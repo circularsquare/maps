@@ -32,12 +32,11 @@ useless detour line cannot be farmed. Drivers parking free and those paying for 
 curve apart, each on their own car cost (below). One rule for commutes, everyday trips, the trip
 explorer and the regional layer's commutes between zones; the regional market (rail, car and air
 between regions) keeps its damped logit (docs/regional.md 5.1). The ceiling tests pass with room
-(T-918, notes/T-918.md). **No train no quicker than walking** (Anita, 2026-10-29, T-1782;
-`Params::walk_fade_of`): the curve alone never compares the train with walking, so a trip
-mostly on foot could take more trains than walks while the train was slower than walking. Rail's
-share is scaled by (walking's cost - rail's) / (0.3 x walking's), held to 0..1: no train at or
-above walking's effective time, a third of its share at 10% quicker, all of it from 30% quicker.
-The ceiling tests keep their room (A 86-93%, B 70-84%; notes/T-1782.md). **No rail propensity**:
+(T-918, notes/T-918.md). **No train slower than walking** (Anita, T-1059, T-2265 in real minutes;
+`Params::walk_rule`, docs/demand-kernel.md step 5): the curve alone never compares the train with
+walking, so within walking's reach a station pair whose real minutes (walks or drive, waits, rides;
+no fare, crowding or weights) are more than walking the whole way's is no option, and a trip with
+none left has no train. A trip with a quicker pair keeps its whole share. **No rail propensity**:
 `asc_rail` is 0 in every country and does not enter the ratio, so rail and the car are judged on
 time and money alone (`everyday_asc_rail` and `api::COUNTRY_ASC_RAIL` remain, at 0 and empty,
 moving only the walking share). The game aims at sensible, with a clear effect from building a
@@ -155,7 +154,10 @@ own last 10 km: 3 km inside Manhattan takes about 12 minutes, Brooklyn to Midtow
 **Parking** (T-380, T-372; `Params::park_parts`). At the destination every driver pays `park_min`, 7
 perceived minutes (T-636, T-637; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
 one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
-below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000). A share `1 / (1 + d / 8,000)` of the
+below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000), times the pack country's income factor
+`Params::park_income` (T-2278, `kernel::park_income_of`): (GDP per head at market rates / $35,000)^0.3
+below $35,000, 1 above (India 0.46, Vietnam 0.56, China 0.76; notes/T-2278.md); the parking at home
+takes it too. A share `1 / (1 + d / 8,000)` of the
 drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix
 of two choices, one against the free driver and one against the paying one, weighted by that
 share, not one result at the mean price. Congestion charges (`kernel::CORDONS`, a place's

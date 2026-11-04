@@ -25,6 +25,11 @@ export const PERIODS: readonly Period[] = [
 
 const LEVEL_INDEX: Record<Demand, number> = { high: 0, medium: 1, low: 2 };
 
+/** An hour of the day as the clock writes it, "06:00"; the day's end is "24:00" (T-2271). */
+export const hourText = (h: number): string => `${String(h).padStart(2, "0")}:00`;
+/** Hours `a` to `b` as players read them: "06:00-10:00". */
+export const hourSpan = (a: number, b: number): string => `${hourText(a)}-${hourText(b)}`;
+
 /** The period at time `t` (seconds), as an index into PERIODS. Callers pass local time (T-309):
  * each region's periods run on its own hours. */
 export function periodAt(t: number): number {

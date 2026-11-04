@@ -6,7 +6,7 @@
 
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { lineMoneyTip } from "../MoneyText";
 import { boatsText, busesText, count, distance, headway, money, plural, speed } from "../../game/format";
@@ -16,7 +16,8 @@ import { dayNote, runningToday, today, useToday } from "../../game/today";
 import { accountVersion, BOAT_CARS, capacity } from "../../game/boarding";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
-import { ask, renameLinePrompt, selection, tool } from "../../game/ui";
+import { ask, display, renameLinePrompt, selection, tool } from "../../game/ui";
+import { live } from "../../map/live";
 import { liveMoney, moneyState } from "../../game/money";
 import { editBusRoute, editFerryRoute } from "../../game/lineActions";
 import { busDraft } from "../../map/busDraw";
@@ -32,7 +33,7 @@ import { useClockQuery } from "../useClockQuery";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { DEMAND_LABEL, levelTimes, StopTransfers, useLiveColour, useSymbolBox } from "./LineInspector";
+import { DEMAND_LABEL, levelTimes, StopTransfers, StretchHalf, stretchLooks, useLiveColour, useSymbolBox } from "./LineInspector";
 import { LineGroup } from "./LineGroup";
 import { afterCopy } from "../../game/lineGroups";
 
@@ -125,6 +126,83 @@ function useEndNames(bus: ClockBus | undefined, stationsTaken: Set<string>): Map
     return () => { live = false; };
   }, [key]);
   return new Map(ends.flatMap((a) => (endNames.has(endKey(a.s.lng, a.s.lat)) ? [[a.i, endNames.get(endKey(a.s.lng, a.s.lat))!] as const] : [])));
+}
+
+/** how far a row is dragged before it counts as a drag, not a click (px) */
+const DRAG_PX = 4;
+
+/** T-2275: a ferry line's ports drawn as a rail line's stops strip, the Traffic view's stretch widths
+ * included (T-2274). A click on a port's dot takes it out of the line and a drag of its row moves it,
+ * the route searched again through the ports (`FerryDraw.setPorts`); not while the ferry tool has the
+ * line, nor with only two ports. */
+function FerryPorts({ l, st, bus, colour, editable, time }: { l: LineInput; st: LineStats; bus: ClockBus; colour: string; editable: boolean; time: (i: number) => ComponentChildren }) {
+  const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const dragged = useRef(false);
+  const ports = bus.ferry?.ports ?? [];
+  const n = ports.length;
+  const names = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
+  const nameOf = (i: number) => names.get(ports[i]?.node ?? -1) ?? "Port";
+  const looks = display.value.trackColour === "traffic" && st.status === "running" && l.stops.length === n ? stretchLooks(l, ports.map((_, i) => nameOf(i)), []) : null;
+  const canEdit = editable && !busy && n > 2;
+  const apply = async (order: number[]) => {
+    const f = live.tools?.ferry;
+    if (!f || busy) return;
+    setBusy(true);
+    try { await f.setPorts(l.num, order); } finally { setBusy(false); }
+  };
+  const all = ports.map((_, i) => i);
+  const remove = (i: number) => void apply(all.filter((k) => k !== i));
+  const pointerDown = (e: PointerEvent, from: number) => {
+    if (!canEdit || e.button !== 0 || e.pointerType === "touch" || (e.target as Element | null)?.closest?.(".stop-hit, button")) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    let on = false, gap = from;
+    const move = (m: PointerEvent) => {
+      if (!on && Math.hypot(m.clientX - x0, m.clientY - y0) < DRAG_PX) return;
+      on = true;
+      const row = document.elementFromPoint(m.clientX, m.clientY)?.closest("[data-port]") as HTMLElement | null;
+      if (row) {
+        const b = row.getBoundingClientRect(), k = Number(row.dataset.port);
+        gap = m.clientY - b.top < b.height / 2 ? k : k + 1;
+      }
+      setDrag({ from, gap });
+    };
+    const end = (u: PointerEvent | KeyboardEvent) => {
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("keydown", key);
+      setDrag(null);
+      if (!on) return;
+      dragged.current = true;
+      setTimeout(() => { dragged.current = false; }, 0);
+      if (u.type !== "pointerup" || gap === from || gap === from + 1) return;
+      const order = all.filter((k) => k !== from);
+      order.splice(gap > from ? gap - 1 : gap, 0, from);
+      void apply(order);
+    };
+    const key = (k: KeyboardEvent) => { if (k.key === "Escape") end(k); };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", end);
+    addEventListener("keydown", key);
+  };
+  const moving = drag && drag.gap !== drag.from && drag.gap !== drag.from + 1 ? drag : null;
+  return (
+    <ul class={"stops ferry-ports" + (looks ? " traffic" : "") + (canEdit ? " movable" : "") + (drag ? " dragging" : "")} style={{ "--c": colour }}>
+      {ports.map((p, i) => (
+        <li data-port={i} class={"xfer" + (drag?.from === i ? " dragged" : "") + (moving?.gap === i ? " drop-before" : moving && i === n - 1 && moving.gap === n ? " drop-after" : "")}
+          onPointerDown={(e) => pointerDown(e, i)}>
+          {looks && i > 0 && looks[i - 1] && <StretchHalf s={looks[i - 1]} down={false} />}
+          {looks && i < n - 1 && looks[i] && <StretchHalf s={looks[i]} down />}
+          {canEdit && <span class="stop-hit" data-tip={`Click to remove the stop at ${nameOf(i)}`} onClick={() => remove(i)} />}
+          <span class="grow">
+            <span class="stop-name" onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: String(p.node) }; }}>{nameOf(i)}</span>
+          </span>
+          <StopTransfers l={l} i={i} />
+          {time(i)}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 // ---------------------------------------------------------------- the schedule
@@ -441,7 +519,7 @@ export function BusInspector({ id }: { id: string }) {
       </ul>
 
       <div class="h divided">{ferry ? "Ports" : "Stops"}</div>
-      <ul class="bus-stops" style={{ "--c": shown }}>
+      {ferry ? <FerryPorts l={l} st={st} bus={bus} colour={shown} editable={!drawing} time={stopTime} /> : <ul class="bus-stops" style={{ "--c": shown }}>
         {rows.map((r) => r.kind === "street" ? (
           <li class="street" data-tip={between(r)}>
             <i class="bs-mk" />
@@ -459,7 +537,7 @@ export function BusInspector({ id }: { id: string }) {
             {stopTime(r.i)}
           </li>
         ))}
-      </ul>
+      </ul>}
 
       {st.status === "running" && <PastDay l={l} st={st} bus={bus} periods={periods} kind={kind} />}
     </>

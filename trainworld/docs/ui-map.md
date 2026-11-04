@@ -337,12 +337,15 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 
 A bus line (T-1464) is drawn by its own pass under rail track: half a rail line's width in its
 colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
+In the Traffic view a running bus or ferry line is drawn as wide as a rail line with as many riders,
+stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
+(`demandLayers.ts` `busWidths`, T-2274).
 Street stops are small rings from zoom 14, ends small rounded squares from zoom 12; where it meets
 a train station the station's own circle stands for the stop. Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],
-the riders on the stretch between the stops under the pointer; "Bus stop" or "End of the
+the riders on the stretch between the stops under the pointer (a ferry's between the ports, T-2274); "Bus stop" or "End of the
 line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
 short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the

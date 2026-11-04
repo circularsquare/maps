@@ -20,7 +20,7 @@ import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
-import { ACTION_KEYS, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
+import { ACTION_KEYS, DEMAND_KEY, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
@@ -28,8 +28,7 @@ import { stopsById, world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
-import { faresOf, type Fares } from "./game/fareCurve";
-import { markSolveFares } from "./game/fareInEffect";
+import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
@@ -76,7 +75,7 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { MapSky, TopBar } from "./ui/TopBar";
-import { MapTopLeft } from "./ui/DemandSelector";
+import { flipDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
 import { startTroubleList } from "./ui/TroubleList";
@@ -133,18 +132,7 @@ const urlChoice = choiceFromUrl();
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
 // network instead.
 const startDemandPool = (newGame: boolean) => {
-  const c = startDemand(HOME_CITY, newGame);
-  // T-2266: every view the client makes carries the fares of its solve (until T-2286 puts this in `daysOf`)
-  const client = c as any;
-  if (!client.fareMarked) {
-    client.fareMarked = true;
-    const daysOf = client.daysOf;
-    client.daysOf = async function (this: unknown, s: { svc: { fare: unknown } }, ...rest: unknown[]) {
-      const days = await daysOf.call(this, s, ...rest);
-      markSolveFares(days, s.svc.fare as Fares | undefined);
-      return days;
-    };
-  }
+  startDemand(HOME_CITY, newGame);
 };
 if (urlChoice) {
   startGameWait(urlChoice.slot ?? (urlChoice.newGame ? "new" : "last"));
@@ -530,6 +518,12 @@ window.addEventListener("keydown", (e) => {
   if (tabKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
     e.preventDefault();
     tab.value = tabKey;
+    return;
+  }
+  // H: the demand bubbles between homes and destinations (T-2271), from any tab
+  if (e.key.toLowerCase() === DEMAND_KEY && !e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat) {
+    e.preventDefault();
+    flipDemandEnd();
     return;
   }
   const k = TOOL_KEYS[e.key.toLowerCase()];

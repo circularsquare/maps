@@ -17,7 +17,8 @@ pub const PASSING: u8 = 8;
 pub const ALL: u8 = TERMINAL | PARK_RIDE | WAITING_ROOM | PASSING;
 /// In a station building (T-2220): set in demand's snapshot on a building's members (the clock
 /// worker, game/buildings.ts), never bought or saved, so not in `ALL`. A change there counts
-/// `BUILDING_CHANGE` of its fixed minutes and walk.
+/// `BUILDING_CHANGE` of its fixed minutes (the walk whole), and a wait there counts as in a
+/// waiting room (T-2276).
 pub const IN_BUILDING: u8 = 16;
 
 /// The terminal's price: this much double track at the station's level.
@@ -29,7 +30,8 @@ pub const PARK_RIDE_COST: f64 = 20.0;
 pub const WAITING_ROOM_COST: f64 = 5.0;
 pub const PARK_RIDE_MIN: f32 = 10.0;
 pub const WAITING_ROOM_WAIT: f32 = 0.8;
-pub const BUILDING_CHANGE: f32 = 0.8;
+/// A change's fixed 2 minutes count 1 (T-2276).
+pub const BUILDING_CHANGE: f32 = 0.5;
 
 /// A passage between two stations (the player's link, T-197): a base price plus this a km of the
 /// straight line between them, at most `PASSAGE_MAX_M` long; changing through it walks that line

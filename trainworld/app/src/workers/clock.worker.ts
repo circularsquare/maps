@@ -34,7 +34,7 @@ import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
@@ -49,8 +49,8 @@ const SNAPSHOT_DEBOUNCE_MS = 500;
 const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
 /** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
 const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
-/** T-2193: a new ferry line's headways, s (a boat every 15, 20 and 30 minutes), dwell and turnaround, s (`ferry::FERRY_*`) */
-const NEW_FERRY_HEADWAYS: [number, number, number] = [900, 1200, 1800];
+/** T-2273: a new ferry line's headways, s (a boat every 20 and 30 minutes, none at low demand), dwell and turnaround, s (`ferry::FERRY_*`) */
+const NEW_FERRY_HEADWAYS: [number, number, number] = [1200, 1800, 0];
 const NEW_FERRY_DWELL_S = 60, NEW_FERRY_TURNAROUND_S = 300;
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
 /** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city); every
@@ -209,7 +209,7 @@ let achievements: Map<string, Achieved> | null = new Map();
 /** T-706: each line's station note and the city it was chosen in */
 let lineNotes = new Map<string, [number, string]>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
-let newLineCars = 0;
+let newLineCars = NEW_LINE_CARS;
 /** T-1822: the Getting started card's progress in this game; undefined: none. `guideWanted`: the page
  * says a new normal game starts with it. */
 let guide: GuideSave | undefined;
@@ -272,6 +272,16 @@ let switching = false;
  * in a save from before it) */
 let mode: GameMode = "normal";
 let startZone: string | undefined;
+/** T-2271: seconds the start zone's local time runs ahead of the clock (0 with no start zone: the
+ * clock's own, New York's). The ledgers' days run midnight to midnight there, so the Money tab's day
+ * turns as its clock passes midnight; their hours stay the clock's. */
+let dayShift = 0;
+const ledgerDay = (t: number) => Math.floor((t + dayShift) / 86400);
+function setStartZone(z: string | undefined) {
+  startZone = z;
+  const c = z ? CITIES.find((x) => x.id === z) : undefined;
+  dayShift = c ? shiftAt(c.center[0], c.center[1]) : 0;
+}
 let opened: string[] | undefined = [];
 /** T-1223: the zones demand holds fine, from the page; T-2153 the last two builds' zones */
 let demandFine: string[] | undefined;
@@ -289,7 +299,7 @@ function loanOp(op: { op: "borrow"; amount: number } | { op: "repay" }): number 
   if (mode === "sandbox") return 1;
   if (op.op === "borrow") {
     if (loan || !LOAN_AMOUNTS.includes(op.amount)) return 1;
-    if (!loanAllowed(op.amount, loanProfit(ledger, Math.floor(moneyNow() / 86400)))) return 1;
+    if (!loanAllowed(op.amount, loanProfit(ledger, ledgerDay(moneyNow())))) return 1;
     loan = newLoan(op.amount);
     a.set_cash(a.cash() + op.amount);
   } else {
@@ -1490,7 +1500,7 @@ function regionEntries(zone: string, day: number, hour: number): [DayLedger, Hou
 
 /** T-531: every region's today and this hour that has an entry today. */
 function regionNow(): RegionNow {
-  const day = Math.floor(moneyNow() / 86400), hour = Math.floor(moneyNow() / 3600), out: RegionNow = {};
+  const day = ledgerDay(moneyNow()), hour = Math.floor(moneyNow() / 3600), out: RegionNow = {};
   for (const [k, r] of regions) {
     const d = r.days[r.days.length - 1], h = r.hours[r.hours.length - 1];
     if (d?.day === day) out[k] = { today: { ...d }, hour: h?.hour === hour ? { ...h } : { hour, fares: 0, running: 0, trains: 0, build: 0, rides: 0 } };
@@ -1575,7 +1585,7 @@ function mergeLedger<T extends { fares: number; running: number; trains: number;
  * cost is worked out again on the loaded network up to where the hour ledger ends, times the whole
  * days kept over the same worked out again. Returns US$M. */
 function unsettleAfter(clockT: number): number {
-  const D = Math.floor(clockT / 86400), H = Math.floor(clockT / 3600);
+  const D = ledgerDay(clockT), H = Math.floor(clockT / 3600);
   const last = hourLedger[hourLedger.length - 1];
   if (!last || last.hour <= H) return 0;
   const groups = localGroups();
@@ -1589,8 +1599,8 @@ function unsettleAfter(clockT: number): number {
     }
     return c;
   };
-  const whole = ledger.filter((d) => d.day > D && d.day < Math.floor(last.hour / 24));
-  const kept = whole.reduce((s, d) => s + d.running, 0), again = whole.reduce((s, d) => s + replay(d.day * 86400, (d.day + 1) * 86400), 0);
+  const whole = ledger.filter((d) => d.day > D && d.day < ledgerDay(last.hour * 3600));
+  const kept = whole.reduce((s, d) => s + d.running, 0), again = whole.reduce((s, d) => s + replay(d.day * 86400 - dayShift, (d.day + 1) * 86400 - dayShift), 0);
   const times = kept > 0 && again > 0 ? kept / again : 1;
   const full = costAt(last.hour) * times;
   const end = last.hour * 3600 + 3600 * (full > 0 ? Math.min(1, last.running / full) : 1);
@@ -1600,7 +1610,7 @@ function unsettleAfter(clockT: number): number {
   const upBack = upHour * Math.min(366 * 24, Math.max(0, upEnd - clockT) / 3600);
   const trim = (days: DayLedger[], hours: HourLedger[]) => {
     const later = days.filter((d) => d.day > D), laterH = hours.filter((e) => e.hour > H);
-    const today = laterH.filter((e) => Math.floor(e.hour / 24) === D);
+    const today = laterH.filter((e) => ledgerDay(e.hour * 3600) === D);
     const fares = [...later, ...today].reduce((s, e) => s + e.fares, 0);
     const keep = { days: days.filter((d) => d.day <= D), hours: hours.filter((e) => e.hour <= H) };
     const d = keep.days.find((x) => x.day === D);
@@ -1631,10 +1641,11 @@ function upkeepNow(): MoneyState["upkeep"] {
 
 function moneyState(): MoneyState {
   const a = api!;
-  dayEntry(Math.floor(moneyNow() / 86400));
+  dayEntry(ledgerDay(moneyNow()));
   hourEntry(Math.floor(moneyNow() / 3600));
   return {
     cash: a.cash(),
+    dayShift,
     mode,
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
@@ -1690,7 +1701,7 @@ function sendMoney() {
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
 function sendCash() {
-  const cash = api!.cash(), today = dayEntry(Math.floor(moneyNow() / 86400)), hour = hourEntry(Math.floor(moneyNow() / 3600));
+  const cash = api!.cash(), today = dayEntry(ledgerDay(moneyNow())), hour = hourEntry(Math.floor(moneyNow() / 3600));
   if (cash === sentCash && today.fares === sentFares) return;
   sentCash = cash;
   sentFares = today.fares;
@@ -1783,7 +1794,7 @@ function settle(): boolean {
     const owed = loan ? loanDrain(loan, dc / 24) : 0;
     if (loan && loan.days <= 0) loan = null;
     cash += fare * df - (cost + up) * dc - owed;
-    const d = dayEntry(Math.floor(t / 86400));
+    const d = dayEntry(ledgerDay(t));
     d.fares += fare * df;
     d.running += cost * dc;
     d.upkeep = (d.upkeep ?? 0) + up * dc;
@@ -1822,16 +1833,15 @@ function settle(): boolean {
   return ended;
 }
 
-/** T-1677, T-1926: the per-period crowding numbers (the first `PERIODS * PERIOD_STRIDE` of
- * `line_periods`) and the per-stretch ones that end it (rider-seconds waited, then riders arriving,
- * per period and stretch) of each line in `lines`, each line's as its count of numbers and then them
- * (none for a line with no account). */
+/** T-1677, T-2236: the per-period crowding numbers (the first `PERIODS * PERIOD_STRIDE` of
+ * `line_periods`) and the busiest hour's load per period and stretch that ends it of each line in
+ * `lines`, each line's as its count of numbers and then them (none for a line with no account). */
 function linesPeriods(a: TrackApi, lines: number[], day: number): Float64Array {
   const P = PERIODS.length, block = P * 11;
   const per = lines.map((n) => {
     const v = a.line_periods(n, day);
-    // per period: 11 numbers, 2 per stop, 2 per stretch (stops - 1): 4 * stops + 9
-    const stops = (v.length / P - 9) / 4, tail = Number.isInteger(stops) && stops > 1 ? 2 * P * (stops - 1) : 0;
+    // per period: 11 numbers, 2 per stop, 3 per stretch (stops - 1): 5 * stops + 8
+    const stops = (v.length / P - 8) / 5, tail = Number.isInteger(stops) && stops > 1 ? P * (stops - 1) : 0;
     if (v.length < block) return v;
     const out = new Float64Array(block + tail);
     out.set(v.subarray(0, block));
@@ -2322,6 +2332,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_bus(h.fleetBus ?? 0);
   api!.set_fleet_ferry(h.fleetFerry ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
+  setStartZone(h.start); // before the ledgers, whose days follow its local time
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
@@ -2329,12 +2340,11 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   goals = new Map(Object.entries(h.goals ?? {}));
   achievements = h.achievements ? new Map(Object.entries(h.achievements)) : null;
   lineNotes = new Map(Object.entries(h.notes ?? {}));
-  newLineCars = h.newCars ?? 0;
+  newLineCars = h.newCars ?? NEW_LINE_CARS;
   guide = h.mode === "sandbox" ? undefined : h.guide;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   loan = mode === "sandbox" ? null : loanFromSave(h);
-  startZone = h.start;
   opened = h.opened;
   newer = unread;
   newerFile = unread ? bytes : null;
@@ -2361,7 +2371,7 @@ function sendOpened() {
 function setNewGame(spec?: NewGameSpec) {
   const g = newGameHeader(spec);
   setMode(g.mode!);
-  startZone = g.start;
+  setStartZone(g.start);
   opened = g.opened;
   demandFine = undefined;
   demandBuilt = undefined;
@@ -2400,7 +2410,7 @@ async function newGame(spec?: NewGameSpec) {
   goals = new Map();
   achievements = new Map();
   lineNotes = new Map();
-  newLineCars = 0;
+  newLineCars = NEW_LINE_CARS;
   restart(startClock(spec), "new");
 }
 
@@ -2812,7 +2822,7 @@ function sendTrips(split = false, hours?: number[]) {
 
 /** An edit's charge (US$M, `trains` of it for trains) into the money record of the hour and day. */
 function bookCharge(seq: number, charge: number, trains: number) {
-  const d = dayEntry(Math.floor(moneyNow() / 86400));
+  const d = dayEntry(ledgerDay(moneyNow()));
   const e = hourEntry(Math.floor(moneyNow() / 3600));
   d.trains += trains;
   d.build += charge - trains;
@@ -3858,6 +3868,7 @@ async function handle(msg: ToClock) {
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
+      : q.what === "blueprintPieces" ? Float64Array.from(api.blueprint_piece_costs())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
       : q.what === "buildingQuote" ? buildingQuoteAnswer(q.id, q.corners)
       : q.what === "lineWaits" ? api.line_waits(q.line, q.level)

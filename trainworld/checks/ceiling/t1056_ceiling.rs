@@ -25,7 +25,7 @@ struct Scen {
     km_usd: f32,
     ratio: f32,
     plus: f32,
-    /// T-1056: no rail where the two walks to and from the train are longer than walking there
+    /// T-1056: no rail where the train's real minutes are more than walking there (T-2265)
     rule: bool,
 }
 const fn sc(kmh: f32, walk_min: f32, wait_min: f32, base_usd: f32, km_usd: f32, rule: bool) -> Scen {
@@ -46,11 +46,11 @@ fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32) -> f32 {
     if s.plus > 0.0 {
         return car_mean + s.plus;
     }
-    // straight metres the two walks cover, at the walk's own detour and speed (`Params::walk_min`)
-    if s.rule && 2.0 * s.walk_min > p.walk_min(d_m) {
+    let km = d_m / 1000.0;
+    // T-2265: no train taking longer than walking there, in real minutes (`Params::walk_rule`)
+    if s.rule && p.walk_rule_at(d_m) && 2.0 * s.walk_min + s.wait_min + km / s.kmh * 60.0 > p.walk_min(d_m) {
         return 1e6;
     }
-    let km = d_m / 1000.0;
     let walk = s.walk_min.min(p.walk_easy_min) * p.w_walk + (s.walk_min - p.walk_easy_min).max(0.0) * p.w_walk_far;
     km / s.kmh * 60.0 + 2.0 * walk + s.wait_min + (s.base_usd + s.km_usd * km) * FARE_MIN_PER_USD
 }
@@ -64,8 +64,7 @@ fn shares(p: &Params, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32,
     let bt = p.mode_beta(road);
     let util = bt * (road - rail) + p.asc_rail;
     let uw = bt * (road - cw) + p.asc_walk();
-    // T-1782: and the rule against a train no quicker than walking, its riders to the car
-    let r = (p.car_choice(util, uw, bt, paid, free, rail, road) * p.walk_fade_of(rail, cw)) as f64;
+    let r = p.car_choice(util, uw, bt, paid, free, rail, road) as f64;
     let e = fast_exp(uw - util);
     let w0 = e / (1.0 + fast_exp(-util) + e);
     let w1 = e / (1.0 + fast_exp(-(util + bt * paid)) + e);

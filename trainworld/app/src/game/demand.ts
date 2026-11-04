@@ -10,6 +10,7 @@ import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
 import type { DriveLevel } from "./drives";
+import type { Fares } from "./fareCurve";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
 import type { ModeSplit } from "./types";
@@ -47,6 +48,9 @@ export interface LineDemand {
    * from a cached result */
   tph?: [number, number, number];
   cars?: number;
+  /** T-2266, T-2286: the fares the figures were solved with, which its riders pay
+   * (game/fareInEffect.ts); absent from a cached result */
+  solvedFares?: Fares;
 }
 
 export interface StationDemand {

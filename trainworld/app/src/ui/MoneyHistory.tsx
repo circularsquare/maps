@@ -1,9 +1,10 @@
 // The Money tab's history (T-447): revenue (fares) against expenses (running trains plus upkeep,
-// T-867, and one-off costs; blue and red, T-1111), then net, then train rides (T-565), per game day
-// over every day kept (T-2143: all time, a week or a month to a column once there are many) or per
-// game hour over the last 48 (the clock worker keeps both and saves them). Days and hours are the game
-// clock's (T-321). The day and hour now are drawn so far, moving as fares land (T-284). The network's,
-// or the region the Money tab is set to (T-531).
+// T-867, and one-off costs; blue and red, T-1111), then net, then train rides (T-565), per game hour
+// over the past 24, per day over the past 30, or per day over every day kept (T-2143: a week or a month
+// to a column once there are many) (T-2271; the clock worker keeps the days and 48 hours and saves
+// them). Days run on the start zone's local time (`MoneyState.dayShift`) and hours are written in it.
+// The day and hour now are drawn so far, moving as fares land (T-284). The network's, or the region the
+// Money tab is set to (T-531).
 
 import { signal } from "@preact/signals";
 import { clockTime, count, money } from "../game/format";
@@ -16,8 +17,11 @@ import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
 import { Money } from "./MoneyText";
 
-/** Days or hours, kept while the game is open. */
-const span = signal<"day" | "hour">("day");
+type Span = "1d" | "30d" | "all";
+/** The span shown, kept while the game is open. */
+const span = signal<Span>("all");
+/** T-2271: columns each span keeps, newest last (hours for 1d) */
+const KEEP: Record<Span, number> = { "1d": 24, "30d": 30, all: Infinity };
 
 /** `from`, `to` (game days, `to` not included) and `n` (days counted, today's part so far) for a
  * column of several days, whose figures are then averages per day (T-2143). */
@@ -38,11 +42,13 @@ const usd = (v: number) => money(v * 1e6);
 const rides = (e: Entry) => e.rides ?? 0;
 const exact = (v: number) => Math.round(v).toLocaleString("en-US");
 
-/** "Mon Apr 14" or "Mon Apr 14, 04:00" in hovers; without the weekday under the charts. */
-function when(e: Entry, hours: boolean, long = true): string {
-  const day = hours ? Math.floor(e.at / 24) : e.at;
+/** "Mon Apr 14" or "Mon Apr 14, 04:00" in hovers; without the weekday under the charts. An hour is
+ * the clock's, written `sh` hours ahead in the ledger days' local time. */
+function when(e: Entry, hours: boolean, sh: number, long = true): string {
+  const at = hours ? e.at + sh : e.at;
+  const day = hours ? Math.floor(at / 24) : at;
   const date = long ? dateName(day) : shortDate(day);
-  return hours ? `${date}, ${clockTime((e.at % 24) * 60)}` : date;
+  return hours ? `${date}, ${clockTime((((at % 24) + 24) % 24) * 60)}` : date;
 }
 
 /** The ledger's entries (the network's, or a region's: T-531) with the day or hour now replaced by the live one. */
@@ -65,15 +71,15 @@ const monthIndex = (d: number) => Math.floor((d - 1 + DAY1_OF_YEAR) / 365) * 12 
 /** T-2143: days as they are while they fit in MAX_COLS columns, else grouped by week (from Monday),
  * month, or runs of months, each group's figures a day's average over the days it covers, the day
  * now counted as far as it has gone. Days missing from a region's ledger count as days of nothing. */
-function binDays(list: Entry[]): { cols: Entry[]; binned: boolean } {
+function binDays(list: Entry[], shift: number): { cols: Entry[]; binned: boolean } {
   const first = list[0].at, last = list[list.length - 1].at;
   if (last - first + 1 <= MAX_COLS) return { cols: list, binned: false };
   const weeks = Math.floor((last - weekdayOf(last) - (first - weekdayOf(first))) / 7) + 1;
   const months = monthIndex(last) - monthIndex(first) + 1;
   const per = Math.ceil(months / MAX_COLS);
   const key = weeks <= MAX_COLS ? (d: number) => d - weekdayOf(d) : (d: number) => Math.floor(monthIndex(d) / per);
-  // the day now's part so far, on the clock; a whole day when the clock is elsewhere
-  const part = Math.min(1, Math.max(1 / 24, clock.minute.peek() / 1440 - last));
+  // the day now's part so far, on the clock in the days' local time; a whole day when the clock is elsewhere
+  const part = Math.min(1, Math.max(1 / 24, (clock.minute.peek() + shift / 60) / 1440 - last));
   /** the group's first day, or the history's */
   const start = (d: number) => { let s = d; while (s > first && key(s - 1) === key(d)) s--; return s; };
   const cols: Entry[] = [];
@@ -95,11 +101,15 @@ function binDays(list: Entry[]): { cols: Entry[]; binned: boolean } {
 }
 
 export function MoneyHistory({ zone }: { zone: string | null }) {
-  const hours = span.value === "hour";
-  const raw = entries(hours, zone);
-  if (!raw.length) return null;
-  const { cols: list, binned } = hours ? { cols: raw, binned: false } : binDays(raw);
-  const slots = Math.max(list.length, MIN_SLOTS[span.value]);
+  const hours = span.value === "1d";
+  const shift = moneyState.value?.dayShift ?? 0, sh = shift / 3600;
+  const all = entries(hours, zone);
+  if (!all.length) return null;
+  // the past 24 hours or 30 days, the hour or day now among them
+  const newest = all[all.length - 1].at;
+  const raw = all.filter((e) => e.at > newest - KEEP[span.value]);
+  const { cols: list, binned } = span.value === "all" ? binDays(raw, shift) : { cols: raw, binned: false };
+  const slots = Math.max(list.length, MIN_SLOTS[hours ? "hour" : "day"]);
   const col = W / slots;
   const x0 = W - list.length * col;
   const cx = (i: number) => x0 + (i + 0.5) * col;
@@ -107,7 +117,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const bw = Math.max(1, col * 0.7);
   /** a binned column's figures are per day */
   const per = binned ? "/day" : "";
-  const name = (e: Entry, i: number) => (binned ? dateRange(e.from!, e.to!) : when(e, hours)) + (i === last ? " so far" : "");
+  const name = (e: Entry, i: number) => (binned ? dateRange(e.from!, e.to!) : when(e, hours, sh)) + (i === last ? " so far" : "");
 
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
@@ -145,7 +155,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
 
   // T-264: a tick under each day or hour a holiday or a long holiday's day where the player has built
   const only = zone && isCity(zone) ? cityById(zone).country ?? null : null;
-  const marks = binned ? [] : list.map((e) => calendarAt(hours ? e.at * 3600 + 1800 : e.at * 86400 + 43200, only));
+  const marks = binned ? [] : list.map((e) => calendarAt(hours ? e.at * 3600 + 1800 : e.at * 86400 + 43200 - shift, only));
 
   const first = list[0];
   return (
@@ -153,10 +163,11 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
       <div class="h">
         History
         <span class="right hist-switches">
-          <Segmented<"day" | "hour">
+          <Segmented<Span>
             options={[
-              ["day", <span data-tip="Every game day so far">Days</span>],
-              ["hour", <span data-tip="The last 48 game hours">Hours</span>],
+              ["1d", "1d"],
+              ["30d", "30d"],
+              ["all", "All time"],
             ]}
             value={span.value}
             onChange={(v) => { span.value = v; }}
@@ -207,7 +218,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
           {list.map((e, i) => marks[i].lines.length ? <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={4} data-tip={[name(e, i), ...marks[i].lines].join("\n")} /> : null)}
         </svg>
       )}
-      <div class="hist-x small muted"><span>{when(first, hours, false)}</span><span>{when(binned ? { ...list[last], at: list[last].to! - 1 } : list[last], hours, false)}</span></div>
+      <div class="hist-x small muted"><span>{when(first, hours, sh, false)}</span><span>{when(binned ? { ...list[last], at: list[last].to! - 1 } : list[last], hours, sh, false)}</span></div>
     </>
   );
 }

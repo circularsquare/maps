@@ -35,22 +35,6 @@ fn common_test_params() -> Params {
 
 /// T-1576: every route node of a line with a bus-only stop carries the bus boarding cost, in the
 /// cost of boarding and in each crowding round's; a train line carries none.
-/// T-1782: no train at or above walking's cost, a third of its share at 10% quicker, all from 30%.
-#[test]
-fn a_train_no_quicker_than_walking_loses_its_riders() {
-    let p = Params::default();
-    let near = |a: f32, b: f32| (a - b).abs() < 1e-5;
-    // Anita's Hodogaya errand: the train 101 effective minutes, walking 91
-    assert_eq!(p.walk_fade_of(101.0, 91.0), 0.0);
-    assert_eq!(p.walk_fade_of(91.0, 91.0), 0.0);
-    assert!(near(p.walk_fade_of(81.9, 91.0), 1.0 / 3.0));
-    assert!(near(p.walk_fade_of(0.85 * 91.0, 91.0), 0.5));
-    assert!(near(p.walk_fade_of(0.7 * 91.0, 91.0), 1.0));
-    assert_eq!(p.walk_fade_of(0.5 * 91.0, 91.0), 1.0);
-    assert_eq!(p.walk_fade_of(40.0, NO_WALK), 1.0);
-    assert_eq!(Params { walk_fade: 0.0, ..p.clone() }.walk_fade_of(101.0, 91.0), 1.0);
-}
-
 #[test]
 fn a_bus_line_costs_minutes_to_board() {
     let p = common_test_params();
@@ -823,20 +807,24 @@ fn a_change_in_a_station_building_counts_less() {
     let walk = p.xfer_min(80.0) * p.w_xfer;
     // waits 2.5, rides 2, the change's fixed 2 and its walk
     assert!((plain.r[2] - (2.5 + 2.0 + 2.0 + walk + 2.5 + 2.0)).abs() < 1e-4, "{}", plain.r[2]);
-    // a building round the first station only: the first boarding pays no change there or here
+    // a building round the first station only: the first boarding pays no change, and the
+    // building is that station's waiting room (T-2276)
     net.st_ups = vec![upgrades::IN_BUILDING, 0, 0, 0];
     let first = skims(&build_graph(&net, &p), &p);
-    assert!(first.r.iter().zip(&plain.r).all(|(a, b)| a == b || (a - b).abs() < 1e-4), "a building where nobody changes changes nothing");
+    net.st_ups = vec![upgrades::WAITING_ROOM, 0, 0, 0];
+    let room = skims(&build_graph(&net, &p), &p);
+    assert!(first.r.iter().zip(&room.r).all(|(a, b)| a == b || (a - b).abs() < 1e-4), "a building where nobody changes is a waiting room");
     net.st_ups = vec![0, upgrades::IN_BUILDING, 0, 0];
     let g = build_graph(&net, &p);
-    assert_eq!((g.change_f(1), g.change_f(0)), (0.8, 1.0));
+    assert_eq!((g.change_f(1), g.change_f(0)), (0.5, 1.0));
     let sk = skims(&g, &p);
-    assert!((sk.r[2] - (2.5 + 2.0 + 1.6 + walk + 2.5 + 2.0)).abs() < 1e-4, "{}", sk.r[2]);
-    assert!((sk.r[s + 2] - plain.r[s + 2]).abs() < 1e-4, "a trip starting in the building pays no change");
-    // the trip explorer: 1.6 on the change, the walk whole
+    // the change's fixed 2 count 1, the wait there 0.8 of 2.5
+    assert!((sk.r[2] - (2.5 + 2.0 + 1.0 + walk + 2.0 + 2.0)).abs() < 1e-4, "{}", sk.r[2]);
+    assert!((sk.r[s + 2] - (plain.r[s + 2] - 0.5)).abs() < 1e-4, "a trip starting in the building pays no change, and waits in it");
+    // the trip explorer: 1 on the change, the walk whole
     let legs = &super::super::trip::routes(&g, &sk, &p, 0, 2, 0.005)[0].1;
     assert_eq!(legs.iter().map(|l| l.kind).collect::<Vec<_>>(), vec![1, 2, 1]);
-    assert!((legs[2].change - 1.6).abs() < 1e-6 && legs[0].change == 0.0);
+    assert!((legs[2].change - 1.0).abs() < 1e-6 && legs[0].change == 0.0);
     assert!((legs[1].perc - walk).abs() < 1e-5);
     let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
     assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
@@ -847,7 +835,7 @@ fn a_change_in_a_station_building_counts_less() {
 }
 
 /// T-2220: a walk between two stations in one building is whole; only the boarding's fixed minutes
-/// at the far one count 0.8.
+/// at the far one count less (half, T-2276), and its wait as in a waiting room.
 #[test]
 fn a_walk_between_building_stations_is_whole() {
     let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
@@ -860,7 +848,8 @@ fn a_walk_between_building_stations_is_whole() {
     // route nodes: line 0 run 0 = 0, 1 (stations 0, 1); line 1 run 0 = 4, 5 (2, 3)
     assert_eq!(walk_edge(&g, 1, 2), p.xfer_min(2000.0) * p.w_xfer);
     let sk = skims(&g, &p);
-    assert!((plain.r[3] - sk.r[3] - 0.4).abs() < 1e-4, "{} {}", plain.r[3], sk.r[3]);
+    // 1 of the fixed 2, and 0.2 of the 5 minute wait at station 2
+    assert!((plain.r[3] - sk.r[3] - 2.0).abs() < 1e-4, "{} {}", plain.r[3], sk.r[3]);
 }
 
 /// T-161: stations of one complex are walking transfers whatever the distance, costed like any
@@ -942,12 +931,15 @@ fn a_boarding_rides_at_least_one_stop() {
     }
 }
 
-/// T-1059: the strategies' walks between stations, and the rule's test on them. Station 1 is a
-/// walk from station 0 (200 m, then 1 km in its complex); line 0 runs 2-0-3, line 1 3-1, as in
-/// `a_boarding_rides_at_least_one_stop`. Station 1's platform for line 1 is 50 m off.
+/// T-1059, T-2265: the strategies' real minutes between stations, and the rule's test on them.
+/// Station 1 is a walk from station 0 (200 m, then 1 km in its complex); line 0 runs 2-0-3, line 1
+/// 3-1, as in `a_boarding_rides_at_least_one_stop`: 12 trains an hour (waits 2.5), 2 minute hops.
+/// Station 1's platform for line 1 is 50 m off.
 #[test]
-fn the_walking_rule_reads_the_walks_between_stations() {
+fn the_walking_rule_reads_the_real_minutes_between_stations() {
     let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    let eq = |min: f32| p.walk_eq_m(min);
+    let near = |a: u16, b: f32| (a as f32 - b).abs() <= 1.0;
     for (y, group) in [(200.0f32, vec![]), (1000.0, vec![0, 0, 2, 3])] {
         let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);
         net.st_x = vec![0.0, 0.0, -3000.0, 3000.0];
@@ -957,20 +949,25 @@ fn the_walking_rule_reads_the_walks_between_stations() {
         let s = g.n_st;
         let sk = skims(&g, &p);
         let m = |a: usize, t: usize| sk.walk[a * s + t];
-        // from 0 the trip rides both lines and walks nothing; from 2 it walks over at 0 when
-        // that is cheaper (200 m) and rides on otherwise
-        assert_eq!(m(0, 1), 0, "y {y}");
-        assert_eq!(m(2, 1), if y < 300.0 { 200 } else { 0 }, "y {y}");
+        // from 0 the trip waits, rides, waits and rides; from 2 it walks over at 0 when that is
+        // cheaper (200 m, at the change's pace) and rides on otherwise. No fixed change minutes.
+        assert!(near(m(0, 1), eq(2.5 + 2.0 + 2.5 + 2.0)), "y {y}: {}", m(0, 1));
+        let from2 = if y < 300.0 { 2.5 + 2.0 + p.xfer_min(200.0) } else { 2.5 + 2.0 + 2.0 + 2.5 + 2.0 };
+        assert!(near(m(2, 1), eq(from2)), "y {y}: {} against {}", m(2, 1), eq(from2));
         assert_eq!(m(1, 1), 0);
-        // the rule: 150 m to station 2, its 200 m over and 100 m from 1 is 450 m
-        assert!(walk_ok(150.0, m(2, 1), 100.0, 460.0) == (y >= 300.0 || 450.0 <= 460.0));
-        assert!(!walk_ok(150.0, m(2, 1), 100.0, 440.0) || y >= 300.0);
+        // the rule: 150 m to station 2, its minutes over and 100 m from 1
+        let w = m(2, 1) as f32;
+        assert!(walk_ok(150.0, m(2, 1), 100.0, 250.0 + w));
+        assert!(!walk_ok(150.0, m(2, 1), 100.0, 249.0 + w));
         assert!(!walk_ok(0.0, u16::MAX, 0.0, 1e9), "no route is no option");
-        // a trip's share kept, over two access and one egress entry: 2 of 3 parts
+        // a trip's share kept, over two access and one egress entry: the pair from 0 (2 of 3
+        // parts) just kept, the one from 2 kept where it is the quicker
+        let direct = 200.0 + m(0, 1) as f32;
         let acc = [(2u32, 1.0f32, 150.0f32, 0u32), (0, 2.0, 100.0, 1)];
         let eg = [(1u32, 1.0f32, 100.0f32, 2u32)];
-        let kept = walk_kept(&acc, &eg, |_, _| 1.0, &sk.walk, s, 300.0);
-        assert!((kept - if y < 300.0 { 2.0 / 3.0 } else { 1.0 }).abs() < 1e-6, "y {y}: {kept}");
+        let kept = walk_kept(&acc, &eg, |_, _| 1.0, &sk.walk, s, direct);
+        let want = if 250.0 + w <= direct { 1.0 } else { 2.0 / 3.0 };
+        assert!((kept - want).abs() < 1e-6, "y {y}: {kept}");
     }
     // platforms: a change at station 3 walks from line 0's platform to line 1's
     let mut net = common_test_net(&[&[2, 0, 3], &[3, 1]], &[12.0, 12.0], &[2.0, 2.0]);
@@ -980,7 +977,7 @@ fn the_walking_rule_reads_the_walks_between_stations() {
     net.stop_y = vec![0.0, 0.0, -25.0, 25.0, 2000.0];
     let g = build_graph(&net, &p);
     let sk = skims(&g, &p);
-    assert_eq!(sk.walk[1], 50, "0 to 1 changes across 50 m at station 3");
+    assert!(near(sk.walk[1], eq(9.0 + p.xfer_min(50.0))), "0 to 1 changes across 50 m at station 3: {}", sk.walk[1]);
 }
 
 /// T-1059 on a small city: the rule takes rail only from the trips it touches, and the slow

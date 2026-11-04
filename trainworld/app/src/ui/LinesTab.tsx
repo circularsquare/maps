@@ -16,7 +16,8 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, crowdMean, dayNote, PERIOD_STRIDE, periodLoad, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { kindIn, lineCountry } from "../game/holidays";
 import { demandView, lineFiguresIn } from "../game/demand";
 import { useClockQuery } from "./useClockQuery";
 import { Chip, Icon, SortHead } from "./widgets";
@@ -65,12 +66,14 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
 }
 
 /** T-472, T-1677, T-1684, T-2236: a line's trains now, coloured by its load past the rated load in
- * the period now, hovered with the weekday's figures for the level now as the line panel's ring is
+ * the period now (T-2279: graded over its stretches from `own`, its own kind of day's numbers, while
+ * `crowdMean` is on), hovered with the weekday's figures for the level now as the line panel's ring is
  * (`crowdLevel`). */
-function TrainsNow({ line, n, period, bus, ferry, v, lev, stops }: { line: string; n: number; period: string; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
+function TrainsNow({ line, n, period, at, bus, ferry, v, own, lev, stops }: { line: string; n: number; period: string; at: number; bus?: boolean; ferry?: boolean; v?: Float64Array; own?: Float64Array; lev: Demand; stops: number }) {
   const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops) : null;
   const d = today.value.get(line);
-  const cls = !bus && d && n > 0 ? crowdClass(d.crowdLoad) : "";
+  const load = d && (crowdMean && own ? periodLoad(own, at, stops) ?? d.crowdLoad : d.crowdLoad);
+  const cls = !bus && d && n > 0 ? crowdClass(load!) : "";
   const tip = bus ? `${period}: ${ferry ? boatsText(n) : busesText(n)} on the line` : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
@@ -126,13 +129,24 @@ export function LinesTab() {
   const crowdNums = (w?.save.lines ?? []).filter((l) => w!.lineStats[l.id]?.status === "running" && !w!.lineStats[l.id].bus).map((l) => l.num);
   const acct = accountVersion.value;
   const crowd = useClockQuery(crowdNums.length ? { what: "linesPeriods", lines: crowdNums, day: 0 } : null, [w?.version, acct, crowdNums.join(",")], (d) => d);
+  // T-2279: while `crowdMean` is on, the trains cell's colour is the line's own kind of day's (a
+  // weekday's is `crowd`): one ask per other kind any line is on, a fixed five so the hooks hold
+  const kindOf = (l: LineInput) => kindIn(lineCountry(l.stops), Math.floor(lineSeconds(w!.lineStats[l.id]) / 86400));
+  const byKind = [1, 2, 3, 4, 5].map((k) => (crowdMean && w ? (w.save.lines ?? []).filter((l) => crowdNums.includes(l.num) && kindOf(l) === k).map((l) => l.num) : []));
+  const kindCrowd = byKind.map((nums, k) => useClockQuery(nums.length ? { what: "linesPeriods", lines: nums, day: k + 1 } : null, [w?.version, acct, nums.join(",")], (d) => d));
   if (!w) return null;
-  // T-1926: each line's numbers come after their count, in `crowdNums`' order
-  const crowdAt: Float64Array[] = [];
-  for (let i = 0; crowd && i < crowd.length; i += 1 + crowd[i]) crowdAt.push(crowd.subarray(i + 1, i + 1 + crowd[i]));
-  const crowdOf = (l: LineInput) => {
-    const v = crowdAt.length === crowdNums.length ? crowdAt[crowdNums.indexOf(l.num)] : undefined;
-    return v && v.length >= PERIODS.length * PERIOD_STRIDE && lineFiguresIn(demandView.value, l.id, l.stops.length) ? v : undefined;
+  // T-1926: each line's numbers come after their count, in `nums`' order
+  const split = (d: Float64Array | null, nums: number[]) => {
+    const at: Float64Array[] = [];
+    for (let i = 0; d && i < d.length; i += 1 + d[i]) at.push(d.subarray(i + 1, i + 1 + d[i]));
+    return at.length === nums.length ? new Map(nums.map((n, i) => [n, at[i]])) : new Map<number, Float64Array>();
+  };
+  const crowdAt = split(crowd, crowdNums), kindAt = byKind.map((nums, k) => split(kindCrowd[k], nums));
+  const usable = (l: LineInput, v: Float64Array | undefined) => (v && v.length >= PERIODS.length * PERIOD_STRIDE && lineFiguresIn(demandView.value, l.id, l.stops.length) ? v : undefined);
+  const crowdOf = (l: LineInput) => usable(l, crowdAt.get(l.num));
+  const ownCrowdOf = (l: LineInput) => {
+    const k = crowdMean ? kindOf(l) : 0;
+    return k === 0 ? crowdOf(l) : usable(l, kindAt[k - 1].get(l.num));
   };
   const sel = selection.value;
   // T-309: each line's demand level now in its own local time
@@ -320,7 +334,7 @@ export function LinesTab() {
           <>
             <RidersToday line={l.id} />
             <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
+            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} own={ownCrowdOf(l)} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
           </>
         )}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

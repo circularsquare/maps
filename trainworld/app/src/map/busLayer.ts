@@ -58,6 +58,8 @@ interface BusSource {
   /** T-2194: a ferry line, and each port's landing and berth (lng, lat, lng, lat) */
   ferry: boolean;
   spurs: number[];
+  /** the stops riders are counted between, in run 0's order (lng, lat): a ferry's berths, a bus's demand stops */
+  marks: number[];
 }
 
 /** The sources' geometry in local units of one anchor. */
@@ -94,6 +96,7 @@ precision highp int;
 ${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform float u_width;       // device px across (the corridor's edge in pass 2)
+uniform float u_add;         // the casing beyond the line, device px (pass 0)
 uniform float u_extra;       // added to the selected line
 uniform int u_pass;          // 0 casing, 1 colour, 2 corridor outline (drawn three times, see draw())
 uniform int u_sel;
@@ -107,6 +110,7 @@ uniform float u_rail;        // a blueprint's rail beyond the colour, device px 
 uniform float u_px_per_unit; // device px a local unit spans
 in vec4 a_seg;
 in vec4 a_info;
+in float a_w;                // T-2274: the Traffic view's width by riders, a share of the line's own
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;
@@ -120,7 +124,7 @@ void main() {
   if ((u_only >= 0 && id != u_only) || (u_only == -2 && !sel) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR}) != 0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float p = a_info.z;
   vec3 col = vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
-  float w = u_width + (sel && u_pass < 2 ? u_extra : 0.0);
+  float w = u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
   if (u_pass < 2) {
@@ -275,7 +279,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
@@ -294,13 +298,14 @@ export class BusLayer {
         // a ferry's stops are its ports, drawn as the stations they are
         if (!b.ferry) for (const s of b.stops) stops.push(s.lng, s.lat, s.kind);
         for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, ferry: !!b.ferry, spurs });
+        const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, ferry: !!b.ferry, spurs, marks });
       }
     }
     const was = this.lines;
     if (was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.spurs, y.spurs);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks);
     })) return false;
     this.lines = next;
     this.byId = new Map(next.map((l) => [l.id, l]));
@@ -397,6 +402,9 @@ export class BusLayer {
     gl.bindVertexArray(this.segVao);
     put(b.seg, "a_seg", 4, this.segProg!);
     put(b.info, "a_info", 4, this.segProg!);
+    put(this.segWidths(b), "a_w", 1, this.segProg!);
+    this.wBuf = this.bufs[this.bufs.length - 1];
+    this.widthsFor = b;
     gl.bindVertexArray(this.stopVao);
     put(b.stops, "a_stop", 4, this.stopProg!);
     gl.bindVertexArray(null);
@@ -413,6 +421,12 @@ export class BusLayer {
     const b = this.local(a);
     if (!b.count) return;
     if (this.onGpu !== b) this.upload(b);
+    if (this.widthsFor !== b && this.wBuf) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.wBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, this.segWidths(b), gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+      this.widthsFor = b;
+    }
     const bus = s.wLine * WIDTH_SHARE;
     const u = this.su;
     gl.useProgram(this.segProg);
@@ -457,11 +471,11 @@ export class BusLayer {
     }
     const body = (only: number) => {
       gl.uniform1i(u.u_only, only);
+      gl.uniform1f(u.u_width, bus);
       gl.uniform1i(u.u_pass, 0);
-      gl.uniform1f(u.u_width, bus + s.casing * CASING_SHARE);
+      gl.uniform1f(u.u_add, s.casing * CASING_SHARE);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
       gl.uniform1i(u.u_pass, 1);
-      gl.uniform1f(u.u_width, bus);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
     };
     body(-1);
@@ -513,31 +527,62 @@ export class BusLayer {
   /** The stretch between the line's demand stops that the pointer (CSS px) is over, counted from its
    * first stop as the line's riders are; -1 where it cannot tell. */
   stretchAt(ov: Overlay, px: number, py: number, line: number): number {
-    const l = this.byId.get(line);
-    if (!l) return -1;
     const b = this.local(anchor());
     const r = b.range.get(line), at = ov.screenToLocal(px, py);
     if (!r || !r[1] || !at) return -1;
-    const along = (x: number, y: number) => {
-      let best = Infinity, s = 0;
-      for (let i = r[0]; i < r[0] + r[1]; i++) {
-        const x0 = b.seg[i * 4], y0 = b.seg[i * 4 + 1], dx = b.seg[i * 4 + 2] - x0, dy = b.seg[i * 4 + 3] - y0, len2 = dx * dx + dy * dy;
-        const t = len2 ? Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / len2)) : 0;
-        const d = Math.hypot(x0 + t * dx - x, y0 + t * dy - y);
-        if (d < best) { best = d; s = b.cum[i] + t * Math.sqrt(len2); }
-      }
-      return s;
-    };
+    const stops = this.stopsAlong(b, line);
+    if (!stops) return -1;
+    return stretchOf(stops, alongRoute(b, r, at[0], at[1]));
+  }
+
+  /** Line `line`'s counted stops' places along its route, in `cum`'s units (kept with the build). */
+  private stopsAlong(b: Built, line: number): number[] | null {
+    const l = this.byId.get(line), r = b.range.get(line);
+    if (!l || !r || !r[1]) return null;
     let stops = b.stopAlong.get(line);
     if (!stops) {
       stops = [];
-      for (let i = 0; i + 2 < l.stops.length; i += 3) stops.push(along(...toLocal(l.stops[i], l.stops[i + 1], b.a)));
+      // each stop searched for from the one before, so a route passing a stop twice counts it where it stops
+      let from = r[0];
+      for (let i = 0; i + 1 < l.marks.length; i += 2) {
+        const [x, y] = toLocal(l.marks[i], l.marks[i + 1], b.a);
+        const [s, seg] = nearestAlong(b, from, r[0] + r[1], x, y);
+        stops.push(s);
+        from = seg;
+      }
       b.stopAlong.set(line, stops);
     }
-    const p = along(at[0], at[1]);
-    let k = -1;
-    for (const s of stops) if (s <= p) k++;
-    return Math.max(0, Math.min(stops.length - 2, k));
+    return stops;
+  }
+
+  /** T-2274: the Traffic view's widths, per line its stretches' widths as shares of a rail line's
+   * (`demandLayers.ts` `busWidths`); null draws every line at its own width. */
+  setTraffic(widths: Map<number, Float32Array> | null) {
+    if (widths === this.traffic) return;
+    this.traffic = widths;
+    this.widthsFor = null;
+    this.version++;
+  }
+  private traffic: Map<number, Float32Array> | null = null;
+  /** the build `wBuf` holds widths for */
+  private widthsFor: Built | null = null;
+  private wBuf: WebGLBuffer | null = null;
+
+  /** Per route segment the Traffic view's width share (1 outside it). */
+  private segWidths(b: Built): Float32Array {
+    const out = new Float32Array(b.count).fill(1);
+    const t = this.traffic;
+    if (!t) return out;
+    for (const [line, ws] of t) {
+      const r = b.range.get(line);
+      const stops = r && this.stopsAlong(b, line);
+      if (!r || !stops || ws.length !== stops.length - 1) continue;
+      for (let i = r[0]; i < r[0] + r[1]; i++) {
+        const mid = b.cum[i] + 0.5 * Math.hypot(b.seg[i * 4 + 2] - b.seg[i * 4], b.seg[i * 4 + 3] - b.seg[i * 4 + 1]);
+        out[i] = (ws[stretchOf(stops, mid)] ?? WIDTH_SHARE) / WIDTH_SHARE;
+      }
+    }
+    return out;
   }
 
   /** The stop drawn under the pointer: its line, and whether it is an end. */
@@ -557,6 +602,28 @@ export class BusLayer {
   }
 }
 const SCRATCH = new Float64Array(2);
+
+/** The place along segments `from` to `to` (exclusive) nearest a local point, in `cum`'s units, and
+ * that segment. */
+function nearestAlong(b: Built, from: number, to: number, x: number, y: number): [number, number] {
+  let best = Infinity, s = 0, at = from;
+  for (let i = from; i < to; i++) {
+    const x0 = b.seg[i * 4], y0 = b.seg[i * 4 + 1], dx = b.seg[i * 4 + 2] - x0, dy = b.seg[i * 4 + 3] - y0, len2 = dx * dx + dy * dy;
+    const t = len2 ? Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / len2)) : 0;
+    const d = Math.hypot(x0 + t * dx - x, y0 + t * dy - y);
+    if (d < best) { best = d; s = b.cum[i] + t * Math.sqrt(len2); at = i; }
+  }
+  return [s, at];
+}
+
+const alongRoute = (b: Built, r: [number, number], x: number, y: number) => nearestAlong(b, r[0], r[0] + r[1], x, y)[0];
+
+/** The stretch a place along the route is on, between stops at `stops` (ascending). */
+function stretchOf(stops: number[], s: number): number {
+  let k = -1;
+  for (const v of stops) if (v <= s) k++;
+  return Math.max(0, Math.min(stops.length - 2, k));
+}
 
 /** A tag row of a line's badge and its name, as the resting hover's list has them. */
 function nameRow(w: WorldView, line: number): HTMLElement | string {

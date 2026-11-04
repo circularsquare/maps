@@ -391,7 +391,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   platform's centre line (as the complexes see it) inside the outline or within 8 m of an edge
   (half a drawn box's width). Worked out again whenever stations or outlines change, never saved;
   a building joins its members into one complex as a passage would, at the plain change pace, and
-  a change inside it counts 0.8 of its fixed minutes, the walk whole (T-2220, demand-kernel.md 4.4).
+  a change inside it counts 1 of its fixed 2 minutes, the walk whole, and a wait there counts as
+  in a waiting room (T-2220, T-2276, demand-kernel.md 4.4).
   US$2,000 a m² of floor, paid at once, no upkeep, counted in the built value; a new outline pays
   for the floor the old one did not cover and refunds nothing for floor given up; removing it
   refunds nothing. Not in the undo history (`Network::buildings`, saved in a trailing `BLD1` block
@@ -462,7 +463,8 @@ Full design, numbers and sources: `notes/T-008.md`.
     built and paid with the second of them (`Network::passages`, quote row "Passages").
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
-  set on any line in the game (0 until one is set; the save keeps it, `newCars` in its header) [T-1094]; a set length
+  set on any line in the game (5 cars until one is set, `NEW_LINE_CARS`, so a crowded line is the player's cue to
+  lengthen it, Anita T-2271; the save keeps it, `newCars` in its header, and a save from before T-1094 starts at 5 too) [T-1094]; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
   (160 a car at its rated load, 100%, and 240 at crush, 150%, T-2186), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars
@@ -1036,7 +1038,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - Running costs, upkeep and **fares**
   are settled by the clock worker into the cash and a ledger per day (every day kept, T-2143) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
-  hour, in order; a load merges any day or hour an older save lists twice. Money time never goes
+  hour, in order; a day runs midnight to midnight in the start zone's local time, an hour is the
+  clock's ([world.md](world.md) "Local time", T-2271); a load merges any day or hour an older save lists twice. Money time never goes
   back: a clock set behind the time already settled adds nothing until it passes it, and a charge
   meanwhile lands on the latest day. Both threads time the clock on `performance.timeOrigin +
   performance.now()`, never `Date.now()`, which drifts from it (T-488). Each clock message carries
@@ -1169,8 +1172,8 @@ each runs its weekend timetable on its own days (T-1720, `costParts` in the cloc
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
   earned (`stars`), and it stays if the share falls. Drawn stamps come later.
-- **Starting money $6B** (T-805): about one real first line, a 20 km line at -2 with 18 stations
-  plus its trains (about $4.2B), with room for a short second one.
+- **Starting money $10B** (T-805, Anita T-2271): about two real first lines, each a 20 km line at -2
+  with 18 stations plus its trains (about $4.2B).
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
@@ -1456,8 +1459,9 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   `fleet_ferry`) with spares shared between ferry lines; running US$40 a boat-km (real, `ECONOMY`
   times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
   ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
-  metres (free) as kind 14. A new ferry line starts at a boat every 15, 20 and 30 minutes by level,
-  60 s dwell, 300 s turnaround (`ferry::FERRY_*`, which the app passes).
+  metres (free) as kind 14. A new ferry line starts at a boat every 20 and 30 minutes at high and
+  medium demand and none at low (T-2273; `NEW_FERRY_HEADWAYS` in the clock worker), 60 s dwell, 300 s
+  turnaround (`ferry::FERRY_DWELL_S`, `FERRY_TURNAROUND_S`, which the app passes).
 - **Saves**: a trailing `LFR1` block (save level 3) holds the ports' berths (as mm deltas from their
   landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
   without it has no ports or ferries and loads as before.

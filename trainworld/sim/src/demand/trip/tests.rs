@@ -188,7 +188,6 @@ fn pair_choice_reproduces_mode_choice() {
                     assert_eq!(st.sub.rail_home[u], mo.rail_by_sub[u]);
                 }
             }
-            // the crowded round leaves fewer: its trains are slower than walking on many short trips (T-1782)
             assert!(checked > 50 && tot > 0.0 && walk_tot > 0.01 * tot, "walking must be in play: {checked} origins, rail {tot:.0}, walking {walk_tot:.0}");
             assert!(worst < 1e-4, "period {q} round {round}: worst origin off by {worst:.2e}");
             let (mut d, mut m) = (0f64, 0f64);
@@ -200,6 +199,57 @@ fn pair_choice_reproduces_mode_choice() {
             println!("period {q} round {round}: {checked} origins, worst {worst:.1e}, station pairs {:.1e}", d / m);
         }
     }
+}
+
+/// T-2265: a trip whose every station pair takes longer than walking there in real minutes (no
+/// fare, crowding or weights) has no train; one whose every pair is quicker keeps its whole share,
+/// as with the rule off, however close to walking it is.
+#[test]
+fn a_train_slower_than_walking_gets_no_riders_and_a_quicker_one_all() {
+    let (mut api, _) = small();
+    api.solve(0);
+    let st = api.period(0).unwrap();
+    let (p, g) = (&st.p, &st.g);
+    let off = Params { walk_rule: 0.0, ..p.clone() };
+    let sz = api.sz.as_ref().unwrap();
+    let s = g.n_st;
+    let sk = kernel::skims(g, p);
+    let (mut slow, mut quick, mut close) = (0, 0, 0);
+    for u in (0..sz.n).filter(|&u| sz.pop[u] > 0.0) {
+        for v in (0..sz.n).filter(|&v| sz.jobs[v] > 0.0) {
+            let (i, j) = (sz.zone[u] as usize, sz.zone[v] as usize);
+            let d = ((sz.cx[u] - sz.cx[v]).powi(2) + (sz.cy[u] - sz.cy[v]).powi(2)).sqrt();
+            let direct = d * api.gr.walk_factor(i, j);
+            let was = pair_choice(&api, sz, &off, &sk, u, v);
+            if was.why != RAIL_OFFERED || !p.walk_rule_at(direct) || sz.apart(u, v) {
+                continue;
+            }
+            // each routed station pair's real minutes against walking's, both as metres at walking's pace
+            let by_ride = !sz.ride(u).is_empty() && ride_offered(&api.z, p, i, j);
+            let ru = if by_ride { sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize } else { sz.walk(u) };
+            let mut t = vec![];
+            for ka in ru {
+                for kb in sz.walk(v) {
+                    let (a, b) = (sz.acc_st[ka] as usize, sz.acc_st[kb] as usize);
+                    if a != b && sk.r[a * s + b].is_finite() {
+                        t.push(kernel::walked(sz, p, u, ka) + sk.walk[a * s + b] as f32 + sz.acc_d[kb]);
+                    }
+                }
+            }
+            let now = pair_choice(&api, sz, p, &sk, u, v);
+            if t.iter().all(|&x| x > direct) {
+                assert_eq!((now.why, now.r), (WALK_FURTHER, 0.0), "{u} {v}: every pair slower than walking");
+                slow += 1;
+            } else if t.iter().all(|&x| x <= direct) {
+                assert_eq!(now.r, was.r, "{u} {v}: every pair quicker than walking keeps its share");
+                quick += 1;
+                // within a fifth of walking's minutes, where T-1782's fade used to cut it
+                close += t.iter().any(|&x| x > 0.8 * direct) as u32;
+            }
+        }
+    }
+    println!("slower {slow}, quicker {quick} ({close} within a fifth of walking)");
+    assert!(slow > 0 && quick > 0 && close > 0, "slower {slow}, quicker {quick}, close {close}");
 }
 
 /// The query: a trip along one line rides it with no change; one between the two lines changes

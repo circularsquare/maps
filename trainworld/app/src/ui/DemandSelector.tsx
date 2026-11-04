@@ -18,6 +18,7 @@ import { PassingNote } from "./PassingNote";
 import { diagramShown } from "../diagram/view";
 import { DiagramTopLeft } from "./DiagramButton";
 import { live, mapBearing } from "../map/live";
+import { DEMAND_KEY } from "./toolKeys";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
@@ -58,11 +59,27 @@ function NorthButton() {
   </button>;
 }
 
+const KEYED: Record<string, string | undefined> = { home: `Show homes (${DEMAND_KEY.toUpperCase()})`, work: `Show destinations (${DEMAND_KEY.toUpperCase()})` };
+
+/** T-801: zoomed out the zones' bubbles need no zone in view */
+const demandReady = () => zoomedOut.value || (!!viewedZone.value && cityDemandViews.value.has(activeCity.value));
+
+const showEnd = (value: "none" | "home" | "work" | "both") => {
+  const current = display.peek();
+  display.value = value === "none" ? { ...current, commuters: false } : { ...current, commuters: true, commuterEnd: value };
+};
+
+/** T-2271: the H key, homes to destinations and back; from none or total, homes. */
+export function flipDemandEnd() {
+  if (!demandReady()) return;
+  const d = display.peek();
+  showEnd(d.commuters && d.commuterEnd === "home" ? "work" : "home");
+}
+
 /** The map's demand view stays within reach whichever dock tab is open. */
 export function DemandSelector() {
   const d = display.value;
-  // T-801: zoomed out the zones' bubbles need no zone in view
-  const ready = zoomedOut.value || (!!viewedZone.value && cityDemandViews.value.has(activeCity.value));
+  const ready = demandReady();
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
   const pending = !viewedZone.value ? "Nothing modeled here" // T-318: dead space
@@ -73,11 +90,10 @@ export function DemandSelector() {
     <FoldCell row="bubbles" />
     {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"], ["both", "Total"] ] as const).map(([value, label]) =>
       <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value} data-guide={value === "home" ? "homes" : undefined}
-        aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : undefined}
+        aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : KEYED[value]}
         onClick={() => {
           if (!ready && value !== "none") return;
-          const current = display.peek();
-          display.value = value === "none" ? { ...current, commuters: false } : { ...current, commuters: true, commuterEnd: value };
+          showEnd(value);
         }}>{label}</button>)}
     <PurposeSelect />
   </div>;

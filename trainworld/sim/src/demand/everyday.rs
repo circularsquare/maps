@@ -1349,15 +1349,16 @@ impl EverydayApi {
             }
             let ride_m = p.ride_min_km * 1000.0;
             let rule = p.walk_rule > 0.0 && sk.walk.len() == ss;
-            // T-1059: per subzone, the most its trips walk before their last station, and the most
-            // they walk from one: a pair within its distance on both counts keeps every pair
-            // (and per access entry its walk, and that plus the most its station walks on)
+            // T-1059: per subzone, the most its trips take before their last station (in metres at
+            // walking's pace, T-2265), and the most they walk from one: a pair within its distance
+            // on both counts keeps every pair (and per access entry its way to the station, and
+            // that plus the most its station takes on)
             let (mut acc_walk, mut acc_from) = (vec![0f32; if rule { na } else { 0 }], vec![0f32; if rule { na } else { 0 }]);
             let (mut rule_from, mut rule_to) = (vec![0f32; if rule { sz.n } else { 0 }], vec![0f32; if rule { sz.n } else { 0 }]);
             if rule {
                 for u in 0..sz.n {
                     for k in sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize {
-                        acc_walk[k] = walked(sz, u, k);
+                        acc_walk[k] = walked(sz, p, u, k);
                         acc_from[k] = acc_walk[k] + sk.walk_max[sz.acc_st[k] as usize] as f32;
                         rule_from[u] = rule_from[u].max(acc_from[k]);
                         rule_to[u] = rule_to[u].max(acc_walk[k]);
@@ -1415,8 +1416,8 @@ impl EverydayApi {
                         continue;
                     }
                     let (u, v) = if direction == 0 { (h, x) } else { (x, h) };
-                    // T-1059: station pairs walking further than walking there are no option
-                    let check = rule && rule_from[u] + rule_to[v] > walk_on && !apart;
+                    // T-1059: station pairs taking longer than walking there are no option
+                    let check = rule && rule_from[u] + rule_to[v] > walk_on && !apart && p.walk_rule_at(walk_on);
                     let keep = |ka: usize, kb: usize| {
                         !check || acc_from[ka] + rule_to[v] <= walk_on || walk_ok(acc_walk[ka], sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], acc_walk[kb], walk_on)
                     };
@@ -1474,8 +1475,8 @@ impl EverydayApi {
                             return (p.bound_share(rail, road, paid, free), p.bound_share(rail + FARE_D_MIN, road, paid, free));
                         }
                         let util = bt * (road - rail) + p.asc_rail;
-                        let pr = p.car_choice(util, uw, bt, paid, free, rail, road) * p.walk_fade_of(rail, cw);
-                        let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road) * p.walk_fade_of(rail + FARE_D_MIN, cw);
+                        let pr = p.car_choice(util, uw, bt, paid, free, rail, road);
+                        let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road);
                         (pr, prd)
                     };
                     let (pr0, prd0) = choice(rail);

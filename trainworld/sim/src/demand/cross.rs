@@ -153,6 +153,8 @@ impl CrossPack {
         let zc: Vec<Vec<f64>> = (0..CROSS.len()).map(|s| if has_central(s) { (0..nz).map(|k| za[s][k] * za[s][k] / land(k)).collect() } else { vec![] }).collect();
         let px: Vec<f64> = (0..nz).map(|i| z.x0 as f64 + z.hx(i) as f64 * 0.5 * z.zone_m as f64).collect();
         let py: Vec<f64> = (0..nz).map(|i| z.y0 as f64 + z.hy(i) as f64 * 0.5 * z.zone_m as f64).collect();
+        // T-2278: paid parking by the country's income, as the local layers have it
+        p.park_income = super::kernel::park_income_of(super::api::country_gdp_usd(&h["country"].as_str().unwrap_or("US").to_uppercase()));
         let ep = p.everyday();
         let place = z.density().iter().map(|&d| ep.place_min_per_km(d)).collect();
         let park = (0..nz).map(|j| ep.park_parts(&z, j)).collect();

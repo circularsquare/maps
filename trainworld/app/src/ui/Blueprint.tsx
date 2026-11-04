@@ -12,7 +12,9 @@ import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
 import { world } from "../game/world";
-import { useBlueprintQuote } from "../game/quotes";
+import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
+import { blueprintParts, bpHover, switchRow } from "../game/blueprintStretches";
+import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
@@ -144,6 +146,7 @@ export function BlueprintControls() {
           {money(upkeep)} / day upkeep
         </p>
       )}
+      <BlueprintBreakdown items={items} />
       <button class="btn text blueprint-construct" data-guide="construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
     </div>
   );
@@ -250,32 +253,99 @@ export function BlueprintBar() {
   );
 }
 
-export function BlueprintBreakdown() {
-  const items = useBlueprintQuote();
+/** The quote's rows of the kinds in `only`, under their kinds' headings, each with its price worked out. */
+function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> }) {
   return (
-    <div class="blueprint-panel">
-      {items.length > 0 ? (
-        <details class="blueprint-breakdown" open>
-          <summary>Blueprint cost breakdown</summary>
-          {KINDS.map((kind, k) => {
-            const rows = items.filter((r) => r.kind === k);
-            if (!rows.length) return null;
-            return (
-              <div class="blueprint-category">
-                <div class="small b">{kind}</div>
-                <ul class="rows blueprint-items">
-                  {rows.map((r) => (
-                    <li>
-                      <span class="what" data-tip={rowTip(r)}>{rowName(r)}</span>
-                      <span class="val" data-tip={rowTip(r)}>{money(r.cost)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </details>
-      ) : <p class="small muted">No blueprint to construct.</p>}
-    </div>
+    <>
+      {KINDS.map((kind, k) => {
+        const rows = items.filter((r) => r.kind === k && (!only || only.has(k)));
+        if (!rows.length) return null;
+        return (
+          <div class="blueprint-category">
+            <div class="small b">{kind}</div>
+            <ul class="rows blueprint-items">
+              {rows.map((r) => (
+                <li>
+                  <span class="what" data-tip={rowTip(r)}>{rowName(r)}</span>
+                  <span class="val" data-tip={rowTip(r)}>{money(r.cost)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+/** the quote's kinds that are no piece of track or station: trains, bus routes and buses, ports, boats, ferry routes */
+const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14]);
+
+const levelsText = (r: { levelMin: Level; levelMax: Level }) =>
+  r.levelMin === r.levelMax ? `${levelName(r.levelMin)} (${levelLabel(r.levelMin)})` : `Levels ${levelLabel(r.levelMin)} to ${levelLabel(r.levelMax)}`;
+
+/** A row's or a part's off switch, a checkbox ticked while any of its pieces is on. */
+function OffSwitch({ on, what, flip }: { on: boolean; what: string; flip: () => void }) {
+  const tip = `${on ? "Disable" : "Enable"} ${what}`;
+  return (
+    <span class="check bp-switch" onClick={(e) => e.stopPropagation()}>
+      <input type="checkbox" checked={on} aria-label={tip} data-tip={tip} onChange={() => flip()} />
+    </span>
+  );
+}
+
+const hover = (edges: number[]) => ({ onPointerEnter: () => (bpHover.value = edges), onPointerLeave: () => (bpHover.value = []) });
+
+/** T-2269: the blueprint by part joined by track, each part's stations and stretches in track order;
+ * a click puts the camera on it, the pointer over it highlights it on the map. Then trains, buses
+ * and ferries, and the whole quote by kind. Collapsed until opened. */
+function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
+  const [open, setOpen] = useState(false);
+  const pieces = useBlueprintPieces(open);
+  const w = world.value;
+  const parts = useMemo(() => (open && w && pieces ? blueprintParts(w, pieces) : []), [open, w, pieces]);
+  useEffect(() => () => { bpHover.value = []; }, []);
+  // the switched-off blueprint counts, so a blueprint all switched off can be switched back on here
+  if (!items.length && !(w && w.money.blueprintCost > 0)) return null;
+  return (
+    <details class="blueprint-breakdown" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary>Cost breakdown</summary>
+      <div class="bp-breakdown-list">
+        {parts.map((p) => (
+          <div class="bp-part">
+            <ul class="rows pick blueprint-items">
+              <li class={"bp-part-head" + (p.on ? "" : " bp-off")} {...hover(p.edges)} onClick={() => locateNodes(p.nodes)}
+                data-tip={[p.stationCount ? plural(p.stationCount, "station") : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean).join(", ")}>
+                <OffSwitch on={p.on} what="all joined track" flip={() => void switchRow(p)} />
+                <span class="grow b">{p.label}</span>
+                <span class="val">{money(p.on ? p.onCost : p.cost)}</span>
+              </li>
+              {(p.rows.length > 1 || p.junctions > 0) && p.rows.map((r) => (
+                <li class={"bp-sub" + (r.on ? "" : " bp-off")} {...hover(r.edges)} onClick={() => locateNodes(r.nodes)}
+                  data-tip={r.kind === "stretch" ? [levelsText(r), r.crossings ? `${plural(r.crossings, "flat crossing")}, ${money(r.crossingCost)}` : ""].filter(Boolean).join("\n") : undefined}>
+                  <OffSwitch on={r.on} what={r.kind === "stretch" ? "this stretch" : "this station"} flip={() => void switchRow(r)} />
+                  <span class="grow">{r.label}</span>
+                  {r.kind === "stretch" && <span class="val muted">{distance(r.lengthM)}</span>}
+                  <span class="val">{money(r.on ? r.onCost : r.cost)}</span>
+                </li>
+              ))}
+              {p.junctions > 0 && (
+                <li class={"bp-sub bp-fixed" + (p.junctionOnCost > 0 || !p.junctionCost ? "" : " bp-off")} {...hover(p.edges)}>
+                  <span class="grow">{plural(p.junctions, "junction")}</span>
+                  <span class="val">{money(p.junctionOnCost > 0 ? p.junctionOnCost : p.junctionCost)}</span>
+                </li>
+              )}
+            </ul>
+          </div>
+        ))}
+        <KindRows items={items} only={NOT_TRACK} />
+        {items.length > 0 && (
+          <details class="bp-by-kind">
+            <summary>By kind</summary>
+            <KindRows items={items} />
+          </details>
+        )}
+      </div>
+    </details>
   );
 }

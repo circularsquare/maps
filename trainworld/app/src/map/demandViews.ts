@@ -22,7 +22,7 @@ import { world } from "../game/world";
 import { startAirportMarks } from "./airportMarks";
 import { startAttractionMarks } from "./attractionMarks";
 import { commuterStats, startCommuterView } from "./commuterView";
-import { buildLayers } from "./demandLayers";
+import { buildLayers, busWidths } from "./demandLayers";
 import { hoverAbove, hoverAt, startHover } from "./demandHover";
 import { DemandOverlay } from "./demandOverlay";
 import { startIntercityView } from "./intercityView";
@@ -83,6 +83,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     inputs = now;
     const t0 = performance.now();
     renderer.setLayers(buildLayers(n, w, dv, period.peek(), on));
+    renderer.buses.setTraffic(on.lineLoad ? busWidths(w, dv, on) : null);
     viewStats.layersMs = performance.now() - t0;
     viewStats.layerBuilds++;
     netSeen = n;

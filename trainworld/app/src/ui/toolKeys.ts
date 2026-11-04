@@ -24,6 +24,8 @@ export const TRIP_KEY = "t";
 export const BUS_KEY = "u";
 /** T-2194: a new ferry line, from any tab (map/ferryDraw.ts, as the bus key). */
 export const FERRY_KEY = "o";
+/** T-2271: the demand bubbles between homes and destinations, from any tab (D is the Select tool's disable). */
+export const DEMAND_KEY = "h";
 /** T-1491: hides the interface for screenshots (ui/hideUi.ts). */
 export const HIDE_UI_KEY = "F2";
 /** T-670: letter keys for new line, edit stops (the selected line's) and construct blueprints, from any tab;

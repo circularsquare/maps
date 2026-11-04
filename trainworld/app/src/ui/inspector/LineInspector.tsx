@@ -8,7 +8,7 @@ import { demandAt, lineSeconds } from "../../game/clock";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { andList, clockTime, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
 import { crowdColour, LINE_PALETTE } from "../../game/palette";
-import { levelHours, PERIODS } from "../../game/periods";
+import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, dayNote, peakLoadText, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
 import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
@@ -47,13 +47,13 @@ import { UPGRADE } from "../../game/upgrades";
 export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts): "High
- * demand: 6-20 on weekdays". */
+ * demand: 06:00-20:00 on weekdays". */
 export function levelTimes(d: Demand): string {
   const own = levelHours(d);
-  const hours = `${DEMAND_LABEL[d]} demand: ${own.map(([a, b]) => `${a}-${b}`).join(", ")}`;
+  const hours = `${DEMAND_LABEL[d]} demand: ${own.map(([a, b]) => hourSpan(a, b)).join(", ")}`;
   // T-1720: a weekend day runs the medium trains through the high hours
   const high = levelHours("high");
-  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length && own.length ? `${hours} on weekdays, ${high[0][0]}-${own[own.length - 1][1]} on weekends` : hours;
+  return d === "high" ? `${hours} on weekdays` : d === "medium" && high.length && own.length ? `${hours} on weekdays, ${hourSpan(high[0][0], own[own.length - 1][1])} on weekends` : hours;
 }
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
@@ -305,14 +305,16 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
 }
 
 /** T-477, T-515, T-2236: one dot per demand level, coloured by the busiest hour's load on the line's
- * fullest stretch over the level's periods (`crowdLevel`), from the boarding account. The hover
+ * stretches over the level's periods (`crowdLevel`), from the boarding account. The hover
  * gives each of the level's periods its load (T-1523). */
-export function CrowdDots({ v, wk, d, stops }: { v: Float64Array; wk: Float64Array | null; d: Demand; stops: number }) {
-  const c = crowdLevel(v, d, stops), r = wk && crowdLevel(wk, d, stops);
-  if (!c) return null;
-  // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's
-  const tip = r && wk !== v ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
-  return <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: r ? crowdColour(r.load) : "transparent" }} data-tip={tip} data-guide={d === "high" ? "crowd" : undefined} />;
+export function CrowdDots({ v, wk, d, stops, kind }: { v: Float64Array; wk: Float64Array | null; d: Demand; stops: number; kind: number }) {
+  const weekday = wk === v;
+  const c = crowdLevel(v, d, stops, kind), r = !wk ? null : weekday ? c : crowdLevel(wk, d, stops);
+  // T-1684: the dot is today's kind of day; the ring, 1 px out with a 1 px gap, is the weekday's.
+  // T-2271: a level that runs no trains today (High on a weekend, T-1720) has only the ring.
+  if (!c && !r) return null;
+  const tip = !c ? `Medium demand trains run in these hours today\nOn weekdays, ${r!.tip.charAt(0).toLowerCase()}${r!.tip.slice(1)}` : r && !weekday ? `${c.tip}\nOn weekdays, ${r.phrase}` : c.tip;
+  return <i class={"crowd-dot" + (c ? "" : " ring-only")} style={{ background: c ? crowdColour(c.load) : "transparent", outlineColor: r ? crowdColour(r.load) : "transparent" }} data-tip={tip} data-guide={d === "high" ? "crowd" : undefined} />;
 }
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
@@ -398,7 +400,7 @@ function useCrowded(num: number, stretches: number, on: boolean): (CrowdedStretc
 
 /** The stretches' looks in the Traffic view, or null outside it or before demand has riders for the
  * line (the plain bar then). */
-function stretchLooks(l: LineInput, names: string[], crowded: (CrowdedStretch | null)[]): StretchLook[] | null {
+export function stretchLooks(l: LineInput, names: string[], crowded: (CrowdedStretch | null)[]): StretchLook[] | null {
   const n = l.stops.length, purpose = purposeFilter.value, dv = demandView.value;
   if (n < 2) return null;
   const day: number[] = [];
@@ -419,7 +421,7 @@ function stretchLooks(l: LineInput, names: string[], crowded: (CrowdedStretch | 
 }
 
 /** One half of a stretch of the diagram, below a stop's dot (`down`) or above the next one's. */
-function StretchHalf({ s, down }: { s: StretchLook; down: boolean }) {
+export function StretchHalf({ s, down }: { s: StretchLook; down: boolean }) {
   // the red edges start at PANEL_MARK_FLOOR, not the map's FULL_FLOOR: with no casing to mix from,
   // a 15% edge on the panel's background cannot be seen
   const edge = s.full > 0 ? PANEL_MARK_FLOOR + ((1 - PANEL_MARK_FLOOR) * (s.full - FULL_FLOOR)) / (1 - FULL_FLOOR) : 0;
@@ -1092,7 +1094,7 @@ function RailLineInspector({ id }: { id: string }) {
         </tr>
         {DEMANDS.map((d) => (
           <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} stops={l.stops.length} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
+            <td>{st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0 && (periods &&lineFiguresIn(demandView.value, l.id, l.stops.length) ? <CrowdDots v={periods} wk={ringPeriods} d={d} stops={l.stops.length} kind={kind} /> : demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />)}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
             <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
           </tr>
         ))}

@@ -2206,6 +2206,56 @@ impl Network {
             [kind as f64, level as f64, tracks as f64, wet as u8 as f64, ramp as u8 as f64, qty, cost]).collect()
     }
 
+    /// T-2269: the blueprint's track, stations, junctions, flat crossings and passages priced one by
+    /// one, switched-off ones too, for the Build tab's breakdown by stretch. Five numbers a row: kind
+    /// (0 a piece of track, 1 a station or port with its upgrades, 2 a junction with any flyover, 3 a
+    /// flat crossing, 4 a passage), two ids (a crossing's two edges, a passage's two stations, else
+    /// the edge or node twice), US$M, and 1 when `blueprint_cost_items` counts it (the same tests).
+    pub fn blueprint_piece_costs(&self) -> Vec<f64> {
+        let mut out = vec![];
+        let mut row = |kind: u8, a: usize, b: usize, cost: f64, on: bool| out.extend([kind as f64, a as f64, b as f64, cost, on as u8 as f64]);
+        for e in 0..self.edge_count() {
+            if self.edge_alive[e] && !self.edge_built[e] {
+                row(0, e, e, self.edge_cost[e], !self.edge_off[e]);
+            }
+        }
+        for n in 0..self.node_count() {
+            if !self.node_alive[n] { continue; }
+            let is_wet = || self.node_is_wet(n);
+            let level = self.node_level[n];
+            if self.node_platform[n] > 0 && !self.node_built[n] {
+                let price = if self.node_berth[n].is_some() { PORT_COST } else {
+                    let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
+                    let ups = self.node_upgrades[n];
+                    cost::station_cost(level, self.node_platform[n], tracks, wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }
+                };
+                row(1, n, n, price, !self.node_off[n]);
+            }
+            let nn = n as u32;
+            if self.priced_ends(nn, |_| true) >= 3 && self.priced_ends(nn, |e| self.edge_built[e]) < 3 {
+                let on = self.priced_ends(nn, |e| self.edge_built[e] || !self.edge_off[e]) >= 3;
+                row(2, n, n, cost::junction_cost(level, self.node_flying[n], is_wet()), on);
+            }
+        }
+        for x in &self.crossings {
+            if let CrossKind::Flat(level) = x.kind {
+                let (e1, e2) = (x.e1 as usize, x.e2 as usize);
+                if (!self.edge_built[e1] || !self.edge_built[e2]) && self.priced_crossing(x) {
+                    let wet = self.water_mask.is_water(x.x, x.y);
+                    row(3, e1, e2, cost::crossing_cost(level, wet), !self.edge_off[e1] && !self.edge_off[e2]);
+                }
+            }
+        }
+        for ([a, b], price) in self.passages() {
+            let (a, b) = (a as usize, b as usize);
+            if !(self.node_built[a] && self.node_built[b]) {
+                let ready = |n: usize| self.node_built[n] || !self.node_off[n];
+                row(4, a, b, price, ready(a) && ready(b));
+            }
+        }
+        out
+    }
+
     /// Build cost of everything standing, US$M.
     pub fn total_cost(&self) -> f64 {
         let mut c = 0.0;

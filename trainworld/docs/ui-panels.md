@@ -64,7 +64,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 **Fixed layout, no floating windows** (the saved games panel, confirmations and the
 [tutorial card](#tutorial-card) are the exceptions). One dock on the left [T-252, `ui/Dock.tsx`]:
 
-- A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a wrench), **Lines** (a route with stops),
+- A row of icon tabs, names and keys in their hovers ("Build (B)"): **Build** (a hammer, T-2271), **Lines** (a route with stops),
   **Stations** (a platform under its canopy), **Finances** (a bill and a coin) [T-1819], **Cities** (a skyline) [T-749], sharing the row's width
   equally [T-532] (each at least 34 px); at the row's right end
   the saved games button (a floppy disk) [T-251] and the **Settings** gear (a toothed wheel outline with a hub circle) [T-523], which opens in the tab
@@ -112,8 +112,8 @@ status small (12 px, regular, muted). **The clock and speed buttons have fixed w
 [T-341, T-1136] and sit together at the right, so nothing moves them. The cash follows the train
 share (after the name it would read as the city's, T-1865) in a box of fixed width, 4.7em (75 px, tabular
 figures: it holds the widest figure written, "−$893.6M", and the usual 7 characters leave a little room),
-so the mode bar (at least 60 px), which widens into the rest, does not change width as the money changes. The name takes what it needs up to 120 px (96 px under 760 px
-of map column), on two lines at most with an ellipsis (the whole name on hover, with the city's
+so the mode bar (at least 60 px), which widens into the rest, does not change width as the money changes. The name takes what it needs up to 140 px (124 px under 760 px
+of map column; "Ho Chi Minh City" is 122 px and fits on one line in both, T-2271), on two lines at most with an ellipsis (the whole name on hover, with the city's
 points and points a day, T-684, T-694) [T-1108]. The train share is in tabular figures in a box of
 fixed width, and the split bar is centred in the bar with nothing under it: the status is a tag
 over the map (Status, below). The time and date are one line ("06:50 Mon May 5") [T-1136,
@@ -188,7 +188,7 @@ wide so a longer date moves nothing [T-1868].
 - **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
   running costs drain [T-284, T-722], in tabular figures in a box of fixed width after the train share,
   so nothing beside it moves as it changes [T-305, T-310, T-1865]. In a sandbox the box says
-  "Sandbox" in the muted colour, with the money since day 1 (the cash less the $6B start) and
+  "Sandbox" in the muted colour, with the money since day 1 (the cash minus the $10B start) and
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
   (figure style) and the date without the year (normal style) on one line 6 px apart, "13:24 Mon Feb
@@ -478,6 +478,7 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
 | U | start a new bus line (`BUS_KEY`) | any tab |
 | T | explore a trip; the tab stays | any tab |
+| H | demand bubbles: Homes to Destinations and back, Homes from None or Total, once the view's demand is ready (`DEMAND_KEY`; D is taken by the Select tool, T-2271); the Homes and Destinations hovers name it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
 | D, E, Delete | disable, enable, remove the picked blueprints | select tool |
 | Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
@@ -491,8 +492,8 @@ has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on S
 map beside the dock, under the tab row, listing only the controls no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag and D, E, Delete in
-the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
-the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
+the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, H, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY`, `DEMAND_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or
 changed that a button does not show gets its row here.
@@ -571,7 +572,7 @@ sits under the mode [T-1822, T-1835].
 
 ## Finances tab (the Money tab until T-1819; id `money`)
 
-Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash less the $6B start,
+Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash minus the $10B start,
 T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
 [T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, "Loan" (the loan's payments,
 hover "Paid back over 60 game days in equal payments")
@@ -584,8 +585,9 @@ in panels have three significant figures from a million up ("$22.4M", "$1.15B", 
 as "$450k"; under $500 "$0") and a negative one is in the alert red (`ui/MoneyText.tsx`, `money` in
 `game/format.ts`) [T-722]; the cash (top bar and this tab) has four ("$11.36B", "$893.6M"; to the dollar under a million) and is red
 with its minus when negative; hovers may give more. History
-[T-447, `ui/MoneyHistory.tsx`]: a Days / Hours switch (Days by default, kept while the game is open;
-Days' hover "Every game day so far", Hours' "The last 48 game hours") over three charts, each on a
+[T-447, `ui/MoneyHistory.tsx`]: a 1d / 30d / All time switch [T-2271] (All time by default, kept while
+the game is open, no hovers): 1d is the past 24 hours, hourly, 30d the past 30 days and All time every
+day, daily; over three charts, each on a
 linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
 theme, the tokens `--revenue` and `--expense`, T-1111), has fares and running costs with upkeep
 (T-867) as lines, scaled to the larger of the two, and one-off costs (new trains and construction)
@@ -598,12 +600,14 @@ are counted as in track-and-service.md 6.4). Days are the ledger's, one each in 
 day kept (T-2143); while they span more than 90 days a column is a week (Monday to Sunday), past 90
 weeks a calendar month, past 90 months a run of months, each column's figures and hovers then a day's
 average over the days it covers ("$22.8M/day", the hover's name "Nov 10-16"), the day now counted as
-far as it has gone, and no holiday ticks. Hours are up to the past 48; a young game's few sit at the
-right of at least 7 days or 12 hours. The
+far as it has gone, and no holiday ticks (All time only; 30d is always one a column). A young game's
+few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (a dashed last segment, a paler bar) and moves as fares land.
 Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
-costs and their parts, or net, or its train rides. Days and hours are the game clock's (T-321). The
+costs and their parts, or net, or its train rides. Days run midnight to midnight in the start zone's
+local time (the ledgers', [track-and-service.md](track-and-service.md) 6.4), so today's column turns as
+the top bar's clock passes midnight there; hours are written in that local time [T-2271]. The
 charts are saved with the game and are there after a reload [T-567]. A column's hover adds an
 "Loan" line when it had loan payments, which the expenses line includes [T-2022]. The fares, whatever the toggle,
 are one country's [T-1277, T-1690]: the selected station's or city's, else that of the built station
@@ -880,7 +884,7 @@ keeps what it had and earns no more.
   [T-971]), a `?new=1` page marks no card Playing, and the copy icon above the cards gives the game
   a slot of its own, which autosaves from then on.
 
-**A new game** starts on day 1 at 07:00 with $6B, empty or (a sandbox) from a real network, on its
+**A new game** starts on day 1 at 07:00 with $10B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
 Americas, Europe and East Asia) with no start city; a start from the player's location is centred on
 it (below). Opening the page shows the start menu (below), with "build 786" muted at its bottom left: the

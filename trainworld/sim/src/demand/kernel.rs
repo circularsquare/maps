@@ -108,12 +108,15 @@ pub struct Params {
     pub w_drive: f32,
     /// Parking at a destination (T-380, `park_parts`): `park_min` to park for every driver; a
     /// paid space `park_paid_min` x ln(d / `park_paid_d0`) more, capped at `park_paid_cap_min`,
-    /// d jobs per km² of land in the zone; a share 1 / (1 + d / `park_free_d`) parks free.
+    /// times the country's income factor (`park_income`, T-2278), d jobs per km² of land in the
+    /// zone; a share 1 / (1 + d / `park_free_d`) parks free.
     pub park_min: f32,
     pub park_paid_min: f32,
     pub park_paid_d0: f32,
     pub park_paid_cap_min: f32,
     pub park_free_d: f32,
+    /// T-2278: the paid parts' factor for the pack country's income (`park_income_of`); 1 rich.
+    pub park_income: f32,
     /// Parking at the home end (T-854, `home_park_at`): every car trip of the local layers from a
     /// home pays `home_park_f` x the paid-space rule above on its zone's residents per km² of land
     /// (`home_dens`, per cell; None: none anywhere). The ride to a station pays it too.
@@ -181,13 +184,12 @@ pub struct Params {
     /// 0 turns it off. T-007: crossing lines at different levels cannot share a station node.
     /// Stations of one complex (`Network::st_group`, T-161) are walks whatever the distance.
     pub xfer_walk_m: f32,
-    /// Anita's walking rule (T-1059): a station pair is no rail option for a trip when the walks
-    /// to, between and from its stations (straight metres, `Skims::walk`) are longer than walking
-    /// the trip's ends' distance, around water where the pack routes walks. 0 turns it off.
+    /// Anita's walking rule (T-1059, in real minutes since T-2265): a station pair is no rail
+    /// option for a trip within `WALK_REACH_KM` when its real minutes (the walk or drive to its
+    /// first station, `Skims::walk` between, the walk from its last; no fare, crowding or fixed
+    /// change minutes) are more than walking the whole way's, around water where the pack routes
+    /// walks. All in metres walked at walking's pace (`walk_eq_m`). 0 turns it off.
     pub walk_rule: f32,
-    /// Anita's rule (T-1782): no train at or above walking's cost, and rail's share scaled from 0
-    /// there up to its whole at this fraction cheaper than walking (`Params::walk_fade_of`). 0 off.
-    pub walk_fade: f32,
     /// The transfer walk is on foot: speed and perceived weight (Subway Builder's 1.39).
     pub xfer_mps: f32,
     pub w_xfer: f32,
@@ -238,6 +240,20 @@ pub struct Params {
 /// Walks longer than this straight line (km, round water where the routes say) are not offered
 /// (T-558): a computational bound, past which walking takes under one trip in a million.
 pub const WALK_REACH_KM: f32 = 10.0;
+/// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
+/// (market US$) below this and not above it, and a dollar weighs GDP^-0.7 minutes (the fares'
+/// rule, app game/income.ts), so paid parking's minutes go as GDP^0.3 below it.
+pub const PARK_INCOME_KNEE_USD: f32 = 35_000.0;
+pub const PARK_INCOME_E: f32 = 0.3;
+
+/// The factor on paid parking for a country of `gdp` US$ a head at market rates (T-2278): 1 from
+/// `PARK_INCOME_KNEE_USD` up, (gdp / knee)^`PARK_INCOME_E` below; 1 with no figure.
+pub fn park_income_of(gdp: Option<f32>) -> f32 {
+    match gdp {
+        Some(y) if y > 0.0 => (y / PARK_INCOME_KNEE_USD).powf(PARK_INCOME_E).min(1.0),
+        _ => 1.0,
+    }
+}
 /// T-710: edges (straight-line km) of the station choice's distance bands (`Params::band`); from
 /// 12 km on the trip counts as 60 minutes or more, where the scale stops changing.
 pub const REL_EDGES: [f32; 5] = [0.0, 3.0, 7.0, 12.0, f32::INFINITY];
@@ -312,6 +328,7 @@ impl Default for Params {
             park_paid_d0: 3000.0,
             park_paid_cap_min: 50.0,
             park_free_d: 8000.0,
+            park_income: 1.0,
             // T-854: dense cores keep about the rail share the car-free split gave them
             home_park_f: 0.4,
             home_dens: None,
@@ -348,8 +365,6 @@ impl Default for Params {
             walk_samples: 6,
             xfer_walk_m: 300.0,
             walk_rule: 1.0,
-            // T-1782: 10% quicker than walking keeps a third (Anita)
-            walk_fade: 0.3,
             xfer_mps: 1.2,
             w_xfer: 1.39,
             station_merge_m: 100.0,
@@ -412,7 +427,6 @@ impl Params {
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,
             "walk_rule" => self.walk_rule = v,
-            "walk_fade" => self.walk_fade = v,
             "station_merge_m" => self.station_merge_m = v,
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
@@ -449,6 +463,7 @@ impl Params {
             "park_paid_d0" => self.park_paid_d0 = v,
             "park_paid_cap_min" => self.park_paid_cap_min = v,
             "park_free_d" => self.park_free_d = v,
+            "park_income" => self.park_income = v,
             "home_park_f" => self.home_park_f = v,
             "car_own_usd_trip" => self.car_own_usd_trip = v,
             "car_own_usd_km" => self.car_own_usd_km = v,
@@ -595,7 +610,7 @@ impl Params {
     pub fn park_parts(&self, z: &Zones, j: usize) -> (f32, f32, f32) {
         let land = (z.ncell[j].max(1) as f32 * CELL_KM2).min(z.square_km2(j));
         let d = z.jobs[j] as f32 / land;
-        let paid = if d > self.park_paid_d0 { (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 };
+        let paid = if d > self.park_paid_d0 { (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) * self.park_income() } else { 0.0 };
         let fixed = self.park_min + self.car_own_min() + self.cordon.as_ref().and_then(|c| c.get(j)).map_or(0.0, |&c| c);
         (fixed, paid, 1.0 / (1.0 + d / self.park_free_d))
     }
@@ -603,7 +618,13 @@ impl Params {
     /// minutes (T-854).
     #[inline]
     pub fn home_park_at(&self, d: f32) -> f32 {
-        if d > self.park_paid_d0 { self.home_park_f * (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) } else { 0.0 }
+        if d > self.park_paid_d0 { self.home_park_f * (self.park_paid_min * (d / self.park_paid_d0).ln()).min(self.park_paid_cap_min) * self.park_income() } else { 0.0 }
+    }
+    /// T-2278: the factor on paid parking (at the destination and at home) for the pack country's
+    /// income (`park_income_of`).
+    #[inline]
+    pub fn park_income(&self) -> f32 {
+        self.park_income
     }
     /// The same for a home in cell `c`.
     #[inline]
@@ -704,15 +725,17 @@ impl Params {
         let s1 = (1.0 - w1) * self.ratio_share(rail, road + paid);
         s0 + (1.0 - free) * (s1 - s0)
     }
-    /// T-1782: the factor on rail's share for rail costing `rail` perceived minutes against walking
-    /// the whole way `cw`: 0 at or above it, 1 from `walk_fade` cheaper, linear between. The same
-    /// expressions as `mode_choice`'s lanes.
+    /// Real minutes as the straight metres walking the whole way covers in them, the unit of the
+    /// walking rule (`walk_rule`, `Skims::walk`).
     #[inline]
-    pub fn walk_fade_of(&self, rail: f32, cw: f32) -> f32 {
-        if self.walk_fade <= 0.0 {
-            return 1.0;
-        }
-        ((cw - rail) / (cw * self.walk_fade)).max(0.0).min(1.0)
+    pub fn walk_eq_m(&self, min: f32) -> f32 {
+        min * self.walk_mps * 60.0 / self.walk_detour
+    }
+    /// Whether the walking rule applies to a trip whose ends are `direct` metres apart on foot: where
+    /// walking the whole way is offered (`WALK_REACH_KM`).
+    #[inline]
+    pub fn walk_rule_at(&self, direct: f32) -> bool {
+        self.walk_rule > 0.0 && direct <= WALK_REACH_KM * 1000.0
     }
     /// T-2214: rail's share of a trip between two land parts, where it is the only way: all of
     /// them up to `ratio_fade_lo` times the cost of a car on a bridge that is not there (`road`,
@@ -2428,9 +2451,9 @@ pub fn ride_fixed(p: &Params, net: &Network, s: usize) -> f32 {
 }
 
 /// How much of its minutes a wait at station `s` counts in mode choice (T-1281): less in a
-/// waiting room.
+/// waiting room, which a station building is for its members (T-2276).
 pub fn wait_factor(net: &Network, s: usize) -> f32 {
-    if net.ups(s) & upgrades::WAITING_ROOM != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
+    if net.ups(s) & (upgrades::WAITING_ROOM | upgrades::IN_BUILDING) != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
 }
 
 /// Past the `ride_lines` cheapest, a place's rides take up to this many more (T-1511): the
@@ -3212,11 +3235,12 @@ pub struct Skims {
     pub n: usize,
     /// Generalised minutes station to station (expected wait + ride + transfers), S x S.
     pub r: Vec<f32>,
-    /// Straight metres walked between stations and platforms on the way, station to station, as
-    /// `r` (T-1059, `walk_column`), saturating at `u16::MAX` where there is no route.
+    /// Real minutes station to station, as `r` (waits, rides and the walks between stations and
+    /// platforms; T-2265, `walk_column`), in metres walked at walking's pace (`Params::walk_eq_m`),
+    /// saturating at `u16::MAX` where there is no route.
     pub walk: Vec<u16>,
     /// Per station, the most `walk` from it to any searched destination: what lets the walking
-    /// rule pass most trips without looking at their station pairs.
+    /// rule pass trips without looking at their station pairs.
     pub walk_max: Vec<u16>,
     /// Each destination's slot in the arrays below, `NONE` if it was not searched.
     pub slot: Vec<u32>,
@@ -3371,7 +3395,7 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         let s = g.n_st;
         for (a, &m) in wm[..s].iter().enumerate() {
             if m.is_finite() {
-                let w = m.round().min(u16::MAX as f32 - 1.0) as u16;
+                let w = p.walk_eq_m(m).round().min(u16::MAX as f32 - 1.0) as u16;
                 sk.walk[a * s + dst] = w;
                 sk.walk_max[a] = sk.walk_max[a].max(w);
             } else {
@@ -3386,11 +3410,13 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
     }
 }
 
-/// The straight metres each node walks on its way to `dst` under strategy `st` (T-1059), into `wm`
-/// (node ids, change nodes from `g.n`; infinite where the strategy does not reach): a walk to
-/// another station from the platform left, and at a change the walk from where the rider stands
-/// to the platform of the first train, expected over the departures by frequency (T-717). A
-/// boarding rides a stop first (T-1055). Read in settle order, so every next node is done first.
+/// The real minutes from each node to `dst` under strategy `st` (T-2265), into `wm` (node ids,
+/// change nodes from `g.n`; infinite where the strategy does not reach): the wait for the first
+/// useful train (half the accepted departures' headway), the rides, a walk to another station
+/// from the platform left, and at a change the walk from where the rider stands to the platform
+/// of the first train, all expected over the departures by frequency (T-717). No crowding, fare,
+/// left-behind wait or fixed change minutes. A boarding rides a stop first (T-1055). Read in
+/// settle order, so every next node is done first.
 pub fn walk_column(g: &Graph, p: &Params, st: Strategy, dst: usize, wm: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
     match (st.next, st.order) {
         (NodeIds::Short(next), NodeIds::Short(order)) => walk_column_in(g, p, st, dst, next, order, wm, dep),
@@ -3404,8 +3430,8 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
     let (s, n) = (g.n_st, g.n);
     wm.clear();
     wm.resize(n + st.change.len(), f32::INFINITY);
-    // a walk edge's perceived minutes back to straight metres (`build_graph`: `xfer_min(d) * w_xfer`)
-    let to_m = p.xfer_mps * 60.0 / (p.w_xfer * p.walk_detour);
+    // a walk edge's perceived minutes back to real ones (`build_graph`: `xfer_min(d) * w_xfer`)
+    let to_min = 1.0 / p.w_xfer;
     let on_train = |v: usize| (s..n).contains(&next[v].ix());
     for &id in order {
         let id = id.ix();
@@ -3416,14 +3442,14 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
             let (mut f, mut w) = (0f32, 0f32);
             for &(e, a) in dep.iter() {
                 let r = g.adj_to[e as usize] as usize - s;
-                let k = if on_train(s + r) { wm[s + r] } else { wm[g.rn_next[r] as usize] };
+                let k = if on_train(s + r) { wm[s + r] } else { g.rn_ride[r] + wm[g.rn_next[r] as usize] };
                 if k.is_finite() {
                     f += a;
                     w += a * k;
                 }
             }
             if f > 0.0 {
-                wm[id] = w / f;
+                wm[id] = 30.0 / f + w / f;
             }
         } else {
             let nx = next[id].ix();
@@ -3431,14 +3457,14 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
                 continue;
             }
             if on_train(id) {
-                wm[id] = wm[nx];
+                wm[id] = g.rn_ride[id - s] + wm[nx];
                 continue;
             }
             let r = id - s;
             let here = g.rn_station[r] as usize;
             let to = if nx < s { nx } else { st.change.st[nx - n] as usize };
             let walk = if to != here {
-                (g.adj_off[id] as usize..g.adj_off[id + 1] as usize).find(|&e| g.adj_to[e] as usize == to).map_or(0.0, |e| g.adj_cost[e] * to_m)
+                (g.adj_off[id] as usize..g.adj_off[id + 1] as usize).find(|&e| g.adj_to[e] as usize == to).map_or(0.0, |e| g.adj_cost[e] * to_min)
             } else {
                 0.0
             };
@@ -3453,7 +3479,7 @@ fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: usize, next: 
                     w += a * (g.rn_dx[r2] - ax).hypot(g.rn_dy[r2] - ay);
                 }
                 if f > 0.0 {
-                    plat = w / f;
+                    plat = p.xfer_min(w / f);
                 }
             }
             wm[id] = walk + plat + wm[nx];
@@ -4531,18 +4557,20 @@ pub struct ModeOut {
 /// An origin first lists its pairs within the walk bound, then takes them eight at a time in
 /// `lanes::F8` (T-036): every lane runs the scalar expressions in their order and every sum keeps
 /// its order, so the results are those of one pair at a time to the bit (`trip::pair_choice`).
-/// Anita's walking rule (T-1059): station pair (a, t) is a rail option for a trip whose ends are
-/// `direct` metres apart on foot when the walk to a, the strategy's walks between stations
-/// (`Skims::walk`, `between`) and the walk from t together are no longer.
+/// Anita's walking rule (T-1059, T-2265): station pair (a, t) is a rail option for a trip whose
+/// ends are `direct` metres apart on foot when the way to a, the strategy's real minutes between
+/// stations (`Skims::walk`, `between`) and the walk from t together take no longer, all in metres
+/// at walking's pace (`Params::walk_eq_m`).
 #[inline]
 pub fn walk_ok(walk_a: f32, between: u16, walk_t: f32, direct: f32) -> bool {
     between != u16::MAX && walk_a + between as f32 + walk_t <= direct
 }
 
-/// Metres subzone `u`'s access entry `k` walks: a walk entry's mean, none on a drive (T-1059).
+/// Subzone `u`'s access entry `k` for the walking rule: a walk entry's mean metres, a drive's real
+/// minutes as metres at walking's pace (T-2265).
 #[inline]
-pub fn walked(sz: &Subzones, u: usize, k: usize) -> f32 {
-    if k < sz.acc_mid[u] as usize { sz.acc_d[k] } else { 0.0 }
+pub fn walked(sz: &Subzones, p: &Params, u: usize, k: usize) -> f32 {
+    if k < sz.acc_mid[u] as usize { sz.acc_d[k] } else { p.walk_eq_m(sz.acc_t[k]) }
 }
 
 /// The share of a trip's station-pair weight on pairs `walk_ok` keeps: over access and egress
@@ -4575,14 +4603,15 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
 /// the whole's in every part).
 pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32)) -> ModeOut {
     let share = p.period_share as f64;
-    // T-1059: Anita's walking rule, with the strategies' walks between stations (`Skims::walk`)
+    // T-1059: Anita's walking rule, with the strategies' real minutes between stations (`Skims::walk`)
     let rule = p.walk_rule > 0.0 && walk_tab.len() == s * s && walk_max.len() == s;
-    // per access entry its walk, and that and the most its station walks on (`Skims::walk_max`)
+    // per access entry its way to the station, and that and the most its station takes on
+    // (`Skims::walk_max`)
     let (mut acc_walk, mut acc_from) = (vec![0f32; sz.acc_st.len()], vec![0f32; sz.acc_st.len()]);
     if rule {
         for u in 0..sz.n {
             for k in sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize {
-                acc_walk[k] = walked(sz, u, k);
+                acc_walk[k] = walked(sz, p, u, k);
                 acc_from[k] = acc_walk[k] + walk_max[sz.acc_st[k] as usize] as f32;
             }
         }
@@ -4968,15 +4997,19 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
                 let (dx, dy) = (ux8 - x8, uy8 - y8);
                 let d = (dx * dx + dy * dy).sqrt();
-                // T-1059: a lane some of whose station pairs walk further than walking there keeps
+                // T-1059: a lane some of whose station pairs take longer than walking there keeps
                 // only the other pairs' part of the logsum. Its station pairs are first passed by
-                // the most their stations walk on (`Skims::walk_max`), and only the rest read the
-                // tables: the refused ones are kept to take off its loads below, or where most
-                // are refused (`whole`), the kept ones to load alone.
+                // the most their stations take on (`Skims::walk_max`) and by walking's reach,
+                // and only the rest read the tables: the refused ones are kept to take off its
+                // loads below, or where most are refused (`whole`), the kept ones to load alone.
                 let (mut slow, mut whole) = (0u32, 0u32);
                 let mut bad_at = [(0u32, 0u32); 8];
                 // (no walk to compare with between two land parts, T-2214)
-                let near = if rule { d.lt_mask(F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !cross } else { 0 };
+                let near = if rule {
+                    d.lt_mask((F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))).min(F8::splat(WALK_REACH_KM * 1000.0 + 1.0))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !cross
+                } else {
+                    0
+                };
                 if near != 0 {
                     lane_bad.clear();
                     let (d_lane, s_lane) = (d.to_array(), ssum.to_array());
@@ -4984,6 +5017,9 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     for l in (0..8).filter(|&l| near >> l & 1 != 0) {
                         let qd = q[l];
                         let direct = d_lane[l] * gr.walk_factor(i, sz.zone[dd_sub[qd] as usize] as usize);
+                        if !p.walk_rule_at(direct) {
+                            continue;
+                        }
                         let (b, c_b) = (bl[l], if rr[l] != 0 { c_u[bl[l]] } else { 1.0 });
                         let er_b = &er[b * ss..(b + 1) * ss];
                         let lo = lane_bad.len() as u32;
@@ -5095,14 +5131,6 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         s0 + (one - free8) * (s1 - s0)
                     }
                 };
-                // T-1782: no train at or above walking's cost (`Params::walk_fade_of`)
-                let fade = |rail: F8| {
-                    if p.walk_fade <= 0.0 {
-                        one
-                    } else {
-                        ((cw8 - rail) / (cw8 * F8::splat(p.walk_fade))).max(zero).min(one)
-                    }
-                };
                 // T-2214: between two land parts rail is the only way, held by the ratio curve's
                 // fade alone (`Params::bound_share`)
                 let bound = |rail: F8| {
@@ -5116,7 +5144,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     }
                 };
                 let chosen = |rail: F8| {
-                    let s = share(rail) * fade(rail);
+                    let s = share(rail);
                     if cross != 0 { pick(cross, s, bound(rail)) } else { s }
                 };
                 let x = tu8 * dv8 * chosen(rail);

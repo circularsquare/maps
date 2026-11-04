@@ -256,7 +256,7 @@ drain evenly [T-284], each hour's share following when riders travel and trains 
 landing as rides end [T-736]; the economy runs at 100x real days [T-081]. Changing a line's trains moves no
 running train: added ones enter at a terminal, removed ones leave at one, and the change takes
 effect a moment ahead so it is drawn in step at any clock speed [T-206, T-1071]. A new game starts
-with $6B in an empty New York [T-805]; double track costs a base of US$75M a km times a
+with $10B in an empty New York [T-805, T-2271]; double track costs a base of US$75M a km times a
 multiplier per elevation (US$37.5M at grade, 75 at +1 and -1, 120 at -2) [T-805, T-1928], plus the ground's terrain class (hills +0.5 or +1.2, mountains +3; the player sees both hill classes as "Hills") at
 every elevation but the bored -2 and -3, so in mountains a tunnel is the cheaper way; a viaduct or cut and cover tunnel over more than 30 km of unbroken water is refused [T-1930]; Settings can
 shade the hills on the map [T-1270], a 200 m station a fixed US$50M plus a part by level (US$75M at grade, US$90M at +1,
@@ -293,7 +293,8 @@ under 1.3 times the shortest, with bends up to 300 m and a speed each point by i
 (one kind, two train cars: 320 riders, 480 at crush) run at most 25 km/h as room allows and accelerate
 at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports only with
 the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
-like a bus line's and a Ferry fare row in the Money tab. In demand (T-2195) a ferry line is a line like
+like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a
+Ferry fare row in the Money tab. A new line runs a boat every 20 and 30 minutes, none at low demand (T-2273). In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base
 times the Ferry multiple, and trips by ferry are the network's. A tenth of visits and attractions
 trips are ferry fans, for whom each minute aboard a ferry counts 0.1 (T-2196, docs/demand-mode.md).

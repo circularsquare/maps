@@ -87,7 +87,7 @@ import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
-import { lineFareMul } from "../game/fareCurve";
+import { lineFareMul, type Fares } from "../game/fareCurve";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -3773,6 +3773,8 @@ class DemandClient {
     const madeViews = Array.isArray(got) ? got : unpackDays(got, layout, res.length);
     const views = DEMAND_DAYS.map((k) => madeViews[made.indexOf(made.includes(k) ? k : PLAIN_KIND[k as DayKind])]);
     const service = new Map(s.svc.lines.map((l) => [l.id, l]));
+    // T-2266, T-2286: the riders pay the fares this solve priced them at
+    const fares = s.svc.fare.nodes ? s.svc.fare as Fares : undefined;
     const done = new Map<DayViews, DayDemand>();
     return views.map((v, day) => {
       const was = done.get(v);
@@ -3783,6 +3785,7 @@ class DemandClient {
         const d = v.view?.lines.get(l.id), sl = service.get(l.id);
         if (d) { d.stops = l.stops; if (sl) { d.tph = sl.tph; d.cars = sl.cars; } }
       }
+      if (fares) for (const d of v.view?.lines.values() ?? []) d.solvedFares = fares;
       // T-325: and the zones open bare, from their own figures
       for (const id of this.bareIds()) if (!v.cities.has(id)) v.cities.set(id, this.bareView(id, day as DemandDay, v.view));
       const out: DayDemand = { view: v.view, cities: v.cities, intercity: { ...v.intercity, corridors: this.corridorsOf(v.intercity.corridors) } };

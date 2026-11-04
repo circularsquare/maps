@@ -102,6 +102,18 @@ function fitAll(lng: number[], lat: number[]) {
   live.map?.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: OPEN_MAX_ZOOM, duration: 0 });
 }
 
+/** T-2269: the map fitted to track nodes (a blueprint stretch's ends); one node as a station. */
+export function locateNodes(ids: readonly number[]) {
+  const map = live.map, w = world.peek();
+  const at = ids.flatMap((id) => w?.nodes.get(id) ?? []);
+  if (!map || !at.length) return;
+  const lng = at.map((n) => n.lng), lat = at.map((n) => n.lat);
+  if (Math.max(...lng) - Math.min(...lng) + Math.max(...lat) - Math.min(...lat) < 1e-4) return locateStation(lng[0], lat[0]);
+  map.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 60, maxZoom: 15, duration: 0 });
+  const c = map.getCenter();
+  activeCity.value = zoneAt(c.lng, c.lat);
+}
+
 /** The map fitted to a line's stops. */
 export function locateLine(stopIds: readonly string[]) {
   const map = live.map;

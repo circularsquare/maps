@@ -205,7 +205,7 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   (T-1903: so a job centre looks as under Destinations and a home area about 0.75 times its Homes radius), so a home
   bubble is 1.34 times the radius of a destination bubble of the same legs; times 0.75
   (`BUBBLE_BASE`, T-1852: the old 0.75x is the new 1x) times the Bubble size
-  setting (0.5-2x width). No minimum size; nobody
+  setting (0.25-2x width, T-2271). No minimum size; nobody
   means no bubble.
 - **Colour** by the **Colors** setting: **2-color** (the old Train share) (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour
@@ -232,7 +232,9 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
   Destinations, "to and from here" for Total and a Total selection's far end [T-1903], a purpose's name before "trips" under a filter), then a thin **mode bar**
-  (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, No route grey (T-2215), widths by share, no numbers; the count is the four together. A far-end
+  (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, No route grey (T-2215), widths by share, no numbers; the count is the four together. These
+  bubbles' bars (a selection's ends too) are as wide as its count on a log scale, a quarter of the tag at 10 trips or
+  fewer to the whole tag at 100,000 (`BAR_*` in `map/commuterView.ts`) [T-2271]. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
   airport badges too). A bubble's hover has no split by trip purpose (Anita, 2026-10-19, T-697).
 - **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
@@ -356,8 +358,8 @@ riders counters keep their own smoothing (Live feel).
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff
   left out, OSM hospitals, clinics, doctors and dentists, Wikidata attractions sized by visitor figures or by page views; private schools are not modelled).
-- **Timing** [T-193]: per purpose one compact chart, a bar per period (6-10, 10-16, 16-20, 20-24,
-  0-6), departures toward the destination drawn up from a baseline and departures home down, as
+- **Timing** [T-193]: per purpose one compact chart, a bar per period, labelled as the clock writes
+  hours ("06:00-10:00", ..., "00:00-06:00", T-2271), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that
   direction's day. Weekdays only.
 

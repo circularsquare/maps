@@ -31,7 +31,7 @@ import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercit
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
 import { perfOff } from "../perfFlags";
-import { modeBar } from "./modeBar";
+import { logShare, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
@@ -57,6 +57,9 @@ export const bubblesWaiting = computed(() => display.value.commuters && !cityOve
   && viewedZone.value !== null && viewedZone.value === activeCity.value && !focusShown.value && !!demandView.value
   && !loadFailure.value && !zoneFailures.value.has(activeCity.value));
 const RETRY_MS = 1000, RETRY_MAX_MS = 8000;
+/** T-2271: a bubble hover's mode bar is a quarter of the tag wide at 10 trips or fewer, the whole
+ * tag at 100,000 or more, log scaled between */
+const BAR_FLOOR = 0.25, BAR_LO = 10, BAR_HI = 100_000;
 
 /** "trips", or the purpose filter's trips (T-158), for the hover tags. */
 const tripWords = () => {
@@ -535,7 +538,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   // ---- hover ----
   const endWord = (end: BubbleEnd) => (end === "home" ? "from here" : end === "work" ? "to here" : "to and from here");
-  const bubbleTag = (end: BubbleEnd, t: number, w: number, d: number, u: number, ...rest: string[]) => [`${count(t + w + d + u)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d, u), ...rest];
+  // T-2271: the bar's width says the count's size too, on a log scale, never under a quarter
+  const bubbleTag = (end: BubbleEnd, t: number, w: number, d: number, u: number, ...rest: string[]) =>
+    [`${count(t + w + d + u)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(t + w + d + u, BAR_LO, BAR_HI)), ...rest];
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();

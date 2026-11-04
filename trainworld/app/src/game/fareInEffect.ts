@@ -2,20 +2,12 @@
 // at once, but a line's income keeps the fares its riders (its `LineDemand`) were solved with until
 // riders solved with the new ones show. Per line, not per view: a cluster's final is merged into the
 // shown view under the old version, and a view made again from an old solve (a holiday coming near,
-// T-1373) holds old riders in new objects. main.ts marks each view the demand client makes with the
-// fares of the solve it comes from (T-2286: demandClient's `daysOf` should do this itself).
+// T-1373) holds old riders in new objects. The demand client stamps each line with its solve's fares
+// (`solvedFares`, in `daysOf`, T-2286).
 
-import type { DayDemand, LineDemand } from "./demand";
+import type { LineDemand } from "./demand";
 import type { Fares } from "./fareCurve";
-
-type Marked = LineDemand & { solvedFares?: Fares };
-
-/** Mark every line of `days` with the fares of the solve they came from. */
-export function markSolveFares(days: DayDemand[], fares: Fares | undefined) {
-  if (!fares?.nodes) return;
-  for (const d of days) if (d.view) for (const l of d.view.lines.values()) (l as Marked).solvedFares = fares;
-}
 
 /** The fares to price a line's riders at: those they were solved with, else `current` (riders from a
  * cache, or none yet). */
-export const lineFares = (dm: LineDemand | undefined, current: Fares): Fares => (dm as Marked | undefined)?.solvedFares ?? current;
+export const lineFares = (dm: LineDemand | undefined, current: Fares): Fares => dm?.solvedFares ?? current;

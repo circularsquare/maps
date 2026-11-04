@@ -31,14 +31,14 @@ export function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpan
 }
 
 const COST_YELLOW = "#f2c200", COST_GREEN = "#8fd97a";
-/** A cost multiplier's colour and strength (T-411, T-1159): yellow growing above 1x, light green
- * growing below it down to 0.5x, none at 1x. The track tool's tag and the Build tab's price. */
+/** A cost multiplier's colour and strength (T-411, T-1159): light yellow at 1x (Anita, T-2271),
+ * growing above it, light green growing below it down to 0.5x. The track tool's tag and the Build
+ * tab's price. */
 export function costTint(mult: number): [string, number] | null {
-  if (mult > 1.005) return [COST_YELLOW, 0.2 + 0.6 * Math.min(1, (mult - 1) / 1.5)];
   if (mult < 0.995) return [COST_GREEN, 0.3 + 0.5 * Math.min(1, (1 - mult) / 0.5)];
-  return null;
+  return [COST_YELLOW, 0.2 + 0.6 * Math.min(1, Math.max(0, mult - 1) / 1.5)];
 }
-/** `costTint` as a CSS background, or undefined at 1x. */
+/** `costTint` as a CSS background. */
 export function costBackground(mult: number): string | undefined {
   const t = costTint(mult);
   if (!t) return undefined;

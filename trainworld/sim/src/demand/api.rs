@@ -54,6 +54,14 @@ pub fn country_asc_rail(country: &str) -> f32 {
 /// US value of time: $20/hour, or 3 perceived minutes per dollar (T-067).
 pub const FARE_MIN_PER_USD: f32 = 3.0;
 
+/// GDP per head at market rates, US$, of a country (ISO alpha-2): the app's own table
+/// (game/countryIncome.json `usd`, T-1521), for paid parking by income (T-2278).
+pub fn country_gdp_usd(country: &str) -> Option<f32> {
+    static TABLE: std::sync::OnceLock<serde_json::Value> = std::sync::OnceLock::new();
+    let t = TABLE.get_or_init(|| serde_json::from_str(include_str!("../../../app/src/game/countryIncome.json")).unwrap_or(serde_json::Value::Null));
+    t["usd"][country].as_f64().map(|v| v as f32)
+}
+
 /// Checks a fare curve's knots (T-883): pairs of trip km and US$, km rising, fares never falling;
 /// fewer than two pairs is the straight line of `set_fares`.
 pub(crate) fn check_fare_curve(knots: &[f32]) -> Result<(), String> {
@@ -985,6 +993,7 @@ impl DemandApi {
         // the pack's country: the header's own, else the one its everyday block was written for
         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
         base.set_extra("country_asc_rail", country_asc_rail(country))?;
+        base.park_income = super::kernel::park_income_of(country_gdp_usd(country));
         // T-2214: the pack's land parts (T-2213), if it has two or more
         if let Some(part) = pack::cell_weights(header, bin, "part", city.len())? {
             base.parts = Parts::of(part.iter().map(|&v| v as u16).collect(), &city, &z).map(Arc::new);

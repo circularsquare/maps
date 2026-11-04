@@ -3,7 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { ACTION_KEYS, BUS_KEY, HIDE_UI_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
+import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HIDE_UI_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
 
@@ -37,6 +37,7 @@ const SECTIONS: [string, [string, string][]][] = [
     [tabKeys, "Build, Lines, Stations, Finances and Cities tabs"],
     [toolKeys, "Track, stations, delete and select tools"],
     [TRIP_KEY.toUpperCase(), "Explore a trip"],
+    [DEMAND_KEY.toUpperCase(), "Switch demand bubbles between homes and destinations"],
     [keyOf("newLine"), "Make a new line"],
     [BUS_KEY.toUpperCase(), "Draw a new bus line"],
     [keyOf("editStops"), "Edit the selected line's stops"],

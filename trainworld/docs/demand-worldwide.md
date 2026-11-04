@@ -507,6 +507,13 @@ notes/T-420.md has the tables.
   of land; a share 1 / (1 + d / 8,000) parks free; congestion charges from a short list of
   charging areas (`kernel::CORDONS`: Manhattan, central London). Checked against real prices in New
   York, London and Toronto (within about half of each) and US and Toronto free-parking shares.
+  By income (T-2278, Anita 2026-11-03: "yes lets do parking cost scale with income. less than
+  linear"): in a country under $35,000 of GDP per head at market rates the paid space and the
+  parking at home are times (GDP / 35,000)^0.3 (Delhi 0.46, Ho Chi Minh City 0.56, Beijing 0.76),
+  1 above. Colliers' 2009 CBD prices rise about in proportion to GDP below $40,000 and not at all
+  above it (notes/T-2278.md), and a dollar weighs GDP^-0.7 minutes as fares do, which leaves 0.3.
+  The local layers and the cross-zone outings use it (`Params::park_income`); the market's longer
+  trips keep their own parking.
   Why it may not carry over: prices relative to wages differ (Tokyo, Hong Kong and Singapore
   dearer; much of the US Sun Belt, Africa and South Asia cheaper, with informal kerb parking),
   and free parking at work is commoner in North America than in Europe or East Asia; the 15 and
@@ -875,11 +882,12 @@ notes/T-420.md has the tables.
   and crowds that slow them below 2 m/s, and riders dislike them more than their minutes say.
   Check: a few published passage times against the rule.
 - **Changes inside a station building** (T-2220, Anita's yes, 2026-11-03: "changes inside it a
-  little faster"). At a station the player has drawn a building round, a change's fixed 2 perceived
-  minutes count 0.8 (1.6); the walk between platforms, the wait and any transfer fare are
-  unchanged (with the walk at 0.8 too, a building that left one line's platforms outside swung a
-  parallel line 83% on New York). A flat judgement figure the player buys, the waiting room's 0.8
-  again; it reads nothing local. Why it may not carry over: some real hubs are slow to
+  little faster"; T-2276, 2026-11-03: "reduce to 1 minute instead of 2. also it should count as a
+  waiting room"). At a station the player has drawn a building round, a change's fixed 2 perceived
+  minutes count 1, and every wait there counts as in a waiting room (0.8); the walk between
+  platforms and any transfer fare are unchanged (with the walk cut too, a building that left one
+  line's platforms outside swung a parallel line 83% on New York). Flat judgement figures the
+  player buys; they read nothing local. Why it may not carry over: some real hubs are slow to
   change in however big their roof (Shinjuku, Chatelet, Penn Station's levels), where signage,
   stairs and crowds, not the roof, decide the time. Check: published interchange times inside a few
   big single-roof stations (Berlin Hbf, Tokyo, Grand Central) against the rule's.
@@ -891,24 +899,22 @@ notes/T-420.md has the tables.
   it does little, which the ride's other costs already show); the shelter discount stands for
   seats, heat and cover, worth more in harsh climates. Check: rail shares at a city's park and
   ride stations against nearby ones without.
-- **No train that walks further than walking there** (Anita, T-1059; docs/demand-kernel.md step
-  5). A pair of stations is no rail option for a trip when the walks to, between and from its
-  stations, in straight metres, are longer than the trip's own walking distance (over water
-  at its cost where the pack routes walks). A rule of sense rather than a fitted number, and it holds
-  anywhere: nobody takes a train to walk further than walking there. What can differ by place is
-  the comparison itself: straight lines stand for both walks, so where streets are far from
-  straight on one side only (a station across a motorway or rail yard, a gated campus, hill
-  towns with long stairs) the rule can keep or refuse a pair a real rider would not. Check: in a
-  city's trip explorer, a few short trips beside a station that the rule refuses, against a map.
-- **No train no quicker than walking** (Anita, T-1782; docs/demand-kernel.md step 5). A trip has no
-  train when the train's effective time is at or above walking's, and below that the train's share
-  is scaled by how much quicker it is, from none at equal times to all of it at 30% quicker
-  (`Params::walk_fade`; 10% quicker keeps a third). Both sides are the model's own perceived
-  minutes, so it holds anywhere the walk and the train are priced: nobody takes a train that is
-  slower than walking. The 30% is Anita's judgement, not fitted. What can differ by place: where
-  walking stands for cycling or a short bus (cities with many bikes, Amsterdam or Tokyo's
-  suburbs), the real alternative is quicker than the walk and the rule is, if anything, too kind
-  to the train. Check: a city's trip explorer on trips of 1-3 km beside a line.
+- **No train slower than walking** (Anita, T-1059 in metres, T-2265 in real minutes, 2026-11-03:
+  "comparing actual train time to actual walking time ... should only be to rule out ridiculous
+  train trips that are literally longer time than wlaking"; docs/demand-kernel.md step 5). Within
+  walking's 10 km reach, a pair of stations is no rail option for a trip when its real minutes
+  (the walk or drive to the first station, the waits at half the headway, the rides, the walks
+  between stations and platforms, the walk from the last) are more than walking the whole way's
+  real minutes (over water at its cost where the pack routes walks). No fare, crowding, weights or
+  fixed change minutes on either side, and a trip with any quicker pair keeps its whole share. A
+  rule of sense rather than a fitted number, and it holds anywhere: nobody takes a train that takes
+  longer than walking there. What can differ by place: straight lines stand for both walks, so where
+  streets are far from straight on one side only (a station across a motorway or rail yard, a gated
+  campus, hill towns with long stairs) the rule can keep or refuse a pair a real rider would not;
+  and where walking stands for cycling or a short bus (Amsterdam, Tokyo's suburbs) the real
+  alternative is quicker than the walk, so the rule is if anything kind to the train. Everyday
+  outings across a zone line have no such check (the regional layer has no walks to compare).
+  Check: in a city's trip explorer, a few short trips beside a station that the rule refuses.
 - **The service span** (T-842, docs/demand-kernel.md step 4). Riders' tolerance for the wait until
   the next train is log-uniform from 30 minutes to 6 hours (Anita's range, 2026-10-21; the shape
   and the median of 1.7 h are judgement, not fitted), and a stop where only a share `phi` of a

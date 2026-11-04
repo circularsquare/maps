@@ -45,10 +45,8 @@ pub const NO_STATION_AT_START: u32 = 1;
 pub const NO_STATION_AT_END: u32 = 2;
 pub const WALKS_TOO_LONG: u32 = 3;
 pub const NO_ROUTE: u32 = 4;
-/// Every station pair walks further than walking there (T-1059).
+/// Every station pair takes longer than walking there (T-1059, T-2265).
 pub const WALK_FURTHER: u32 = 5;
-/// The train costs as much as walking the whole way or more (T-1782).
-pub const SLOWER_THAN_WALK: u32 = 6;
 
 /// Whether the home end could drive to a station (`HEAD` slot 41, T-910): the trip is shorter than
 /// `Params::ride_min_km`, the drives were among its ways to a station, or it has no station
@@ -86,8 +84,8 @@ pub(crate) struct PairChoice {
     /// (`Params::car_choice`).
     pub util: f32,
     pub r: f32,
-    /// The factor on rail's share for being barely cheaper than walking (`Params::walk_fade_of`).
-    pub fade: f32,
+    /// The quickest station pair's real minutes, as the walking rule counts them (`quickest_min`).
+    pub quick: f32,
     /// The walkers rail takes, a share of all trips (T-558, `ModeOut::rail_walk`).
     #[cfg_attr(not(test), allow(dead_code))]
     pub walk_lost: f32,
@@ -108,6 +106,27 @@ fn zone_density(z: &Zones, i: usize) -> f32 {
 fn walk_cost(api: &DemandApi, i: usize, j: usize) -> f32 {
     // T-275: around water with the pack's routes
     api.gr.walk_cost_pair(&api.z, i, j)
+}
+
+/// The quickest of a trip's station pairs (access entries `ru` of `u`, egress entries `rv` of `v`)
+/// in real minutes, as the walking rule counts them (T-2265); infinite with none routed.
+fn quickest_min(sz: &Subzones, p: &Params, sk: &Skims, u: usize, v: usize, ru: std::ops::Range<usize>, rv: std::ops::Range<usize>) -> f32 {
+    let s = sk.s;
+    if sk.walk.len() != s * s {
+        return f32::INFINITY;
+    }
+    let mut best = f32::INFINITY;
+    for ka in ru {
+        let a = sz.acc_st[ka] as usize;
+        for kb in rv.clone() {
+            let t = sz.acc_st[kb] as usize;
+            let w = sk.walk[a * s + t];
+            if a != t && w != u16::MAX && sk.r[a * s + t].is_finite() {
+                best = best.min(walked(sz, p, u, ka) + w as f32 + walked(sz, p, v, kb));
+            }
+        }
+    }
+    best / p.walk_eq_m(1.0)
 }
 
 /// The choice for subzones `u` (home) and `v` (work) with period parameters `p` and strategies
@@ -153,18 +172,18 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     // there (straight x `road_detour`), rail's bound
     let apart = sz.apart(u, v);
     let df = if apart { p.road_detour } else { p.drive_factor(i, j) };
-    // T-1059: the station pairs walking further than walking there are no option
+    // T-1059: the station pairs taking longer than walking there are no option
     let routed = ssum >= 1e-30;
-    if p.walk_rule > 0.0 && sk.walk.len() == s * s && !apart {
-        let direct = d * api.gr.walk_factor(i, j);
-        let acc: Vec<(u32, f32, f32, u32)> = ru.clone().map(|k| (sz.acc_st[k], acc_e(k, m_u), walked(sz, u, k), k as u32)).collect();
+    let direct = d * api.gr.walk_factor(i, j);
+    if p.walk_rule_at(direct) && sk.walk.len() == s * s && !apart {
+        let acc: Vec<(u32, f32, f32, u32)> = ru.clone().map(|k| (sz.acc_st[k], acc_e(k, m_u), walked(sz, p, u, k), k as u32)).collect();
         let eg: Vec<(u32, f32, f32, u32)> = rv.clone().map(|k| (sz.acc_st[k], acc_e(k, m_v), sz.acc_d[k], k as u32)).collect();
         let kept = walk_kept(&acc, &eg, er, &sk.walk, s, direct);
         if kept < 1.0 {
             ssum *= kept;
             for e in pairs.iter_mut() {
                 let (a, t) = (sz.acc_st[e.0] as usize, sz.acc_st[e.1] as usize);
-                if !walk_ok(walked(sz, u, e.0), sk.walk[a * s + t], sz.acc_d[e.1], direct) {
+                if !walk_ok(walked(sz, p, u, e.0), sk.walk[a * s + t], sz.acc_d[e.1], direct) {
                     e.2 = 0.0;
                 }
             }
@@ -198,10 +217,6 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     } else {
         (f32::INFINITY, f32::NEG_INFINITY, 0.0)
     };
-    // T-1782: no train at or above walking's cost, and less of one just under it
-    let fade = if why == RAIL_OFFERED && !apart { p.walk_fade_of(rail, cw) } else { 1.0 };
-    let why = if fade == 0.0 { SLOWER_THAN_WALK } else { why };
-    let r_car = r_car * fade;
     // the zone pair's walking with no rail, of which rail takes its share (`mode_choice`)
     let w_none = if cw < NO_WALK { api.nr.split(&api.gr, p, i, j, (api.gr.base(z, i) + api.gr.key(z, j)) as usize) } else { 0.0 };
     let r = r_car;
@@ -209,7 +224,8 @@ pub(crate) fn pair_choice(api: &DemandApi, sz: &Subzones, p: &Params, sk: &Skims
     let walk_lost = r * w_none;
     let pw = w_none - walk_lost;
     let ride = ride_state(by_ride, !sz.ride(u).is_empty());
-    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, fade, walk_lost, pairs, apart }
+    let quick = quickest_min(sz, p, sk, u, v, ru, rv);
+    PairChoice { pw, d_m: d, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, quick, walk_lost, pairs, apart }
 }
 
 /// The everyday layer's choice (T-586, T-201) for purpose inputs `ev`, home subzone `u` and
@@ -239,12 +255,12 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
         let r = sk.r[a * s + t];
         if a == t || !r.is_finite() { 0.0 } else { fast_exp(-th * (r - off)) }
     };
-    // T-1059: station pairs walking further than walking there are no option, as the pass has it
+    // T-1059: station pairs taking longer than walking there are no option, as the pass has it
     let walk_on = distance * walk_factor;
     // T-2214: on two land parts, as the pass has it
     let apart = sz.apart(u, v);
-    let rule = p.walk_rule > 0.0 && sk.walk.len() == s * s && !apart;
-    let keep = |ka: usize, kb: usize| !rule || walk_ok(walked(sz, u, ka), sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], walked(sz, v, kb), walk_on);
+    let rule = p.walk_rule_at(walk_on) && sk.walk.len() == s * s && !apart;
+    let keep = |ka: usize, kb: usize| !rule || walk_ok(walked(sz, p, u, ka), sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], walked(sz, p, v, kb), walk_on);
     let logsum = |a: &std::ops::Range<usize>, ma: f32, out: &mut Vec<(usize, usize, f32)>| {
         let (mut sum, mut all) = (0.0f32, 0.0f32);
         for ka in a.clone() {
@@ -284,23 +300,12 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     };
     let (mut rail, mut util, mut r) = (f32::INFINITY, f32::NEG_INFINITY, 0.0f32);
     let w_none = ev.no_rail;
-    let mut fade = 1.0;
-    let mut why = why;
     if why == RAIL_OFFERED {
         rail = m_u + m_v + p.fare_min - fast_ln(sum) / th + off;
         let bt = p.mode_beta(road_free);
         util = bt * (road_free - rail) + p.asc_rail;
         let uw = bt * (road_free - cw) + p.asc_walk();
-        // T-1782: as the pass has it
-        if apart {
-            r = p.bound_share(rail, road_free, paid, free);
-        } else {
-            fade = p.walk_fade_of(rail, cw);
-            r = p.car_choice(util, uw, bt, paid, free, rail, road_free) * fade;
-        }
-        if fade == 0.0 {
-            why = SLOWER_THAN_WALK;
-        }
+        r = if apart { p.bound_share(rail, road_free, paid, free) } else { p.car_choice(util, uw, bt, paid, free, rail, road_free) };
     }
     if why == RAIL_OFFERED {
         // each station pair's share of the trip's rail riders
@@ -314,7 +319,8 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     }
     let walk_lost = r * w_none;
     let ride = ride_state(by_ride, !sz.ride(u).is_empty());
-    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, fade, walk_lost, pairs, apart }
+    let quick = quickest_min(sz, p, sk, u, v, ru, rv);
+    PairChoice { pw: w_none - walk_lost, d_m: distance, drive_min, park, road, why, m_u, m_v, ride, rail, util, r, quick, walk_lost, pairs, apart }
 }
 
 /// One leg of a route: a ride (kind 1) from boarding to alighting route node, or a walk between
@@ -595,7 +601,7 @@ impl DemandApi {
         let city = &self.city;
         let mut h = vec![0f64; HEAD];
         h[0] = 1.0;
-        h[44] = 1.0;
+        h[44] = -1.0;
         h[1] = round as f64;
         h[2] = o as f64;
         h[3] = d as f64;
@@ -706,12 +712,12 @@ impl DemandApi {
         h[41] = pc.ride as f64;
         h[42] = p.ride_min_km as f64;
         h[43] = p.pair_walk_max as f64;
-        h[44] = pc.fade as f64;
+        h[44] = if pc.quick.is_finite() { pc.quick as f64 } else { -1.0 };
         // T-1902: the views can count train riders between cells too far from the stations for
         // the cells' own trip (they count the homes and places around them); the route such riders
         // take is read with the limits on walks lifted, the trip's own chances left as they are
-        let lifted = matches!(pc.why, WALKS_TOO_LONG | SLOWER_THAN_WALK | WALK_FURTHER).then(|| {
-            let pf = Params { pair_walk_max: f32::INFINITY, walk_fade: 0.0, walk_rule: 0.0, ..p.clone() };
+        let lifted = matches!(pc.why, WALKS_TOO_LONG | WALK_FURTHER).then(|| {
+            let pf = Params { pair_walk_max: f32::INFINITY, walk_rule: 0.0, ..p.clone() };
             match m {
                 Model::Commute => pair_choice(self, sz, &pf, &sk, u, v),
                 Model::Everyday(ev) => everyday_choice(&TripInputs { p: &pf, ..**ev }, sz, &sk, u, v, cells_m, true),
@@ -809,10 +815,10 @@ impl DemandApi {
     /// sample joins the two subzones); the drive's length by road, km, and the weight a minute of walking the whole way counts at (T-699);
     /// the subzones' chance of walking, rail and driving, and their cheapest walk at the home end,
     /// real minutes (-1 none); whether the home end could drive to a station (`RIDE_TOO_SHORT`..
-    /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`; the factor on
-    /// rail's share for being barely cheaper than walking (`Params::walk_fade_of`, T-1782); the
+    /// `RIDE_NONE`, T-910), `Params::ride_min_km` and `Params::pair_walk_max`; the quickest
+    /// station pair's real minutes as the walking rule counts them (-1 none; T-2265); the
     /// transfer fare a change pays (perceived minutes, `Params::xfer_fare`, T-1801); 1 when rail is
-    /// not offered (walks too long, walking further than walking there, or slower than walking)
+    /// not offered (walks too long, or slower than walking)
     /// but the pairs and routes below are read with those limits lifted, rail's cost then theirs
     /// (T-1902), else 0; 1 when the two cells are on two land parts (T-2214: no car and no walk,
     /// the trips rail does not take no way serves), else 0.

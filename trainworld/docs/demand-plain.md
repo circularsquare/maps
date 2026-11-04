@@ -1,12 +1,13 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-10-29 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
+Last updated 2026-11-04 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
-rule that every rail trip rides a train, T-1059's that it never walks further than walking
-there, T-1782's that it is never slower than walking, T-1091's flat near end of the commute curve outside the US, T-1092's trips into
-town, T-1070's cap at the trains' room as T-1255's 30-minute queue, and T-263's attractions). The full rules are in demand.md; this is the gist.
+rule that every rail trip rides a train, T-2265's that it never takes longer than walking there,
+T-1091's flat near end of the commute curve outside the US, T-1092's trips into
+town, T-1070's cap at the trains' room as T-1255's 30-minute queue, T-263's attractions, T-2276's
+station buildings and T-2278's parking by income). The full rules are in demand.md; this is the gist.
 
 ## Who travels, and where to
 
@@ -105,8 +106,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   homes. Without the bands a short line's group could mix 2 and 28 minute walks, and rail came out
   7-21% too high. The trip explorer works out its own two places exactly.
 - Wait on the platform: half the time between trains, in plain minutes; at a station with a
-  waiting room (a station upgrade the player buys) each of those minutes counts 0.8, so a few
-  more people take the train there.
+  waiting room (a station upgrade the player buys) or inside a station building the player drew,
+  each of those minutes counts 0.8, so a few more people take the train there.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within
@@ -123,7 +124,7 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
   two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
   walkways: 300 m takes 2.5 minutes rather than 5.4. Inside a station building the player drew,
-  the fixed 2 minutes count 0.8, so 1.6; the walk and the wait are as anywhere. Nobody changes back onto the line they just
+  the fixed 2 minutes count 1, and the wait counts as in a waiting room; the walk is as anywhere. Nobody changes back onto the line they just
   left to go back the way they came: on a full line people wait at their station. Where a line
   comes back through a station (a loop on a stalk), people may change there onto the same line
   heading somewhere else, like any change.
@@ -137,16 +138,14 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   platforms and full trains all through the peak.
 - Every rail trip rides at least one train: nobody boards only to walk off to another station
   or platform of a complex, so walking between two stations is never a rail trip and pays no fare.
-- No train that walks further than walking there: a pair of stations is no option for a trip when
-  the walk to the first, the walks between stations and platforms on the way and the walk from the
-  last add up to more than walking between the two ends (over water, each metre of it counts as
-  3 metres of walking). A trip left with no such pair has no train. It takes about 3% of rail trips away, nearly
-  all under 2 km, to walking and the car.
-- No train slower than walking: when the train's effective time (walks, wait, ride, changes and
-  fare) is the same as walking's or more, nobody takes it. Just under, few do: the train keeps
-  none of its riders at equal times, a third at 10% quicker than walking, and all of them from
-  30% quicker. The rest walk or drive. An errand from Hodogaya with 54 minutes of walking, the
-  train 101 effective minutes against walking's 91, went from train 7% to none.
+- No train that takes longer than walking there: a pair of stations is no option for a trip when
+  its real minutes (the walk or drive to the first station, the waits, the rides, the walks
+  between stations and platforms on the way, the walk from the last) are more than walking the
+  whole way takes. Plain minutes on both sides: no fare, no crowding, no weights, no fixed minutes
+  for changing (over water, each metre of the walk counts as 3). A trip left with no such pair has
+  no train; a trip with a quicker pair keeps its whole share, however close to walking. Only
+  trips walking reaches (10 km) are checked. It takes about 8% of New York's rail trips away to
+  walking and the car, nearly all short everyday ones.
 - Fare: a dollar of fare counts more minutes where people earn less: 4.4 in the US, 6.0 in the UK,
   8.4 in Japan, 16 in China, 51 in India (by GDP per head in US dollars, to the power -0.7). The
   fare is the player's curve of trip length times the country's fare scale (by income, so a new
@@ -186,6 +185,11 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   what parking costs at work by the same density rule (none under 3,000 people a km², 7 minutes at
   10,000, 16 at 40,000). This is why dense neighbourhoods take the train more; there is no
   "households without a car" figure.
+- In poorer countries both prices count less: times (GDP per head / $35,000) to the power 0.3
+  where a country is under $35,000 a head, so 0.46 in India, 0.56 in Vietnam, 0.76 in China, the
+  full price in Japan, Korea, Europe and the US. Real parking prices rise about in step with
+  income up to there (Colliers' city centre prices: Delhi about $25 a month, Tokyo $530) and not
+  beyond; a poorer driver also feels each dollar more, as with fares, which leaves the 0.3.
 - Owning the car: $2.10 a trip plus $0.1365 a km, at 3 minutes a dollar. A typical trip pays $3.05
   to $5.50, and a driver's day comes to about $14. The long trips between cities pay none.
 - Everyone can drive. "Walking" also stands for cycling and short bus trips (one reason its share

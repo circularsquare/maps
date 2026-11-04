@@ -254,6 +254,11 @@ impl TrackApi {
         (t - b).max(0.0)
     }
 
+    /// T-2269: the blueprint priced piece by piece (`Network::blueprint_piece_costs`).
+    pub fn blueprint_piece_costs(&self) -> Vec<f64> {
+        self.w.net.blueprint_piece_costs()
+    }
+
     /// Cost rows for Construct all, including new cars after using the spare fleet.
     /// Infrastructure rows come from the same pricing intervals as track_cost.
     pub fn blueprint_cost_items(&mut self) -> Vec<f64> {

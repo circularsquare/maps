@@ -247,7 +247,7 @@ export type ToClock =
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
    * (T-743): no slot is ever written over with another game */
   | { kind: "import"; bytes: ArrayBuffer; name?: string }
-  /** start again: empty city (or `game.real`'s network), $6B, day 1 07:00; answered with "loaded" */
+  /** start again: empty city (or `game.real`'s network), `START_CASH`, day 1 07:00; answered with "loaded" */
   | { kind: "newGame"; name?: string; game?: NewGameSpec }
   /** T-728: make this normal game a sandbox, for good */
   | { kind: "sandbox" }
@@ -265,12 +265,12 @@ export type ToClock =
    * what doubling up a track adds to the blueprint (`[US$M]`, or `[-1, ...]` and the refusal's
    * kinds as character codes, joined by newlines; T-708), or what removing pieces does to lines
    * (`removal_lines`, T-859), the blueprint's quote rows (`blueprint_cost_items`, seven numbers a
-   * row, US$M) or a planned line's `[build, trains]` in US$M (T-1171: priced only when a panel asks),
+   * row, US$M), its pieces' prices (`blueprint_piece_costs`, five a row, T-2269) or a planned line's `[build, trains]` in US$M (T-1171: priced only when a panel asks),
    * or the gap between a line and a station no track joins it to (`stop_gap`, T-1896) */
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineRelated"; line: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -279,6 +279,8 @@ export type RegionNow = Record<string, { today: DayLedger; hour: HourLedger }>;
 /** Money as the worker keeps it (T-028), US$M unless said. */
 export interface MoneyState {
   cash: number;
+  /** T-2271: seconds ahead of the clock of the local time the ledgers' days run on (the start zone's) */
+  dayShift: number;
   /** T-728: a sandbox refuses nothing for money and hides the cash */
   mode: GameMode;
   /** cars owned, and the cars the running lines need */

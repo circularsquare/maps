@@ -114,6 +114,21 @@ export function busiestDay(w: WorldView, dv: DemandView | null, purpose: Purpose
   return best;
 }
 
+/** T-2274: the Traffic view's widths of bus and ferry lines (drawn by `busLayer.ts`): per running
+ * line's number, each stretch's width as the rail lines' rule gives it (a share of a rail line's
+ * width in the Line view), so a stretch is as wide as a rail stretch with as many riders. */
+export function busWidths(w: WorldView, dv: DemandView | null, on: LayerSwitches): Map<number, Float32Array> {
+  const out = new Map<number, Float32Array>();
+  const busiest = Math.max(busiestDay(w, dv, on.purpose, on.stopKey), ...(on.days ?? []).map((d) => busiestDay(w, d, on.purpose, on.stopKey)));
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id];
+    if (!st?.bus || st.status !== "running") continue;
+    const day = stretchDay(dv, l.id, l.stops, on.purpose ?? "all", on.stopKey);
+    if (day) out.set(l.num, day.map((v) => TRAFFIC_WIDTH * widthFor(v, busiest)));
+  }
+  return out;
+}
+
 /** Build the renderer's layers for `net`. */
 export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | null, period: number, on: LayerSwitches): NetworkLayers {
   const L = net.lines;

@@ -62,6 +62,7 @@ import { buildingAtPack } from "../game/buildingView";
 import { BuildingFloors, startBuildingFloors } from "./buildingFloors";
 import { playBuild } from "./buildSound";
 import { perfOff } from "../perfFlags";
+import { logShare } from "./modeBar";
 
 /** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
 const TOUCH_GAP_PX = 44;
@@ -74,6 +75,9 @@ const SNAP_EDGE_PX = 15;
 const TRACK_NODE_PX = 12;
 const TRACK_EDGE_PX = 8;
 const NOT_ON_TRACK = "Place stations on track";
+/** T-2271: the station tool's trips-near bar is empty at 1,000 trips and full at 1M, log scaled
+ * (New York's lines have 30k-1M within 1 km); its ticks (style.css `.size-bar`) are 10k and 100k */
+const NEAR_BAR_LO = 1e3, NEAR_BAR_HI = 1e6;
 /** open ground this near track (and further than TRACK_EDGE_PX) draws beside it (T-1685) */
 const BESIDE_PX = 40;
 /** tracks this much further from the pointer than the nearest still count as overlapping it (T-469) */
@@ -1005,7 +1009,7 @@ export class Tools {
   /** "12k trips within 1km" of the spot (T-412, T-1058; 1 mile in US units), from the cells behind
    * the Homes and Destinations bubbles; null until they are in. A trip with both ends inside counts
    * twice, and a spot near a zone's edge counts the viewed zone's cells only. */
-  private tripsNear(lng: number, lat: number): string | null {
+  private tripsNear(lng: number, lat: number): { text: string; legs: number } | null {
     const dv = demandView.peek();
     if (!dv) return null;
     const key = `${dv.version}:${dv.round}:${dv.day}:${activeCity.peek()}:${worldFrameEpoch.peek()}`;
@@ -1041,7 +1045,7 @@ export class Tools {
     // two significant figures: the figure is rough by nature
     const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
     const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : r2.toLocaleString("en-US");
-    return `${n ?? "Under 50"} trips within 1${unitShort()}`;
+    return { text: `${n ?? "Under 50"} trips within 1${unitShort()}`, legs: sum };
   }
 
   /** The station placed last in this session (T-312), found by its position so a rename shows. */
@@ -1774,20 +1778,27 @@ export class Tools {
       if (lines.length) {
         this.tag.style.display = "";
         this.tag.className = "tool-tag build-tag";
-        this.tag.replaceChildren(...lines.map((s) => Object.assign(document.createElement("div"), { textContent: s })));
+        this.tag.replaceChildren(...lines);
         put(this.tag, h.lx, h.ly, 14, 12);
       } else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
   }
 
   /** The station tool's tag lines: `first` if any, how far from the station placed last (T-312),
-   * the trips near (T-412). */
-  private helpLines(h: Snap, first: string | null): string[] {
-    const lines: string[] = first ? [first] : [];
+   * the trips near (T-412) over a bar of their size on a log scale (T-2271). */
+  private helpLines(h: Snap, first: string | null): HTMLDivElement[] {
+    const row = (s: string) => Object.assign(document.createElement("div"), { textContent: s });
+    const lines = first ? [row(first)] : [];
     const last = this.lastPlacedName(), [lng, lat] = toLngLat(h.lx, h.ly);
-    if (last) lines.push(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`);
+    if (last) lines.push(row(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`));
     const trips = this.tripsNear(lng, lat);
-    if (trips) lines.push(trips);
+    if (trips) {
+      const bar = Object.assign(document.createElement("div"), { className: "size-bar" });
+      const fill = document.createElement("i");
+      fill.style.width = `${(100 * logShare(trips.legs, NEAR_BAR_LO, NEAR_BAR_HI)).toFixed(1)}%`;
+      bar.append(fill);
+      lines.push(row(trips.text), bar);
+    }
     return lines;
   }
 }

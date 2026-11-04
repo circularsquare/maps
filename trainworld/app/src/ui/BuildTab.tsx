@@ -1,35 +1,25 @@
 // The Build tab: tools, elevation, track type, target speed and platforms, and the blueprint quote.
 
-import { distUnit, length, levelName, levelUpkeepLine, perDistance, speed } from "../game/format";
-import { edgeUpkeep } from "../game/regionMoney";
+import { distUnit, length, levelName, speed } from "../game/format";
 import { moneyState } from "../game/money";
-import type { Level } from "../game/types";
-import { batch } from "@preact/signals";
 import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, display, keepPlacing, setDisplay, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { stepPlatform } from "../game/boarding";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
-import { BlueprintBreakdown, BlueprintControls, BlueprintPick } from "./Blueprint";
-import { BUS_KEY, FERRY_KEY, levelKeyName, pickTool, TOOLS } from "./toolKeys";
+import { BlueprintControls, BlueprintPick } from "./Blueprint";
+import { BUS_KEY, FERRY_KEY, pickTool, TOOLS } from "./toolKeys";
 import { newBusLine, newFerryLine } from "../game/lineActions";
 import { live } from "../map/live";
 import { costBackground } from "../map/trackTagRows";
-
-// SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
-const BASE_M_PER_KM = 75;
-const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
-/** high-speed track's price over double track (params.rs `HSR_COST`, T-817) */
-const HSR_COST = 1.5;
+import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 
 /** All building controls: tools, blueprint quote and construction, level, track and platforms. */
 export function BuildTab() {
   const t = tool.value;
   const lv = buildLevel.value;
-  const hsrF = trackType.value === "hsr" ? HSR_COST : 1;
-  const mult = MULT[lv] * hsrF;
-  // T-2009: quad is two double tracks side by side, so its price and upkeep are two doubles'
-  const pairs = trackType.value === 4 ? 2 : 1;
+  const tt = trackType.value;
+  const mult = trackMult(lv, tt);
   const m = moneyState.value;
-  const upkeepTip = (l: Level) => (m ? "\n" + levelUpkeepLine(pairs * edgeUpkeep({ built: true, tracks: 2, hsr: hsrF !== 1, lengthM: 1000, levelMin: l, levelMax: l }, m)) : "");
+  const upkeep = upkeepAt(lv, tt, m);
   return (
     <>
       <div class="build-options">
@@ -58,12 +48,12 @@ export function BuildTab() {
         </div>
         <div class="h">Level</div>
         <div class="build-track-row">
-          <LevelButtons value={lv} tip={(l) => `${levelName(l)} (${levelKeyName(l)})${upkeepTip(l)}`} onPick={(l) => (buildLevel.value = l)} />
+          <LevelButtons value={lv} tip={(l) => levelTip(l, tt, m)} onPick={(l) => (buildLevel.value = l)} />
         </div>
         {/* T-1394: the Terrain switch beside the price it changes; T-1802: the ramp switch left of it */}
         <div class="build-track-row price-row">
-          <p class="muted small price" data-tip={`${levelName(lv)}${hsrF !== 1 ? ", high-speed track" : pairs > 1 ? ", quad track" : ""}${upkeepTip(lv)}`}>
-            ${Math.round(perDistance(BASE_M_PER_KM * mult * pairs) * 10) / 10}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{mult.toFixed(hsrF === 1 ? 1 : 2)}x cost</span>)
+          <p class="muted small price" data-tip={`${levelName(lv)}${tt === "hsr" ? ", high-speed track" : tt === 4 ? ", quad track" : ""}${upkeep ? "\n" + upkeep : ""}`}>
+            ${unitPrice(lv, tt)}M per {distUnit()} (<span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{multText(lv, tt)} cost</span>)
           </p>
           <button class={"btn icon" + (autoRamp.value ? " on" : "")} aria-label="Ramp over track you cross" aria-pressed={autoRamp.value}
             data-tip="Automatically try to ramp over crossed tracks at the same level."
@@ -107,7 +97,6 @@ export function BuildTab() {
           </li>
         </ul>
         <BlueprintPick />
-        <BlueprintBreakdown />
       </div>
       <BlueprintControls />
     </>

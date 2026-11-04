@@ -85,7 +85,9 @@ purpose filter the purpose drawn is ringed in the bar.
   number under the "Trains" header [T-532]) is coloured by the line's load in the period now on today's kind of
   day, otherwise muted (a 0 is muted and has no hover): the busiest hour's mean load of the trains on the line's
   fullest stretch (the fuller direction) as a share of the rated load, 160 a car (`period_peaks` in
-  `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad` in `game/today.ts`).
+  `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad` in `game/today.ts`);
+  with `CROWD_MEAN_ON` the stretch mean of the period's intervals instead (`periodLoad`, from `linesPeriods` for
+  each line's own kind of day) [T-2279].
   Grades (`CROWD_GRADES`, the colour scale's steps): past 100% from 100.5%, orange from 130%, red from 140%;
   orange and red colour the count (`crowdClass`). The hover is the line panel's dot hover for the same level on
   a weekday [T-1672, T-1677]: "Peak load 132%", the strip of intervals, then one line per period of the
@@ -231,13 +233,18 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   300 ms and paints the level's train count red until the cash covers it or another edit to the
   line goes through (`refusedForCash` in `game/world.ts`) [T-625]; hovering High, Medium or Low gives that
   level's times of day in the line's local time, from the period table in `game/periods.ts`:
-  "High demand: 6-20 on weekdays", "Medium demand: 20-24 on weekdays, 6-24 on weekends" (a weekend day
-  runs the medium trains 6-24, T-1720), "Low demand: 0-6": that one line only [T-406, T-1536,
+  "High demand: 06:00-20:00 on weekdays", "Medium demand: 20:00-24:00 on weekdays, 06:00-24:00 on weekends" (a weekend day
+  runs the medium trains 6-24, T-1720), "Low demand: 00:00-06:00" (hours as the clock writes them, `hourSpan`, T-2271): that one line only [T-406, T-1536,
   T-1797]; on a
   running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on, with a 1 px ring 1 px outside it (a gap between) graded the same way on a weekday, so a weekend does not hide peak crowding [T-1671, T-1684], by the
   load past the rated load, as in Trains to add [T-2236]: the busiest hour's mean load of the trains on the
   line's fullest stretch (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
-  and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`), its colour
+  and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`; on a Saturday
+  or Sunday the high hours run the medium level's trains, T-1720, so they count as Medium and the High dot is its
+  ring alone, hover "Medium demand trains run in these hours today" then the weekday's hover as "On weekdays,
+  peak load 140%" [T-2271]); with `CROWD_MEAN_ON` (off; `?crowdMean=1` turns it on for a look) the dot and the
+  Lines list's trains count take 100% plus the power-3 mean over every interval of its load past 100% instead
+  (`stretchLoad`, notes/T-2279.md) [T-2279]; its colour
   running smoothly with that load: green to 100%, yellow-green at 110%, yellow at 120%, orange at 130%, red at
   140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
   the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,
@@ -246,8 +253,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "Past 100% on 2 of 14 intervals" below it ("Past 100% on all 14 intervals"; no line for a single interval;
   T-2023: "interval", Anita's word, in every shown string) [T-1926, T-1901; `tipStrip` in `ui/tip.ts`; the Lines
   tab's trains hover has the same strip], then, for a level of more than one period with trains, a line for each
-  in time order: "10-16: 118%" [T-1523, T-1672, T-1797], then, only when the line's day is not a weekday, "On
-  weekdays, peak load 140%" [T-1684, T-1797, T-1893]; riders left at the platform by trains at crush are the
+  in time order: "10:00-16:00: 118%" [T-1523, T-1672, T-1797, T-2271], then, only when the line's day is not a weekday, "On
+  weekdays, peak load 140%" [T-1684, T-1797, T-1893]; the dot's hover reaches 6 px round it (5 px on the
+  name's side) [T-2271]; riders left at the platform by trains at crush are the
   station panel's and the trouble list's, not the dots'; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
   option's hover giving its top speed ("High speed trains run up to 320 km/h on high speed track
@@ -458,7 +466,15 @@ the Build tab's quote has rows for bus routes and new buses.
 **A ferry line's panel** (T-2194) is the same panel in boats: Edit route opens the ferry tool on its
 ports (ui-building.md, "Drawing a ferry line"); Delete line removes it at once (its ports stay, its
 boats go to the depot, and it is undoable); while planned, Construct's hover gives the ports and the
-boats. Schedule in boats; the stops list is headed Ports. Its counts block is the bus line's
+boats. Schedule in boats. The ports list, headed Ports, is a rail line's stops strip (T-2275): a
+port's dot, a time from the first, the bullets met; in the Traffic view each stretch as wide as its
+riders against the line's busiest, its hover "A to B" and the riders a day, as a rail line's (T-2274).
+With three ports or more, a click on a port's dot takes it out of the line (hover "Click to remove
+the stop at X"; the port stays) and dragging a port's row moves it, a line between rows marking where;
+the route is searched again through the ports and saved as one undoable edit, refused with "No water
+path found between A and B." where a leg finds no water. Not while the ferry tool has the line. A
+bus line's stops follow its route (its stations met and street stops), so its list has no editing:
+the route is edited on the map. Its counts block is the bus line's
 (T-2195): riders, Changing to trains (between this boat and any rail line at its ports' complexes),
 profit, average load (against 480 a boat at crush) and Boats leaving full. A boat's panel is a train's,
 named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
@@ -661,7 +677,8 @@ stations are constructed.
   button or key). On a complex with no building it opens on the smallest rectangle round the
   complex's boxes, turned to its longest platform, 15 m out from them (`offeredRectangle`); on one
   with a building it opens that outline to edit. Its hover: "Station building", what it does (it joins
-  the stations it touches; "Changing trains inside it feels a little quicker.", T-2220), "Costs
+  the stations it touches; "Changing trains inside it feels 1 minute shorter." and "Waiting in it for a train feels 20%
+  shorter.", T-2220, T-2276), "Costs
   $2,000 per m²" ($186 per sq ft with US units), then "Click, then change its outline on the map",
   or "Built. Click to change its outline", or "Click to stop" while drawing.
 - **A closed outline** shows its corners as round handles and each edge's middle as a small one.
@@ -900,12 +917,16 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   too short to drive to one"; with no station within a drive, "none is within a drive of the start";
   else the bigger end: the end's, "No train trip found" [T-2144], or the start's, "The stations
   near the start are too far, even by car". Its hover gives the two ends' felt minutes and the limit.
+  Where every station pair takes longer than walking there [T-2265]: "Walking there is quicker than
+  the train.", its hover "By train at least 34 min, walking 28 min." and "Nobody takes a train that
+  takes longer than walking." (real minutes, the quickest pair's, `DemandApi.trip` slot 44).
   **When the headline counts train trips anyway** [T-1902] (at least one whole trip; the headline
   counts the homes and places around the two points, and the views deal a zone's commuters over
-  its cells, so train riders land on cells too far from the stations for the cells' own trip), a trip whose walks are too long, whose station pairs all walk further than
-  walking there, or that walking beats shows the route read with those limits lifted
+  its cells, so train riders land on cells too far from the stations for the cells' own trip), a trip whose walks are too long
+  or whose station pairs all take longer than walking there shows the route read with those limits lifted
   (`DemandApi.trip` slot 46): one line "The stations are too far from these exact points. Trips
-  from nearby take this route." (or "Walking is quicker from these exact points. ..."), its hover
+  from nearby take this route." (or "Walking is quicker from these exact points. ...", its hover
+  "From these two points walking takes 28 min, less than any train. ..."), its hover
   the felt minutes and the limit, then the route's rows, fare, time and
   effective time as usual; its chances and Train by period stay the trip's own. With no train
   counted the reason stays and the lifted route is not drawn.

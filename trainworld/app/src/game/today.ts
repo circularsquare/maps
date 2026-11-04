@@ -15,7 +15,7 @@ import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
 import { moneyState } from "./money";
 import { clockTime, count, trainKind } from "./format";
-import { PERIODS, periodAt } from "./periods";
+import { hourSpan, PERIODS, periodAt } from "./periods";
 import { levelOn } from "./days";
 import { crowdColour } from "./palette";
 import { tipStrip } from "../ui/tip";
@@ -62,25 +62,59 @@ export const peakLoadText = (c: CrowdedStretch) => `Peak load ${loadText(c.load)
 export const PERIOD_STRIDE = 11;
 
 /** Where the busiest hour's load per period and stretch starts in a line's `line_periods` numbers
- * `v` (T-2236, `period_peaks` in boarding.rs: `p * (stops - 1) + k`), or -1 where `v` has none (a
+ * `v` (T-2236, `period_peaks` in boarding.rs: `p * (stops - 1) + k`), whole or as the clock
+ * worker's `linesPeriods` cuts it (the per-period block and the loads), or -1 where `v` has none (a
  * line of one stop, an older WASM build). */
 function peaksAt(v: ArrayLike<number>, stops: number): number {
   const s = stops - 1, n = PERIODS.length;
-  return s >= 1 && v.length === n * (PERIOD_STRIDE + 2 * stops + 3 * s) ? v.length - n * s : -1;
+  return s >= 1 && (v.length === n * (PERIOD_STRIDE + 2 * stops + 3 * s) || v.length === n * (PERIOD_STRIDE + s)) ? v.length - n * s : -1;
+}
+
+/** T-2279: the crowding dot and the Lines list grade a line by all its stretches (`stretchLoad`)
+ * when on; off, by its fullest stretch. `?crowdMean=1` or `=0` overrides it for a look at both. */
+const CROWD_MEAN_ON = false;
+const crowdMeanFlag = typeof location === "undefined" ? null : new URLSearchParams(location.search).get("crowdMean");
+export const crowdMean = crowdMeanFlag === "1" ? true : crowdMeanFlag === "0" ? false : CROWD_MEAN_ON;
+/** T-2279: the power the stretches' loads past 100% are averaged at. Above 1 the mean leans to the
+ * fullest: one stretch packed to crush among 20 grades as 118% (1.5 - 1 over the cube root of 20). */
+export const CROWD_MEAN_POWER = 3;
+
+/** T-2279: a line's load from its stretches' loads (shares of the rated load): 100% plus the power
+ * mean of each one's load past 100% (`CROWD_MEAN_POWER`), so it is the fullest stretch's load when
+ * every stretch is that full and less as fewer are; the fullest's while `crowdMean` is off. */
+export function stretchLoad(per: ArrayLike<number>, on = crowdMean): number {
+  let peak = 0, sum = 0;
+  for (let k = 0; k < per.length; k++) {
+    peak = Math.max(peak, per[k]);
+    if (per[k] > 1) sum += (per[k] - 1) ** CROWD_MEAN_POWER;
+  }
+  if (!on || peak <= 1) return peak;
+  return 1 + (sum / per.length) ** (1 / CROWD_MEAN_POWER);
+}
+
+/** T-2279: the Lines list's trains cell's load in period `p` from a line's `line_periods` numbers
+ * (`stretchLoad` over each stretch's busiest hour then); null where `v` has no loads. */
+export function periodLoad(v: ArrayLike<number>, p: number, stops: number): number | null {
+  const at = peaksAt(v, stops), s = stops - 1;
+  if (at < 0) return null;
+  return stretchLoad(Array.from({ length: s }, (_, k) => v[at + p * s + k]));
 }
 
 /** T-477, T-515, T-2236: one demand level's crowding from a line's `line_periods` numbers `v`, as
- * the line panel's dot and the Lines list's trains cell show it: the busiest hour's load on the
- * line's fullest stretch over the level's periods, as a share of the rated load, and the hover with
- * each stretch's colour and each period's load. Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { load: number; tip: string; phrase: string } | null {
+ * the line panel's dot and the Lines list's trains cell show it: the busiest hour's load on each
+ * stretch over the level's periods, as a share of the rated load, graded by `stretchLoad` (`load`,
+ * the dot's colour), and the hover with the fullest stretch's load, each stretch's colour and each
+ * period's load. On a Saturday or Sunday (`kind`, T-1720) the high hours run the medium level's
+ * trains, so they count as medium and the high level has none. Null when the level runs no trains. */
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, kind = 0): { load: number; tip: string; phrase: string } | null {
   const at = peaksAt(v, stops), s = stops - 1;
   if (at < 0) return null;
   let trains = 0, peak = 0;
   const per = new Array<number>(s).fill(0), lines: string[] = [];
+  const want = LEVEL_INDEX[d];
   for (let i = 0; i < PERIODS.length; i++) {
     const p = PERIODS[i];
-    if (p.demand !== d || !(v[i * PERIOD_STRIDE] > 0)) continue;
+    if (levelOn(kind, LEVEL_INDEX[p.demand]) !== want || !(v[i * PERIOD_STRIDE] > 0)) continue;
     trains += v[i * PERIOD_STRIDE];
     let most = 0;
     for (let k = 0; k < s; k++) {
@@ -89,7 +123,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { lo
       most = Math.max(most, x);
     }
     peak = Math.max(peak, most);
-    lines.push(`${p.from}-${p.to}: ${loadText(most)}`);
+    lines.push(`${hourSpan(p.from, p.to)}: ${loadText(most)}`);
   }
   if (!(trains > 0)) return null;
   const over = per.filter((x) => x >= CROWD_GRADES[0]).length;
@@ -101,7 +135,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { lo
     + (over > 0 ? `\n${tipStrip(per.map(crowdColour))}` + (text ? `\n${text}` : "") : "")
     + (verbose && over > 0 && over * 2 <= s ? "\nOnly a short stretch is crowded. More trains would run mostly empty, and may cost more than they earn." : "")
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "");
-  return { load: peak, tip, phrase: `peak load ${loadText(peak)}` };
+  return { load: stretchLoad(per), tip, phrase: `peak load ${loadText(peak)}` };
 }
 
 /** T-1893: the profit hover's line when the line's day is not a weekday, so a loss on a quiet day

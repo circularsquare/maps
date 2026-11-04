@@ -184,12 +184,12 @@ levels:
    the arrival's cost (`platform_walk`), and which lines join the pool does not depend on the
    platform arrived at; the trip explorer shows each route's own walk. A change across one
    platform walks nothing, platforms 80 m apart cost 2.0 perceived minutes, 120 m 3.0 and a linked
-   pair 1 km apart 25, each with the fixed 2. **In a station building** (T-2220) the fixed minutes
-   count `upgrades::BUILDING_CHANGE` (0.8): the clock worker sets `upgrades::IN_BUILDING` in the
-   snapshot upgrades of each building's members (game/buildings.ts, never saved), and a boarding at
-   such a station pays 1.6 fixed minutes (`Graph::change_f`; the first boarding's take-back alike;
-   any transfer fare whole). Walks are whole: at 0.8 they made a building's effect hang on which
-   platforms its outline took in. The members stay separate demand stations joined by walk edges rather
+   pair 1 km apart 25, each with the fixed 2. **In a station building** (T-2220, T-2276) the fixed
+   minutes count `upgrades::BUILDING_CHANGE` (0.5): the clock worker sets `upgrades::IN_BUILDING` in
+   the snapshot upgrades of each building's members (game/buildings.ts, never saved), and a boarding
+   at such a station pays 1 fixed minute (`Graph::change_f`; the first boarding's take-back alike;
+   any transfer fare whole), and its waits count as in a waiting room (`wait_factor`, 0.8). Walks
+   are whole: cut too, they made a building's effect hang on which platforms its outline took in. The members stay separate demand stations joined by walk edges rather
    than one merged station: each keeps its own catchment and position, a long link is not a free
    teleport, and transfers stay counted platform to platform for the complex map (T-176). The
    trip explorer shows such a change as a walk between the two stations. The 100 m merge is single
@@ -207,7 +207,7 @@ levels:
    graph each. A worker keeps two tables; when a third graph comes, the table with the fewest
    searched destinations gives way, and only to one with at least as many to search (a cheaper one
    is searched for that call alone), so the order populations are solved in does not change what
-   is searched (T-405). A table is stations² costs and stations² walks (u16 metres, T-1059) plus, per searched destination, each node's next
+   is searched (T-405). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there (their trains an hour are the graph's),
    and each change node's station and a bit per boarding edge of that station for the departures
@@ -252,34 +252,31 @@ levels:
    selected cells before any is weighed) and answer only the far cells they reach; the main
    thread adds the workers' answers up over those cells (`workers/selectionMerge.ts`; T-285,
    timings in notes/demand-kernel-history.md).
-   **Anita's walking rule** (T-1059, `Params::walk_rule`): a station pair is no rail option for a
-   trip when the walk to its first station, the walks between stations and platforms on the way
-   and the walk from its last together are longer than walking between the trip's ends. All in
-   straight metres: an access entry's mean distance (none for a drive to the station), the
-   strategy's expected walks (`Skims::walk`, u16 metres station to station, worked out from each
-   destination's strategy as it is searched: a walk to another station from the platform left,
-   and at a change the walk to the first train's platform, by frequency), and for the trip the
+   **Anita's walking rule** (T-1059, in real minutes since T-2265, `Params::walk_rule`): within
+   `WALK_REACH_KM` a station pair is no rail option for a trip when the way to its first station,
+   the strategy's real minutes between stations and the walk from its last together take longer
+   than walking between the trip's ends. All in metres walked at walking's pace
+   (`Params::walk_eq_m`, 76.9 m a minute): an access entry's mean distance (a drive's real
+   minutes), the strategy's expected real minutes (`Skims::walk`, u16 station to station, worked
+   out from each destination's strategy as it is searched, `walk_column`: half the accepted
+   departures' headway at each boarding, the rides, a walk to another station from the platform
+   left, and at a change the walk to the first train's platform at the change's pace, by
+   frequency; no crowding, fare, left-behind wait or fixed change minutes), and for the trip the
    distance its walk uses (commutes: between the subzones' centres; everyday: the pair's mean),
    times the pack's walk factor over water. The refused pairs leave the logsum, so rail costs
-   more there, and a trip with none left has no rail (the trip explorer says walking is
-   shorter). The commutes keep their lanes: each origin knows the most its trips can walk before
-   their last station (an access walk and the most its station walks on to any destination,
-   `Skims::walk_max`), and a lane whose distance is past that and its destination's longest
-   egress walk is taken as before (98% of lanes on the real New York and Tokyo networks). Only the
-   rest look at their station pairs one by one, scale the lane's logsum by the share kept, load as
+   more there, and a trip with none left has no rail (`WALK_FURTHER`: the trip explorer says
+   walking is quicker, with the quickest pair's real minutes from head slot 44). A trip with no
+   refused pair keeps its whole share. The commutes keep their lanes: each origin knows the most
+   its trips can take before their last station (its way to a station and the most its station
+   takes on to any destination, `Skims::walk_max`), and a lane whose distance is past that and its
+   destination's longest egress walk, or past walking's reach, is taken as before. Only the rest
+   look at their station pairs one by one, scale the lane's logsum by the share kept, load as
    usual and take the refused pairs off again, or, where most are refused, load the kept pairs
-   alone (f32 would lose too much in the taking off). The everyday pass, the pair choice
-   (`walk_kept`) and the trip explorer skip the refused pairs in their own loops. Long trips between cities do not apply it (their
-   walks are never close to the trip's length).
-   **No train no quicker than walking** (Anita, T-1782, `Params::walk_fade` 0.3): rail's share of a
-   trip (after `car_choice`) is scaled by `walk_fade_of(rail, cw)` = (cw - rail) / (0.3 cw) held to
-   0..1, rail the trip's rail cost (the logsum, fare included) and cw walking the whole way's:
-   nothing at or above walking's cost, a third at 10% under, all from 30% under. Its riders go
-   back to walking and the car as any rail share does (walking keeps its share of what rail does
-   not take). The commute lanes, the everyday pass, the everyday outings across a zone line (their
-   walk's cost read back from its weight against the car) and the trip explorer apply it; the
-   explorer says walking is quicker (`SLOWER_THAN_WALK`) or names the cut (head slot 44). Walks
-   past 10 km (`NO_WALK`) are never cut.
+   alone (f32 would lose too much in the taking off). Since the rule counts rides and waits,
+   `walk_max` passes few lanes under 10 km (the New York calib's solve about 20% slower than with
+   T-1059's metres, T-2307). The everyday pass, the pair choice (`walk_kept`) and the trip explorer
+   skip the refused pairs in their own loops. Long trips between cities and the everyday outings
+   across a zone line do not apply it.
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,

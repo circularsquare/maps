@@ -12,6 +12,7 @@
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
 import type { Map as MlMap } from "maplibre-gl";
+import { bpHover } from "../game/blueprintStretches";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, switchPicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
 import { designSpeed, selection, tool } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
@@ -91,6 +92,7 @@ export class BlueprintBox {
     // the highlight follows the pick and the world (a new network has new buffers)
     effect(() => {
       bpPicked.value;
+      bpHover.value;
       selection.value;
       world.value;
       tool.value;
@@ -211,9 +213,9 @@ export class BlueprintBox {
    * network buffers were replaced. */
   refreshHighlight() {
     const n = this.overlay.renderer.net;
-    // T-1679: the track inspector's piece too
+    // T-1679: the track inspector's piece too; T-2269: the Build tab's breakdown row under the pointer first
     const sel = selection.peek();
-    const edges = bpPicked.peek().edges.length ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : [];
+    const edges = bpHover.peek().length ? bpHover.peek() : bpPicked.peek().edges.length ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : [];
     if (!n || !edges.length) {
       this.overlay.renderer.setHighlight(null);
     } else {

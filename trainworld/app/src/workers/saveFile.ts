@@ -23,8 +23,11 @@ export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
 /** SPEC 8: a new game starts on day 1 at 07:00 (game seconds). */
 export const START_CLOCK = 86400 + 7 * 3600;
-/** SPEC 6.4: US$6B to start, in US$M; a sandbox's money since the start is the cash less this (T-728). */
-export const START_CASH = 6000;
+/** SPEC 6.4: US$10B to start (T-2271), in US$M; a sandbox's money since the start is the cash minus this (T-728). */
+export const START_CASH = 10000;
+/** T-2271: a new game's lines start at 5 cars a train (Anita: players raise it where crowded); a save
+ * keeps its own `newCars`. */
+export const NEW_LINE_CARS = 5;
 
 /** One game day's money, US$M (T-028). */
 export interface DayLedger {

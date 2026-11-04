@@ -35,20 +35,44 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   only after my "go" (one writer at a time with replan).
 - a24a3ce58427a5a79 **replan** (Opus): T-1189 (Taiwan, US+PR, Europe): prerequisites (T-1999, T-774 in
   pipeline/world_plan.py: go given 01:55, countries told to keep off that file), dry runs and a look, then builds.
-  Ids T-2300..04. Pack writes only after my "go".
-- a332dce7f34335163 **audit** (Opus): closes done TASKS lines and rewrites for-anita.md's old section. Id T-2305.
+  Ids T-2300..04. Pack writes only after my "go". **Pack lock: replan, since ~02:20** (Taiwan: retire ead/zht/xid,
+  world_run TW --no-join, 7 new zones; backup data/work/pre-T1189/pre-tw; batch 20261104-015157, PID 17932).
+  Build 8800 frozen until it releases. Successors interim (xid, zht -> tai; ead -> none) until the gate registers the
+  new zones, then replan sets ead=eai, xid=zhb, zht=zhb. **Next lock: countries (Turkey, 76 rows: 8 metros, 68
+  zones; TUR and RUS rules in world_plan.py)**, waiting for my go after Taiwan's gate.
+- **audit DONE** (3ecdc51c): 13 closed or abandoned, 6 trimmed; CLAUDE.md "task is done" rule now says to update
+  every line naming an archived id and archive a parent with its last stage. Unsure, left open: T-430, T-340 (moot
+  once T-2282 drops quad), T-2267/T-2270 (archive when T-2282..85 start), T-1193, T-1867, T-1444; T-1920 and T-2058
+  asked in for-anita.md. notes/audit-2026-11-04.md.
+- a0c6d307f45a77263 **diagram** (Opus, ~02:10): T-2272 friend items (dark ring, small local stops, HSR, faint big
+  names, stations 4x further out) then T-2289 condense lonely stretches. Port 6179. Ids T-2321..23.
 - aa63180067dce711c **demand** (Opus): T-2265 walk rule, T-2278 parking by income, T-2276 buildings 1 min +
   waiting room. Port 6178. Ids T-2306..08.
-- a9dff6b277a205075 **display** (Opus): T-2271 map items (weekend dot rim, stop-editing dim, log bars, wider dot hover,
-  lower min bubble) + T-2279 crowding average behind a constant, default off, curve and examples in notes/T-2279.md
-  for Anita. Port 6174. Ids T-2309..11.
-- ad9dc5e7e818a8799 **panels** (Opus): T-2271 panel items (HCMC one line, 6:00, D hotkey, money plots 1d/30d/all and
-  local days, hammer icon, $10B, 5 cars) + T-2286 fares stamped in daysOf. Port 6175. Ids T-2312..14.
-- a6302f2fb8bb72c39 **buildtab** (Opus): T-2271 level hover (cost multiple, 1x yellow) + T-2269 blueprint breakdown
-  with stretches on/off. Port 6176. Ids T-2315..17.
-- aae6e3f95e13b0381 **ferries** (Opus): T-2273 tool polish, T-2274 per-stretch flows, T-2275 stop list click/drag.
-  Port 6177. Ids T-2318..20.
-- Next free id **T-2321**.
+- **display DONE, uncommitted** (a9dff6b277a205075, retired ~03:35): T-2271 map items (whole T-2271 archived),
+  T-2279 behind `CROWD_MEAN_ON = false` in game/today.ts (`?crowdMean=1` previews; on her OK set true and archive),
+  linesPeriods fix in clock.worker.ts. Smoke 23/23 on 6174. Commit with the UI batch (waiting on demand's and
+  diagram's file lists to leave their hunks out).
+- **panels DONE, uncommitted** (ad9dc5e7e818a8799, retired ~03:20): T-2271 panel items (name cap 140 px in style.css;
+  hourSpan/hourText in game/periods.ts "06:00"; H key toolKeys/main/DemandSelector; MoneyHistory 1d/30d/All; ledger
+  local days in clock.worker dayShift + protocol MoneyState.dayShift; hammer widgets.tsx; START_CASH 10000 and
+  NEW_LINE_CARS 5 in saveFile.ts) + T-2286 (LineDemand.solvedFares stamped in daysOf; main.ts wrap gone). t2266
+  10/10; smoke 22/23 (t1053 during replan's write, passes alone). Stale "$6B" comment in sim wasm.rs. Commit with
+  the UI batch.
+- **buildtab DONE, uncommitted** (a6302f2fb8bb72c39, retired ~03:05): level hover in new ui/trackPrice.ts (for
+  T-2282), 1x yellow costTint; T-2269 breakdown (BuildTab.tsx, Blueprint.tsx, new game/blueprintStretches.ts, map/
+  blueprintBox.ts bpHover, ui/locate.ts locateNodes, WASM `blueprint_piece_costs` in sim track/net.rs +
+  track/wasm/money.rs, protocol "blueprintPieces", clock.worker one line, game/quotes.ts). cargo 354 + 521, wasm
+  rebuilt in main tree. Smoke 22/23: t1053-zone-ids fails on replan's Taiwan retire (asked replan to run
+  zone_successors.py). Commit with the UI batch. Strings in for-anita.md.
+- **ferries DONE, uncommitted** (aae6e3f95e13b0381, retired ~02:40): T-2273 (tag no longer hides: ferryDraw.ts;
+  leg to pointer #1d4f91 / dark #9cc2ee `--ferry-ghost`; headways 20/30/none in clock.worker.ts), T-2274 (Traffic view
+  bus and ferry widths by stretch: demandLayers busWidths, busLayer.ts, demandViews.ts; hover finds the stretch;
+  ferry panel port list drawn like stops), T-2275 (click a port dot to remove, drag rows, one undoable
+  FerryDraw.setPorts). check t2273-ferry-panel.mjs; smoke 23/23 on 6177. T-2320 filed (train drag reorder). Its
+  hunks share files with display/panels/buildtab (style.css, demandViews, LineInspector, docs): commit with that UI
+  batch. Loose end: sim ferry::FERRY_HEADWAYS_S unused, still 900/1200/1800: fix at the next sim landing.
+  Strings: "Click to remove the stop at X" (port dot), "A ferry line needs at least two ports."
+- Next free id **T-2324**.
 
 ## Next
 1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while

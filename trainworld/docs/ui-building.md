@@ -14,8 +14,10 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   2 by 2 grid [T-1128], and under them the full-width Bus button (U, [below](#drawing-a-bus-line))
   [T-1514]; then the level, headed "Level" (seven buttons
   tinted in their Level colours, the chosen one solid with a dark outline, a light one in the dark theme, T-478, T-692)
-  (hover "Ground level (Shift+4)" and so on, with a second line "Upkeep $20k per km per day", that
-  elevation's upkeep for one km of the picked track type (both pairs on Quad), `edgeUpkeep` [T-2006, T-2009]: Shift+1 to Shift+7 pick the drawing
+  (hover "Ground level (Shift+4)" and so on, then "0.5x cost, $37.5M per km", that level's multiplier
+  and price as the price row below gives them [T-2271], then "Upkeep $20k per km per day", that
+  elevation's upkeep for one km of the picked track type (both pairs on Quad), `edgeUpkeep` [T-2006, T-2009];
+  the three lines are `levelTip` in `ui/trackPrice.ts`): Shift+1 to Shift+7 pick the drawing
   elevation from any tab, by key code, 4 being 0 [T-1701, T-1834]; the draw-at-the-elevation-of-the-track-you-extend
   switch of T-1161 is gone, and every segment's open-ground end takes the elevation picked,
   `Tools.freeLevel`). The price row below them runs left to right: the picked elevation's price
@@ -27,8 +29,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   km (1.1x cost)" (with High speed picked, high-speed track's: 1.5x, so 0.75x at ground; with Quad
   picked, both pairs': the price and the upkeep lines are two double tracks', the multiplier stays
   the elevation's [T-2009]), the
-  multiplier on the track tool's tag colours: yellow growing above 1x, light green growing below
-  it, none at 1x (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
+  multiplier on the track tool's tag colours: light yellow at 1x [T-2271], yellow growing above it,
+  light green growing below it (`costTint` in `map/trackTagRows.ts`); the line's hover names the elevation
   [T-1159] (with ", high-speed track" or ", quad track" after it) [T-2009] and gives the same upkeep line as the elevation buttons [T-2006]. Then Double, Quad or High speed track [T-255, T-817; no single track, T-733],
   the target max speed (a row under the track choice: a stepper through 160, 200, 250 and 320 km/h, 160
   by default; higher lays the curves of newly drawn track wider, [track-and-service.md](track-and-service.md)
@@ -61,7 +63,34 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 - **At the bottom of the pane**, fixed while the settings above scroll: the blueprint total, undo
   and redo, and "Construct blueprints", which builds every blueprint that is not disabled
   ([below](#the-select-tool)). The total is red when it is more than the cash on hand [T-527]. It includes the new
-  train cars that constructing starts, after spare cars. An expandable cost breakdown shows track
+  train cars that constructing starts, after spare cars.
+  Under the total and its upkeep line, above Construct, is the **Cost breakdown** [T-2269], collapsed
+  by default (it opens and closes with its heading; the bottom area takes at most 60% of the pane
+  and the breakdown scrolls within it). Open, it lists the blueprint by **part**: track joined by
+  blueprint track (crossovers included), biggest price first, each a heading row named by the first
+  and last stations met walking it from an end ("Alpha St to Charlie Sq"; one station's name; "Track"
+  with none) and then, when it has more than one row, its rows in track order: each blueprint
+  station ("Alpha St", its upgrades and passages in its price) and each **stretch**, the track
+  between two stations, junctions or track ends, named by its ends ("Alpha St to Bravo Av",
+  "Alpha St to a junction", "Bravo Av to a track end", "Bravo Av to built track"; an end within
+  250 m of a station takes the station's name, since track drawn from a station starts at its
+  platform's end), with its length and price (its flat crossings in it); then one "2 junctions"
+  row for the part's junction switches, flyovers and crossovers. Quad track's twin rows (the same
+  names, ends within 80 m) are one row. A blueprint station on built track only is a part of its
+  own. Prices come from the track model piece by piece (`blueprint_piece_costs`, kind, two ids,
+  US$M and whether the quote counts it; `game/blueprintStretches.ts` groups them); the parts' counted
+  prices plus the rows below add to the total. Each heading, station and stretch row has a checkbox:
+  unticking switches its pieces off (the part's checkbox, every piece of the part; one undoable
+  edit), which is the Select tool's Disable, so the pieces are drawn grey, left out of the total
+  and of Construct, and saved switched off [T-333]; a row all switched off is grey and shows its
+  full price, a row partly off shows what is still counted. Hovers: "Disable this stretch" /
+  "Enable this stretch" (and "this station", "all joined track" on a heading), a stretch's level
+  ("Viaduct (+1)", "Levels −1 to +1") and its flat crossings, a heading's stations and length.
+  The pointer over a row highlights its track on the map with the selection's ink band (a station,
+  the track at it; `bpHover`); a click on a row moves the camera to fit it (`locateNodes`). After
+  the parts come the trains, bus routes, buses, ports, boats and ferry routes as kind rows, then a
+  collapsed **By kind**, the whole quote by kind as below. The pieces are asked of the clock worker
+  only while the breakdown is open. By kind shows track
   by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
   model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $6M per road crossing", "Road crossings × 12", "= $72M") [T-1929, T-2017]. The fleet quote previews the constructed service, so lines started together include their
@@ -197,7 +226,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   and its lowest speed limit with the track tag's icons and colours ("↕ 0 +2  » 67 km/h": where
   it starts, a bridge's top or a dip's bottom, where it ends, each once [T-707]),
   `map/trackTagRows.ts`; [ui-map.md](ui-map.md) "Hover tags on the network"). The multiplier sits
-  on yellow above 1x, deeper up to 2.5x, plain at 1x and below. It is the level's multiplier
+  on `costTint`'s colours, as the Build tab's price: light yellow at 1x, deeper up to 2.5x, light
+  green below 1x [T-2271]. It is the level's multiplier
   (6.4: 0.5x at ground, 1.0x at +1) plus terrain's and water's surcharges, averaged over the track
   priced, both pairs on quad, whose price is two double tracks' [T-711]. Where the segment could not be
   built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
@@ -286,7 +316,10 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   a port the network has (within 10 px or 30 m) stops there, so lines share ports. A click on water
   is refused ("Place ports on land by the water"), and on land more than 150 m from water ("Too far
   from water"); the tag over the pointer says which before the click, "Place port" or "Stop at
-  <port>" where a click works.
+  <port>" where a click works. The tag stays up as the pointer moves, as the track tool's does:
+  while the water under a new position is asked it keeps the last answer, so only its text changes
+  (T-2273). From the active end to the pointer a dashed leg shows where the next click joins, dark
+  blue in light and light blue in dark (`--ferry-ghost`).
 - **While drawing** each port is a circle on its landing with a short line to its berth, the active
   end larger; the route between is dashed in the line's colour, grey and straight while it is
   searched, red and straight where no water joins two ports. The tag gives the route's length and the
@@ -411,8 +444,9 @@ switch on, the track tool follows the real network the layer draws.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips there are within 1 km
-  (1 mile in US units): "12k trips within 1km", two significant figures, "Under 50" below that.
-  The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
+  (1 mile in US units): "12k trips within 1km", two significant figures, "Under 50" below that,
+  over a thin bar of its size on a log scale, empty at 1,000 and full at 1M, ticks at 10k and 100k
+  (`NEAR_BAR_*` in `map/tools.ts`) [T-2271]. The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
   are inside the circle, from the zone in view only; a trip with both ends inside counts twice.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance, each labelled at its top, follow the spot under the ghost
@@ -629,9 +663,10 @@ running line's trains stop at then wins over one they do; then the nearest.
 
 **Stop editing mode** (Edit stops, New line, Copy line):
 
-- The map hides the demand views (bubbles, inter-city bubbles, the trip route,
-  capacity tags, traffic widths and station circles) and draws the other lines and their trains at
-  30%; the edited line's trains stay full.
+- The demand bubbles (local, inter-city, the airport and attraction badges) stay, at 35% and beneath
+  the network, with no hover tags [T-2271]; the trip route, capacity tags, traffic widths, drive arcs
+  and station circles go; the other lines and their trains are drawn at 30%; the edited line's trains
+  stay full.
 - A round toggle marker on every station, over everything: a stop is a disc in the line's colour
   inside a white ring inside a dark one; other stations are hollow. Stations a stop can be added at
   without changing the line's path (on track the route passes over, or past either end on track

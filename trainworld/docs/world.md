@@ -209,7 +209,11 @@ player is looking.
 - **The view.** The top bar's time, day and demand level, the demand views' period and their
   "Today" kind of day are the local time at the view's centre (`viewShift`, updated as the map
   moves). A line's inspector and the Lines tab show each line's level in its own local time.
-- **Not yet local** (T-321): the money ledger's days and the world market's longer trips between zones of different offsets (London - Paris,
+- **The money ledgers' days** (T-2271): every ledger (the network's and each region's) has its days
+  midnight to midnight in the start zone's local time (`dayShift` in the clock worker; a save with no
+  start zone, the clock's own), one offset for all so the regions still add up to the network day by
+  day; the hour ledgers keep the clock's hours.
+- **Not yet local** (T-321): the world market's longer trips between zones of different offsets (London - Paris,
   Tokyo - New York), which take no period rule yet.
 
 ### Calendar

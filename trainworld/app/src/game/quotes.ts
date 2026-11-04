@@ -50,6 +50,19 @@ export function lineQuote(num: number, v: number): Promise<{ build: number; trai
   return q.p;
 }
 
+let pieces: { v: number; p: Promise<Float64Array | null> } | null = null;
+/** T-2269: the blueprint priced piece by piece at world version `v` (`blueprint_piece_costs`: kind,
+ * two ids, US$M, counted), the switched-off pieces too; null when an edit came first. */
+export function blueprintPieces(v: number): Promise<Float64Array | null> {
+  if (pieces?.v !== v) pieces = { v, p: settled(v, () => queryClock({ what: "blueprintPieces" })) };
+  return pieces.p;
+}
+/** `blueprintPieces` for a panel while `shown`: the last answer meanwhile. */
+export function useBlueprintPieces(shown: boolean): Float64Array | null {
+  const v = world.value?.version ?? -1;
+  return useLatestAnswer(shown ? () => blueprintPieces(v) : null, [v, shown]);
+}
+
 /** The blueprint's quote rows for a panel, asked again as the world changes; the last ones meanwhile. */
 export function useBlueprintQuote(): BlueprintItem[] {
   const v = world.value?.version ?? -1;

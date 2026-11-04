@@ -28,6 +28,9 @@
 /* T-2215: No route, the bubbles' grey (game/palette.ts NONE_GREY) for bars and swatches */
 :root { --none-grey: #b6b6b6; }
 :root[data-shade="dark"] { --none-grey: #d6d6d6; }
+/* T-2273: the ferry tool's leg from the active port to the pointer, over light or dark water */
+:root { --ferry-ghost: #1d4f91; }
+:root[data-shade="dark"] { --ferry-ghost: #9cc2ee; }
 
 :root {
   --font: "Nunito", "Zen Maru Gothic", system-ui, sans-serif;
@@ -452,7 +455,9 @@ table.sched .hw-real { color: var(--muted); margin-right: 6px; }
 /* T-472, T-477: text the player should act on, and each demand level's crowding */
 .crowd-warn { color: var(--warn); }
 .crowd-bad { color: var(--bad); }
-.crowd-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 3px; vertical-align: 1px; outline: 1px solid transparent; outline-offset: 1px; }
+.crowd-dot { display: inline-block; position: relative; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 3px; vertical-align: 1px; outline: 1px solid transparent; outline-offset: 1px; }
+/* T-2271: the hover reaches 6 px round the dot (to the row's left edge, short of the level's name) */
+.crowd-dot::before { content: ""; position: absolute; inset: -6px -5px -6px -6px; }
 .rows.sub-rows > li { padding-left: 12px; color: var(--muted); min-height: 24px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
 .complex-map { margin: 8px 0 4px; }
@@ -581,6 +586,13 @@ rect.now { fill-opacity: .45; }
 .stops .stop-hit:hover { box-shadow: inset 0 0 0 2px var(--bad); }
 .stops .stop-hit.add:hover { box-shadow: inset 0 0 0 2px var(--text); }
 .stops.related-rows .stop-hit { left: calc(var(--spine) - 10px); }
+/* T-2275: a ferry line's ports moved by dragging their rows */
+.stops.ferry-ports.movable li { cursor: grab; user-select: none; }
+.stops.ferry-ports.dragging li { cursor: grabbing; }
+.stops.ferry-ports li.dragged { opacity: 0.5; }
+.stops.ferry-ports li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.stops.ferry-ports li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
+.stops.ferry-ports .n { flex: none; }
 /* T-1464: a bus line's stops: a square at each end, a ring at a station, small rings for the street stops */
 .bus-stops { list-style: none; margin: 0; padding: 0; }
 .bus-stops li { display: flex; align-items: center; gap: 8px; min-height: 25px; }
@@ -681,7 +693,7 @@ rect.now { fill-opacity: .45; }
    and the speed buttons. The clock and speed buttons have fixed widths and the bar takes the rest. The
    name takes what it needs up to a cap, on two lines at most with an ellipsis (its whole name on
    hover). The split is one row (bar, then the train share), centred in the bar (T-349). */
-.city { flex: none; width: max-content; max-width: 120px; white-space: normal; overflow: hidden; overflow-wrap: anywhere;
+.city { flex: none; width: max-content; max-width: 140px; white-space: normal; overflow: hidden; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .split { flex: 1; min-width: 0; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
 .split-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 24px; }
@@ -911,6 +923,18 @@ button.save-add:hover { color: var(--text); }
 .bp-total .off-cost { user-select: none; }
 .blueprint-breakdown summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 8px; }
 .blueprint-category { margin-top: 8px; }
+/* T-2269: the breakdown under the blueprint total scrolls on its own; switched-off rows grey */
+.blueprint-controls { display: flex; flex-direction: column; max-height: 60%; }
+.blueprint-controls > * { flex: none; }
+.blueprint-controls > .blueprint-breakdown { flex: 0 1 auto; min-height: 0; overflow-y: auto; margin: 0 -14px 8px; padding: 0 14px; }
+.blueprint-controls .blueprint-breakdown summary { margin-top: 2px; }
+.bp-part { margin-top: 6px; }
+.blueprint-items > li.bp-part-head, .blueprint-items > li.bp-sub { align-items: center; gap: 6px; padding: 2px 6px; }
+.blueprint-items > li.bp-sub { padding-left: 32px; }
+.blueprint-items > li.bp-fixed { cursor: default; }
+.bp-part-head .grow, .bp-sub .grow { white-space: normal; }
+.blueprint-items > li.bp-off, .blueprint-items > li.bp-off .val { color: var(--muted); }
+.bp-by-kind summary { cursor: pointer; font-size: 12px; color: var(--muted); margin-top: 10px; }
 /* T-1159: the Track row, Target max speed and Platform length the same 6 px apart */
 .build-rows { margin-top: 6px; }
 .build-rows > li { padding: 0; min-height: 0; }
@@ -980,6 +1004,12 @@ button.save-add:hover { color: var(--text); }
 /* T-1926: a strip of cells in a hover; width 0 with a full minimum keeps it from widening the tag */
 .tool-tag .tip-strip { display: flex; gap: 1px; width: 0; min-width: 100%; height: 5px; margin: 3px 0; }
 .tool-tag .tip-strip i { flex: 1 1 0; min-width: 0; }
+/* T-2271: a count's size on a log scale, a tick at each power of ten (the station tool's trips near) */
+.tool-tag .size-bar { position: relative; width: 0; min-width: 100%; height: 4px; margin: 3px 0 2px;
+  background: color-mix(in srgb, var(--map-ink) 14%, transparent); }
+.tool-tag .size-bar i { display: block; height: 100%; background: color-mix(in srgb, var(--map-ink) 62%, transparent); }
+.tool-tag .size-bar::after { content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(to right, transparent 0 calc(33.333% - 1px), var(--map-land) calc(33.333% - 1px) 33.333%); }
 /* T-1495: a coloured span in a tag stops 2 px short at the bottom, so the spans of rows below one another leave a gap
    (its colour is the --chip-bg that `chip` in map/trackTagRows.ts sets) */
 .tag-chip { background: linear-gradient(var(--chip-bg), var(--chip-bg)) no-repeat 0 0 / 100% calc(100% - 2px); }
@@ -1032,10 +1062,13 @@ button.save-add:hover { color: var(--text); }
 /* T-224: while a tool is on, presses and moves on a dot reach the map underneath */
 .cap-marks.pass .cap-mark { pointer-events: none; }
 
-/* stop editing (T-233, map/stopMarkers.ts): the demand views go, a toggle marker sits on every
-   station. Markers take no pointer events; the map's own clicks pick them. */
-.stop-editing #map canvas.overlay.demand, .stop-editing #map canvas.overlay.trip, .stop-editing .cap-marks,
-.stop-editing .intercity-labels, .stop-editing .demand-tag, .stop-editing .demand-box { display: none !important; }
+/* stop editing (T-233, map/stopMarkers.ts): a toggle marker sits on every station; T-2271: the
+   bubbles stay, faint and beneath the network, and their tags, the trip route and the capacity tags
+   go. Markers take no pointer events; the map's own clicks pick them. */
+.stop-editing #map canvas.overlay.trip, .stop-editing .cap-marks,
+.stop-editing .demand-tag, .stop-editing .demand-box { display: none !important; }
+.stop-editing #map canvas.overlay.demand, .stop-editing .intercity-labels, .stop-editing .airport-marks,
+.stop-editing .attraction-marks { z-index: 0; opacity: 0.35; }
 .stop-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; --c: #888; --ms: 20px; }
 .stop-mark { position: absolute; left: 0; top: 0; box-sizing: border-box; width: var(--ms); height: var(--ms);
              margin: calc(var(--ms) / -2) 0 0 calc(var(--ms) / -2); border-radius: 50%;
@@ -1171,7 +1204,7 @@ button.save-add:hover { color: var(--text); }
   #topbar { gap: 10px; }
 }
 @container map-column (max-width: 760px) {
-  .city { max-width: 96px; }
+  .city { max-width: 124px; }
 }
 /* T-349, T-1853, T-1865, T-1868, T-1883 (Anita's sketch): below 700 px the bar takes two rows. The first has
    the name, the cash and the time and date at the row's end; the second the mode bar with the train share

@@ -62,6 +62,16 @@ export const ferryDraft = signal<{ line: number | null; points: number } | null>
 
 const same = (a: Pt, b: Pt) => a.lng === b.lng && a.lat === b.lat;
 
+/** A route as the sim takes it: x, y, kind and speed per point. */
+function routeArray(r: LineRoute): number[] {
+  const route: number[] = [];
+  for (let i = 0; i < r.kinds.length; i++) {
+    const q = lngLatToPack(r.ll[2 * i], r.ll[2 * i + 1]);
+    route.push(q.x, q.y, r.kinds[i], r.speeds[i]);
+  }
+  return route;
+}
+
 export class FerryDraw {
   readonly water: FerryWater;
   private ports: DraftPort[] = [];
@@ -73,6 +83,7 @@ export class FerryDraw {
   private routing: Promise<void> | null = null;
   /** the pointer, what is under it, and the probe of the water there */
   private at: Pt | null = null;
+  private pt: { x: number; y: number } | null = null;
   private under: Under = { kind: "unknown" };
   private probing = false;
   private probed: { at: Pt; water: boolean; shore: boolean } | null = null;
@@ -231,9 +242,9 @@ export class FerryDraw {
     if (i >= 0) return { kind: "handle", i };
     const port = this.portAt(px, py, at, touch ? TOUCH_HANDLE_PX : HANDLE_PX);
     if (port) return port;
+    // the last answer stands while a newer one is asked, so the tag stays up and only its text changes (T-2273)
     const p = this.probed;
-    if (p && same(p.at, at)) return { kind: p.water ? "water" : p.shore ? "shore" : "far" };
-    return { kind: "unknown" };
+    return p ? { kind: p.water ? "water" : p.shore ? "shore" : "far" } : { kind: "unknown" };
   }
 
   /** Ask the worker what is under the pointer; the newest position wins. */
@@ -245,11 +256,15 @@ export class FerryDraw {
       this.probing = false;
       if (r) this.probed = { at, ...r };
       if (!this.active) return;
-      if (this.at && !same(this.at, at)) return this.probe();
-      if (this.under.kind === "unknown" && r) {
-        this.under = { kind: r.water ? "water" : r.shore ? "shore" : "far" };
-        this.place();
+      const k = this.under.kind;
+      if (r && k !== "handle" && k !== "port") {
+        const next = r.water ? "water" : r.shore ? "shore" : "far";
+        if (next !== k) {
+          this.under = { kind: next };
+          this.place();
+        }
       }
+      if (this.at && !same(this.at, at)) this.probe();
     });
   }
 
@@ -257,8 +272,9 @@ export class FerryDraw {
 
   move(e: MapMouseEvent) {
     this.at = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+    this.pt = { x: e.point.x, y: e.point.y };
     this.under = this.underAt(e.point.x, e.point.y, this.at);
-    if (this.under.kind === "unknown") this.probe();
+    if (!this.probed || !same(this.probed.at, this.at)) this.probe();
     const cur = this.under.kind === "handle" || this.under.kind === "port" ? "pointer" : "crosshair";
     if (this.map.getCanvas().style.cursor !== cur) this.map.getCanvas().style.cursor = cur;
     this.place();
@@ -311,15 +327,20 @@ export class FerryDraw {
   private add(p: DraftPort) {
     if (this.head) this.ports.unshift(p);
     else this.ports.push(p);
-    this.under = { kind: "unknown" };
+    this.reunder();
     this.changed(true);
   }
 
   private remove(i: number) {
     if (this.busy || i < 0 || i >= this.ports.length) return;
     this.ports.splice(i, 1);
-    this.under = { kind: "unknown" };
+    this.reunder();
     this.changed(true);
+  }
+
+  /** The ports changed under a still pointer. */
+  private reunder() {
+    this.under = this.pt && this.at ? this.underAt(this.pt.x, this.pt.y, this.at) : { kind: "unknown" };
   }
 
   /** Take back the active end; with no port placed, leave the tool. */
@@ -424,11 +445,7 @@ export class FerryDraw {
         say(refused ?? `${NO_WATER_PATH}.`, true);
         return;
       }
-      const route: number[] = [];
-      for (let i = 0; i < r.kinds.length; i++) {
-        const q = lngLatToPack(r.ll[2 * i], r.ll[2 * i + 1]);
-        route.push(q.x, q.y, r.kinds[i], r.speeds[i]);
-      }
+      const route = routeArray(r);
       const ports: FerryPortIn[] = this.ports.map((p) => {
         if (p.node !== null) return { node: p.node };
         const a = lngLatToPack(p.landing.lng, p.landing.lat), b = lngLatToPack(p.berth.lng, p.berth.lat);
@@ -458,6 +475,32 @@ export class FerryDraw {
     } finally {
       this.busy = false;
     }
+  }
+
+  /** T-2275: line `line`'s ports in a new order or fewer of them (`order`: indices into its ports now),
+   * from the line panel's list: the route searched again through them and saved, one undoable edit.
+   * False when refused (said why). */
+  async setPorts(line: number, order: number[]): Promise<boolean> {
+    const w = world.peek(), l = w?.save.lines.find((x) => x.num === line);
+    const st = l ? w?.lineStats[l.id]?.bus : undefined;
+    if (!l || !st?.ferry) return false;
+    const ports = order.map((i) => st.ferry!.ports[i]).filter((p) => !!p);
+    if (ports.length < 2) {
+      say("A ferry line needs at least two ports.", true);
+      return false;
+    }
+    const got = await this.water.line(ports.map((p) => ({ at: p.berth, kind: 1 as const })));
+    if (!got) return false;
+    const r = got.route, k = r.legs.findIndex((x) => x.reason);
+    if (k >= 0 || !r.ok) {
+      const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.num, s.name]));
+      const a = names.get(ports[k]?.node ?? -1), b = names.get(ports[k + 1]?.node ?? -1);
+      say(a && b ? `${NO_WATER_PATH} between ${a} and ${b}.` : `${NO_WATER_PATH}.`, true);
+      return false;
+    }
+    const a = await edit({ op: "ferryRoute", line, ports: ports.map((p) => ({ node: p.node })), route: routeArray(r) }, true);
+    if (!a.ok) say("The route could not be changed. Try other ports.", true);
+    return a.ok;
   }
 
   // ---------------------------------------------------------------- drawing
@@ -497,7 +540,7 @@ export class FerryDraw {
     const u = this.under;
     if (end && this.at && !touchInput.peek() && (u.kind === "shore" || u.kind === "port")) {
       const a = xy(end.berth), b = xy(u.kind === "port" ? u.landing : this.at);
-      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--map-land);stroke-width:2px;stroke-opacity:.6;stroke-dasharray:4 4"/>`);
+      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
     }
     // each port: a line from its landing to its berth and a station circle; the active end larger
     const ei = this.endIndex();

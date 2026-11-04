@@ -887,6 +887,35 @@ fn blueprint_switched_off_is_skipped_saved_and_undone() {
 }
 
 #[test]
+fn blueprint_pieces_add_up_to_the_quote() {
+    // T-2269: the pieces counted add to the quote, all of them to the blueprint's whole cost
+    let mut a = api();
+    let line = |x0: f64, y0: f64, x1: f64, y1: f64| -> Vec<f64> { free(x0, y0).iter().chain(free(x1, y1).iter()).copied().collect() };
+    assert_eq!(a.add_route(&line(0.0, 0.0, 1000.0, 0.0), &[], 2, false), 0);
+    let n0 = a.nodes_info()[0] as u32;
+    assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "A".into()), 0, "{}", a.issues());
+    assert_eq!(a.add_route(&line(500.0, -300.0, 500.0, 300.0), &[], 2, false), 0);
+    let e = a.edges_info()[0];
+    let ends: Vec<f64> = [2.0, e, 400.0, 0.0, 0.0].iter().chain(free(400.0, -600.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let sums = |a: &mut TrackApi| {
+        let rows = a.blueprint_piece_costs();
+        let on: f64 = rows.chunks_exact(5).filter(|r| r[4] == 1.0).map(|r| r[3]).sum();
+        let all: f64 = rows.chunks_exact(5).map(|r| r[3]).sum();
+        let kinds: Vec<u8> = rows.chunks_exact(5).map(|r| r[0] as u8).collect();
+        (on, all, kinds, a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum::<f64>())
+    };
+    let (on, all, kinds, quote) = sums(&mut a);
+    assert!([0, 1, 2, 3].iter().all(|k| kinds.contains(k)), "track, a station, a junction and a flat crossing: {kinds:?}");
+    assert!((on - quote).abs() < 1e-8 && (all - a.blueprint_cost()).abs() < 1e-8, "{on} {all} {quote}");
+    // one route switched off: what is counted follows the quote, the whole stays
+    let off: Vec<u32> = a.edges_info().chunks(10).map(|c| c[0] as u32).skip(1).take(1).collect();
+    assert_eq!(a.set_blueprint_off(&off, &[], true), 0, "{}", a.issues());
+    let (on2, all2, _, quote2) = sums(&mut a);
+    assert!(on2 < on - 1.0 && (on2 - quote2).abs() < 1e-8 && (all2 - all).abs() < 1e-8, "{on2} {quote2} {all2}");
+}
+
+#[test]
 fn several_pieces_change_level_at_once_but_not_into_a_flat_crossing() {
     let mut a = api();
     let route = |a: &mut TrackApi, x0: f64, y0: f64, x1: f64, y1: f64, level: f64| {

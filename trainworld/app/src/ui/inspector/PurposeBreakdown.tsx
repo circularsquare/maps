@@ -1,12 +1,12 @@
 import { useState } from "preact/hooks";
 import type { PurposeTrips } from "../../game/demand";
 import { andList, capitalise, count } from "../../game/format";
-import { PERIODS } from "../../game/periods";
+import { hourSpan, PERIODS } from "../../game/periods";
 import { shownDayPhrase } from "../../game/ui";
 import { purposeColour, shownName } from "../../game/purposes";
 import { Spinner } from "../Spinner";
 
-const LABELS = PERIODS.map((p) => `${p.from}–${p.to}`);
+const LABELS = PERIODS.map((p) => hourSpan(p.from, p.to));
 const HOURS = PERIODS.map((p) => p.to - p.from);
 
 type Row = { name: string; outward: number[]; returning: number[]; total: number };

@@ -46,7 +46,7 @@ export function SettingsTab() {
         {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>
       <div class="h">Demand bubbles</div>
-      <Slider label="Size" min={0.5} max={2} step={0.05} value={d.bubbleSize} percent set={(v) => setDisplay("bubbleSize", v)} />
+      <Slider label="Size" min={0.25} max={2} step={0.05} value={d.bubbleSize} percent set={(v) => setDisplay("bubbleSize", v)} />
       <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} percent set={(v) => setDisplay("bubbleOpacity", v)} />
       {/* finer bubbles are more and smaller ones, at the same area per trip */}
       <Slider label="Detail" min={DETAIL_RANGE.min} max={DETAIL_RANGE.max} step={1} value={d.bubbleDetail}

@@ -34,7 +34,9 @@ try {
   // and how many lines are priced at each factor
   await page.evaluate(async () => {
     const H = [4, 6, 4, 4, 6];
-    const { lineFares, markSolveFares } = await import('/src/game/fareInEffect.ts');
+    const { lineFares } = await import('/src/game/fareInEffect.ts');
+    // T-2286: each line's stamp of its solve's fares, as the demand client's `daysOf` writes it
+    const markSolveFares = (days, fares) => { for (const d of days) if (d.view) for (const l of d.view.lines.values()) l.solvedFares = fares; };
     const { demandByDay } = await import('/src/game/demand.ts');
     const tw = window.tw;
     const orig = tw.moneyState.value.fares.nodes.map((n) => [...n]);
