@@ -56,7 +56,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   rebased by it, port 6187): T-1734 land-ready, then T-2410 new line skips the local solve. T-2409 (estimate + clock
   caps + strings) waits on Anita's 1x-or-4x call. RU/BY join: in `step intercity --solve` (pid 41468) since ~11:14
   local clock, no log output while it solves.
-- Next free id **T-2411**.
+- diagpar landed 83dee708 (T-2405, T-2408); **8800 = build 895 (61c7dd29)**, smoke 23/23 light and dark. diagblocks told
+  to rebase. Anita: T-2409 caps at 4x only, strings "Calculation 1 day behind", "Time capped at 4x while updating
+  demand"; queued to solveend after T-1734 and T-2410.
+- tripgraph done (T-2365 stage 1 landed adf36414: kernel `trip_lengths_day`, main WASM rebuilt; retired at 471k).
+  Stage 2 (UI) waits on Anita's pick: review/trips-by-length-log.png (its pick), -vertical, -bars, split-hover.png.
+- Anita evening notes (notes/todo-2026-11-04f.md, T-2411..T-2418). Running: a99a2b6b0ed498dee **uismall** (Opus, tree,
+  6190: T-2415 wrench, T-2416 diagram exit button + Esc, T-2412 track-under-station removal); a1cf37636d38484e7
+  **ramps** (Opus, tree, 6191: T-2414 bridge ramps); a1a42c71ac616cd89 **carwater** (Opus, read-only, 6193: T-2418
+  Liberty/Governors driving + car across water; islands fix waits on my go); abda6df47a7705c4e **hsrdelay** (Opus,
+  read-only, 6192: T-2413); a27d271723090d34a **profit** (Opus, read-only, 6195: T-2411 design). T-2417 (diagram
+  stretched to Philadelphia) queued for diagblocks after T-2407. Islands T-2256/T-2216 after carwater reports.
+- hsrdelay done (T-2413 archived): fix T-2419 waits on Anita (overtake plan for every shared stretch).
+- Next free id **T-2420**.
 - Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
   (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
   T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).

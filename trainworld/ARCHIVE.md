@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2412 Track under a station takes the station (2026-11-04, agent uismall): the delete tool snapped to a station's node or on its platform's stretch removes the station with its own question; the track stays. DECISIONS 2026-11-04.
+- T-2416 Diagram exit (2026-11-04, agent uismall): a cross at the top left, hover "Show map (M)"; Esc leaves once the question, drag and selection are cleared.
+- T-2415 Build tab icon back to the wrench (2026-11-04, agent uismall), replacing T-2271's hammer.
+- T-2413 Fast train behind a slow one, checked (2026-11-04, agent hsrdelay): small delays are right for partly shared track (random meetings); same-ends lines are overcharged at long headways (whole gain at every headway). Fix proposed as T-2419. notes/T-2413.md.
 - T-2408 Diagram lines never vanish far out (2026-11-04, agent diagpar): a stroke under a device px draws a px wide at its width's share of opacity, at least 0.25; high-speed stripe dropped then.
 - T-2405 Diagram lines never drawn under another (2026-11-04, agent diagpar): cause was pieces drawn on one place and one stroke per colour; now a stroke per line (same colour on same track shared) and overlapping pieces drawn side by side. New York hidden stretches 10 -> 0. notes/T-2405.md.
 
