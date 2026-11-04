@@ -15,6 +15,10 @@ const RADIUS_W = 6;
 const RADIUS_STATION_W = 3;
 /** a pill's half width and its outline, in stroke widths */
 export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
+/** a local stop's (`small`, T-2272) */
+export const SMALL_R = 0.5, SMALL_OUTLINE = 0.24;
+/** a high-speed line's centre stripe, in the background colour, this share of its stroke (T-2272) */
+const FAST_CORE = 0.34;
 /** stop points of one station this many pitches apart or nearer share a pill */
 const PILL_JOIN = 1.6;
 /** stops this many pitches apart or nearer share a pill when no line crosses between them */
@@ -26,8 +30,8 @@ const ALONG_SLACK = 1.25;
 const AXIS_SHIFT = 2, AXIS_STEPS = 2, SHIFT_COST = 1;
 /** a passage between pills of one station is this share of a pill wide */
 const PASSAGE = 0.45;
-/** pills are drawn from a pitch this many device px */
-const PILL_MIN_PX = 2.5;
+/** pills are drawn from a pitch this many device px (T-2272) */
+const PILL_MIN_PX = 0.625;
 
 export interface Drawing {
   /** a pitch, stroke width, layout units */
@@ -35,7 +39,7 @@ export interface Drawing {
   stroke: number;
   /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
    * on the page when first painted */
-  lines: { colour: string; cmds: Float64Array; path?: Path2D }[];
+  lines: { colour: string; fast: boolean; cmds: Float64Array; path?: Path2D }[];
   /** per line, its index in the graph's lines */
   lineOf: number[];
   /** per line, its drawn ribbon sampled: x, y pairs (the names keep off them) */
@@ -52,6 +56,8 @@ export interface Drawing {
   passageOf: number[];
   /** stations with a round stop off their axis (a hook, for checks) */
   hooks: number[];
+  /** per graph node, 1 for a local stop, drawn small (`localStops`) */
+  small: Uint8Array;
   box: [number, number, number, number];
 }
 
@@ -83,6 +89,34 @@ function offsetKeep(v: Float64Array, o: number): Float64Array {
     out[i * 2 + 1] = v[i * 2 + 1] + (my * o) / c;
   }
   return out;
+}
+
+/** Local stops (T-2272), drawn small: stations one line stops at, or passed by a line that does not stop
+ * while the lines stopping are all of one colour. A line's end never is one. */
+export function localStops(g: DiagramGraph): Uint8Array {
+  const n = g.key.length, stops = new Uint16Array(n), passed = new Uint8Array(n), end = new Uint8Array(n), many = new Uint8Array(n);
+  const colour: (string | null)[] = new Array(n).fill(null), seen = new Int32Array(n).fill(-1);
+  g.lines.forEach((ln, li) => {
+    const c = ln.chain;
+    if (!c.length) return;
+    end[c[0]] = end[c[c.length - 1]] = 1;
+    c.forEach((k, i) => {
+      if (!ln.stop[i]) return void (passed[k] = 1);
+      if (seen[k] === li) return;
+      seen[k] = li;
+      stops[k]++;
+      if (colour[k] === null) colour[k] = ln.colour;
+      else if (colour[k] !== ln.colour) many[k] = 1;
+    });
+  });
+  const small = new Uint8Array(n);
+  for (let k = 0; k < n; k++) small[k] = stops[k] > 0 && !end[k] && (stops[k] === 1 || (passed[k] && !many[k])) ? 1 : 0;
+  return small;
+}
+
+/** a station's pill: its fill's half width and its outline, layout units */
+export function pillSize(d: Drawing, k: number): [number, number] {
+  return d.small[k] ? [SMALL_R * d.stroke, SMALL_OUTLINE * d.stroke] : [PILL_R * d.stroke, PILL_OUTLINE * d.stroke];
 }
 
 type V = [number, number, number, number, number]; // x, y, offset left of travel, bundle half width, node (-1 none)
@@ -246,7 +280,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
     if (!cmds) return;
-    lines.push({ colour: Vs[li][0].colour, cmds });
+    lines.push({ colour: Vs[li][0].colour, fast: !!Vs[li][0].fast, cmds });
     ribbons.push(Float64Array.from(r.pts));
     lineOf.push(li);
     const V = Vs[li][1], at = new Int32Array(r.vi.length);
@@ -305,7 +339,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, box: [x0, y0, x1, y1] };
+  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, small: localStops(g), box: [x0, y0, x1, y1] };
 }
 
 /** a line's commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy to x, y */
@@ -407,7 +441,10 @@ function stopOn(r: Ribbon, i0: number, i1: number, cx: number, cy: number, ax: [
   return { cross: best && bd < nd + 2 * reach ? best : null, near };
 }
 
-export interface DiagramTheme { bg: string; ink: string; pill: string; selected: string }
+/** `edge`: a thin outline round a pill's ring, so the ink ring shows on a dark background (T-2272) */
+export interface DiagramTheme { bg: string; ink: string; pill: string; selected: string; edge?: string }
+/** the edge's width, in stroke widths */
+const EDGE_W = 0.16;
 
 /** What is picked (T-2163): its lines drawn full and the rest muted, as the map draws a picked line's
  * others; its stations' pills and names full and the rest faded. */
@@ -447,6 +484,12 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.strokeStyle = l.colour;
     ctx.lineWidth = d.stroke;
     ctx.stroke((l.path ??= toPath(l.cmds)));
+    // a high-speed line: two strokes of its colour either side of a stripe of the background
+    if (l.fast) {
+      ctx.strokeStyle = theme.bg;
+      ctx.lineWidth = d.stroke * FAST_CORE;
+      ctx.stroke(l.path);
+    }
   };
   ctx.strokeStyle = theme.bg;
   ctx.lineWidth = d.pitch;
@@ -465,7 +508,6 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   if (focus && focus.hot >= 0 && d.lines[focus.hot]) ribbon(focus.hot, true);
   // far out a pill is a speck on its lines: none
   if (d.pitch * scale < PILL_MIN_PX) return;
-  const rp = PILL_R * d.stroke, ol = PILL_OUTLINE * d.stroke;
   const faded = (k: number) => !!focus?.stations && !focus.stations.has(k) && !focus.selected.has(k);
   const outline = (k: number) => (focus?.selected.has(k) ? theme.selected : theme.ink);
   const bar = (x0: number, y0: number, x1: number, y1: number, width: number, colour: string, alpha = 1) => {
@@ -486,16 +528,22 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.stroke();
   };
   // a selected station's outline is half again as thick
-  const olOf = (k: number) => (focus?.selected.has(k) ? 1.5 * ol : ol);
-  d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp * PASSAGE * 2 + 2 * olOf(d.passageOf[q]), outline(d.passageOf[q]), faded(d.passageOf[q]) ? FADE_ALPHA : 1));
+  const olOf = (k: number) => (focus?.selected.has(k) ? 1.5 : 1) * pillSize(d, k)[1];
+  const rp = (k: number) => pillSize(d, k)[0];
+  if (theme.edge) {
+    const e = 2 * EDGE_W * d.stroke, edge = theme.edge;
+    d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2 + 2 * olOf(d.passageOf[q]) + e, edge, faded(d.passageOf[q]) ? FADE_ALPHA : 1));
+    d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * olOf(d.pillOf[i]) + 2 * p[4] + e, edge, faded(d.pillOf[i]) ? FADE_ALPHA : 1));
+  }
+  d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2 + 2 * olOf(d.passageOf[q]), outline(d.passageOf[q]), faded(d.passageOf[q]) ? FADE_ALPHA : 1));
   // a faded pill's white over the background, so it recedes in the dark theme too
   const fill = (x0: number, y0: number, x1: number, y1: number, width: number, k: number) => {
     if (faded(k)) bar(x0, y0, x1, y1, width, theme.bg);
     bar(x0, y0, x1, y1, width, theme.pill, faded(k) ? FADE_ALPHA : 1);
   };
-  d.passages.forEach(([x0, y0, x1, y1], q) => fill(x0, y0, x1, y1, rp * PASSAGE * 2, d.passageOf[q]));
-  d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp + 2 * olOf(d.pillOf[i]) + 2 * p[4], outline(d.pillOf[i]), faded(d.pillOf[i]) ? FADE_ALPHA : 1));
-  d.pills.forEach((p, i) => fill(p[0], p[1], p[2], p[3], 2 * rp + 2 * p[4], d.pillOf[i]));
+  d.passages.forEach(([x0, y0, x1, y1], q) => fill(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2, d.passageOf[q]));
+  d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * olOf(d.pillOf[i]) + 2 * p[4], outline(d.pillOf[i]), faded(d.pillOf[i]) ? FADE_ALPHA : 1));
+  d.pills.forEach((p, i) => fill(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * p[4], d.pillOf[i]));
   ctx.globalAlpha = 1;
 }
 
@@ -504,11 +552,12 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
 export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: number): { station: number } | { line: number; at: number } | null {
   const reach = slop / scale;
   if (d.pitch * scale >= PILL_MIN_PX) {
-    const R = (PILL_R + PILL_OUTLINE) * d.stroke + reach;
     let best = -1, bd = Infinity;
     d.pills.forEach((p, i) => {
-      const dd = segDist(x, y, p[0], p[1], p[2], p[3]) - p[4];
-      if (dd < R && dd < bd) (bd = dd), (best = d.pillOf[i]);
+      const [r, o] = pillSize(d, d.pillOf[i]);
+      // measured from the outline, so a small stop beside a big one is still picked
+      const dd = segDist(x, y, p[0], p[1], p[2], p[3]) - p[4] - r - o;
+      if (dd < reach && dd < bd) (bd = dd), (best = d.pillOf[i]);
     });
     if (best >= 0) return { station: best };
   }

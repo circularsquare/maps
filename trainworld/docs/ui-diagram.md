@@ -44,7 +44,9 @@ Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` 
 `diagram/draw.ts`. Each line is one ribbon (casing in the background colour, strokes 5/6.4 of a pitch
 wide), corners rounded with radius 6 stroke widths (3 at a station, so a line turning there passes
 under its pill) plus the bundle's half width, plus or minus the stroke's offset, so a bundle's bends
-are concentric. A slot change on a straight run is a 45 degree jog.
+are concentric. A slot change on a straight run is a 45 degree jog. A line with high-speed trains (T-817) has a
+stripe of the background colour along its middle, 0.34 of its stroke, so it reads as two thin strokes of its
+colour (T-2272; notes/T-2272.md for the maps this follows).
 
 **Pills.** Each station's pill lies along an axis: of the four octilinear axes through its place, the
 one every line stopping there crosses, and of those the one giving the shortest pill. Where none
@@ -52,11 +54,16 @@ crosses them all (a line turning at the station, or ending along an axis), the a
 pitches to one side of the place, at a pitch of pill length a pitch. A line's stop is where its drawn
 ribbon crosses the axis; a line ending there has its last run carried on, or cut back, to the axis; a
 line running beside the axis within 1.25 pitches lies under the pill's edge. So a pill is always a
-straight capsule on its lines, white with the ink outline in both themes, two pitches across. Stops
+straight capsule on its lines, white with the ink outline in both themes, two pitches across; in the dark
+theme a thin edge of the map's ink (0.16 of a stroke) runs round the outline, so the
+ring shows on the dark background (T-2272). A **local stop** is drawn small, its fill half a stroke across
+each side of its axis and its outline 0.24 of a stroke (about 1.2 pitches across): a station one line stops
+at, or one a line passes without stopping while the lines stopping are all of one colour; a line's end
+never is one (T-2272, `localStops`). Stops
 along the axis more than 1.6 pitches apart make separate pills, unless they are within 4 pitches and
 no line crosses the axis between them; a line running along the axis further off gets a round stop
 on its own ribbon. Pills of one station are joined by a passage, 0.45 of a pill wide. Below a pitch
-of 2.5 device px, no pills.
+of 0.625 device px, no pills (T-2272).
 
 The drawing is made in the layout worker and posted with the layout: each line's path as commands,
 made a Path2D on the page when first painted.
@@ -72,7 +79,8 @@ diagram's background, over everything else.
 - **Order**: interchanges (two line colours or more stopping) by lines stopping, then line ends, then
   the rest by lines stopping. A station with no pill (passed, never stopped at) has no name.
 - **Places**: eight round each of the station's pills, east first, then west, then the rest, each
-  starting 3 px off the pill's outline at the point farthest that way; east, west, north and south
+  starting 3 px off the pill's outline at the point farthest that way (a local stop's names as round a full
+pill, so they clear its own line); east, west, north and south
   also slid to be flush with that point either way. Off the pill's ends cost least (the lines cross
   its sides), then the corners. A name of 12 characters or more may go over two lines, broken at the
   space or hyphen nearest its middle.
@@ -80,14 +88,18 @@ diagram's background, over everything else.
   fewer other stations' pills within 6 pitches (east, else north, when even).
 - **Two distances**: at the pill, or 1.5 pitches further out (over a line beside it). An interchange
   may also go 3 or 4.5 pitches out where lines meet all round it, but never over 32 px out.
-- **Kept off**: a line's middle by half a pitch plus a px; other pills and passages; names already
+- **Kept off**: a line's middle by half a pitch plus a px; other pills and passages (each at its drawn size); names already
   placed (`BoxGrid`, in px); and no name nearer another station's pill than its own. The box tested
   runs from the pill (or the lifted point) to the far side of the name.
 - **Zoom levels**: placed afresh for a pitch of 7 px times 2^(k/4), k from -3 to 12 (4.2 to 56 px); a
-  level's names are drawn at every zoom from it to the next, none below the first. Since text keeps its
+  level's names are drawn at every zoom from it to the next, none below the first faint level. Since text keeps its
   px size while the drawing scales, a name past its level only shrinks toward its pill, inside the box
   tested, so nothing it was clear of comes nearer. Each level favours the last level's place for a name
   (by 1.2 of cost), so names move little across levels.
+- **Faint levels** (T-2272): below those, k from -14 to -4 (0.62 to 3.5 px, as far out as pills go), the big stations only, drawn
+  at 0.6 opacity: of the stations with 3 lines or more stopping, most lines first, each one with no station
+  kept before it within 120 px at the level. Their names keep off each other's names only (over lines and
+  pills, the halo keeping them legible). The levels proper are placed as if these were not there.
 
 ## The graph
 
@@ -97,7 +109,8 @@ by its lowest station node id on the lines. Each rail line becomes the chain of 
 through, first stop to last: its own path's stations, and the stations whose platform is within
 35 m of its track and parallel (within about 25 degrees), found from `corridors.ts`' beside table (a
 station's own edges' end samples name the edges beside it). A complex met again within 300 m with
-one other between is met once. Edges join consecutive complexes of a chain and carry its lines.
+one other between is met once. Edges join consecutive complexes of a chain and carry its lines. Each line
+carries its colour and whether it runs high-speed trains.
 Places are metres east and north of the network's middle.
 
 ## The layout
@@ -107,7 +120,15 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
 and names use no maths beyond `+ - * /` and square roots (`diagram/fmath.ts` has atan2 and powers from
 those), so every browser, and the Node checks, lay a graph out to the same bits.
 
-- **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds.
+- **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds up to 2,000
+  complexes, rising evenly to 40 at 8,000 and over (a country's long stretches only reach their targets in
+  that many; T-2289).
+- **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
+  being such stations within 2.5 km of each other (`cityParts`). A hop whose lines are all of one colour,
+  between two stations with two hops or fewer each, that leaves a city or joins two, with an end alone (no
+  station within 4 km whose lines share no colour with its own) has 0.4 of its target, at least 4 pitches
+  (never more than it had), so the long thin single-line stretches between cities draw short while parallel
+  suburban branches and junctions keep theirs. The pitch is set from the targets before this.
 - **Sides** (in A and B, each round): two stations that share no edge and lie nearer in reality than 1.5 times
   either one's mean real hop keep at least their spacing (their half widths plus half the median hop) between
   them along their real bearing (weight 3), so a line of short hops beside one of long hops cannot carry its

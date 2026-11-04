@@ -21,6 +21,8 @@ export const SAVES = {
   nyc: { file: REAL_SAVE, lon: -73.985, lat: 40.758 },
   tyo: { file: new URL('data/packs/real/tyo.save', TW), lon: 139.7, lat: 35.7 },
   jpn: { file: new URL('data/work/realnet/jpn_real.save', TW), lon: 139.7, lat: 35.7 },
+  // T-2289: New York and Philadelphia, the shared Northeast save
+  ne: { file: new URL('T-125-northeast.save', TW), lon: -73.985, lat: 40.758 },
   // T-2290: Anita's line 8 game as t2290-line8-game.mjs builds it
   l8: { file: new URL('../artifacts/trainworld/t2290/line8.save', TW), lon: -73.985, lat: 40.758 },
 };
@@ -46,7 +48,7 @@ export function openSave(name) {
   const li = api.lines_info(), lines = [];
   for (let i = 0; i < li.length; i += 22) {
     const id = li[i];
-    lines.push({ id, ok: li[i + 2] === 1, bus: api.is_bus(id) || undefined, path: [...api.line_path(id)], stops: [...api.line_stops(id)], colour: '#' + li[i + 1].toString(16).padStart(6, '0'), name: api.line_name(id) });
+    lines.push({ id, ok: li[i + 2] === 1, bus: api.is_bus(id) || undefined, path: [...api.line_path(id)], stops: [...api.line_stops(id)], colour: '#' + li[i + 1].toString(16).padStart(6, '0'), name: api.line_name(id), fast: !api.is_bus(id) && api.line_fast(id) });
   }
   const ni = api.nodes_info(), geo = [];
   let top = 0, stations = 0;

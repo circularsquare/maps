@@ -80,6 +80,19 @@ function nearestOf(xs: ArrayLike<number>, ys: ArrayLike<number>, x: number, y: n
   return best;
 }
 
+/** a CSS colour's lightness, 0 to 1 (#rgb, #rrggbb or rgb()), 1 when unread */
+function lightness(c: string): number {
+  let r: number, g: number, b: number;
+  const m = c.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/);
+  if (m) [r, g, b] = [+m[1], +m[2], +m[3]];
+  else {
+    const h = c.replace("#", ""), f = h.length === 3 ? h.split("").map((x) => x + x).join("") : h.slice(0, 6);
+    if (!/^[0-9a-f]{6}$/i.test(f)) return 1;
+    [r, g, b] = [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16));
+  }
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
 /** the names' font: the interface's family at NAME_PX times its scale */
 function nameFont(): { px: number; family: string } {
   const ui = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ui")) || 1;
@@ -321,8 +334,10 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const theme = () => {
     const s = getComputedStyle(document.body);
     const v = (k: string, d: string) => s.getPropertyValue(k).trim() || d;
-    // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them
-    return { bg: v("--bg", "#fbf5ef"), ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text: v("--map-ink", "#2b2b2b"), font: s.fontFamily };
+    // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
+    // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
+    const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
@@ -530,7 +545,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 
 /** The whole diagram on a canvas of its own, unselected, at the largest names' level of at most
  * PICTURE_PITCH_PX a pitch that keeps it within PICTURE_MAX_SIDE and PICTURE_MAX_AREA. */
-function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; font: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
+function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; font: string; edge?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
   const d = s.d, levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));

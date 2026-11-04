@@ -10,7 +10,7 @@
 import { BoxGrid } from "../map/labelLayout";
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout } from "./layout";
-import { PILL_OUTLINE, PILL_R, type Drawing } from "./draw";
+import { PILL_OUTLINE, PILL_R, pillSize, type Drawing } from "./draw";
 import { hyp, pow } from "./fmath";
 
 /** px between a pill's outline and its name */
@@ -37,6 +37,11 @@ const WRAP_FROM = 12;
 const SIDE_REACH = 6;
 /** the last level's place for a name counts this much cheaper */
 const STAY = 1.2;
+/** Faint levels below the first (T-2272), from STEP to this power: only the stations with at least
+ * FAINT_LINES lines stopping and more than any other within FAINT_REACH_PX at the level, kept off
+ * other names only, drawn at FAINT_ALPHA */
+const FAINT_LO = -14, FAINT_LINES = 3, FAINT_REACH_PX = 120;
+export const FAINT_ALPHA = 0.6;
 
 /** the eight places, counter-clockwise from east */
 const DIR8: [number, number][] = Array.from({ length: 8 }, (_, k) => [Math.round(Math.cos((k * Math.PI) / 4) * 1e9) / 1e9, Math.round(Math.sin((k * Math.PI) / 4) * 1e9) / 1e9]);
@@ -58,6 +63,8 @@ export interface NamePlan {
   /** a pitch in CSS px each level is placed for, rising */
   levels: number[];
   at: LevelNames[];
+  /** how many of the levels, from the first, are faint (FAINT_LO) */
+  faint: number;
   /** per graph node its name ("" none), the name's width in CSS px, and over two lines (0 where it
    * is not split) */
   text: string[];
@@ -181,20 +188,19 @@ class SegGrid {
 export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text: string[], width: ArrayLike<number>, width2: ArrayLike<number>, fontPx: number, why?: (level: number, k: number, dir: number, lifted: number, what: string) => void, tick?: (done: number) => void): NamePlan {
   const t0 = performance.now();
   const n = g.key.length, pitch = d.pitch, h = fontPx * NAME_LINE, h2 = fontPx * (NAME_LINE + NAME_LINE2);
-  const R = (PILL_R + PILL_OUTLINE) * d.stroke, rPass = (PILL_R * 0.45 + PILL_OUTLINE) * d.stroke;
+  // a pill's half width with its outline: R a full pill's, the names' distance; Rof(k) a station's own, as drawn
+  const R = (PILL_R + PILL_OUTLINE) * d.stroke, Rof = (k: number) => pillSize(d, k)[0] + pillSize(d, k)[1];
   const grid = new SegGrid(4 * pitch);
   for (const p of d.ribbons) for (let j = 0; j + 3 < p.length; j += 2) grid.add(p[j], p[j + 1], p[j + 2], p[j + 3], 0, 0, -1);
   const pillsOf: number[][] = Array.from({ length: n }, () => []);
   d.pills.forEach((p, i) => {
-    grid.add(p[0], p[1], p[2], p[3], R + p[4], 1, d.pillOf[i]);
+    grid.add(p[0], p[1], p[2], p[3], Rof(d.pillOf[i]) + p[4], 1, d.pillOf[i]);
     pillsOf[d.pillOf[i]].push(i);
   });
-  // a passage belongs to the station whose pill it starts at
-  for (const q of d.passages) {
-    let own = -1;
-    grid.some([q[0], q[1], q[0], q[1]], 0, (i) => grid.kind[i] === 1 && ptSeg(q[0], q[1], grid.seg[i * 4], grid.seg[i * 4 + 1], grid.seg[i * 4 + 2], grid.seg[i * 4 + 3]) < 1e-6 * pitch + 1e-9 && ((own = grid.owner[i]), true));
-    grid.add(q[0], q[1], q[2], q[3], rPass, 2, own);
-  }
+  d.passages.forEach((q, i) => {
+    const k = d.passageOf[i], [r, o] = pillSize(d, k);
+    grid.add(q[0], q[1], q[2], q[3], r * 0.45 + o, 2, k);
+  });
 
   // the order: interchanges (two colours or more stopping) by lines stopping, then line ends, then the rest
   const lines = new Uint16Array(n), ends = new Uint8Array(n), colours: Set<string>[] = Array.from({ length: n }, () => new Set());
@@ -260,6 +266,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
   const cands: Cand[][] = Array.from({ length: n }, () => []);
   for (const k of order) {
     for (const pi of pillsOf[k]) {
+      // a name sits where it would round a full pill: nearer a local stop's, its own line is within the clearance
       const p = d.pills[pi], r = R + p[4], ex = p[2] - p[0], ey = p[3] - p[1], el = hyp(ex, ey);
       const axx = el > 1e-9 ? ex / el : 0, axy = el > 1e-9 ? ey / el : 0;
       for (let dir = 0; dir < 8; dir++) {
@@ -289,6 +296,46 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
   const levels: number[] = [], out: LevelNames[] = [];
   let prev = new Map<number, Cand>();
   const T = [0, 0, 0, 0];
+  const big = order.filter((k) => lines[k] >= FAINT_LINES).sort((a, b) => lines[b] - lines[a] || g.key[a] - g.key[b]);
+  for (let lv = FAINT_LO; lv < LEVEL_LO; lv++) {
+    const P = LEVEL_BASE * pow(LEVEL_STEP, lv), s = P / pitch, reach = FAINT_REACH_PX / s, boxes = new BoxGrid();
+    // most lines first, so a station is kept when no station kept before it is within reach
+    const kept: number[] = [], cells = new Map<number, number[]>();
+    for (const k of big) {
+      const cx = Math.floor(lay.x[k] / reach), cy = Math.floor(lay.y[k] / reach);
+      let near = false;
+      for (let gx = cx - 1; gx <= cx + 1 && !near; gx++) for (let gy = cy - 1; gy <= cy + 1 && !near; gy++)
+        for (const j of cells.get(gx * 1048576 + gy) ?? []) if (hyp(lay.x[j] - lay.x[k], lay.y[j] - lay.y[k]) < reach) (near = true);
+      if (near) continue;
+      const key = cx * 1048576 + cy, v = cells.get(key);
+      if (v) v.push(k);
+      else cells.set(key, [k]);
+      kept.push(k);
+    }
+    const now = new Map<number, Cand>();
+    const node: number[] = [], xs: number[] = [], ys: number[] = [], dirs: number[] = [], slides: number[] = [], lifts: number[] = [], wraps: number[] = [];
+    for (const k of kept) {
+      const was = prev.get(k);
+      const list = was ? [...cands[k]].sort((a, b) => a.cost - (a === was ? STAY : 0) - (b.cost - (b === was ? STAY : 0))) : cands[k];
+      for (const c of list) {
+        const lift = c.lifted * LIFT * pitch;
+        if (c.lifted > 1 && lift * s > LIFT_MAX_PX) continue;
+        nameBox(c.ax, c.ay, c.dir, c.slide, lift, c.wrap ? width2[k] : width[k], c.wrap ? h2 : h, s, T);
+        const px = [Math.min(T[0], c.ax) * s, Math.min(T[1], c.ay) * s, Math.max(T[2], c.ax) * s, Math.max(T[3], c.ay) * s];
+        if (boxes.hits(px)) continue;
+        boxes.add(px);
+        now.set(k, c);
+        node.push(k), xs.push(c.ax), ys.push(c.ay), dirs.push(c.dir), slides.push(c.slide), lifts.push(lift), wraps.push(c.wrap);
+        break;
+      }
+    }
+    levels.push(P);
+    out.push({ node: Int32Array.from(node), x: Float64Array.from(xs), y: Float64Array.from(ys), dir: Uint8Array.from(dirs), slide: Int8Array.from(slides), lift: Float64Array.from(lifts), wrap: Uint8Array.from(wraps) });
+    prev = now;
+  }
+  // the levels proper start afresh, as if there were no faint ones
+  const faint = levels.length;
+  prev = new Map();
   for (let lv = LEVEL_LO; lv <= LEVEL_HI; lv++) {
     tick?.((lv - LEVEL_LO) / (LEVEL_HI - LEVEL_LO + 1));
     const P = LEVEL_BASE * pow(LEVEL_STEP, lv), s = P / pitch, boxes = new BoxGrid();
@@ -316,7 +363,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
         let own = Infinity;
         for (const pi of pillsOf[k]) {
           const p = d.pills[pi];
-          own = Math.min(own, segBoxDist(p[0], p[1], p[2], p[3], B) - R - p[4]);
+          own = Math.min(own, segBoxDist(p[0], p[1], p[2], p[3], B) - Rof(k) - p[4]);
         }
         const blocked = grid.some(Tn, Math.max(clear, R + own + pitch), (i) => {
           const x0 = grid.seg[i * 4], y0 = grid.seg[i * 4 + 1], x1 = grid.seg[i * 4 + 2], y1 = grid.seg[i * 4 + 3];
@@ -344,7 +391,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
     out.push({ node: Int32Array.from(node), x: Float64Array.from(xs), y: Float64Array.from(ys), dir: Uint8Array.from(dirs), slide: Int8Array.from(slides), lift: Float64Array.from(lifts), wrap: Uint8Array.from(wraps) });
     prev = now;
   }
-  return { levels, at: out, text, width: Float32Array.from(width), width2: Float32Array.from(width2), fontPx, ms: performance.now() - t0 };
+  return { levels, at: out, faint, text, width: Float32Array.from(width), width2: Float32Array.from(width2), fontPx, ms: performance.now() - t0 };
 }
 
 /** a name placed at level `li`, its `i`th, as a box in layout units at `s` CSS px a layout unit */
@@ -389,10 +436,12 @@ export function paintNames(ctx: CanvasRenderingContext2D, plan: NamePlan, d: Dra
       shown.push([x, y0 + lead, parts[0], align, dim], [x, y0 + lead + NAME_LINE2 * f, parts[1], align, dim]);
     } else shown.push([x, (y0 + y1) / 2, plan.text[k], align, dim]);
   }
+  const base = li < plan.faint ? FAINT_ALPHA : 1;
   ctx.strokeStyle = theme.halo;
+  ctx.globalAlpha = base;
   for (const [x, y, t, a] of shown) (ctx.textAlign = a), ctx.strokeText(t, x, y);
   ctx.fillStyle = theme.ink;
-  for (const [x, y, t, a, dim] of shown) (ctx.globalAlpha = dim ? theme.fadeAlpha ?? 1 : 1), (ctx.textAlign = a), ctx.fillText(t, x, y);
+  for (const [x, y, t, a, dim] of shown) (ctx.globalAlpha = base * (dim ? theme.fadeAlpha ?? 1 : 1)), (ctx.textAlign = a), ctx.fillText(t, x, y);
   ctx.globalAlpha = 1;
 }
 

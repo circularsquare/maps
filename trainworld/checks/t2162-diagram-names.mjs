@@ -1,6 +1,7 @@
 // T-2162: the network diagram's names (app/src/diagram/names.ts) on the real New York save and Tokyo's real
 // network. At every zoom level, and between levels, it counts names overlapping a line's stroke, a pill or
-// another name, and names nearer another station's pill than their own; round Times Sq and Shinjuku (a
+// another name, and names nearer another station's pill than their own (at a faint level, T-2272, names meeting
+// names only; pills each at its drawn size, a local stop's smaller); round Times Sq and Shinjuku (a
 // 1600 x 1000 px view at a pitch of 7 and 14 px) the same, and every interchange must be named at 14 px
 // (at 7 px a figure only); and layout, drawing and
 // naming together must stay under 5 s (New York) and 8 s (Tokyo). `nyc-game` and `tyo-game` are the game's own
@@ -13,7 +14,7 @@ import { gameGraph, splitCity } from './diagram-game.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
-const A = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, PILL_R, PILL_OUTLINE } from '@app/src/diagram/draw.ts'; export * from '@app/src/diagram/names.ts';`);
+const A = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, pillSize, PILL_R, PILL_OUTLINE } from '@app/src/diagram/draw.ts'; export * from '@app/src/diagram/names.ts';`);
 const which = (process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'nyc,tyo,nyc-game,tyo-game').split(',');
 /** `--svg`: each view drawn to artifacts/trainworld/t2162/<save>-<pitch>px.svg */
 const SVG = process.argv.includes('--svg');
@@ -74,8 +75,10 @@ for (const name of which) {
       }
   };
   for (const p of d.ribbons) for (let j = 0; j + 3 < p.length; j += 2) file(p[j], p[j + 1], p[j + 2], p[j + 3], W / 2, 0, -1);
-  d.pills.forEach((p, i) => file(p[0], p[1], p[2], p[3], R + p[4], 1, d.pillOf[i]));
-  for (const q of d.passages) file(q[0], q[1], q[2], q[3], (A.PILL_R * 0.45 + A.PILL_OUTLINE) * W, 2, -2);
+  // a local stop's pill is smaller (T-2272)
+  const rOf = (k) => A.pillSize(d, k).reduce((a, b) => a + b);
+  d.pills.forEach((p, i) => file(p[0], p[1], p[2], p[3], rOf(d.pillOf[i]) + p[4], 1, d.pillOf[i]));
+  d.passages.forEach((q, i) => { const [r, o] = A.pillSize(d, d.passageOf[i]); file(q[0], q[1], q[2], q[3], r * 0.45 + o, 2, -2); });
   const near = (b, pad) => {
     const seen = new Set();
     for (let gx = Math.floor((b[0] - pad) / cell); gx <= Math.floor((b[2] + pad) / cell); gx++)
@@ -136,7 +139,7 @@ for (const name of which) {
       for (let j = 0; j + 1 < p.length; j += 2) pts.push(`${X(p[j])},${Y(p[j + 1])}`);
       o.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="${d.lines[i].colour}" stroke-width="${(W * sc).toFixed(2)}" stroke-linejoin="round"/>`);
     });
-    for (const p of d.pills) o.push(`<line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(p[2])}" y2="${Y(p[3])}" stroke="#2b2b2b" stroke-width="${(2 * (R + p[4]) * sc).toFixed(2)}" stroke-linecap="round"/><line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(p[2])}" y2="${Y(p[3])}" stroke="#fff" stroke-width="${(2 * (R - A.PILL_OUTLINE * W + p[4]) * sc).toFixed(2)}" stroke-linecap="round"/>`);
+    d.pills.forEach((p, i) => o.push(`<line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(p[2])}" y2="${Y(p[3])}" stroke="#2b2b2b" stroke-width="${(2 * (rOf(d.pillOf[i]) + p[4]) * sc).toFixed(2)}" stroke-linecap="round"/><line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(p[2])}" y2="${Y(p[3])}" stroke="#fff" stroke-width="${(2 * (A.pillSize(d, d.pillOf[i])[0] + p[4]) * sc).toFixed(2)}" stroke-linecap="round"/>`));
     const L = plan.at[li], esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     for (let i = 0; i < L.node.length; i++) {
       const b = A.placedBox(plan, li, i, sc), parts = L.wrap[i] ? A.splitName(text[L.node[i]]) : [text[L.node[i]]];
@@ -152,7 +155,9 @@ for (const name of which) {
   let worst = 0, prevNamed = null, lost = 0;
   plan.levels.forEach((P, li) => {
     const at = measure(li, P), mid = measure(li, P * 1.18);
-    worst += at.r.nameName + at.r.nameLine + at.r.namePill + at.r.nearerOther + mid.r.nameName + mid.r.nameLine + mid.r.namePill + mid.r.nearerOther;
+    // a faint level's names (T-2272) are kept off each other only
+    if (li < (plan.faint ?? 0)) worst += at.r.nameName + mid.r.nameName;
+    else worst += at.r.nameName + at.r.nameLine + at.r.namePill + at.r.nearerOther + mid.r.nameName + mid.r.nameLine + mid.r.namePill + mid.r.nearerOther;
     if (prevNamed) for (const k of prevNamed) if (!at.named.has(k)) lost++;
     prevNamed = at.named;
     levels.push({ pitchPx: +P.toFixed(2), ...at.r, between: mid.r });

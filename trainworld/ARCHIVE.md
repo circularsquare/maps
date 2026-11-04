@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2289 Diagram intercity stretches condensed (2026-11-04, agent diagram): lonely single-line hops 0.4 of their target, A up to 40 rounds on big networks; all Japan's longest stretch 1,111 to 587 pitches, under its longest city block. notes/T-2289.md; follow-up T-2321.
+- T-2272 Diagram stations, high-speed lines and far names (2026-11-04, agent diagram): a light rim round dark-theme pills, local stops small, a centre stripe on high-speed lines, pills to 0.625 px, faint names for big stations below the names levels. notes/T-2272.md.
+
 - T-2265 No train slower than walking, in real minutes (2026-11-04, agent demand): T-1782's fade gone; T-1059's per-pair rule counts real waits, rides and walks against the whole walk, within 10 km. Real save 11,721,348 to 12,509,688 rail trips; solve about +20% (T-2307). notes/T-2265.md.
 - T-2278 Parking by income (2026-11-04, agent demand): paid parking times min(1, (GDP per head / $35,000)^0.3), from Colliers' price slope less the fares' 0.7. No-rail car share Ho Chi Minh City 53.7% to 60.6%, Delhi 59.7% to 60.9%, rich packs unchanged. notes/T-2278.md.
 - T-2276 Station buildings 1 minute and a waiting room (2026-11-04, agent demand): a change inside counts 1 of its fixed 2 minutes (walks whole) and waits there count 0.8; building hover reworded. Follow-up T-2308.

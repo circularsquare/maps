@@ -1,6 +1,6 @@
 // T-2161: the network diagram's pills (app/src/diagram/draw.ts) on the real New York save and Tokyo's real
 // network: no pill wider than two pitches across (Times Sq, 14 St and 59 St named), no two stations' pills
-// overlapping, no hook at the stations that had one (T-2244, T-2255), and how many stations need more than one
+// overlapping (each at its drawn size, a local stop's smaller, T-2272), no hook at the stations that had one (T-2244, T-2255), and how many stations need more than one
 // pill. `nyc-game` and `tyo-game` are the game's own graphs (diagram-game.mjs; run it first).
 //   node trainworld/checks/t2161-diagram-pills.mjs [nyc,tyo,nyc-game,tyo-game]      (about a minute; figures in
 //   artifacts/trainworld/t2161/pills.json)
@@ -10,7 +10,7 @@ import { gameGraph, splitCity, bitsHash, pillsFlat } from './diagram-game.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
-const A = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, PILL_R, PILL_OUTLINE, STROKE_SHARE } from '@app/src/diagram/draw.ts';`);
+const A = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, pillSize, PILL_R, PILL_OUTLINE, STROKE_SHARE } from '@app/src/diagram/draw.ts';`);
 const which = (process.argv[2] ?? 'nyc,tyo,nyc-game,tyo-game').split(',');
 // the save's node names, and the game's complex names (the most lines stopping, diagram/names.ts' pickName)
 const NAMED = { nyc: ['Times Sq-42 St', '14 St-Union Sq', '59 St-Columbus Circle', '34 St-Penn Station', 'New York Penn'], tyo: ['新宿', '代々木', '渋谷', '池袋'] };
@@ -54,15 +54,16 @@ for (const name of which) {
     const same = bitsHash(pillsFlat(d.pills)) === cap.page.pills;
     line(same, `${name}: Node draws the game's graph exactly as the page's worker did`, same ? '' : 'pills differ: some engine-dependent maths in the layout or drawing (diagram/fmath.ts)');
   } else if (cap) console.log(`INFO ${name}: the capture (${cap.captured}) is older than the layout code; the page is not compared; run diagram-game.mjs`);
-  const W = d.stroke, r = (A.PILL_R + A.PILL_OUTLINE) * W;
+  // a pill's half width with its outline (a local stop's is smaller, T-2272)
+  const rOf = (i) => A.pillSize(d, d.pillOf[i]).reduce((a, b) => a + b);
   // across: a pill's full thickness, outline included, in pitches
-  const across = d.pills.map((p) => (2 * r + 2 * p[4]) / d.pitch);
+  const across = d.pills.map((p, i) => (2 * rOf(i) + 2 * p[4]) / d.pitch);
   const named = {};
   for (const nm of NAMED[city]) {
     const ks = new Set(names.flatMap((x, i) => (x && x.split('/').some((part) => part === nm) ? [i] : [])));
     const mine = d.pills.map((p, i) => [p, i]).filter(([, i]) => ks.has(d.pillOf[i]));
     if (!ks.size) continue;
-    named[nm] = { pills: mine.length, widest: Math.max(0, ...mine.map(([, i]) => across[i])), longest: Math.max(0, ...mine.map(([p]) => (Math.hypot(p[2] - p[0], p[3] - p[1]) + 2 * r) / d.pitch)) };
+    named[nm] = { pills: mine.length, widest: Math.max(0, ...mine.map(([, i]) => across[i])), longest: Math.max(0, ...mine.map(([p, i]) => (Math.hypot(p[2] - p[0], p[3] - p[1]) + 2 * rOf(i)) / d.pitch)) };
   }
   // pills of two stations overlapping
   let overlaps = 0;
@@ -79,7 +80,7 @@ for (const name of which) {
     for (let gx = cx - R; gx <= cx + R; gx++) for (let gy = cy - R; gy <= cy + R; gy++) for (const j of grid.get(`${gx},${gy}`) ?? []) {
       if (j <= i || d.pillOf[j] === d.pillOf[i]) continue;
       const q = d.pills[j];
-      if (segDist(p, q) < 2 * r + p[4] + q[4]) { overlaps++; if (pairs.length < 8) pairs.push(`${names[d.pillOf[i]]} | ${names[d.pillOf[j]]}`); }
+      if (segDist(p, q) < rOf(i) + rOf(j) + p[4] + q[4]) { overlaps++; if (pairs.length < 8) pairs.push(`${names[d.pillOf[i]]} | ${names[d.pillOf[j]]}`); }
     }
   });
   const perStation = new Map();

@@ -29,7 +29,7 @@ function below(c: Float64Array, v: number): number {
   return lo;
 }
 
-export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string }
+export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string; fast?: boolean }
 export interface GraphEdge { id: number; a: number; b: number }
 
 export interface DiagramGraph {
@@ -53,6 +53,8 @@ export interface DiagramGraph {
 export interface DiagramLine {
   id: number;
   colour: string;
+  /** high-speed trains (T-817), drawn with a centre stripe (T-2272) */
+  fast?: boolean;
   /** the nodes it runs through in order, first stop to last */
   chain: Int32Array;
   /** per chain entry, 1 where the line stops */
@@ -185,7 +187,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   };
 
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length >= 1 && l.stops.length >= 2);
-  const out: { id: number; colour: string; chain: number[]; stop: number[] }[] = [];
+  const out: { id: number; colour: string; fast: boolean; chain: number[]; stop: number[] }[] = [];
   const met: number[] = [];
   for (const l of rail) {
     met.length = 0;
@@ -221,7 +223,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     // from the first stop to the last: stations beside it beyond its ends are not the line's
     let i0 = stop.indexOf(1), i1 = stop.lastIndexOf(1);
     if (i0 < 0) continue;
-    out.push({ id: l.id, colour: l.colour.toLowerCase(), chain: chain.slice(i0, i1 + 1), stop: stop.slice(i0, i1 + 1) });
+    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, chain: chain.slice(i0, i1 + 1), stop: stop.slice(i0, i1 + 1) });
   }
 
   // nodes on some kept chain only, numbered again in order of their keys
@@ -248,7 +250,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     // local y points south
     y[i] = -(py[i] - my) / k;
   });
-  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
+  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
   const em = new Map<number, number[]>();
   dl.forEach((l, li) => {
     for (let i = 1; i < l.chain.length; i++) {

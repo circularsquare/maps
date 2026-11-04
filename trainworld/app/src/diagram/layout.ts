@@ -27,6 +27,8 @@ export interface LayoutOptions {
   room: number;
   /** unconnected stations kept apart by their half widths plus this share of the median hop */
   apart: number;
+  /** a lonely hop's target, as a share of its evened length (T-2289; 1 for none) */
+  lonely: number;
   roundsA: number;
   roundsB: number;
   /** LSQR iterations a round */
@@ -34,10 +36,10 @@ export interface LayoutOptions {
 }
 
 /** round 2's mockups (artifacts/trainworld/t2146/r2-*.png), for comparison */
-export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room: 1.6, apart: 0.5, roundsA: 10, roundsB: 30, iters: 400 };
+export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room: 1.6, apart: 0.5, lonely: 1, roundsA: 10, roundsB: 30, iters: 400 };
 /** "a little more compact" (Anita on round 2): shorter long hops, thicker strokes against the hops,
  * bundles a little closer (notes/T-2146.md, stage 2) */
-export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, roundsA: 10, roundsB: 30, iters: 400 };
+export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, lonely: 0.4, roundsA: 10, roundsB: 30, iters: 400 };
 
 /** a segment this near a 45 degree direction is snapped onto it */
 const SNAP_DEG = 11;
@@ -85,6 +87,13 @@ const PROGRESS_A = 0.2, PROGRESS_B = 0.7;
 const SEP_CAP = 0.3;
 /** a rebuild keeps to the last drawing when at least this share of its nodes were in it */
 const PREV_SHARE = 0.9;
+/** T-2289: a station is in a city when at least URBAN_N others lie within URBAN_M of it in reality; a
+ * city is such stations within URBAN_M of each other. A lonely hop's target is LayoutOptions.lonely of its
+ * evened length, at least LONELY_MIN pitches. */
+export const URBAN_M = 2500, URBAN_N = 3, ALONE_M = 4000;
+/** A's rounds: the options' up to A_ROUNDS_FROM complexes, rising to A_ROUNDS_MAX at A_ROUNDS_AT (T-2289) */
+const A_ROUNDS_FROM = 2000, A_ROUNDS_AT = 8000, A_ROUNDS_MAX = 40;
+const LONELY_MIN = 4;
 
 export interface Piece {
   /** the graph nodes along it, first to last */
@@ -169,6 +178,11 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
     hw[g.ea[e]] = Math.max(hw[g.ea[e]], h);
     hw[g.eb[e]] = Math.max(hw[g.eb[e]], h);
   }
+  // the lonely stretches between cities drawn shorter, after the pitch is set from every hop (T-2289)
+  if (o.lonely < 1) {
+    const lonely = cityParts(g).lonely;
+    for (let e = 0; e < m; e++) if (lonely[e]) L[e] = Math.max(Math.min(L[e], LONELY_MIN * pu), L[e] * o.lonely);
+  }
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
   const adj = new Set<number>();
@@ -191,6 +205,60 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
     }
   }
   return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj) };
+}
+
+/** The cities and the lonely hops between them (T-2289): `city` per node, its city (-1 for a station in
+ * none), and `lonely` per edge, 1 for a hop whose lines are all of one colour and that leaves a city or
+ * joins two: the long thin single-line stretches of the countryside, drawn shorter. */
+export function cityParts(g: DiagramGraph): { city: Int32Array; lonely: Uint8Array } {
+  const n = g.key.length, m = g.ea.length;
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  /** f on each other station within R of station i, from a grid of cell R */
+  const within = (R: number) => {
+    const grid = new Map<number, number[]>();
+    for (let i = 0; i < n; i++) {
+      const k = key(Math.floor(g.x[i] / R), Math.floor(g.y[i] / R)), v = grid.get(k);
+      if (v) v.push(i);
+      else grid.set(k, [i]);
+    }
+    return (i: number, f: (j: number) => void) => {
+      const cx = Math.floor(g.x[i] / R), cy = Math.floor(g.y[i] / R);
+      for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++)
+        for (const j of grid.get(key(gx, gy)) ?? []) if (j !== i && (g.x[j] - g.x[i]) * (g.x[j] - g.x[i]) + (g.y[j] - g.y[i]) * (g.y[j] - g.y[i]) < R * R) f(j);
+    };
+  };
+  const near = within(URBAN_M);
+  const urban = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    let c = 0;
+    near(i, () => c++);
+    urban[i] = c >= URBAN_N ? 1 : 0;
+  }
+  // alone: no station within ALONE_M whose lines share no colour with this one's
+  const cols: Set<string>[] = Array.from({ length: n }, () => new Set());
+  for (const l of g.lines) for (const k of l.chain) cols[k].add(l.colour);
+  const alone = new Uint8Array(n).fill(1), far = within(ALONE_M);
+  for (let i = 0; i < n; i++) far(i, (j) => { if (alone[i] && ![...cols[j]].some((c) => cols[i].has(c))) alone[i] = 0; });
+  // a city: urban stations within reach of each other, joined (union-find)
+  const up = Int32Array.from({ length: n }, (_, i) => i);
+  const root = (i: number): number => {
+    while (up[i] !== i) (up[i] = up[up[i]]), (i = up[i]);
+    return i;
+  };
+  for (let i = 0; i < n; i++) if (urban[i]) near(i, (j) => { if (urban[j]) up[root(i)] = root(j); });
+  const city = new Int32Array(n).fill(-1);
+  for (let i = 0; i < n; i++) if (urban[i]) city[i] = root(i);
+  const deg = new Uint16Array(n);
+  for (let e = 0; e < m; e++) deg[g.ea[e]]++, deg[g.eb[e]]++;
+  const lonely = new Uint8Array(m);
+  for (let e = 0; e < m; e++) {
+    const c0 = g.lines[g.on[g.first[e]]]?.colour;
+    let one = true;
+    for (let k = g.first[e] + 1; k < g.first[e + 1]; k++) if (g.lines[g.on[k]].colour !== c0) one = false;
+    const a = city[g.ea[e]], b = city[g.eb[e]];
+    lonely[e] = one && deg[g.ea[e]] <= 2 && deg[g.eb[e]] <= 2 && (a < 0 || b < 0 || a !== b) && (alone[g.ea[e]] || alone[g.eb[e]]) ? 1 : 0;
+  }
+  return { city, lonely };
 }
 
 /** Stations that share no edge and lie within SIDE_HOPS of either one's mean real hop of each other. Hops
@@ -1383,6 +1451,10 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const t0 = performance.now();
   const n = g.key.length;
   const P = prep(g, o);
+  // a big network's A needs more rounds to draw its long stretches as short as their targets (T-2289);
+  // the loading bar keeps A's and B's shares of the time in step
+  const roundsA = Math.round(Math.min(A_ROUNDS_MAX, Math.max(o.roundsA, o.roundsA + ((A_ROUNDS_MAX - o.roundsA) * (n - A_ROUNDS_FROM)) / (A_ROUNDS_AT - A_ROUNDS_FROM))));
+  const progA = (PROGRESS_B * PROGRESS_A * roundsA) / (PROGRESS_A * roundsA + (PROGRESS_B - PROGRESS_A) * o.roundsA);
   const geo = new Float64Array(n * 2);
   for (let i = 0; i < n; i++) geo[i * 2] = g.x[i], (geo[i * 2 + 1] = g.y[i]);
   const step = (from: number, to: number) => progress && ((d: number) => progress(from + (to - from) * d));
@@ -1391,10 +1463,10 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   if (last && last.size) {
     start = warmStart(g, P, last);
     warm = true;
-  } else start = lsq(P, false, o.roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, PROGRESS_A));
+  } else start = lsq(P, false, roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, progA));
   const t1 = performance.now();
   // a rebuild starts near where B ended: fewer rounds, held closer to the last layout
-  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(PROGRESS_A, PROGRESS_B));
+  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(progA, PROGRESS_B));
   const t2 = performance.now();
   const bx = new Float64Array(n), by = new Float64Array(n);
   for (let i = 0; i < n; i++) bx[i] = B[i * 2], (by[i] = B[i * 2 + 1]);
