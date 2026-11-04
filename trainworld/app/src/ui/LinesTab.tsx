@@ -25,11 +25,21 @@ import { Chip, Icon, SortHead } from "./widgets";
 import { lineMoneyTip, Money } from "./MoneyText";
 import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
-import { linesPending } from "../game/lineFigures";
+import { linesPending, pendingLabel, type PendingKind } from "../game/lineFigures";
 
 const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
+
+/** T-2392: a line's riders while they are worked out again: the old figure, the label small above it
+ * (alone where there is no figure yet). */
+function PendingRiders({ k, text }: { k: PendingKind; text: string }) {
+  return (
+    <span class={"val w-riders pending" + (text ? " stacked" : " muted")} data-tip="Calculating riders after your change">
+      {text ? <><span class="pending-label muted">{pendingLabel(k)}</span><span>{text}</span></> : pendingLabel(k)}
+    </span>
+  );
+}
 
 /** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
 function RidersToday({ line }: { line: string }) {
@@ -47,7 +57,8 @@ function RidersToday({ line }: { line: string }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
-  if (linesPending.value.has(line)) return <span class="val w-riders pending muted" data-tip="Calculating riders after your change">constructing...</span>;
+  const k = linesPending.value.get(line);
+  if (k) return <PendingRiders k={k} text={d ? count(d.riders) : ""} />;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in past 24h` : undefined}>{text}</span>;
@@ -87,14 +98,16 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
     return <span class="val muted">{STATUS[st]}</span>;
   }
   const by = (f: (l: LineInput) => string) => run.map((l) => `${l.name}: ${f(l)}`).join("\n");
-  const pending = run.some((l) => linesPending.value.has(l.id));
+  const pend = linesPending.value;
+  // a line being constructed names the group's state over one only loading
+  const pending = run.map((l) => pend.get(l.id)).filter((k): k is PendingKind => !!k).sort()[0];
   const riders = run.reduce((n, l) => n + (t.get(l.id)?.riders ?? 0), 0);
   const any = run.some((l) => t.has(l.id));
   const net = run.reduce((n, l) => n + lineNet(t.get(l.id), l, w.lineStats[l.id]), 0);
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
-      {pending ? <span class="val w-riders pending muted" data-tip="Calculating riders after your change">constructing...</span>
+      {pending ? <PendingRiders k={pending} text={any ? count(riders) : ""} />
         : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in past 24h in total\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
       {any ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>

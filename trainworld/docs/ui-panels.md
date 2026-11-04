@@ -809,7 +809,9 @@ keeps what it had and earns no more.
   all track in grey and each line in its colour that falls in it, so a line to another city runs
   off the edge; stations are not drawn [T-1100]. The city's name is text over the panel's top
   left in that theme's ink with a land-coloured halo, and with two or more panels its station
-  count under it; the hover gives both. A network with no station in a city is one unnamed panel
+  count under it; the hover gives both. With more than three cities to show, the fourth panel is
+  the whole network instead, framed on everything built and named "Whole network" with all its
+  stations [T-2394]. A network with no station in a city is one unnamed panel
   over all of it. Then its name, "Autosaved 2 min ago"
   for the game being played ("Saved just now" after a save by hand, while it is the last write) or
   "Saved ..." for the others (exact time on hover), the game day, the cities its stations are in,

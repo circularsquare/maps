@@ -219,6 +219,9 @@ export function BlueprintBar() {
   const piece = (s.built ? "Built: " : "Blueprint: ") + pieces(s.edges, s.stations);
   const levelTip = (l: Level) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`;
   const canLevel = !s.built && s.edges > 0;
+  // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
+  const keys = tool.value === "blueprint";
+  const switchKey = keys ? ` (${SWITCH_PICK_KEY.toUpperCase()})` : "";
   return (
     <>
       <div class="blueprint-bar" role="group" aria-label="Selection">
@@ -238,12 +241,12 @@ export function BlueprintBar() {
       )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip={`Leave these out when constructing${s.off ? "" : ` (${SWITCH_PICK_KEY.toUpperCase()})`}`} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
-          <button class="btn text" data-tip={`Enable the selection (${SWITCH_PICK_KEY.toUpperCase()})`} disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
+          <button class="btn text" data-tip={`Leave these out when constructing${s.off ? "" : switchKey}`} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
+          <button class="btn text" data-tip={`Enable the selection${switchKey}`} disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
         </div>
       )}
       <PickDoubleUp />
-      <button class="btn text" data-tip="Remove the selection (Delete)" onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
+      <button class="btn text" data-tip={keys ? "Remove the selection (Delete)" : "Remove the selection"} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
       <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">Clear</span></button>
       </div>
       {canLevel && levels && (

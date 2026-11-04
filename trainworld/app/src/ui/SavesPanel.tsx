@@ -15,7 +15,7 @@ import { useThumbIn } from "./thumbShade";
 import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
 import { exportGame, exportSlot, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
-import { listBackups, type SaveSlot, type SlotBackup } from "../workers/saveFile";
+import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
 import { accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
 import { tiedTo, type CloudContext } from "../workers/cloud";
@@ -54,19 +54,20 @@ const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Dat
 const atTime = (at: number, now: number) => sameDay(at, now) ? clockTime(at) : `${new Date(at).toLocaleDateString([], { month: "short", day: "numeric" })} at ${clockTime(at)}`;
 
 /** A saved game's picture of its network (T-241): one panel per city it has built in, the most
- * stations first, each named, with its stations when there is more than one (T-894). The names are
- * text over the picture, in the colours of the theme it was drawn in. */
+ * stations first, each named, with its stations when there is more than one (T-894); built in more
+ * than 3 cities, the last panel is the whole network (T-2394). The names are text over the picture,
+ * in the colours of the theme it was drawn in. */
 export function SlotThumb({ slot }: { slot: SaveSlot }) {
   // T-1852: drawn in the theme now set, whichever it was saved in
   const now = shade.value;
   const src = useThumbIn(slot.thumb ?? "", slot.shade ?? "light", now);
   if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
-  const panels = (slot.panels ?? []).filter((p) => isCity(p.city));
+  const panels = (slot.panels ?? []).filter((p) => p.city === WHOLE_PANEL || isCity(p.city));
   const sh = SHADES[now];
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
     {src && <img src={src} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />}
     {panels.map((p) => {
-      const name = cityById(p.city).name, stations = plural(p.stations, "station");
+      const name = p.city === WHOLE_PANEL ? "Whole network" : cityById(p.city).name, stations = plural(p.stations, "station");
       return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={`${name}: ${stations}`}>
         <div class="thumb-city">{name}</div>
         {panels.length > 1 && <div class="thumb-figure num">{stations}</div>}

@@ -6,7 +6,8 @@
 // are the trips taken by rail (`railTrips`, each trip once however many lines it rides, T-2237: a
 // line that saves people a change lowers boardings while trips rise), profit is that day's fare
 // income (`incomeByDay`, what the clock pays) minus its running cost and the upkeep. A one-line
-// edit's line figures are its riders (`LineDemand.ridersPerDay`, its boardings) and its profit.
+// edit's line figures are its riders (`LineDemand.ridersPerDay`, its boardings) and its profit; the
+// lines whose riders moved most are named too (T-2390).
 // Zones keep their levels of detail while edits settle (`editsSettling`, T-2180), and figures from
 // other levels are never compared. Held on the main thread only and not saved.
 
@@ -33,6 +34,9 @@ export const NOTE_COUNT_MS = 900;
 const NO_SOLVE_MS = 8000;
 /** Wall ms after which edits demand never settled are forgotten. */
 const GIVE_UP_MS = 5 * 60_000;
+/** T-2390: the most lines the note names, and the least change in a line's riders a day that names it */
+const MOVED_SHOWN = 5;
+const MOVED_MIN = 100;
 
 export interface FromTo { from: number; to: number }
 export interface EditNote {
@@ -42,6 +46,8 @@ export interface EditNote {
   /** the line, when the edits were about exactly one line (named in them, or new): its riders (its
    * boardings) and profit */
   line?: { id: string; riders: FromTo; money: FromTo };
+  /** T-2390: the lines whose riders (boardings) moved most, most first */
+  moved: { id: string; riders: FromTo }[];
   /** "per weekday": the day the figures are for */
   day: string;
   /** performance.now() when it landed */
@@ -189,8 +195,12 @@ export function startEditNote() {
       const id = touched[0], f = after.lines.get(id)!, b = was.lines.get(id);
       line = { id, riders: { from: Math.round(b?.riders ?? 0), to: Math.round(f.riders) }, money: { from: b?.money ?? 0, to: f.money } };
     }
+    const moved = [...after.lines].map(([id, f]) => ({ id, riders: { from: Math.round(was.lines.get(id)?.riders ?? 0), to: Math.round(f.riders) } }))
+      .filter((x) => Math.abs(x.riders.to - x.riders.from) >= MOVED_MIN)
+      .sort((a, b) => Math.abs(b.riders.to - b.riders.from) - Math.abs(a.riders.to - a.riders.from))
+      .slice(0, MOVED_SHOWN);
     clearTimeout(hide);
-    editNote.value = { trips, money, line, day: shown < DAY_KINDS.length ? shownDayPhrase.peek() : DEMAND_DAY_PHRASE[0], at: now };
+    editNote.value = { trips, money, line, moved, day: shown < DAY_KINDS.length ? shownDayPhrase.peek() : DEMAND_DAY_PHRASE[0], at: now };
     holdNote(false);
   });
 

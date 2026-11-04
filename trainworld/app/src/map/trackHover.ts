@@ -1,7 +1,7 @@
 // Hovering track (T-157): a tag by the pointer says what the current track display draws there:
 // the line's bullet and name and its riders per day on that stop-to-stop stretch (any view,
-// T-1907), its average load there (Traffic, T-2007), and always the elevation and speed limit there plus the lines on the track (T-473,
-// T-526). It shows at once. The tag follows the map's pick order (T-133): with the select tool,
+// T-1907), its average load there (Traffic, T-2007), and always the elevation and speed limit there;
+// bare track also lists the lines on it (T-473, T-526). It shows at once. The tag follows the map's pick order (T-133): with the select tool,
 // demand bubbles, capacity tags and editing handles above the network hide it; with a build tool
 // the demand views are beneath the network, and the tag sits above the pointer, clear of the
 // tool's own tag. Trains, stations, platform crowds and station demand circles have tags of their
@@ -201,10 +201,9 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     if (i < 0) [i] = topSeg(ov, L.seg, L.count, px, py, slop, B, bandPx, (j) => String(L.colour[j]) === hit.line, wide, widePx);
     if (i < 0) return null;
     if (out) out.hot = { line: L.colour[i] };
-    // T-473: the track under the line says its elevation and speed too; T-559: and every other line
-    // on it (T-2007: the line's own bullet heads the tag)
-    const on = linesOn(w, L.edge[i]).filter((x) => x.num !== L.colour[i]);
-    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.stretch ? L.stretch[i] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop), ...(on.length ? [lineBullets(on)] : [])];
+    // T-473: the track under the line says its elevation and speed too; T-2387: the other lines on it
+    // are left out, as they read as part of the hovered line
+    return [...lineTip(n, w, demandView.peek(), d.trackColour === "traffic", i, ov.renderer.fullStretch(L.colour[i], L.stretch ? L.stretch[i] : -1)), ...trackFacts(ov, L.edge[i], px, py, slop)];
   }
   if (hit.kind !== "track") return null;
   const facts = trackFacts(ov, hit.edge, px, py, slop);

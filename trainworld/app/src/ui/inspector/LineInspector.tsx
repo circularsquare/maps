@@ -19,7 +19,7 @@ import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, typ
 import { ask, display, lineDraft, purposeFilter, relatedLines, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
-import { linesPending } from "../../game/lineFigures";
+import { linesPending, pendingLabel } from "../../game/lineFigures";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
@@ -246,23 +246,24 @@ function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
  * component: it re-renders as the counts move. */
 function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
   const d = today.value.get(l.id);
-  const pending = linesPending.value.has(l.id);
+  const pending = linesPending.value.get(l.id);
   if (!d) {
     if (!pending) return null;
     return (
       <>
         <div class="h divided" />
-        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">constructing...</span></Row></ul>
+        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span></Row></ul>
       </>
     );
   }
   const load = periods ? averageLoad(periods, st) : null;
   const run = runningToday(l, st);
+  // T-2392: while the riders are worked out again the old figures stay, the label above them
   return (
     <>
-      <div class="h divided" />
+      <div class="h divided">{pending && <span class="pending-note muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span>}</div>
       <ul class="rows">
-        <Row label="Riders">{pending ? <span class="muted" data-tip="Calculating riders after your change">constructing...</span> : count(d.riders)}</Row>
+        <Row label="Riders">{count(d.riders)}</Row>
         {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
         <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, false, dayNote(l, st))}>
           <span class="grow">Profit</span>

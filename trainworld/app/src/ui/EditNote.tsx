@@ -1,12 +1,13 @@
 // "What this edit did" (T-2125): under the view rows at the map's upper left, for a few seconds after
 // demand settles from the player's edits, the change in train trips a day and profit a day, each after a
-// green up or red down arrow, as plain text on the map; the numbers ease up from 0. game/editNote.ts
-// says when and what the figures are.
+// green up or red down arrow, as plain text on the map; the numbers ease up from 0; then the bullets of
+// the lines whose riders moved most (T-2390). game/editNote.ts says when and what the figures are.
 
 import { useEffect, useState } from "preact/hooks";
 import { count, exact, money, moneyNegative } from "../game/format";
 import { editNote, holdNote, NOTE_COUNT_MS, shownChange, type FromTo } from "../game/editNote";
 import { world } from "../game/world";
+import { Chip } from "./widgets";
 
 const Arrow = ({ up }: { up: boolean }) => (
   <svg class={"edit-arrow " + (up ? "up" : "down")} viewBox="0 0 12 12" aria-hidden="true">
@@ -30,7 +31,9 @@ export function EditNote() {
     return () => cancelAnimationFrame(raf);
   }, [n?.at]);
   if (!n) return null;
-  const name = n.line && world.value?.save.lines.find((l) => l.id === n.line!.id)?.name;
+  const lines = world.value?.save.lines ?? [];
+  const name = n.line && lines.find((l) => l.id === n.line!.id)?.name;
+  const moved = n.moved.flatMap((x) => { const l = lines.find((y) => y.id === x.id); return l ? [{ l, riders: x.riders }] : []; });
   const dt = n.trips.to - n.trips.from, dm = n.money.to - n.money.from;
   const tr = Math.round(shownChange(dt, n.at)), m = shownChange(dm, n.at);
   const tripsText = signed(dt, Math.abs(dt) >= 10_000 ? count(Math.abs(tr)) : exact(Math.abs(tr)));
@@ -49,6 +52,12 @@ export function EditNote() {
         <div class={"edit-row" + (moneyNegative(dm) ? " money-neg" : "")} data-tip={tip("Profit", n.money, "", n.line?.money, money)}>
           <Arrow up={dm > 0} />
           <span>{signed(dm, money(m))} profit/day</span>
+        </div>
+      )}
+      {moved.length > 0 && (
+        <div class="edit-row edit-lines">
+          {moved.map(({ l, riders }) => <Chip line={l} size="sm" tip={`${l.name}
+${exact(riders.from)} to ${exact(riders.to)} riders ${n.day}`} />)}
         </div>
       )}
     </div>

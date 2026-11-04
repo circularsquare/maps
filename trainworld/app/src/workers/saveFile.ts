@@ -314,7 +314,9 @@ export interface SlotSummary {
 
 /** One city's panel in a save's picture (T-894): its registry id ("" for an unnamed panel over the
  * whole network), its stations, and where it is, as fractions of the picture's width and height. */
+/** `city`: a city id, or `WHOLE_PANEL` for the panel over everything built (T-2394) */
 export interface ThumbPanel { city: string; stations: number; x: number; y: number; w: number; h: number; }
+export const WHOLE_PANEL = "*";
 
 export interface StoredSave extends Partial<SlotSummary> {
   bytes: Uint8Array;

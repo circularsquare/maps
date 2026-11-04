@@ -217,8 +217,11 @@ function buildRamp(from: string, to: string): Uint8ClampedArray {
 }
 
 /** T-976, T-1120: the fill of the small dots that stand for zones the game has not opened (the
- * zoomed-out overview, map/intercityView.ts), in both themes; each has a 1 px map ink outline. */
+ * zoomed-out overview, map/intercityView.ts), in both themes. */
 export const UNBUILT_FILL = "#ffffff";
+/** T-2391: their 1 px outline, a medium grey in both themes (on the light map's land and on the
+ * dark map's alike; the dark theme's map ink is near white and left the dots rimless). */
+export const UNBUILT_RIM = "#8c8c8c";
 
 /** Commuter bubbles are this opaque, so the network shows through where they pile up. */
 export const BUBBLE_ALPHA = 0.8;

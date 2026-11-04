@@ -7,7 +7,7 @@
 // changes. While the game plays with the camera still it is never touched.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { MODE_COLOURS, rgbf } from "../game/palette";
+import { MODE_COLOURS, rgbf, UNBUILT_RIM } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, pxPerUnitAt, type Anchor } from "./geo";
@@ -104,6 +104,7 @@ void main() {
 const DISC_FS = `#version 300 es
 precision highp float;
 uniform vec3 u_ink;
+uniform vec3 u_rim;       // an unopened zone's dot's outline (T-2391)
 uniform float u_dpr;
 uniform vec3 u_split_train;
 uniform vec3 u_split_rest;
@@ -146,10 +147,10 @@ void main() {
   vec3 col = v_col.rgb;
   float a = v_col.a;
   if (v_edge > 1.1) {
-    // a dark outline 2 px wide (1 px from 1.1 to 1.5: an unopened zone's dot, T-976), the inside left as it is
+    // a dark outline 2 px wide (1 px of grey from 1.1 to 1.5: an unopened zone's dot, T-976), the inside left as it is
     float w = v_edge > 1.5 ? 2.0 : 1.0;
     float t = clamp(d - (v_r - w * u_dpr) + 0.5, 0.0, 1.0) * spinInk();
-    col = mix(col, u_ink, t);
+    col = mix(col, v_edge > 1.5 ? u_ink : u_rim, t);
     a = mix(a, 1.0, t);
   }
   a *= cover;
@@ -329,7 +330,7 @@ export class DemandOverlay {
   private programs() {
     const gl = this.gl;
     this.prog = compile(gl, DISC_VS, DISC_FS);
-    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_ink", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest", "u_spin"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_px_per_unit", "u_ink", "u_rim", "u_dpr", "u_rscale", "u_opacity", "u_pad", "u_hot", "u_split_train", "u_split_rest", "u_spin"]);
     this.timer = new GpuTimer(gl);
     this.cutProg = this.lineProg = null;
   }
@@ -575,6 +576,7 @@ export class DemandOverlay {
     gl.uniform2f(this.u.u_viewport, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.u.u_px_per_unit, pxPerUnit);
     gl.uniform3fv(this.u.u_ink, rgbf(shadeColours().mapInk));
+    gl.uniform3fv(this.u.u_rim, rgbf(UNBUILT_RIM));
     gl.uniform1f(this.u.u_dpr, dpr);
     gl.uniform3fv(this.u.u_split_train, SPLIT_TRAIN);
     gl.uniform3fv(this.u.u_split_rest, SPLIT_REST);

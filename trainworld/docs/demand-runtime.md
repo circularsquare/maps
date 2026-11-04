@@ -329,7 +329,7 @@ sent them), plus their own, so with nothing changed it repeats the whole solve; 
 read through its old route nodes, carried to the new network's by line and station ids
 (`solve.ids`). Each is sent as a cluster result marked `local`, its cities the touched zones: the page
 puts its lines, their stations and those zones' views in (never the market's own figures) and
-clears the lines' "constructing...". A worker then waits for the page's `whole`, sent 8 s after the
+clears the lines' pending label ("constructing..." or "loading...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time (the stations, then the line) is solved locally too; the whole solves follow as
 above and replace everything.

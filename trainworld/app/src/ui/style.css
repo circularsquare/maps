@@ -216,6 +216,10 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-2152: "constructing..." is wider than the riders column: it takes the room from the name, so
    the right-aligned columns stay in line and Money keeps its place */
 .lines-box .rows .val.w-riders.pending { width: auto; white-space: nowrap; }
+/* T-2392: a pending line's label sits small above its old riders figure, inside the row's height */
+.rows .val.pending.stacked { display: flex; flex-direction: column; align-items: flex-end; line-height: 13px; }
+.rows .val.pending .pending-label { font-size: 11px; line-height: 11px; }
+.h .pending-note { margin-left: auto; font-weight: 400; font-size: 12px; }
 @container lines (max-width: 250px) { .lines-box .w-linemoney { display: none; } }
 @container lines (max-width: 308px) { .lines-box.with-city .w-linemoney { display: none; } }
 @container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
@@ -877,11 +881,12 @@ button.save-add:hover { color: var(--text); }
 .zone-loads { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .zone-load { position: absolute; left: 0; top: 0; }
 .zone-load .load-bar { width: 96px; height: 6px; margin: -4px 0 0 -48px; zoom: var(--ui, 1); }
-/* T-975, T-1006, T-1046: a realm not shown, a circle like an unopened zone's dot floating on the shade */
+/* T-975, T-1006, T-1046: a realm not shown, a circle like an unopened zone's dot floating on the shade
+   (its grey rim, palette.ts UNBUILT_RIM, T-2391) */
 .realm-buttons { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .realm-button { position: absolute; left: 0; top: 0; pointer-events: auto; }
 .realm-button button { display: block; box-sizing: border-box; width: 16px; height: 16px; padding: 0; border-radius: 50%;
-  border: 1px solid var(--map-ink); background: #fff; cursor: pointer; }
+  border: 1px solid #8c8c8c; background: #fff; cursor: pointer; }
 .realm-button button:hover { background: #d9d9d9; }
 /* T-1298: toned down in dark, a mid grey with a dark rim */
 :root[data-shade="dark"] .realm-button button { background: #8a857f; border-color: #141517; }
@@ -1481,6 +1486,8 @@ button.save-add:hover { color: var(--text); }
   font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 2px var(--bg), 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 4px var(--bg); }
 .edit-row { display: flex; align-items: center; gap: 4px; width: fit-content; }
 .edit-row.money-neg { color: var(--bad); }
+/* T-2390: the bullets of the lines whose riders moved most */
+.edit-lines { gap: 3px; margin-top: 1px; text-shadow: none; }
 .edit-arrow { width: 12px; height: 12px; flex: none; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
   filter: drop-shadow(0 0 1px var(--bg)) drop-shadow(0 0 1.5px var(--bg)) drop-shadow(0 0 2px var(--bg)); }
 .edit-arrow.up { stroke: var(--good); }

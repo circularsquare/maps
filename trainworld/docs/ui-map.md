@@ -697,6 +697,10 @@ those who got on, less the load carried on.
   weekday: 812,400 to 817,626"), and when the edits were about exactly one line (the line an edit
   names, or a new line), that line's own too: its riders under the trips ("Riders on 大江戸線:
   1,016,738 to 1,140,493"), its profit under the profit ("大江戸線: $2.03M to −$17.0M").
+  Under the rows, the bullets of the lines whose riders (boardings a day) moved most, most first, up
+  to 5 and only those that moved by 100 or more [T-2390]: each a small bullet that selects its line
+  on a click, its hover the line's name over its before and after ("4" / "812,400 to 790,113 riders
+  per weekday").
   - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
     (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
     track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier
@@ -773,9 +777,9 @@ those who got on, less the load carried on.
   half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap
   (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what
   the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
-  here" where the limit is shown [T-1271]; and last every line using the track as
-  line bullets, in the save's order, wrapping, over bare track, and over a line every other line
-  there (its own bullet heads the tag) [T-2007] (the markup and CSS of
+  here" where the limit is shown [T-1271]; and last, over bare track only, every line using the track as
+  line bullets, in the save's order, wrapping (over a line the tag is that line's alone, its bullet
+  heading it [T-2007, T-2387]) (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs
   there) [T-532, T-559]. A planned line adds
   "Not running yet", a broken one "Not running"; before the first solve the traffic view says
@@ -879,7 +883,7 @@ Everything outside the realms shown (those the game has built in, starts in or t
 is covered by one shade, a little darker than the outside shade and over it (11% of the outside shade's colour, 22.5% black in the dark theme: together about 18% and 50%), on land and water alike, under
 labels and the network, taking no clicks. Its edge is the shown zones' coarse outline, the line the
 zone outlines draw, never a coast; nothing of a hidden realm's zones is drawn. Each hidden realm has
-one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px map ink outline; in the dark theme toned down to a mid grey #8a857f with a near-black rim, T-1298), at its point (the centre of the zone nearest the
+one floating circle, 16 px across, filled and outlined like an unopened zone's dot (white, a 1 px medium grey outline, T-2391; in the dark theme toned down to a mid grey #8a857f with a near-black rim, T-1298), at its point (the centre of the zone nearest the
 mean of its zones' centres, so on its land), moving with the map and leaving the screen with that
 point, never pinned at the edge [T-1142] (hover: the realm's name over "Click the shaded area to show the cities there").
 Circles that would overlap give way to the realm with more zones. A click on the circle, or a plain

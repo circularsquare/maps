@@ -34,7 +34,7 @@ import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
@@ -2039,12 +2039,16 @@ async function slotSummary(): Promise<SlotSummary> {
     if (!(all[2] >= all[0])) return summary; // nothing built or drawn
     // T-894: the biggest cities by stations, each framed on its own stations; a city with under 8%
     // of the biggest's stations is a fringe of its network, not a panel. A network with no station
-    // in a city is one panel over all of it, unnamed.
+    // in a city is one panel over all of it, unnamed. T-2394: with more than 3 cities to show, the
+    // last panel is everything built, named, in place of the fourth city.
     const most = cities.length ? byCity.get(cities[0])! : 0;
-    const shown = cities.filter((c) => byCity.get(c)! >= 0.08 * most).slice(0, THUMB_LAYOUTS.length);
+    const big = cities.filter((c) => byCity.get(c)! >= 0.08 * most);
+    const whole = big.length > 3;
+    const shown = big.slice(0, THUMB_LAYOUTS.length - (whole ? 1 : 0));
     const frames = shown.length
       ? shown.map((c) => ({ city: c, stations: byCity.get(c)!, box: boxOf(stationXY.filter((p) => p.city === c).map((p) => [p.x, p.y] as [number, number])) }))
       : [{ city: "", stations, box: all }];
+    if (whole) frames.push({ city: WHOLE_PANEL, stations, box: all });
     const layout = THUMB_LAYOUTS[frames.length - 1];
     const sh = SHADES[thumbShade];
     const canvas = new OffscreenCanvas(THUMB_W, THUMB_H);

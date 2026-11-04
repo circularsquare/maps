@@ -110,7 +110,7 @@ const SPLIT_BUBBLES = true;
 /** A bubble's edge value: its outline (0 none, 1 plain, 2 the selected one's), and under
  * `SPLIT_BUBBLES` the train share; a bubble nobody travels in stays a plain grey disc. */
 const edgeOf = (outline: 0 | 1 | 2, rail: number, all: number) => (SPLIT_BUBBLES && all > 0 ? splitEdge(outline, rail / all) : outline);
-/** An unopened zone's dot: a 1 px map ink outline (the disc shader's 1.1-1.5 band). */
+/** An unopened zone's dot: a 1 px grey outline (the disc shader's 1.1-1.5 band, `UNBUILT_RIM`). */
 const UNBUILT_EDGE = 1.25;
 const UNBUILT_GROW = 1.25;
 /** Most place labels on screen at once, the biggest first (T-493). */

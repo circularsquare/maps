@@ -709,7 +709,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `set_line_group_name` renames every line of it in one edit. Copy line puts the copy in its
   source's group, making a new one of the two when the source had none (one edit). The service
   never reads the group: a group edit rebuilds the lines' service like a colour change, wakes no
-  demand and shows no "constructing...". Saved in a trailing `LGR1` block (architecture.md, the
+  demand and shows no pending label. Saved in a trailing `LGR1` block (architecture.md, the
   save format); a save without it loads every line ungrouped. The group's bullet set by hand
   (`group_look`, text and colour, T-1813) rides beside the name the same way, `set_line_group_look`
   one undoable edit, saved in `LGL1`. The Lines and Stations tabs' hand order is a rank per line
