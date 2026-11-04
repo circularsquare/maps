@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2341 Jakarta as Jabodetabek (2026-11-04, agents countries2, countries3): jak 36.9M with Tangerang, new zones sum Sukabumi with Cianjur (5.56M), krw Karawang with Purwakarta, sra Serang with Cilegon; tan retired into jak; Java's group re-solved, terrain and drives. notes/T-2341.md.
+- T-2438 Network diagram far out: city names only (2026-11-04, agent diagnames, tree .tw-trees/diagborders): below 1.47 px a pitch each block shows its zone's name beside its box, station names hidden; checks/t2438-city-names.mjs. notes/T-2438.md.
+- T-2429 Train vanishing at a terminal on a count edit (2026-11-04, agent termtrain, tree .tw-trees/termtrain): a train standing at its terminal whose run the edit made quicker now waits from the edit for the new pattern's first departure (`Service::hand_over`); test `a_change_to_a_following_pair_on_full_track_moves_no_train`.
 - T-2168 Network diagram zone borders (2026-11-04, agent diagborders, tree .tw-trees/diagborders): each zone's coarse outline warped by the nearest stations' own maps, faint grey under the lines, shown inside blocks only; 98.5-99.6% of stations on their side (checks/t2168-borders.mjs). notes/T-2168.md.
 - T-2444 Money tab plots (2026-11-04, agent profit2): the one-off costs bar sits behind the fares and running costs bars, which fill the column less a 1.5 px gap (train rides likewise); checks/t2444-money-plot.mjs, shots in artifacts/trainworld/profit2/money-*.png.
 - T-2445 Track tag "+2160 km/h" (2026-11-04, agent profit2): not a bug; the elevation chip "+2" sat right before the speed chip "160 km/h" and the text read together.

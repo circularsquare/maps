@@ -1,19 +1,32 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38
-Previous: session 5f661fa7-7343-4c77-9e53-f444fc8a7bd5, name maps-5c, handed over 2026-11-04 16:38, finishing in-flight work
-Updated: 2026-11-04 17:35
+Updated: 2026-11-04 18:40. **Anita restarts VS Code now; the next orchestrator takes over with `/takeover
+trainworld`.** No agent of maps-17's is running; nothing is mid-flight; maps-5c is done (Jakarta committed 670d3241).
+
+## Start here (next orchestrator)
+1. Land, in order: profit2, achieve, deadcode, diagborders, termtrain (details under "In flight"). Before landing,
+   commit the main tree's uncommitted records by path (TASKS.md, ARCHIVE.md, DECISIONS.md, docs/track-and-service.md,
+   notes/handoff.md): the land's fast-forward fails on uncommitted edits in files a commit touches. DECISIONS.md has
+   countries3's T-2341 line and three T-2344 lines: check e2a06912 did not already take them (no duplicates).
+2. Rebuild 8800 on the result (it is still build 917, without Jakarta), smoke light and dark. Then delete
+   data/work/pre-T2341/ (2.3 GB), pre-T2294/, pre-T2418/.
+3. Run checks/city-browser.mjs on one zone, then start a fresh Opus agent on Ukraine T-2344 (notes/T-2344.md
+   "Next"; Crimea joins mos-ru, so that joint solve, ~1 h, reruns). After Ukraine, remove the kit's sim copy:
+   `tools\country\setup_sim.py <kit> remove` (kit in session 8509086d's scratch, countries\).
+4. Tell Anita (from countries3): Sukabumi+Cianjur is one 5.56M zone (could be two); Karawang+Purwakarta is out of
+   Jakarta (in Jabodetabek it would push jak past the 40M split); Jakarta now on 8800 once rebuilt.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **cf102c0a** (maps-5c: gate regex fix for the T-2365 hover grid). **8800 = build 917 (698d3954)**, all of
+- master **e2a06912** (Anita's own "trainworld work" commit of the whole tree, 17:31) after cf102c0a (maps-5c: gate
+  regex fix for the T-2365 hover grid). **8800 = build 917 (698d3954)**, all of
   today's landings to then. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico and Brazil
   before release, her ask).
 - Cores cap 15 (Anita away for a few hours from ~17:30: "feel free to keep working"). Disk ~25 GB free.
-- **Pack lock: maps-5c's countries3**, Jakarta T-2341 rerun (batch 20261104-171517, detached run_jak.cmd, PIDs
-  27272.., log artifacts/trainworld/countries/t2341-run.log). Its gate's browser checks load the main tree's app/:
-  **no landings into the main tree until Jakarta is committed** (maps-5c messages me). Then order: Ukraine T-2344
+- **Pack lock: free (the orchestrator's).** Jakarta T-2341 shipped and committed 670d3241 (t1053-zone-ids PASS, 750
+  successors; countries3's smoke 23/23). Order now: Ukraine T-2344
   (fresh agent, state in notes/T-2344.md "State at countries3's hand-back") -> T-2302 Europe replan -> Mexico
   T-2436 -> Brazil T-2437 (Anita: "lets do euro preplan first").
 - Worktrees: achieve, deadcode, profit2 (finished, to land), diagborders (T-2168 finished + diagnames working),
@@ -43,7 +56,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   2. **achieve** (T-2431 achievements, T-2285 Shift+1-7, T-2347 dash draw order, T-2446 2 px edge). Smoke ok.
      Retake the achievements shot after (its shot.mjs in scratch/achieve/; the old one was overwritten).
   3. **deadcode** (T-2369 + T-1304, 38 files). Smoke ok. Then delete the main tree's stale trainworld/app/dist.
-  4. **docsfix**'s main-tree docs, commit by path: trainworld/SPEC.md, docs/{world,ui-panels,ui-building,
+  4. (Anita committed the whole tree herself at 17:31 before going out, e2a06912 "trainworld work": docsfix's docs,
+     my records and countries3's mid-Jakarta game json are in it. So only edits since then need committing.)
+     docsfix's main-tree docs, were to be committed by path: trainworld/SPEC.md, docs/{world,ui-panels,ui-building,
      ui-inspectors,ui-map,ui-demand-views,track-and-service,demand-kernel,demand-mode,demand-plain,demand-runtime,
      demand-sources,demand-views,demand-worldwide,demand-market,regional,architecture,world-run,
      adding-a-city-by-hand,adding-a-country}.md, notes/archive/t0001-0499/T-304.md,
@@ -51,17 +66,20 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
      ui-building.md in the main tree: check the hunks).
   Then the records (TASKS, ARCHIVE, DECISIONS, notes/T-2375.md, T-2411.md, T-2267.md, todo-2026-11-04g/h.md,
   for-anita.md, handoff), rebuild 8800, smoke light and dark, run city-browser.mjs on one zone before the next gate.
-- **diagnames** (Opus, in tree .tw-trees/diagborders, 6185, ids T-2447..T-2448): T-2438 city names at far zoom, then
-  T-2425 Japan stretches. The tree also holds diagborders' finished T-2168 (zone borders: warp.ts, borders.ts;
+- **diagnames** DONE (in tree .tw-trees/diagborders): T-2438 city names below 1.47 px pitch (smoke ok; shot
+  artifacts/trainworld/diagnames/jpn-v2-0.3.png); T-2425 handed back with findings, no code (notes/T-2425.md: the
+  long stretches are stations between blocks; B stops converging with long inter-block hops). Filed T-2447 (Nagano's
+  smaller blocks unnamed). t2162-diagram-names fails 3 names at 14 px + 2 timing limits, untouched by it: compare
+  against master at landing. The tree also holds diagborders' finished T-2168 (zone borders: warp.ts, borders.ts;
   98.5-99.6% of stations on their side locally; shots artifacts/trainworld/diagborders/jpn-v0-3.png). Lands as one.
   diagborders retired at 414k tokens.
-- **termtrain** (Opus, tree .tw-trees/termtrain from cf102c0a, 6186, id T-2449): T-2429 train vanishing at a
-  terminal on a count edit (sim/src/track; Rust).
+- **termtrain** DONE (tree .tw-trees/termtrain): T-2429 fixed in sim/src/track/service.rs `hand_over` + test in
+  transition_tests.rs; both cargo runs pass (361, 534), smoke ok, no strings. Land after the others (sim: the land
+  rebuilds the main WASM). Doc sentence added to the main tree's docs/track-and-service.md (commit with docsfix's).
 - Filed today by maps-17: T-2431, T-2435 (t325-bare-check fails on master), T-2436..T-2440, T-2443..T-2446.
 - Next free id **T-2450**.
 
-maps-5c's (finishing): countries3's Jakarta rerun (above). Earlier lines of maps-5c's in-flight section are in
-git history (1e34ad36).
+maps-5c: done, countries3 retired. Its earlier in-flight lines are in git history (1e34ad36).
 
 ## Next
 1. On maps-5c's message: land profit2, achieve, deadcode, commit docsfix and records, rebuild 8800, smoke light/dark;

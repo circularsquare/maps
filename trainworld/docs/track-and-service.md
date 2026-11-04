@@ -906,7 +906,10 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   its run and turnaround takes the next departure from there if it comes within that departure's
   headway (an hour at most), standing at the platform until then; a departure no train waits for
   is a train entering service there; a train that finds another already waiting, or no departure
-  soon enough, leaves service at the end of its turnaround. So an added train enters at a
+  soon enough, leaves service at the end of its turnaround. A train standing at a terminal when a
+  change makes its run quicker (its turnaround then ends before the change) waits from the change
+  instead, for up to one and a half new headways, and leaves service no earlier than the change
+  (T-2429). So an added train enters at a
   terminal, a removed one finishes its trip and leaves at a terminal (on a loop, a train finishing
   a run takes that run's next departure from A, standing there as the timing hold, and trains enter
   and leave service at A only), and headways even out as
