@@ -13,9 +13,14 @@ import { effect, signal } from "@preact/signals";
 import type { ClockClient } from "../workers/clockClient";
 import { saveSlotsState } from "../workers/clockClient";
 import type { DiagramGraph } from "./graph";
-import type { DiagramNames, FromDiagram, ToDiagram } from "../workers/diagram.worker";
+import type { DiagramNames, FromDiagram, ToDiagram, ZoneFrame, ZoneOutlines } from "../workers/diagram.worker";
+import type { MultiPolygon } from "geojson";
+import { coarseOutlines } from "../map/coarseOutlines";
+import { zonesTouching } from "../game/cities";
+import { EARTH_C, toMerc01 } from "../map/geo";
 import { FADE_ALPHA, paint, pickAt, type DiagramFocus, type Drawing } from "./draw";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
+import { cityBox, paintCityNames } from "./cityNames";
 import { keyIsTheirs } from "../ui/keys";
 import { live } from "../map/live";
 import { toLocal } from "../map/geo";
@@ -101,6 +106,18 @@ function nameFont(): { px: number; family: string } {
 
 let measure: CanvasRenderingContext2D | null = null;
 const widths = new Map<string, number>();
+/** a text's width in CSS px in the names' font */
+function widthOf(t: string, f = nameFont()): number {
+  measure ??= document.createElement("canvas").getContext("2d");
+  const font = `${f.px}px ${f.family}`, k = font + "\u0000" + t;
+  let v = widths.get(k);
+  if (v === undefined) {
+    measure!.font = font;
+    widths.set(k, (v = measure!.measureText(t).width));
+  }
+  return v;
+}
+
 /** each graph node's name (its complex's, `pickName`) and widths in the names' font */
 function namesOf(g: DiagramGraph): DiagramNames {
   const w = world.peek(), cx = complexes.peek(), f = nameFont();
@@ -114,17 +131,7 @@ function namesOf(g: DiagramGraph): DiagramNames {
       return s ? [{ name: s.name, lines: stops.get(m) ?? 0 }] : [];
     }));
   });
-  measure ??= document.createElement("canvas").getContext("2d");
-  const font = `${f.px}px ${f.family}`;
-  const wOf = (t: string) => {
-    const k = font + "\u0000" + t;
-    let v = widths.get(k);
-    if (v === undefined) {
-      measure!.font = font;
-      widths.set(k, (v = measure!.measureText(t).width));
-    }
-    return v;
-  };
+  const wOf = (t: string) => widthOf(t, f);
   const width = new Float32Array(text.length), width2 = new Float32Array(text.length);
   text.forEach((t, i) => {
     width[i] = t ? wOf(t) : 0;
@@ -132,6 +139,35 @@ function namesOf(g: DiagramGraph): DiagramNames {
     width2[i] = p ? Math.max(wOf(p[0]), wOf(p[1])) : 0;
   });
   return { text, width, width2, fontPx: f.px };
+}
+
+/** the zones' borders' colour, the map's own zone outline colour (map/cityBoundaries.ts), in both themes */
+const BORDER_COLOUR = "#73798b";
+
+/** T-2168: the frame from mercator to graph metres, by the stations' own places (so it never depends on the
+ * anchor the graph was built at), and the box of their lng, lat; null without stations */
+function zoneFrame(g: DiagramGraph): { frame: ZoneFrame; box: [number, number, number, number] } | null {
+  const byId = new Map((world.peek()?.save.stations ?? []).map((s) => [s.id, s]));
+  const k = g.k / EARTH_C;
+  let fx = 0, fy = 0, c = 0, w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  g.key.forEach((key, i) => {
+    const st = byId.get(String(key));
+    if (!st) return;
+    const [mx, my] = toMerc01(st.lng, st.lat);
+    (fx += mx - g.x[i] * k), (fy += my + g.y[i] * k), c++;
+    (w = Math.min(w, st.lng)), (e = Math.max(e, st.lng)), (s = Math.min(s, st.lat)), (n = Math.max(n, st.lat));
+  });
+  return c ? { frame: [fx / c, fy / c, 1 / k], box: [w, s, e, n] } : null;
+}
+
+/** a zone's coarse outline as mercator rings, open */
+function mercRings(g: MultiPolygon): Float64Array[] {
+  return g.coordinates.flatMap((poly) => poly.map((ring) => {
+    const m = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1] ? ring.length - 1 : ring.length;
+    const out = new Float64Array(m * 2);
+    for (let i = 0; i < m; i++) [out[i * 2], out[i * 2 + 1]] = toMerc01(ring[i][0], ring[i][1]);
+    return out;
+  }));
 }
 
 /** A layout as shown, with what clicks and the focus look up in it. */
@@ -243,8 +279,35 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     busy = true;
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options } satisfies ToDiagram);
+    const zf = zoneFrame(g);
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined } satisfies ToDiagram);
   };
+  // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
+  let outlineMap: Map<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
+  const zonesSent = new Set<string>();
+  const newZones = (box: [number, number, number, number]): ZoneOutlines => {
+    lastBox = box;
+    const out: ZoneOutlines = [];
+    if (!outlineMap) return out;
+    for (const c of zonesTouching(...box)) {
+      const g = outlineMap.get(c.id);
+      if (!g || zonesSent.has(c.id)) continue;
+      zonesSent.add(c.id);
+      // T-2438: its shown name, for the city names far out
+      out.push({ id: c.id, rings: mercRings(g), label: { name: c.name, width: widthOf(c.name), trips: c.localTrips ?? 0, city: c.kind !== "zone" } });
+    }
+    return out;
+  };
+  void coarseOutlines().then((m) => {
+    if (!m.size) return;
+    outlineMap = m;
+    // outlines in after a layout: that layout's borders alone
+    if (worker && lastBox) {
+      const zones = newZones(lastBox);
+      if (zones.length) worker.postMessage({ kind: "zones", zones } satisfies ToDiagram);
+    }
+  });
+  let shownSeq = -1;
   client.onDiagram = (g) => {
     if (!diagramShown.peek()) return;
     if (!worker) {
@@ -254,15 +317,20 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           if (!shown && diagramShown.peek()) diagramProgress.value = e.data.share;
           return;
         }
+        if (e.data.kind === "borders") {
+          if (shown && e.data.seq === shownSeq) (shown.d.borders = e.data.borders), (shown.names.cities = e.data.cities), draw();
+          return;
+        }
         busy = false;
         const { graph, layout, drawing: d, names } = e.data;
+        shownSeq = e.data.seq;
         shown = indexShown(graph, d, names, layout.x, layout.y);
         focusKey = null;
         hot = -1;
         diagramProgress.value = null;
         diagramReady.value = true;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? c.at.map((l, i) => [c.levels[i], [...l.block].map((b) => c.text[b])]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.levels = b.levels.map(() => new Float64Array(0))), (b.paths = undefined), draw(); return b ? b.levels.reduce((a, l) => a + l.length / 2, 0) : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
         if (!placed) place();
         draw();
         const next = waiting;
@@ -337,7 +405,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
     // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
     const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined };
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
@@ -371,10 +439,13 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     const f = focusNow();
-    paint(ctx, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f);
+    paint(ctx, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, { ...t, dpr }, f);
     // the map's station names: its ink with a halo of the background
     const st = f?.stations;
     paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
+    // far out, the city names in place of the station names (T-2438)
+    const cn = shown.names.cities;
+    if (cn) paintCityNames(ctx, cn, shown.d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font });
   };
   new ResizeObserver(() => draw()).observe(canvas);
   effect(() => {
@@ -545,7 +616,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 
 /** The whole diagram on a canvas of its own, unselected, at the largest names' level of at most
  * PICTURE_PITCH_PX a pitch that keeps it within PICTURE_MAX_SIDE and PICTURE_MAX_AREA. */
-function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; font: string; edge?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
+function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; font: string; edge?: string; border?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
   const d = s.d, levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));
@@ -567,7 +638,18 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
     const [W, H] = size(at, b);
     if (fits(W, H)) (sc = at), (box = b);
   }
-  // too big for names at any level: the lines alone, as large as fits
+  // too big for station names at any level: the city names' largest level that fits (T-2438)
+  const cn = s.names.cities;
+  for (let li = (cn?.levels.length ?? 0) - 1; li >= 0 && !sc; li--) {
+    const at = cn!.levels[li] / d.pitch, b = [x0, y0, x1, y1];
+    for (let i = 0; i < cn!.at[li].block.length; i++) {
+      const n = cityBox(cn!, li, i, at);
+      (b[0] = Math.min(b[0], n[0])), (b[1] = Math.min(b[1], n[1])), (b[2] = Math.max(b[2], n[2])), (b[3] = Math.max(b[3], n[3]));
+    }
+    const [W, H] = size(at, b);
+    if (fits(W, H)) (sc = at), (box = b);
+  }
+  // too big for any names: the lines alone, as large as fits
   if (!sc) {
     const span = Math.max(x1 - x0, y1 - y0), area = (x1 - x0) * (y1 - y0);
     sc = Math.min((PICTURE_MAX_SIDE - 2 * PICTURE_MARGIN_PX) / span, Math.sqrt(PICTURE_MAX_AREA / area) * 0.95);
@@ -581,5 +663,6 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
   const mx = (box[0] + box[2]) / 2, my = (box[1] + box[3]) / 2;
   paint(ctx, d, W, H, mx, my, sc, t);
   paintNames(ctx, s.names, d, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
+  if (cn) paintCityNames(ctx, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
   return { canvas: out, pitchPx: sc * d.pitch };
 }

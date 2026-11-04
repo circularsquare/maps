@@ -2,8 +2,8 @@
 
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
-camera and the picture (T-2163), and city blocks (T-2407; notes/T-2407.md); the faint city outlines and water
-are T-2168 and T-2169.
+camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' faint borders (T-2168;
+notes/T-2168.md) and city names far out (T-2438); water is T-2169.
 
 ## The button and key M
 
@@ -79,6 +79,27 @@ of 0.625 device px, no pills (T-2272).
 The drawing is made in the layout worker and posted with the layout: each line's path as commands,
 made a Path2D on the page when first painted.
 
+## Zone borders
+
+`diagram/borders.ts`, `diagram/warp.ts` (T-2168). Each zone holding a station has its coarse outline (the map's
+own, `packs/outlines.json`) drawn under everything, in the map's outline grey (#73798b) a CSS px wide at half
+opacity, the lines' casings cutting it. A station's zone is the outline holding it, else the nearest within
+40 km. The page sends the outlines of the zones near the network once each, in mercator, with the graph's frame
+worked out from the stations' own places; the layout worker draws them after the names (and again, alone, for
+outlines that arrive after a layout). A border two zones share is drawn once.
+
+- **The warp**: a real place goes where the blend of its 8 nearest stations puts it, weights 1/(d^2 + 50 m^2)^2,
+  each station carrying it by its own linear map (its hops' drawn vectors against their real ones, held toward
+  their drawn-to-real scale) for at most 20 pitches. So beside a station a border keeps the side it had in
+  reality, and between stations it stretches as the drawing does; one function covers the whole drawing, blocks
+  and gaps alike.
+- **Where it shows**: full within 6 pitches of a drawn station and in reality within the nearest station's median
+  hop (at least 1.5 km); gone by 16 pitches and twice that distance, in four steps. Only the blocks' stations
+  count (every station when there are no blocks): between blocks the drawing moves stations too far from their
+  real places for a border to keep its sides, so borders show inside blocks only.
+- **Shape**: densified to at most 0.75 pitch drawn and 500 m real, simplified within 0.6 pitch, corners cut
+  twice. Borders follow the layout, so they move only as the stations near them move.
+
 ## Names
 
 `diagram/names.ts`, placed in the layout worker after the drawing. A station's name is its complex's:
@@ -107,10 +128,27 @@ pill, so they clear its own line); east, west, north and south
   px size while the drawing scales, a name past its level only shrinks toward its pill, inside the box
   tested, so nothing it was clear of comes nearer. Each level favours the last level's place for a name
   (by 1.2 of cost), so names move little across levels.
-- **Faint levels** (T-2272): below those, k from -14 to -4 (0.62 to 3.5 px, as far out as pills go), the big stations only, drawn
+- **Faint levels** (T-2272): below those, k from -9 to -4 (1.47 to 3.5 px), the big stations only, drawn
   at 0.6 opacity: of the stations with 3 lines or more stopping, most lines first, each one with no station
   kept before it within 120 px at the level. Their names keep off each other's names only (over lines and
   pills, the halo keeping them legible). The levels proper are placed as if these were not there.
+
+## City names
+
+`diagram/cityNames.ts` (T-2438). Below a pitch of 1.47 px no station names are drawn; each city block (The layout,
+Blocks) has its name instead, in the station names' font, size, ink and halo, at full opacity. Placed in the layout
+worker after the borders, at levels k from -22 to -10 (0.16 to 1.24 px), each drawn from it to the next, none below
+the first; past its level a name only shrinks toward its anchor on the box's edge.
+
+- **The name**: the zone (the borders' zone of each station) holding most of the block's stations, ties to a city
+  zone, then to more local trips; its shown name, as the map's (`game/zoneNames.ts`). The page
+  sends it with the zone's outline. A name a bigger block already has is not shown again, so a zone with several
+  blocks (a prefecture's smaller cities) is named once, at its biggest.
+- **Where**: biggest block first, of up to twelve places the one covering the least line in px (grown by half a
+  4 px gap), plus a small cost for the place: above the box centred, then flush with either side; below likewise;
+  beside it; inside a corner (only where the box holds the name). Never over a name placed before it (with 6 px to
+  spare); a block with no such place has no name at that level.
+- The saved picture, too big for station names at any level, takes the largest city level that fits.
 
 ## The graph
 
@@ -226,7 +264,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   overlap: each hop and link the last layout had is held as it is drawn, the new ones get their targets, and
   boxes within the gap but not overlapping at the start are left so; each block's last places, B's and the
   drawing's, move by the block's move, so an edit inside a city moves no block.
-- **Exposed** (`layout.blocks`, for T-2168's outlines and T-2169's water): per node its block (or none), per
+- **Exposed** (`layout.blocks`, for the zone borders and T-2169's water): per node its block (or none), per
   block its drawn box, its move, and an affine fit from real places to drawn ones over its stations.
 
 `LAYOUT_R2` keeps round 2's options (alpha 0.35, pitch the median hop over 12, edges 1.6 half widths).

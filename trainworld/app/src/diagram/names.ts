@@ -12,6 +12,7 @@ import type { DiagramGraph } from "./graph";
 import type { DiagramLayout } from "./layout";
 import { PILL_OUTLINE, PILL_R, pillSize, type Drawing } from "./draw";
 import { hyp, pow } from "./fmath";
+import type { CityNames } from "./cityNames";
 
 /** px between a pill's outline and its name */
 const GAP_PX = 3;
@@ -39,8 +40,8 @@ const SIDE_REACH = 6;
 const STAY = 1.2;
 /** Faint levels below the first (T-2272), from STEP to this power: only the stations with at least
  * FAINT_LINES lines stopping and more than any other within FAINT_REACH_PX at the level, kept off
- * other names only, drawn at FAINT_ALPHA */
-const FAINT_LO = -14, FAINT_LINES = 3, FAINT_REACH_PX = 120;
+ * other names only, drawn at FAINT_ALPHA. Below them the city names (cityNames.ts, T-2438). */
+const FAINT_LO = -9, FAINT_LINES = 3, FAINT_REACH_PX = 120;
 export const FAINT_ALPHA = 0.6;
 
 /** the eight places, counter-clockwise from east */
@@ -65,6 +66,8 @@ export interface NamePlan {
   at: LevelNames[];
   /** how many of the levels, from the first, are faint (FAINT_LO) */
   faint: number;
+  /** the city names far out (cityNames.ts), set in the layout worker after the borders */
+  cities?: CityNames;
   /** per graph node its name ("" none), the name's width in CSS px, and over two lines (0 where it
    * is not split) */
   text: string[];
