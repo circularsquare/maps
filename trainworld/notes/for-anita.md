@@ -8,7 +8,7 @@ Answer "text acknowledged" per block, or name the lines to change.
 One change to your wording: the Traffic note says "Red borders indicate track at full capacity." (the red
 borders in Traffic view mark track full of trains, not crowded trains). The green-bubble note is dropped.
 
-### Track and station bars, mode frame (T-2267 + T-2270, design only)
+### Track and station bars, mode frame (T-2267 + T-2270; built 2026-11-04 as T-2282 to T-2284 with your changes, T-2285 not built)
 Note: notes/T-2267.md. Shots: artifacts/trainworld/review/track-bar.png, mode-colours.png.
 Questions: build it as T-2282 to T-2284? the optional cross "Stop (Esc)", the bars' 3 px top edge in the mode
 colour, and Shift+1-7 re-levelling (T-2285)? keep the mode colours though they sit only 11-15 dE from the game's
@@ -54,16 +54,16 @@ are written "06:00" to match the top bar clock (you wrote "6:00"; say if you wan
 - Line panel level hovers: "High demand: 6-20 on weekdays" -> "High demand: 06:00-20:00 on weekdays"; "Medium demand: 20-24 on weekdays, 6-24 on weekends" -> "Medium demand: 20:00-24:00 on weekdays, 06:00-24:00 on weekends"; "Low demand: 0-6" -> "Low demand: 00:00-06:00"
 - Purpose chart axis: "6–10", "10–16" ... -> "06:00-10:00", "10:00-16:00" ...; bar hovers "To destination, 6–10: ..." -> "To destination, 06:00-10:00: ..."
 
-### Map display (T-2271's map items done; T-2279 built, switched off, waiting on you)
+### Map display (T-2271's map items, done)
 - Weekend: the High dot is only its weekday rim (those hours run Medium's trains, now counted in the Medium dot).
   Wider dot hover. Editing stops dims bubbles to 35% beneath the network instead of hiding them. A log bar under
   the station tool's "57k trips within 1km" (1,000 to 1M). The bubble hover's mode bar scales with the count (log).
 - "lower min demand bubble trip size more": read as the Settings bubble Size slider, minimum 0.5x -> 0.25x. If
   you meant the smallest trip count that gets a bubble at all, say so.
-- **T-2279 crowding dot**: 100% plus the cube-root mean of each stretch's load past 100%; one crushed stretch in 20
+- **Crowding dot**: 100% plus the cube-root mean of each stretch's load past 100%; one crushed stretch in 20
   comes out 118% (yellow), a line full everywhere keeps its load; the hover keeps the peak. Example: BNTNM, 1 of 12
   stretches at 148%: crimson now, yellow (121%) with the mean. PATH, 3 of 5 up to 150%: crimson now, red (138%).
-  Try it on 8800 with `?crowdMean=1`. Turn it on? Pictures: artifacts/trainworld/display/t2279-curve.png,
+  On since T-2335, the ring the peak. Pictures: artifacts/trainworld/display/t2279-curve.png,
   mean-one-packed.png beside peak-one-packed.png.
 - Strings: crowding hover period lines "6-10: 106%" -> "06:00-10:00: 106%"; new weekend High dot hover "Medium
   demand trains run in these hours today", then "On weekdays, peak load 140%" and the weekday strip.
@@ -117,12 +117,6 @@ The toggle is greyed at a building's stations (a building already counts as one)
   October rule? (2) Build Ukraine at all, on the population grid only, with a 2001 census and millions displaced?
   The agent leans not yet; so do I.
 
-### Older asks found open by the audit (2026-11-04)
-- T-1920: a zone's rail commuters are dealt over all its work cells by jobs, so cells no station reaches get
-  train riders (5 of 71 New York pairs). Deal them only over cells within reach? A demand rule, so yours.
-- T-2058: the interlining look (lines side by side looking continuous). Only "turn the default on once you have
-  seen it" is left; you have been playing with it (T-2222, T-2223). Make it the default?
-
 ## From 2026-10-26, still open (checked 2026-11-04)
 
 The rest of that list is built or answered: Canada, Kwai Chung, superholidays, both fare tasks, level of
@@ -130,8 +124,6 @@ detail, the slow-computer work, track edits on big networks, the worker crash, r
 the terrain tint, the waiting room, real networks sharing track, routed drives (T-279), the base map
 palette, the privacy page, and your go on the replan (T-1189, under way tonight).
 
-- **Mexico**: next country after Turkey, whose build runs tonight. Its census and jobs sources are filed
-  (T-2080, T-2081); no build task yet.
 - Someday tasks you might want back, all still open: T-750 add a city's real network to a sandbox game
   already running; T-685 drawn city stamps at 10% rail share (the stars are done); T-651 unopened zones look
   fully red when zoomed out; T-632 walking feels too strong to play against (you said try later); T-438 a

@@ -3,12 +3,12 @@
 // Midtown line as blueprint: its "Road crossings" quote row through an export and reload, a station
 // splitting it, and Construct paying it. Pictures of the tags in artifacts/trainworld/t1929/. About
 // two minutes.
-// Usage: node trainworld/checks/t1929-roads.mjs [url] (default http://localhost:6180/)
+// Usage: node trainworld/checks/old/t1929-roads.mjs [url] (default http://localhost:6180/)
 
 import { mkdirSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, collectErrors, importSave, launchChrome } from './lib.mjs';
+import { ARTIFACTS, collectErrors, importSave, launchChrome } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6180/';
 const sep = BASE.includes('?') ? '&' : '?';

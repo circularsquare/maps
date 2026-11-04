@@ -1,11 +1,11 @@
 // T-1881: the track tool's tag over the named ghosts of T-1944 and T-1889 (Midtown at ground, the
 // East River at +1) and over real hills that must stay dear (Nob Hill, the Peak), each in a new game
 // in its zone. Prints each tag; screenshots of them to artifacts/trainworld/t1881/. No checks.
-// Usage: node trainworld/checks/t1881-prices.mjs <label> [url] [ghost,ghost] (default http://localhost:6158/)
+// Usage: node trainworld/checks/old/t1881-prices.mjs <label> [url] [ghost,ghost] (default http://localhost:6158/)
 
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { ARTIFACTS, collectErrors, launchChrome } from './lib.mjs';
+import { ARTIFACTS, collectErrors, launchChrome } from '../lib.mjs';
 
 const LABEL = process.argv[2] ?? 'now';
 const BASE = process.argv[3] ?? 'http://localhost:6158/';

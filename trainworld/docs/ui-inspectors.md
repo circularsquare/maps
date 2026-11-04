@@ -925,8 +925,10 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   the train.", its hover "By train at least 34 min, walking 28 min." and "Nobody takes a train that
   takes longer than walking." (real minutes, the quickest pair's, `DemandApi.trip` slot 44).
   **When the headline counts train trips anyway** [T-1902] (at least one whole trip; the headline
-  counts the homes and places around the two points, and the views deal a zone's commuters over
-  its cells, so train riders land on cells too far from the stations for the cells' own trip), a trip whose walks are too long
+  counts the homes and places around the two points; the commuters' far end goes only to cells within
+  the walk limit of the selection's nearest end [T-1920], but an everyday purpose's riders, a far
+  subzone with no cell in reach and the walking rule's station pairs can still land train riders on
+  cells the cells' own trip gives none), a trip whose walks are too long
   or whose station pairs all take longer than walking there shows the route read with those limits lifted
   (`DemandApi.trip` slot 46): one line "The stations are too far from these exact points. Trips
   from nearby take this route." (or "Walking is quicker from these exact points. ...", its hover

@@ -315,6 +315,12 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   save's weekday rail trips per url to `artifacts/trainworld/smoke-figures.json`, which t883 compares
   against (T-1135). It prints a WARN line when over 20 `tw-*` folders older than a day sit in the
   temp folder (profiles an old check left; T-1213).
+- `doc_lint.py [--all-links] [--since DATE]`: the doc-state check (T-2366), a few seconds, no browser. One
+  line per finding, `file:line: [kind] what`, exit 1 if any: a task in both TASKS.md and ARCHIVE.md, stages or
+  blockers all archived, an archived id opening a line of for-anita.md, over-long TASKS lines and (from
+  `--since`) ARCHIVE or DECISIONS entries, empty TASKS headings, "Update:" paragraphs, over-long doc sections,
+  dead names and key letters in the docs, `notes/` links that resolve nowhere (`--all-links` adds the docs and
+  code comments). It is what keeps a fact from standing in two files.
 - `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
   in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
   profile from `tempProfile`, deleted by its `close()` and, if the check never gets there, at process
@@ -845,7 +851,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   only; `get` fetches objects over 100 MB with curl from a presigned URL, resuming), `status.py` (what of ours exists; `cost
   <run>`), `teardown.py` (terminate and sweep by our tags, then list), `guard.py` (a PreToolUse hook
   refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks. A wave (T-1065):
-  `bundle.py` (the code tar), `userdata/wave.sh` (check row, go, `world_run.py run --build-only` by
+  `bundle.py` (the code tar; `--head-sim` takes sim/ from HEAD), `seed.py` (home's world field and the box's
+  sea polygons, unpacked first, T-2301), `userdata/wave.sh` (check row, go, `world_run.py run --build-only` by
   runner region) with `wavepack.py` (a region's result tar on the machine), `land.py` (results into
   data/ under the plan lock, rows "built"). The fine terrain (T-1854): `userdata/terrain.sh` runs
   `pipeline/terrain_fine.py run` over a block list and puts its part tars as they fill.

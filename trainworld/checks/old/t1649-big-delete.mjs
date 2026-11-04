@@ -3,10 +3,10 @@
 // built track?", Keep it changes nothing, and a small delete asks as before. On a new game a big
 // blueprint delete asks, and one undo brings track, stations and the line back; a small one is quiet.
 // Uses the Vite already on `port` (dev-nowatch.mjs). From the maps root:
-//   node trainworld/checks/t1649-big-delete.mjs [port]
+//   node trainworld/checks/old/t1649-big-delete.mjs [port]
 import { readFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, REAL_SAVE, launchChrome, collectErrors, importSave } from './lib.mjs';
+import { ARTIFACTS, REAL_SAVE, launchChrome, collectErrors, importSave } from '../lib.mjs';
 
 const port = Number(process.argv[2] ?? 6151);
 const SHOT = join(ARTIFACTS, 't1649-confirm.png');

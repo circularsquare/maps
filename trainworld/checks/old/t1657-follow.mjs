@@ -2,12 +2,12 @@
 // frame while the camera moves, on the real save (New York), with mouse drags (pan) and wheel zooms,
 // plus the main thread's ms a frame. Station names are checked against the placement rule (the
 // station's screen point plus the gap, below or beside); marks against map.project of the attraction.
-//   node trainworld/checks/t1657-follow.mjs <url>      (from the maps root; a Vite with ?debug=1 pages)
+//   node trainworld/checks/old/t1657-follow.mjs <url>      (from the maps root; a Vite with ?debug=1 pages)
 import { readFile } from 'node:fs/promises';
-import { launchChrome, importSave, demandFinal, REAL_SAVE } from './lib.mjs';
+import { launchChrome, importSave, demandFinal, REAL_SAVE } from '../lib.mjs';
 
 const BASE = process.argv[2];
-if (!BASE) { console.error('usage: node checks/t1657-follow.mjs <url>'); process.exit(2); }
+if (!BASE) { console.error('usage: node checks/old/t1657-follow.mjs <url>'); process.exit(2); }
 const SCENES = [
   { name: 'pan z14', at: [-73.985, 40.75], zoom: 14, drag: 'pan' },
   { name: 'pan z15', at: [-73.985, 40.755], zoom: 15, drag: 'pan' },

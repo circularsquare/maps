@@ -2,10 +2,10 @@
 // against the pill's inside, at 2x), Settings > Game "Getting started" Start again in a normal game,
 // the keep placing hover, one colour for hotkey hints, and the demand bubble icon. Screenshots light
 // and dark in artifacts/trainworld/t1835/. From the maps root:
-//   node trainworld/checks/t1835-ui.mjs [url]   (about a minute)
+//   node trainworld/checks/old/t1835-ui.mjs [url]   (about a minute)
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, REAL_SAVE, GL, launchChrome, collectErrors, importSave } from './lib.mjs';
+import { ARTIFACTS, REAL_SAVE, GL, launchChrome, collectErrors, importSave } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6193/';
 const OUT = join(ARTIFACTS, 't1835');

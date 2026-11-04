@@ -103,7 +103,8 @@ levels:
    falls in the same 15-minute band (`band_min`, Anita, T-720; why: notes/T-720.md). Each carries
    its perceived walk to each of its stations, averaged over its cells as the mode choice weighs
    them (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near
-   cells carry most of the rail), used at both ends of a trip. Cells with no station within 4 km
+   cells carry most of the rail), used at both ends of a trip; each cell keeps its own cheapest
+   walk too, for where the views draw rail (`walk_c`, T-1920, step 5). Cells with no station within 4 km
    are in no subzone: their commuters drive or walk. Access and subzones together are rebuilt on
    every edit (counts and timings: notes/T-720.md, notes/T-090.md).
 4. **Station-to-station times**: one reverse strategy search per destination station over station
@@ -246,7 +247,13 @@ levels:
    mode (`flows`, T-098 for the bubbles: the gravity's zone trips from the selection, rail along
    the kept station pairs, walk and drive the rest; totals exact and equal to `cellModes`, far
    rail by place blurred like `stationRiders`; the far cells holding the last 1% left out as a cut
-   total; notes/T-098.md). A selection's everyday
+   total; notes/T-098.md). A far subzone's rail goes to its cells the selection's own trips reach
+   (T-1920, `far_reach`): the far cell's cheapest walk to a station (`Subzones::walk_c`; a home
+   end's cheapest ride where the two zones are far enough apart for one) and the selection's
+   cheapest end together within `pair_walk_max`, as the trip explorer's two cells have it; a
+   subzone with none of its cells in reach keeps its rail on all of them by weight, so each far
+   subzone's rail stays within it; the walking rule is not applied here. `cellModes` and
+   `stationRiders` deal a subzone's rail over all its cells by weight. A selection's everyday
    purposes (`EverydayApi::selection_sparse_day`) visit only the selection's destination samples
    (a purpose's samples laid out by the selected end are read by range, the others scanned for
    selected cells before any is weighed) and answer only the far cells they reach; the main

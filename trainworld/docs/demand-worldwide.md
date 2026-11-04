@@ -554,6 +554,13 @@ notes/T-420.md has the tables.
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (rail trips at the ride access entries, `Subzones::ride`).
+- **Where a selection's train riders are drawn** (T-1920, docs/demand-kernel.md step 5, `flows`). A
+  subzone's commuters by rail at a selection's far end go to its cells within the walk limit
+  (`pair_walk_max`, 80 perceived minutes for both ends' walks) of the selection's nearest end, or
+  to all its cells by jobs or homes when none is. Nothing in it is per country: it reads the same
+  walks and rides as mode choice. Why it may not carry over: where stations are dense (Tokyo,
+  Paris) nearly every cell is in reach and nothing moves; where stations are far apart a far
+  subzone's riders gather on its cells nearer the station, more than in New York (notes/T-1920.md).
 - **Walking the whole way** (T-558, T-636, docs/demand-mode.md 4.3 "Walking"). A mode in the choice
   beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with a
   bonus of 10 perceived minutes against the car (`walk_bonus_min`) for what a short drive costs beyond

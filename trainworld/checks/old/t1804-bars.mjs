@@ -1,10 +1,10 @@
 // T-1804: a city's loading bar stays on its spot through a zoom. A bar is faked on the zone in view
 // (zoneLoads), the map zooms in and out, and each frame the bar's place on the screen is compared with
 // where the zone's centre projects (plus the bar's fixed drop below it). From the maps root:
-//   node trainworld/checks/t1804-bars.mjs [url]   (about 30 s; screenshots to artifacts/trainworld/t1804/)
+//   node trainworld/checks/old/t1804-bars.mjs [url]   (about 30 s; screenshots to artifacts/trainworld/t1804/)
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, GL, launchChrome, collectErrors } from './lib.mjs';
+import { ARTIFACTS, GL, launchChrome, collectErrors } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6173/';
 const OUT = join(ARTIFACTS, 't1804');

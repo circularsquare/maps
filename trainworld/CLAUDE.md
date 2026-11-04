@@ -61,7 +61,8 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   small targeted edits, never rewrite TASKS.md, DECISIONS.md or ARCHIVE.md wholesale.
 - **notes/ is the agents'** (Anita, 2026-10-13): move, merge or delete freely. One-off scripts go
   once their task is done; scripts worth keeping go to `checks/`. Check outputs (.json, .log) go in
-  `../artifacts/trainworld/`, never notes/.
+  `../artifacts/trainworld/`, never notes/. A `notes/` link that does not resolve is in `notes/archive/<band>/`
+  (bands by task id: `t0001-0499`, `t0500-0999`, `t1000-1499`, `t1500-1999`, `t2000-2499`).
 - **Project knowledge lives here**, not in Claude's memory. Adding a country: `docs/adding-a-country.md`; its scripts are in `tools/country/`.
 - **The data register** (`docs/data-register.md`): a city or data task that uses, finds or rules
   out a source updates that country's cell, and files a P3 task for a source usable but not used.

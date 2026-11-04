@@ -4,8 +4,8 @@
 // before), then builds the rectangle the upgrade row offers round Times Sq-42 St (as t2218 does) and checks
 // that no line's riders move more than 5% and the building's stations gain transfers. Writes
 // artifacts/trainworld/t2220/<mode>.json. Uses the Vite already on the url (dev-nowatch.mjs). From the maps root:
-//   node trainworld/checks/t2220-building-change.mjs <url> baseline|check
-import { ARTIFACTS, REAL_SAVE, collectErrors, demandFinal, importSave, launchChrome } from './lib.mjs';
+//   node trainworld/checks/old/t2220-building-change.mjs <url> baseline|check
+import { ARTIFACTS, REAL_SAVE, collectErrors, demandFinal, importSave, launchChrome } from '../lib.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 

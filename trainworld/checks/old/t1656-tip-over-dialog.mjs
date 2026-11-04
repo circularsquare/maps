@@ -1,11 +1,11 @@
 // T-1656: the game's hover tag shows above a modal dialog (the saved games panel). Opens the panel,
 // hovers a button in it and checks that the tag is shown as a popover, which a modal dialog's top
 // layer cannot cover (elementFromPoint cannot tell: the page outside a modal is inert).
-//   node trainworld/checks/t1656-tip-over-dialog.mjs <url> [screenshot.png]      (from the maps root)
-import { launchChrome } from './lib.mjs';
+//   node trainworld/checks/old/t1656-tip-over-dialog.mjs <url> [screenshot.png]      (from the maps root)
+import { launchChrome } from '../lib.mjs';
 
 const [BASE, SHOT] = process.argv.slice(2);
-if (!BASE) { console.error('usage: node checks/t1656-tip-over-dialog.mjs <url> [screenshot.png]'); process.exit(2); }
+if (!BASE) { console.error('usage: node checks/old/t1656-tip-over-dialog.mjs <url> [screenshot.png]'); process.exit(2); }
 const { ctx, close } = await launchChrome({ prefix: 'tw-tipdlg-', size: [1200, 800] });
 let ok = false;
 try {

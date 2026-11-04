@@ -1,11 +1,11 @@
 // T-1820: the station tool places stations on track only, and snaps to track from 15 px.
-//   node trainworld/checks/t1820-stations.mjs [url] [fresh]      (from the maps root; about a minute)
+//   node trainworld/checks/old/t1820-stations.mjs [url] [fresh]      (from the maps root; about a minute)
 // A blueprint piece is drawn by Central Park (on the real save, or a fresh game with `fresh`). With the
 // station tool: a click on open ground places nothing and the tag says "Place stations on track"; a
 // click 17 px off the track (outside the radius) places nothing; one 13 px off (inside it, outside
 // the earlier 10 px) places a station on the piece. Screenshots to artifacts/trainworld/t1820/.
 import { readFile, mkdir } from 'node:fs/promises';
-import { launchChrome, importSave, REAL_SAVE, GL, ARTIFACTS } from './lib.mjs';
+import { launchChrome, importSave, REAL_SAVE, GL, ARTIFACTS } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6195/';
 const FRESH = process.argv[3] === 'fresh';

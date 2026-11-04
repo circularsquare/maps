@@ -2,11 +2,11 @@
 // in Brooklyn, its tag read and photographed in both themes), the 30 km water rule (a viaduct and a
 // cut and cover tunnel over the Dover Strait refused, 25 km of it and a bored tunnel not), and the
 // upkeep rates by level. About two minutes.
-// Usage: node trainworld/checks/t1928-prices.mjs [url] (default http://localhost:6170/)
+// Usage: node trainworld/checks/old/t1928-prices.mjs [url] (default http://localhost:6170/)
 
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ARTIFACTS, collectErrors, launchChrome } from './lib.mjs';
+import { ARTIFACTS, collectErrors, launchChrome } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6170/';
 const sep = BASE.includes('?') ? '&' : '?';

@@ -1,9 +1,9 @@
 // T-751, T-1844: a refused + on train length (platforms too short) shakes, knocks and offers
 // "Expand all"; the button lengthens the platforms, charges them and lengthens the trains; with too
 // little cash it refuses the same way. Steppers at a limit shake and knock too.
-//   node trainworld/checks/t751-expand.mjs [url] [shots folder]    (from the maps root; a running dev server)
+//   node trainworld/checks/old/t751-expand.mjs [url] [shots folder]    (from the maps root; a running dev server)
 import { mkdirSync } from 'node:fs';
-import { NOISE, acrossLine, collectErrors, launchChrome } from './lib.mjs';
+import { NOISE, acrossLine, collectErrors, launchChrome } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6193/';
 const SHOTS = process.argv[3] ?? 'artifacts/trainworld/t751';

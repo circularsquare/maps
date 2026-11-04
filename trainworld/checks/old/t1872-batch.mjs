@@ -4,10 +4,10 @@
 // from no service gives 5 minutes. (3) a copied line's name and symbol. (4) a game the player opens
 // starts on the city with the most built stations. Uses the Vite already on `port`
 // (dev-nowatch.mjs). From the maps root:
-//   node trainworld/checks/t1872-batch.mjs [port]
+//   node trainworld/checks/old/t1872-batch.mjs [port]
 import { readFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, REAL_SAVE, launchChrome, collectErrors, importSave, acrossLine } from './lib.mjs';
+import { ARTIFACTS, REAL_SAVE, launchChrome, collectErrors, importSave, acrossLine } from '../lib.mjs';
 
 const port = Number(process.argv[2] ?? 6172);
 const OUT = join(ARTIFACTS, 't1872');

@@ -3,12 +3,12 @@
 // account gets these same bytes, cloud.ts); a reload of the page opens them; dragging a group's row
 // into a gap only moves it (it once sent "leave group" for line Number("g:N") = NaN, which the worker's
 // Uint32Array made line 0, so the group holding line 0 dissolved); an export and import keeps them.
-//   node trainworld/checks/t1855-groups-kept.mjs [url]   (from the maps root; default localhost:6189; about a minute)
+//   node trainworld/checks/old/t1855-groups-kept.mjs [url]   (from the maps root; default localhost:6189; about a minute)
 import { readFile } from 'node:fs/promises';
-import { launchChrome, collectErrors, importSave, GL } from './lib.mjs';
+import { launchChrome, collectErrors, importSave, GL } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6189/';
-const TOKYO = new URL('../data/packs/real/tyo.save', import.meta.url);
+const TOKYO = new URL('../../data/packs/real/tyo.save', import.meta.url);
 let fail = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) fail++; };
 const errors = [];

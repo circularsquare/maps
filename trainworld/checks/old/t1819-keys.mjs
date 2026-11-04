@@ -1,8 +1,8 @@
 // T-1819, T-1834: the key map. Presses each key in a new game and reads which dock tab, tool and elevation
 // button is on: Shift+1 to Shift+7 elevation, 1 2 3 4 tools, B L A F Y tabs, S edit stops, G add passed, U bus, nothing
 // while typing in a text box, a bare digit not an elevation, hovers showing the keys. From the maps root:
-//   node trainworld/checks/t1819-keys.mjs [url]   (about 30 seconds)
-import { launchChrome, collectErrors, GL } from './lib.mjs';
+//   node trainworld/checks/old/t1819-keys.mjs [url]   (about 30 seconds)
+import { launchChrome, collectErrors, GL } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6193/';
 let fail = 0;

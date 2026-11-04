@@ -1,6 +1,6 @@
 // T-1810: the clock worker's work after a demand solve (riders, then transfers), and how long track
 // previews wait meanwhile, in headless Chrome.
-//   node trainworld/checks/t1810-transfers.mjs [page url] [save]      (from the maps root)
+//   node trainworld/checks/old/t1810-transfers.mjs [page url] [save]      (from the maps root)
 // Loads the save, waits for demand's final and its transfers, then ROUNDS times sets a running
 // line's trains (alternately two more and back) so demand solves again, with the track tool's ghost moved every
 // frame from the edit to SETTLE ms after the solve's transfers went to the clock worker. Per round:
@@ -10,7 +10,7 @@
 // page opens that zone, since its demand asks for the zone in view (T-1814; in a New York page a
 // Tokyo save gets no transfers).
 import { readFile } from 'node:fs/promises';
-import { launchChrome, importSave, ANGLE, REAL_SAVE } from './lib.mjs';
+import { launchChrome, importSave, ANGLE, REAL_SAVE } from '../lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6191/';
 const SAVE = process.argv[3] ?? REAL_SAVE;
