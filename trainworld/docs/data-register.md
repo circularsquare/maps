@@ -134,7 +134,7 @@ capped at 1 (errands / leisure). It decides how far the everyday fallback trusts
 | Mexico (not built) | N 2020 census by municipio, locality (ITER) and urban AGEB (INEGI open terms), T-2080 (T-2075) | N INEGI Marco Geoestadistico 2020 by CVEGEO | - |
 | Israel (not built; Middle East pick) | N 2022 census by statistical area (CBS, data.gov.il), T-2082 (T-2075) | N CBS's own statistical-area polygons | - |
 | Saudi Arabia (not built) | ? 2022 census by region only (COD-PS SAU, 13 regions); GHSL alone would do (T-2075) | - COD-AB to region only | - |
-| Ukraine (held) | - nothing open and current (census 2001; COD-PS UKR 2026 is marked restricted) | ? COD-AB UKR (hromada) | - |
+| Ukraine (planned, T-2344) | U GHSL alone (census 2001; COD-PS UKR 2026 is marked restricted) | U geoBoundaries UKR ADM3 councils; ? COD-AB UKR (hromada); line of control: ISW and AEI Critical Threats' "Assessed Russian-controlled Ukrainian Territory" (ArcGIS layer, edited 2026-09-29, `data/raw/worldplan/isw_ukr_control_2026-09-29.geojson`), whole units over half inside not drawn; Crimea's councils to Russia (Natural Earth's de facto line); N OSM, ACLED, OCHA's 2018 contact line, DeepStateMap (notes/T-2344.md) | - |
 | Belarus | U GHSL alone; ? 2019 census by raion in Belstat PDF bulletins (T-2075, not taken: GHSL is sound in Belarus and a PDF table is past the playbook's hour) | U OSM relations matched to geoBoundaries ADM2 raions; ? COD-AB BLR (raion) | - |
 
 ## Jobs
