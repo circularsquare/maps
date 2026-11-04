@@ -1842,10 +1842,8 @@
 "koy": ["Jayapura", "Port Numbay", "Hollandia", "Sentani"],
 "kts": ["Sorong"],
 "hla": ["Tobelo"],
-"tan": ["Tangerang City", "Kota Tangerang", "Tangerang Selatan", "South Tangerang City", "Kota Tangerang Selatan", "South Tangerang", "Tangsel", "Kota Tangeran Selatan", "Serang", "Kota Serang", "Cilegon", "Kota Cilegon", "Pasar Kemis"],
 "tak": ["Kota Tasikmalaya", "Ciamis", "Kecamatan Ciamis", "Banjarsari", "Panumbangan", "Panjalu", "Kawali"],
 "pea": ["Kota Pekalongan"],
-"jak": ["Batavia", "Daerah Khusus Ibukota Jakarta", "Bekasi", "Kota Bekasi", "Depok", "Kota Depok", "Bogor", "Kota Bogor", "Kota Hujan", "Sukabumi", "Kota Sukabumi", "Karawang"],
 "toi": ["Wamena", "Wamena Kota", "Distrik Wamena"],
 "acs": ["Meulaboh", "Moulabouh"],
 "nis": ["Gunungsitoli", "Kota Gunungsitoli"],
@@ -2838,5 +2836,9 @@
 "lxi": ["Aiken", "North Augusta", "Lexington"],
 "whi": ["Dalton"],
 "los": ["Albany", "Valdosta"],
-"rid": ["Augusta", "Evans", "Martinez"]
+"rid": ["Augusta", "Evans", "Martinez"],
+"jak": ["Batavia", "Daerah Khusus Ibukota Jakarta", "Bekasi", "Kota Bekasi", "Tangerang", "Tangerang City", "Kota Tangerang", "Tangerang Selatan", "South Tangerang City", "Kota Tangerang Selatan", "South Tangerang", "Depok", "Kota Depok", "Tangsel", "Kota Tangeran Selatan"],
+"sum": ["Kota Sukabumi", "Cianjur"],
+"krw": ["Purwakarta", "Kecamatan Purwakarta"],
+"sra": ["Kota Serang", "Cilegon", "Kota Cilegon"]
 }

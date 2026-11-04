@@ -23902,6 +23902,22 @@
       {
         "name": "Serang",
         "regionName": "Serang region"
+      },
+      {
+        "name": "Jakarta",
+        "regionName": "Jakarta region"
+      },
+      {
+        "name": "Sukabumi",
+        "regionName": "Sukabumi region"
+      },
+      {
+        "name": "Karawang",
+        "regionName": "Karawang region"
+      },
+      {
+        "name": "Serang",
+        "regionName": "Serang region"
       }
     ],
     "rule": {
@@ -23947,7 +23963,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 68446858.0,
+      "localTrips": 68446861.0,
       "box": [
         -75.219,
         39.475,
@@ -23997,7 +24013,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 15306068.0,
+      "localTrips": 15306054.0,
       "box": [
         -71.924,
         41.565,
@@ -24097,7 +24113,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 2312393.0,
+      "localTrips": 2312407.0,
       "box": [
         -73.352,
         41.087,
@@ -25023,7 +25039,7 @@
         36.375
       ],
       "place": 47,
-      "localTrips": 1238612.0,
+      "localTrips": 1238609.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -25049,7 +25065,7 @@
         35.371
       ],
       "place": 48,
-      "localTrips": 3423332.0,
+      "localTrips": 3423316.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -25231,7 +25247,7 @@
         34.727
       ],
       "place": 55,
-      "localTrips": 2395274.0,
+      "localTrips": 2395275.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -25793,7 +25809,7 @@
         55.075
       ],
       "place": 82,
-      "localTrips": 2975996.0,
+      "localTrips": 2976009.0,
       "country": "GB",
       "realm": "uk-ie"
     },
@@ -26168,7 +26184,7 @@
         52.347
       ],
       "place": 103,
-      "localTrips": 10729555.0,
+      "localTrips": 10729525.0,
       "country": "NL",
       "realm": "benelux"
     },
@@ -26793,7 +26809,7 @@
         61.11
       ],
       "place": 193,
-      "localTrips": 4762589.0,
+      "localTrips": 4762600.0,
       "country": "NO",
       "realm": "nordic"
     },
@@ -27556,7 +27572,7 @@
         42.763
       ],
       "place": 267,
-      "localTrips": 2766606.0,
+      "localTrips": 2766604.0,
       "country": "ES",
       "realm": "iberia"
     },
@@ -28441,7 +28457,7 @@
       ],
       "place": 415,
       "country": "IT",
-      "localTrips": 1524058.0,
+      "localTrips": 1524203.0,
       "realm": "italy"
     },
     {
@@ -28831,7 +28847,7 @@
       ],
       "place": 430,
       "country": "IT",
-      "localTrips": 354580.0,
+      "localTrips": 354587.0,
       "realm": "italy"
     },
     {
@@ -29819,7 +29835,7 @@
       ],
       "place": 468,
       "country": "IT",
-      "localTrips": 2168329.0,
+      "localTrips": 2168313.0,
       "realm": "italy"
     },
     {
@@ -31327,7 +31343,7 @@
       ],
       "place": 659,
       "country": "FR",
-      "localTrips": 2154946.0,
+      "localTrips": 2154947.0,
       "realm": "france"
     },
     {
@@ -33589,7 +33605,7 @@
       ],
       "place": 767,
       "country": "GR",
-      "localTrips": 749188.0,
+      "localTrips": 749194.0,
       "realm": "gr-cy"
     },
     {
@@ -33901,7 +33917,7 @@
       ],
       "place": 783,
       "country": "NL",
-      "localTrips": 3842323.0,
+      "localTrips": 3842301.0,
       "realm": "benelux"
     },
     {
@@ -33953,7 +33969,7 @@
       ],
       "place": 785,
       "country": "NL",
-      "localTrips": 2120283.0,
+      "localTrips": 2120297.0,
       "realm": "benelux"
     },
     {
@@ -35305,7 +35321,7 @@
       ],
       "place": 867,
       "country": "DE",
-      "localTrips": 1756201.0,
+      "localTrips": 1756208.0,
       "realm": "germany"
     },
     {
@@ -37463,7 +37479,7 @@
       ],
       "place": 963,
       "country": "IE",
-      "localTrips": 1612042.0,
+      "localTrips": 1612043.0,
       "realm": "uk-ie"
     },
     {
@@ -38399,7 +38415,7 @@
       ],
       "place": 1004,
       "country": "DE",
-      "localTrips": 1552896.0,
+      "localTrips": 1552897.0,
       "realm": "germany"
     },
     {
@@ -39283,7 +39299,7 @@
       ],
       "place": 1044,
       "country": "AT",
-      "localTrips": 1707751.0,
+      "localTrips": 1707732.0,
       "realm": "ch-at"
     },
     {
@@ -40973,7 +40989,7 @@
       ],
       "place": 1126,
       "country": "RO",
-      "localTrips": 1726599.0,
+      "localTrips": 1726623.0,
       "realm": "ro-md"
     },
     {
@@ -41701,7 +41717,7 @@
       ],
       "place": 1156,
       "country": "RS",
-      "localTrips": 2350305.0,
+      "localTrips": 2350306.0,
       "realm": "balkans"
     },
     {
@@ -41831,7 +41847,7 @@
       ],
       "place": 1162,
       "country": "AL",
-      "localTrips": 2102618.0,
+      "localTrips": 2102615.0,
       "realm": "balkans"
     },
     {
@@ -42065,7 +42081,7 @@
       ],
       "place": 1171,
       "country": "BG",
-      "localTrips": 1835528.0,
+      "localTrips": 1835518.0,
       "realm": "balkans"
     },
     {
@@ -42247,7 +42263,7 @@
       ],
       "place": 1180,
       "country": "HR",
-      "localTrips": 1252126.0,
+      "localTrips": 1252130.0,
       "realm": "balkans"
     },
     {
@@ -42507,7 +42523,7 @@
       ],
       "place": 1198,
       "country": "NO",
-      "localTrips": 710714.0,
+      "localTrips": 710717.0,
       "realm": "nordic"
     },
     {
@@ -42533,7 +42549,7 @@
       ],
       "place": 1200,
       "country": "FI",
-      "localTrips": 2761182.0,
+      "localTrips": 2761187.0,
       "realm": "nordic"
     },
     {
@@ -42637,7 +42653,7 @@
       ],
       "place": 1205,
       "country": "LT",
-      "localTrips": 2598486.0,
+      "localTrips": 2598494.0,
       "realm": "baltic"
     },
     {
@@ -42741,7 +42757,7 @@
       ],
       "place": 1209,
       "country": "SE",
-      "localTrips": 2602919.0,
+      "localTrips": 2602978.0,
       "realm": "nordic"
     },
     {
@@ -42767,7 +42783,7 @@
       ],
       "place": 1210,
       "country": "SE",
-      "localTrips": 2156414.0,
+      "localTrips": 2156423.0,
       "realm": "nordic"
     },
     {
@@ -42897,7 +42913,7 @@
       ],
       "place": 1216,
       "country": "FI",
-      "localTrips": 2507565.0,
+      "localTrips": 2507568.0,
       "realm": "nordic"
     },
     {
@@ -42923,7 +42939,7 @@
       ],
       "place": 1261,
       "country": "NO",
-      "localTrips": 1299972.0,
+      "localTrips": 1299986.0,
       "realm": "nordic"
     },
     {
@@ -42949,7 +42965,7 @@
       ],
       "place": 1262,
       "country": "FI",
-      "localTrips": 1141430.0,
+      "localTrips": 1141431.0,
       "realm": "nordic"
     },
     {
@@ -42975,7 +42991,7 @@
       ],
       "place": 1263,
       "country": "NO",
-      "localTrips": 1748783.0,
+      "localTrips": 1748787.0,
       "realm": "nordic"
     },
     {
@@ -43001,7 +43017,7 @@
       ],
       "place": 1265,
       "country": "GB",
-      "localTrips": 1396343.0,
+      "localTrips": 1396346.0,
       "realm": "uk-ie"
     },
     {
@@ -43228,7 +43244,7 @@
       ],
       "place": 2232,
       "country": "US",
-      "localTrips": 19696767.0,
+      "localTrips": 19696747.0,
       "realm": "us-south"
     },
     {
@@ -43555,7 +43571,7 @@
       ],
       "place": 2293,
       "country": "US",
-      "localTrips": 3081292.0,
+      "localTrips": 3081304.0,
       "realm": "us-south"
     },
     {
@@ -43984,7 +44000,7 @@
       ],
       "place": 2464,
       "country": "US",
-      "localTrips": 2384650.0,
+      "localTrips": 2384651.0,
       "realm": "us-midwest"
     },
     {
@@ -44009,7 +44025,7 @@
       ],
       "place": 2469,
       "country": "US",
-      "localTrips": 11490970.0,
+      "localTrips": 11490971.0,
       "realm": "us-midwest"
     },
     {
@@ -44213,7 +44229,7 @@
       ],
       "place": 2482,
       "country": "US",
-      "localTrips": 3423559.0,
+      "localTrips": 3423562.0,
       "realm": "us-west"
     },
     {
@@ -44646,7 +44662,7 @@
       ],
       "place": 2524,
       "country": "US",
-      "localTrips": 13809707.0,
+      "localTrips": 13809708.0,
       "realm": "us-west"
     },
     {
@@ -44748,7 +44764,7 @@
       ],
       "place": 2531,
       "country": "US",
-      "localTrips": 2679968.0,
+      "localTrips": 2679969.0,
       "realm": "us-northeast"
     },
     {
@@ -44825,7 +44841,7 @@
       ],
       "place": 2539,
       "country": "US",
-      "localTrips": 1651927.0,
+      "localTrips": 1651928.0,
       "realm": "us-northeast"
     },
     {
@@ -45056,7 +45072,7 @@
       ],
       "place": 2566,
       "country": "US",
-      "localTrips": 4055176.0,
+      "localTrips": 4055231.0,
       "realm": "us-northeast"
     },
     {
@@ -45331,7 +45347,7 @@
       ],
       "place": 2606,
       "country": "CN",
-      "localTrips": 13031391.0,
+      "localTrips": 13031407.0,
       "realm": "cn-east"
     },
     {
@@ -45356,7 +45372,7 @@
       ],
       "place": 2608,
       "country": "CN",
-      "localTrips": 18219294.0,
+      "localTrips": 18219308.0,
       "realm": "cn-east"
     },
     {
@@ -45531,7 +45547,7 @@
       ],
       "place": 2627,
       "country": "CN",
-      "localTrips": 21724319.0,
+      "localTrips": 21724340.0,
       "realm": "cn-northeast"
     },
     {
@@ -45606,7 +45622,7 @@
       ],
       "place": 2630,
       "country": "CN",
-      "localTrips": 47501361.0,
+      "localTrips": 47501352.0,
       "realm": "cn-southwest"
     },
     {
@@ -45831,7 +45847,7 @@
       ],
       "place": 2639,
       "country": "CN",
-      "localTrips": 31444915.0,
+      "localTrips": 31444931.0,
       "realm": "cn-northwest"
     },
     {
@@ -46081,7 +46097,7 @@
       ],
       "place": 2656,
       "country": "CN",
-      "localTrips": 7255751.0,
+      "localTrips": 7255765.0,
       "realm": "cn-south"
     },
     {
@@ -46406,7 +46422,7 @@
       ],
       "place": 2681,
       "country": "CN",
-      "localTrips": 12985654.0,
+      "localTrips": 12985655.0,
       "realm": "cn-southwest"
     },
     {
@@ -46582,7 +46598,7 @@
       "place": 2690,
       "country": "CN",
       "realm": "cn-north",
-      "localTrips": 6455615.0
+      "localTrips": 6455617.0
     },
     {
       "id": "had",
@@ -46632,7 +46648,7 @@
       "place": 2693,
       "country": "CN",
       "realm": "cn-east",
-      "localTrips": 32510975.0
+      "localTrips": 32510976.0
     },
     {
       "id": "nan",
@@ -46857,7 +46873,7 @@
       "place": 2702,
       "country": "CN",
       "realm": "cn-north",
-      "localTrips": 5261524.0
+      "localTrips": 5261485.0
     },
     {
       "id": "hef",
@@ -47491,7 +47507,7 @@
       ],
       "place": 2751,
       "country": "KR",
-      "localTrips": 1199255.0,
+      "localTrips": 1199257.0,
       "realm": "korea"
     },
     {
@@ -49909,7 +49925,7 @@
       ],
       "place": 2844,
       "country": "CN",
-      "localTrips": 3987122.0,
+      "localTrips": 3987107.0,
       "realm": "cn-east"
     },
     {
@@ -50117,7 +50133,7 @@
       ],
       "place": 2852,
       "country": "CN",
-      "localTrips": 3317519.0,
+      "localTrips": 3317534.0,
       "realm": "cn-east"
     },
     {
@@ -50195,7 +50211,7 @@
       ],
       "place": 2855,
       "country": "CN",
-      "localTrips": 5745534.0,
+      "localTrips": 5745535.0,
       "realm": "cn-east"
     },
     {
@@ -50611,7 +50627,7 @@
       ],
       "place": 2872,
       "country": "CN",
-      "localTrips": 3841375.0,
+      "localTrips": 3841376.0,
       "realm": "cn-east"
     },
     {
@@ -52405,7 +52421,7 @@
       ],
       "place": 2942,
       "country": "CN",
-      "localTrips": 4948550.0,
+      "localTrips": 4948530.0,
       "realm": "cn-east"
     },
     {
@@ -52431,7 +52447,7 @@
       ],
       "place": 2944,
       "country": "CN",
-      "localTrips": 4965865.0,
+      "localTrips": 4965866.0,
       "realm": "cn-east"
     },
     {
@@ -53003,7 +53019,7 @@
       ],
       "place": 2966,
       "country": "CN",
-      "localTrips": 4959399.0,
+      "localTrips": 4959401.0,
       "realm": "cn-east"
     },
     {
@@ -53367,7 +53383,7 @@
       ],
       "place": 2983,
       "country": "CN",
-      "localTrips": 5564866.0,
+      "localTrips": 5564853.0,
       "realm": "cn-south"
     },
     {
@@ -53887,7 +53903,7 @@
       ],
       "place": 3005,
       "country": "CN",
-      "localTrips": 4166291.0,
+      "localTrips": 4166305.0,
       "realm": "cn-east"
     },
     {
@@ -54511,7 +54527,7 @@
       ],
       "place": 3184,
       "country": "CN",
-      "localTrips": 5748930.0,
+      "localTrips": 5748932.0,
       "realm": "cn-east"
     },
     {
@@ -54719,7 +54735,7 @@
       ],
       "place": 3193,
       "country": "CN",
-      "localTrips": 4576398.0,
+      "localTrips": 4576411.0,
       "realm": "cn-east"
     },
     {
@@ -55499,7 +55515,7 @@
       ],
       "place": 3226,
       "country": "CN",
-      "localTrips": 3693742.0,
+      "localTrips": 3693743.0,
       "realm": "cn-northeast"
     },
     {
@@ -55993,7 +56009,7 @@
       ],
       "place": 3245,
       "country": "CN",
-      "localTrips": 4706837.0,
+      "localTrips": 4706907.0,
       "realm": "cn-northwest"
     },
     {
@@ -56097,7 +56113,7 @@
       ],
       "place": 3249,
       "country": "CN",
-      "localTrips": 4213076.0,
+      "localTrips": 4213082.0,
       "realm": "cn-central"
     },
     {
@@ -57137,7 +57153,7 @@
       ],
       "place": 3295,
       "country": "CN",
-      "localTrips": 6074250.0,
+      "localTrips": 6074263.0,
       "realm": "cn-central"
     },
     {
@@ -57423,7 +57439,7 @@
       ],
       "place": 3307,
       "country": "CN",
-      "localTrips": 5268305.0,
+      "localTrips": 5268320.0,
       "realm": "cn-central"
     },
     {
@@ -59503,7 +59519,7 @@
       ],
       "place": 3407,
       "country": "CN",
-      "localTrips": 5810387.0,
+      "localTrips": 5810422.0,
       "realm": "cn-southwest"
     },
     {
@@ -61167,7 +61183,7 @@
       ],
       "place": 3525,
       "country": "CN",
-      "localTrips": 1854149.0,
+      "localTrips": 1854150.0,
       "realm": "cn-south"
     },
     {
@@ -61271,7 +61287,7 @@
       ],
       "place": 3529,
       "country": "CN",
-      "localTrips": 5862566.0,
+      "localTrips": 5862565.0,
       "realm": "cn-northwest"
     },
     {
@@ -61349,7 +61365,7 @@
       ],
       "place": 3532,
       "country": "CN",
-      "localTrips": 4884713.0,
+      "localTrips": 4884714.0,
       "realm": "cn-northwest"
     },
     {
@@ -62233,7 +62249,7 @@
       ],
       "place": 3575,
       "country": "CN",
-      "localTrips": 4821779.0,
+      "localTrips": 4821778.0,
       "realm": "cn-southwest"
     },
     {
@@ -62441,7 +62457,7 @@
       ],
       "place": 3584,
       "country": "CN",
-      "localTrips": 3310273.0,
+      "localTrips": 3310258.0,
       "realm": "cn-southwest"
     },
     {
@@ -64128,7 +64144,7 @@
       ],
       "place": 3677,
       "country": "CA",
-      "localTrips": 4101974.0,
+      "localTrips": 4101934.0,
       "realm": "canada"
     },
     {
@@ -64154,7 +64170,7 @@
       ],
       "place": 3678,
       "country": "CA",
-      "localTrips": 3270513.0,
+      "localTrips": 3270471.0,
       "realm": "canada"
     },
     {
@@ -64180,7 +64196,7 @@
       ],
       "place": 3680,
       "country": "CA",
-      "localTrips": 3088598.0,
+      "localTrips": 3088599.0,
       "realm": "canada"
     },
     {
@@ -64310,7 +64326,7 @@
       ],
       "place": 3686,
       "country": "CA",
-      "localTrips": 1093090.0,
+      "localTrips": 1093112.0,
       "realm": "canada"
     },
     {
@@ -64336,7 +64352,7 @@
       ],
       "place": 3687,
       "country": "CA",
-      "localTrips": 917889.0,
+      "localTrips": 917897.0,
       "realm": "canada"
     },
     {
@@ -64362,7 +64378,7 @@
       ],
       "place": 3688,
       "country": "CA",
-      "localTrips": 1148726.0,
+      "localTrips": 1148728.0,
       "realm": "canada"
     },
     {
@@ -64388,7 +64404,7 @@
       ],
       "place": 3689,
       "country": "CA",
-      "localTrips": 1060677.0,
+      "localTrips": 1060669.0,
       "realm": "canada"
     },
     {
@@ -64440,7 +64456,7 @@
       ],
       "place": 3691,
       "country": "CA",
-      "localTrips": 873440.0,
+      "localTrips": 873439.0,
       "realm": "canada"
     },
     {
@@ -64879,7 +64895,7 @@
       ],
       "place": 3711,
       "country": "CA",
-      "localTrips": 372424.0,
+      "localTrips": 372402.0,
       "realm": "canada"
     },
     {
@@ -64983,7 +64999,7 @@
       ],
       "place": 3715,
       "country": "CA",
-      "localTrips": 1811171.0,
+      "localTrips": 1811174.0,
       "realm": "canada"
     },
     {
@@ -65035,7 +65051,7 @@
       ],
       "place": 3717,
       "country": "CA",
-      "localTrips": 978539.0,
+      "localTrips": 978538.0,
       "realm": "canada"
     },
     {
@@ -65242,7 +65258,7 @@
       ],
       "place": 3731,
       "country": "VN",
-      "localTrips": 46165774.0,
+      "localTrips": 46165775.0,
       "realm": "vietnam"
     },
     {
@@ -65267,7 +65283,7 @@
       ],
       "place": 3732,
       "country": "VN",
-      "localTrips": 26725737.0,
+      "localTrips": 26725734.0,
       "realm": "vietnam"
     },
     {
@@ -65422,7 +65438,7 @@
       ],
       "place": 3740,
       "country": "VN",
-      "localTrips": 3910866.0,
+      "localTrips": 3910867.0,
       "realm": "vietnam"
     },
     {
@@ -65552,7 +65568,7 @@
       ],
       "place": 3746,
       "country": "VN",
-      "localTrips": 3720381.0,
+      "localTrips": 3720383.0,
       "realm": "vietnam"
     },
     {
@@ -66020,7 +66036,7 @@
       ],
       "place": 3769,
       "country": "VN",
-      "localTrips": 2635089.0,
+      "localTrips": 2635104.0,
       "realm": "vietnam"
     },
     {
@@ -66540,7 +66556,7 @@
       ],
       "place": 3793,
       "country": "VN",
-      "localTrips": 1656256.0,
+      "localTrips": 1656255.0,
       "realm": "vietnam"
     },
     {
@@ -67838,7 +67854,7 @@
       ],
       "place": 3862,
       "country": "TH",
-      "localTrips": 2290342.0,
+      "localTrips": 2290343.0,
       "realm": "thailand"
     },
     {
@@ -68774,7 +68790,7 @@
       ],
       "place": 3901,
       "country": "TH",
-      "localTrips": 1234438.0,
+      "localTrips": 1234422.0,
       "realm": "thailand"
     },
     {
@@ -69033,7 +69049,7 @@
       ],
       "place": 3913,
       "country": "TH",
-      "localTrips": 2494515.0,
+      "localTrips": 2494516.0,
       "realm": "thailand"
     },
     {
@@ -69501,7 +69517,7 @@
       ],
       "place": 3931,
       "country": "PL",
-      "localTrips": 2671682.0,
+      "localTrips": 2671683.0,
       "realm": "poland"
     },
     {
@@ -69527,7 +69543,7 @@
       ],
       "place": 3932,
       "country": "CA",
-      "localTrips": 2839930.0,
+      "localTrips": 2839976.0,
       "realm": "canada"
     },
     {
@@ -69553,7 +69569,7 @@
       ],
       "place": 3933,
       "country": "CA",
-      "localTrips": 550129.0,
+      "localTrips": 550152.0,
       "realm": "canada"
     },
     {
@@ -70432,7 +70448,7 @@
       ],
       "place": 3982,
       "country": "AU",
-      "localTrips": 2576407.0,
+      "localTrips": 2576424.0,
       "realm": "australia"
     },
     {
@@ -70822,7 +70838,7 @@
       ],
       "place": 3997,
       "country": "AU",
-      "localTrips": 541115.0,
+      "localTrips": 541116.0,
       "realm": "australia"
     },
     {
@@ -71625,7 +71641,7 @@
       ],
       "place": 4035,
       "country": "MY",
-      "localTrips": 3485601.0,
+      "localTrips": 3485616.0,
       "realm": "borneo"
     },
     {
@@ -71651,7 +71667,7 @@
       ],
       "place": 4036,
       "country": "MY",
-      "localTrips": 3346808.0,
+      "localTrips": 3346783.0,
       "realm": "malaysia"
     },
     {
@@ -72300,7 +72316,7 @@
       "place": 4181,
       "country": "ID",
       "realm": "java",
-      "localTrips": 38540184.0
+      "localTrips": 38540004.0
     },
     {
       "id": "bad",
@@ -72325,7 +72341,7 @@
       "place": 4183,
       "country": "ID",
       "realm": "java",
-      "localTrips": 29809026.0
+      "localTrips": 29865440.0
     },
     {
       "id": "yog",
@@ -72350,7 +72366,7 @@
       "place": 4184,
       "country": "ID",
       "realm": "java",
-      "localTrips": 20427823.0
+      "localTrips": 20427667.0
     },
     {
       "id": "sem",
@@ -72375,7 +72391,7 @@
       "place": 4185,
       "country": "ID",
       "realm": "java",
-      "localTrips": 13674066.0
+      "localTrips": 13673904.0
     },
     {
       "id": "cir",
@@ -72400,7 +72416,7 @@
       "place": 4187,
       "country": "ID",
       "realm": "java",
-      "localTrips": 11131033.0
+      "localTrips": 11134921.0
     },
     {
       "id": "teg",
@@ -72425,7 +72441,7 @@
       "place": 4188,
       "country": "ID",
       "realm": "java",
-      "localTrips": 9455469.0
+      "localTrips": 9455362.0
     },
     {
       "id": "pur",
@@ -72450,7 +72466,7 @@
       "place": 4189,
       "country": "ID",
       "realm": "java",
-      "localTrips": 9305625.0
+      "localTrips": 9305618.0
     },
     {
       "id": "tar",
@@ -72475,7 +72491,7 @@
       "place": 4190,
       "country": "ID",
       "realm": "java",
-      "localTrips": 7823926.0
+      "localTrips": 7834262.0
     },
     {
       "id": "jem",
@@ -72501,7 +72517,7 @@
       "place": 4192,
       "country": "ID",
       "realm": "java",
-      "localTrips": 7088842.0
+      "localTrips": 7088895.0
     },
     {
       "id": "inm",
@@ -72527,7 +72543,7 @@
       "place": 4193,
       "country": "ID",
       "realm": "java",
-      "localTrips": 5181066.0
+      "localTrips": 5183549.0
     },
     {
       "id": "ked",
@@ -72553,7 +72569,7 @@
       "place": 4194,
       "country": "ID",
       "realm": "java",
-      "localTrips": 4999161.0
+      "localTrips": 4999100.0
     },
     {
       "id": "sub",
@@ -72579,7 +72595,7 @@
       "place": 4195,
       "country": "ID",
       "realm": "java",
-      "localTrips": 4355145.0
+      "localTrips": 4356689.0
     },
     {
       "id": "lek",
@@ -72605,7 +72621,7 @@
       "place": 4196,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3987894.0
+      "localTrips": 4005805.0
     },
     {
       "id": "baw",
@@ -72631,7 +72647,7 @@
       "place": 4197,
       "country": "ID",
       "realm": "java",
-      "localTrips": 4754417.0
+      "localTrips": 4754345.0
     },
     {
       "id": "cia",
@@ -72657,7 +72673,7 @@
       "place": 4198,
       "country": "ID",
       "realm": "java",
-      "localTrips": 4349310.0
+      "localTrips": 4349320.0
     },
     {
       "id": "pan",
@@ -72683,7 +72699,7 @@
       "place": 4199,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3686043.0
+      "localTrips": 3706947.0
     },
     {
       "id": "pro",
@@ -72709,7 +72725,7 @@
       "place": 4200,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3864832.0
+      "localTrips": 3864767.0
     },
     {
       "id": "mln",
@@ -72735,7 +72751,7 @@
       "place": 4201,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3608643.0
+      "localTrips": 3608618.0
     },
     {
       "id": "grg",
@@ -72761,7 +72777,7 @@
       "place": 4202,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3495035.0
+      "localTrips": 3494982.0
     },
     {
       "id": "bli",
@@ -72787,7 +72803,7 @@
       "place": 4203,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3538538.0
+      "localTrips": 3538476.0
     },
     {
       "id": "jom",
@@ -72813,7 +72829,7 @@
       "place": 4204,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3348598.0
+      "localTrips": 3348583.0
     },
     {
       "id": "pem",
@@ -72839,7 +72855,7 @@
       "place": 4205,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3276242.0
+      "localTrips": 3276200.0
     },
     {
       "id": "boj",
@@ -72865,7 +72881,7 @@
       "place": 4206,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3124846.0
+      "localTrips": 3124817.0
     },
     {
       "id": "lmo",
@@ -72891,7 +72907,7 @@
       "place": 4207,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3113510.0
+      "localTrips": 3113496.0
     },
     {
       "id": "pax",
@@ -72917,7 +72933,7 @@
       "place": 4208,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3287490.0
+      "localTrips": 3287461.0
     },
     {
       "id": "kui",
@@ -72943,7 +72959,7 @@
       "place": 4209,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2960668.0
+      "localTrips": 2960883.0
     },
     {
       "id": "tub",
@@ -72969,7 +72985,7 @@
       "place": 4210,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3059916.0
+      "localTrips": 3059934.0
     },
     {
       "id": "keb",
@@ -72995,7 +73011,7 @@
       "place": 4211,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3226942.0
+      "localTrips": 3226864.0
     },
     {
       "id": "jep",
@@ -73021,7 +73037,7 @@
       "place": 4212,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2961498.0
+      "localTrips": 2961460.0
     },
     {
       "id": "ngj",
@@ -73047,7 +73063,7 @@
       "place": 4213,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2749009.0
+      "localTrips": 2748990.0
     },
     {
       "id": "sue",
@@ -73073,7 +73089,7 @@
       "place": 4214,
       "country": "ID",
       "realm": "java",
-      "localTrips": 3047623.0
+      "localTrips": 3047616.0
     },
     {
       "id": "tuu",
@@ -73099,7 +73115,7 @@
       "place": 4215,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2765396.0
+      "localTrips": 2765349.0
     },
     {
       "id": "luj",
@@ -73125,7 +73141,7 @@
       "place": 4216,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2868486.0
+      "localTrips": 2868456.0
     },
     {
       "id": "bnn",
@@ -73151,7 +73167,7 @@
       "place": 4217,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2427856.0
+      "localTrips": 2427810.0
     },
     {
       "id": "smp",
@@ -73177,7 +73193,7 @@
       "place": 4218,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2513552.0
+      "localTrips": 2513514.0
     },
     {
       "id": "woi",
@@ -73203,7 +73219,7 @@
       "place": 4219,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2368366.0
+      "localTrips": 2368333.0
     },
     {
       "id": "mdu",
@@ -73255,7 +73271,7 @@
       "place": 4221,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2410709.0
+      "localTrips": 2410685.0
     },
     {
       "id": "srn",
@@ -73281,7 +73297,7 @@
       "place": 4222,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2207191.0
+      "localTrips": 2207109.0
     },
     {
       "id": "blr",
@@ -73307,7 +73323,7 @@
       "place": 4223,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2213627.0
+      "localTrips": 2213590.0
     },
     {
       "id": "pme",
@@ -73333,7 +73349,7 @@
       "place": 4224,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2298272.0
+      "localTrips": 2298245.0
     },
     {
       "id": "ngw",
@@ -73359,7 +73375,7 @@
       "place": 4225,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2061155.0
+      "localTrips": 2061115.0
     },
     {
       "id": "kud",
@@ -73385,7 +73401,7 @@
       "place": 4226,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2160211.0
+      "localTrips": 2160180.0
     },
     {
       "id": "btn",
@@ -73411,7 +73427,7 @@
       "place": 4227,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2054408.0
+      "localTrips": 2054377.0
     },
     {
       "id": "bow",
@@ -73437,7 +73453,7 @@
       "place": 4228,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2049386.0
+      "localTrips": 2049376.0
     },
     {
       "id": "wos",
@@ -73463,7 +73479,7 @@
       "place": 4229,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2094757.0
+      "localTrips": 2094756.0
     },
     {
       "id": "gun",
@@ -73489,7 +73505,7 @@
       "place": 4230,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1833626.0
+      "localTrips": 1833578.0
     },
     {
       "id": "tea",
@@ -73515,7 +73531,7 @@
       "place": 4231,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1823773.0
+      "localTrips": 1823766.0
     },
     {
       "id": "trl",
@@ -73541,7 +73557,7 @@
       "place": 4232,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1902302.0
+      "localTrips": 1902279.0
     },
     {
       "id": "puo",
@@ -73567,7 +73583,7 @@
       "place": 4233,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1856266.0
+      "localTrips": 1856234.0
     },
     {
       "id": "sio",
@@ -73593,7 +73609,7 @@
       "place": 4234,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1855132.0
+      "localTrips": 1855145.0
     },
     {
       "id": "png",
@@ -73619,7 +73635,7 @@
       "place": 4235,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1526645.0
+      "localTrips": 1526589.0
     },
     {
       "id": "mta",
@@ -73645,7 +73661,7 @@
       "place": 4236,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1526138.0
+      "localTrips": 1526127.0
     },
     {
       "id": "rem",
@@ -73671,7 +73687,7 @@
       "place": 4237,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1636004.0
+      "localTrips": 1636042.0
     },
     {
       "id": "pac",
@@ -73697,7 +73713,7 @@
       "place": 4238,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1526090.0
+      "localTrips": 1526061.0
     },
     {
       "id": "kuo",
@@ -73723,7 +73739,7 @@
       "place": 4239,
       "country": "ID",
       "realm": "java",
-      "localTrips": 862892.0
+      "localTrips": 862889.0
     },
     {
       "id": "med",
@@ -73748,7 +73764,7 @@
       "place": 4240,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 14056094.0
+      "localTrips": 14055921.0
     },
     {
       "id": "pal",
@@ -73773,7 +73789,7 @@
       "place": 4241,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 6113281.0
+      "localTrips": 6113307.0
     },
     {
       "id": "bat",
@@ -73798,7 +73814,7 @@
       "place": 4242,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 4343186.0
+      "localTrips": 4343916.0
     },
     {
       "id": "pek",
@@ -73823,7 +73839,7 @@
       "place": 4243,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3016515.0
+      "localTrips": 3016481.0
     },
     {
       "id": "pad",
@@ -73848,7 +73864,7 @@
       "place": 4244,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3602114.0
+      "localTrips": 3602084.0
     },
     {
       "id": "bap",
@@ -73873,7 +73889,7 @@
       "place": 4245,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2814784.0
+      "localTrips": 2815729.0
     },
     {
       "id": "lmp",
@@ -73899,7 +73915,7 @@
       "place": 4246,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 4056175.0
+      "localTrips": 4056373.0
     },
     {
       "id": "bnk",
@@ -73925,7 +73941,7 @@
       "place": 4247,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3862192.0
+      "localTrips": 3861831.0
     },
     {
       "id": "aga",
@@ -73977,7 +73993,7 @@
       "place": 4249,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3840002.0
+      "localTrips": 3840016.0
     },
     {
       "id": "ktb",
@@ -74003,7 +74019,7 @@
       "place": 4250,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3937445.0
+      "localTrips": 3937754.0
     },
     {
       "id": "ace",
@@ -74029,7 +74045,7 @@
       "place": 4251,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3918853.0
+      "localTrips": 3918830.0
     },
     {
       "id": "oga",
@@ -74055,7 +74071,7 @@
       "place": 4252,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3679985.0
+      "localTrips": 3679907.0
     },
     {
       "id": "inl",
@@ -74081,7 +74097,7 @@
       "place": 4253,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3217229.0
+      "localTrips": 3218931.0
     },
     {
       "id": "tal",
@@ -74107,7 +74123,7 @@
       "place": 4254,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3461060.0
+      "localTrips": 3460818.0
     },
     {
       "id": "koj",
@@ -74133,7 +74149,7 @@
       "place": 4255,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3368199.0
+      "localTrips": 3368763.0
     },
     {
       "id": "seg",
@@ -74159,7 +74175,7 @@
       "place": 4256,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3257396.0
+      "localTrips": 3257449.0
     },
     {
       "id": "kmp",
@@ -74185,7 +74201,7 @@
       "place": 4257,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2699281.0
+      "localTrips": 2699237.0
     },
     {
       "id": "ogn",
@@ -74211,7 +74227,7 @@
       "place": 4258,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3091798.0
+      "localTrips": 3091992.0
     },
     {
       "id": "lmu",
@@ -74237,7 +74253,7 @@
       "place": 4259,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3035834.0
+      "localTrips": 3036999.0
     },
     {
       "id": "sil",
@@ -74263,7 +74279,7 @@
       "place": 4260,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2972147.0
+      "localTrips": 2972129.0
     },
     {
       "id": "lmn",
@@ -74289,7 +74305,7 @@
       "place": 4261,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2942475.0
+      "localTrips": 2942490.0
     },
     {
       "id": "lmg",
@@ -74315,7 +74331,7 @@
       "place": 4262,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2581572.0
+      "localTrips": 2586464.0
     },
     {
       "id": "lbu",
@@ -74341,7 +74357,7 @@
       "place": 4263,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 3024691.0
+      "localTrips": 3025014.0
     },
     {
       "id": "inu",
@@ -74367,7 +74383,7 @@
       "place": 4264,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2683043.0
+      "localTrips": 2682845.0
     },
     {
       "id": "tng",
@@ -74393,7 +74409,7 @@
       "place": 4265,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2928064.0
+      "localTrips": 2928171.0
     },
     {
       "id": "mdn",
@@ -74419,7 +74435,7 @@
       "place": 4267,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2622275.0
+      "localTrips": 2622047.0
     },
     {
       "id": "mre",
@@ -74445,7 +74461,7 @@
       "place": 4268,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2669153.0
+      "localTrips": 2669093.0
     },
     {
       "id": "kxx",
@@ -74471,7 +74487,7 @@
       "place": 4269,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2573431.0
+      "localTrips": 2573411.0
     },
     {
       "id": "asx",
@@ -74497,7 +74513,7 @@
       "place": 4270,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2505020.0
+      "localTrips": 2505236.0
     },
     {
       "id": "ron",
@@ -74523,7 +74539,7 @@
       "place": 4271,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2176866.0
+      "localTrips": 2176854.0
     },
     {
       "id": "pew",
@@ -74549,7 +74565,7 @@
       "place": 4272,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2211907.0
+      "localTrips": 2212039.0
     },
     {
       "id": "mrg",
@@ -74575,7 +74591,7 @@
       "place": 4273,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2251075.0
+      "localTrips": 2251087.0
     },
     {
       "id": "sok",
@@ -74601,7 +74617,7 @@
       "place": 4274,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2118988.0
+      "localTrips": 2118951.0
     },
     {
       "id": "rox",
@@ -74627,7 +74643,7 @@
       "place": 4275,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1999866.0
+      "localTrips": 1999870.0
     },
     {
       "id": "bno",
@@ -74653,7 +74669,7 @@
       "place": 4276,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2135443.0
+      "localTrips": 2135373.0
     },
     {
       "id": "msi",
@@ -74679,7 +74695,7 @@
       "place": 4277,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2127055.0
+      "localTrips": 2127174.0
     },
     {
       "id": "lht",
@@ -74705,7 +74721,7 @@
       "place": 4278,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2030349.0
+      "localTrips": 2030299.0
     },
     {
       "id": "psa",
@@ -74731,7 +74747,7 @@
       "place": 4279,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1927777.0
+      "localTrips": 1927707.0
     },
     {
       "id": "acb",
@@ -74757,7 +74773,7 @@
       "place": 4280,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1962473.0
+      "localTrips": 1962469.0
     },
     {
       "id": "pen",
@@ -74783,7 +74799,7 @@
       "place": 4281,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1580970.0
+      "localTrips": 1581133.0
     },
     {
       "id": "tuw",
@@ -74809,7 +74825,7 @@
       "place": 4282,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1758746.0
+      "localTrips": 1758986.0
     },
     {
       "id": "pee",
@@ -74835,7 +74851,7 @@
       "place": 4283,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1729706.0
+      "localTrips": 1729679.0
     },
     {
       "id": "srl",
@@ -74861,7 +74877,7 @@
       "place": 4284,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1428560.0
+      "localTrips": 1428949.0
     },
     {
       "id": "msb",
@@ -74887,7 +74903,7 @@
       "place": 4285,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1543366.0
+      "localTrips": 1543759.0
     },
     {
       "id": "bet",
@@ -74913,7 +74929,7 @@
       "place": 4286,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1504951.0
+      "localTrips": 1505080.0
     },
     {
       "id": "lia",
@@ -74939,7 +74955,7 @@
       "place": 4287,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1491578.0
+      "localTrips": 1491539.0
     },
     {
       "id": "bix",
@@ -74965,7 +74981,7 @@
       "place": 4288,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1424642.0
+      "localTrips": 1424627.0
     },
     {
       "id": "pix",
@@ -74991,7 +75007,7 @@
       "place": 4289,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1500322.0
+      "localTrips": 1500328.0
     },
     {
       "id": "paw",
@@ -75017,7 +75033,7 @@
       "place": 4290,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1297063.0
+      "localTrips": 1297085.0
     },
     {
       "id": "bnu",
@@ -75043,7 +75059,7 @@
       "place": 4293,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 761264.0
+      "localTrips": 761361.0
     },
     {
       "id": "sme",
@@ -75069,7 +75085,7 @@
       "place": 4294,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 237083.0
+      "localTrips": 237081.0
     },
     {
       "id": "nax",
@@ -75121,7 +75137,7 @@
       "place": 4296,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 196916.0
+      "localTrips": 196924.0
     },
     {
       "id": "den",
@@ -75146,7 +75162,7 @@
       "place": 4297,
       "country": "ID",
       "realm": "java",
-      "localTrips": 8645690.0
+      "localTrips": 8645598.0
     },
     {
       "id": "mat",
@@ -75171,7 +75187,7 @@
       "place": 4298,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 3358332.0
+      "localTrips": 3358233.0
     },
     {
       "id": "lob",
@@ -75197,7 +75213,7 @@
       "place": 4299,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 3665018.0
+      "localTrips": 3664969.0
     },
     {
       "id": "bul",
@@ -75223,7 +75239,7 @@
       "place": 4300,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2914678.0
+      "localTrips": 2914632.0
     },
     {
       "id": "skk",
@@ -75249,7 +75265,7 @@
       "place": 4301,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 2763910.0
+      "localTrips": 2763894.0
     },
     {
       "id": "lok",
@@ -75275,7 +75291,7 @@
       "place": 4302,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 2475880.0
+      "localTrips": 2475822.0
     },
     {
       "id": "mra",
@@ -75301,7 +75317,7 @@
       "place": 4303,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 2617298.0
+      "localTrips": 2617300.0
     },
     {
       "id": "bim",
@@ -75327,7 +75343,7 @@
       "place": 4304,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 2563060.0
+      "localTrips": 2563040.0
     },
     {
       "id": "suy",
@@ -75353,7 +75369,7 @@
       "place": 4305,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 2401400.0
+      "localTrips": 2401353.0
     },
     {
       "id": "ktk",
@@ -75405,7 +75421,7 @@
       "place": 4307,
       "country": "ID",
       "realm": "java",
-      "localTrips": 1856642.0
+      "localTrips": 1856571.0
     },
     {
       "id": "tio",
@@ -75457,7 +75473,7 @@
       "place": 4309,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 1680819.0
+      "localTrips": 1680803.0
     },
     {
       "id": "suw",
@@ -75483,7 +75499,7 @@
       "place": 4310,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 1701497.0
+      "localTrips": 1701519.0
     },
     {
       "id": "tit",
@@ -75535,7 +75551,7 @@
       "place": 4312,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 601153.0
+      "localTrips": 601163.0
     },
     {
       "id": "rte",
@@ -75664,7 +75680,7 @@
       "place": 4317,
       "country": "ID",
       "realm": "sulawesi",
-      "localTrips": 3525867.0
+      "localTrips": 3525868.0
     },
     {
       "id": "box",
@@ -75976,7 +75992,7 @@
       "place": 4329,
       "country": "ID",
       "realm": "sulawesi",
-      "localTrips": 1702585.0
+      "localTrips": 1702582.0
     },
     {
       "id": "boa",
@@ -76469,7 +76485,7 @@
       "place": 4350,
       "country": "ID",
       "realm": "borneo",
-      "localTrips": 2934170.0
+      "localTrips": 2934179.0
     },
     {
       "id": "ktt",
@@ -76521,7 +76537,7 @@
       "place": 4352,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2269479.0
+      "localTrips": 2269482.0
     },
     {
       "id": "bnx",
@@ -76547,7 +76563,7 @@
       "place": 4353,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2156107.0
+      "localTrips": 2156109.0
     },
     {
       "id": "kuk",
@@ -76703,7 +76719,7 @@
       "place": 4362,
       "country": "ID",
       "realm": "id-east",
-      "localTrips": 1782180.0
+      "localTrips": 1782181.0
     },
     {
       "id": "kts",
@@ -76832,7 +76848,7 @@
       "place": 4382,
       "country": "ID",
       "realm": "java",
-      "localTrips": 12337611.0
+      "localTrips": 12343026.0
     },
     {
       "id": "pea",
@@ -76857,7 +76873,7 @@
       "place": 4383,
       "country": "ID",
       "realm": "java",
-      "localTrips": 2810685.0
+      "localTrips": 2810636.0
     },
     {
       "id": "toi",
@@ -76935,7 +76951,7 @@
       "place": 4389,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2855187.0
+      "localTrips": 2855207.0
     },
     {
       "id": "nis",
@@ -76961,7 +76977,7 @@
       "place": 4390,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 2304307.0
+      "localTrips": 2304322.0
     },
     {
       "id": "skx",
@@ -76987,7 +77003,7 @@
       "place": 4392,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1155036.0
+      "localTrips": 1154993.0
     },
     {
       "id": "bbb",
@@ -77013,7 +77029,7 @@
       "place": 4393,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1248585.0
+      "localTrips": 1248594.0
     },
     {
       "id": "hlm",
@@ -77325,7 +77341,7 @@
       "place": 4405,
       "country": "ID",
       "realm": "sumatra",
-      "localTrips": 1863313.0
+      "localTrips": 1864295.0
     },
     {
       "id": "cif",
@@ -77428,7 +77444,7 @@
       ],
       "place": 4420,
       "country": "PH",
-      "localTrips": 3133647.0,
+      "localTrips": 3133632.0,
       "realm": "luzon"
     },
     {
@@ -77844,7 +77860,7 @@
       ],
       "place": 4437,
       "country": "PH",
-      "localTrips": 2859052.0,
+      "localTrips": 2859053.0,
       "realm": "visayas"
     },
     {
@@ -78338,7 +78354,7 @@
       ],
       "place": 4474,
       "country": "PH",
-      "localTrips": 1661290.0,
+      "localTrips": 1661291.0,
       "realm": "luzon"
     },
     {
@@ -78806,7 +78822,7 @@
       ],
       "place": 4495,
       "country": "PH",
-      "localTrips": 1215662.0,
+      "localTrips": 1215646.0,
       "realm": "luzon"
     },
     {
@@ -78987,7 +79003,7 @@
       ],
       "place": 4508,
       "country": "PH",
-      "localTrips": 83251378.0,
+      "localTrips": 83251298.0,
       "realm": "luzon"
     },
     {
@@ -79037,7 +79053,7 @@
       ],
       "place": 4510,
       "country": "PH",
-      "localTrips": 7023252.0,
+      "localTrips": 7023242.0,
       "realm": "luzon"
     },
     {
@@ -79218,7 +79234,7 @@
       ],
       "place": 4517,
       "country": "PH",
-      "localTrips": 3611725.0,
+      "localTrips": 3611663.0,
       "realm": "visayas"
     },
     {
@@ -79530,7 +79546,7 @@
       ],
       "place": 4529,
       "country": "PH",
-      "localTrips": 1675254.0,
+      "localTrips": 1675233.0,
       "realm": "mindanao"
     },
     {
@@ -80258,7 +80274,7 @@
       ],
       "place": 4564,
       "country": "PH",
-      "localTrips": 4574259.0,
+      "localTrips": 4574261.0,
       "realm": "mindanao"
     },
     {
@@ -80765,7 +80781,7 @@
       ],
       "place": 4586,
       "country": "IN",
-      "localTrips": 17340592.0,
+      "localTrips": 17340599.0,
       "realm": "in-south"
     },
     {
@@ -80790,7 +80806,7 @@
       ],
       "place": 4588,
       "country": "IN",
-      "localTrips": 10579435.0,
+      "localTrips": 10579494.0,
       "realm": "in-south"
     },
     {
@@ -80815,7 +80831,7 @@
       ],
       "place": 4589,
       "country": "IN",
-      "localTrips": 10963809.0,
+      "localTrips": 10963800.0,
       "realm": "in-south"
     },
     {
@@ -81866,7 +81882,7 @@
       ],
       "place": 4645,
       "country": "IN",
-      "localTrips": 7085136.0,
+      "localTrips": 7085109.0,
       "realm": "in-east"
     },
     {
@@ -82048,7 +82064,7 @@
       ],
       "place": 4652,
       "country": "IN",
-      "localTrips": 6160835.0,
+      "localTrips": 6160824.0,
       "realm": "in-central"
     },
     {
@@ -82152,7 +82168,7 @@
       ],
       "place": 4656,
       "country": "IN",
-      "localTrips": 6334703.0,
+      "localTrips": 6334704.0,
       "realm": "in-central"
     },
     {
@@ -82256,7 +82272,7 @@
       ],
       "place": 4660,
       "country": "IN",
-      "localTrips": 6015350.0,
+      "localTrips": 6015360.0,
       "realm": "in-central"
     },
     {
@@ -83347,7 +83363,7 @@
       ],
       "place": 4703,
       "country": "IN",
-      "localTrips": 5872140.0,
+      "localTrips": 5872125.0,
       "realm": "in-south"
     },
     {
@@ -83373,7 +83389,7 @@
       ],
       "place": 4704,
       "country": "IN",
-      "localTrips": 5961870.0,
+      "localTrips": 5961879.0,
       "realm": "in-east"
     },
     {
@@ -84335,7 +84351,7 @@
       ],
       "place": 4742,
       "country": "IN",
-      "localTrips": 5290422.0,
+      "localTrips": 5290423.0,
       "realm": "in-north"
     },
     {
@@ -85505,7 +85521,7 @@
       ],
       "place": 4789,
       "country": "IN",
-      "localTrips": 5049480.0,
+      "localTrips": 5049477.0,
       "realm": "in-central"
     },
     {
@@ -86025,7 +86041,7 @@
       ],
       "place": 4809,
       "country": "IN",
-      "localTrips": 4953449.0,
+      "localTrips": 4953468.0,
       "realm": "in-east"
     },
     {
@@ -86051,7 +86067,7 @@
       ],
       "place": 4810,
       "country": "IN",
-      "localTrips": 5138745.0,
+      "localTrips": 5138712.0,
       "realm": "in-east"
     },
     {
@@ -87350,7 +87366,7 @@
       ],
       "place": 4862,
       "country": "IN",
-      "localTrips": 4765775.0,
+      "localTrips": 4765806.0,
       "realm": "in-central"
     },
     {
@@ -92524,7 +92540,7 @@
       ],
       "place": 5070,
       "country": "IN",
-      "localTrips": 3295492.0,
+      "localTrips": 3295503.0,
       "realm": "india"
     },
     {
@@ -93278,7 +93294,7 @@
       ],
       "place": 5101,
       "country": "IN",
-      "localTrips": 3133310.0,
+      "localTrips": 3133295.0,
       "realm": "in-central"
     },
     {
@@ -93824,7 +93840,7 @@
       ],
       "place": 5126,
       "country": "IN",
-      "localTrips": 3111882.0,
+      "localTrips": 3111909.0,
       "realm": "in-central"
     },
     {
@@ -98088,7 +98104,7 @@
       ],
       "place": 5299,
       "country": "IN",
-      "localTrips": 2263480.0,
+      "localTrips": 2263505.0,
       "realm": "india"
     },
     {
@@ -111649,6 +111665,109 @@
       "country": "US",
       "localTrips": 1285567.0,
       "realm": "us-south"
+    },
+    {
+      "id": "jak",
+      "name": "Jakarta",
+      "origin": {
+        "lon": 106.8022,
+        "lat": -6.1876
+      },
+      "center": [
+        106.8022,
+        -6.1876
+      ],
+      "zoom": 11.2,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        106.321,
+        -6.807,
+        107.315,
+        -5.902
+      ],
+      "place": 5971,
+      "country": "ID",
+      "localTrips": 104470958.0,
+      "realm": "java"
+    },
+    {
+      "id": "sum",
+      "name": "Sukabumi",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.927,
+        "lat": -6.921
+      },
+      "center": [
+        106.927,
+        -6.921
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        106.352,
+        -7.524,
+        107.503,
+        -6.584
+      ],
+      "place": 5972,
+      "country": "ID",
+      "localTrips": 15786488.0,
+      "realm": "java"
+    },
+    {
+      "id": "krw",
+      "name": "Karawang",
+      "kind": "zone",
+      "origin": {
+        "lon": 107.305,
+        "lat": -6.305
+      },
+      "center": [
+        107.305,
+        -6.305
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        107.066,
+        -6.793,
+        107.663,
+        -5.921
+      ],
+      "place": 5973,
+      "country": "ID",
+      "localTrips": 9506445.0,
+      "realm": "java"
+    },
+    {
+      "id": "sra",
+      "name": "Serang",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.15,
+        "lat": -6.12
+      },
+      "center": [
+        106.15,
+        -6.12
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.806,
+        -6.354,
+        106.431,
+        -5.789
+      ],
+      "place": 5974,
+      "country": "ID",
+      "localTrips": 7966285.0,
+      "realm": "java"
     }
   ]
 }
