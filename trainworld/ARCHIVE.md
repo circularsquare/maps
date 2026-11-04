@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2257 Rikers Island's false land part (2026-11-03, agent t2257): its bridge is access=no, bus=yes; closed roads letting some road vehicles through now join land, and stale pre-T-2213 way caches are no longer used. 9 packs rerun; links scan finds no other false split. notes/T-2257.md.
+- T-2263 Tutorial pass from the friend playtest (2026-11-03, agent t2263): first card reads demand (top bar split, Homes, bubble, trip) then lays the line; second runs it (trains, unpause, crowding, levels, Traffic, 2%). Notes under the step in hand, slower ripples, Continue rippled, two longer hovers while the card is up.
 - T-2222 A band snapping to its own track (2026-11-03, agent t2222b): same fault as T-2258, seen on her day 414 save north of Shinjuku in the Traffic view; gone at zoom 10-15 in both views. Sweep check covers the save at its opened zoom. notes/T-2058.md 3h
 - T-2258 The rounded prong on the curve (2026-11-03, agent t2222b): zero- and near-zero-length stroke segments (band knots, float32 points) pointed anywhere, so their round caps were shifted off the band. Strokes keep no segment under 8 plane m (`MIN_SEG_M`). notes/T-2058.md 3h
 - T-2223 The gap between bands (2026-11-03, agent t2222b): `bandFine` built in (1 px, caps as round as the sides, sharper ramp; Anita's pick), the other three looks and their flags removed. notes/T-2058.md 3g

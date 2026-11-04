@@ -1,7 +1,7 @@
 """T-2213: the land parts (routes.py's `part` and `parts`) of finished packs, extract by extract.
 
     python pipeline/parts_run.py [<id> ... | --from <file of ids> | --all] [--workers N] [--downloads N]
-                                 [--dry] [--redo]
+                                 [--dry] [--redo] [--backup <folder in data/work>]
     python pipeline/parts_run.py --status [<id> ... | --all]
 
 A pack's extracts are its `routes.extracts` (SUBSTITUTE swaps one too big for its pack). Download
@@ -10,7 +10,7 @@ threads fetch the extracts ahead of the readers (a copy kept in data/raw/osm, .w
 while the disk has under MIN_FREE). Per extract, in a reader process: its ways, and for every pack
 it serves, the pack's water pixels at 50 m under the ways that join land ->
 data/work/parts/px/<id>/<extract>.npy. Then per pack whose extracts are all done: its parts
-(routes.land_parts); unless --dry, the pack backed up to data/work/pre-T2213/, the parts written
+(routes.land_parts); unless --dry, the pack backed up to data/work/pre-T2213/ (or --backup's), the parts written
 (routes.write_parts) and its zone file's part fields (market_zones.parts_only); a summary in
 data/work/parts/<id>.json either way (--dry: says whether the merged pack would be merged again).
 Restartable: an extract whose pixels every pack has, and a pack with a summary (written, unless
@@ -39,7 +39,7 @@ DL = os.path.join(ROOT, "data", "raw", "osm_parts")
 TILE = 0.5  # degrees: segments are found by the tile of their first end
 BIG_PBF = 700e6  # bytes; at most two extracts this big are read at once (memory)
 MIN_FREE = 15e9  # bytes free on the disk before a download starts
-BACKUP = os.path.join(ROOT, "data", "work", "pre-T2213")
+BACKUP = os.environ.get("TW_PARTS_BACKUP") or os.path.join(ROOT, "data", "work", "pre-T2213")  # --backup sets it
 # an extract named for a pack whose land in it is all in a smaller one (qie's corner of Vietnam)
 SUBSTITUTE = {"asia/sea": "asia/vietnam"}
 
@@ -85,12 +85,14 @@ def _init(sem):
 
 
 def cached(e):
-    """A copy of the extract kept in data/raw/osm (its ways, or the .osm.pbf), or None."""
+    """A copy of the extract kept in data/raw/osm (its ways by the current routes.WAYS_RULE, or the
+    .osm.pbf), or None."""
     stem = os.path.join(ROOT, "data", "raw", "osm", slug(e))
-    for p in (stem + ".ways2.npz", stem + ".osm.pbf"):
-        if os.path.exists(p):
-            return p
-    return None
+    if os.path.exists(stem + ".ways2.npz"):
+        with np.load(stem + ".ways2.npz") as z:
+            if "rule" in z.files and int(z["rule"]) == routes.WAYS_RULE:
+                return stem + ".ways2.npz"
+    return stem + ".osm.pbf" if os.path.exists(stem + ".osm.pbf") else None
 
 
 def fetch(e, tries=3):
@@ -131,50 +133,58 @@ def load_ways(e, path):
     return w, f"{size / 1e6:.0f} MB"
 
 
-def extract_job(e, ids, path):
-    """The water pixels under the extract's land-joining ways, for each of `ids`."""
+def write_pixels(e, ways, ids, dest=None):
+    """The water pixels under the ways that join land (`ways` as routes.read_ways has them) for each of
+    `ids`, saved to `dest(id, e)` (px_path); the segment and pixel counts."""
     import water
     from read_pack import load_pack
+    dest = dest or px_path
+    off, lon, lat, _ = routes.merged([ways], routes.PART_FLAGS)
+    way = np.repeat(np.arange(len(off) - 1), np.diff(off))
+    s = np.nonzero(way[1:] == way[:-1])[0]
+    del way
+    alon, alat, blon, blat = lon[s], lat[s], lon[s + 1], lat[s + 1]
+    del lon, lat, s
+    tx, ty = np.floor(alon / TILE).astype(np.int64), np.floor(alat / TILE).astype(np.int64)
+    key = tx * 100_000 + ty
+    order = np.argsort(key, kind="stable")
+    key = key[order]
+    alon, alat, blon, blat = alon[order], alat[order], blon[order], blat[order]
+    n_px = 0
+    for cid in ids:
+        h, a = load_pack(cid, PACKS)
+        bar, origin = routes.water50(h, a)
+        H, W = bar.shape
+        lon0, lat0 = h["origin"]["lon"], h["origin"]["lat"]
+        pad = routes.PART_PAD_M
+        lo, la = water.to_lonlat(np.array([origin[0] - pad, origin[0] + W * routes.WALK_CELL_M + pad]),
+                                 np.array([origin[1] - pad, origin[1] + H * routes.WALK_CELL_M + pad]), lon0, lat0)
+        sel = []
+        for gx in range(int(np.floor(lo[0] / TILE)) - 1, int(np.floor(lo[1] / TILE)) + 2):
+            i0 = np.searchsorted(key, gx * 100_000 + int(np.floor(la[0] / TILE)) - 1)
+            i1 = np.searchsorted(key, gx * 100_000 + int(np.floor(la[1] / TILE)) + 2)
+            if i1 > i0:
+                sel.append(np.arange(i0, i1))
+        sel = np.concatenate(sel) if sel else np.zeros(0, np.int64)
+        xa, ya = routes.local_xy(alon[sel], alat[sel], lon0, lat0)
+        xb, yb = routes.local_xy(blon[sel], blat[sel], lon0, lat0)
+        px = routes.road_water_pixels(bar, origin, xa, ya, xb, yb)
+        p = dest(cid, e)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        np.save(p + ".part.npy", px)
+        os.replace(p + ".part.npy", p)
+        n_px += len(px)
+    return len(key), n_px
+
+
+def extract_job(e, ids, path):
+    """The water pixels under the extract's land-joining ways, for each of `ids`."""
     t0 = time.time()
     try:
         ways, how = load_ways(e, path)
-        off, lon, lat, _ = routes.merged([ways], routes.PART_FLAGS)
-        del ways
-        way = np.repeat(np.arange(len(off) - 1), np.diff(off))
-        s = np.nonzero(way[1:] == way[:-1])[0]
-        del way
-        alon, alat, blon, blat = lon[s], lat[s], lon[s + 1], lat[s + 1]
-        del lon, lat, s
-        tx, ty = np.floor(alon / TILE).astype(np.int64), np.floor(alat / TILE).astype(np.int64)
-        key = tx * 100_000 + ty
-        order = np.argsort(key, kind="stable")
-        key = key[order]
-        alon, alat, blon, blat = alon[order], alat[order], blon[order], blat[order]
         t_read = time.time() - t0
-        n_px = 0
-        for cid in ids:
-            h, a = load_pack(cid, PACKS)
-            bar, origin = routes.water50(h, a)
-            H, W = bar.shape
-            lon0, lat0 = h["origin"]["lon"], h["origin"]["lat"]
-            pad = routes.PART_PAD_M
-            lo, la = water.to_lonlat(np.array([origin[0] - pad, origin[0] + W * routes.WALK_CELL_M + pad]),
-                                     np.array([origin[1] - pad, origin[1] + H * routes.WALK_CELL_M + pad]), lon0, lat0)
-            sel = []
-            for gx in range(int(np.floor(lo[0] / TILE)) - 1, int(np.floor(lo[1] / TILE)) + 2):
-                i0 = np.searchsorted(key, gx * 100_000 + int(np.floor(la[0] / TILE)) - 1)
-                i1 = np.searchsorted(key, gx * 100_000 + int(np.floor(la[1] / TILE)) + 2)
-                if i1 > i0:
-                    sel.append(np.arange(i0, i1))
-            sel = np.concatenate(sel) if sel else np.zeros(0, np.int64)
-            xa, ya = routes.local_xy(alon[sel], alat[sel], lon0, lat0)
-            xb, yb = routes.local_xy(blon[sel], blat[sel], lon0, lat0)
-            px = routes.road_water_pixels(bar, origin, xa, ya, xb, yb)
-            os.makedirs(os.path.dirname(px_path(cid, e)), exist_ok=True)
-            np.save(px_path(cid, e) + ".part.npy", px)
-            os.replace(px_path(cid, e) + ".part.npy", px_path(cid, e))
-            n_px += len(px)
-        return e, True, f"{e}: {how}, {len(key):,} segments read in {t_read:.0f} s; {len(ids)} packs, {n_px:,} water pixels under roads ({time.time() - t0:.0f} s)"
+        n_seg, n_px = write_pixels(e, ways, ids)
+        return e, True, f"{e}: {how}, {n_seg:,} segments read in {t_read:.0f} s; {len(ids)} packs, {n_px:,} water pixels under roads ({time.time() - t0:.0f} s)"
     except Exception:
         return e, False, f"{e}: FAILED\n{traceback.format_exc()}"
 
@@ -244,6 +254,10 @@ def done_pack(cid, dry):
 def main(args):
     workers = int(args.pop(args.index("--workers") + 1)) if "--workers" in args else 3
     downloads = int(args.pop(args.index("--downloads") + 1)) if "--downloads" in args else 4
+    if "--backup" in args:  # the backup folder's name in data/work, for a later task's rerun
+        global BACKUP
+        BACKUP = os.path.join(ROOT, "data", "work", args.pop(args.index("--backup") + 1))
+        os.environ["TW_PARTS_BACKUP"] = BACKUP
     if "--from" in args:  # a file of ids, one per line
         with open(args.pop(args.index("--from") + 1), encoding="utf-8") as f:
             args += f.read().split()

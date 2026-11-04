@@ -711,14 +711,18 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   header `parts`, T-2213); `routes.py <id> --stage parts` makes only those, for a finished pack,
   merged or not (into the res-9 copy and the merged pack as `nocar.py` does, or merged again where a
   merged cell would span two parts).
-- `parts_run.py [ids | --from file | --all] [--workers N] [--downloads N] [--dry]` (T-2213): the land
-  parts of many packs, extract by extract: downloads ahead of the readers into `data/raw/osm_parts/`
-  (deleted once read), pixels per pack and extract in `data/work/parts/px/`, then per pack a backup
-  to `data/work/pre-T2213/`, the parts, its zone file's part fields (`market_zones.py --parts`) and a
-  summary `data/work/parts/<id>.json`; restartable. Every pack: 67 GB of extracts, under 2 hours on 4
-  readers. Checks: `checks/t2213_islands.py` (the islands and joins of notes/T-2207.md 3),
-  `checks/t2213_interior.py` (the most populous parts no road leaves), `checks/t2213_packs_load.py`
-  (every pack through the sim's `zone_summary`, against an earlier run).
+- `parts_run.py [ids | --from file | --all] [--workers N] [--downloads N] [--dry] [--redo] [--backup
+  folder]` (T-2213): the land parts of many packs, extract by extract: downloads ahead of the readers
+  into `data/raw/osm_parts/` (deleted once read; a kept `.ways2.npz` is used only when written under
+  the current `routes.WAYS_RULE`), pixels per pack and extract in `data/work/parts/px/`, then per pack
+  a backup to `data/work/pre-T2213/` (or `--backup`'s), the parts, its zone file's part fields
+  (`market_zones.py --parts`) and a summary `data/work/parts/<id>.json`; restartable. Every pack: 67 GB
+  of extracts, under 2 hours on 4 readers. Checks: `checks/t2213_islands.py` (the islands and joins of
+  notes/T-2207.md 3), `checks/t2213_interior.py` (the most populous parts no road leaves),
+  `checks/t2213_packs_load.py` (every pack through the sim's `zone_summary`, against an earlier run),
+  `checks/t2257_links.py` (every pack with two parts or more, its extracts read again: the packs whose
+  parts the current rule changes, and each part joined to another by a bridge, tunnel or causeway in
+  OSM, by car, path or rail; 230 extracts, about 1 h 40 min on 4 readers).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the

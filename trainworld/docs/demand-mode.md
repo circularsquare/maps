@@ -204,7 +204,9 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
 - **Land parts** (T-2213, `part` per cell, header `parts`; notes/T-2207.md). Land a car can reach
   from any point of it: the 50 m water as the walk raster has it before its bridges, every pixel
   under an OSM way some car may use made land (the drive's roads, service ways and tracks, private
-  ones too: a gated island's bridge joins it), islets under 0.1 km² off the grid's edge made water, then 8-connected
+  ones too: a gated island's bridge joins it; a road closed to motor traffic still joins when it lets
+  some cars, buses or lorries through, as Rikers Island's `access=no`, `bus=yes` bridge does, unless
+  it is an emergency access way: `routes.way_flags`), islets under 0.1 km² off the grid's edge made water, then 8-connected
   land holding cells; all such land reaching the grid's edge on one world landmass is one part
   (joined beyond the edge: a river's two banks whose bridge is outside the grid). Ferries join
   nothing. A cell's part is the land under its centre, or the nearest. Per part the header lists

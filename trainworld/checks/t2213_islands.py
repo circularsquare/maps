@@ -21,6 +21,7 @@ import routes  # noqa: E402
 PLACES = [
     ("nyc", "Manhattan", -73.985, 40.755, False), ("nyc", "Staten Island", -74.15, 40.58, False),
     ("nyc", "Roosevelt Island", -73.951, 40.761, False), ("nyc", "Long Island (Hempstead)", -73.62, 40.71, False),
+    ("nyc", "Rikers Island (T-2257: bridge access=no, bus=yes)", -73.887, 40.792, False),
     ("nyc", "Shelter Island", -72.34, 41.069, True), ("nyc", "Fishers Island", -72.004, 41.267, True),
     ("hon", "Hong Kong Island", 114.17, 22.28, False), ("hon", "Lantau (Tung Chung)", 113.94, 22.29, False),
     ("hon", "Ma Wan", 114.059, 22.351, False), ("hon", "Cheung Chau", 114.029, 22.207, True),

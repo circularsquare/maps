@@ -55,7 +55,8 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
       );
     }
     const line = ln.get(l.line);
-    const bus = !!world.peek()?.lineStats[l.line]?.bus;
+    const busRow = world.peek()?.lineStats[l.line]?.bus;
+    const bus = !!busRow && !busRow.ferry;
     return (
       <li data-tip={rideTip(l)}>
         {line && <Chip line={line} size="sm" />}

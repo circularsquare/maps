@@ -120,15 +120,60 @@ def tag(other, key):
     return other[j:other.find('"', j)]
 
 
+# Road vehicles a way closed to motor traffic (access=no, motor_vehicle=no) may still let through, and
+# then it joins land parts: Rikers Island's bridge is access=no, bus=yes (T-2257).
+CAR_EXCEPTIONS = ("motor_vehicle", "motorcar", "bus", "psv", "hgv", "goods", "delivery", "taxi", "minibus", "coach",
+                  "tourist_bus", "share_taxi", "hov", "agricultural", "forestry")
+
+
+def car_may_use(other, access, motor):
+    """Whether some car, bus or lorry may use the way (its OSM other_tags; access and motor as read_ways has them).
+    An emergency access way closed to the public takes no exceptions: Suomenlinna's service tunnel is
+    access=no, motor_vehicle=permit (T-2257)."""
+    if access != "no" and motor != "no":
+        return True
+    if tag(other, "service") == "emergency_access":
+        return False
+    return any(tag(other, k) not in ("", "no") for k in CAR_EXCEPTIONS)
+
+
+_DCLASS = {c: i for i, c in enumerate(DRIVE_CLASSES)}
+WAYS_RULE = 2257  # the task that last changed way_flags; a cached .ways2.npz from another is stale
+
+
+def way_flags(h, o):
+    """A way's class and read_ways flags from its highway value and OSM other_tags."""
+    cls, flags = 255, 0
+    access = tag(o, "access")
+    motor = tag(o, "motor_vehicle") or tag(o, "motorcar")
+    if tag(o, "area") != "yes" and (h in _DCLASS or h in ("service", "track")):
+        if access != "no" and motor != "no" and h in _DCLASS and access != "private" and motor != "private":
+            cls = _DCLASS[h]
+            flags |= 1
+        elif car_may_use(o, access, motor):
+            flags |= 4
+    if h in WALK_CLASSES and tag(o, "bridge") not in ("", "no"):
+        foot = tag(o, "foot")
+        walkable = foot not in ("no", "private") and (access not in ("no", "private") or foot in ("yes", "designated", "permissive"))
+        if h in ("trunk", "trunk_link") and foot not in ("yes", "designated", "permissive"):
+            walkable = False  # many trunk bridges carry no sidewalk; OSM says foot=yes where one does
+        if walkable:
+            flags |= 2
+    return cls, flags
+
+
 def read_ways(extract, keep_pbf=False, cache=True):
     """The extract's drivable roads and walkable bridges, cached as an .npz (unless not `cache`):
     per way its class (index into DRIVE_CLASSES, or 255 for walk-only), flags (1 drivable,
     2 bridge a person may walk on, 4 any other way some car may use, private roads, service ways
     and tracks included: it joins land parts, T-2213), and its points (lon, lat) in one flat array
-    with offsets. Caches written before T-2213 have no flag 4."""
+    with offsets. A cache from another WAYS_RULE is read again (before T-2213 they had no flag 4, and
+    parts_run.py's first run took them as they were, T-2257)."""
     out = npz_path(extract)
     if os.path.exists(out):
-        return dict(np.load(out))
+        w = dict(np.load(out))
+        if int(w.get("rule", 0)) == WAYS_RULE:
+            return w
     import pyogrio
     path = download(extract)
     t0 = time.time()
@@ -140,26 +185,8 @@ def read_ways(extract, keep_pbf=False, cache=True):
     other = df["other_tags"].fillna("").to_numpy()
     cls = np.full(len(df), 255, np.uint8)
     flags = np.zeros(len(df), np.uint8)
-    dclass = {c: i for i, c in enumerate(DRIVE_CLASSES)}
     for i in range(len(df)):
-        o = other[i]
-        h = hw[i]
-        access = tag(o, "access")
-        motor = tag(o, "motor_vehicle") or tag(o, "motorcar")
-        bridge = tag(o, "bridge") not in ("", "no")
-        if access != "no" and motor != "no" and tag(o, "area") != "yes" and (h in dclass or h in ("service", "track")):
-            if h in dclass and access != "private" and motor != "private":
-                cls[i] = dclass[h]
-                flags[i] |= 1
-            else:
-                flags[i] |= 4
-        if bridge and h in WALK_CLASSES:
-            foot = tag(o, "foot")
-            walkable = foot not in ("no", "private") and (access not in ("no", "private") or foot in ("yes", "designated", "permissive"))
-            if h in ("trunk", "trunk_link") and foot not in ("yes", "designated", "permissive"):
-                walkable = False  # many trunk bridges carry no sidewalk; OSM says foot=yes where one does
-            if walkable:
-                flags[i] |= 2
+        cls[i], flags[i] = way_flags(hw[i], other[i])
     keep = flags > 0
     geoms = df.geometry.to_numpy()[keep]
     import shapely
@@ -167,7 +194,8 @@ def read_ways(extract, keep_pbf=False, cache=True):
     off = np.zeros(len(geoms) + 1, np.int64)
     np.add.at(off, idx + 1, 1)
     off = np.cumsum(off)
-    w = dict(cls=cls[keep], flags=flags[keep], off=off, lon=coords[:, 0].astype(np.float64), lat=coords[:, 1].astype(np.float64))
+    w = dict(cls=cls[keep], flags=flags[keep], off=off, lon=coords[:, 0].astype(np.float64), lat=coords[:, 1].astype(np.float64),
+             rule=np.int64(WAYS_RULE))
     if cache:
         np.savez(out, **w)
     print(f"  {extract}: {int(keep.sum()):,} kept ({int((flags[keep] & 1).sum()):,} drivable, {int((flags[keep] & 2).sum()):,} walkable bridges, "
