@@ -88,6 +88,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
+Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
+- T-2450 [P2] Ferries a little faster ("could we make ferries a little faster lol"). Open.
+- T-2451 [P2] Bus route legs only along roads: no straight-line legs off the road network (takes in T-2178's water case). Open.
+- T-2452 [P3] The Line, Traffic, Speed and Profit track displays for bus and ferry lines too (T-2411's later stage). Open.
+- T-2453 [P2] Demand loads the cities selected in the city view first, so their figures (the trip-length breakdown) come before others'. Open.
 Anita's chat 2026-11-04 ~17:10 (verbatim in notes/todo-2026-11-04h.md; briefs quote it word for word):
 - T-2447 [P3] Network diagram city names: a block in a zone a bigger block already names (Japan: four more Nagano blocks, two Tokyo, two Nagasaki, two Shizuoka) goes unnamed; name it by its own place (a town from the zone's place list nearest the block, or its biggest station's town). notes/T-2438.md. Open.
 Anita's notes 2026-11-04 late afternoon (verbatim in notes/todo-2026-11-04g.md; briefs quote it word for word):
@@ -145,7 +150,7 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
 - T-2148 [P3] Saves keep every day of every region's ledger (T-2143), about 30 bytes compressed a region-day; a world game of 100 regions over 1,000 days nears the account's 4 MB cap. If saves get big, fold a region's days older than 90 into Monday weeks in the save (the chart already shows weeks past 90 days). Open.
 Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026-11-03d.md, her shots in artifacts/trainworld/anita-2026-11-03d/):
 - T-2209 [P3] Ferry routes in canals at the 10 m limit: Amsterdam's grachten route (3.0 km) is not found at 2.5 m cells (an 11 m canal, a seam between water polygons), so Centraal to Rijksmuseum goes by the Amstel (4.25 km); 1-4% of Venice's and Amsterdam's routes under 5 m. Perhaps a 1.5 m cell for short canal legs, or seams under a cell closed. notes/T-2177.md "T-2192 results". Open.
-- T-2178 [P3] Disallow bus route legs over water where there is no road (Anita, with T-2177): a straight stretch over more than 50 m of water refused, on T-2192's water. After T-2192; notes/T-2177.md 3.10. Open.
+- T-2178 [P3] Disallow bus route legs over water where there is no road (Anita, with T-2177): a straight stretch over more than 50 m of water refused, on T-2192's water. After T-2192; notes/T-2177.md 3.10. Open; in T-2451.
 - T-2188 [P3] A city line's edit ends with its local solve, no whole solve of the cluster (the "Trips in 18 cities" step): the touch rule already re-solves only the line's zone (city game: Tokyo alone, 0.1 s; the whole solve 8 s), and on the real Tokyo save the local result was within 83 riders of the whole (31.7M). Open. notes/T-2188.md.
 - T-2189 [P3] The edit note forgets edits not settled in 5 minutes (`GIVE_UP_MS`, game/editNote.ts): Tokyo's real save on one demand worker settled in 352-361 s and showed no note. Raise it, keeping the level-of-detail hold it now bounds (T-2180) short. Open.
 - T-2198 [P3] Mark where faster trains lose time behind slower ones (T-1924's following loss, wire kind 11): it can be minutes a train, yet it shows only in the line panel ("Behind X trains"), never on the map or in the trouble list, and drawn it is trains bunched behind slower ones, which reads as a jam with no mark. Open; notes/T-2185.md. notes/T-2198.md.
