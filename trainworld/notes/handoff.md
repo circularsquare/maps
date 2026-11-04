@@ -9,7 +9,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master **314776ed** (maps-c9's last: US/PR replan T-2301 shipped; it also swept in tidy-docs/tidy-checks' staged
   `git mv`s of notes/ and checks/old/, ~466 paths: they were final, nothing lost). Before: eac6f326 panels2, 5b825d59
   crowd, e1076e5a trackbar, 695a441b countries2's plans, 7c7b87b5 morning notes.
-- **8800 = build 885 (314776ed)**, plain from data/packs, smoke 23/23 light and dark; real save 12,517,619 rail
+- **8800 = build 891 (1debc265)**, plain from data/packs, smoke 23/23 light and dark; real save 12,517,619 rail
   trips. LIVE = 821. Publish only on Anita's word (release "later this week").
 - **Cores cap 15** (Anita 08:05: "using lots of cores is fine"). Disk ~25 GB free.
 - Worktrees: t1734 (kept), reach, bldgalign, home (all done, rebased on 314776ed, to land), panels3 (agent working).
@@ -40,9 +40,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - af04bc3536fc3910f **lagdemand** T-2386 (6190): one more Japan run at 4 cores when free, then reports.
 - a7f3f79599d445573 **lagfix** (Opus, tree .tw-trees/lagfix, port 6195): T-2403 blueprint lag fixes 1-3, 5.
 - Anita ~14:30 on the diagram (notes/todo-2026-11-04d.md): ac3669604eb2d8174 **diagpar** (Opus, tree .tw-trees/diagpar,
-  port 6196) T-2405 no line hidden under another, parallel strokes; af44f88dffad9d614 **diagscale** (Opus, read-only,
-  port 6198) T-2406 large-scale distortion: research + design to Anita.
-- Next free id **T-2407**.
+  port 6196) T-2405 no line hidden under another, parallel strokes. diagscale done (T-2406 archived; T-2407 stage 1
+  waits on Anita's pick; review/diagram-blocks.png, diagram-today.png, diagram-country-level.png).
+- **8800 = build 891 (1debc265)** ~15:30: has panels3 (441780dc), home, bldgalign, reach; smoke 23/23 light and dark on
+  8800 and on master's Vite. Built mid-RU/BY join: the join writes only new RU/BY packs (not in the committed
+  registry) and global files at its end, so the build's packs are the committed set.
+- Anita ~16:00 (notes/todo-2026-11-04e.md): diagram = one unified view with city blocks (T-2407 go), faint real-shaped
+  city borders inside blocks (T-2168), water across blocks (T-2169), thin lines fade not vanish (T-2408, queued to
+  diagpar). Split bar: Other cities own row; hover with small mode bars; by-length as a graph (area = trips; x or y,
+  linear if legible); rename "Within". Launched a614e73f8869f042b **diagblocks** (Opus, tree, port 6199, T-2407) and
+  a0701e43d8c50c68d **tripgraph** (Opus, tree, port 6188, T-2365 stage 1: kernel bins by length + mockups, WASM change
+  OK in its tree; UI after her look).
+- Next free id **T-2409**.
 - Cleanup T-2359: stages T-2366..T-2384 in TASKS "Code health", order in notes/T-2359.md. Done: T-2366, T-2367
   (surveys T-2360..62 archived). Next after the landings: T-2368 code-map, T-2369 app dead code, T-2370 flags,
   T-2376 docs, T-2379 sim small items (own tree), T-2298, T-2384 drives removal (own tree).

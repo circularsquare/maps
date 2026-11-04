@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2403 Blueprint lag after a click, fixes 1-3 and 5 (2026-11-04, agent lagfix): New York ghost freeze in the first 100 ms 449-460 -> 187-203 ms p50, the second stutter gone; achievements, complex passages, LOD band and fullAttr off the click. notes/T-2403.md.
+- T-2406 Diagram large-scale distortion, researched and designed (2026-11-04, agent diagscale): cities as rigid blocks recommended (mock NY-LA 41,612 -> 877 pitches), a two-level country view and a fisheye weighed; stage 1 is T-2407. notes/T-2406.md.
 - T-2364 The split bar by distance, measured and designed (2026-11-04, agent splitkm): train share by trips -> by km, New York 17.8% -> 26.5%, London 21.4% -> 37.6%; walking under 2 km is 72-87%. Bar stays on trips; km share and a by-length section are T-2365. notes/T-2364.md.
 - T-2388 Blueprint lag after the click, measured (2026-11-04, agent lagblue): New York freezes the ghost ~0.3-0.4 s a click (worker state 115-180 ms, achievements' figures 112-191 ms, a LOD frame later); fixes T-2403, T-2404. notes/T-2388.md.
 - T-2394 Save preview's whole network panel (2026-11-04, agent panels3): with more than 3 cities to show (each at least 8% of the biggest's stations), the fourth panel frames everything built, named "Whole network" with all its stations. docs/ui-panels.md, DECISIONS.
