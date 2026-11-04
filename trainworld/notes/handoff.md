@@ -1,20 +1,23 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8509086d-46cd-4c5f-8d59-da9348f4a5e0, name maps-c9, since 2026-11-03 23:29
-Updated: 2026-11-04 03:05
+Updated: 2026-11-04 06:20
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **11405b29** (~02:55: Taiwan replan shipped, T-1999, T-774, Turkey/Russia plan rules). Before: 47fe69ec
-  diagram T-2272/T-2289, 8c965a29 UI + demand batch, 3ecdc51c audit, bb48b358 tutorial/fares/Fleetwood.
-- **8800 = build 872 (11405b29)**, plain from data/packs, smoke 23/23 light and dark; real save 12,509,688 rail trips.
-  LIVE = 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word (release "later this week").
-- Freeze: data/frozen/20261103-162459 (post-India). Build 8800 on it (`snapbuild-frozen.cmd`) while packs are written.
-- **Cores cap 15** overnight (Anita asleep, "feel free to use all cores overnight"); `python cores.py cap 10` when
-  she is back at the machine.
-- Disk ~45 GB free. Worktrees: .tw-trees/t1734 (kept, T-1734) only.
-- Uncommitted: agents' files; TODO.md (Anita's).
+- master **95a724e0**. Tonight, newest first: 95a724e0/889628f4 Turkey shipped + RU/BY gated + US/PR planned and
+  built, ecce08c4 passing tracks, 784f0a82 line colours, ce6a8f6d walk-rule speed + T-2308, 11405b29 Taiwan replan,
+  47fe69ec diagram T-2272/T-2289, 8c965a29 UI + demand batch, 3ecdc51c audit, bb48b358 tutorial/fares/Fleetwood.
+- **8800 = build 877 (95a724e0)**, plain from data/packs, smoke 23/23 light and dark; real save 12,509,849 rail trips.
+  Has Turkey (shipped), Taiwan's replan, Rikers. LIVE = 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish
+  only on Anita's word (release "later this week").
+- Freeze: data/frozen/20261103-162459 (post-India, old: lacks Rikers, Taiwan, Turkey). **Do not rebuild 8800 from
+  packs while the US is half-retired** (from replan2's retire until its join ships); use the freeze if a code
+  change must reach 8800 meanwhile.
+- **Cores cap 15** overnight; `python cores.py cap 10` when Anita is back at the machine.
+- Disk ~32 GB free. Worktrees: .tw-trees/t1734 (kept, T-1734) only. data/work/terrain-fine (3.8 GB) is kept.
+- Uncommitted: TODO.md (Anita's) only, as of 06:20.
 
 ## Anita before bed (2026-11-04 ~01:20), in her words where it matters
 - "we can continue to run more countries overnight? perhaps turkey or russia / eastern europe?"; "we can addd more
@@ -27,80 +30,26 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   only in the tutorial card (she asked; yes).
 - Design T-2267/T-2270 (T-2282..T-2285): not answered yet; don't build.
 
-## In flight (maps-c9's subagents; conditions in scratch common-brief.md)
-- **Pack lock: countries, since 02:58**: Turkey's gate run, batch 20261104-025828 (74 rows, jobs 4, Vite 6371, log
-  artifacts/trainworld/countries/t2294-gate.log). Then Turkey's join needs my go. Russia + Belarus build-only batch
-  20261104-024516 (181 rows) runs alongside (claims 11).
-- abb1ccd32095e266b **countries** (Opus): Turkey T-2079/T-2294 (74 rows built), then Russia (unheld; 13 rows + Minsk;
-  4 Siberian towns held: suk xaf gub xag) and Belarus; Ukraine if data. geoBoundaries RUS stops at the recognised
-  border. Ids T-2294..99.
-- replan2 (abaa9dba7f94a9a7b) handed back at a clean point (~300k tokens): nothing landed or retired; its .cmd kit
-  and "State at hand-back" in notes/T-1189.md list steps 1-7. **Resume it with SendMessage for the go** (it keeps
-  its context). T-2326 filed (AWS seed carries world_field and sea polygons).
-- ~05:55 RU/BY regate 75/79: **177/181 gated**; vei, nii, tbo, khy (origins off their towns; khy now "Kizilyurt")
-  rebuilding and gating (log artifacts/trainworld/countries/t2295-gate3.log). Turkey's T-2054 chain done 05:33 (173
-  terrain grids, 406 drive places, terrain-fine 3.8 GB all kept). Then: commit + 8800, US sequence, RU/BY join.
-- ~05:30 RU/BY gate: 102/181 gated (Belarus 8/8), 79 parked: 72 on page errors from app/WASM changing under the
-  gate's Vite (my landings' agents), 7 relaxed (one-town job shares, nyb commute), khy timeout. **Rerun of the 79
-  (gate only, ~25 min) go given; no app/WASM changes until it ends.**
-- **~05:05 US wave home**: t2301-us-3 built 155/155 (inbox artifacts/trainworld/aws/inbox/t2301-us-3, 2.25 GB); all
-  three AWS runs $0.74, NOTHING RUNNING OR BILLING (bucket still holds us-3's 13 objects until landed). PR 4 built at
-  home. **Plan**: when countries' RU/BY gate and Turkey's terrain chain end, I commit the game json and rebuild 8800
-  from packs (keeps 8800 whole), then go to replan2 for: backup prejoin-us, land.py, retire (163 ids), gate PR,US
-  (8 cores), join PR,US (12 cores, 1.5-3 h), terrain/drives, names, successors, smoke. Never rebuild 8800 from packs
-  between the retire and the join. RU/BY join after the US join.
-- **~04:58 Russia + Belarus 181/181 built** (batch 20261104-024516); **gate run go given** (pack lock: countries).
-  Order after: US land/retire/gate/join (replan2), then RU+BY join, then market_drives once for all.
-- **Turkey 74/74 SHIPPED** (join ended 04:31, 58.5 min, 0 parked; not frozen). ~04:35 go for its terrain grids and
-  routed drives (T-2054 by hand, data/terrain + drive files, 20-40 min), then stale.py, zone_origins, load check.
-  Then: commit Turkey's game json, rebuild 8800 from packs. market_drives reads market-rows.json and writes only
-  data/packs/market-drives.bin: rerun it after the US join (and after Russia's) for their new places. Terrain
-  fetch keeps no tiles (disk fine). Queue: US land/retire/gate/join (~05:30), then Russia
-  + Belarus gate/join.
-- (earlier) Turkey 74/74 gated; join was: batch 20261104-033213 (`join --countries TR --jobs 6`, log
-  artifacts/trainworld/countries/t2294-join.log, python 32828; backup data/work/pre-T2294/prejoin 932 MB, undo
-  `restore.py T2294 prejoin --go`). Census check: packs match ADNKS (Adana 2.28M census vs 2.30M pack); the plan was
-  low because GHSL undercounts Adana's urban ilce (0.84M vs 2.01M registered); only Adana's shape is affected (one
-  2.3M zone, no metro row): T-2296 plans zones on census totals. Russia/Belarus are GHSL-only (Rosstat VPN-2021 by
-  municipal district suggested as a P3 source).
-- ~03:45 countries: Turkey gate 62/74 gated, 12 parked (pop_vs_plan 4: Adana 2.44, Arnavutkoy 1.91, Torbali 1.58,
-  Ceyhan 0.42 from the census hook moving people between outlines; pop_vs_fua 2: Gaziantep, Antalya; top_zone_jobs 4
-  one-town zones; browser 2: Konya, Erzurum origins in villages, moved). 10 relaxed with reasons; relax rerun of 12
-  rows under way (log artifacts/trainworld/countries/t2294-relax.log), countries still holds the lock; join next.
-- ~03:25 replan2: PR/US plan written (PR 4 to 5, US 187 to 182; 163 old ids out, 159 new rows; backup
-  pre-T1189/pre-us 2.7 GB); build-only run of the 159 rows next. **Order (decided ~03:40): Turkey's join next (go given
-  once countries confirms its gate counts); the US retire waits until the 159 rows are built (hours at 1-4 cores;
-  AWS suggested), then retire, gate and join back to back, so data/packs never sits for hours with the US
-  half-removed.** Don't rebuild 8800 from packs between a retire and its join.
-- AWS: t2301-us-2 parked on a missing data/work/world_field.npz (torn down, $0.06). **t2301-us-3 running** (seed has
-  world_field.* and outside.json): check row fab built; go 04:19; 154 rows done ~05:15-05:30; timer ~08:15. PR's 4
-  built at home. Then land + retire + gate + join on my go.
-- ~04:30 AWS: t2301-us-1 built nothing (osmdata.openstreetmap.de, the coastline water polygons, unreachable from AWS
-  and home); torn down 0.54 h, $0.20. **t2301-us-2 running**, same machine, seeded with home's cached water
-  polygons clipped to the US (301 MB); timer ends 08:00. replan2 confirms the check row (fab) before `go`.
-- ~03:55 **AWS run t2301-us-1 approved** (replan2): one m7a.8xlarge one-time spot, us-east-2, 4 h hard timer, the 155
-  new US rows on 6 lines (~1-1.5 h, under $1); tools/aws/bundle.py gained `--head-sim` (commit it). Run id and
-  timer end go in notes/T-1189.md; teardown.py must end it. PR's 4 rows build at home. Then land + retire + gate +
-  join back to back, on my go.
-- abaa9dba7f94a9a7b **replan2** (Opus, ~03:00): T-2301 US + Puerto Rico replan (then T-2302 Europe if time). Kit from
-  scratch replan\, its own scratch replan2\. Asks my go for plan write, retire, register/gate, join. Ids T-2326..29.
-- **solvespeed DONE, committed ce6a8f6d** (retired): T-2307 partly (7.8% over the pre-T-2265 solve, from 10.5%,
-  side-by-side; 1% sliver lie, +161 rail trips on the real save), rest T-2324 [P2]; T-2308 greyed toggle; ferry
-  constant; $10B comment. Not on 8800 yet.
-- **passing DONE, committed ecce08c4** (retired): T-2245 (overtakes timetabled at a set headway, time behind an
-  express counted; T-2232's local 13m07s a round trip, express panel shows "Behind slower trains 17s"), T-2248,
-  T-2249. Not on 8800 yet. T-2239/40/41 still open.
-- **colours DONE, committed 784f0a82** (retired): T-2291 (re-pick after stop edits while the line is new; beside =
-  shared edge/station or stop within 300 m; under 19 CIEDE2000); T-2332 filed (copied, bus and ferry lines). Not on
-  8800 yet. Undo may step through the recolour first (unchecked).
-- Uncommitted on purpose: registry.json, market-rows.json, zone-names.json, world_plan.json (Turkey's join and the
-  replans write them; commit after Turkey's join ends, then rebuild 8800 from packs).
-- **Done tonight** (agents retired): audit (3ecdc51c); replan Taiwan (11405b29; tig "Taitung" 1.29M Central Range
-  zone, follow-up T-2300); diagram (47fe69ec; T-2321); display, panels, buildtab, ferries, demand (8c965a29).
-  Strings and pictures for Anita: notes/for-anita.md "Open now".
-- Next to start once cores free (after Russia's build): T-2137 Delhi phone memory (Sonnet), passing tracks
-  T-2245/T-2248/T-2249 (Opus), T-2291 colour near-duplicates + T-2280 tutorial hovers (Sonnet).
-- Next free id **T-2333**.
+## In flight
+- **Pack lock: replan2** (abaa9dba7f94a9a7b, Opus), go given ~06:20 for T-2301's steps 1-6: backup prejoin-us,
+  land.py t2301-us-3 (155 rows from AWS), retire_us.cmd (163 old ids), gate_us.cmd (159 rows, 8 cores, port 6373),
+  join_us.cmd (1.5-3 h), T-2054 chain, names.py --write, zone_successors --set, smoke, real save; then
+  `bucket.py rm t2301-us-3`. Kit: scratch replan2\; steps in notes/T-1189.md "State at hand-back". It reports any
+  park between retire and join at once.
+- **Next pack lock: Russia + Belarus join** (181/181 gated; countries agent retired): `backup.py T2295 prejoin
+  RU,BY,<neighbours>`, `<kit>\join_ru.cmd`, then `terrain_ru.cmd` (terrain_fine, zone_terrain, market_drives,
+  build_inputs). Kit: scratch countries\; steps in notes/T-2295.md "Next". Needs a fresh agent (Opus) after the US
+  join, or run the .cmd files directly.
+- Done tonight, agents retired: tutorial T-2263, fares T-2266, Fleetwood T-2290, design T-2267/T-2270, audit,
+  UI batch T-2271/T-2269/T-2273..75/T-2286, demand T-2265/T-2278/T-2276, diagram T-2272/T-2289, walk-rule speed
+  T-2307 (rest T-2324), T-2308, line colours T-2291, passing T-2245/48/49, Taiwan T-1189 part, Turkey T-2294 (74
+  shipped), Russia/Belarus T-2295 (181 gated). Strings and pictures: notes/for-anita.md "Open now".
+- a0dfdec9a399fb405 **phone** (Sonnet, ~06:25): T-2137 Delhi on the emulated phone, measurement only (no app/sim
+  edits while the US gate runs). Port 6183. Id T-2333.
+- Not started, could go next: T-2324 rest of the walk-rule cost, T-2302 Europe
+  replan after the US (628 zones to 462), T-2296 plan on census totals, T-2300 Taiwan's Central Range split,
+  T-2321 diagram overlaps, T-2332 copied/bus/ferry colours, T-2326 AWS seed, T-2298 gate on a frozen app.
+- Next free id **T-2333** (T-2327..29 handed to replan2, T-2330/31 unused).
 
 ## Next
 1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while

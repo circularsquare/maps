@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2137 Delhi on the emulated phone (2026-11-04, agent phone): renderer peaks 0.74 GB open, 1.15-1.17 first line, 1.01-1.06 three and five lines, 1.17-1.22 loading the save (2 GB limit); iPhone-like run the same. Jakarta on a real phone not done. notes/T-2137.md.
 - T-2294 Turkey (2026-11-04, agent countries): the whole country from the world plan, 8 metro rows and 66 zones on the census totals, all 74 shipped (ten parks relaxed with the census or as one-town zones; Konya's and Erzurum's origins moved). notes/T-2294.md.
 - T-2079 Turkey's census totals (2026-11-04, agent countries): `admin_totals` config TR, the 2022 register by ilce plus the Syrians under temporary protection, four earthquake provinces scaled to 2023 (`tools/country/turkey_census.py`). notes/T-2294.md.
 - T-2249 Passing stations' riders (2026-11-04, agent passing): the crowd fills an island between the running track and the outer track's inner edge (`u_pass_in`). notes/T-2228.md 10.

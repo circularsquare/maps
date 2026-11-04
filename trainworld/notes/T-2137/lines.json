@@ -1,0 +1,12 @@
+{
+  "ned": {
+    "name": "Delhi", "centre": [77.209, 28.62],
+    "lines": [
+      { "level": -2, "stops": [["Jahangirpuri", 77.1627, 28.7255], ["Azadpur", 77.1766, 28.7071], ["Vidhan Sabha", 77.2188, 28.6866], ["Civil Lines", 77.225, 28.677], ["Kashmere Gate", 77.2284, 28.6675], ["Chandni Chowk", 77.23, 28.658], ["New Delhi", 77.2219, 28.643], ["Rajiv Chowk", 77.2192, 28.6328], ["Central Secretariat", 77.2121, 28.6149], ["INA", 77.2095, 28.575], ["Hauz Khas", 77.2067, 28.5436], ["Saket", 77.2018, 28.5206]] },
+      { "level": -3, "stops": [["Janakpuri West", 77.0786, 28.6291], ["Rajouri Garden", 77.1222, 28.6492], ["Kirti Nagar", 77.1432, 28.6556], ["Karol Bagh", 77.1881, 28.644], ["Rajiv Chowk B", 77.2192, 28.6328], ["Mandi House", 77.2343, 28.6259], ["Yamuna Bank", 77.2685, 28.6232], ["Laxmi Nagar", 77.277, 28.63], ["Anand Vihar", 77.3159, 28.6469]] },
+      { "level": 2, "stops": [["Lal Qila", 77.241, 28.6567], ["Delhi Gate", 77.238, 28.641], ["ITO", 77.241, 28.6285], ["Pragati Maidan", 77.243, 28.619], ["Jangpura", 77.242, 28.584], ["Lajpat Nagar", 77.237, 28.5703]] },
+      { "level": 3, "stops": [["Rithala", 77.107, 28.7206], ["Pitampura", 77.1316, 28.7033], ["Netaji Subhash Place", 77.1521, 28.6955], ["Kashmere Gate R", 77.2284, 28.6675], ["Welcome", 77.278, 28.672], ["Shahdara", 77.2886, 28.6732], ["Dilshad Garden", 77.3217, 28.676]] },
+      { "level": -1, "stops": [["HUDA City Centre", 77.0724, 28.459], ["Sikanderpur", 77.0928, 28.4813], ["Ghitorni", 77.1493, 28.493], ["Sultanpur", 77.1613, 28.4994], ["Chhatarpur", 77.1749, 28.5069], ["Qutub Minar", 77.1855, 28.5128]] }
+    ]
+  }
+}

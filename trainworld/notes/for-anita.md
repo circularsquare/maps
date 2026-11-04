@@ -100,6 +100,23 @@ The toggle is greyed at a building's stations (a building already counts as one)
 - Hover, at a member: "...Costs $X / Click to build" -> "Waiting room / Waiting here for a train feels 20% shorter. / The station building already counts as a waiting room."
 - Same in complex view, with "Waiting at any station in this complex for a train feels 20% shorter."
 
+### New countries overnight
+- **Turkey: 74 zones shipped**, on 8800 (build 877): 8 metros (Istanbul 14.6M, Ankara, Izmir, Bursa, Gaziantep,
+  Antalya, Sincan, Konya) and 66 zones; people from the 2022 register plus the 3.5M Syrians under temporary
+  protection, the earthquake provinces scaled to 2023. Adana is one 2.3M zone (the population grid undercounts it;
+  T-2296). Map: artifacts/trainworld/countries/tr-plan.png.
+- **Russia (173) and Belarus (8): built and checked, joining after the US** (later this morning). Russia to its
+  recognised borders: the boundary data holds no Crimea or occupied Ukraine. 4 lone Siberian towns held. Map:
+  artifacts/trainworld/countries/ru-live.png.
+- **Taiwan replanned**: 9 zones; "Taitung" (1.29M) wraps the Central Range from Douliu to Hengchun to Hualien (T-2300
+  would split it).
+- **US and Puerto Rico replan**: 159 new zones built (155 on AWS for $0.74), going in now; Europe (628 zones to 462)
+  after.
+- Questions: (1) Territory: your October rule (`DE_FACTO`) gives Crimea to the side holding it when Ukraine's units
+  are cut, so if Ukraine is ever built Crimea would be in neither country. Keep recognised borders for both, or your
+  October rule? (2) Build Ukraine at all, on the population grid only, with a 2001 census and millions displaced?
+  The agent leans not yet; so do I.
+
 ### Older asks found open by the audit (2026-11-04)
 - T-1920: a zone's rail commuters are dealt over all its work cells by jobs, so cells no station reaches get
   train riders (5 of 71 New York pairs). Deal them only over cells within reach? A demand rule, so yours.
