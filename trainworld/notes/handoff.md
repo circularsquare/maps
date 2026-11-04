@@ -44,6 +44,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   already committed). Land t2214 after t2257 reports. After landing: fix "Cheung Chau ferry bus to" (RouteParts.tsx
   ~62 adds " bus" to ferries) and file the airport badge hover leaving No route out.
 
+- ~23:40: de944172 T-2222/T-2258/T-2223 (8 m minimum stroke segment ends the snap and the prong; bandFine is the look). **8800 = build 863**, smoke 23/23 light and dark. T-2262 filed (float32 positions). Only t2257 still running; then land t2214.
+
 ## Next
 1. When t2257 and t2215 report: commit t2257, land t2214, rebuild 8800 (plain snapbuild once nobody writes packs).
 2. T-2216 the market across parts (rebuild the 901 zone files then; Sunshine Coast lie, notes/T-2213.md), T-2256.
@@ -75,6 +77,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
 
 ## Open questions to Anita (asked, unanswered)
+- Friend playtest (notes/todo-2026-11-03h.md, filed T-2263..T-2272): asked about default train length 5 cars, moped parking in poorer countries, line crowding red as average vs peak, where the rail cost multiplier goes, and blueprint segments enable/disable.
 - Strings to acknowledge: Ferry tool (T-2194), station building tool (T-2218), crowding (T-2236), diagram (T-2163),
   ferry demand rows (T-2195), building hover "Changing trains inside it feels a little quicker." (T-2220).
 - Answered 22:30: buildings fixed minutes only OK; gap look = fine; band snap at default zoom, Yamanote north of Shinjuku, export copied. Earlier: islands go, word "No route"; edit note and everywhere "trips/day"; rates "per"; period on the
@@ -104,4 +107,4 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Disk: delete orphaned temp files always; keep only the current build and the latest published ones in
   artifacts/trainworld/publish/ and data/frozen/; delete superseded backups once a later state checks clean.
 
-Next free task id: T-2259 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25, T-2252..54; check before use).
+Next free task id: T-2273 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25, T-2252..54; check before use).
