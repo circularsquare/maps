@@ -645,7 +645,11 @@ impl PairRule {
     }
     /// A longer trip's car over a zone pair of this place pair, `d` km apart, to parking `park`.
     fn car_cost(&self, d: f32, park: f32) -> Cost {
-        routed_car(d, park, self.rt, self.rk, if self.cu > 0. { self.cu } else { CAR_USD_PER_KM }).plus(self.cross)
+        self.zone_car(d, park, (self.rt, self.rk))
+    }
+    /// `car_cost` with the zone pair's own routed ratios (`Market::zone_ratios`).
+    fn zone_car(&self, d: f32, park: f32, (rt, rk): (f32, f32)) -> Cost {
+        routed_car(d, park, rt, rk, if self.cu > 0. { self.cu } else { CAR_USD_PER_KM }).plus(self.cross)
     }
     /// The car the place pair's split is decided on: centre to centre, the two places' mean parking.
     fn split_car(&self, p: &Place, q: &Place) -> Cost {
@@ -737,7 +741,7 @@ fn pair_ways(places: &[Place], countries: &[String], drives: &Drives, i: usize, 
         }
     }
     let d = if r.car { drives.get(i, j) } else { Drive::RULE };
-    r.cross = if r.car && i != j { crossing_cost((&countries[p.country as usize], p.lat), (&countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
+    r.cross = if r.car && i != j { crossing_cost((&countries[p.country as usize], p.lon, p.lat), (&countries[q.country as usize], q.lon, q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
     (r.rt, r.rk) = (d.rt, d.rk);
     r.cu = 0.5 * (p.car_usd() + q.car_usd());
     r
@@ -1441,12 +1445,17 @@ struct Crossing {
 const CHANNEL: Crossing = Crossing { usd: 150., min: 60. };
 /// The Tsugaru Strait: the Seikan Tunnel carries no cars, the Aomori-Hakodate ferry (3 h 40) does.
 const TSUGARU: Crossing = Crossing { usd: 170., min: 240. };
-/// The car's cost for the crossings between two places (country, latitude) on one landmass; the
-/// fare is shared like the car's running cost.
-fn crossing_cost(a: (&str, f64), b: (&str, f64)) -> Cost {
-    let hokkaido = |p: (&str, f64)| p.0 == "JP" && p.1 > 41.4;
+/// Great Britain: the UK less Northern Ireland, which is on Ireland's landmass (T-2423).
+fn great_britain(country: &str, lon: f64, lat: f64) -> bool {
+    country == "GB" && !(lon < -5.4 && lat < 55.4)
+}
+/// The car's cost for the crossings between two places (country, longitude, latitude) on one
+/// landmass; the fare is shared like the car's running cost.
+fn crossing_cost(a: (&str, f64, f64), b: (&str, f64, f64)) -> Cost {
+    let hokkaido = |p: (&str, f64, f64)| p.0 == "JP" && p.2 > 41.4;
+    let gb = |p: (&str, f64, f64)| great_britain(p.0, p.1, p.2);
     let mut m = Cost::default();
-    for (on, c) in [((a.0 == "GB") != (b.0 == "GB"), &CHANNEL), (hokkaido(a) != hokkaido(b), &TSUGARU)] {
+    for (on, c) in [(gb(a) != gb(b), &CHANNEL), (hokkaido(a) != hokkaido(b), &TSUGARU)] {
         if on {
             m = m.plus(Cost { min: c.min, usd: c.usd / LONG_OCCUPANCY });
         }
@@ -1665,6 +1674,18 @@ impl Market {
         } else {
             ((a.x - b.x).hypot(a.y - b.y) / 1000.) as f64
         }
+    }
+    /// T-2424: zone pair (a, b)'s routed ratios (minutes, road km): its places' (`r`, their pair
+    /// rule), times a's own detour towards b's place and b's towards a's, so zones round a lake's
+    /// end or across its widest part drive their own road.
+    fn zone_ratios(&self, r: &PairRule, a: &Zone, b: &Zone) -> (f32, f32) {
+        if !r.car || a.place == b.place {
+            return (r.rt, r.rk);
+        }
+        let k = |z: &Zone| z.gid - self.places[z.place].off;
+        let (ta, ka) = self.drives.zone(a.place, k(a), b.place);
+        let (tb, kb) = self.drives.zone(b.place, k(b), a.place);
+        (r.rt * ta * tb, r.rk * ka * kb)
     }
     /// The ordered pair (i, j)'s rule: from the table when both places are open, else worked out
     /// (T-1204, T-1558).
@@ -3981,8 +4002,9 @@ impl IntercityApi {
                 let corridor = m.open_corridor(za.place, zb.place) as u32;
                 let (a, b) = (a as u32, b as u32);
                 let band = self.base.band_of_d2(d * d * 1e6) as u8;
-                pairs.push(Pair { a, b, trips, corridor, car: r.car_cost(d, zb.park), band });
-                pairs.push(Pair { a: b, b: a, trips, corridor, car: back.car_cost(d, za.park), band });
+                let zr = m.zone_ratios(&r, za, zb);
+                pairs.push(Pair { a, b, trips, corridor, car: r.zone_car(d, zb.park, zr), band });
+                pairs.push(Pair { a: b, b: a, trips, corridor, car: back.zone_car(d, za.park, zr), band });
             }
         }
         self.pairs = pairs;
@@ -4004,7 +4026,8 @@ impl IntercityApi {
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
             let r = m.pr(zh.place, zw.place);
-            let car = drive_min(km) * r.rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
+            let (rt, rk) = m.zone_ratios(&r, zh, zw);
+            let car = drive_min(km) * rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let corridor = m.open_corridor(zh.place, zw.place);
             let band = pc.band_of_d2(km * km * 1e6) as u8;
             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
@@ -4024,7 +4047,8 @@ impl IntercityApi {
             let (zh, za) = (&m.zones[h], &m.zones[a]);
             let km = m.zone_km(zh, za) as f32;
             let r = m.pr(zh.place, za.place);
-            let car = drive_min(km) * r.rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * r.rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
+            let (rt, rk) = m.zone_ratios(&r, zh, za);
+            let car = drive_min(km) * rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let w = ep.walk.min(0.999);
             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
         }

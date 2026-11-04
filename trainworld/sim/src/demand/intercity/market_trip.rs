@@ -261,7 +261,7 @@ impl IntercityApi {
                 let (from, to) = (&m.places[za.place], &m.places[zb.place]);
                 let split = r.split_car(from, to);
                 let d = m.zone_km(za, zb) as f32;
-                let car_cost = r.car_cost(d, zb.park);
+                let car_cost = r.zone_car(d, zb.park, m.zone_ratios(&r, za, zb));
                 // T-1431: each income group of the place the trip starts from, as the pass
                 // (T-1520: one logsum at the groups' mean)
                 let gs = from.groups();

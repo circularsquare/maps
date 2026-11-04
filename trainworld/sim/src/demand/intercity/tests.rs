@@ -951,12 +951,16 @@ fn corridor_modes_are_each_ways_pair_rule() {
 }
 #[test]
 fn the_car_pays_the_channel_and_the_tsugaru_ferry() {
-    let (lon, par, man) = (("GB", 51.5), ("FR", 48.9), ("GB", 53.5));
-    let (tyo, spk, hak) = (("JP", 35.7), ("JP", 43.1), ("JP", 41.8));
+    let (lon, par, man) = (("GB", -0.1, 51.5), ("FR", 2.3, 48.9), ("GB", -2.2, 53.5));
+    let (tyo, spk, hak) = (("JP", 139.7, 35.7), ("JP", 141.4, 43.1), ("JP", 140.7, 41.8));
     let crossing_min = |a, b| crossing_cost(a, b).at(FARE_MIN_PER_USD);
-    assert_eq!((crossing_min(lon, man), crossing_min(tyo, ("JP", 40.8)), crossing_min(spk, hak)), (0., 0., 0.));
+    assert_eq!((crossing_min(lon, man), crossing_min(tyo, ("JP", 140.7, 40.8)), crossing_min(spk, hak)), (0., 0., 0.));
     assert_eq!(crossing_min(lon, par), crossing_min(par, man));
     assert!(crossing_min(lon, par) > 200. && crossing_min(tyo, spk) > crossing_min(lon, par));
+    // T-2423: Northern Ireland is on Ireland's landmass, so Belfast - Dublin has no Channel
+    let (bel, dub) = (("GB", -5.93, 54.6), ("IE", -6.26, 53.35));
+    assert_eq!(crossing_min(bel, dub), 0.);
+    assert!(!great_britain("GB", -5.93, 54.6) && great_britain("GB", -4.25, 55.86) && great_britain("GB", -4.9, 54.9));
 }
 #[test]
 fn air_flies_far_pairs_by_place_and_rail_takes_its_share_by_the_curve() {
@@ -2561,7 +2565,7 @@ fn corridor_mode_two_ways(m: &Market, a: usize, b: usize) -> [f32; 2] {
             }
         }
         let d = if r.car { m.drives.get(i, j) } else { Drive::RULE };
-        r.cross = if r.car && i != j { crossing_cost((&m.countries[p.country as usize], p.lat), (&m.countries[q.country as usize], q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
+        r.cross = if r.car && i != j { crossing_cost((&m.countries[p.country as usize], p.lon, p.lat), (&m.countries[q.country as usize], q.lon, q.lat)).plus(d.ferry_cost()) } else { Cost::default() };
         (r.rt, r.rk) = (d.rt, d.rk);
         r.cu = 0.5 * (p.car_usd() + q.car_usd());
         let (split, w) = (r.split_car(p, q), p.w());
