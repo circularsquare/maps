@@ -755,6 +755,47 @@ fn flows_add_up() {
     assert!(api.flows(0, &sels[0], &[1.0]).is_empty());
 }
 
+/// T-1920: a home cell's far rail lands only on the work cells its own trips reach (the work cell's
+/// walk and the home's within `pair_walk_max`), all of a subzone's cells where none is, and every
+/// far subzone keeps its rail.
+#[test]
+fn far_rail_stays_within_reach() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    for q in 0..PERIODS {
+        api.solve(q);
+    }
+    let sz = api.sz.as_ref().unwrap();
+    // the home with rail and the longest walk, so some work cells are out of its reach
+    let rail = api.cell_modes(&api.sub_sums());
+    let o = (0..api.city.len()).filter(|&c| rail[c] > 0.0 && sz.walk_c[c].is_finite()).max_by(|&a, &b| sz.walk_c[a].total_cmp(&sz.walk_c[b])).unwrap();
+    let fr = api.flow_rail(0, &[o as u32]);
+    let f = api.flows(0, &[o as u32], &fr);
+    let (reach, win) = api.far_reach(true, &[o as u32]);
+    let k = f[6] as usize;
+    let ns = sz.n;
+    let (mut got, mut out) = (vec![0f64; ns], 0);
+    for i in 0..k {
+        let c = f[7 + i] as usize;
+        let v = sz.cell[c];
+        if v == u32::MAX {
+            continue;
+        }
+        let r = f[7 + k + i];
+        got[v as usize] += r as f64;
+        if win[v as usize] > 0.0 && !reach[c] {
+            assert_eq!(r, 0.0, "work cell {c} beyond reach got rail");
+            // the home's walk (a ride can only be cheaper) and the cell's are over the limit
+            assert!(sz.walk_c[o] + sz.walk_c[c] > api.base.pair_walk_max);
+            out += 1;
+        }
+    }
+    assert!(out > 0, "no work cell was out of reach");
+    // the far cells kept plus the cut hold the selection's rail, as each far subzone had it
+    let want: f64 = (0..ns).map(|v| fr[v] as f64 / 2.0).sum();
+    assert!((got.iter().sum::<f64>() + f[3] as f64 - want).abs() <= 1e-3 * want.max(1.0));
+}
+
 /// The real New York pack with T-005's hand-made network: prints the day's split and the
 /// per-period timings. `cargo test --release --features demand nyc_day -- --ignored --nocapture`
 #[test]

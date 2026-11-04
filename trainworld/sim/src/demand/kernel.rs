@@ -547,7 +547,10 @@ impl Params {
     /// Perceived minutes of that walk: the first `walk_easy_min` at `w_walk`, the rest at
     /// `w_walk_far`.
     pub fn access_cost(&self, d_m: f32) -> f32 {
-        let t = self.walk_min(d_m);
+        self.access_cost_min(self.walk_min(d_m))
+    }
+    /// `access_cost` of a walk of `t` real minutes.
+    pub fn access_cost_min(&self, t: f32) -> f32 {
         t.min(self.walk_easy_min) * self.w_walk + (t - self.walk_easy_min).max(0.0) * self.w_walk_far
     }
     /// Minutes a km at a place with `dens` homes and jobs per km² of land: on its local streets,
@@ -2388,6 +2391,9 @@ pub struct Subzones {
     /// CSR: the cells of each subzone (`mem[mem_off[u]..mem_off[u + 1]]`).
     pub mem_off: Vec<u32>,
     pub mem: Vec<u32>,
+    /// T-1920: each cell's cheapest walk to a station, perceived minutes as the trip explorer's
+    /// own cell has it (infinite with none; empty where not built).
+    pub walk_c: Vec<f32>,
     /// T-2214: each subzone's land part (every member's; `Params::parts`), empty with none; and
     /// each station's (`Access::st_part`).
     pub part: Vec<u16>,
@@ -2415,7 +2421,11 @@ impl Subzones {
     /// off where streets are slow).
     pub fn bound_min(&self, p: &Params, u: usize) -> f32 {
         let walk = self.walk(u).map(|k| self.acc_w[k]).fold(f32::INFINITY, f32::min);
-        self.ride(u).map(|k| p.ride_bound_cost(self.acc_w[k], self.acc_t[k])).fold(walk, f32::min)
+        walk.min(self.ride_min(p, u))
+    }
+    /// Its cheapest ride as `bound_min` prices it (infinite with none).
+    pub fn ride_min(&self, p: &Params, u: usize) -> f32 {
+        self.ride(u).map(|k| p.ride_bound_cost(self.acc_w[k], self.acc_t[k])).fold(f32::INFINITY, f32::min)
     }
     /// Subzone `u`'s part of the home -> work trips of the period (`share` of the day): its
     /// homes' share of their zones' gravity row factors. A ride-only subzone's homes keep their
@@ -2752,6 +2762,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         cell: vec![],
         mem_off: vec![],
         mem: vec![],
+        walk_c: (0..n).map(|c| acc.of(c).map(|i| p.access_cost_min(acc.walk[i])).fold(f32::INFINITY, f32::min)).collect(),
         part: if pp.is_some() { (0..ns).map(|s| cpart(mem[moff[s] as usize] as usize)).collect() } else { vec![] },
         st_part: acc.st_part.clone(),
     };

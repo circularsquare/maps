@@ -586,6 +586,7 @@ impl DemandApi {
             cell: vec![],
             mem_off: vec![0, 1, 2],
             mem: vec![o as u32, d as u32],
+            walk_c: vec![],
             part: if sz.part.is_empty() { vec![] } else { vec![sz.part[u], sz.part[v]] },
             st_part: vec![],
         };

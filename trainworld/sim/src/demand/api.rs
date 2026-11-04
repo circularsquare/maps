@@ -2026,8 +2026,9 @@ impl DemandApi {
         // rail by zone, is scaled to match
         let lost_w: f64 = (0..nz).filter(|&b| t_z[b] > 0.0).map(|b| r_z[b] * w_z[b] / t_z[b]).sum();
         let lf = if lost_w > 0.0 { lost / lost_w } else { 0.0 };
-        // per far cell: its zone's commuters by its people, rail from its subzone, the rest split
-        // as its zone's walk and drive
+        // per far cell: its zone's commuters by its people, rail from its subzone over its cells
+        // the selection reaches (T-1920), the rest split as its zone's walk and drive
+        let (reach, win) = self.far_reach(home, cells);
         let mut fc: Vec<(u32, f32, f32, f32)> = vec![];
         for c in 0..n {
             let j = self.z.cell_zone[c] as usize;
@@ -2035,8 +2036,14 @@ impl DemandApi {
                 continue;
             }
             let tot = (t_z[j] * fw[c] as f64 / fzone[j]) as f32;
-            let v = scell.get(c).copied().unwrap_or(u32::MAX);
-            let r = if v != u32::MAX && fwsub[v as usize] > 0.0 { sums[v as usize] / 2.0 * fw[c] / fwsub[v as usize] } else { 0.0 };
+            let v = scell.get(c).copied().unwrap_or(u32::MAX) as usize;
+            let r = if v != u32::MAX as usize && fwsub[v] > 0.0 {
+                let wv = win.get(v).copied().unwrap_or(0.0);
+                let share = if wv <= 0.0 { fw[c] / fwsub[v] } else if reach[c] { fw[c] / wv } else { 0.0 };
+                sums[v] / 2.0 * share
+            } else {
+                0.0
+            };
             let non_z = (t_z[j] - r_z[j]).max(1e-12);
             let walk_z = (w_z[j] - r_z[j] * w_z[j] / t_z[j] * lf).max(0.0);
             let share = (walk_z / non_z).min(1.0) as f32;
@@ -2097,6 +2104,52 @@ impl DemandApi {
         // T-2214: last, the selection's trips no way serves (not in its far cells yet, T-2256)
         out.push(unr_near as f32);
         out
+    }
+
+    /// T-1920: which cells at the far end of a selection (`cells`; `home`: its homes) its own trips
+    /// reach, as the trip explorer's cells have it: the far cell's cheapest walk (a home's ride
+    /// where the two zones are far enough apart for one) and the selection's cheapest end
+    /// together within `Params::pair_walk_max`. Then per subzone the far end's weight in reach.
+    fn far_reach(&self, home: bool, cells: &[u32]) -> (Vec<bool>, Vec<f32>) {
+        let Some(sz) = self.sz.as_ref().filter(|s| s.walk_c.len() == self.city.len()) else { return (vec![], vec![]) };
+        let p = &self.base;
+        let (w, fw) = if home { (&self.city.pop, &self.city.jobs) } else { (&self.city.jobs, &self.city.pop) };
+        // the selection's cheapest walk, and per zone its homes' cheapest ride
+        let mut walk = f32::INFINITY;
+        let mut zones: Vec<(usize, f32)> = vec![];
+        for &c in cells {
+            let c = c as usize;
+            if c >= w.len() || w[c] <= 0.0 || sz.cell[c] == u32::MAX {
+                continue;
+            }
+            let u = sz.cell[c] as usize;
+            walk = walk.min(sz.walk_c[c]);
+            let ride = if home { sz.ride_min(p, u) } else { f32::INFINITY };
+            match zones.iter_mut().find(|e| e.0 == sz.zone[u] as usize) {
+                Some(e) => e.1 = e.1.min(ride),
+                None => zones.push((sz.zone[u] as usize, ride)),
+            }
+        }
+        let mut reach = vec![false; fw.len()];
+        let mut win = vec![0f32; sz.n];
+        for c in 0..fw.len() {
+            let v = sz.cell[c];
+            if fw[c] <= 0.0 || v == u32::MAX {
+                continue;
+            }
+            let (v, j) = (v as usize, sz.zone[v as usize] as usize);
+            let (near, far) = if home {
+                (zones.iter().filter(|e| ride_offered(&self.z, p, e.0, j)).fold(walk, |m, e| m.min(e.1)), sz.walk_c[c])
+            } else {
+                let ride = if zones.iter().any(|e| ride_offered(&self.z, p, j, e.0)) { sz.ride_min(p, v) } else { f32::INFINITY };
+                (walk, sz.walk_c[c].min(ride))
+            };
+            if near + far <= p.pair_walk_max {
+                reach[c] = true;
+                win[v] += fw[c];
+            }
+        }
+        (reach, win)
     }
 
     /// The city's cells: x, y per cell (metres east and north of the pack origin, pack order).
