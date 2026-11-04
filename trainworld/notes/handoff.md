@@ -1,133 +1,99 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8509086d-46cd-4c5f-8d59-da9348f4a5e0, name maps-c9, since 2026-11-03 23:29
-Updated: 2026-11-03 23:29
+Updated: 2026-11-04 01:55
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **8dc8961f** (maps-1c, ~01:30: T-2214 + T-2215 islands demand and No route landed, tree t2214 removed;
-  before it af7a4271 T-2257 Rikers fix + ferry " bus" label fix). maps-1c finished winding down ~01:35. Today under maps-1c (oldest first): 6587f89d (T-2186 150% load, T-2180, T-2237, T-2226/27,
-  T-2192 ferry router, T-2222/23 band looks behind `perfTry`), 5cd94db2 T-2193 ferry sim, 455bef52 T-2231 passing
-  sim, a1d96f2f T-2205/06, 736d8e88 T-2194 Ferry tool, a2ffbef1 T-2217 buildings sim (save LEVEL 4), 26d78ae5 T-2162
-  diagram names, e715556b T-2232 passing panels, 5a7a76e5 T-2218 building tool + T-2233 passing stations drawn,
-  eb57aad3 T-2163/T-2235 diagram clicks, 27cad2f7 T-2236 crowding by load + T-2219 building drawing, 6329c909 T-2195
-  ferries in demand, 5249035a Anita's text answers, 04dd3ef5 **India T-2111** (782/782 rows), 65562660 T-2250 tests,
-  6a1b4f2a CLAUDE.md demand-tests rule, d3ad2f27 T-2196 ferry fans, 15034a96 T-2220 0.8 rule (fixed minutes only),
-  6cd0a31d T-2243/44 diagram folds and hooks, 9ebc8fed **T-2213 land parts in every pack**, 6499883c T-2238/T-2230
-  edit speed, then paperwork.
-- **8800 = build 867 (8dc8961f)**, built from data/packs directly, smoke 23/23 light and dark; real save 11,721,348
-  rail trips (islands: -84). LIVE = 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word.
-- Freeze: data/frozen/20261103-162459 (post-India). Build 8800 on it while an agent writes data/packs.
-- Uncommitted in the main tree: running agents' files; TODO.md (Anita's).
-- **Cores cap 10** (Anita at the machine, 23:29); `python cores.py cap 15` when she is away.
-- Disk: ~46 GB free. A watch (scratch lowdisk.ps1, re-armed ~20:00, 6 h) reports under 3 GB.
-- Worktrees: .tw-trees/t1734 (kept, T-1734) only.
+- master **bb48b358** (maps-c9 01:50: T-2263 tutorial with Anita's reworded strings, T-2266 fares lag, T-2290
+  Fleetwood side terms, T-2267/T-2270 design note). Before it 8dc8961f (maps-1c: T-2214 + T-2215 islands and No
+  route), af7a4271 (T-2257 Rikers, ferry " bus" fix). maps-1c has wound down; no Previous.
+- **8800 = build 868 (bb48b358)**, plain snapbuild from data/packs, smoke 23/23 light and dark; real save 11,721,348
+  rail trips. LIVE = 821 (R2 `trainworld/2026-11-03b`, website dc49c5f). Publish only on Anita's word (release
+  "later this week").
+- Freeze: data/frozen/20261103-162459 (post-India). Build 8800 on it (`snapbuild-frozen.cmd`) while packs are written.
+- **Cores cap 15** overnight (Anita asleep, "feel free to use all cores overnight"); `python cores.py cap 10` when
+  she is back at the machine.
+- Disk ~45 GB free. Worktrees: .tw-trees/t1734 (kept, T-1734) only.
+- Uncommitted: agents' files; TODO.md (Anita's).
 
-## In flight under maps-c9 (main tree; all told to leave t2214's files and t2257's pipeline files alone until t2214 lands)
-- **T-2263 tutorial DONE, uncommitted** (agent a12a2687d7e5186cc, retired): game/guide.ts, game/ui.ts, map/trackTagRows.ts,
-  game/today.ts, ui/ripple.ts, ui/Guide.tsx, new ui/guide.css, ui/DemandSelector.tsx, checks/t2123-tutorial.mjs,
-  docs/ui-panels.md, DECISIONS, ARCHIVE, TASKS (T-2280 filed). Smoke 23/23 and t2123 pass on 6170. Commit after
-  maps-1c finishes. After t2214 lands: docs/ui-demand-views.md 70-71 "every row shows folded" -> "the station
-  ridership and track colour rows show folded"; code-map.md 483 t2123's new order. Strings shown to Anita 23:5x.
-- **Cores cap 6 until ~00:50** (Anita: keep 4 cores free for an hour; machine was at 97% with her League client).
-  Then `python cores.py cap 10`.
-- **T-2267 + T-2270 design DONE, uncommitted** (agent a17a59b5769d7736e, retired): notes/T-2267.md,
-  research/tool-options-and-modes.md, stages T-2282..T-2285 filed (after her OK). Shown to Anita ~00:10 with
-  review/track-bar.png and mode-colours.png; waiting on her OK. Dark/station/phone mockups skipped for cores
-  (scratch t2267\mock.mjs makes them, ~5 min on 3 cores).
-- **T-2266 fares lag DONE, uncommitted, smoke NOT run** (agent aad069e13aaf224e6, retired): new game/fareInEffect.ts,
-  game/money.ts, game/regionMoney.ts, main.ts (wraps demandClient's private daysOf: stand-in until T-2286 [P3, after
-  t2214] stamps fares in daysOf), checks/t2266-fare-lag.mjs, SPEC fares line, DECISIONS, ARCHIVE. Real save: income
-  held at 148.7M/h through a 10x edit, 270.5M at the 5x final; a cluster final can still overshoot before the full
-  final (419M, as before). Run smoke before committing. code-map line to add after t2214 lands: "`t2266-fare-lag.mjs
-  [url] [save] [out.json]` (the real save: fares to 10x then 5x while solving; income held at the old fares until
-  riders solved with the new ones show, and ends at the new figure with every line priced at 5x; port 6172, 2 demand
-  workers, about 5 minutes; T-2266)". Proposed hover (asked Anita): "Riders pay the old fares until demand has settled".
-- a40a9cd5aa265e0ef **t2290** diagram: Fleetwood drawn east of Port Chester so line 8 loops round it (Opus; rescoped
-  after Anita's correction), app/src/diagram/*, Vite 6173, id T-2293.
-- Queued for after t2214 lands (they touch its files): T-2271 small UI batch, T-2278 parking by income, T-2265
-  walking rule, T-2276 buildings 1 min + waiting room, T-2279 crowding dot (show her first), T-2273/74/75 ferries and
-  stop list, T-2269 blueprint breakdown (her answer filed: switch stretches and whole connected parts off/on).
-  Diagram: T-2168 now "faint city outlines", T-2169 water "wider than a certain width", T-2289 condense lonely
-  intercity stretches, T-2290 Fleetwood on the wrong side (agent t2290, above), T-2291 line colours avoid near-duplicates (P3), T-2292
-  parallel-bundle idea (P3). T-2288 is maps-1c's (airport badge hover); T-2287 offered to it. Next free id T-2294.
+## Anita before bed (2026-11-04 ~01:20), in her words where it matters
+- "we can continue to run more countries overnight? perhaps turkey or russia / eastern europe?"; "we can addd more
+  countries though and replan old regions yes, as we prepare for a release later this week."; "feel free to use all
+  cores overnight. and keep going een if you run into 50% context as i won't be up to start the next orchestrator."
+- Closing done tasks: "i think theres quite a few candidates that we already did. im not sure why we're not closign
+  these tasks but please have someone check again" (agent audit).
+- Tutorial strings: her rewording applied in bb48b358 (green-bubble note dropped; "Red borders indicate track at full
+  capacity." is my correction of her "crowded segments": red borders mark track at capacity, ui-map.md). Notes show
+  only in the tutorial card (she asked; yes).
+- Design T-2267/T-2270 (T-2282..T-2285): not answered yet; don't build.
 
-## In flight under maps-1c, its to land (all Opus, its subagents)
-- **T-2214 islands demand: DONE in tree t2214, held unlanded.** Sado test ferry: 55 by ferry, 2,475 no way, none
-  car/walk; Athens/Kagawa/HK within 9%; solve +1.7%; both cargo runs and smoke 23/23 in tree. Held until T-2215 and
-  T-2257 are ready (else island trips vanish from mode bars, and Rikers' 6,379 NYC jobs get no car).
-- a6a17775cc9b4d02c **t2215** "No route" display, working IN TREE t2214 (Vite 6196). Land T-2214 + T-2215 together:
-  rebase t2214, both cargo runs, wasm, typecheck, smoke in tree, `land t2214`, remove the tree.
-- ad70096d7069a28aa **t2257** Rikers Island false split: main tree pipeline, writes data/packs (backup
-  data/work/pre-T2257/). Land its packs before t2214.
-- a93f41b475e25b962 **t2255** diagram on the game's own layouts (hairpins at 125 St, Woodhaven, hook at Grand
-  Central; checks on the game's graphs). Main tree, Vite 6194.
-
-- a7a0c49c5970ac78a **t2222b**: T-2223 bandFine as the look (her pick), T-2258 the rounded prong in the curve
-  picture, T-2222 the band snap on her export (artifacts/trainworld/anita-2026-11-03e/tokyo-day-414.save, default
-  zoom, Yamanote north of Shinjuku). Main tree renderer, Vite 6189.
-
-- 23:00: c7066737 T-2255 (engine-independent diagram maths, checks on the game's graphs; T-2259/60/61 filed); 8800
-  build at c7066737 on the freeze, **8800 = build 862**, smoke 23/23 light and dark. **T-2215 DONE in tree
-  t2214** (check t2215-no-route 22/22, smoke 23/23; strings to show Anita; its ARCHIVE/TASKS/DECISIONS lines are
-  already committed). Land t2214 after t2257 reports. After landing: fix "Cheung Chau ferry bus to" (RouteParts.tsx
-  ~62 adds " bus" to ferries) and file the airport badge hover leaving No route out.
-
-- ~23:40: de944172 T-2222/T-2258/T-2223 (8 m minimum stroke segment ends the snap and the prong; bandFine is the look). **8800 = build 863**, smoke 23/23 light and dark. T-2262 filed (float32 positions). Only t2257 still running; then land t2214.
+## In flight (maps-c9's subagents, launched ~01:45; brief conditions in scratch common-brief.md, ownership there)
+- abb1ccd32095e266b **countries** (Opus): Turkey T-2079 + build, then Russia (unheld) + Belarus, Ukraine if data;
+  territory default = recognised borders, Crimea/occupied unbuilt (ask Anita). Ids T-2294..99. Joins/pack writes
+  only after my "go" (one writer at a time with replan).
+- a24a3ce58427a5a79 **replan** (Opus): T-1189 (Taiwan, US+PR, Europe): prerequisites (T-1999, T-774 in
+  pipeline/world_plan.py: go given 01:55, countries told to keep off that file), dry runs and a look, then builds.
+  Ids T-2300..04. Pack writes only after my "go".
+- a332dce7f34335163 **audit** (Opus): closes done TASKS lines and rewrites for-anita.md's old section. Id T-2305.
+- aa63180067dce711c **demand** (Opus): T-2265 walk rule, T-2278 parking by income, T-2276 buildings 1 min +
+  waiting room. Port 6178. Ids T-2306..08.
+- a9dff6b277a205075 **display** (Opus): T-2271 map items (weekend dot rim, stop-editing dim, log bars, wider dot hover,
+  lower min bubble) + T-2279 crowding average behind a constant, default off, curve and examples in notes/T-2279.md
+  for Anita. Port 6174. Ids T-2309..11.
+- ad9dc5e7e818a8799 **panels** (Opus): T-2271 panel items (HCMC one line, 6:00, D hotkey, money plots 1d/30d/all and
+  local days, hammer icon, $10B, 5 cars) + T-2286 fares stamped in daysOf. Port 6175. Ids T-2312..14.
+- a6302f2fb8bb72c39 **buildtab** (Opus): T-2271 level hover (cost multiple, 1x yellow) + T-2269 blueprint breakdown
+  with stretches on/off. Port 6176. Ids T-2315..17.
+- aae6e3f95e13b0381 **ferries** (Opus): T-2273 tool polish, T-2274 per-stretch flows, T-2275 stop list click/drag.
+  Port 6177. Ids T-2318..20.
+- Next free id **T-2321**.
 
 ## Next
-1. When t2257 and t2215 report: commit t2257, land t2214, rebuild 8800 (plain snapbuild once nobody writes packs).
-2. T-2216 the market across parts (rebuild the 901 zone files then; Sunshine Coast lie, notes/T-2213.md), T-2256.
-3. Turkey (T-2079) when compute is spare (Anita away = cap 15).
-4. Diagram: T-2242 close pairs, T-2246 room for names, T-2247 names speed, T-2168 boxes, T-2169 water.
-5. Passing tracks: T-2245 local waits check, T-2248, T-2249, T-2239/40/41. Station buildings: the offered
-   rectangle misses same-named stations (notes/T-2208.md follow-up; no id yet). T-2251 uji. T-2209 canals.
-6. Follow-ups not filed yet: diagram picture tiling for all-Japan, demand loading card over the diagram, NYC's second
-   "Times Sq-42 St" complex (notes/T-2163.md); StrokeSender patch on moved runs (notes/T-2238.md); drop the unused
-   platform-wait numbers in Rust `crowding()` (T-2236); a trouble-list row past ~140% load.
+1. As code agents report: smoke on my Vite (6197), commit their files (explicit paths), rebuild 8800 (frozen while
+   packs are written), smoke light and dark. Strings to Anita in the morning.
+2. Grant pack-write "go"s one at a time (countries, replan); rebuild 8800 from packs after each ships.
+3. When agents finish: T-2216 market across parts, T-2256; diagram T-2289, T-2242, T-2246, T-2247, T-2168, T-2169,
+   T-2272; passing tracks T-2245, T-2248, T-2249, T-2239/40/41; T-2280, T-2291.
+4. Morning: the design OK (T-2282..85), T-2279 curve, territory question, all strings.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\8509086d-46cd-4c5f-8d59-da9348f4a5e0\scratchpad
-  (snapbuild.cmd, snapbuild-frozen.cmd, keep_hunks.py, mark_taking.py, lowdisk.ps1). A new orchestrator should copy
-  these to its own scratchpad and fix the path inside snapbuild-frozen.cmd.
+  (snapbuild.cmd, snapbuild-frozen.cmd, keep_hunks.py, mark_taking.py, lowdisk.ps1, common-brief.md). A new
+  orchestrator should copy these to its own scratchpad and fix the path inside snapbuild-frozen.cmd.
 - 8800: `cmd /c "<scratch>\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"` (or `snapbuild-frozen.cmd <hash>
-  20261103-162459` while packs are being written). The build runs tsc on the committed tree. Then smoke on
-  http://localhost:8800/trainworld/ light and SMOKE_SHADE=dark. Build number = `git rev-list --count <hash>`.
-- Pre-commit smoke: own Vite (`node trainworld/checks/dev-nowatch.mjs 6197`), warm one page load, then smoke; stop it
-  by its port's PID.
+  20261103-162459` while packs are being written). Then smoke on http://localhost:8800/trainworld/ light and
+  SMOKE_SHADE=dark (claim 4 cores). Build number = `git rev-list --count <hash>`.
+- Pre-commit smoke: own Vite (`node trainworld/checks/dev-nowatch.mjs 6197`, restart after app edits), smoke; stop it
+  by its port's PID (Get-NetTCPConnection -LocalPort 6197).
 - Landing a tree: `git -C <tree> add --all -- trainworld`, commit "agent-tree: work in progress", `rebase master`,
-  resolve, `rebase --continue`; run both cargo runs (`--features demand --lib` too), `npm run wasm`, typecheck and
-  smoke in the tree; then `agent-tree.mjs land <name> "<sentence>"` and `remove`. A main-tree uncommitted edit to a
-  file the branch touches refuses the fast-forward: commit it first, or set it aside (`git diff --output`, checkout,
-  land, `git apply --3way`, `git reset` the file).
+  resolve, `rebase --continue`; both cargo runs, `npm run wasm`, typecheck and smoke in the tree; then
+  `agent-tree.mjs land <name> "<sentence>"` and `remove`.
 - Mixed files: `python <scratch>\keep_hunks.py <maps root> <path> <marker>...` (-U0).
-- Publish: `freeze.py build <stamp>` with TW_MARKET_DRIVES set, `deploy.py --dist <dist> --version <v> --smoked`, website
-  `git add trainsworld/ trainworld/`, commit "anitabuilder", push (her word), `deploy.py --verify --page --version <v>`.
-  Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
+- Publish: `freeze.py build <stamp>` with TW_MARKET_DRIVES set, `deploy.py --dist <dist> --version <v> --smoked`,
+  website `git add trainsworld/ trainworld/`, commit "anitabuilder", push (her word), `deploy.py --verify --page
+  --version <v>`. Afterwards prune publish/ and data/frozen/ to the current build and the latest published ones.
 
 ## Open questions to Anita (asked, unanswered)
-- Friend playtest (notes/todo-2026-11-03h.md, filed T-2263..T-2272): asked about default train length 5 cars, moped parking in poorer countries, line crowding red as average vs peak, where the rail cost multiplier goes, and blueprint segments enable/disable.
-- Strings to acknowledge: Ferry tool (T-2194), station building tool (T-2218), crowding (T-2236), diagram (T-2163),
-  ferry demand rows (T-2195), building hover "Changing trains inside it feels a little quicker." (T-2220).
-- Answered 22:30: buildings fixed minutes only OK; gap look = fine; band snap at default zoom, Yamanote north of Shinjuku, export copied. Earlier: islands go, word "No route"; edit note and everywhere "trips/day"; rates "per"; period on the
-  passing hover; On board hover cut; temp files always delete; keep only current and latest published builds;
-  passing tracks go (400 m price, every station); crowding from 70%; capacity 150%; ferries go (ports only, "No water
-  path found"); named crossings and maglev yes; diagram for everyone.
+- T-2267/T-2270 design: build T-2282..T-2284? optional cross "Stop (Esc)", 3 px coloured bar edge, T-2285 Shift+1-7?
+  keep mode colours (11-15 dE from game colours)? (notes/for-anita.md "Open now").
+- Fares: optional hover "Riders pay the old fares until demand has settled"?
+- Strings maps-1c listed (Ferry tool T-2194, building tool T-2218, crowding T-2236, diagram T-2163, ferry demand rows
+  T-2195, building hover T-2220): not acknowledged as far as I know.
 
 ## Lessons from this run
 - Before starting an "Open" task, `git log --grep "T-<id>"`.
 - Her TODO.md can repeat an earlier batch word for word: diff against notes/todo-*.md before filing.
 - Commit as agents report when their files are separable; untangle shared docs with keep_hunks.py (-U0).
-- Two worktrees that both bump the save level collide; any new save block now goes after BLD1 at LEVEL 5.
-- Trees touching worker files (protocol.ts, clock.worker.ts) can't fast-forward while a main-tree agent edits them:
-  land trees right after a main-tree commit.
-- `cargo test` without `--features demand` skips the demand kernel's tests (two broke unseen, T-2250).
-- C: can fill suddenly (0.5 GB free at 13:00 with a join running): check `Get-PSDrive C` before long runs.
+- Any new save block goes after BLD1 at LEVEL 5.
+- `cargo test` without `--features demand` skips the demand kernel's tests (T-2250).
+- C: can fill suddenly: check `Get-PSDrive C` before long runs.
 - Agents near 450-550k tokens: retire after their report; give follow-ups to a fresh agent.
-- maps-b2's and maps-0f's subagents can't be messaged from here; go through their session.
-- Her Tokyo save file: C:\Users\anita\Documents\trainworld\Tokyo Seoul Fukuoka Busan (from anita.garden).save (read
-  only, older than her live game).
+- An agent finished but "waiting on its own background work" re-sends its report each time that work ends: ignore
+  the repeats.
+- When Anita asks for cores free, check the real load (Get-Counter), not only the ledger: her games and our
+  unclaimed headless pages don't show in cores.json.
 
 ## Anita's standing asks
 - Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
@@ -136,5 +102,3 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Every demand task has a "done when". Buses settled. Thanks to agents in my own reply. Keep the work moving.
 - Disk: delete orphaned temp files always; keep only the current build and the latest published ones in
   artifacts/trainworld/publish/ and data/frozen/; delete superseded backups once a later state checks clean.
-
-Next free task id: T-2273 (unused but handed out: T-2173/74, T-2187..2191, T-2197, T-2224/25, T-2252..54; check before use).

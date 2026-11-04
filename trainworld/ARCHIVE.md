@@ -2,6 +2,20 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2146 Network diagram design, round 2, closed 2026-11-04 by the audit: done in 57e1e7cc (2026-11-03), Anita: "lets build this"; stages 1-5 landed as T-2159 to T-2163 (00e3d300 to eb57aad3, 2026-11-03); stages 6-7 stay open as T-2168, T-2169.
+- T-2177 Ferries, closed 2026-11-04 by the audit: designed (notes/T-2177.md) and built as F1-F5, T-2192 to T-2196 (6587f89d, 5cd94db2, 736d8e88, 6329c909, d3ad2f27, 2026-11-03); follow-ups T-2209, T-2178, T-2273 to T-2275.
+- T-2207 Islands with no car access, closed 2026-11-04 by the audit: designed and built as I1-I3, T-2213 (9ebc8fed, 2026-11-03), T-2214 and T-2215 (8dc8961f, 2026-11-04); T-2216 and T-2256 stay open. notes/T-2207.md.
+- T-2208 Station buildings, closed 2026-11-04 by the audit: built as stages 1-4, T-2217 (a2ffbef1), T-2218 (5a7a76e5), T-2219 (27cad2f7), T-2220 (15034a96), all 2026-11-03; Anita's later change is T-2276. notes/T-2208.md.
+- T-2228 Passing tracks, closed 2026-11-04 by the audit: built as T-2231 (455bef52), T-2232 (e715556b), T-2233 (5a7a76e5), 2026-11-03; T-2234 and the follow-ups T-2239 to T-2249 stay open. notes/T-2228.md.
+- T-1650 Cut a big network into parts for demand, closed 2026-11-04 by the audit: done as stages T-1733 (ff76b15e, 2026-10-28) and T-1735 (afb89cbc, 2026-10-29); stage 2, T-1734, stays open on its own line. notes/T-1650.md.
+- T-1169 Demand over many zones, memory per worker, closed 2026-11-04 by the audit: its done-when met by T-1611 (bc3dc742, 2026-10-28: all-China peaks 2.99 GB a worker) and T-1545 (Japan 1.33 GB); stage 5 stays as T-1560. notes/T-1169.md.
+- T-1504 China's longer trips barely ride rail, closed 2026-11-04 by the audit: diagnosis done in 1664f6e7 (2026-10-26); its follow-ups T-1506, T-1507, T-1508 closed 2026-10-26 to 10-27; the deferred refit stays as T-1599. notes/T-1504.md.
+- T-1306 Altay's origin in the desert, closed 2026-11-04 by the audit: done in T-1765's run, b50802f3 (2026-10-29): aty rebuilt with its origin in Altay and joined, its browser relaxation dropped. notes/T-1738.md 10.
+- T-1310 tier0's cell cache reused after an outline change, closed 2026-11-04 by the audit: done in 112c6eba (2026-10-28, T-1743): `clear_row_caches` deletes `<id>.tier0_signals.npz` before a planned row builds.
+- T-1396 A car between landmasses by ferry, abandoned 2026-11-04 by the audit: superseded by T-2216 (rail is the only ground mode between parts; Anita 2026-11-03: car ferries ignored); its Canada drives rerun was done in T-1738's Philippines run (2026-11-03, 0 zones without drives).
+- T-1845 A gate check waiting 90 min for a line's removal, closed 2026-11-04 by the audit: done in d550ab27 (2026-11-03, T-2040): the same hang (a renderer dead after the removal, a wait outliving its timeout) now costs 5 minutes and a fresh page. notes/T-2040.md.
+- T-1227 The join runs `seams.py` first, abandoned 2026-11-04 by the audit: folded into T-2112, which asks the same of the join plus the reruns for countries built since.
+
 - T-2290 A station on the wrong side of its neighbours: Fleetwood and line 8 (2026-11-04, agent t2290): near stations sharing no edge keep their real side in A and B (wrong-side pairs drawn 42-71 a city -> 10-18); line 8 game reproduction in t2160; last-bit round pills painted. notes/T-2290.md; follow-up T-2293.
 
 - T-2266 Fare changes take effect when demand settles (2026-11-03, agent t2266): a line's riders pay the fares they were solved with, so a 10x rise no longer pays 10x on the old riders (checks/t2266-fare-lag.mjs: 148.7M/game hour held until riders at the new fares show, 270.5M at the final; the old rule would show 1,487M). Follow-up T-2286.

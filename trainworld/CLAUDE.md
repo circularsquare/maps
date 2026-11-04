@@ -51,7 +51,10 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   ~3 lines of context goes in `notes/T-###.md`.
 - **A task is done when** the work runs, the spec matches it, any decision is in DECISIONS.md, and
   its line has moved from TASKS.md to the top of ARCHIVE.md. Abandoned tasks move the same way,
-  saying why. New work found on the way goes in TASKS.md; do not silently widen the task.
+  saying why. When archiving, grep TASKS.md and notes/for-anita.md for the id and update every line
+  naming it; if it was a parent's last open stage, archive the parent in the same edit; and name in
+  your report any older open task your work also did (an audit on 2026-11-04 closed 13 lines left open
+  these ways). New work found on the way goes in TASKS.md; do not silently widen the task.
 - **Each milestone ends with a doc tidy task**: spec against code, prune TASKS.md, fold finished
   notes into the spec or archive, flag anything stale.
 - **Shared files.** Several agents work here at once: re-read a doc right before editing it, make
