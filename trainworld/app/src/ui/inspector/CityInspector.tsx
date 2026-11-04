@@ -18,6 +18,7 @@ import type { City } from "../../game/cities";
 import { builtCities } from "../../game/worldTotals";
 import { GoalTicks } from "../GoalTicks";
 import { CityFigures, CityNetwork } from "./CityDetails";
+import { HomeButton } from "./HomeButton";
 
 /** `note`: a second line for the part's hover */
 type Part = { name: string; n: number; cls: string; note?: string };
@@ -80,6 +81,7 @@ export function CityInspector({ id }: { id: string }) {
       <div class="title">
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
+        <HomeButton place={city.id} />
         <button class="btn icon" data-tip={`Go to ${city.name}`} aria-label={`Go to ${city.name}`} onClick={() => goTo({ kind: "city", name: city.name, city })}>
           <Icon.locate />
         </button>

@@ -97,6 +97,9 @@ export const Icon = {
   alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v4" /><circle class="solid" cx="8" cy="11.1" r="0.5" /></svg>,
   // the Cities tab, a skyline
   cities: () => <svg viewBox="0 0 16 16"><path d="M1.5 14h13M3 14V7h3.5v7M6.5 14V2.5h3.5V14M10 14V8h3v6" /></svg>,
+  // T-2395: the game's home, filled where it is this place
+  home: () => <svg viewBox="0 0 16 16"><path d="M2 7.5L8 2l6 5.5M3.8 6v7.8h3V9.8h2.4v4h3V6" /></svg>,
+  homeOn: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 2L2 7.5h1.8v6.3h3V9.8h2.4v4h3V7.5H14z" /></svg>,
   // a city's star in the Cities list
   star: () => <svg viewBox="0 0 16 16"><path class="solid" d="M8 1.5l1.9 4.1 4.5.5-3.4 3 1 4.4L8 11.3l-4 2.2 1-4.4-3.4-3 4.5-.5z" /></svg>,
   // the account (head and shoulders) and the leaderboards

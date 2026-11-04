@@ -1,4 +1,4 @@
-// The Cities tab (T-550, its own tab since T-749): a World row, then one row for every region (a city pack or a zone, the
+// The Cities tab (T-550, its own tab since T-749): an All cities row, then one row for every region (a city pack or a zone, the
 // regions of the Lines tab's place toggle) where the player has a station, with its mode split bar
 // as the top bar draws it, its train rides a day, its profit a day (fares less running trains and upkeep), its
 // points over the past 24 game hours (T-684, T-694) and its star once earned (T-685). A click opens
@@ -20,6 +20,7 @@ import { builtCities, sumModes } from "../game/worldTotals";
 import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
+import { locateAllCities } from "./locate";
 import { Icon, SortHead } from "./widgets";
 
 /** Move the camera to a region's registry centre and zoom, at once; what search does for a city. */
@@ -92,34 +93,59 @@ interface CityRow {
   money: { d: DayLedger; yesterday: boolean } | null;
 }
 
-/** T-857: the first row, the sums over every row below: rides, profit and points, and the mode split
- * of all their trips. Not a region, so a click does nothing. */
-function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
-  const stations = rows.reduce((n, r) => n + r.stations, 0);
-  const sum0 = sumModes(rows.map((r) => r.view));
-  const split = sum0?.split ?? null, seen = !!sum0, rides = sum0?.rides.train ?? 0;
-  const s = split ?? { train: 0, walk: 0, drive: 0 };
-  const where = ` in the world${day}`;
+/** The name of the sums over every region with a built station (T-2389: Anita, they are only the player's cities). */
+export const ALL_CITIES = "All cities";
+
+/** T-857, T-2395: the sums over every region with a built station (the Cities tab's first row and the
+ * all cities view): their stations, the mode split of all their trips, profit (`money` null before
+ * any region has a figure) and points. */
+export function allCitiesTotals() {
+  const built = builtCities(), views = cityDemandViews.value, m = moneyState.value;
+  let stations = 0;
+  for (const n of built.values()) stations += n;
+  const modes = sumModes([...built.keys()].map((id) => views.get(id)));
   const sum: DayLedger = { day: 0, fares: 0, running: 0, trains: 0, build: 0 };
   let yesterday = true, counted = 0;
-  for (const r of rows) {
-    if (!r.money) continue;
-    const d = r.money.d;
+  for (const id of built.keys()) {
+    const f = m ? figures(id, m) : null;
+    if (!f) continue;
+    const d = f.d;
     sum.fares += d.fares; sum.running += d.running; sum.upkeep = (sum.upkeep ?? 0) + (d.upkeep ?? 0); sum.trains += d.trains; sum.build += d.build;
-    yesterday &&= r.money.yesterday;
+    yesterday &&= f.yesterday;
     counted++;
   }
   const past = pointsPast24h.value, rate = pointsPerDay.value;
-  const pastAll = rows.reduce((n, r) => n + (past.get(r.id) ?? 0), 0);
-  const rateAll = rows.reduce((n, r) => n + (rate.get(r.id)?.[shownDay.value] ?? 0), 0);
-  const pointsTip = [
-    `${exact(pastAll)} points in the world in past 24h`,
-    `${exact(rateAll)} points ${shownDayOn.value} with the riders now`,
-  ].join("\n");
+  let pointsPast = 0, pointsRate = 0;
+  for (const id of built.keys()) {
+    pointsPast += past.get(id) ?? 0;
+    pointsRate += rate.get(id)?.[shownDay.value] ?? 0;
+  }
+  const where = ` in all cities${shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value}`;
+  return {
+    cities: built.size, stations, modes, where,
+    money: counted ? { d: sum, yesterday } : null,
+    pointsPast,
+    pointsTip: [`${exact(pointsPast)} points in all cities in past 24h`, `${exact(pointsRate)} points ${shownDayOn.value} with the riders now`].join("\n"),
+  };
+}
+
+/** The hover of the all cities name: how many cities and stations it sums. */
+function allCitiesTip(t: { cities: number; stations: number }): string {
+  return `${ALL_CITIES}\n${t.cities} ${t.cities === 1 ? "city" : "cities"}, ${t.stations} ${t.stations === 1 ? "station" : "stations"}`;
+}
+
+/** T-857: the first row, the sums over every row below: rides, profit and points, and the mode split
+ * of all their trips. A click opens the all cities view (T-2395), a double click zooms out to them. */
+function TotalRow({ on }: { on: boolean }) {
+  const t = allCitiesTotals();
+  const split = t.modes?.split ?? null, seen = !!t.modes, rides = t.modes?.rides.train ?? 0;
+  const s = split ?? { train: 0, walk: 0, drive: 0 };
+  const f = t.money;
   return (
-    <li class="total">
-      <span class="grow" data-tip={`World\n${rows.length} ${rows.length === 1 ? "city" : "cities"}, ${stations} ${stations === 1 ? "station" : "stations"}`}>World</span>
-      <span class="city-bar" data-tip={splitTip(where, split, sum0?.rides ?? null, "")}>
+    <li class={"total" + (on ? " on" : "")} onClick={() => (selection.value = { kind: "world" })}
+      onDblClick={() => { locateAllCities(); selection.value = { kind: "world" }; }}>
+      <span class="grow" data-tip={allCitiesTip(t)}>{ALL_CITIES}</span>
+      <span class="city-bar" data-tip={splitTip(t.where, split, t.modes?.rides ?? null, "")}>
         <span class="bar">
           <i class="seg seg-train" style={{ width: s.train + "%" }} />
           <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
@@ -127,9 +153,9 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
           <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
         </span>
       </span>
-      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train trips per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
-      <span class={"val w-money c-cities c-money" + (counted && net(sum) * 1e6 <= -500 ? " neg" : "")} data-tip={counted ? moneyTip("the world", { d: sum, yesterday }) : undefined}>{counted ? money(net(sum) * 1e6) : "–"}</span>
-      <span class="val w-points c-cities" data-tip={pointsTip}>{pointsShort(pastAll)}</span>
+      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train trips per day${t.where}` : undefined}>{seen ? count(rides) : "–"}</span>
+      <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip("all cities", f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
+      <span class="val w-points c-cities" data-tip={t.pointsTip}>{pointsShort(t.pointsPast)}</span>
     </li>
   );
 }
@@ -161,7 +187,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   const here = viewedZone.value;
   // T-1438: a click opens the city view (as a station row opens the station's), and the selected
   // city's row is the one tinted; with none selected, the viewed region's
-  const sel = selection.value, picked = sel?.kind === "city" ? sel.city : null;
+  const sel = selection.value, all = sel?.kind === "world", picked = sel?.kind === "city" ? sel.city : all ? "" : null;
   // T-693: a container, so a narrow dock hides the star and then the money before the names go
   return (
     <div class="cities-box">
@@ -173,7 +199,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         { key: "points", label: "Points", tip: "Sort by points in past 24h", first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">
-        <TotalRow rows={rows} day={day} />
+        <TotalRow on={all} />
         {rows.map((r) => {
           const v = r.view, where = ` in ${r.name}${day}`;
           const rides = v ? ridesOf(v) : null;

@@ -311,8 +311,7 @@ body.resizing, body.resizing * { user-select: none; }
 @container cities (max-width: 167px) { .cities-box .w-citybar, .cities-box .city-bar { display: none; } }
 .rows.cities .bar { height: 10px; }
 /* the World row and its divider evenly spaced: as far from the head's rule, the divider and the first city */
-.rows.pick.cities > li.total { cursor: default; margin: 6px -6px 2px; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
-.rows.pick.cities > li.total:hover { background: none; }
+.rows.pick.cities > li.total { margin: 6px -6px 2px; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
 .rows.cities .val.neg, .money-neg { color: var(--bad); }
 .group.scope .btn { display: inline-flex; align-items: center; gap: 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .group.scope .btn svg { width: 14px; height: 14px; flex: none; }

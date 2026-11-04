@@ -148,7 +148,7 @@ wide so a longer date moves nothing [T-1868].
   table, measured on each save in a new game with every zone open (notes/T-2145.md).
   **Zoomed out below zoom 7** (a country or a few regions on screen) [T-1865] the bar names "World" instead [T-1110]:
   the train rides summed over every city with a built station and a demand view, as the Cities
-  tab's World row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
+  tab's All cities row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
   whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
   (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion trips a day in
   the world (8.2 billion people at about 3 trips each, `WORLD_RIDES`), so it is usually well under
@@ -692,8 +692,9 @@ each country charges the round start curve it would have had as a new game's [T-
 ## Cities tab
 
 [T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
-row "World" that sums them, a faint divider after it [T-857, T-1110, T-1865] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
-row's, in the world; the top bar names the same sum when the map is zoomed far out, `game/worldTotals.ts`; it is not clickable or sorted): its name
+row "All cities" that sums them [T-2389], a faint divider after it [T-857, T-1110, T-1865] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
+row's, "in all cities"; the top bar names the same sum "World" when the map is zoomed far out, `game/worldTotals.ts`; it is not sorted; a click opens the
+all cities view ([ui-inspectors.md](ui-inspectors.md#the-all-cities-view)) and tints the row, a double click also zooms out to every built station as that view's go-to does [T-2395]). Each row: its name
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
@@ -726,10 +727,10 @@ keeps what it had and earns no more.
 - **Running** means a rail line with status running and trains set at some level; buses, blueprints and
   lines with no trains never count. **Demand figures** come from final results on the average day only,
   so the Day choice changes nothing, and a city's share from no rough zone's (as its goals); Trips per
-  day counts coarse zones too, as the World row does. Network figures are checked as the
+  day counts coarse zones too, as the All cities row does. Network figures are checked as the
   world changes, demand ones on each final, the best line's profit as each game hour turns.
 - **Tiered** (each tier a step): **Cities served** 2, 10, 25, 100 (regions, the Cities tab's rows, with a
-  built station where a running line stops); **Trips per day** 1M, 10M, 100M, 300M, 1B (the World row's
+  built station where a running line stops); **Trips per day** 1M, 10M, 100M, 300M, 1B (the All cities row's
   train trips a day); **Busiest station** 500k, 1M, 2M, 5M boardings a day at one station complex;
   **Busiest line** 500k, 1M, 3M, 10M riders a day on one line. A jump over several tiers records each
   and toasts the highest.
@@ -958,7 +959,7 @@ registry centre and zoom, or over New York with none [T-310].
   cleared." with Keep them here only and Add them ("Keep it here only", "Add it" for one). Added
   games go up at once; kept ones are never asked about again and carry the crossed cloud.
 - **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
-  game hours, the World row's figure) and its best 64 cities' points, when they change and at
+  game hours, the All cities row's figure) and its best 64 cities' points, when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
   in localStorage (`trainworld.score-games.v1`), or the id of its game on the account when it has
@@ -1018,7 +1019,11 @@ registry centre and zoom, or over New York with none [T-310].
   new slot named after the file and opens with its stations in view, as Open a file does in the saves
   panel; one that is not a save, or too big for the device (T-1197), says why over the cards and nothing
   opens.
-- A saved game opens on the city view (its registry centre and zoom, as picking it in the Cities
+- A saved game with a home (set by the home button of a city view or the all cities view,
+  [ui-inspectors.md](ui-inspectors.md#the-city-view); kept in the save, T-2395) opens there: a zone's registry
+  centre and zoom, or for all cities every built station (all stations if none is built; the world map with
+  none) fitted in view, padding 70 px, no closer than zoom 6.75, just under where the top bar turns to a city.
+  A saved game with no home (older saves too) opens on the city view (its registry centre and zoom, as picking it in the Cities
   tab) of the zone with the most built stations (of all stations if none is built; the stations'
   zones by `placeAt`), as soon as the clock worker has read them from the save (`stationsAhead`,
   T-1539), and again at its first state (the same view), before its demand [T-1872]; stations in no

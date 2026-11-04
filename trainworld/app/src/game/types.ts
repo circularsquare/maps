@@ -287,6 +287,8 @@ export type Selection =
   | { kind: "commuters"; end: BubbleEnd; cells: number[]; areas: number }
   /** a city's longer-trips bubble picked zoomed far out (T-186): the registry's city id */
   | { kind: "city"; city: string }
+  /** T-2395: the all cities view, the Cities tab's first row */
+  | { kind: "world" }
   /** T-2124: the achievements, opened from the Cities tab */
   | { kind: "achievements" }
   /** the trip explorer (T-195): where a trip starts and ends, world metres; `to` null until the

@@ -160,6 +160,8 @@ export type ToClock =
       guide?: boolean }
   /** T-1822: the Getting started card's progress, to keep in the save */
   | { kind: "guide"; guide: GuideSave }
+  /** T-2395: the game's home, a zone id or `WORLD_HOME`; null for none */
+  | { kind: "home"; home: string | null }
   /** T-1029: the client could not take a state as changes to the last: post the next whole */
   | { kind: "wholeState" }
   /** T-2159: the network diagram is shown (its graph follows every network state) or hidden */
@@ -658,7 +660,8 @@ export type FromClock =
   | { kind: "left"; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
   /** `fine` (T-1223), `built` (T-2153): the save's `demandFine` and `demandBuilt`, null where it has none */
-  | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null; built: string[][] | null }
+  /** `home` (T-2395): the save's home, where the camera goes in place of the stations' fit */
+  | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null; built: string[][] | null; home?: string }
   /** T-1539: the save being loaded: the key of its network's inputs (demandCache.ts `saveNetKey`) */
   | { kind: "netAhead"; key: string }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
@@ -670,6 +673,8 @@ export type FromClock =
   | { kind: "opened"; zones: string[] | null; start?: string }
   /** T-1813: the loaded game's hand order of lines and of stations, sent with "opened" */
   | { kind: "listOrder"; lines: number[]; stations: number[] }
+  /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
+  | { kind: "home"; home: string | null }
   /** the save file, for the player to keep */
   | { kind: "exported"; bytes: Uint8Array; day: number }
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the

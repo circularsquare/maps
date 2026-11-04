@@ -17,7 +17,12 @@ view's own rows below.
 
 [T-1438; `ui/inspector/CityInspector.tsx` with `CityDetails.tsx`] A city or zone picked by its
 inter-city bubble zoomed out, or by a click on its row in the Cities tab (a double click there moves
-the camera, as in the Stations tab). The go-to icon sits on the title's line, at its right; under it, rows: **Train share** (the
+the camera, as in the Stations tab). The home and go-to icons sit on the title's line, at its right. The home
+icon (a house, `HomeButton.tsx`, T-2395) makes the zone the game's home, where the camera starts whenever the
+game is opened ([ui-panels.md](ui-panels.md#start-menu)); it is filled while the zone is home, and a click on
+it then clears the home. Hover "Set as home" with "Start here whenever you open this game" under it, or when home
+"Home" with "You start here whenever you open this game". One home per game, kept in the save (`home`). Under the
+title, rows: **Train share** (the
 zone's, as the top bar gives it; hover the split with counts), and for a zone with a built station
 **Stations** (built ones, the Cities tab's count), **Lines** (lines with a stop in the zone) and
 **Train trips** ("12.3M/day", the Cities tab's Trips figure for the day shown, hover the whole figure
@@ -32,6 +37,18 @@ inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on
 (bullet, name, count with hover; the header's right says "boardings today"); **Top stations**, the five complexes (or lone stations) in the
 zone with most boardings today, named after the member with most lines. A click on a
 line or station row opens its view.
+
+## The all cities view
+
+[T-2395; `ui/inspector/AllCitiesView.tsx`] Opened by a click on the Cities tab's first row, All cities: that
+row's sums (`allCitiesTotals` in `ui/Cities.tsx`) laid out as the city view's rows, totals only. The title "All
+cities", then the home icon and the go-to icon (hover "Go to all cities": every built station in view, all
+stations if none is built, as a home of all cities opens). Home here means the game opens zoomed out on all
+cities; its hover "Set as home" with "Start zoomed out on all cities whenever you open this game" under it, or
+"Home" with "You start zoomed out on all cities whenever you open this game". Rows: **Train share** (of the
+cities' trips, the row's bar; hover its split "in all cities"), **Cities**, **Stations**, **Lines** (lines with
+a stop at a built station in one of the cities), **Train trips** ("12.3M/day"), **Points** and **Profit** (the
+row's figures and hovers, losses red).
 
 ## The past 24 hours, shown as today
 

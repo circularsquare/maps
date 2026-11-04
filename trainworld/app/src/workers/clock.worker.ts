@@ -211,6 +211,8 @@ let newLineCars = NEW_LINE_CARS;
  * says a new normal game starts with it. */
 let guide: GuideSave | undefined;
 let guideWanted = false;
+/** T-2395: where the game opens (`SaveHeader.home`); undefined: none */
+let home: string | undefined;
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -1952,7 +1954,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2296,7 +2298,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isNortheastSave(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -2312,7 +2314,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const st = TrackApi.save_stations(net);
   demandFine = h.demandFine;
   demandBuilt = h.demandBuilt;
-  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null, built: demandBuilt ?? null });
+  if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null, built: demandBuilt ?? null, home: h.home });
   // T-1539: the demand result kept for this save's network can show while the network is worked out
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
@@ -2332,6 +2334,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   newLineCars = h.newCars ?? NEW_LINE_CARS;
   guide = h.mode === "sandbox" ? undefined : h.guide;
+  home = h.home;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   loan = mode === "sandbox" ? null : loanFromSave(h);
@@ -2358,6 +2361,9 @@ function newGameHeader(spec?: NewGameSpec): Pick<SaveHeader, "mode" | "start" | 
 function sendOpened() {
   send({ kind: "opened", zones: opened ? [...opened] : null, start: startZone });
 }
+function sendHome() {
+  send({ kind: "home", home: home ?? null });
+}
 function setNewGame(spec?: NewGameSpec) {
   const g = newGameHeader(spec);
   setMode(g.mode!);
@@ -2366,6 +2372,7 @@ function setNewGame(spec?: NewGameSpec) {
   demandFine = undefined;
   demandBuilt = undefined;
   guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0, ...(g.start ? {} : { zoom: true as const }) } : undefined;
+  home = undefined;
   fares = startFares(spec);
 }
 
@@ -2425,6 +2432,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   syncFrame();
   keep();
   sendOpened();
+  sendHome();
   send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
   convertedOnLoad = false;
@@ -3522,6 +3530,7 @@ async function processMessage(msg: ToClock) {
       }
       keep();
       sendOpened();
+      sendHome();
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })().catch((err) => send({ kind: "failed", error: String(err) }));
@@ -3789,6 +3798,9 @@ async function handle(msg: ToClock) {
       dirty = true;
       sendMoney();
     }
+  } else if (msg.kind === "home") {
+    home = msg.home ?? undefined;
+    dirty = true;
   } else if (msg.kind === "lineNotes") {
     let added = false;
     for (const [id, v] of Object.entries(msg.notes)) if (!lineNotes.has(id)) { lineNotes.set(id, v); added = true; }

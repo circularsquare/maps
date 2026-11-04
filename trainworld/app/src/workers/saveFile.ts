@@ -127,7 +127,12 @@ export interface SaveHeader {
   /** T-2124: the achievement steps earned, by key (game/achievements.ts); absent in older saves,
    * which work theirs out quietly on load */
   achievements?: Record<string, Achieved>;
+  /** T-2395: where the game opens, a zone id or `WORLD_HOME`; absent: as `startOpenFit` picks */
+  home?: string;
 }
+
+/** T-2395: `SaveHeader.home` for all the player's cities (the built area, zoomed out) */
+export const WORLD_HOME = "world";
 
 /** T-2124: when a step was earned (game seconds) and what earned it, for the hovers: `of` the name of
  * the line, station or city, `v` the figure, `in` the countries or continents. Names are kept as they
@@ -143,7 +148,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
-  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true,
+  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true,
 };
 
 /** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher
@@ -185,7 +190,7 @@ export function zoneNow(id: string, have: (id: string) => boolean = (z) => REGIS
   return id;
 }
 
-/** T-1053: the header with every zone id it keeps (the cities, start and opened zones, the region
+/** T-1053: the header with every zone id it keeps (the cities, start, home and opened zones, the region
  * ledgers, stars and line notes) as the registry has it now: a removed zone's ledgers add into its
  * successor's (or "", outside every zone, where it has none), its star keeps the earlier time, and
  * an id with no successor is dropped. Track, stations and lines are positions and need nothing. */
@@ -197,6 +202,7 @@ export function currentZones(h: SaveHeader, now: (id: string) => string | null =
   if (h.demandFine) out.demandFine = list(h.demandFine);
   if (h.demandBuilt) out.demandBuilt = h.demandBuilt.map(list).filter((b) => b.length);
   if (h.start !== undefined) out.start = now(h.start) ?? undefined;
+  if (h.home !== undefined && h.home !== WORLD_HOME) out.home = now(h.home) ?? undefined;
   if (h.regions) {
     const regions: NonNullable<SaveHeader["regions"]> = {};
     for (const [k, r] of Object.entries(h.regions)) {

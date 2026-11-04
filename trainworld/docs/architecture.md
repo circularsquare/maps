@@ -373,7 +373,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the
   header's `stars` keeps each region's star, the game second it was earned; `achievements` each
   achievement step earned, by key, with its game second and what earned it (T-2124,
-  [ui-panels.md](ui-panels.md) "Achievements"). A field a save lacks
+  [ui-panels.md](ui-panels.md) "Achievements"); `home` where the game opens, a zone id or `world` for all
+  cities (T-2395, absent for none, which opens as before; a removed zone's home follows its successor). A field a save lacks
   reads as empty: no `rides` or `points` as 0, no `hours`, `regions` or `stars` as none, no
   `fleetFast` as no high-speed cars; no `achievements` as not yet worked out, which the page does
   quietly once the loaded game's first final result is in. A header `points` block (per region totals, written by builds

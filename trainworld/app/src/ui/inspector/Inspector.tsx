@@ -2,6 +2,7 @@
 
 import { selection } from "../../game/ui";
 import { AchievementsView } from "./AchievementsView";
+import { AllCitiesView } from "./AllCitiesView";
 import { CityInspector } from "./CityInspector";
 import { CommutersInspector } from "./CommutersInspector";
 import { LineInspector } from "./LineInspector";
@@ -24,6 +25,7 @@ export function Inspector() {
   else if (s.kind === "junction") body = <JunctionInspector node={s.node} />;
   else if (s.kind === "commuters") body = <CommutersInspector />;
   else if (s.kind === "city") body = <CityInspector key={s.city} id={s.city} />;
+  else if (s.kind === "world") body = <AllCitiesView />;
   else if (s.kind === "achievements") body = <AchievementsView />;
   else body = <TripInspector />;
   return <section id="inspector">{body}</section>;

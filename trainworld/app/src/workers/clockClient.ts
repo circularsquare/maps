@@ -10,6 +10,7 @@ import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
 import { setHandOrderSink, takeHandOrder } from "../game/handOrder";
 import { hiddenZones, setGameStart } from "../game/realms";
+import { home } from "../game/home";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
@@ -116,9 +117,10 @@ export function onNetworkSnapshot(f: (s: NetworkSnapshot) => void) {
   if (networkSnapshot.peek()) f(networkSnapshot.peek()!);
 }
 
-let stationsAheadSink: ((frame: FrameSpec, xy: Float64Array, fine: string[] | null, built: string[][] | null) => void) | null = null;
+type StationsAheadSink = (frame: FrameSpec, xy: Float64Array, fine: string[] | null, built: string[][] | null, home: string | undefined) => void;
+let stationsAheadSink: StationsAheadSink | null = null;
 /** T-889: call `f` with a loading save's built stations, before its first snapshot. */
-export function onStationsAhead(f: (frame: FrameSpec, xy: Float64Array, fine: string[] | null, built: string[][] | null) => void) {
+export function onStationsAhead(f: StationsAheadSink) {
   stationsAheadSink = f;
 }
 const roadsListeners: (() => void)[] = [];
@@ -347,6 +349,12 @@ export function makeSandbox() {
 /** T-1822: keep the Getting started card's progress in the save. */
 export function saveGuide(guide: GuideSave) {
   current?.post({ kind: "guide", guide });
+}
+/** T-2395: make a place the game's home (a zone id or `WORLD_HOME`), or none. */
+export function setHome(place: string | null) {
+  if (!current) return;
+  home.value = place;
+  current.post({ kind: "home", home: place });
 }
 /** T-2124: achievement steps met (game/achievements.ts); the worker keeps each from the first time. */
 export function postAchievements(got: Record<string, Omit<import("./saveFile").Achieved, "at">>) {
@@ -858,7 +866,10 @@ export class ClockClient {
         takeHandOrder(msg.lines, msg.stations);
         break;
       case "stationsAhead":
-        stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built);
+        stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built, msg.home);
+        break;
+      case "home":
+        home.value = msg.home;
         break;
       case "netAhead":
         netAheadSink?.(msg.key);

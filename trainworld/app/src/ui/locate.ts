@@ -5,7 +5,10 @@
 import { effect, untracked } from "@preact/signals";
 import { activeCity, CITIES, viewedZone } from "../game/cities";
 import { makeFrame, type FrameSpec } from "../game/frame";
+import { home } from "../game/home";
 import { fitView } from "../game/loading";
+import { WORLD_ZOOM } from "../game/worldTotals";
+import { WORLD_HOME } from "../workers/saveFile";
 import { openedZones } from "../game/openedZones";
 import { display } from "../game/ui";
 import { stopsById, world } from "../game/world";
@@ -66,20 +69,51 @@ function fitOpened() {
   const all = w.save.stations;
   const built = all.filter((s) => s.built);
   const at = built.length ? built : all;
+  if (atHome(home.peek(), at.map((s) => s.lng), at.map((s) => s.lat))) return;
   if (!at.length) return viewStart([...(openedZones.peek() ?? [])][0]);
   openAt(at.map((s) => s.lng), at.map((s) => s.lat));
 }
 
 /** T-1539: the same fit from a loading save's built stations (`stationsAhead`, x, y in `frame`), as
- * soon as they are read: the game's figures can show before its first state. */
-export function fitAhead(frame: FrameSpec, xy: Float64Array) {
+ * soon as they are read: the game's figures can show before its first state. `homeAt`: the save's home. */
+export function fitAhead(frame: FrameSpec, xy: Float64Array, homeAt?: string) {
   const f = makeFrame(frame), lng: number[] = [], lat: number[] = [];
   for (let k = 0; k + 1 < xy.length; k += 2) {
     const [x, y] = f.toLonLat(xy[k], xy[k + 1]);
     lng.push(x);
     lat.push(y);
   }
+  if (atHome(homeAt ?? null, lng, lat)) return;
   if (lng.length) openAt(lng, lat);
+}
+
+/** T-2395: the camera at the game's home, if it has one: a zone's registry view, as the Cities tab's
+ * double click, or for `WORLD_HOME` the stations at `lng`, `lat` fitted zoomed out far enough that
+ * the top bar names the world (the world map with none). False: no home, so the caller fits. */
+function atHome(at: string | null, lng: number[], lat: number[]): boolean {
+  if (at === WORLD_HOME) {
+    if (!lng.length) live.map?.jumpTo(WORLD_VIEW);
+    else live.map?.fitBounds([[Math.min(...lng), Math.min(...lat)], [Math.max(...lng), Math.max(...lat)]], { padding: 70, maxZoom: HOME_WORLD_ZOOM, duration: 0 });
+    return true;
+  }
+  const c = at ? CITIES.find((x) => x.id === at) : undefined;
+  if (!c) return false;
+  activeCity.value = c.id;
+  viewedZone.value = c.id;
+  live.map?.jumpTo({ center: c.center, zoom: c.zoom });
+  return true;
+}
+
+/** Closest the `WORLD_HOME` start goes: just under where the top bar turns from the world to a city. */
+const HOME_WORLD_ZOOM = WORLD_ZOOM - 0.25;
+
+/** T-2395: the all cities view's go-to: every built station (all of them if none is built) in view,
+ * zoomed out as a `WORLD_HOME` start is. */
+export function locateAllCities() {
+  const all = world.peek()?.save.stations ?? [];
+  const built = all.filter((s) => s.built);
+  const at = built.length ? built : all;
+  atHome(WORLD_HOME, at.map((s) => s.lng), at.map((s) => s.lat));
 }
 
 /** The city view (as the Cities tab's pick) of the zone most of the points are in; all of them in view when none is in a zone. */
