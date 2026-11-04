@@ -39,8 +39,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   DONE in packs (parts rerun, checks pass); T-2424 market drives re-route restarted 14:46 on 7 workers, done
   ~16:00-16:30, log artifacts/trainworld/t2424-market-drives.log; T-2423 NI fix in it. Then: its Rust (intercity.rs
   zone detours, ferry cost) lands from its tree, pipeline + notes committed, 8800 rebuilt, then tell countries3 go.
-- **countries3** a98664e86d75b14a3 (Opus, 6194, ids T-2398..T-2402): paused before Jakarta; asks "go" before each pack
-  write. Ukraine dry run ready (27 zones + kyi/kha/ode; Crimea as 3 zones to RUS; 959 councils left out). Tell Anita
+- waterroute ~16:05: market-drives.bin re-routed and checked (679,457 pairs, 2,507 with OSM car ferries, 2.68M zone
+  detours, 11.5 MB; Toronto-Buffalo 0.96/1.00/1.04 of land path; Detroit-Windsor and Kutch no ferry; Belfast-Dublin
+  by road). Its smoke and final report pending; then land its tree (intercity.rs), commit its pipeline files and
+  notes, rebuild 8800, smoke light/dark.
+- **countries3** a98664e86d75b14a3 (Opus, 6194, ids T-2398..T-2402): **GO given for Jakarta ~16:10** (pack lock its);
+  asks "go" again before Ukraine. Ukraine dry run ready (27 zones + kyi/kha/ode; Crimea as 3 zones to RUS; 959 councils left out). Tell Anita
   after: Sukabumi+Cianjur one zone, Karawang out of Jakarta; ISW line not an open licence (only whole units dropped).
 - solveend done: T-1734, T-2410, T-2409 landed 1179abad (+ notes dca06c0d); not on 8800 yet (post-waterroute rebuild,
   smoke light and dark). Strings to show Anita: "Time capped at 4x while updating demand", "16x (time capped at 4x
