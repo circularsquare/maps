@@ -539,7 +539,7 @@ line panel. A bus route under the pointer, where no track is, is removable too [
 ## The Select tool
 
 [T-333, T-815, T-829; `map/blueprintBox.ts`, `game/blueprintPick.ts`, `ui/Blueprint.tsx`
-`BlueprintBar`] The Select tool (key M, a dashed box icon) picks several pieces at once to disable,
+`BlueprintBar`] The Select tool (a dashed box icon) picks several pieces at once to disable,
 re-level or remove them. A pick is of one kind (Anita, T-829): one that holds any blueprint takes
 only blueprint, track and stations; one with no blueprint takes constructed track and constructed
 stations. Disabled blueprint is left out by Construct and the blueprint total, and drawn grey

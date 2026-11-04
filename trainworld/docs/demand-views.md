@@ -72,7 +72,7 @@ independent, so they are the solve's). It changes no state and is answered betwe
 the other queries: each solving worker answers for the periods it holds, only from a round that
 all its periods hold (`trip` message, the cells' positions in world metres); a zone open bare is
 answered by the aux worker from its copy solved on no network, every period (T-979). A trip whose end has
-no subzone (no station within 4 km), or whose cheapest walks pass `pair_walk_max`, or with no
+no subzone (no station within 3 km), or whose cheapest walks pass `pair_walk_max`, or with no
 connecting service in the period gets no rail; its drive is priced between the two cells.
 The answer also carries the subzones' own chances of walking, rail and driving and their cheapest
 walk at the home end (the head's last four numbers): what the demand views count for the trip,

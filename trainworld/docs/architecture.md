@@ -58,6 +58,8 @@ An idea for later: signals simulated by clumps of shared track with a stored rep
 
 Web first, so it can be shared as a link.
 
+### App, map and basemap
+
 - **App and UI**: TypeScript, Vite, Preact with signals. No game engine: the map is the game. The
   main thread holds UI state and read-only snapshots from the workers (the `WorldView`: the save's
   inputs plus worker results) and changes the game only by sending edit operations to the clock
@@ -126,6 +128,9 @@ Web first, so it can be shared as a link.
   epoch at the start of the current game hour, so the float32 time stays under 3600 s and positions
   within about 2 cm. When the hour turns the clock worker lists the next hour's trips relative to
   the new epoch (computed in float64), and only that buffer is re-uploaded.
+
+### Frame loop and the draw caches
+
 - **Frame loop** [T-073, T-084, T-097]: frames only while the clock runs; 10 fps while the window is
   visible but unfocused; nothing while hidden or paused; none while no trips run
   this hour (the clock wakes once a game minute instead). Otherwise the overlay draws on MapLibre's
@@ -190,6 +195,9 @@ Web first, so it can be shared as a link.
   hour, and the demand level effects that follow the minute) catches up at the first frame back.
   Hours that pass hidden pay their fares evenly within the hour (no boarding hour was worked out for
   them), with the same whole-hour totals. Station faces and sounds stop while hidden either way.
+
+### Workers
+
 - **Simulation and demand**: Rust compiled to WebAssembly in Web Workers: one clock worker (track
   model, lines, money, the boarding account, autosave) and a pool of demand workers. The crate
   builds two WASM modules, the clock worker's and the demand workers', so each downloads only its
@@ -241,6 +249,9 @@ Web first, so it can be shared as a link.
   of the rest of its solve replaces its own figures with its final as soon as it is done [T-392].
   What the player sees:
   [ui-panels.md](ui-panels.md) "Loading".
+
+### Loading, panics and memory
+
 - **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351]: input is never blocked. A
   loaded game holds only the clock until every needed city is open and the fresh solve's final
   round has landed (`HOLD_ROUND`, `holdDone`; Anita, T-347). A viewed zone open bare is final from
@@ -324,6 +335,9 @@ Web first, so it can be shared as a link.
   memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
   between solves) and every worker composes afresh; no figure changes. It never grows back in a page
   (T-1366). `?perfOff=restart,cap` turns either off; check `t1205-memory.mjs`.
+
+### Threads, pipeline and determinism
+
 - **Threads talk by snapshots**: a worker transfers a finished buffer with a version number; the
   main thread swaps it in. Works on any host. SharedArrayBuffer is a later option; it needs
   cross-origin isolation headers, which GitHub Pages (Anita's website) cannot send and Cloudflare
@@ -348,6 +362,8 @@ note [T-706], money (cash, cars owned of each kind, the ledgers' every day [T-21
 Money tab's history charts: fares, costs, net and train rides; T-447, T-531, T-565, T-567), clock,
 empty line drafts, custom badge symbols, the line-name counter, and the player's station links. Population, jobs and travel come from versioned packs;
 all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
+
+### Format and compatibility
 
 - **Format** [T-029, `workers/saveFile.ts`]: `TWG1`, a JSON header and the track model's network
   bytes, gzipped. The header keeps `city: nyc` and adds optional region and pack metadata. The
@@ -432,6 +448,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   clock worker) and the slot written again at once in TWT6; the old bytes stay under a hidden key
   `old-frame-<slot>`. Cash, fleet, fares and ledger are copied as they are; track lengths follow the
   true ground.
+
+### When it saves, backups and versions
+
 - **When it saves**: the clock worker builds, compresses and writes to IndexedDB itself: at once
   after anything paid for, else once a wall minute if something changed, and when the page is
   hidden; a game running in the background keeps saving once a wall minute [T-826]. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
@@ -502,6 +521,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   looks at the slot: if another tab wrote a player change there that this tab never read (`edit`
   above the one it last read or wrote), that version moves to a new slot, the same game, still tied
   to the account game it went up as, and this slot is tied to a new account game (`keepOtherTabs`).
+
+### Storage, slots and writers
+
 - **Deleting is for good** [T-1827 removed]: deleting a slot (saves panel, start menu, or a
   deletion from the account taking off an unchanged copy, `settleSlot`) deletes it, its backups,
   sync record and demand cache. A card's delete deletes every slot and account game of its origin
@@ -545,6 +567,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   exported). Rename and delete refuse slots owned by another tab. Storage failures keep the dirty
   state and a persistent notice, with file export still available; browsers without locks disable
   browser writes. notes/T-029.md, notes/T-068.md.
+
+### Demand cache, old saves and the account
+
 - **Demand cache** [T-328, `workers/demandCache.ts`]: each final demand result is kept beside its
   slot in the same IndexedDB store (`demand:<slot>:<network hash>`, one per slot; a deleted slot
   takes its cache along; sizes and timings in notes/T-328.md). It holds what

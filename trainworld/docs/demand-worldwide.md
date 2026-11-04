@@ -424,6 +424,8 @@ notes/T-420.md has the tables.
 
 ## Mode choice
 
+### The curve, islands, damping and propensity
+
 - **The ratio curve** (T-918, docs/demand-mode.md 4.3). Rail against the car is 1 / (1 + q^3) on
   q, rail's perceived cost over the car's, fading to nothing from 3 to 4 times either way. It has
   no constant to fit and no unit: a ratio reads the same whatever the currency, speeds or trip
@@ -466,6 +468,9 @@ notes/T-420.md has the tables.
   London) high. Check: a new country's station entries against the model's level, and its census
   rail share by area where it has one; a country constant only where a real network's counts show
   a gap the worldwide value cannot close.
+
+### Driving and parking
+
 - **Driving alternative and parking at home** (T-854, docs/demand-mode.md 4.3).
   Everyone can drive; drive times and costs are the US car's, and the car stands for every way of
   getting about but rail and walking. Parking at the home end, 0.4 of the destination's paid-space
@@ -530,6 +535,9 @@ notes/T-420.md has the tables.
   Milan's Area C, Durham) join the list when a pack covers them. Check: a day's parking price in
   a city's main and secondary centres against the rule, and a free-parking-at-work survey where
   one exists.
+
+### Walking and riding to a station
+
 - **Routed walks** (T-275, T-1164). A walk to a station goes over water on a 50 m raster from the
   pack's water mask, each metre of water counting 3 metres of walking (water too wide for that
   within the bound is no walk), with every OSM way a person may walk on that is a bridge opened
@@ -580,6 +588,9 @@ notes/T-420.md has the tables.
   bonus also stands for how much a short drive costs beyond its road time, which differs with car
   ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
   England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
+
+### Value of time, income and crowding
+
 - **Value of time and fare sensitivity** (T-1277, T-1166, T-1521). A fare dollar costs 4.4 x (GDP
   per head / $90,000)^-0.7 perceived minutes, by the country the trip starts in: the US 4.4, the UK
   6.0, Japan 8.4, China 16, India 51, Nigeria 89. GDP per head in current US dollars at market rates
@@ -686,6 +697,8 @@ notes/T-420.md has the tables.
 
 ## Other purposes
 
+### Everyday trips
+
 - **Everyday trip rates and distance scales** (T-509 stage 4, `pipeline/everyday_rates.py`, the
   pack's `everyday` block; notes/T-509.md section 12). Each country's weekday outings a resident
   from its national travel survey: legs by purpose, the leg home under the activity it leaves,
@@ -716,8 +729,7 @@ notes/T-420.md has the tables.
   squares the attraction, so an error in the attraction proxy (tier 0's blend of jobs and OSM
   places, an estimated jobs lump) is amplified in where long trips end; and a polycentric city
   with weak centres gets its tail spread over many small ones. Check: a country's survey share of
-  everyday trips over 5 km, and which zones take the most central trips (`top_zone` in the T-1092
-  measure) for a lump that is not a real centre.
+  everyday trips over 5 km, and which zones take the most central trips (notes/T-1092.md) for a lump that is not a real centre.
 - **Everyday samples** (T-397, T-1874; demand-sources.md 4.1). A cell's everyday trips go to a
   few sampled cells: one per 8 trips, 2 to 16, and a school's or university's homes one per 30,
   2 to 100, each sample's share varied by a seeded factor (uniform 0.5-1.5) and the cell's total
@@ -767,6 +779,9 @@ notes/T-420.md has the tables.
   judgement, not fitted. Check: a national time-use survey with a location code (the UK and most
   of the EU have HETUS-style diaries) for the share; park visit counts (mobile-phone or ticketed
   parks) in one city per country for the size and population terms.
+
+### School, airport, medical and attractions
+
 - **School and university.** NCES and IPEDS are US-only. Abroad: national school registers where
   they exist, OSM school and university points with an enrolment estimate otherwise.
 - **Airport** (T-142): FAA enplanements are US-only; OurAirports is global but needs a passenger
@@ -817,6 +832,9 @@ notes/T-420.md has the tables.
   Brazil) gets few attractions. Hotels are not in the packs, so leisure jobs stand for where
   visitors stay. Check: a national tourism board's visitor table for a country's top places,
   against the file's figures.
+
+### Timing, weekends and superholidays
+
 - **Trip timing.** Period shares and departure profiles come from US data (ACS B08302, NHTS).
   Work hours, siesta patterns, school hours and late evenings differ by country.
 - **Weekends** (T-260, T-262, docs/demand-timing.md 4.2). A Saturday's and a Sunday's trips per

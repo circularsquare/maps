@@ -1,0 +1,57 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#333}#map{position:absolute;left:0;top:0}</style>
+<script src="maplibre-gl.js"></script>
+</head><body><div id="map"></div>
+<script>
+const T = 512, MARGIN = 128;
+let map = null, curSize = 0;
+window.ready = false;
+window.styleUrl = null;
+
+async function init(styleJson, nx, ny) {
+  const w = nx * T + 2 * MARGIN, h = ny * T + 2 * MARGIN;
+  const el = document.getElementById('map');
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  map = new maplibregl.Map({
+    container: el, style: styleJson, center: [0, 0], zoom: 2,
+    pixelRatio: 1, fadeDuration: 0, interactive: false, attributionControl: false,
+    preserveDrawingBuffer: true, antialias: true, renderWorldCopies: false,
+    maxCanvasSize: [8192, 8192], maxTileCacheSize: 400,
+  });
+  window.mapRef = map;
+  map.on('error', e => console.log('maperror ' + (e.error && e.error.message)));
+  await new Promise(r => map.once('idle', r));
+  window.ready = true;
+  return [map.getCanvas().width, map.getCanvas().height];
+}
+
+function tileCenter(z, x0, y0, nx, ny) {
+  const n = Math.pow(2, z);
+  const fx = x0 + nx / 2, fy = y0 + ny / 2;
+  const lon = fx / n * 360 - 180;
+  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * fy / n))) * 180 / Math.PI;
+  return [lon, lat];
+}
+
+// renders tiles x0..x0+nx-1, y0..y0+ny-1 at zoom z, returns {"x,y": dataURL png}
+async function renderBlock(z, x0, y0, nx, ny, want) {
+  map.jumpTo({ center: tileCenter(z, x0, y0, nx, ny), zoom: z, bearing: 0, pitch: 0 });
+  await new Promise(r => map.once('idle', r));
+  // a second pass settles label placement
+  map.triggerRepaint();
+  await new Promise(r => map.once('idle', r));
+  const cv = map.getCanvas();
+  const out = {};
+  const c2 = document.createElement('canvas'); c2.width = T; c2.height = T;
+  const g = c2.getContext('2d');
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const key = (x0 + i) + ',' + (y0 + j);
+    if (want && !want.includes(key)) continue;
+    g.clearRect(0, 0, T, T);
+    g.drawImage(cv, (cv.width - nx * T) / 2 + i * T, (cv.height - ny * T) / 2 + j * T, T, T, 0, 0, T, T);
+    out[key] = c2.toDataURL('image/png');
+  }
+  return out;
+}
+</script></body></html>

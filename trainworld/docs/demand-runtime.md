@@ -4,6 +4,8 @@
 
 Which packs a worker holds, bare zones, warm-up, the worker pool and clusters.
 
+## Which packs a worker holds
+
 **Which cities are open** (T-149). A worker holds only the city packs the game needs: the viewed
 city and every city with a built station inside its footprint or within 4.5 km of it (the 3 km
 walk plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). The ride's
@@ -42,7 +44,7 @@ pack opened or closed) frees the old composition before composing, unless a mark
 holds it, and a part composed of the same packs serves again without composing (T-1198). A
 composition holds its open places' pair rules and zones, 12-25 MB for a few places, and shares the
 world's corridor figures (34 MB, worked out at the worker's first composition and kept, T-1204,
-[demand-market.md](demand-market.md)); before T-1204 each was about 450 MB and 3-13 s a worker. A new game
+[demand-market.md](demand-market.md)). A new game
 opens only New York; a save with construction in several cities pays
 each of their openings once, in every worker. Only the cells with a budget for a purpose hold its
 destination samples and their pair indices (T-395; about half of all cells x purposes have none),
@@ -62,6 +64,8 @@ table per purpose by grid offset (T-172), and the long loops of the opening and 
 run in functions called once per zone or per 16k samples, because a browser optimises a
 WebAssembly function only between calls (a single long call stays in the baseline compiler
 throughout). Startup timings: notes/T-172.md, notes/T-174.md.
+
+## Bare zones
 
 **Bare zones** (T-325, T-336). A zone viewed or on screen beside the view (above zoom 7.5, T-871)
 that no built station reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
@@ -99,6 +103,8 @@ solved with no station in it.
   that no station reaches opens bare too, outside a load's card and only while no other bare
   opening is under way, one at a time, nearest the view's centre first. Nothing keeps it open: it
   closes as any spare zone does, its figures still shown (`bareKept`). `?perfOff=track` turns it off.
+
+## Levels of detail
 
 **Levels of detail** (T-1223, `workers/demandLod.ts`, design notes/T-1206.md). Each zone the solves
 cover is open fine or coarse in the solving workers (the aux worker opens every zone fine; its
@@ -145,6 +151,8 @@ shown from a coarse solve are `roughZones` (no star or goal comes from them), an
 shown rough while fine is on its way is `refiningZone` (the status tag,
 [ui-demand-views.md](ui-demand-views.md)). The demand cache's key marks each coarse zone's pack. `?lod=fine` opens
 every zone fine and `?lod=coarse` every zone coarse, and neither changes them after.
+
+## Warm-up and the worker pool
 
 **Everyday warm-up** (T-173). Several workers opening a big everyday layer at once from the
 browser's baseline code each take several times as long as one alone. So worker 0 opens a small
@@ -205,13 +213,15 @@ A worker already past the round asked about answers nothing and the question goe
 round. After an edit questions about a zone being solved wait for its final (the workers hold a
 network the map does not show yet); others are answered at once ("Clusters" below). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
 
+## Clusters
+
 **Clusters** (T-326, `workers/demandClusters.ts`). Each worker splits the network into clusters
 that share no rider and solves each on its own sub-network: the cluster's stations (in snapshot
 order) and its lines, with their own route nodes, mapped back to the whole network's in every
 result and answer. A cluster is joined up from populations, stations and lines: a line joins its
 stations; a station complex joins its stations; stations within 1 km join (merged platforms are
 100 m, walking transfers 300 m); a city joins every station within 30 km of its cells' bounding box
-(the 4 km walk and the 15 km ride from a home group's centre); the regional market, when open,
+(the 3 km walk and the 15 km ride from a home group's centre); the regional market, when open,
 joins each of its own 6 km zones to every station within 30 km of the box of that zone's sites
 (its rides reach about 17 km; `MARKET_REACH_M`, `IntercityApi.zone_boxes`), one node per zone, so
 every station in a zone's access lists is in that zone's cluster, and two networks meet through
@@ -250,6 +260,8 @@ the new `sig`); one last solved with its market apart (T-1607) is re-keyed and t
 below. `?perfOff=noise` keeps a cluster only on exactly the network it solved. Every worker splits
 the same way from the same inputs. `?perfOff=clusters` solves everything as one cluster, as before T-326.
 
+## Each population on its reach
+
 **Each population on its reach** (T-756, `reachView` in `workers/demandClusters.ts`). Within a
 cluster a city's commutes and everyday layer are set on their own network: the stations within
 30 km of the city's cells' box (`CITY_REACH_M`, the test that joins it to the cluster: past the
@@ -287,6 +299,8 @@ the window first needs it (`pass_searched`), the cities' cached tables dropped f
 pairs; the far-zone table a station click reads (`station_flows`) holds only the entries a station's
 zones can fill (`StPattern`, a tenth of all on Japan), and the zone pairs are counted before their
 table is made, so it is never grown by doubling.
+
+## Solving clusters
 
 Within a cluster that is solved, a period whose own inputs are unchanged keeps its result too
 (T-124). Periods share no rider and each reads only its own demand level's run times and trains an
@@ -375,6 +389,8 @@ and one about the first group's zone after its final is answered at once. Otherw
 step through the rounds together. The worker adds
 cities up in the registry's order, never the order their packs opened in, so a network's figures
 are the same to the bit however it was loaded. T-392, T-393, notes/T-326.md.
+
+## The zone in view first
 
 **The zone in view first** (T-1533, notes/T-1533.md). Every queue the zone in view passes through
 takes it first. Its pack downloads at high fetch priority, ahead of the markets and the other zones

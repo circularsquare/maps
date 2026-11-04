@@ -31,6 +31,8 @@ something already answers on that port (T-1079, T-1986). Set `TW_SIM_DIR` and `T
 copy is not HEAD's `sim/`, saying which match the tree (a change not yet committed). Run it in the
 background and wait once for the process.
 
+### Several countries and zone rows
+
 - **Several countries at once** (T-786): a run's builds use about 0.9 cores each (so about 0.9 x
   `--jobs` while it builds, and 1 to 1.5 cores during its region's gate) and its joint solve all
   of them, so start one run per country or region with `--no-join` and its own `--port`, `--jobs` summed
@@ -82,6 +84,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   it (T-1113). The old units' joint and everyday files stay in data/work, read by nothing; once the
   join is done, `pipeline\pair_files.py unused` lists them and `--move` puts them in
   `data/work/retired/` (T-1976).
+
+### Inputs, rows and the gate
+
 - **Country inputs** (T-1979): at the run's start `pipeline/netget.py <ISO2>...` caches the national
   figures every planned row's build reads (World Bank employment and age shares, tertiary
   enrolment, vulnerable employment; nocar's GDP and income groups), seconds when cached; a failure
@@ -135,6 +140,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   T-1743, T-1986; reading all 2,000 market packs takes about 30 s), or the next `market_pack`
   refuses them. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
+
+### Joint gravity, freeze and clean up
+
 - **Joint gravity**, once for the batch after its last region (T-723; a run stopped before it
   leaves the gated rows registered and `built`, for the next run to gate again; with `--no-join`,
   `join` does it): a pack with no country in its header (tor, lon, par, sao) takes the registry's
@@ -166,6 +174,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
+
+### Status, stopping and faults
+
 - **Status** is each row's `status` in `pipeline/world_plan.json` (`planned`, `built`, `gated`,
   `shipped`, `parked`) with a `run` record: batch, seconds a step, gate warnings, a parked row's
   reason, the claiming run while one runs it (`claim`). A
@@ -215,7 +226,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
     Rico; elsewhere geoBoundaries gbOpen at the finest
     of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that
     level misses a tenth of the people of takes the finest level covering it (Moscow). No
-    geoBoundaries at all: the territory whole (Hong Kong, Macau).
+    geoBoundaries at all: the territory whole (Hong Kong, Macau). Zones take units on the de facto lines: a unit
+    held by another side goes to it (`DE_FACTO_TAKE`, Crimea to Russia) or is left out (`LEFT_OUT`, occupied
+    Ukraine; docs/zones.md 2).
   - **Extent.** A unit is in when half its people live in the metro's area, the larger share
     winning. A unit with half its people in an existing pack is taken, and an extent is cut along
     every existing pack and every earlier row, so nothing overlaps. A metro left with no unit takes

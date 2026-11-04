@@ -9,6 +9,8 @@ How the commute and everyday trips are computed: gravity between zones, access, 
 Code in `sim/src/demand/`. Measurements: notes/T-005.md, T-019.md, T-020.md and
 notes/demand-measurements.md; how this design was reached: notes/demand-kernel-history.md.
 
+#### Gravity between zones
+
 **Commuting does not enumerate cell pairs** (T-005: there are billions). Demand works on two
 levels:
 
@@ -89,7 +91,10 @@ levels:
    each pack's own mean and each pack's fill its own, so a pack's net exchange stays nil. The joint
    solve also adds the long commutes (docs/zones.md 4): 1% of every zone's workers to jobs 50-150 km
    away, which the zone trips here leave out.
-2. **Access per cell**: the 6 nearest stations by walk within the walk's 4 km bound (4.3), found by
+
+#### Access and station-to-station times
+
+2. **Access per cell**: the 6 nearest stations by walk within the walk's 3 km bound (`walk_cutoff_m`, 4.3), found by
    scattering each station over the cells near it. With routes (T-275) each station's walk is
    searched once per position, every station once per worker on opening; an edit searches only
    its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
@@ -104,7 +109,7 @@ levels:
    its perceived walk to each of its stations, averaged over its cells as the mode choice weighs
    them (a logsum at its 0.10 scale: the walk's cost grows faster than its length, and the near
    cells carry most of the rail), used at both ends of a trip; each cell keeps its own cheapest
-   walk too, for where the views draw rail (`walk_c`, T-1920, step 5). Cells with no station within 4 km
+   walk too, for where the views draw rail (`walk_c`, T-1920, step 5). Cells with no station within 3 km
    are in no subzone: their commuters drive or walk. Access and subzones together are rebuilt on
    every edit (counts and timings: notes/T-720.md, notes/T-090.md).
 4. **Station-to-station times**: one reverse strategy search per destination station over station
@@ -216,6 +221,9 @@ levels:
    notes/T-581.md). The search's queue holds each
    node at most once (a lower cost moves it up) and pops by cost, then id, as a queue of copies
    would (T-581).
+
+#### Mode choice per subzone pair
+
 5. **Mode choice per subzone pair.** The access logit factorises: each origin subzone gets one row
    over all stations, the logsum of its access options followed by every station-to-station cost
    (at most 6 options x stations multiply-adds); each pair then multiplies that row into its
@@ -287,6 +295,9 @@ levels:
    pairs up once into a bit each for its three passes; the pair choice (`walk_kept`) and the trip
    explorer skip the refused pairs in their own loops. Long trips between cities and the everyday
    outings across a zone line do not apply it.
+
+#### Loading and crowding
+
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
    Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,

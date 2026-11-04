@@ -63,5 +63,15 @@
     "name": "liveddensity",
     "folder": "C:/Users/anita/projects/maps/liveddensity",
     "about": "population-weighted population density by country"
+  },
+  {
+    "name": "trackdepth",
+    "folder": "trackdepth",
+    "about": "NYC subway track depth with error bars"
+  },
+  {
+    "name": "transituniversalis",
+    "folder": "../transituniversalis/.snap/app/dist",
+    "about": "grand strategy transport game, 1500"
   }
 ]

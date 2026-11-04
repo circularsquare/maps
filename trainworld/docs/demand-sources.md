@@ -6,6 +6,8 @@ Cells, jobs, homes and the seven purposes' inputs.
 
 ### 4.1 Where trips come from
 
+#### The gravity model, cells and jobs
+
 A **doubly constrained gravity model** from homes to jobs with a distance-decay curve. Tiers say
 how good the inputs are. The US cities are tier 1; every other place is built by tier 0
 (`pipeline/tier0.py`, T-287), with a country's own inputs in place of its proxies where it has
@@ -83,6 +85,8 @@ and the rule; `build_city.py` applies it as it reads the blocks.
 a remote worker at the employer's office, so commute trips are scaled down by the share working
 from home (US: ACS "worked from home", by tract at the home end, by industry at the work end). Jobs whose work is at other people's homes
 (home care aides) are real commutes and are spread over where people live (T-014).
+
+#### Everyday outings and parks
 
 **Every registered city has the same non-work purposes from the same national sources** (T-142):
 everyday outings from LODES sectors, school attendance from NCES public schools, university
@@ -178,6 +182,8 @@ leisure, school, university, airport or medical site; a school or university pai
 side zero) is an empty slot with no trips; with no leisure sites, social uses residents (and
 parks) alone. Residents must be positive, and a pair with only one of its two arrays is an error.
 
+#### School and university attendance
+
 **School attendance (T-140/T-150/T-181, metro public schools).** Every pack's schools are the
 NCES EDGE/CCD 2023-24 public schools in its counties (`pipeline/enrich_schools.py <city>`),
 charter schools included. Distinct NCES school IDs at shared coordinates keep their own enrollment,
@@ -221,6 +227,8 @@ schedule. The purpose joins the same bubbles, fares, assignment, loads and
 crowding as other local trips as the model purpose University (shown with School as "School and
 university", T-192). Homes, attendance and timing are
 estimates; staff remain in Work. Universities in other countries need country/source adapters.
+
+#### Airports, medical visits and attractions
 
 **Airport ground trips (T-142, every city).** Air passengers travelling between an airport and
 their home or hotel. `pipeline/enrich_airports.py <city>` takes each airport with scheduled
@@ -292,7 +300,7 @@ An attraction's staff draw no social outings (T-1932, `social_leisure` in everyd
 1 km of it, a cell's leisure jobs above 2,000, up to one per 1,000 visitors a year, nearest cells
 first, are left out of social's leisure-jobs half (its visitors come by this purpose); the other
 uses of leisure jobs keep them.
-The rate `rate_attractions` (1.0) is the one multiplier. Measured: notes/T-263.md "Stage 2 as built".
+The attractions entry of `RATE` in everyday.rs (1.0) is the one multiplier. Measured: notes/T-263.md "Stage 2 as built".
 
 Unmodelled purposes are labelled explicitly. Activity chains, visitor origins and cross-pack everyday outings
 remain later work. Research: [T-138](../notes/T-138.md); implementation and checks:

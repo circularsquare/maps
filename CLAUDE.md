@@ -53,6 +53,14 @@ Projects run by an orchestrator session (trainworld, isochrone) keep its live st
 moment without waiting for the old one to wind down. Like the rest of this section, these are
 guidelines: if one is clearly unhelpful in your situation, adapt it and say why.
 
+- **Keep the work moving** (Anita, 2026-11-03: "there are times when we have lots of stuff to potentially work on
+  but we're only doing a bit at a time, or stopping"). By default, every time an agent reports and at least every
+  couple of hours, look over what is not done (the task list, her open asks, follow-ups the reports filed) and start
+  whatever can go ahead now, up to the cores and the files agents can own without colliding. Hold back only when you
+  have a stated reason (a run that must not be disturbed, a decision only she can make, a cost she would want to
+  weigh), or when she says to be conservative or take it slow. When everything left waits on her and she is around,
+  still look regularly and tell her what you need from her to unblock it. On the same sweep, move task lines that are
+  already done to the archive (several stale "open" lines were found 2026-11-02 and 11-03).
 - `/takeover <project>` starts a new orchestrator from the file; `/handoff` brings it up to date,
   and covers winding down once another session has taken over (`.claude/skills/`).
 - Hooks (`.claude/hooks/orchestrator.py`): each session starts knowing its own id and where each

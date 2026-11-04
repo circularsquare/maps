@@ -1,76 +1,78 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 5f661fa7-7343-4c77-9e53-f444fc8a7bd5, name maps-5c, since 2026-11-04 09:05
-Updated: 2026-11-04 ~15:10 local clock (context past 500k: a fresh orchestrator can take over any time)
+Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38
+Previous: session 5f661fa7-7343-4c77-9e53-f444fc8a7bd5, name maps-5c, handed over 2026-11-04 16:38, finishing in-flight work
+Updated: 2026-11-04 17:35
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **dad3c5e6** (records) after 1fbe042b hsrfix T-2419. Today's landings, newest first: 1fbe042b T-2419 fast
-  behind slow, 861369d9 T-2365 trip graph, a2eb391f T-2414 bridge ramps, f4977dd7 RU/BY shipped, 184937ae T-2420
-  profit map, 67468b83 T-2407 diagram blocks, beec2537 uismall, adf36414 trip kernel, 83dee708 T-2405/T-2408 diagram
-  strokes, d295f405 T-2403 lag, 441780dc panels3, 3cf52fc0 home, 3b795c19 T-2363, 6039c1b0 T-1920, 401fd11d cleanup.
-- **8800 = build 907 (dad3c5e6)**, plain from data/packs. Light smoke failed once (53 console "pE") while
-  waterroute's parts rerun rewrote 2,971 packs during the build's copy; rerun PASSED, dark PASSED. **Rebuild 8800
-  once waterroute's re-route is written**, so its packs are one consistent state. LIVE = 821. Publish only on
-  Anita's word (release "later this week").
-- Cores cap 15 (Anita: "using lots of cores is fine"). Disk ~28 GB free.
-- Worktrees: t1734 (solveend's), neartrips, waterroute.
-- **Pack lock: waterroute's** (order: waterroute -> countries3 Jakarta T-2341 -> Ukraine T-2344 -> T-2302 Europe).
-- Uncommitted in main tree, not mine to commit until their agent says: waterroute's pipeline/market_drives.py,
-  parts_run.py, routes.py, notes/T-2424*; countries3's Ukraine code pipeline/world_plan.py, docs/zones.md,
-  notes/T-2344.md, notes/t2344/; solveend's notes/T-1734*, T-2409.md, T-2410.md; TODO.md (Anita's).
+- master **cf102c0a** (maps-5c: gate regex fix for the T-2365 hover grid). **8800 = build 917 (698d3954)**, all of
+  today's landings to then. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico and Brazil
+  before release, her ask).
+- Cores cap 15 (Anita away for a few hours from ~17:30: "feel free to keep working"). Disk ~25 GB free.
+- **Pack lock: maps-5c's countries3**, Jakarta T-2341 rerun (batch 20261104-171517, detached run_jak.cmd, PIDs
+  27272.., log artifacts/trainworld/countries/t2341-run.log). Its gate's browser checks load the main tree's app/:
+  **no landings into the main tree until Jakarta is committed** (maps-5c messages me). Then order: Ukraine T-2344
+  (fresh agent, state in notes/T-2344.md "State at countries3's hand-back") -> T-2302 Europe replan -> Mexico
+  T-2436 -> Brazil T-2437 (Anita: "lets do euro preplan first").
+- Worktrees: achieve, deadcode, profit2 (finished, to land), diagborders (T-2168 finished + diagnames working),
+  termtrain (working).
+- Uncommitted in the main tree: docsfix's docs (below); my TASKS/ARCHIVE/DECISIONS/notes records; countries3's
+  pipeline/world_plan.py, docs/zones.md, docs/data-register.md, notes/T-2341.md, T-2344.md, notes/t2344/ and game
+  json (registry.json, market-rows.json, zone-successors.json, world_plan.json): theirs to commit; TODO.md (Anita's).
 
 ## Anita today (2026-11-04), in her words where it matters
 - Cleanup: "we might be overdue for a code and documentation cleanup"; "feel free to make decisions among yourselves
-  regarding reorg" (T-2359 stages T-2366..T-2384; T-2366/67 done).
-- Drives removed (T-2384), one Average-load basis (T-2373), T-1920 yes, home strings "yup text fine".
-- Split bar: bar/ticks/star stay on trips; trip graph built as she picked ("i like the log graph", other places on
-  the same chart, "Trip count"); T-2365 done.
-- Diagram: "one unified view ... city/region blocks is nice"; faint real-shaped city borders inside blocks (T-2168),
-  water across blocks (T-2169), thin lines fade (done).
-- Demand behind the clock: "yes lets stop at 4x"; "time capped", "calculation 1 day behind" (T-2409).
-- Fast behind slow: "we can go with proposed fix" as long as the 7 express+local on one double track stays bad (done).
-- Water: "yeah lets do road detours ... keep the osm car ferries and just make ferries quite expensive" (T-2424).
-- Batches: notes/todo-2026-11-04a.md .. -04f.md.
+  regarding reorg" (T-2359 stages).
+- Profit view: ratio colours, grey before figures, whole fare by km (T-2440 built); "profit display looks good".
+- Money plots: one-off costs behind expenses, thicker bars, 1.5 px gaps (T-2444 built).
+- Capacity marks keep the dashes ("i cannot tell what is a crowding indicator and what is just a red line"); draw
+  order fix only (T-2347 built). Shift+1-7 yes (T-2285 built). Cross and Esc fine; bars' top edge 2 px (T-2446
+  built). No fares hover. Mode colours good. T-2430 trips near fine, water fixes great, T-2409 strings fine.
+- Diagram: blocks "nice"; faint real-shaped city borders in blocks (T-2168 built), city names only far out (T-2438),
+  water across blocks (T-2169 later).
+- Restarting the VS Code extension: she wants to, at a quiet point (no agent mid-task, Jakarta committed). Tell her.
+- Batches: notes/todo-2026-11-04a.md .. -04h.md.
 
-## In flight
-- **waterroute** aaf4ca522c7b5427c (Opus, tree .tw-trees/waterroute, 6196, ids T-2426..T-2428): T-2421 Liberty islets
-  DONE in packs (parts rerun, checks pass); T-2424 market drives re-route restarted 14:46 on 7 workers, done
-  ~16:00-16:30, log artifacts/trainworld/t2424-market-drives.log; T-2423 NI fix in it. Then: its Rust (intercity.rs
-  zone detours, ferry cost) lands from its tree, pipeline + notes committed, 8800 rebuilt, then tell countries3 go.
-- **waterroute landed 367be52f** (Rust) + 698d3954 (pipeline, docs, notes); worktree removed. **8800 = build 917
-  (698d3954)**: everything from today incl. T-1734/T-2410/T-2409, T-2430, water detours. Smoke: all browser checks
-  pass light and dark; only `t1053-zone-ids` fails, because Jakarta's replan is mid-way in the main tree (jak retired,
-  successors not yet written by countries3's chain): rerun smoke once countries3 commits Jakarta. Kept the 5% zone
-  detour threshold (11.5 MB, 6.7 gz) over `--zone-q 6` (8.1 MB, Toronto-Buffalo 0.94-1.08). Filed T-2426 (Bohai
-  ferries untagged for cars). Backup data/work/pre-T2418/ can go once Jakarta's state checks clean.
-- (earlier) waterroute ~16:05: market-drives.bin re-routed and checked (679,457 pairs, 2,507 with OSM car ferries, 2.68M zone
-  detours, 11.5 MB; Toronto-Buffalo 0.96/1.00/1.04 of land path; Detroit-Windsor and Kutch no ferry; Belfast-Dublin
-  by road). Its smoke and final report pending; then land its tree (intercity.rs), commit its pipeline files and
-  notes, rebuild 8800, smoke light/dark.
-- **countries3** a98664e86d75b14a3 (Opus, 6194, ids T-2398..T-2402): **GO given for Jakarta ~16:10** (pack lock its);
-  asks "go" again before Ukraine. Ukraine dry run ready (27 zones + kyi/kha/ode; Crimea as 3 zones to RUS; 959 councils left out). Tell Anita
-  after: Sukabumi+Cianjur one zone, Karawang out of Jakarta; ISW line not an open licence (only whole units dropped).
-- solveend done: T-1734, T-2410, T-2409 landed 1179abad (+ notes dca06c0d); not on 8800 yet (post-waterroute rebuild,
-  smoke light and dark). Strings to show Anita: "Time capped at 4x while updating demand", "16x (time capped at 4x
-  while updating demand)", "Calculation 1 day behind" / "Calculation N days behind". Worktree t1734 removed.
-  waterroute's code-map.md line committed early (24a: market drives zone detours) so the land could fast-forward.
-- neartrips done: T-2430 landed 00791e1d (the tag's legs asked on tool pick, late answers kept, retried; was a
-  12-20 s wait with bubbles off on Tokyo). Not on 8800 yet: goes with the post-waterroute rebuild.
-- Next free id **T-2431**.
+## In flight (maps-17's; common brief scratch/common-brief-tree.md)
+- **To land when Jakarta is committed**, in this order (achieve and profit2 both edit main.ts, map/renderer.ts,
+  map/rendererShaders.ts, ui/style.css):
+  1. **profit2** (T-2440 profit view, T-2439 trip-graph hover lag, T-2443 split hover width, T-2444 money plots;
+     T-2445 not a bug). Smoke ok. Checks: t2411-profit-map.mjs, t2439-hover-perf.mjs, t2444-money-plot.mjs.
+  2. **achieve** (T-2431 achievements, T-2285 Shift+1-7, T-2347 dash draw order, T-2446 2 px edge). Smoke ok.
+     Retake the achievements shot after (its shot.mjs in scratch/achieve/; the old one was overwritten).
+  3. **deadcode** (T-2369 + T-1304, 38 files). Smoke ok. Then delete the main tree's stale trainworld/app/dist.
+  4. **docsfix**'s main-tree docs, commit by path: trainworld/SPEC.md, docs/{world,ui-panels,ui-building,
+     ui-inspectors,ui-map,ui-demand-views,track-and-service,demand-kernel,demand-mode,demand-plain,demand-runtime,
+     demand-sources,demand-views,demand-worldwide,demand-market,regional,architecture,world-run,
+     adding-a-city-by-hand,adding-a-country}.md, notes/archive/t0001-0499/T-304.md,
+     notes/archive/t1000-1499/T-1204.md (profit2 and achieve also edited docs/ui-map.md, ui-panels.md,
+     ui-building.md in the main tree: check the hunks).
+  Then the records (TASKS, ARCHIVE, DECISIONS, notes/T-2375.md, T-2411.md, T-2267.md, todo-2026-11-04g/h.md,
+  for-anita.md, handoff), rebuild 8800, smoke light and dark, run city-browser.mjs on one zone before the next gate.
+- **diagnames** (Opus, in tree .tw-trees/diagborders, 6185, ids T-2447..T-2448): T-2438 city names at far zoom, then
+  T-2425 Japan stretches. The tree also holds diagborders' finished T-2168 (zone borders: warp.ts, borders.ts;
+  98.5-99.6% of stations on their side locally; shots artifacts/trainworld/diagborders/jpn-v0-3.png). Lands as one.
+  diagborders retired at 414k tokens.
+- **termtrain** (Opus, tree .tw-trees/termtrain from cf102c0a, 6186, id T-2449): T-2429 train vanishing at a
+  terminal on a count edit (sim/src/track; Rust).
+- Filed today by maps-17: T-2431, T-2435 (t325-bare-check fails on master), T-2436..T-2440, T-2443..T-2446.
+- Next free id **T-2450**.
+
+maps-5c's (finishing): countries3's Jakarta rerun (above). Earlier lines of maps-5c's in-flight section are in
+git history (1e34ad36).
 
 ## Next
-1. As agents report: land trees (rebase, both cargo runs if sim changed, typecheck, smoke), commit records by path,
-   rebuild 8800, smoke light and dark, show Anita strings old -> new.
-2. Pack lock: waterroute -> countries3 Jakarta -> Ukraine -> T-2302 Europe replan.
-3. Waiting: T-2404 (blueprint follow-up), T-2425 (diagram Japan stretches), T-2429 (terminal train vanishes),
-   T-2256/T-2216 islands (after waterroute), T-2422 Governors tunnel (next data batch), cleanup stages T-2368..T-2384
-   (T-2368 code-map, T-2369 app dead code, T-2370 flags, T-2376 docs, T-2379 sim, T-2384 drives removal, T-2298),
-   T-2168/T-2169 diagram borders and water, T-2396 dock height, T-2393 scheduler idea.
+1. On maps-5c's message: land profit2, achieve, deadcode, commit docsfix and records, rebuild 8800, smoke light/dark;
+   delete data/work/pre-T2418/ once Jakarta checks clean; start a fresh Opus agent on Ukraine (T-2344).
+2. On diagnames' and termtrain's reports: land (termtrain changes sim: both cargo runs in the tree first).
+3. Then, one tree at a time: T-2368 code-map (main tree, docs, after the landings), T-2370 flags (tree), T-2379 sim
+   small items (tree), T-2373 bus panel (Opus, tree), T-2384 drives removal (tree, sim), T-2435, T-2404 blueprint,
+   T-2396 dock height, T-2169 diagram water (after diagnames).
 
 ## How to
-- Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\5f661fa7-7343-4c77-9e53-f444fc8a7bd5\scratchpad
+- Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6\scratchpad
   (snapbuild.cmd, snapbuild-frozen.cmd, keep_hunks.py, mark_taking.py `<tasks.md> T-x=agent ...`,
   common-brief-tree.md for tree agents, lowdisk.ps1). A new orchestrator copies these and fixes the path inside
   snapbuild-frozen.cmd.
@@ -86,12 +88,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- T-2267/T-2270 design leftovers: optional cross "Stop (Esc)", 3 px coloured bar edge, T-2285 Shift+1-7, mode
-  colours (notes/for-anita.md "Open now").
-- Fares: optional hover "Riders pay the old fares until demand has settled"?
-- Profit map calls she may change: half base fare by boardings, blue for profit, no key.
+- Money plot: one-off costs hidden on days they are smaller than both other bars (drawing them behind): fine?
+- T-2168's borders are faint (`BORDER_ALPHA` in diagram/draw.ts) and sparse (Japan's zones are prefecture-sized;
+  New York is one zone): show her on 8800 once landed.
 
 ## Lessons from this run
+- A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
+  checks/city-browser.mjs's text wait timed out on every zone from 13:42 (fixed cf102c0a). Before the next
+  country gate after a landing that touches the top bar or its hovers (profit2's T-2443 does), run
+  city-browser.mjs on one zone first.
+- An agent that left a background wait running re-sends its final report on every wake; TaskStop it once done.
+- Check the clock (`Get-Date`) before writing times into the handoff.
 - Commit with a pathspec; another session's staged moves get swept in otherwise (314776ed).
 - Headless pages run over their core claims (a page took 7-8 cores on a 3-4 claim); briefs must say "cap the page's
   demand workers to the claim, claim with --pid, release between runs".

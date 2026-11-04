@@ -7,6 +7,8 @@ access to stations.
 
 ### 4.3 Mode choice and catchment
 
+#### Cost and the rail-against-car curve
+
 Per OD pair and period, rail, driving and walking the whole way (below) compete by
 **generalised cost** in minutes. Buses are out of scope (Anita, 2026-10-09). Everyone can drive:
 there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
@@ -72,6 +74,8 @@ its strategy (the riders' split over lines by their departures), and the assignm
 correction on the lines the trips ride, by their km on each, for fare income (T-1516). Crowding multiplies ride time
 without multiplying fare (T-067).
 
+#### Walking and land parts
+
 **Walking** (Anita, T-558) is a third mode: its share is that of a logit among rail, the car and
 walking at `beta`, damped on the car's minutes (above), drivers parking free and those paying for a
 space choosing apart; rail and the car split the rest by the ratio curve (T-918). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
@@ -115,6 +119,8 @@ riders the trains' room turns away, all stay home. Car ferries are no road (Anit
 player's ferry or train is an island's only way, and a rail bridge the player builds joins nothing.
 The everyday layer applies it per sample (a pair of subzones is on one pair of parts). The regional
 layer's commutes and outings between zones and the market do not yet (T-2256, T-2216).
+
+#### Weights, ferry fans, driving and parking
 
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
 exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
@@ -182,6 +188,8 @@ three layers: the commutes and the everyday layer call `park_parts` (both take t
 drivers' choices per pair, `Params::car_choice`); the regional layer's market pack holds each
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
 mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack.
+
+#### Routed walking and driving
 
 **Routed walking and driving** (T-275, notes/T-275.md). Drives go over bridges and tunnels,
 walks over bridges or across water at a cost, from data that exists for any city: OpenStreetMap roads and bridges (Geofabrik
@@ -264,6 +272,8 @@ position and region, `routes::zones_check`; the tables are used only when it mat
 `Gravity::walk_cost_pair(z, i, j)`. Across pack edges nothing is stored; the pipeline's
 `routes.drive_factors(lon, lat, extracts)` gives the same factor between any list of places from
 the same roads (unscaled).
+
+#### Route choice and getting to the station
 
 Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known complaint is riders
 waiting 50 minutes for a fast train that arrives one minute earlier. A wait counts its plain

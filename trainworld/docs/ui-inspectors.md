@@ -94,6 +94,8 @@ purpose filter the purpose drawn is ringed in the bar.
 
 ## Lines tab and the line inspector
 
+### The Lines tab
+
 - **The Lines tab** has New line above its list (actions go above lists of any length). The list
   sorts by clicking a column header [T-310]: Name, City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
@@ -193,6 +195,9 @@ purpose filter the purpose drawn is ringed in the bar.
   title; set ones are kept on every line of the group, so they join, copy and undo with it, and a
   line leaving loses them. It is the group's mark in the Lines tab's group row, the line panel's
   group row and the group view's title.
+
+### New line and the line editor
+
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
   ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
   city has as its name (a line's city is its first stop's zone, as the City column; a line with no
@@ -224,6 +229,9 @@ purpose filter the purpose drawn is ringed in the bar.
   machine: 6 times the last edit's round trip), and the final colour goes as one edit on release, a
   swatch click, an arrow key step or a typed hex. Opening the editor scrolls the panel to its top,
   since the editor sits under the pinned title (the group view's too) [T-1894].
+
+### The line inspector
+
 - **Under the title** a muted line, left aligned with the title's bullet, gives the stop count
   and length, "24 stops, 16.3 km", led by "High-speed, " on a line of high-speed trains [T-1280].
   Above it, for a line in a group [T-1791, T-1813, T-1818], a row reading "Part of [bullet]
@@ -232,7 +240,7 @@ purpose filter the purpose drawn is ringed in the bar.
   ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
   there for touch, where dragging rows is not; a bus line's panel has the same row. The row
   starts 6 px below the title, which covers that much of whatever follows it.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover and key O), Copy line (duplicates route and settings with no trains, T-1161;
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the
   two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
@@ -240,6 +248,9 @@ purpose filter the purpose drawn is ringed in the bar.
   not taken, T-1872, `game/cloneNames.ts`), and Delete line (asked first). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
+
+#### Schedule and trains
+
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
   cell one line, the Demand column cut with an ellipsis when short of room [T-692]; beside the
@@ -319,8 +330,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   held per level beneath it ("Medium demand: 1 train held out of service"), one alert for each
   full place. Alerts are a plain list, each with a red (bad) or yellow (warning) circled
   exclamation point (`Alert` in `ui/widgets.tsx`, `--bad`, `--yellow`), no box [T-748]; a broken
-  line's "Track this line ran on is gone" is one too;
-  Today for a running line:
+  line's "Track this line ran on is gone" is one too.
+
+#### Today on a running line
+
+Today for a running line:
   riders by purpose,
   one Profit row (the expected profit today, fares less running cost and the line's share of upkeep,
   in the alert red when negative; the hover gives "Expected profit today: $x", fares, running trains and upkeep share, T-867, T-1443,
@@ -334,7 +348,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   and the riders left at platform as "x/y", x those a full train left behind and y those who
   wanted a train (boarded plus left behind) [T-230, T-239, T-293, T-669]; the block has no heading
   (T-1893), only a rule above it and none between its rows
-  (the only other rule is above Stops) [T-692]; the stops (above Schedule while being edited [T-670]),
+  (the only other rule is above Stops) [T-692].
+
+#### Stops
+
+The stops (above Schedule while being edited [T-670]),
   **north up** [T-1894, `game/northUp.ts`]: the end farther north on top, or for a line within about
   22 degrees of east-west (north-south distance under 0.4 of east-west) the west end; a loop as
   built; each with its time from the stop on top (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
@@ -398,7 +416,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   5 px corners so each bar meets its straight side, and its bullets (up to 6, in the bars' order, the
   rest behind the "+") in two rows; a side line's own row keeps two bars. Hovers: a pill only ("6, 6 and 6X stop at 23 St",
   "4 and 5 pass"); the columns, their ends and the bars have none (T-2020), and a bullet names its line as everywhere.
-  A click on a column, bullet or bar selects that line; the round trip split into running, dwell, turning and waiting,
+  A click on a column, bullet or bar selects that line.
+
+#### The round trip
+
+The round trip split into running, dwell, turning and waiting,
   naming where it waits most [T-031]. Time following slower trains on shared track is its own row,
   "Behind slower trains", apart from "Waiting at busy track", and its places name the line ahead
   ("Behind J trains") [T-1924]. Time standing at passing tracks for faster trains is
@@ -541,7 +563,7 @@ has rows for ports, new boats and the ferry route (free).
   alighting share at that stop in the period it arrives in, as the account lets them off; everyone
   at the end of the line. The row's hover: "61 of the 1,440 riders aboard get off at Grand St, and
   40 get on". The list moves on at each stop and the minutes each game minute.
-- **Random rider** (heading; "One rider" until T-1851) [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
+- **Random rider** (heading) [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
   riders are aboard, one rider drawn from them, with two icon buttons in its heading (Pick another
   rider, Open this trip in the trip explorer). The account holds no per-rider data, so the draw
   follows how it lets people on and off: where the rider got on is a stop at or behind the train,
@@ -640,7 +662,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   header, above all rows and lists. A station has, in station view, Construct station (a blueprint
   only) in a row (what placing a passage asks, when picking, is under it), then the **upgrade row** under a "Station upgrades" heading
   [T-1281, T-1415, `ui/inspector/StationUpgrades.tsx`]:
-  icons for the terminal (two sidings), parking lot (P; "Park and ride" until T-1851), waiting room (a bench under a roof),
+  icons for the terminal (two sidings), parking lot (P), waiting room (a bench under a roof),
   passing tracks (a through track with a track bowing out each side; hover "Allow faster trains to
   pass slower trains that are stopped here.", Anita's wording; only where the station is on double
   track or already has them) [T-2232], passage (two platforms and a walkway) and station building (a hall round a platform,
@@ -770,6 +792,8 @@ The trips between two places as the view it was opened from counts them, homes a
 destinations at the end, and how the demand model's people would make one of them. The panel's
 title is "Trip" with no line under it naming the ends: the map marks them [T-1253].
 
+### Opening it
+
 - **Starting it**: the T key from any tab [T-444] (the Settings button was removed, T-1843; tapping two demand bubbles also opens it), turns on the trip
   tool (a crosshair; a second press or Esc leaves it). Clicks alternate between start and end, a
   third starting a new trip; the hint at the bottom left says which is next.
@@ -806,6 +830,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   no answer), a dotted straight line in map ink on a casing joins the two ends, so the pair still
   shows. Hover: "No train route between these two points" (or "No train route at this time of
   day" when another period has one) and "4.2 km in a straight line".
+
+### Between zones
+
 - **Between zones** [T-866; `ui/inspector/MarketTrip.tsx`, `IntercityApi::market_trip` in
   `sim/src/demand/intercity/market_trip.rs`]: with a bubble selection, a click on an inter-city
   bubble (a whole place zoomed out, a 6 km area up close; hover ends "Click to explore these
@@ -878,6 +905,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   sim's place-pair rule held to it by `checks/t1148-market-rule.mjs`): the places' trips by the
   corridor's split, the car and the distance centre to centre. By train then reads "There is no
   station near Paris region." and the bar has no Train.
+
+### The headline
+
 - **The headline follows the view** [T-586]: under the purpose filter and the day shown, the trips
   a day between the two places (a line "124 trips per day, 2.5 km apart"; its hover the
   exact count and, under All purposes, each purpose's), then a bar and rows of their shares by
@@ -906,6 +936,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   one takes at that count left out; with no counted train trips they stay the model's. The
   representative trip's own chances (Train by period, a trip the view counts none of) are not
   rounded. Past a couple of hundred trips the rounding changes no whole percent.
+
+### The representative trip
+
 - **The representative trip**: everything below the headline is one trip read by the model: under
   All purposes the purpose with most of the trips between the two places (work when none), else
   the filter's (school and university: the kind with more trips between the two areas); a commute

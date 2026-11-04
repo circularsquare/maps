@@ -136,7 +136,7 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
 4. **Cut cities** (FLAG cut city): the main urban centre of a GHS-FUA over 1M split between rows, two each
    holding a fifth of it. The planner joins such zones over the cap (`world_plan.FUA_WHOLE`, T-1984:
    Adelaide); a FLAG left is a metro row against a zone, or a suburb in another FUA (Sydney's Campbelltown
-   was): one zone or the metro takes it, patched under the plan lock as T-1857's `patch.py` did; record
+   was): one zone or the metro takes it, patched under the plan lock as T-1857 did (notes/T-1857.md); record
    in DECISIONS.md.
 5. **Borders** (NOTE borders): the built countries within 50 km. The default factor is the national 0.05
    (`pipeline/borders.json`); a dense crossing (Singapore and Johor Bahru) needs a pair factor.

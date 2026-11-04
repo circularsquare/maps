@@ -90,6 +90,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 
 ## Lines and track
 
+### Widths and double track
+
 - **Widths** [T-191, T-205, T-1821]: a line is 1.1 px at zoom 9, 5.1 at 12 and 8.6 at 15 (linear
   between, held outside; `LINE_PX`: 0.85, 3.9 and 6.6 times `LINE_VIEW_WIDTH` 1.3; the Traffic view
   scales its widths by 0.85 / 1.3, so they stay where they were); bare track 0.4, 1.8 and 3; a casing 0.6-2.4 px wider (white, near-black #141517 in
@@ -138,6 +140,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   `map/network.ts`); at a junction a single-track branch leaves from the centre line. Quad
   track is four tracks 4 m apart; a crossover between double tracks is two double tracks in an
   X. Clicks and the hover reach half the pair's width from the centre line once it has grown.
+
+### High-speed track and lines sharing track
+
 - **High-speed track** [T-817, `F_HSR` in `map/network.ts`, the stroke shaders in
   `map/renderer.ts`]: double track's colours with a thin centre line along the stroke, 18% of its
   width: the casing colour on built track (light, dark in the dark theme), the rail colour on
@@ -233,6 +238,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   zero) goes under every line that runs trains; within each group the shorter route (end to end,
   one direction) is on top, ties to the higher id. The line on top wins a click. It is rebuilt when
   lines or fleets change.
+
+### Track display
+
 - **Track display** [T-105, T-703; on the map under the demand buttons], five choices, remembered per browser:
   - **Line** (the default [T-1101]; a stored Traffic from before settings version 10 is dropped
     once, T-1244): uniform width in the line colours.
@@ -275,30 +283,33 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     ordinary track, up to 320 on high-speed track). The trains' speed at a stroke segment's middle
     is the run profiles' (speed against distance along each run, the medium demand level's; the
     levels differ only in standing time), the fastest of every such line in either direction, so
-    shared track shows its fastest service and a station its trains' slowest (`trainSpeeds` in
+    shared track shows its fastest service and a station its trains' slowest (`lineTrainSpeeds` in
     `map/network.ts`). Keyed 40/80/120/160/240/320 km/h
     from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
     (`SPEED_STOPS`; the stroke shader is built from the same stops); under 40 is the red. No key
     sits beside the display buttons for the speed or the elevation colours (T-1499): the track hover
     says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
     network").
-  - **Profit** [T-2420, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by its
-    stretch's profit per km a day on the day shown, worked out only while the view is on (`game/stretchMoney.ts`).
-    A stretch is the track between two stations, junctions or track ends. Each running rail line's money goes
-    onto the edges of its path: its per-km fares by the paid passenger-km on each stretch between its stops,
-    both directions, as its fare income counts them; its base fares (its share by T-2104) half by those
-    passenger-km and half by boardings at the stretch's two stops (a through stop's half to each side, an end
-    stop's all to its one stretch); its running trains' cost a day by length; its share of each edge's upkeep
-    (by trains a day, as the line's upkeep share is split) and of each station's, half to the stretch on each
-    side. Summed over the lines on each edge, a line's edges come to its fares that day and its upkeep share
-    exactly (`checks/t2411-profit-map.mjs`). Track no running line uses has its own upkeep. Construction and
-    trains bought are left out, as in the Cities tab; bus and ferry lines are not placed yet (drawn as in the
-    other views; their share of a station's upkeep is off the track). Colours (`PROFIT_STOPS`, blended in the
-    stroke shader, the same in both themes): −$300k a km a day #b2182b, −$100k #e0603f, −$20k #f4a582, 0
-    #bdbab3, +$1M #92c5de, +$4M #4393c3, +$8M and over #2166ac; blue for profit, so red-green colour
-    blindness still reads it. Track with no figure (before demand answers, blueprint) is plain track. No key
-    (as T-1499): the hover gives the numbers.
+  - **Profit** [T-2420, T-2440, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by
+    how much of its costs its fares cover on the day shown (fares over costs, a ratio, not their difference),
+    worked out only while the view is on (`game/stretchMoney.ts`). A stretch is the track between two stations,
+    junctions or track ends. Each running rail line's money goes onto the edges of its path: its fares, per-km
+    and base alike, by the paid passenger-km on each stretch between its stops, both directions (the line's form
+    of spreading each trip's fare over the km it rides); its running trains' cost a day by length; its share of
+    each edge's upkeep (by trains a day, as the line's upkeep share is split) and of each station's, half to the
+    stretch on each side. Summed over the lines on each edge, a line's edges come to its fares that day and its
+    upkeep share exactly (`checks/t2411-profit-map.mjs`). Track no running line uses has its own upkeep, so it
+    reads 0. Construction and trains bought are left out, as in the Cities tab; bus and ferry lines are not
+    placed yet (drawn as in the other views; their share of a station's upkeep is off the track). Colours
+    (`PROFIT_STOPS`, blended in the stroke shader, the same in both themes): 0 #b2182b, 0.5 #e9853b, 0.95
+    #f1d54a (yellow), 1.05 #96d58f (pale green), 1.6 #8ecae6, 3 and over #2166ac; blue past green so red-green
+    colour blindness still reads it. Plain track is drawn where there are no figures: blueprint, and any stretch
+    a running line is on that demand has no figures for yet (`lineFiguresIn`: the game loading, a new line not
+    yet solved). No key (as T-1499): the hover gives the numbers.
   In Elevation, Speed and Profit the width is uniform and trains keep their line colours.
+
+### Blueprint track, line colours and marks
+
 - **Blueprint track** [T-311, T-322, T-331, T-333] is drawn solid and opaque as two rails in every
   track view: a light blue middle (#a9cdf3) between dark blue rails (#2f62b3). The whole width is 75%
   (`BP_NARROW`) of a line plus a rail of 16% of a line width (at least 1 px) either side, the rails
@@ -794,9 +805,9 @@ those who got on, less the load carried on.
   (`map/trackTagRows.ts`, `.tag-chip`, T-1495); in the Speed view a first row says what
   the colour there is: "Fastest train 85 km/h" (on its colour) where trains run, "No trains run
   here" where the limit is shown [T-1271]; in the Profit view the first rows are the stretch's
-  "Profit −$280k per day" (the day shown's phrase, the figure on its colour), "−$512k per km",
+  "Fares cover 64% of costs" (the share on its colour), "Profit −$280k per day" (the day shown's phrase), "−$512k per km",
   "Fares $400k", "Running trains −$590k" and "Upkeep −$90k", negative money red; on bare track "No
-  trains run here" and "Upkeep −$40k per day"; "Calculating demand" before the first answer [T-2420]; and last, over bare track only, every line using the track as
+  trains run here" and "Upkeep −$40k per day"; "Calculating demand" before the first answer or while a line on it has no figures [T-2420, T-2440]; and last, over bare track only, every line using the track as
   line bullets, in the save's order, wrapping (over a line the tag is that line's alone, its bullet
   heading it [T-2007, T-2387]) (the markup and CSS of
   the `Chip` in `ui/widgets.tsx`, built as plain DOM by `lineBullets`; no row when none runs

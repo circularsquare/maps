@@ -12,7 +12,8 @@ borders in Traffic view mark track full of trains, not crowded trains). The gree
 Note: notes/T-2267.md. Shots: artifacts/trainworld/review/track-bar.png, mode-colours.png.
 Questions: build it as T-2282 to T-2284? the optional cross "Stop (Esc)", the bars' 3 px top edge in the mode
 colour, and Shift+1-7 re-levelling (T-2285)? keep the mode colours though they sit only 11-15 dE from the game's
-own? (I'd say yes to all.)
+own? (I'd say yes to all.) Anita 2026-11-04 ~18:00: mode colours "looks good", Shift+1-7 "seems fine" (T-2285
+to build); the cross and Esc "fine"; the top edge to 2 px (T-2446).
 - Track type: "Double / Quad / High speed" -> "Regular / High speed"
 - Build tab Terrain button and its hover "Show terrain. Steep terrain costs more to build on." -> gone
 - New descriptors: "Placing track", "Placing stations", "Deleting", "Selecting track and stations", "Exploring a trip", "New passage from Bedford Av"
@@ -21,7 +22,7 @@ own? (I'd say yes to all.)
 - Level hover (T-2271's): "Viaduct (Shift+3)" / "1.0x cost, $75M per km" / "Upkeep $20k per km per day", 1x on light yellow
 
 ### Fares (T-2266, done)
-- Optional hover on the fare controls, not built: "Riders pay the old fares until demand has settled". Want it?
+- Optional hover on the fare controls: not wanted (Anita 2026-11-04: "not necessary").
 
 ### Ferries (T-2273, T-2274, T-2275, done overnight)
 The tool's tag no longer flickers; the leg from the last port to the pointer is dark blue (light blue in dark

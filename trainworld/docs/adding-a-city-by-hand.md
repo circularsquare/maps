@@ -318,6 +318,8 @@ country (`pipeline/canada.py`), chosen by `"country"` in the city's config: `bui
 (`spread.py`, given the country's polygons) and the water rasterizer (`water.build_mask`, given a
 `source`) are shared, so the runtime needs nothing new.
 
+### What each input uses
+
 What Canada's adapter uses (sources and URLs in notes/T-277.md), and tier 0, the adapter from
 global sources only (`pipeline/tier0.py`, T-287; sources and its measured distance from Toronto's
 real pack in notes/T-287.md):
@@ -360,6 +362,8 @@ place has none. Printed once, after the jobs are set, before the cells are writt
 jobs are the proxy alone, a place's weight is capped before the cells are summed (T-583, so
 `top_place_jobs_share` is at most 0.0075) and the line's shares are of the weight before capping.
 
+### Water outside the US
+
 **Water outside the US (T-041).** `pipeline/osm_water.py` gives any city a water mask from
 OpenStreetMap: the sea from osmdata.openstreetmap.de's coastline polygons
 (`data/raw/osmdata/water-polygons-split-4326.zip`, downloaded once for the world and kept, and
@@ -383,6 +387,8 @@ before its pack exists:
 and runs `read_pack.py`'s water test places for that id (add them to `WATER_TESTS`, close-ups to
 `look_water.VIEWS`). The Geofabrik `.osm.pbf` can go once its `.water.fgb`, `.points.fgb`,
 `.areas.fgb` and `.ways2.npz` exist.
+
+### Tier 0 cities
 
 A tier 0 city is a `CITIES` entry with `"tier0": True` (the keys are listed in `tier0.py`'s
 docstring); `build_city.py <id>` hands it to `tier0.main`. A country's census then replaces one
@@ -409,6 +415,8 @@ extract's features and water, `build_city.py lon` (reads every OSM input from th
 `routes.py lon --extracts europe/united-kingdom/england`, `places.py`. Measure each upgrade
 against tier 0 before switching, at the 2 km zone the game feels; use district totals and
 workplace counts wherever a country has them (London's lessons: `notes/adding-a-city-history.md`).
+
+### Worked examples by country
 
 **Worked examples by country**, one per archetype, for the chain of commands (what each took and its
 timings: `notes/adding-a-city-history.md`; the notes of each task have the sources):

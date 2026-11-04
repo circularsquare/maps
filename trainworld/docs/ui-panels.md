@@ -126,6 +126,8 @@ over the map (Status, below). The time and date are one line ("06:50 Mon May 5")
 T-1853, Anita's sketch] behind a thin divider (the faint rule colour) after the cash, in a box 132 px
 wide so a longer date moves nothing [T-1868].
 
+### The goal number
+
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
   mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
   everyday outings, school and university), so the shares are of trips per day, not people [T-342].
@@ -165,6 +167,9 @@ wide so a longer date moves nothing [T-1868].
   1% [T-1301], the walking and driving taking the rest in the cities' own proportions. No goal ticks.
   Its hover gives the train trips a day and in how many cities, the share of the world's rides and
   how they are reached, then the cities' own split as a city's hover gives it.
+
+### Status and busy tags
+
 - **Status** [T-349, `ui/StatusTag.tsx`]: a small tag (small type style, background, thin border)
   on the map's top row, to the right of the demand buttons and centred with them (`ui/DemandSelector.tsx`;
   the buttons stay at the top left). It appears and goes in one step and moves nothing; the whole
@@ -202,6 +207,9 @@ wide so a longer date moves nothing [T-1868].
   over 150 ms on this device shows it: each kind's time per unit (a state's edges and nodes) is
   learnt from its last runs in this page, so a fast desktop rarely sees it and a phone often. Not
   while the loading card is up.
+
+### Cash and the clock
+
 - **Cash**, four significant figures (to the dollar under a million), moving as fares are paid and
   running costs drain [T-284, T-722], in tabular figures in a box of fixed width after the train share,
   so nothing beside it moves as it changes [T-305, T-310, T-1865]. In a sandbox the box says
@@ -278,6 +286,9 @@ wide so a longer date moves nothing [T-1868].
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
   on at the chosen speed with fares, running costs and autosaves, and the map catches up when the
   tab is shown again [T-826].
+
+### Narrow maps and Demand shown for
+
 - **Narrow maps** [T-1853, T-1868, T-1883, Anita's sketch]: two rows below 700 px of map column, 56 px high.
   Row one has the name, the cash (the same box as the wide bar's), then the time and date at the row's end; row two has the mode bar
   with the train share under the name and cash, then the speed buttons under the clock. The same thin divider as the wide bar spans both
@@ -496,7 +507,8 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | 1, 2, 3, 4 | tool: draw track, place stations, delete, select; opens Build (`TOOLS`) | any tab |
 | Shift+1 to Shift+7 | draw at elevation +3 down to -3 (Shift+4 is ground level); by key code, digit row only | any tab |
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
-| U | start a new bus line (`BUS_KEY`) | any tab |
+| U, O | start a new bus line, a new ferry line (`BUS_KEY`, `FERRY_KEY`) | any tab |
+| M | swap the map for the network diagram, and back (`DIAGRAM_KEY`, `diagram/view.ts`) | any tab |
 | T | explore a trip; the tab stays | any tab |
 | D | demand bubbles: None, Homes, Destinations, Total and round again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
@@ -590,7 +602,7 @@ not the browser's. In a normal game a
 row "Tutorial" with a Start again button (restarts the [tutorial card](#tutorial-card))
 sits under the mode [T-1822, T-1835].
 
-## Finances tab (the Money tab until T-1819; id `money`)
+## Finances tab (id `money`)
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash minus the $10B start,
 T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
@@ -609,10 +621,10 @@ with its minus when negative; hovers may give more. History
 the game is open, no hovers): 1d is the past 24 hours, hourly, 30d the past 30 days and All time every
 day, daily; over two charts, each on a
 linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
-theme, the tokens `--revenue` and `--expense`, T-1111), has three narrow bars side by side in each column
-[T-2340]: fares, running costs with upkeep and loan payments (T-867), and one-off costs (new trains and
-construction, pale red, its slot left empty when there are none), the three taking 72% of the column's
-width and the rest a gap before the next. Fares and running costs set the scale, the larger of the two;
+theme, the tokens `--revenue` and `--expense`, T-1111), has two bars side by side in each column
+[T-2340, T-2444]: fares and running costs with upkeep and loan payments (T-867), and behind both a pale red bar
+of the one-off costs (new trains and construction; none when there are none), the bars filling the column
+less a 1.5 px gap before the next (the train rides' bars likewise), so a one-off bar shows only above the two. Fares and running costs set the scale, the larger of the two;
 a one-off bar is on the same scale, cut at the top with a red cap when larger, so a build day does
 not flatten the others [T-452]; the top's figure at the right. Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
@@ -793,6 +805,8 @@ keeps what it had and earns no more.
 [T-068, T-241, T-251, T-320, T-1395; `ui/SavesPanel.tsx`; save format and slot rules in
 [architecture.md](architecture.md) "Saves"]
 
+### The panel and its cards
+
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
 - **The head**: "Saved games", one icon, then Close [T-1395]. Where accounts are on, signed out a
@@ -849,6 +863,9 @@ keeps what it had and earns no more.
     versions from this browser and your account?` (or "from this browser", "from your account" as
     the versions are kept; the Playing card's adds "The game ends and you go back to the start
     menu."); the game being played goes last.
+
+### Card actions
+
 - **Rename** [T-1247]: the pencil or a double click on a card's name (any card) puts a box in its
   place with the name selected; Enter or leaving the box renames, Escape puts the name back.
 - **Make a copy** [T-1395]: the copy is made at once, named "<game> copy", and becomes the Playing
@@ -907,6 +924,8 @@ keeps what it had and earns no more.
   "Autosave is off in this test page. Make a copy to keep the game." (the only place it is said,
   [T-971]), a `?new=1` page marks no card Playing, and the copy icon above the cards gives the game
   a slot of its own, which autosaves from then on.
+
+### A new game
 
 **A new game** starts on day 1 at 07:00 with $10B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the

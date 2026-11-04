@@ -121,7 +121,10 @@ SHAPEFILES = {
             "group_col": "pc11_s_id",
         },
         2: {
-            "candidates": [REPO_ROOT / "data/asia1m/india/district.shp"],
+            # level2.gpkg is SHRUG's district.shp with Delhi's districts the union
+            # of their redrawn tehsils (level4.py)
+            "candidates": [HELPER / "data/india/level2.gpkg",
+                           REPO_ROOT / "data/asia1m/india/district.shp"],
             "code_col": "pc11_d_id",
             "name_col": "d_name",
             "parent_col": "pc11_s_id",
@@ -129,7 +132,7 @@ SHAPEFILES = {
             "group_col": "pc11_s_id",
         },
         3: {
-            # level3.gpkg is SHRUG's subdistrict.shp with Bangalore redrawn (level4.py)
+            # level3.gpkg is SHRUG's subdistrict.shp with Bangalore, Pune and Delhi redrawn (level4.py)
             "candidates": [HELPER / "data/india/level3.gpkg",
                            REPO_ROOT / "data/asia1m/india/subdistrict.shp"],
             "code_col": ["pc11_d_id", "pc11_sd_id"],  # composite: pc11_d_id is global

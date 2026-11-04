@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>nyc track depth</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; color: #eee; font-family: 'Nunito', sans-serif; overflow: hidden; }
+#map { position: absolute; inset: 0; }
+#deck { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+#title { position: absolute; top: 10px; left: 14px; font-size: 20px; font-weight: 700; color: #ccc; z-index: 2; pointer-events: none; }
+.panel { background: rgba(10,10,10,.85); border: 1px solid #333; border-radius: 8px; color: #ccc; font-size: 12px; }
+.ptitle { font-size: 11px; color: #888; margin: 8px 0 6px; }
+.ghost { background: none; border: 1px solid #555; color: #ccc; border-radius: 6px; cursor: pointer; font: inherit; }
+.ghost.active { color: #6889a8; border-color: #6889a8; }
+.ghost svg { display: block; margin: auto; }
+#legend { position: absolute; top: 10px; right: 10px; padding: 8px 10px; z-index: 2; width: 352px; max-width: calc(100vw - 20px); }
+#legend .row { display: flex; align-items: center; gap: 6px; }
+#legend .row .ghost { height: 30px; padding: 0 10px; }
+#legend .row .ghost.icon { width: 30px; padding: 0; margin-left: auto; }
+#legend .bar { width: 100%; height: 8px; border-radius: 2px; }
+#legend .ticks { position: relative; height: 14px; font-size: 11px; color: #888; font-variant-numeric: tabular-nums; margin-top: 2px; }
+#legend .ticks span { position: absolute; transform: translateX(-50%); }
+#legend .ticks span:first-child { transform: none; }
+#legend .ticks span:last-child { transform: translateX(-100%); }
+#exag { display: none; align-items: center; gap: 8px; margin-top: 8px; }
+#exag.open { display: flex; }
+#exag input { flex: 1; accent-color: #6889a8; min-width: 0; }
+#exag-val { color: #888; width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
+.toggle { display: flex; align-items: center; gap: 6px; margin-top: 6px; cursor: pointer; width: fit-content; }
+.toggle input { accent-color: #6889a8; margin: 0; }
+#services { position: absolute; top: 42px; left: 10px; padding: 7px 8px; z-index: 2; display: none; flex-direction: column; gap: 7px; width: 254px; }
+#services.ready { display: flex; }
+#services .grp { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+#services .other { padding-top: 7px; border-top: 1px solid #333; }
+.sys { background: none; border: 1px solid #555; color: #ccc; height: 20px; padding: 0 6px; border-radius: 4px; font: 700 10px/1 'Nunito', sans-serif; cursor: pointer; flex: none; }
+.sys.active { color: #6889a8; border-color: #6889a8; }
+.bul { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 21px; height: 21px; border-radius: 50%;
+  border: none; font: 700 12px/1 'Nunito', sans-serif; cursor: pointer; padding: 0; }
+.bul.diamond { width: 15px; height: 15px; margin: 3px; border-radius: 2px; transform: rotate(45deg); }
+.bul.diamond span { transform: rotate(-45deg); }
+.bul.pill { width: auto; padding: 0 5px; border-radius: 11px; font-size: 10px; }
+.bul.on { box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 3.5px #ddd; }
+.bul.small { width: 16px; height: 16px; font-size: 10px; cursor: default; vertical-align: -3px; margin-right: 2px; }
+.bul.small.diamond { width: 11px; height: 11px; margin: 2px 4px 2px 2px; }
+.bul.small.pill { width: auto; font-size: 9px; }
+.bul.tag { width: auto; height: 18px; padding: 0 6px; border-radius: 4px; font-size: 10px; white-space: nowrap; }
+.bul.small.tag { width: auto; height: 15px; font-size: 9px; padding: 0 4px; }
+#profile { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 262px; padding: 8px 10px; z-index: 2; display: none; background: rgba(10,10,10,.94); }
+#profile.open { display: block; }
+#profile .head { display: flex; align-items: center; gap: 8px; height: 24px; }
+#pname { color: #ccc; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#pread { margin-left: auto; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#flip, #close { width: 24px; height: 24px; flex: none; border-radius: 4px; line-height: 1; }
+#flip[hidden] { display: none; }
+#chart { width: 100%; height: 220px; display: block; margin-top: 4px; touch-action: none; }
+#chart text { fill: #888; font-size: 10px; font-family: inherit; }
+#chart text.stn { fill: #aaa; paint-order: stroke; stroke: #0a0a0a; stroke-width: 3px; stroke-linejoin: round; }
+#info-btn { position: absolute; left: 10px; bottom: 10px; width: 30px; height: 30px; z-index: 3; }
+body.has-profile #info-btn { bottom: 282px; }
+#info { position: absolute; left: 10px; bottom: 48px; width: 340px; max-width: calc(100vw - 20px); padding: 10px 12px; z-index: 3; display: none; line-height: 1.45; }
+body.has-profile #info { bottom: 320px; }
+#info.open { display: block; }
+#info p + p { margin-top: 6px; }
+#info a { color: #89b4fa; }
+.maplibregl-popup-content { background: rgba(10,10,10,.9); color: #ccc; border: 1px solid #333; border-radius: 6px; padding: 6px 8px; font-family: 'Nunito', sans-serif; font-size: 12px; font-variant-numeric: tabular-nums; }
+.maplibregl-popup-tip { display: none; }
+.maplibregl-popup { z-index: 2; }
+.pe { line-height: 20px; overflow-wrap: anywhere; }
+.pe .bul:last-of-type { margin-right: 6px; }
+.pe + .pe { margin-top: 4px; padding-top: 4px; border-top: 1px solid #333; }
+@media (max-width: 640px) {
+  #legend { top: 40px; left: 10px; right: 10px; width: auto; max-width: none; padding: 6px 8px; }
+  #legend .ptitle { margin: 6px 0 4px; }
+  #legend .toggles { display: flex; gap: 14px; flex-wrap: wrap; }
+  #services { top: auto; bottom: 10px; left: 48px; right: 10px; width: auto; flex-direction: row; overflow-x: auto; padding: 6px 7px; scrollbar-width: none; gap: 5px; align-items: center; }
+  #services .grp { flex-wrap: nowrap; }
+  #services .other { padding: 0 0 0 7px; border-top: none; border-left: 1px solid #333; }
+  body.has-profile #services { bottom: 262px; }
+  #profile { height: 244px; left: 6px; right: 6px; bottom: 6px; padding: 6px 8px; }
+  #chart { height: 206px; }
+  body.has-profile #info-btn { bottom: 262px; }
+  body.has-profile #info { bottom: 300px; }
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="title">nyc track depth</div>
+<div id="services" class="panel"></div>
+<div id="legend" class="panel">
+  <div class="row">
+    <button class="ghost active" data-mode="depth">Depth</button>
+    <button class="ghost" data-mode="elev">Elevation</button>
+    <button class="ghost icon" id="btn3d" title="3D view"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8 1.5 14 4.8v6.4L8 14.5 2 11.2V4.8z"/><path d="M2 4.8 8 8l6-3.2M8 8v6.5"/></svg></button>
+  </div>
+  <div class="ptitle" id="ramp-title"></div>
+  <div id="legend-ramp"></div>
+  <div id="exag"><span>Vertical exaggeration</span><input type="range" id="exag-in" min="1" max="15" step="0.5" value="3"><span id="exag-val"></span></div>
+  <div class="toggles">
+    <label class="toggle"><input type="checkbox" id="show-stations" checked> Show stations</label>
+    <label class="toggle"><input type="checkbox" id="by-track"> Select single tracks</label>
+  </div>
+</div>
+<div id="profile" class="panel">
+  <div class="head"><span id="pbul"></span><span id="pname"></span><button class="ghost" id="flip" title="Other direction"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5h9M8.5 2l2.5 2.5L8.5 7M12 9.5H3M5.5 7 3 9.5 5.5 12"/></svg></button><span id="pread"></span><button class="ghost" id="close" title="Close">&times;</button></div>
+  <svg id="chart"></svg>
+</div>
+<button id="info-btn" class="ghost" title="About"><span style="font-family:'Times New Roman',Times,serif;font-style:italic;font-size:19px;font-weight:bold">i</span></button>
+<div id="info" class="panel">
+  <p>A first estimate. Most depths come from rules of thumb for each kind of structure, pinned to real numbers where the MTA lists how far a station's elevators travel. The band around the rail on a profile is one standard deviation.</p>
+  <p>Track and routes from <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>. Ground height from <a href="https://www.usgs.gov/3d-elevation-program" target="_blank">USGS 3DEP</a> lidar. Elevator rises from the <a href="https://data.ny.gov/d/94fv-bak7" target="_blank">MTA elevator and escalator inventory</a>. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a>.</p>
+</div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@8.9.36/dist.min.js"></script>
+<script>
+// Two ramps, high to deep: sky colours above, green at the reference, warm below.
+// Depth: height of the rail relative to the surface. Elevation: relative to sea level (NAVD88).
+// Stops are dense near the reference, where most track is.
+const RAMPS = {
+  depth: { title: 'Height above surface, m', key: 'h',
+    stops: [[45, '#ffffff'], [28, '#b9b7ff'], [15, '#5a8dff'], [6, '#22c3c9'], [0, '#3ccf5a'], [-4, '#ffe14d'],
+            [-8, '#ff9f3a'], [-13, '#ff4d3d'], [-20, '#d1245f'], [-32, '#a12a9c'], [-55, '#6a2fb0']] },
+  // rail heights run from -34 to +60 m; half the track sits between +2 and +17
+  elev: { title: 'Height above sea level, m', key: 'e',
+    stops: [[60, '#ffffff'], [40, '#b9b7ff'], [24, '#5a8dff'], [10, '#22c3c9'], [0, '#3ccf5a'], [-4, '#ffe14d'],
+            [-8, '#ff9f3a'], [-13, '#ff4d3d'], [-19, '#d1245f'], [-27, '#a12a9c'], [-40, '#6a2fb0']] },
+};
+let mode = 'depth', is3D = false, exag = 3;
+const ramp = () => RAMPS[mode];
+const colorExpr = () => ['interpolate', ['linear'], ['get', ramp().key], ...ramp().stops.slice().reverse().flat()];
+const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+function rampRGB(v) {
+  const s = ramp().stops;  // descending
+  if (v >= s[0][0]) return hex(s[0][1]);
+  for (let k = 1; k < s.length; k++) {
+    if (v >= s[k][0]) {
+      const t = (v - s[k][0]) / (s[k - 1][0] - s[k][0]), a = hex(s[k][1]), b = hex(s[k - 1][1]);
+      return [0, 1, 2].map(j => Math.round(a[j] + (b[j] - a[j]) * t));
+    }
+  }
+  return hex(s[s.length - 1][1]);
+}
+function drawLegend() {
+  // evenly spaced stops, so the dense near-zero steps get as much room as the far ones
+  const stops = ramp().stops, n = stops.length - 1;
+  const grad = 'linear-gradient(to right,' + stops.map(([v, c], i) => `${c} ${(i / n * 100).toFixed(1)}%`).join(',') + ')';
+  const ticks = stops.map(([v], i) => `<span style="left:${(i / n * 100).toFixed(1)}%">${v > 0 ? '+' + v : v < 0 ? '−' + -v : 0}</span>`).join('');
+  document.getElementById('legend-ramp').innerHTML = `<div class="bar" style="background:${grad}"></div><div class="ticks">${ticks}</div>`;
+  document.getElementById('ramp-title').textContent = ramp().title;
+}
+drawLegend();
+
+const fmt = v => (v == null || isNaN(v)) ? '?' : Math.abs(v).toFixed(1);
+const relSurface = h => h >= 0 ? `${fmt(h)} m above surface` : `${fmt(h)} m below surface`;
+const relSea = z => z >= 0 ? `${fmt(z)} m above sea level` : `${fmt(z)} m below sea level`;
+const heightText = (z, g) => mode === 'depth' ? relSurface(z - g) : relSea(z);
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/dark',
+  center: [-73.93, 40.73], zoom: 11, attributionControl: false, maxPitch: 80,
+});
+// deck.gl on its own canvas over the map, following the map's camera. Not MapboxOverlay: its view
+// sets the far clipping plane just past the ground at the horizon, so track deep under the ground
+// near the top of the screen fell beyond it and vanished when zoomed in. Our own MapView pushes
+// the far plane out (and the near plane in).
+const deckCanvas = document.createElement('canvas');
+deckCanvas.id = 'deck';
+map.getContainer().appendChild(deckCanvas);
+const deckgl = new deck.Deck({
+  canvas: deckCanvas, width: '100%', height: '100%', controller: false, layers: [],
+  // far plane at 2x (default 1.01) is enough for the deepest track at the top exaggeration;
+  // pushing it much further costs depth precision, and the water plane then bleeds through land
+  views: new deck.MapView({ id: 'map', nearZMultiplier: 0.05, farZMultiplier: 2 }),
+  viewState: { longitude: -73.93, latitude: 40.73, zoom: 11, pitch: 0, bearing: 0 },
+});
+function syncDeck() {
+  const c = map.getCenter();
+  deckgl.setProps({ viewState: { longitude: c.lng, latitude: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() } });
+}
+map.on('move', syncDeck);
+map.on('resize', syncDeck);
+
+let DATA, SERVICES = [], wayToSvc = new Map(), idToTi = new Map(), grid = new Map();
+let selected = null;  // { pts, colour, service, variant, ways:Set of ti, stations }
+const GRID = 0.0005;
+const gkey = (lon, lat) => Math.floor(lon / GRID) + ',' + Math.floor(lat / GRID);
+const metres = (a, b) => Math.hypot((a[0] - b[0]) * 84300, (a[1] - b[1]) * 111000);
+
+function segFeatures(tracks) {
+  const out = [];
+  tracks.forEach((t, ti) => {
+    for (let i = 0; i + 1 < t.lon.length; i++) {
+      const h = ((t.z[i] - t.ground[i]) + (t.z[i + 1] - t.ground[i + 1])) / 2, e = (t.z[i] + t.z[i + 1]) / 2;
+      out.push({ type: 'Feature', properties: { ti, i, h, e, sd: (t.sd[i] + t.sd[i + 1]) / 2, yard: t.service === 'yard' ? 1 : 0 },
+        geometry: { type: 'LineString', coordinates: [[t.lon[i], t.lat[i]], [t.lon[i + 1], t.lat[i + 1]]] } });
+    }
+  });
+  return { type: 'FeatureCollection', features: out };
+}
+
+// ---------- services ----------
+function bulletHTML(s, cls = '', attrs = '') {
+  return `<button class="bul ${s.shape} ${cls}" style="background:${s.colour};color:${s.text}" ${attrs}><span>${s.label}</span></button>`;
+}
+function svcOfTrack(ti) {
+  const list = wayToSvc.get(DATA.tracks[ti].id) || [];
+  return [...new Set(list.map(x => x.s))];
+}
+// Subway bullets, then a quieter row of the other systems. A system with one service (Amtrak,
+// NJ Transit, AirTrain) selects it; one with several lines (PATH, LIRR, Metro-North) opens a row of
+// its lines as small coloured tags.
+let openSystem = null;
+function drawBullets() {
+  const el = document.getElementById('services');
+  const on = i => selected && selected.service === i ? 'on' : '';
+  const tip = s => s.name && s.name !== s.label ? ` title="${s.name}"` : '';
+  const subway = SERVICES.map((s, i) => [s, i]).filter(([s]) => !s.system);
+  const systems = [...new Set(SERVICES.filter(s => s.system).map(s => s.system))];
+  if (selected && selected.service != null && SERVICES[selected.service].system) openSystem = SERVICES[selected.service].system;
+  const sysBtn = sys => {
+    const lines = SERVICES.map((s, i) => [s, i]).filter(([s]) => s.system === sys);
+    if (lines.length === 1) {
+      const [s, i] = lines[0];
+      return `<button class="sys ${on(i) ? 'active' : ''}" data-s="${i}"${tip(s)}>${s.label}</button>`;
+    }
+    return `<button class="sys ${openSystem === sys ? 'active' : ''}" data-sys="${sys}">${sys}</button>`;
+  };
+  const lines = openSystem ? SERVICES.map((s, i) => [s, i]).filter(([s]) => s.system === openSystem) : [];
+  el.innerHTML = `<div class="grp">${subway.map(([s, i]) => bulletHTML(s, on(i), `data-s="${i}"${tip(s)}`)).join('')}</div>` +
+    (systems.length ? `<div class="grp other">${systems.map(sysBtn).join('')}</div>` : '') +
+    (lines.length > 1 ? `<div class="grp lines">${lines.map(([s, i]) => bulletHTML(s, on(i), `data-s="${i}"${tip(s)}`)).join('')}</div>` : '');
+  el.classList.toggle('ready', SERVICES.length > 0);
+  el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
+    const si = +b.dataset.s;
+    if (selected && selected.service === si) closeProfile(); else { openService(si, 0, null); fitSelection(); }
+  });
+  el.querySelectorAll('[data-sys]').forEach(b => b.onclick = () => {
+    openSystem = openSystem === b.dataset.sys ? null : b.dataset.sys;
+    drawBullets();
+  });
+}
+
+// ---------- map ----------
+const pop = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+map.on('load', async () => {
+  for (const l of map.getStyle().layers) {
+    if (l.type === 'symbol' && l.layout && l.layout['text-field']) map.setPaintProperty(l.id, 'text-color', '#666');
+  }
+  const [tj, sj] = await Promise.all([
+    fetch('data/tracks.json').then(r => r.json()),
+    fetch('data/services.json').then(r => r.ok ? r.json() : { services: [] }).catch(() => ({ services: [] })),
+  ]);
+  DATA = tj;
+  DATA.tracks.forEach((t, ti) => {
+    idToTi.set(t.id, ti);
+    t.lon.forEach((lon, i) => {
+      const k = gkey(lon, t.lat[i]);
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(ti, i);
+    });
+  });
+  SERVICES = sj.services || [];
+  SERVICES.forEach((s, si) => s.variants.forEach((v, vi) => v.ways.forEach(([id]) => {
+    if (!wayToSvc.has(id)) wayToSvc.set(id, []);
+    const l = wayToSvc.get(id);
+    if (!l.some(x => x.s === si)) l.push({ s: si, v: vi });
+  })));
+  drawBullets();
+
+  map.addSource('seg', { type: 'geojson', data: segFeatures(DATA.tracks), tolerance: 0.2 });
+  map.addSource('sel', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addSource('cursor', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'sel', type: 'line', source: 'sel', layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#fff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 5, 16, 12], 'line-opacity': 0.55 } });
+  const w = (yard, main) => ['case', ['==', ['get', 'yard'], 1], yard, main];
+  map.addLayer({ id: 'seg', type: 'line', source: 'seg', layout: { 'line-cap': 'round' },
+    paint: { 'line-color': colorExpr(), 'line-width': ['interpolate', ['linear'], ['zoom'], 10, w(0.6, 1.4), 16, w(2, 4)] } });
+  map.addSource('stations', { type: 'geojson', data: { type: 'FeatureCollection', features: DATA.stations.map((s, k) => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+    properties: { k, h: s.z - s.ground, e: s.z } })) } });
+  map.addLayer({ id: 'stations', type: 'circle', source: 'stations', paint: {
+    'circle-color': colorExpr(), 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2, 13, 3.5, 16, 6],
+    'circle-stroke-color': '#0a0a0a', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 16, 1.5] } });
+  map.addLayer({ id: 'cursor', type: 'circle', source: 'cursor', paint: { 'circle-radius': 5, 'circle-color': '#fff', 'circle-stroke-color': '#000', 'circle-stroke-width': 1 } });
+
+  map.on('mousemove', onHover);
+  map.on('mouseout', () => { pop.remove(); });
+  map.on('click', onClick);
+  readHash();
+});
+
+// Everything under the cursor: stations first, then every track (each once), shallowest first.
+function hitsAt(point) {
+  if (!is3D) {
+    const showSt = document.getElementById('show-stations').checked;
+    const st = showSt ? map.queryRenderedFeatures(point, { layers: ['stations'] }).map(f => f.properties.k) : [];
+    const seen = new Set(), tracks = [];
+    // a few px of slack around the pointer, so thin lines are easy to hit
+    const box = [[point.x - 4, point.y - 4], [point.x + 4, point.y + 4]];
+    for (const f of map.queryRenderedFeatures(box, { layers: ['seg'] })) {
+      const p = f.properties;
+      if (seen.has(p.ti)) continue;
+      seen.add(p.ti); tracks.push({ ti: p.ti, i: p.i });
+    }
+    return { st, tracks };
+  }
+  const st = [], tracks = [], seen = new Set();
+  const picks = deckgl.pickMultipleObjects({ x: point.x, y: point.y, radius: 7, depth: 6, layerIds: ['tracks', 'stations3d'] });
+  for (const p of picks) {
+    if (p.layer.id === 'stations3d') { if (!st.length) st.push(p.index); continue; }
+    if (seen.has(p.index)) continue;
+    seen.add(p.index);
+    tracks.push({ ti: p.index, i: nearestPointOnScreen(p.index, point) });
+  }
+  return { st, tracks };
+}
+function viewport() {
+  const c = map.getCenter(), el = map.getCanvas();
+  return new deck.WebMercatorViewport({ width: el.clientWidth, height: el.clientHeight, longitude: c.lng, latitude: c.lat,
+    zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() });
+}
+function nearestPointOnScreen(ti, point) {
+  const t = DATA.tracks[ti], vp = viewport();
+  let best = 0, bd = Infinity;
+  for (let i = 0; i < t.lon.length; i++) {
+    const [x, y] = vp.project([t.lon[i], t.lat[i], height3D(t.z[i], t.ground[i])]);
+    const d = (x - point.x) ** 2 + (y - point.y) ** 2;
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+// Hovers: whole metres, one entry per level. Tracks under the cursor within 2 m of each other in
+// height are one entry (parallel tracks on one level), with all their services' bullets.
+const hoverHeight = (v, sd) => {
+  const m = Math.round(Math.abs(v)), where = mode === 'depth' ? 'surface' : 'sea level';
+  return `<span style="white-space:nowrap">${m} m ${v >= 0 || m === 0 ? 'above' : 'below'} ${where} &plusmn; ${Math.max(1, Math.round(sd))}</span>`;
+};
+const bullets = list => list.map(si => bulletHTML(SERVICES[si], 'small')).join('');
+function trackEntries(tracks) {
+  const T = DATA.tracks, val = h => mode === 'depth' ? T[h.ti].z[h.i] - T[h.ti].ground[h.i] : T[h.ti].z[h.i];
+  tracks.sort((a, b) => val(b) - val(a));
+  if (document.getElementById('by-track').checked) {
+    return tracks.slice(0, 3).map(h => {
+      const t = T[h.ti];
+      return `<div class="pe">${t.name || 'Unnamed track'}${t.track ? ' · track ' + t.track : ''}<br>${bullets(svcOfTrack(h.ti))}${hoverHeight(val(h), t.sd[h.i])}</div>`;
+    }).join('');
+  }
+  const groups = [];
+  for (const h of tracks) {
+    const g = groups[groups.length - 1];
+    if (g && g.top - val(h) <= 2) g.list.push(h); else groups.push({ top: val(h), list: [h] });
+  }
+  return groups.slice(0, 3).map(g => {
+    const mean = g.list.reduce((s, h) => s + val(h), 0) / g.list.length;
+    const sd = Math.max(...g.list.map(h => T[h.ti].sd[h.i]));
+    const sv = [...new Set(g.list.flatMap(h => svcOfTrack(h.ti)))].sort((a, b) => a - b);
+    return `<div class="pe">${bullets(sv)}${hoverHeight(mean, sd)}</div>`;
+  }).join('');
+}
+let hoverPending = null;
+function onHover(e) {
+  if (!DATA) return;
+  if (hoverPending) { hoverPending = e; return; }
+  hoverPending = e;
+  requestAnimationFrame(() => {
+    const ev = hoverPending; hoverPending = null;
+    const { st, tracks } = hitsAt(ev.point);
+    if (!st.length && !tracks.length) { map.getCanvas().style.cursor = ''; pop.remove(); return; }
+    map.getCanvas().style.cursor = 'pointer';
+    let html;
+    if (st.length) {
+      const s = DATA.stations[st[0]];
+      html = `${s.name} · ${s.line}<br>${hoverHeight(mode === 'depth' ? s.z - s.ground : s.z, s.sd)}`;
+    } else {
+      html = trackEntries(tracks);
+    }
+    pop.setLngLat(ev.lngLat).setHTML(html).addTo(map);
+  });
+}
+
+// Clicking a track opens the service that runs on it. Clicking the same spot again steps to
+// the next service there (4, 5, 6 on Lexington), or the next track down with single tracks.
+let lastPick = null;
+function onClick(e) {
+  if (!DATA) return;
+  const { st, tracks } = hitsAt(e.point);
+  if (!tracks.length) {
+    if (!st.length) closeProfile();
+    return;
+  }
+  const byTrack = document.getElementById('by-track').checked;
+  const t = DATA.tracks;
+  tracks.sort((a, b) => (t[b.ti].z[b.i] - t[b.ti].ground[b.i]) - (t[a.ti].z[a.i] - t[a.ti].ground[a.i]));
+  if (byTrack) {
+    const key = 't' + tracks.map(h => h.ti).join(',');
+    const n = lastPick && lastPick.key === key ? (lastPick.n + 1) % tracks.length : 0;
+    lastPick = { key, n };
+    openChain(tracks[n].ti, tracks[n].i);
+    return;
+  }
+  // services on the exact tracks under the cursor, in bullet order; else on track nearby
+  let opts = [];
+  for (const h of tracks) for (const x of wayToSvc.get(t[h.ti].id) || []) {
+    if (!opts.some(o => o.s === x.s)) opts.push({ s: x.s, ti: h.ti, i: h.i });
+  }
+  if (!opts.length) opts = nearbyServices(t[tracks[0].ti].lon[tracks[0].i], t[tracks[0].ti].lat[tracks[0].i], 40);
+  if (!opts.length) { openChain(tracks[0].ti, tracks[0].i); return; }
+  // services that run there full time come first (the 6 before the late-night 4 on the local track)
+  const partTime = o => SERVICES[o.s].variants.some(v => !v.when && v.ways.some(([id]) => id === t[o.ti].id)) ? 0 : 1;
+  opts.forEach(o => { o.pt = partTime(o); });
+  opts.sort((a, b) => a.pt - b.pt || a.s - b.s);
+  const key = 's' + opts.map(o => o.s).join(',');
+  const n = lastPick && lastPick.key === key ? (lastPick.n + 1) % opts.length : 0;
+  lastPick = { key, n };
+  const o = opts[n];
+  openService(o.s, variantWith(o.s, t[o.ti].id), { ti: o.ti, i: o.i });
+}
+function nearbyServices(lon, lat, maxM) {
+  const cx = Math.floor(lon / GRID), cy = Math.floor(lat / GRID), found = new Map();
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+    const cell = grid.get((cx + dx) + ',' + (cy + dy)) || [];
+    for (let k = 0; k < cell.length; k += 2) {
+      const ti = cell[k], i = cell[k + 1], tr = DATA.tracks[ti];
+      const svc = wayToSvc.get(tr.id);
+      if (!svc) continue;
+      const d = metres([tr.lon[i], tr.lat[i]], [lon, lat]);
+      if (d > maxM) continue;
+      for (const x of svc) if (!found.has(x.s) || found.get(x.s).d > d) found.set(x.s, { s: x.s, ti, i, d });
+    }
+  }
+  return [...found.values()];
+}
+function variantWith(si, wayId) {
+  const vs = SERVICES[si].variants;
+  const k = vs.findIndex(v => v.ways.some(([id]) => id === wayId));
+  return k < 0 ? 0 : k;
+}
+
+// ---------- 3D ----------
+// Tracks, stations and terrain all sit at their height above sea level (NAVD88) times the
+// exaggeration, in both modes; the mode only changes colours and wording.
+function height3D(z, g) { return z * exag; }
+// Terrain: our own tiles (make_terrain.py: 3DEP bare earth, CUDEM riverbeds, about 15 m cells,
+// already smoothed), a little transparent, and drawn before the tracks without writing depth, so no
+// track is ever hidden by ground in front of it. Its colours are baked into a texture per tile
+// (near-black land with a soft hillshade, green parks, light blue lakes, bed tinted by depth) and
+// drawn unlit: the mesh has no vertex normals, so deck's lighting facets steep ground. Water is a
+// flat polygon at height 0 over the terrain (data/water.json, the OSM coastline with piers cut
+// out: an exact shore). Inside it the tiles hold the riverbed, never above -1 m; land outside it
+// is never below -0.9 m. Neither layer writes depth, so the plane cannot z-fight the bed. Cells
+// with no data (-10000 m) are dropped to 0 and are transparent in the texture. The decoder
+// carries the exaggeration; it is cached per value, since a new decoder object makes the layer
+// fetch its tiles again.
+const decoders = {};
+const decoder = ex => decoders[ex] || (decoders[ex] = { rScaler: 256 * ex, gScaler: ex, bScaler: ex / 256, offset: -32768 * ex });
+let terrainExag = exag;
+const TERRAIN = 'data/terrain/{z}/{x}/{y}.png', TERRAIN_TEX = 'data/terrain/tex/{z}/{x}/{y}.webp';
+const TERRAIN_EXTENT = [-74.342, 40.508, -73.645, 41.032];  // make_terrain.py prints it
+const tileCache = new Map();
+function terrainTile(url, signal) {
+  if (tileCache.has(url)) return tileCache.get(url);
+  const job = (async () => {
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error('no terrain tile');
+    const bmp = await createImageBitmap(await res.blob(), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' });
+    const W = bmp.width, H = bmp.height, cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d', { willReadFrequently: true });
+    g.drawImage(bmp, 0, 0);
+    const im = g.getImageData(0, 0, W, H), p = im.data;
+    for (let i = 0; i < W * H; i++) {
+      let z = p[i * 4] * 256 + p[i * 4 + 1] + p[i * 4 + 2] / 256 - 32768;
+      if (z < -1000) z = 0;
+      const val = z + 32768;
+      p[i * 4] = Math.floor(val / 256); p[i * 4 + 1] = Math.floor(val) % 256; p[i * 4 + 2] = Math.floor((val % 1) * 256); p[i * 4 + 3] = 255;
+    }
+    // a perfectly flat tile (no data at all) makes the mesher return nothing, which the tile
+    // layer chokes on; nudge one corner up a few cm
+    p[2] = (p[2] + 13) % 256;
+    g.putImageData(im, 0, 0);
+    return await new Promise(r => cv.toBlob(r, 'image/png'));
+  })();
+  job.catch(() => tileCache.delete(url));
+  tileCache.set(url, job);
+  return job;
+}
+const defaultFetch = deck.Layer.defaultProps.fetch.value;
+async function terrariumFetch(url, ctx) {
+  if (ctx.propName === 'texture') {
+    // the baked colour tile (make_terrain.py), a webp with the no-data cells transparent
+    const res = await fetch(url, { signal: ctx.signal });
+    if (!res.ok) throw new Error('no terrain texture');
+    return createImageBitmap(await res.blob(), { premultiplyAlpha: 'none' });
+  }
+  if (ctx.propName !== 'elevationData') return defaultFetch(url, ctx);
+  const blob = await terrainTile(url, ctx.signal);
+  const u = URL.createObjectURL(blob);
+  try { return await defaultFetch(u, ctx); } finally { setTimeout(() => URL.revokeObjectURL(u), 10000); }
+}
+// The water polygon: land is holes in it. Fetched once; the same array every time, so deck does
+// not triangulate it again.
+let WATER = null;
+fetch('data/water.json').then(r => r.json()).then(fc => { WATER = fc.features.map(f => f.geometry.coordinates); refreshDeck(); }).catch(() => {});
+function waterAbove() {
+  return new deck.SolidPolygonLayer({ id: 'water', data: WATER, getPolygon: d => d, getFillColor: [58, 118, 190, 95],
+    parameters: { depthMask: false } });
+}
+// Mesh error in exaggerated metres. Each tile's skirt (twice that) closes the cracks where two
+// tiles' meshes cut an edge differently; the tiles agree in height along their shared edge.
+const MESH_ERR = 1;
+function terrainBelow() {
+  return new deck.TerrainLayer({ id: 'terrain', fetch: terrariumFetch, elevationData: TERRAIN, texture: TERRAIN_TEX,
+    elevationDecoder: decoder(terrainExag), minZoom: 9, maxZoom: 13, meshMaxError: MESH_ERR, loadOptions: { terrain: { skirtHeight: 2 * MESH_ERR } },
+    extent: TERRAIN_EXTENT, opacity: 0.45,
+    material: false, parameters: { depthMask: false } });
+}
+function lighten(c, k) { const a = hex(c); return a.map(v => Math.round(v + (255 - v) * k)); }
+function lineColour(c) {
+  // dark trunk colours (the A's blue) are hard to see on black; lift them for lines
+  const [r, g, b] = hex(c), lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum < 90 ? lighten(c, 0.35) : hex(c);
+}
+const rgbStr = a => `rgb(${a.join(',')})`;
+function buildDeck() {
+  if (!is3D || !DATA) { deckgl.setProps({ layers: [] }); return; }
+  const T = DATA.tracks;
+  let n = 0;
+  for (const t of T) n += t.lon.length;
+  const pos = new Float32Array(n * 3), col = new Uint8Array(n * 4), starts = new Uint32Array(T.length);
+  let k = 0;
+  T.forEach((t, ti) => {
+    starts[ti] = k;
+    const a = t.service === 'yard' ? 150 : 255;
+    for (let i = 0; i < t.lon.length; i++, k++) {
+      pos[k * 3] = t.lon[i]; pos[k * 3 + 1] = t.lat[i]; pos[k * 3 + 2] = height3D(t.z[i], t.ground[i]);
+      const c = rampRGB(mode === 'depth' ? t.z[i] - t.ground[i] : t.z[i]);
+      col[k * 4] = c[0]; col[k * 4 + 1] = c[1]; col[k * 4 + 2] = c[2]; col[k * 4 + 3] = a;
+    }
+  });
+  // Draw order: terrain (no depth writes), then tracks and stations, depth tested among
+  // themselves so stacked levels read.
+  const layers = [terrainBelow()];
+  if (WATER) layers.push(waterAbove());
+  if (selected) {
+    const paths = [...selected.tis].map(ti => { const t = T[ti]; return t.lon.map((lon, i) => [lon, t.lat[i], height3D(t.z[i], t.ground[i])]); });
+    layers.push(new deck.PathLayer({ id: 'sel3d', data: paths, getPath: d => d, getColor: [...selected.rgb, 120], getWidth: 7, widthUnits: 'pixels',
+      billboard: true, capRounded: true, jointRounded: true, parameters: { depthTest: false, depthMask: false } }));
+  }
+  layers.push(new deck.PathLayer({ id: 'tracks', data: { length: T.length, startIndices: starts, attributes: { getPath: { value: pos, size: 3 }, getColor: { value: col, size: 4 } } },
+    _pathType: 'open', getWidth: 2.2, widthUnits: 'pixels', billboard: true, capRounded: true, jointRounded: true, pickable: true }));
+  if (document.getElementById('show-stations').checked) {
+    const S = DATA.stations;
+    layers.push(new deck.LineLayer({ id: 'stems3d', data: S, getSourcePosition: s => [s.lon, s.lat, height3D(s.z, s.ground)],
+      getTargetPosition: s => [s.lon, s.lat, s.ground * exag], getColor: [200, 200, 200, 70], getWidth: 1 }));
+    layers.push(new deck.ScatterplotLayer({ id: 'stations3d', data: S, getPosition: s => [s.lon, s.lat, height3D(s.z, s.ground)],
+      getFillColor: s => rampRGB(mode === 'depth' ? s.z - s.ground : s.z), getRadius: 3.5, radiusUnits: 'pixels', billboard: true,
+      stroked: true, getLineColor: [10, 10, 10], getLineWidth: 1, lineWidthUnits: 'pixels', pickable: true }));
+  }
+  if (cursor3D) layers.push(new deck.ScatterplotLayer({ id: 'cursor3d', data: [cursor3D], getPosition: d => d, getFillColor: [255, 255, 255],
+    getRadius: 5, radiusUnits: 'pixels', billboard: true, stroked: true, getLineColor: [0, 0, 0], getLineWidth: 1, lineWidthUnits: 'pixels',
+    parameters: { depthTest: false } }));
+  deckgl.setProps({ layers });
+}
+let cursor3D = null, deckTimer = null;
+function refreshDeck() { if (deckTimer) return; deckTimer = requestAnimationFrame(() => { deckTimer = null; buildDeck(); }); }
+
+function set3D(on) {
+  is3D = on;
+  document.getElementById('btn3d').classList.toggle('active', on);
+  document.getElementById('exag').classList.toggle('open', on);
+  const vis = on ? 'none' : 'visible';
+  for (const id of ['seg', 'sel', 'cursor']) map.setLayoutProperty(id, 'visibility', vis);
+  map.setLayoutProperty('stations', 'visibility', !on && document.getElementById('show-stations').checked ? 'visible' : 'none');
+  if (on) map.easeTo({ pitch: 62, bearing: map.getBearing() || -25, duration: 700 });
+  else map.easeTo({ pitch: 0, bearing: 0, duration: 500 });
+  pop.remove();
+  buildDeck();
+  writeHash();
+}
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  drawLegend();
+  if (map.getLayer('seg')) { map.setPaintProperty('seg', 'line-color', colorExpr()); map.setPaintProperty('stations', 'circle-color', colorExpr()); }
+  pop.remove();
+  buildDeck();
+  if (selected) drawChart();
+  writeHash();
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+document.getElementById('btn3d').onclick = () => set3D(!is3D);
+const exagIn = document.getElementById('exag-in');
+const showExag = () => { document.getElementById('exag-val').textContent = exag + '×'; };
+showExag();
+exagIn.oninput = () => { exag = +exagIn.value; showExag(); refreshDeck(); };
+exagIn.onchange = () => { terrainExag = exag; refreshDeck(); };
+document.getElementById('show-stations').onchange = e => {
+  if (!is3D) map.setLayoutProperty('stations', 'visibility', e.target.checked ? 'visible' : 'none');
+  buildDeck();
+};
+
+// ---------- selection ----------
+// Points of one track, whole (rev: backwards) or the stretch between fractions f0 and f1 of its
+// length (services.json runs; f0 > f1 runs backwards).
+function trackPoints(ti, rev, f0 = 0, f1 = 1) {
+  const t = DATA.tracks[ti];
+  if (!t.cum) {
+    t.cum = [0];
+    for (let i = 1; i < t.lon.length; i++) t.cum.push(t.cum[i - 1] + metres([t.lon[i - 1], t.lat[i - 1]], [t.lon[i], t.lat[i]]));
+  }
+  const tot = t.cum[t.cum.length - 1] || 1, a = Math.min(f0, f1) * tot - 13, b = Math.max(f0, f1) * tot + 13;
+  let idx = [...t.lon.keys()].filter(j => t.cum[j] >= a && t.cum[j] <= b);
+  if (rev || f0 > f1) idx.reverse();
+  return idx.map(j => ({ ti, j, lon: t.lon[j], lat: t.lat[j], g: t.ground[j], z: t.z[j], sd: t.sd[j], bed: t.bed ? t.bed[j] : null }));
+}
+// Lay track pieces end to end. Each piece is flipped if the given direction leaves a gap and the
+// other one doesn't; a real gap (a way missing from the data) lifts the pen.
+function layOut(pieces) {
+  const pts = [];
+  let d = 0;
+  for (let [ti, rev, f0, f1] of pieces) {
+    let p = trackPoints(ti, rev, f0, f1);
+    if (!p.length) continue;
+    if (pts.length && f0 == null) {
+      const last = pts[pts.length - 1], a = [p[0].lon, p[0].lat], b = [p[p.length - 1].lon, p[p.length - 1].lat], l = [last.lon, last.lat];
+      if (metres(l, a) > 30 && metres(l, b) < metres(l, a)) p = p.reverse();
+    }
+    for (const q of p) {
+      if (pts.length) {
+        const last = pts[pts.length - 1], m = metres([last.lon, last.lat], [q.lon, q.lat]);
+        if (m < 0.5) continue;
+        if (m > 60) q.brk = true;
+        d += m;
+      }
+      q.d = d; pts.push(q);
+    }
+  }
+  return westFirst(pts);
+}
+// Every profile is drawn with its west end (smaller longitude) on the left, whichever way the
+// train runs. `flipped` says the points now run against the direction of travel.
+function westFirst(pts) {
+  if (pts.length < 2 || pts[0].lon <= pts[pts.length - 1].lon) { pts.flipped = false; return pts; }
+  const out = pts.slice().reverse();
+  let d = 0;
+  out.forEach((q, k) => {
+    q.brk = false;
+    if (k) {
+      const m = metres([out[k - 1].lon, out[k - 1].lat], [q.lon, q.lat]);
+      if (m > 60) q.brk = true;
+      d += m;
+    }
+    q.d = d;
+  });
+  out.flipped = true;
+  return out;
+}
+// Chain ways with the same name and track ref through shared end points.
+function chainFrom(ti) {
+  const t0 = DATA.tracks[ti];
+  const same = DATA.tracks.map((t, i) => i).filter(i => DATA.tracks[i].name === t0.name && DATA.tracks[i].track === t0.track);
+  const k = (t, end) => end ? `${t.lon[t.lon.length - 1]},${t.lat[t.lat.length - 1]}` : `${t.lon[0]},${t.lat[0]}`;
+  const ends = new Map();
+  for (const i of same) for (const e of [0, 1]) {
+    const key = k(DATA.tracks[i], e);
+    if (!ends.has(key)) ends.set(key, []);
+    ends.get(key).push([i, e]);
+  }
+  const used = new Set([ti]);
+  const walk = (key) => {
+    const seq = [];
+    while (true) {
+      const next = (ends.get(key) || []).filter(([i]) => !used.has(i));
+      if (next.length !== 1) break;
+      const [i, e] = next[0];
+      used.add(i);
+      const rev = e === 1;
+      seq.push([i, rev]);
+      key = k(DATA.tracks[i], rev ? 0 : 1);
+    }
+    return seq;
+  };
+  const fwd = walk(k(t0, 1));
+  const back = walk(k(t0, 0)).map(([i, rev]) => [i, !rev]).reverse();
+  return [...back, [ti, false], ...fwd];
+}
+function openChain(ti, pi) {
+  const chain = chainFrom(ti), pts = layOut(chain), t0 = DATA.tracks[ti];
+  const here = pts.findIndex(p => p.ti === ti && p.j === pi);
+  showSelection({ pts, here, colour: '#cfd9e4', rgb: [255, 255, 255], service: null, tis: new Set(chain.map(c => c[0])), stations: stationsAlong(pts, { stops: [] }),
+    title: (t0.name || 'Unnamed track') + (t0.track ? ' · track ' + t0.track : '') });
+}
+function openService(si, vi, at) {
+  const s = SERVICES[si], v = s.variants[vi];
+  const pieces = v.ways.filter(([id]) => idToTi.has(id)).map(([id, f0, f1]) => [idToTi.get(id), false, f0, f1]);
+  if (!pieces.length) return;
+  const pts = layOut(pieces);
+  const tis = new Set();
+  for (const vv of s.variants) for (const [id] of vv.ways) if (idToTi.has(id)) tis.add(idToTi.get(id));
+  let here = -1;
+  if (at) here = pts.findIndex(p => p.ti === at.ti && p.j === at.i);
+  const stations = stationsAlong(pts, v, !!s.system);
+  const end = pts.flipped ? stations[0] : stations[stations.length - 1];
+  const to = end ? end.name : v.to.replace(/\s+/g, ' ').trim();
+  showSelection({ pts, here, colour: rgbStr(lineColour(s.colour)), rgb: hex(s.colour), service: si, variant: vi, tis,
+    stations, title: (to ? 'to ' + to : s.name) + (v.when ? ' · ' + v.when : '') });
+}
+// Stops of the service along its profile: OSM stop positions, named after the nearest MTA
+// station of the same depth. Routes without stops fall back to stations right on the track.
+const ABBR = { street: 'st', avenue: 'av', ave: 'av', road: 'rd', boulevard: 'blvd', parkway: 'pkwy', place: 'pl', square: 'sq',
+  heights: 'hts', junction: 'jct', center: 'ctr', plaza: 'plz', east: 'e', west: 'w', north: 'n', south: 's' };
+function nameWords(n) {
+  return new Set(n.toLowerCase().replace(/(\d+)(st|nd|rd|th)\b/g, '$1').split(/[^a-z0-9]+/).filter(Boolean).map(w => ABBR[w] || w)
+    .filter(w => !['st', 'av', 'the', 'and'].includes(w)));
+}
+function stationsAlong(pts, v, own = false) {
+  const nearest = (lon, lat) => {
+    let best = -1, bd = Infinity;
+    for (let k = 0; k < pts.length; k += 1) {
+      const d = metres([pts[k].lon, pts[k].lat], [lon, lat]);
+      if (d < bd) { bd = d; best = k; }
+    }
+    return [best, bd];
+  };
+  const out = [];
+  if (v.stops && v.stops.length) {
+    for (const [lon, lat, name] of v.stops) {
+      const [k, d] = nearest(lon, lat);
+      if (k < 0 || d > 150) continue;
+      let nm = name, bs = Infinity;
+      const want = nameWords(name);
+      for (const s of DATA.stations) {
+        const dd = metres([s.lon, s.lat], [lon, lat]);
+        if (dd > 250) continue;
+        const got = nameWords(s.name), same = [...want].filter(w => got.has(w)).length / Math.max(1, Math.min(want.size, got.size));
+        const score = dd + 8 * Math.abs(s.z - pts[k].z) - (same >= 0.5 ? 300 : 0);
+        if (score < bs) { bs = score; nm = s.name; }
+      }
+      // On a rail line other than the subway, the nearest station can be a different one that
+      // shares most words (Grand Central Madison beside Grand Central Terminal): when neither
+      // name's words contain the other's, keep the stop's own name. The subway keeps the MTA's.
+      if (own) {
+        const a = nameWords(name), b = nameWords(nm);
+        if (![...a].every(w => b.has(w)) && ![...b].every(w => a.has(w))) nm = name;
+      }
+      if (!out.length || (out[out.length - 1].k !== k && out[out.length - 1].name !== nm)) out.push({ k, name: nm });
+    }
+  } else {
+    for (const s of DATA.stations) {
+      const [k, d] = nearest(s.lon, s.lat);
+      if (d < 40 && Math.abs(s.z - pts[k].z) < 4) out.push({ k, name: s.name });
+    }
+  }
+  return out.sort((a, b) => a.k - b.k);
+}
+function showSelection(sel) {
+  selected = sel;
+  cursor3D = null;
+  const feats = [...sel.tis].map(ti => { const t = DATA.tracks[ti]; return { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: t.lon.map((lon, i) => [lon, t.lat[i]]) } }; });
+  map.getSource('sel').setData({ type: 'FeatureCollection', features: feats });
+  map.setPaintProperty('sel', 'line-color', sel.service == null ? '#fff' : SERVICES[sel.service].colour);
+  document.getElementById('pname').textContent = sel.title;
+  document.getElementById('pbul').innerHTML = sel.service == null ? '' : bulletHTML(SERVICES[sel.service], 'small');
+  document.getElementById('flip').hidden = sel.service == null || SERVICES[sel.service].variants.length < 2;
+  document.getElementById('pread').textContent = '';
+  document.body.classList.add('has-profile');
+  document.getElementById('profile').classList.add('open');
+  drawBullets();
+  drawChart();
+  buildDeck();
+  writeHash();
+}
+// bring a service picked from its bullet into view, clear of the panels
+function fitSelection() {
+  if (!selected) return;
+  let w = 180, s = 90, e = -180, n = -90;
+  for (const p of selected.pts) { w = Math.min(w, p.lon); e = Math.max(e, p.lon); s = Math.min(s, p.lat); n = Math.max(n, p.lat); }
+  const narrow = innerWidth <= 640, prof = document.getElementById('profile').offsetHeight;
+  const padding = narrow ? { top: 200, bottom: prof + 60, left: 20, right: 20 } : { top: 180, bottom: prof + 30, left: 40, right: 40 };
+  if (innerHeight - padding.top - padding.bottom < 120) return;
+  map.fitBounds([[w, s], [e, n]], { padding, maxZoom: 14, duration: 600, pitch: map.getPitch(), bearing: map.getBearing() });
+}
+document.getElementById('flip').onclick = () => {
+  if (!selected || selected.service == null) return;
+  const s = SERVICES[selected.service];
+  openService(selected.service, (selected.variant + 1) % s.variants.length, null);
+};
+
+// ---------- profile ----------
+function drawChart() {
+  const pts = selected.pts, svg = document.getElementById('chart');
+  const W = svg.clientWidth, H = svg.clientHeight, L = 34, R = 8, T = 4, B = 16;
+  const D = pts[pts.length - 1].d || 1;
+  // the plot always shows real heights (NAVD88), terrain and all; the mode only changes wording
+  const rel = false;
+  // The ground in tracks.json is a running median of 7 points along each OSM way, so a short way
+  // (4 to 8 points, common on the LIRR) keeps its end spikes where bare earth under a bridge or
+  // beside a road shows. Median again over 7 points along the whole laid-out profile, so the line
+  // reads as the street.
+  let s0 = 0;
+  for (let i = 1; i <= pts.length; i++) {
+    if (i < pts.length && !pts[i].brk) continue;
+    for (let j = s0; j < i; j++) {
+      const w = [];
+      for (let k = Math.max(s0, j - 3); k <= Math.min(i - 1, j + 3); k++) if (pts[k].g != null) w.push(pts[k].g);
+      w.sort((a, b) => a - b);
+      const m = w.length >> 1;
+      pts[j].gm = !w.length ? pts[j].g : w.length % 2 ? w[m] : (w[m - 1] + w[m]) / 2;
+    }
+    s0 = i;
+  }
+  const rv = p => rel ? p.z - p.g : p.z;   // rail value
+  const gv = p => rel ? 0 : p.gm;          // surface value
+  let lo = Infinity, hi = -Infinity;
+  for (const p of pts) { lo = Math.min(lo, rv(p) - p.sd, gv(p)); hi = Math.max(hi, rv(p) + p.sd, gv(p)); }
+  lo = Math.floor((lo - 2) / 10) * 10; hi = Math.ceil((hi + 4) / 10) * 10;
+  const x = d => L + d / D * (W - L - R), y = v => T + (hi - v) / (hi - lo || 1) * (H - T - B);
+  const X = p => x(p.d).toFixed(1), Y = v => y(v).toFixed(1);
+  const runs = [];  // stretches without a gap
+  let cur = [];
+  for (const p of pts) { if (p.brk && cur.length) { runs.push(cur); cur = []; } cur.push(p); }
+  if (cur.length) runs.push(cur);
+  const line = (sel) => runs.map(r => 'M' + r.map(p => X(p) + ',' + Y(sel(p))).join('L')).join('');
+  const area = (r, top, bot) => 'M' + r.map(p => X(p) + ',' + Y(top(p))).join('L') + 'L' + r.slice().reverse().map(p => X(p) + ',' + Y(bot(p))).join('L') + 'Z';
+  // sky above the surface, earth below; water where the surface is a river or the harbour
+  let bg = '';
+  const yTop = T, yBot = H - B;
+  for (const r of runs) {
+    const top = 'M' + r.map(p => X(p) + ',' + yTop).join('L');
+    bg += `<path d="${top}L${r.slice().reverse().map(p => X(p) + ',' + Y(gv(p))).join('L')}Z" fill="url(#sky)"/>`;
+    bg += `<path d="M${r.map(p => X(p) + ',' + Y(gv(p))).join('L')}L${X(r[r.length - 1])},${yBot}L${X(r[0])},${yBot}Z" fill="url(#earth)"/>`;
+  }
+  let water = '';
+  for (const r of runs) {
+    // Water down to the riverbed where tracks.json has one (`bed`); elsewhere only a shallow
+    // band that fades out, since the bed is unknown there.
+    let w = [], kind = null;
+    const bedv = p => rel ? p.bed - p.g : p.bed;
+    const flush = () => {
+      if (w.length > 1) {
+        const bot = kind === 'bed' ? bedv : p => gv(p) - 3;
+        water += `<path d="${area(w, gv, bot)}" fill="#0c0e12"/><path d="${area(w, gv, bot)}" fill="url(#${kind === 'bed' ? 'deep' : 'water'})"/>`;
+        if (kind === 'bed') water += `<path d="M${w.map(p => X(p) + ',' + Y(bedv(p))).join('L')}" fill="none" stroke="#a07850" stroke-opacity="0.6" stroke-width="1"/>`;
+      }
+      w = []; kind = null;
+    };
+    for (const p of r) {
+      const k = p.bed != null ? 'bed' : p.gm < 1 ? 'fade' : null;
+      if (k !== kind) { const last = w[w.length - 1]; flush(); if (k && last) w.push(last); }
+      kind = k;
+      if (k) w.push(p);
+    }
+    flush();
+  }
+  let grid = '';
+  const span = hi - lo, step = span > 120 ? 40 : span > 60 ? 20 : 10;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) grid += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#fff" stroke-opacity="0.07"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  const kmStep = D > 30000 ? 5 : D > 12000 ? 2 : 1, kmPx = (W - L - R) / (D / 1000);
+  const ks = kmStep * Math.ceil(46 / (kmPx * kmStep) || 1);
+  for (let k = 0; k * 1000 <= D; k += ks) grid += `<text x="${x(k * 1000)}" y="${H - 3}" text-anchor="middle">${k} km</text>`;
+  const band = runs.map(r => area(r, p => rv(p) + p.sd, p => rv(p) - p.sd)).join('');
+  const here = selected.here >= 0 ? pts[selected.here] : null;
+  // station dots on the rail, names standing up from them. A name that would crowd the previous
+  // one is skipped, except the first and the last of the line, which are always drawn (a name
+  // stands 3.5 px either side of its dot, so a dot at the plot's edge still has room): the last
+  // one displaces the name before it.
+  let stn = '';
+  const ss = selected.stations, drawn = new Set();
+  let lastX = -1e9, lastI = -1;
+  ss.forEach((s, i) => {
+    const px = x(pts[s.k].d);
+    if (i === 0 || px - lastX >= 12 || i === ss.length - 1) {
+      if (i === ss.length - 1 && lastI > 0 && px - lastX < 12) drawn.delete(lastI);
+      drawn.add(i); lastX = px; lastI = i;
+    }
+  });
+  ss.forEach((s, i) => {
+    const p = pts[s.k], px = x(p.d), py = y(rv(p));
+    stn += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.6" fill="#0a0a0a" stroke="${selected.colour}" stroke-width="1.4"/>`;
+    if (!drawn.has(i)) return;
+    const len = s.name.length * 5.3, roomUp = py - 6 - T, roomDown = H - B - 4 - py - 6;
+    const up = len <= roomUp || (len > roomDown && roomUp >= roomDown);
+    let name = s.name;
+    const room = up ? roomUp : roomDown;
+    if (len > room) name = name.slice(0, Math.max(1, Math.floor(room / 5.3) - 1)) + '…';
+    const ty = up ? py - 6 : py + 6;
+    stn += `<text class="stn" transform="translate(${(px + 3.5).toFixed(1)},${ty.toFixed(1)}) rotate(-90)" text-anchor="${up ? 'start' : 'end'}">${name.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text>`;
+  });
+  svg.innerHTML = `<defs>
+      <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6a9fd8" stop-opacity="0.02"/><stop offset="1" stop-color="#6a9fd8" stop-opacity="0.13"/></linearGradient>
+      <linearGradient id="earth" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a07850" stop-opacity="0.24"/><stop offset="1" stop-color="#a07850" stop-opacity="0.08"/></linearGradient>
+      <linearGradient id="deep" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3a7fd0" stop-opacity="0.5"/><stop offset="1" stop-color="#3a7fd0" stop-opacity="0.3"/></linearGradient>
+      <linearGradient id="water" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3a7fd0" stop-opacity="0.55"/><stop offset="1" stop-color="#3a7fd0" stop-opacity="0.05"/></linearGradient>
+    </defs>` + bg + water + grid +
+    `<path d="${band}" fill="${selected.colour}" opacity="0.22"/>` +
+    `<path d="${line(gv)}" fill="none" stroke="#8a8a8a" stroke-width="1"/>` +
+    `<path d="${line(rv)}" fill="none" stroke="${selected.colour}" stroke-width="2" stroke-linejoin="round"/>` +
+    (here ? `<line x1="${x(here.d)}" x2="${x(here.d)}" y1="${T}" y2="${H - B}" stroke="#666" stroke-dasharray="2,3"/>` : '') +
+    `<text x="${L + 4}" y="${T + 10}">height above sea level, m</text>` +
+    stn +
+    `<line id="hair" y1="${T}" y2="${H - B}" stroke="#aaa" visibility="hidden"/>`;
+  const move = e => {
+    const r = svg.getBoundingClientRect(), dd = (e.clientX - r.left - L) / (W - L - R) * D;
+    let best = pts[0];
+    for (const p of pts) if (Math.abs(p.d - dd) < Math.abs(best.d - dd)) best = p;
+    const h = svg.querySelector('#hair');
+    h.setAttribute('x1', x(best.d)); h.setAttribute('x2', x(best.d)); h.setAttribute('visibility', 'visible');
+    document.getElementById('pread').textContent = `${heightText(best.z, best.g)} ± ${fmt(best.sd)}` + (mode === 'depth' ? '' : ` · ${relSurface(best.z - best.g)}`);
+    if (is3D) { cursor3D = [best.lon, best.lat, height3D(best.z, best.g)]; refreshDeck(); }
+    else map.getSource('cursor').setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [best.lon, best.lat] } });
+  };
+  svg.onpointermove = move;
+  svg.onpointerdown = move;
+  svg.onpointerleave = () => {
+    svg.querySelector('#hair').setAttribute('visibility', 'hidden');
+    document.getElementById('pread').textContent = '';
+    map.getSource('cursor').setData({ type: 'FeatureCollection', features: [] });
+    if (cursor3D) { cursor3D = null; refreshDeck(); }
+  };
+}
+window.addEventListener('resize', () => selected && drawChart());
+function closeProfile() {
+  document.getElementById('profile').classList.remove('open'); document.body.classList.remove('has-profile');
+  if (map.getSource('sel')) map.getSource('sel').setData({ type: 'FeatureCollection', features: [] });
+  selected = null; cursor3D = null; lastPick = null;
+  drawBullets();
+  buildDeck();
+  writeHash();
+}
+document.getElementById('close').onclick = closeProfile;
+document.getElementById('info-btn').onclick = () => {
+  document.getElementById('info').classList.toggle('open'); document.getElementById('info-btn').classList.toggle('active');
+};
+document.getElementById('by-track').onchange = () => { lastPick = null; };
+
+// view state in the hash: #elev, #flat (3D is the default), #s=5 (service), so a view can be
+// shared or reloaded
+function writeHash() {
+  if (!DATA) return;
+  const parts = [];
+  if (mode === 'elev') parts.push('elev');
+  if (!is3D) parts.push('flat');
+  if (selected && selected.service != null) parts.push('s=' + encodeURIComponent(SERVICES[selected.service].ref) + (selected.variant ? '.' + selected.variant : ''));
+  history.replaceState(null, '', parts.length ? '#' + parts.join('&') : location.pathname + location.search);
+}
+function readHash() {
+  const parts = location.hash.slice(1).split('&').filter(Boolean);
+  if (parts.includes('elev')) setMode('elev');
+  set3D(!parts.includes('flat'));
+  const s = parts.find(p => p.startsWith('s='));
+  if (s) {
+    const [ref, v] = decodeURIComponent(s.slice(2)).split('.');
+    const si = SERVICES.findIndex(x => x.ref === ref);
+    if (si >= 0) openService(si, Math.min(+v || 0, SERVICES[si].variants.length - 1), null);
+  }
+}
+</script>
+</body>
+</html>

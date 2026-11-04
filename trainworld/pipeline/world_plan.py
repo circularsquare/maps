@@ -124,6 +124,14 @@ GOLAN = (35.6, 32.6, 36.0, 33.4)
 DE_FACTO = {"CHN": {"IND": None, "BTN": None, "TWN": None, "HKG": None, "MAC": None}, "TWN": {"CHN": None},
             "IND": {"CHN": None, "PAK": KASHMIR, "KAS": None}, "PAK": {"IND": KASHMIR, "KAS": None},
             "UKR": {"RUS": CRIMEA}, "SYR": {"ISR": GOLAN}}
+# T-2344: a country's units that de_facto gives another side become that side's units, ids kept (Russia zones
+# Ukraine's councils in Crimea, which geoBoundaries RUS does not hold)
+DE_FACTO_TAKE = {"RUS": ["UKR"]}
+# T-2344: land held by another side where no de facto border is drawn (Anita 2026-11-04: "probably not draw the other
+# contested areas"): a unit of the country with over the share of its area inside the file's polygons is left out
+# whole, one with less stays whole. ISW and AEI's assessed Russian-controlled Ukraine of 2026-09-29: its terms are not
+# an open licence, so it only picks whole units; none of its edges is drawn or shipped
+LEFT_OUT = {"UKR": (RAW / "isw_ukr_control_2026-09-29.geojson", 0.5)}
 # The US, Puerto Rico and China (T-1004, T-1015; T-1185: China's census by township): `module` is the
 # country module zone rows take (elsewhere zones take none); `zoned_only` limits a first-level unit to
 # these units, the rest dead space (Alaska: the road and rail belt, Anchorage to Fairbanks)
@@ -173,6 +181,12 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
                       "task": "T-2295"},
               # Belarus's raions are settled countryside at 10-20 a km2: at the default 20, 76 of 118 were dead space
               "BLR": {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": "T-2295"},
+              # Ukraine's village and town councils (geoBoundaries ADM3, 10,375) by their old raion, as Korea's; the
+              # state's units, which kyi kha ode were planned on; land the government does not hold left out (LEFT_OUT);
+              # a density floor of 10 a km2, as Turkey's: at the default 20, 2.05M people in settled raions of 12-20 a
+              # km2 were dead space (Novoukrainka, Bashtanka, Snovsk, Olevsk)
+              "UKR": {"floor": 500_000, "cap": 1_500_000, "min_density": 10.0, "contiguous": True, "group_level": 1,
+                      "plan_units": True, "task": "T-2344"},
               # New Zealand's wards by territorial authority with no density floor (at 20 a km2 the wards left 1.19M
               # dead, Selwyn and Gisborne among them), zones not joining over 250 km (else Christchurch and Dunedin
               # were one zone of the whole South Island; T-1738)
@@ -423,6 +437,36 @@ def de_facto(iso, g):
         if own < lost and own < 0.1 * g.area:
             return None
     return polygonal(g.difference(cut))
+
+
+_LEFT = {}
+
+
+def left_out(iso, g):
+    """True when a unit of `iso` (Mollweide) lies mostly on LEFT_OUT's land (T-2344)."""
+    if iso not in LEFT_OUT:
+        return False
+    if iso not in _LEFT:
+        path, share = LEFT_OUT[iso]
+        gj = json.loads(path.read_text(encoding="utf-8"))
+        held = union_all([shapely.make_valid(to_moll(shape(f["geometry"]))) for f in gj["features"] if f["geometry"]])
+        shapely.prepare(held)
+        _LEFT[iso] = (held, share)
+    held, share = _LEFT[iso]
+    return bool(g.intersects(held)) and g.intersection(held).area > share * g.area
+
+
+def taken_units(st, iso):
+    """Copies, as `iso`'s, of the plan state's units of the countries DE_FACTO_TAKE names for it that de_facto
+    gives to another side (T-2344)."""
+    out = []
+    for other in DE_FACTO_TAKE.get(iso, ()):
+        for u in st["units"]:
+            if u.iso == other and de_facto(other, u.geom) is None:
+                t = Unit(u.id, u.name, iso, u.geom, u.parents)
+                t.pop = u.pop
+                out.append(t)
+    return out
 
 
 def iso_at(ne, tree, pts):
@@ -704,7 +748,7 @@ def state_units(iso):
             g = de_facto(iso, u.geom)
             if g is not None and not g.is_empty:
                 out.append((u.id, u.name, g))
-    return out
+    return out + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
 
 
 def fill_gaps(iso, units):
@@ -2427,6 +2471,7 @@ def plan_zones(isos3, out_path=None, replan=False):
     used |= {r["id"] for r in rows}
     order = max(r.get("order", 0) for r in rows)
     changes = []
+    took_all = {iso: taken_units(st, iso) for iso in isos3}  # before the loop sets the state's units on the de facto lines
     for iso in isos3:
         units = [u for u in st["units"] if u.iso == iso]
         # a country no metro reached, so not in the plan's state (T-788); or one with its own zone
@@ -2447,6 +2492,15 @@ def plan_zones(isos3, out_path=None, replan=False):
             units = [u for u in units if u.geom is not None and not u.geom.is_empty]
             if gone:
                 log(f"{iso}: {len(gone)} units held by another country on the ground, left out: {', '.join(gone)}")
+        took = took_all[iso]
+        if took:
+            units = units + took
+            log(f"{iso}: {len(took)} units of {', '.join(DE_FACTO_TAKE[iso])} it holds on the ground, taken (T-2344)")
+        left = [u for u in units if left_out(iso, u.geom)]
+        if left:
+            units = [u for u in units if u not in left]
+            log(f"{iso}: {len(left)} units mostly on land {LEFT_OUT[iso][0].name} leaves out, {sum(u.pop for u in left) / 1e6:.2f}M "
+                "people, not zoned (T-2344)")
         src = doc["unit_sources"][iso]
         rule = ZONE_RULES.get(iso, {})
         floor, cap = rule.get("floor", ZONE_FLOOR), rule.get("cap", ZONE_CAP)
@@ -2540,6 +2594,8 @@ def plan_zones(isos3, out_path=None, replan=False):
             mine = (grown[r["id"]][0] if r["id"] in grown else r).get("units", {}).get(iso)
             if r["id"] in old or not (mine or (not r.get("units") and r["id"] in pk and cc.get(r["id"]) == a2.get(iso))):
                 continue
+            if mine and r["id"] not in pk and not any(i in by for i in mine):
+                continue  # a held row on land LEFT_OUT leaves out (Donetsk, T-2344)
             fixed_units[r["id"]] += [i for i in mine or () if i in by]
             if r["id"] in pk:
                 g = pk[r["id"]]["geom"]
@@ -2737,6 +2793,11 @@ def plan_zones(isos3, out_path=None, replan=False):
             rec["remnants"] = {k: [m for g in add for m in members[g]] for k, add in remnants.items()}
         if away:
             rec["outside_europe"] = away
+        if left:
+            rec["left_out"] = {"source": LEFT_OUT[iso][0].name, "share": LEFT_OUT[iso][1], "task": "T-2344",
+                               "units": [{"unit": u.id, "name": u.name, "people": round(u.pop)} for u in left]}
+        if took:
+            rec["taken"] = {"from": DE_FACTO_TAKE[iso], "task": "T-2344", "units": [u.id for u in took]}
         changes.append({"iso": iso, "replan": replan, "old": {k: r["units"][iso] for k, r in old.items()},
                         "metros": {k: grow[k]["units"][iso] for k in grown}, "grown": {k: v[0] for k, v in grown.items()},
                         "out": out, "record": rec, "src": src,

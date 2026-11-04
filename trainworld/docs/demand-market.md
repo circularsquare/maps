@@ -4,6 +4,8 @@
 
 How the regional layer's market is held and measured; its rules are in regional.md.
 
+## The world market
+
 **The world market** (T-377, [regional.md](regional.md) 5.1, docs/zones.md 4-5). Longer trips
 follow T-376's rule: ground and tail departures, each over its own normaliser against the world
 field (T-1603: the ground curve fades out over the tail's own 300-700 km window, so past 700 km
@@ -61,6 +63,8 @@ working there by home zone). A station's far-zone rows hold both parts and take 
 weekend factor (a known approximation: commuters are counted 1.58x rather than 0.30x on a weekend
 there, T-296). Measurements on the real New York network: notes/T-276.md.
 
+## A superholiday's lean and the zone pairs
+
 **A superholiday's lean** (T-1373, [demand-timing.md](demand-timing.md) "Kinds of day"). On a
 going-out day a pair of places' longer trips lean towards the smaller: those from place i to j are
 times `1 + lean(i, j)`, `lean(i, j) = 0.4 (s_i - s_j) / (s_i + s_j)` (`LEAN`, `Market::lean`), and
@@ -110,6 +114,8 @@ composition of every pack it holds and adds each part's rail, `selection_rail_da
 out every place and every 6 km zone of the world (`zone_count`, the rows' zone counts in place
 order); a zone not open has no figures of its own and sits at its place's centre. Positions the
 app reads are in the market frame (the New York equirectangular one) whatever the place.
+
+## Distances and the regional API
 
 **The market's distances are on the ground** (T-128). Each zone centre goes through its pack's
 frame to the unit sphere and zone pairs are measured by great circle (`zone_km`; the same as

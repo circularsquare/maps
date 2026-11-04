@@ -19,9 +19,10 @@ STATE_DIR = Path(os.environ.get("TEMP", MAPS / ".claude")) / "claude-orchestrato
 
 
 def handoffs():
-    """(project, path, orchestrator line, previous line, updated line) for each notes/handoff.md."""
+    """(project, path, orchestrator line, previous line, updated line) for each notes/handoff.md,
+    in maps/ and in the projects beside it (transituniversalis lives outside maps)."""
     out = []
-    for path in sorted(MAPS.glob("*/notes/handoff.md")):
+    for path in sorted(MAPS.glob("*/notes/handoff.md")) + sorted(MAPS.parent.glob("*/notes/handoff.md")):
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:

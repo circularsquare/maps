@@ -98,7 +98,8 @@ them: the player's ferry or train is the only way. It takes every such trip unle
 times a drive over a bridge that isn't there, and none past 4 times. The rest are "no route":
 counted in the totals, by no mode. Car ferries don't count as roads.
 
-**By train**
+### By train
+
 - Walk to the station: each minute counts 1.5. To keep the sums quick, homes are priced in groups:
   those in one 2 km square that share their nearest station and are within the same 15 minute
   band of walking to it (0-15, 15-30, over 30) share one walk, an average leaning to the nearer
@@ -174,7 +175,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   costs 80 minutes or less, and for that limit the drive still counts 1.33 a minute, so long
   drives are dearer but not ruled out where streets are slow. The trip explorer's hover for the effective time by train lists each of these parts.
 
-**By car**
+### By car
+
 - Road time from the distance and the place: fast highways in the middle, slow streets at the ends
   where it's dense (3 km inside Manhattan about 12 minutes).
 - Driving counts 1.33 a minute.
@@ -195,7 +197,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   runs above the census's), and "car" for driving, taxis and longer bus trips. The trip explorer's
   Walk and Drive rows say so in their hovers.
 
-**Between cities** (the car and the plane against the train)
+### Between cities (the car and the plane against the train)
+
 - Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
   and water (motorways fast, mountain roads slow, lakes and inlets driven round); farther, 15 minutes
   plus the drive at 85 km/h on a road 1.25 times the straight line. Each neighbourhood has its own
@@ -226,7 +229,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   every 2 hours, 30 at anything sparser. A change of trains on the way waits as on any trip, and
   commutes and outings between cities wait as local trips do.
 
-**Walking the whole way**
+### Walking the whole way
+
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.
   Walks over 10 km are not offered.
 - Against the car, a walk gets a 10 minute head start: the car side leaves out getting to the car
@@ -283,10 +287,3 @@ is left out of the comparison; the figure is rail out of rail plus car.
 Details and the settings that were tried: notes/T-636.md; the route choice, notes/T-710.md; the
 curve by times cheaper, notes/T-918.md; the car's speeds and ownership cost, notes/T-938.md; the
 trips into town, notes/T-1092.md; the cap at the trains' room, notes/T-1070.md.
-
-## Coming next
-
-- T-1163: the everyday trips across a city line and the 0.5 damping, in the data at the next
-  rebuild.
-- Deep calibration, later: whether the walk's 1.5 should be 1, and what the real cities say about
-  the new numbers (the model carries about 2.4 times New York's station counts, 1.6 times London's).

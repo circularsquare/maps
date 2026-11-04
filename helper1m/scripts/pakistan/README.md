@@ -149,6 +149,10 @@ every district and province figure is an exact sum.
   figures themselves are exact sums of published counts; the only error the map can carry is a
   boundary that does not match the census unit, and the Kontur test cannot separate that from
   its own urban bias.
+- GHSL 2025 (`scripts/audit_ghsl.py pakistan`, 2026-11-02) and Table 1's own areas, unit by unit,
+  flag the boundary cases listed under Known weaknesses (Peshawar, Karachi West / Malir,
+  Qasimabad, Mirpur Khas, Chaman City, Sukkur City). No source for better lines was found, so the
+  build is unchanged; what was searched is under Tried and not used.
 
 ## Known weaknesses
 
@@ -176,6 +180,28 @@ every district and province figure is an exact sum.
   areas differ (Shigar 4,173 km2 there against 8,532 in COD).
 - **Restricted areas**: the 1.04 million counted by head only are inside the tehsil figures but
   PBS does not say which tehsils; they are wherever Table 1 put them.
+- **Peshawar's seven tehsils follow OSM's 2023 lines, which do not match the census units.**
+  Table 1 against drawn km2: Peshawar City 176 vs 267 (2.11M, 1.91M urban), Pishtakhara 135 vs
+  71, Chamkani 226 vs 128, Shah Alam 145 vs 101, Mathra 218 vs 262, Badhber 357 vs 383, Hassan
+  Khel 261 vs 221. GHSL agrees (Pishtakhara 3.9x ours over GHSL, Shah Alam 2.0x, City 0.87x). The
+  2021 reform put every neighbourhood council in the metropolitan City tehsil and the village
+  councils of Town-II and Town-IV into the five new tehsils (Dawn, June 2021,
+  https://www.dawn.com/news/1627068). OSM's City takes in old union councils whose 2015 councils
+  are all village councils (Sarband, Pishtakhara Payan, Shahi Bala, Sheikh Muhammadi), so its line
+  runs too far out. A fix needs the 2021 list of councils in each tehsil and the 2015 list of
+  which councils were in each old union council (ECP, blocked to scripts), then the 2017 union
+  council map below.
+- **Karachi West is drawn at 189 km2 against 370 in Table 1, Malir at 2,686 against 2,160.** The
+  census's Manghopir sub-division is 342 km2 with 249k rural people; OSM's Manghopir Town is 147
+  km2, so West's rural north is drawn inside Malir's Gadap (Gadap sub-division is 1,104 km2 in
+  Table 1, 2,109 drawn). No source gives the sub-division line (the deh lists name dehs but there
+  is no deh map). The district is one unit at tehsil level, so only the West / Malir split is off.
+- **Smaller city talukas drawn too big**, OSM's lines, no better source: Qasimabad (Hyderabad) 35
+  census km2 vs 91 drawn, Mirpur Khas taluka 24 vs 68 (Hussain Bux Mari 209 vs 336 beside it),
+  Chaman City 22 vs 76. Densities there are too low by the same factor.
+- **Table 1 areas that look wrong**, left as printed: Sukkur City taluka 250 km2 for an all-urban
+  267k (drawn 24; New Sukkur 109 vs 319 beside it), and Bahawalpur City 1,490 km2, the same figure
+  as Hasilpur's, likely a copy error (drawn 400).
 
 ## Tried and not used
 
@@ -188,6 +214,21 @@ every district and province figure is an exact sum.
 - **PBS GIS page** (`pbs.gov.pk/gis/`): lists administrative-unit PDFs, no shapefiles.
 - **GB at a Glance 2024** on `portal.pnd.gog.pk`: the host no longer resolves; the Wayback copy
   is cut off at exactly 5 MiB and unreadable. The 2025 edition on `pnd.gog.pk` replaced it.
+- **Union council map** (HDX, ALHASAN Systems, CC0, uploaded 2021,
+  `https://data.humdata.org/dataset/pakistan-union-council-boundaries-along-with-other-admin-boundaries-dataset`,
+  kept in `data/asia1m/pakistan/hdx_uc/`): 5,884 union councils on the 2001 towns, no urban /
+  rural flag in Peshawar or Karachi. Peshawar's 93 UCs line up with COD's four towns, so they could
+  carry a Peshawar rebuild once the council lists are in hand. Not usable alone: Karachi's Gadap UCs
+  are huge and do not give the 2023 Manghopir line; Hyderabad's city UCs are unnamed and partial;
+  in Balochistan the polygons are misplaced (its Chaman UC lies 20 km east of the town).
+- **KP Local Government 2015 Annex D** (`https://lgkp.gov.pk/uploads/2015/04/Village-Neighbourhood-Councils-Detatails-Annex-D.pdf`,
+  kept in `data/asia1m/pakistan/ecp_lg/`): Peshawar's 130 neighbourhood and ~200 village councils
+  by name, but not by union council, so it cannot sort UCs into urban and rural by itself.
+- **ECP delimitation lists** for Peshawar (`https://ecp.gov.pk/storage/uploads/32930.pdf`, a
+  65-page council list by ward, and the 2021 per-tehsil lists): the site answers scripts with
+  "The URL you requested has been blocked". No Wayback copy.
+- **PBS**: the GIS page's PDFs are one-page national summaries; `psi.pbos.gov.pk` does not answer;
+  the mouza census site has tables only. No deh or mauza polygons on HDX.
 - **USCB's 2017 workbook** (religiondots) has AJK and GB, but its GB tehsils are estimates spread
   from 1998 shares and its AJK total (4,045,367) is not the census's (4,032,363).
 

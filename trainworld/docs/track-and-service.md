@@ -6,6 +6,8 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 ### 6.1 Track and stations
 
+#### Geometry and drawing
+
 - **One track type**, anywhere: over roads at normal cost, over water and rough ground dearer
   (6.4). No buildings to demolish, no yards, no depots. Ground is flat in shape: levels are heights
   above or below the local ground, and the terrain only prices track (6.4, T-1270).
@@ -68,6 +70,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   free point is two straights side by side. From other track or a node the express pair swings
   out as below, which needs a straight, so that segment keeps the lead-in shape (curve then
   straight); one ending on track or a node has both pairs meet there.
+
+#### Pieces, reshaping and moving
+
 - **One piece per segment** (T-244, Anita: deleting one stretch should not delete the whole
   path): each segment drawn is one edge (each pair's, on quad track), joined to the next at a
   plain node (two edge ends, no station). A route edit given clicked corners (`pis`, as the
@@ -132,6 +137,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   auto, a set radius stays set and narrows to fit): a reshape of the edge as dragging the
   PI is, the PI found by stepping it by the preview's miss until the middle is within 0.3 m. Either
   end of a blueprint platform drags the station node by the pointer's move.
+
+#### Placing stations, curve speed and levels
+
 - **Placing stations**: click on track (it is split there), or a loose end's node for an end
   station when the pointer is within half a platform of it; the station tool takes nothing else
   (T-1820, T-1870; ui-building.md "Room along the track"). The sim can still place one on open ground, where the station
@@ -182,6 +190,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
+
+#### Track settings
+
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
   apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
   tracks.) **Single track** stays in the track model but the Build tab does not offer it (T-733;
@@ -241,6 +252,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
   on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
   beside it (`Alongside`); a run stops at high-speed track as at single track.
+
+#### Routes beside track, crossovers and junctions
+
 - **A route beside track** (T-1685, T-1721, `TrackApi::set_route_beside(_, to_edge)`, used by the
   next `preview_route` or `add_route` only): a route with no PIs whose end is open ground beside the
   run of track through `to_edge` (walked through plain joints and stations as doubling up walks, any
@@ -301,6 +315,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   high-speed track stays high speed on both halves. It is part of
   the route edit, so the ghost, the click, the real-network snap and the edit API agree, in one
   undo step.
+
+#### Water, bridges and ramps
+
 - **No track at ground level over water** (level 0 is invalid where the water mask says water);
   bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
@@ -367,6 +384,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   same way. The drawing tool sends the switch with each route (`ramp`); an edit API route
   without it crosses flat, a station placed on open ground never ramps, and saved track is never
   reshaped. The preview and the edit share the code.
+
+#### Stations
+
 - **Stations** are nodes on a route, platform length 60-400 m in 20 m steps, level and free of
   other nodes along it; curved platforms are fine. Through a station the platform is centred on
   the node; at a dead end it runs from the node along the track and trains stop at its middle
@@ -417,6 +437,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   handled as a passage is: the charge (`building_charge`) booked as construction that day and hour,
   in the region of the outline's middle; the `buildingQuote` query gives a drawn outline's floor,
   price, stations touching and refusal. The tool and panel: ui-inspectors.md "Station buildings".
+
+#### Station upgrades
+
 - **Station upgrades** (T-1281, `track/upgrades.rs`, notes/T-1281.md), bought from the station
   panel's row of icons like a flyover: into the blueprint with a blueprint station (built with
   it, in the quote as "Station upgrades"), paid at once on a constructed one; removing one is
@@ -472,6 +495,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   - **Passage**: the link above, priced US$10M plus US$90M a km of the straight line between the
     two stations (`upgrades::passage_price`); paid at once between constructed stations, else
     built and paid with the second of them (`Network::passages`, quote row "Passages").
+
+#### Train length
+
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
   set on any line in the game (5 cars until one is set, `NEW_LINE_CARS`, so a crowded line is the player's cue to
@@ -503,6 +529,8 @@ route conflict with every move on the other; one with no train on its other rout
 constructed track no line runs on) holds nothing. A node where only two edge ends carry running
 lines is plain track for capacity: a branch no train uses yet does not cut the section through it
 (T-1805).
+
+#### Resources and utilisation
 
 **Resources and utilisation.** Everything shared has an occupancy `s` per train, and per period
 `rho = sum(trains per hour x s) / 3600` from the scheduled frequencies:
@@ -545,6 +573,8 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   line's end (short turn or pooled dead end), with no reversing limiter. The loop itself is plain
   track, so a balloon has no turnback limit (about 34 an hour at 80 km/h).
 - junction move, with the moves it crosses; flat crossing, all moves: 90 s
+
+#### Delay and slower trains
 
 **Delay per train** (seconds), Kingman's queueing formula with a small variability term because
 trains are timetabled:
@@ -633,6 +663,8 @@ queue on track two lines share (about a minute at 12 trains an hour). The same w
 keeping a 10 minute headway (`passing_tracks_on_headway_lines`): the same waits, 12 locals and 9
 expresses.
 
+#### Capacity limits in the clock worker
+
 **No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
 on every resource but a station crossover (whose load counts through trains that never meet),
 `rho` stops at 100%. Where the lines a resource carries want more, each line's rate is scaled down
@@ -700,6 +732,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 
 ### 6.3 Trains, lines, schedules
 
+#### Trains and lines
+
 - **Two train kinds, chosen per line** (T-817; Anita 2026-10-21): **normal** (top speed 160
   km/h) and **high speed** (320, on high-speed track only; 160 elsewhere). They differ by top speed
   and cost (6.4), never by urban vs intercity; a line's choice is saved with it (`LineData::fast`,
@@ -720,6 +754,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
+
+#### Line groups
+
 - **Line groups** (T-1791; Anita 2026-10-29): a grouping for the player's eyes only, each line
   still its own service. A group is a number on each line (`LineData::group`, 0 for none) with
   the group's name beside it (`group_name`, empty for its oldest line's name, the same on every
@@ -778,6 +815,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   colour and custom badge as independent inputs, and starts with no trains (counts at 0, or a
   headway line's headways at none) until the player sets them, so a copy never doubles a
   service (T-1161); edits and removal are undoable.
+
+#### Scheduling
+
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
@@ -852,6 +892,9 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains
   never leave a terminal in pairs.
+
+#### Trains on a running line
+
 - **Trains join and leave at the ends** (T-206, notes/T-206.md). An edit that changes a running
   line's departures (its train count, a whole-line fleet's headway after track or congestion
   changes, its turnaround) takes effect at one game time (the edit's, a moment later for a train
@@ -894,6 +937,8 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   round trip.
 
 ### 6.4 Costs and money
+
+#### Construction prices
 
 Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
@@ -996,6 +1041,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   tracks the platform plus 0.4 km of it, 1.5x on high-speed track (US$22.5M for a 200 m station at
   grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km, a station building US$2,000 a m² of floor (T-2217). A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches.
+
+#### Blueprint, trains and running costs
+
 - **Blueprint, then construct** (Anita, 2026-10-09). New track, stations and junctions are drawn
   as a **blueprint**: free, freely edited and undone, drawn faded, shown with its total cost. The
   player pays when they click **Construct**, which builds the blueprint at once if the money is
@@ -1059,6 +1107,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   and the track inspector (not on crossovers), and "$X / day upkeep" under the Build tab's
   blueprint total (the pieces switched off left out); each hover states the rule. The panels' upkeep
   figures (station, track and the Build tab's) are in the alert red, as a cost [T-1893].
+
+#### Fares and the ledgers
+
 - Running costs, upkeep and **fares**
   are settled by the clock worker into the cash and a ledger per day (every day kept, T-2143) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
@@ -1159,6 +1210,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   even share per boarding would give. Each line's base goes over its periods by passenger-km. Changing the fare
   recalculates demand: higher prices can lose riders (T-067). Running costs can take the cash below zero; edits that cost nothing still
   work then. notes/T-028.md.
+
+#### Regions, points and stars
+
 - **Money by region** (T-531, `app/src/game/regionMoney.ts`): beside the network's, the worker
   keeps both ledgers per region, a region being a zone as `stationZone` places it (the Lines and
   Stations tabs' place), and "" for anything outside every zone, so the regions add up to the
@@ -1196,8 +1250,27 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
   earned (`stars`), and it stays if the share falls. Drawn stamps come later.
+
+#### Starting money, loan and the economy's scale
+
 - **Starting money $10B** (T-805, Anita T-2271): about two real first lines, each a 20 km line at -2
   with 18 stations plus its trains (about $4.2B).
+- **A fare edit pays when its riders show** (T-2266, `game/fareInEffect.ts`): the fare controls
+  change at once, but a line's income keeps the fares its riders were solved with (`solvedFares`)
+  until riders solved with the new ones show, whether the change raised or cut them; a solve
+  overtaken by a later edit never switches them. Nothing of this is saved: a loaded game solves its
+  riders with its saved fares.
+- **The loan** (T-1661, T-2022, T-1906, `game/loan.ts`): one at a time, of $1B, $5B or $10B, at the
+  bottom of the Money tab. It pays itself back in 60 equal daily payments, the same for every size:
+  an annuity at 1% interest a game day on what is left ($22.2M a day for $1B, $1.33B in all),
+  drained evenly through each day like upkeep and shown in the ledger and history as "Loan". A
+  payment goes whatever the cash, which can go below zero as with upkeep. Repay pays off what is
+  left (the payments still due less the interest they would carry) once the cash covers it; after
+  the last payment or a repay another can be taken. A sandbox has none. The loan (its amount,
+  payment and days left) is saved with the game; a save from before T-2022 starts its loan's 60
+  days from the load. A loan is refused while its payment a day is more than the profit a day
+  (fares minus running costs and upkeep) averaged over the last 7 whole game days, fewer in a
+  younger game; before a whole day with fares, only the $1B loan can be taken.
 - **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game

@@ -1,0 +1,87 @@
+id,measure,line,place,value,unit,reason
+TD0003,platform_below_street,IRT Lenox Avenue Line,Mott Avenue (1904 name; now 149th Street-Grand Concourse),90-100,ft,"1904 gives 90-100 ft for the Mott Av platform, the 1906 book a 46 ft shaft; OSM names the track IRT White Plains Road Line (level -4, v1 depth 57 ft) and it is not certain the 1904 'Mott Avenue' is today's 149 St-Grand Concourse"
+TD0005,excavation_depth,"IRT Lenox Avenue Line (Harlem River tunnel, West F","Harlem River crossing, Lenox Avenue branch: dredged trench f",39,ft,"dredged trench bottom (excavation), not a rail; used only to cross-check TD0023 (subgrade about 1.6 m under the invert)"
+TD0006,excavation_depth,"IRT Lenox Avenue Line (Harlem River tunnel, West F","Harlem River crossing, Lenox Avenue branch: maximum excavati",50,ft,"maximum excavation, reference level not stated"
+TD0007,excavation_depth,IRT Lenox Avenue Line (Harlem River tunnel approac,"Harlem River tunnel approaches, excavation",>40,ft,"a bound (over 40 ft) on an excavation, reference not stated"
+TD0009,grade_percent,IRT Lexington Avenue Line (Joralemon Street Tunnel,"East River tubes, Battery to Joralemon Street: grade",3.1,percent,"a grade, not a height"
+TD0010,tunnel_roof_below_street,"IRT Lexington Avenue Line (Broadway, Post Office t","Broadway south of the Post Office, Brooklyn Extension, cover",5,ft,"roof 5 ft below street 'south of the Post Office', the shallowest stretch of the IRT Lexington line under Broadway; v1 has the rail 14-21 m below the street from Fulton St to Bowling Green (the Joralemon ramp prior leaking up the line), so this is a contradiction to look at, but the stretch is not defined enough to pin (a roof 1.5 m down cannot hold where the line crosses other lines or starts down to the river)"
+TD0011,other,IRT Broadway-Seventh Avenue Line (Manhattan Valley,Manhattan Street (125th Street) station on the viaduct,68,ft,"viaduct height at a station, rail vs platform vs structure not stated; Manhattan Valley viaduct over a valley, ground reference unclear (TD0018 says platform 55 ft)"
+TD0012,rail_above_street,IRT original elevated viaducts (West side: Dyckman,"IRT 1904 viaducts, typical height",<=29,ft,an upper limit (29 ft) for the two-bent viaducts
+TD0013,other,IRT Broadway-Seventh Avenue Line,168th Street (access shaft),98,ft,"access shaft depth, not platform"
+TD0014,other,IRT Broadway-Seventh Avenue Line,181st Street (access shaft),120,ft,"access shaft depth, not platform"
+TD0015,other,IRT Lenox Avenue Line,Mott Avenue (1906 name; now 149th Street-Grand Concourse) (a,46,ft,"access shaft depth, not platform"
+TD0016,riverbed_depth,IRT Lexington Avenue Line (Joralemon Street Tunnel,"East River crossing, Battery to Joralemon Street: river dept",47,ft,"river depth (bed), not a rail; checks CUDEM: 47 ft at high water = -14.0 m, CUDEM -13.8 median at the Joralemon crossing"
+TD0018,other,IRT Broadway-Seventh Avenue Line (Manhattan Valley,Manhattan Valley station platforms,55,ft,"platform height of a viaduct station, 55 ft vs 68 ft (TD0011) disagree, and the street reference under a valley viaduct is unclear"
+TD0019,riverbed_depth,IRT Lexington Avenue Line (Harlem River tubes),"Harlem River crossing, E 132nd St and Lexington Ave to E 135",20-26,ft,"river depth (bed), not a rail; checks CUDEM: avg 23 ft below MHW = -6.6 m in 1915, CUDEM bed -4.6 m median, -5.6 m deepest (about 2 m shallower now)"
+TD0022,grade_percent,IRT Lexington Avenue Line (Harlem River tubes),"Harlem River crossing, Lexington Avenue subway: grade",0.3,percent,"a grade (0.3%), not a height"
+TD0029,other,Brooklyn Borough Hall area (IRT Clark St and Joral,Court Street and Fulton/Johnson Street station and ventilati,61-77,ft,"depth of four station and ventilation shafts, not tracks"
+TD0030,excavation_depth,"Brooklyn Borough Hall area (Fulton Street, Brookly",Fulton Street cut near Borough Hall,50-63,ft,"excavation depth of a cut, line not named, reference not stated"
+TD0031,other,IND Fulton Street Line,IND Brooklyn datum definition (Jay-Smith and Fulton Street s,100,ft,"datum definition: Brooklyn IND datum 100 ft below MHW. Checked with TD0032 and the DEM: Fulton St at Utica Av, Elevation 150 = 50 ft above MHW = +15.7 m (1934 MHW +0.43), DEM 16.2 m; at Rockaway Av Elevation 200 = +30.9 m, DEM 29.4 m (coordinates approximate)"
+TD0032,other,IND Fulton Street Line,"Fulton Street, Brooklyn street surface, Buffalo Avenue to Ro",150-200,ft,"street (ground) elevation, not a rail; used only to check the DEM and the datum, see TD0031"
+TD0034,other,IND Culver Line (Smith Street double-deck subway),Bergen Street (double-deck station),45,ft,"double-deck station 'depth 45 ft' (structure, of which 25 ft in ground water), reference not stated"
+TD0036,other,IND Fulton Street Line,Utica Avenue mezzanine to platform,25,ft,"a vertical distance between mezzanine and platform, not a depth"
+TD0037,grade_percent,"IND Culver Line (Rutgers Street Tunnel, Brooklyn e","Foot of Jay Street, Brooklyn: rise from Rutgers Street tunne",3,percent,a grade
+TD0038,grade_percent,IND Jay Street-Smith Street subway,"Jay Street-Borough Hall, south end of platforms",2,percent,a grade
+TD0039,grade_percent,IND Fulton Street Line,Ralph Avenue to Rockaway Avenue,2-3,percent,a grade
+TD0043,rail_below_street,IRT Flushing Line (Steinway Tunnel),"Queens shaft, original 1890s plan",75,ft,"superseded 1890s plan, not as built; shaft location not given"
+TD0044,rail_below_street,IRT Flushing Line (Steinway Tunnel),"Queens end, revised plan",25,ft,"revised plan, not necessarily as built; shaft location not given"
+TD0046,other,Second Avenue Subway Phase 2,"Tunnel curve at 125th Street, change from 2004 FEIS design",20,ft,relative to the 2004 design
+TD0047,other,Second Avenue Subway Phase 2,"125th Street (Second Avenue Subway), change from 2004 FEIS d",20,ft,relative to the 2004 design
+TD0048,other,Second Avenue Subway Phase 2,Tunnel curve at 125th Street (vertical alignment),20,ft,relative to the 2004 design
+TD0053,other,IRT Broadway-Seventh Avenue Line (Manhattan Valley,"125th Street station, steel arch across 125th Street",54,ft,"height of a steel arch, not the rail"
+TD0057,other,IND Eighth Avenue Line / IRT Broadway-Seventh Aven,"168th Street, elevators to upper mezzanine",76,ft,"an elevator rise between levels, not a depth"
+TD0058,mezzanine_below_street,IND Eighth Avenue Line,"181st Street, Fort Washington Avenue entrance",100,ft,depth from a hilltop entrance to a mezzanine
+TD0060,rail_elevation_datum,IRT Broadway-Seventh Avenue Line,181st Street kiosk,188,ft,"kiosk ground elevation, not a rail; checks the DEM: 188 ft = 57.3 m above sea level, DEM at the 181 St tracks 56.1 m"
+TD0063,other,IRT Broadway-Seventh Avenue Line (191st Street tun,191st Street tunnel at its connection to the station elevato,225,ft,"pedestrian tunnel, reference unclear"
+TD0067,mezzanine_below_street,IRT Flushing Line (7 Subway Extension),"34th Street-Hudson Yards, lower mezzanine",109,ft,"mezzanine depth, not a platform"
+TD0068,excavation_depth,IRT Flushing Line,"42nd Street, trench for the original subway under 42nd Stree",35,ft,"excavation of the original trench, datum unclear, section unclear"
+TD0069,platform_below_street,IND Eighth Avenue Line,42nd Street-Port Authority Bus Terminal,<=50,ft,"an upper bound ('ranges up to 50 ft'), level not stated"
+TD0081,other,IRT Eastern Parkway Line / IRT Broadway-Seventh Av,"Borough Hall, southbound Broadway-Seventh Avenue Line track ",18,ft,"vertical separation between two tracks at Borough Hall (18 ft); a relative figure, needs a two-way input, not the single-height format here"
+TD0082,other,BMT Nassau Street Line,"Nassau Street, below the IRT Lexington Avenue Line",20,ft,"vertical separation between two lines (20 ft); relative, needs a two-way input"
+TD0084,platform_below_street,BMT Broadway Line,Canal Street (Broadway mainline level),20,ft,"Canal St Broadway mainline (20 ft): OSM names the only level -1 tracks there BMT Brighton Line/Nassau and the line identity is unclear; the Canal St levels (Nassau 40 ft, Manhattan Bridge 55 ft) already anchor"
+TD0088,other,IRT Broadway-Seventh Avenue Line (Clark Street Tun,"Clark Street, passageway",69,ft,"passageway level, not a platform"
+TD0091,mezzanine_below_street,IRT Flushing Line,"Flushing-Main Street, Lippmann Plaza lobby",40,ft,"lobby depth, not a platform"
+TD0093,excavation_depth,Staten Island Railway,"Great Kills, excavation for the right-of-way",30,ft,"open-cut excavation depth during construction, not the final rail"
+TD0096,rail_below_street,IND Archer Avenue Line (upper level),"Jamaica Center, upper-level tracks curving under the LIRR At",60,ft,"likely 60 ft below the LIRR, not below ground: TD0097 says 45 ft below street and 60 ft below the LIRR tracks for the same crossing"
+TD0097,other,IND Archer Avenue Line,"Archer Avenue line, section under the LIRR Main Line and Atl",45,ft,"45 ft below street under the LIRR at Jamaica, crossing location not pinned (Main Line vs Atlantic Branch, 450 m apart); v1 already has the BMT Archer lower level 47 ft down there"
+TD0099,other,IND Queens Boulevard Line,"Kew Gardens-Union Turnpike, tracks under the Union Turnpike ",20,ft,relative to a road underpass
+TD0104,mezzanine_below_street,BMT Broadway Line / IRT Lexington Avenue Line (com,"Lexington Avenue/59th Street, mezzanine below the BMT platfo",62,ft,"mezzanine depth, not a platform"
+TD0111,platform_below_street,IRT Broadway-Seventh Avenue Line,South Ferry (2009 station),50,ft,"planned 50 ft for the 2009 South Ferry station; v1 already has it at street -15.2 m (rail), the same"
+TD0113,other,IRT Broadway-Seventh Avenue Line,"Times Square, Broadway-Seventh Avenue Line",40,ft,reference not named ('runs 40 ft under Seventh Av')
+TD0114,other,BMT Broadway Line,"Times Square, BMT Broadway Line",50,ft,reference not named ('50 ft under Broadway')
+TD0118,other,IRT Broadway-Seventh Avenue Line,"Cortlandt Street, original tunnel",40,ft,"reference of 'underground' not stated, and the old tunnel is gone"
+TD0119,other,IRT Lexington Avenue Line,"Wall Street, Broadway Lexington Avenue Line tunnel",4-5,ft,"relative to street car conduits, planning statement"
+TD0122,grade_percent,IRT Broadway-Seventh Avenue Line (Clark Street bra,"Clark Street branch, passing under the Broadway and Park Row",3,percent,a grade
+TD0123,other,Second Avenue Subway,"Mined stations (72nd and 86th Streets), as built",85-90,ft,"mined stations as built, 'deep', conflicts with TD0074/TD0076 which are anchors"
+TD0124,other,Second Avenue Subway,"125th Street curve, mixed-face geology",100,ft,"planning statement, reference not stated"
+TD0127,rail_above_street,IRT Broadway-Seventh Avenue Line,"Dyckman Street, viaduct north of the station",<=29,ft,an upper limit (29 ft)
+TD0128,rail_above_street,IRT Flushing Line,Court Square-23rd Street,<=29,ft,an upper limit (29 ft)
+TD0129,rail_above_street,IRT White Plains Road Line,Freeman Street,<=29,ft,an upper limit (29 ft)
+TD0130,rail_above_street,IRT White Plains Road Line,Jackson Avenue,<=29,ft,an upper limit (29 ft)
+TD0131,rail_above_street,IRT White Plains Road Line,Prospect Avenue,<=29,ft,an upper limit (29 ft)
+TD0132,rail_above_street,IRT White Plains Road Line,Simpson Street,<=29,ft,an upper limit (29 ft)
+TD0133,other,IND Rockaway Line,"Aqueduct-North Conduit Avenue, north of the station",2,m,"platform height of an at-grade stretch (2 m), not rail; TD0134 is the rail"
+TD0134,rail_above_street,IND Rockaway Line,"Aqueduct-North Conduit Avenue, north of the station",<1,m,a bound (under 1 m above street)
+TD0135,rail_below_street,Second Avenue Subway (2004 FEIS design),125th Street (Park to east of Lexington Avenue),100,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0136,rail_below_street,Second Avenue Subway (2004 FEIS design),116th Street,40,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0137,rail_below_street,Second Avenue Subway (2004 FEIS design),106th Street,40,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0138,rail_below_street,Second Avenue Subway (2004 FEIS design),96th Street,40-45,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0139,rail_below_street,Second Avenue Subway (2004 FEIS design),86th Street,85,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0140,rail_below_street,Second Avenue Subway (2004 FEIS design),72nd Street,85,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0141,rail_below_street,Second Avenue Subway (2004 FEIS design),55th Street,50-60,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0142,rail_below_street,Second Avenue Subway (2004 FEIS design),42nd Street,90-100,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0143,rail_below_street,Second Avenue Subway (2004 FEIS design),34th Street,50,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0144,rail_below_street,Second Avenue Subway (2004 FEIS design),23rd Street,95-100,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0145,rail_below_street,Second Avenue Subway (2004 FEIS design),14th Street,105,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0146,rail_below_street,Second Avenue Subway (2004 FEIS design),Houston Street,80,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0147,rail_below_street,Second Avenue Subway (2004 FEIS design),Grand Street,70,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0148,rail_below_street,Second Avenue Subway (2004 FEIS design),Chatham Square,65,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0149,rail_below_street,Second Avenue Subway (2004 FEIS design),Seaport (Pearl Street/Dover Street to Fulton Street),80,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0150,rail_below_street,Second Avenue Subway (2004 FEIS design),Hanover Square,110,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0151,rail_below_street,IND 63rd Street Line,Lexington Avenue-63rd Street (existing F station and new Thi,105/135,ft,"two figures (105/135 ft) with no level named, 2004 design; Wikipedia says 140/155 ft for the built station"
+TD0152,platform_below_street,Second Avenue Subway (2004 FEIS design),"Hanover Square, chapter text",110,ft,2004 Second Avenue Subway design of an unbuilt station (south of 72 St or north of 96 St): no OSM track there
+TD0153,platform_below_street,Second Avenue Subway (2004 FEIS design),"Whole line, range of platform depths",40-100+,ft,range over the whole 2004 design
+TD0154,other,Second Avenue Subway (2004 FEIS design),South of Houston Street to Hanover Square,80-100+,ft,"alignment depth of the unbuilt 2004 design, reference not stated"
+TD0156,mezzanine_below_street,IRT Lexington Avenue Line (Grand Central 'Diagonal,"Grand Central-42nd Street, mezzanine under 42nd Street",17,ft,"mezzanine floor, not a platform"
+TD0157,rail_elevation_datum,IRT Lexington Avenue Line (Grand Central 'Diagonal,"Grand Central-42nd Street, mezzanine floor elevation",128.4,ft,"mezzanine floor elevation 128.4 ft in a datum the article does not name. If it is MHW + 100 ft as in Brooklyn it is +9.0 m (street 14.3 m, DEM there about 16); a mezzanine, not a rail"
+TD0158,other,IRT Broadway-Seventh Avenue Line,"Park Place, escalator rise from platform to mezzanine",28,ft,"an escalator rise between levels, not a depth"

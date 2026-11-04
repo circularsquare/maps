@@ -283,6 +283,32 @@ and share one palette, `scripts/language_colors.csv`.
   often a few km off the town, so click a city together with its district.
   Fetcher: `scripts/uzbekistan/`.
 
+## Splitting a big unit without small-area counts
+
+For a city or district too big to leave whole when the census has no counts
+below it that can be drawn. India's level 4 does all three; `scripts/india/level4.py`
+has the code (`town_pieces`, `cap_density`) and the record. Best first:
+
+1. **Census small areas on a map of the same date.** Census wards or villages
+   with counts, placed on a ward map whose numbering is checked against the
+   census (totals per group, names in the right place, neighbours alike).
+   A later map with the same number of wards is not enough on its own.
+2. **A later delimitation drawn on that census.** Election wards drawn soon
+   after a census are usually built to equal population from its counts, so
+   each ward gets an equal share of the total. Only if the map's outer limit
+   is the city's limit at census time (compare areas). India: Pune's 2012
+   prabhags, Ahmedabad's 2015 wards (`EQUAL_WARDS`).
+3. **GHSL inside the unit's outline.** Keep the census total and use GHSL
+   (1 km, 2025) only to spread it. GHSL piles people into its densest cells
+   (Surat 300k/km²), so cap each cell at the densest real small area you know
+   (India: 100k/km², `GHSL_CAP`) and spread the rest in proportion.
+
+Group the pieces into parts by recursive bisection at the population median
+and draw part outlines as Voronoi cells of sample points; name parts by ward
+numbers or by direction from the centre. Before trusting any of this, check
+the unit's outline is the right size: SHRUG drew Bengaluru, Pune and
+Vijayawada far too small. `scripts/audit_ghsl.py` lists suspects per country.
+
 ## Adding a country
 
 1. Write a fetcher at `scripts/<id>/fetch.py` that produces `data/<id>/population.csv` with columns `code,level,year,pop` (code = the boundary file's unit code as a string, level = 1/2/3...). Each unit needs at least two years, since the estimate is a line through the last two.

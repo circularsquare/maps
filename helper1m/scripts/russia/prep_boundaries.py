@@ -86,9 +86,9 @@ MANUAL_POINTS = {
     "46711000": (37.85, 55.63),   # Dzerzhinsky urban okrug, Moscow Oblast
 }
 
-TRANS = dict(zip("абвгдезийклмнопрстуфхцы", "abvgdeziyklmnoprstufkhtsy"))
-TRANS.update({"ё": "yo", "ж": "zh", "ч": "ch", "ш": "sh", "щ": "shch", "ъ": "",
-              "ь": "", "э": "e", "ю": "yu", "я": "ya"})
+TRANS = dict(zip("абвгдезийклмнопрстуфы", "abvgdeziyklmnoprstufy"))
+TRANS.update({"х": "kh", "ц": "ts", "ё": "yo", "ж": "zh", "ч": "ch", "ш": "sh", "щ": "shch",
+              "ъ": "", "ь": "", "э": "e", "ю": "yu", "я": "ya"})
 
 
 def translit(s):

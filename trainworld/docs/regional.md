@@ -14,6 +14,8 @@ Trenton's (2) is kept with no sites (Mercer is in New York's pack).
 
 Generate **total** all-mode trips, then let the player's network earn rail's share.
 
+### Sites, pairs and what is solved
+
 - **Sites**: population- and job-weighted endpoint sites at 600 m grain from every zone pack,
   grouped into zones of 6 km, each zone's in its own pack, `data/packs/<id>.market.json`
   (`pipeline/market_zones.py`; the Northeast's in the market frame, every other zone's in its own
@@ -80,6 +82,8 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   solves every pair.
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
+
+### Mode choice
 
 **Mode choice.** Inter-city trips choose rail, car and plane in one logit [T-378]. **Income groups**
 [T-1431]: a place's longer trips come from its country's people in three equal groups by income

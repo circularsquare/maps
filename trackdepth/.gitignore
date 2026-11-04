@@ -1,0 +1,5 @@
+raw/
+# make_terrain.py output, ~28 MB in ~1,400 PNGs; rebuilt from raw/
+data/terrain/
+# basemap tiles (OpenFreeMap vector tiles baked to webp, no place labels); rebuilt by the bake script
+data/basemap/

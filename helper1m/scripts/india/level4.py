@@ -5,6 +5,7 @@ without rewriting population.csv. Writes
   data/india/level4.gpkg       one polygon per level-4 unit (code, name, parent, group)
   data/india/level4_parts.csv  every census ward, town and village behind each part
   data/india/level3.gpkg       the level-3 outlines, SHRUG's with subdistricts()'s fixes
+  data/india/level2.gpkg       SHRUG's districts, REDRAW ones the union of their new tehsils
 and returns the level-4 population rows.
 
 Units and codes
@@ -22,12 +23,12 @@ Sources (downloads under maps/data/asia1m/india/wards/)
       and village with TOT_P. Per unit, the WARD rows plus the VILLAGE rows add up
       to the SUB-DISTRICT row exactly in all 265 units (checked at every build: a
       mismatch is logged).
-  Result (2026-10-25 build): 252 of the 265 units split into 776 parts, median
-      0.37M. The 13 carried whole are one town each with no 2011 ward map
-      (Ahmadabad, Surat, Nagpur, Bhubaneswar, Visakhapatnam, Vijayawada, ...),
-      plus Pune City (KEEP_WHOLE). Big towns inside a split unit stay one part,
-      so 72 level-4 units are still over 0.75M, among them Kanpur, Ghaziabad,
-      Agra, Meerut, Allahabad and Varanasi.
+  Result (2026-11-02 build): all 265 units over 0.75M are split. Before that
+      day 13 were carried whole (one town each with no 2011 ward map: Ahmadabad,
+      Surat, Nagpur, ...) plus Pune City, and 72 level-4 units were still over
+      0.75M because big towns stayed one part; now every town over TOWN_SPLIT
+      is split too (town_pieces()), and the only part over 1M is Mumbai's P/N
+      ward, a real BMC ward.
   datameet/  DataMeet Municipal_Spatial_Data (github.com/datameet, CC BY-SA 2.5 IN):
       ward maps, used only where they match the 2011 census wards (below).
   religiondots/data/geo/in/shrug-village-pc11.parquet (read only): SHRUG village and
@@ -42,6 +43,16 @@ Method
   outlines are the Voronoi cells of all the points, clipped to the level-3 outline
   and dissolved by part, so parts tile their unit exactly. Shapes are therefore a
   rough gist of where the people are, not legal boundaries.
+  A town over TOWN_SPLIT (0.75M in 2026) that is not split by census ward is
+  split anyway, with less to go on (town_pieces()): Pune and Ahmadabad over the
+  wards of a later delimitation drawn on the 2011 census, every ward near the
+  same population and the outer limit the 2011 one (EQUAL_WARDS: PMC's 76
+  prabhags of 2012, AMC's 48 wards of 2015), each ward an equal share; every
+  other town over GHSL 2025's 1 km cells clipped to its polygon, people shared
+  by GHSL with no cell over GHSL_CAP per km2. Parts are named by those ward
+  numbers or by direction from the town's centre ("Surat (M Corp.) north 2").
+  These shapes say less than census wards do: GHSL misplaces people at the
+  edges (see audit_ghsl.py), and equal shares miss the 10% each ward may vary.
   Grouping: the ward-split town by a named grouping where there is one (Mumbai
   admin wards, Bangalore assembly constituencies, Chennai zones), else by recursive
   bisection at the population median until each group is under 0.5M (2026). Other
@@ -68,11 +79,17 @@ Ward maps, and how each match was checked
   inside the unit, densities 6,000-134,000 per km2. Grouped by zone: 10 parts.
   Kolkata 99999: kolkata.geojson, 141 wards = the 141 census wards (KMC added
   142-144 only in 2015). All inside the unit. Bisection: 8 parts.
-  Delhi, Saraswati Vihar: Delhi_Wards.geojson, the 272 MCD wards of the 2007
-  delimitation (plus cantonment and NDMC charges, ignored). Check: of the 30 DMC
-  wards the census puts in this tehsil, 27 lie inside it on the map; of the 16 DMC
-  wards the census puts partly elsewhere, 3. Bisection on DMC (U) wards, plus
-  Kirari Suleman Nagar and Sultan Pur Majra census towns: 7 parts.
+  Delhi (all 27 tehsils, since 2026-11-02; Saraswati Vihar alone before):
+  Delhi_Wards.geojson, the 272 MCD wards of the 2007 delimitation plus 9 NDMC and
+  8 cantonment charges. Every census ward is on it: DMC (U) ward n = map ward n,
+  NDMC (Part) ward n = NDMC charge n, Delhi Cantonment ward n = CANT charge n, and
+  a census town's rows carry the number of the MCD ward it lies in. Checks: each
+  tehsil's census wards make one block on the map (Gandhi Nagar and Patel Nagar
+  bar a ward holding one census town), with the map's names in the right place
+  (ward 234 "Gandhi Nagar" in Gandhi Nagar tehsil); neighbouring map wards share
+  a tehsil 64% of the time, 5% when tehsils are shuffled; SHRUG's census-town
+  polygons lie in the wards their rows name (median 92% of the area). Big
+  tehsils are split by bisection on DMC (U) wards; other towns as everywhere.
   Jaipur tehsil: Jaipur_Wards.geojson, the 77 wards of the 2004 delimitation (the
   2014 one has 91). Check: 56 of the 59 census wards in Jaipur tehsil lie inside it
   on the map, 0 of the 18 the census puts in other tehsils do. 5 parts.
@@ -89,12 +106,14 @@ Ward maps, and how each match was checked
   not match 2011 were not used (below).
 
 Left whole or only partly split, and why
+  Since 2026-11-02 all the towns below are split by town_pieces() instead; the
+  notes say why census wards could not be used.
   Ahmadabad City (6.85M): census has 57 wards, DataMeet's map is the 2015
-      delimitation's 48. No 2011 ward map found. Carried whole.
-  Surat City (5.48M), Nagpur (Urban) (2.73M): one town each, no ward map. Whole.
-  Pune City (4.22M): kept whole, see KEEP_WHOLE (PMC's 144 census wards of the
-      2007 delimitation have no map; DataMeet has the 2012/2017/2022 prabhags).
-  Towns split off but not split further (2026): Kanpur 3.05M (DataMeet's Kanpur
+      delimitation's 48. No 2011 ward map found. Split by EQUAL_WARDS.
+  Surat City (5.48M), Nagpur (Urban) (2.73M): one town each, no ward map. GHSL.
+  Pune City (4.22M): PMC's 144 census wards of the 2007 delimitation have no
+      map; DataMeet has the 2012/2017/2022 prabhags. Split by the 2012 ones.
+  Towns once split off but not split further (2026): Kanpur 3.05M (DataMeet's Kanpur
       file has 58 of 110 wards and does not overlay), Indore 2.58M, Thane (M Corp.)
       2.43M, Ghaziabad 2.31M, Bhopal 2.29M (the DataMeet map is the 2014
       delimitation's 85 wards, the census has 70, and the number test fails),
@@ -108,11 +127,39 @@ Approximate shapes to know about
       missing most of the south, which SHRUG gives to Bangalore South taluk (186
       km2 of city), so the south's constituencies were slivers and the taluk's 0.28M
       were spread over the southern city. Since 2026-10-31 (she spotted it) the unit
-      is redrawn as the ward map and that area is taken out of the four taluks
-      (CITIES outline=True, subdistricts()); level 3 gets the same outlines through
-      level3.gpkg. Chennai and Kolkata match their maps within a few km2, so left.
-  Haveli: SHRUG's Pimpri Chinchwad polygon is about half the corporation, so the
-      "villages west" part is drawn over some of PCMC.
+      takes in the ward map and that area is taken out of the four taluks; level 3
+      gets the same outlines through level3.gpkg.
+  Pune (2026-11-02, she spotted it too): SHRUG's PMC polygon is 88 km2 of the 2012
+      ward map's 243, and 39 km2 of PMC sat in Haveli's "villages west" part; its
+      Pimpri Chinchwad polygon is 84 km2 of PCMC's 171, so PCMC's 2.2M were drawn
+      at 26,000/km2 with the villages part over the rest of it.
+  Both fixed by TOWN_OUTLINES: a town listed there is drawn as its DataMeet map,
+      whose outer limit must match the corporation's 2011 one (PMC 2012 wards;
+      PCMC electoral wards at 171 km2, its limit since 1997 bar Talawade; BBMP's
+      2010 wards; VMC's admin wards at 154 km2, before the 2020 expansion); its
+      unit takes in that area from its district's other sub-districts
+      (subdistricts()), and other SHRUG polygons inside it give the area up.
+      Checked the same way and left: Chennai, Kolkata, Ahmedabad (map within 8
+      km2 of SHRUG), Mira-Bhayandar and Navi Mumbai (within 30 km2, maps of later
+      limits), Bhopal (map is the 2014 limits, 392 km2).
+  Delhi (2026-11-02, found by audit_ghsl.py): SHRUG's DMC (U) polygon in each
+      tehsil does not follow the census's tehsils (Gandhi Nagar's 5.0 km2 has 19% of
+      its area in the tehsil's census wards), so Gandhi Nagar was drawn at 101,000
+      per km2, Seema Puri 99,000 and Shahdara 98,000 with Vivek Vihar pale beside
+      them, and one level-4 part was 0.58M on 2 km2. REDRAW rebuilds all 27 from
+      census membership (redraw()): villages and census towns keep their SHRUG
+      polygons; each map ward, less those, goes to the tehsil holding its people;
+      84 of 289 wards are split between tehsils (1.2M in the minority shares), and
+      their area is carved by nearness to what each tehsil holds for sure (a tehsil
+      under REDRAW_MINOR of a ward's people gets none); five central tehsils with no
+      whole ward (Sadar Bazar, Kotwali, Connaught Place, Chanakya Puri, Parliament
+      Street) seed that carve from SHRUG's polygon; 37.5 km2 off the map goes to the
+      nearest tehsil. The 27 tile SHRUG's Delhi (1,476 km2) with no gap or overlap;
+      level 2 follows through level2.gpkg. Km2 before -> after: Gandhi Nagar 5.0 ->
+      9.7, Seema Puri 7.6 -> 12.2, Shahdara 4.6 -> 5.3 (86,000/km2 in 2026, which its
+      own wards bear out), Vivek Vihar 22.3 -> 9.7, Rajouri Garden 10.1 -> 15.0,
+      Sadar Bazar 3.4 -> 7.4, Pahar Ganj 4.1 -> 2.9. Densest level-4 parts now about
+      105,000/km2 on their own wards (north east Delhi), against 291,000 before.
   Village parts take the gaps between SHRUG polygons, so they can look larger
       than their villages.
   One Varanasi village (Karaundi, 7,271) has no SHRUG polygon; it is counted in
@@ -142,9 +189,11 @@ WARDS = REPO / "data" / "asia1m" / "india" / "wards"
 PCA = WARDS / "pca_tv"            # pca_tv_<pc11_d_id>.xlsx, Census 2011 PCA TV per district
 DM = WARDS / "datameet"           # DataMeet Municipal_Spatial_Data ward maps
 SUBDIST_SHP = REPO / "data" / "asia1m" / "india" / "subdistrict.shp"
+DISTRICT_SHP = REPO / "data" / "asia1m" / "india" / "district.shp"
 VILLAGES = REPO / "religiondots" / "data" / "geo" / "in" / "shrug-village-pc11.parquet"
 OUT_GPKG = HELPER / "data" / "india" / "level4.gpkg"
 OUT_L3 = HELPER / "data" / "india" / "level3.gpkg"
+OUT_L2 = HELPER / "data" / "india" / "level2.gpkg"
 OUT_PARTS = HELPER / "data" / "india" / "level4_parts.csv"
 
 SPLIT_OVER = 750_000       # a level-3 unit over this in SPLIT_YEAR is split
@@ -159,27 +208,62 @@ CRS = 7755                 # WGS 84 / India NSF LCC, metres
 #   map   - DataMeet file under DM; num - its ward-number column
 #   group - map column that groups wards into parts (else recursive bisection)
 #   label - how a part is named
-#   outline - redraw the unit as the ward map (see subdistricts())
 CITIES = {
     "51899999": dict(town="802794", map="Mumbai__BMC_Wards.geojson", mumbai=True),
     "51999999": dict(town="802794", map="Mumbai__BMC_Wards.geojson", mumbai=True),
     "57299999": dict(town="803162", map="Bangalore__BBMP_oldWards.geojson", num="WARD_NO",
-                     group="ASS_CONST1", label="BBMP wards in {g} constituency",
-                     outline=True),
+                     group="ASS_CONST1", label="BBMP wards in {g} constituency"),
     "60399999": dict(town="803339", map="Chennai__Wards-2008.geojson", num="ward",
                      group="zone", label="Chennai zone {g}"),
     "34299999": dict(town="801742", map="Kolkata__kolkata.geojson", num="WARD"),
-    "09000431": dict(town="800441", map="Delhi__Delhi_Wards.geojson", num="Ward_No"),
     "11000546": dict(town="800522", map="Jaipur__Jaipur_Wards.geojson", num="WARD_NO"),
     "15700821": dict(town="800951", map="Lucknow__Lucknow_ward_boundary.geojson",
                      num="Ward Num"),
 }
-# Units the method could split but should not (see the docstring).
-KEEP_WHOLE = {
-    "52104194": "SHRUG's Pune (M Corp.) polygon is 88 km2 of the corporation's 244, so "
-                "the 0.23M cantonments-and-village part would be drawn as a ring over "
-                "the rest of the city",
+# Towns whose SHRUG polygon is far smaller than the corporation was in 2011, drawn
+# instead as the union of a ward map whose outer limit matches 2011 (see the
+# docstring). census town code -> (level-3 unit it is counted in, DataMeet file)
+TOWN_OUTLINES = {
+    "803162": ("57299999", "Bangalore__BBMP_oldWards.geojson"),      # 488 -> 708 km2
+    "802814": ("52104194", "Pune__pune-electoral-wards_2012.geojson"),  # 88 -> 243
+    "802811": ("52104193", "PCMC__pcmc-electoral-wards.geojson"),    # 84 -> 171
+    "802596": ("48603898", "Vadodara__vardodara_wards.geojson"),     # 112 -> 154
 }
+# Districts whose SHRUG sub-district lines do not follow the 2011 census, redrawn
+# from census membership (see the docstring): each tehsil is its villages and
+# census towns (SHRUG polygons) plus the ward-map area of the wards the census
+# counts in it, a ward shared between tehsils carved by nearness.
+#   districts - pc11_d_id; map, num - DataMeet ward map and its ward column
+#   towns     - census town code -> prefix of its wards' keys on the map
+#   split     - the town every big tehsil is split by ward at level 4 (as CITIES)
+REDRAW = {
+    "Delhi": dict(districts=[f"{d:03d}" for d in range(90, 99)],
+                  map="Delhi__Delhi_Wards.geojson", num="Ward_No",
+                  towns={"800441": "", "800442": "NDMC_", "800443": "CANT_"},
+                  split="800441"),
+}
+REDRAW_MINOR = 0.03        # a tehsil with under this share of a ward's people gets none of its area
+REDRAW_SLIVER = 100_000    # m2; a detached piece smaller than this joins its neighbour
+# Units the method could split but should not (see the docstring).
+KEEP_WHOLE = {}
+# A town at least this big (SPLIT_YEAR) with no 2011 ward map is split anyway
+# (split_town()): over the wards of a map drawn on the 2011 census at equal
+# population (EQUAL_WARDS), else by GHSL.
+TOWN_SPLIT = SPLIT_OVER
+# census town code -> (DataMeet file, ward column, year). Each is a delimitation
+# made from the 2011 census with every ward near the same population, inside the
+# town's 2011 limits, so each ward gets an equal share. The column's leading
+# number is the ward number ("47 VATVA" is 47).
+EQUAL_WARDS = {
+    "802814": ("Pune__pune-electoral-wards_2012.geojson", "wardnum", 2012),  # 76 prabhags
+    "802484": ("Ahmedabad__Wards.geojson", "Name", 2015),                    # 48 wards
+}
+GHSL = (REPO / "trainworld" / "data" / "raw" / "worldplan"
+        / "GHS_POP_E2025_GLOBE_R2023A_54009_1000_V1_0.tif")
+# GHSL piles people into its densest cells (Surat's top 1 km cells at 250,000-
+# 315,000 per km2, where the densest census wards anywhere here are about
+# 135,000, Chennai), so a GHSL piece holds at most this many 2011 people per km2
+GHSL_CAP = 100_000
 # Census ward prefix (first two digits) -> BMC administrative ward. Checked: each
 # prefix's census total equals BMC's published 2011 figure for that ward.
 MUMBAI_PREFIX = dict(zip(
@@ -251,21 +335,200 @@ def shrug(districts):
     return g.to_crs(CRS)
 
 
+_outline = {}
+
+
+def town_outline(town):
+    """TOWN_OUTLINES town as one polygon (CRS)."""
+    if town not in _outline:
+        g = gpd.read_file(DM / TOWN_OUTLINES[town][1], on_invalid="ignore")
+        g = g[g.geometry.notna()].to_crs(CRS)
+        _outline[town] = shapely.union_all(g.buffer(0).values)
+    return _outline[town]
+
+
+_redrawn_towns = {}   # (level-3 code, census town) -> that town's area in it, from redraw()
+
+
+def map_key(v):
+    """A ward map's key: plain numbers as "17", anything else as written (CANT_3)."""
+    n = ward_num(v)
+    return str(n) if n is not None else str(v).strip()
+
+
+def redraw_cfg(code):
+    """The CITIES-style ward split for a level-3 unit in a REDRAW district."""
+    for cfg in REDRAW.values():
+        if code[:3] in cfg["districts"]:
+            return dict(town=cfg["split"], map=cfg["map"], num=cfg["num"])
+    return None
+
+
+def redraw(cfg, old):
+    """REDRAW entry, {code: SHRUG outline} -> {code: new outline}, tiling the
+    same ground (CRS), built from census membership. Fills _redrawn_towns with
+    each ward-mapped town's area per tehsil, for level 4."""
+    state = shapely.union_all(list(old.values()))
+    ds = cfg["districts"]
+    df = pd.concat([pca(d) for d in ds])
+    df["code"] = df["District"].str.zfill(3) + df["Subdistt"]
+    towns = cfg["towns"]
+    pieces = []   # (code, ward-mapped town or "", geometry)
+
+    # 1. villages and census towns: SHRUG's polygon, in the tehsil the census
+    #    counts them in
+    vil = shrug(ds)
+    poly = {tv: shapely.union_all(g.geometry.values) for tv, g in vil.groupby("pc11_tv_id")}
+    tv = df[(df.Level == "VILLAGE")
+            | ((df.Level == "TOWN") & (df.TRU == "Urban") & ~df["Town/Village"].isin(towns))]
+    tv = tv.drop_duplicates(["Town/Village", "code"])
+    twice = tv[tv.duplicated("Town/Village", keep=False)]
+    if len(twice):
+        log(f"redraw: in two tehsils, placed in the first: {sorted(set(twice['Town/Village']))}")
+    nopoly = []
+    for t, c in tv.drop_duplicates("Town/Village")[["Town/Village", "code"]].values:
+        if t in poly:
+            pieces.append((c, "", poly[t].intersection(state)))
+        else:
+            nopoly.append(t)
+    if nopoly:
+        log(f"redraw: {len(nopoly)} villages/towns without a SHRUG polygon: {nopoly[:8]}")
+    taken = shapely.union_all([p for _, _, p in pieces])
+
+    # 2. census people per ward and tehsil. A town's ward row carries the town's
+    #    ward number; a census town's row carries the number of the ward it lies in
+    w = df[df.Level == "WARD"].copy()
+    pre = w["Town/Village"].map(towns)
+    w["key"] = pre.fillna("") + w["Ward"].astype(int).astype(str)
+    w["town"] = w["Town/Village"].where(pre.notna(), "")
+    in_town = w[w.town != ""].groupby(["key", "code"])["TOT_P"].sum()
+    in_any = w.groupby(["key", "code"])["TOT_P"].sum()
+    town_of = w[w.town != ""].drop_duplicates("key").set_index("key")["town"]
+
+    wm = gpd.read_file(DM / cfg["map"], on_invalid="ignore")
+    wm = wm[wm.geometry.notna()].to_crs(CRS)
+    wm["key"] = wm[cfg["num"]].map(map_key)
+    wm["geometry"] = wm.buffer(0)
+    wm = wm.dissolve("key", as_index=False)
+    missing = sorted(set(in_any.index.get_level_values(0)) - set(wm.key))
+    if missing:
+        log(f"redraw: census wards not on the map: {missing}")
+
+    # 3. each map ward minus the villages and census towns in it goes to the
+    #    tehsil(s) holding its town's people (else its census towns' people)
+    tree = shapely.STRtree(wm.geometry.values)
+    shared = []
+    for i, (key, geom) in enumerate(zip(wm.key, wm.geometry)):
+        rest = geom.intersection(state).difference(taken)
+        prev = [j for j in tree.query(geom) if j < i]
+        if prev:
+            rest = rest.difference(shapely.union_all(wm.geometry.values[prev]))
+        if rest.is_empty:
+            continue
+        src = in_town if key in in_town.index.get_level_values(0) else in_any
+        if key not in src.index.get_level_values(0):
+            continue   # no census rows (the map's unnumbered sliver): left to the gap fill
+        o = src.loc[key]
+        o = o[o >= REDRAW_MINOR * o.sum()]
+        town = town_of.get(key, "")
+        if len(o) == 1:
+            pieces.append((o.index[0], town, rest))
+        else:
+            shared.append((key, town, rest, list(o.index)))
+
+    # 4. a shared ward is carved between its tehsils by nearness to the area
+    #    they surely hold (Voronoi of points in their other pieces)
+    seeds = {}
+    for c, _, p in pieces:
+        seeds.setdefault(c, []).append(sample(p, 150))
+    seeds = {c: np.vstack(v) for c, v in seeds.items()}
+    # a tehsil that holds no ward outright is seeded by SHRUG's polygon for it
+    bare = sorted({c for *_, codes in shared for c in codes} - set(seeds))
+    for c in bare:
+        seeds[c] = sample(old[c], 150)
+    if bare:
+        log(f"redraw: seeded by SHRUG's own polygon (no ward of their own): {bare}")
+
+    def carve(area, codes, near):
+        xy, lab = [], []
+        for c in codes:
+            s = seeds[c]
+            box = near.bounds
+            k = ((s[:, 0] > box[0]) & (s[:, 0] < box[2]) & (s[:, 1] > box[1]) & (s[:, 1] < box[3]))
+            if not k.any():   # nothing nearby: its 20 nearest points
+                d = np.hypot(s[:, 0] - near.centroid.x, s[:, 1] - near.centroid.y)
+                k = np.argsort(d)[:20]
+            xy.append(s[k])
+            lab += [c] * len(s[k])
+        xy, idx = np.unique(np.round(np.vstack(xy), 1), axis=0, return_index=True)
+        lab = np.asarray(lab)[idx]
+        cells = shapely.voronoi_polygons(MultiPoint(xy), extend_to=area.envelope.buffer(5000))
+        cells = gpd.GeoDataFrame(geometry=list(cells.geoms), crs=CRS)
+        pts = gpd.GeoDataFrame({"code": lab}, geometry=shapely.points(xy), crs=CRS)
+        j = gpd.sjoin(cells, pts, predicate="contains", how="inner")
+        j["geometry"] = j.geometry.intersection(area)
+        return {c: shapely.union_all(g.geometry.values) for c, g in j.groupby("code")}
+
+    for key, town, rest, codes in shared:
+        for c, p in carve(rest, codes, rest.buffer(1500)).items():
+            if not p.is_empty:
+                pieces.append((c, town, p))
+
+    # 5. what is left of the state (off the map, slivers) goes to the nearest tehsil
+    gap = state.difference(shapely.union_all([p for _, _, p in pieces]))
+    if gap.area > 1:
+        seeds = {}
+        for c, _, p in pieces:
+            seeds.setdefault(c, []).append(sample(p, 300))
+        seeds = {c: np.vstack(v) for c, v in seeds.items()}
+        for c, p in carve(gap, sorted(seeds), state).items():
+            if not p.is_empty:
+                pieces.append((c, "", p))
+        log(f"redraw: {gap.area / 1e6:.1f} km2 not on the map or in a SHRUG polygon, "
+            f"given to the nearest tehsil")
+
+    out = {}
+    for c in sorted({c for c, _, _ in pieces}):
+        out[c] = shapely.make_valid(shapely.union_all([p for cc, _, p in pieces if cc == c]))
+    # slivers (a piece under REDRAW_SLIVER away from its tehsil's main body) go
+    # to the neighbour they share most border with
+    for c in list(out):
+        gs = sorted(shapely.get_parts(out[c]), key=lambda g: -g.area)
+        for s in gs[1:]:
+            if s.area >= REDRAW_SLIVER:
+                continue
+            ring = s.buffer(5)
+            nb = max((o for o in out if o != c), key=lambda o: out[o].intersection(ring).area)
+            out[c] = out[c].difference(s)
+            out[nb] = out[nb].union(s)
+    for (c, town) in {(c, t) for c, t, _ in pieces if t}:
+        _redrawn_towns[(c, town)] = shapely.make_valid(
+            shapely.union_all([p for cc, t, p in pieces if cc == c and t == town]))
+    return out
+
+
 def subdistricts():
-    """SHRUG's sub-district outlines (CRS, indexed by code), with each CITIES unit
-    marked outline=True redrawn as its ward map, clipped to its district, and that
-    area taken out of the district's other sub-districts."""
+    """SHRUG's sub-district outlines (CRS, indexed by code), with REDRAW
+    districts redrawn from the census, and each TOWN_OUTLINES town added to the
+    unit it is counted in, clipped to the district, and taken out of the
+    district's other sub-districts."""
     sd = gpd.read_file(SUBDIST_SHP).to_crs(CRS)
     sd["code"] = sd.pc11_d_id + sd.pc11_sd_id
     sd = sd.set_index("code")
     sd["geometry"] = shapely.make_valid(sd.geometry.values)
-    for code, cfg in CITIES.items():
-        if not cfg.get("outline"):
-            continue
+    for name, cfg in REDRAW.items():
+        sib = sd.pc11_d_id.isin(cfg["districts"])
+        new = redraw(cfg, sd.loc[sib].geometry.to_dict())
+        moved = []
+        for c in sd.index[sib]:
+            old = sd.loc[c].geometry.area
+            sd.loc[c, "geometry"] = new.get(c, Point())
+            moved.append(f"{sd.loc[c].sd_name} {old / 1e6:.0f}->{sd.loc[c].geometry.area / 1e6:.0f}")
+        log(f"{name} redrawn from census wards (km2): {', '.join(moved)}")
+    for town, (code, f) in TOWN_OUTLINES.items():
         sib = sd.pc11_d_id == code[:3]
         old = sd.loc[code].geometry.area
-        city = shapely.union_all(ward_map(cfg, None).geometry.values)
-        city = city.intersection(shapely.union_all(sd.loc[sib].geometry.values))
+        city = town_outline(town).intersection(shapely.union_all(sd.loc[sib].geometry.values))
         moved = []
         for c in sd.index[sib]:
             if c == code:
@@ -275,10 +538,67 @@ def subdistricts():
             if lost > 1e6:
                 moved.append(f"{sd.loc[c].sd_name} {lost / 1e6:.0f}")
             sd.loc[c, "geometry"] = g.difference(city)
-        sd.loc[code, "geometry"] = city
-        log(f"{code} outline from {cfg['map']}: {old / 1e6:.0f} -> {city.area / 1e6:.0f} km2, "
+        new = sd.loc[code].geometry.union(city)
+        sd.loc[code, "geometry"] = new
+        log(f"{code} {sd.loc[code].sd_name} with {f}: {old / 1e6:.0f} -> {new.area / 1e6:.0f} km2, "
             f"taken from {', '.join(moved) or 'nothing'} (km2)")
     return sd
+
+
+def town_pieces(town, tpoly):
+    """A TOWN_SPLIT town's pieces as [(key, weight, polygon)] (CRS) and how they
+    were made: EQUAL_WARDS map wards weighted by the share of each inside the
+    town, else GHSL 1 km cells weighted by their people inside the town."""
+    if town in EQUAL_WARDS:
+        f, col, year = EQUAL_WARDS[town]
+        g = gpd.read_file(DM / f, on_invalid="ignore")
+        g = g[g.geometry.notna()].to_crs(CRS)
+        g["key"] = g[col].astype(str).str.extract(r"^\s*(\d+)")[0].astype(float)
+        g = g[g.key.notna()]
+        g["geometry"] = g.buffer(0)
+        g = g.dissolve("key", as_index=False)
+        out = []
+        for k, geom in zip(g.key.astype(int), g.geometry):
+            inside = geom.intersection(tpoly)
+            if inside.area > 1:
+                out.append((k, inside.area / geom.area, inside))
+        return out, f"{year} wards"
+    import rasterio
+    from rasterio.windows import Window
+    p = gpd.GeoSeries([tpoly], crs=CRS).to_crs("ESRI:54009").iloc[0]
+    with rasterio.open(GHSL) as src:
+        t = src.transform
+        x0, y0, x1, y1 = p.bounds
+        c0, c1 = int((x0 - t.c) // t.a), int((x1 - t.c) // t.a) + 1
+        r0, r1 = int((t.f - y1) // -t.e), int((t.f - y0) // -t.e) + 1
+        arr = src.read(1, window=Window(c0, r0, c1 - c0, r1 - r0)).astype(float)
+    arr[arr < 0] = 0
+    rr, cc = np.nonzero(arr > 0)
+    xs, ys = t.c + (c0 + cc) * t.a, t.f + (r0 + rr) * t.e
+    cells = shapely.box(xs, ys + t.e, xs + t.a, ys)
+    inside = shapely.intersection(cells, p)
+    w = arr[rr, cc] * shapely.area(inside) / (t.a * -t.e)
+    k = w > 0
+    geo = gpd.GeoSeries(inside[k], crs="ESRI:54009").to_crs(CRS)
+    return [(i, wi, gi) for i, (wi, gi) in enumerate(zip(w[k], geo.values))], "GHSL"
+
+
+def cap_density(w, km2, total):
+    """Weights scaled to total with no piece over GHSL_CAP per km2, the excess
+    spread over the others in proportion (repeated until nothing is over)."""
+    x = w / w.sum() * total
+    cap = GHSL_CAP * km2
+    for _ in range(50):
+        over = x > cap
+        if not over.any():
+            break
+        spare = (x[over] - cap[over]).sum()
+        x[over] = cap[over]
+        free = ~over & (x < cap)
+        if not free.any():
+            break
+        x[free] += spare * x[free] / x[free].sum()
+    return x
 
 
 def ward_map(cfg, unit_poly):
@@ -406,7 +726,7 @@ def unit_atoms(code, vil):
 def split_unit(code, unit_poly, sd_name, pops, vil):
     d = code[:3]
     wards, vills, town_pop, names, extra = unit_atoms(code, vil)
-    cfg = CITIES.get(code)
+    cfg = CITIES.get(code) or redraw_cfg(code)
     p11 = town_pop.sum() + vills["TOT_P"].sum()
     f26 = pops[SPLIT_YEAR] / p11
     spacing = float(np.clip(np.sqrt(unit_poly.area / 6000), 100, 500))
@@ -415,6 +735,21 @@ def split_unit(code, unit_poly, sd_name, pops, vil):
     for tv, g in mine.groupby("pc11_tv_id"):
         here = g[g.pc11_sd_id == code[3:]]
         poly_of[tv] = shapely.union_all((here if len(here) else g).geometry.values)
+    # a TOWN_OUTLINES town takes its outline, and SHRUG polygons lying in it
+    # give that area up (unless that would leave them nothing)
+    for town, (c, _) in TOWN_OUTLINES.items():
+        if c != code:
+            continue
+        out = town_outline(town)
+        for tv, p in poly_of.items():
+            rest = p.difference(out)
+            if not rest.is_empty and rest.area > 1:
+                poly_of[tv] = rest
+        poly_of[town] = out
+    # a REDRAW district's ward-mapped towns take their redrawn area
+    for (c, town), p in _redrawn_towns.items():
+        if c == code:
+            poly_of[town] = p
     centre = unit_poly.centroid
 
     atoms = []   # dict(kind, key, pop, pts, xy, p26, ...)
@@ -430,7 +765,7 @@ def split_unit(code, unit_poly, sd_name, pops, vil):
     missing = []
     if cfg:
         wm = ward_map(cfg, unit_poly)
-        tpoly = None if cfg.get("outline") else poly_of.get(split_town)
+        tpoly = poly_of.get(split_town)
         tpoly = unit_poly if tpoly is None else tpoly.intersection(unit_poly)
         w = wards[wards["Town/Village"] == split_town]
         if cfg.get("mumbai"):
@@ -454,11 +789,22 @@ def split_unit(code, unit_poly, sd_name, pops, vil):
                 else:
                     missing.append(n)
                     add("ward", n, pop, None, group=None)
-    # 2. other towns, whole
+    # 2. other towns, whole, but a town over TOWN_SPLIT in pieces
+    how = {}
     for tv, pop in town_pop.items():
         if tv == split_town:
             continue
-        add("town", tv, pop, poly_of.get(tv), name=names.get(tv, tv))
+        tpoly = poly_of.get(tv)
+        if pop * f26 >= TOWN_SPLIT and tpoly is not None:
+            pieces, how[tv] = town_pieces(tv, tpoly.intersection(unit_poly))
+            if len(pieces) > 1:
+                w = np.array([w for _, w, _ in pieces], float)
+                if how[tv] == "GHSL":
+                    w = cap_density(w, np.array([p.area / 1e6 for _, _, p in pieces]), pop)
+                for (k, _, p), n in zip(pieces, apportion(w, pop)):
+                    add("tpart", k, n, p, town=tv, name=names.get(tv, tv))
+                continue
+        add("town", tv, pop, tpoly, name=names.get(tv, tv))
     # 3. villages
     for _, v in vills.iterrows():
         add("village", v["Town/Village"], v["TOT_P"], poly_of.get(v["Town/Village"]),
@@ -494,8 +840,32 @@ def split_unit(code, unit_poly, sd_name, pops, vil):
                 groups.append((f"{tname} wards " + ranges(atoms[i]["key"] for i in idx), idx))
         if missing:
             log(f"{code}: census wards not on the map, placed with the nearest number: {missing}")
+    # a town split by town_pieces(): bisection, parts named by ward numbers or
+    # by direction from the town's centre
+    for tv, h in how.items():
+        ti = [i for i, a in enumerate(atoms) if a["kind"] == "tpart" and a["town"] == tv]
+        if not ti:
+            continue
+        tname = atoms[ti[0]]["name"]
+        tc = np.average([atoms[i]["xy"] for i in ti], axis=0,
+                        weights=[max(atoms[i]["pop"], 1) for i in ti])
+        seen = {}
+        for idx in bisect(atoms, ti, PART_MAX):
+            if h == "GHSL":
+                xy = np.average([atoms[i]["xy"] for i in idx], axis=0,
+                                weights=[max(atoms[i]["pop"], 1) for i in idx])
+                lab = f"{tname} {compass(xy[0] - tc[0], xy[1] - tc[1])}"
+                seen[lab] = seen.get(lab, 0) + 1
+                if seen[lab] > 1:
+                    lab += f" {seen[lab]}"
+            else:
+                lab = f"{tname} {h} " + ranges(atoms[i]["key"] for i in idx)
+            groups.append((lab, idx))
+        log(f"{code}: {tname} split by {h}")
     rest = []
     for i, a in enumerate(atoms):
+        if a["kind"] == "tpart":
+            continue
         if a["kind"] == "town" and a["p26"] >= TOWN_PART:
             groups.append((a["name"], [i]))
         elif a["kind"] != "ward":
@@ -586,6 +956,14 @@ def build(l3_rows):
     sd = subdistricts()
     l3 = sd.reset_index()[["pc11_s_id", "pc11_d_id", "pc11_sd_id", "sd_name", "geometry"]]
     write_gpkg(gpd.GeoDataFrame(l3, geometry="geometry", crs=CRS).to_crs(4326), OUT_L3)
+    # districts of REDRAW are the union of their new tehsils
+    dist = gpd.read_file(DISTRICT_SHP).to_crs(CRS)
+    redrawn = sorted(d for cfg in REDRAW.values() for d in cfg["districts"])
+    for d in redrawn:
+        k = dist.index[dist.pc11_d_id == d]
+        if len(k):
+            dist.loc[k[0], "geometry"] = shapely.union_all(sd[sd.pc11_d_id == d].geometry.values)
+    write_gpkg(dist.to_crs(4326), OUT_L2)
     vil = shrug({c[:3] for c in big})
     recs, rows, lines = [], [], []
     split = {}

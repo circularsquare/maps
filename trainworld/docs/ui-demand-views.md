@@ -340,8 +340,7 @@ riders counters keep their own smoothing (Live feel).
   level holds at least 10 and every total is exact. The draws follow the far end under the purpose
   filter, and every purpose's far end moves the same way. Display only: demand is untouched. The
   trip explorer opened from far bubbles counts the grouped trips, so it agrees with the hover.
-- **Lines to the selection** [T-520, on trial: `LINES_TO_SELECTION` in `map/commuterView.ts`
-  turns them off]: from each far-end bubble's edge a 1.5 px line of constant width in that bubble's
+- **Lines to the selection** [T-520, `linesToward` in `map/commuterView.ts`]: from each far-end bubble's edge a 1.5 px line of constant width in that bubble's
   own colour, 80% opaque at the bubble's edge and fading linearly to nothing at the tip [T-858], points at the selection's centre (its bubbles' centres weighted by area),
   6% of the map's longer side long and cut square (no taper) [T-739], stopping at the
   selected bubble's edge when there is one.
@@ -376,7 +375,7 @@ inspector lists no commuters or inter-city riders [T-1812].
 [T-118, T-120, T-135, T-136, T-139, T-222; the market in [regional.md](regional.md)]
 
 - Neither a station's inspector [T-1812] nor a local bubble's [T-1668] has an "Inter-city trips"
-  section (`SelectionLongerTrips` is unused). A selection's would list trips leaving its areas and trips arriving there, each by place with all modes, then by
+  section. A selection's inter-city section, were it shown, would list trips leaving its areas and trips arriving there, each by place with all modes, then by
   train, car and plane [T-378] (column heads are the modes' icons, `Icon.train`, `Icon.ride`,
   `Icon.plane` in `ui/widgets.tsx`; every number's hover gives the exact count and its share), then
   an "Elsewhere" row for trips with places that have no zone (all modes only; counted in the

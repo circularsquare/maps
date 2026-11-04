@@ -23894,6 +23894,14 @@
       {
         "name": "Richmond County",
         "regionName": "Richmond County region"
+      },
+      {
+        "name": "Jakarta",
+        "regionName": "Jakarta region"
+      },
+      {
+        "name": "Serang",
+        "regionName": "Serang region"
       }
     ],
     "rule": {
@@ -76802,31 +76810,6 @@
       "localTrips": 529558.0
     },
     {
-      "id": "tan",
-      "name": "Tangerang",
-      "origin": {
-        "lon": 106.5779,
-        "lat": -6.1552
-      },
-      "center": [
-        106.5779,
-        -6.1552
-      ],
-      "zoom": 11.2,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        105.806,
-        -6.381,
-        106.799,
-        -5.789
-      ],
-      "place": 4381,
-      "country": "ID",
-      "realm": "java",
-      "localTrips": 28483532.0
-    },
-    {
       "id": "tak",
       "name": "Tasikmalaya",
       "origin": {
@@ -76875,31 +76858,6 @@
       "country": "ID",
       "realm": "java",
       "localTrips": 2810685.0
-    },
-    {
-      "id": "jak",
-      "name": "Jakarta",
-      "origin": {
-        "lon": 106.8022,
-        "lat": -6.1876
-      },
-      "center": [
-        106.8022,
-        -6.1876
-      ],
-      "zoom": 11.2,
-      "utcOffset": 7,
-      "market": -1,
-      "box": [
-        106.352,
-        -7.524,
-        107.663,
-        -5.902
-      ],
-      "place": 4384,
-      "country": "ID",
-      "realm": "java",
-      "localTrips": 104885212.0
     },
     {
       "id": "toi",

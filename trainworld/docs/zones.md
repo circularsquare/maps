@@ -223,6 +223,13 @@ module (archetype A; Puerto Rico C, population only). US rows solve their joint 
 division, Delaware, Maryland and DC with the Northeast (`SOLVE_REGIONS`); Puerto Rico is its own
 country. A zone named after a county name another zone has carries its state ("Jefferson County, KY").
 notes/T-1004.md.
+**Ukraine** (Anita, 2026-11-04, T-2344: "we can do de facto borders. crimea to russia if its drawable, and probably
+not draw the other contested areas") is zoned on geoBoundaries' village and town councils by their old raion, as
+Korea's. Crimea and Sevastopol go with Russia: a unit `de_facto` gives another side becomes that side's unit
+(`world_plan.DE_FACTO_TAKE`, ids kept), so Russia's zones step zones them. Land held by Russia elsewhere is left
+out (`LEFT_OUT`): a council with over half its area inside ISW and AEI's assessed line of control of 2026-09-29 is
+not zoned, one with less is zoned whole. The line only picks whole units (its terms are not an open licence); no
+edge of it is drawn or shipped. The Donetsk metro row stays held. notes/T-2344.md.
 
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
