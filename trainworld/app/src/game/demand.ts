@@ -239,10 +239,14 @@ export const modeSplit = computed<ModeSplit | null>(() => !viewedZone.value ? nu
  * until the zone has a solved or bare view, and over dead space. */
 export const modeRides = computed<(ModeSplit & { all: number }) | null>(() => {
   const v = !viewedZone.value ? null : cityDemandViews.value.get(activeCity.value);
-  if (!v) return null;
-  const all = v.tripsPerDay;
-  return { all, train: v.railTripsPerDay, walk: all * v.split.walk / 100, drive: all * v.split.drive / 100 };
+  return v ? ridesOf(v) : null;
 });
+
+/** A view's split in rides (trip legs) a day, `all` their total: its `split` times its trips. */
+export function ridesOf(v: DemandView): ModeSplit & { all: number } {
+  const all = v.tripsPerDay;
+  return { all, train: v.railTripsPerDay, walk: all * v.split.walk / 100, drive: all * v.split.drive / 100, none: all * (v.split.none ?? 0) / 100 };
+}
 
 export const lineDemand = (id: string): LineDemand | null => demandView.value?.lines.get(id) ?? null;
 export const stationDemand = (id: string): StationDemand | null => demandView.value?.stations.get(id) ?? null;
@@ -284,6 +288,10 @@ export interface CellModes {
   workRail: Float32Array;
   workWalk: Float32Array;
   workDrive: Float32Array;
+  /** T-2214, T-2215: trips no way serves (between two land parts, not by rail), "No route", at
+   * each end; in none of the three above */
+  homeNone: Float32Array;
+  workNone: Float32Array;
 }
 
 /** Cells and the commuters from each, most first. */

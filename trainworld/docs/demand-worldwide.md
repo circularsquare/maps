@@ -432,6 +432,20 @@ notes/T-420.md has the tables.
   hour trip as worth little, which may undersell a fast intercity line there; the power 3 is
   Anita's choice for play, set against her two ceiling tests, not fitted to any survey. Check: a
   country's rail share by trip length against its travel survey, short and long trips apart.
+- **Islands no road reaches** (T-2214, docs/demand-mode.md 4.3 "Between two land parts"). Between
+  two land parts of a pack (T-2213: land joined only by a drivable OSM way, from the pack's water
+  mask and OSM roads, the same for every country) there is no car and no walk; the player's network
+  is the only way, its share held only by the ratio curve's 3-4x fade against a car on a bridge
+  that is not there, and the rest no way serves. No constant. Car ferries count as no road, one
+  rule everywhere (Anita, 2026-11-03). Why it may not carry over: where road ferries are part of
+  the road network (Sweden's vägfärjor, Norway's riksvei ferries, the Philippines' RoRo routes,
+  Indonesia's ASDP crossings) an island keeps a real car the model takes away, and a player's
+  boat there fills with drivers who in fact cross by car; OSM ways a car can use but the public
+  cannot reach still join (a private bridge, a service track over a dam); the gravity sends trips
+  across water as if it were land, so a busy strait's island draws too many (Vashon about 3 times
+  its ferry's riders, notes/T-2207.md 3). Check: per country, the people on parts other than the
+  first (`checks/t2213_islands.py`) against its known car-free islands, and an island's trips
+  across against its ferry's riders.
 - **Cost damping** (T-495, docs/demand-mode.md 4.3). The logit's 0.10 a perceived minute falls as
   sqrt(60 / T) past T = 60, T the car's perceived minutes (even where no car can go), for walking's
   share and the regional market (rail against the car is the ratio curve's). The form and power follow UK WebTAG's cost damping and long-distance mode choice studies;

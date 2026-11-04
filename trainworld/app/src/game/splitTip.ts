@@ -12,8 +12,10 @@ export type SplitRides = ModeSplit & { all: number };
 export function splitTip(where: string, split: ModeSplit | null, rides: SplitRides | null, note: string): string {
   const s = split ?? { train: 0, walk: 0, drive: 0 };
   const pct = (v: number) => (split ? v.toFixed(1) + "%" : "–");
+  // T-2215: No route only where some trips have none
+  const none = (s.none ?? 0) > 0;
   const body = rides
-    ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), all ${count(rides.all)} trips`
-    : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}`;
+    ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), ${none ? `No route ${pct(s.none!)} (${count(rides.none ?? 0)}), ` : ""}all ${count(rides.all)} trips`
+    : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${none ? `, No route ${pct(s.none!)}` : ""}`;
   return `Trips per day${where}: ${body}${note}`;
 }

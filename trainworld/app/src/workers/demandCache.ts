@@ -21,7 +21,7 @@ import type { NetworkSnapshot } from "./protocol";
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
 export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
-export const CACHE_FORMAT = 6; // 3: the corridors as a shared table and the pairs with rail (T-1008); 4: Saturday and Sunday apart (T-262); 5: the away day, the average last (T-264); 6: the going-out and coming-back days (T-1373)
+export const CACHE_FORMAT = 7; // 3: the corridors as a shared table and the pairs with rail (T-1008); 4: Saturday and Sunday apart (T-262); 5: the away day, the average last (T-264); 6: the going-out and coming-back days (T-1373); 7: the bubbles' No route arrays (T-2215)
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve, as before T-328). */
 export const CACHE_VERSION = 0;
@@ -50,7 +50,7 @@ interface StoredView {
 type CityFigures = Pick<DemandView, "split" | "trainShareByPeriod" | "tripsPerDay" | "railTripsPerDay">;
 interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; intercity: Omit<IntercityDemand, "version"> | null }
 /** `modes`: the viewed zone's bubbles on the kind of day shown (`day`, a weekday when absent), all
- * purposes (`CellModes`' six arrays one after another, pack cell order), when they were on show as
+ * purposes (`CellModes`' eight arrays one after another, pack cell order), when they were on show as
  * the result landed */
 export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array; day?: number }; ahead?: CacheAhead }
 /** T-1539: the network a load of a save works out, when this result is that network's: `save` the

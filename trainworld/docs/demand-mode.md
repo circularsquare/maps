@@ -98,6 +98,24 @@ zone pairs for commutes, over the samples for everyday trips); a pair offered ra
 rail, as the logit does (`ModeOut::rail_walk`, `Params::car_choice`). A good station near a short
 trip can take walkers, and a long walk loses to the train.
 
+**Between two land parts** (Anita, 2026-11-03, T-2214; design notes/T-2207.md 3; `kernel::Parts`;
+the parts are the pack's, "Land parts" below) there is no car and no walk, neither the whole way
+nor to a station. A station's part is its nearest cell's (a ferry port's, its own shore's); a cell
+walks, rides or drives only to stations on its own part, so each subzone is on one part. A zone
+pair's commutes split over its zones' homes and jobs by part (a zone's cells on one part are a
+slot): those between slots of one part choose as above, walking at the share of the pair's cell
+pairs on one part; those between two parts have the player's network as their only way. There
+rail's share is the ratio curve's fade alone against a car on a bridge that is not there (straight
+x `road_detour` 1.3 with the local speeds and parking): all of them up to 3 times its cost, none
+from 4 times, linear between (`Params::bound_share`). Neither Anita's walking rule nor "no train no
+quicker than walking" applies, having no walk to compare with. What rail does not take **no way
+serves**: those trips keep their place in every total, in no mode (`DemandApi::cell_unreach_day`,
+`EverydayApi::cell_unreach_day`, the summaries' 14th number; driving is the rest), and of their
+riders the trains' room turns away, all stay home. Car ferries are no road (Anita, 2026-11-03): the
+player's ferry or train is an island's only way, and a rail bridge the player builds joins nothing.
+The everyday layer applies it per sample (a pair of subzones is on one pair of parts). The regional
+layer's commutes and outings between zones and the market do not yet (T-2256, T-2216).
+
 Weights (perceived minutes per real minute), from Subway Builder's published constants where they
 exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
 transfer 1.39, waiting for a train 1.0 (half the headway, plain minutes: Anita, T-585), congested
@@ -213,7 +231,8 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   people, jobs, cells, `open` (it reaches the grid's edge, so it may go on into a neighbouring pack)
   and the world field's landmass at its busiest cell: two cells of one pack are joined when their
   part is the same, two in different packs when both parts are open and on one landmass. `routes.py --stage parts` makes them for a finished pack,
-  `parts_run.py` for every pack. The sim does not read them yet (T-2214).
+  `parts_run.py` for every pack. Local demand reads `part` (T-2214, "Between two land parts"
+  above); a pack whose cells are all on one part solves as before.
 - **Not routed**: walking transfers between stations (300 m and complexes) stay straight x 1.3,
   because every population must build the same graph from the same stations to share its
   strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has

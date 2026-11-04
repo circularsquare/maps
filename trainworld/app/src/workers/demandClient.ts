@@ -28,6 +28,7 @@
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
+import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
 import { display, selection, shownDay, tool } from "../game/ui";
 import {
@@ -256,6 +257,13 @@ const MARKET_SPEC: FrameSpec = { kind: MARKET_FRAME.kind, lon: MARKET_FRAME.lon,
 function byMask(parts: Reply[]): Reply[] {
   const m = (r: Reply) => ("mask" in r ? r.mask : 0);
   return [...parts].sort((a, b) => m(a) - m(b));
+}
+/** `CellModes` from the workers' eight blocks a cell (demand.worker.ts `withNone`): rail, walk and
+ * drive at the home end, the same at the activity end, then No route at each (T-2215). `copy`
+ * slices, else the arrays view `data`. */
+function cellModesOf(version: number, day: DemandDay, data: Float32Array, copy = false): CellModes {
+  const n = data.length / 8, b = (k: number) => (copy ? data.slice(k * n, (k + 1) * n) : data.subarray(k * n, (k + 1) * n));
+  return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5), homeNone: b(6), workNone: b(7) };
 }
 /** A bare zone's everyday legs per solving worker's periods (T-325), in `byMask`'s order. */
 function bareParts(r: Extract<FromDemand, { kind: "bare" }>): Float32Array[] {
@@ -2089,7 +2097,7 @@ class DemandClient {
     const ahead = lk?.snapshot && lk.svcKey === JSON.stringify(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
     // the result shown at load is the same one, unless it can now add its bubbles or its network
     if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
-    const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive]), ...(m!.day ? { day: m!.day } : {}) };
+    const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
     const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}) } satisfies StoredDemand);
@@ -3184,7 +3192,7 @@ class DemandClient {
       if (!cells) return null;
       // a shown purpose may count more than one of the model's (school and university, T-192)
       const kinds = membersOf(purpose).map((m) => EVERYDAY_KEYS.indexOf(m)).filter((k) => k >= 0);
-      let modes = new Float32Array(6 * cells.n);
+      let modes = new Float32Array(8 * cells.n);
       const bare = this.isBare(city);
       for (const kind of kinds) {
         if (bare) {
@@ -3203,9 +3211,7 @@ class DemandClient {
         if (mask !== ALL_PERIODS) return null;
       }
       if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || shownDay.peek() !== day) return null;
-      const n = cells.n;
-      const b = (k: number) => modes.subarray(k * n, (k + 1) * n);
-      return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) };
+      return cellModesOf(version, day, modes);
     })();
     if (other !== undefined) return p;
     // one solve's purposes at a time; a failed answer is not kept
@@ -3307,8 +3313,7 @@ class DemandClient {
     // T-328: the cached result's bubbles, when it kept this zone's for this day
     const kept = this.cachedModes;
     if (version === CACHE_VERSION && everydayToo && other === undefined && day === (kept?.day ?? 0) && kept?.city === activeCity.peek()) {
-      const n = kept.data.length / 6, b = (k: number) => kept.data.slice(k * n, (k + 1) * n);
-      return Promise.resolve({ version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) });
+      return Promise.resolve(cellModesOf(version, day, kept.data, true));
     }
     const p = (async (): Promise<CellModes | null> => {
       const city = other ?? activeCity.peek();
@@ -3343,9 +3348,7 @@ class DemandClient {
       // Old commuter queries count one person; convert before adding everyday travel.
       // (work alone for the purpose filter, T-158: `everydayToo` false)
       for (let k = 0; k < r.modes.length; k++) r.modes[k] = 2 * r.modes[k] + (everydayToo ? extra?.[k] ?? 0 : 0);
-      const n = r.modes.length / 6;
-      const b = (k: number) => r.modes!.subarray(k * n, (k + 1) * n);
-      return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) };
+      return cellModesOf(version, day, r.modes);
     })();
     if (!everydayToo || other !== undefined) return p; // cached by purposeModes, or a nearby zone's
     this.modesP = { version, round, day, src, p };
@@ -3369,9 +3372,7 @@ class DemandClient {
     if ((other === undefined && activeCity.peek() !== city) || demandView.peek()?.version !== version || demandView.peek()?.round !== round || shownDay.peek() !== day) return null;
     const m = r.commute;
     for (let k = 0; k < m.length; k++) m[k] = 2 * m[k] + (everydayToo ? extra?.[k] ?? 0 : 0);
-    const n = m.length / 6;
-    const b = (k: number) => m.subarray(k * n, (k + 1) * n);
-    return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5) };
+    return cellModesOf(version, day, m);
   }
 
   /** A station's riders, or a station complex's (`members`, T-146): every member is asked, and
@@ -4009,24 +4010,25 @@ class DemandClient {
    */
   private bareView(id: CityId, day: DemandDay, network: DemandView): DemandView {
     const b = (this.bareOpen.get(id) ?? this.bareKept.get(id))!;
-    let trips = 0, rail = 0, walk = 0;
+    let trips = 0, rail = 0, walk = 0, none = 0;
     const trainShareByPeriod: [string, number][] = PERIODS.map((period, q) => {
       let s = b.summary[q];
       if (day !== 0 && this.dayTable.length) {
         s = s.slice();
-        const cp = b.parts[q];
+        const cp = b.parts[q], t0 = s[1];
         s[1] = s[2] = s[3] = 0;
         for (let i = 0; i * 3 < cp.length; i++) {
           const f = dayFactor(this.dayTable, day, b.keys[i], q);
           s[1] += cp[3 * i] * f; s[2] += cp[3 * i + 1] * f; s[3] += cp[3 * i + 2] * f;
         }
+        // T-2215: as `dayResult`, the trips no way serves follow the trips
+        if (s[13]) s[13] *= t0 > 0 ? s[1] / t0 : 0;
       }
       const [, t, ra, wa] = s;
-      trips += t; rail += ra; walk += wa;
+      trips += t; rail += ra; walk += wa; none += s[13] ?? 0;
       return [period.name, t > 0 ? 100 * ra / t : 0];
     });
-    const pct = (n: number) => trips > 0 ? 100 * n / trips : 0;
-    return { ...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: { train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk)) } };
+    return { ...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: splitOf(trips, rail, walk, none) };
   }
 
   /** Zones with bare figures: open bare, or closed since (T-301). */

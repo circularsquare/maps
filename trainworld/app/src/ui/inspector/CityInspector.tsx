@@ -19,13 +19,16 @@ import { builtCities } from "../../game/worldTotals";
 import { GoalTicks } from "../GoalTicks";
 import { CityFigures, CityNetwork } from "./CityDetails";
 
-type Part = { name: string; n: number; cls: string };
+/** `note`: a second line for the part's hover */
+type Part = { name: string; n: number; cls: string; note?: string };
+/** T-2215: why a trip has no route (the trips between two land parts no road joins, not by rail) */
+const NO_ROAD = "No road joins their two ends";
 
-/** A figure with its mode bar: train blue, walking green, car red, as the map's bubbles. */
+/** A figure with its mode bar: train blue, walking green, car red, No route grey, as the map's bubbles. */
 function TripsBar({ label, tip, what, parts, goals }: { label: string; tip?: string; what: string; parts: Part[]; goals?: City }) {
   const all = parts.reduce((s, p) => s + p.n, 0);
   const bar = <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
-    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}` }))} />;
+    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}${p.note ? `\n${p.note}` : ""}` }))} />;
   return (
     <li class={"zone-trips" + (goals ? " with-goals" : "")}>
       <div class="line">
@@ -62,12 +65,12 @@ export function CityInspector({ id }: { id: string }) {
   const lm = localModes(view);
   const localAll = view ? view.tripsPerDay : city.localTrips ?? 0;
   // the title mark is the zone's bubble colour (map/intercityView.ts): local and inter-region together
-  const walk = lm?.walk ?? 0;
+  const walk = lm?.walk ?? 0, none = lm?.none ?? 0;
   const rail = interRail + (lm?.train ?? 0);
   const d = display.value;
   setBubbleShade(shade.value);
   setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
-  const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk));
+  const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk - none), none);
   const filter = purposeFilter.value;
   const drawn = filter === "all";
   const top = places.slice(0, 3);
@@ -95,6 +98,7 @@ export function CityInspector({ id }: { id: string }) {
                   { name: "Train", n: lm.train, cls: "seg-train" },
                   { name: "Walk", n: lm.walk, cls: "seg-walk" },
                   { name: "Car", n: lm.drive, cls: "seg-drive" },
+                  ...(lm.none > 0 ? [{ name: "No route", n: lm.none, cls: "seg-none", note: NO_ROAD }] : []),
                 ]}
                 goals={city}
               />

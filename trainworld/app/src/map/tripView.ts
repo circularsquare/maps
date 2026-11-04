@@ -401,6 +401,8 @@ export interface RiderTrip {
   pTrain: number | null;
   pDrive: number | null;
   pWalk: number | null;
+  /** T-2214: the two ends are on two land parts no road joins (no car) */
+  apart?: boolean;
 }
 
 /** Undefined while the workers move on (ask again); null where the two points have no answer. */
@@ -427,7 +429,7 @@ export async function riderTrip(from: [number, number], to: [number, number], ke
   }
   const t = trip.periods[q] ?? trip.periods.find((p) => p);
   if (!t) return null;
-  return { market: false, train: t.railOffered ? fin(t.railPerceived) : null, car: fin(t.roadPerceived), pTrain: t.pTrain, pDrive: t.pDrive, pWalk: t.pWalk };
+  return { market: false, train: t.railOffered ? fin(t.railPerceived) : null, car: t.apart ? null : fin(t.roadPerceived), pTrain: t.pTrain, pDrive: t.pDrive, pWalk: t.pWalk, apart: t.apart };
 }
 
 /** T-866: the longer trips between a selection's cells and a far place or 6 km zone, every period,

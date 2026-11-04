@@ -290,6 +290,7 @@ export function TopBar() {
               <i class="seg seg-train" style={{ width: s.train + "%" }} />
               <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
               <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+              <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
             </span>
           </span>
           <b class={"lg pct" + (far ? " trips" : "")}>{pct(s.train)}</b>

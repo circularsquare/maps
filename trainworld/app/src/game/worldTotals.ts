@@ -20,15 +20,15 @@ export const worldView = signal((() => { const v = hashView(); return !!v && v.z
 /** The mode split of the cities' trips added up, in rides a day: null until one has a view. `train`
  * of `rides` is also the train rides a day. */
 export function sumModes(views: Iterable<DemandView | undefined>): { split: ModeSplit; rides: SplitRides } | null {
-  let all = 0, train = 0, walk = 0, drive = 0, seen = false;
+  let all = 0, train = 0, walk = 0, drive = 0, none = 0, seen = false;
   for (const v of views) {
     if (!v) continue;
     const a = v.tripsPerDay;
     seen = true;
-    all += a; train += v.railTripsPerDay; walk += a * v.split.walk / 100; drive += a * v.split.drive / 100;
+    all += a; train += v.railTripsPerDay; walk += a * v.split.walk / 100; drive += a * v.split.drive / 100; none += a * (v.split.none ?? 0) / 100;
   }
   if (!seen || all <= 0) return null;
-  return { split: { train: 100 * train / all, walk: 100 * walk / all, drive: 100 * drive / all }, rides: { all, train, walk, drive } };
+  return { split: { train: 100 * train / all, walk: 100 * walk / all, drive: 100 * drive / all, none: 100 * none / all }, rides: { all, train, walk, drive, none } };
 }
 
 /** T-1301: the world's rides a day by every mode the split counts (train, walking, driving, the
@@ -43,9 +43,9 @@ export const WORLD_RIDES = 25e9;
  * proportions of the cities' own. */
 export function worldSplit(rides: SplitRides): ModeSplit {
   const train = Math.min(100, (100 * rides.train) / WORLD_RIDES);
-  const rest = rides.walk + rides.drive;
+  const none = rides.none ?? 0, rest = rides.walk + rides.drive + none;
   return rest > 0
-    ? { train, walk: ((100 - train) * rides.walk) / rest, drive: ((100 - train) * rides.drive) / rest }
+    ? { train, walk: ((100 - train) * rides.walk) / rest, drive: ((100 - train) * rides.drive) / rest, none: ((100 - train) * none) / rest }
     : { train, walk: 0, drive: 100 - train };
 }
 

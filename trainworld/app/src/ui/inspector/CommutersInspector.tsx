@@ -3,7 +3,7 @@
 
 import { capitalise, count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
-import { BUBBLE_ALPHA, modeMix } from "../../game/palette";
+import { BUBBLE_ALPHA, modeMix, towardNone } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
 import { commuterPick } from "../../map/commuterView";
 import { Row } from "../widgets";
@@ -15,13 +15,21 @@ const swatch = (t: number, w: number, d: number) => {
   return <i class="mk" style={{ background: `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${BUBBLE_ALPHA})` }} />;
 };
 
-function Modes({ totals }: { totals: [number, number, number] }) {
-  const all = totals[0] + totals[1] + totals[2];
+/** The selection's mark: the mode mix, pulled to the No route grey as its bubbles are (T-2215). */
+function TitleMark({ totals }: { totals: [number, number, number, number] }) {
+  const c = towardNone(modeMix(totals[0], totals[1], totals[2]), totals[0] + totals[1] + totals[2], totals[3]);
+  return <i class="mk" style={{ background: `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${BUBBLE_ALPHA})` }} />;
+}
+
+function Modes({ totals }: { totals: [number, number, number, number] }) {
+  const all = totals[0] + totals[1] + totals[2] + totals[3];
   const pct = (v: number) => (all > 0 ? Math.round((100 * v) / all) + "%" : "");
-  const rows: [string, number, [number, number, number]][] = [
+  const rows: [string, number, [number, number, number] | null][] = [
     ["Train", totals[0], [1, 0, 0]],
     ["Walking", totals[1], [0, 1, 0]],
     ["Driving", totals[2], [0, 0, 1]],
+    // T-2215: trips between two land parts no road joins, not by rail
+    ...(totals[3] > 0 ? [["No route", totals[3], null] as [string, number, null]] : []),
   ];
   return (
     <ul class="rows">
@@ -29,8 +37,8 @@ function Modes({ totals }: { totals: [number, number, number] }) {
         {count(all)}
       </Row>
       {rows.map(([name, v, m]) => (
-        <li>
-          {swatch(...m)}
+        <li data-tip={m ? undefined : "No road joins their two ends"}>
+          {m ? swatch(...m) : <i class="mk" style={{ background: "var(--mode-none)" }} />}
           <span class="grow">{name}</span>
           <span class="val">{count(v)}</span>
           <span class="val w-num">{pct(v)}</span>
@@ -47,7 +55,7 @@ export function CommutersInspector() {
   return (
     <>
       <div class="title">
-        {swatch(...p.totals)}
+        <TitleMark totals={p.totals} />
         <span class="name">{end === "home" ? "Trips from homes here" : end === "work" ? "Trips to destinations here" : "Trips to and from here"}</span>
       </div>
       <div class="sub muted" data-tip="Outward and return legs included.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>

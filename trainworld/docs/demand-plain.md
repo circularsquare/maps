@@ -93,6 +93,11 @@ alternatives takes about 73% of the trips. Rail and the car split the rest.
 
 There is no built-in liking for the train. Rail and the car are compared on time and money alone.
 
+Islands no road reaches (Sado, Salamis, Hong Kong's outlying islands) have no car and no walk off
+them: the player's ferry or train is the only way. It takes every such trip unless it costs over 3
+times a drive over a bridge that isn't there, and none past 4 times. The rest are "no route":
+counted in the totals, by no mode. Car ferries don't count as roads.
+
 **By train**
 - Walk to the station: each minute counts 1.5. To keep the sums quick, homes are priced in groups:
   those in one 2 km square that share their nearest station and are within the same 15 minute

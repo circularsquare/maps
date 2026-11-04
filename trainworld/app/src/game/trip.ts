@@ -145,6 +145,10 @@ export interface TripPeriod {
   pWalk: number;
   pTrain: number;
   pDrive: number;
+  /** T-2214: the two cells are on two land parts no road joins: no car and no walk (`pWalk`,
+   * `pDrive` 0), and `pNone` (the rest beside the train) has no way at all, "No route" */
+  apart: boolean;
+  pNone: number;
   baseFarePerceived: number;
   /** T-1801: the transfer fare each change pays, perceived minutes (0 none) */
   xferFarePerceived: number;
@@ -164,6 +168,8 @@ export interface TripPeriod {
   groupWalk: number;
   groupTrain: number;
   groupDrive: number;
+  /** T-2214: the group's trips with no way (between two land parts, not by rail) */
+  groupNone: number;
   groupWalkStartMin: number;
   /** T-910: whether the home end could drive to a station: the trip is under `rideMinKm`, the
    * drives were among its ways to a station, or none is within a drive. `walkStartPerceived` and
@@ -220,7 +226,10 @@ export function readTripPeriod(v: Float64Array, at: RouteNodes): TripPeriod | nu
   const routes = readRoutes(v, HEAD + np * PAIR_LEN, nr, at);
   const offered = v[13] === 1;
   const why = WHY[v[26]] ?? "";
+  // T-2214: on two land parts the shares beside the train's have no way
+  const apart = v[47] === 1;
   return {
+    apart, pNone: apart ? Math.max(0, 1 - v[18]) : 0, groupNone: apart ? Math.max(0, 1 - v[38]) : 0,
     round: v[1], from: [v[27], v[28]], to: [v[29], v[30]], cells: [v[2], v[3]], walkMin: v[33], walkWeight: v[36], pairTrips: v[34], distM: v[6], driveDistM: v[7], driveRoadKm: v[35],
     driveMin: v[9], drivePerceived: v[10], parkPerceived: v[11], carOwnPerceived: v[32], roadPerceived: v[12],
     railOffered: offered, why, lifted: v[46] === 1, railPerceived: offered || why === "slowerThanWalk" || v[46] === 1 ? v[14] : NaN, walkFade: v[44], railOfMotor: v[15], utility: v[16],
@@ -550,11 +559,11 @@ export function averageTrips(trips: { trip: Trip; w: number }[], label: (r: Trip
       distM: mean((t) => t.distM), driveDistM: mean((t) => t.driveDistM), driveRoadKm: mean((t) => t.driveRoadKm),
       driveMin: mean((t) => t.driveMin), drivePerceived: mean((t) => t.drivePerceived), parkPerceived: mean((t) => t.parkPerceived),
       carOwnPerceived: mean((t) => t.carOwnPerceived), roadPerceived: mean((t) => t.roadPerceived),
-      railOffered: rail.length > 0, why: rail.length ? "" : base.why, lifted: false,
+      railOffered: rail.length > 0, why: rail.length ? "" : base.why, lifted: false, apart: xs.every((x) => x.t.apart),
       railPerceived: railW > 0 ? rail.reduce((s, x) => s + x.w * x.t.railPerceived, 0) / railW : NaN,
       railOfMotor: mean((t) => t.railOfMotor), utility: mean((t) => t.utility),
-      pWalk: mean((t) => t.pWalk), pTrain: mean((t) => t.pTrain), pDrive: mean((t) => t.pDrive),
-      groupWalk: mean((t) => t.groupWalk), groupTrain: mean((t) => t.groupTrain), groupDrive: mean((t) => t.groupDrive),
+      pWalk: mean((t) => t.pWalk), pTrain: mean((t) => t.pTrain), pDrive: mean((t) => t.pDrive), pNone: mean((t) => t.pNone),
+      groupWalk: mean((t) => t.groupWalk), groupTrain: mean((t) => t.groupTrain), groupDrive: mean((t) => t.groupDrive), groupNone: mean((t) => t.groupNone),
       pairs, routes, cut,
       sampled: xs.length, railSampled: rail.length,
     };

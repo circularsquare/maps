@@ -8,6 +8,7 @@ import { makeFrame, type FrameSpec } from "../game/frame";
 import { EVERYDAY_KEYS, membersOf, PURPOSES, shownKey, type PurposeFilter, type PurposeKey } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import type { CityId } from "../game/cities";
+import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, type DemandDay } from "../game/days";
 import type { Corridors, DemandView, FarEnd, Flows, IntercityDemand, IntercitySelection, IntercityStation, LineDemand, PlaceFlows, PlaceTrips, PurposeDemand, StationDemand, ZoneTrips } from "../game/demand";
 import type { DealtCells } from "../game/farChunks";
@@ -462,11 +463,14 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   for (const [id, s0] of Object.entries(r.citySummary)) {
     const s = s0.slice(), cp = r.cityParts?.[id];
     if (cp) {
+      const t0 = s[1];
       s[1] = s[2] = s[3] = 0;
       for (let i = 0; i * 3 < cp.length; i++) {
         const f = factor(p.keys[i]);
         s[1] += cp[3 * i] * f; s[2] += cp[3 * i + 1] * f; s[3] += cp[3 * i + 2] * f;
       }
+      // T-2215: the trips no way serves are not split by purpose: they follow the trips
+      if (s[13]) s[13] *= t0 > 0 ? s[1] / t0 : 0;
     }
     citySummary[id] = s;
   }
@@ -523,13 +527,14 @@ function dayCorridors(res: DayResult[]): CorridorRail | null {
 
 /** The views of one kind of day from its period results. */
 function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews {
-  let trips = 0, rail = 0, walk = 0;
+  let trips = 0, rail = 0, walk = 0, none = 0;
   const byPeriod: [string, number][] = [];
   res.forEach((r, q) => {
     const [, t, ra, wa] = r.summary;
     trips += t;
     rail += ra;
     walk += wa;
+    for (const s of Object.values(r.citySummary)) none += s[13] ?? 0;
     byPeriod.push([PERIODS[q].name, t > 0 ? (100 * ra) / t : 0]);
   });
   const lines = new Map<string, LineDemand>();
@@ -574,13 +579,12 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
     });
     lines.set(id, { ridersPerDay: boardings.reduce((x, y) => x + y, 0), fullestPct: Math.round(100 * fullest), boardings, loads, board, alight, arrive, fareX });
   }
-  const pct = (v: number) => (trips > 0 ? (100 * v) / trips : 0);
   const network: DemandView = {
     version: input.version,
     day,
     round: input.round,
     final: input.final,
-    split: { train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk)) },
+    split: splitOf(trips, rail, walk, none),
     trainShareByPeriod: byPeriod,
     peakHourFactor: input.peakHourFactor,
     tripsPerDay: trips,
@@ -591,13 +595,12 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
   };
   // only the cities this solve covered (T-149: a city not loaded has no view, and its controls wait)
   const cities = new Map<CityId, DemandView>(input.solved.map((id) => {
-    let trips = 0, rail = 0, walk = 0;
+    let trips = 0, rail = 0, walk = 0, none = 0;
     const trainShareByPeriod: [string, number][] = res.map((r, q) => {
-      const [, t, ra, wa] = r.citySummary[id]; trips += t; rail += ra; walk += wa;
+      const s = r.citySummary[id], [, t, ra, wa] = s; trips += t; rail += ra; walk += wa; none += s[13] ?? 0;
       return [PERIODS[q].name, t > 0 ? 100 * ra / t : 0];
     });
-    const pct = (n: number) => trips > 0 ? 100 * n / trips : 0;
-    return [id, {...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: {train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk))}}];
+    return [id, {...network, tripsPerDay: trips, railTripsPerDay: rail, trainShareByPeriod, split: splitOf(trips, rail, walk, none)}];
   }));
   // the regional layer between places: longer trips and (T-276) commutes between zones together
   let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;

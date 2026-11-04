@@ -113,15 +113,15 @@ function bucketCells() {
   }
 }
 
-function smooth(train: Float32Array, walk: Float32Array, drive: Float32Array): [Float32Array, Float32Array, Float32Array] {
+function smooth(train: Float32Array, walk: Float32Array, drive: Float32Array, none: Float32Array): [Float32Array, Float32Array, Float32Array, Float32Array] {
   const n = train.length;
-  const t = new Float32Array(n), w = new Float32Array(n), d = new Float32Array(n);
+  const t = new Float32Array(n), w = new Float32Array(n), d = new Float32Array(n), u = new Float32Array(n);
   const inv = -1 / (2 * SMOOTH_SIGMA_M * SMOOTH_SIGMA_M), cut2 = SMOOTH_CUT_M * SMOOTH_CUT_M;
   for (let c = 0; c < n; c++) {
-    const all = train[c] + walk[c] + drive[c];
+    const all = train[c] + walk[c] + drive[c] + none[c];
     if (!(all > 0)) continue;
     const bx = Math.floor(mx[c] / SMOOTH_CUT_M), by = Math.floor(my[c] / SMOOTH_CUT_M);
-    let st = 0, sw = 0, sd = 0;
+    let st = 0, sw = 0, sd = 0, su = 0;
     for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
       const b = buckets.get(bucketKey(bx + ox, by + oy));
       if (!b) continue;
@@ -130,32 +130,33 @@ function smooth(train: Float32Array, walk: Float32Array, drive: Float32Array): [
         const dx = mx[j] - mx[c], dy = my[j] - my[c], d2 = dx * dx + dy * dy;
         if (d2 > cut2) continue;
         const g = Math.exp(d2 * inv);
-        (st += g * train[j]), (sw += g * walk[j]), (sd += g * drive[j]);
+        (st += g * train[j]), (sw += g * walk[j]), (sd += g * drive[j]), (su += g * none[j]);
       }
     }
-    const s = st + sw + sd;
-    if (!(s > 0)) (t[c] = train[c]), (w[c] = walk[c]), (d[c] = drive[c]);
-    else (t[c] = (all * st) / s), (w[c] = (all * sw) / s), (d[c] = (all * sd) / s);
+    const s = st + sw + sd + su;
+    if (!(s > 0)) (t[c] = train[c]), (w[c] = walk[c]), (d[c] = drive[c]), (u[c] = none[c]);
+    else (t[c] = (all * st) / s), (w[c] = (all * sw) / s), (d[c] = (all * sd) / s), (u[c] = (all * su) / s);
   }
-  return [t, w, d];
+  return [t, w, d, u];
 }
 
-function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Float32Array, drive: Float32Array) {
-  const totals: [number, number, number] = [0, 0, 0];
+function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Float32Array, drive: Float32Array, none: Float32Array) {
+  const totals: [number, number, number, number] = [0, 0, 0, 0];
   for (let i = 0; i < train.length; i++) {
     totals[0] += train[i];
     totals[1] += walk[i];
     totals[2] += drive[i];
+    totals[3] += none[i];
   }
-  const [st, sw, sd] = smooth(train, walk, drive);
+  const [st, sw, sd, su] = smooth(train, walk, drive, none);
   const out: BubbleLevel[] = levels.map((g) => {
-    const a = aggregate(g, cellX, cellY, null, train, walk, drive);
+    const a = aggregate(g, cellX, cellY, null, train, walk, drive, none);
     const order = biggestFirst(a);
     const s = reorder(a, order);
     // the same cells and groups, so the same groups in the same order
-    const sh = reorder(aggregate(g, cellX, cellY, null, st, sw, sd), order);
-    const l: BubbleLevel = { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 0, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive };
-    if (sh.group.length === s.group.length) l.shade = { train: sh.train, walk: sh.walk, drive: sh.drive };
+    const sh = reorder(aggregate(g, cellX, cellY, null, st, sw, sd, su), order);
+    const l: BubbleLevel = { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 0, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive, none: s.none };
+    if (sh.group.length === s.group.length) l.shade = { train: sh.train, walk: sh.walk, drive: sh.drive, none: sh.none };
     return l;
   });
   recolour(out);
@@ -181,14 +182,14 @@ self.onmessage = (e: MessageEvent<ToCommuters>) => {
     return;
   }
   if (msg.kind === "sum") {
-    const out: FromCommuters = { kind: "summed", id: msg.id, levels: levels.map((g) => aggregate(g, cellX, cellY, msg.cells, msg.train, msg.walk, msg.drive)), anchor: cur!, ms: 0 };
+    const out: FromCommuters = { kind: "summed", id: msg.id, levels: levels.map((g) => aggregate(g, cellX, cellY, msg.cells, msg.train, msg.walk, msg.drive, msg.none ?? null)), anchor: cur!, ms: 0 };
     out.ms = performance.now() - t0;
-    post(out, out.levels.flatMap((l) => [l.group.buffer, l.x.buffer, l.y.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer]));
+    post(out, out.levels.flatMap((l) => [l.group.buffer, l.x.buffer, l.y.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer, l.none.buffer]));
     return;
   }
   if (msg.kind === "build") {
-    const r = build(msg.end, msg.train, msg.walk, msg.drive);
+    const r = build(msg.end, msg.train, msg.walk, msg.drive, msg.none);
     const out: FromCommuters = { kind: "bubbles", id: msg.id, end: msg.end, ...r, ms: performance.now() - t0 };
-    post(out, r.levels.flatMap((l) => [l.discs.buffer, l.group.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer, ...(l.shade ? [l.shade.train.buffer, l.shade.walk.buffer, l.shade.drive.buffer] : [])]));
+    post(out, r.levels.flatMap((l) => [l.discs.buffer, l.group.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer, l.none.buffer, ...(l.shade ? [l.shade.train.buffer, l.shade.walk.buffer, l.shade.drive.buffer, l.shade.none.buffer] : [])]));
   }
 };

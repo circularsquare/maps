@@ -97,14 +97,25 @@ let viewZones = new Set<CityId>();
 function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Sums) {
   const days = viewDay !== 0 && viewZones.has(id) ? [0, viewDay] : [0];
   for (const day of days) {
-    const k: Sums = day === 0 ? kept ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everyday.get(id)?.cell_modes() ?? null }
-      : { mask: a.solved_mask(), sums: a.sub_sums_day(day), everyday: everyday.get(id)?.cell_modes_day(day) ?? null };
+    const k: Sums = day === 0 ? kept ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everydayModes(everyday.get(id), 0) }
+      : { mask: a.solved_mask(), sums: a.sub_sums_day(day), everyday: everydayModes(everyday.get(id), day) };
     for (const r of rounds) sumsByRound.set(day === 0 ? `${id}:${r}` : `${id}:${r}:${day}`, k);
     const copy = k.sums.slice();
     const extra = k.everyday?.slice() ?? null;
     sendMessage({ kind: "sums", version, round: rounds[rounds.length - 1], city: id, mask: k.mask, sums: copy, everyday: extra, ...(day ? { day } : {}) }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
   }
 }
+/** T-2215: six mode blocks per cell with the two No route blocks (trips no way serves, home end
+ * and far end, T-2214) after them: the eight blocks every `cellModes`-like answer carries */
+function withNone(modes: Float32Array, none: Float32Array): Float32Array {
+  if (!modes.length) return modes;
+  const n = modes.length / 6, out = new Float32Array(8 * n);
+  out.set(modes);
+  if (none.length === 2 * n) out.set(none, 6 * n);
+  return out;
+}
+/** an everyday layer's legs per cell on a kind of day, eight blocks (`withNone`); null without one */
+const everydayModes = (e: EverydayApi | undefined, day: number) => (e ? withNone(e.cell_modes_day(day), e.cell_unreach_day(-1, day)) : null);
 /** the round the solve in hand is working on or last finished */
 let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
@@ -656,7 +667,7 @@ function solveBare(a: DemandApi, e: EverydayApi | null) {
     e?.solve(q);
     const own = Array.from(a.summary(q)), s = own.slice();
     const v = e?.summary(q);
-    if (v) for (const k of [1, 2, 3, 5, 10, 11, 12]) s[k] += v[k] ?? 0;
+    if (v) for (const k of [1, 2, 3, 5, 10, 11, 12, 13]) s[k] += v[k] ?? 0;
     const p = new Array(3 * keys.length).fill(0);
     for (let k = 0; k < 3; k++) p[k] = own[1 + k] ?? 0;
     const kt = e?.kind_totals(q);
@@ -1019,19 +1030,19 @@ function query(msg: Query) {
       // (T-1904: or from the copy kept for the zones on screen when the round was whole)
       const copy = a && msg.version === current ? sumsByRound.get(`${msg.city}:${msg.round}:${day}`) : undefined;
       const sums = copy ? copy.sums.slice() : live ? a!.sub_sums_day(day) : null;
-      const extra = copy ? copy.everyday?.slice() ?? null : live ? everyday.get(msg.city)?.cell_modes_day(day) ?? null : null;
+      const extra = copy ? copy.everyday?.slice() ?? null : live ? everydayModes(everyday.get(msg.city), day) : null;
       sendMessage({ kind: "subSums", id: msg.id, version: msg.version, mask: copy ? copy.mask : live ? a!.solved_mask() : 0, sums, everyday: extra }, [...(sums ? [sums.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "subSums") {
       // from the copy taken when the round was whole, not from the state now (see sumsByRound)
       // (or, for a cluster held to its last round, from its state, which has not moved since)
       const copy = a && msg.version === current ? sumsByRound.get(`${msg.city}:${msg.round}`) : undefined;
       const sums = copy ? copy.sums.slice() : live ? a!.sub_sums() : null;
-      const extra = copy ? copy.everyday?.slice() ?? null : live ? everyday.get(msg.city)?.cell_modes() ?? null : null;
+      const extra = copy ? copy.everyday?.slice() ?? null : live ? everydayModes(everyday.get(msg.city), 0) : null;
       sendMessage({ kind: "subSums", id: msg.id, version: msg.version, mask: copy ? copy.mask : live ? a!.solved_mask() : 0, sums, everyday: extra }, [...(sums ? [sums.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "cellModes") {
       // reads the network's subzones and the sums it is given, not any period's state, so it holds
       // for the version whatever round this worker is in
-      const modes = a && sameNet ? a.cell_modes_day(msg.sums, day) : null;
+      const modes = a && sameNet ? withNone(a.cell_modes_day(msg.sums, day), a.cell_unreach_day(msg.sums, day)) : null;
       sendMessage({ kind: "cellModes", id: msg.id, version: msg.version, modes: modes && modes.length ? modes : null }, modes ? [modes.buffer] : []);
     } else if (msg.kind === "station") {
       const packed = live ? stationRiders(at!, cl, a!, msg.station, day) : null;
@@ -1077,7 +1088,7 @@ function query(msg: Query) {
     } else if (msg.kind === "purposeModes") {
       // one everyday purpose's legs (T-158); a city without that purpose answers empty, not null
       const layer = live ? everyday.get(msg.city) : undefined;
-      const modes = !live ? null : layer && msg.purpose < layer.purpose_count() ? layer.cell_modes_of_day(msg.purpose, day) : new Float32Array(0);
+      const modes = !live ? null : layer && msg.purpose < layer.purpose_count() ? withNone(layer.cell_modes_of_day(msg.purpose, day), layer.cell_unreach_day(msg.purpose, day)) : new Float32Array(0);
       sendMessage({ kind: "purposeModes", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, modes }, modes ? [modes.buffer] : []);
     } else if (msg.kind === "transfers") {
       const pairs = live ? transfersAt(at!, msg.version === current && units.every(q => roundsHeld[q] === msg.round), msg.nodes, day) : null;
@@ -1134,9 +1145,12 @@ function query(msg: Query) {
       // T-325: no network in it, so any version and round; the everyday legs per solving worker's
       // periods, as each would have sent them, so the main thread adds them up as it does those
       const b = bare.get(msg.city);
-      const commute = !b ? null : msg.purpose < 0 ? b.a.cell_modes_day(new Float32Array(0), day) : new Float32Array(0);
+      const f0 = new Float32Array(0);
+      const commute = !b ? null : msg.purpose < 0 ? withNone(b.a.cell_modes_day(f0, day), b.a.cell_unreach_day(f0, day)) : f0;
       const e = msg.purpose === -2 ? null : b?.e;
-      const parts = !e ? [] : groupMasks.map((m) => msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : msg.purpose < e.purpose_count() ? e.cell_modes_of_mask_day(msg.purpose, m, day) : new Float32Array(0));
+      // T-2215: the No route blocks are every period's (no mask form), so in the first part alone
+      const none = !e || (msg.purpose >= 0 && msg.purpose >= e.purpose_count()) ? f0 : e.cell_unreach_day(msg.purpose, day);
+      const parts = !e ? [] : groupMasks.map((m, i) => withNone(msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : msg.purpose < e.purpose_count() ? e.cell_modes_of_mask_day(msg.purpose, m, day) : f0, i === 0 ? none : f0));
       sendMessage({ kind: "bare", id: msg.id, commute, masks: parts.length ? groupMasks : [], parts }, [...(commute ? [commute.buffer] : []), ...parts.map((p) => p.buffer)]);
     } else if (msg.kind === "bareFlows") {
       // T-336: a bare zone's selection with no rail: the commuters' far end as `flows` gives it
@@ -1966,7 +1980,7 @@ async function run() {
         const come: [Float32Array, Float32Array] | undefined = side ? [free.slice(), rounds.slice()] : undefined;
         const arrive = arriveOf(comeMax(free, rounds), rounds, board);
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
-        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10, 11, 12]) citySummary[id][k] += v[k] ?? 0; }
+        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10, 11, 12, 13]) citySummary[id][k] += v[k] ?? 0; }
         const intercitySummary = market ? market.summary : [];
         const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
         for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;

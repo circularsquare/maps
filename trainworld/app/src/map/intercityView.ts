@@ -322,12 +322,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const day = shownDayPhrase.peek();
     const points = CITIES.flatMap((c) => {
       const isOwn = c === own;
-      let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0 };
+      let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0, none: 0 };
       if (!own) {
         // T-576: a zone's local walking is green; a zone not opened has no walk split (its walk is
         // inside `all`, so it draws as the rest)
-        const v = local.get(c.id);
-        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air, walk: localModes(v)?.walk ?? 0 };
+        const v = local.get(c.id), lm = localModes(v);
+        t = { all: t.all + (v ? v.tripsPerDay : c.localTrips ?? 0), rail: t.rail + (v ? v.railTripsPerDay : 0), air: t.air, walk: lm?.walk ?? 0, none: lm?.none ?? 0 };
       }
       // T-421: a zone still loading has its bar instead
       // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
@@ -337,7 +337,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
       const localLine = `${count(localAll)} trips ${day} within ${c.name}`;
       const lm = localModes(v);
-      const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive) : "";
+      const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
       const inter = !own || isOwn ? total(c.place) : t;
       const interLine = `${count(inter.all)} inter-city trips ${day} to and from ${c.name}`;
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
@@ -358,7 +358,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const size = display.peek().bubbleSize * BUBBLE_BASE;
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
-      const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk));
+      const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk - p.none), p.none);
       let r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       // T-976: a zone not opened is a dot of half the radius it would have, in whole CSS px, at least 2
       // so its 1 px outline leaves some fill; then a quarter bigger (T-1886: beside the opened zones' bubbles it read small)

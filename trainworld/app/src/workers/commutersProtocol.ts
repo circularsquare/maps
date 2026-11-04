@@ -27,17 +27,18 @@ export type ToCommuters =
   | { kind: "cells"; xy: Float32Array; h3: BigUint64Array; frame: FrameSpec; anchor: Anchor }
   /** the draw anchor moved: measure the cells from the new one and send them back (`Moved`) */
   | { kind: "anchor"; id: number; anchor: Anchor }
-  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array }
+  /** `none`: T-2215's trips no way serves (No route) */
+  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */
-  | { kind: "sum"; id: number; cells: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array };
+  | { kind: "sum"; id: number; cells: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array; none?: Float32Array };
 
 /** Groups at one level (map/bubbles.ts `Groups`), as the worker sends them. */
 export interface Summed {
   kind: "summed";
   id: number;
-  /** one per BUBBLE_RES: group, x, y, train, walk, drive per group with anyone in it */
-  levels: { group: Uint32Array; x: Float32Array; y: Float32Array; train: Float32Array; walk: Float32Array; drive: Float32Array }[];
+  /** one per BUBBLE_RES: group, x, y, train, walk, drive, no route per group with anyone in it */
+  levels: { group: Uint32Array; x: Float32Array; y: Float32Array; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array }[];
   /** the anchor `x` and `y` are relative to */
   anchor: Anchor;
   ms: number;
@@ -76,13 +77,14 @@ export interface Ready {
 export interface BubbleLevel {
   /** discs, DISC floats each, biggest first (so smaller ones draw on top) */
   discs: Float32Array;
-  /** per disc: its group, and its commuters by train, walking, driving */
+  /** per disc: its group, and its commuters by train, walking, driving and no route (T-2215) */
   group: Uint32Array;
   train: Float32Array;
   walk: Float32Array;
   drive: Float32Array;
+  none: Float32Array;
   /** per disc, the same smoothed among nearby cells (T-900): its colour only */
-  shade?: { train: Float32Array; walk: Float32Array; drive: Float32Array };
+  shade?: { train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array };
 }
 
 export interface Bubbles {
@@ -91,8 +93,8 @@ export interface Bubbles {
   end: BubbleEnd;
   /** one per BUBBLE_RES */
   levels: BubbleLevel[];
-  /** commuters by mode, the whole city */
-  totals: [number, number, number];
+  /** commuters by mode, the whole city: train, walk, drive, no route */
+  totals: [number, number, number, number];
   /** the anchor the discs' positions are relative to */
   anchor: Anchor;
   ms: number;

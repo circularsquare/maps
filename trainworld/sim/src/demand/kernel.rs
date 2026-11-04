@@ -200,6 +200,9 @@ pub struct Params {
     /// the walk share and the drive's road between zones by real paths. None: straight lines
     /// x `walk_detour` and x `road_detour`.
     pub routes: Option<std::sync::Arc<super::routes::Routes>>,
+    /// The pack's land parts (T-2214, `Parts`): no car and no walk between two, access only
+    /// within one. None: one part.
+    pub parts: Option<std::sync::Arc<Parts>>,
     /// The routed factor's multiplier (T-275): shortest-distance routes over the pack's roads
     /// are on average shorter than `road_detour`, which the density speeds were fitted with (to
     /// ACS car commute times on New York, T-090), and than the faster roads drivers take. 1.3 /
@@ -352,6 +355,7 @@ impl Default for Params {
             station_merge_m: 100.0,
             left_behind: true,
             routes: None,
+            parts: None,
             road_routed_scale: 1.3 / 1.210,
             // T-372: fitted on the real New York network (notes/T-372.md)
             p_ride: 15.0,
@@ -448,6 +452,12 @@ impl Params {
             "home_park_f" => self.home_park_f = v,
             "car_own_usd_trip" => self.car_own_usd_trip = v,
             "car_own_usd_km" => self.car_own_usd_km = v,
+            // T-2214: 0 drops the pack's land parts (checks: a pack solved as one part)
+            "parts" => {
+                if v == 0.0 {
+                    self.parts = None;
+                }
+            }
             // scales every zone's cordon charge (0 turns them off)
             "cordon" => {
                 if let Some(c) = &self.cordon {
@@ -704,6 +714,21 @@ impl Params {
         }
         ((cw - rail) / (cw * self.walk_fade)).max(0.0).min(1.0)
     }
+    /// T-2214: rail's share of a trip between two land parts, where it is the only way: all of
+    /// them up to `ratio_fade_lo` times the cost of a car on a bridge that is not there (`road`,
+    /// to a driver parking free; `paid` more for a space, `free` parking free), none from
+    /// `ratio_fade_hi`, linear between. The same expressions as `mode_choice`'s lanes.
+    #[inline]
+    pub fn bound_share(&self, rail: f32, road: f32, paid: f32, free: f32) -> f32 {
+        let (hi, kf) = (self.ratio_fade_hi, 1.0 / (self.ratio_fade_hi - self.ratio_fade_lo));
+        let rail_c = rail.max(0.01);
+        let f0 = ((hi - rail_c / road) * kf).max(0.0).min(1.0);
+        if paid < 1e-30 {
+            return f0;
+        }
+        let f1 = ((hi - rail_c / (road + paid)) * kf).max(0.0).min(1.0);
+        f0 + (1.0 - free) * (f1 - f0)
+    }
     /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
     /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
     /// `WALK_REACH_KM`).
@@ -770,6 +795,95 @@ impl NoRail {
         let (fixed, paid, free) = self.park[j];
         (p.car_drive(p.drive_min_f(d_km * 1000.0, f, self.place[i], self.place[j]), d_km * f) + fixed + self.home[i], paid, free)
     }
+}
+
+/// T-2214: the pack's land parts (its `part` per cell, T-2213; demand-mode.md 4.3 "Land parts"):
+/// between two there is no car and no walk, and stations are reached only within one. Each
+/// zone's cells by part are its slots, CSR by zone in part order.
+#[derive(Debug)]
+pub struct Parts {
+    pub cell: Vec<u16>,
+    /// The part with the most commuters' homes and jobs.
+    pub main: u16,
+    pub z_off: Vec<u32>,
+    pub s_part: Vec<u16>,
+    /// Each slot's home and work weight (`City::pop`, `City::jobs` over its cells).
+    pub s_pop: Vec<f64>,
+    pub s_jobs: Vec<f64>,
+    pub cell_slot: Vec<u32>,
+    /// The zones with a slot off `main`, ascending.
+    pub mixed: Vec<u32>,
+}
+
+impl Parts {
+    /// None where every cell is on one part (or `part` is not one per cell).
+    pub fn of(part: Vec<u16>, city: &City, z: &Zones) -> Option<Parts> {
+        if part.len() != city.len() || part.iter().all(|&p| p == part[0]) {
+            return None;
+        }
+        let np = *part.iter().max().unwrap() as usize + 1;
+        let mut mass = vec![0f64; np];
+        for c in 0..city.len() {
+            mass[part[c] as usize] += (city.pop[c] + city.jobs[c]) as f64;
+        }
+        let main = (0..np).max_by(|&a, &b| mass[a].total_cmp(&mass[b]).then(b.cmp(&a))).unwrap() as u16;
+        let mut by_zone: Vec<Vec<u16>> = vec![vec![]; z.n];
+        for c in 0..city.len() {
+            let l = &mut by_zone[z.cell_zone[c] as usize];
+            if !l.contains(&part[c]) {
+                l.push(part[c]);
+            }
+        }
+        let mut pp = Parts { cell: vec![], main, z_off: vec![0], s_part: vec![], s_pop: vec![], s_jobs: vec![], cell_slot: vec![0; city.len()], mixed: vec![] };
+        for (i, l) in by_zone.iter_mut().enumerate() {
+            l.sort_unstable();
+            pp.s_part.extend_from_slice(l);
+            pp.z_off.push(pp.s_part.len() as u32);
+            if l.iter().any(|&p| p != main) {
+                pp.mixed.push(i as u32);
+            }
+        }
+        pp.s_pop = vec![0.0; pp.s_part.len()];
+        pp.s_jobs = vec![0.0; pp.s_part.len()];
+        for c in 0..city.len() {
+            let zi = z.cell_zone[c] as usize;
+            let s = pp.z_off[zi] as usize + by_zone[zi].binary_search(&part[c]).unwrap();
+            pp.cell_slot[c] = s as u32;
+            pp.s_pop[s] += city.pop[c] as f64;
+            pp.s_jobs[s] += city.jobs[c] as f64;
+        }
+        pp.cell = part;
+        Some(pp)
+    }
+    /// Zone i's slots.
+    #[inline]
+    pub fn slots(&self, i: usize) -> std::ops::Range<usize> {
+        self.z_off[i] as usize..self.z_off[i + 1] as usize
+    }
+    /// The share of zone i's jobs on part `q` (`z` the zones the slots were made on).
+    pub fn job_share(&self, z: &Zones, i: usize, q: u16) -> f64 {
+        if z.jobs[i] <= 0.0 {
+            return 0.0;
+        }
+        self.slots(i).find(|&s| self.s_part[s] == q).map_or(0.0, |s| self.s_jobs[s] / z.jobs[i])
+    }
+    pub fn home_share(&self, z: &Zones, i: usize, q: u16) -> f64 {
+        if z.pop[i] <= 0.0 {
+            return 0.0;
+        }
+        self.slots(i).find(|&s| self.s_part[s] == q).map_or(0.0, |s| self.s_pop[s] / z.pop[i])
+    }
+}
+
+/// T-2214: per slot of `Parts` (or per zone with none), the day's commutes with no rail that walk
+/// and that no way serves (`Gravity::no_rail_by_slot`), at the home end and at the work end.
+#[derive(Clone, Default)]
+pub struct NoRailSlots {
+    pub walk_home: Vec<f64>,
+    pub walk_work: Vec<f64>,
+    /// Empty with no parts.
+    pub unr_home: Vec<f64>,
+    pub unr_work: Vec<f64>,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1154,7 +1268,8 @@ impl Gravity {
         }
         let (home, work) = walk_points(city, z, ns);
         let sq = z.by_square();
-        let w2 = 1.0 / (ns * ns) as f32;
+        // T-2214: only the cell pairs on one land part walk
+        let pp = p.parts.as_deref();
         let mut row: Vec<(u32, f32, f32)> = vec![];
         let mut c = vec![0f32; ns * ns];
         for i in 0..z.n {
@@ -1170,16 +1285,26 @@ impl Gravity {
                     return;
                 }
                 let k = (self.base(z, i) + self.key(z, ju)) as usize;
+                let mut cnt = 0usize;
                 for (n, &a) in hi.iter().enumerate() {
                     for (m, &b) in wj.iter().enumerate() {
+                        if pp.is_some_and(|pp| pp.cell[a as usize] != pp.cell[b as usize]) {
+                            c[n * ns + m] = f32::NAN;
+                            continue;
+                        }
+                        cnt += 1;
                         let f = self.walk_factor_cells(z, a as usize, b as usize) * 0.001;
                         c[n * ns + m] = self.wcost.at(cell_walk_m(city, a, b) * f);
                     }
                 }
+                let w2 = if cnt > 0 { 1.0 / cnt as f32 } else { 0.0 };
                 let (road, paid, free) = nr.road(self, p, i, ju, k);
                 let bt = p.mode_beta(road);
                 let (mut m0, mut sw) = (0f32, 0f32);
                 for &x in &c {
+                    if x.is_nan() {
+                        continue;
+                    }
                     sw += p.walk_no_rail(road, paid, free, x);
                     if x < NO_WALK {
                         m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
@@ -1306,6 +1431,89 @@ impl Gravity {
             });
         }
         [wh, ww]
+    }
+
+    /// T-2214: `no_rail_by_zone` by slot of the pack's land parts (`Params::parts`; by zone with
+    /// none), and the commutes no way serves. A zone pair's trips split over its zones' slots by
+    /// their homes and jobs; those between slots of one part walk as the pair does
+    /// (`NoRail::split`), those between two parts neither walk nor drive.
+    pub fn no_rail_by_slot(&self, z: &Zones, p: &Params, nr: &NoRail) -> NoRailSlots {
+        let Some(pp) = p.parts.as_deref() else {
+            let [walk_home, walk_work] = self.no_rail_by_zone(z, p, nr);
+            return NoRailSlots { walk_home, walk_work, unr_home: vec![], unr_work: vec![] };
+        };
+        let ns = pp.s_part.len();
+        let hs = |i: usize, a: usize| if z.pop[i] > 0.0 { pp.s_pop[a] / z.pop[i] } else { 0.0 };
+        let js = |j: usize, b: usize| if z.jobs[j] > 0.0 { pp.s_jobs[b] / z.jobs[j] } else { 0.0 };
+        let (mut wh, mut ww) = (vec![0.0f64; ns], vec![0.0f64; ns]);
+        if self.walk_set {
+            let r = (WALK_REACH_KM * 1000.0 / z.zone_m).ceil() as i32 + 1;
+            let sq = z.by_square();
+            for i in 0..z.n {
+                if self.row[i] == 0.0 {
+                    continue;
+                }
+                let base = self.base(z, i);
+                z.near(&sq, i, r, |j| {
+                    let k = (base + self.key(z, j)) as usize;
+                    if self.walk_c(k) >= NO_WALK {
+                        return;
+                    }
+                    let w = nr.split(self, p, i, j, k);
+                    if w <= 0.0 {
+                        return;
+                    }
+                    let t = self.row[i] * self.col[j] * (self.ftab[k] * self.k(z, i, j)) as f64 * w as f64;
+                    for a in pp.slots(i) {
+                        for b in pp.slots(j) {
+                            if pp.s_part[a] == pp.s_part[b] {
+                                let x = t * hs(i, a) * js(j, b);
+                                wh[a] += x;
+                                ww[b] += x;
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        // Between parts: a zone wholly on the main part sends nothing off it to another such, so
+        // only pairs with a mixed zone (`Parts::mixed`) are summed, and a slot off the main part
+        // takes its zone's whole row (or column) less what it sends to (takes from) mixed zones.
+        let (mut uh, mut uw) = (vec![0.0f64; ns], vec![0.0f64; ns]);
+        let is_mixed = {
+            let mut v = vec![false; z.n];
+            pp.mixed.iter().for_each(|&m| v[m as usize] = true);
+            v
+        };
+        let (mut rows, mut cols) = (vec![0.0f64; z.n], vec![0.0f64; z.n]);
+        for &m in &pp.mixed {
+            let m = m as usize;
+            for j in 0..z.n {
+                rows[m] += self.t(z, m, j);
+                cols[m] += self.t(z, j, m);
+            }
+        }
+        for i in 0..z.n {
+            let (mut to_m, mut from_m) = (0.0f64, 0.0f64);
+            for &m in &pp.mixed {
+                let m = m as usize;
+                let (out, inn) = (self.t(z, i, m), self.t(z, m, i));
+                to_m += out;
+                from_m += inn;
+                for a in pp.slots(i) {
+                    let q = pp.s_part[a];
+                    uh[a] += hs(i, a) * out * (1.0 - pp.job_share(z, m, q));
+                    uw[a] += js(i, a) * inn * (1.0 - pp.home_share(z, m, q));
+                }
+            }
+            if is_mixed[i] {
+                for a in pp.slots(i).filter(|&a| pp.s_part[a] != pp.main) {
+                    uh[a] += hs(i, a) * (rows[i] - to_m).max(0.0);
+                    uw[a] += js(i, a) * (cols[i] - from_m).max(0.0);
+                }
+            }
+        }
+        NoRailSlots { walk_home: wh, walk_work: ww, unr_home: uh, unr_work: uw }
     }
 }
 
@@ -1787,6 +1995,8 @@ pub struct Access {
     /// Per station, the cells whose walk to it goes around water (T-275,
     /// `routes::Routes::station_walks`), with their walking metres; None without routes.
     pub ex: Vec<Option<std::sync::Arc<Vec<(u32, f32)>>>>,
+    /// T-2214: each station's land part, its nearest cell's (`Params::parts`); empty with none.
+    pub st_part: Vec<u16>,
 }
 
 /// Station lookup grid with buckets the size of the walk cutoff; only occupied buckets are stored
@@ -1911,7 +2121,7 @@ fn bus_insert(list: &mut Vec<(u32, f32)>, st: u32, m: f32) {
 /// sparse).
 pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
     let n = city.len();
-    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], w: K, cells_with_access: 0, ex: vec![None; net.n_stations()] };
+    let mut a = Access { n: vec![0; n], st: vec![NONE; n * K], walk: vec![f32::INFINITY; n * K], w: K, cells_with_access: 0, ex: vec![None; net.n_stations()], st_part: vec![] };
     if net.n_stations() == 0 || n == 0 {
         return a;
     }
@@ -1939,6 +2149,44 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
         fill[b] += 1;
     }
     drop(fill);
+    // T-2214: a station's land part is its nearest cell's (a ferry port's, its own shore's)
+    let pp = p.parts.as_deref();
+    if let Some(pp) = pp {
+        a.st_part = (0..net.n_stations())
+            .map(|s| {
+                let (sx, sy) = (net.st_x[s], net.st_y[s]);
+                // a station off the cells' grid searches from the grid's edge
+                let (bx, by) = ((((sx - minx) / size).floor() as i32).clamp(0, w - 1), (((sy - miny) / size).floor() as i32).clamp(0, h - 1));
+                let mut best = (f32::INFINITY, pp.main);
+                // rings of buckets until one holds a cell, then one more (a nearer cell can lie
+                // in the next ring)
+                let mut found = None;
+                for r in 0..(w.max(h) + 1) {
+                    for gx in (bx - r).max(0)..=(bx + r).min(w - 1) {
+                        for gy in (by - r).max(0)..=(by + r).min(h - 1) {
+                            if (gx - bx).abs() != r && (gy - by).abs() != r {
+                                continue;
+                            }
+                            let k = (gx * h + gy) as usize;
+                            for &c in &cells[off[k] as usize..off[k + 1] as usize] {
+                                let d2 = (city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2);
+                                if d2 < best.0 {
+                                    best = (d2, pp.cell[c as usize]);
+                                }
+                            }
+                        }
+                    }
+                    if best.0.is_finite() && found.is_none() {
+                        found = Some(r);
+                    }
+                    if found.is_some_and(|f| r > f) {
+                        break;
+                    }
+                }
+                best.1
+            })
+            .collect();
+    }
     // each station into the sorted K lists (distance squared for now) of the cells near it
     let cut = p.walk_cutoff_m;
     let cut2 = cut * cut;
@@ -1968,10 +2216,16 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
         });
         a.ex[s] = ex.clone();
         let exl: &[(u32, f32)] = ex.as_deref().map_or(&[], |v| &v[..]);
+        let sp = a.st_part.get(s).copied();
         for gx in gx0..=gx1 {
             for gy in gy0..=gy1 {
                 let k = (gx * h + gy) as usize;
                 for &c in &cells[off[k] as usize..off[k + 1] as usize] {
+                    if let (Some(pp), Some(sp)) = (pp, sp) {
+                        if pp.cell[c as usize] != sp {
+                            continue; // T-2214: no walk to another land part
+                        }
+                    }
                     let mut d2 = (city.x[c as usize] - sx).powi(2) + (city.y[c as usize] - sy).powi(2);
                     if !exl.is_empty() && d2 <= cut2 {
                         if let Ok(e) = exl.binary_search_by_key(&c, |e| e.0) {
@@ -2005,7 +2259,7 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
         }
     }
     if !net.catches.is_empty() {
-        add_bus_access(&mut a, city, net, &cells, &off, (minx, miny, w, h));
+        add_bus_access(&mut a, city, net, &cells, &off, (minx, miny, w, h), pp);
     }
     let wd = a.w;
     for c in 0..n {
@@ -2022,7 +2276,7 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
 
 /// T-1464: each cell's bus stops (`bus_walks`, squared metres for now) after its train stations,
 /// the entries laid out `K + BUS_SLOTS` a cell. `grid` is `build_access`'s cell buckets.
-fn add_bus_access(a: &mut Access, city: &City, net: &Network, cells: &[u32], off: &[u32], grid: (f32, f32, i32, i32)) {
+fn add_bus_access(a: &mut Access, city: &City, net: &Network, cells: &[u32], off: &[u32], grid: (f32, f32, i32, i32), pp: Option<&Parts>) {
     let (minx, miny, w, h) = grid;
     let size = ACCESS_BUCKET_M;
     let n = city.len();
@@ -2041,6 +2295,9 @@ fn add_bus_access(a: &mut Access, city: &City, net: &Network, cells: &[u32], off
                 let k = (gx * h + gy) as usize;
                 for &cell in &cells[off[k] as usize..off[k + 1] as usize] {
                     let cell = cell as usize;
+                    if pp.is_some_and(|pp| a.st_part.get(c.st as usize).is_some_and(|&sp| pp.cell[cell] != sp)) {
+                        continue;
+                    }
                     let d = polyline_dist(&c.pts, city.x[cell], city.y[cell]);
                     if d <= BUS_REACH_M {
                         bus_insert(&mut bus[cell], c.st, d + BUS_WALK_EXTRA_M);
@@ -2105,9 +2362,18 @@ pub struct Subzones {
     /// CSR: the cells of each subzone (`mem[mem_off[u]..mem_off[u + 1]]`).
     pub mem_off: Vec<u32>,
     pub mem: Vec<u32>,
+    /// T-2214: each subzone's land part (every member's; `Params::parts`), empty with none; and
+    /// each station's (`Access::st_part`).
+    pub part: Vec<u16>,
+    pub st_part: Vec<u16>,
 }
 
 impl Subzones {
+    /// Whether subzones u and v are on two land parts (T-2214).
+    #[inline]
+    pub fn apart(&self, u: usize, v: usize) -> bool {
+        !self.part.is_empty() && self.part[u] != self.part[v]
+    }
     /// Subzone `u`'s walk entries (`acc_st` indices).
     #[inline]
     pub fn walk(&self, u: usize) -> std::ops::Range<usize> {
@@ -2321,9 +2587,13 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
     let mut nsub = 0u32;
     // homes beyond every walk, by group square and region (T-371): per group its homes, their
     // centre, and its homes by zone
-    let mut group_of: HashMap<u64, u32> = HashMap::new();
+    let mut group_of: HashMap<(u64, u16), u32> = HashMap::new();
     let mut cell_group = vec![NONE; n];
     let mut gsum: Vec<(f64, f64, f64)> = vec![];
+    // T-2214: a group per land part too, and every subzone's rides on its own part
+    let pp = p.parts.as_deref();
+    let cpart = |c: usize| pp.map_or(0, |pp| pp.cell[c]);
+    let mut gpart: Vec<u16> = vec![];
     let mut gzone: std::collections::BTreeMap<(u32, u32), f64> = Default::default();
     let (mut zx, mut zy) = (vec![0f64; zones.n], vec![0f64; zones.n]);
     for c in 0..n {
@@ -2334,8 +2604,9 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         if acc.n[c] == 0 {
             if pop > 0.0 && p.ride_lines > 0 {
                 let key = ((zones.gx[zi] / RIDE_GROUP) as u64) << 40 | ((zones.gy[zi] / RIDE_GROUP) as u64) << 8 | zones.region[zi] as u64;
-                let g = *group_of.entry(key).or_insert_with(|| {
+                let g = *group_of.entry((key, cpart(c))).or_insert_with(|| {
                     gsum.push((0.0, 0.0, 0.0));
+                    gpart.push(cpart(c));
                     gsum.len() as u32 - 1
                 });
                 cell_group[c] = g;
@@ -2392,10 +2663,11 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
     }
     let (ride_off, rides) = access_options(zones, net, p, &places, End::Home, None);
     let place_ride = |pl: usize| &rides[ride_off[pl] as usize..ride_off[pl + 1] as usize];
+    let ride_ok = |st: u32, q: u16| pp.is_none() || acc.st_part.get(st as usize).map_or(true, |&sp| sp == q);
     // a group with rides is a subzone
     let mut group_sub = vec![NONE; gsum.len()];
     for g in 0..gsum.len() {
-        if !place_ride(zones.n + g).is_empty() {
+        if place_ride(zones.n + g).iter().any(|e| ride_ok(e.0, gpart[g])) {
             group_sub[g] = nsub;
             nsub += 1;
         }
@@ -2454,6 +2726,8 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         cell: vec![],
         mem_off: vec![],
         mem: vec![],
+        part: if pp.is_some() { (0..ns).map(|s| cpart(mem[moff[s] as usize] as usize)).collect() } else { vec![] },
+        st_part: acc.st_part.clone(),
     };
     // candidates: (mean perceived minutes, station, mean straight-line metres)
     let mut cand: Vec<(f32, u32, f32)> = Vec::with_capacity(32);
@@ -2480,7 +2754,7 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
             let g = sub_group[s - n_walk] as usize;
             sz.zone[s] = g_rep[g].0;
             sz.acc_mid.push(sz.acc_st.len() as u32);
-            for &(st, w, d, t) in place_ride(zones.n + g) {
+            for &(st, w, d, t) in place_ride(zones.n + g).iter().filter(|e| ride_ok(e.0, gpart[g])) {
                 sz.acc_st.push(st);
                 sz.acc_w.push(w + hp);
                 sz.acc_d.push(d);
@@ -2494,7 +2768,8 @@ pub fn build_subzones_on(city: &City, home_w: &[f32], work_w: &[f32], zones: &Zo
         let zi = zones.cell_zone[m[0] as usize];
         sz.zone[s] = zi;
         sz.home_off.push(sz.home_zones.len() as u32);
-        let zone_rides = || place_ride(zi as usize).iter();
+        let q = cpart(m[0] as usize);
+        let zone_rides = || place_ride(zi as usize).iter().filter(move |e| ride_ok(e.0, q));
         // candidates: union of the members' lists; distance = weighted mean over members
         cand.clear();
         for &c in m {
@@ -4224,6 +4499,12 @@ pub struct ModeOut {
     /// `rail_walk` by home subzone and by work subzone.
     pub walk_lost_by_sub: Vec<f32>,
     pub walk_lost_to_sub: Vec<f32>,
+    /// T-2214: the rail trips between two land parts (`Subzones::apart`), which no other way
+    /// serves: the trips no way serves are those with no rail (`Gravity::no_rail_by_slot`) less
+    /// these. In all, by home subzone and by work subzone (empty with no parts).
+    pub rail_unr: f64,
+    pub unr_lost_by_sub: Vec<f32>,
+    pub unr_lost_to_sub: Vec<f32>,
     /// Rail trips per access entry (`Subzones::acc_st`): at the home end, boarding at that
     /// station from that subzone; at the work end, leaving the train there for that subzone.
     pub acc_home: Vec<f32>,
@@ -4349,6 +4630,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     // per subzone: minutes a km on its local streets and main roads (by its zone's density)
     let dens = z.density();
     let local: Vec<(f32, f32)> = (0..sz.n).map(|v| p.place_min_per_km(dens[sz.zone[v] as usize])).collect();
+    // T-2214: subzones on two land parts have neither car nor walk (`Subzones::apart`)
+    let parted = !sz.part.is_empty();
     let mut out = ModeOut {
         od: vec![0.0; s * s],
         rail: 0.0,
@@ -4364,6 +4647,9 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
         rail_to_sub: vec![0.0; sz.n],
         walk_lost_by_sub: vec![0.0; sz.n],
         walk_lost_to_sub: vec![0.0; sz.n],
+        rail_unr: 0.0,
+        unr_lost_by_sub: if parted { vec![0.0; sz.n] } else { vec![] },
+        unr_lost_to_sub: if parted { vec![0.0; sz.n] } else { vec![] },
         acc_home: vec![0.0; sz.acc_st.len()],
         acc_work: vec![0.0; sz.acc_st.len()],
     };
@@ -4407,6 +4693,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     let mut dd: Vec<[[f32; 4]; 3]> = Vec::with_capacity(sz.zd.len());
     // its subzone, and the walkers rail takes there (`walk_lost_to_sub`)
     let mut dd_sub: Vec<u32> = Vec::with_capacity(sz.zd.len());
+    // and its land part (T-2214)
+    let mut dd_part: Vec<u16> = vec![];
     // and its egress stations, their weights and `Subzones::acc_st` entries, padded to K with
     // station `s` (read as a dummy past the row's end, 0) at weight 0: a pad adds exactly 0 to
     // every sum it enters, so eight destinations go through the same steps
@@ -4438,6 +4726,9 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             let (fixed, paid, free) = park[j];
             dd.push([[sz.cx[v], sz.cy[v], local[v].0, local[v].1], [fixed, dv[v], acc_m[v], paid], [free, 0.0, 0.0, 0.0]]);
             dd_sub.push(v as u32);
+            if parted {
+                dd_part.push(sz.part[v]);
+            }
         }
         let q1 = dd.len() as u32;
         dz.push(DZone { key: gr.key(z, j), reg: z.region[j], zid: j as u32, min: zmin(j), max: dd[q1 as usize - 1][1][2], dv: dvz, q0, q1, gx: z.gx[j], gy: z.gy[j], hx: z.hx(j), hy: z.hy(j), sup: p.routes.as_ref().map_or(0, |r| r.sup_of(j)) });
@@ -4453,6 +4744,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     let mut fm = vec![1f32; dz.len()];
     let mut run: Vec<(usize, f64)> = vec![];
     let mut lost_q = vec![0f32; dd.len()];
+    let mut unr_q = vec![0f32; if parted { dd.len() } else { 0 }];
     // the decay and the walk's cost by zone offset side by side: one lookup per zone pair
     let fw: Vec<[f32; 2]> = gr.ftab.iter().enumerate().map(|(k, &f)| [f, gr.walk_c(k)]).collect();
     // with a third: the road's length over the straight line between the zones (T-275); and a
@@ -4570,6 +4862,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             let mut rail_sum = 0.0f32;
             let (mut d_sum, mut dk_sum, mut rk_sum) = (0.0f32, 0.0f32, 0.0f32);
             let mut walk_sum = 0.0f32;
+            let mut unr_sum = 0.0f32;
+            let pu = if parted { sz.part[u] } else { 0 };
             let mut all_sum = 0.0f32;
             let mut n_pairs = 0usize;
             // past this, a destination's walk takes the pair over `pair_walk_max` (by walk, and
@@ -4648,6 +4942,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             }
             for (ci, c) in cand.chunks_exact(8).enumerate() {
                 let q: [usize; 8] = std::array::from_fn(|l| c[l][0] as usize);
+                // T-2214: the lanes whose destination is on another land part than the origin
+                let cross: u32 = if parted { (0..8).fold(0, |m, l| m | ((dd_part[q[l]] != pu) as u32) << l) } else { 0 };
                 // each lane's band, and its row: the band's pair, walks or walks and rides
                 let bl: [usize; 8] = std::array::from_fn(|l| visit_b[(c[l][1] & 0x7fff_ffff) as usize] as usize);
                 let rr: [u32; 8] = std::array::from_fn(|l| if c[l][1] >> 31 != 0 { h as u32 } else { 0 });
@@ -4679,7 +4975,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 // are refused (`whole`), the kept ones to load alone.
                 let (mut slow, mut whole) = (0u32, 0u32);
                 let mut bad_at = [(0u32, 0u32); 8];
-                let near = if rule { d.lt_mask(F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) } else { 0 };
+                // (no walk to compare with between two land parts, T-2214)
+                let near = if rule { d.lt_mask(F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !cross } else { 0 };
                 if near != 0 {
                     lane_bad.clear();
                     let (d_lane, s_lane) = (d.to_array(), ssum.to_array());
@@ -4746,7 +5043,16 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     continue;
                 }
                 let [park8, dv8, m8, paid8] = F8::transpose(std::array::from_fn(|l| dd[q[l]][1]));
-                let [tu8, cw8, df8, mo8] = F8::transpose(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize]));
+                let [tu8, cw8, mut df8, mo8] = F8::transpose(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize]));
+                // T-2214: between two land parts, rail against a car on the bridge that is not
+                // there (straight x `road_detour`)
+                let pick = |m: u32, a: F8, b: F8| {
+                    let (a, b) = (a.to_array(), b.to_array());
+                    F8::new(std::array::from_fn(|l| if m >> l & 1 != 0 { b[l] } else { a[l] }))
+                };
+                if cross != 0 {
+                    df8 = pick(cross, df8, F8::splat(p.road_detour));
+                }
                 // `Params::drive_min_f`
                 let rd = d * F8::splat(0.001) * df8;
                 let e = (F8::splat(0.5) * rd).min(F8::splat(p.road_local_km));
@@ -4797,10 +5103,26 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         ((cw8 - rail) / (cw8 * F8::splat(p.walk_fade))).max(zero).min(one)
                     }
                 };
-                let x = tu8 * dv8 * (share(rail) * fade(rail));
+                // T-2214: between two land parts rail is the only way, held by the ratio curve's
+                // fade alone (`Params::bound_share`)
+                let bound = |rail: F8| {
+                    let rail_c = rail.max(F8::splat(0.01));
+                    let f0 = ((hi - rail_c / road) * kf).max(zero).min(one);
+                    if !paying {
+                        f0
+                    } else {
+                        let f1 = ((hi - rail_c / (road + paid8)) * kf).max(zero).min(one);
+                        f0 + (one - free8) * (f1 - f0)
+                    }
+                };
+                let chosen = |rail: F8| {
+                    let s = share(rail) * fade(rail);
+                    if cross != 0 { pick(cross, s, bound(rail)) } else { s }
+                };
+                let x = tu8 * dv8 * chosen(rail);
                 // T-1300: and at a fare `FARE_D_MIN` dearer, for the riders' fare sensitivity
                 let rd8 = rail + F8::splat(FARE_D_MIN);
-                let xd = (tu8 * dv8 * (share(rd8) * fade(rd8)) - x).to_array();
+                let xd = (tu8 * dv8 * chosen(rd8) - x).to_array();
                 let dk = (d * F8::splat(0.001)).to_array();
                 let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
@@ -4818,7 +5140,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let ssum_a = ssum.to_array();
                 // and the walkers it takes: its trips times the zone pair's walking with no rail
                 // (`rail_walk`), as the zones' sums have it
-                let wl = (x * F8::new(std::array::from_fn(|l| visit_w[(c[l][1] & 0x7fff_ffff) as usize]))).to_array();
+                let mut wl = (x * F8::new(std::array::from_fn(|l| visit_w[(c[l][1] & 0x7fff_ffff) as usize]))).to_array();
                 for l in 0..8 {
                     if ok >> l & 1 == 0 {
                         continue;
@@ -4827,6 +5149,12 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     d_sum += xd[l];
                     dk_sum += xd[l] * dk[l];
                     rk_sum += xa[l] * dk[l];
+                    if cross >> l & 1 != 0 {
+                        // it takes trips no way served, never walkers
+                        wl[l] = 0.0;
+                        unr_sum += xa[l];
+                        unr_q[q[l]] += xa[l];
+                    }
                     walk_sum += wl[l];
                     lost_q[q[l]] += wl[l];
                     if whole >> l & 1 == 0 {
@@ -4867,6 +5195,10 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             }
             out.rail_walk += walk_sum as f64;
             out.walk_lost_by_sub[u] = walk_sum;
+            if parted {
+                out.rail_unr += unr_sum as f64;
+                out.unr_lost_by_sub[u] = unr_sum;
+            }
             out.rail += rail_sum as f64;
             out.sense.d += d_sum as f64 / FARE_D_MIN as f64;
             out.sense.d_km += dk_sum as f64 / FARE_D_MIN as f64;
@@ -4923,6 +5255,9 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     }
     for (q, &v) in dd_sub.iter().enumerate() {
         out.walk_lost_to_sub[v as usize] = lost_q[q];
+        if parted {
+            out.unr_lost_to_sub[v as usize] = unr_q[q];
+        }
     }
     if rule {
         // T-1059: a refused station pair taken off its lane's loads can be left a rounding below 0

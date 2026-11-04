@@ -206,6 +206,16 @@ export interface ModeSplit {
   train: number;
   walk: number;
   drive: number;
+  /** T-2215: trips no way serves (between two land parts, not by rail), "No route"; absent as 0 */
+  none?: number;
+}
+
+/** The split of `trips` with `rail`, `walk` and `none` (T-2215) of them, % of trips; driving is
+ * the rest. */
+export function splitOf(trips: number, rail: number, walk: number, none: number): ModeSplit {
+  const pct = (v: number) => (trips > 0 ? (100 * v) / trips : 0);
+  const n = pct(none);
+  return { train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk) - n), none: n };
 }
 
 export interface CityStats {

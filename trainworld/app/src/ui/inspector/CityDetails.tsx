@@ -6,7 +6,7 @@
 import { type City, type CityId } from "../../game/cities";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
-import { cityDemandViews, demandView } from "../../game/demand";
+import { cityDemandViews, demandView, ridesOf } from "../../game/demand";
 import { count, exact, money } from "../../game/format";
 import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
@@ -39,8 +39,7 @@ function cityScope(id: CityId, stations: Map<string, StationInput>, lines: reado
 export function CityFigures({ city, built }: { city: City; built: boolean }) {
   const v = cityDemandViews.value.get(city.id);
   const day = shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value;
-  const all = v?.tripsPerDay ?? 0;
-  const rides = v ? { all, train: v.railTripsPerDay, walk: all * v.split.walk / 100, drive: all * v.split.drive / 100 } : null;
+  const rides = v ? ridesOf(v) : null;
   const m = moneyState.value;
   const f = built && m ? figures(city.id, m) : null;
   const at = goalsReached(city.id);

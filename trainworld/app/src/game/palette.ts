@@ -76,12 +76,13 @@ export const MODE_COLOURS = {
 /** T-833: the colours bars and swatches show modes in under Train share bubbles. Car red and train
  * blue are the default ramp's ends, lighter than the mode colours (Anita, T-1138); walking is the mode green in both schemes (T-1724) and "other" (planes: the one mode that is not car, walk or train) orange, a step from
  * both the yellow and the red. Under Mode mix, planes stay the muted grey. */
-const SHARE_MODE_COLOURS = { train: "#4d4dff", walk: MODE_COLOURS.walk, drive: "#ff4d4d", other: "#f07a14" } as const;
-const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)" } as const;
+const SHARE_MODE_COLOURS = { train: "#4d4dff", walk: MODE_COLOURS.walk, drive: "#ff4d4d", other: "#f07a14", none: "var(--none-grey)" } as const;
+const MIX_MODE_COLOURS = { ...MODE_COLOURS, other: "var(--muted)", none: "var(--none-grey)" } as const;
 /** The scheme in force; a signal, so panels that read `modeColours()` follow a change. */
 export const modeScheme = signal<BubbleScheme>("mode");
-/** The mode colours for bars, swatches and hover tags under the bubble scheme in force. */
-export const modeColours = (): { readonly train: string; readonly walk: string; readonly drive: string; readonly other: string } =>
+/** The mode colours for bars, swatches and hover tags under the bubble scheme in force; `none` is
+ * "No route" (T-2215), the bubbles' `NONE_GREY` in both schemes (style.css `--none-grey`). */
+export const modeColours = (): { readonly train: string; readonly walk: string; readonly drive: string; readonly other: string; readonly none: string } =>
   modeScheme.value === "ramp" ? SHARE_MODE_COLOURS : MIX_MODE_COLOURS;
 
 /**
@@ -126,7 +127,8 @@ let rampLut: Uint8ClampedArray | null = null;
  * swatches); the same arguments again change nothing. */
 export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
   lastScheme = [s, from, to];
-  const key = s === "ramp" ? `ramp${from}${to}` : lightMap ? "mode-light" : "mode";
+  // the shade is in the key under either scheme: the No route grey (T-2215) follows it
+  const key = (s === "ramp" ? `ramp${from}${to}` : "mode") + (lightMap ? "-light" : "");
   modeScheme.value = s === "ramp" ? "ramp" : "mode";
   if (key === schemeKey) return;
   schemeKey = key;
@@ -144,14 +146,32 @@ export function setBubbleShade(shade: "light" | "dark") {
 export const bubbleSchemeKey = () => schemeKey;
 const HEX =/^#[0-9a-f]{6}$/i;
 
-/** A bubble's colour under the chosen scheme: `modeMix`, or the ramp at the train share. */
-export function bubbleColour(train: number, walk: number, drive: number): [number, number, number] {
+/** A bubble's colour under the chosen scheme: `modeMix`, or the ramp at the train share; then, with
+ * trips no way serves (`none`, T-2215: between two land parts, no rail), pulled towards the No
+ * route grey by their share. */
+export function bubbleColour(train: number, walk: number, drive: number, none = 0): [number, number, number] {
+  return towardNone(modeColour(train, walk, drive), train + walk + drive, none);
+}
+/** Colour `c` of `moved` trips pulled towards the No route grey by the share of `none` trips beside
+ * them (T-2215). */
+export function towardNone(c: [number, number, number], moved: number, none: number): [number, number, number] {
+  if (!(none > 0)) return c;
+  const g = lightMap ? NONE_GREY_LIGHT : NONE_GREY;
+  if (!(moved > 0)) return [g, g, g];
+  const k = none / (moved + none);
+  return [Math.round(c[0] + (g - c[0]) * k), Math.round(c[1] + (g - c[1]) * k), Math.round(c[2] + (g - c[2]) * k)];
+}
+function modeColour(train: number, walk: number, drive: number): [number, number, number] {
   if (!rampLut) return modeMix(train, walk, drive);
   const all = train + walk + drive;
   if (all <= 0) return [163, 155, 143];
   const k = Math.round((train / all) * 255) * 3;
   return [rampLut[k], rampLut[k + 1], rampLut[k + 2]];
 }
+/** T-2215: the No route grey, its own, lighter and flatter than the mix grey (`MIX_GREY`); style.css
+ * `--none-grey` is the same for bars. A visual call for Anita. */
+const NONE_GREY = 214;
+const NONE_GREY_LIGHT = 182;
 
 // OKLab (Ottosson): even steps of lightness and hue between the two ends
 const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);

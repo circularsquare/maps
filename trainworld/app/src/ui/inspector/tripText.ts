@@ -15,6 +15,9 @@ export const pctOf = (n: number, of: number): string => {
 /** Minutes, at least one: "6 min". */
 export const minText = (m: number): string => `${Math.max(1, Math.round(m))} min`;
 
+/** T-2215: a trip between two land parts no road joins (T-2214) has no car and no walk. */
+export const NO_ROAD = "No road between these two places";
+
 /** To one decimal place, a trailing .0 dropped. */
 export const num1 = (v: number): string => String(Math.round(v * 10) / 10);
 

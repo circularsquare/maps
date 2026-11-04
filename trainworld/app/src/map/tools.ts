@@ -1018,7 +1018,7 @@ export class Tools {
           return;
         }
         const legs = new Float32Array(cells.n);
-        for (const a of [m.homeRail, m.homeWalk, m.homeDrive, m.workRail, m.workWalk, m.workDrive])
+        for (const a of [m.homeRail, m.homeWalk, m.homeDrive, m.workRail, m.workWalk, m.workDrive, m.homeNone, m.workNone])
           if (a.length === cells.n) for (let i = 0; i < cells.n; i++) legs[i] += a[i];
         this.legs = { key, xy: cells.xy, legs };
         if (tool.peek() === "station") this.place();

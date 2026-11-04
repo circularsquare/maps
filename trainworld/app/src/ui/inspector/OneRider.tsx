@@ -16,7 +16,7 @@ import { stationNames, world } from "../../game/world";
 import { riderTrip, type RiderTrip } from "../../map/tripView";
 import { Icon } from "../widgets";
 import { alightShares } from "./TrainStops";
-import { minText } from "./tripText";
+import { minText, NO_ROAD } from "./tripText";
 
 interface Rider {
   from: number;
@@ -131,7 +131,7 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
         </li>
         <li class={better === "car" ? "b" : ""} data-tip={`By car, in effective time: the drive, parking and what the car costs counted as minutes${chances}`}>
           <span class="grow">By car</span>
-          <span class="val">{minutes(trip === undefined ? undefined : trip?.car ?? null, "No answer for the car")}</span>
+          <span class="val">{minutes(trip === undefined ? undefined : trip?.car ?? null, trip?.apart ? NO_ROAD : "No answer for the car")}</span>
         </li>
       </ul>
     </>

@@ -3,7 +3,7 @@ import type { CorridorTable } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 47, PAIR_LEN: 20, LEG_LEN: 13 } as const;
+export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 13 } as const;
 /** `IntercityApi::market_trip`'s answer: `MT_HEAD` and `MT_PAIR_LEN` in market_trip.rs. */
 export const MARKET_TRIP_LAYOUT = { HEAD: 25, PAIR_LEN: 7 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
@@ -308,7 +308,7 @@ export type FromDemand =
       version: number;
       period: number;
       /** DemandApi.summary(): round, trips, rail, walk, ms, pairs, crowding stats; driving is
-       * trips less rail and walk */
+       * trips minus rail, walk and (index 13, T-2214) the trips no way serves */
       summary: number[];
       /** T-1300: rail trips per curve dollar dearer on every fare (negative), local and the market's,
        * then each one's reach: its sensitivity-weighted mean trip km over its rider-weighted one */
@@ -401,7 +401,8 @@ export type FromDemand =
   /** `everyday`: per purpose kind 30 timing values, m, then m far cells, their rail, walk and
    * drive legs (`EverydayApi.selection_sparse_day`, T-285) */
   | { kind: "purposes"; id: number; city: CityId; version: number; mask: number; work: Float32Array | null; everyday: Float32Array | null; names: string[] }
-  /** six blocks of one value per cell (home rail, walk, drive, work rail, walk, drive) */
+  /** eight blocks of one value per cell (home rail, walk, drive, work rail, walk, drive, then No route at
+   * home and at work, T-2215: demand.worker.ts `withNone`) */
   | { kind: "cellModes"; id: number; city: CityId; version: number; modes: Float32Array | null }
   | { kind: "station"; id: number; city: CityId; version: number; mask: number; packed: Float32Array | null }
   | { kind: "flowRail"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null }
@@ -411,7 +412,7 @@ export type FromDemand =
   | { kind: "icSel"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null }
   /** `packed` as `IntercityApi.station_flows` */
   | { kind: "icStation"; id: number; city: CityId; version: number; mask: number; packed: Float64Array | null }
-  /** six blocks of one value per cell as `cellModes`, trip legs; empty when the city has no such
+  /** eight blocks of one value per cell as `cellModes`, trip legs; empty when the city has no such
    * purpose; null: no network, or not `version` and `round` */
   | { kind: "purposeModes"; id: number; city: CityId; version: number; mask: number; modes: Float32Array | null }
   /** triples (route node arriving, route node leaving, riders), each pair once, summed over this
@@ -423,7 +424,7 @@ export type FromDemand =
   /** T-866: one `IntercityApi.market_trip` answer per period in `periods`, from the market part
    * with the most rail (its route nodes the whole network's); null as `trip` */
   | { kind: "icTrip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null }
-  /** T-325: `commute` as `cellModes`'s six blocks (commuters, not legs); `parts` one block set per
+  /** T-325: `commute` as `cellModes`'s eight blocks (commuters, not legs); `parts` one block set per
    * solving worker's periods (`masks`), the everyday legs as that worker's `sums` message would
    * carry them (empty arrays for a kind the zone lacks; none without an everyday layer). Null
    * `commute`: not open bare here */

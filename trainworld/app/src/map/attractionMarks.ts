@@ -33,7 +33,7 @@ const MIN_ZOOM_FILTERED = 10;
 /** The smallest attraction shown at a zoom (visitors a year): the big ones first. */
 const smallestAt = (zoom: number) => (zoom >= 14 ? 0 : zoom >= 13 ? 200_000 : zoom >= 12 ? 500_000 : zoom >= 11 ? 1_000_000 : 2_000_000);
 
-interface Modes { train: number; walk: number; drive: number }
+interface Modes { train: number; walk: number; drive: number; none: number }
 
 export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   const box = document.createElement("div");
@@ -85,7 +85,7 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
     if (!cells || !modes || modes.day !== day) return;
     if (!cellsOf.has(zone)) cellsOf.set(zone, placeIn(zone, cells.xy, cells.n));
     const out = new Map<Attraction, Modes>();
-    for (const [a, c] of cellsOf.get(zone)!) out.set(a, { train: modes.workRail[c], walk: modes.workWalk[c], drive: modes.workDrive[c] });
+    for (const [a, c] of cellsOf.get(zone)!) out.set(a, { train: modes.workRail[c], walk: modes.workWalk[c], drive: modes.workDrive[c], none: modes.workNone[c] });
     modesOf.set(key, { at, modes: out });
     if (demandView.peek() !== at) ensure();
   };
@@ -193,8 +193,8 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
       const m = map.project([a.lng, a.lat]);
       if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX || hiddenOnGlobe(a.lng, a.lat)) continue;
       const lines = [escape(a.name), `About ${count(visitsOn(a.visitors, shownDay.peek()))} visits ${shownDayPhrase.peek()}`];
-      const modes = modesAt(a), legs = modes ? modes.train + modes.walk + modes.drive : 0;
-      if (modes && legs > 0) lines.push(`${Math.round((100 * modes.train) / legs)}% by train`, modeBar(modes.train, modes.walk, modes.drive));
+      const modes = modesAt(a), legs = modes ? modes.train + modes.walk + modes.drive + modes.none : 0;
+      if (modes && legs > 0) lines.push(`${Math.round((100 * modes.train) / legs)}% by train`, modeBar(modes.train, modes.walk, modes.drive, modes.none));
       return lines;
     }
     return null;

@@ -25,6 +25,9 @@
    already uses, one it reaches by a new route, one it cannot reach; dark ones fade into the land */
 :root { --mk-route-ring: #7d7872; --mk-reroute-fill: #e6e3df; --mk-reroute-ring: #a8a39d; --mk-cut-fill: #d6d3cf; --mk-cut-ring: #b9b5b0; }
 :root[data-shade="dark"] { --mk-route-ring: #a39e97; --mk-reroute-fill: #34373c; --mk-reroute-ring: #8d8983; --mk-cut-fill: #2a2c30; --mk-cut-ring: #66635f; }
+/* T-2215: No route, the bubbles' grey (game/palette.ts NONE_GREY) for bars and swatches */
+:root { --none-grey: #b6b6b6; }
+:root[data-shade="dark"] { --none-grey: #d6d6d6; }
 
 :root {
   --font: "Nunito", "Zen Maru Gothic", system-ui, sans-serif;
@@ -722,6 +725,7 @@ rect.now { fill-opacity: .45; }
 .seg-train { background: var(--mode-train); }
 .seg-walk { background: var(--mode-walk); }
 .seg-drive { background: var(--mode-drive); }
+.seg-none { background: var(--mode-none); }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
 /* T-305, T-1865: the cash moves as fares land, in tabular figures, in a box of fixed width
    (4.7em: the widest it writes, "−$893.6M", the usual 7 characters leaving a little room) so the bar

@@ -25,7 +25,7 @@ zone's, as the top bar gives it; hover the split with counts), and for a zone wi
 tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
 star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
 [T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): within
-the zone, with the goal ticks over its mode bar, to other places, the top three
+the zone, with the goal ticks over its mode bar (a grey No route part where some trips have no way, T-2215), to other places, the top three
 destinations. Then, for a zone with a built station: **By purpose**, the purpose bar of the
 inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
 **Top lines**, the five lines with most boardings at the zone's stations today
@@ -826,6 +826,13 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   walk row shows when walking the whole way takes under 30 minutes [T-628], or whatever it takes
   when walking has a share [T-992]. When the view counts no trips between them, the headline is the representative
   trip's chances in the period shown.
+- **Between two land parts** [T-2215; T-2214's `apart`, slot 47 of `DemandApi.trip`]: when the two cells are on
+  land parts no road joins, the headline's Walk and Drive rows go (their counted trips are No route: the far end's
+  cells still split them as walking and driving, T-2256) and a **No route** row and bar part follow Train, in the No
+  route grey, hover "No route: 38% of the 120 trips per weekday between the two places" and "No road joins these
+  two places". By car and By walking each read "No road between these two places" in place of their rows; Train by
+  period's hovers give "no route" in place of drive and walk. A sampled rider's By car (the train inspector's
+  Random rider) reads "none" with that line as its hover.
 - **Whole trips** [T-911]: counted shares are rounded to what whole trips allow: the trip count
   rounded (at least 1; under half a trip the line reads "Under 1 trip") is dealt among the modes by
   largest remainder (`wholePeople` in `game/trip.ts`), and each share is its trips over that count,

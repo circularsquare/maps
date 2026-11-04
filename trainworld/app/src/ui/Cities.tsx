@@ -5,7 +5,7 @@
 // the city view (T-1438), a double click moves the camera to the region.
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
-import { cityDemandViews, type DemandView } from "../game/demand";
+import { cityDemandViews, ridesOf, type DemandView } from "../game/demand";
 import { clockTime, count, dayOf, exact, money } from "../game/format";
 import { AVERAGE_DAY, weekdayOf } from "../game/days";
 import { shiftAt } from "../game/localTime";
@@ -124,6 +124,7 @@ function TotalRow({ rows, day }: { rows: CityRow[]; day: string }) {
           <i class="seg seg-train" style={{ width: s.train + "%" }} />
           <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
           <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+          <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
         </span>
       </span>
       <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train trips per day${where}` : undefined}>{seen ? count(rides) : "–"}</span>
@@ -175,8 +176,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         <TotalRow rows={rows} day={day} />
         {rows.map((r) => {
           const v = r.view, where = ` in ${r.name}${day}`;
-          const all = v?.tripsPerDay ?? 0;
-          const rides = v ? { all, train: v.railTripsPerDay, walk: all * v.split.walk / 100, drive: all * v.split.drive / 100 } : null;
+          const rides = v ? ridesOf(v) : null;
           const s = v?.split ?? { train: 0, walk: 0, drive: 0 };
           const f = r.money;
           return (
@@ -189,6 +189,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
                   <i class="seg seg-train" style={{ width: s.train + "%" }} />
                   <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
                   <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
+                  <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
                 </span>
               </span>
               <span class="val w-riders c-cities" data-tip={v ? `${count(v.railTripsPerDay)} train trips per day${where}` : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>

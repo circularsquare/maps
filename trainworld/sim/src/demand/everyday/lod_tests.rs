@@ -306,8 +306,8 @@ fn levels_fine_is_today_coarse_keeps_rail() {
     let bits = |v: &[f64]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
     assert!(bits(&fine.0) == bits(&today.1 .0) && bits(&fine.1) == bits(&today.1 .1), "fine figures to the bit");
     let rail = |s: &[f64]| -> [f64; 3] {
-        // per period: the commutes' summary then the everyday one, 12 numbers each (ms left out)
-        let n = 12;
+        // per period: the commutes' summary then the everyday one, 13 numbers each (ms left out)
+        let n = 13;
         let (mut c, mut d, mut t) = (0.0, 0.0, 0.0);
         for p in s.chunks(2 * n) {
             c += p[2];

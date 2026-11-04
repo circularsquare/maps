@@ -17,7 +17,7 @@ import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
 import { MarketTrip } from "./MarketTrip";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
-import { minText, num1, pctShare, roundTo } from "./tripText";
+import { minText, NO_ROAD, num1, pctShare, roundTo } from "./tripText";
 
 const usd = (v: number) => "$" + v.toFixed(2);
 
@@ -119,28 +119,37 @@ const WALK_ROW_MIN = 30;
 const STANDS_FOR: Record<string, string> = {
   Walk: "Walking here also covers cycling and short bus trips.",
   Drive: "Driving here also covers taxis and longer bus trips.",
+  // T-2215 (notes/T-2207.md 4)
+  "No route": "No road joins these two places",
 };
 
 /** The headline: the trips between the two places by mode as the view counts them (T-586), or,
  * when the view counts none, the representative trip's chances in the period shown. */
 function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: string }) {
-  const n = mix ? mix.rail + mix.walk + mix.drive : 0;
-  const model = n > 0 ? [mix!.rail / n, mix!.walk / n, mix!.drive / n] : [t.pTrain, t.pWalk, t.pDrive];
+  // T-2215: between two land parts no road joins, the counted walking and driving have no way (the
+  // far end's cells still split them as walk and drive, T-2256)
+  const m = mix ? { rail: mix.rail, walk: t.apart ? 0 : mix.walk, drive: t.apart ? 0 : mix.drive, none: t.apart ? mix.walk + mix.drive : 0 } : null;
+  const n = m ? m.rail + m.walk + m.drive + m.none : 0;
+  const model = n > 0 ? [m!.rail / n, m!.walk / n, m!.drive / n, m!.none / n] : [t.pTrain, t.pWalk, t.pDrive, t.pNone];
   // T-911: counted trips are whole people; the representative trip's chances stay as they are
-  const [train, walk, drive] = roundTo(model, peopleOf(n));
-  const parts: [string, number, string][] = [["Train", train, "seg-train"], ["Walk", walk, "seg-walk"], ["Drive", drive, "seg-drive"]];
+  const [train, walk, drive, none] = roundTo(model, peopleOf(n));
+  const parts: [string, number, string][] = [["Train", train, "seg-train"], ["Walk", walk, "seg-walk"], ["Drive", drive, "seg-drive"],
+    ...(t.apart || none > 0 ? [["No route", none, "seg-none"] as [string, number, string]] : [])];
   const walkTip = `; walking the whole way takes about ${minText(t.walkMin)}`;
   const note = n > 0 ? "" : groupNote(t);
   const modelTip = (i: number) => (n > 0 ? `\nModel: ${(100 * model[i]).toFixed(1)}%, rounded here to whole trips` : "");
   const stands = (m: string) => (STANDS_FOR[m] ? `\n${STANDS_FOR[m]}` : "");
+  const extra = (m: string) => (m === "Walk" && !t.apart ? walkTip : "");
+  // walking and driving between two land parts are 0: their rows go, By car and By walking say why
+  const shown = (m: string, v: number) => (t.apart && (m === "Walk" || m === "Drive") ? v > 0 : m !== "Walk" || v > 0 || t.walkMin < WALK_ROW_MIN);
   return (
     <div class="trip-modes">
       <SegBar kind="trip-bar" label={parts.map(([n, v]) => `${n} ${pctShare(v)}`).join(", ")}
-        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${m === "Walk" ? walkTip : ""}${stands(m)}` }))} />
+        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: `${m}: ${pctShare(v)} of ${of}${extra(m)}${stands(m)}` }))} />
       <ul class="rows">
-        {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => m !== "Walk" || v > 0 || t.walkMin < WALK_ROW_MIN).map(([[m, v], i]) => (
-          <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${m === "Walk" ? walkTip : ""}${modelTip(i)}${note}${stands(m)}`}>
-            <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : "drive"] }} />
+        {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => shown(m, v)).map(([[m, v], i]) => (
+          <li data-tip={`${m}: ${n > 0 ? pctShare(v) : `${(100 * v).toFixed(1)}%`} of ${of}${extra(m)}${modelTip(i)}${note}${stands(m)}`}>
+            <i class="mk" style={{ background: modeColours()[m === "Train" ? "train" : m === "Walk" ? "walk" : m === "Drive" ? "drive" : "none"] }} />
             <span class="grow">{m}</span>
             <span class="val w-num">{pctShare(v)}</span>
           </li>
@@ -375,7 +384,7 @@ function LiftedNote({ t }: { t: TripPeriod }) {
  * near each end, which can differ. Empty when they agree to the shown percent. */
 function groupNote(t: TripPeriod): string {
   if (Math.abs(t.pTrain - t.groupTrain) < 0.005 && Math.abs(t.pWalk - t.groupWalk) < 0.005) return "";
-  return `\nCounted with the homes and places near here, as the map's bubbles count it: train ${pctShare(t.groupTrain)}, drive ${pctShare(t.groupDrive)}, walk ${pctShare(t.groupWalk)}`;
+  return `\nCounted with the homes and places near here, as the map's bubbles count it: train ${pctShare(t.groupTrain)}, ${t.apart ? `no route ${pctShare(t.groupNone)}` : `drive ${pctShare(t.groupDrive)}, walk ${pctShare(t.groupWalk)}`}`;
 }
 
 /** T-865: an averaged trip's routes, the busiest first, by their share of the train riders over
@@ -498,7 +507,7 @@ export function TripInspector() {
         </>
       ) : <p class="muted">No route.</p>}
       <div class="h">By car</div>
-      <ul class="rows">
+      {t.apart ? <p class="muted">{NO_ROAD}</p> : <ul class="rows">
         <li data-tip={`${distance(1000 * t.driveRoadKm)} by road (${distance(t.driveDistM)} in a straight line) at an average of ${speed(t.driveRoadKm / (Math.max(t.driveMin, 0.1) / 60))}${avg ? `\n${avgTip}` : ""}`}>
           <span class="grow">Drive</span>
           <span class="val">{minText(t.driveMin)}</span>
@@ -521,21 +530,21 @@ export function TripInspector() {
           <span class="grow">Effective time</span>
           <span class="val">{minText(t.roadPerceived)}</span>
         </li>
-      </ul>
+      </ul>}
       {t.distM <= WALK_REACH_M && (
         <>
           <div class="h">By walking</div>
-          <ul class="rows">
+          {t.apart ? <p class="muted">{NO_ROAD}</p> : <ul class="rows">
             <li data-tip={equation([{ label: "walk", real: num1(t.walkMin), weight: t.walkWeight, perceived: t.walkMin * t.walkWeight }])}>
               <span class="grow">Effective time</span>
               <span class="val">{minText(t.walkMin * t.walkWeight)}</span>
             </li>
-          </ul>
+          </ul>}
         </>
       )}
       <PeriodRows
         train={(i) => trip.periods[i]?.pTrain ?? null}
-        tip={(i) => { const x = trip.periods[i]; return x ? `${PERIODS[i].name}, one ${words} trip: train ${pctShare(x.pTrain)}, drive ${pctShare(x.pDrive)}, walk ${pctShare(x.pWalk)}${groupNote(x)}` : PERIODS[i].name; }} />
+        tip={(i) => { const x = trip.periods[i]; return x ? `${PERIODS[i].name}, one ${words} trip: train ${pctShare(x.pTrain)}, ${x.apart ? `no route ${pctShare(x.pNone)}` : `drive ${pctShare(x.pDrive)}, walk ${pctShare(x.pWalk)}`}${groupNote(x)}` : PERIODS[i].name; }} />
     </>
   );
 }

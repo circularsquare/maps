@@ -37,6 +37,15 @@ T-1138), walking the same green #1eaa3c as under Mode mix and planes orange #f07
 The local layers' modes are train, walk and car; "car" stands for every way of getting about but
 those two (T-854, [demand-mode.md](demand-mode.md) 4.3).
 
+**No route** [T-2215, notes/T-2207.md 4]: trips between two land parts no road joins and no line of the player's
+serves ([demand-mode.md](demand-mode.md) 4.3 "Between two land parts") are in no mode. Every bubble (local,
+nearby zones', a selection's own, the zone bubbles zoomed out) is pulled towards the No route grey by their share
+of its trips, under either colouring (`towardNone` in `game/palette.ts`: 214 in the dark theme, 182 in the light,
+lighter and flatter than the mix grey; a bubble of only such trips is that grey). Bars and swatches give them a
+fourth part after car, "No route", in the same grey (`--none-grey`, `modeColours().none`), shown only where there
+are any: the hover bars, the top bar's and the Cities tab's train share bars (their hover adds "No route 0.8%
+(86k)"), the city view's Within bar, a selection's rows and the trip explorer. No legend entry.
+
 **Purpose colours** [T-142, T-143, T-192]: work blue, school and university blue-green,
 social/leisure purple, shopping/errands red, airport olive, medical pink, attractions orange [T-263] (CIEDE2000 22 apart at the
 closest pair), the same in the pie, bars, filter swatch and purpose split.
@@ -223,7 +232,7 @@ way but train and walking; every purpose; the day shown; the purpose filter does
   Drawn over the network and capacity tags, under station names.
 - **Hover** [T-323, T-494]: "422 trips per day from here" (Homes; "to here" for
   Destinations, "to and from here" for Total and a Total selection's far end [T-1903], a purpose's name before "trips" under a filter), then a thin **mode bar**
-  (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, widths by share, no numbers. A far-end
+  (`map/modeBar.ts`): train blue, walking green (yellow under Train share), driving red, No route grey (T-2215), widths by share, no numbers; the count is the four together. A far-end
   bubble adds "Click to explore this trip". Every demand hover with a mode split uses the bar (the
   airport badges too). A bubble's hover has no split by trip purpose (Anita, 2026-10-19, T-697).
 - **Airports** [T-448, T-674, `map/airportMarks.ts`]: a small black plane (14 px, a thin white
@@ -339,7 +348,8 @@ riders counters keep their own smoothing (Live feel).
   `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): titled "Trips from homes here",
   "Trips to destinations here" or "Trips to and from here" (Total, both ends' legs summed [T-1903]); the selection's local trip legs and
-  split; no list of far-end places and no inter-city trips (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
+  split (Train, Walking, Driving, and No route where it has any, its hover "No road joins their two ends", T-2215; the
+  far-end bubbles still count those trips as walking and driving, T-2256); no list of far-end places and no inter-city trips (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School,
   Errands, Leisure, Airports, Medical and Attractions [T-142, T-192, T-263, T-1253], with a
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
@@ -410,7 +420,7 @@ rest [T-576: an open zone's walking is green, from its split; a zone not loaded 
 has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
 "Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493], spaced as above [T-1050]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
-the zone's modelled split, none for a zone not loaded) and "120k inter-city trips per day on
+the zone's modelled split with its No route part [T-2215], none for a zone not loaded) and "120k inter-city trips per day on
 average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
@@ -435,7 +445,7 @@ inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, an ico
 that moves the camera to its centre and clears the selection [T-220, T-1134], then the city view's
 own rows ([ui-inspectors.md](ui-inspectors.md#the-city-view), T-1438), then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
-"Within Philadelphia" (train, walking, car from the open zone's split; the count alone for a zone
-not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
+"Within Philadelphia" (train, walking, car and, where there are any, No route from the open zone's split, the
+last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, train blue and the rest
 red), then the three places with the most trips, name and trips a day. No table of every place.
 For a zone with stations the city view goes on with its boardings by purpose and its top lines and stations.
