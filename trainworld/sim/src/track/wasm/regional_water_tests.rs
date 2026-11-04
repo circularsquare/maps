@@ -128,7 +128,11 @@ fn northeast_pack_water_crossings() {
         }
         let [x, y] = world(&a, -74.7755, 40.2169);
         let ends: Vec<f64> = free(x - 200.0, y).into_iter().chain(free(x + 200.0, y)).collect();
-        assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 0.0, "ground-level Delaware crossing refused");
-        assert!(a.issue_kinds().contains("BridgeNoRoom"), "400 m is no room for the ramps");
+        // T-2414: 400 m is no room for the ramps, so both new ends stay up on the banks
+        assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 1.0, "{}", a.issue_kinds());
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
+        let levels: Vec<i8> = (0..a.w.net.node_count()).filter(|&n| a.w.net.node_ok(n as u32)).map(|n| a.w.net.node_level[n]).collect();
+        assert_eq!(levels, vec![1, 1]);
+        assert!(a.undo() == 0);
     }
 }

@@ -316,8 +316,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   unchanged: a ramp is centred between two vertices of different levels, so each ramp gets a
   vertex either side of it (at least 100 m from its centre, nearer an existing vertex where that
   is one); on a straight that is a PI with no turn, on an arc the arc is cut into arcs of its own
-  radius, one PI each, and every PI of the segment gets its radius set. A ramp that a curve or a
-  vertex keeps off its place moves back along the segment in steps of 25 m, up to 400 m. Quad
+  radius, one PI each, and every PI of the segment gets its radius set. The ramps are laid one after
+  another along the segment, each as close to its water as fits: one that a curve or a vertex keeps
+  off its place moves back in steps of 25 m, up to 400 m, on its own. Where the ramp down after one
+  crossing and the ramp up before the next have no room between them, the bridge stays up over the
+  land between, priced as any viaduct [T-2414]. Quad
   track bridges each pair on its own. One edit and one undo step; the preview (`preview_route`)
   and `add_route` share the code, so the ghost shows the bridge, its price and the elevation
   reached (`0 +1` in the tag). Another level is left as drawn. A route through clicked corners (the
@@ -331,14 +334,22 @@ Full design, numbers and sources: `notes/T-008.md`.
   can while the water and 14.5 m either side stay up, spread over as many short legs as they need
   (T-1895, above); with no room even so (water just past an end) the route is refused as below
   [T-727d, T-1187; `bridge::bridge_long`].
-  A new end over water (a free click, not track already there) stays up at level 1, with no ramp
-  on its side, so a segment may end or start mid-river with one ramp, on the land side; quad
-  track's express pair, sharing that end, must stay up there too. A segment drawn at ground level
-  from or to an end already at level 1 is bridged the same way: it stays up to the water, or comes
-  down at once where there is room (400 m) to go up again before it [T-1269].
-  With no room on land otherwise (water within 200 m of the segment's start or end, so of a
-  station or junction it leaves, or one a curve leaves no vertex room for) the edit is refused as
-  `BridgeNoRoom`: "Not enough space for bridge ramps" (T-1852)
+  A new end (a free click, not track already there) over water, or on land with no room for its
+  ramp before the water, stays up at level 1, with no ramp on its side, so a segment may end or
+  start mid-river or on an island with one ramp, or none; quad track's express pair, sharing that
+  end, must stay up there too [T-1269, T-2414]. A segment drawn at ground level from or to an end
+  already at level 1 is bridged the same way: it stays up to the water, or comes down at once
+  where there is room (400 m) to go up again before it [T-1269]. A segment from or to a dead end
+  of blueprint track at ground level (no station; not on quad) with no room for its ramp puts that
+  end a level up in the same edit: the end's piece of track ramps up to it as close to it as fits,
+  what that piece has up already staying up, so a bridge just before the end carries on to it
+  (`raise_end`) [T-2414]. With no room otherwise (water within 215 m of a station, a junction,
+  track the segment branches off or built track at its start or end, or a curve that leaves no
+  vertex room) the edit is refused, naming the end short of room where there is one:
+  `BridgeNoRoomStation` "Not enough space for a bridge ramp between the station and the water",
+  `BridgeNoRoomJunction` "... between the junction and the water", `BridgeNoRoomBuilt` "...
+  between the built track and the water", else `BridgeNoRoom` "Not enough space for bridge ramps"
+  (T-1852, T-2414)
 - **Ramping over track** (T-1615, `draw.rs` `shaped`, `bridge::ramp_over`): with the Build tab's
   ramp switch on (the default; `set_route_ramp`), a route that would cross other track flat (both
   at the route's level, the other not on a ramp, more than `SHARED_NODE_CLEAR` 25 m from the

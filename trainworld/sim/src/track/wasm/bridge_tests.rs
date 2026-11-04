@@ -255,15 +255,17 @@ fn a_long_route_keeps_its_radii_beside_each_bridge() {
 }
 
 #[test]
-fn a_long_route_from_a_river_bank_says_there_is_no_room() {
-    // T-1187: a river 110 m from the first click leaves no room for the ramp up, even raising the
-    // window whole; the player is told so rather than "cannot cross water"
+fn a_long_route_from_a_river_bank_starts_up() {
+    // T-1187: a river 110 m from the first click leaves no room for the ramp up; T-2414: the
+    // route's start, a new node, stays up
     let mut a = merc();
     water(&mut a, &[(150.0, 350.0)]);
     let (e, pis) = zigzag(&a, 100);
     let pv = a.preview_route(&e, &pis, 2, false);
-    assert_eq!(pv[0], 0.0);
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+    assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+    assert_eq!(level_at_x(&a, 0.0), 1);
+    assert!(problems(&a).is_empty(), "{:?}", problems(&a));
 }
 
 #[test]
@@ -314,31 +316,31 @@ fn each_crossing_gets_its_own_bridge_and_close_ones_share() {
     assert_eq!(height(&b, edge, 1200.0), 8.0, "level between the two");
 }
 
+/// T-2414: a new end on land with no room for a ramp before the water stays up (it was refused).
 #[test]
-fn no_room_on_land_is_refused_and_says_so() {
-    let mut a = api();
-    water(&mut a, &[(100.0, 300.0)]);
-    // water 100 m from the start
-    let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
-    let pv = a.preview_route(&e, &[], 2, false);
-    assert_eq!(pv[0], 0.0);
-    assert!(pv.len() > 20, "the ghost still has its shape");
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
-    assert_ne!(a.add_route(&e, &[], 2, false), 0);
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
-    assert!(alive(&a).is_empty());
-    // water 100 m before the end
-    let mut b = api();
-    water(&mut b, &[(2600.0, 2900.0)]);
-    let e = ends(&b, (0.0, 0.0), (3000.0, 0.0));
-    assert_ne!(b.add_route(&e, &[], 2, false), 0);
-    assert_eq!(b.issue_kinds(), "BridgeNoRoom");
+fn a_new_end_near_water_stays_up() {
+    for world in [false, true] {
+        // water 100 m from the start, then 100 m before the end
+        for (w, up) in [((100.0, 300.0), (1, 0)), ((2600.0, 2900.0), (0, 1))] {
+            let mut a = if world { merc() } else { api() };
+            water(&mut a, &[w]);
+            let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+            let pv = a.preview_route(&e, &[], 2, false);
+            assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+            assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+            assert!((pv[1] - first_edge_cost(&a)).abs() < 1e-6);
+            assert_eq!((level_at_x(&a, 0.0), level_at_x(&a, 3000.0)), up, "world {world}, water {w:?}");
+            bridge_ok(&a, alive(&a)[0]);
+            assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+        }
+    }
     // just enough: 200 m of land each side
     let mut c = api();
     water(&mut c, &[(300.0, 400.0)]);
     let e = ends(&c, (0.0, 0.0), (700.0, 0.0));
     assert_eq!(c.add_route(&e, &[], 2, false), 0, "{}", c.issue_kinds());
     bridge_ok(&c, alive(&c)[0]);
+    assert_eq!((level_at_x(&c, 0.0), level_at_x(&c, 700.0)), (0, 0));
 }
 
 /// The level of the node at x from `base`.
@@ -422,20 +424,41 @@ fn drawing_on_from_an_end_left_up() {
     assert!(problems(&a).is_empty(), "{:?}", problems(&a));
 }
 
-/// T-1269: track already there keeps its level, so water at it still leaves no room.
+/// T-1269: built track keeps its level, so water at its end still leaves no room; T-2414: a
+/// blueprint end goes up, its track ramping up before the water, in the same edit.
 #[test]
-fn an_end_on_track_over_water_is_still_refused() {
-    let mut a = api();
-    assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (1000.0, 0.0)), &[], 2, false), 0);
-    // a newer water mask puts the track's end in a river
-    water(&mut a, &[(900.0, 1500.0)]);
-    let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 1000.0).abs() < 1.0).unwrap();
-    let (bx, by) = base(&a);
-    let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0];
-    assert_eq!(a.preview_route(&e, &[], 2, false)[0], 0.0);
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
-    assert_ne!(a.add_route(&e, &[], 2, false), 0);
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+fn an_end_on_track_over_water() {
+    for built in [true, false] {
+        let mut a = api();
+        assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (1000.0, 0.0)), &[], 2, false), 0);
+        if built {
+            assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+        }
+        // a newer water mask puts the track's end in a river
+        water(&mut a, &[(900.0, 1500.0)]);
+        let node = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - base(&a).0 - 1000.0).abs() < 1.0).unwrap();
+        let (bx, by) = base(&a);
+        let e = [1.0, node as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0];
+        let pv = a.preview_route(&e, &[], 2, false);
+        if built {
+            assert_eq!(pv[0], 0.0);
+            assert_eq!(a.issue_kinds(), "BridgeNoRoomBuilt");
+            assert_ne!(a.add_route(&e, &[], 2, false), 0);
+            assert_eq!(a.issue_kinds(), "BridgeNoRoomBuilt");
+            continue;
+        }
+        assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+        assert_eq!(level_at_x(&a, 1000.0), 1);
+        for e in alive(&a) {
+            bridge_ok(&a, e);
+        }
+        assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+        // one undo puts the old track back as it was
+        assert_eq!(a.undo(), 0);
+        assert_eq!(level_at_x(&a, 1000.0), 0);
+        assert_eq!(alive(&a).len(), 1);
+    }
 }
 
 #[test]
@@ -448,7 +471,7 @@ fn water_near_a_station_leaves_no_room() {
     assert_eq!(a.add_station(1, end, 0.0, 0.0, 100, "River".into()), 0, "{}", a.issue_kinds());
     let e = [1.0, end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, base(&a).0 + 4000.0, base(&a).1, 0.0];
     assert_eq!(a.preview_route(&e, &[], 2, false)[0], 0.0);
-    assert_eq!(a.issue_kinds(), "BridgeNoRoom");
+    assert_eq!(a.issue_kinds(), "BridgeNoRoomStation");
     assert_ne!(a.add_route(&e, &[], 2, false), 0);
     // water further out leaves the room, and the platform stays off the ramp
     water(&mut a, &[(2400.0, 2600.0)]);

@@ -52,6 +52,8 @@ pub struct TrackApi {
     route_bridged: Vec<Pi>,
     /// T-656: the last route crossed water and had no room for a bridge's ramps.
     bridge_refused: bool,
+    /// T-2414: what the refusal names, `BridgeNoRoom` or the end short of room.
+    bridge_short: Issue,
     /// T-418: a route from a heading to a free end is one tangent arc (`set_route_tangent`).
     route_tangent: bool,
     /// T-817: the auto radius cap of the corners the drawing tool makes, ground m (`set_design_speed`).
@@ -282,6 +284,7 @@ impl TrackApi {
             route_express: vec![],
             route_bridged: vec![],
             bridge_refused: false,
+            bridge_short: Issue::BridgeNoRoom,
             route_tangent: false,
             route_cap: R_CAP,
             route_hsr: false,
@@ -1192,11 +1195,11 @@ fn crossover_partner(net: &Network, e: u32) -> Option<u32> {
 }
 
 /// T-656: a segment that needed a bridge and had no room for the ramps fails ground over water;
-/// the player is told about the ramps instead.
-fn bridge_refusal(issues: Vec<Issue>) -> Vec<Issue> {
+/// the player is told about the ramps instead, `short` naming the end that has no room (T-2414).
+fn bridge_refusal(issues: Vec<Issue>, short: &Issue) -> Vec<Issue> {
     let mut out: Vec<Issue> = vec![];
     for i in issues {
-        let i = if matches!(i, Issue::GroundOverWater { .. }) { Issue::BridgeNoRoom } else { i };
+        let i = if matches!(i, Issue::GroundOverWater { .. }) { short.clone() } else { i };
         if !out.contains(&i) {
             out.push(i);
         }
@@ -1580,3 +1583,6 @@ mod station_sweep_tests;
 mod t1898_tests;
 #[cfg(test)]
 mod gap_tests;
+/// T-2414: close crossings, ends near water and islands.
+#[cfg(test)]
+mod water_gap_tests;

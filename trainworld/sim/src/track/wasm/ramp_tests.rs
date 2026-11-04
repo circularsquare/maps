@@ -78,9 +78,20 @@ fn below_ground_the_route_ramps_under() {
 }
 
 #[test]
-fn without_room_for_a_ramp_it_crosses_flat() {
+fn without_room_for_a_ramp() {
+    // T-2414: a new start with no room for the ramp up stays up and goes over
     let ((lo, hi), n, _, _) = cross(0, true, 1350.0, 2);
-    assert_eq!((lo, hi, n), (0.0, 0.0, 1));
+    assert_eq!((lo, hi, n), (0.0, LEVEL_H, 0));
+    // from a track end there, it crosses flat
+    let mut a = api();
+    assert_eq!(a.add_route(&ends(&a, (1500.0, -1500.0), (1500.0, 1500.0), 0), &[], 2, false), 0);
+    assert_eq!(a.add_route(&ends(&a, (0.0, 0.0), (1350.0, 0.0), 0), &[], 2, false), 0);
+    let before = alive(&a);
+    a.set_route_ramp(true);
+    let (bx, by) = base(&a);
+    let n = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - bx - 1350.0).abs() < 1.0).unwrap();
+    assert_eq!(a.add_route(&[1.0, n as f64, 0.0, 0.0, 0.0, 0.0, 0.0, bx + 3000.0, by, 0.0], &[], 2, false), 0, "{}", a.issue_kinds());
+    assert_eq!((span(&a, &before), flats(&a)), ((0.0, 0.0), 1));
 }
 
 #[test]

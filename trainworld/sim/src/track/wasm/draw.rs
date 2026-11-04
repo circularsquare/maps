@@ -74,6 +74,8 @@ impl TrackApi {
         let mut new_nodes = vec![];
         let mut new_edges = vec![];
         let net = &self.w.net;
+        let station = |end: End| matches!(end, End::Node(n) if net.node_ok(n) && net.node_platform[n as usize] > 0);
+        let mut at_station = [station(a), station(b)];
         let b_at = match b {
             End::Free { x, y, .. } | End::Edge { x, y, .. } => (x, y),
             End::Node(n) if net.node_ok(n) => (net.node_x[n as usize], net.node_y[n as usize]),
@@ -91,6 +93,8 @@ impl TrackApi {
                 return Err(i);
             }
         };
+        let existing = [matches!(a, End::Node(_)), matches!(b, End::Node(_))];
+        at_station = [at_station[0] || from_a.is_some(), at_station[1] || from_b.is_some()];
         let mut rb = self.resolve(b, first_split, &mut new_nodes, &mut new_edges)?;
         leave_away(&mut rb, from_b);
         if ra.node == rb.node {
@@ -100,6 +104,7 @@ impl TrackApi {
         self.route_arc.clear();
         self.route_bridged.clear();
         self.bridge_refused = false;
+        self.bridge_short = Issue::BridgeNoRoom;
         // T-418: ending on open ground, the segment is one arc through the end; ending on track it
         // must join that like a turnout, so it keeps the usual shape
         let quad = tracks == 4;
@@ -167,7 +172,41 @@ impl TrackApi {
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
         // Clicked corners at ground level too (T-667, the real-network snap's routes, T-727): the
         // corners the bridge adds are cut into pieces like the clicked ones.
-        let bridged = self.shaped(&verts, lift);
+        let mut bridged = self.shaped(&verts, lift);
+        // T-2414: no room for a ramp between a dead end of blueprint track and the water: that end
+        // goes a level up, its track ramping up to it, and the bridge starts there. One end, then
+        // the other, then both.
+        if self.bridge_refused && !quad {
+            let raise = [existing[0].then(|| self.raise_end(ra.node)).flatten(), existing[1].then(|| self.raise_end(rb.node)).flatten()];
+            for which in [[true, false], [false, true], [true, true]] {
+                if (0..2).any(|k| which[k] && raise[k].is_none()) {
+                    continue;
+                }
+                let mut up = verts.clone();
+                let last = up.len() - 1;
+                for (k, i) in [(0, 0), (1, last)] {
+                    if which[k] {
+                        up[i].level += 1;
+                    }
+                }
+                self.bridge_refused = false;
+                let b = self.shaped(&up, lift);
+                if !self.bridge_refused && b.is_some() {
+                    for (k, r) in [(0, &mut ra), (1, &mut rb)] {
+                        if let (true, Some(o)) = (which[k], &raise[k]) {
+                            ops.extend(o.iter().cloned());
+                            r.level += 1;
+                        }
+                    }
+                    (verts, bridged) = (up, b);
+                    break;
+                }
+                self.bridge_refused = true;
+            }
+        }
+        if self.bridge_refused {
+            self.bridge_short = self.short_end(&verts, [&ra, &rb], lift, at_station);
+        }
         if let Some(b) = &bridged {
             lift_end(&mut ops, &mut ra, b[0].level);
             lift_end(&mut ops, &mut rb, b[b.len() - 1].level);
@@ -363,6 +402,112 @@ impl TrackApi {
         }
     }
 
+    /// T-2414: what a bridge refusal names: the end of `shape` (start first) with water within a
+    /// ramp and its shore, where the end cannot move up (a station, a junction, built track); else
+    /// `BridgeNoRoom`. `free`: which ends are new nodes; `station`: which are at a station.
+    fn short_end(&self, shape: &[Pi], ends: [&Resolved; 2], free: [bool; 2], station: [bool; 2]) -> Issue {
+        let net = &self.w.net;
+        let f = geom::fit_in(shape, net.frame().scaled());
+        let wet = bridge::water(net.water_mask.as_ref())(&f, false);
+        let (Some(first), Some(last)) = (wet.first(), wet.last()) else { return Issue::BridgeNoRoom };
+        let reach = RAMP_PER_LEVEL + 2.0 * WATER_STEP;
+        for k in 0..2 {
+            let near = if k == 0 { first[0] < reach } else { f.len - last[1] < reach };
+            if !near || free[k] {
+                continue;
+            }
+            let r = ends[k];
+            let i = r.node as usize;
+            let on_track = net.node_ok(r.node);
+            if station[k] {
+                return Issue::BridgeNoRoomStation;
+            }
+            if r.new_junction || on_track && net.node_ports[i].n >= 2 {
+                return Issue::BridgeNoRoomJunction;
+            }
+            if on_track && net.node_ports[i].ends().iter().any(|&c| net.edge_built[(c >> 1) as usize]) {
+                return Issue::BridgeNoRoomBuilt;
+            }
+        }
+        Issue::BridgeNoRoom
+    }
+
+    /// T-2414: the ops that put `n`, a dead end of blueprint track at ground level (no station), a
+    /// level up, its piece of track ramping up to it as near it as the bridge's ramps fit. The
+    /// piece's corners are at ground level or one up (a bridge, or a ramp over track); what is up
+    /// now stays up, its ramps laid again, so a bridge just before `n` carries on to it. None for
+    /// any other node, or where the ramp has no room on that piece.
+    pub(super) fn raise_end(&self, n: u32) -> Option<Vec<Op>> {
+        if !self.dead_end_on_ground(n) {
+            return None;
+        }
+        let net = &self.w.net;
+        let e = net.node_ports[n as usize].ends()[0] >> 1;
+        let mut d = net.edge_data(e)?;
+        if d.built || d.crossover || !d.thru.is_empty() || d.a == d.b || d.pis.iter().any(|p| !(0..=1).contains(&p.level)) {
+            return None;
+        }
+        let at_b = d.b == n;
+        let end = |m: u32| net.node_data(m).map(|p| Pi::new(p.x, p.y, 0.0, p.level));
+        let mut now: Vec<Pi> = std::iter::once(end(d.a)?).chain(d.pis.iter().copied()).chain(std::iter::once(end(d.b)?)).collect();
+        if !at_b {
+            now.reverse();
+        }
+        let scaled = net.frame().scaled();
+        // the stretches up now, along the piece from its far end
+        let g = geom::fit_in(&now, scaled);
+        let mut held: Vec<[f64; 2]> = vec![];
+        let mut s = 0.0;
+        while s <= g.len {
+            if geom::height_at(&g.vert, s) >= LEVEL_H - 0.01 {
+                match held.last_mut() {
+                    Some(h) if s - h[1] < 2.5 => h[1] = s,
+                    _ => held.push([s, s]),
+                }
+            }
+            s += 2.0;
+        }
+        let last = now.len() - 1;
+        let shape: Vec<Pi> = now.iter().enumerate().map(|(i, p)| if i == 0 || i == last { *p } else { Pi { level: 0, ..*p } }).collect();
+        let water = bridge::water(net.water_mask.as_ref());
+        let near_end = |f: &geom::Fit, fine: bool| {
+            let mut s = water(f, fine);
+            s.extend(held.iter().copied());
+            s.push([f.len - 1e-3, f.len]);
+            s.sort_by(|a, b| a[0].total_cmp(&b[0]));
+            s
+        };
+        let up_node = |m: u32| net.node_data(m).map(|p| Op::Node { id: m, data: Some(NodeData { level: 1, ..p }) });
+        let far = if at_b { d.a } else { d.b };
+        let mut ops = vec![up_node(n)?];
+        match bridge::ramp_over(&shape, scaled, &near_end, 0, true, [false, true], shape.len() > LONG_ROUTE_VERTS) {
+            Ok(Some(mut up)) => {
+                if !at_b {
+                    up.reverse();
+                }
+                d.pis = up[1..up.len() - 1].to_vec();
+            }
+            // a piece too short for the ramp from another dead end goes up whole, as a new end
+            // with no room would have
+            _ if self.dead_end_on_ground(far) && now[0].level == 0 => {
+                for p in &mut d.pis {
+                    p.level = 1;
+                }
+                ops.extend(up_node(far));
+            }
+            _ => return None,
+        }
+        ops.push(Op::Edge { id: e, data: Some(d) });
+        Some(ops)
+    }
+
+    /// A plain node at ground level with one track end, no station (T-2414).
+    fn dead_end_on_ground(&self, n: u32) -> bool {
+        let net = &self.w.net;
+        let i = n as usize;
+        net.node_ok(n) && net.node_platform[i] == 0 && net.node_ports[i].n == 1 && net.node_level[i] == 0
+    }
+
     /// `shape` as `bridged` makes it; with a ramp to try (T-1615) and track crossed at the shape's
     /// own level, ramped over or under that track instead: up first from level 0 or above, down
     /// first from -1 or below. Going up from level 0 clears the water in the same pass. Sets
@@ -443,7 +588,7 @@ impl TrackApi {
         };
         let r = self.w.trial(op);
         self.release(&nn, &ne);
-        let r = if self.bridge_refused { r.map_err(bridge_refusal) } else { r };
+        let r = if self.bridge_refused { r.map_err(|i| bridge_refusal(i, &self.bridge_short)) } else { r };
         let shape = std::mem::take(&mut self.route_bridged);
         let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_hsr && tracks == 2);
         for j in &self.route_junctions {
@@ -566,7 +711,7 @@ impl TrackApi {
         if r != 0 {
             self.release(&nn, &ne);
             if self.bridge_refused && self.money_short.is_none() {
-                self.issues = bridge_refusal(std::mem::take(&mut self.issues));
+                self.issues = bridge_refusal(std::mem::take(&mut self.issues), &self.bridge_short);
             }
         }
         r

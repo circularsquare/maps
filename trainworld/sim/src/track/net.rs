@@ -250,6 +250,12 @@ pub enum Issue {
     /// A segment drawn at ground level over water that has no room on land for a bridge's
     /// ramps (T-656); the drawing tool words it in place of `GroundOverWater`.
     BridgeNoRoom,
+    /// `BridgeNoRoom` where the water is too near a station the segment starts or ends at (T-2414).
+    BridgeNoRoomStation,
+    /// `BridgeNoRoom` where the water is too near a junction, or track the segment branches off.
+    BridgeNoRoomJunction,
+    /// `BridgeNoRoom` where the water is too near the end of built track.
+    BridgeNoRoomBuilt,
     /// A viaduct or cut and cover tunnel over more than `WATER_SPAN_MAX` of unbroken water (T-1930).
     WaterTooLong { edge: u32 },
     Crossing { e1: u32, e2: u32, x: f64, y: f64, overlap: bool },
