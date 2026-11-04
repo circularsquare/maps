@@ -476,19 +476,28 @@ notes/T-420.md has the tables.
   drove; car ownership's real spread between countries (Paris's 65% of households without a car
   against Houston's few) shows only through density. Check: a city's rail share by area against its
   census mode share where it has one (T-509), dense cores against suburbs.
-- **Routed drives** (T-275, docs/demand-mode.md 4.3). A drive's road is the straight line times a
-  per-pack routed factor over OSM roads (every public road but service ways, shortest distance),
-  times one scale, 1.3 / 1.210, that puts New York's commute-weighted factor back at the 1.3 its
-  density speeds were fitted with. The nine US packs come to 1.17-1.26 before the scale. Why it
+- **Routed drives** (T-275, docs/demand-mode.md 4.3). A local drive's road is the straight line
+  times a routed factor over OSM roads per pair of 2 km zones (within 12 km) or of supercells beyond
+  (every public road but service ways, shortest distance), times one scale, 1.3 / 1.210, that puts
+  New York's commute-weighted factor back at the 1.3 its density speeds were fitted with; the nine
+  US packs come to 1.17-1.26 before the scale. A drive between places (the regional and market
+  layers, T-279, T-2424, docs/regional.md 5.1) is routed once per pair of places on a world 1/60
+  degree lattice from GRIP4 road density, round water the lattice has no road over, times each
+  zone's own detour towards the other place, so a coastal line round a lake (Toronto to Buffalo)
+  competes with a car that goes round too, zone by zone; a car crosses water only on a fixed link
+  or a car ferry OSM maps, at a ferry's high base and per-km price. Why it
   may not carry over: the scale ties every city to New York's speed fit; shortest-distance routes
   undercount more where drivers keep to a sparse motorway grid (Los Angeles, Houston) and less in
   old street grids (European centres); OSM's classification differs by country (rural roads
   tagged `track` are not in the drive graph), and residential
   coverage is thin in parts of Africa and Asia, where the nearest road joined can be kilometres
-  off. Ferries that carry cars (Hong Kong, Istanbul, Seattle, the Baltic) are not roads here, so
-  a city across a strait has only its bridges and tunnels. Check: per new country, the
+  off. Ferries that carry cars (Hong Kong, Istanbul, Seattle, the Baltic) are not roads locally, so
+  a city across a strait has only its bridges and tunnels; between places a car ferry counts only
+  where OSM tags it for cars, and a ferry so tagged where few cars really sail (or one left untagged)
+  shifts the pair. Check: per new country, the
   commute-weighted factor the pipeline reports and the median snapping distance (US packs:
-  94-213 m); a city's ACS-like car commute times against the model's, as T-090 did.
+  94-213 m); a city's ACS-like car commute times against the model's, as T-090 did; the market
+  drives' log of car ferry lines and pairs with a ferry.
 - **Long drives** (T-370, T-938, docs/demand-mode.md 4.3). Each end's density speeds (16.5-88 km/h)
   last its own first 10 km of road (2 local, 8 main); anything beyond is open highway at 110 km/h.
   Why it may not carry over: 110 km/h assumes a motorway between the ends (US, Canada, western Europe); where long

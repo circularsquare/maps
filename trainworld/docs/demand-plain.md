@@ -93,7 +93,7 @@ alternatives takes about 73% of the trips. Rail and the car split the rest.
 
 There is no built-in liking for the train. Rail and the car are compared on time and money alone.
 
-Islands no road reaches (Sado, Salamis, Hong Kong's outlying islands) have no car and no walk off
+Islands no road reaches (Sado, Salamis, Hong Kong's outlying islands, Liberty Island) have no car and no walk off
 them: the player's ferry or train is the only way. It takes every such trip unless it costs over 3
 times a drive over a bridge that isn't there, and none past 4 times. The rest are "no route":
 counted in the totals, by no mode. Car ferries don't count as roads.
@@ -197,14 +197,17 @@ counted in the totals, by no mode. Car ferries don't count as roads.
 
 **Between cities** (the car and the plane against the train)
 - Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
-  and water (motorways fast, mountain roads slow, inlets driven round); farther, 15 minutes plus the
-  drive at 85 km/h on a road 1.25 times the straight line. Plus fuel and tolls for each km of road
+  and water (motorways fast, mountain roads slow, lakes and inlets driven round); farther, 15 minutes
+  plus the drive at 85 km/h on a road 1.25 times the straight line. Each neighbourhood has its own
+  detour to the other city, so from the end of a lake the car goes round a short way and from across
+  its widest part a long way (Toronto to Buffalo). Plus fuel and tolls for each km of road
   (the two cities' countries' pump price at 8.5 litres a 100 km, and motorway tolls where they go by
   distance: about $0.10 a km in the US, $0.23 in Japan, $0.32 in France) and parking, shared by two
-  people, the dollars counted as below. Over open water with no road (Helsinki to Tallinn) it takes a ferry: 30
-  minutes plus the crossing at 35 km/h, $50 plus 50 cents a km a car. Across the Channel it pays $150
-  a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the Seikan
-  Tunnel takes no cars). No tolls at borders.
+  people, the dollars counted as below. A car crosses water on a bridge or tunnel, or on a car ferry
+  where OSM maps one (Helsinki to Tallinn): 90 minutes plus the crossing at 30 km/h, $80 plus 50
+  cents a km a car, so a ferry is always slower and dearer than a bridge. Across the Channel it pays
+  $150 a car and an hour for the shuttle or ferry; to Hokkaido $170 and 4 hours for the ferry (the
+  Seikan Tunnel takes no cars). Belfast to Dublin is by road. No tolls at borders.
 - Plane, between cities 250 km apart or more that both have airports: the drive to each airport,
   135 minutes at the airports (both ends together), 25 minutes until the flight (the train's planned wait below at a
   flight every 2 hours), the flight at 750 km/h plus 30 minutes (an hour more with no direct

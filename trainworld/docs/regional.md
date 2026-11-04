@@ -124,18 +124,24 @@ air by hours on the train: notes/T-712.md.
   highway and primary road, 55 with 100 m of any road, 20 with less) slowed by GEDTM30 slope (divided
   by 1 + (slope - 3°) / 6, highways excepted), open water at 6 km/h within 12 km of a shore, Wikidata's
   fixed links as land; the drive is 24 + 1.252 x the path's minutes and its road 1.107 x the path's km.
-  The table keeps each as a ratio to the rule's at the places' centres, and every drive between the
-  two places (the corridor split, each zone pair, commutes between zones, the trip explorer) is the
-  rule's at its own distance times those ratios. Within one place, beyond 1,500 km, across the
-  Channel or the Tsugaru Strait, or with no table, the rule. Where the path crosses open water the
-  landmass has no road over (the Gulf of Finland, the Baltic to Sweden), it takes a *ferry*: 30
-  minutes plus the crossing at 35 km/h, and a fare of $50 plus 50 cents a km per car, shared by the
-  two (the path uses the ferry where that costs less than going round). Where the car is carried
-  over water by the market's own crossings (T-712, `crossing_cost`) it pays the crossing's fare per
-  car (shared by the two) and its minutes beyond the straight drive: the Channel, $150 and 60
-  minutes, between a place in Great Britain and one elsewhere; the Tsugaru Strait's ferry, $170 and
-  240 minutes, between Hokkaido (Japan north of 41.4°) and elsewhere. Commutes between zones pay
-  them too. Airports' access drives keep the rule.
+  The table keeps each as a ratio to the rule's at the places' centres. T-2424: each place's search
+  is read also at the other place's market zones, so each zone has its own ratios towards that place
+  over the centres' (kept where 10% or more off; zones within 5 km of the other centre, or on a
+  different number of ferries, keep the centres'). Every drive between two zones of the two places
+  (each zone pair, commutes and outings between zones, the trip explorer) is the rule's at its own
+  distance times the places' ratios times zone i's own towards j's place and zone j's towards i's,
+  so zones at a lake's end drive round less and zones across its widest part more; the corridor
+  split keeps the centres'. Within one place, beyond 1,500 km, across the Channel or the Tsugaru
+  Strait, or with no table, the rule. A car takes a *ferry* only where OSM maps a car ferry
+  (`route=ferry` with `motor_vehicle` or `motorcar` yes): 90 minutes (check-in, the wait for a
+  sailing, loading and unloading) plus the crossing at 30 km/h, and a fare of $80 plus 50 cents a
+  km per car, shared by the two, so a ferry is clearly worse than a bridge (the path uses it where
+  that costs less than going round). Where the car is carried over water by the market's own
+  crossings (T-712, `crossing_cost`) it pays the crossing's fare per car (shared by the two) and its
+  minutes beyond the straight drive: the Channel, $150 and 60 minutes, between a place in Great
+  Britain (the UK less Northern Ireland, which is on Ireland's landmass, T-2423) and one elsewhere;
+  the Tsugaru Strait's ferry, $170 and 240 minutes, between Hokkaido (Japan north of 41.4°) and
+  elsewhere. Commutes between zones pay them too. Airports' access drives keep the rule.
 - *Plane*: between places whose centres are at least 250 km apart (the far pairs) and that both
   have airports. Door to door: the drive to an airport at each end (the car's drive time,
   people-weighted over the place's zones), 135 minutes at the airports (both ends together, T-1564), 25 minutes until the flight

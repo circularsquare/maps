@@ -23,6 +23,9 @@ PLACES = [
     ("nyc", "Roosevelt Island", -73.951, 40.761, False), ("nyc", "Long Island (Hempstead)", -73.62, 40.71, False),
     ("nyc", "Rikers Island (T-2257: bridge access=no, bus=yes)", -73.887, 40.792, False),
     ("nyc", "Shelter Island", -72.34, 41.069, True), ("nyc", "Fishers Island", -72.004, 41.267, True),
+    ("nyc", "Liberty Island (T-2421: an islet holding cells)", -74.0453, 40.6880, True),
+    ("ven", "San Servolo (T-2421)", 12.3555, 45.4205, True), ("sto", "Fjaderholmarna (T-2421)", 18.1766, 59.3287, True),
+    ("ams", "Forteiland, IJmuiden (T-2421)", 4.5769, 52.4656, True), ("ams", "Amsterdam", 4.90, 52.37, False),
     ("hon", "Hong Kong Island", 114.17, 22.28, False), ("hon", "Lantau (Tung Chung)", 113.94, 22.29, False),
     ("hon", "Ma Wan", 114.059, 22.351, False), ("hon", "Cheung Chau", 114.029, 22.207, True),
     ("hon", "Lamma", 114.11, 22.217, True), ("hon", "Peng Chau", 114.039, 22.285, True),
@@ -59,7 +62,7 @@ def pack_cells_parts(cid, use_px):
         exs = parts_run.plan([cid])[cid]
         bar, origin = routes.water50(h, a)
         opened = np.unique(np.concatenate([np.load(parts_run.px_path(cid, e)) for e in exs]))
-        lab, edge, info = routes.land_labels(bar, opened)
+        lab, edge, info = routes.land_labels(bar, opened, (a["x_m"].astype(np.float64), a["y_m"].astype(np.float64), origin))
         part, block, _ = routes.land_parts(h, a, lab, edge, origin, info, exs)
         return h, a, part, block
     return h, a, a["part"], h["parts"]

@@ -378,10 +378,17 @@ def road_water_pixels(bar, origin, xa, ya, xb, yb):
     return idx[bar.flat[idx]].astype(np.uint32)
 
 
-def land_labels(bar, opened):
+ISLET_KEEP_M = 150.0   # T-2421: an islet holding a cell stays land this far from other land
+ISLET_KEEP_PX = 8      # ... and this big (0.02 km2): smaller ones are piers, moorings and mask specks
+
+
+def land_labels(bar, opened, cells=None):
     """The land of `bar` with the `opened` pixels made land and islets (under MIN_LAND_PX, off the
-    grid's edge) made water, labelled 8-connected (int32, 0 water); the labels on the edge; a summary."""
-    from scipy.ndimage import label
+    grid's edge) made water, labelled 8-connected (int32, 0 water); the labels on the edge; a summary.
+    `cells` (x, y, origin): an islet of ISLET_KEEP_PX or more that is some cell's land (`pixel_labels`)
+    and ISLET_KEEP_M or more from other land stays land (Liberty Island; a mask sliver beside a shore
+    still closes)."""
+    from scipy.ndimage import distance_transform_edt, find_objects, label
     bar = bar.copy()
     bar.flat[opened] = False
     lab, n = label(~bar, structure=np.ones((3, 3), bool))
@@ -390,9 +397,25 @@ def land_labels(bar, opened):
     small = size < MIN_LAND_PX
     small[0] = False
     small[edge] = False
+    kept = 0
+    if cells is not None and small.any():
+        x, y, origin = cells
+        cl = pixel_labels(lab, origin, x, y)
+        pad = int(np.ceil(ISLET_KEEP_M / WALK_CELL_M)) + 1
+        boxes = find_objects(lab)
+        for i in np.unique(cl[(cl > 0) & small[cl]]):
+            if size[i] < ISLET_KEEP_PX:
+                continue
+            r, c = boxes[i - 1]
+            r0, c0 = max(r.start - pad, 0), max(c.start - pad, 0)
+            sub = lab[r0:r.stop + pad, c0:c.stop + pad]
+            other = (sub > 0) & (sub != i) & ~small[sub]
+            if not other.any() or distance_transform_edt(~other)[sub == i].min() * WALK_CELL_M >= ISLET_KEEP_M:
+                small[i] = False
+                kept += 1
     islets = small[lab]
     lab[islets] = 0
-    return lab, edge[edge > 0], {"pixels_opened": int(len(opened)), "islets_closed": int(islets.sum())}
+    return lab, edge[edge > 0], {"pixels_opened": int(len(opened)), "islets_closed": int(islets.sum()), "islets_kept": kept}
 
 
 def pixel_labels(lab, origin, x, y):
@@ -462,7 +485,8 @@ def land_parts(header, a, lab, edge, origin, info, extracts, wf=None):
     block = {"task": "T-2213", "built": str(datetime.date.today()),
              "rule": "land of the pack's water mask at 50 m (a pixel water when 3 of its 4 mask pixels are), every pixel "
                      "under an OSM way some car may use (DRIVE_CLASSES, service ways and tracks, private ones too) made "
-                     "land, islets under 0.1 km2 off the grid's edge made water; a part is 8-connected land holding cells, "
+                     "land, islets under 0.1 km2 off the grid's edge made water unless 0.02 km2 or more, some cell's land "
+                     "and 150 m or more from other land (T-2421); a part is 8-connected land holding cells, "
                      "or all such land reaching the grid's edge on one world landmass (joined beyond the edge); a cell's "
                      "part the land under its centre or the nearest land; numbered by people and jobs, most first. "
                      "Ferries join nothing",
@@ -483,7 +507,7 @@ def pack_parts(header, a, ways, extracts):
     bar, origin = water50(header, a)
     seg = way_segments(ways, PART_FLAGS, header["origin"]["lon"], header["origin"]["lat"])
     opened = road_water_pixels(bar, origin, *seg)
-    lab, edge, info = land_labels(bar, opened)
+    lab, edge, info = land_labels(bar, opened, (a["x_m"].astype(np.float64), a["y_m"].astype(np.float64), origin))
     part, block, lab_part = land_parts(header, a, lab, edge, origin, info, extracts)
     return part, block, lab_part, lab, origin
 

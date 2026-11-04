@@ -227,7 +227,9 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
   under an OSM way some car may use made land (the drive's roads, service ways and tracks, private
   ones too: a gated island's bridge joins it; a road closed to motor traffic still joins when it lets
   some cars, buses or lorries through, as Rikers Island's `access=no`, `bus=yes` bridge does, unless
-  it is an emergency access way: `routes.way_flags`), islets under 0.1 km² off the grid's edge made water, then 8-connected
+  it is an emergency access way: `routes.way_flags`), islets under 0.1 km² off the grid's edge made water
+  unless one is 0.02 km² or more, some cell's land and 150 m or more from other land (T-2421:
+  Liberty Island, Fjaderholmarna, San Servolo; smaller ones are piers and mask specks), then 8-connected
   land holding cells; all such land reaching the grid's edge on one world landmass is one part
   (joined beyond the edge: a river's two banks whose bridge is outside the grid). Ferries join
   nothing. A cell's part is the land under its centre, or the nearest. Per part the header lists
@@ -239,8 +241,9 @@ them, or with them made for other zones, has every walk and drive straight x 1.3
 - **Not routed**: walking transfers between stations (300 m and complexes) stay straight x 1.3,
   because every population must build the same graph from the same stations to share its
   strategy searches (T-119) and none of the real New York network's 80 pairs within 300 m has
-  water between them; ferries are no walk or drive (T-280); the regional market's drives
-  (T-276's redesign).
+  water between them; ferries are no walk or drive (T-280); the regional market's drives, which
+  are routed per pair of places round the water on a 1/60 degree lattice, each zone with its own
+  detour towards the other place (docs/regional.md 5.1, T-279, T-2424).
 - **The map's walking minutes** (T-312, `app/src/game/walks.ts`): the closest-stations lists of
   the station inspector and the bubble hover walk the same barrier raster, read on the main thread
   from the pack's `walk_row` and `walk_x` (a Range request, about 250 KB a city) with a TypeScript

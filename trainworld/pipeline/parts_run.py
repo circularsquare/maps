@@ -211,7 +211,7 @@ def pack_job(cid, exs, dry):
         h, a = routes.res9_pack(cid)
         bar, origin = routes.water50(h, a)
         opened = np.unique(np.concatenate([np.load(px_path(cid, e)) for e in exs]))
-        lab, edge, info = routes.land_labels(bar, opened)
+        lab, edge, info = routes.land_labels(bar, opened, (a["x_m"].astype(np.float64), a["y_m"].astype(np.float64), origin))
         part, block, _ = routes.land_parts(h, a, lab, edge, origin, info, exs)
         market = None
         if dry:
@@ -230,7 +230,7 @@ def pack_job(cid, exs, dry):
         s = {"id": cid, "city": h.get("city"), "country": h.get("country"), "written": not dry, "how": how, "market": market,
              "parts": block["parts"], "people": float(sum(block["people"])),
              "off_first": float(sum(block["people"][1:])), "interior": float(sum(p for p, o in zip(block["people"], block["open"]) if not o)),
-             "pixels_opened": info["pixels_opened"], "islets_closed": info["islets_closed"], "top": top,
+             "pixels_opened": info["pixels_opened"], "islets_closed": info["islets_closed"], "islets_kept": info.get("islets_kept", 0), "top": top,
              "seconds": round(time.time() - t0, 1)}
         with open(summary_path(cid) + ".part", "w", encoding="utf-8") as f:
             json.dump(s, f, ensure_ascii=False)
