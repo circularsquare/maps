@@ -10,7 +10,7 @@ import { cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
 import { continentOf } from "./continents";
 import { AVERAGE_DAY } from "./days";
-import { demandByDay, demandUpdating, eachCorridor, lineFiguresIn, roughZones } from "./demand";
+import { demandByDay, demandUpdating, eachCorridor, lineFiguresIn, roughZones, type Corridors } from "./demand";
 import { andList, bigDistance, clockTime, dayOf, money, speed } from "./format";
 import { countryName } from "./holidays";
 import { stationZone } from "./listScope";
@@ -20,7 +20,7 @@ import { weekdayOf } from "./days";
 import { stationsById, world } from "./world";
 import { sumModes } from "./worldTotals";
 import { zonesLoaded } from "./zones";
-import type { LineInput, LineStats, WorldView } from "./types";
+import type { LineInput, LineStats, StationInput, WorldView } from "./types";
 import { gamesLoaded, postAchievements, queryClock } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 
@@ -103,16 +103,29 @@ function runningLines(w: WorldView): { l: LineInput; st: LineStats }[] {
   return out;
 }
 
+/** What the figures read of the world: the stations and the running lines. The same object while
+ * neither changes (clockClient.ts keeps a station's, line's and line's stats' objects while their rows
+ * stay), so an edit to track alone leaves the figures as they were (T-2403). */
+interface AchWorld { stations: readonly StationInput[]; byId: Map<string, StationInput>; running: { l: LineInput; st: LineStats }[] }
+let lastAch: AchWorld | null = null;
+const achWorld = computed<AchWorld | null>(() => {
+  const w = world.value;
+  if (!w) return (lastAch = null);
+  const running = runningLines(w), was = lastAch;
+  if (was && was.stations === w.save.stations && was.running.length === running.length && was.running.every((x, i) => x.l === running[i].l && x.st === running[i].st)) return was;
+  return (lastAch = { stations: w.save.stations, byId: stationsById(w), running });
+});
+
 /** The figures that come from the network alone. */
 export const networkFigures = computed(() => {
-  const w = world.value;
+  const w = achWorld.value;
   void zonesLoaded.value; // boundaries arriving re-place the stations
   if (!w) return null;
-  const byId = stationsById(w);
+  const byId = w.byId;
   const served = new Set<CityId>();
   const firsts = new Map<FirstId, Detail>();
   let long: Detail | null = null, bullet: Detail | null = null, circle: Detail | null = null;
-  for (const { l, st } of runningLines(w)) {
+  for (const { l, st } of w.running) {
     const countries = new Set<string>(), continents = new Set<string>();
     for (const id of l.stops) {
       const s = byId.get(id);
@@ -138,7 +151,7 @@ export const networkFigures = computed(() => {
   if (long) firsts.set("long", long);
   if (bullet) firsts.set("bullet", bullet);
   if (circle) firsts.set("circle", circle);
-  return { cities: served.size, firsts, running: runningLines(w).length };
+  return { cities: served.size, firsts, running: w.running.length };
 });
 
 /** The longest a rider is sure to stay on one of the line's trains, s, among riders at least
@@ -167,20 +180,38 @@ function longestRide(l: LineInput, st: LineStats, loads: Float32Array[], board: 
   return best;
 }
 
+/** Each place's trips to and from other places and those by rail, over the corridors touching any of
+ * `places`, kept for the last corridors and places (a demand result's, T-2403). */
+let corridorMemo: { corr: Corridors; key: string; sums: Map<number, { all: number; rail: number }> } | null = null;
+function corridorSums(corr: Corridors, places: ReadonlyMap<number, CityId>): Map<number, { all: number; rail: number }> {
+  const key = [...places.keys()].sort((a, b) => a - b).join(",");
+  if (corridorMemo?.corr === corr && corridorMemo.key === key) return corridorMemo.sums;
+  const sums = new Map<number, { all: number; rail: number }>();
+  const add = (p: number, all: number, rail: number) => {
+    if (!places.has(p)) return;
+    const e = sums.get(p) ?? { all: 0, rail: 0 };
+    e.all += all; e.rail += rail;
+    sums.set(p, e);
+  };
+  eachCorridor(corr, (a, b) => a !== b && (places.has(a) || places.has(b)), (j, x) => { add(corr.table.from[j], x.trips, x.rail); add(corr.table.to[j], x.trips, x.rail); });
+  corridorMemo = { corr, key, sums };
+  return sums;
+}
+
 /** The figures from demand: final results only, on the average day, never a rough zone's. */
 export const demandFigures = computed(() => {
-  const w = world.value;
+  const w = achWorld.value;
   void zonesLoaded.value;
   const d = demandByDay.value[AVERAGE_DAY];
   const v = d?.view;
   if (!w || !v?.final) return null;
-  const rough = roughZones.value, byId = stationsById(w);
-  const run = runningLines(w);
+  const rough = roughZones.value, byId = w.byId;
+  const run = w.running;
   const firsts = new Map<FirstId, Detail>();
   // Trips a day: the Cities tab's World row, coarse zones included (a big game holds most zones
   // coarse, and a total of millions is past the noise the star's rule guards against)
   const built = new Set<CityId>();
-  for (const s of w.save.stations) if (s.built) { const z = stationZone(s); if (z) built.add(z); }
+  for (const s of w.stations) if (s.built) { const z = stationZone(s); if (z) built.add(z); }
   const views = [...built].map((id) => d.cities.get(id)).filter((x) => x?.final);
   const trips = sumModes(views)?.rides.train ?? 0;
   // busiest station, by complex
@@ -224,15 +255,7 @@ export const demandFigures = computed(() => {
   }
   const corr = d.intercity?.corridors;
   if (corr && places.size) {
-    const sums = new Map<number, { all: number; rail: number }>();
-    const add = (p: number, all: number, rail: number) => {
-      if (!places.has(p)) return;
-      const e = sums.get(p) ?? { all: 0, rail: 0 };
-      e.all += all; e.rail += rail;
-      sums.set(p, e);
-    };
-    eachCorridor(corr, (a, b) => a !== b && (places.has(a) || places.has(b)), (j, x) => { add(corr.table.from[j], x.trips, x.rail); add(corr.table.to[j], x.trips, x.rail); });
-    for (const [p, e] of sums) {
+    for (const [p, e] of corridorSums(corr, places)) {
       if (e.all < INTERCITY_MIN_TRIPS) continue;
       const share = 100 * e.rail / e.all;
       if (share >= INTERCITY_SHARE && (!inter || share > inter.v!)) inter = { of: cityById(places.get(p)!)?.name, v: share };

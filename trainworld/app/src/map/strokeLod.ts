@@ -156,6 +156,14 @@ export function significance(s: Strokes, speed: Float32Array | null, sig: Float3
  * segment's values; `first` is that segment's index in `s`, for the per-segment arrays rewritten
  * later (the demand widths, the traffic marks). */
 export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Float32Array | null): { strokes: Strokes; first: Uint32Array } {
+  const out = simplifiedLater(s, sig, tol, speed);
+  out.fill(0, out.strokes.count);
+  return out;
+}
+
+/** `simplified`, its arrays filled by `fill(from, to)` (merged segments `from` to `to`), so the work
+ * can be spread over several tasks (T-2403). */
+export function simplifiedLater(s: Strokes, sig: Float32Array, tol: number, speed: Float32Array | null): { strokes: Strokes; first: Uint32Array; fill: (from: number, to: number) => void } {
   const n = s.count;
   let m = 0;
   for (let i = 0; i < n; i++) if (sig[i] > tol) m++;
@@ -163,31 +171,33 @@ export function simplified(s: Strokes, sig: Float32Array, tol: number, speed: Fl
   for (let i = 0, k = 0; i < n; i++) if (sig[i] > tol) first[k++] = i;
   const seg = new Float32Array(m * 4), colour = new Uint32Array(m), edge = new Uint32Array(m), level = new Float32Array(m), flags = new Float32Array(m);
   const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined, band = s.band ? new Int16Array(m * BAND_STRIDE) : undefined;
-  for (let k = 0; k < m; k++) {
-    const i = first[k], last = (k + 1 < m ? first[k + 1] : n) - 1;
-    seg[k * 4] = s.seg[i * 4];
-    seg[k * 4 + 1] = s.seg[i * 4 + 1];
-    seg[k * 4 + 2] = s.seg[last * 4 + 2];
-    seg[k * 4 + 3] = s.seg[last * 4 + 3];
-    colour[k] = s.colour[i];
-    edge[k] = s.edge[i];
-    level[k] = s.level[i];
-    flags[k] = s.flags[i];
-    if (sp) sp[k] = speed![i];
-    if (stretch) stretch[k] = s.stretch![i];
-    if (lane) {
-      lane[k * 2] = s.lane![i * 2];
-      lane[k * 2 + 1] = s.lane![last * 2 + 1];
+  const fill = (from: number, to: number) => {
+    for (let k = from; k < Math.min(to, m); k++) {
+      const i = first[k], last = (k + 1 < m ? first[k + 1] : n) - 1;
+      seg[k * 4] = s.seg[i * 4];
+      seg[k * 4 + 1] = s.seg[i * 4 + 1];
+      seg[k * 4 + 2] = s.seg[last * 4 + 2];
+      seg[k * 4 + 3] = s.seg[last * 4 + 3];
+      colour[k] = s.colour[i];
+      edge[k] = s.edge[i];
+      level[k] = s.level[i];
+      flags[k] = s.flags[i];
+      if (sp) sp[k] = speed![i];
+      if (stretch) stretch[k] = s.stretch![i];
+      if (lane) {
+        lane[k * 2] = s.lane![i * 2];
+        lane[k * 2 + 1] = s.lane![last * 2 + 1];
+      }
+      if (band) {
+        const b = s.band!, o = k * BAND_STRIDE, oi = i * BAND_STRIDE, ol = last * BAND_STRIDE;
+        band[o] = b[oi];
+        band[o + 1] = b[ol + 1];
+        band[o + 2] = b[oi + 2];
+        band[o + 3] = b[ol + 3];
+        band[o + 4] = b[oi + 4];
+        band[o + 5] = b[ol + 5];
+      }
     }
-    if (band) {
-      const b = s.band!, o = k * BAND_STRIDE, oi = i * BAND_STRIDE, ol = last * BAND_STRIDE;
-      band[o] = b[oi];
-      band[o + 1] = b[ol + 1];
-      band[o + 2] = b[oi + 2];
-      band[o + 3] = b[ol + 3];
-      band[o + 4] = b[oi + 4];
-      band[o + 5] = b[ol + 5];
-    }
-  }
-  return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, band, count: m }, first };
+  };
+  return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, band, count: m }, first, fill };
 }

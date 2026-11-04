@@ -328,8 +328,11 @@ export function lineDrawOrder<L extends { id: number; lengthM: number; trains: A
 /** The passages drawn without being built (T-1859): a complex's members whose boxes do not touch
  * are joined like the player's passages (T-217), by the shortest joins between platforms that
  * connect the complex, with boxes that touch and the player's own passages (`links`, station index
- * pairs) counting as joined already. Station index pairs. */
-function complexPassages(st: readonly { id: number; lat: number }[], stations: Float32Array, stationLine: Float32Array, complexOf: ArrayLike<number>, links: readonly number[]): number[] {
+ * pairs) counting as joined already. Station index pairs. `cache` (T-2403): each complex's joins, kept
+ * while its members, their station pieces (`NetCache.stations`, which hold their platform lines),
+ * places and passages stay; a complex's joins depend on those alone, the player's passages joining
+ * members of one complex (else everything is worked out again). */
+function complexPassages(st: readonly { id: number; lat: number }[], stations: Float32Array, stationLine: Float32Array, complexOf: ArrayLike<number>, links: readonly number[], pieces?: readonly object[], cache?: NetCache["passages"]): number[] {
   const groups = new Map<number, number[]>();
   st.forEach((n, i) => {
     const c = complexOf[n.id];
@@ -338,6 +341,19 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
     if (g) g.push(i);
     else groups.set(c, [i]);
   });
+  const of = (i: number) => complexOf[st[i].id];
+  const linksIn = new Map<number, number[]>();
+  let apart = false;
+  for (let k = 0; k + 1 < links.length; k += 2) {
+    const c = of(links[k]);
+    if (c === undefined || c === 0xffffffff || c !== of(links[k + 1])) apart = true;
+    else {
+      const v = linksIn.get(c);
+      if (v) v.push(links[k], links[k + 1]);
+      else linksIn.set(c, [links[k], links[k + 1]]);
+    }
+  }
+  if (apart || !pieces || !cache) cache = undefined;
   const parent = Int32Array.from({ length: st.length }, (_, i) => i);
   const find = (i: number) => {
     while (parent[i] !== i) i = parent[i] = parent[parent[i]];
@@ -347,8 +363,21 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
   for (let k = 0; k + 1 < links.length; k += 2) union(links[k], links[k + 1]);
   const line = (i: number) => stationLine.subarray(i * 2 * PLATFORM_POINTS, (i + 1) * 2 * PLATFORM_POINTS);
   const out: number[] = [];
-  for (const m of groups.values()) {
+  const seen: NetCache["passages"] = new Map();
+  for (const [c, m] of groups) {
     if (m.length < 2) continue;
+    const ln = linksIn.get(c) ?? [];
+    let hit: PassageEntry | undefined;
+    if (cache) {
+      const e = cache.get(st[m[0]].id);
+      if (e && e.ids.length === m.length && e.links.length === ln.length && m.every((i, a) => e.ids[a] === st[i].id && e.pieces[a] === pieces![i] && e.xy[a * 2] === stations[i * 3] && e.xy[a * 2 + 1] === stations[i * 3 + 1]) && ln.every((i, k) => e.links[k] === st[i].id)) hit = e;
+    }
+    if (hit) {
+      for (const a of hit.joins) out.push(m[a]);
+      seen.set(st[m[0]].id, hit);
+      continue;
+    }
+    const from = out.length;
     const reach = m.map((i) => offsetsReach(line(i)));
     const joins: [number, number, number][] = [];
     for (let a = 0; a < m.length; a++)
@@ -363,9 +392,23 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
       }
     joins.sort((p, q) => p[0] - q[0] || p[1] - q[1] || p[2] - q[2]);
     for (const [, i, j] of joins) if (find(i) !== find(j)) { union(i, j); out.push(i, j); }
+    if (cache) {
+      const pos = new Map(m.map((i, a) => [i, a]));
+      seen.set(st[m[0]].id, {
+        ids: m.map((i) => st[i].id), pieces: m.map((i) => pieces![i]), xy: m.flatMap((i) => [stations[i * 3], stations[i * 3 + 1]]),
+        links: ln.map((i) => st[i].id), joins: out.slice(from).map((i) => pos.get(i)!),
+      });
+    }
+  }
+  if (cache) {
+    cache.clear();
+    for (const [k, e] of seen) cache.set(k, e);
   }
   return out;
 }
+/** a complex's joins as last worked out (`complexPassages`): its members' ids, station pieces and
+ * places, its passages' station ids in pairs, and the joins as member positions in pairs */
+interface PassageEntry { ids: number[]; pieces: object[]; xy: number[]; links: number[]; joins: number[] }
 
 /** The lines on each edge, by id. */
 function linesOnEdges(s: ClockState) {
@@ -922,11 +965,13 @@ export interface NetCache {
   stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
   speeds: Map<number, LineSpeeds>;
   samples: Map<number, LineSamples>;
+  /** each complex's drawn passages, by its first member's id (`complexPassages`) */
+  passages: Map<number, PassageEntry>;
   serial: number;
   last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), serial: 0, last: null });
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), passages: new Map(), serial: 0, last: null });
 
 /**
  * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
@@ -1174,7 +1219,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
-    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || !sameBand(c.band, band))) {
+    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
       const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -1380,7 +1425,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
   }
   if (s.complexOf) {
-    const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx);
+    const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx, st.map((n) => stationsSeen.get(n.id)!), cache.passages);
     for (let k = 0; k + 1 < auto.length; k += 2) {
       const i = auto[k], j = auto[k + 1];
       if (oneFloor(i, j)) continue;

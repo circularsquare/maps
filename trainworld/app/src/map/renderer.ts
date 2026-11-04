@@ -23,7 +23,7 @@ import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt,
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
 import { StrokeCache } from "./strokeCache";
-import { chunkBoxes, mergeRanges, significance, simplified, visibleRanges, type ChunkBoxes } from "./strokeLod";
+import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather, type StrokeCpu } from "./strokeGather";
 import { capInside, perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
@@ -204,14 +204,16 @@ function plainWmul(n: number): Float32Array {
 
 /** `a_full` for `n` segments (2 a segment: the traffic mark, from `marks` or 0, and the local units
  * from the start of its run of joined segments of one line and edge to its start, which the dashes
- * are measured along so they keep one length round curves, T-2184) */
-function fullAttr(s: { seg: Float32Array; colour: Uint32Array; edge: Uint32Array }, n: number, marks?: (i: number) => number): Float32Array {
+ * are measured along so they keep one length round curves, T-2184); with `start`, segments `start` on,
+ * a run taken to begin there (a network piece's first segment always begins one: no two pieces share an
+ * edge and line) */
+function fullAttr(s: { seg: Float32Array; colour: Uint32Array; edge: Uint32Array }, n: number, marks?: (i: number) => number, start = 0): Float32Array {
   const out = new Float32Array(Math.max(1, n) * 2), g = s.seg;
   let at = 0;
-  for (let i = 0; i < n; i++) {
-    if (i > 0 && (s.colour[i] !== s.colour[i - 1] || s.edge[i] !== s.edge[i - 1] || g[i * 4] !== g[i * 4 - 2] || g[i * 4 + 1] !== g[i * 4 - 1])) at = 0;
-    if (marks) out[i * 2] = marks(i);
-    out[i * 2 + 1] = at;
+  for (let i = start, o = 0; o < n; i++, o++) {
+    if (o > 0 && (s.colour[i] !== s.colour[i - 1] || s.edge[i] !== s.edge[i - 1] || g[i * 4] !== g[i * 4 - 2] || g[i * 4 + 1] !== g[i * 4 - 1])) at = 0;
+    if (marks) out[o * 2] = marks(i);
+    out[o * 2 + 1] = at;
     at += Math.hypot(g[i * 4 + 2] - g[i * 4], g[i * 4 + 3] - g[i * 4 + 1]);
   }
   return out;
@@ -243,6 +245,8 @@ interface StrokeLodState {
   sigAt: number;
   working: boolean;
   bands: Map<number, StrokeBand>;
+  /** the zoom band whose copy is being made (`workBand`), null for none */
+  making: number | null;
 }
 /** a simplified copy of a stroke set for one zoom band, with the arrays its buffers hold (T-1644) */
 interface StrokeBand { vao: StrokeVao; strokes: Strokes; first: Uint32Array; boxes: ChunkBoxes; v: number; res: { del: () => void }[]; wm: Float32Array | null; fu: Float32Array | null }
@@ -741,8 +745,9 @@ export class NetworkRenderer {
 
   /** A stroke set's VAO. `from` (a network's strokes, T-1028): the strokes drawn before and the runs
    * (start, count, old start or -1, `NetPatch`) that make these from them: unchanged runs are copied
-   * on the GPU from the old buffers, only the new segments uploaded. */
-  private strokes(s: Strokes, list = this.res, from?: { old: StrokeVao; runs: Int32Array } | null): StrokeVao {
+   * on the GPU from the old buffers, only the new segments uploaded. `more`: the `a_wmul` and `a_full`
+   * values when worked out already, or "later" for an `a_full` written by its caller (T-2403). */
+  private strokes(s: Strokes, list = this.res, from?: { old: StrokeVao; runs: Int32Array } | null, more?: { wmul?: Float32Array | null; full?: Float32Array | "later" }): StrokeVao {
     const gl = this.gl;
     const vao = gl.createVertexArray()!;
     list.push({ del: () => gl.deleteVertexArray(vao) });
@@ -783,9 +788,31 @@ export class NetworkRenderer {
     this.attrib(p, "a_level", make(sub(s.level, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
     this.attrib(p, "a_flags", make(sub(s.flags, 1), 1, 4, new Float32Array(1)), 1, gl.FLOAT, 1);
     this.attrib(p, "a_speed", make(speedOf, 1, 4, new Float32Array(1).fill(160)), 1, gl.FLOAT, 1);
-    const wmulBuf = this.buffer(plainWmul(Math.max(1, n)), list);
+    const wmulBuf = this.buffer(more?.wmul ?? plainWmul(Math.max(1, n)), list);
     this.attrib(p, "a_wmul", wmulBuf, 3, gl.FLOAT, 1);
-    const fullBuf = this.buffer(fullAttr(s, n), list);
+    let fullBuf: WebGLBuffer;
+    if (more?.full instanceof Float32Array) fullBuf = this.buffer(more.full, list);
+    else if (more?.full === "later") {
+      fullBuf = gl.createBuffer()!;
+      list.push({ del: () => gl.deleteBuffer(fullBuf) });
+      gl.bindBuffer(gl.ARRAY_BUFFER, fullBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, Math.max(1, n) * 8, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    } else if (patch) {
+      // as the attributes: a run's values depend on its own segments alone (`fullAttr`)
+      fullBuf = gl.createBuffer()!;
+      list.push({ del: () => gl.deleteBuffer(fullBuf) });
+      gl.bindBuffer(gl.COPY_WRITE_BUFFER, fullBuf);
+      gl.bufferData(gl.COPY_WRITE_BUFFER, n * 8, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.COPY_READ_BUFFER, patch.old.fullBuf);
+      const r = patch.runs;
+      for (let k = 0; k < r.length; k += 3) {
+        if (r[k + 2] >= 0) gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, r[k + 2] * 8, r[k] * 8, r[k + 1] * 8);
+        else gl.bufferSubData(gl.COPY_WRITE_BUFFER, r[k] * 8, fullAttr(s, r[k + 1], undefined, r[k]));
+      }
+      gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+      gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+    } else fullBuf = this.buffer(fullAttr(s, n), list);
     this.attrib(p, "a_full", fullBuf, 2, gl.FLOAT, 1);
     const lane = s.lane;
     const laneBuf = make(lane ? sub(lane, 2) : (_, count) => new Uint8Array(count * 2).fill(255), 2, 1, new Uint8Array(2).fill(255));
@@ -834,6 +861,17 @@ export class NetworkRenderer {
     if (bad.length) console.error(`T-1028 check: the ${name} strokes patched on the GPU differ from the network's in ${bad.join(", ")}`);
   }
 
+  /** `?patch=check` (T-2403): the track's `a_full` patched by runs against one worked out whole */
+  private checkFull(v: StrokeVao | null, s: Strokes) {
+    if (!v || !s.count) return;
+    const gl = this.gl, want = fullAttr(s, s.count), got = new Float32Array(want.length);
+    gl.bindBuffer(gl.COPY_READ_BUFFER, v.fullBuf);
+    gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, got);
+    gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+    const x = new Uint32Array(want.buffer), y = new Uint32Array(got.buffer);
+    if (x.some((b, k) => b !== y[k])) console.error("T-2403 check: the track's a_full patched by runs differs from a whole one");
+  }
+
   /** the network's stroke buffers on the GPU and their sizes (checks read them back) */
   gpuDump(): Record<string, [WebGLBuffer, number]> {
     const out: Record<string, [WebGLBuffer, number]> = {};
@@ -847,36 +885,18 @@ export class NetworkRenderer {
   private pickStrokes(s: StrokeVao | null, src: Strokes, lines: boolean, zoom: number, dpr: number, grow: number, project: Project, w: number, h: number): { vao: StrokeVao; ranges: number[] | null } | null {
     if (!s || !s.count) return null;
     let st = this.lodOf.get(s);
-    if (!st) this.lodOf.set(s, (st = { boxes: null, speed: undefined, sig: null, sigAt: 0, working: false, bands: new Map() }));
+    if (!st) this.lodOf.set(s, (st = { boxes: null, speed: undefined, sig: null, sigAt: 0, working: false, bands: new Map(), making: null }));
     let vao = s, boxes = st.boxes, used: StrokeBand | null = null;
     const bz = Math.ceil(zoom + Math.log2(dpr) - 1e-6);
     if (this.strokeLod && grow === 0 && bz < LOD_TOP_ZOOM && (st.sig && st.sigAt >= src.count || this.workLod(s, st, src))) {
-      let band = st.bands.get(bz);
-      if (!band) {
-        const t0 = performance.now();
-        const { strokes, first } = simplified(src, st.sig!, LOD_TOL_PX / pxPerUnitAt(bz), st.speed ?? null);
-        const res: { del: () => void }[] = [];
-        band = { vao: this.strokes(strokes, res), strokes, first, boxes: chunkBoxes(strokes.seg, strokes.count), v: -1, res, wm: null, fu: null };
-        st.bands.set(bz, band);
-        this.lodMs += performance.now() - t0;
-      }
-      if (band.vao.count < s.count) {
+      // the full set is drawn until the band is made (T-2403)
+      const band = st.bands.get(bz) ?? this.workBand(s, st, src, bz, lines);
+      if (band && band.vao.count < s.count) {
         if (lines && band.v !== this.perSegV) {
           band.v = this.perSegV;
-          const f = band.first, wm = this.linesWmul, fu = this.linesFull;
-          // a merged segment's width and shift at its start are its first segment's, at its end its last's
-          if (wm) {
-            const m = f.length, all = wm.length / 3, out = new Float32Array(m * 3);
-            for (let k = 0; k < m; k++) {
-              const i = f[k], last = (k + 1 < m ? f[k + 1] : all) - 1;
-              out[k * 3] = wm[i * 3];
-              out[k * 3 + 1] = wm[i * 3 + 1];
-              out[k * 3 + 2] = wm[last * 3 + 2];
-            }
-            band.wm = out;
-          } else band.wm = null;
-          band.fu = fullAttr(band.strokes, f.length, fu ? (k) => fu[f[k] * 2] : undefined);
-          this.rewrite(band.vao.wmulBuf, band.wm ?? plainWmul(f.length));
+          band.wm = this.bandWmul(band.first);
+          band.fu = this.bandFull(band.strokes, band.first, 0, band.first.length, this.linesFull);
+          this.rewrite(band.vao.wmulBuf, band.wm ?? plainWmul(band.first.length));
           this.rewrite(band.vao.fullBuf, band.fu);
         }
         vao = band.vao;
@@ -904,6 +924,85 @@ export class NetworkRenderer {
     let v = this.speedShown.get(s);
     if (!v) this.speedShown.set(s, (v = s.speed ? shownSpeed(s.speed, s.trainSpeed?.length === s.speed.length ? s.trainSpeed : undefined) : new Float32Array(s.count).fill(160)));
     return v;
+  }
+
+  /** A line band's `a_wmul`: a merged segment's width and shift at its start are its first segment's,
+   * at its end its last's; null for plain widths. */
+  private bandWmul(f: Uint32Array): Float32Array | null {
+    const wm = this.linesWmul;
+    if (!wm) return null;
+    const m = f.length, all = wm.length / 3, out = new Float32Array(m * 3);
+    for (let k = 0; k < m; k++) {
+      const i = f[k], last = (k + 1 < m ? f[k + 1] : all) - 1;
+      out[k * 3] = wm[i * 3];
+      out[k * 3 + 1] = wm[i * 3 + 1];
+      out[k * 3 + 2] = wm[last * 3 + 2];
+    }
+    return out;
+  }
+  /** A band's `a_full` for merged segments `from` to `to` into `out`, the traffic marks from `fu`
+   * (the full set's) when given; `out` made when absent. */
+  private bandFull(b: Strokes, f: Uint32Array, from: number, to: number, fu: Float32Array | null, out?: Float32Array): Float32Array {
+    const part = fullAttr(b, to - from, fu ? (k) => fu[f[k] * 2] : undefined, from);
+    if (!out) {
+      if (from === 0 && to === f.length) return part;
+      out = new Float32Array(Math.max(1, f.length) * 2);
+    }
+    out.set(part.subarray(0, (to - from) * 2), from * 2);
+    return out;
+  }
+
+  /** T-2403: a zoom band's simplified copy made in 8 ms slices between frames after the significance
+   * (`workLod`), one band at a time a set; null until it is made. `fullAttr` starts a run at each
+   * slice, so the slices of `a_full` end only where a run of the band starts. */
+  private workBand(s: StrokeVao, st: StrokeLodState, src: Strokes, bz: number, lines: boolean): StrokeBand | null {
+    if (st.making !== null) return null;
+    st.making = bz;
+    const t0 = performance.now();
+    const job = simplifiedLater(src, st.sig!, LOD_TOL_PX / pxPerUnitAt(bz), st.speed ?? null);
+    const m = job.strokes.count, b = job.strokes, f = job.first;
+    const SLICE = 16384;
+    let phase = 0, at = 0, boxes: ChunkBoxes | null = null, v = -1, wm: Float32Array | null = null, fuSrc: Float32Array | null = null, full: Float32Array | null = null;
+    // where a run of the band's own starts (`fullAttr`): slices of `a_full` end only there
+    const runEnd = (k: number) => {
+      while (k < m && k > 0 && b.colour[k] === b.colour[k - 1] && b.edge[k] === b.edge[k - 1] && b.seg[k * 4] === b.seg[k * 4 - 2] && b.seg[k * 4 + 1] === b.seg[k * 4 - 1]) k++;
+      return Math.min(k, m);
+    };
+    const step = (): boolean => {
+      if (phase === 0) {
+        job.fill(at, at + SLICE);
+        at += SLICE;
+        if (at >= m) phase = 1, at = 0;
+      } else if (phase === 1) {
+        boxes = chunkBoxes(b.seg, m);
+        if (lines) { v = this.perSegV; wm = this.bandWmul(f); fuSrc = this.linesFull; }
+        full = new Float32Array(Math.max(1, m) * 2);
+        phase = 2;
+      } else if (phase === 2) {
+        const to = runEnd(Math.min(m, at + SLICE));
+        this.bandFull(b, f, at, to, lines ? fuSrc : null, full!);
+        at = to;
+        if (at >= m) phase = 3;
+      } else {
+        const res: { del: () => void }[] = [];
+        const vao = this.strokes(b, res, null, { wmul: wm, full: full! });
+        st.bands.set(bz, { vao, strokes: b, first: f, boxes: boxes!, v, res, wm: lines ? wm : null, fu: lines ? full : null });
+        st.making = null;
+        return true;
+      }
+      return false;
+    };
+    const run = () => {
+      if (this.lodOf.get(s) !== st) return;
+      const t1 = performance.now();
+      let done = false;
+      while (!done && performance.now() - t1 < 8) done = step();
+      this.lodMs += performance.now() - t1;
+      if (!done) setTimeout(run, 0);
+    };
+    this.lodMs += performance.now() - t0;
+    setTimeout(run, 0);
+    return null;
   }
 
   /** T-1639: the runs' significance worked out in 8 ms slices between frames, so an edit's first
@@ -1081,7 +1180,8 @@ export class NetworkRenderer {
     this.floors.setNetwork(n.buildings);
     const oldTrack = this.track, oldLines = this.lines;
     this.track = this.strokes(n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
-    this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null);
+    // its a_full is `writeFull`'s, just below
+    this.lines = this.strokes(n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null, { full: "later" });
     for (const r of [...(oldTrack?.res ?? []), ...(oldLines?.res ?? [])]) r.del();
     this.dropLod();
     this.linesWmul = this.linesFull = null;
@@ -1089,6 +1189,7 @@ export class NetworkRenderer {
     if (patch && this.checkPatch) {
       this.checkStrokes("track", this.track, n.track);
       this.checkStrokes("lines", this.lines, n.lines);
+      this.checkFull(this.track, n.track);
     }
     this.fullDrawn = "";
     this.writeFull();

@@ -156,8 +156,11 @@ function pairsOf(flat: number[]): [string, string][] {
  * nothing differs. */
 const stationViews = new WeakMap<object, StationInput>();
 const lineViews = new WeakMap<object, LineInput>();
+const statsViews = new WeakMap<object, LineStats>();
 let lastStations: StationInput[] = [];
 let lastLines: LineInput[] = [];
+let lastNodeRows: readonly object[] = [];
+let lastNodeMap = new Map<number, TrackNode>();
 function sameObjects<T>(a: readonly T[], b: readonly T[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
@@ -196,7 +199,12 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       v.push(String(l.id));
       edgeLines.set(p, v);
     }
-    lineStats[String(l.id)] = {
+    const had = statsViews.get(l);
+    if (had) {
+      lineStats[String(l.id)] = had;
+      continue;
+    }
+    statsViews.set(l, lineStats[String(l.id)] = {
       status: l.running ? "running" : l.ok || (!l.broken && l.stops.length < 2) ? "planned" : "broken",
       km: l.lengthM / 1000,
       fromStartS: l.fromStart[0] ?? [],
@@ -220,15 +228,21 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       endTurns: l.endTurns ?? [],
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null,
       ...(l.bus ? { bus: l.bus } : {}),
-    };
+    });
   }
   const edges: TrackEdge[] = s.edges.map((e) => ({
     id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
     levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
   }));
-  const nodes = new Map<number, TrackNode>(
-    s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}) }]),
-  );
+  // the last map while the rows are the same, so the snap's node grid (map/snapIndex.ts) stays
+  let nodes = lastNodeMap;
+  if (!sameObjects(s.nodes, lastNodeRows)) {
+    nodes = new Map<number, TrackNode>(
+      s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}) }]),
+    );
+    lastNodeRows = s.nodes;
+    lastNodeMap = nodes;
+  }
   return {
     version: s.version,
     capacity: s.markers,

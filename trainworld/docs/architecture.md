@@ -157,8 +157,9 @@ Web first, so it can be shared as a link.
   whole zoom band: each run of joined segments of one line or track, edge, level, flags, stretch
   and speed (within 10 km/h) is cut to the Douglas-Peucker points at 0.25 device px of the band's
   top zoom, each merged segment carrying its first segment's values (the demand widths and traffic
-  marks gathered by that index). A copy is made on the first draw that needs it and dropped with
-  the network. From zoom 7 only the chunks whose box may show (all four corners not off one side
+  marks gathered by that index). A copy is made after the first draw that needs it, in 8 ms slices
+  between frames once the runs' significance is worked out (likewise in slices), one band at a time;
+  the full set is drawn until then. Copies are dropped with the network (T-2403). From zoom 7 only the chunks whose box may show (all four corners not off one side
   of the view, 48 CSS px out) are drawn, in order, so which line is drawn over which is as before.
   Chunks are 16 instances in boxes of 8 boxes, level on level; a box wholly in the view is drawn
   without testing what is in it, and below zoom 12 the testing stops at boxes of 128 instances
