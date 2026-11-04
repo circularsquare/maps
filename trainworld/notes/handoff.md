@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6b129d28-dd4c-41cd-a38e-7497bd99e810, name maps-1c, since 2026-11-03 12:49
-Updated: 2026-11-03 20:30
+Updated: 2026-11-03 21:30
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -55,6 +55,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   uncommitted files: pipeline/{routes,market_zones,merge_cells,packio,parts_run}.py, checks/t2213_*.py,
   docs/demand-mode.md, demand-sources.md, notes/T-2213.md). Next to start: T-2214 after T-2213; T-2218 tool's
   offered rectangle misses same-named stations (notes/T-2208.md follow-up); T-2242..47 diagram polish; T-2238.
+  ~21:30: 9ebc8fed T-2213 land parts in every pack (3,138 packs; pre-T2213 backup deleted after 8800 smoke);
+  6499883c T-2238/T-2230 edit speed (1.7 s -> 0.4 s; tiles < 1 ms); 0c9a41fe paperwork. **8800 = build 857**
+  (from data/packs directly), smoke 23/23 light and dark; real save now 11,721,432 rail trips (+6 from T-2213's
+  re-merged cells). Running: a50c27c98c3034975 **t2214** islands demand (tree t2214, Vite 6196, ids T-2256..58),
+  a93f41b475e25b962 **t2255** diagram on the game's graphs (main tree, Vite 6194). Trees: t1734, t2214.
+  Next: T-2215 after T-2214, T-2216 (market; rebuild the 901 zone files then); Turkey (T-2079) when compute is spare.
   ~20:30: 6cd0a31d T-2243/T-2244 diagram folds and hooks (agent at 535k tokens, retired); T-2255 filed (game-graph
   hairpins). **8800 = build 855**, smoke 23/23 light and dark. Next free id T-2256 (t2213 holds T-2252..54).
   Started ~19:05: a0d2a3c6ec243b0e9 **t2238** (T-2238 2 s placement + T-2230 road tile install; tree t2238, Vite
