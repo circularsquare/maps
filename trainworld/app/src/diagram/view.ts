@@ -55,6 +55,9 @@ export const diagramShown = signal(false);
 export const diagramProgress = signal<number | null>(null);
 /** whether a drawing is up, to save as a picture */
 export const diagramReady = signal(false);
+/** T-2565: whether the water is worked out and drawn; experimental, so off until the player turns it on, and kept per browser */
+const WATER_STORE = "anitabuilder-diagram-water";
+export const diagramWater = signal((() => { try { return localStorage.getItem(WATER_STORE) === "1"; } catch { return false; } })());
 export const DIAGRAM_KEY = "m";
 /** a pitch this many CSS px when the diagram first opens */
 const START_PITCH_PX = 7;
@@ -279,7 +282,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (tagShown) (tag.style.display = "none"), (tagShown = false);
     if (hot >= 0) (hot = -1), draw();
   };
+  let lastGraph: DiagramGraph | null = null;
   const send = (g: DiagramGraph) => {
+    lastGraph = g;
     if (busy) {
       waiting = g;
       return;
@@ -287,7 +292,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     busy = true;
     const zf = zoneFrame(g);
     // the zones whose water masks the water is drawn from (T-2169)
-    const water = zf ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
+    const water = zf && diagramWater.peek() ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
     worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
@@ -342,7 +347,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           return;
         }
         if (e.data.kind === "water") {
-          if (shown && e.data.seq === shownSeq) (shown.d.water = e.data.water), (waterMs = e.data.ms), draw();
+          if (shown && e.data.seq === shownSeq && diagramWater.peek()) (shown.d.water = e.data.water), (waterMs = e.data.ms), draw();
           return;
         }
         if (e.data.kind === "borders") {
@@ -435,7 +440,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
     // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
     const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
@@ -485,6 +490,13 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     void shade.value;
     void colourTheme.value;
     if (diagramShown.peek()) draw();
+  });
+  // T-2565: the water switch; turning it on lays the diagram out again, with the water asked for
+  effect(() => {
+    const on = diagramWater.value;
+    try { localStorage.setItem(WATER_STORE, on ? "1" : "0"); } catch { /* this visit only */ }
+    if (!on) return void draw();
+    if (shown && !shown.d.water && lastGraph) send(lastGraph);
   });
   diagramShown.subscribe((on) => {
     canvas.style.display = on ? "block" : "none";

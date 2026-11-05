@@ -18,7 +18,7 @@ for (const save of [...new Set(views.map((v) => v.save))]) {
   const { ctx, close } = await launchChrome({ prefix: `tw-diagwater-${save}-`, size: [1600, 1100] });
   try {
     const page = await ctx.newPage();
-    await page.addInitScript((s) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: s, v: 2 })); } catch {} }, shade);
+    await page.addInitScript((s) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: s, v: 2 })); localStorage.setItem('anitabuilder-diagram-water', '1'); } catch {} }, shade);
     collectErrors(page, errors, NOISE);
     const sep = base.includes('?') ? '&' : '?';
     await page.goto(`${base}${sep}debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);

@@ -1,4 +1,4 @@
-import { diagramProgress, diagramReady, diagramShown, saveDiagramPicture } from "../diagram/view";
+import { diagramProgress, diagramReady, diagramShown, diagramWater, saveDiagramPicture } from "../diagram/view";
 import { BusyTag } from "./BusyTag";
 import { LoadBar } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
@@ -26,6 +26,7 @@ export function DiagramTopLeft() {
   return <div class="map-top-left">
     <div class="map-top-row">
       <button type="button" class="btn icon diagram-exit" data-tip="Show map (M)" aria-label="Show map (M)" onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
+      <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip="Show water" aria-label="Show water" aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip="Save picture" aria-label="Save picture" onClick={saveDiagramPicture}><Icon.download /></button>}
       {share !== null && <div class="status-tag" role="status">
         <BunnyTrain small />

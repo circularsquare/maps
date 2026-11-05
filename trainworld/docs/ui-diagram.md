@@ -110,6 +110,12 @@ that arrive after a layout), between blocks as inside them.
 
 ## Water
 
+**Water is experimental (T-2565): off by default, behind the waves button beside the save button** (hover "Show water",
+pressed while on; the choice is kept in localStorage as `anitabuilder-diagram-water`). Off, the page sends the worker no
+`water`, so none of the work below runs and the layout has no sea to keep open; the picture saved follows the button.
+Turning it on lays the diagram out again with the water asked for (the layout keeps the sea open, so it cannot be added
+to a finished one). The T-2169 checks call the water code directly and ignore the button.
+
 `diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
 notes/T-2497.md, notes/T-2516.md, notes/T-2540.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
