@@ -297,6 +297,19 @@ Tier 0 with one national upgrade, for every row; notes/T-1857.md has the sources
   empty the city centres; the flows are also behind TableBuilder's account.
 - **Curve**: borrowed (metros) and the zone curve (zones); **work from home** 0, as tier 0.
 
+## Mexico (world plan rows, `pipeline/mexico.py`, T-2080, T-2081, 2026-11-05)
+
+Tier 0 with two national upgrades, for every row once its build takes the module (T-2436); notes/T-2080.md
+has the sources and checks.
+
+- **Population**: the 2020 census. Urban AGEBs (median 0.25 km2) with their people, and rural localities
+  from ITER as points, each over the cells nearer it than any other within 2 km; GHSL inside each. The units
+  add up to the census exactly; GHSL runs 10-15% under it in the big cities.
+- **Jobs**: DENUE's units at their points, each at its employee band's mean size, plus the jobs DENUE leaves
+  out (farm work, street trade, domestic work: tier 0's World Bank jobs a resident less DENUE's national
+  workers a resident, 0.151) over the row's people by tier 0's proxy; the country's total is tier 0's.
+- **Curve**, **work from home** and everyday destinations: as tier 0.
+
 ## Japan (Tokyo, `pipeline/japan.py`, T-420, 2026-10-15)
 
 Tier 0 with Japan's national inputs, written to serve every Japanese pack (research/japan.md);

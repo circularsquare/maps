@@ -194,8 +194,8 @@ got the usual 302 to the S3 file. A fetch that comes back empty from `data.humda
   - Municipio and locality: ITER, `https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/iter/iter_00_cpv2020_csv.zip`
     (36.6 MB; 193,094 locality rows; municipio rows are `LOC == '0000'`). Opened by religiondots (`sources/mx.md`).
   - Urban AGEB and block: "Principales resultados por AGEB y manzana urbana", one file per state from the census's
-    "Datos abiertos" page (https://www.inegi.org.mx/programas/ccpv/2020/default.html#Datos_abiertos); exact URL not
-    confirmed today (the guessed one answered a soft 404).
+    "Datos abiertos" page: `https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/ageb_manzana/ageb_mza_urbana_{01..32}_cpv2020_csv.zip`
+    (confirmed 2026-11-05, T-2080).
   - Licence: INEGI Terminos de Libre Uso (attribution), https://www.inegi.org.mx/inegi/terminos.html
 - **Boundaries**: Marco Geoestadistico 2020, national subset `mg_2020_integrado.zip` (257,527,530 bytes),
   `https://www.inegi.org.mx/contenidos/productos/prod_serv/contenidos/espanol/bvinegi/productos/geografia/marcogeo/889463807469/mg_2020_integrado.zip`:
@@ -208,7 +208,9 @@ got the usual 302 to the S3 file. A fetch that comes back empty from `data.humda
   `admin_totals` by municipio, filed T-2080. The 2020 enumeration (2-27 March 2020) was before the lockdown.
 - **Jobs**: DENUE, INEGI's directory of every economic unit with coordinates and an employee band (per_ocu), a general
   jobs-at-work source for the whole country; Censos Economicos 2019 by AGEB; the census's extended questionnaire
-  microdata has the municipio of work (commute flows by municipio). Not opened; filed T-2081.
+  microdata has the municipio of work (commute flows by municipio). DENUE's bulk files are per state,
+  `https://www.inegi.org.mx/contenidos/masiva/denue/denue_{01..32}_csv.zip`, the State of Mexico as `denue_15_1` and
+  `denue_15_2` (no national file); used by `pipeline/mexico.py` (T-2081, notes/T-2080.md).
 - **Help**: low to medium (highland and dispersed rural Oaxaca and Chiapas are where GHSL could be off); mostly
   census-quality people for little work.
 
