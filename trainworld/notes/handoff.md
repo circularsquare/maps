@@ -35,7 +35,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   setting carries to new track, T-2475 expected profit ticking (explain, steady if noise), T-2477 no camera snap.
 - **loadwait** (Opus, tree .tw-trees/loadwait, 6196, ids T-2483..84): T-2476 worst-case demand wait, T-2478 Vancouver.
 - **sizes** (Sonnet, main tree read-only, ids T-2485..86): T-2472 size summary into notes/T-2472.md.
-- Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2487**.
+- **diaglines** (Opus, tree .tw-trees/diaglines from fb4c5e61, 6198, ids T-2489..90): T-2488 SPIKE, report before
+  landing: zone borders as layout lines (virtual nodes along real boundaries), plus her fallback (hull, 2-3 pitch
+  clearance); all built zones and neighbours. Anita: T-2464 "mostly just hugging the lines"; wants her idea answered
+  plainly ("make sure i read it").
+- uismall2 also has T-2487 (money plot titles name the scope).
+- Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
 
 ## Next
 1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show
