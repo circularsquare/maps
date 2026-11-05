@@ -35,7 +35,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   gated, 0 parked (30 UA rows, 3 Crimean RU rows sif sel kcx), 53 min. Join UA,RU (mos-ru solve, ~1 h, 8 cores) started
   ~20:40, then zone_terrain, market_drives, build_inputs, stale, smoke. After it: `tools\country\setup_sim.py <kit>
   remove` for countries3's kit (session 8509086d's scratch, countries\). Backup data/work/pre-T2344/ goes once clean.
-- Nothing else running. Next free id **T-2460** (T-2456..57, T-2460..63 given out and unused; T-2458, T-2459 filed).
+- **buspanel** (Opus, tree .tw-trees/buspanel from 2bcab3a0, 6191, ids T-2460..T-2461): T-2373 bus/ferry panels
+  share the rail panel's schedule parts; one Average-load basis.
+- **smallui** (Sonnet, tree .tw-trees/smallui from 2bcab3a0, 6192): T-2462 bus/boat Speed ramp red to yellow, T-2463
+  money plot one-offs stacked on the expenses bar (Anita's answers, 2026-11-04 ~20:50).
+- **diagzones** (Opus, tree .tw-trees/diagzones from 2bcab3a0, 6193, ids T-2465..T-2466): T-2464 diagram zone borders
+  redone the Tube way (from which zone each drawn station is in; octilinear, even width, closed, between blocks).
+  Anita on T-2168's: "not really visible at all", "very wavy", "dont fully contain the region", "why can't we just
+  draw them the same way we draw lines?"
+- **ferrybus** (Opus, resumed, ~275k tokens; tree .tw-trees/ferrybus recreated from 2bcab3a0, 6187, ids T-2470..71):
+  T-2467 bus tool (no straight blue preview, first point refused off roads, snap to reachable road), T-2468 ferry
+  stops snap, T-2469 bus legs over bridges (Anita, 2026-11-04 ~21:00, verbatim in its brief).
+- Next free id **T-2472** (T-2456..57 unused; T-2458, T-2459 filed).
 
 ## Next
 1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show
@@ -64,9 +75,6 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- Money plot: one-off costs hidden on days they are smaller than both other bars (drawing them behind): fine?
-- Diagram zone borders' strength (`BORDER_ALPHA` in diagram/draw.ts) once she has seen them on 8800.
-- Speed view: buses (~16 km/h) and boats (20-32) are all one red under rail's 40 km/h floor; own ramp for them?
 
 ## Lessons from this run
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and

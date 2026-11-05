@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2373 Cleanup A6: bus panel shares the rail panel's parts (2026-11-04, agent buspanel, tree .tw-trees/buspanel): new ui/inspector/schedule.tsx and LineTitle.tsx serve rail, bus and ferry panels; about 590 lines of copies gone. Average load at the rated load for all three (ferries 1.5x); bus drift settled to the rail form (DECISIONS).
+- T-2462 Speed display colours for bus and ferry routes (2026-11-04, agent smallui): their own ramp, rail's red at 10 km/h to rail's yellow at 30; hover chip likewise. checks/t2462-bus-speed.mjs.
+- T-2463 Money plots stack one-off costs (2026-11-04, agent smallui): the pale red bar sits on top of the running costs bar, same width, capped at the top as before.
 - T-2435 t325 bare check failing (2026-11-04, agent barecheck, tree .tw-trees/barecheck): broken by 8dc8961f (T-2215), whose `bare` answer put every period's No route legs in the first solving worker's part (sums off in the last bit) and sent one empty buffer twice; new `cell_unreach_mask_day` gives each part its own periods'. Check passes.
 - T-2452 Track displays for bus and ferry lines (2026-11-04, agent busviews, tree .tw-trees/busviews): Speed and Profit colour their routes (own width and dashes kept), hover rows say "bus"/"boat"; Line and Traffic already did (T-2274). Bus station-upkeep share fixed to match `line_upkeep`. checks/t2452-bus-views.mjs.
 - T-2453 Selected city's demand first (2026-11-04, agent cityfirst, tree .tw-trees/cityfirst): the city view's zone goes second in the downloads, opens and cluster order; its figures and trip-length graph come at its cluster's round 0, Tokyo save Seoul 29-35 s after selecting against 64-79 s; settled figures the same to the bit. `?perfOff=selected`. notes/T-2453.md; follow-ups T-2458, T-2459.
