@@ -1,5 +1,6 @@
 # Archive
 
+- T-056 [P3] Corridor rays. Done 2026-11-05: the spokes were the search tree bunching near-equal routes; corridors now count a tree whose land parents are re-chosen by spread trips within 1% of the fastest. Fan spreads by bearing, roads and rivers kept; counting ~2-3x slower. notes/T-056.md.
 - T-066 [P2] Land hazard world build (T-042 stage 2). Done 2026-11-05: `tools/hazard/` builds `data/hazard/` (L10 1.1 MB, L3 9.3, L1 29.3 MB) in ~10 min on one core, ice where LC100 has no class from RGI 6.0 and Natural Earth; trips match the sample. notes/T-066.md.
 - T-036 [P2] Unreached river water on canoe starts. Done 2026-11-05: river water no open step crosses (lines in the next cell, unrunnable rivers, ponds) is now a dead-end canoe node, entered at 5 km/h, left only to the shore; dark chains gone, K trips unchanged. notes/T-036.md.
 - T-071 [P1] Upstream paddling and carrying speeds. Done 2026-11-05: upstream max(p - 0.4 v, 2.5 km/h) (was 0.6, 1.5), 3.0 km/h on a huge river, from recorded upstream crews (2.5-3.5 km/h) and bank currents; carry x2 kept. Missouri trip carried 62% to 45%. notes/T-071.md.

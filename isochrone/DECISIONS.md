@@ -5,6 +5,11 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Corridors count a re-chosen tree over land** (T-056, notes/T-056.md): a land node takes,
+  among near-equal land parents, the one most trips pass through when each trip is spread over
+  routes within 3% (time), keeping every tree route within 1% of the fastest. The search's own
+  tree bunched sectors into grid-direction spokes and parallel strands whose place is set by
+  speed noise. Costs about 2-3x the old counting time; the search and time map are unchanged.
 - **Land danger as designed** (T-042, docs/hazard.md section 8; Anita): OSM wells, springs and
   villages count as water on today's map ("we can do well/spring/village as water"); each place
   takes the kinder of January and July ("more intuitive"); a path stops under 1% survival on land

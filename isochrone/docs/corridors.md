@@ -12,14 +12,27 @@ Where many trips from the start share a route (T-046). Code: `js/corridors.js`, 
 - **The tree.** Each node's predecessor code (`docs/canoe.md` 5) gives its parent: a grid move,
   a transfer between the land and canoe layers, or a river step. A node's count is its own
   weight plus its children's: the area whose routes pass through it.
-- **One pass.** Reached nodes are found by reading the predecessor codes four at a time (most are
-  0), the start as the one parent with no code. Children are counted per node, then leaves are
-  added to their parents, each parent queued once all its children are in (no sort by time).
+- **Near-equal land parents** (T-056). Over open land many routes are within a fraction of a
+  percent of each other, and the search's single fastest parent sends a whole sector of trips
+  down one run of a single move, peeling them off in parallel strands (spokes along the grid
+  directions). So a land node reached by a land move (walked, or carried) may take another land
+  parent: one move back in a direction next to the search's move (one place either side round
+  the 16), settled earlier. First every trip is spread over the near-equal routes: each such node
+  passes its trips to these parents in proportion to (1 - slack / (3% of its time))², slack being
+  the time lost going through the parent (none past 3%). Then each takes the parent most spread
+  trips pass through, among those that keep its route through the tree within 1% of its fastest
+  time; the search's parent always qualifies. Other nodes keep the search's parent. The time map,
+  the hover's route and the search are unchanged; only the counted tree is.
+- **Passes.** Reached nodes are found by reading the predecessor codes four at a time (most are
+  0), the start as the one parent with no code. The shares are found in cell order; the trips are
+  spread leaves first (each node queued once all its children are in, no sort by time), and that
+  order, backwards, puts every node after its parents for the choice; the counts then add up
+  along it.
 - **Lines.** An edge is drawn when its child's count is at least 0.2% of the area reached at
   L10; the same threshold at every level. Strength is log(count / threshold) over
   log(L10 total / threshold) in 8 steps; width and opacity rise with it.
 - **Speed** (T-062, T-064). An edge's speed is the length travelled over its time in the search
-  (time only, no hazard), summed over the edge and up to 6 edges of the same mode each way along
+  (time only, no hazard; a re-chosen land parent's edge, the move's own time), summed over the edge and up to 6 edges of the same mode each way along
   the route (towards the start, and on along the child with the most trips). A river step
   travels the river's own length (meanders included, `rKm` of the canoe layer), so a reach reads
   its model speed, and the window evens out routes that hop between rivers sharing cells. A grid

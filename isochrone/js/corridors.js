@@ -1,7 +1,8 @@
 // Corridors (T-046, docs/corridors.md): where many trips from the start share a route. Each
 // reached land cell is one trip, weighted by its area; a node's count is the area whose route
-// passes through it, summed up the shortest-path tree (the predecessor codes). Edges with a count
-// past a threshold are sent as polylines with a strength, log of the count.
+// passes through it, summed up the shortest-path tree (the predecessor codes, with land parents
+// re-chosen among near-equal ones, T-056). Edges with a count past a threshold are sent as
+// polylines with a strength, log of the count.
 import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_GRID, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
 
@@ -32,9 +33,40 @@ for (let code = 1; code < P_SEED; code++) {
 // Work arrays, grown as needed and shared by every level (counted one at a time). nch is all 0
 // between calls.
 let nch = new Uint8Array(0), stack = new Int32Array(0), flag = new Uint8Array(0), reach = new Int32Array(0);
+let flow = new Float32Array(0), share = new Uint32Array(0), ord = new Int32Array(0), excess = new Float32Array(0);
 function work(M) {
-    if (nch.length < M) { nch = new Uint8Array(M); stack = new Int32Array(M); flag = new Uint8Array(M); reach = new Int32Array(M); }
+    if (nch.length < M) {
+        nch = new Uint8Array(M); stack = new Int32Array(M); flag = new Uint8Array(M); reach = new Int32Array(M);
+        flow = new Float32Array(M); share = new Uint32Array(M); ord = new Int32Array(M); excess = new Float32Array(M);
+    }
 }
+
+// Re-choosing land parents (T-056, docs/corridors.md, notes/T-056.md). The search keeps one fastest
+// parent per node; over open land many routes are within a fraction of a percent of each other, and
+// its tree sends a whole sector of trips down one run of a single move, peeling them off in parallel
+// strands. A land node may instead take a land parent that keeps its route through the tree within
+// NEAR of its fastest time, and takes the one most trips would pass if each trip were spread over the
+// near-equal routes (SPREAD).
+const NEAR = 0.01;     // a route through the tree is at most this share slower than the fastest
+const SPREAD = 0.03;   // a parent's share falls as (1 - slack / (SPREAD x time))², none past it
+// a share q (of 63) back to its slack, as a share of SPREAD x time
+const SLACK = Float32Array.from({ length: 64 }, (_, q) => 1 - Math.sqrt(q / 63));
+// The two cells a knight move passes between (as in search.js): E1 the diagonal step, E0 the step
+// along the long side.
+const E0C = new Int8Array(16), E0R = new Int8Array(16), E1C = new Int8Array(16), E1R = new Int8Array(16);
+for (let k = 8; k < 16; k++) {
+    E1C[k] = Math.sign(MDC[k]); E1R[k] = Math.sign(MDR[k]);
+    E0C[k] = Math.abs(MDC[k]) === 2 ? E1C[k] : 0; E0R[k] = Math.abs(MDR[k]) === 2 ? E1R[k] : 0;
+}
+// Near-equal parents lie in the directions next to the search's move (a route at a bearing between
+// two moves mixes those two): for each move, the moves within WIDE places of it round the 16.
+const WIDE = 1;
+const NEXT = (() => {
+    const byAngle = Array.from({ length: 16 }, (_, k) => k).sort((a, b) => Math.atan2(MDR[a], MDC[a]) - Math.atan2(MDR[b], MDC[b]));
+    const out = new Int8Array(16 * (2 * WIDE + 1));
+    for (let i = 0; i < 16; i++) for (let j = -WIDE; j <= WIDE; j++) out[byAngle[i] * (2 * WIDE + 1) + j + WIDE] = byAngle[(i + j + 16) % 16];
+    return out;
+})();
 
 // The first of the coarser counted levels that holds the whole window L.
 const holding = (L, coarser) => coarser && coarser.find(C => C.corr && (C.wrap ||
@@ -84,36 +116,177 @@ export function count(L, canoe, coarser) {
         }
         par[n] = p;
         if (p < 0) continue;
-        nch[p]++;
         if (pred[p] === P_NONE && !roots.includes(p)) {
             roots.push(p);
             reach[nr++] = p;      // its own turn in this loop sets its par and cnt
         }
     }
+    // the parents of land nodes re-chosen (T-056); ord then holds every node after its children
+    const dtl = old && old.dtl.length >= M ? old.dtl : new Float32Array(M);
+    reparent(L, canoe, par, cnt, nr, dtl);
     // A window holding the start: which nodes' routes go back to it (org 1) and which to a border
     // seed (2). Near the border the seeds often win (a coarse time a little earlier than the fine
     // one), and downstream on a river they win far in; there the coarser level's lines are kept.
     let org = null;
     if (coarser && roots.length) {
         org = new Uint8Array(M);
-        for (let i = 0; i < nr; i++) {
-            let a = reach[i], k = 0;
-            while (!org[a] && par[a] >= 0) { stack[k++] = a; a = par[a]; }
-            let f = org[a];
-            if (!f) { f = pred[a] === P_NONE ? 1 : 2; org[a] = f; }
-            while (k > 0) org[stack[--k]] = f;
+        for (let i = nr - 1; i >= 0; i--) {
+            const n = ord[i], p = par[n];
+            org[n] = p >= 0 ? org[p] : pred[n] === P_NONE ? 1 : 2;
         }
     }
     if (coarser) total += edgeFlux(L, canoe, coarser, cnt, par, org);
-    // leaves first: a node is added to its parent once all its children are in
-    let sp = 0;
+    for (let i = 0; i < nr; i++) { const n = ord[i], p = par[n]; if (p >= 0) cnt[p] += cnt[n]; }
+    L.corr = { par, cnt, total, nr, org, dtl };
+    return L.corr;
+}
+
+// T-056: re-choose the parents of land nodes reached by a land grid move (walked, or carried on a
+// canoe start); every other node keeps the search's parent. A node's candidates are the land cells
+// one move back in the directions next to the search's move (NEXT) settled earlier (smaller
+// weight, so the links never loop); the slack of one is the time lost going through it,
+// t[u] + move - t[v]. Time, not weight: the budget is on time, and a land hazard on the moves
+// (T-067) would leave it unchanged. The move's time must match the search's land move.
+// 1. In cell order, each node's share for each candidate, (1 - slack / (SPREAD x t[v]))², kept as
+//    6 bits a candidate in `share` (the search's parent always gets one).
+// 2. Leaves first, the trips spread: each node passes its own and its children's to its candidates
+//    by share, or all to its one parent. The order they are passed in is kept (ord).
+// 3. That order backwards (every node after its candidates), each node takes the candidate with the
+//    most trips among those whose route through the tree stays within NEAR x t[v] of the fastest:
+//    excess, the time a node's tree route loses, plus the slack (read back from the share) is at
+//    most that. The search's parent always qualifies.
+// dtl gets each node's link time: the move's own when the parent changed.
+function reparent(L, canoe, par, own, nr, dtl) {
+    const { W, H, grid, wrap, dxKm, dyKm } = L;
+    const { t, w, pred } = L.res;
+    const maxH = cfg.maxHours, inv = cfg.inv, f = canoe ? cfg.carry : 1;
+    const N = W * H, NW = 2 * WIDE + 1;
+    let sk = L.stepKm16;      // move lengths by the row moved from, km, as the search has them
+    if (!sk) {
+        sk = L.stepKm16 = new Float32Array(H * 16);
+        for (let r = 0; r < H; r++) for (let k = 0; k < 16; k++) {
+            const r2 = r + MDR[k];
+            if (r2 < 0 || r2 >= H) continue;
+            const dx = MDC[k] * (dxKm[r] + dxKm[r2]) * 0.5, dy = MDR[k] * dyKm;
+            sk[r * 16 + k] = Math.sqrt(dx * dx + dy * dy);
+        }
+    }
+    const off = new Int32Array(16), off0 = new Int32Array(16), off1 = new Int32Array(16);
+    for (let k = 0; k < 16; k++) {
+        off[k] = MDR[k] * W + MDC[k];
+        off0[k] = (MDR[k] - E0R[k]) * W + MDC[k] - E0C[k];     // the cells a knight move passes, back from v
+        off1[k] = (MDR[k] - E1R[k]) * W + MDC[k] - E1C[k];
+    }
+    // the cell one move k back from v (row r, column c), -1 off the level; away from the edges v - off[k]
+    const back = (v, r, c, k) => {
+        const ru = r - MDR[k];
+        if (ru < 0 || ru >= H) return -1;
+        let cu = c - MDC[k];
+        if (cu < 0 || cu >= W) { if (!wrap) return -1; cu = (cu + W) % W; }
+        return ru * W + cu;
+    };
+    // the time of land move k from u (row ru) into v (speed gv); -1 when a knight move passes water
+    const move = (u, ru, v, k, gv, inner) => {
+        if (k < 8) return sk[ru * 16 + k] * (inv[grid[u]] + inv[gv]) * 0.5 * f;
+        let e0, e1;
+        if (inner) { e0 = grid[v - off0[k]]; e1 = grid[v - off1[k]]; }
+        else {
+            const cu = u - ru * W;
+            e0 = grid[(ru + E0R[k]) * W + (cu + E0C[k] + W) % W]; e1 = grid[(ru + E1R[k]) * W + (cu + E1C[k] + W) % W];
+        }
+        if (!e0 || !e1) return -1;
+        return sk[ru * 16 + k] * (inv[grid[u]] + inv[gv] + inv[e0] + inv[e1]) * 0.25 * f;
+    };
+    // 1. shares, and the children each node waits for in 2 (nch, back to 0 by its end)
+    for (let i = 0; i < nr; i++) {
+        const v = reach[i], p = par[v];
+        flow[v] = own[v]; share[v] = 0;
+        if (p < 0) continue;
+        const code = pred[v], gv = v < N ? grid[v] : 0;
+        if (!gv || code < P_GRID || code >= P_GRID + 16) { nch[p]++; continue; }
+        const wv = w[v], tv = t[v], r = (v / W) | 0, c = v - r * W, iv = inv[gv];
+        const lim = SPREAD * tv, isc = 1 / lim;
+        const k0 = (code - P_GRID) * NW;
+        const inner = r >= 2 && r < H - 2 && c >= 2 && c < W - 2;
+        let sh = 0;
+        for (let j = 0; j < NW; j++) {
+            const k = NEXT[k0 + j];
+            const u = inner ? v - off[k] : back(v, r, c, k);
+            if (u < 0) continue;
+            const gu = grid[u];
+            if (!gu) continue;
+            if (!(w[u] < wv) || (canoe && !(t[u] <= maxH))) continue;
+            let m;
+            if (k < 8) m = sk[(r - MDR[k]) * 16 + k] * (inv[gu] + iv) * 0.5 * f;
+            else if (inner) {
+                const e0 = grid[v - off0[k]], e1 = grid[v - off1[k]];
+                if (!e0 || !e1) continue;
+                m = sk[(r - MDR[k]) * 16 + k] * (inv[gu] + iv + inv[e0] + inv[e1]) * 0.25 * f;
+            } else {
+                m = move(u, r - MDR[k], v, k, gv, false);
+                if (m < 0) continue;
+            }
+            const slack = t[u] + m - tv;
+            let q = 63;
+            if (slack > 0) {
+                if (slack >= lim) { if (u !== p) continue; q = 1; }
+                else { const e = 1 - slack * isc; q = ((63 * e * e + 0.5) | 0) || 1; }
+            }
+            sh |= q << (6 * j);
+            nch[u]++;
+        }
+        share[v] = sh;
+        if (!sh) nch[p]++;
+    }
+    // 2. spread, leaves first
+    let sp = 0, no = 0;
     for (let i = 0; i < nr; i++) { const n = reach[i]; if (nch[n] === 0) stack[sp++] = n; }
     while (sp > 0) {
-        const n = stack[--sp], p = par[n];
-        if (p >= 0) { cnt[p] += cnt[n]; if (--nch[p] === 0) stack[sp++] = p; }
+        const v = stack[--sp], p = par[v];
+        ord[no++] = v;
+        if (p < 0) continue;
+        const sh = share[v], fv = flow[v];
+        if (sh === 0) { flow[p] += fv; if (--nch[p] === 0) stack[sp++] = p; continue; }
+        let sum = 0;
+        for (let j = 0; j < NW; j++) sum += (sh >>> (6 * j)) & 63;
+        const r = (v / W) | 0, c = v - r * W, k0 = (pred[v] - P_GRID) * NW;
+        const inner = r >= 2 && r < H - 2 && c >= 2 && c < W - 2;
+        const q = fv / sum;
+        for (let j = 0; j < NW; j++) {
+            const s = (sh >>> (6 * j)) & 63;
+            if (!s) continue;
+            const k = NEXT[k0 + j];
+            const u = inner ? v - off[k] : back(v, r, c, k);
+            flow[u] += q * s;
+            if (--nch[u] === 0) stack[sp++] = u;
+        }
     }
-    L.corr = { par, cnt, total, nr, org };
-    return L.corr;
+    // 3. choose, parents first
+    for (let i = no - 1; i >= 0; i--) {
+        const v = ord[i], p = par[v];
+        if (p < 0) { dtl[v] = 0; excess[v] = 0; continue; }
+        const sh = share[v];
+        if (!sh) { dtl[v] = t[v] - t[p]; excess[v] = excess[p]; continue; }
+        const tv = t[v], k0 = (pred[v] - P_GRID) * NW;
+        const r = (v / W) | 0, c = v - r * W;
+        const inner = r >= 2 && r < H - 2 && c >= 2 && c < W - 2;
+        const lim = SPREAD * tv, room = NEAR * tv;
+        let best = p, bf = flow[p], bs = 0, ps = 0;
+        for (let j = 0; j < NW; j++) {
+            const q = (sh >>> (6 * j)) & 63;
+            if (!q) continue;
+            const k = NEXT[k0 + j];
+            const u = inner ? v - off[k] : back(v, r, c, k);
+            const slack = lim * SLACK[q];
+            if (u === p) { ps = slack; continue; }
+            if (!(flow[u] > bf) || excess[u] + slack > room) continue;
+            best = u; bf = flow[u]; bs = slack;
+        }
+        if (best === p) { excess[v] = excess[p] + ps; dtl[v] = t[v] - t[p]; continue; }
+        excess[v] = excess[best] + bs;
+        par[v] = best;
+        dtl[v] = tv - t[best] + bs;
+    }
 }
 
 // A window only holds the trips that end inside it. The trips that leave it are the coarser
@@ -225,8 +398,8 @@ const SMOOTH = 6;
 // km/h past a class edge before a line is cut for speed (lines())
 const HYST = 0.4;
 function edgeSpeeds(L, canoe, nk, kept, mode) {
-    const { par, cnt } = L.corr;
-    const { t, pred } = L.res;
+    const { par, cnt, dtl } = L.corr;
+    const { pred } = L.res;
     const W = L.W, N = W * L.H, cn = canoe ? L.cn : null;
     const idx = new Map();
     for (let i = 0; i < nk; i++) idx.set(stack[i], i);
@@ -236,7 +409,7 @@ function edgeSpeeds(L, canoe, nk, kept, mode) {
         const n = stack[i], p = par[n], code = pred[n];
         md[i] = mode(n);
         if (kept(p)) up[i] = idx.get(p);
-        const d = t[n] - t[p];
+        const d = dtl[n];
         if (!(d > 0) || (FLIP[code] && DC[code] === 0 && DR[code] === 0)) continue;
         const cell = n < N ? n : cn.cellOf[n - N], r = (cell / W) | 0;
         let len = -1;
@@ -245,7 +418,12 @@ function edgeSpeeds(L, canoe, nk, kept, mode) {
             if (pc < 0 || pc >= W) pc = (pc + W) % W;
             len = riverKm(cn, (r - DR[code]) * W + pc, cell, code, d);
         }
-        if (len < 0) len = Math.hypot(DC[code] * (L.dxKm[r] + L.dxKm[r - DR[code]]) * 0.5, DR[code] * L.dyKm);
+        if (len < 0) {
+            // a land move's offset from the cells, as its parent may not be the search's (reparent)
+            let dc = DC[code], dr = DR[code];
+            if (code < P_XFER && p < N) { const pr = (p / W) | 0; dr = r - pr; dc = cell - r * W - (p - pr * W); if (dc > 2) dc -= W; else if (dc < -2) dc += W; }
+            len = Math.hypot(dc * (L.dxKm[r] + L.dxKm[r - dr]) * 0.5, dr * L.dyKm);
+        }
         km[i] = len; dt[i] = d;
     }
     for (let i = 0; i < nk; i++) {
