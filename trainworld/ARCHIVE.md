@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2495 Focus pool memory during a load (2026-11-05, agent focusmem, tree): one solving worker, no aux of its own, ended once the main pool's estimates catch up; the table's columns read in place. Real save, 2 workers: peak 3.93 -> 3.52 GB, first figures 21.6 -> 19.5 s, final 109 -> 88 s; figures identical. T-2508. notes/T-2495.md.
+- T-2500 Selected zone's graph during a load (2026-11-05, agent focusmem, tree): the city view hid everything under its first rows while the zone showed a loading bar; now its Trips within and graph show with its figures. All of Japan, Tokyo's graph 874 -> 193 s. notes/T-2495.md.
 - T-2384 Drives view removed (2026-11-05, agent drives, tree): DRIVES_FEATURE, map/driveArcs.ts, game/drives.ts, the client's driveArcs query, the sums and worker messages, and the sim's drive_squares, drive_base_day and drive_rail_day with their two files all gone; market drives stay; settled rail trips unchanged. Closes T-1471's removal. notes/T-2360.md.
 - T-2459 Selected zone's cluster ahead during a load (2026-11-05, agent loadfix, tree): with the focus pool on the zone in view, the city view's zone's cluster goes first; all of Japan, Okinawa selected 842 -> 13 s, the clock 839 -> 160 s; settled figures identical. T-2500. notes/T-2459.md.
 - T-2484 Focus pool takes the selected zone next (2026-11-05, agent loadfix): not built; on the Tokyo save the focus pool finishes Tokyo at 25 s and Seoul already shows at 27 s from the main pool, so a second focus solve could not be sooner. notes/T-2459.md.
