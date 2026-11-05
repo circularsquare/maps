@@ -244,12 +244,17 @@ export function headwayShown(id: LineId): [number, number, number] | null {
 /** The headway limits (0 is no service) and the step from one headway to the next (T-1872): to the
  * whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; with `minutes` 5
  * (shift-click, T-1888) to the multiple of 5, so 7 goes to 5 or 10 and 5 to 10 or the 1-minute limit. From no service,
- * plus gives 15 minutes and minus 5; minus at the 1-minute limit gives no service. */
+ * plus gives 15 minutes and minus 5; minus at the 1-minute limit gives no service. From 1 hour up
+ * the step is a multiple of 15 minutes (T-2519). The cap is 4 hours, the shortest stretch of one
+ * demand level in the day (20:00 to 24:00, `level_stretches`): the timetable lays at least one
+ * departure in each stretch, so a longer headway would run more trains than it asks for. */
 export const HEADWAY_MIN_S = 60;
-export const HEADWAY_MAX_S = 7200;
+export const HEADWAY_MAX_S = 14400;
+const LONG_HEADWAY_S = 3600, LONG_STEP_MIN = 15;
 export function nextHeadway(s: number, dir: number, minutes = 1): number {
   if (s <= 0) return dir > 0 ? 900 : 300;
-  const k = Math.max(1, minutes), m = s / 60 / k, near = Math.round(m), whole = Math.abs(m - near) < 1e-6;
+  const long = dir > 0 ? s >= LONG_HEADWAY_S : s > LONG_HEADWAY_S;
+  const k = Math.max(long ? LONG_STEP_MIN : 1, minutes), m = s / 60 / k, near = Math.round(m), whole = Math.abs(m - near) < 1e-6;
   if (dir > 0) return Math.min(HEADWAY_MAX_S, (whole ? near + 1 : Math.ceil(m)) * k * 60);
   if (s <= HEADWAY_MIN_S) return 0;
   return Math.max(HEADWAY_MIN_S, (whole ? near - 1 : Math.floor(m)) * k * 60);

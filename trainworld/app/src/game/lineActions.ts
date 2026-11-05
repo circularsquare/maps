@@ -23,9 +23,21 @@ function lineMates(city: CityId | null): LineInput[] {
   });
 }
 
-/** T-813: "Line m" with m the lowest number no line in the city has as its name. */
+/** T-2526: the lines with any stop in the city's zone, whatever their home; a line with no stops
+ * yet counts in the city being viewed. */
+function linesStoppingIn(city: CityId | null): LineInput[] {
+  const w = world.value;
+  if (!w) return [];
+  const at = stationsById(w);
+  return w.save.lines.filter((l) => {
+    if (!l.stops.length) return viewedZone.peek() === city;
+    return l.stops.some((n) => { const s = at.get(n); return !!s && stationZone(s) === city; });
+  });
+}
+
+/** T-813, T-2526: "Line m" with m the lowest number no line stopping in the city has as its name. */
 export function nextLineName(city: CityId | null): string {
-  const taken = new Set(lineMates(city).map((l) => l.name));
+  const taken = new Set(linesStoppingIn(city).map((l) => l.name));
   for (let k = 1; ; k++) if (!taken.has(`Line ${k}`)) return `Line ${k}`;
 }
 

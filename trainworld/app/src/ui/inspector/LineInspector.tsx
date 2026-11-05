@@ -749,7 +749,7 @@ function RailLineInspector({ id }: { id: string }) {
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />{editingStops ? "Done editing stops" : "Edit stops"}</button>
+        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />Edit stops</button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>

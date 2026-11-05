@@ -838,8 +838,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   Resources used by count schedules keep continuous delays so rounding cannot make the solve
   oscillate. Legacy saves preserve their original frequencies until a schedule is edited.
 - **Headway mode** (T-625, `LineData::auto`, `Op::AutoTrains`): instead of a count per level a
-  line can keep a headway per level, in seconds (0 is no service; the panel offers 1 minute to 2
-  hours). Its counts are then derived: the fewest trains with round trip over headway, the round
+  line can keep a headway per level, in seconds (0 is no service; the panel offers 1 minute to 4
+  hours, `HEADWAY_MAX_S`: the day's shortest stretch of one demand level is 4 hours and the
+  timetable lays at least one departure in each, so a longer headway would run more trains than it
+  asks for; T-2519). Its counts are then derived: the fewest trains with round trip over headway, the round
   trip being the capacity-adjusted one with running, dwell, turnaround and waiting (`auto_trains`;
   the real headway may run 0.5% over the chosen one, so a few seconds of drift in the round trip
   buy no train). At the track's limit the count is clamped (T-679, `clamp_auto`): when the headway

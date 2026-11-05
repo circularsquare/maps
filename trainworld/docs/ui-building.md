@@ -79,7 +79,8 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
 on the map while the tool is on, in the selection bar's box and place: top centre, lower on narrower
 maps as the selection bar goes (`.blueprint-bar` rules), and on a phone the map's bottom edge. Only one
 of the three bars shows at a time; the other modes have none. The track and station bars have a 2 px top
-edge in their mode's colour (`CLICK_MODE_COLOURS`, as the aura's) [T-2446].
+edge in their mode's colour (`CLICK_MODE_COLOURS`, as the aura's) [T-2446]. Their text is 14 px, as
+the panels', with the price in 12 px (the map element's own 12 px does not reach them) [T-2522].
 
 - **The track bar**, two rows. First "Level" (muted), the seven level buttons, the size they had in
   the Build tab, tinted in their Level colours, the chosen one solid with a dark outline, a light one

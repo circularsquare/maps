@@ -205,9 +205,10 @@ purpose filter the purpose drawn is ringed in the bar.
 ### New line and the line editor
 
 - **New line** [T-109 to T-112] selects an empty zero-train line, enters stop editing
-  ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line in the same
-  city has as its name (a line's city is its first stop's zone, as the City column; a line with no
-  stops yet counts in the city being viewed), so a renamed line frees its number. The line's colour
+  ([ui-building.md](ui-building.md)) and focuses its `Line m` name, text selected [T-813]; after a finger's tap the name is not focused, so the on-screen keyboard stays down [T-1756]. m is the lowest number no line stopping in the
+  same city has as its name (any stop in the city's zone counts, so an intercity line from elsewhere
+  takes its number there too; a line with no stops yet counts in the city being viewed), so a renamed
+  line frees its number. The line's colour
   is the `LINE_PALETTE` colour farthest from the lines near it, ties at random [T-856, T-1278]; a
   city's first four lines take only red, blue, green, orange, purple or yellow, and later ones
   favour those six (their distance counted 1.3 times) [T-1894]; once its stops are picked, a colour
@@ -246,7 +247,7 @@ purpose filter the purpose drawn is ringed in the bar.
   ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
   there for touch, where dragging rows is not; a bus line's panel has the same row. The row
   starts 6 px below the title, which covers that much of whatever follows it.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover), Copy line (duplicates route and settings with no trains, T-1161;
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; it keeps its label and shows pressed while stops are being edited, T-2525), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the
   two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
@@ -270,8 +271,8 @@ purpose filter the purpose drawn is ringed in the bar.
   copied from; each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
-  the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 120
-  minutes; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872,
+  the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 240
+  minutes; from 60 minutes up a click moves to the multiple of 15 above or below; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872, T-2519,
   `nextHeadway`]; Shift-click steps to the multiple of 5 minutes (7 goes to 5 or 10, 5 to 10 or the
   1-minute limit) and Ctrl-click to the multiple of 20, the hover saying "Shift-click for 5 min,
   Ctrl-click for 20 min" [T-1888]; a click on the number types it in minutes) and the trains column the count it gives, 10 px clear of the stepper [T-1159]; while a
