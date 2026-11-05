@@ -77,6 +77,12 @@ Canoe rivers (`docs/canoe.md` 4, layouts in `notes/T-020.md`), into `data/canoe/
 | `tools/canoe/rivers.py` | Stages: `reaches` (RiverATLAS gdb to Q >= 1 reaches), `lakes` (HydroLAKES to an L1 lake/reservoir raster, pour points), `snap` (barriers to reaches), `build` (river steps at L10, L3, L1; GMTED gradient north of 60N), `index` (re-adds the `rivers` key) | ~3.5, 4, 1, 4 min; build peaks ~8 GB |
 | `tools/canoe/rivers_check.py` | `stats`: steps, km and classes per level and continent, read back from the files; `png`: river PNGs `maps/artifacts/isochrone/t020_*.png` | ~1 min each |
 
+Land hazard (`docs/hazard.md`), into `data/hazard/` (gitignored): `tools/hazard/fetch.py`
+(CHELSA, OSM wells/springs/settlements from QLever, ice outlines, into `data/raw/`; ~6 min),
+`tools/hazard/build.py ice|dist|tiles|plot` (ice outlines to L1 north of 60 N ~1 min; distance to
+drinkable water on a 2 km grid ~3 min; the uint8 rate band as `l10.bin.gz`, L3 and L1 tiles and
+`index.json` ~7 min, 39.7 MB; the world PNG `t066_world.png`), one core, peak ~6 GB.
+
 Run with plain `python` (C:\Python39). Raw downloads: `data/raw/` (gitignored); the MAP surface
 is `data/raw/unzipped/2020_walking_only_friction_surface.geotiff` (726 MB), LC100 is
 `data/raw/lc100/` (2.3 GB), GMTED `data/raw/gmted/mn30_grd/` (0.4 GB). RiverATLAS is not kept

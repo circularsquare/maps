@@ -1,8 +1,8 @@
 # Land hazard
 
-**A design for Anita's review (T-042 stage 1, 2026-11-05).** Nothing here is on the page yet; the
-L10 sample, its check trips and how the numbers were reached are in `notes/T-042.md`. Sources and
-the checked numbers: research/friction.md 6.
+**Approved by Anita 2026-11-05** (section 8). The band is built (`data/hazard/`, T-066); the page
+does not read it yet (T-067). The L10 sample, its check trips and how the numbers were reached are
+in `notes/T-042.md`. Sources and the checked numbers: research/friction.md 6.
 
 The search minimises time + K x hazard on every layer (K = 1000 h, SPEC 3), and the hover shows
 survival = exp(-sum of hazard x time) along the chosen path. Water hazard is built
@@ -29,7 +29,7 @@ same rate over its doubled time.
 |---|---|---|---|
 | **Thirst** | c (e^(k d) - 1), with d = km to the nearest drinkable water, k = 0.678 / S, c = 1.53e-4 / S, S = days survived walking with 9.5 L in that heat (FM 21-76 table, by mean daily max temperature: 14 days at 16 C and below, 13.5 at 21, 11.5 at 27, 8 at 32, 5.5 at 38, 3.5 at 43, 3 at 49) | The rule is fitted so a straight dry gap between two waters, walked at 25 km a day, has 1% risk when it takes S/2 days and 50% when it takes S days, rising steeply beyond (section 2.1) | The FM 21-76 survival days are measured (Adolph's 1940s desert studies); the 1%-at-half and the 25 km a day are choices. Order of magnitude, as the rest. |
 | **Cold** | 0 while the night low (mean daily min of the month) is -10 C or above; then 1e-5 x 10^((-10 - Tmin) / 10): 1e-4 at -20, 1e-3 at -30, capped at 1e-2 from -40 | A guess; no usable source found | Rough. With the season rule below it fires almost only on ice and the highest ground. |
-| **Ice** | 1e-3 on an ice pixel (LC100 snow and ice; no class north of 80 N on land), and ice is never drinkable water | Greenland ice-sheet teams with polar gear were evacuated ~3% of crossings 2010-12 (~1e-4 an hour); without polar gear about ten times that | Rough; thirst does most of the work far into an ice sheet. |
+| **Ice** | 1e-3 on an ice pixel (LC100 snow and ice; where LC100 has no class, north of 80 N and on some Arctic islands, inside an ice outline), and ice is never drinkable water | Greenland ice-sheet teams with polar gear were evacuated ~3% of crossings 2010-12 (~1e-4 an hour); without polar gear about ten times that | Rough; thirst does most of the work far into an ice sheet. |
 | **Altitude** | 0 below 3,000 m; 10^(-6 + (z - 3000) / 1000): 1e-6 at 3,000 m, 1e-5 at 4,000, 1e-4 at 5,000, 1e-3 at 6,000, capped at 1e-2 from 7,000 | Nepal trekkers (~1e-6 an hour, 3,000-5,500 m, lodges and groups); Himalayan climbers above base camp (1e-5 to 4e-4); summiteers above 8,000 m (3e-4 to 1e-2) | Order of magnitude; z is the pixel's mean height (GMTED, 1 km). |
 
 Not factors: heat with water at hand (~1e-5 an hour at 50 C, Hajj 2024; small beside thirst),
@@ -91,7 +91,7 @@ extra: the build makes both months anyway.
 | Rivers | RiverATLAS v1.0 reach lines with `dis_m3_pyr`, and `dis_m3_pmn` for Q >= 1 (data/raw/rivers_work/all_lines.npz and reaches.npz, kept from the canoe build) | CC BY 4.0 |
 | Lakes | HydroLAKES (rivers_work/lakes_l1.npy) | CC BY 4.0 |
 | Wells, springs, settlements | OSM from QLever's planet endpoint (data/raw/osm_water/, 4.7 M points) | ODbL |
-| Ice | LC100 2019 class 70 (data/surface/lc_class.tif) | as LC100 |
+| Ice | LC100 2019 class 70 (data/surface/lc_class.tif); where LC100 has no class, RGI 6.0 regions 03, 05, 07, 09 (OGGM's open mirror) and Natural Earth 10 m glaciated areas (data/raw/ice/) | as LC100; NE public domain; RGI CC BY 4.0 |
 | Height | GMTED2010 mean (data/surface/elev.tif) | public domain |
 
 The info panel credits CHELSA (Karger et al. 2017, 2021) and OSM when the band is on. For 10,000
@@ -108,17 +108,16 @@ whole 128-day limit they add under 0.1%. 241-255 are unused.
 
 | File | Level | Size (gzip) |
 |---|---|---|
-| `data/hazard/l10.bin.gz` | L10 world, 4320 x 1740 | ~1.1 MB |
-| `data/hazard/l3/<r>_<c>.bin.gz` | L3, 5° tiles | ~11 MB |
-| `data/hazard/l1/<r>_<c>.bin.gz` | L1, 5° tiles | ~55 MB |
+| `data/hazard/l10.bin.gz` | L10 world, 4320 x 1740, row-major from the north-west | 1.1 MB |
+| `data/hazard/l3/<r>_<c>.bin.gz` | L3, 5° tiles of 200 x 200 | 9.3 MB, 1,128 tiles |
+| `data/hazard/l1/<r>_<c>.bin.gz` | L1, 5° tiles of 600 x 600 | 29.3 MB, 1,140 tiles |
+| `data/hazard/index.json` | grid, coding, the tiles per level (`levels["1"].tiles`, ids r x 72 + c), as `data/tiles/index.json` | |
 
-About 67 MB in all, against 135 MB of speed tiles (measured as one gzip stream per level over
-the whole world, before tiling; tiles add a little). The L1 band is the big one; coarser steps
-(20 a decade) or T-016's tighter encoding would cut it before publishing.
-
-L0.1 windows read the L1 pixel under each cell. A separate band, not a byte inside the speed
-files: an era (T-012) or a season switch swaps the hazard files and leaves the speeds alone, and a
-tile with no hazard anywhere is not written (all 0).
+39.7 MB in all, against 135 MB of speed tiles. Each file is gzip of one uint8 band, as the speed
+tiles. L0.1 windows read the L1 pixel under each cell. A separate band, not a byte inside the
+speed files: an era (T-012) or a season switch swaps the hazard files and leaves the speeds
+alone. A tile with no hazard anywhere is not written (all 0): the reader treats a missing tile
+as 0.
 
 **Coarse levels**: an L3 or L10 cell's rate is the time-weighted mean of its L1 land pixels'
 rates, weights the pixels' time per metre (the same weights as the cell's speed, so a coarse
@@ -168,16 +167,29 @@ Riyadh reaches 21 cells.
 
 ## 6. Build
 
-`tools/hazard/build.py` (T-066, from `notes/T-042/build_l10.py`): the distance to water on the 2
-km grid (~5 min, ~6 GB), then the rate per L1 pixel strip by strip, coded and written as L1 tiles,
-and the time-weighted L3 tiles and L10 grid from the same strips (~25 min on one core). The
-sample already runs the second step over every L1 pixel of the world.
+Plain `python` from the maps root, one core:
+
+    python isochrone/tools/hazard/fetch.py           # CHELSA, OSM water points, ice outlines -> data/raw/  (~6 min)
+    python isochrone/tools/hazard/build.py ice       # ice outlines north of 60 N to the L1 grid             (~15 s)
+    python isochrone/tools/hazard/build.py dist      # distance to drinkable water, 2 km grid                 (~3 min, 5.7 GB)
+    python isochrone/tools/hazard/build.py tiles     # rates per L1 pixel -> data/hazard/                     (~7 min, 5.2 GB)
+    python isochrone/tools/hazard/build.py plot      # maps/artifacts/isochrone/t066_world.png
+
+`tiles` works one row of 5° tiles (600 L1 rows) at a time: the rate per L1 pixel, coded into the
+L1 tiles, and the time-weighted L3 tiles and L10 rows from the same strip. Land is the speed
+tiles' land (MAP's, small water as land), and a coarse cell keeps its rate only where the speed
+level has land (a quarter of its pixels). `data/hazard/index.json` has the grid, the tiles that
+exist per level and the coding, as `data/tiles/index.json` does. The distance grid covers the
+same land (small water included), so every land pixel has a distance. Work files:
+`data/raw/hazard_work/` (`ice_l1.npy`, `dist_g2.npy`, ~0.5 GB), kept for a rebuild.
 
 ## 7. Known approximations
 
-- North of 80 N LC100 has no class, and land there counts as ice (as `docs/surface.md` walks
-  it), so ice-free Peary Land and north Ellesmere read as ice. The world build should take ice
-  there from a real ice mask (GIMP for Greenland, RGI for glaciers).
+- Where LC100 has no class (north of 80 N, Svalbard, some Arctic islands), ice is the union of
+  RGI 6.0's glaciers and Natural Earth's 10 m glaciated areas. RGI leaves out the Greenland ice
+  sheet, so its northern edge comes from NE, generalised to a few km; GIMP's mask would be
+  sharper but is behind an Earthdata login (NSIDC). NE also draws some caps a little wider than
+  RGI does.
 - A coarse cell's rate is a time-weighted mean, so a valley route past glaciers pays some of the
   glaciers' rate at L10 and L3 (Leh to Manali); L1 windows correct it.
 - Salt lakes outside hot deserts count as water; seasonal rivers outside hot deserts count all
@@ -186,21 +198,18 @@ sample already runs the second step over every L1 pixel of the world.
   danger in its middle rather than at its far end; the total over a straight gap is right, a
   path that wanders inside a gap pays more than the real walker would.
 
-## 8. For Anita
+## 8. Anita's decisions (2026-11-05, DECISIONS.md)
 
-Each changes what the map is; the recommendation is what the design above assumes.
+1. **Today's wells, springs and villages are water** on today's map (with roads, as
+   infrastructure); 10,000 BC drops them. With them the Sahara is crossable along wells
+   (Tamanrasset to Agadez 99%) and only its emptiest parts go unpainted.
+2. **Season**: the kinder of January and July at each place. One month for the whole map would
+   be a later switch, a second set of hazard files.
+3. **Unreached land**: survival under 1% stops a path on land as on water, so Greenland's ice and
+   the empty deserts stay unpainted on walking starts.
+4. **The traveller** as in section 1; disease (malaria for an outsider in West Africa) would
+   change the tropics most and depends on who travels.
 
-1. **Today's wells, springs and villages as water.** With them, the Sahara is crossable along
-   wells (Tamanrasset to Agadez 99%) and only its emptiest parts go unpainted; without them, the
-   Sahara and Arabia away from big rivers are out of reach on foot. Recommended: count them on
-   the "today" map, with roads (they are infrastructure), and drop them in 10,000 BC.
-2. **Season**: the kinder of January and July at each place (Sahara in winter, Siberia in
-   summer), recommended; or one month for the whole map, which makes Siberia in January or the
-   Sahara in July the answer. A switch later costs only a second set of hazard files.
-3. **Unreached land on walking starts**: survival under 1% stops a path, so Greenland's ice and
-   the empty deserts stay unpainted, as the open ocean does for the canoe. Recommended: keep it
-   the same rule on land and water.
-4. **Who travels**: a competent walker with water bottles and clothes for the place, no polar
-   gear or stove, and no disease, violence or background risk counted. Recommended as is; disease
-   (malaria for an outsider in West Africa) would change the tropics more than anything here, and
-   depends on who the traveller is.
+Named deserts as areas (Anita: fine "if it's easier and has similar effect") are not used: the
+distance to water already covers them and every dry gap outside them. A desert name could later
+help the hover say why survival drops.

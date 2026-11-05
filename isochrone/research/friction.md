@@ -389,6 +389,12 @@ trips. The land band takes the kinder of January and July at each place (docs/ha
 - **OSM water points** (wells `man_made=water_well` 369 k, springs `natural=spring` 284 k,
   settlements `place=city|town|village|hamlet` 4.0 M; QLever's OSM planet endpoint, ODbL, credit
   "© OpenStreetMap contributors"), data/raw/osm_water/: the "today" water of the thirst rule.
+- **Ice where LC100 has no class** (north of 80 N, Svalbard): RGI 6.0 regions 03, 05, 07, 09
+  (RGI Consortium 2017, CC BY 4.0; from OGGM's open mirror
+  https://cluster.klima.uni-bremen.de/~oggm/rgi/www.glims.org/RGI/rgi60_files/, as rgidata.org
+  sends RGI 7 to NSIDC, which needs an Earthdata login) and Natural Earth 10 m glaciated areas
+  (public domain) for the Greenland ice sheet, which RGI leaves out. GIMP's ice mask (NSIDC-0714)
+  needs the same login.
 
 ---
 

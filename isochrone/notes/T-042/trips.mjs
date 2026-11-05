@@ -1,6 +1,6 @@
 // T-042 sample: walking check trips over the real L10 grid with a land hazard band (docs/hazard.md).
 // A copy of js/search.js's walking loop with weight = time + K x hazard; js/ itself is unchanged.
-//   node isochrone/notes/T-042/trips.mjs [nat|osm] [K ...]     (from the maps root; -1 = hazard off)
+//   node isochrone/notes/T-042/trips.mjs [world|nat|osm|natjul|osmjul] [K ...]   (from the maps root; -1 = hazard off)
 //   CLUJ=1 ...   also the Cluj reach statistics
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
@@ -19,12 +19,16 @@ const { W, H, dxKm, dyKm } = L, N = W * H;
 const inv = new Float32Array(256).fill(-1);
 for (let v = 1; v < 256; v++) inv[v] = meta.scale / v;
 const variant = process.argv[2] || 'nat';
-const OUT = ROOT + 'data/raw/t042/';
-const codes = new Uint8Array(gunzipSync(readFileSync(OUT + 'hazard_' + variant + '.bin.gz')));
+// 'world' reads the built band (T-066, data/hazard/l10.bin.gz); the others the T-042 sample
+const OUT = ROOT + 'data/raw/t042/', WORLD = variant === 'world';
+const codes = new Uint8Array(gunzipSync(readFileSync(WORLD ? ROOT + 'data/hazard/l10.bin.gz' : OUT + 'hazard_' + variant + '.bin.gz')));
 const rate = new Float32Array(N);
 for (let i = 0; i < N; i++) rate[i] = codes[i] ? Math.pow(10, (codes[i] - 240) / 40) : 0;
 // extra per-cell layers for describing a path (float32, not coded)
-const f32 = (k) => { const b = readFileSync(OUT + 'l10_' + k + '.f32'); return new Float32Array(b.buffer, b.byteOffset, b.length / 4); };
+const f32 = (k) => {
+    if (WORLD) return new Float32Array(N);     // no factor layers in the built band: the breakdown reads 0
+    const b = readFileSync(OUT + 'l10_' + k + '.f32'); return new Float32Array(b.buffer, b.byteOffset, b.length / 4);
+};
 const thirstL = f32('thirst_' + variant), iceL = f32('ice'), altL = f32('alt'), coldL = f32('cold');
 
 const E0C = new Int32Array(16), E0R = new Int32Array(16), E1C = new Int32Array(16), E1R = new Int32Array(16);
