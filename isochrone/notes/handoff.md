@@ -21,9 +21,13 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   notes/T-010/compare.log, ~8 tiles. Done when docs/roads.md and notes/T-010.md exist, stage 2
   filed as T-053, data/raw/osm/ emptied (1.56 GB there now). Settled: add central-america to the
   fetch; keep 100 m road bits for every tile. No world build.
-- Page agent aa378ee8ea1276653 (Sonnet), session 4a6a5ff2: T-037 and T-052 landed (7fdc77b6);
-  now T-063 water paler, then T-061 instant hovers (sent ~13:40). Owns index.html, js/paint.js,
-  js/riverlines.js. Done when both lines are in ARCHIVE.md and t063_*/t061_* screenshots exist.
+- Page agent aa378ee8ea1276653 (Sonnet), session 4a6a5ff2: T-037, T-052 (7fdc77b6), T-063,
+  T-061 (1a85c017), T-062 (7355b831) landed; now T-060 diag / hex looks behind `?look=`. Owns
+  js/paint.js, index.html outside the corridor hover. Done when t060_*.png exist; T-060 stays
+  open for Anita's pick.
+- T-064 corridor speed noise: agent adc57204d733689a3 (Opus), session 4a6a5ff2, started ~14:30.
+  Owns js/corridors.js, docs/corridors.md, the corridor hover. Done when T-064 is in ARCHIVE.md
+  and t064_*.png exist.
 
 ## Long runs
 (none)

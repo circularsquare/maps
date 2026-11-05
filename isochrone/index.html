@@ -185,7 +185,8 @@ async function loadGrid() {
     const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
     const bytes = await new Response(stream).arrayBuffer();
     worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
-                         maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn }, [bytes]);
+                         maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn,
+                         look: ['diag', 'hex'].includes(params.get('look')) ? params.get('look') : 'crisp' }, [bytes]);
     await workerReady;
 }
 

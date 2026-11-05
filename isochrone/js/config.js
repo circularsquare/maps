@@ -2,6 +2,7 @@
 // imported binding can't be assigned from another module.
 export const cfg = {
     bands: null, alpha: 190, maxHours: 1024,
+    look: 'crisp',               // cell look (T-060): crisp, diag or hex; the page's ?look= (js/paint.js)
     inv: null,                   // hours per km for each stored value, -1 for water
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
     // the canoe model (docs/canoe.md 2, 3)
@@ -30,6 +31,7 @@ export const cfg = {
 
 export function setConfig(msg) {
     cfg.bands = msg.bands; cfg.alpha = msg.alpha; cfg.maxHours = msg.maxHours;
+    if (msg.look) cfg.look = msg.look;
     if (msg.canoeBase) cfg.canoeBase = msg.canoeBase;
     cfg.inv = new Float32Array(256).fill(-1);
     for (let v = 1; v < 256; v++) cfg.inv[v] = msg.meta.scale / v;
