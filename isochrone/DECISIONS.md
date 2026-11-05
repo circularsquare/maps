@@ -5,6 +5,11 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Small corridor nodes keep the search's parent** (T-077, notes/T-077.md): a node with fewer
+  spread trips than 2% of the drawing threshold neither spreads nor re-chooses, which skips the
+  share work for 82% of nodes in an L3 desert window; lines change by a few per level. Slack is in
+  the search's weight (time + K x hazard) but the 3% and 1% budgets stay shares of time, so a canoe
+  start's sea hazard does not widen them on land.
 - **Walking starts run the general search** (T-067, notes/T-067.md): with land hazard they need
   time and hazard arrays; the general loop took 1.1-1.5x the walking loop's time at L10, so no
   hazard-carrying copy of the walking loop was written. `solveWalk` stays for hazard off.

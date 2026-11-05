@@ -1,5 +1,5 @@
-// The K check trips (notes/T-005.md, notes/T-006.md): the worker's modules in node over the
-// real L10 data, from the maps root:
+// The K check trips (notes/T-005.md, notes/T-006.md, walking: notes/T-042.md, T-067.md): the
+// worker's modules in node over the real L10 data, with the land danger band, from the maps root:
 //   node isochrone/checks/ktrips.mjs trips -1 0 300 1000   -> each trip at each K (-1: hazard off)
 //   node isochrone/checks/ktrips.mjs time [K]              -> canoe solve times, hazard off and on
 //   ONLY=cyprus ...                                        -> Constanta to Cyprus and Izmir, by edge kind
@@ -14,16 +14,18 @@ globalThis.fetch = async (u) => {
 };
 const imp = (m) => import(pathToFileURL(ROOT + 'js/' + m).href);
 const { cfg, setConfig } = await imp('config.js');
-const { makeLevel, snap } = await imp('levels.js');
+const { makeLevel, snap, setHazard } = await imp('levels.js');
 const { solve, cellTimes, MDC, MDR, P_GRID, P_XFER, P_DOWN, P_UP } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
 const { buildCanoe } = await imp('canoe.js');
+const { loadHazardWorld } = await imp('tiles.js');
 
 const meta = JSON.parse(readFileSync(ROOT + 'data/grid.json', 'utf8'));
-setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: ROOT + 'data/canoe/' });
+setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
 const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 const cell = (meta.north - meta.south) / meta.height;
 const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north, cell, true);
+setHazard(L, await loadHazardWorld());
 const d = await loadWorld(L.W, L.H);
 let t0 = performance.now();
 buildCanoe(L, d, d.sea);
@@ -34,10 +36,10 @@ const lonOf = (c) => L.west + (c + 0.5) * L.cellDeg, latOf = (r) => L.north - (r
 const SH = new Float32Array(256);
 for (let s = 0; s < 256; s++) SH[s] = s <= 20 ? s : 20 + 10 * (Math.min(s, 78) - 20);
 
-async function run(lat, lng) {
+async function run(lat, lng, canoe = true) {
     const s = snap(L, lng, lat, 8);
     const t = performance.now();
-    const res = await solve(L, { idx: [s], w: [0], t: [0], hz: [0] }, alive, true);
+    const res = await solve(L, { idx: [s], w: [0], t: [0], hz: [0] }, alive, canoe);
     return { res, ms: performance.now() - t };
 }
 
@@ -114,6 +116,14 @@ const TRIPS = process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.
     ['Bergen-St John\'s', [60.39, 5.32], [47.56, -52.71]],
     ['Brest-St John\'s', [48.39, -4.49], [47.56, -52.71]],
 ];
+// walking starts, where the land danger decides the route (notes/T-042.md, T-067.md)
+const WALKS = process.env.ONLY ? [] : [
+    ['Tamanrasset-Agadez', [22.79, 5.53], [16.97, 7.99]],
+    ['Tamanrasset-In Salah', [22.79, 5.53], [27.20, 2.47]],
+    ['Cairo-Khartoum', [30.04, 31.24], [15.50, 32.56]],
+    ['Greenland east-Kangerlussuaq', [65.60, -38.20], [67.01, -50.70]],
+    ['Leh-Manali', [34.16, 77.58], [32.24, 77.19]],
+];
 
 const mode = process.argv[2] || 'trips';
 if (mode === 'time') {
@@ -158,6 +168,14 @@ if (mode === 'time') {
                 console.log(`  ${name}: ${(res.t[n] / 8).toFixed(1)} days (${res.t[n].toFixed(0)} h), survival ${(100 * Math.exp(-res.hz[n])).toFixed(1)}%, ` +
                     `paddled ${ds.pad.toFixed(0)} h (${ds.far.toFixed(0)} h past 20 km), carried ${ds.carry.toFixed(0)} h, farthest ${ds.maxOff} km out\n    via ${ds.pts.join(' ')}`);
             }
+        }
+        let from = null, res = null;
+        for (const [name, s, b] of WALKS) {
+            if (s.join() !== from) { from = s.join(); res = (await run(s[0], s[1], false)).res; console.log(`walking from ${from}`); }
+            // the land cell nearest the point, as notes/T-042/trips.mjs
+            const n = snap(L, b[1], b[0], 3);
+            if (n < 0 || !(res.t[n] <= 1024)) { console.log(`  ${name}: not reached`); continue; }
+            console.log(`  ${name}: ${(res.t[n] / 8).toFixed(1)} days (${res.t[n].toFixed(0)} h), survival ${(100 * Math.exp(-res.hz[n])).toFixed(1)}%`);
         }
     }
 }

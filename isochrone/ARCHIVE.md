@@ -1,5 +1,6 @@
 # Archive
 
+- T-077 [P1] Corridors after the windows. Done 2026-11-05: counted once every level is painted, coarse first; slack pays K x hazard; a stale-state bug fixed; windows 1.5-2x faster than T-056, L10 not (target missed); ktrips walks. notes/T-077.md.
 - T-042 [P2] Land hazard band. Done 2026-11-05 in three stages: design approved by Anita (docs/hazard.md), world band (T-066), page (T-067); thirst by distance to water, ice, altitude, cold. notes/T-042.md.
 - T-067 [P2] Land hazard on the page (T-042 stage 3). Done 2026-11-05: walking, carrying and getting in or out pay the band at every level; walking runs the general search (1.1-1.5x); hover survival from 0.5% risk; credits. Trips match node; Cluj +0.1%. notes/T-067.md.
 - T-056 [P3] Corridor rays. Done 2026-11-05: the spokes were the search tree bunching near-equal routes; corridors now count a tree whose land parents are re-chosen by spread trips within 1% of the fastest. Fan spreads by bearing, roads and rivers kept; counting ~2-3x slower. notes/T-056.md.

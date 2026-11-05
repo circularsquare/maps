@@ -21,13 +21,17 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - Uncommitted and others': docs/hazard.md, notes/T-042/, research/friction.md (T-042 agent).
 
 ## In flight
-- T-042 approved by Anita (DECISIONS 2026-11-05). T-066 hazard world build: agent
-  a41134b19636e2f86 (Opus), resumed; owns tools/hazard/, docs/hazard.md. Then T-067 (worker and
-  page read the band) for a fresh agent.
+- T-066 (bf42d32e) and T-067 (535656b3) landed: land danger on the page, T-042 archived.
+  New on-page strings shown to Anita (survival on walking hovers from 0.5% risk; info panel
+  danger paragraph and credits).
+- T-077 corridors after windows + faster counting + hazard in reparent slack + ktrips walking:
+  agent adc7a052a9841e8eb (Opus, launched after 535656b3). Owns js/corridors.js, js/session.js,
+  checks/ktrips.mjs, docs/corridors.md.
   CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
 - T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
-- T-056 corridor rays along grid directions: agent a4584a872f25fa41a (Opus). Owns js/corridors.js,
-  docs/corridors.md; time map must stay identical.
+- T-056 landed (e3730347): corridors re-chosen tree, counting 2-4x slower. T-077 (count after
+  windows paint, speed up `reparent`) waits for T-067 to free js/session.js; fresh agent (the
+  T-056 one is at ~455k tokens).
 - T-036 landed (2f0b985b): dead-end river water. T-074 river water paler: page agent
   a188a1156511192ef (Sonnet), owns js/paint.js, the flag in js/canoe.js.
 

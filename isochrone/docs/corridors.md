@@ -1,7 +1,9 @@
 # Corridors
 
 Where many trips from the start share a route (T-046). Code: `js/corridors.js`, called from
-`js/session.js` after each level is posted, so it never holds up the paint.
+`js/session.js` once every level of the view is solved and painted, L10 first and then each window
+coarse to fine (a window's count takes the coarser counts at its edge). A newer click or view stops
+the counting between levels; the next view counts what is left (T-077).
 
 ## Counting
 
@@ -17,17 +19,21 @@ Where many trips from the start share a route (T-046). Code: `js/corridors.js`, 
   down one run of a single move, peeling them off in parallel strands (spokes along the grid
   directions). So a land node reached by a land move (walked, or carried) may take another land
   parent: one move back in a direction next to the search's move (one place either side round
-  the 16), settled earlier. First every trip is spread over the near-equal routes: each such node
-  passes its trips to these parents in proportion to (1 - slack / (3% of its time))², slack being
-  the time lost going through the parent (none past 3%). Then each takes the parent most spread
-  trips pass through, among those that keep its route through the tree within 1% of its fastest
-  time; the search's parent always qualifies. Other nodes keep the search's parent. The time map,
-  the hover's route and the search are unchanged; only the counted tree is.
+  the 16), reached and settled earlier. First every trip is spread over the near-equal routes:
+  each such node passes its trips to these parents in proportion to (1 - slack / (3% of its
+  time))², slack being the weight lost going through the parent, time plus K x hazard as the
+  search costs the move (T-077), none past 3%. Then each takes the parent most spread trips pass
+  through, among those that keep its route's weight through the tree within 1% of its time of
+  the fastest; the search's parent always qualifies. A node with fewer spread trips than 2% of
+  the drawing threshold passes them all to the search's parent and keeps it (most nodes; T-077).
+  Other nodes keep the search's parent. The time map, the hover's route and the search are
+  unchanged; only the counted tree is.
 - **Passes.** Reached nodes are found by reading the predecessor codes four at a time (most are
-  0), the start as the one parent with no code. The shares are found in cell order; the trips are
-  spread leaves first (each node queued once all its children are in, no sort by time), and that
-  order, backwards, puts every node after its parents for the choice; the counts then add up
-  along it.
+  0), the start as the one parent with no code. In cell order each node's parent and its possible
+  other parents are found; the trips are spread leaves first (each node queued once every node
+  that may pass it trips is in, no sort by time), the shares worked out as a node is reached and
+  only if it has trips enough; that order, backwards, puts every node after its parents for the
+  choice; the counts then add up along it.
 - **Lines.** An edge is drawn when its child's count is at least 0.2% of the area reached at
   L10; the same threshold at every level. Strength is log(count / threshold) over
   log(L10 total / threshold) in 8 steps; width and opacity rise with it.

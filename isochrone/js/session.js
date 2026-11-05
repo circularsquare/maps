@@ -51,7 +51,19 @@ function post(type, L, extra) {
     self.postMessage(msg, [px.buffer, dist.buffer]);
 }
 
-// ---- corridors (docs/corridors.md): counted after a level is posted, so they never hold up its paint ----
+// ---- corridors (docs/corridors.md): counted once every level of the view is painted ----
+// Coarse first: a window's count takes the flux of the coarser levels' counts, and every level's
+// threshold is a share of the L10 total. Between levels the worker yields, so a newer click or view
+// stops the rest (alive false); the next refine counts what is left.
+async function countCorridors(alive) {
+    for (const [L, level] of [[coarse, 10], [last[3], 3], [last[1], 1], [last[0.1], 0.1]]) {
+        if (!corrOn || !alive()) return;
+        if (!L || L.corrSent === originId) continue;
+        postCorridors(L, level);
+        await new Promise(res => setTimeout(res, 0));
+    }
+}
+
 function postCorridors(L, level) {
     if (!corrOn || !L || !L.res || L.corrSent === originId) return;
     if (level !== 10 && !(coarse.corr && coarse.corrSent === originId)) postCorridors(coarse, 10);
@@ -70,10 +82,8 @@ function postCorridors(L, level) {
 export function setCorridors(on) {
     corrOn = on;
     if (!on || !coarse || !coarse.res || clickPending) return;
-    postCorridors(coarse, 10);
-    if (last[3]) postCorridors(last[3], 3);
-    if (last[1]) postCorridors(last[1], 1);
-    if (last[0.1]) postCorridors(last[0.1], 0.1);
+    const cg = clickGen, vg = viewGen;
+    countCorridors(() => cg === clickGen && vg === viewGen);
 }
 
 export function click(lng, lat, m) {
@@ -131,7 +141,6 @@ async function runClick(g, lng, lat, m) {
     origin = (col === c && row === r) ? { lng, lat }
         : { lng: L.west + (c + 0.5) * L.cellDeg, lat: L.north - (r + 0.5) * L.cellDeg };
     post('coarse', L, { origin, ms: Math.round(performance.now() - t0), loadMs: buildMs });
-    postCorridors(L, 10);
     refine();
 }
 
@@ -152,13 +161,15 @@ export function route(msg) {
 
 // ---- view: windows at L3, L1 and L0.1 ----
 // A failed window load (404, server down) is reported once; one for a view or click since replaced is
-// dropped, as the page has moved on (T-076).
+// dropped, as the page has moved on (T-076). The corridors are counted once the windows are painted
+// (T-077: a window's count took longer than the next finer window's solve).
 function refine() {
     const cg = clickGen, vg = viewGen;
-    refineWindows().catch(e => {
-        if (cg !== clickGen || vg !== viewGen) return;
-        self.postMessage({ type: 'error', message: String(e && e.message || e) });
-    });
+    const alive = () => cg === clickGen && vg === viewGen;
+    const report = (e) => { if (alive()) self.postMessage({ type: 'error', message: String(e && e.message || e) }); };
+    refineWindows().catch(report)
+        .then(() => { if (alive() && !clickPending && coarse.res) return countCorridors(alive); })
+        .catch(report);
 }
 
 async function refineWindows() {
@@ -188,7 +199,6 @@ async function refineWindows() {
         if (!L3) return;
         last[3] = L3;
         post('win', L3, { level: 3, fetchMs: L3.fetchMs, solveMs: L3.solveMs, cells: L3.W * L3.H });
-        postCorridors(L3, 3);
     }
     if (!w1) { clear([1, 0.1]); return; }
     let L1 = last[1];
@@ -197,7 +207,6 @@ async function refineWindows() {
         if (!L1) return;
         last[1] = L1;
         post('win', L1, { level: 1, fetchMs: L1.fetchMs, solveMs: L1.solveMs, cells: L1.W * L1.H });
-        postCorridors(L1, 1);
     }
     if (!w01) { clear([0.1]); return; }
     if (last[0.1] && contains(last[0.1].win, windowFor(0.1, v, 0, false) || w01)) return;
@@ -205,5 +214,4 @@ async function refineWindows() {
     if (!L01) return;
     last[0.1] = L01;
     post('win', L01, { level: 0.1, fetchMs: L01.fetchMs, solveMs: L01.solveMs, cells: L01.W * L01.H });
-    postCorridors(L01, 0.1);
 }
