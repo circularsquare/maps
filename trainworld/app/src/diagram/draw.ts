@@ -7,6 +7,7 @@ import type { DiagramGraph } from "./graph";
 import type { DiagramLayout, Piece } from "./layout";
 import { atan2, DIRS8, hyp } from "./fmath";
 import type { DiagramBorders } from "./borders";
+import type { DiagramWater } from "./water";
 
 /** a stroke is this share of a pitch wide; the rest is the gap between neighbours */
 export const STROKE_SHARE = 5 / 6.4;
@@ -65,6 +66,8 @@ export interface Drawing {
   /** the zones' borders (borders.ts), set in the layout worker after the names; the Path2D made on the page when
    * first painted */
   borders?: DiagramBorders & { path?: Path2D };
+  /** the water (water.ts), set on the page when the layout worker posts it; the Path2Ds made when first painted */
+  water?: DiagramWater & { riverPath?: Path2D; seaPath?: Path2D };
 }
 
 /** a polyline offset left by `o`, one point per point (mitred, capped) */
@@ -568,6 +571,8 @@ export interface DiagramTheme {
   bg: string; ink: string; pill: string; selected: string; edge?: string;
   /** the zones' borders' colour */
   border?: string;
+  /** the water's colour, the map's */
+  water?: string;
 }
 /** zone borders (T-2464): this share of a pitch wide at this opacity; below a device px, a px wide and fainter by its
  * width's share, though never below BORDER_THIN of it (the lines' rule, T-2408, with a higher floor) */
@@ -603,7 +608,17 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   ctx.setTransform(scale, 0, 0, -scale, w / 2 - cx * scale, h / 2 + cy * scale);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  // the zones' borders under everything; the lines' casings cut them
+  // the water under everything (T-2169): the sea filled, the rivers as bands, at least a device px wide
+  const wa = d.water;
+  if (wa && theme.water) {
+    ctx.fillStyle = ctx.strokeStyle = theme.water;
+    if (wa.sea?.length) ctx.fill((wa.seaPath ??= toPath(wa.sea)), "evenodd");
+    if (wa.rivers.length) {
+      ctx.lineWidth = Math.max(wa.band, 1 / scale);
+      ctx.stroke((wa.riverPath ??= toPath(wa.rivers)));
+    }
+  }
+  // the zones' borders under everything else; the lines' casings cut them
   const bd = d.borders;
   if (bd && theme.border && bd.cmds.length) {
     ctx.strokeStyle = theme.border;

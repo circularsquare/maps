@@ -108,6 +108,45 @@ that arrive after a layout), between blocks as inside them.
   0.2 of a pitch wide; below a device px, a px wide and fainter by its width's share, never below half (the lines'
   rule, T-2408, with a higher floor). One path; a border two zones share is drawn once.
 
+## Water
+
+`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169; notes/T-2169.md). Drawn only with `?water`
+in the address for now (`WATER_ON` in view.ts), until Anita has looked at it. Rivers are drawn as
+lines and the sea (lakes too) as a coast, both in the base map's water colour of the theme, under everything else. The
+layout worker makes them last, after the borders, and posts them on their own, so the layout's time is not touched;
+the page names the zones near the network and the worker fetches their water masks from the packs (the 25 m rasters
+the track model prices water with), each zone once.
+
+- **On the ground**, near the network only. A coarse grid (200 m, within 15 km of a station) says where the **sea**
+  is: water at least 2 km across everywhere within it, and water within 400 m of that counts as the sea's. A fine
+  grid (40 m, within 3 km of a hop's track) finds **rivers**: water at least three cells (about 120 to 160 m) across
+  that is not the sea's, of the rivers some hop's track passes over. Each river is thinned to its centre line and
+  traced as arcs between the places where rivers meet or end; branches ending free under 400 m (or three half widths)
+  and rivers under 600 m in all are dropped. A hop crosses a river where its track crosses the centre line an odd
+  number of times; one hop crossing two arcs within 600 m of each other (where rivers meet) crosses the wider only.
+- **Rivers in the drawing**: bands 2 pitches wide with round ends. A river is drawn where a hop crosses it, and along
+  it between such places under 15 km apart, and on to the sea where it reaches it within 4 km; a river ending free
+  runs 3 pitches past its last crossing. Each crossing is a straight run square to the hop's bundle, at the real share
+  of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80% where it would otherwise end on another line), from
+  the side the river comes from on the ground, on past the outermost casing by half a pitch. Between crossings the band
+  is routed on a one-pitch grid like a line (runs at 0, 45 and 90 degrees, a 45 degree bend costing 6 pitches of length
+  and a 90 degree one 14), never through a casing or a pill, dearer within a pitch of the band's edge touching one, near
+  the river's course carried into the drawing through the nearest stations' local maps (T-2488's border lines).
+  Where the drawing leaves no way round to the side the river comes from, the run is crossed the other way; where it
+  leaves none at all, the band has a gap there. A run that would still cross another line is left out. So **a band
+  crosses exactly the hops that cross that river, each once, and no other line**. Corners are rounded at 2.5 pitches,
+  unless that would cut across a line.
+- **The sea in the drawing**: on a grid over the drawing (1.5 pitches a cell, coarser for a big drawing, at most a
+  million cells; 40 pitches past the network's box), each cell is sea where its four nearest drawn stations, voting by
+  nearness, find it past the sea: each carries the cell's offset back to the ground through its local map and looks
+  the way it lies for the sea within three of its mean hops (at least 3 km). So a cell beyond a station on the sea side
+  is sea however far the drawing stretches the core. Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by
+  3 majority, twice), sea under 60 square pitches and land without a station under 30 dropped, the coast is fitted with
+  runs at 0, 45 and 90 degrees, straying at most 6 pitches seaward and 2 landward (refitted tighter where a station
+  would fall in the sea), corners rounded at 3 pitches, and filled even-odd. **Every station is on land**, even where
+  the coast departs from the real one.
+- Drawn under the zone borders and the lines' casings: the sea filled, the rivers stroked at least a device px wide.
+
 ## Names
 
 `diagram/names.ts`, placed in the layout worker after the drawing. A station's name is its complex's:
@@ -174,7 +213,9 @@ station's own edges' end samples name the edges beside it). A complex met again 
 one other between is met once. Edges join consecutive complexes of a chain and carry its lines, each with
 the stroke it is drawn in there (`stroke`): lines of one colour, both high-speed or both not, share one where
 at least half of the shorter one's track on that hop is track both run on (interlining); every other line has
-its own (T-2405). Each line carries its colour and whether it runs high-speed trains.
+its own (T-2405). Each line carries its colour and whether it runs high-speed trains. Each edge also carries its
+track on the ground, as the first line on it runs it between the two complexes, kept to within 15 m (`hop`, for the
+water's crossings, T-2169).
 Places are metres east and north of the network's middle.
 
 ## The layout

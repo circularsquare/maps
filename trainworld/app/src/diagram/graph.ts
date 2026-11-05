@@ -54,7 +54,14 @@ export interface DiagramGraph {
   /** the middle the places are measured from, local units, and local units per metre there */
   mid: [number, number];
   k: number;
+  /** per edge, its track on the ground from a to b as one of its lines runs it, simplified (T-2169: where it crosses
+   * water): x, y pairs in metres as `x`, `y`, edge e's from hopAt[e] to hopAt[e + 1] (pairs) */
+  hop?: Float32Array;
+  hopAt?: Int32Array;
 }
+
+/** a hop's track is kept to within this of the ground's, metres */
+const HOP_TOL_M = 15;
 
 export interface DiagramLine {
   id: number;
@@ -195,7 +202,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length >= 1 && l.stops.length >= 2);
   /** per line: its chain, and per chain entry the range of its path the hops either side run on: the hop
    * from entry i to i + 1 runs on path[lo[i]] to path[hi[i + 1]] */
-  type Out = { id: number; colour: string; fast: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[] };
+  type Out = { id: number; colour: string; fast: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[]; at: number[] };
   const out: Out[] = [];
   /** met: arc, node, lo, hi */
   const met: number[] = [];
@@ -239,7 +246,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     let i0 = stop.indexOf(1), i1 = stop.lastIndexOf(1);
     if (i0 < 0) continue;
     const cut = <T>(v: T[]) => v.slice(i0, i1 + 1);
-    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi) });
+    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi), at: cut(at) });
   }
 
   // nodes on some kept chain only, numbered again in order of their keys
@@ -321,5 +328,75 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     }
   });
   first[ek.length] = o;
-  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), stroke: stroke.subarray(0, o), mid: [mx, my], k };
+  const { hop, hopAt } = hopTracks(ek, n, dl, out, ends, pts, cumOf, mx, my, k);
+  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), stroke: stroke.subarray(0, o), mid: [mx, my], k, hop, hopAt };
+}
+
+/** per edge (keys a * n + b in `ek`'s order), the track of the first line on it between its two nodes, in metres
+ * from the middle (mx, my), simplified to HOP_TOL_M */
+function hopTracks(ek: number[], n: number, dl: DiagramLine[], out: { path: number[]; at: number[] }[], ends: Map<number, GraphEdge>, pts: ReadonlyMap<number, Float32Array>, cumOf: (e: number) => Float64Array | null, mx: number, my: number, k: number): { hop: Float32Array; hopAt: Int32Array } {
+  const index = new Map(ek.map((kk, i) => [kk, i]));
+  const per: (number[] | undefined)[] = new Array(ek.length);
+  dl.forEach((l, li) => {
+    const src = out[li];
+    // each path entry's start along the line, local units
+    const start: number[] = [];
+    let arc = 0;
+    for (const code of src.path) {
+      start.push(arc);
+      const c = cumOf(code >> 1);
+      arc += c ? c[c.length - 1] : 0;
+    }
+    for (let i = 1; i < l.chain.length; i++) {
+      const u = l.chain[i - 1], w = l.chain[i];
+      if (u === w) continue;
+      const e = index.get(Math.min(u, w) * n + Math.max(u, w));
+      if (e === undefined || per[e]) continue;
+      const A = src.at[i - 1], B = src.at[i], p: number[] = [];
+      const push = (x: number, y: number) => p.push((x - mx) / k, -(y - my) / k);
+      for (let q = 0; q < src.path.length; q++) {
+        const code = src.path[q], pe = pts.get(code >> 1), c = cumOf(code >> 1);
+        if (!pe || !c || !ends.has(code >> 1)) continue;
+        const len = c[c.length - 1], s0 = start[q];
+        if (s0 >= B || s0 + len <= A) continue;
+        const m = pe.length / 3, back = (code & 1) === 1;
+        for (let j = 0; j < m; j++) {
+          const jj = back ? m - 1 - j : j, s = s0 + (back ? len - c[jj] : c[jj]);
+          if (s >= A && s <= B) push(pe[jj * 3], pe[jj * 3 + 1]);
+        }
+      }
+      if (p.length < 4) continue;
+      if (u > w) for (let a = 0, b = p.length - 2; a < b; a += 2, b -= 2) [p[a], p[a + 1], p[b], p[b + 1]] = [p[b], p[b + 1], p[a], p[a + 1]];
+      per[e] = simplifyLine(p, HOP_TOL_M);
+    }
+  });
+  const hopAt = new Int32Array(ek.length + 1);
+  for (let e = 0; e < ek.length; e++) hopAt[e + 1] = hopAt[e] + (per[e]?.length ?? 0) / 2;
+  const hop = new Float32Array(hopAt[ek.length] * 2);
+  per.forEach((p, e) => p && hop.set(p, hopAt[e] * 2));
+  return { hop, hopAt };
+}
+
+/** a polyline (x, y pairs) with the points within `tol` of the way between their kept neighbours dropped (Douglas and
+ * Peucker), its ends kept */
+export function simplifyLine(p: number[], tol: number): number[] {
+  const m = p.length / 2;
+  if (m <= 2) return p;
+  const keep = new Uint8Array(m);
+  (keep[0] = 1), (keep[m - 1] = 1);
+  const stack = [0, m - 1];
+  while (stack.length) {
+    const b = stack.pop()!, a = stack.pop()!;
+    const ax = p[a * 2], ay = p[a * 2 + 1], dx = p[b * 2] - ax, dy = p[b * 2 + 1] - ay, l2 = dx * dx + dy * dy;
+    let worst = -1, wi = -1;
+    for (let i = a + 1; i < b; i++) {
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((p[i * 2] - ax) * dx + (p[i * 2 + 1] - ay) * dy) / l2)) : 0;
+      const ex = p[i * 2] - ax - dx * t, ey = p[i * 2 + 1] - ay - dy * t, dd = ex * ex + ey * ey;
+      if (dd > worst) (worst = dd), (wi = i);
+    }
+    if (worst > tol * tol) (keep[wi] = 1), stack.push(a, wi, wi, b);
+  }
+  const out: number[] = [];
+  for (let i = 0; i < m; i++) if (keep[i]) out.push(p[i * 2], p[i * 2 + 1]);
+  return out;
 }

@@ -4,7 +4,9 @@
 // waiting), with its stations' names measured in the page's font. A first layout posts how far it has
 // got, for the loading bar (T-2235). The zones' borders (diagram/borders.ts, T-2464) and the city names
 // far out (diagram/cityNames.ts, T-2438) are made after the names from the zone outlines and names the
-// page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone.
+// page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone. The
+// water (diagram/waterReal.ts, diagram/water.ts, T-2169) comes last, from the water masks of the zones the page names,
+// fetched here from the packs, and is posted on its own.
 
 import type { DiagramGraph } from "../diagram/graph";
 import { LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
@@ -12,6 +14,8 @@ import { drawing, type Drawing } from "../diagram/draw";
 import { placeNames, type NamePlan } from "../diagram/names";
 import { zoneBorders, type DiagramBorders, type ZoneShape } from "../diagram/borders";
 import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityNames";
+import { realWater, type RealWater, type WaterMask } from "../diagram/waterReal";
+import { diagramWater, type DiagramWater } from "../diagram/water";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
 export type DiagramNames = { text: string[]; width: Float32Array; width2: Float32Array; fontPx: number };
@@ -22,12 +26,13 @@ export type ZoneFrame = [number, number, number];
 /** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
 export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
-  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; zones?: ZoneOutlines; frame?: ZoneFrame }
+  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] } }
   | { kind: "zones"; zones: ZoneOutlines }
   | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
   | { kind: "layout"; seq: number; graph: DiagramGraph; layout: DiagramLayout; drawing: Drawing; names: NamePlan; ms: { drawing: number; names: number; borders: number; cities: number } }
   | { kind: "borders"; seq: number; borders: DiagramBorders; cities?: CityNames }
+  | { kind: "water"; seq: number; water: DiagramWater; ms: { masks: number; ground: number; drawn: number } }
   | { kind: "progress"; seq: number; share: number };
 
 /** the layout's share of a first build's time; the drawing and names take the rest */
@@ -99,4 +104,51 @@ self.onmessage = (e: MessageEvent<ToDiagram>) => {
   shown = { seq: m.seq, graph: m.graph, layout, d, fontPx: m.names.fontPx, frame: m.frame };
   const ms = { drawing: t1 - t0, names: t2 - t1, borders: t3 - t2, cities: performance.now() - t3 };
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms } satisfies FromDiagram);
+  if (m.water && m.frame) void water(m.seq, m.water.packs, m.water.zones, m.frame);
 };
+
+// ---- the water (T-2169): each zone's mask fetched once, as the clock worker fetches it (a range of the pack's .bin)
+const masks = new Map<string, Promise<WaterMask | null>>();
+function maskOf(packs: string, id: string): Promise<WaterMask | null> {
+  let p = masks.get(id);
+  if (!p) {
+    const url = new URL(id, packs).href;
+    p = (async () => {
+      const head = await (await fetch(url + ".json")).json();
+      const row = head.arrays.find((a: { name: string }) => a.name === "water_row"), xs = head.arrays.find((a: { name: string }) => a.name === "water_x");
+      if (!head.water || !row || !xs) return null;
+      const start = row.offset, end = xs.offset + xs.count * 2;
+      const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
+      if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
+      const buf = await res.arrayBuffer(), base = res.status === 206 ? start : 0, w = head.water;
+      return {
+        cell: w.cell_m, x0: w.origin_m[0], y0: w.origin_m[1], w: w.size[0], h: w.size[1],
+        rows: new Uint32Array(buf.slice(row.offset - base, row.offset - base + row.count * 4)), runs: new Uint16Array(buf.slice(xs.offset - base, xs.offset - base + xs.count * 2)),
+        lon: head.origin.lon, lat: head.origin.lat,
+      };
+    })();
+    // a mask that failed is fetched again by the next layout
+    p.catch(() => masks.get(id) === p && masks.delete(id));
+    masks.set(id, p);
+  }
+  return p;
+}
+/** the water on the ground, kept while the stations' places and the hops' tracks are the same */
+let ground: { key: string; real: RealWater } | null = null;
+async function water(seq: number, packs: string, zones: string[], frame: ZoneFrame) {
+  const t0 = performance.now();
+  const got = (await Promise.all(zones.map((id) => maskOf(packs, id).catch(() => null)))).filter((w): w is WaterMask => !!w);
+  // a newer layout came meanwhile: its own water follows
+  const s = shown;
+  if (!s || s.seq !== seq) return;
+  const t1 = performance.now(), g = s.graph;
+  let sum = 0;
+  for (let i = 0; i < g.key.length; i += 7) sum += g.x[i] * 3 + g.y[i];
+  if (g.hop) for (let i = 0; i < g.hop.length; i += 13) sum += g.hop[i];
+  const key = `${frame.join()}|${g.key.length}|${g.ea.length}|${sum}|${got.length}`;
+  if (ground?.key !== key) ground = { key, real: realWater(g, got, frame) };
+  const t2 = performance.now();
+  const w = diagramWater(g, s.layout.x, s.layout.y, s.d, ground.real);
+  s.d.water = w;
+  (self as unknown as Worker).postMessage({ kind: "water", seq, water: w, ms: { masks: t1 - t0, ground: t2 - t1, drawn: performance.now() - t2 } } satisfies FromDiagram);
+}

@@ -20,6 +20,11 @@ import { zonesTouching } from "../game/cities";
 import { placesOfZone } from "../game/placeList";
 import { EARTH_C, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
+import { SHADES } from "../game/shadeTable";
+import { DATA_BASE } from "../game/dataBase";
+
+/** T-2169: water is drawn only with ?water in the address until Anita has looked at it */
+const WATER_ON = new URLSearchParams(location.search).has("water");
 import { FADE_ALPHA, paint, pickAt, type DiagramFocus, type Drawing } from "./draw";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
 import { cityBox, paintCityNames } from "./cityNames";
@@ -282,7 +287,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     }
     busy = true;
     const zf = zoneFrame(g);
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined } satisfies ToDiagram);
+    // T-2169: the zones whose water masks the water is drawn from; only with ?water until Anita has seen it
+    const water = zf && WATER_ON ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
   let outlineMap: Map<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
@@ -325,6 +332,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     })).then((towns) => worker?.postMessage({ kind: "towns", towns } satisfies ToDiagram));
   };
   let shownSeq = -1;
+  let waterMs: unknown = null;
   client.onDiagram = (g) => {
     if (!diagramShown.peek()) return;
     if (!worker) {
@@ -332,6 +340,10 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       worker.onmessage = (e: MessageEvent<FromDiagram>) => {
         if (e.data.kind === "progress") {
           if (!shown && diagramShown.peek()) diagramProgress.value = e.data.share;
+          return;
+        }
+        if (e.data.kind === "water") {
+          if (shown && e.data.seq === shownSeq) (shown.d.water = e.data.water), (waterMs = e.data.ms), draw();
           return;
         }
         if (e.data.kind === "borders") {
@@ -348,7 +360,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         diagramProgress.value = null;
         diagramReady.value = true;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? c.at.map((l, i) => [c.levels[i], [...l.block].map((b) => c.text[b])]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? c.at.map((l, i) => [c.levels[i], [...l.block].map((b) => c.text[b])]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, water: () => ({ ms: waterMs, stats: shown?.d.water?.stats, sea: shown?.d.water?.seaStats }) };
         if (!placed) place();
         draw();
         wantTowns(names.cities?.want);
@@ -424,7 +436,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
     // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
     const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR };
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: SHADES[shade.peek()].water };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
