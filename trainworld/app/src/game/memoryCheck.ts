@@ -11,6 +11,7 @@ import { decodeSave, readStored, type SaveHeader } from "../workers/saveFile";
 import { poolSize } from "../workers/demandClient";
 import { deviceGB } from "../workers/deviceMemory";
 import { COARSE_SHARE, GB_PER_MTRIPS } from "../workers/demandLod";
+import { COMPUTER_NOTE } from "./loadText";
 
 /** GB a solving worker takes outside its WebAssembly memory (its JS heap, T-1205); the browser's 4 GB
  * is on the WebAssembly memory alone, which is GB_PER_MTRIPS per million local trips a day held fine */
@@ -41,9 +42,9 @@ const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));
 /** Why a game reaching `zones` will not fit here, in a sentence; null if it will. */
 export function memoryRefusal(zones: readonly string[]): string | null {
   const need = memoryNeed(zones);
-  if (need.wasmGB > WORKER_CAP_GB) return `This game covers ${need.zones} zones. Each demand calculation needs about ${gb(need.wasmGB)} GB and browsers allow 4.`;
+  if (need.wasmGB > WORKER_CAP_GB) return `not enough memory. this save covers ${need.zones} zones, each demand calculation needs about ${gb(need.wasmGB)} GB and browsers allow 4. ${COMPUTER_NOTE}`;
   const device = deviceGB();
-  if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return `This game needs about ${gb(need.totalGB)} GB of memory and this device has about ${gb(device)} GB.`;
+  if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return `not enough memory. this save needs about ${gb(need.totalGB)} GB and your device has about ${gb(device)} GB. ${COMPUTER_NOTE}`;
   return null;
 }
 

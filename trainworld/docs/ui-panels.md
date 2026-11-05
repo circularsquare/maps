@@ -91,7 +91,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Narrow screens** [T-951, T-1259, `style.css`]: at most 600 px wide and at least 560 px tall (a
   phone held upright) the dock goes under the map, full width and 40% of the height, so the map and
   top bar keep the whole width and the map column's container queries see the real width. A strip
-  above the tab row, a short line in the rule colour, drags the dock taller or shorter with a finger
+  above the tab row (which has a rule on its top edge like the ones between and below its tabs, T-2549), a short line in the rule colour, drags the dock taller or shorter with a finger
   or the mouse, from the tab row and about two rows of the tab up to 58% of the screen (the map
   under the top bar keeps about 30%), remembered per browser [T-1884]. Under the tab row the tab
   area takes the dock's whole height. On every tab the inspector stands beside the tab area instead
@@ -549,7 +549,8 @@ dismissed, and the map and tools are blocked meanwhile.
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
 "Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, first the Day choice (Average, Weekday, Sat, Sun;
-"Demand shown for", below) [T-703], under this heading since it sets the day of every demand figure [T-2345], then three sliders: Size
+"Demand shown for", below) [T-703], under this heading since it sets the day of every demand figure [T-2345], then the Purpose
+choice (the map's purpose filter, the same list as the one on the map's demand row, which phones do not show; T-2548), then three sliders: Size
 (0.25-2x, [T-099, T-2271]; the radius is the slider times `BUBBLE_BASE`, 0.75, so 1x is the old 0.75x, T-1852), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the
 commuter and longer-trip bubbles, not station discs; ignored while bubbles are selected, T-936, but not while a whole zone is, T-1726) and Detail (4 steps from coarser to finer,
 the third by default; its hover reads "How many bubbles are aggregated together"; [T-795, T-1838]), the Colors
@@ -1123,7 +1124,8 @@ registry centre and zoom, or over New York with none [T-310].
   of those zones, and the whole game's, 1.5 GB plus 15 MB a zone plus the workers'. A worker over
   3.5 GB (a browser worker cannot pass 4) or, on a device reporting under 8 GB, a game over three
   quarters of it is refused: the start menu shows the reason over the saved games, and in a game a
-  notice says it.
+  notice says it ("not enough memory. this save needs about 4.3 GB and your device has about 4 GB.
+  works best on a computer.") [T-2545].
 - **The bar is three stages, each with its share** [T-1195, notes/T-1195.md; `game/loadBar.ts`]: the
   game, the city data and the solve each get the share of the bar their expected times give them,
   and the stage in hand moves inside its share by what has landed (bytes downloaded, packs open in
@@ -1175,10 +1177,17 @@ registry centre and zoom, or over New York with none [T-310].
   has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with
   no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in
   view always arrive.
-- If demand cannot load, a screen says "Demand could not load" with the reason and two buttons, Try
-  again (reload) and Play without demand, and takes every key until one is pressed. If the game
-  itself never started (the clock worker failed to start, or the page's setup threw before its end),
-  it says "The game could not start" with the reason and Try again alone [T-950].
+- If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
+  without demand, and takes every key until one is pressed. If the game itself never started (the
+  clock worker failed to start, or the page's setup threw before its end), it has Try again alone
+  [T-950]. The screen gives no reason, only "ran out of memory. works best on a computer." when the
+  failure was a failed allocation (`isMemoryFailure`, `game/loadText.ts`), else "failed to load :(
+  works best on a computer." [T-2545]; the cause goes to the console. The same two sentences come
+  back for a game or a real network the clock worker could not load, and as the hover of the status
+  tag's "Demand could not load". A page that finds the flag set in sessionStorage at its start
+  (set when a game starts loading, cleared when the load ends, fails or the page is left) was
+  reloaded by the browser mid-load, as iOS does on running out of memory: it starts no game and shows
+  the memory sentence with Try again.
 - A card that sees nothing move (no demand worker message other than a query's answer, no pack
   bytes, no game or network from the clock worker) for 3 minutes, or 10 with a bar up, gives way
   to that screen ("No demand figures arrived in 3 minutes"); a hidden or frozen page counts no

@@ -82,7 +82,7 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   (their text only), keeping the stored choice, with "Calculating demand" on hover; while its pack
   is still loading the hover says "Loading Boston, 37%" [T-149]. Over dead space they say "Nothing
   modelled here" [T-318].
-- **Purpose filter** [T-158, T-192, T-305; `game/purposes.ts`]: a dropdown at the end of the bar:
+- **Purpose filter** [T-158, T-192, T-305; `game/purposes.ts`]: a dropdown at the end of the bar (not shown on a phone, which has the settings tab's Purpose choice only [T-2548]):
   All purposes (default), Work, School, Errands, Leisure, Medical, Airports, Attractions [T-263,
   T-1253]. School and university are one shown purpose everywhere, "School", though the model keeps
   them apart (`membersOf`). With one chosen, a swatch in its colour sits before the name, the

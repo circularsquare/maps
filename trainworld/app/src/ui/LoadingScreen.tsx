@@ -11,17 +11,17 @@ import { clock } from "../game/clock";
 import { world } from "../game/world";
 import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
+import { loadFailText } from "../game/loadText";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
   const game = gameFailed.value;
-  const title = game ? "The game could not start" : "Demand could not load";
-  return <div class="loading-screen" role="alertdialog" aria-label={title}>
+  const text = loadFailText(loadFailure.value ?? "");
+  return <div class="loading-screen" role="alertdialog" aria-label={text}>
     <div class="loading-box">
-      <p class="big">{title}</p>
-      <p class="muted small">{loadFailure.value}</p>
+      <p class="big">{text}</p>
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>Try again</button>
         {!game && <button class="btn" onClick={continueWithoutDemand}>Play without demand</button>}

@@ -9,7 +9,8 @@
 // the player can look around and build while demand loads. Only a failed load puts up a screen
 // (ui/LoadingScreen.tsx).
 
-import { computed, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
+import { isMemoryFailure } from "./loadText";
 import { clock } from "./clock";
 import { cityById, type CityId } from "./cities";
 
@@ -75,7 +76,8 @@ let wait = { seq: 0, since: 0, key: "last" };
 export const gameWait = () => wait;
 /** The start menu's pick (main.ts): the startup wait begins. */
 export function startGameWait(key: string) {
-  wait = { seq: wait.seq, since: performance.now(), key };
+  setLoadFlag(true);
+  wait ={ seq: wait.seq, since: performance.now(), key };
   gameReady.value = false;
   viewFigures.value = false;
   gameLoadSeq.value++;
@@ -123,6 +125,20 @@ export function loadComplete() {
  * player is told it under the demand buttons (ui/DemandStopped.tsx); the figures shown stay. */
 export const demandStopped = signal<"memory" | "error" | null>(null);
 
+/** T-2545: iOS may reload a page that ran out of memory without a word. A flag in sessionStorage is set
+ * when a game starts loading and cleared when the load ends (or fails, or the page is left on purpose);
+ * found still set at the next start, the last load died, and main.ts says so. */
+const LOAD_FLAG = "tw-load-started";
+function setLoadFlag(on: boolean) {
+  try { if (on) sessionStorage.setItem(LOAD_FLAG, "1"); else sessionStorage.removeItem(LOAD_FLAG); } catch { /* storage unavailable */ }
+}
+/** Whether the last load in this tab never ended; the flag is cleared. */
+export function lastLoadDied(): boolean {
+  try { const died = !!sessionStorage.getItem(LOAD_FLAG); sessionStorage.removeItem(LOAD_FLAG); return died; } catch { return false; }
+}
+if (typeof addEventListener === "function") addEventListener("pagehide", () => setLoadFlag(false));
+effect(() => { if (gameReady.value || demandIdle.value) setLoadFlag(false); });
+
 /** Demand could not load. At startup the loading screen says so and offers a way on; later the
  * clock is released at once, since there is no result to wait for. */
 export function loadFailed(why: string) {
@@ -134,9 +150,7 @@ export function loadFailed(why: string) {
   // after startup; at a failed startup the player's choice releases it (every worker may report)
   else if (startup.peek() === "ready") {
     clock?.setHeld(false);
-    // a dead worker's text always names its WASM size and a panic always aborts as `unreachable`, so
-    // only a failed allocation counts (`last_panic`'s "out of memory", V8's "could not allocate", T-1891)
-    if (!demandStopped.peek()) demandStopped.value = /out of memory|could not allocate|allocation failed/i.test(why) ? "memory" : "error";
+    if (!demandStopped.peek()) demandStopped.value = isMemoryFailure(why) ? "memory" : "error";
   }
 }
 

@@ -86,7 +86,8 @@ import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, startGameWait } from "./game/loading";
+import { choosing, lastLoadDied, loadCannotFinish, startGameWait } from "./game/loading";
+import { OUT_OF_MEMORY } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
@@ -127,7 +128,11 @@ startLoadingGate();
 // T-677: which game opens. A URL switch may say (ui/StartMenu.tsx); otherwise the start menu goes up
 // once the page is set up, and the workers start with the pick (`startWorkers` below), the map
 // already drawn under it.
-const urlChoice = choiceFromUrl();
+// T-2545: the last load in this tab never ended (iOS reloads a page that ran out of memory): say so and
+// start no game, or a game too big for the device would load and die again
+const lastDied = lastLoadDied();
+const urlChoice = lastDied ? null : choiceFromUrl();
+if (lastDied) loadCannotFinish(OUT_OF_MEMORY, true);
 // Demand pool (T-026) first: its downloads and pack opening are the longest part of startup, so
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made

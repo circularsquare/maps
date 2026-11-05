@@ -160,7 +160,7 @@ function TrackDisplay() {
 }
 
 /** The purpose filter (T-158): every demand drawing on the map narrowed to one trip purpose. */
-function PurposeSelect() {
+export function PurposeSelect() {
   const purpose = asFilter(purposeFilter.value);
   // T-169: Chrome counts a mouse-focused select as :focus-visible, so the ring would stay after a
   // pick. Like the bar's buttons, it shows for keyboard focus only (style.css).

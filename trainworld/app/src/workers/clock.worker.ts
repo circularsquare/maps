@@ -41,6 +41,7 @@ import { RoadFeed } from "./roadFeed";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, stampAll, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
+import { loadFailText } from "../game/loadText";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -3487,7 +3488,7 @@ async function processMessage(msg: ToClock) {
             void autosave();
             return;
           } catch (err) {
-            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The real network could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
+            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("real network:", err), loadFailText(String(err))), frame: frameSpec(), game });
           }
         }
         const empty = msg.game && { ...msg.game, real: undefined };
@@ -3512,7 +3513,7 @@ async function processMessage(msg: ToClock) {
             hold(await leaseSlot(activeSlot));
             await publishSlots();
           }
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: "The last game could not be loaded. " + (err as Error).message, frame: frameSpec(), game });
+          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("last game:", err), loadFailText(String(err))), frame: frameSpec(), game });
         }
       }
       keep();

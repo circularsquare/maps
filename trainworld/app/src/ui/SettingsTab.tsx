@@ -13,6 +13,7 @@ import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
 import { accountState } from "../game/account";
 import { AccountButton, AccountSection, loginText } from "./AccountPanel";
+import { PurposeSelect } from "./DemandSelector";
 import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 
 const THEME_NAME: Record<Theme, string> = { pink: "Pink", blue: "Blue", green: "Green" };
@@ -57,6 +58,10 @@ export function SettingsTab() {
           <Segmented<DayShown> options={days} value={d.dayShown} onChange={(v) => setDisplay("dayShown", v)} />
         </div>
       )}
+      <div class="slider">
+        <span>Purpose</span>
+        <PurposeSelect />
+      </div>
       <Slider label="Size" min={0.25} max={2} step={0.05} value={d.bubbleSize} percent set={(v) => setDisplay("bubbleSize", v)} />
       <Slider label="Opacity" min={0.2} max={1} step={0.05} value={d.bubbleOpacity} percent set={(v) => setDisplay("bubbleOpacity", v)} />
       {/* finer bubbles are more and smaller ones, at the same area per trip */}

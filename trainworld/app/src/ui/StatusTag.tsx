@@ -8,7 +8,8 @@ import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { cityNames, demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
+import { loadFailText } from "../game/loadText";
+import { cityNames,demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting } from "../map/commuterView";
@@ -54,7 +55,7 @@ export function StatusTag() {
     // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
     : viewRecomputing.value ? recomputing() : null;
   if (!busy) return null;
-  const base = loadFailure.value ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
+  const base = (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
     : "");

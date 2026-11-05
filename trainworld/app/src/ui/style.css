@@ -134,7 +134,7 @@ svg .stroke2 { stroke-width: 2; }
 }
 /* T-252: the tabs are icons (their names on hover), on the left; the saves button (T-251) and
    the settings gear on the right */
-.tabs { display: flex; flex: none; background: var(--shade); border-bottom: 1px solid var(--rule); }
+.tabs { display: flex; flex: none; background: var(--shade); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .tab {
   flex: 1 1 0; min-width: 34px; height: 36px; padding: 0; margin-bottom: -1px;
   border: 0; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
@@ -813,12 +813,13 @@ rect.now { fill-opacity: .45; }
 .demand-selector button.hint-cell { padding: 0; font: inherit; cursor: pointer; }
 .demand-selector button.hint-cell:hover { background: var(--shade); }
 /* T-158: one trip purpose on the map; a swatch in its purpose colour while one is chosen */
-.demand-selector .purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
+.purpose-filter { display: flex; align-items: center; gap: 5px; height: 28px; margin-left: 6px;
   padding: 0 0 0 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
-.demand-selector .purpose-filter.on { border-color: var(--accent); background: var(--tint); }
-.demand-selector .purpose-filter select { height: 100%; padding: 0 4px 0 0; border: 0; background: transparent; cursor: pointer; outline: none; }
+.slider .purpose-filter { margin-left: 0; }
+.purpose-filter.on { border-color: var(--accent); background: var(--tint); }
+.purpose-filter select { height: 100%; padding: 0 4px 0 0; border: 0; background: transparent; cursor: pointer; outline: none; }
 /* T-169: the browser's keyboard ring, round the whole control (swatch included); none after a click */
-.demand-selector .purpose-filter:not(.mouse):has(select:focus-visible) { outline: auto 1px; outline: -webkit-focus-ring-color auto 1px; }
+.purpose-filter:not(.mouse):has(select:focus-visible) { outline: auto 1px; outline: -webkit-focus-ring-color auto 1px; }
 /* T-149, T-172: shown only when demand could not load; it covers everything until a choice. */
 .loading-screen { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
   background: color-mix(in srgb, var(--bg) 72%, transparent); }
@@ -1296,6 +1297,8 @@ button.save-add:hover { color: var(--text); }
   .dock-grab::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; bottom: 0; }
   .dock-grab::after { content: ""; position: absolute; left: calc(50% - 16px); top: 3px; width: 32px; height: 3px; border-radius: 2px; background: var(--rule); }
   .dock-grab:hover::after, .dock-grab.on::after { background: var(--accent); }
+  /* T-2548: no room for the purpose picker beside the demand row; it is in the settings tab */
+  .demand-selector .purpose-filter { display: none; }
   #tools { right: 10px; }
   #tool-notes { width: auto; max-width: none; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
