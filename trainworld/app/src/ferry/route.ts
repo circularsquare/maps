@@ -38,7 +38,7 @@ const R_MIN_M = 3;
 const DP_M = 25;
 const DP_ROOM = 0.25;
 /** speeds by room (distance to land): `V_OPEN` from `ROOM_OPEN_M`, `V_CHANNEL` at `ROOM_CHANNEL_M` or less */
-export const V_OPEN = 25 / 3.6;
+export const V_OPEN = 32 / 3.6;
 export const V_CHANNEL = 10 / 3.6;
 const ROOM_OPEN_M = 200;
 const ROOM_CHANNEL_M = 20;

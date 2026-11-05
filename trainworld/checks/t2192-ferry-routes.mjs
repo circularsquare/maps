@@ -215,7 +215,7 @@ function picture(name, parts, route, snaps, c) {
   const dot = ([cx, cy], rad, col) => { for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { if (dx * dx + dy * dy > rad * rad) continue; const x = Math.round(cx + dx), y = Math.round(cy + dy); if (x < 0 || y < 0 || x >= PW || y >= PH) continue; const o = (y * PW + x) * 3; img[o] = col[0]; img[o + 1] = col[1]; img[o + 2] = col[2]; } };
   for (let i = 1; i < route.kinds.length; i++) {
     const a = px(route.ll[2 * i - 2], route.ll[2 * i - 1]), b = px(route.ll[2 * i], route.ll[2 * i + 1]);
-    const v = Math.min(route.speeds[i - 1], route.speeds[i]) / (25 / 3.6), n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 2) + 1;
+    const v = Math.min(route.speeds[i - 1], route.speeds[i]) / (32 / 3.6), n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) * 2) + 1;
     for (let s = 0; s <= n; s++) dot([a[0] + ((b[0] - a[0]) * s) / n, a[1] + ((b[1] - a[1]) * s) / n], 1, [120 + 110 * v, 40, 60 + 20 * v]);
   }
   for (const p of c.pts) dot(px(...p), 5, [40, 40, 60]);

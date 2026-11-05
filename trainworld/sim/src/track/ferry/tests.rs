@@ -78,7 +78,7 @@ fn a_stretch_runs_at_the_lower_of_its_two_points() {
 #[test]
 fn speeds_are_kept_on_a_mm_grid_and_within_the_boats_range() {
     let top = quant_v(BOAT_TOP);
-    assert_eq!(top, 6.944);
+    assert_eq!(top, 8.889);
     assert_eq!((quant_v(0.0), quant_v(f64::NAN), quant_v(-3.0), quant_v(40.0)), (top, top, top, top));
     assert_eq!(quant_v(0.01), 0.25);
     assert_eq!(quant_v(2.77777), 2.778);

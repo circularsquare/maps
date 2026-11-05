@@ -977,7 +977,7 @@ notes/T-420.md has the tables.
   city's bus ridership per route-km against the model's on a similar drawn network.
 - **Ferries as lines** (T-2195, design notes/T-2177.md 3.6; docs/demand-kernel.md step 4). A ferry
   line is a line like any other: its ports are stations walked to as any station, the minutes aboard
-  are the boats' run (25 km/h in open water, 10 in narrow channels, 0.15 m/s² at each port), the
+  are the boats' run (32 km/h in open water, 10 in narrow channels, 0.15 m/s² at each port), the
   wait half the headway, a change to or from it a change like any other, and no boarding cost (a
   ferry is boarded from a waiting room, as a train is). A boat holds two train cars (480 at crush).
   Its kilometres pay the one fare curve, the part above the base times the player's Ferry multiple

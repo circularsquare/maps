@@ -307,8 +307,18 @@ new line; the Build tab's button again, while it is on, leaves it. Each click ad
 point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
 shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
 minor and bus-only roads, any direction, length as it is, no turn rules; motorways, service ways,
-tracks and paths are left out). It stays straight where that path is over 3 times the straight line,
-where no road is within 100 m of a point, or while the roads are still loading. A point on one
+tracks and paths are left out), at most 3 times the straight line or 1 km more than it, whichever is
+longer. A route never runs straight off the roads (T-2451): a click is refused, with a message at the
+map's bottom left, where no road is within 100 m ("Too far from a road. Click within 100 m of one."),
+where no road path joins it to the active end ("No road path found."), or where the two are too far
+apart to search (over about 100 zoom 14 tiles: "Too far between points. Add one on the way."); the tag
+over the pointer says which before the click, the leg to the pointer dashed red. A drag that drops a
+point where the roads do not reach puts it back with the same message, and a right click that would
+leave its neighbours with no road path between them is refused ("No road path found without this
+point."). While its roads are still loading a leg is straight; one that turns out to have no
+road is drawn red, the tag leads with why, and finishing is refused ("No road path found for part of
+the route. Move or delete a point beside it.", or "The roads here did not load. Try again." when its
+roads never came). A point on one
 carriageway of a divided road (the basemap draws the two as separate lines) may cross to the roughly
 parallel road 4 to 40 m across before the path follows a road, the hop counted at its length, so the
 route turns there instead of running to the next junction and back (T-1512; `across` in `roadGraph.ts`). The roads come from
@@ -335,7 +345,8 @@ the tag by the pointer gives the road length and the price.
   **Escape** drops a new route's points (a second Escape leaves the tool), and leaves an edit with
   the route as it was. A click on the active end of a single point does nothing.
 - **Edit route** in the bus panel reopens the tool on the line's route with its clicked points and
-  the stretches between them as they were, the last point active; the same button, now **Save
+  the road stretches between them as they were (a straight one from an older save is searched again,
+  red if it still finds no road), the last point active; the same button, now **Save
   route**, saves it. Finishing an edit that changed nothing closes it untouched; otherwise it redraws
   the route (final for a constructed route, which pays any longer road). A new bus line is planned
   until Construct.

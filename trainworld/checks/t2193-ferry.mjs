@@ -65,7 +65,7 @@ check(Math.abs(upkeep[7] - 0.02) < 1e-12 && upkeep[8] === 2, `ports' upkeep $${(
 
 // save and load into a fresh model; the fleet travels in the game's own header, as for buses
 const saved = api.save();
-check(Buffer.from(saved).includes('LFR1') && TrackApi.save_unread(saved) === 0, `the save carries an LFR1 block (${saved.length} bytes)`);
+check(Buffer.from(saved).includes('LFR2') && TrackApi.save_unread(saved) === 0, `the save carries an LFR2 block (${saved.length} bytes)`);
 const back = new TrackApi(O[0], O[1], true);
 check(back.load(saved), 'it loads');
 back.set_fleet_ferry(api.fleet_ferry());

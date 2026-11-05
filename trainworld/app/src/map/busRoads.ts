@@ -1,8 +1,9 @@
 // The roads a bus route follows (T-1465, notes/T-1445.md "Stage 2"). Between two clicked points the
 // route takes the shortest path over the basemap's zoom 14 roads (`roadGraph.ts`), counting road length
-// as it is, and stays straight where that path is over 3 times the straight line or no road is near a
-// point. The tiles are fetched here, straight from the basemap's own tile server, because the map holds
-// only the zoom it is showing; they are kept decoded, and the graph is built from them as a leg needs.
+// as it is; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
+// cap, or too long to search), and the tool keeps it out of a route. The tiles are fetched here,
+// straight from the basemap's own tile server, because the map holds only the zoom it is showing; they
+// are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
 import { EXTENT, RoadGraph, WORLD, gxOf, gyOf, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
@@ -10,11 +11,13 @@ import { decodeRoads, type RoadLines } from "./roadTiles";
 
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
-/** A road path longer than this many times the straight line is not used. */
+/** A road path longer than this many times the straight line, and `DETOUR_M` more than it, is not used:
+ * a short leg may still go round a block or to the next crossing. */
 export const DETOUR = 3;
+const DETOUR_M = 1000;
 /** The route is thinned to within this (ground metres) of the road. */
 const THIN_M = 2.5;
-/** Tiles beyond which a leg is left straight (a leg this long is not a bus leg). */
+/** Tiles beyond which a leg is not searched (refused as `long`). */
 const MAX_TILES = 100;
 /** Tiles the graph holds at most; past it the graph is rebuilt from the decoded tiles. */
 const GRAPH_TILES = 220;
@@ -28,6 +31,10 @@ export interface Pt {
   lat: number;
 }
 
+/** Why a leg has no road: a point more than `SNAP_M` from any road, no road path under the detour cap,
+ * or the leg too long to search. */
+export type BusRefusal = "far" | "path" | "long";
+
 /** A stretch of route between two clicked points. */
 export interface Leg {
   /** longitude, latitude pairs from the first point (moved onto its road) to the last */
@@ -38,6 +45,8 @@ export interface Leg {
   ready: boolean;
   /** road metres (the straight line's length when it is straight) */
   m: number;
+  /** ready but with no road: why, and `pts` is the straight line */
+  refused?: BusRefusal;
 }
 
 type Tile = { rl: RoadLines | null; at: number } | "loading";
@@ -195,23 +204,32 @@ export class BusRoads {
     return s ? { lng: lngOf(s.x), lat: latOf(s.y) } : p;
   }
 
-  /** The route between two clicked points: along the roads when a road path under `DETOUR` times the
-   * straight line joins the roads they land on, else straight. Not `ready` while tiles load (straight
+  /** A road within `SNAP_M` of a point: true or false, null while the tiles load. */
+  near(p: Pt): boolean | null {
+    if (!this.look(p)) return null;
+    this.fresh();
+    const x = gxOf(p.lng), y = gyOf(p.lat);
+    return this.snapAt(x, y, metresPerUnit(y)) !== null;
+  }
+
+  /** The route between two clicked points: along the roads when a road path under the detour cap joins
+   * the roads they land on, else `refused` (straight). Not `ready` while tiles load (straight
    * meanwhile); the callback given at construction runs when they have. */
   leg(a: Pt, b: Pt): Leg {
     const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
     const mpu = metresPerUnit((ay + by) / 2);
-    const line = (pa: [number, number], pb: [number, number], ready: boolean): Leg => ({
+    const line = (pa: [number, number], pb: [number, number], ready: boolean, refused?: BusRefusal): Leg => ({
       pts: [lngOf(pa[0]), latOf(pa[1]), lngOf(pb[0]), latOf(pb[1])],
       road: false,
       ready,
       m: Math.hypot(pa[0] - pb[0], pa[1] - pb[1]) * mpu,
+      refused,
     });
     const straight = Math.hypot(ax - bx, ay - by) * mpu;
     const pad = Math.max(600, 0.25 * straight) / mpu;
     const x0 = Math.min(ax, bx) - pad, x1 = Math.max(ax, bx) + pad, y0 = Math.min(ay, by) - pad, y1 = Math.max(ay, by) + pad;
     const tiles = (Math.floor(x1 / EXTENT) - Math.floor(x0 / EXTENT) + 1) * (Math.floor(y1 / EXTENT) - Math.floor(y0 / EXTENT) + 1);
-    if (tiles > MAX_TILES) return line([ax, ay], [bx, by], true);
+    if (tiles > MAX_TILES) return line([ax, ay], [bx, by], true, "long");
     if (!this.need(x0, y0, x1, y1)) return line([ax, ay], [bx, by], false);
     this.fresh();
     const key = `${a.lng},${a.lat},${b.lng},${b.lat}`;
@@ -220,10 +238,10 @@ export class BusRoads {
     const t0 = performance.now();
     const sa = this.snapAt(ax, ay, mpu), sb = this.snapAt(bx, by, mpu);
     const pa: [number, number] = sa ? [sa.x, sa.y] : [ax, ay], pb: [number, number] = sb ? [sb.x, sb.y] : [bx, by];
-    let out = line(pa, pb, true);
+    let out = line(pa, pb, true, sa && sb ? "path" : "far");
     if (sa && sb) {
       const direct = Math.hypot(pa[0] - pb[0], pa[1] - pb[1]) * mpu;
-      const path = this.graph.path(sa, sb, Math.max(direct * DETOUR, 1));
+      const path = this.graph.path(sa, sb, Math.max(direct * DETOUR, direct + DETOUR_M));
       if (path) {
         const pts = thin(path.pts, THIN_M / mpu);
         const ll: number[] = [];

@@ -288,7 +288,7 @@ mod tests {
         assert_eq!(b.save(), bytes);
     }
 
-    /// After T-2193: a save with ferries and buildings writes LFR1 then BLD1 and loads both; the
+    /// After T-2193: a save with ferries and buildings writes LFR2 then BLD1 and loads both; the
     /// ferry save from before the building reads back without buildings, to the bit.
     #[test]
     fn buildings_follow_the_ferries_in_the_save() {
@@ -303,7 +303,7 @@ mod tests {
         let route = [0.0, -3000.0, K_PORT as f64, 3.0, 2000.0, -3000.0, K_PORT as f64, 3.0];
         assert_eq!(a.set_ferry_line(l, &[p, q], &route, 900, 1200, 1800, 60.0, 300.0, 0x1f77b4, "Ferry 1".into()), 0, "{}", a.issues());
         let ferries = a.save();
-        assert!(ferries.windows(4).any(|w| w == b"LFR1") && !ferries.windows(4).any(|w| w == b"BLD1"));
+        assert!(ferries.windows(4).any(|w| w == b"LFR2") && !ferries.windows(4).any(|w| w == b"BLD1"));
         assert_eq!(a.add_building(&rect(-100.0, -25.0, 100.0, 25.0), "Hall".into()), 0, "{}", a.issue_kinds());
         let both = a.save();
         assert_eq!(&both[..ferries.len()], &ferries[..], "BLD1 only follows what was there");
