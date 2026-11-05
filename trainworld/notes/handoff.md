@@ -29,7 +29,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## In flight (maps-17's; common brief scratch/common-brief-tree.md, from 8f9cb6af)
 - **europe** (Opus, main tree, pack lock, port 6197, ids T-2479..80): T-2302 Europe replan per notes/T-1189.md "Next";
-  go given if the dry counts match 628 -> 462 (399 removed, 233 new). It messages maps-17 when a browser gate starts
+  go given if the dry counts match 628 -> 462 (399 removed, 233 new). Plan written exact (23:4x); backup
+  data/work/pre-T2302/pre (4 GB); build-only run batch 20261104-234553 (233 rows, 7 cores, no browser), several
+  hours. Build-first failed at home (cut_packs cuts new outlines by old packs on disk): now Taiwan's way, retire
+  (go given 00:00) -> build-only -> browser gate -> join. From the retire until the gate registers, Europe's
+  countryside zones are holes in the main tree's data: tree pages must avoid Europe; no 8800 rebuild until Europe's
+  pack writes end. Kit: scratch\europe; notes/T-2302.md has steps, PIDs, restart commands.
+- **8800 = build 956 (a8a72002)**, built 00:00 before the retire: uismall2's five fixes and the looser zone borders.
+  Smoke light PASSED; dark's browser checks all PASS, its Node check t1053-zone-ids failed on the main tree's
+  mid-retire data (expected until zone_successors runs; not an 8800 fault). It messages maps-17 when a browser gate starts
   and ends: land trees only between gates.
 - uismall2 LANDED 0e50cf65 (T-2473, T-2474, T-2475 profit = whole local day of its kind, T-2477, T-2487 titles).
   Not on 8800 yet.
