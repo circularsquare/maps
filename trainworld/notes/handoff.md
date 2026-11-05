@@ -2,24 +2,21 @@
 
 Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38 (resumed after
 Anita's VS Code restart, ~19:00)
-Updated: 2026-11-04 20:42
+Updated: 2026-11-04 22:51
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **d7527845** (+ records). Landed this evening: fac6820c profit2 (T-2440, T-2439, T-2443, T-2444), 7479ba4d
-  achieve (T-2431, T-2285, T-2347, T-2446), 1797c894 deadcode (T-2369, T-1304), e8af5ad8 diagborders (T-2168, T-2438),
-  3dc94145 termtrain (T-2429), 92173326 ferrybus (T-2451 bus legs on roads only, T-2178; T-2450 ferries 32 km/h, saves
-  write LFR2), bcf588bc cityfirst (T-2453 selected zone's figures and graph from its cluster's round 0), 5f634c25
-  busviews (T-2452 Speed/Profit for bus and ferry; buses take no station upkeep), d7527845 barecheck (T-2435, new WASM
-  fn `cell_unreach_mask_day`). No worktrees. Dev smoke on d7527845 PASSED (23).
-- **8800 = build 932 (92173326)**, smoke PASSED light and dark. **Rebuild to d7527845 once ukraine's pack writes end**
-  (join, zone_terrain, market_drives, build_inputs); ukraine will message. LIVE = 821. Publish only on Anita's word
-  (release "later this week"; Mexico and Brazil before release).
-- **Cores cap 12** (Anita: "lets keep 4 cores free"). Disk 45 GB free.
-- **Pack lock: ukraine's** (T-2344). Order after: T-2302 Europe replan -> Mexico T-2436 -> Brazil T-2437.
-- Uncommitted: TODO.md (Anita's); ukraine's work (zone-names, realms, registry, market-rows, borders, world_plan,
-  notes/T-2344.md).
+- master **8f9cb6af** (+ records). Landed 2026-11-04 evening: profit2, achieve, deadcode, diagborders, termtrain,
+  ferrybus (T-2451, T-2450), cityfirst (T-2453), busviews (T-2452), barecheck (T-2435), buspanel (T-2373), smallui
+  (T-2462, T-2463), ferrybus again (T-2467-69), diagzones (T-2464), diagnames (T-2447), "holiday load" hover, and
+  8f9cb6af **Ukraine + Crimea (T-2344)**: 33 rows shipped, kyi-ua group, borders with RU/BY factor 0.
+- **8800 = build at 8f9cb6af**: smoke PASSED light (dark ran in the background at ~22:55). LIVE = 821. Publish only on
+  Anita's word (release "later this week"; Mexico and Brazil before release).
+- **Cores cap 12** (Anita: "keep 4 cores free"); europe may raise to 14 after ~01:00 if she's quiet, back to 12 after.
+- Disk 39 GB free (pre-T2344 deleted).
+- **Pack lock: europe's** (T-2302). Then Mexico T-2436 -> Brazil T-2437.
+- Uncommitted: TODO.md (Anita's); agents' work as they go.
 
 ## Anita today (2026-11-04), in her words where it matters
 - Cleanup: "we might be overdue for a code and documentation cleanup"; "feel free to make decisions among yourselves
@@ -30,24 +27,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Sukabumi+Cianjur stays one zone ("no preference ... lets keep it"). Europe replan before Mexico and Brazil.
 - Batches: notes/todo-2026-11-04a.md .. -04i.md.
 
-## In flight (maps-17's; common brief scratch/common-brief-tree.md)
-- **ukraine** (Opus, main tree, pack lock, port 6197, ids T-2454..T-2455): T-2344. Run 20261104-194048: 33 of 33
-  gated, 0 parked (30 UA rows, 3 Crimean RU rows sif sel kcx), 53 min. Join UA,RU (mos-ru solve, ~1 h, 8 cores) started
-  ~20:40, then zone_terrain, market_drives, build_inputs, stale, smoke. After it: `tools\country\setup_sim.py <kit>
-  remove` for countries3's kit (session 8509086d's scratch, countries\). Backup data/work/pre-T2344/ goes once clean.
-- buspanel LANDED 06d03711 (T-2373; filed T-2460 sim `rated()` boat 480 vs 320). Not yet on 8800; strings shown.
-  8800 rebuild waits for ukraine's pack writes; it then carries T-2453, T-2452, T-2435, T-2373.
-- smallui LANDED 908471d4 (T-2462 bus/boat Speed ramp 10-30 km/h red to yellow; T-2463 one-offs stacked on the
-  expenses bar). Not yet on 8800.
-- diagzones LANDED 68b03bcf (T-2464 zone borders from nearest pill on a 1-pitch grid, closed octilinear, #73798b
-  0.7 opacity 0.2 pitch; a one-zone network shows one outline round it; 0 wrong-side on Japan/NE/NYC/Toronto). No
-  multi-zone screenshot: Anita to judge in her own game on 8800. Agent at 470k: retired.
-- **diagnames** (Sonnet, tree .tw-trees/diagnames from 68b03bcf, 6194, ids T-2472..73): T-2447 unnamed diagram blocks.
-- Commits after be462de3: 4da1470f ferrybus, b2ab0311 "holiday load" hover (Anita ok'd), 68b03bcf diagzones.
-  Bus/boat Speed scale stays 10-30 (Anita: "buses can just look alike").
-- ferrybus LANDED 4da1470f (T-2467 bus legs road or dashed red, first point refused, snap; T-2468 ferry port snap
-  200 m; T-2469 motorways so bridges). Agent at 400k: retired; follow-ups to a fresh agent. Not yet on 8800.
-- Next free id **T-2472** (T-2456..57 unused; T-2458, T-2459 filed).
+## In flight (maps-17's; common brief scratch/common-brief-tree.md, from 8f9cb6af)
+- **europe** (Opus, main tree, pack lock, port 6197, ids T-2479..80): T-2302 Europe replan per notes/T-1189.md "Next";
+  go given if the dry counts match 628 -> 462 (399 removed, 233 new). It messages maps-17 when a browser gate starts
+  and ends: land trees only between gates.
+- **uismall2** (Opus, tree .tw-trees/uismall2, 6195, ids T-2481..82): T-2473 tutorial text stays greyed, T-2474 track
+  setting carries to new track, T-2475 expected profit ticking (explain, steady if noise), T-2477 no camera snap.
+- **loadwait** (Opus, tree .tw-trees/loadwait, 6196, ids T-2483..84): T-2476 worst-case demand wait, T-2478 Vancouver.
+- **sizes** (Sonnet, main tree read-only, ids T-2485..86): T-2472 size summary into notes/T-2472.md.
+- Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2487**.
 
 ## Next
 1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show

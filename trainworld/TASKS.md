@@ -89,6 +89,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 ## Interface
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
+Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
+- T-2472 [P2] Size summary for Anita: R2, her computer, what an average player downloads, the player's RAM, anything else; and what could shrink. taking, 2026-11-04, sizes.
+- T-2473 [P2] Tutorial text that only informs stays up, greyed, after its step is done instead of disappearing. taking, 2026-11-04, uismall2.
+- T-2474 [P2] Track tool: a setting changed on selected track (high speed, say) carries over to new track placed afterwards. taking, 2026-11-04, uismall2.
+- T-2475 [P2] Expected line profit ticks up and down continuously: find why (holidays and weekends?) and steady it if it's noise. taking, 2026-11-04, uismall2.
+- T-2476 [P2] Demand load wait: the expected worst case, when it happens and how long, then what to cut. taking, 2026-11-04, loadwait.
+- T-2477 [P2] Entering a game: no camera snap back to the home city at ~20% loaded once the player has panned away. taking, 2026-11-04, uismall2.
+- T-2478 [P2] Vancouver stalled loading, failed after a reload, then worked on retry: find what's wrong. taking, 2026-11-04, loadwait.
 - T-2458 [P3] A zone selected in the city view during a load is solved coarse by the load's solve and refined only by a second whole solve after its final (Tokyo save: Seoul selected 8 s before the solve was sent, fine figures about 6 s after the final). Pick its level before the load's solve goes. notes/T-2453.md "Left as they are". Open.
 - T-2459 [P3] During a load a selected zone in another cluster than the zone in view's shows only at the second group's final (world save: Amsterdam 10.9 s, no sooner than before T-2453). When the focus pool already has the zone in view, solve the selected zone's cluster ahead instead; the hold would then need to count the focus pool's final. Measure first. notes/T-2453.md. Open.
 Anita's chat 2026-11-04 ~17:10 (verbatim in notes/todo-2026-11-04h.md; briefs quote it word for word):
