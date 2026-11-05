@@ -59,7 +59,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - diagwater LANDED 988c5f40 behind `?water` (maps-17's call: rivers in pieces/stubs in NYC's core, sea coast a
   blocky staircase). Show Anita game-nyc-light.png and game-tor-light.png (artifacts/trainworld/t2169/) and ask
   whether to iterate (T-2497 gaps and stubs, smoother coast) or switch on. Agent retired (589k).
-- **memhunt** (Opus, tree .tw-trees/memhunt from 1987aba1, 6199, ids T-2495..96): T-2485 player RAM (real save 3.8 GB).
+- memhunt LANDED ecac1167 (T-2485: real save settles 2.97 -> 2.87 GB, load peak 4.22 -> 3.97 GB; the 3.8 was
+  mid-load; biggest: solving workers' WASM ~350 MB each, focus pool ~0.7 GB during a load). Filed T-2495 (focus pool
+  memory), T-2496 (WASM heap accounting). Cache format 8. Told loadfix to rebase.
 - Anita went to bed ~00:45 2026-11-05: "feel free to keep going with stuff after europe"; "feel free to up cores
   overnight as usual and keep going after the normal context handover cap overnight" (recorded in trainworld/CLAUDE.md
   and maps/CLAUDE.md, the latter uncommitted for her). **Cap set to 15; put it back to 12 at ~08:00 or when she's
