@@ -20,8 +20,13 @@ const FINE_M = 40;
 /** the coarse grid's cell, metres; water SEA_M across everywhere within is sea, and river water within SEA_NEAR_M of
  * the sea is the sea's (so a coast's fringe is no river) */
 const COARSE_M = 200, SEA_M = 2000, SEA_NEAR_M = 400;
-/** rivers are looked for this near a hop's track or a station, the sea this near a station, metres */
-const RIVER_NEAR_M = 3000, SEA_NEAR_STATION_M = 15000;
+/** a river's end at the sea meets the sea nearest it within this many coarse cells */
+const BODY_NEAR = 5;
+/** a river ending free this near another river is joined to it, or this near the sea ends at it, metres (T-2516) */
+const GAP_M = 400, SEA_GAP_M = 1000;
+/** rivers are looked for this near a hop's track or a station, and followed on up to RIVER_FAR_M from a station; the
+ * sea this near a station, metres */
+const RIVER_NEAR_M = 3000, RIVER_FAR_M = 12000, SEA_NEAR_STATION_M = 15000;
 /** a river's branch ending free shorter than this, or this many of the river's half widths where it leaves, is
  * dropped (thinning leaves such spurs); a river shorter than RIVER_MIN_M in all is a pond */
 const SPUR_M = 400, SPUR_WIDTHS = 3, RIVER_MIN_M = 600;
@@ -36,6 +41,8 @@ export interface RiverArc {
   pts: Float64Array;
   a: number;
   b: number;
+  /** the river it is part of: arcs of one connected water, between the seas */
+  river: number;
   /** its half width, metres (the median along it) */
   half: number;
   /** its crossings with the hops, by distance along it */
@@ -52,10 +59,16 @@ export interface Crossing {
 }
 export interface RealWater {
   arcs: RiverArc[];
-  /** per node: where it is, graph metres, and whether a river ends there at the sea */
-  nodes: { x: number; y: number; sea: boolean }[];
+  /** per node: where it is, graph metres, whether a river ends there at the sea, and which sea (`seaBody`; -1 none
+   * found); `open`, where a river runs on out of what is looked at (far from the stations, or out of the masks) */
+  nodes: { x: number; y: number; sea: boolean; body: number; open: boolean }[];
   /** whether a place is sea (1), land or river (0), or unknown (-1: no mask says, or too far from the stations) */
   seaAt(x: number, y: number): number;
+  /** which sea a place is in: one id per sea connected on the ground (T-2516), -1 where it is not sea */
+  seaBody(x: number, y: number): number;
+  /** the shortest way by water (any water on the coarse grid) from a place to a sea `ok` takes, within `maxM`: its
+   * places (x, y pairs, graph metres) and that sea; null if none */
+  waterWay(x: number, y: number, ok: (body: number) => boolean, maxM: number): { pts: number[]; body: number } | null;
   /** the hops that cross some river an even number of times, so are counted as crossing none */
   evenDropped: number;
   ms: { coarse: number; fine: number; skeleton: number; crossings: number };
@@ -103,8 +116,21 @@ function maskRows(masks: WaterMask[], f: MercFrame) {
   };
 }
 
+/** whether some mask covers a place in graph metres */
+function maskCover(masks: WaterMask[], f: MercFrame) {
+  const [fx, fy, k] = f;
+  return (x: number, y: number) => {
+    const lat = (2 * Math.atan(Math.exp(Math.PI * (1 - 2 * (fy - y / k)))) - Math.PI / 2) / RAD, lon = 360 * (fx + x / k) - 180;
+    for (const m of masks) {
+      const r = (EARTH_R * (lat - m.lat) * RAD - m.y0) / m.cell, c = (EARTH_R * RAD * Math.cos(m.lat * RAD) * (lon - m.lon) - m.x0) / m.cell;
+      if (r >= 0 && r < m.h && c >= 0 && c < m.w) return true;
+    }
+    return false;
+  };
+}
+
 /** chamfer distances (3 a side step, 4 a diagonal) from cells where `src` is 0 (or 1 with `from1`), w by h */
-function chamfer(src: Uint8Array, w: number, h: number, from1: boolean, cap: number): Uint16Array {
+export function chamfer(src: Uint8Array, w: number, h: number, from1: boolean, cap: number): Uint16Array {
   const d = new Uint16Array(w * h);
   for (let c = 0; c < w * h; c++) d[c] = (src[c] !== 0) === from1 ? 0 : cap;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
@@ -137,7 +163,7 @@ function chamfer(src: Uint8Array, w: number, h: number, from1: boolean, cap: num
 /** The water near the network of `g` (laid out or not: only its places on the ground are read), from `masks`. */
 export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame): RealWater {
   const t0 = performance.now();
-  const n = g.key.length, rowOf = maskRows(masks, frame);
+  const n = g.key.length, rowOf = maskRows(masks, frame), inMasks = maskCover(masks, frame);
   const hop = g.hop ?? new Float32Array(0), hopAt = g.hopAt ?? new Int32Array(g.ea.length + 1);
 
   // ---- the sea, on the coarse grid: tiles round the stations, each worked with a halo wide enough for the opening
@@ -168,65 +194,118 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         const dc = chamfer(core, W, W, true, 3 * (rs + near + 2));
         for (let j = 0; j < CT; j++) for (let i = 0; i < CT; i++) {
           const c = (j + HALO) * W + i + HALO;
-          out[j * CT + i] = dc[c] <= 3 * rs && buf[c] ? 3 : dc[c] <= 3 * (rs + near) ? 2 : buf[c] ? 1 : 0;
+          out[j * CT + i] = (dc[c] <= 3 * rs && buf[c] ? 3 : dc[c] <= 3 * (rs + near) ? 2 : buf[c] ? 1 : 0) | (buf[c] ? 4 : 0);
         }
       }
       ctiles.set(key, out);
     }
   }
-  /** the coarse cell's class at a place: 3 sea, 2 near the sea, 1 other water, 0 land; -1 no tile */
-  const coarseAt = (x: number, y: number) => {
+  /** the coarse cell's class at a place: 3 sea, 2 near the sea, 1 other water, 0 land; -1 no tile; with 4 added where
+   * it is water (`raw`) */
+  const coarseAt = (x: number, y: number, raw = false) => {
     const i = Math.floor(x / hc), j = Math.floor(y / hc), t = ctiles.get(tkey(Math.floor(i / CT), Math.floor(j / CT)));
-    return t ? t[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)] : -1;
+    return t ? t[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)] & (raw ? 7 : 3) : -1;
+  };
+  // each sea connected on the ground (4 neighbours, across tiles) one body (T-2516)
+  const labs = new Map<number, Int32Array>(), par: number[] = [];
+  const root = (v: number): number => {
+    while (par[v] !== v) (par[v] = par[par[v]]), (v = par[v]);
+    return v;
+  };
+  const join = (a: number, b: number) => void (par[root(a)] = root(b));
+  for (const [key, t] of ctiles) {
+    const lab = new Int32Array(CT * CT).fill(-1);
+    for (let c = 0; c < CT * CT; c++) {
+      if ((t[c] & 3) !== 3) continue;
+      const l = c % CT > 0 ? lab[c - 1] : -1, u = c >= CT ? lab[c - CT] : -1;
+      if (l < 0 && u < 0) lab[c] = par.length, par.push(par.length);
+      else (lab[c] = l >= 0 ? l : u), l >= 0 && u >= 0 && join(l, u);
+    }
+    labs.set(key, lab);
+  }
+  for (const [key, lab] of labs) {
+    const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, e = labs.get(tkey(ti + 1, tj)), nb = labs.get(tkey(ti, tj + 1));
+    for (let q = 0; q < CT; q++) {
+      if (e && lab[q * CT + CT - 1] >= 0 && e[q * CT] >= 0) join(lab[q * CT + CT - 1], e[q * CT]);
+      if (nb && lab[(CT - 1) * CT + q] >= 0 && nb[q] >= 0) join(lab[(CT - 1) * CT + q], nb[q]);
+    }
+  }
+  const bodyId = new Map<number, number>();
+  const seaBody = (x: number, y: number) => {
+    const i = Math.floor(x / hc), j = Math.floor(y / hc), lab = labs.get(tkey(Math.floor(i / CT), Math.floor(j / CT)));
+    const v = lab ? lab[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)] : -1;
+    if (v < 0) return -1;
+    const r = root(v);
+    let id = bodyId.get(r);
+    if (id === undefined) bodyId.set(r, (id = bodyId.size));
+    return id;
+  };
+  /** the sea nearest a place within BODY_NEAR coarse cells, -1 none */
+  const bodyNear = (x: number, y: number, r = BODY_NEAR) => {
+    let best = -1, bd = Infinity;
+    for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) {
+      const dd = di * di + dj * dj, b = dd < bd ? seaBody(x + di * hc, y + dj * hc) : -1;
+      if (b >= 0) (best = b), (bd = dd);
+    }
+    return best;
   };
   const t1 = performance.now();
 
   // ---- rivers, on the fine grid near the track: water three cells across (an opening by a 3 by 3 square), less the
   // sea and its fringe. Per tile, 1 river, 2 wide water by the sea.
-  const h = FINE_M, ftiles = new Map<number, Uint8Array>();
+  // The tiles near the track are made first; a river is followed on into tiles out to RIVER_FAR_M from a station, made
+  // as its flood reaches them (T-2516: so it is found whole, to the sea), and where it runs on past those or out of
+  // the masks its end is open.
+  const h = FINE_M, ftiles = new Map<number, Uint8Array | null>(), want = new Set<number>(), allowed = new Set<number>();
+  const HF = 2, FW = FT + 2 * HF, buf = new Uint8Array(FW * FW), ero = new Uint8Array(FW * FW);
+  const fineTile = (key: number): Uint8Array | null => {
+    const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, W = FW;
+    buf.fill(0);
+    const x0 = (ti * FT - HF) * h;
+    for (let j = 0; j < W; j++) rowOf((tj * FT - HF + j + 0.5) * h, x0, h, W, buf, j * W);
+    ero.fill(0);
+    let any = 0;
+    for (let j = 1; j < W - 1; j++) for (let i = 1; i < W - 1; i++) {
+      const c = j * W + i;
+      if (buf[c] && buf[c - 1] && buf[c + 1] && buf[c - W] && buf[c + W] && buf[c - W - 1] && buf[c - W + 1] && buf[c + W - 1] && buf[c + W + 1]) (ero[c] = 1), (any = 1);
+    }
+    if (!any) return null;
+    const out = new Uint8Array(FT * FT);
+    let rivers = 0;
+    for (let j = 0; j < FT; j++) for (let i = 0; i < FT; i++) {
+      const c = (j + HF) * W + i + HF;
+      if (!(ero[c] || ero[c - 1] || ero[c + 1] || ero[c - W] || ero[c + W] || ero[c - W - 1] || ero[c - W + 1] || ero[c + W - 1] || ero[c + W + 1])) continue;
+      const sea = coarseAt((ti * FT + i + 0.5) * h, (tj * FT + j + 0.5) * h) >= 2;
+      out[j * FT + i] = sea ? 2 : 1;
+      if (!sea) rivers++;
+    }
+    return rivers ? out : null;
+  };
   {
-    const side = FT * h, want = new Set<number>(), R = RIVER_NEAR_M;
-    const mark = (x: number, y: number) => {
-      for (let i = Math.floor((x - R) / side); i <= Math.floor((x + R) / side); i++) for (let j = Math.floor((y - R) / side); j <= Math.floor((y + R) / side); j++) want.add(tkey(i, j));
+    const side = FT * h;
+    const mark = (x: number, y: number, R: number, into: Set<number>) => {
+      for (let i = Math.floor((x - R) / side); i <= Math.floor((x + R) / side); i++) for (let j = Math.floor((y - R) / side); j <= Math.floor((y + R) / side); j++) into.add(tkey(i, j));
     };
-    for (let i = 0; i < n; i++) mark(g.x[i], g.y[i]);
+    for (let i = 0; i < n; i++) mark(g.x[i], g.y[i], RIVER_NEAR_M, want), mark(g.x[i], g.y[i], RIVER_FAR_M, allowed);
     for (let e = 0; e < g.ea.length; e++) for (let q = hopAt[e]; q + 1 < hopAt[e + 1]; q++) {
       const ax = hop[q * 2], ay = hop[q * 2 + 1], bx = hop[q * 2 + 2], by = hop[q * 2 + 3], parts = Math.ceil(hyp(bx - ax, by - ay) / 1000);
-      for (let p = 1; p <= parts; p++) mark(ax + ((bx - ax) * p) / parts, ay + ((by - ay) * p) / parts);
+      for (let p = 1; p <= parts; p++) mark(ax + ((bx - ax) * p) / parts, ay + ((by - ay) * p) / parts, RIVER_NEAR_M, want);
     }
-    const HF = 2, W = FT + 2 * HF, buf = new Uint8Array(W * W), ero = new Uint8Array(W * W);
-    for (const key of want) {
-      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768;
-      buf.fill(0);
-      const x0 = (ti * FT - HF) * h;
-      for (let j = 0; j < W; j++) rowOf((tj * FT - HF + j + 0.5) * h, x0, h, W, buf, j * W);
-      ero.fill(0);
-      let any = 0;
-      for (let j = 1; j < W - 1; j++) for (let i = 1; i < W - 1; i++) {
-        const c = j * W + i;
-        if (buf[c] && buf[c - 1] && buf[c + 1] && buf[c - W] && buf[c + W] && buf[c - W - 1] && buf[c - W + 1] && buf[c + W - 1] && buf[c + W + 1]) (ero[c] = 1), (any = 1);
-      }
-      if (!any) continue;
-      const out = new Uint8Array(FT * FT);
-      let rivers = 0;
-      for (let j = 0; j < FT; j++) for (let i = 0; i < FT; i++) {
-        const c = (j + HF) * W + i + HF;
-        if (!(ero[c] || ero[c - 1] || ero[c + 1] || ero[c - W] || ero[c + W] || ero[c - W - 1] || ero[c - W + 1] || ero[c + W - 1] || ero[c + W + 1])) continue;
-        const sea = coarseAt((ti * FT + i + 0.5) * h, (tj * FT + j + 0.5) * h) >= 2;
-        out[j * FT + i] = sea ? 2 : 1;
-        if (!sea) rivers++;
-      }
-      if (rivers) ftiles.set(key, out);
-    }
+    for (const key of want) allowed.add(key), ftiles.set(key, fineTile(key));
   }
   const fineAt = (i: number, j: number) => {
-    const ti = Math.floor(i / FT), tj = Math.floor(j / FT), t = ftiles.get(tkey(ti, tj));
+    const ti = Math.floor(i / FT), tj = Math.floor(j / FT), key = tkey(ti, tj);
+    let t = ftiles.get(key);
+    if (t === undefined) ftiles.set(key, (t = allowed.has(key) ? fineTile(key) : null));
     return t ? t[(j - tj * FT) * FT + (i - ti * FT)] : 0;
   };
+  /** whether a fine cell is past where rivers are followed: out of the allowed tiles or of every mask */
+  const beyond = (i: number, j: number) => !allowed.has(tkey(Math.floor(i / FT), Math.floor(j / FT))) || !inMasks((i + 0.5) * h, (j + 0.5) * h);
   const t2 = performance.now();
 
   // ---- each river (8-connected river cells) thinned and traced
   const nodes: RealWater["nodes"] = [], arcs: RiverArc[] = [];
+  let rivers = 0;
   const seen = new Map<number, Uint8Array>();
   const seenAt = (i: number, j: number) => {
     const key = tkey(Math.floor(i / FT), Math.floor(j / FT));
@@ -266,6 +345,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       traceRiver(ci, cj, i0 - 2, j0 - 2, i1 - i0 + 5, j1 - j0 + 5);
     }
   }
+  bridgeGaps();
   const t3 = performance.now();
 
   // ---- crossings: each arc against the hops' tracks near it
@@ -343,8 +423,125 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       const c = coarseAt(x, y);
       return c < 0 ? -1 : c === 3 ? 1 : 0;
     },
+    seaBody,
+    waterWay(x, y, ok, maxM) {
+      const key = (i: number, j: number) => (i + 1e6) * 4e6 + (j + 1e6);
+      const wet = (i: number, j: number) => coarseAt((i + 0.5) * hc, (j + 0.5) * hc, true) >= 4;
+      const dist = new Map<number, number>(), from = new Map<number, number>(), hp: [number, number, number][] = [];
+      const push = (d: number, i: number, j: number) => {
+        hp.push([d, i, j]);
+        for (let c = hp.length - 1; c > 0; ) {
+          const p = (c - 1) >> 1;
+          if (hp[p][0] <= hp[c][0]) break;
+          [hp[p], hp[c]] = [hp[c], hp[p]];
+          c = p;
+        }
+      };
+      const pop = () => {
+        const top = hp[0], last = hp.pop()!;
+        if (hp.length) {
+          hp[0] = last;
+          for (let c = 0; ; ) {
+            const a = 2 * c + 1, b = a + 1;
+            let m = c;
+            if (a < hp.length && hp[a][0] < hp[m][0]) m = a;
+            if (b < hp.length && hp[b][0] < hp[m][0]) m = b;
+            if (m === c) break;
+            [hp[m], hp[c]] = [hp[c], hp[m]];
+            c = m;
+          }
+        }
+        return top;
+      };
+      const i0 = Math.floor(x / hc), j0 = Math.floor(y / hc);
+      for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) if (wet(i0 + di, j0 + dj)) dist.set(key(i0 + di, j0 + dj), 0), push(0, i0 + di, j0 + dj);
+      while (hp.length) {
+        const [dv, i, j] = pop();
+        if (dv > (dist.get(key(i, j)) ?? Infinity) || dv > maxM) continue;
+        const b = coarseAt((i + 0.5) * hc, (j + 0.5) * hc) === 3 ? seaBody((i + 0.5) * hc, (j + 0.5) * hc) : -1;
+        if (b >= 0 && ok(b)) {
+          const pts: number[] = [];
+          for (let k: number | undefined = key(i, j); k !== undefined; k = from.get(k)) {
+            const ci = Math.floor(k / 4e6) - 1e6, cj = k - (ci + 1e6) * 4e6 - 1e6;
+            pts.push((ci + 0.5) * hc, (cj + 0.5) * hc);
+          }
+          const out: number[] = [];
+          for (let q = pts.length - 2; q >= 0; q -= 2) out.push(pts[q], pts[q + 1]);
+          return { pts: simplifyLine(out, hc), body: b };
+        }
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+          if ((!di && !dj) || !wet(i + di, j + dj)) continue;
+          const nd = dv + (di && dj ? Math.SQRT2 : 1) * hc, k = key(i + di, j + dj);
+          if (nd < (dist.get(k) ?? Infinity)) dist.set(k, nd), from.set(k, key(i, j)), push(nd, i + di, j + dj);
+        }
+      }
+      return null;
+    },
     ms: { coarse: t1 - t0, fine: t2 - t1, skeleton: t3 - t2, crossings: t4 - t3 },
   };
+
+  /** a river ending free where the mask has a short gap (a bridge drawn as land, the river narrowing under three cells
+   * for a while) is joined on (T-2516): to another river within GAP_M, by a straight arc to its nearest point, the
+   * two then one river; else, within SEA_GAP_M of the sea, it ends at the sea */
+  function bridgeGaps() {
+    const deg = new Int32Array(nodes.length);
+    for (const A of arcs) deg[A.a]++, deg[A.b]++;
+    const G = 1000, grid = new Map<number, number[]>();
+    const index = (q: number) => {
+      const P = arcs[q].pts;
+      for (let k = 0; k < P.length; k += 2) {
+        const key = tkey(Math.floor(P[k] / G), Math.floor(P[k + 1] / G)), l = grid.get(key);
+        if (l) l.push(q, k);
+        else grid.set(key, [q, k]);
+      }
+    };
+    arcs.forEach((_, q) => index(q));
+    const same = arcs.map((A) => A.river), up = Array.from({ length: rivers }, (_, r) => r);
+    const top = (r: number): number => (up[r] === r ? r : (up[r] = top(up[r])));
+    const riverOf = new Int32Array(nodes.length).fill(-1);
+    arcs.forEach((A) => (riverOf[A.a] = riverOf[A.b] = A.river));
+    for (let v = 0; v < nodes.length; v++) {
+      const nd = nodes[v];
+      if (deg[v] !== 1 || nd.sea || nd.open) continue;
+      let bq = -1, bk = -1, bd = GAP_M;
+      for (let i = Math.floor((nd.x - GAP_M) / G); i <= Math.floor((nd.x + GAP_M) / G); i++) for (let j = Math.floor((nd.y - GAP_M) / G); j <= Math.floor((nd.y + GAP_M) / G); j++) {
+        const l = grid.get(tkey(i, j));
+        if (l) for (let z = 0; z < l.length; z += 2) {
+          const q = l[z], k = l[z + 1], P = arcs[q].pts;
+          if (top(same[q]) === top(riverOf[v]) || k >= P.length) continue;
+          const dd = hyp(P[k] - nd.x, P[k + 1] - nd.y);
+          if (dd < bd) (bd = dd), (bq = q), (bk = k);
+        }
+      }
+      if (bq >= 0) {
+        // split the arc at that point (unless it is an end), and join the two by a straight arc
+        const A = arcs[bq], P = A.pts;
+        let w: number;
+        if (bk === 0) w = A.a;
+        else if (bk === P.length - 2) w = A.b;
+        else {
+          w = nodes.length;
+          nodes.push({ x: P[bk], y: P[bk + 1], sea: false, body: -1, open: false });
+          const B: RiverArc = { pts: P.slice(bk), a: w, b: A.b, river: A.river, half: A.half, cross: [] };
+          (A.pts = P.slice(0, bk + 2)), (A.b = w);
+          arcs.push(B), same.push(B.river), index(arcs.length - 1);
+        }
+        arcs.push({ pts: Float64Array.of(nd.x, nd.y, nodes[w].x, nodes[w].y), a: v, b: w, river: riverOf[v], half: A.half, cross: [] });
+        same.push(riverOf[v]);
+        up[top(same[bq])] = top(riverOf[v]);
+        continue;
+      }
+      for (let s = COARSE_M / 2; s <= SEA_GAP_M; s += COARSE_M / 2) {
+        let hit = false;
+        for (let q = 0; q < 16 && !hit; q++) hit = coarseAt(nd.x + s * Math.cos((q * Math.PI) / 8), nd.y + s * Math.sin((q * Math.PI) / 8)) === 3;
+        if (hit) {
+          (nd.sea = true), (nd.body = bodyNear(nd.x, nd.y, BODY_NEAR + Math.ceil(SEA_GAP_M / COARSE_M)));
+          break;
+        }
+      }
+    }
+    arcs.forEach((A, q) => (A.river = top(same[q])));
+  }
 
   /** one river's cells (global cell indices) thinned in a raster of its own (origin ox, oy, w by hh cells) and traced
    * into `nodes` and `arcs` */
@@ -371,16 +568,21 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) if (fineAt(i + di, j + dj) === 2) return true;
       return false;
     };
+    const byEdge = (c: number) => {
+      const i = (c % w) + ox, j = Math.floor(c / w) + oy;
+      for (let dj = -3; dj <= 3; dj += 3) for (let di = -3; di <= 3; di += 3) if (beyond(i + di, j + dj)) return true;
+      return false;
+    };
     // nodes: cells with other than two neighbours, those touching one node
     const nodeOf = new Map<number, number>();
-    const local: { cells: number[]; sea: boolean }[] = [];
+    const local: { cells: number[]; sea: boolean; open: boolean }[] = [];
     const isNode = (c: number) => nbrs(c).length !== 2;
     for (let c = 0; c < w * hh; c++) {
       if (!img[c] || nodeOf.has(c) || !isNode(c)) continue;
       const id = local.length, cells = [c];
       nodeOf.set(c, id);
       for (let q = 0; q < cells.length; q++) for (const d of [...nbrs(cells[q])]) if (!nodeOf.has(d) && isNode(d)) nodeOf.set(d, id), cells.push(d);
-      local.push({ cells, sea: cells.some(bySea) });
+      local.push({ cells, sea: cells.some(bySea), open: cells.some(byEdge) });
     }
     type LArc = { cells: number[]; a: number; b: number; len: number };
     const larcs: LArc[] = [], used = new Uint8Array(w * hh);
@@ -409,7 +611,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
     for (let c = 0; c < w * hh; c++) {
       if (!img[c] || used[c] || nodeOf.has(c)) continue;
       nodeOf.set(c, local.length);
-      local.push({ cells: [c], sea: bySea(c) });
+      local.push({ cells: [c], sea: bySea(c), open: false });
       const d = nbrs(c)[0];
       if (d !== undefined) walk(c, d);
     }
@@ -426,7 +628,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       let cut = false;
       larcs.forEach((l, q) => {
         if (!alive[q] || l.a === l.b) return;
-        const freeA = degree[l.a] === 1 && !local[l.a].sea, freeB = degree[l.b] === 1 && !local[l.b].sea;
+        const freeA = degree[l.a] === 1 && !local[l.a].sea && !local[l.a].open, freeB = degree[l.b] === 1 && !local[l.b].sea && !local[l.b].open;
         if (freeA === freeB) return;
         const at = freeA ? l.cells[l.cells.length - 1] : l.cells[0];
         if (l.len < Math.max(SPUR_M, SPUR_WIDTHS * (half[at] / 3) * h)) (alive[q] = false), (cut = true);
@@ -450,7 +652,8 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         let sx = 0, sy = 0;
         for (const c of cs) (sx += (c % w) + ox + 0.5), (sy += Math.floor(c / w) + oy + 0.5);
         kept.set(id, (k = nodes.length));
-        nodes.push({ x: (sx / cs.length) * h, y: (sy / cs.length) * h, sea: local[id].sea });
+        const nx = (sx / cs.length) * h, ny = (sy / cs.length) * h;
+        nodes.push({ x: nx, y: ny, sea: local[id].sea, body: local[id].sea ? bodyNear(nx, ny) : -1, open: local[id].open && !local[id].sea });
       }
       return k;
     };
@@ -483,8 +686,9 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       // the ends at the nodes' middles
       const a = keepNode(start), b = keepNode(from);
       (p[0] = nodes[a].x), (p[1] = nodes[a].y), (p[p.length - 2] = nodes[b].x), (p[p.length - 1] = nodes[b].y);
-      arcs.push({ pts: Float64Array.from(simplifyLine(p, h)), a, b, half: hw[hw.length >> 1], cross: [] });
+      arcs.push({ pts: Float64Array.from(simplifyLine(p, h)), a, b, river: rivers, half: hw[hw.length >> 1], cross: [] });
     });
+    rivers++;
   }
 }
 

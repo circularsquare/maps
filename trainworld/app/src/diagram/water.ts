@@ -1,17 +1,18 @@
 // The network diagram's water (T-2169; docs/ui-diagram.md "Water"), drawn on the finished drawing from the water on the
-// ground (waterReal.ts); the rail drawing is not touched. Rivers are bands of one width: each hop whose track crosses a
-// river is crossed once, square to its bundle, near the real share of the hop, from the side the river comes from;
-// between those crossings the band is routed on a grid the way a line would be (runs at 0, 45 and 90 degrees, bends
-// costing, never through a line's casing or a pill) near the river's own course carried into the drawing by the
-// nearest stations' local maps (T-2488's border lines, notes/T-2488.md). Where no such way is found the band has a gap,
-// so it never crosses a line the river does not. The sea is waterSea.ts'.
+// ground (waterReal.ts); the rail drawing is not touched. The sea is waterSea.ts', drawn first. A river a hop crosses
+// is drawn whole (T-2516): along it between its crossings and on to where it meets the sea, as one band. Each hop whose
+// track crosses it is crossed once, square to its bundle, near the real share of the hop, from the side the river
+// comes from; between those crossings the band is routed on a grid the way a line would be (runs at 0, 45 and 90
+// degrees, bends costing, clear of the lines' casings and the pills) near the river's own course carried into the
+// drawing by the nearest stations' local maps (T-2488's border lines, notes/T-2488.md). Where the drawing leaves no
+// such way, the band crosses the fewest lines it can: it is never left with a gap.
 
 import type { DiagramGraph } from "./graph";
-import { pillSize, type Drawing } from "./draw";
+import { pillSize, STROKE_SHARE, type Drawing } from "./draw";
 import { fitOcti, rounded, segD } from "./borders";
 import { hyp } from "./fmath";
 import type { RealWater, RiverArc, Crossing } from "./waterReal";
-import { diagramSea, type SeaStats } from "./waterSea";
+import { diagramSea, type SeaGrid, type SeaStats } from "./waterSea";
 
 export interface DiagramWater {
   /** the rivers' centre lines as path commands (draw.ts `toPath`), stroked BAND pitches wide with round ends */
@@ -23,24 +24,35 @@ export interface DiagramWater {
   /** checks only: the sea's rings as fitted */
   seaRings?: Float64Array[];
   seaStats?: SeaStats;
-  /** checks only: each river run as routed (x, y pairs, before its corners are rounded), its arc, and the crossings it
-   * was routed through (graph edges) */
-  runs?: { parts: Float64Array[]; arc: number; edges: number[]; marks: number[] }[];
-  /** checks only: sections with no way clear of the lines, from x, y to x, y */
-  failed?: number[];
+  /** checks only: each river run as routed (x, y pairs, before its corners are rounded), its arc and river, and the
+   * crossings it was routed through (graph edges); `ends`, per end of the arc, what it meets: "sea" (a region of the
+   * drawn sea, `region`), "river" (another drawn arc), "open" (it runs on off the drawing), "free" (where the river
+   * ends on the ground) or "dry" (the sea it meets is not drawn near) */
+  runs?: { parts: Float64Array[]; arc: number; river: number; edges: number[]; marks: number[]; falseKeys: string[]; ends: string[]; regions: number[] }[];
+  /** checks only: where bands cross lines the river does not, x, y */
+  falsePts?: number[];
+  /** checks only: the drawn sea on its grid */
+  seaGrid?: SeaGrid;
   stats: WaterStats;
 }
-export interface WaterStats { arcs: number; crossings: number; leftOut: number; turned: number; sections: number; widened: number; noRoute: number; ms: number }
+/** `falseCross`: lines crossed where the river does not cross them (T-2497); `rivers` drawn, `dropped` (crossed but
+ * not drawn: narrow ones that would have had to cross other lines), `uncrossed` (found but no hop crosses them);
+ * `mouths` drawn into the sea, `dry` ends meeting a sea that is not drawn near, `open` ends running off the drawing */
+export interface WaterStats { arcs: number; crossings: number; leftOut: number; turned: number; sections: number; widened: number; noRoute: number; falseCross: number; rivers: number; dropped: number; uncrossed: number; mouths: number; dry: number; open: number; channels: number; ms: number }
 
-/** a river band's width, pitches */
-export const BAND = 2;
+/** a river band's width, pitches: three lines' (T-2516) */
+export const BAND = 3 * STROKE_SHARE;
 /** a route's cost rises within this many pitches of a casing or pill beyond the band's half width */
 const GAP = 1;
 /** the routing grid's cell, pitches; how far a route may stray from its course; bends' costs (pitches of length) */
-const CELL = 1, CORRIDOR = 12, B45 = 6, B90 = 14;
+const CELL = 1, CORRIDOR = 12, B45 = 10, B90 = 30;
 /** straying costs nothing within FREE_DEV pitches, then W_DEV at the corridor's edge (per unit length); nearness to a
  * casing W_PROX at touching */
-const FREE_DEV = 8, W_DEV = 0.1, W_PROX = 3;
+const FREE_DEV = 8, W_DEV = 0.3, W_PROX = 1;
+/** a way may cross other lines, each pitch inside a casing costing W_CROSS pitches of length, inside a hop the river
+ * crosses elsewhere W_OWN, inside a pill W_PILL (T-2497, T-2516); it is looked for within ROUTE_M corridors of its
+ * course */
+const W_CROSS = 10, W_OWN = 60, W_PILL = 150, ROUTE_M = 2;
 /** a crossing runs on until this many pitches past the outermost casing (and any other it would end on) */
 const RUN_PAST = 0.5;
 /** the shares of a hop a crossing may be moved to, from its real one, to end clear of other lines */
@@ -49,13 +61,18 @@ const SHARES = [0.2, 0.35, 0.5, 0.65, 0.8];
 const MAX_GUIDE = 100;
 /** a river's course sampled this often on the ground, metres */
 const DENSIFY_M = 200;
-/** a river is drawn on to the sea where it meets it within this, metres */
-const SEA_REACH_M = 4000;
-/** a river ending free (not where it meets another drawn river or the sea) runs on this many pitches past its last
- * crossing */
-const TAIL = 3;
-/** drawn parts of one river are joined where the way between them along it is under this, metres */
-const JOIN_M = 15000;
+/** a river is drawn on to its nearest mouth, and to each other mouth where it is at least MAJOR_M metres wide each side
+ * of its middle within MOUTH_M of what is drawn, metres; the sea a mouth meets is looked for within MOUTH_REACH
+ * pitches of where its place on the ground is carried */
+const MAJOR_M = 150, MOUTH_M = 25000, MOUTH_REACH = 80;
+/** a mouth at a sea not drawn near goes on by water on the ground to one that is within this, metres; pieces of one sea
+ * drawn apart are joined by a channel within CHANNEL pitches */
+const WAY_M = 30000, CHANNEL = 40;
+/** a piece of sea under this many square pitches (a sliver the coast's fit leaves) needs no channel */
+const CHANNEL_MIN = 60;
+/** a river ending free (where it ends on the ground) runs on this many pitches past its last crossing, a wide one
+ * TAIL_MAJOR; one running on off what is looked at runs on this far past the drawing's box */
+const TAIL = 3, TAIL_MAJOR = 5, OPEN_RUN = 12;
 /** corners rounded with this radius, pitches */
 const RADIUS = 2.5;
 
@@ -75,10 +92,13 @@ const dirOf = (dx: number, dy: number) => {
 export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, d: Drawing, real: RealWater, detail = false): DiagramWater {
   const t0 = performance.now();
   const pitch = d.pitch, n = g.key.length;
-  const stats: WaterStats = { arcs: 0, crossings: 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, ms: 0 };
-  const failed: number[] = [];
+  const stats: WaterStats = { arcs: 0, crossings: 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, falseCross: 0, rivers: 0, dropped: 0, uncrossed: 0, mouths: 0, dry: 0, open: 0, channels: 0, ms: 0 };
+  const warp = makeWarp(g, x, y, 20 * pitch, 2, 2.5 * pitch);
+  const sea = diagramSea(g, x, y, d, real, warp.J);
+  const t0r = performance.now();
 
-  // ---- which arcs are drawn: those crossed and those joining them; then the sea's within reach
+  // ---- which arcs are drawn: of each river some hop crosses, those crossed and those joining them, and the ways on to
+  // its mouths
   const arcs = real.arcs, nn = real.nodes.length;
   const lenOf = (a: RiverArc) => {
     let s = 0;
@@ -92,11 +112,11 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     deg.fill(0);
     arcs.forEach((a, q) => drawn[q] && (deg[a.a]++, deg[a.b]++));
   };
+  const by: number[][] = Array.from({ length: nn }, () => []);
+  arcs.forEach((a, q) => a.a !== a.b && (by[a.a].push(q), by[a.b].push(q)));
   {
-    // the drawn parts of a river joined where the way between them on the river is under JOIN_M (a greedy Steiner tree:
-    // from each part, the nearest other by Dijkstra over the arcs, joined, until none is within reach)
-    const by: number[][] = Array.from({ length: nn }, () => []);
-    arcs.forEach((a, q) => a.a !== a.b && (by[a.a].push(q), by[a.b].push(q)));
+    // the drawn parts of a river joined (a greedy Steiner tree: from each part, the nearest other by Dijkstra over the
+    // arcs, joined, until all are)
     const up = Int32Array.from({ length: nn }, (_, i) => i);
     const find = (v: number): number => (up[v] === v ? v : (up[v] = find(up[v])));
     arcs.forEach((a, q) => drawn[q] && (up[find(a.a)] = find(a.b)));
@@ -122,7 +142,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
           }
           for (const q of by[v]) {
             const w = arcs[q].a === v ? arcs[q].b : arcs[q].a, nd = dv + alen[q];
-            if (nd < dist[w] && nd <= JOIN_M) (dist[w] = nd), (via[w] = q), heap.push(nd, w);
+            if (nd < dist[w]) (dist[w] = nd), (via[w] = q), heap.push(nd, w);
           }
         }
         if (hit < 0) continue;
@@ -138,19 +158,56 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       }
     }
   }
+  {
+    // on to the sea (T-2516): from what is drawn of each river along it to its nearest mouth, and to each wide mouth
+    // within MOUTH_M; a river meeting no sea runs on to where it leaves what is looked at, if it does
+    const dist = new Float64Array(nn).fill(Infinity), via = new Int32Array(nn).fill(-1), heap = new Heap();
+    for (let v = 0; v < nn; v++) if (by[v].some((q) => drawn[q])) (dist[v] = 0), heap.push(0, v);
+    while (heap.size) {
+      const [dv, v] = heap.pop();
+      if (dv > dist[v]) continue;
+      for (const q of by[v]) {
+        const w = arcs[q].a === v ? arcs[q].b : arcs[q].a, nd = dv + alen[q];
+        if (nd < dist[w]) (dist[w] = nd), (via[w] = q), heap.push(nd, w);
+      }
+    }
+    const take = (m: number) => {
+      for (let v = m; dist[v] > 0; ) {
+        const q = via[v];
+        drawn[q] = true;
+        v = arcs[q].a === v ? arcs[q].b : arcs[q].a;
+      }
+    };
+    const wide = (v: number) => by[v].some((q) => arcs[q].half >= MAJOR_M);
+    const nearest = new Map<number, number>(), open = new Map<number, number>();
+    for (let v = 0; v < nn; v++) {
+      if (dist[v] === Infinity || !by[v].length) continue;
+      const r = arcs[by[v][0]].river, nd = real.nodes[v];
+      if (nd.sea && (nearest.get(r) === undefined || dist[v] < dist[nearest.get(r)!])) nearest.set(r, v);
+      if (nd.open && (open.get(r) === undefined || dist[v] < dist[open.get(r)!])) open.set(r, v);
+    }
+    for (const v of nearest.values()) take(v);
+    for (const [r, v] of open) if (!nearest.has(r)) take(v);
+    // a river meeting no sea and running on off nowhere (it ends on the ground at both ends, or the mask loses it) is
+    // not drawn: it would stop short (T-2516)
+    const short = new Set<number>();
+    arcs.forEach((a, q) => drawn[q] && !nearest.has(a.river) && !open.has(a.river) && short.add(a.river));
+    arcs.forEach((a, q) => short.has(a.river) && (drawn[q] = false));
+    stats.dropped += short.size;
+    for (let v = 0; v < nn; v++) if (real.nodes[v].sea && dist[v] > 0 && dist[v] <= MOUTH_M && wide(v)) take(v);
+  }
   count();
-  arcs.forEach((a, q) => {
-    if (drawn[q] || a.a === a.b) return;
-    const ends = [a.a, a.b].filter((v) => deg[v] > 0);
-    if (ends.length === 1 && real.nodes[ends[0] === a.a ? a.b : a.a].sea && alen[q] <= SEA_REACH_M) drawn[q] = true;
-  });
-  count();
+  {
+    const crossed = new Set<number>(), all = new Set<number>();
+    arcs.forEach((a) => (all.add(a.river), a.cross.length && crossed.add(a.river)));
+    stats.uncrossed = all.size - crossed.size;
+  }
 
-  // ---- the warp, and the drawing's obstacles (casings and pills) by squares of OB
-  const warp = makeWarp(g, x, y, 20 * pitch, 2, 2.5 * pitch);
+  // ---- the drawing's obstacles (casings and pills) by squares of OB
   const half = (BAND / 2) * pitch, C = half + GAP * pitch;
   const segs: number[] = [];
   for (const r of d.ribbons) for (let k = 0; k + 3 < r.length; k += 2) segs.push(r[k], r[k + 1], r[k + 2], r[k + 3], pitch / 2);
+  const pillsFrom = segs.length;
   d.pills.forEach((p, q) => {
     const [r, o] = pillSize(d, d.pillOf[q]);
     segs.push(p[0], p[1], p[2], p[3], r + o + p[4]);
@@ -174,6 +231,16 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     let best = CL;
     for (const s of obs.get(okey(Math.floor(px / OB), Math.floor(py / OB))) ?? []) best = Math.min(best, segD(px, py, segs[s], segs[s + 1], segs[s + 2], segs[s + 3]) - segs[s + 4]);
     return best;
+  };
+  /** what a way pays a unit of length to cross the casings at (px, py) where it has to: dearer through a pill or a hop
+   * in `own` (the river crosses those elsewhere) */
+  const crossCost = (px: number, py: number, own: Set<number>) => {
+    let c = 0;
+    for (const s of obs.get(okey(Math.floor(px / OB), Math.floor(py / OB))) ?? []) {
+      if (segD(px, py, segs[s], segs[s + 1], segs[s + 2], segs[s + 3]) >= segs[s + 4]) continue;
+      c = Math.max(c, s >= pillsFrom ? W_PILL : own.has(ribE[s / 5]) ? W_OWN : W_CROSS);
+    }
+    return c;
   };
   /** a point moved off the lines: the nearest within 8 pitches with the full clearance, else the clearest */
   const free = (px: number, py: number): [number, number] => {
@@ -311,20 +378,17 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
 
   // ---- routing
   const h = CELL * pitch, Rc = CORRIDOR * pitch;
-  /** a route clear of the lines, or null where none is found (the band then has a gap: it never crosses a line the
-   * river does not) */
-  const routeOne = (sx: number, sy: number, dS: number, ex: number, ey: number, dE: number, guide: number[]): number[] | null => {
+  /** a route, crossing another line only where going round costs more (T-2516: a smooth band crossing a line reads
+   * better than one winding through the gaps; T-2497: the drawing may have put its two ends on different sides of
+   * some line), a hop in `own` (the river's) dearer still */
+  const routeOne = (sx: number, sy: number, dS: number, ex: number, ey: number, dE: number, guide: number[], own: Set<number>): { p: number[]; fb: boolean } => {
     stats.sections++;
-    for (const k of [1, 3]) {
-      const r = attempt(sx, sy, dS, ex, ey, dE, guide, k * Rc);
-      if (r) return r;
-      stats.widened++;
-    }
-    if (detail) failed.push(sx, sy, ex, ey);
+    const r = attempt(sx, sy, dS, ex, ey, dE, guide, ROUTE_M * Rc, own);
+    if (r) return { p: r, fb: true };
     stats.noRoute++;
-    return null;
+    return { p: [sx, sy, ex, ey], fb: true };
   };
-  const attempt = (sx: number, sy: number, dS: number, ex: number, ey: number, dE: number, guide: number[], M: number): number[] | null => {
+  const attempt = (sx: number, sy: number, dS: number, ex: number, ey: number, dE: number, guide: number[], M: number, own: Set<number> | null): number[] | null => {
     let gx0 = Infinity, gy0 = Infinity, gx1 = -Infinity, gy1 = -Infinity;
     for (let k = 0; k < guide.length; k += 2) (gx0 = Math.min(gx0, guide[k])), (gx1 = Math.max(gx1, guide[k])), (gy0 = Math.min(gy0, guide[k + 1])), (gy1 = Math.max(gy1, guide[k + 1]));
     const i0 = Math.floor((gx0 - M - sx) / h) - 1, i1 = Math.ceil((gx1 + M - sx) / h) + 1, j0 = Math.floor((gy0 - M - sy) / h) - 1, j1 = Math.ceil((gy1 + M - sy) / h) + 1;
@@ -367,10 +431,11 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     const free0 = FREE_DEV * pitch;
     const cost = (c: number) => {
       if (clr[c] !== clr[c]) {
-        const od = clearAt(sx + ((c % W) + i0) * h, sy + (Math.floor(c / W) + j0) * h);
+        const cx = sx + ((c % W) + i0) * h, cy = sy + (Math.floor(c / W) + j0) * h, od = clearAt(cx, cy);
         clr[c] = od;
         const dv = Math.max(0, gd[c] * h - free0) / (Rc - free0), pr = Math.max(0, 1 - od / CL);
-        step[c] = od < 0 && c !== goal && c !== start ? Infinity : 1 + W_DEV * dv * dv + W_PROX * pr * pr;
+        step[c] = 1 + W_DEV * dv * dv + W_PROX * pr * pr;
+        if (od < 0 && c !== goal && c !== start) step[c] = own ? step[c] + crossCost(cx, cy, own) : Infinity;
       }
       return step[c];
     };
@@ -424,7 +489,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
   };
 
   // ---- the ribbons' segments with their graph edges, by squares of RG: what a piece may not cross
-  const RG = 4 * pitch, rib = new Map<number, number[]>(), ribE: number[] = [], ribP: number[] = [];
+  const RG = 4 * pitch, rib = new Map<number, number[]>(), ribE: number[] = [], ribL: number[] = [], ribP: number[] = [];
   {
     const edgeOf = new Map<number, number>();
     for (let e = 0; e < g.ea.length; e++) edgeOf.set(g.ea[e] * n + g.eb[e], e);
@@ -432,7 +497,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       const chain = g.lines[d.lineOf[li]].chain, at = d.chainAt[li];
       for (let k = 0; k + 3 < r.length; k += 2) {
         const ci = at[k / 2], u = chain[ci], w = chain[ci + 1], s = ribE.length;
-        ribE.push(w === undefined ? -1 : edgeOf.get(Math.min(u, w) * n + Math.max(u, w)) ?? -1);
+        ribE.push(w === undefined ? -1 : edgeOf.get(Math.min(u, w) * n + Math.max(u, w)) ?? -1), ribL.push(li);
         ribP.push(r[k], r[k + 1], r[k + 2], r[k + 3]);
         for (let i = Math.floor(Math.min(r[k], r[k + 2]) / RG); i <= Math.floor(Math.max(r[k], r[k + 2]) / RG); i++) for (let j = Math.floor(Math.min(r[k + 1], r[k + 3]) / RG); j <= Math.floor(Math.max(r[k + 1], r[k + 3]) / RG); j++) {
           const l = rib.get(okey(i, j));
@@ -442,8 +507,9 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       }
     });
   }
-  /** whether polyline p crosses a ribbon of an edge not in `allow` */
-  const crossesOther = (p: number[], allow: Set<number>) => {
+  /** the ribbons (`${ribbon}|${edge}`) of edges not in `allow` that polyline p crosses */
+  const crossKeys = (p: number[], allow: Set<number>, at?: number[]) => {
+    const got = new Set<string>();
     for (let k = 0; k + 3 < p.length; k += 2) {
       const ax = p[k], ay = p[k + 1], ux = p[k + 2] - ax, uy = p[k + 3] - ay;
       for (let i = Math.floor(Math.min(ax, p[k + 2]) / RG); i <= Math.floor(Math.max(ax, p[k + 2]) / RG); i++) for (let j = Math.floor(Math.min(ay, p[k + 3]) / RG); j <= Math.floor(Math.max(ay, p[k + 3]) / RG); j++) for (const s of rib.get(okey(i, j)) ?? []) {
@@ -451,12 +517,11 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
         const cx = ribP[s * 4], cy = ribP[s * 4 + 1], vx = ribP[s * 4 + 2] - cx, vy = ribP[s * 4 + 3] - cy, den = ux * vy - uy * vx;
         if (Math.abs(den) < 1e-12) continue;
         const r = ((cx - ax) * vy - (cy - ay) * vx) / den, t = ((cx - ax) * uy - (cy - ay) * ux) / den;
-        if (r >= 0 && r <= 1 && t >= 0 && t <= 1) return true;
+        if (r >= 0 && r <= 1 && t >= 0 && t <= 1) got.add(`${ribL[s]}|${ribE[s]}`), at?.push(ax + ux * r, ay + uy * r);
       }
     }
-    return false;
+    return got;
   };
-
   // ---- each drawn arc: from its start through each crossing to its end
   const nodeAt = new Map<number, [number, number]>();
   const nodePlace = (v: number) => {
@@ -464,7 +529,67 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     if (!p) nodeAt.set(v, (p = free(...warped(real.nodes[v].x, real.nodes[v].y))));
     return p;
   };
-  const cmds: number[] = [], runs: DiagramWater["runs"] = [];
+  // a mouth is drawn into the sea it meets on the ground (T-2516): the nearest cell of a drawn region of that sea, deep
+  // enough for the band's end, to where its place on the ground is carried
+  const G = sea.grid, need = (3 * (half + pitch)) / G.h, mouthAt = new Map<number, [number, number, number] | null>();
+  const mouthNear = (x: number, y: number, body: number) => {
+    const [wx, wy] = warped(x, y), R = Math.ceil((MOUTH_REACH * pitch) / G.h);
+    const ci = Math.floor((wx - G.x0) / G.h), cj = Math.floor((wy - G.y0) / G.h);
+    let best: [number, number, number] | null = null, bd = Infinity;
+    for (let j = Math.max(0, cj - R); j <= Math.min(G.H - 1, cj + R); j++) for (let i = Math.max(0, ci - R); i <= Math.min(G.W - 1, ci + R); i++) {
+      const c = j * G.W + i, r = G.reg[c], dd = (i - ci) ** 2 + (j - cj) ** 2;
+      if (r < 0 || dd >= bd || G.depth[c] < need || (G.body[r] !== body && G.body[r] >= 0 && body >= 0)) continue;
+      (best = [G.x0 + (i + 0.5) * G.h, G.y0 + (j + 0.5) * G.h, r] as [number, number, number]), (bd = dd);
+    }
+    return best;
+  };
+  const mouth = (v: number) => {
+    if (!mouthAt.has(v)) mouthAt.set(v, mouthNear(real.nodes[v].x, real.nodes[v].y, real.nodes[v].body));
+    return mouthAt.get(v)!;
+  };
+  /** the routes along a course on the ground (`rr`, x, y pairs) from (fx, fy), leaving the way fd, to (tx, ty),
+   * arriving the way td (-1 either way) */
+  const course = (rr: number[], fx: number, fy: number, fd: number, tx: number, ty: number, td: number, own: Set<number>): number[][] => {
+    const got: number[][] = [];
+    const guide = simplify(chainFit(rr, fx, fy, tx, ty), 2 * pitch);
+    let gl = 0;
+    const cut = [0];
+    for (let k = 2; k < guide.length; k += 2) {
+      gl += hyp(guide[k] - guide[k - 2], guide[k + 1] - guide[k - 1]);
+      if (gl > MAX_GUIDE * pitch && k < guide.length - 2) cut.push(k), (gl = 0);
+    }
+    cut.push(guide.length - 2);
+    let ax = fx, ay = fy, ad = fd;
+    for (let c = 1; c < cut.length; c++) {
+      const lastPart = c === cut.length - 1;
+      const [bx, by] = lastPart ? [tx, ty] : free(guide[cut[c]], guide[cut[c] + 1]);
+      const sub = [ax, ay, ...guide.slice(cut[c - 1] + 2, cut[c]), bx, by];
+      got.push(routeOne(ax, ay, ad, bx, by, lastPart ? td : -1, sub, own).p);
+      (ax = bx), (ay = by), (ad = -1);
+    }
+    return got;
+  };
+  // a mouth at a sea not drawn near goes on by water on the ground to one that is (T-2516: the Hackensack through
+  // Newark Bay and the Kill Van Kull to the harbour)
+  const drawnSeas = new Set(G.body.filter((b) => b >= 0));
+  const wayAt = new Map<number, { pts: number[]; to: [number, number, number] } | null>();
+  const way = (v: number) => {
+    if (wayAt.has(v)) return wayAt.get(v)!;
+    const nd = real.nodes[v], w = real.waterWay(nd.x, nd.y, (b) => b !== nd.body && drawnSeas.has(b), WAY_M);
+    let out: { pts: number[]; to: [number, number, number] } | null = null;
+    if (w) {
+      const n2 = w.pts.length, to = mouthNear(w.pts[n2 - 2], w.pts[n2 - 1], w.body);
+      if (to) out = { pts: w.pts, to };
+    }
+    wayAt.set(v, out);
+    return out;
+  };
+  const [bx0, by0, bx1, by1] = d.box;
+  /** a drawn piece of band: its points, the hops it crosses as the river does and the lines it crosses that do not
+   * (`${ribbon}|${edge}`), its arc */
+  type Part = { p: number[]; e: Set<number>; f: Set<string>; arc: number; river: number; ends: string[]; regions: number[] };
+  const cmds: number[] = [], runs: DiagramWater["runs"] = [], parts: Part[] = [], marks = new Map<number, number[]>(), falsePts: number[] = [];
+  const ways = new Map<number, number>(), dryAt = new Set<number>();
   arcs.forEach((A, ai) => {
     if (!drawn[ai]) return;
     stats.arcs++;
@@ -485,95 +610,214 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       const f = Math.max(0, Math.min(1, (at - ss[q - 1]) / Math.max(1e-9, ss[q] - ss[q - 1])));
       return [rs[q * 2 - 2] + (rs[q * 2] - rs[q * 2 - 2]) * f, rs[q * 2 - 1] + (rs[q * 2 + 1] - rs[q * 2 - 1]) * f];
     };
-    const cr = A.cross.map((c) => [c, drawnCross(c)] as const).filter((q) => q[1]) as [Crossing, Drawn][];
-    // ends: a node joining other drawn rivers or at the sea is drawn to; a free end only a little past the last crossing
-    const freeEnd = (v: number) => deg[v] <= 1 && !real.nodes[v].sea;
+    const cr0 = A.cross.map((c) => [c, drawnCross(c)] as const).filter((q) => q[1]) as [Crossing, Drawn][];
+    stats.leftOut += A.cross.length - cr0.length;
+    // a crossing run that crosses every line of another hop this river crosses serves for both (two hops side by side
+    // in the drawing: PATH's into Christopher Street)
+    const also = new Map<Crossing, number[]>(), served = new Set<number>(), cr: [Crossing, Drawn][] = [];
+    for (const [c, dc] of cr0) {
+      if (served.has(c.e)) continue;
+      const lines = new Map<number, number>();
+      for (const k of crossKeys([dc.ex, dc.ey, dc.xx, dc.xy], new Set([c.e]))) {
+        const e = +k.split("|")[1];
+        if (e !== c.e && A.cross.some((o) => o.e === e)) lines.set(e, (lines.get(e) ?? 0) + 1);
+      }
+      const got = [...lines].filter(([e, m]) => m === (stretches.get(e)?.length ?? -1)).map(([e]) => e);
+      for (const e of got) {
+        served.add(e);
+        const before = cr.findIndex(([o]) => o.e === e);
+        if (before >= 0) got.push(...(also.get(cr[before][0]) ?? [])), cr.splice(before, 1);
+      }
+      also.set(c, [...new Set(got)].filter((e) => e !== c.e)), cr.push([c, dc]);
+    }
+    const own = new Set(A.cross.map((c) => c.e)), tl = (A.half >= MAJOR_M ? TAIL_MAJOR : TAIL) * pitch;
+    // ends: at the sea, into it; where other drawn arcs meet, the node; running on off what is looked at, on past the
+    // drawing's box; where the river ends on the ground, a short run on past the crossing beside it
+    const ends: string[] = [], regions: number[] = [];
+    const endAt = (v: number): [number, number] => {
+      const nd = real.nodes[v];
+      if (nd.sea) {
+        const m = mouth(v);
+        if (m) return ends.push("sea"), regions.push(m[2]), stats.mouths++, [m[0], m[1]];
+        const w = way(v);
+        if (w) return ends.push("way"), ways.set(v, A.river), nodePlace(v);
+        return ends.push("dry"), dryAt.add(v), nodePlace(v);
+      }
+      ends.push(deg[v] > 1 ? "river" : nd.open ? "open" : "free");
+      return nodePlace(v);
+    };
+    const freeEnd = (v: number) => deg[v] <= 1 && !real.nodes[v].sea && !real.nodes[v].open;
     let s0 = 0, s1 = total;
-    if (cr.length && freeEnd(A.a)) s0 = cr[0][0].s;
+    if (cr.length && freeEnd(A.a)) (s0 = cr[0][0].s), ends.push("free");
     if (cr.length && freeEnd(A.b)) s1 = cr[cr.length - 1][0].s;
-    // a free end is a short straight run on from the crossing beside it
-    const [sx0, sy0] = s0 > 0 ? [NaN, NaN] : nodePlace(A.a);
-    const [ex1, ey1] = s1 < total ? [NaN, NaN] : nodePlace(A.b);
-    // pieces in order: routes (e -1) and crossings (e their hop); null where no route was found
-    const pieces: ({ p: number[]; e: number } | null)[] = [];
+    const [sx0, sy0] = s0 > 0 ? [NaN, NaN] : endAt(A.a);
+    const [ex1, ey1] = s1 < total ? [NaN, NaN] : endAt(A.b);
+    if (s1 < total) ends.push("free");
+    // pieces in order: routes (e -1) and crossings (e their hop)
+    type Piece = { p: number[]; e: number; fb?: boolean; also?: number[] };
+    const pieces: Piece[] = [];
     let fromS = s0, fx = sx0, fy = sy0, fd = -1;
-    /** the routes from the last place to (tx, ty), arriving the way td; whether the last arrived */
-    const leg = (toS: number, tx: number, ty: number, td: number): { got: ({ p: number[]; e: number } | null)[]; ok: boolean } => {
-      const got: ({ p: number[]; e: number } | null)[] = [];
+    /** the routes from the last place to (tx, ty), arriving the way td */
+    const leg = (toS: number, tx: number, ty: number, td: number): Piece[] => {
       const rr: number[] = [...realAt(fromS)];
       for (let q = 0; q < ss.length; q++) if (ss[q] > fromS && ss[q] < toS) rr.push(rs[q * 2], rs[q * 2 + 1]);
       rr.push(...realAt(toS));
-      const guide = simplify(chainFit(rr, fx, fy, tx, ty), 2 * pitch);
-      let gl = 0;
-      const cut = [0];
-      for (let k = 2; k < guide.length; k += 2) {
-        gl += hyp(guide[k] - guide[k - 2], guide[k + 1] - guide[k - 1]);
-        if (gl > MAX_GUIDE * pitch && k < guide.length - 2) cut.push(k), (gl = 0);
-      }
-      cut.push(guide.length - 2);
-      let ax = fx, ay = fy, ad = fd;
-      for (let c = 1; c < cut.length; c++) {
-        const lastPart = c === cut.length - 1;
-        const [bx, by] = lastPart ? [tx, ty] : free(guide[cut[c]], guide[cut[c] + 1]);
-        const sub = [ax, ay, ...guide.slice(cut[c - 1] + 2, cut[c]), bx, by];
-        const r = routeOne(ax, ay, ad, bx, by, lastPart ? td : -1, sub);
-        got.push(r && { p: r, e: -1 });
-        (ax = bx), (ay = by), (ad = -1);
-      }
-      return { got, ok: !!got[got.length - 1] };
+      return course(rr, fx, fy, fd, tx, ty, td, own).map((p) => ({ p, e: -1, fb: true }));
     };
+    /** the lines a leg crosses where the river does not */
+    const falseOf = (got: Piece[]) => got.reduce((t, pc) => t + (pc.fb ? crossKeys(pc.p, new Set()).size : 0), 0);
     for (const [c, dc] of cr) {
       if (c.s < s0 || c.s > s1) continue;
-      // crossed the way the river crosses on the ground; where the drawing leaves no way round to that side, the other
-      // way (the drawing turned the place over), which crosses no other line either
       if (fx !== fx) {
-        const ux = UX[dc.dir] * TAIL * pitch, uy = UY[dc.dir] * TAIL * pitch;
-        pieces.push({ p: [dc.ex - ux, dc.ey - uy, dc.ex, dc.ey], e: -1 }, { p: [dc.ex, dc.ey, dc.xx, dc.xy], e: c.e });
+        const ux = UX[dc.dir] * tl, uy = UY[dc.dir] * tl;
+        pieces.push({ p: [dc.ex - ux, dc.ey - uy, dc.ex, dc.ey], e: -1, fb: true }, { p: [dc.ex, dc.ey, dc.xx, dc.xy], e: c.e, also: also.get(c) });
         (fromS = c.s), (fx = dc.xx), (fy = dc.xy), (fd = dc.dir);
         continue;
       }
+      // crossed the way the river crosses on the ground; where the drawing leaves no clean way round to that side, the
+      // other way (the drawing turned the place over) if that crosses fewer other lines
       let l = leg(c.s, dc.ex, dc.ey, dc.dir), run = [dc.ex, dc.ey, dc.xx, dc.xy], dir = dc.dir;
-      if (!l.ok) {
+      const lf = falseOf(l);
+      if (lf) {
         const back = leg(c.s, dc.xx, dc.xy, (dc.dir + 4) % 8);
-        if (back.ok) (l = back), (run = [dc.xx, dc.xy, dc.ex, dc.ey]), (dir = (dc.dir + 4) % 8), stats.turned++;
+        if (falseOf(back) < lf) (l = back), (run = [dc.xx, dc.xy, dc.ex, dc.ey]), (dir = (dc.dir + 4) % 8), stats.turned++;
       }
-      pieces.push(...l.got, { p: run, e: c.e });
+      pieces.push(...l, { p: run, e: c.e, also: also.get(c) });
       (fromS = c.s), (fx = run[2]), (fy = run[3]), (fd = dir);
     }
-    if (ex1 === ex1) pieces.push(...leg(s1, ex1, ey1, -1).got);
-    else if (fd >= 0) pieces.push({ p: [fx, fy, fx + UX[fd] * TAIL * pitch, fy + UY[fd] * TAIL * pitch], e: -1 });
-    // a piece crossing a line it should not is left out: a route crossing any, a crossing any but its own hop's (so a
-    // band never crosses a line the river does not; a crossing left out is counted)
-    const parts: { p: number[]; e: Set<number> }[] = [], edges: number[] = [];
-    let out = { p: [] as number[], e: new Set<number>() };
-    const close = () => {
-      if (out.p.length >= 4) parts.push(out);
-      out = { p: [], e: new Set() };
+    if (ex1 === ex1) pieces.push(...leg(s1, ex1, ey1, -1));
+    else if (fd >= 0) pieces.push({ p: [fx, fy, fx + UX[fd] * tl, fy + UY[fd] * tl], e: -1, fb: true });
+    // an end running on off what is looked at goes on straight, away from the drawing's middle, past its box
+    const openRun = (px: number, py: number) => {
+      const k = dirOf(px - (bx0 + bx1) / 2, py - (by0 + by1) / 2), M = OPEN_RUN * pitch;
+      let t = 0;
+      while (t < 4000 * pitch && px + UX[k] * t > bx0 - M && px + UX[k] * t < bx1 + M && py + UY[k] * t > by0 - M && py + UY[k] * t < by1 + M) t += pitch;
+      stats.open++;
+      return [px, py, px + UX[k] * t, py + UY[k] * t];
     };
+    if (pieces.length && ends[ends.length - 1] === "open") {
+      const q = pieces[pieces.length - 1].p;
+      pieces.push({ p: openRun(q[q.length - 2], q[q.length - 1]), e: -1, fb: true });
+    }
+    if (pieces.length && ends[0] === "open" && s0 === 0) {
+      const r = openRun(pieces[0].p[0], pieces[0].p[1]);
+      pieces.unshift({ p: [r[2], r[3], r[0], r[1]], e: -1, fb: true });
+    }
+    // one band: the lines it crosses where the river does not counted
+    const out: Part = { p: [], e: new Set(), f: new Set(), arc: ai, river: A.river, ends, regions };
     for (const pc of pieces) {
-      if (!pc || crossesOther(pc.p, new Set([pc.e]))) {
-        if (pc && pc.e >= 0) stats.leftOut++;
-        close();
-        continue;
-      }
-      if (pc.e >= 0) edges.push(pc.e), out.e.add(pc.e);
+      const allow = new Set(pc.e >= 0 ? [pc.e, ...(pc.also ?? [])] : []), bad = crossKeys(pc.p, allow);
+      for (const k of bad) out.f.add(k);
+      if (detail && bad.size) crossKeys(pc.p, allow, falsePts);
+      for (const e of allow) out.e.add(e);
       for (let k = out.p.length ? 2 : 0; k < pc.p.length; k++) out.p.push(pc.p[k]);
     }
-    close();
-    const vs = parts.map((q) => Float64Array.from(q.p));
-    vs.forEach((v, q) => {
-      // rounded corners, unless rounding would cut across a line
-      let c: number[] = [];
-      rounded(v, false, RADIUS * pitch, c);
-      if (crossesOther(flatten(c), parts[q].e)) rounded(v, false, 0, (c = []));
-      for (const x of c) cmds.push(x);
-    });
-    stats.crossings += edges.length;
-    if (detail) runs.push({ parts: vs, arc: ai, edges, marks: cr.flatMap(([, dc]) => [dc.ex, dc.ey, dc.xx, dc.xy]) });
+    if (out.p.length >= 4) parts.push(out);
+    marks.set(ai, cr.flatMap(([, dc]) => [dc.ex, dc.ey, dc.xx, dc.xy]));
   });
-  stats.ms = performance.now() - t0;
-  const sea = diagramSea(g, x, y, d, real, warp.J);
-  return { rivers: Float64Array.from(cmds), band: BAND * pitch, sea: sea.cmds, seaRings: detail ? sea.rings : undefined, runs: detail ? runs : undefined, failed: detail ? failed : undefined, stats, seaStats: sea.stats };
+  // the ways on by water from mouths at seas not drawn near, each its own piece of band (as an arc of `arcs.length +`
+  // its node)
+  for (const [v, river] of ways) {
+    const w = way(v)!, [fx, fy] = nodePlace(v);
+    const p: number[] = [];
+    for (const q of course(w.pts, fx, fy, -1, w.to[0], w.to[1], -1, new Set())) for (let k = p.length ? 2 : 0; k < q.length; k++) p.push(q[k]);
+    if (p.length < 4) continue;
+    stats.mouths++;
+    parts.push({ p, e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + v, river, ends: ["river", "sea"], regions: [w.to[2]] });
+  }
+  // pieces of one sea on the ground drawn apart, and not joined by a river drawn, are joined by a channel where they
+  // are within CHANNEL pitches (T-2516; as river -1 - that sea)
+  {
+    const nR = G.body.length, up = Array.from({ length: nR }, (_, r) => r), find = (r: number): number => (up[r] === r ? r : (up[r] = find(up[r])));
+    const first = new Map<number, number>();
+    for (const q of parts) for (const r of q.regions) first.has(q.river) ? (up[find(r)] = find(first.get(q.river)!)) : first.set(q.river, r);
+    const area = new Float64Array(nR);
+    for (let c = 0; c < G.reg.length; c++) if (G.reg[c] >= 0) area[G.reg[c]]++;
+    const lim = (CHANNEL * pitch) / G.h, dist = new Float32Array(G.reg.length), from = new Int32Array(G.reg.length);
+    for (const b of new Set(G.body)) {
+      if (b < 0) continue;
+      for (let guard = 0; guard < nR; guard++) {
+        const mine = G.body.map((x, r) => (x === b && area[r] * G.h * G.h >= CHANNEL_MIN * pitch * pitch ? r : -1)).filter((r) => r >= 0);
+        const groups = new Map<number, number>();
+        for (const r of mine) groups.set(find(r), (groups.get(find(r)) ?? 0) + area[r]);
+        if (groups.size < 2) break;
+        const main = [...groups].sort((p, q) => q[1] - p[1])[0][0];
+        // outward from the main piece, through anything, to the nearest cell of another piece of the same sea
+        dist.fill(Infinity), from.fill(-1);
+        const queue: number[] = [];
+        for (let c = 0; c < G.reg.length; c++) if (G.reg[c] >= 0 && find(G.reg[c]) === main) (dist[c] = 0), queue.push(c);
+        let hit = -1;
+        for (let k = 0; k < queue.length && hit < 0; k++) {
+          const c = queue[k], i = c % G.W, j = (c - i) / G.W;
+          if (dist[c] >= lim) continue;
+          for (const nc of [i > 0 ? c - 1 : -1, i < G.W - 1 ? c + 1 : -1, j > 0 ? c - G.W : -1, j < G.H - 1 ? c + G.W : -1]) {
+            if (nc < 0 || dist[nc] !== Infinity) continue;
+            (dist[nc] = dist[c] + 1), (from[nc] = c), queue.push(nc);
+            const r = G.reg[nc];
+            if (r >= 0 && G.body[r] === b && find(r) !== main && mine.includes(r)) {
+              hit = nc;
+              break;
+            }
+          }
+        }
+        if (hit < 0) break;
+        let s0 = hit;
+        while (from[s0] >= 0) s0 = from[s0];
+        const at = (c: number): [number, number] => [G.x0 + ((c % G.W) + 0.5) * G.h, G.y0 + (Math.floor(c / G.W) + 0.5) * G.h];
+        const [sx, sy] = at(s0), [ex, ey] = at(hit);
+        const p = routeOne(sx, sy, -1, ex, ey, -1, [sx, sy, ex, ey], new Set()).p;
+        parts.push({ p, e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + nn + G.reg[hit], river: -1 - b, ends: ["sea", "sea"], regions: [G.reg[s0], G.reg[hit]] });
+        up[find(G.reg[hit])] = main;
+        stats.channels++;
+      }
+    }
+  }
+  // a river no wider than MAJOR_M where it is crossed is drawn only where it crosses no other line, else not at all
+  // (T-2516: never in pieces; small rivers crossing lines read as noise, T-2497)
+  {
+    // first a narrow arc at an end of what is drawn of a river (the Harlem River beside the Hudson) that crosses
+    // another line, and an arc left ending free with no crossing, until none is
+    const dg = new Int32Array(nn);
+    for (const q of parts) if (q.arc < arcs.length) dg[arcs[q.arc].a]++, dg[arcs[q.arc].b]++;
+    const endFree = (v: number) => dg[v] <= 1 && ((!real.nodes[v].sea && !real.nodes[v].open) || dryAt.has(v));
+    for (let again = true; again; ) {
+      again = false;
+      for (const q of parts) {
+        const A = arcs[q.arc];
+        if (!A || !q.p.length || A.a === A.b || !(endFree(A.a) || endFree(A.b)) || (q.e.size && !(A.half < MAJOR_M && q.f.size))) continue;
+        (stats.leftOut += q.e.size), (q.p.length = 0), dg[A.a]--, dg[A.b]--, (again = true);
+      }
+    }
+    const wide = new Set<number>(), dirty = new Set<number>(), all = new Set<number>();
+    arcs.forEach((A) => A.cross.length && A.half >= MAJOR_M && wide.add(A.river));
+    // (and a river left meeting no drawn sea: its mouths' seas are not drawn near, nor reached by water)
+    const crossed = new Set<number>(), reaches = new Set<number>();
+    for (const q of parts) if (q.p.length && q.ends.some((e) => e === "sea" || e === "way" || e === "open")) reaches.add(q.river);
+    for (const q of parts) if (q.p.length && q.e.size && reaches.has(q.river)) crossed.add(q.river);
+    for (const r of new Set(parts.map((q) => q.river))) if (r >= 0 && !crossed.has(r)) stats.dropped++;
+    for (const q of parts) if (q.river >= 0 && !crossed.has(q.river)) q.p.length = 0;
+    for (const q of parts) if (q.p.length && q.river >= 0) all.add(q.river), q.f.size && dirty.add(q.river);
+    for (const q of parts) if (dirty.has(q.river) && !wide.has(q.river)) (stats.leftOut += q.e.size), (q.p.length = 0);
+    for (const r of all) (dirty.has(r) && !wide.has(r) ? stats.dropped++ : stats.rivers++);
+    for (const q of parts) if (q.p.length) stats.dry += q.ends.filter((e) => e === "dry").length;
+  }
+  const byArc = new Map<number, Part[]>();
+  for (const q of parts) {
+    if (!q.p.length) continue;
+    const v = Float64Array.from(q.p);
+    // rounded corners, unless rounding would cut across a line
+    let c: number[] = [];
+    rounded(v, false, RADIUS * pitch, c);
+    if (crossKeys(flatten(c), q.e).size > q.f.size) rounded(v, false, 0, (c = []));
+    for (const x of c) cmds.push(x);
+    (stats.crossings += q.e.size), (stats.falseCross += q.f.size);
+    const l = byArc.get(q.arc);
+    if (l) l.push(q);
+    else byArc.set(q.arc, [q]);
+  }
+  if (detail) for (const [ai, l] of byArc) runs.push({ parts: l.map((q) => Float64Array.from(q.p)), arc: ai, river: l[0].river, edges: l.flatMap((q) => [...q.e]), marks: marks.get(ai) ?? [], falseKeys: l.flatMap((q) => [...q.f]), ends: l[0].ends, regions: l[0].regions });
+  stats.ms = performance.now() - t0r;
+  return { rivers: Float64Array.from(cmds), band: BAND * pitch, sea: sea.cmds, seaRings: detail ? sea.rings : undefined, seaGrid: detail ? sea.grid : undefined, runs: detail ? runs : undefined, falsePts: detail ? falsePts : undefined, stats, seaStats: sea.stats };
 }
 
 /** path commands (draw.ts `toPath`) as a polyline, curves sampled */

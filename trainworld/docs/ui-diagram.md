@@ -110,41 +110,68 @@ that arrive after a layout), between blocks as inside them.
 
 ## Water
 
-`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169; notes/T-2169.md). Drawn only with `?water`
-in the address for now (`WATER_ON` in view.ts), until Anita has looked at it. Rivers are drawn as
-lines and the sea (lakes too) as a coast, both in the base map's water colour of the theme, under everything else. The
-layout worker makes them last, after the borders, and posts them on their own, so the layout's time is not touched;
-the page names the zones near the network and the worker fetches their water masks from the packs (the 25 m rasters
-the track model prices water with), each zone once.
+`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516; notes/T-2169.md,
+notes/T-2497.md, notes/T-2516.md). Drawn only with `?water` in the address for now (`WATER_ON` in view.ts), until Anita
+has looked at it. Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
+map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
+coast drawn a little wrong shows less). The layout worker makes them last, after the borders, and posts them on their
+own, so the layout's time is not touched; the page names the zones near the network and the worker fetches their water
+masks from the packs (the 25 m rasters the track model prices water with), each zone once.
 
 - **On the ground**, near the network only. A coarse grid (200 m, within 15 km of a station) says where the **sea**
-  is: water at least 2 km across everywhere within it, and water within 400 m of that counts as the sea's. A fine
-  grid (40 m, within 3 km of a hop's track) finds **rivers**: water at least three cells (about 120 to 160 m) across
-  that is not the sea's, of the rivers some hop's track passes over. Each river is thinned to its centre line and
-  traced as arcs between the places where rivers meet or end; branches ending free under 400 m (or three half widths)
-  and rivers under 600 m in all are dropped. A hop crosses a river where its track crosses the centre line an odd
-  number of times; one hop crossing two arcs within 600 m of each other (where rivers meet) crosses the wider only.
-- **Rivers in the drawing**: bands 2 pitches wide with round ends. A river is drawn where a hop crosses it, and along
-  it between such places under 15 km apart, and on to the sea where it reaches it within 4 km; a river ending free
-  runs 3 pitches past its last crossing. Each crossing is a straight run square to the hop's bundle, at the real share
-  of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80% where it would otherwise end on another line), from
-  the side the river comes from on the ground, on past the outermost casing by half a pitch. Between crossings the band
-  is routed on a one-pitch grid like a line (runs at 0, 45 and 90 degrees, a 45 degree bend costing 6 pitches of length
-  and a 90 degree one 14), never through a casing or a pill, dearer within a pitch of the band's edge touching one, near
-  the river's course carried into the drawing through the nearest stations' local maps (T-2488's border lines).
-  Where the drawing leaves no way round to the side the river comes from, the run is crossed the other way; where it
-  leaves none at all, the band has a gap there. A run that would still cross another line is left out. So **a band
-  crosses exactly the hops that cross that river, each once, and no other line**. Corners are rounded at 2.5 pitches,
-  unless that would cut across a line.
+  is: water at least 2 km across everywhere within it, and water within 400 m of that counts as the sea's. Each sea
+  connected on the ground (four neighbours) is one **body**. A fine grid (40 m) finds **rivers**: water at least three
+  cells (about 120 to 160 m) across that is not the sea's, of the rivers some hop's track passes over, each followed
+  from the tiles within 3 km of a track out to 12 km from a station (where it runs on past that, or out of the masks,
+  its end is **open**). Each river is thinned to its centre line and traced as arcs between the places where rivers
+  meet or end; branches ending free under 400 m (or three half widths) and rivers under 600 m in all are dropped. A
+  river ending free within 400 m of another is joined to it by a straight arc (a bridge the mask draws as land), and
+  one ending free within 1 km of the sea ends at it. Where a river meets the sea, its end takes the body nearest. A
+  hop crosses a river where its track crosses the centre line an odd number of times; one hop crossing two arcs within
+  600 m of each other (where rivers meet) crosses the wider only.
+- **Which rivers are drawn**: only rivers (water connected on the ground) some hop crosses, and each drawn **whole,
+  as one band**: its crossed arcs, the arcs joining them along it, the way from them to its nearest mouth, and the way
+  to each mouth at least 150 m wide each side of its middle within 25 km (so the East River runs from the harbour to
+  Long Island Sound). A river with no mouth runs on to its open end; one with neither (it stops on the ground at both
+  ends) is not drawn. A narrow arc at an end of what is drawn (all its crossings under 150 m each side) that crosses
+  another line is left out, and an arc left ending free with no crossing goes with it; a river narrow wherever it is
+  crossed is drawn only where it crosses no other line, else not at all. So **no band is drawn in pieces**.
+- **Rivers in the drawing**: bands three lines wide (3 x 5/6.4 of a pitch) with round ends. Each crossing is a straight
+  run square to the hop's bundle, at the real share of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80%
+  where it would otherwise end on another line), from the side the river comes from on the ground, on past the
+  outermost casing by half a pitch; a run that crosses every line of another hop the river crosses serves for both.
+  Between crossings the band is routed on a one-pitch grid like a line (runs at 0, 45 and 90 degrees, a 45 degree bend
+  costing 10 pitches of length and a 90 degree one 30), dearer within a pitch of a casing, near the river's course
+  carried into the drawing through the nearest stations' local maps (T-2488's border lines), within 24 pitches of it.
+  It may cross other lines: each pitch inside a casing costs 10 pitches of length, inside a hop the river crosses
+  elsewhere 60, inside a pill 150, so it crosses a line where going round costs more (T-2516: a band that runs on
+  smoothly reads better than one winding through the gaps, and the drawing often puts a river's two banks on the wrong
+  sides of a line). Where that way crosses lines, the run is tried the other way round too, and the one crossing
+  fewer taken. So **a band crosses each hop that crosses that river once**, save where it has to cross its own hop
+  again, and other lines where the drawing leaves no way round.
+- **Ends**: a mouth goes into the drawn sea of the body it meets: to the nearest cell of that body's drawn sea, at
+  least a pitch past the band's edge from the coast, within 80 pitches of where its place on the ground is carried. A
+  mouth at a sea not drawn near (Newark Bay) goes on by water on the ground (the coarse grid's water, the shortest way
+  within 30 km) to a sea that is drawn, as its own band (the Kill Van Kull to the harbour). An open end runs on
+  straight, away from the drawing's middle, to 12 pitches past the drawing's box. A free end (the river ends on the
+  ground) runs 3 pitches past its last crossing, a wide river's 5. A river whose mouths all meet seas not drawn near nor
+  reached by water is not drawn.
+- **Connected seas**: pieces of one body drawn apart (each 60 square pitches or more) and not joined by a drawn river
+  are joined by a channel band, the shortest way between them on the drawing's grid, routed like a river, where that
+  is within 40 pitches.
+- Corners are rounded at 2.5 pitches, unless that would cut across a line.
 - **The sea in the drawing**: on a grid over the drawing (1.5 pitches a cell, coarser for a big drawing, at most a
   million cells; 40 pitches past the network's box), each cell is sea where its four nearest drawn stations, voting by
   nearness, find it past the sea: each carries the cell's offset back to the ground through its local map and looks
   the way it lies for the sea within three of its mean hops (at least 3 km). So a cell beyond a station on the sea side
   is sea however far the drawing stretches the core. Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by
-  3 majority, twice), sea under 60 square pitches and land without a station under 30 dropped, the coast is fitted with
-  runs at 0, 45 and 90 degrees, straying at most 6 pitches seaward and 2 landward (refitted tighter where a station
-  would fall in the sea), corners rounded at 3 pitches, and filled even-odd. **Every station is on land**, even where
-  the coast departs from the real one.
+  3 majority, twice; then opened and closed by 4 pitches, so inlets and notches under about 8 pitches across go, the
+  land round the pills kept), sea under 60 square pitches and land without a station under 30 dropped, the coast is
+  drawn the way a line is: fitted with runs at 0, 45 and 90 degrees, straying up to 12 pitches seaward and landward up
+  to its clearance from the lines and pills less a pitch (between 1 and 8), never moving a pill across it, so it runs
+  straight for long stretches (T-2497). A ring that, with another fitted near it, still leaves a station in the sea
+  is fitted again tight. Corners rounded at 4 pitches, filled even-odd. **Every station is on land**, even where the
+  coast departs from the real one. Each connected piece of drawn sea takes the body most of its cells' votes found.
 - Drawn under the zone borders and the lines' casings: the sea filled, the rivers stroked at least a device px wide.
 
 ## Names

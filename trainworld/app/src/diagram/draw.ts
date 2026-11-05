@@ -571,9 +571,12 @@ export interface DiagramTheme {
   bg: string; ink: string; pill: string; selected: string; edge?: string;
   /** the zones' borders' colour */
   border?: string;
-  /** the water's colour, the map's */
+  /** the water's colour: the map's, WATER_SHARE of the way from the background */
   water?: string;
 }
+/** the water is drawn this share of the way from the background to the map's water, so a river or coast drawn a little
+ * wrong shows less (T-2516) */
+export const WATER_SHARE = 0.55;
 /** zone borders (T-2464): this share of a pitch wide at this opacity; below a device px, a px wide and fainter by its
  * width's share, though never below BORDER_THIN of it (the lines' rule, T-2408, with a higher floor) */
 const BORDER_W = 0.2, BORDER_ALPHA = 0.7, BORDER_THIN = 0.5;

@@ -25,7 +25,8 @@ import { DATA_BASE } from "../game/dataBase";
 
 /** T-2169: water is drawn only with ?water in the address until Anita has looked at it */
 const WATER_ON = new URLSearchParams(location.search).has("water");
-import { FADE_ALPHA, paint, pickAt, type DiagramFocus, type Drawing } from "./draw";
+import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
+import { mixOklab } from "../game/palette";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
 import { cityBox, paintCityNames } from "./cityNames";
 import { keyIsTheirs } from "../ui/keys";
@@ -436,7 +437,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
     // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
     const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: SHADES[shade.peek()].water };
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;

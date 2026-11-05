@@ -4,7 +4,10 @@
 // found on the ground and drawn. Checked, as drawn: every hop that crosses a drawn river on the ground crosses its band
 // once, between the same two stations, and no band crosses a line anywhere else; every station's pill is on land
 // (outside the sea's fill). Reported: rivers and crossings, and the times (the layout's and the water's).
-//   node trainworld/checks/t2169-water.mjs [nyc,tor,tyo,jpn] [--png]      (figures in artifacts/trainworld/t2169/)
+// T-2497: a band may cross other lines where it says it had to (`falseKeys`); also reported, the coast's bends and the
+// rivers' pieces and bands.
+//   node trainworld/checks/t2169-water.mjs [nyc,tor,tyo,jpn] [--png]      (figures in artifacts/trainworld/t2169/, or
+//   WATER_OUT=<folder>/, which t2169-shots.mjs and t2169-game.mjs take too)
 import { existsSync, mkdirSync, openSync, readSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
 import { serialize, deserialize } from 'node:v8';
 import { deflateSync } from 'node:zlib';
@@ -23,7 +26,7 @@ const which = (args[0] ?? 'nyc,tor,tyo,jpn').split(',');
 const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
 const PACKS = new URL('data/packs/', TW);
 const CACHE = process.env.T2464_CACHE;
-const OUT = `${ARTIFACTS}t2169/`;
+const OUT = process.env.WATER_OUT ?? `${ARTIFACTS}t2169/`;
 mkdirSync(OUT, { recursive: true });
 let failed = 0;
 const say = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
@@ -102,11 +105,92 @@ for (const city of which) {
   const c = crossCheck(S, W, real, f);
   say(c.missing.length === 0, `${city}: every hop crossing a drawn river on the ground crosses its band`, `${c.missing.length} of ${c.expected} missing ${c.missing.slice(0, 8).join('; ')}`);
   say(c.multi.length === 0, `${city}: each line on such a hop crosses the band once`, `${c.multi.length} lines crossing it evenly ${c.multi.slice(0, 8).join('; ')}`);
-  say(c.wrong.length === 0, `${city}: no band crosses a hop that does not cross that river`, `${c.wrong.length} wrong ${c.wrong.slice(0, 8).join('; ')}`);
+  say(c.wrong.length === 0, `${city}: no band crosses a hop that does not cross that river, but where it says it had to`, `${c.wrong.length} wrong ${c.wrong.slice(0, 8).join('; ')}; ${W.stats.falseCross} declared`);
   const wet = [];
   S.d.pills.forEach((p, q) => { const mx = (p[0] + p[2]) / 2, my = (p[1] + p[3]) / 2; if (L.inRings(W.seaRings ?? [], mx, my)) wet.push(S.names[S.d.pillOf[q]]); });
   f.seaStats = W.seaStats; f.wetPills = wet.length;
-  console.log(`     sea: ${JSON.stringify(W.seaStats)}`);
+  // the coast's shape (T-2497): bends per 100 pitches of coast, runs under 4 pitches, and the share of its length off
+  // 0, 45 and 90 degrees (none, as fitted)
+  {
+    const P = S.d.pitch;
+    let len = 0, bends = 0, short = 0, off = 0;
+    for (const v of W.seaRings ?? []) {
+      const m = v.length / 2;
+      for (let k = 0; k < m; k++) {
+        const ax = v[k * 2], ay = v[k * 2 + 1], bx = v[((k + 1) % m) * 2], by = v[((k + 1) % m) * 2 + 1], l = Math.hypot(bx - ax, by - ay);
+        if (l < 1e-9) continue;
+        len += l, bends++;
+        if (l < 4 * P) short++;
+        const a = ((Math.atan2(by - ay, bx - ax) * 4) / Math.PI) % 1;
+        if (Math.min(Math.abs(a), 1 - Math.abs(a)) > 0.01) off += l;
+      }
+    }
+    f.coast = { pitches: Math.round(len / P), bendsPer100: +((100 * bends * P) / Math.max(1, len)).toFixed(2), short, offShare: +(off / Math.max(1e-9, len)).toFixed(4) };
+  }
+  // the rivers' pieces (T-2497): how many, how many under STUB pitches, their median length
+  {
+    const P = S.d.pitch, lens = [];
+    for (const run of W.runs) for (const p of run.parts) {
+      let l = 0;
+      for (let q = 0; q + 3 < p.length; q += 2) l += Math.hypot(p[q + 2] - p[q], p[q + 3] - p[q + 1]);
+      lens.push(l / P);
+    }
+    lens.sort((a, b) => a - b);
+    // and the bands: pieces touching end to end taken together
+    const all = W.runs.flatMap((r) => r.parts), up = all.map((_, i) => i), find = (i) => (up[i] === i ? i : (up[i] = find(up[i])));
+    const ends = new Map();
+    all.forEach((p, i) => { for (const k of [0, p.length - 2]) { const key = `${Math.round(p[k] / (0.01 * P))},${Math.round(p[k + 1] / (0.01 * P))}`; ends.has(key) ? (up[find(i)] = find(ends.get(key))) : ends.set(key, i); } });
+    const band = new Map();
+    all.forEach((p, i) => { let l = 0; for (let q = 0; q + 3 < p.length; q += 2) l += Math.hypot(p[q + 2] - p[q], p[q + 3] - p[q + 1]); band.set(find(i), (band.get(find(i)) ?? 0) + l / P); });
+    const bands = [...band.values()].sort((a, b) => b - a);
+    f.pieces = { n: lens.length, under12: lens.filter((l) => l < 12).length, median: +(lens[lens.length >> 1] ?? 0).toFixed(1), longest: Math.round(lens[lens.length - 1] ?? 0), bands: bands.length, bandsUnder16: bands.filter((l) => l < 16).length, longestBands: bands.slice(0, 5).map(Math.round) };
+  }
+  // continuity (T-2516): per drawn river, its pieces (its arcs' bands touching end to end, or meeting in one region of
+  // the drawn sea); its arcs' ends by what they meet; and the drawn water as a whole: regions of the sea joined by
+  // drawn rivers, and whether each sea on the ground is drawn as one connected water
+  {
+    const P = S.d.pitch, G = W.seaGrid, cont = { rivers: {}, ends: {}, regions: G.body.length, joined: 0, splitSeas: [] };
+    const nR = G.body.length, up = [];
+    const find = (k) => (up[k] === k ? k : (up[k] = find(up[k])));
+    const node = (k) => (up[k] ??= k, k);
+    const runsBy = new Map();
+    W.runs.forEach((r) => (runsBy.has(r.river) ? runsBy.get(r.river).push(r) : runsBy.set(r.river, [r])));
+    let id = nR;
+    for (const [river, rs] of runsBy) {
+      const at = new Map(), ids = [];
+      for (const r of rs) for (const p of r.parts) {
+        const me = node(id++);
+        ids.push(me);
+        for (const k of [0, p.length - 2]) { const key = `${Math.round(p[k] / (0.01 * P))},${Math.round(p[k + 1] / (0.01 * P))}`; at.has(key) ? (up[find(me)] = find(at.get(key))) : at.set(key, me); }
+        for (const g of r.regions) up[find(me)] = find(node(g));
+        for (const e of r.ends) cont.ends[e] = (cont.ends[e] ?? 0) + 1;
+      }
+      const roots = new Set(ids.map(find));
+      const crossings = rs.reduce((t, r) => t + r.edges.length, 0);
+      cont.rivers[river] = { arcs: rs.length, crossings, pieces: roots.size, mouths: [...new Set(rs.flatMap((r) => r.regions))], ends: rs.flatMap((r) => r.ends).filter((e) => e !== 'river').join(',') };
+    }
+    for (let g = 0; g < nR; g++) node(g);
+    const groups = new Set(Array.from({ length: nR }, (_, g) => find(g)));
+    cont.joined = groups.size;
+    // each region's size and where it is (pitches from the drawing's middle), for reading
+    const cells = new Array(nR).fill(0), sx = new Array(nR).fill(0), sy = new Array(nR).fill(0);
+    for (let c = 0; c < G.reg.length; c++) { const g = G.reg[c]; if (g < 0) continue; cells[g]++; sx[g] += c % G.W; sy[g] += Math.floor(c / G.W); }
+    // (slivers under 60 square pitches the coast's fit leaves aside)
+    const bySea = new Map();
+    G.body.forEach((b, g) => { if (b >= 0 && cells[g] * G.h * G.h >= 60 * P * P) (bySea.has(b) ? bySea.get(b) : bySea.set(b, new Set()).get(b)).add(find(g)); });
+    for (const [b, s] of bySea) if (s.size > 1) cont.splitSeas.push(`sea ${b} in ${s.size} pieces`);
+    const mx = (S.d.box[0] + S.d.box[2]) / 2, my = (S.d.box[1] + S.d.box[3]) / 2;
+    cont.regionList = G.body.map((b, g) => `${g}: sea ${b}, ${Math.round((cells[g] * G.h * G.h) / (P * P))} sq pitches at ${Math.round((G.x0 + (sx[g] / cells[g]) * G.h - mx) / P)},${Math.round((G.y0 + (sy[g] / cells[g]) * G.h - my) / P)}, group ${find(g)}`);
+    f.continuity = cont;
+    const many = Object.entries(cont.rivers).filter(([, r]) => r.pieces > 1);
+    const rv = Object.entries(cont.rivers), drawnR = rv.filter(([r]) => +r >= 0);
+    console.log(`     rivers drawn ${drawnR.length} (${drawnR.filter(([, v]) => v.pieces === 1).length} one piece each), channels ${rv.length - drawnR.length}; the most crossed: ${drawnR.sort((a, b) => b[1].crossings - a[1].crossings).slice(0, 4).map(([r, v]) => `river ${r} ${JSON.stringify(v)}`).join(' ')}`);
+    console.log(`     ends ${JSON.stringify(cont.ends)}; sea regions ${cont.regions}, joined into ${cont.joined}; ${cont.splitSeas.join('; ') || 'every sea in one piece'}`);
+    if (process.env.WATER_REGIONS) console.log(`     regions: ${cont.regionList.join(' | ')}`);
+    say(many.length === 0, `${city}: every drawn river is one band (its arcs and the sea it meets)`, many.map(([r, v]) => `river ${r} in ${v.pieces}`).join('; '));
+    say(!cont.ends.dry, `${city}: every river end at the sea is drawn into it`, `${cont.ends.dry ?? 0} not`);
+  }
+  console.log(`     sea: ${JSON.stringify(W.seaStats)}; coast ${JSON.stringify(f.coast)}; river pieces ${JSON.stringify(f.pieces)}`);
   say(wet.length === 0, `${city}: every station drawn on land`, `${wet.length} pills in the sea: ${wet.slice(0, 8).join(", ")}`);
   if (PNG) groundPng(city, S, real);
   if (PNG) writeFileSync(`${OUT}render-${city}.js`, `window.TW_DATA = window.TW_DATA || {}; window.TW_DATA[${JSON.stringify(city)}] = ${JSON.stringify(renderData(S, W), (k, v) => (ArrayBuffer.isView(v) ? Array.from(v) : v))};`);
@@ -144,7 +228,7 @@ function crossCheck(S, W, real, f) {
   let expected = 0;
   const missing = [], multi = [], wrong = [];
   for (const run of W.runs) {
-    const want = new Set(run.edges);
+    const want = new Set(run.edges), declared = new Set(run.falseKeys ?? []);
     expected += want.size;
     const count = new Map(); // `${li}|${e}` -> n
     for (const p of run.parts)
@@ -161,9 +245,17 @@ function crossCheck(S, W, real, f) {
     const crossedEdges = new Set();
     for (const [key, c] of count) {
       const [li, e] = key.split('|').map(Number);
+      // T-2497: a line crossed where the drawing left no way round, declared as such (a hop the river crosses, crossed
+      // again so, is still counted below)
+      if (declared.has(key) && !want.has(e)) {
+        if (!want.has(e)) f.declaredSeen = (f.declaredSeen ?? 0) + 1;
+        continue;
+      }
       if (want.has(e)) {
         crossedEdges.add(e);
-        if (c % 2 === 0) multi.push(`${hopName(e)} (line ${g.lines[d.lineOf[li]].id}) x${c}`);
+        // T-2516: a band may cross its own river's hop again where the drawing leaves no other way, and says so
+        if (c % 2 === 0 && declared.has(key)) f.ownTwice = (f.ownTwice ?? 0) + 1;
+        else if (c % 2 === 0) multi.push(`${hopName(e)} (line ${g.lines[d.lineOf[li]].id}) x${c}`);
       } else wrong.push(`arc ${run.arc}: ${e < 0 ? 'a line end' : hopName(e)} (line ${g.lines[d.lineOf[li]].id})`);
     }
     for (const e of want) if (!crossedEdges.has(e)) missing.push(`arc ${run.arc}: ${hopName(e)}`);
@@ -179,7 +271,7 @@ function renderData(S, W) {
   const fontPx = 12, wOf = (t) => t.length * 6.6;
   const width = Float32Array.from(names, wOf), width2 = Float32Array.from(names, (t) => { const p = L.splitName(t); return p ? Math.max(wOf(p[0]), wOf(p[1])) : 0; });
   const plan = L.placeNames(g, lay, d, names, width, width2, fontPx);
-  return { plan, pitch: d.pitch, stroke: d.stroke, lines: d.lines.map((l) => ({ colour: l.colour, fast: l.fast, cmds: [...l.cmds] })), lineOf: d.lineOf, ribbons: d.ribbons.map((r) => [...r]), chainAt: d.chainAt.map((c) => [...c]), pills: d.pills, pillOf: d.pillOf, passages: d.passages, passageOf: d.passageOf, hooks: d.hooks, small: [...d.small], box: d.box, x: [...lay.x], y: [...lay.y], text: names, water: { rivers: [...W.rivers], sea: W.sea ? [...W.sea] : [], band: W.band }, runs: (W.runs ?? []).flatMap((r) => r.parts.map((p, i) => ({ p: [...p], marks: i ? [] : r.marks, arc: r.arc }))), failed: W.failed ?? [] };
+  return { plan, pitch: d.pitch, stroke: d.stroke, lines: d.lines.map((l) => ({ colour: l.colour, fast: l.fast, cmds: [...l.cmds] })), lineOf: d.lineOf, ribbons: d.ribbons.map((r) => [...r]), chainAt: d.chainAt.map((c) => [...c]), pills: d.pills, pillOf: d.pillOf, passages: d.passages, passageOf: d.passageOf, hooks: d.hooks, small: [...d.small], box: d.box, x: [...lay.x], y: [...lay.y], text: names, water: { rivers: [...W.rivers], sea: W.sea ? [...W.sea] : [], band: W.band }, runs: (W.runs ?? []).flatMap((r) => r.parts.map((p, i) => ({ p: [...p], marks: i ? [] : r.marks, arc: r.arc, river: r.river }))), failed: W.failed ?? [], falsePts: W.falsePts ?? [] };
 }
 writeFileSync(`${OUT}figures.json`, JSON.stringify(figures, null, 1));
 process.exit(failed ? 1 : 0);

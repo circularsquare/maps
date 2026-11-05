@@ -35,7 +35,7 @@ for (const save of [...new Set(views.map((v) => v.save))]) {
       const ok = await page.evaluate(([n, px]) => window.twDiagram.centreOn(n, px), [v.at, v.px]);
       if (!ok) console.log(`${save}: no station ${v.at}`);
       await page.waitForTimeout(400);
-      const file = `${ARTIFACTS}t2169/game-${v.name}-${shade}.png`;
+      const file = `${process.env.WATER_OUT ?? `${ARTIFACTS}t2169/`}game-${v.name}-${shade}.png`;
       await page.addStyleTag({ content: '#debug-root, .busy-tag, .status-tag, .loading-card-wrap, .loading-screen { display: none !important; }' });
       const r = await page.locator('.diagram-canvas').boundingBox();
       await page.screenshot({ path: file, clip: { x: r.x, y: r.y + 50, width: r.width, height: r.height - 50 } });
