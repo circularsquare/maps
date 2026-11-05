@@ -7,13 +7,14 @@
 // T-2497: a band may cross other lines where it says it had to (`falseKeys`); also reported, the coast's bends and the
 // rivers' pieces and bands. T-2540: no two land masses on the ground (of ISLAND_MIN stations) drawn as one piece of
 // land; per land mass, its drawn pieces and its overlap with its ground shape carried by the similarity fitting its
-// stations; each save in its own frame (diagram-saves.mjs `frameSpec`).
+// stations; each save in its own frame (diagram-saves.mjs `frameSpec`). T-2541: laid out with the sea on the ground, as
+// the page's worker does (diagram-saves.mjs `waterOf`).
 //   node trainworld/checks/t2169-water.mjs [nyc,tor,tyo,jpn] [--png]      (figures in artifacts/trainworld/t2169/, or
 //   WATER_OUT=<folder>/, which t2169-shots.mjs and t2169-game.mjs take too)
-import { existsSync, mkdirSync, openSync, readSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { serialize, deserialize } from 'node:v8';
 import { deflateSync } from 'node:zlib';
-import { openSave, SAVES } from './diagram-saves.mjs';
+import { openSave, SAVES, waterOf } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
@@ -25,8 +26,6 @@ SAVES.tor ??= { file: new URL('data/packs/real/tor.save', TW), lon: -79.38, lat:
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const PNG = process.argv.includes('--png');
 const which = (args[0] ?? 'nyc,tor,tyo,jpn').split(',');
-const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
-const PACKS = new URL('data/packs/', TW);
 const CACHE = process.env.T2464_CACHE;
 const OUT = process.env.WATER_OUT ?? `${ARTIFACTS}t2169/`;
 mkdirSync(OUT, { recursive: true });
@@ -36,20 +35,14 @@ const say = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' 
 /** the save laid out (t2464-borders.mjs' cache), its graph built again for the hops' tracks, and its frame */
 function laidOut(city) {
   const file = CACHE && `${CACHE}/${city}.bin`;
-  const s = openSave(city), O = SAVES[city];
+  const s = openSave(city);
   const { g } = s.graph();
-  const ni = s.api.nodes_info(), xy = new Map();
-  for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
   const names = [...g.key].map((k) => s.name(k) ?? '');
+  // the sea on the ground first, as the page's worker finds it for the layout (T-2541)
+  const t0 = performance.now();
+  const { frame, box, masks, sea } = waterOf(s, g);
+  const seaMs = performance.now() - t0;
   s.api.free();
-  const fr = L.makeFrame(s.frameSpec), k = g.k / L.EARTH_C;
-  let fx = 0, fy = 0, w = Infinity, so = Infinity, e = -Infinity, n = -Infinity;
-  g.key.forEach((key, i) => {
-    const [lng, lat] = fr.toLonLat(...xy.get(key)), [mx, my] = L.toMerc01(lng, lat);
-    (fx += mx - g.x[i] * k), (fy += my + g.y[i] * k);
-    (w = Math.min(w, lng)), (e = Math.max(e, lng)), (so = Math.min(so, lat)), (n = Math.max(n, lat));
-  });
-  const frame = [fx / g.key.length, fy / g.key.length, 1 / k];
   let r;
   if (file && existsSync(file)) {
     r = deserialize(readFileSync(file));
@@ -57,32 +50,12 @@ function laidOut(city) {
     (r.g.hop = g.hop), (r.g.hopAt = g.hopAt);
   } else {
     const t0 = performance.now();
-    const lay = L.layoutDiagram(g);
+    const lay = L.layoutDiagram(g, L.LAYOUT, null, undefined, sea);
     const layoutMs = performance.now() - t0;
     r = { g, lay, d: L.drawing(g, lay), names, layoutMs };
     if (file) writeFileSync(file, serialize({ ...r, g: { ...g, hop: undefined, hopAt: undefined } }));
   }
-  return { ...r, names, frame, box: [w, so, e, n] };
-}
-
-/** the water masks of the zones whose boxes meet `box` (lng, lat), read from the packs as the page fetches them */
-function masksNear(box) {
-  const out = [];
-  for (const c of REG.cities) {
-    const b = c.box;
-    if (!b || b[0] > box[2] + 0.3 || b[2] < box[0] - 0.3 || b[1] > box[3] + 0.3 || b[3] < box[1] - 0.3) continue;
-    const head = JSON.parse(readFileSync(new URL(`${c.id}.json`, PACKS)));
-    const row = head.arrays.find((a) => a.name === 'water_row'), xs = head.arrays.find((a) => a.name === 'water_x');
-    if (!head.water || !row || !xs) continue;
-    const fd = openSync(new URL(`${c.id}.bin`, PACKS), 'r');
-    const rows = new Uint32Array(row.count), runs = new Uint16Array(xs.count);
-    readSync(fd, new Uint8Array(rows.buffer), 0, row.count * 4, row.offset);
-    readSync(fd, new Uint8Array(runs.buffer), 0, xs.count * 2, xs.offset);
-    closeSync(fd);
-    const w = head.water;
-    out.push({ id: c.id, cell: w.cell_m, x0: w.origin_m[0], y0: w.origin_m[1], w: w.size[0], h: w.size[1], rows, runs, lon: head.origin.lon, lat: head.origin.lat });
-  }
-  return out;
+  return { ...r, names, frame, box, masks, sea, seaMs };
 }
 
 const figures = {};
@@ -90,15 +63,13 @@ const figures = {};
 const ISLAND_MIN = 10;
 for (const city of which) {
   const S = laidOut(city);
-  const t0 = performance.now();
-  const masks = masksNear(S.box);
-  const tRead = performance.now() - t0;
+  const masks = S.masks;
   const t1 = performance.now();
-  const real = L.realWater(S.g, masks, S.frame);
-  const realMs = performance.now() - t1;
+  const real = L.realWater(S.g, masks, S.frame, S.sea);
+  const realMs = performance.now() - t1 + S.seaMs;
   const crossings = real.arcs.reduce((a, r) => a + r.cross.length, 0);
   const crossed = real.arcs.filter((r) => r.cross.length).length;
-  const f = { stations: S.g.key.length, masks: masks.length, arcs: real.arcs.length, crossed, crossings, evenDropped: real.evenDropped, ms: { layout: Math.round(S.layoutMs ?? 0), read: Math.round(tRead), real: Math.round(realMs), ...Object.fromEntries(Object.entries(real.ms).map(([k, v]) => [k, Math.round(v)])) } };
+  const f = { stations: S.g.key.length, masks: masks.length, arcs: real.arcs.length, crossed, crossings, evenDropped: real.evenDropped, ms: { layout: Math.round(S.layoutMs ?? 0), real: Math.round(realMs), ...Object.fromEntries(Object.entries(real.ms).map(([k, v]) => [k, Math.round(v)])) } };
   const t2 = performance.now();
   const W = L.diagramWater(S.g, S.lay.x, S.lay.y, S.d, real, true);
   f.ms.drawn = Math.round(performance.now() - t2);

@@ -17,7 +17,7 @@ import { ARTIFACTS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave } 
 const OUT = `${ARTIFACTS}diagram-game/`;
 const FILES = { nyc: REAL_SAVE, tyo: fileURLToPath(new URL('../data/packs/real/tyo.save', import.meta.url)), l8: fileURLToPath(new URL('../../artifacts/trainworld/t2290/line8.save', import.meta.url)), xp: fileURLToPath(new URL('../../artifacts/trainworld/t2405/express.save', import.meta.url)) };
 /** the code a layout, drawing and names depend on: a capture made before it changed has no page figures to compare */
-const LAYOUT_SRC = ['layout.ts', 'lsqr.ts', 'fmath.ts', 'draw.ts', 'names.ts'];
+const LAYOUT_SRC = ['layout.ts', 'blocks.ts', 'lsqr.ts', 'fmath.ts', 'draw.ts', 'names.ts', 'waterReal.ts'];
 const GRAPH_SRC = ['graph.ts'];
 const srcHash = (files) => {
   const h = createHash('sha1');
@@ -35,7 +35,8 @@ export const pillsFlat = (pills) => pills.flatMap((p) => Array.from(p));
 
 /** the game's graph for `city` from its capture, or null: `g` the graph, `text`, `width`, `width2` and
  * `fontPx` the names as the page measured them, `page` what its worker sent back, `fresh` whether the
- * layout code is as it was at the capture (else `page` is of older code), `graphFresh` the same for graph.ts */
+ * layout code is as it was at the capture (else `page` is of older code), `graphFresh` the same for graph.ts; `frame`
+ * and `zones` the graph's frame and the zones whose water masks the page read (T-2541; none in older captures) */
 export function gameGraph(city) {
   const file = `${OUT}${city}.json`;
   if (!existsSync(file)) return null;
@@ -43,7 +44,7 @@ export function gameGraph(city) {
   const g = { ...r, key: Int32Array.from(r.key), x: Float64Array.from(r.x), y: Float64Array.from(r.y), ea: Int32Array.from(r.ea), eb: Int32Array.from(r.eb), first: Int32Array.from(r.first), on: Int32Array.from(r.on), lines: r.lines.map((l) => ({ ...l, chain: Int32Array.from(l.chain), stop: Uint8Array.from(l.stop) })) };
   // a capture from before T-2405 has no strokes: one per colour on each edge, as the layout then drew them
   g.stroke = r.stroke ? Int32Array.from(r.stroke) : Int32Array.from(r.on, (l, k) => { let e = 0; while (r.first[e + 1] <= k) e++; for (let j = r.first[e]; j <= k; j++) if (r.lines[r.on[j]].colour === r.lines[l].colour) return r.on[j]; return l; });
-  return { g, text: c.names.text.map((t) => t ?? ''), width: Float32Array.from(c.names.width), width2: Float32Array.from(c.names.width2), fontPx: c.names.fontPx, page: c.page, captured: c.captured, fresh: c.layoutSrc === srcHash(LAYOUT_SRC), graphFresh: c.graphSrc === srcHash(GRAPH_SRC) };
+  return { g, frame: c.frame, zones: c.zones, text: c.names.text.map((t) => t ?? ''), width: Float32Array.from(c.names.width), width2: Float32Array.from(c.names.width2), fontPx: c.names.fontPx, page: c.page, captured: c.captured, fresh: c.layoutSrc === srcHash(LAYOUT_SRC), graphFresh: c.graphSrc === srcHash(GRAPH_SRC) };
 }
 
 /** the city names a check was asked for, each `<city>` (the save's graph, diagram-saves.mjs) or `<city>-game` */
@@ -61,7 +62,7 @@ async function capture(base, city) {
       const pm = Worker.prototype.postMessage;
       Worker.prototype.postMessage = function (m, t) {
         if (m && m.kind === 'graph' && m.graph) {
-          window.__dg.sent.push({ seq: m.seq, graph: plain(m.graph), names: { text: m.names.text, width: Array.from(m.names.width), width2: Array.from(m.names.width2), fontPx: m.names.fontPx } });
+          window.__dg.sent.push({ seq: m.seq, frame: m.frame, zones: m.water?.zones, graph: plain(m.graph), names: { text: m.names.text, width: Array.from(m.names.width), width2: Array.from(m.names.width2), fontPx: m.names.fontPx } });
           if (!this.__dg) {
             this.__dg = true;
             this.addEventListener('message', (e) => {
@@ -105,7 +106,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     // the first graph, laid out from nothing; later ones are rebuilds from it, which a check does not repeat
     const s = sent[0], b = back.find((x) => x.seq === s.seq);
     const page = { seq: b.seq, ms: b.ms, pieces: b.pieces, hooks: b.hooks, places: bitsHash(b.x, b.y), pills: bitsHash(pillsFlat(b.pills)), graphsSent: sent.length };
-    writeFileSync(`${OUT}${city}.json`, JSON.stringify({ city, captured: new Date().toISOString(), url: base, layoutSrc: srcHash(LAYOUT_SRC), graphSrc: srcHash(GRAPH_SRC), graph: s.graph, names: s.names, page }));
+    writeFileSync(`${OUT}${city}.json`, JSON.stringify({ city, captured: new Date().toISOString(), url: base, layoutSrc: srcHash(LAYOUT_SRC), graphSrc: srcHash(GRAPH_SRC), frame: s.frame, zones: s.zones, graph: s.graph, names: s.names, page }));
     console.log(`${city}: ${s.graph.key.length} complexes, ${sent.length} graph${sent.length === 1 ? '' : 's'} sent; the page laid it out in ${(b.ms.total / 1000).toFixed(2)} s (B ${(b.ms.b / 1000).toFixed(2)}), drawing ${(b.ms.drawing / 1000).toFixed(2)} s, names ${(b.ms.names / 1000).toFixed(2)} s; ${((Date.now() - t0) / 1000).toFixed(0)} s in all`);
   }
 }

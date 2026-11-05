@@ -6,7 +6,8 @@
 // far out (diagram/cityNames.ts, T-2438) are made after the names from the zone outlines and names the
 // page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone. The
 // water (diagram/waterReal.ts, diagram/water.ts, T-2169) comes last, from the water masks of the zones the page names,
-// fetched here from the packs, and is posted on its own.
+// fetched here from the packs, and is posted on its own; its sea part is found before a first layout, which keeps the
+// sea open (T-2541).
 
 import type { DiagramGraph } from "../diagram/graph";
 import { LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
@@ -14,7 +15,7 @@ import { drawing, type Drawing } from "../diagram/draw";
 import { placeNames, type NamePlan } from "../diagram/names";
 import { zoneBorders, type DiagramBorders, type ZoneShape } from "../diagram/borders";
 import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityNames";
-import { realWater, type RealWater, type WaterMask } from "../diagram/waterReal";
+import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import { diagramWater, type DiagramWater } from "../diagram/water";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
@@ -72,7 +73,7 @@ const keep = (zones: ZoneOutlines) => {
   for (const z of zones) outlines.set(z.id, z.rings), labels.set(z.id, z.label);
 };
 
-self.onmessage = (e: MessageEvent<ToDiagram>) => {
+self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   const m = e.data;
   if (m.kind === "zones" || m.kind === "towns") {
     if (m.kind === "zones") keep(m.zones);
@@ -85,13 +86,16 @@ self.onmessage = (e: MessageEvent<ToDiagram>) => {
   keep(m.zones ?? []);
   if (m.options !== lastOptions) last = null;
   lastOptions = m.options;
+  // the layout keeps the water on the ground open (T-2541): a first layout waits for the sea, a rebuild takes the last
+  // found (its stations near where they were)
+  const sea = m.water && m.frame ? (last && seaKnown ? seaKnown.sea : await seaOf(m.graph, m.water.packs, m.water.zones, m.frame)) : null;
   let sent = -1;
   const progress = last ? undefined : (share: number) => {
     if (share - sent < 0.01) return;
     sent = share;
     (self as unknown as Worker).postMessage({ kind: "progress", seq: m.seq, share } satisfies FromDiagram);
   };
-  const layout = layoutDiagram(m.graph, m.options === "r2" ? LAYOUT_R2 : LAYOUT, last, progress && ((s) => progress(s * LAYOUT_SHARE)));
+  const layout = layoutDiagram(m.graph, m.options === "r2" ? LAYOUT_R2 : LAYOUT, last, progress && ((s) => progress(s * LAYOUT_SHARE)), sea);
   last = lastPlaces(m.graph, layout);
   const t0 = performance.now();
   const d = drawing(m.graph, layout);
@@ -133,20 +137,31 @@ function maskOf(packs: string, id: string): Promise<WaterMask | null> {
   }
   return p;
 }
-/** the water on the ground, kept while the stations' places and the hops' tracks are the same */
+/** the water on the ground, kept while the stations' places and the hops' tracks are the same; and its sea part, which
+ * the layout reads first (T-2541) */
 let ground: { key: string; real: RealWater } | null = null;
+let seaKnown: { key: string; sea: GroundSea } | null = null;
+const masksFor = async (packs: string, zones: string[]) => (await Promise.all(zones.map((id) => maskOf(packs, id).catch(() => null)))).filter((w): w is WaterMask => !!w);
+function groundKey(g: DiagramGraph, frame: ZoneFrame, masks: number): string {
+  let sum = 0;
+  for (let i = 0; i < g.key.length; i += 7) sum += g.x[i] * 3 + g.y[i];
+  if (g.hop) for (let i = 0; i < g.hop.length; i += 13) sum += g.hop[i];
+  return `${frame.join()}|${g.key.length}|${g.ea.length}|${sum}|${masks}`;
+}
+async function seaOf(g: DiagramGraph, packs: string, zones: string[], frame: ZoneFrame): Promise<GroundSea> {
+  const got = await masksFor(packs, zones), key = groundKey(g, frame, got.length);
+  if (seaKnown?.key !== key) seaKnown = { key, sea: groundSea(g, got, frame) };
+  return seaKnown.sea;
+}
 async function water(seq: number, packs: string, zones: string[], frame: ZoneFrame) {
   const t0 = performance.now();
-  const got = (await Promise.all(zones.map((id) => maskOf(packs, id).catch(() => null)))).filter((w): w is WaterMask => !!w);
+  const got = await masksFor(packs, zones);
   // a newer layout came meanwhile: its own water follows
   const s = shown;
   if (!s || s.seq !== seq) return;
   const t1 = performance.now(), g = s.graph;
-  let sum = 0;
-  for (let i = 0; i < g.key.length; i += 7) sum += g.x[i] * 3 + g.y[i];
-  if (g.hop) for (let i = 0; i < g.hop.length; i += 13) sum += g.hop[i];
-  const key = `${frame.join()}|${g.key.length}|${g.ea.length}|${sum}|${got.length}`;
-  if (ground?.key !== key) ground = { key, real: realWater(g, got, frame) };
+  const key = groundKey(g, frame, got.length);
+  if (ground?.key !== key) ground = { key, real: realWater(g, got, frame, seaKnown?.key === key ? seaKnown.sea : undefined) };
   const t2 = performance.now();
   const w = diagramWater(g, s.layout.x, s.layout.y, s.d, ground.real);
   s.d.water = w;

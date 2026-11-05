@@ -8,7 +8,7 @@
 //   node trainworld/checks/t2405-diagram-hidden.mjs [nyc,l8,xp,nyc-game,l8-game,xp-game]      (about a minute;
 //   figures in artifacts/trainworld/t2405/hidden.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { openSave } from './diagram-saves.mjs';
+import { openSave, waterOf, gameSea } from './diagram-saves.mjs';
 import { gameGraph, splitCity } from './diagram-game.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
@@ -67,21 +67,24 @@ function strokeMates(g, lay) {
 
 for (const name of which) {
   const [city, game] = splitCity(name);
-  let g, names;
+  let g, names, sea = null;
   if (game) {
     const cap = gameGraph(city);
     if (!cap) { console.log(`SKIP ${name}: no capture; run diagram-game.mjs first`); continue; }
     ({ g } = cap);
     names = cap.text;
+    sea = gameSea(cap);
   } else {
     const s = openSave(city);
     ({ g } = s.graph());
     names = [...g.key].map((k) => s.name(k) ?? '');
+    ({ sea } = waterOf(s, g));
     s.api.free();
   }
-  A.layoutDiagram(g, A.LAYOUT); // the code compiled
+  // with the sea on the ground, as the page's worker lays it out (T-2541)
+  A.layoutDiagram(g, A.LAYOUT, null, undefined, sea); // the code compiled
   const t0 = performance.now();
-  const lay = A.layoutDiagram(g, A.LAYOUT);
+  const lay = A.layoutDiagram(g, A.LAYOUT, null, undefined, sea);
   const ms = performance.now() - t0;
   const d = A.drawing(g, lay);
   const n = g.key.length, W = d.stroke, near = NEAR_W * W, step = STEP_P * d.pitch;

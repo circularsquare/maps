@@ -13,7 +13,7 @@
 //   node trainworld/checks/t2160-diagram-layout.mjs [nyc,tyo,nyc-game,tyo-game] [r2]      (about two minutes;
 //   `r2` lays out with round 2's options instead of the game's; figures in artifacts/trainworld/t2160/check.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { openSave, layoutApp } from './diagram-saves.mjs';
+import { openSave, layoutApp, waterOf, gameSea } from './diagram-saves.mjs';
 import { gameGraph, splitCity, bitsHash } from './diagram-game.mjs';
 import { ARTIFACTS } from './lib.mjs';
 
@@ -154,21 +154,24 @@ function withStation(g) {
 
 for (const name of which) {
   const [city, game] = splitCity(name);
-  let g, names, cap = null;
+  let g, names, cap = null, sea = null;
   if (game) {
     cap = gameGraph(city);
     if (!cap) { console.log(`SKIP ${name}: no capture; run diagram-game.mjs first`); continue; }
     ({ g } = cap);
     names = cap.text;
+    sea = gameSea(cap);
   } else {
     const s = openSave(city);
     ({ g } = s.graph());
     names = [...g.key].map((k) => s.name(k) ?? '');
+    ({ sea } = waterOf(s, g));
     s.api.free();
   }
-  L.layoutDiagram(g, OPTS); // the code compiled
+  // with the sea on the ground, as the page's worker lays it out (T-2541)
+  L.layoutDiagram(g, OPTS, null, undefined, sea); // the code compiled
   const t0 = performance.now();
-  const lay = L.layoutDiagram(g, OPTS);
+  const lay = L.layoutDiagram(g, OPTS, null, undefined, sea);
   let ms = performance.now() - t0, phases = lay.ms;
   // the game's graph: the page's own time, when the capture is of this layout code
   const pageOk = cap && cap.fresh && OPTS === L.LAYOUT;
@@ -203,7 +206,7 @@ for (const name of which) {
   const last = L.lastPlaces(g, lay);
   const g2 = withStation(g);
   const t1 = performance.now();
-  const lay2 = L.layoutDiagram(g2, OPTS, last);
+  const lay2 = L.layoutDiagram(g2, OPTS, last, undefined, sea);
   const ms2 = performance.now() - t1;
   const moved = [...g.key].map((_, i) => Math.hypot(lay2.x[i] - lay.x[i], lay2.y[i] - lay.y[i]) / lay.hop);
   const movedB = [...g.key].map((_, i) => Math.hypot(lay2.bx[i] - lay.bx[i], lay2.by[i] - lay.by[i]) / lay.hop);

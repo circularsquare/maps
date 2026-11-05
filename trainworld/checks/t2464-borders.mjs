@@ -10,13 +10,12 @@
 //   artifacts/trainworld/t2464/figures.json; T2464_CACHE=<folder> reads and writes laid out saves there)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { serialize, deserialize } from 'node:v8';
-import { openSave, SAVES } from './diagram-saves.mjs';
+import { openSave, SAVES, waterOf } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
 const L = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing, pillSize } from '@app/src/diagram/draw.ts';
-export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01, EARTH_C } from '@app/src/map/geo.ts';
-export { makeFrame } from '@app/src/game/frame.ts';`);
+export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
 const TW = new URL('../', import.meta.url);
 SAVES.tor ??= { file: new URL('data/packs/real/tor.save', TW), lon: -79.38, lat: 43.65 };
 const which = (process.argv[2] ?? 'jpn,ne,nyc,tor').split(',');
@@ -31,21 +30,13 @@ const say = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' 
 function laidOut(city) {
   const file = CACHE && `${CACHE}/${city}.bin`;
   if (file && existsSync(file)) return deserialize(readFileSync(file));
-  const s = openSave(city), O = SAVES[city];
+  const s = openSave(city);
   const { g } = s.graph();
   const names = [...g.key].map((k) => s.name(k) ?? '');
-  const ni = s.api.nodes_info(), xy = new Map();
-  for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
+  // the frame as view.ts works it out, from each node's key station, in the save's own frame (T-2542); and the sea on
+  // the ground the page's layout reads (T-2541)
+  const { frame: [fx, fy, K], box: [w, so, e, n], sea } = waterOf(s, g), k = 1 / K;
   s.api.free();
-  // the frame as view.ts works it out, from each node's key station
-  const fr = L.makeFrame({ kind: 'equirect', lon: O.lon, lat: O.lat }), k = g.k / L.EARTH_C;
-  let fx = 0, fy = 0, w = Infinity, so = Infinity, e = -Infinity, n = -Infinity;
-  g.key.forEach((key, i) => {
-    const [lng, lat] = fr.toLonLat(...xy.get(key)), [mx, my] = L.toMerc01(lng, lat);
-    (fx += mx - g.x[i] * k), (fy += my + g.y[i] * k);
-    (w = Math.min(w, lng)), (e = Math.max(e, lng)), (so = Math.min(so, lat)), (n = Math.max(n, lat));
-  });
-  (fx /= g.key.length), (fy /= g.key.length);
   const shapes = [];
   for (const c of REG.cities) {
     const b = c.box, flat = OUTL.zones[c.id];
@@ -61,7 +52,7 @@ function laidOut(city) {
     }) });
   }
   const t0 = performance.now();
-  const lay = L.layoutDiagram(g);
+  const lay = L.layoutDiagram(g, L.LAYOUT, null, undefined, sea);
   const layoutMs = performance.now() - t0;
   const d = L.drawing(g, lay);
   const r = { g, lay, d, shapes, names, layoutMs };

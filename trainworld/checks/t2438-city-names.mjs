@@ -6,19 +6,18 @@
 // station-name sizes and meet no other, and below the switch no station names are drawn while above it no city names are.
 //   node trainworld/checks/t2438-city-names.mjs [jpn,ne,nyc,tor]      (about two minutes with Japan)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { openSave, SAVES } from './diagram-saves.mjs';
+import { openSave, SAVES, waterOf } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
 const L = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { drawing } from '@app/src/diagram/draw.ts';
-export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01, EARTH_C } from '@app/src/map/geo.ts';
-export { makeFrame } from '@app/src/game/frame.ts'; export * from '@app/src/diagram/cityNames.ts';
+export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';
+export * from '@app/src/diagram/cityNames.ts';
 export { placeNames, levelAt, guessWidth, NAME_LINE } from '@app/src/diagram/names.ts'; export { zoneName } from '@app/src/game/zoneNames.ts';`);
 const which = (process.argv[2] ?? 'jpn,ne,nyc,tor').split(',');
 const TW = new URL('../', import.meta.url);
 const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
 const OUTL = JSON.parse(readFileSync(new URL('data/packs/outlines.json', TW)));
-const ORIGIN = { ne: [-73.985, 40.758], nyc: [-73.985, 40.758], jpn: [139.7, 35.7], tor: [-79.3832, 43.6534] };
 SAVES.tor = { file: new URL('data/packs/real/tor.save', TW), lon: -79.3832, lat: 43.6534 };
 const FONT = 12;
 let failed = 0;
@@ -30,18 +29,10 @@ for (const city of which) {
   const s = openSave(city);
   const { g } = s.graph();
   const text = [...g.key].map((k) => s.name(k) ?? '');
-  const ni = s.api.nodes_info(), xy = new Map();
-  for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
+  // the zones' outlines in the graph's frame, as view.ts sends them, from the save's own frame (T-2542); and the sea on
+  // the ground the page's layout reads (T-2541)
+  const { frame: [fx, fy, K], box: [w, so, e, n], sea } = waterOf(s, g), k = 1 / K;
   s.api.free();
-  // the zones' outlines in the graph's frame, as view.ts sends them
-  const fr = L.makeFrame({ kind: 'equirect', lon: ORIGIN[city][0], lat: ORIGIN[city][1] }), k = g.k / L.EARTH_C;
-  let fx = 0, fy = 0, w = Infinity, so = Infinity, e = -Infinity, n = -Infinity;
-  g.key.forEach((key, i) => {
-    const [lng, lat] = fr.toLonLat(...xy.get(key)), [mx, my] = L.toMerc01(lng, lat);
-    (fx += mx - g.x[i] * k), (fy += my + g.y[i] * k);
-    (w = Math.min(w, lng)), (e = Math.max(e, lng)), (so = Math.min(so, lat)), (n = Math.max(n, lat));
-  });
-  (fx /= g.key.length), (fy /= g.key.length);
   const shapes = [], byId = new Map();
   for (const c of REG.cities) {
     byId.set(c.id, c);
@@ -57,7 +48,7 @@ for (const city of which) {
       return r;
     }) });
   }
-  const lay = L.layoutDiagram(g);
+  const lay = L.layoutDiagram(g, L.LAYOUT, null, undefined, sea);
   const d = L.drawing(g, lay);
   const widths = text.map((t) => L.guessWidth(t, FONT));
   const plan = L.placeNames(g, lay, d, text, widths, widths.map(() => 0), FONT);

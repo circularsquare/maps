@@ -5,7 +5,7 @@
 //   node trainworld/checks/t2161-diagram-pills.mjs [nyc,tyo,nyc-game,tyo-game]      (about a minute; figures in
 //   artifacts/trainworld/t2161/pills.json)
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { openSave } from './diagram-saves.mjs';
+import { openSave, waterOf, gameSea } from './diagram-saves.mjs';
 import { gameGraph, splitCity, bitsHash, pillsFlat } from './diagram-game.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
@@ -36,19 +36,22 @@ const segDist = (p, q) => {
 
 for (const name of which) {
   const [city, game] = splitCity(name);
-  let g, names, cap = null;
+  let g, names, cap = null, sea = null;
   if (game) {
     cap = gameGraph(city);
     if (!cap) { console.log(`SKIP ${name}: no capture; run diagram-game.mjs first`); continue; }
     ({ g } = cap);
     names = cap.text;
+    sea = gameSea(cap);
   } else {
     const s = openSave(city);
     ({ g } = s.graph());
     names = [...g.key].map((k) => s.name(k));
+    ({ sea } = waterOf(s, g));
     s.api.free();
   }
-  const lay = A.layoutDiagram(g, A.LAYOUT);
+  // with the sea on the ground, as the page's worker lays it out (T-2541)
+  const lay = A.layoutDiagram(g, A.LAYOUT, null, undefined, sea);
   const d = A.drawing(g, lay);
   if (cap?.fresh) {
     const same = bitsHash(pillsFlat(d.pills)) === cap.page.pills;

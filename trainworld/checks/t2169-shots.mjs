@@ -1,7 +1,7 @@
 // T-2169: pictures of t2169-water.mjs' render files (run it with --png first), painted by the diagram's own draw.ts in a
 // static page, one per view and theme, into artifacts/trainworld/t2169/.
 //   node trainworld/checks/t2169-shots.mjs <views.json>
-//   views: [{ city, name, at: "Jamaica" | [x, y] | ["Jamaica", dx, dy] (pitches from it), px, w?, h?, dark?, debug? }]
+//   views: [{ city, name, at: "Jamaica" | [x, y] | ["Jamaica", dx, dy] (pitches from it) | "fit", px, w?, h?, dark?, debug? }]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -29,7 +29,9 @@ window.render = (city, at, px, w, h, dark, dbg) => {
   const d = { ...D, lines: D.lines.map((l) => ({ ...l, cmds: Float64Array.from(l.cmds), path: undefined })), small: Uint8Array.from(D.small),
     water: { rivers: Float64Array.from(D.water.rivers), sea: Float64Array.from(D.water.sea), band: D.water.band } };
   let cx, cy;
-  if (typeof at === 'string') { const i = D.text.indexOf(at); if (i < 0) return 'no ' + at; cx = D.x[i]; cy = D.y[i]; }
+  // "fit": the whole drawing in the picture (px then the largest that fits, at most the view's)
+  if (at === 'fit') { const b = D.box; cx = (b[0] + b[2]) / 2; cy = (b[1] + b[3]) / 2; px = Math.min(px, (0.96 * w * D.pitch) / (b[2] - b[0]), (0.96 * h * D.pitch) / (b[3] - b[1])); }
+  else if (typeof at === 'string') { const i = D.text.indexOf(at); if (i < 0) return 'no ' + at; cx = D.x[i]; cy = D.y[i]; }
   else if (typeof at[0] === 'string') { const i = D.text.indexOf(at[0]); if (i < 0) return 'no ' + at[0]; cx = D.x[i] + at[1] * D.pitch; cy = D.y[i] + at[2] * D.pitch; }
   else [cx, cy] = at;
   const scale = px / d.pitch;

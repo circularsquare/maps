@@ -312,11 +312,21 @@ function blockBoxes(B: Blocks, pos: Float64Array): Float64Array {
  * so only what changed moves anything, and boxes already within the gap of each other but not overlapping are
  * left so, unless `strict` (after B, which grows a block's box, every pair is given the gap again).
  */
-export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Float64Array, gdx: Float64Array, gdy: Float64Array, pu: number, linkTarget: (d: number) => number, held: Set<string> | null, strict = false, ties: Float64Array = new Float64Array(0)): Float64Array {
+export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Float64Array, gdx: Float64Array, gdy: Float64Array, pu: number, linkTarget: (d: number) => number, held: Set<string> | null, strict = false, ties: Float64Array = new Float64Array(0), sea: Float64Array = new Float64Array(0), wSea = 0): Float64Array {
   const n = g.key.length, nb = B.list.length, of = B.of;
   const unit = new Int32Array(n);
   let nu = nb;
   for (let i = 0; i < n; i++) unit[i] = of[i] >= 0 ? of[i] : nu++;
+  // stations with the sea between them in different units (layout.ts' seaTerms, T-2541: a, b, ux, uy, length), each pair
+  // of units held at its pairs' lengths and bearings with wSea in all
+  const seaHere: number[] = [], perUnits = new Map<number, number>();
+  for (let k = 0; k < sea.length; k += 5) {
+    const ua = unit[sea[k]], ub = unit[sea[k + 1]];
+    if (ua === ub) continue;
+    const key = Math.min(ua, ub) * nu + Math.max(ua, ub);
+    perUnits.set(key, (perUnits.get(key) ?? 0) + 1);
+    seaHere.push(k);
+  }
   // crossings on the ground held (layout.ts' crossTies, T-2534) between units
   const tieUnits = (k: number) => [g.ea[ties[k]], g.eb[ties[k]], g.ea[ties[k + 1]], g.eb[ties[k + 1]]].map((v) => unit[v]);
   const tied = tiedBlocks(g, B, ties);
@@ -391,6 +401,12 @@ export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Fl
       if (u[0] === u[1] && u[1] === u[2] && u[2] === u[3]) continue;
       const e = ties[k];
       tieTerms(T, g.ea, g.eb, ties, k, -gdy[e], gdx[e], W_TIE, W_TIE_PT, (v) => unit[v], pos);
+    }
+    for (const k of seaHere) {
+      const a = sea[k], b = sea[k + 1], ua = unit[a], ub = unit[b], t = sea[k + 4];
+      const w = wSea / Math.sqrt(perUnits.get(Math.min(ua, ub) * nu + Math.max(ua, ub))!);
+      T.add([ub * 2, ua * 2], [1, -1], sea[k + 2] * t - (pos[b * 2] - pos[a * 2]), w);
+      T.add([ub * 2 + 1, ua * 2 + 1], [1, -1], sea[k + 3] * t - (pos[b * 2 + 1] - pos[a * 2 + 1]), w);
     }
     for (let u = 0; u < nu * 2; u++) T.add([u], [1], 0, wAnchor[u >> 1]);
     // boxes kept apart, along the axis they overlap less on (on a first layout, from the hops' places on)

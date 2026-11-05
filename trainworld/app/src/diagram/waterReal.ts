@@ -173,16 +173,29 @@ export function chamfer(src: Uint8Array, w: number, h: number, from1: boolean, c
   return d;
 }
 
-/** The water near the network of `g` (laid out or not: only its places on the ground are read), from `masks`. */
-export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame): RealWater {
+const tkey = (i: number, j: number) => (i + 32768) * 65536 + (j + 32768);
+
+/** The sea round the network on the ground (the coarse grid and the far grid), which the layout reads too (T-2541) */
+export interface GroundSea {
+  /** the coarse cell's class at a place: 3 sea, 2 near the sea, 1 other water, 0 land; -1 no tile; with 4 added where
+   * it is water (`raw`) */
+  coarseAt(x: number, y: number, raw?: boolean): number;
+  isSea(x: number, y: number): boolean;
+  massAt(x: number, y: number): number;
+  seaBody(x: number, y: number): number;
+  /** the sea nearest a place within `r` coarse cells, -1 none */
+  bodyNear(x: number, y: number, r?: number): number;
+  ms: number;
+}
+
+/** The sea near the network of `g` (only its places on the ground are read), from `masks`: RealWater's sea part. */
+export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame): GroundSea {
   const t0 = performance.now();
-  const n = g.key.length, rowOf = maskRows(masks, frame), inMasks = maskCover(masks, frame);
-  const hop = g.hop ?? new Float32Array(0), hopAt = g.hopAt ?? new Int32Array(g.ea.length + 1);
+  const n = g.key.length, rowOf = maskRows(masks, frame);
 
   // ---- the sea, on the coarse grid: tiles round the stations, each worked with a halo wide enough for the opening
   const hc = COARSE_M, rs = Math.round(SEA_M / 2 / hc), near = Math.round(SEA_NEAR_M / hc), HALO = 2 * rs + near + 2;
   const ctiles = new Map<number, Uint8Array>();
-  const tkey = (i: number, j: number) => (i + 32768) * 65536 + (j + 32768);
   {
     const R = SEA_NEAR_STATION_M, side = CT * hc;
     const want = new Set<number>();
@@ -268,7 +281,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
     return best;
   };
   const { isSea, massAt } = farGround();
-  const t1 = performance.now();
+  return { coarseAt, seaBody, bodyNear, isSea, massAt, ms: performance.now() - t0 };
 
   /** the sea anywhere, and the land masses (T-2540): the coarse tiles where a mask covers them; elsewhere a far grid,
    * the masks' wide water where they cover it, else the nearest known cell's. Land masses are land connected round
@@ -391,6 +404,15 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       },
     };
   }
+}
+
+/** The water near the network of `g` (laid out or not: only its places on the ground are read), from `masks`; `sea` its
+ * sea part where already found (`groundSea`). */
+export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame, sea: GroundSea = groundSea(g, masks, frame)): RealWater {
+  const t1 = performance.now();
+  const n = g.key.length, rowOf = maskRows(masks, frame), inMasks = maskCover(masks, frame);
+  const hop = g.hop ?? new Float32Array(0), hopAt = g.hopAt ?? new Int32Array(g.ea.length + 1);
+  const hc = COARSE_M, { coarseAt, seaBody, bodyNear, isSea, massAt } = sea;
 
   // ---- rivers, on the fine grid near the track: water three cells across (an opening by a 3 by 3 square), less the
   // sea and its fringe. Per tile, 1 river, 2 wide water by the sea.
@@ -620,7 +642,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       }
       return null;
     },
-    ms: { coarse: t1 - t0, fine: t2 - t1, skeleton: t3 - t2, crossings: t4 - t3 },
+    ms: { coarse: sea.ms, fine: t2 - t1, skeleton: t3 - t2, crossings: t4 - t3 },
   };
 
   /** a river ending free where the mask has a short gap (a bridge drawn as land, the river narrowing under three cells

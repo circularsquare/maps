@@ -83,7 +83,22 @@ const CROSS_COS = 0.9396926207859084, CROSS_END_M = 100, CROSS_DENSE_N = 12, CRO
 const W_CROSS_A = 3, W_CROSS_B = 10, W_CROSS_SNAP = 30, W_CROSS_PT_B = 3, W_CROSS_PT_SNAP = 10;
 /** stations within CROSS_SIDE_M of a crossing's longer hop kept on their side of it, at least their half width and
  * CROSS_SIDE_PU pitches off, with weight W_SIDE */
-const CROSS_SIDE_M = 1500, CROSS_SIDE_PU = 2;/** a rebuild's B rounds, and its pull to the last layout */
+const CROSS_SIDE_M = 1500, CROSS_SIDE_PU = 2;
+/** T-2541 (`seaTerms`): the scale round a station is its hops' targets over their real lengths, summed over the land hops
+ * with middles within SCALE_M; a hop across water (its ends on different land masses, found out to MASS_FIND, or a run
+ * of sea on its track of SEA_RUN_M and SEA_SHARE of it, looked at every SEA_STEP_M) is at least K_HOP times its real
+ * length at the scale round its ends, and STRAIT_PU pitches past its own target where the masses differ */
+const SCALE_M = 10000, MASS_STEP = 200, MASS_FIND = 2000, SEA_RUN_M = 2000, SEA_SHARE = 0.3, SEA_STEP_M = 250, STRAIT_PU = 12, K_HOP = 2;
+/** a hop's track is across the sea where the sea is also this far either side of it (a track along a shore is not) */
+const OPEN_M = 1000;
+/** stations within COAST_M of the sea, nearer each other than PAIR_M with such a run of sea on the straight way
+ * between them or on another land mass (each with its PAIR_N nearest), are kept K_BAY times their real distance at
+ * their scale apart along their real bearing, and STRAIT_PU pitches between land masses: W_SEA in A and B, and in the
+ * blocks' stage each pair of units held so with W_SEA_STAGE in all */
+const COAST_M = 3000, PAIR_M = 40000, PAIR_N = 4, K_BAY = 1.25, W_SEA = 3, W_SEA_STAGE = 1;
+/** a pair's scale is taken along the shortest way round by track up to PATH_REACH times their distance, at most PATH_M */
+const PATH_REACH = 6, PATH_M = 200000;
+/** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
 const SPREAD_PASSES = 4, SPREAD_OVER = 1.02;
@@ -200,6 +215,14 @@ interface Prep {
   /** crossings on the ground held (`crossTies`): e1, e2, t1, t2; and the stations near e1 kept on their side: e, v, share, side */
   cross: Float64Array;
   crossSides: Float64Array;
+  /** stations with the sea between them kept apart (`seaTerms`): a, b, ux, uy (the real bearing), the length wanted */
+  seaPairs: Float64Array;
+}
+
+/** what the layout reads of the water on the ground (T-2541; waterReal.ts' `groundSea`) */
+export interface LayoutSea {
+  isSea(x: number, y: number): boolean;
+  massAt(x: number, y: number): number;
 }
 
 function sharesLine(g: DiagramGraph, e1: number, e2: number): boolean {
@@ -357,7 +380,179 @@ function crossSideTerms(T: Terms, P: Prep, pos: Float64Array, dir: (e: number) =
   }
 }
 
-function prep(g: DiagramGraph, o: LayoutOptions): Prep {
+/** T-2541: the water on the ground kept open (constants SCALE_M on): the hops across water lengthened in `L` (targets,
+ * changed in place) and the pairs of stations with the sea between them, a, b, ux, uy, length wanted. Straits and bays
+ * are a few hops' room at most, so they are given it before land: Japan's islands and the bays that make its peninsulas
+ * read only if the water between them is drawn. */
+function seaTerms(g: DiagramGraph, L: Float64Array, pu: number, sea: LayoutSea): Float64Array {
+  const n = g.key.length, m = g.ea.length;
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  const mass = new Int32Array(n);
+  for (let i = 0; i < n; i++) {
+    let k = sea.massAt(g.x[i], g.y[i]);
+    for (let s = MASS_STEP; k < 0 && s <= MASS_FIND; s += MASS_STEP) for (let a = 0; a < 8 && k < 0; a++) k = sea.massAt(g.x[i] + s * DIRS[a][0], g.y[i] + s * DIRS[a][1]);
+    mass[i] = k;
+  }
+  /** the longest run of sea along x, y pairs, metres (looked at every SEA_STEP_M); with `open`, sea also OPEN_M either
+   * side, so a track along a shore is not taken for one across the sea */
+  const seaRun = (p: ArrayLike<number>, from: number, to: number, open = false) => {
+    let run = 0, best = 0;
+    for (let k = from; k + 3 < to; k += 2) {
+      const dx = p[k + 2] - p[k], dy = p[k + 3] - p[k + 1], l = hyp(dx, dy), st = Math.max(1, Math.ceil(l / SEA_STEP_M));
+      const nx = l > 0 ? (-dy / l) * OPEN_M : 0, ny = l > 0 ? (dx / l) * OPEN_M : 0;
+      for (let s = 0; s < st; s++) {
+        const x = p[k] + (dx * (s + 0.5)) / st, y = p[k + 1] + (dy * (s + 0.5)) / st;
+        if (sea.isSea(x, y) && (!open || (sea.isSea(x + nx, y + ny) && sea.isSea(x - nx, y - ny)))) best = Math.max(best, (run += l / st));
+        else run = 0;
+      }
+    }
+    return best;
+  };
+  const gl = new Float64Array(m), water = new Uint8Array(m);
+  for (let e = 0; e < m; e++) {
+    const a = g.ea[e], b = g.eb[e];
+    gl[e] = Math.max(1, hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]));
+    if (mass[a] >= 0 && mass[b] >= 0 && mass[a] !== mass[b]) water[e] = 2;
+    else if (gl[e] >= SEA_RUN_M) {
+      const track = g.hop && g.hopAt && g.hopAt[e + 1] - g.hopAt[e] >= 2;
+      const run = track ? seaRun(g.hop!, g.hopAt![e] * 2, g.hopAt![e + 1] * 2, true) : seaRun([g.x[a], g.y[a], g.x[b], g.y[b]], 0, 4, true);
+      if (run >= Math.max(SEA_RUN_M, SEA_SHARE * gl[e])) water[e] = 1;
+    }
+  }
+  // the scale round each station: its land hops' targets over their real lengths within SCALE_M, else its own hops'
+  const grid = new Map<number, number[]>(), mx = new Float64Array(m), my = new Float64Array(m);
+  for (let e = 0; e < m; e++) {
+    if (water[e]) continue;
+    (mx[e] = (g.x[g.ea[e]] + g.x[g.eb[e]]) / 2), (my[e] = (g.y[g.ea[e]] + g.y[g.eb[e]]) / 2);
+    const k = key(Math.floor(mx[e] / SCALE_M), Math.floor(my[e] / SCALE_M)), v = grid.get(k);
+    if (v) v.push(e);
+    else grid.set(k, [e]);
+  }
+  const own = new Float64Array(n * 2);
+  for (let e = 0; e < m; e++) for (const v of [g.ea[e], g.eb[e]]) (own[v * 2] += L[e]), (own[v * 2 + 1] += gl[e]);
+  const scale = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let sl = 0, sg = 0;
+    const cx = Math.floor(g.x[i] / SCALE_M), cy = Math.floor(g.y[i] / SCALE_M);
+    for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) for (const e of grid.get(key(gx, gy)) ?? []) {
+      if ((mx[e] - g.x[i]) * (mx[e] - g.x[i]) + (my[e] - g.y[i]) * (my[e] - g.y[i]) < SCALE_M * SCALE_M) (sl += L[e]), (sg += gl[e]);
+    }
+    scale[i] = sg > 0 ? sl / sg : own[i * 2 + 1] > 0 ? own[i * 2] / own[i * 2 + 1] : 0;
+  }
+  for (let e = 0; e < m; e++) {
+    if (!water[e]) continue;
+    const s = Math.sqrt(scale[g.ea[e]] * scale[g.eb[e]]);
+    L[e] = Math.max(L[e] + (water[e] === 2 ? STRAIT_PU * pu : 0), K_HOP * gl[e] * s);
+  }
+  // pairs of stations near the sea with the sea between them, each station's PAIR_N nearest
+  const coast: number[] = [];
+  for (let i = 0; i < n; i++) {
+    let c = false;
+    for (let s = COAST_M / 6; s <= COAST_M && !c; s += COAST_M / 6) for (let a = 0; a < 8 && !c; a++) c = sea.isSea(g.x[i] + s * DIRS[a][0], g.y[i] + s * DIRS[a][1]);
+    if (c) coast.push(i);
+  }
+  const cg = new Map<number, number[]>();
+  for (const i of coast) {
+    const k = key(Math.floor(g.x[i] / PAIR_M), Math.floor(g.y[i] / PAIR_M)), v = cg.get(k);
+    if (v) v.push(i);
+    else cg.set(k, [i]);
+  }
+  const adj = new Set<number>();
+  for (let e = 0; e < m; e++) adj.add(g.ea[e] * n + g.eb[e]);
+  const tested = new Map<number, boolean>(), out: number[] = [];
+  const across = (i: number, j: number) => {
+    const k = Math.min(i, j) * n + Math.max(i, j);
+    let v = tested.get(k);
+    if (v === undefined && mass[i] >= 0 && mass[j] >= 0 && mass[i] !== mass[j]) tested.set(k, (v = true));
+    if (v === undefined) {
+      const d = hyp(g.x[j] - g.x[i], g.y[j] - g.y[i]);
+      tested.set(k, (v = seaRun([g.x[i], g.y[i], g.x[j], g.y[j]], 0, 4) >= Math.max(SEA_RUN_M, SEA_SHARE * d)));
+    }
+    return v;
+  };
+  const kept = new Set<number>(), found: number[][] = Array.from({ length: n }, () => []);
+  for (const i of coast) {
+    const cx = Math.floor(g.x[i] / PAIR_M), cy = Math.floor(g.y[i] / PAIR_M), cand: [number, number][] = [];
+    for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) for (const j of cg.get(key(gx, gy)) ?? []) {
+      if (j === i || adj.has(Math.min(i, j) * n + Math.max(i, j))) continue;
+      const d = hyp(g.x[j] - g.x[i], g.y[j] - g.y[i]);
+      // (the middle of the way at sea first: most pairs along one shore fail there)
+      const other = mass[i] >= 0 && mass[j] >= 0 && mass[i] !== mass[j];
+      if (d < PAIR_M && (other || (d >= SEA_RUN_M && sea.isSea((g.x[i] + g.x[j]) / 2, (g.y[i] + g.y[j]) / 2)))) cand.push([d, j]);
+    }
+    cand.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    let got = 0;
+    for (const [, j] of cand) {
+      if (got >= PAIR_N) break;
+      if (!across(i, j)) continue;
+      got++;
+      const a = Math.min(i, j), b = Math.max(i, j);
+      if (kept.has(a * n + b)) continue;
+      kept.add(a * n + b);
+      found[a].push(b);
+    }
+  }
+  // each pair's scale: the targets over the real lengths along the shortest way round by track (a bay's width at the
+  // scale its shores are drawn at, not a city's on one of them), else the scale round its two ends
+  const nb: number[][] = Array.from({ length: n }, () => []);
+  for (let e = 0; e < m; e++) nb[g.ea[e]].push(e), nb[g.eb[e]].push(e);
+  const dist = new Float64Array(n).fill(Infinity), sumL = new Float64Array(n), seen: number[] = [];
+  for (let a = 0; a < n; a++) {
+    if (!found[a].length) continue;
+    let reach = 0;
+    for (const b of found[a]) reach = Math.max(reach, Math.min(PATH_M, PATH_REACH * hyp(g.x[b] - g.x[a], g.y[b] - g.y[a])));
+    // Dijkstra by real length, out to `reach`
+    for (const v of seen) (dist[v] = Infinity), (sumL[v] = 0);
+    seen.length = 0;
+    const heap: number[] = [];
+    const push = (dv: number, v: number) => {
+      heap.push(dv, v);
+      for (let c = heap.length / 2 - 1; c > 0; ) {
+        const p = (c - 1) >> 1;
+        if (heap[p * 2] < heap[c * 2] || (heap[p * 2] === heap[c * 2] && heap[p * 2 + 1] <= heap[c * 2 + 1])) break;
+        for (let z = 0; z < 2; z++) [heap[p * 2 + z], heap[c * 2 + z]] = [heap[c * 2 + z], heap[p * 2 + z]];
+        c = p;
+      }
+    };
+    const pop = (): [number, number] => {
+      const top: [number, number] = [heap[0], heap[1]];
+      const ly = heap.pop()!, lx = heap.pop()!;
+      if (heap.length) {
+        (heap[0] = lx), (heap[1] = ly);
+        for (let c = 0; ; ) {
+          const l = 2 * c + 1, r = l + 1, h = heap.length / 2;
+          let s = c;
+          const less = (p: number, q: number) => heap[p * 2] < heap[q * 2] || (heap[p * 2] === heap[q * 2] && heap[p * 2 + 1] < heap[q * 2 + 1]);
+          if (l < h && less(l, s)) s = l;
+          if (r < h && less(r, s)) s = r;
+          if (s === c) break;
+          for (let z = 0; z < 2; z++) [heap[s * 2 + z], heap[c * 2 + z]] = [heap[c * 2 + z], heap[s * 2 + z]];
+          c = s;
+        }
+      }
+      return top;
+    };
+    (dist[a] = 0), seen.push(a), push(0, a);
+    while (heap.length) {
+      const [dv, v] = pop();
+      if (dv > dist[v]) continue;
+      for (const e of nb[v]) {
+        const w = g.ea[e] === v ? g.eb[e] : g.ea[e], nd = dv + gl[e];
+        if (nd > reach || nd >= dist[w]) continue;
+        if (dist[w] === Infinity) seen.push(w);
+        (dist[w] = nd), (sumL[w] = sumL[v] + L[e]), push(nd, w);
+      }
+    }
+    for (const b of found[a]) {
+      const d = hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]), s = dist[b] < Infinity && dist[b] > 0 ? sumL[b] / dist[b] : Math.sqrt(scale[a] * scale[b]);
+      const least = mass[a] >= 0 && mass[b] >= 0 && mass[a] !== mass[b] ? STRAIT_PU * pu : 0;
+      out.push(a, b, (g.x[b] - g.x[a]) / d, (g.y[b] - g.y[a]) / d, Math.max(K_BAY * d * s, least));
+    }
+  }
+  return Float64Array.from(out);
+}
+
+function prep(g: DiagramGraph, o: LayoutOptions, sea?: LayoutSea | null): Prep {
   const n = g.key.length, m = g.ea.length;
   const L = new Float64Array(m), gdx = new Float64Array(m), gdy = new Float64Array(m);
   for (let e = 0; e < m; e++) {
@@ -415,6 +610,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       L[e] = Math.max(L[e], (hi[e] - lo[e]) * gl * (sc[e] / cnt[e]) + 2 * LONELY_MIN * pu);
     }
   }
+  const seaPairs = sea ? seaTerms(g, L, pu, sea) : new Float64Array(0);
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
   const adj = new Set<number>();
@@ -436,7 +632,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       through[v].add(e1 * m + e2).add(e2 * m + e1);
     }
   }
-  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city, par, cross, crossSides };
+  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city, par, cross, crossSides, seaPairs };
 }
 
 /** The cities and the lonely hops between them (T-2289): `city` per node, its city (-1 for a station in
@@ -667,6 +863,12 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
       const a = S[k], b = S[k + 1], ux = S[k + 2], uy = S[k + 3], want = P.dmin + P.hw[a] + P.hw[b];
       if ((pos[b * 2] - pos[a * 2]) * ux + (pos[b * 2 + 1] - pos[a * 2 + 1]) * uy < want) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], want, W_SIDE);
       if (!octi && r >= rounds - ACROSS_ROUNDS) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [-uy, ux, uy, -ux], 0, W_SIDE_ACROSS);
+    }
+    // stations with the sea between them kept apart (T-2541)
+    const Q = P.seaPairs;
+    for (let k = 0; k < Q.length; k += 5) {
+      const a = Q[k], b = Q[k + 1], ux = Q[k + 2], uy = Q[k + 3];
+      if ((pos[b * 2] - pos[a * 2]) * ux + (pos[b * 2 + 1] - pos[a * 2 + 1]) * uy < Q[k + 4]) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], Q[k + 4], W_SEA);
     }
     // crossings on the ground held (T-2534): in A on the longer hop's real way, in B on its direction and near the
     // place, with the stations near it on their side
@@ -1733,10 +1935,10 @@ export function lastPlaces(g: DiagramGraph, lay: DiagramLayout): LastPlaces {
 
 /** The layout of a graph; `last` the last layout's places: a rebuild starts from its B positions,
  * and its separation keeps to the drawing nearest the last one. */
-export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?: LastPlaces | null, progress?: (share: number) => void): DiagramLayout {
+export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?: LastPlaces | null, progress?: (share: number) => void, sea?: LayoutSea | null): DiagramLayout {
   const t0 = performance.now();
   const n = g.key.length;
-  const P = prep(g, o);
+  const P = prep(g, o, sea);
   const hop = median(P.L);
   const blocks = findBlocks(g, P.city, P.cross);
   const tied = tiedBlocks(g, blocks, P.cross);
@@ -1772,7 +1974,9 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
         const e1 = P.cross[k], e2 = P.cross[k + 1], b = blocks.of[P.ea[e1]];
         if (b >= 0 && !skip[e1] && !skip[e2] && blocks.of[P.ea[e2]] === b) c.push(e1, e2, P.cross[k + 2], P.cross[k + 3]);
       }
-      PA = { ...P, side: Float64Array.from(s), cross: Float64Array.from(c) };
+      const q: number[] = [];
+      for (let k = 0; k < P.seaPairs.length; k += 5) if (blocks.of[P.seaPairs[k]] >= 0 && blocks.of[P.seaPairs[k]] === blocks.of[P.seaPairs[k + 1]]) for (let z = 0; z < 5; z++) q.push(P.seaPairs[k + z]);
+      PA = { ...P, side: Float64Array.from(s), cross: Float64Array.from(c), seaPairs: Float64Array.from(q) };
     }
     start = lsq(PA, false, roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, progA), skip);
   }
@@ -1787,7 +1991,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
         const l = o.L0 * pow(d / o.L0, o.alpha);
         return o.lonely < 1 ? Math.max(Math.min(l, LONELY_MIN * P.pu), l * o.lonely) : l;
       };
-      mv = placeBlocks(g, blocks, start, P.L, P.gdx, P.gdy, P.pu, linkTarget, held, false, P.cross);
+      mv = placeBlocks(g, blocks, start, P.L, P.gdx, P.gdy, P.pu, linkTarget, held, false, P.cross, held ? undefined : P.seaPairs, W_SEA_STAGE);
       for (let i = 0; i < n * 2; i++) start[i] += mv[i];
     }
     // the hops between blocks keep the length placed, so B and the drawing do not pull the cities together again;

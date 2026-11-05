@@ -7,7 +7,7 @@
 //   node trainworld/checks/t2289-diagram-intercity.mjs [ne,jpn] [lonely=1]      (about two minutes; figures in
 //   artifacts/trainworld/t2289/intercity.json; the second argument overrides the layout's options, to compare)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { openSave, app } from './diagram-saves.mjs';
+import { openSave, app, waterOf } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
@@ -16,7 +16,6 @@ const which = (process.argv[2] ?? 'ne,jpn').split(',');
 const over = process.argv[3] ? Object.fromEntries(process.argv[3].split(',').map((kv) => [kv.split('=')[0], +kv.split('=')[1]])) : {};
 const OPTS = { ...L.LAYOUT, ...over };
 const REG = JSON.parse(readFileSync(new URL('../app/src/game/registry.json', import.meta.url)));
-const ORIGIN = { ne: [-73.985, 40.758], nyc: [-73.985, 40.758], jpn: [139.7, 35.7], tyo: [139.7, 35.7] };
 let failed = 0;
 const out = {};
 const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
@@ -27,8 +26,11 @@ for (const city of which) {
   const names = [...g.key].map((k) => s.name(k) ?? '');
   const ni = s.api.nodes_info(), xy = new Map();
   for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
+  // the sea on the ground the page's layout reads (T-2541)
+  const { sea } = waterOf(s, g);
   s.api.free();
-  const frame = app.makeFrame({ kind: 'equirect', lon: ORIGIN[city][0], lat: ORIGIN[city][1] });
+  // the save's own frame (T-2542)
+  const frame = app.makeFrame(s.frameSpec);
   const zone = [...g.key].map((k) => {
     const [lng, lat] = frame.toLonLat(...xy.get(k)), kx = 111320 * Math.cos(lat * Math.PI / 180);
     let best = null, bd = Infinity;
@@ -36,7 +38,7 @@ for (const city of which) {
     return bd <= 120000 ? best : null;
   });
   const t0 = performance.now();
-  const lay = L.layoutDiagram(g, OPTS);
+  const lay = L.layoutDiagram(g, OPTS, null, undefined, sea);
   const ms = performance.now() - t0;
   const d = L.drawing(g, lay);
   const r = { complexes: g.key.length, ms: Math.round(ms), ...intercity(g, lay, names, zone), overlaps: overlaps(g, d, names), close: closePairs(g, lay) };

@@ -113,9 +113,10 @@ that arrive after a layout), between blocks as inside them.
 `diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
 notes/T-2497.md, notes/T-2516.md, notes/T-2540.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
-coast drawn a little wrong shows less). The layout worker makes them last, after the borders, and posts them on their
-own, so the layout's time is not touched; the page names the zones near the network and the worker fetches their water
-masks from the packs (the 25 m rasters the track model prices water with), each zone once.
+coast drawn a little wrong shows less). The page names the zones near the network and the worker fetches their water
+masks from the packs (the 25 m rasters the track model prices water with), each zone once. Before a first layout the
+worker finds the sea on the ground (the coarse and far grids and the land masses below), which the layout keeps open
+(The layout, Water); the rivers and the drawing come last, after the borders, posted on their own.
 
 - **On the ground**, near the network only. A coarse grid (200 m, within 15 km of a station) says where the **sea**
   is: water at least 2 km across everywhere within it, and water within 400 m of that counts as the sea's. Each sea
@@ -308,6 +309,20 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   its side of it in B and the snap (weight 3, its half width and 2 pitches off). So a long-distance line passing
   through a small city's network, stopping at none of its stations, is drawn through it; a dense core is left
   free, where holding every crossing would bend its lines about.
+- **Water** (T-2541): the layout reads the sea on the ground (Water below: the coarse and far grids and the land
+  masses), which the worker finds before a first layout; a rebuild takes the last found. The scale round a station is
+  the targets of the land hops with middles within 10 km over their real lengths. A **hop across water** (its ends on
+  different land masses, found out to 2 km, or a run of sea on its track of 2 km and 30% of it) has at least twice its
+  real length at the geometric mean of its ends' scales, and 12 pitches past its own target between land masses.
+  **Stations with the sea between them**: each station within 3 km of the sea with its 4 nearest within 40 km that are
+  on another land mass or have such a run of sea on the straight way between them. Each pair's scale is the targets
+  over the real lengths along the shortest way between them by track, up to 6 times their distance and 200 km (else
+  the scale round its ends), so a bay is as wide as its shores are drawn, not as a city on one of them; it is kept
+  1.25 times its real distance at that scale apart along its real bearing, and 12 pitches between land masses: in A
+  and B when nearer (weight 3; in A only within one block), and in the blocks' stage each pair of units is held to
+  its pairs' lengths and bearings (weight 1 in all). So straits and bays get room before land does: Japan's four main
+  islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water round them, while land
+  with few stations keeps the lonely and local hops' short targets (Anita, 2026-11-05: peninsulas need not be big).
 - **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
   being such stations within 2.5 km of each other (`cityParts`). A hop whose lines are all of one colour,
   between two stations with two hops or fewer each, that leaves a city or joins two, with an end alone (no
