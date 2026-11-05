@@ -397,7 +397,6 @@ fn attraction_sites(commutes: &DemandApi, a: &[f32]) -> Vec<(u32, u32, f32)> {
     out
 }
 
-mod drives;
 #[cfg(test)]
 mod tests;
 /// T-1222: the levels of detail against each other.

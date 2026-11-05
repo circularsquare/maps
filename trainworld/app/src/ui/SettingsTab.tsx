@@ -3,7 +3,7 @@
 
 import type { ComponentChildren } from "preact";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
-import { ask, display, DRIVES_FEATURE, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
@@ -101,9 +101,6 @@ export function SettingsTab() {
         <Check checked={d.lineBands} onChange={(v) => setDisplay("lineBands", v)}>
           Lines side by side
         </Check>
-        {DRIVES_FEATURE && <Check checked={d.drives} onChange={(v) => setDisplay("drives", v)}>
-          Drives
-        </Check>}
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           Map labels
         </Check>

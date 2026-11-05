@@ -5,7 +5,6 @@
 // - Network layers (line width, train fill): map/demandLayers.ts, rebuilt when the network, the
 //   world, the demand result, the period in force or a setting changes.
 // - Station ridership circles, over the bubbles: map/stationCircles.ts.
-// - Where people drive, arcs between the bubbles and the circles: map/driveArcs.ts.
 // - Commuter bubbles and a bubble selection: map/commuterView.ts.
 // - Longer trips of a selection, and one bubble per city zoomed far out: map/intercityView.ts.
 // - Hovering any of these discs shows how many people they stand for (map/demandHover.ts).
@@ -28,7 +27,6 @@ import { DemandOverlay } from "./demandOverlay";
 import { startIntercityView } from "./intercityView";
 import type { Overlay } from "./overlay";
 import { StationCircles, stationCircles } from "./stationCircles";
-import { DriveArcs } from "./driveArcs";
 
 /** The period in force on the clock; changes five times a game day. */
 const period = computed(() => periodAt(clock.local.value * 60)); // T-309: the local time in view
@@ -52,8 +50,6 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
   const view = new DemandOverlay(map, overlay);
   // the station ridership circles, over the bubbles (T-1448)
   const circles = stationCircles.now = new StationCircles(map, overlay, view.canvas);
-  // where people drive (T-1435): over the bubbles, under the circles
-  const drives = new DriveArcs(map, overlay, view.canvas);
   startHover(map);
   // The selected station shows above the bubbles (T-189): cut out of them, redrawn when the
   // network draws a new selection, and picked before them.
@@ -123,7 +119,6 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     networkChanged() {
       if (renderer.net !== netSeen) schedule();
       circles.invalidate();
-      drives.invalidate();
     },
     click(px, py, add, under = false) {
       if (!under && above(px, py)) return undefined; // the network picks the selected station

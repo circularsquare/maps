@@ -913,7 +913,6 @@ button.save-add:hover { color: var(--text); }
 /* T-1448: the station ridership circles, over the bubbles (later in the map, the same z) */
 #map canvas.overlay.stations { z-index: 2; }
 /* T-1435: where people drive, between the bubbles and the circles (the same z) */
-#map canvas.overlay.drives { z-index: 2; }
 #map .maplibregl-control-container { position: relative; z-index: 3; }
 .stn-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .stn-label-plane { position: absolute; inset: 0; }
@@ -1202,7 +1201,7 @@ button.save-add:hover { color: var(--text); }
    on, the demand views are drawn beneath the network */
 .track-tag, .build-tag { z-index: 5; }
 .build-tag { position: absolute; left: 0; top: 0; pointer-events: none; }
-.building #map canvas.overlay.demand, .building #map canvas.overlay.stations, .building #map canvas.overlay.drives, .building .airport-marks, .building .attraction-marks, .building .intercity-labels { z-index: 0; }
+.building #map canvas.overlay.demand, .building #map canvas.overlay.stations, .building .airport-marks, .building .attraction-marks, .building .intercity-labels { z-index: 0; }
 /* T-732: what else is under a resting pointer, under the hover tag; its entries take clicks */
 .rest-list { z-index: 6; pointer-events: auto; padding: 1px 0; }
 .rest-entry { display: flex; gap: 5px; align-items: center; padding: 1px 4px; cursor: pointer; }

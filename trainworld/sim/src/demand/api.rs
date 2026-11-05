@@ -2335,7 +2335,6 @@ impl DemandApi {
     }
 }
 
-pub(crate) mod drives;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

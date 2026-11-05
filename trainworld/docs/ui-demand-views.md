@@ -5,7 +5,7 @@
 
 [T-084, T-097; notes/T-084.md, notes/T-097.md; `map/demandViews.ts`, `map/demandLayers.ts`,
 `map/commuterView.ts`, `map/bubbles.ts`, `map/intercityView.ts`, `map/demandOverlay.ts`,
-`map/demandHover.ts`, `map/driveArcs.ts`]
+`map/demandHover.ts`]
 
 **Two kinds of figure.** Line widths, station circles and bubbles are demand's whole-day forecast
 from the latest solve, for the day shown: the average day unless the Day choice in Settings says a
@@ -71,10 +71,6 @@ closest pair), the same in the pie, bars, filter swatch and purpose split.
   "Show riders at each station"), after the interchange icon (two station boxes crossing, one outline) with a big blue station
   circle centred on the boxes' crossing [T-1851, T-1865]. The track display's hovers read "Show line colors", "Show line colors, thickness by traffic",
   "Show track elevation colors", "Show track speed", and its icon has a short yellow line along its lower right.
-- **Where people drive** [T-1435, T-1477] is switched off (T-1851, Anita prefers clicking the demand
-  bubbles): `DRIVES_FEATURE = false` in `game/ui.ts` hides the Settings > Show check and draws no arcs;
-  the code stays. When on it was a Drives check, off by default, remembered per browser (`display.drives`); see
-  "Where people drive" below.
 - **Folding** [T-1448]: each row's icon is a button that folds the row down to the icon and opens it
   again (its hover "Hide demand bubble choices" or "Show ...", likewise "station ridership" and
   "track colour"); folded rows are remembered per browser (`foldedRows`) and the choices in them
@@ -152,45 +148,6 @@ row per part, each after a dot in its end colour: "186,100 entries", "947,400 tr
 "12,400 entries per day" or "464,000 transfers per day". The circles take the hover and clicks
 before the demand bubbles; the network under them (stations, trains, marks, lines) keeps its own
 hover and clicks. They do not enlarge the station's click target.
-
-## Where people drive
-
-[T-1435; `map/driveArcs.ts`, `game/drives.ts`; the tables in [demand-views.md](demand-views.md)]
-With Drives on, the biggest car flows are soft arcs: width the car trips a day, opacity the minutes
-a train would save them, so the arcs say which pairs to join. The car is the model's driving, every
-way but train and walking; every purpose; the day shown; the purpose filter does not apply.
-
-- **The rule** (DECISIONS 2026-10-26): a car trip's gain is its drive, as the model prices it, less
-  a straight-line train at 100 km/h plus 15 minutes to reach a station, wait and leave the far one
-  (`TRAIN_KMH`, `TRAIN_ACCESS_MIN`), never below 0. Arcs rank by car trips times that gain; a pair
-  with no gain is not drawn.
-- **Zoomed in** (above `OVERVIEW_ZOOM`, 8.5): the focused zone's local trips between squares of
-  its 2 km grid, the commutes and the everyday layer, rail taken off. The squares are 2, 3, 4, 6...
-  zones a side, the smallest giving at most 800 squares (New York: 8 km), merged 2 x 2 three times
-  more, so four groupings; the finest whose squares are at least 110 CSS px wide is drawn. Each
-  end is where the pair's car trips start and end (the squares' people and jobs, weighted by the
-  car trips). Trips within one square are not drawn, nor trips to other zones.
-- **Zoomed out**: the market's corridors between zones (`corridorAt`'s car: longer trips and
-  commute legs, rail taken off), between the zones' registry centres, both ways together, up to
-  1,500 km. Their drive is the model's rule with both ends at 5,000 people and jobs a km²
-  (`corridorDriveMin`). In a new game they wait for the market's result, which comes with the
-  first station.
-- **Drawn**: at most 60 arcs, the biggest by car trips times gain with at least one end on screen,
-  each a quadratic curve bowing 16% of its length to the same side (west end first), stopping short
-  of its ends (15% of the square's width on screen, at most 36 px; 5 px at a zone), so a busy square
-  is an open hub. Width the square root of car trips a day over 45, 1 to 14 CSS px; opacity 0.18
-  with no gain up to 0.7 at 30 minutes or more. Amber, #c86400 light and #ffad45 dark. On a canvas
-  of its own over the bubbles and under the station ridership circles, redrawn with each map frame;
-  hidden while stops are edited and below `CITY_MARKS_MIN_ZOOM`.
-- **Hover** (the game's tag, before the bubbles'): "99,800 drives per weekday between South Bronx
-  and Manhattan", then "About 12 min faster by train". A zone arc's ends are named by the OSM
-  place nearest relative to its kind's reach (city 15 km, borough 8, town 5, suburb 4, quarter and
-  village 3, neighbourhood 2, hamlet 1.5), the place lists loaded for the view; a corridor's by
-  its zones. No clicks: a click reaches what is under.
-- **Cost**: the tables with no rail are worked out once per zone and day (the commutes' in the aux
-  worker, 1.1-1.9 s for New York; the everyday layer's in a solving worker, about 0.3 s), each
-  demand result asks every solving worker for the car trips rail takes (about 0.25 s each on the
-  real save), and the sums worker makes the groupings; nothing is asked while Drives is off.
 
 ## Local trip bubbles
 

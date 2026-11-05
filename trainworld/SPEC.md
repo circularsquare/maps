@@ -335,8 +335,7 @@ start, track, stations, construct, a line, stops, a train, the crowding dot, tra
 then a second card on reading demand (Homes, a bubble, a trip, a star), until the player has finished
 the first once in the browser [T-1822, T-2123; docs/ui-panels.md "Tutorial card"]; a browser's first elevation is +1. **Panels count the past 24 hours, not a forecast** [T-293, T-446]: the line and station panels
 count the past 24 hours from the boarding account (labelled "today", the profit "expected profit today" [T-1893]), while the map's demand views (Homes and Destinations bubbles
-coloured by mode share, line widths by riders, station ridership circles, inter-city trips, the
-biggest car flows as arcs [T-1435]) show demand's
+coloured by mode share, line widths by riders, station ridership circles, inter-city trips) show demand's
 whole day: the average day by default, or a weekday, a Saturday or a Sunday [T-464, T-262]. On the map, lines sharing track are drawn over each other,
 stations are dots from zoom 9 and their true platforms from 14, and trains fill like a gauge with
 their riders.

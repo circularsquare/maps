@@ -20,7 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityById, cityToLonLat, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { CITIES, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
@@ -139,7 +139,7 @@ let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "driveRail", "tripLengths"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-1607: which of a cluster's populations a worker solves a period of: all, the cities' alone
  * (the market's in another worker) or the market's alone */
@@ -1168,10 +1168,6 @@ function query(msg: Query) {
       const b = bare.get(msg.city);
       const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
       sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
-    } else if (msg.kind === "driveRail") {
-      const commute = live ? a!.drive_rail_day(day) : null;
-      const everydayRail = live ? everyday.get(msg.city)?.drive_rail_day(day) ?? null : null;
-      sendMessage({ kind: "driveRail", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, commute, everyday: everydayRail }, [...(commute ? [commute.buffer] : []), ...(everydayRail ? [everydayRail.buffer] : [])]);
     } else if (msg.kind === "tripLengths") {
       // T-2365: a zone open bare from the aux worker's copy, its periods solved on no network
       const b = msg.bare ? bare.get(msg.city) : undefined;
@@ -1181,19 +1177,6 @@ function query(msg: Query) {
       const commute = ok ? api!.trip_lengths_day(day, mask) : null;
       const ev = ok && layer ? layer.trip_lengths_day(day, mask) : null;
       sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask, edges: trip_length_edges(), commute, everyday: ev }, [...(commute ? [commute.buffer] : []), ...(ev ? [ev.buffer] : [])]);
-    } else if (msg.kind === "driveBase") {
-      // no network in it: a zone open bare answers from the aux worker's copy (T-325)
-      const b = bare.get(msg.city);
-      const api = cities.get(msg.city) ?? b?.a;
-      const layer = everyday.get(msg.city) ?? b?.e;
-      const base = !api ? null : msg.part === 0 ? api.drive_base_day(day) : layer?.drive_base_day(day) ?? null;
-      let squares: Float64Array | null = null;
-      if (api && base) {
-        squares = Float64Array.from(api.drive_squares());
-        const n = squares[2];
-        for (let i = 0; i < n; i++) [squares[3 + i], squares[3 + n + i]] = cityToLonLat(squares[3 + i], squares[3 + n + i], msg.city);
-      }
-      sendMessage({ kind: "driveBase", id: msg.id, squares, base }, [...(squares ? [squares.buffer] : []), ...(base ? [base.buffer] : [])]);
     }
   } catch (err) {
     // a failed query answers with nothing; the pool itself carries on (after a panic, with this
@@ -1213,8 +1196,6 @@ function query(msg: Query) {
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
-    else if (msg.kind === "driveRail") sendMessage({ kind: "driveRail", id: msg.id, version: msg.version, mask: 0, commute: null, everyday: null });
-    else if (msg.kind === "driveBase") sendMessage({ kind: "driveBase", id: msg.id, squares: null, base: null });
     else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null });
   }
 }

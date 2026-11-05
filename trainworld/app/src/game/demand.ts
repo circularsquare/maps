@@ -9,7 +9,6 @@ import { computed, signal } from "@preact/signals";
 import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
-import type { DriveLevel } from "./drives";
 import type { TripLengths } from "./tripLengths";
 import type { Fares } from "./fareCurve";
 import { shownDay } from "./ui";
@@ -508,7 +507,6 @@ export interface DemandQueries {
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null>;
   intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
   intercityStation(stationId: string, members?: string[]): Promise<IntercityStation | null>;
-  drives(): Promise<DriveLevel[] | null>;
   tripLengths(zone?: CityId): Promise<TripLengths | null>;
 }
 
@@ -520,8 +518,6 @@ export function setDemandQueries(q: DemandQueries) {
 /** The city's cells (null until the pool has opened the city). `city`: another zone's than the
  * focused one (a nearby zone's bubbles, T-276); it waits for that zone to open. */
 export const cityCells = (city?: CityId): Promise<CityCells | null> => queries?.cityCells(city) ?? Promise.resolve(null);
-/** T-1435: the focused zone's drive arcs for the solve shown (game/drives.ts); null while unknown. */
-export const driveArcs = (): Promise<DriveLevel[] | null> => queries?.drives() ?? Promise.resolve(null);
 /** T-2365: a zone's local trips a day by length on the day shown (game/tripLengths.ts); null while unknown. */
 export const zoneTripLengths = (zone?: CityId): Promise<TripLengths | null> => queries?.tripLengths(zone) ?? Promise.resolve(null);
 /** Local trip legs a day per cell by mode, for the solve `demandView` shows. One 4.9 MB answer in

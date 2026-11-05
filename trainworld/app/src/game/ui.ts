@@ -41,9 +41,6 @@ export interface DisplaySettings {
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
-  /** T-1435: the biggest car flows drawn as arcs, ranked by what a train would win (map/driveArcs.ts).
-   * T-1851: switched off for everyone while DRIVES_FEATURE is false (no Settings entry, nothing drawn) */
-  drives: boolean;
   /** T-1448: the map's upper left rows folded down to their icon ("bubbles", "stations", "track") */
   foldedRows: MapRow[];
   /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
@@ -120,7 +117,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: true,
   stationUse: "none",
-  drives: false,
   foldedRows: [],
   trainLoad: true,
   platformCrowds: "patch",
@@ -205,9 +201,6 @@ const trackColour = (saved.v ?? 1) < 10
 
 export const tab = signal<Tab>(saved.tab && TABS.includes(saved.tab) ? saved.tab : "lines");
 export const selection = signal<Selection>(null);
-/** T-1851: the drive arcs are off (Anita prefers clicking the demand bubbles); true brings back the
- * Settings entry and the arcs (map/driveArcs.ts). */
-export const DRIVES_FEATURE = false;
 
 export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour });
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour

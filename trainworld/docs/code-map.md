@@ -215,7 +215,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   bubble selections; the far end grouped into at least 10 trips a bubble in `game/farChunks.ts`, T-909), `intercityView.ts` (longer trips of a selection or station, one bubble per
   far zone, T-118, T-120; one per city zoomed far out, T-186), `demandOverlay.ts` (their canvas, over the network's; a selection's turning outline while its answer loads, T-1216),
   `demandHover.ts` (the count tag by the pointer), `modeBar.ts` (the tag's mode bar, T-494, `logShare` for log-scaled size bars, T-2271, and `localModes`, an open zone's local legs by mode, T-576), `airportMarks.ts` (the plane badge on an
-  airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`), `attractionMarks.ts` (a mark on each attraction and its hover, T-263), `driveArcs.ts` (where people drive: the car flows as arcs on a canvas between the bubbles' and the circles', and the corridors zoomed out, T-1435; the groupings and the train rule in `game/drives.ts`, the tables in `sim/src/demand/api/drives.rs` and `everyday/drives.rs`).
+  airport and its hover, T-448, T-674; paths shared with the icons in `glyphs.ts`), `attractionMarks.ts` (a mark on each attraction and its hover, T-263),
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `stretchLoad.ts` (a stretch's average load in the track tag, T-2007), `hoverRest.ts` (the list of what else is under a resting pointer,
   T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
@@ -285,7 +285,7 @@ each a sub-network, T-326; `reachView`, a city's own network inside its cluster,
 reach, T-149; the footprints fetched on demand by registry box, T-404; `distanceTo` through a grid of each outline's edges, T-889; `atZero`, whether a place is in an outline, from a grid of cells each crossed by an edge or wholly in or out, so `placeAt` and `cityWithin` find the zone holding a place before measuring any distance, T-1348), `commuters.worker.ts` and `commutersProtocol.ts` (the commuter bubbles' sums,
 T-097), `selectionMerge.ts` (a bubble selection's everyday far end added up over the workers,
 T-285), `demandSums.ts` and `demandSums.worker.ts` (demand's sums off the main thread: each round's
-views of every kind of day, a selection's commuters and longer trips, a station's, T-1208, T-1210; the drives view's groupings, T-1435), `shade.worker.ts` (the realm shade's cut, T-1026), `focusShade.worker.ts` (the focused
+views of every kind of day, a selection's commuters and longer trips, a station's, T-1208, T-1210), `shade.worker.ts` (the realm shade's cut, T-1026), `focusShade.worker.ts` (the focused
 zone's own outline joined with its sea, for the shade outside it, T-1145), `roadFeed.ts` (the clock worker's fetch of the basemap's zoom 14 road tiles under the track being drawn, put in the track model to count and price crossings, T-1929), `marketParts.ts` (the regional market's `part_summary` on another kind of day; plain arithmetic a Node check imports, T-1229).
 
 ### URL switches

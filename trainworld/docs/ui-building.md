@@ -737,7 +737,7 @@ running line's trains stop at then wins over one they do; then the nearest.
 **Stop editing mode** (Edit stops, New line, Copy line):
 
 - The demand bubbles (local, inter-city, the airport and attraction badges) stay, at 35% and beneath
-  the network, with no hover tags [T-2271]; the trip route, capacity tags, traffic widths, drive arcs
+  the network, with no hover tags [T-2271]; the trip route, capacity tags, traffic widths
   and station circles go; the other lines and their trains are drawn at 30%; the edited line's trains
   stay full.
 - A round toggle marker on every station, over everything: a stop is a disc in the line's colour
