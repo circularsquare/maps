@@ -37,6 +37,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **8800 = build 1056 (e0534793)** with the octilinear water fix (338ecad2), smoke PASSED; Anita pinged ~17:45.
   Disk: after_join.py --go freed 15.6 GB, pre-T2302 deleted; 67 GB free. git gc run (loose objects 6,830 -> 2,987;
   master 134 commits ahead of origin, pushing is Anita's). T-2483 archived (swap works).
+- Anita ~18:00 pushed master. Proposed a different diagram water/scale strategy (one continuous warp of the real map:
+  grid cells grown or shrunk, bounded scale change per distance, lenient absolute displacement cap by map size, real
+  water pushed through and snapped to 45/90). maps-17 paused diagsmooth (T-2561) to write findings; discussing with
+  her before a design + prototype task.
 - **mexico** (agent aa0915d6048b49d88, Opus, main tree, pack lock, port 6197, kit scratch\mexico): T-2554's three
   pipeline changes first, then wire mexico.py, dry counts to maps-17, build/gate/join; messages at browser gates.
 - Anita ~17:20 on 8800: "this seems to have made water no longer follow 90 degree / 45 degree lines. thats bad, we
@@ -125,6 +129,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
+- Diagram water/scale redesign (~18:05): go ahead with (1) a one-page summary of how the diagram works now and what
+  failed, (2) a design for approach A (one continuous rubber-sheet warp built from station/demand density, her two
+  limits: bounded scale change per distance and a map-size cap on displacement; stations laid out on it, then real
+  water pushed through and snapped to 45/90 without closing straits), (3) a Node prototype drawing New York and all
+  Japan beside today's, shown to her before anything enters the game? A vs B (keep today's layout, fit a sheet after):
+  maps-17 recommends A (Wang and Chi 2011 focus+context metro maps; cartograms).
 
 ## Lessons from this run
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
