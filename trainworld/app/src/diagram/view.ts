@@ -28,7 +28,7 @@ const WATER_ON = new URLSearchParams(location.search).has("water");
 import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
 import { mixOklab } from "../game/palette";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
-import { cityBox, paintCityNames } from "./cityNames";
+import { paintCityNames } from "./cityNames";
 import { keyIsTheirs } from "../ui/keys";
 import { live } from "../map/live";
 import { toLocal } from "../map/geo";
@@ -361,7 +361,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         diagramProgress.value = null;
         diagramReady.value = true;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? c.at.map((l, i) => [c.levels[i], [...l.block].map((b) => c.text[b])]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, water: () => ({ ms: waterMs, stats: shown?.d.water?.stats, sea: shown?.d.water?.seaStats }) };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, water: () => ({ ms: waterMs, stats: shown?.d.water?.stats, sea: shown?.d.water?.seaStats }) };
         if (!placed) place();
         draw();
         wantTowns(names.cities?.want);
@@ -471,13 +471,12 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     const f = focusNow();
-    paint(ctx, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f);
+    const cn = shown.names.cities, d = shown.d;
+    // the city names under the lines, far out (T-2438, T-2521)
+    paint(ctx, d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f, cn && ((c) => paintCityNames(c, cn, d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, font: t.font })));
     // the map's station names: its ink with a halo of the background
     const st = f?.stations;
     paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
-    // far out, the city names in place of the station names (T-2438)
-    const cn = shown.names.cities;
-    if (cn) paintCityNames(ctx, cn, shown.d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, halo: t.bg, font: t.font });
   };
   new ResizeObserver(() => draw()).observe(canvas);
   effect(() => {
@@ -670,18 +669,7 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
     const [W, H] = size(at, b);
     if (fits(W, H)) (sc = at), (box = b);
   }
-  // too big for station names at any level: the city names' largest level that fits (T-2438)
-  const cn = s.names.cities;
-  for (let li = (cn?.levels.length ?? 0) - 1; li >= 0 && !sc; li--) {
-    const at = cn!.levels[li] / d.pitch, b = [x0, y0, x1, y1];
-    for (let i = 0; i < cn!.at[li].block.length; i++) {
-      const n = cityBox(cn!, li, i, at);
-      (b[0] = Math.min(b[0], n[0])), (b[1] = Math.min(b[1], n[1])), (b[2] = Math.max(b[2], n[2])), (b[3] = Math.max(b[3], n[3]));
-    }
-    const [W, H] = size(at, b);
-    if (fits(W, H)) (sc = at), (box = b);
-  }
-  // too big for any names: the lines alone, as large as fits
+  // too big for station names at any level: the lines alone, as large as fits (the city names under them when the pitch is small enough)
   if (!sc) {
     const span = Math.max(x1 - x0, y1 - y0), area = (x1 - x0) * (y1 - y0);
     sc = Math.min((PICTURE_MAX_SIDE - 2 * PICTURE_MARGIN_PX) / span, Math.sqrt(PICTURE_MAX_AREA / area) * 0.95);
@@ -693,8 +681,8 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
   const ctx = out.getContext("2d");
   if (!ctx) return null;
   const mx = (box[0] + box[2]) / 2, my = (box[1] + box[3]) / 2;
-  paint(ctx, d, W, H, mx, my, sc, t);
+  const cn = s.names.cities;
+  paint(ctx, d, W, H, mx, my, sc, t, undefined, cn && ((c) => paintCityNames(c, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.place, font: t.font })));
   paintNames(ctx, s.names, d, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
-  if (cn) paintCityNames(ctx, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.place, halo: t.bg, font: t.font });
   return { canvas: out, pitchPx: sc * d.pitch };
 }

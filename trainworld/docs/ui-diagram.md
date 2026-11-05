@@ -209,11 +209,18 @@ pill, so they clear its own line); east, west, north and south
 
 ## City names
 
-`diagram/cityNames.ts` (T-2438). Below a pitch of 1.47 px no station names are drawn; each city block (The layout,
-Blocks) has its name instead, in the station names' font, size and halo, in the grey of the map's place names
-(`placeNameInk` in `map/basemap.ts`, each theme's own; T-2492). Placed in the layout
-worker after the borders, at levels k from -22 to -10 (0.16 to 1.24 px), each drawn from it to the next, none below
-the first; past its level a name only shrinks toward its anchor on the box's edge.
+`diagram/cityNames.ts` (T-2438, T-2521). Below a pitch of 1.47 px no station names are drawn; each city block (The
+layout, Blocks) has its name instead: big, in the grey of the map's place names (`placeNameInk` in `map/basemap.ts`,
+each theme's own; T-2492) at half opacity, in the station names' font, centred on the middle of the block's box, and
+painted under the lines (a callback `paint` runs after the water and borders, before the line casings), so lines and
+stations cross it and it has no halo. Made in the layout worker after the borders (names and the box's middle), sized
+and placed on every paint.
+
+- **Size**: its width is 0.6 of the block's box on screen, within 1.5 to 7 times the station names' size (18 to 84
+  px), so a name grows with the zoom and stays small beside a small block.
+- **Overlaps**: biggest block (by stations) first. A name that would meet one already placed (with 6 px to spare)
+  shrinks by a tenth at a time toward 1.5 times the station names' size; if it still meets one it is left out. A
+  name off the screen blocks none.
 
 - **The name**: the zone (the borders' zone of each station) holding most of the block's stations, ties to a city
   zone, then to more local trips; its shown name, as the map's (`game/zoneNames.ts`). The page
@@ -223,11 +230,8 @@ the first; past its level a name only shrinks toward its anchor on the box's edg
   biggest, only when no city or town is left). No name is shown twice. The page fetches a zone's list only when
   such a block exists, after the first drawing, and the worker names again when it arrives; until then (or with
   no list or no place left) the block has no name.
-- **Where**: biggest block first, of up to twelve places the one covering the least line in px (grown by half a
-  4 px gap), plus a small cost for the place: above the box centred, then flush with either side; below likewise;
-  beside it; inside a corner (only where the box holds the name). Never over a name placed before it (with 6 px to
-  spare); a block with no such place has no name at that level.
-- The saved picture, too big for station names at any level, takes the largest city level that fits.
+- The saved picture, too big for station names at any level, is the lines alone at the largest scale that fits, with
+  the city names under them where the pitch is below 1.47 px.
 
 ## The graph
 

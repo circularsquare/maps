@@ -603,7 +603,7 @@ const THIN_ALPHA = 0.25;
 export const FADE_ALPHA = 0.35;
 
 /** the drawing on `ctx` at `scale` px per layout unit, (cx, cy) in the canvas's middle */
-export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: number, cx: number, cy: number, scale: number, theme: DiagramTheme, focus?: DiagramFocus): void {
+export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: number, cx: number, cy: number, scale: number, theme: DiagramTheme, focus?: DiagramFocus, under?: (ctx: CanvasRenderingContext2D) => void): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
   ctx.fillStyle = theme.bg;
@@ -631,6 +631,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.stroke((bd.path ??= toPath(bd.cmds)));
     ctx.globalAlpha = 1;
   }
+  if (under) (ctx.save(), under(ctx), ctx.restore());
   // casings first, so neighbours sit a gap apart and bundles read as one ribbon
   const full = (i: number) => !focus?.lines || focus.lines.has(i);
   const ribbon = (i: number, casing: boolean) => {

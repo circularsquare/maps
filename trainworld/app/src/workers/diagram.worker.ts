@@ -65,7 +65,7 @@ const cities = (graph: DiagramGraph, layout: DiagramLayout, d: Drawing, b: Diagr
     const l = labels.get(id), t = towns.get(id);
     return l && t ? { ...l, towns: t.map((p) => ({ name: p.name, width: p.width, x: (p.x - fx) * k, y: -(p.y - fy) * k, big: p.big })) } : l;
   });
-  return placeCityNames(d, graph, layout.blocks, b.zoneOf, zones, fontPx, b.zones);
+  return placeCityNames(graph,layout.blocks, b.zoneOf, zones, fontPx, b.zones);
 };
 
 const keep = (zones: ZoneOutlines) => {
