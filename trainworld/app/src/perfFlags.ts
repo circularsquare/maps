@@ -84,6 +84,8 @@
 //   lodHold  zones change their level of detail while edits settle, and the edit note compares
 //            figures across a change (before T-2180)
 //   roads    no road tiles go to the track model, so no road crossings are counted or priced (before T-1929)
+//   selected the zone the city view shows waits its turn in the queues, and its trip lengths and figures
+//            wait for its cluster's final while a load's other figures are shown (before T-2453)
 //
 // `?perfTry=...` turns on candidate fixes, measured in notes/T-045.md before anyone adopts them:
 //   labelLayers  each station label and capacity tag on its own compositor layer
@@ -98,7 +100,7 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 const tries = new Set((q.get("perfTry") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "fans" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "firm" | "alone" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "idle" | "labelPan" | "noDouble" | "stagger" | "early" | "bareStart" | "ahead" | "clusters" | "periods" | "spread" | "split" | "reach" | "chunks" | "close" | "marks" | "span" | "fans" | "zoneZoom" | "openAhead" | "batchOpen" | "track" | "moving" | "restart" | "cap" | "rough" | "cacheAhead" | "estimate" | "splitAhead" | "parts" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "refine" | "window" | "noise" | "firm" | "alone" | "daySums" | "prebuild" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "lodHold" | "roads" | "selected") => off.has(part);
 export const perfTry = (fix: "labelLayers" | "hoverCursor" | "idle" | "noDouble" | "focusFirst") => tries.has(fix);
 /** T-2058: how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

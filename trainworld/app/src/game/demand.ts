@@ -223,6 +223,10 @@ export const editsSettling = signal(false);
 /** T-2045: the zones shown from their own solve during a game load (the focus pool), true once it
  * has its last round: settled, which counts as final until the load's whole solve replaces it */
 export const focusZones = signal<ReadonlyMap<CityId, boolean>>(new Map());
+/** T-2453: counts the times a view's questions change where they go while the shown version and round
+ * stay (a load's whole solve sent, a round of a cluster solved ahead or of the focus pool shown): a
+ * panel that asks once per shown round asks again */
+export const demandAskTurn = signal(0);
 /** A solve is running that will still change the figures of the zone in view. */
 export const viewUpdating = computed(() => demandUpdating.value && !focusZones.value.get(activeCity.value) && (demandSolving.value?.has(activeCity.value) ?? true));
 /** T-421: the figures shown for the zone in view are final: the shown result is, or (T-402) the

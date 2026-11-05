@@ -59,6 +59,7 @@ import {
   roughZones,
   refiningZone,
   focusZones,
+  demandAskTurn,
   editsSettling,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
@@ -731,7 +732,8 @@ class DemandClient {
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-801: a selected zone's market opens for its partner bubbles
-    effect(() => { selection.value; this.ensure(); this.lodSoon(); });
+    // T-2453: and the zone the city view shows goes first after the zone in view
+    effect(() => { selection.value; this.selectedFirst(); this.ensure(); this.lodSoon(); queueMicrotask(() => this.lengthsAhead()); });
     // T-1223: the zone in view goes fine once it has been in view VIEW_SETTLE_MS
     effect(() => {
       const id = viewedZone.value && zonesLoadForView.value ? activeCity.value : null;
@@ -831,15 +833,17 @@ class DemandClient {
       const reached = this.reachedSet(svc);
       if (!reached?.size) return;
       if (this.lod === "auto" && !this.lodZones) this.initFine([...this.withoutBroken(new Set(reached))]);
-      // T-1533: the zone in view's pack first, then the markets, then the other zones
-      const viewed = activeCity.peek();
-      const zones = [...this.withoutBroken(new Set(reached))].sort((x, y) => Number(y === viewed) - Number(x === viewed));
+      // T-1533: the zone in view's pack first (T-2453: then the selected zone's), then the markets,
+      // then the other zones
+      const firsts = this.firstZones();
+      const rank = (id: CityId) => { const k = firsts.indexOf(id); return k < 0 ? firsts.length : k; };
+      const zones = [...this.withoutBroken(new Set(reached))].sort((x, y) => rank(x) - rank(y));
       const fetchZone = (id: CityId) => {
         if (this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
         this.prefetched.add(id);
         this.fetchCity(id, "full");
       };
-      if (zones[0] === viewed) fetchZone(viewed);
+      for (const id of zones) if (rank(id) < firsts.length) fetchZone(id);
       for (const id of new Set([...reached, ...this.nearOf(svc).markets])) {
         const item = marketItem(id);
         if (this.fetching.has(item) || this.broken.has(item)) continue;
@@ -880,6 +884,18 @@ class DemandClient {
    * (T-871) zoomed out past `ZONE_LOAD_ZOOM`. */
   private viewedSet(): Set<CityId> {
     return this.withoutBroken(new Set(viewedZone.peek() && zonesLoadForView.peek() ? [activeCity.peek()] : []));
+  }
+
+  /** T-2453: the zone the city view shows (a city selection), when it is not the zone in view */
+  private selectedZone(): CityId | null {
+    const sel = selection.peek();
+    return !perfOff("selected") && sel?.kind === "city" && sel.city !== activeCity.peek() ? (sel.city as CityId) : null;
+  }
+  /** T-1533, T-2453: the zones that go first through every queue, in order: the zone in view, then
+   * the zone the city view shows */
+  private firstZones(): CityId[] {
+    const sel = this.selectedZone();
+    return sel ? [activeCity.peek(), sel] : [activeCity.peek()];
   }
 
   /** T-318: a network is in hand and neither the view nor any station needs a pack: nothing to
@@ -1033,8 +1049,8 @@ class DemandClient {
     // too, coarse unless the first fine set has them)
     else if (this.lod === "auto" && this.lodZones && reached && this.hold && (!this.ahead || this.ahead.arrived)) for (const id of reached) this.lodZones.add(id);
     // T-1533: the zone in view's pack first, ahead of the markets and the other zones
-    const viewed = activeCity.peek();
-    if (need.has(viewed)) this.want(viewed, reached === null ? null : reached.has(viewed));
+    // (T-2453: then the selected zone's)
+    for (const id of this.firstZones()) if (need.has(id)) this.want(id, reached === null ? null : reached.has(id));
     // over dead space with no station in reach there is nothing to open, the market included
     if (need.size) for (const id of this.wantsMarket(this.latest())) if (!this.fetching.has(marketItem(id))) this.fetchMarket(id);
     if (known) this.settleAhead(known);
@@ -1445,8 +1461,8 @@ class DemandClient {
       for (const m of ms ?? []) if (m.pack.byteLength) transfer.push(m.pack.buffer as ArrayBuffer);
       if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
       if (dr) transfer.push(dr.buffer as ArrayBuffer);
-      // T-1533: the zone in view's pack as it is sent (a held one may go seconds later)
-      const send = () => w.postMessage(pack?.id === activeCity.peek() ? { ...msg, first: true } : msg, transfer);
+      // T-1533: the zone in view's pack as it is sent (a held one may go seconds later), T-2453: or the selected zone's
+      const send = () => w.postMessage(pack && this.firstZones().includes(pack.id) ? { ...msg, first: true } : msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
       else send();
     });
@@ -1493,7 +1509,7 @@ class DemandClient {
         this.post({ pack: { ...pack, level } });
         return this.postMarkets();
       }
-      const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(id === activeCity.peek() ? { first: true } : {}) };
+      const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(this.firstZones().includes(id) ? { first: true } : {}) };
       this.workers[this.computeN].postMessage(msg, [own]);
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
@@ -2260,6 +2276,16 @@ class DemandClient {
     this.purposeP.clear();
   }
 
+  /** T-2453: a zone newly shown in the city view, if its pack waits to open in a worker, opens next
+   * there after the zone in view's (the workers keep earlier `first` packs ahead of it) */
+  private selectedFirst() {
+    const c = this.selectedZone();
+    if (c === this.selFirst) return;
+    this.selFirst = c;
+    if (c && ((this.fetching.has(c) && !this.opened.has(c)) || (this.fetchingBare.has(c) && !this.bareOpen.has(c)))) for (const w of this.workers) w.postMessage({ kind: "first", id: c } satisfies ToDemand);
+  }
+  private selFirst: CityId | null = null;
+
   /** Stop the pool; also called for a load that cannot finish for another reason (T-950). */
   fail(why: string) {
     this.status = "failed: " + why;
@@ -2672,6 +2698,7 @@ class DemandClient {
       if (!this.fpool) return;
       this.fshown.set(id, { s, ests, round });
       focusZones.value = new Map(focusZones.peek()).set(id, final);
+      if (!alone) this.askTurn(); // T-2453
       const l = this.flog.find((x) => x.version === s.version);
       if (l) l.roundAt[round] = performance.now();
       this.lodShown([id], s.coarse);
@@ -3071,9 +3098,11 @@ class DemandClient {
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
     demandSolving.value = null;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
+    const next = this.firstZones().slice(1);
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
+    if (barrier) this.askTurn();
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
   }
 
@@ -3120,10 +3149,10 @@ class DemandClient {
    * figures at most. Otherwise the shown result's version and round, as a worker holds them only
    * when idle. Not after an edit: the workers then hold a network the map does not show yet.
    */
-  private target(): Target | null {
+  private target(zone: CityId = activeCity.peek(), anyShown = false): Target | null {
     const dv = demandView.peek();
     // T-2045: a zone shown from the focus pool is asked about there, as a solve stepping through rounds
-    const f = this.fpool?.alive ? this.fshown.get(activeCity.peek()) : undefined;
+    const f = this.fpool?.alive ? this.fshown.get(zone) : undefined;
     if (f) {
       const view = dv?.version ?? f.s.version;
       return f.round >= ROUNDS ? { version: f.s.version, round: ROUNDS, view, wait: false, solve: f.s } : { version: f.s.version, round: f.round + 1, view, wait: true, solve: f.s, shown: f.round };
@@ -3131,16 +3160,20 @@ class DemandClient {
     const s = this.cur;
     // T-402: the zone in view's cluster solved ahead counts its own rounds (the workers tell which
     // rounds a question means by its zone)
-    const ahead = s?.ahead?.cities.includes(activeCity.peek()) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : null;
+    const ahead = s?.ahead?.cities.includes(zone) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : null;
     const published = ahead ?? s?.published ?? -1;
     // nothing shown yet (startup, no cache): asked of round 0, whose answer is in hand when it shows
     if (!dv) return s && published < 0 && !perfOff("ahead") ? { version: s.version, round: 0, view: s.version, wait: true, solve: s, shown: -1 } : null;
-    const cv = this.cityVersion.get(activeCity.peek());
+    const cv = this.cityVersion.get(zone);
     if (s && cv === s.version) return { version: cv, round: ROUNDS, view: dv.version, wait: false, solve: s };
     // T-1205: after a worker change the shown result is not in every worker: asked of the new final
     if (s && this.refreshing && dv.version !== s.version && published < ROUNDS) return { version: s.version, round: ROUNDS, view: dv.version, wait: true, solve: s, shown: -1 };
     const cached = dv.version === CACHE_VERSION && this.log[0]?.version === CACHE_VERSION && this.log[0].svc === s?.svc;
-    if (s && published < ROUNDS && (dv.version === s.version || cached) && !perfOff("ahead")) {
+    // T-2453 (`anyShown`): or a solve with the barrier, for a zone it covers that shows no settled
+    // figures, whatever the view is of (during a game load, the game before's final with the load's
+    // estimates and the focus pool's figures put in)
+    const unsettled = anyShown && !perfOff("selected") && !!s?.barrier && !s.rough && s.cities.includes(zone) && this.unsettledZone(zone);
+    if (s && published < ROUNDS && (dv.version === s.version || cached || unsettled) && !perfOff("ahead")) {
       // no worker starts a round before every worker has the one before (`go`), so every worker
       // has the round after the published one, or will
       return { version: s.version, round: published + 1, view: dv.version, wait: true, solve: s, shown: published };
@@ -3331,13 +3364,21 @@ class DemandClient {
     const dv = demandView.peek();
     if (!dv) return Promise.resolve(null);
     const city = zone ?? activeCity.peek(), day = shownDay.peek(), { version, round } = dv;
-    const src = this.cityVersion.get(city); // T-392, as in cellModes
-    const at: Target = src !== undefined ? { version: src, round: ROUNDS, view: version, wait: false } : { version, round, view: version, wait: false };
-    const key = `${city}:${version}:${round}:${day}:${src ?? ""}`;
+    // T-2453: as the views' questions are (T-327): while a solve steps through its rounds, of the round
+    // after the one shown, answered on reaching it; a zone shown from the focus pool, there
+    const at = this.target(city, true) ?? { version, round, view: version, wait: false };
+    // (a question that waits for a round kept apart from one of a round in hand: a cluster's last
+    // round asked ahead comes back empty at the solve's final, and the graph then asks again)
+    const keyAt = (r: number, wait: boolean) => `${city}:${version}:${round}:${day}:${at.version}:${r}:${wait ? "w" : ""}`;
+    const key = keyAt(at.round, at.wait);
     const had = this.lengthsP.get(key);
-    if (had) return had;
+    // T-2453: as `viaRound`: the round shown's answer, when it was asked for in time (`lengthsAhead`),
+    // with the next round's asked for at once
+    const shown = at.wait && at.shown !== undefined && at.shown >= 0 ? this.lengthsP.get(keyAt(at.shown, true)) : undefined;
+    if (had) return shown ?? had;
     const p = (async (): Promise<TripLengths | null> => {
-      const bare = this.isBare(city);
+      // (T-2453: a zone open bare whose figures shown are of no solve, while a solve with it runs: that solve's)
+      const bare = this.isBare(city) && !at.solve?.cities.includes(city);
       const replies = bare
         ? await this.ask((id) => ({ kind: "tripLengths", id, version: 0, bare: true }), [this.computeN], [], city)
         : byMask(await this.ask((id) => ({ kind: "tripLengths", id, version: at.version }), undefined, [], city, at));
@@ -3353,11 +3394,19 @@ class DemandClient {
       return tripLengthsOf(version, day, edges, sum);
     })();
     this.lengthsP.set(key, p);
-    if (this.lengthsP.size > 8) this.lengthsP.delete(this.lengthsP.keys().next().value!);
+    if (this.lengthsP.size > 12) this.lengthsP.delete(this.lengthsP.keys().next().value!);
     p.then((v) => { if (!v && this.lengthsP.get(key) === p) this.lengthsP.delete(key); });
-    return p;
+    return shown ?? p;
   }
   private lengthsP = new Map<string, Promise<TripLengths | null>>();
+
+  /** T-2453: the city view's zone has its trip lengths asked for each round as the round starts, so
+   * its graph finds the round shown answered when it opens on it (a worker past a round answers
+   * nothing of it) */
+  private lengthsAhead() {
+    const sel = selection.peek();
+    if (sel?.kind === "city" && !perfOff("selected")) void this.tripLengths(sel.city as CityId);
+  }
   /** T-1435: the squares and the tables with no rail, from `driveTable`. */
   private async driveBase(city: CityId, day: DemandDay): Promise<Omit<DriveInput, "commuteRail" | "everydayRail"> | null> {
     const [c, e] = await Promise.all([this.driveTable(city, day, 0), this.driveTable(city, day, 1)]);
@@ -4037,6 +4086,37 @@ class DemandClient {
     for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "whole", version: s.version } satisfies ToDemand);
   }
 
+  /** T-2453: views ask their questions again (`demandAskTurn`) */
+  private askTurn() {
+    if (perfOff("selected")) return;
+    this.lengthsAhead();
+    demandAskTurn.value++;
+  }
+
+  /** T-2453: `zone` shows no settled figures: a game load's (every figure then is the load's
+   * estimates, the focus pool's, or those of a zone left unsettled when the hold ended), or none at all */
+  private unsettledZone(zone: CityId): boolean {
+    return (!!this.hold || !!this.unsettled?.has(zone) || !cityDemandViews.peek().has(zone)) && !focusZones.peek().get(zone);
+  }
+
+  /** T-2453: a round of a cluster solved ahead (T-402) while other figures are shown (the zone in
+   * view's from the focus pool): the zone the city view shows, when the cluster has it and it shows
+   * nothing settled, takes that round's view of it; the lines and the rest wait for the final. */
+  private async selectedRound(s: Solve, res: Result[], cities: CityId[], round: number) {
+    const id = this.selectedZone();
+    if (!id || !cities.includes(id) || !this.unsettledZone(id)) return;
+    const ests = await this.daysOf(s, [], round, false, res, true);
+    if (s !== this.cur || this.cityVersion.get(id) === s.version || this.selectedZone() !== id) return;
+    demandByDay.value = demandByDay.peek().map((d, k) => {
+      const v = ests[k]?.cities.get(id);
+      if (!d.view || !v) return d;
+      const cities = new Map(d.cities);
+      cities.set(id, { ...d.view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      return { ...d, cities };
+    });
+    this.lodShown([id], s.coarse);
+  }
+
   private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean }, round: number) {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;
@@ -4044,6 +4124,8 @@ class DemandClient {
     if (round === 0 && !final && !s.showEstimates && !perfOff("early")) return this.publishNewLines(s, res);
     // T-1790: the zone in view's cluster solved ahead counts its own rounds
     if (s.barrier && c.cities.includes(activeCity.peek())) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
+    // T-2453: its zones' questions now go to its next round
+    if (s.barrier && !final) this.askTurn();
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     this.inOrder(async () => {
       const shown = demandByDay.peek()[0].view;
@@ -4051,6 +4133,7 @@ class DemandClient {
       // cluster alone, which the solve's own results replace (its totals are the cluster's, so never
       // the solve's final); its rounds before the last only where the solve's estimates are shown
       const alone = !shown || shown.version === s.version;
+      if (!final && s.showEstimates && !alone) return this.selectedRound(s, res, c.cities, round);
       if (!final && (!s.showEstimates || !alone)) return;
       if (alone) demandByDay.value = await this.daysOf(s, fresh, round, false, res);
       else {
@@ -4088,6 +4171,7 @@ class DemandClient {
       this.lodShown(c.cities, s.coarse);
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
+        if (s.barrier) this.askTurn(); // T-2453: its zones' questions now go to its final
         // T-2045: a cluster's own final beats the focus pool's figures of its zones
         if (c.cities.some((id) => this.fshown.has(id))) {
           const z = new Map(focusZones.peek());

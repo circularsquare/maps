@@ -1650,15 +1650,14 @@ async function run() {
         }
         return pending ? null : inbox.get(key)!;
       };
-      // T-393: the cluster of the city in view first
-      if (job.first) {
-        const i = dirty.findIndex((c) => c.cities.includes(job.first!));
-        if (i > 0) dirty.unshift(...dirty.splice(i, 1));
-      }
+      // T-393: the cluster of the city in view first; T-2453: then those of `next`, in its order
+      const firsts = [...(job.first ? [job.first] : []), ...(job.next ?? [])];
+      const rank = (c: JobCluster) => { const k = firsts.findIndex((id) => c.cities.includes(id)); return k < 0 ? firsts.length : k; };
+      if (firsts.length) dirty.sort((a, b) => rank(a) - rank(b));
       // T-392: after an edit (no barrier) the clusters are solved one after another, each to its last
       // round, and each but the last is sent as a cluster result the moment it is done; then the
       // solve's results. With the barrier (the shown estimates step through the rounds) they all go
-      // round by round together, in groups (T-402): the city in view's cluster alone first, sent as
+      // round by round together, in groups (T-402): the first ranked cluster alone first, sent as
       // cluster results round by round, then the rest, whose results are the solve's.
       // T-1609: a cluster whose network is the one its populations hold solved, and whose only new
       // populations are zones opened again at another level (`fresh`), solves those alone against
@@ -1711,7 +1710,7 @@ async function run() {
       }
       const early = job.barrier ? [] : dirty;
       // (T-2045: not in a solve of `only` zones, whose clusters are all the zone in view's)
-      const ahead = job.barrier && !job.whole && !only && dirty.length > 1 && !!job.first && dirty[0].cities.includes(job.first);
+      const ahead = job.barrier && !job.whole && !only && dirty.length > 1 && rank(dirty[0]) < firsts.length;
       // T-2045: the lines a solve of `only` zones gives figures, so the page puts in only those
       const onlyLines = only ? () => ({ onlyLines: Uint32Array.from(new Set(jobClusters.flatMap((c) => [...c.lines]))) }) : () => ({});
       const groups = !job.barrier ? [] : ahead ? [[dirty[0]], dirty.slice(1)] : [dirty];

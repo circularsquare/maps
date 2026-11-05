@@ -5,7 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
+import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
 import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway } from "../game/days";
@@ -264,7 +264,7 @@ export function TopBar() {
   // T-2365: the zone's km by mode for the split's hover, asked for while the pointer is on it
   const [over, setOver] = useState(false);
   const dv = demandView.value, zone = !worldView.value && viewedZone.value ? activeCity.value : null;
-  useEffect(() => { if (over && zone) wantLengths(zone); }, [over, zone, dv?.version, dv?.round, shownDay.value]);
+  useEffect(() => { if (over && zone) wantLengths(zone); }, [over, zone, dv?.version, dv?.round, shownDay.value, demandAskTurn.value]);
   const w = world.value;
   if (!w) return <header id="topbar" />;
   // T-1110: zoomed far out the bar names the world and sums every city, as the Cities tab's first row does

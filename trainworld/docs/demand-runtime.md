@@ -317,7 +317,7 @@ re-solves that level's periods (three at high, one at medium or low), a new stat
 `?perfOff=periods` re-solves every period of a cluster solved.
 
 After an edit (a solve without the round barrier) the clusters to solve go one after another, the
-zone in view's first (T-393), each to its last round; each but the last is sent as soon as it is
+zone in view's first (T-393), then the city view's zone's (T-2453), each to its last round; each but the last is sent as soon as it is
 done, as one result per period with that cluster's figures alone (`result.cluster`), and the page
 puts its lines, their stations, its zones' views and, if the market is in it, the regional market's
 into the shown result at once. The network-wide totals wait for the solve's final: once every
@@ -378,7 +378,8 @@ shows its figures when it has landed and the local solve on top is done. A solve
 is still cut short by a newer network.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
-the zone in view's is one of them (T-402): that cluster alone first, through every round, each
+the first ranked zone's is one of them (T-402; the zone in view's, else the city view's, "The zone
+in view first" below): that cluster alone first, through every round, each
 round sent as its own cluster result and shown where the solve's estimates are (a view of the
 cluster alone when nothing else is shown, else only its final, put in as after an edit); then the
 other clusters together, round by round, whose results are the solve's, with the first group's
@@ -407,6 +408,24 @@ cache wait for the whole solve, whose figures replace them). A cached result sho
 a game load the focus pool (below) does this instead, to the zone's last round. After
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
 lines their first figures (T-324) without waiting for its last round.
+**The city view's zone next** (T-2453, notes/T-2453.md, `?perfOff=selected` off). A zone selected in
+the city view, when it is not the zone in view, comes second in each of those queues: its pack
+downloads and opens right after the zone in view's (`firstZones`; a `first` message when it is
+selected with its pack already queued), and a solve names it in `next`, so the worker orders the
+clusters to solve the zone in view's, then its, then the rest, and with the barrier solves its
+cluster alone first when the zone in view's needs no solving. While a load's other figures are
+shown (the focus pool's, the game before's), each round of a cluster solved ahead that has it
+gives it that round's figures (`selectedRound`); the cluster's lines and other zones still wait
+for its final. Its trips by length (the city view's graph, `tripLengths`) are asked where the views'
+questions go (`target`): while a solve with the barrier steps through the rounds, of the round after
+the one shown for a zone with no settled figures, whatever version the view is of; of the focus pool
+for a zone shown from it. A worker past a round answers nothing of it, so the page asks for the city
+view's zone at each round's start (`lengthsAhead`) and hands the graph the round shown's answer when it
+opens on it, with the next round's asked at once; a round put in without the shown version or round
+changing bumps `demandAskTurn`, and the graph and the top bar's hover ask again. On the Tokyo save
+(Tokyo in view, Seoul selected, 2 workers) Seoul's figures and graph come with its cluster's round 0,
+about 30 s after the load, where they came with the load's final at about 70 s. A zone selected while
+a solve runs reorders the opens at once, but the solve itself only from the next one.
 **The focus pool** (T-2045, `workers/demandFocus.ts`, notes/T-2045.md, `?perfOff=focus` off). A game
 load with built stations starts a second pool, kept for that load alone (not on a phone, a tablet or a
 device of 4 GB or less, `smallDevice`, where its workers would be a few hundred MB more in a tab of about

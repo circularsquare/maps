@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { City } from "../../game/cities";
-import { demandView, intercityDemand } from "../../game/demand";
+import { demandAskTurn, demandView, intercityDemand } from "../../game/demand";
 import { count } from "../../game/format";
 import { axisSpan, bandAt, binSums, LAYERS, layerCurves, lengthLayers, type Layer, type LengthLayers } from "../../game/tripLengths";
 import { shownDay } from "../../game/ui";
@@ -127,7 +127,7 @@ function drawGraph(local: NonNullable<ReturnType<typeof lengthsOf>>, market: Ret
 
 export function TripGraph({ city }: { city: City }) {
   const dv = demandView.value, day = shownDay.value;
-  useEffect(() => { wantLengths(city.id); }, [city.id, dv?.version, dv?.round, day]);
+  useEffect(() => { wantLengths(city.id); }, [city.id, dv?.version, dv?.round, day, demandAskTurn.value]);
   // the km under the pointer, set only when the pointer moves into another band
   const [hoverKm, setHoverKm] = useState<number | null>(null);
   const band0 = useRef<number | null>(null);

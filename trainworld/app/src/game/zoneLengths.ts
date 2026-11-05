@@ -3,24 +3,30 @@
 
 import { signal } from "@preact/signals";
 import { CITIES, type City, type CityId } from "./cities";
-import { demandView, eachCorridor, zoneTripLengths, type Corridors } from "./demand";
+import { demandAskTurn, demandView, eachCorridor, zoneTripLengths, type Corridors } from "./demand";
 import type { FarTrips, TripLengths } from "./tripLengths";
 import { shownDay } from "./ui";
 
 /** Each zone's newest answer; one of an older solve or day stays until the next lands. */
 export const zoneLengths = signal<ReadonlyMap<CityId, TripLengths>>(new Map());
 const asked = new Map<CityId, string>();
+// T-2453: each question's turn; an answer is kept unless one asked later is already in
+let turn = 0;
+const answered = new Map<CityId, number>();
 
-/** Ask for `zone`'s trips by length for the solve and day shown, once each. */
+/** Ask for `zone`'s trips by length for the solve, round and day shown, once each, and again at each
+ * `demandAskTurn` (a round of figures put in without the shown round changing). */
 export function wantLengths(zone: CityId) {
   const dv = demandView.peek();
   if (!dv) return;
-  const key = `${dv.version}:${dv.round}:${shownDay.peek()}`;
+  const key = `${dv.version}:${dv.round}:${shownDay.peek()}:${demandAskTurn.peek()}`;
   if (asked.get(zone) === key) return;
   asked.set(zone, key);
+  const n = ++turn;
   void zoneTripLengths(zone).then((t) => {
-    if (asked.get(zone) !== key) return;
-    if (!t) return void asked.delete(zone);
+    if (!t) return void (asked.get(zone) === key && asked.delete(zone));
+    if ((answered.get(zone) ?? 0) > n || t.day !== shownDay.peek()) return;
+    answered.set(zone, n);
     const m = new Map(zoneLengths.peek());
     m.set(zone, t);
     zoneLengths.value = m;

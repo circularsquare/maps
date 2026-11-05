@@ -139,6 +139,8 @@ export type ToDemand =
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */
       first?: CityId;
+      /** T-2453: zones whose clusters come next, in order (the zone the city view shows) */
+      next?: CityId[];
       /** T-1533: a rough solve of these zones alone (no market), while the packs a whole solve needs
        * still open: it starts ahead of the opens waiting, which wait for it */
       only?: CityId[];
