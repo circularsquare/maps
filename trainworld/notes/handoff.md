@@ -60,7 +60,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   text stays "Build trains around the world!"; card image = load-screen logo before a small globe; phone: NA save
   failed early with the memory pre-check (4.3 GB vs 4 GB), Japan save loaded. **launchbits** (Sonnet, tree from
   c0721519, port 6194): T-2544 card text + logo image, T-2545 load-fail messages with "works best on a computer".
-  **tourvideo** (Opus, tree from c0721519, port 6193): T-2546 deterministic frame-by-frame clip via ffmpeg.
+  tourvideo stopped and tree removed (Anita ~11:40: clip later, T-2546 on hold). Her phone notes: T-2548 hide the
+  purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
+  "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
+  after a deploy, so left as is.
 - uismall4 LANDED 42ccfc96 (T-2535 empty rail/bus line deletes without confirm; T-2536 no profit until trains + first
   demand result, "calculating..." meanwhile; zero-rider case loosened via linesPending, untested). String added:
   "calculating..." (Profit row).
@@ -85,7 +88,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   more with regards to reflecting how thick the water is, but its pretty good" (T-2528). "ok, we can do 4 hours and
   layout jobs first."
 - Batch notes/todo-2026-11-05a.md (T-2519..T-2526).
-- Next free id **T-2547**.
+- Next free id **T-2550** (T-2547 unused).
 
 
 ## Next
