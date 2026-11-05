@@ -22,7 +22,7 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry } from "../perfFlags";
@@ -290,8 +290,8 @@ export async function exportSlot(slot: SaveSlot): Promise<boolean> {
   downloadSave(stored.bytes, slot.name, stored.day, slot.key);
   return true;
 }
-/** Load a save file the player picked, into a new slot named after the file (T-743). */
-/** `version`: the file is a version of that game (an account backup, T-2037), else a game of its own. */
+/** Load a save file the player picked, into a new slot named after the file (T-743).
+ * `version`: the file is a version of that game (an account backup, T-2037), else a game of its own. */
 export async function importGame(file: File, version?: { origin: string; edit: number }) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (await ifItFits({ bytes })) switchGame({ load: "file" }, { kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: saveSlotsState.peek().active, ...version });
@@ -1068,7 +1068,7 @@ export class ClockClient {
   }
 
   /** Ask what a route would cost. One request in flight; newer ones replace a waiting one. */
-  preview(req: { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }, cb: (a: PreviewAnswer) => void) {
+  preview(req: RouteAsk, cb: (a: PreviewAnswer) => void) {
     this.ask((seq) => ({ kind: "preview", seq, ...req }), cb);
   }
 

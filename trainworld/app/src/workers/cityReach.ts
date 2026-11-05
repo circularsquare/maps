@@ -25,7 +25,7 @@ export interface Footprint {
   bbox: [number, number, number, number];
 }
 
-export function footprint(id: CityId, fc: FeatureCollection<Polygon | MultiPolygon>): Footprint {
+function footprint(id: CityId, fc: FeatureCollection<Polygon | MultiPolygon>): Footprint {
   const rings: Float64Array[] = [];
   const bbox: Footprint["bbox"] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const f of fc.features) {
@@ -108,22 +108,30 @@ function reaches(f: Footprint, lon: number, lat: number): boolean {
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
   const [w, s, e, n] = f.bbox;
   if ((w - lon) * kx > REACH_M || (lon - e) * kx > REACH_M || (s - lat) * ky > REACH_M || (lat - n) * ky > REACH_M) return false;
-  let inside = false;
-  const r2 = REACH_M * REACH_M;
-  for (const ring of f.rings) {
-    for (let k = 0, m = ring.length / 2; k < m; k++) {
-      const j = (k + 1) % m;
-      const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
-      const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
-      // the station is at the origin: distance to segment a-b, then the even-odd crossing test
-      const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
-      const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
-      const px = ax + t * dx, py = ay + t * dy;
-      if (px * px + py * py <= r2) return true;
-      if ((ay > 0) !== (by > 0) && ax - (ay * dx) / dy > 0) inside = !inside;
-    }
-  }
-  return inside;
+  return distanceTo(f, lon, lat) <= REACH_M;
+}
+
+/** Edge k of `ring` (lon, lat pairs) seen from (lon, lat), in metres east and north (`kx`, `ky` per
+ * degree): whether it crosses the place's latitude to its east (the even-odd test's step). */
+function crossesEast(ring: Float64Array, k: number, lon: number, lat: number, kx: number, ky: number): boolean {
+  const j = (k + 1) % (ring.length / 2);
+  const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
+  if ((ay > 0) === (by > 0)) return false;
+  const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
+  return ax - (ay * (bx - ax)) / (by - ay) > 0;
+}
+
+/** `nearestOnEdge`'s point, metres east and north of the place (module-level so the hot loops allocate nothing). */
+let nearX = 0, nearY = 0;
+/** The squared metres from (lon, lat) to edge k of `ring`, its nearest point left in `nearX`, `nearY`. */
+function nearestOnEdge(ring: Float64Array, k: number, lon: number, lat: number, kx: number, ky: number): number {
+  const j = (k + 1) % (ring.length / 2);
+  const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
+  const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
+  const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+  const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
+  nearX = ax + t * dx; nearY = ay + t * dy;
+  return nearX * nearX + nearY * nearY;
 }
 
 /** T-889: a footprint's outline edges by grid cell over its bbox, so `distanceTo` looks at the
@@ -191,13 +199,7 @@ function gridDistance(f: Footprint, g: EdgeGrid, lon: number, lat: number): numb
         const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
         if (stamp[id] === visit) continue;
         stamp[id] = visit;
-        const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
-        const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
-        if ((ay > 0) !== (by > 0)) {
-          const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
-          const dx = bx - ax, dy = by - ay;
-          if (ax - (ay * dx) / dy > 0) inside = !inside;
-        }
+        if (crossesEast(f.rings[ri], k, lon, lat, kx, ky)) inside = !inside;
       }
     }
     if (inside) return 0;
@@ -222,13 +224,8 @@ function gridDistance(f: Footprint, g: EdgeGrid, lon: number, lat: number): numb
           const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
           if (stamp[id] === visit) continue;
           stamp[id] = visit;
-          const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
-          const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
-          const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
-          const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
-          const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
-          const px = ax + t * dx, py = ay + t * dy, d2 = px * px + py * py;
-          if (d2 < best || (d2 === best && id < bestId)) (best = d2), (bestId = id), (bx0 = px), (by0 = py);
+          const d2 = nearestOnEdge(f.rings[ri], k, lon, lat, kx, ky);
+          if (d2 < best || (d2 === best && id < bestId)) (best = d2), (bestId = id), (bx0 = nearX), (by0 = nearY);
         }
       }
     }
@@ -323,26 +320,18 @@ function atZeroExact(f: Footprint, lon: number, lat: number): boolean {
   const [w, s] = f.bbox;
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
   const onEdge = (ring: Float64Array, k: number) => {
-    const m = ring.length / 2, j = (k + 1) % m;
+    const j = (k + 1) % (ring.length / 2);
     const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
     const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
     if ((ax > 0 && bx > 0) || (ax < 0 && bx < 0) || (ay > 0 && by > 0) || (ay < 0 && by < 0)) return false;
-    const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
-    const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
-    const px = ax + t * dx, py = ay + t * dy;
-    return px * px + py * py === 0;
+    return nearestOnEdge(ring, k, lon, lat, kx, ky) === 0;
   };
   const g = edgeGrid(f);
   if (!g) {
     let inside = false;
     for (const ring of f.rings) {
       for (let k = 0, m = ring.length / 2; k < m; k++) {
-        const j = (k + 1) % m;
-        const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
-        if ((ay > 0) !== (by > 0)) {
-          const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
-          if (ax - (ay * (bx - ax)) / (by - ay) > 0) inside = !inside;
-        }
+        if (crossesEast(ring, k, lon, lat, kx, ky)) inside = !inside;
         if (onEdge(ring, k)) return true;
       }
     }
@@ -359,13 +348,7 @@ function atZeroExact(f: Footprint, lon: number, lat: number): boolean {
       const ri = seg[2 * q], k = seg[2 * q + 1], id = base[ri] + k;
       if (stamp[id] === visit) continue;
       stamp[id] = visit;
-      const ring = f.rings[ri], m = ring.length / 2, j = (k + 1) % m;
-      const ay = (ring[2 * k + 1] - lat) * ky, by = (ring[2 * j + 1] - lat) * ky;
-      if ((ay > 0) !== (by > 0)) {
-        const ax = (ring[2 * k] - lon) * kx, bx = (ring[2 * j] - lon) * kx;
-        const dx = bx - ax, dy = by - ay;
-        if (ax - (ay * dx) / dy > 0) inside = !inside;
-      }
+      if (crossesEast(f.rings[ri], k, lon, lat, kx, ky)) inside = !inside;
     }
   }
   if (inside) return true;
@@ -394,14 +377,9 @@ function walkDistance(f: Footprint, lon: number, lat: number): number {
   let inside = false, best = Infinity, bx0 = 0, by0 = 0;
   for (const ring of f.rings) {
     for (let k = 0, m = ring.length / 2; k < m; k++) {
-      const j = (k + 1) % m;
-      const ax = (ring[2 * k] - lon) * kx, ay = (ring[2 * k + 1] - lat) * ky;
-      const bx = (ring[2 * j] - lon) * kx, by = (ring[2 * j + 1] - lat) * ky;
-      const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
-      const t = len > 0 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0;
-      const px = ax + t * dx, py = ay + t * dy, d2 = px * px + py * py;
-      if (d2 < best) (best = d2), (bx0 = px), (by0 = py);
-      if ((ay > 0) !== (by > 0) && ax - (ay * dx) / dy > 0) inside = !inside;
+      const d2 = nearestOnEdge(ring, k, lon, lat, kx, ky);
+      if (d2 < best) (best = d2), (bx0 = nearX), (by0 = nearY);
+      if (crossesEast(ring, k, lon, lat, kx, ky)) inside = !inside;
     }
   }
   return inside ? 0 : best === Infinity ? Infinity : Math.hypot(bx0, by0);

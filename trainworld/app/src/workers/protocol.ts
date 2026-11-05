@@ -43,13 +43,15 @@ export type StationAt =
   | { kind: "edge"; edge: EdgeId; x: number; y: number }
   | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean; hsr?: boolean };
 
+/** A route turning at the clicked points `pis`; a junction it makes is flat (T-080). `through`
+ * (T-418): a route with no PIs from a heading to open ground is one tangent arc. `design` (T-817):
+ * the design speed its curves are laid out for, km/h; 160 when absent. */
+export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
+
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
 export type EditOp =
-  /** a route turning at the clicked points `pis`; a junction it makes is flat (T-080) */
-  /** `through` (T-418): a route with no PIs from a heading to open ground is one tangent arc */
-  /** `design` (T-817): the design speed its curves are laid out for, km/h; 160 when absent */
-  | { op: "route"; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
+  | ({ op: "route" } & RouteAsk)
   | { op: "removeEdge"; edge: EdgeId }
   /** reshape blueprint track (T-064): its PIs replaced (moved, or a radius set), same ends;
    * `design` (T-1898): as a route's, for the corners it moves or adds */
@@ -180,7 +182,7 @@ export type ToClock =
    * demand is answered before its state is built, so the next ghost is not kept waiting */
   | { kind: "edit"; seq: number; op: EditOp; early?: boolean }
   /** what a route would cost and whether it can be built; answered with "preview" */
-  | { kind: "preview"; seq: number; from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
+  | ({ kind: "preview"; seq: number } & RouteAsk)
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
   | { kind: "previewEdge"; seq: number; edge: EdgeId; pis: PiInput[]; design?: number }
   /** what moving a blueprint node would do (T-093); answered with "preview", one part per edge */
@@ -210,9 +212,8 @@ export type ToClock =
    * its latest load (T-715). */
   | { kind: "clock"; t: number; rate: number; at: number; game: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
-   * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order) */
-  /** fare income per game hour in each period, per kind of day (US$M); `lines` the same per line
-   * (T-293: each line's fares taken today) */
+   * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order); `lines` the
+   * same per line (T-293: each line's fares taken today) */
   | { kind: "income"; perHour: number[][]; rides: number[][]; lines?: { line: number; perHour: number[][]; rides: number[][] }[] }
   /** T-531: each running line's fares, train rides and running cost by region, [region, share] pairs
    * (game/regionMoney.ts) */
@@ -593,8 +594,8 @@ export interface ClockState {
 
 export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
-  /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`) */
-  /** `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
+  /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`);
+   * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean }
   | {
       kind: "preview";
@@ -647,15 +648,15 @@ export type FromClock =
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
   | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
-   * `error` and changes nothing */
-  /** `frame`: the game now in the worker; `converted`: its save was in an older frame and was
+   * `error` and changes nothing;
+   * `frame`: the game now in the worker; `converted`: its save was in an older frame and was
    * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock" */
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number }
   /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
   | { kind: "left"; error?: string }
-  /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out */
-  /** `fine` (T-1223), `built` (T-2153): the save's `demandFine` and `demandBuilt`, null where it has none */
-  /** `home` (T-2395): the save's home, where the camera goes in place of the stations' fit */
+  /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out;
+   * `fine` (T-1223), `built` (T-2153): the save's `demandFine` and `demandBuilt`, null where it has none;
+   * `home` (T-2395): the save's home, where the camera goes in place of the stations' fit */
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null; built: string[][] | null; home?: string }
   /** T-1539: the save being loaded: the key of its network's inputs (demandCache.ts `saveNetKey`) */
   | { kind: "netAhead"; key: string }

@@ -426,6 +426,20 @@ function purposeDemand(layout: DayInput["layout"], res: DayResult[]): Map<Purpos
   return out;
 }
 
+/** A city's figures of one period (`citySummary`'s) on another kind of day: its trips, rail and
+ * walked trips from its purposes' (`cityParts`, in `keys` order), each times its factor. */
+export function summaryOnDay(s0: number[], cp: number[], keys: string[], factor: (key: string) => number): number[] {
+  const s = s0.slice(), t0 = s[1];
+  s[1] = s[2] = s[3] = 0;
+  for (let i = 0; i * 3 < cp.length; i++) {
+    const f = factor(keys[i]);
+    s[1] += cp[3 * i] * f; s[2] += cp[3 * i + 1] * f; s[3] += cp[3 * i + 2] * f;
+  }
+  // T-2215: the trips no way serves are not split by purpose: they follow the trips
+  if (s[13]) s[13] *= t0 > 0 ? s[1] / t0 : 0;
+  return s;
+}
+
 /**
  * One period's result as it is on another kind of day (T-260): each purpose's riders times its
  * load factor, the totals their sum, the mode split from each city's purposes the same way, the
@@ -458,20 +472,11 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   // the fare curve's extra follows the riders on the stretch where it is counted (T-1516)
   const fareX = r.fareX?.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
   // T-1255: the riders coming to a platform follow its boardings
-  const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));  const citySummary: Record<CityId, number[]> = {};
+  const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));
+  const citySummary: Record<CityId, number[]> = {};
   for (const [id, s0] of Object.entries(r.citySummary)) {
-    const s = s0.slice(), cp = r.cityParts?.[id];
-    if (cp) {
-      const t0 = s[1];
-      s[1] = s[2] = s[3] = 0;
-      for (let i = 0; i * 3 < cp.length; i++) {
-        const f = factor(p.keys[i]);
-        s[1] += cp[3 * i] * f; s[2] += cp[3 * i + 1] * f; s[3] += cp[3 * i + 2] * f;
-      }
-      // T-2215: the trips no way serves are not split by purpose: they follow the trips
-      if (s[13]) s[13] *= t0 > 0 ? s[1] / t0 : 0;
-    }
-    citySummary[id] = s;
+    const cp = r.cityParts?.[id];
+    citySummary[id] = cp ? summaryOnDay(s0, cp, p.keys, factor) : s0.slice();
   }
   const fl = factor("longer"), fw = factor("work");
   const intercitySummary = r.intercitySummary.slice();

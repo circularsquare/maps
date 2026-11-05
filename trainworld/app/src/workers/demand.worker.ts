@@ -29,7 +29,7 @@ import { curveKnots, scaledKnots } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
 import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
-import { arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -640,6 +640,12 @@ function openBare(pack: { id: CityId; header: string; bin: ArrayBuffer }) {
   }
 }
 
+/** A zone's everyday layer's figures of a period (`EverydayApi.summary`) added into its commutes'
+ * (`DemandApi.summary`), in the slots that add up across populations */
+function addSummary(s: number[], v: ArrayLike<number>) {
+  for (const k of [1, 2, 3, 5, 10, 11, 12, 13]) s[k] += v[k] ?? 0;
+}
+
 function solveBare(a: DemandApi, e: EverydayApi | null) {
   const f0 = new Float32Array(0), u0 = new Uint32Array(0);
   a.set_network(f0, u0, u0, f0, f0, f0);
@@ -651,7 +657,7 @@ function solveBare(a: DemandApi, e: EverydayApi | null) {
     e?.solve(q);
     const own = Array.from(a.summary(q)), s = own.slice();
     const v = e?.summary(q);
-    if (v) for (const k of [1, 2, 3, 5, 10, 11, 12, 13]) s[k] += v[k] ?? 0;
+    if (v) addSummary(s, v);
     const p = new Array(3 * keys.length).fill(0);
     for (let k = 0; k < 3; k++) p[k] = own[1 + k] ?? 0;
     const kt = e?.kind_totals(q);
@@ -1061,7 +1067,7 @@ function query(msg: Query) {
           for (let i = 0; i < v.length; i++) packed[i] += v[i];
         }
       }
-      const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : 0;
+      const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : 0;
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
       const sc = mcs.find((c) => (c.stLocal[msg.station] ?? -1) >= 0);
@@ -1092,7 +1098,7 @@ function query(msg: Query) {
           if (v[0] === 1) {
             const p0 = cityToWorld(v[27], v[28], msg.city), p1 = cityToWorld(v[29], v[30], msg.city);
             v[27] = p0.x; v[28] = p0.y; v[29] = p1.x; v[30] = p1.y;
-            if (c) tripNodesGlobal(v, viewOf(c, api).nodeGlobal);
+            if (c) tripNodesGlobal(v, viewOf(c, api).nodeGlobal, TRIP_NODES);
           }
           answers.push(v);
           periods.push(q);
@@ -1115,14 +1121,14 @@ function query(msg: Query) {
           for (const c of mcs) {
             const v = near ? c.part!.market_trip_between(q, day, near.place, near.gid, msg.end, msg.far, msg.farGid) : c.part!.market_trip(q, day, place, sq!.xy, sq!.share, msg.end, msg.far, msg.farGid);
             if (v[0] !== 1) continue;
-            if (!best || v[3] + v[20] + v[23] > best[3] + best[20] + best[23]) { marketTripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal); best = v; }
+            if (!best || v[3] + v[20] + v[23] > best[3] + best[20] + best[23]) { tripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal, MARKET_TRIP_NODES); best = v; }
           }
           if (!best) { best = new Float64Array(MARKET_TRIP_LAYOUT.HEAD); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = best[24] = -1; }
           answers.push(best);
           periods.push(q);
         }
       }
-      const mask = !go ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), 31) : maskOf(at?.markets ?? mine);
+      const mask = !go ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : maskOf(at?.markets ?? mine);
       sendMessage({ kind: "icTrip", id: msg.id, version: msg.version, mask, periods, answers: go ? answers : null }, answers.map((v) => v.buffer));
     } else if (msg.kind === "bare") {
       // T-325: no network in it, so any version and round; the everyday legs per solving worker's
@@ -1427,27 +1433,16 @@ function marketFigures(parts: IntercityApi[], q: number) {
     elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
   };
 }
-/** A `DemandApi.trip` answer's route nodes (trip.ts `PAIR_LEN`, `LEG_LEN`) from its cluster's
- * network to the whole network's, the ones the client reads. */
-function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const { HEAD, PAIR_LEN, LEG_LEN } = TRIP_LAYOUT;
+/** Where a trip answer's pair and route counts sit (`count`, the routes' next), and its pairs' two
+ * route nodes (`node`): `DemandApi.trip`'s (trip.rs) and `IntercityApi.market_trip`'s (market_trip.rs). */
+const TRIP_NODES = { ...TRIP_LAYOUT, count: 24, node: 2 };
+const MARKET_TRIP_NODES = { ...MARKET_TRIP_LAYOUT, LEG_LEN: TRIP_LAYOUT.LEG_LEN, count: 11, node: 0 };
+/** A trip answer's route nodes from its cluster's network to the whole network's, the ones the
+ * client reads: each pair's two, then each route's legs' boarding and alighting. */
+function tripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array, { HEAD, PAIR_LEN, LEG_LEN, count, node }: Record<keyof typeof TRIP_NODES, number>) {
   const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
-  const np = v[24], nr = v[25];
-  for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + 2); g(HEAD + k * PAIR_LEN + 3); }
-  let o = HEAD + np * PAIR_LEN;
-  for (let k = 0; k < nr; k++) {
-    const n = v[o + 2];
-    o += 3;
-    for (let i = 0; i < n; i++, o += LEG_LEN) { g(o + 1); g(o + 2); }
-  }
-}
-
-/** The same for an `IntercityApi.market_trip` answer (T-866: head 24 since T-880, pairs of 7, legs of 12). */
-function marketTripNodesGlobal(v: Float64Array, nodeGlobal: Uint32Array) {
-  const { HEAD, PAIR_LEN } = MARKET_TRIP_LAYOUT, { LEG_LEN } = TRIP_LAYOUT;
-  const g = (i: number) => { if (v[i] >= 0) v[i] = nodeGlobal[v[i]]; };
-  const np = v[11], nr = v[12];
-  for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN); g(HEAD + k * PAIR_LEN + 1); }
+  const np = v[count], nr = v[count + 1];
+  for (let k = 0; k < np; k++) { g(HEAD + k * PAIR_LEN + node); g(HEAD + k * PAIR_LEN + node + 1); }
   let o = HEAD + np * PAIR_LEN;
   for (let k = 0; k < nr; k++) {
     const n = v[o + 2];
@@ -2012,7 +2007,7 @@ async function run() {
         const come: [Float32Array, Float32Array] | undefined = side ? [free.slice(), rounds.slice()] : undefined;
         const arrive = arriveOf(comeMax(free, rounds), rounds, board);
         const citySummary = Object.fromEntries(ids.map((id) => [id, Array.from(cities.get(id)!.summary(q))])) as Record<CityId, number[]>;
-        for (const [id, a] of jobEveryday) if (citySummary[id]) { const v = a.summary(q); for (const k of [1, 2, 3, 5, 10, 11, 12, 13]) citySummary[id][k] += v[k] ?? 0; }
+        for (const [id, a] of jobEveryday) if (citySummary[id]) addSummary(citySummary[id], a.summary(q));
         const intercitySummary = market ? market.summary : [];
         const summary = [round, 0, 0, 0, ms, 0, 0, 0, 0, 0];
         for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3, 5]) summary[k] += v[k] ?? 0;

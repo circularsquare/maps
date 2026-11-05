@@ -8,7 +8,9 @@ Which packs a worker holds, bare zones, warm-up, the worker pool and clusters.
 
 **Which cities are open** (T-149). A worker holds only the city packs the game needs: the viewed
 city and every city with a built station inside its footprint or within 4.5 km of it (the 3 km
-walk plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). The ride's
+walk plus a margin for edge cells and pack frames, `app/src/workers/cityReach.ts`). The reach
+follows from the stations' positions alone, so an edit that moves no station (a timetable, a train
+count) reuses the last one worked out, unless a zone's footprint failed to download then. The ride's
 15 km does not widen it: a pack's trips run between two stations of its own pack and the work or
 activity end walks, so a station only a ride from the pack carries none of its riders (T-394; the
 regional market carries riders between zones). Any

@@ -4,8 +4,7 @@
 // re-base, SPEC 7). After a service change it also builds the network snapshot demand runs on,
 // debounced 0.5 s (SPEC 6.5). notes/T-025.md.
 //
-// Every edit answers with an "edited" message (and, if it applied, a new "state"); the state
-// holds the whole network. Fine for a city; per-tile updates are follow-up work (notes/T-025.md).
+// Every edit answers with an "edited" message and, if it applied, a new "state".
 
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
@@ -35,11 +34,11 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
-import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, stampAll, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
 
@@ -94,7 +93,8 @@ const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
 const LEVEL_HOURS = new Float64Array([0, 1, 2].map((l) => PERIODS.reduce((s, p) => s + (LEVEL_OF[p.demand] === l ? p.to - p.from : 0), 0)));
 
 let api: TrackApi | null = null;
-let city = HOME_CITY;
+/** the world's home zone, written into saves and snapshots; never the map's focused zone */
+const city = HOME_CITY;
 /** the frame of the loaded game (T-125): new games are in the world frame, saves made before it in
  * the legacy one; read from the track model after every load */
 let frame: Frame = makeFrame(NEW_GAME_FRAME);
@@ -1057,9 +1057,9 @@ function roadsUnder(...lines: ArrayLike<number>[]): Promise<void> {
 }
 
 /** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
-function zonesOfPoints(xy: ArrayLike<number>, stride = 2, start = 0): string[] {
+function zonesOfPoints(xy: ArrayLike<number>, stride = 2): string[] {
   let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
-  for (let k = start; k + 1 < xy.length; k += stride) {
+  for (let k = 0; k + 1 < xy.length; k += stride) {
     const [lon, lat] = frame.toLonLat(xy[k], xy[k + 1]);
     if (lon < w) w = lon; if (lon > e) e = lon;
     if (lat < s) s = lat; if (lat > n) n = lat;
@@ -1075,7 +1075,7 @@ function zonesOfPoints(xy: ArrayLike<number>, stride = 2, start = 0): string[] {
     return { id: c.id, w: bw - dx, s: bs - dy, e: be + dx, n: bn + dy };
   });
   const hit = new Set<string>();
-  for (let k = start; k + 1 < xy.length; k += stride) {
+  for (let k = 0; k + 1 < xy.length; k += stride) {
     const [lon, lat] = frame.toLonLat(xy[k], xy[k + 1]);
     for (const b of boxes) if (lon >= b.w && lon <= b.e && lat >= b.s && lat <= b.n) hit.add(b.id);
   }
@@ -1850,7 +1850,7 @@ function today(): Float64Array {
   // while a solve publishes; the same question with nothing changed since gets the last answer
   const key = `${todayGen}|${now}|${partHour}|${partFare}`;
   if (todayLast?.key === key) return todayLast.data.slice();
-  const data = packDays(lineDaysAt(now, false, undefined, true));
+  const data = packDays(pastDays(now));
   todayLast = { key, data };
   return data.slice();
 }
@@ -1859,36 +1859,29 @@ function today(): Float64Array {
 let todayGen = 0;
 let todayLast: { key: string; data: Float64Array } | null = null;
 
-/** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M). */
+/** One line's day, in `TrackApi.past_day`'s per-line layout, with its fares (US$M). */
 interface LineDay { id: number; block: ArrayLike<number>; fare: number; day: number }
 
-/** Every line's block of `TrackApi.today(now)` with its fares taken: each hour since the line's
- * local midnight (T-309), at its local period and day, by the share already paid (`closed`: the
- * day is over, every hour paid whole). `shift` keeps the lines on one local time. `past`: the past
- * 24 hours instead (T-446). */
-function lineDaysAt(now: number, closed: boolean, shift?: number, past = false): LineDay[] {
+/** Every line's block of `TrackApi.past_day(now)` with its fares taken: each hour at the line's
+ * local period and day (T-309), the hour now by the share already paid and the hour a day ago by
+ * the rest; and (T-2475) its fares for the whole of its local day now, every hour on its own kind
+ * of day. */
+function pastDays(now: number): LineDay[] {
   const a = api!;
   syncHolidays();
-  const v = past ? a.past_day(now) : a.today(now), count = v[0], hNow = Math.floor(now / 3600);
+  const v = a.past_day(now), count = v[0], hNow = Math.floor(now / 3600);
+  const h0 = hNow - 24, wNow = hNow === partHour ? partFare : 0;
   const out: LineDay[] = [];
   let i = 1;
   for (let k = 0; k < count; k++) {
     const id = v[i], n = v[i + 1], spans = v[i + 6], len = 15 + 2 * spans + n;
-    const sh = a.line_shift(id);
-    if (shift === undefined || sh === shift) {
-      const per = lineIncome.get(id);
-      let f = 0;
-      const h0 = past ? hNow - 24 : Math.floor((now + sh) / 86400) * 24 - sh / 3600;
-      const wNow = closed ? 1 : hNow === partHour ? partFare : 0;
-      if (per) for (let h = h0; h <= hNow; h++) {
-        const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
-        f += fareHour(per, t, kindOfLine(id)) * w;
-      }
-      // T-2475: the whole of the line's local day now, every hour on its own kind of day
-      let day = 0;
-      if (past && per) for (let h = Math.floor((now + sh) / 86400) * 24 - sh / 3600, e = h + 24; h < e; h++) day += fareHour(per, h * 3600 + sh, kindOfLine(id));
-      out.push({ id, block: v.subarray(i, i + len), fare: f, day });
+    const sh = a.line_shift(id), per = lineIncome.get(id);
+    let f = 0, day = 0;
+    if (per) {
+      for (let h = h0; h <= hNow; h++) f += fareHour(per, h * 3600 + sh, kindOfLine(id)) * (h === hNow ? wNow : h === h0 ? 1 - wNow : 1);
+      for (let h = Math.floor((now + sh) / 86400) * 24 - sh / 3600, e = h + 24; h < e; h++) day += fareHour(per, h * 3600 + sh, kindOfLine(id));
     }
+    out.push({ id, block: v.subarray(i, i + len), fare: f, day });
     i += len;
   }
   return out;
@@ -2458,8 +2451,8 @@ const SHIFTS_EXACT = 8;
 const SHIFT_REACH = 2 ** 22;
 
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
- * again, which was about half the edit's time on New York's real network. */
-/** `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
+ * again, which was about half the edit's time on New York's real network.
+ * `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
 function sendState(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false) {
   const t0 = performance.now();
   const s = buildState();
@@ -3152,22 +3145,17 @@ function apply(op: EditOp): Applied {
   const a = api!;
   switch (op.op) {
     case "route": {
-      a.set_route_tangent(!!op.through);
-      a.set_design_speed(op.design ?? 160);
-      a.set_route_hsr(!!op.hsr);
-      a.set_route_ramp(!!op.ramp);
-      a.set_route_beside(...besideOf(op));
-      const r = a.add_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false);
+      const r = a.add_route(...routeArgs(a, op), false);
       return { r, node: r === 0 ? a.route_end() : undefined };
     }
     case "edgePis":
-      a.set_design_speed(op.design ?? 160);
+      a.set_design_speed(designOf(op));
       return { r: a.set_edge_pis(op.edge, pisArr(op.pis)) };
     case "moveNode":
-      a.set_design_speed(op.design ?? 160);
+      a.set_design_speed(designOf(op));
       return { r: a.move_node(op.node, op.x, op.y) };
     case "moveNodes":
-      a.set_design_speed(op.design ?? 160);
+      a.set_design_speed(designOf(op));
       return { r: a.move_nodes(new Uint32Array(op.nodes), op.dx, op.dy) };
     case "edgeLevel":
       return { r: a.set_edge_level(op.edge, op.level) };
@@ -3430,8 +3418,6 @@ async function processMessage(msg: ToClock) {
     if (msg.patch) patchMode = msg.patch;
     setBandCheck(patchMode === "check");
     if (msg.bandMode !== undefined) setBandMode(msg.bandMode);
-    // World identity and coordinates never follow the map's focused city.
-    city = HOME_CITY;
     packBase = msg.pack;
     outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
       if (!api) return;
@@ -3571,17 +3557,28 @@ async function processMessage(msg: ToClock) {
  * preview found every mask its geometry needs in, at that version: its edit needs no second look */
 let trackVersion = 0;
 let maskedRoute = "";
-type RouteAsk = { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] };
-const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, r.design ?? 160, !!r.hsr, !!r.ramp, r.beside ?? null])}`;
+const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), !!r.hsr, !!r.ramp, r.beside ?? null])}`;
 /** T-1685: the pieces a route beside track runs along, for `set_route_beside` (none: u32::MAX) */
 const besideOf = (r: { beside?: [number, number] }): [number, number] => r.beside ?? [0xffffffff, 0xffffffff];
+/** The design speed new track is laid for, km/h, where the request names none */
+const designOf = (r: { design?: number }) => r.design ?? 160;
+/** `r`'s settings set on the track model, and its ends, points and tracks as `TrackApi.add_route`
+ * and `preview_route` take them. */
+function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, number] {
+  a.set_route_tangent(!!r.through);
+  a.set_design_speed(designOf(r));
+  a.set_route_hsr(!!r.hsr);
+  a.set_route_ramp(!!r.ramp);
+  a.set_route_beside(...besideOf(r));
+  return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.single ? 1 : r.quad ? 4 : 2];
+}
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
 function failAnswer(msg: ToClock) {
   if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
   if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 });
   if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
-  if (msg.kind === "preview" || msg.kind === "previewEdge" || msg.kind === "previewNode" || msg.kind === "previewNodes") send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
+  if (isPreview(msg)) send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   if (msg.kind === "query") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
 }
 
@@ -3627,10 +3624,10 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 async function masksFor(op: EditOp) {
   const a = api!;
   if (op.op === "route" && maskedRoute === routeKey(op)) return;
-  if (op.op === "route") await withMasks(() => (a.set_route_tangent(!!op.through), a.set_design_speed(op.design ?? 160), a.set_route_hsr(!!op.hsr), a.set_route_ramp(!!op.ramp), a.set_route_beside(...besideOf(op)), a.preview_route(new Float64Array([...endArr(op.from), ...endArr(op.to)]), pisArr(op.pis), op.single ? 1 : op.quad ? 4 : 2, false)), routePoints);
-  else if (op.op === "edgePis") await withMasks(() => (a.set_design_speed(op.design ?? 160), a.preview_edge(op.edge, pisArr(op.pis))), routePoints);
-  else if (op.op === "moveNode") await withMasks(() => (a.set_design_speed(op.design ?? 160), a.preview_move_node(op.node, op.x, op.y)), nodePoints);
-  else if (op.op === "moveNodes") await withMasks(() => (a.set_design_speed(op.design ?? 160), a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy)), nodePoints);
+  if (op.op === "route") await withMasks(() => a.preview_route(...routeArgs(a, op), false), routePoints);
+  else if (op.op === "edgePis") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_edge(op.edge, pisArr(op.pis))), routePoints);
+  else if (op.op === "moveNode") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_move_node(op.node, op.x, op.y)), nodePoints);
+  else if (op.op === "moveNodes") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy)), nodePoints);
   // T-1577: a bus is timed from the street speeds of the zones it crosses
   else if (op.op === "addBusLine" || op.op === "busRoute") await ensureStreets(zonesOfPoints(op.route, 3));
 }
@@ -3900,14 +3897,14 @@ async function handle(msg: ToClock) {
     send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts, anchor: anchor().version }, parts.map((p) => p.buffer));
   } else if (msg.kind === "previewNode" || msg.kind === "previewNodes") {
     const a = api;
-    const out = await withMasks(() => (a.set_design_speed(msg.design ?? 160), msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy)), nodePoints, msg.seq);
+    const out = await withMasks(() => (a.set_design_speed(designOf(msg)), msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy)), nodePoints, msg.seq);
     if (out) sendNodePreview(msg.seq, out);
     else sendStale(msg.seq);
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? (a.set_route_tangent(!!msg.through), a.set_design_speed(msg.design ?? 160), a.set_route_hsr(!!msg.hsr), a.set_route_ramp(!!msg.ramp), a.set_route_beside(...besideOf(msg)), a.preview_route(new Float64Array([...endArr(msg.from), ...endArr(msg.to)]), pisArr(msg.pis), msg.single ? 1 : msg.quad ? 4 : 2, false))
-      : (a.set_design_speed(msg.design ?? 160), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq);
+      ? a.preview_route(...routeArgs(a, msg), false)
+      : (a.set_design_speed(designOf(msg)), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq);
     if (!out) return sendStale(msg.seq);
     void roadsUnder(routePoints(out));
     if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";
@@ -3929,10 +3926,9 @@ async function handle(msg: ToClock) {
       const [x, y] = packLocal(out[k], out[k + 1]);
       pts.set([x, y, out[k + 2]], k - p0);
     }
-    // Explicit shape also permits type-checking before the track WASM declarations regenerate.
-    const speeds = (api as TrackApi & { preview_render_speeds(): Float32Array }).preview_render_speeds();
+    const speeds = a.preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
-    const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
+    const marks = markPoints(a.preview_marks(), 3);
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
     send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
@@ -3983,6 +3979,6 @@ function sendNodePreview(seq: number, out: Float64Array) {
     parts.push(pts.length / 3);
   }
   const v = new Float64Array(verts), p = new Float32Array(pts), pa = new Uint32Array(parts);
-  const marks = markPoints((api as TrackApi & { preview_marks(): Float64Array }).preview_marks(), 3);
+  const marks = markPoints(api!.preview_marks(), 3);
   send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, marks.buffer]);
 }

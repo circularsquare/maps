@@ -11,17 +11,18 @@ import { curveKnots } from "../game/fareCurve";
 import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
 
-const LEVEL = { high: 0, medium: 1, low: 2 } as const;
+/** Each demand level's index among a line's run times and trains an hour */
+export const LEVEL = { high: 0, medium: 1, low: 2 } as const;
 
 /** A city reaches a station within this of its cells' bounding box: past the 4 km walk and the
  * 15 km ride from a home's group centre (`ride_max_m`, up to about 9 km off the cell). */
-export const CITY_REACH_M = 30_000;
+const CITY_REACH_M = 30_000;
 /** T-396: the regional market reaches a station within this of a market zone's registry box: its
  * sites are the zones' cells, inside the boxes, and its rides reach about 17 km. */
-export const MARKET_REACH_M = 30_000;
+const MARKET_REACH_M = 30_000;
 /** Stations this close are joined: platforms merged into one demand station (100 m) and walking
  * transfers (300 m) lie well inside it. */
-export const JOIN_M = 1_000;
+const JOIN_M = 1_000;
 
 const MARKET_BOXES = CITIES.map((c) => [c.id, zoneBox(c)] as const);
 
@@ -98,8 +99,7 @@ function hashOf(parts: (ArrayBufferView | string)[]): string {
 export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }[], marketZones: Float64Array | null, rounds: number, whole = false, oneMarket = false): Cluster[] {
   const market = !!marketZones;
   const S = n.stXY.length / 2, L = n.lineN.length, P = cities.length;
-  const lineOff = new Uint32Array(L + 1);
-  for (let l = 0; l < L; l++) lineOff[l + 1] = lineOff[l] + n.lineN[l];
+  const lineOff = lineOffsets(n);
   // T-377: per open 6 km zone its world id, then its sites' box in degrees (`IntercityApi.zone_boxes`)
   const M = marketZones ? marketZones.length / 5 : 0;
   const parent = new Int32Array(S + P + Math.max(M, 1)).map((_, i) => i);
@@ -142,11 +142,7 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
       else grid.set(k, [s]);
     }
     cities.forEach(({ id, box }, i) => {
-      if (!box) return;
-      for (let s = 0; s < S; s++) {
-        const p = worldToCity(n.stXY[2 * s], n.stXY[2 * s + 1], id);
-        if (p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M) join(s, S + i);
-      }
+      if (box) for (let s = 0; s < S; s++) if (cityReaches(n, s, id, box)) join(s, S + i);
     });
     if (marketZones && S) {
       // a grid of `GD` degrees; each zone's box widened by the reach at its own latitude
@@ -237,31 +233,28 @@ export function clusterView(c: Cluster): PopView {
 /** T-756: the snapshot stations a city reaches (`CITY_REACH_M` of its cells' box), 1 each. */
 export function cityReach(n: DemandNetwork, id: CityId, box: Box): Uint8Array {
   const S = n.stXY.length / 2, out = new Uint8Array(S);
-  if (!box) return out;
-  for (let s = 0; s < S; s++) {
-    const p = worldToCity(n.stXY[2 * s], n.stXY[2 * s + 1], id);
-    if (p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M) out[s] = 1;
-  }
+  if (box) for (let s = 0; s < S; s++) if (cityReaches(n, s, id, box)) out[s] = 1;
   return out;
 }
 
-/** T-756: the network of a population reaching the stations marked in `reach`, over the cluster's lines. */
-export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopView {
-  const lineOff = new Uint32Array(n.lineN.length + 1);
-  for (let l = 0; l < n.lineN.length; l++) lineOff[l + 1] = lineOff[l] + n.lineN[l];
-  const spans: [number, number, number][] = [];
-  for (const l of c.lines) {
-    const m = n.lineN[l], g = lineOff[l];
-    let a = -1, b = -1;
-    for (let k = 0; k < m; k++) if (reach[n.stops[g + k]]) { if (a < 0) a = k; b = k; }
-    if (a < 0) continue;
-    a = Math.max(0, a - 1); b = Math.min(m - 1, b + 1);
-    if (b > a) spans.push([l, a, b]);
-  }
-  const S = n.stXY.length / 2, used = new Uint8Array(S);
-  for (const [l, a, b] of spans) for (let k = a; k <= b; k++) used[n.stops[lineOff[l] + k]] = 1;
-  const stations: number[] = [];
-  for (let s = 0; s < S; s++) if (used[s]) stations.push(s);
+/** Station `s` within `CITY_REACH_M` of city `id`'s cells' box (its own frame). */
+function cityReaches(n: DemandNetwork, s: number, id: CityId, box: [number, number, number, number]): boolean {
+  const p = worldToCity(n.stXY[2 * s], n.stXY[2 * s + 1], id);
+  return p.x >= box[0] - CITY_REACH_M && p.x <= box[2] + CITY_REACH_M && p.y >= box[1] - CITY_REACH_M && p.y <= box[3] + CITY_REACH_M;
+}
+
+/** Each line's first stop in `stops`, then the stop count. */
+function lineOffsets(n: DemandNetwork): Uint32Array {
+  const off = new Uint32Array(n.lineN.length + 1);
+  for (let l = 0; l < n.lineN.length; l++) off[l + 1] = off[l] + n.lineN[l];
+  return off;
+}
+
+/** `stations` (whole-network indices, ascending) as a network of their own: each one's index there
+ * (-1 for the rest), positions, and complexes numbered by their first station here (the numbers
+ * carry no meaning past equality). */
+function stationsOf(n: DemandNetwork, stations: number[]): { stLocal: Int32Array; stXY: Float32Array; complex: Uint32Array } {
+  const S = n.stXY.length / 2;
   const stLocal = new Int32Array(S).fill(-1);
   stations.forEach((s, i) => (stLocal[s] = i));
   const stXY = new Float32Array(2 * stations.length);
@@ -276,6 +269,26 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
       return i;
     });
   }
+  return { stLocal, stXY, complex };
+}
+
+/** T-756: the network of a population reaching the stations marked in `reach`, over the cluster's lines. */
+export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopView {
+  const lineOff = lineOffsets(n);
+  const spans: [number, number, number][] = [];
+  for (const l of c.lines) {
+    const m = n.lineN[l], g = lineOff[l];
+    let a = -1, b = -1;
+    for (let k = 0; k < m; k++) if (reach[n.stops[g + k]]) { if (a < 0) a = k; b = k; }
+    if (a < 0) continue;
+    a = Math.max(0, a - 1); b = Math.min(m - 1, b + 1);
+    if (b > a) spans.push([l, a, b]);
+  }
+  const S = n.stXY.length / 2, used = new Uint8Array(S);
+  for (const [l, a, b] of spans) for (let k = a; k <= b; k++) used[n.stops[lineOff[l] + k]] = 1;
+  const stations: number[] = [];
+  for (let s = 0; s < S; s++) if (used[s]) stations.push(s);
+  const { stLocal, stXY, complex } = stationsOf(n, stations);
   const nStops = spans.reduce((t, [, a, b]) => t + b - a + 1, 0);
   const lineN = Uint32Array.from(spans, ([, a, b]) => b - a + 1);
   const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
@@ -358,22 +371,7 @@ function spanOf(n: DemandNetwork, nodeGlobal: Uint32Array): Float32Array {
 }
 
 function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, marketKey: string, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
-  const S = n.stXY.length / 2;
-  const stLocal = new Int32Array(S).fill(-1);
-  stations.forEach((s, i) => (stLocal[s] = i));
-  const stXY = new Float32Array(2 * stations.length);
-  stations.forEach((s, i) => { stXY[2 * i] = n.stXY[2 * s]; stXY[2 * i + 1] = n.stXY[2 * s + 1]; });
-  // complexes numbered by their first station here: the numbers carry no meaning past equality
-  let complex = new Uint32Array(0);
-  if (n.complex && n.complex.length === S) {
-    const first = new Map<number, number>();
-    complex = Uint32Array.from(stations, (s, i) => {
-      const f = first.get(n.complex[s]);
-      if (f !== undefined) return f;
-      first.set(n.complex[s], i);
-      return i;
-    });
-  }
+  const { stLocal, stXY, complex } = stationsOf(n, stations);
   const nStops = lines.reduce((a, l) => a + n.lineN[l], 0);
   const lineN = Uint32Array.from(lines, (l) => n.lineN[l]);
   const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);

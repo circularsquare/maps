@@ -1,6 +1,7 @@
 import type { CityId } from "../game/cities";
 import type { CorridorTable } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
+import { PERIODS } from "../game/periods";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
 export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 13 } as const;
@@ -74,12 +75,6 @@ export type MarketRows = string | Uint8Array;
 /** T-492: a pack a worker could not open: the zone, whether it was its market pack, and why */
 export interface OpenRejected { id: CityId; market: boolean; error: string }
 
-/**
- * T-1607: one side of a period shared by two workers (its cities' populations in one, its market
- * in the other): that side's segment loads, boardings and alightings after `round`, summed on the
- * whole network's route nodes (3 x nodes), for cluster `cluster` (index in the job's clusters).
- * The page passes it on to the other side's worker.
- */
 /** T-1255: the riders coming to the platforms per route node: the free-flow pass's boardings, at
  * least the rounds' (before the cap), into `free` */
 export function comeMax(free: Float32Array, rounds: Float32Array): Float32Array {
@@ -93,7 +88,22 @@ export function arriveOf(come: Float32Array, rounds: Float32Array, board: Float3
   for (let k = 0; k < come.length; k++) come[k] = board[k] < 0.999 * rounds[k] ? Math.max(come[k], board[k]) : board[k];
   return come;
 }
-export type Loads ={ kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array };
+/**
+ * T-1607: one side of a period shared by two workers (its cities' populations in one, its market
+ * in the other): that side's segment loads, boardings and alightings after `round`, summed on the
+ * whole network's route nodes (3 x nodes), for cluster `cluster` (index in the job's clusters).
+ * The page passes it on to the other side's worker.
+ */
+export type Loads = { kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array };
+
+/** Bit q set for every period q: a question answered for the whole day */
+export const ALL_PERIODS = (1 << PERIODS.length) - 1;
+
+/** The questions for the demand views, `ToDemand`'s and `FromDemand`'s kinds alike */
+const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail", "flows", "purposes", "icSel", "icStation", "purposeModes", "transfers", "trip", "icTrip", "bare", "bareFlows", "bareSquares", "tripLengths"] as const;
+export type QueryKind = (typeof QUERY_KIND_LIST)[number];
+const QUERY_KINDS: ReadonlySet<string> = new Set(QUERY_KIND_LIST);
+export const isQuery = <T extends { kind: string }>(m: T): m is Extract<T, { kind: QueryKind }> => QUERY_KINDS.has(m.kind);
 
 export type ToDemand =
   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
@@ -188,17 +198,15 @@ export type ToDemand =
   | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
   /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */
   | Loads
-  /**
-   * Queries for the demand views (T-078, notes/T-078.md), answered between periods. `id` matches
-   * the reply; `version` is the solve they ask about: a worker that has moved on to a newer
-   * network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
-   * 0 when absent): the day its answer weighs the periods for (0 weekday, 1 Saturday, 2 Sunday,
-   * 3 the average day, T-464, T-262). A question that reads the
-   * periods' state may also carry `wait` (T-327): if this worker has not yet reached `round` of
-   * `version`, it is answered as soon as it has, just before that round's last `result`.
-   */
-  /** the city's cells and zones (static; any worker) */
-  /** `frame`: the world frame the answer's coordinates are wanted in (T-125) */
+  // Queries for the demand views (T-078, notes/T-078.md, `QUERY_KINDS`), answered between periods.
+  // `id` matches the reply; `version` is the solve they ask about: a worker that has moved on to a
+  // newer network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
+  // 0 when absent): the day its answer weighs the periods for (0 weekday, 1 Saturday, 2 Sunday, 3 the
+  // average day, T-464, T-262). A question that reads the periods' state may also carry `wait`
+  // (T-327): if this worker has not yet reached `round` of `version`, it is answered as soon as it
+  // has, just before that round's last `result`.
+  /** the city's cells and zones (static; any worker); `frame`: the world frame the answer's
+   * coordinates are wanted in (T-125) */
   | { kind: "cells"; id: number; city: CityId; frame: FrameSpec }
   /** rail trips by subzone over this worker's periods (`DemandApi.sub_sums`) */
   | { kind: "subSums"; id: number; city: CityId; version: number; round: number }
@@ -357,8 +365,8 @@ export type FromDemand =
        * on with other clusters: its cities (only theirs in `citySummary`), whether the market is in it
        * (else the intercity fields are empty), its lines (indices into the network's); every array
        * still the whole network's, zero off the cluster. T-402: in a solve with the barrier, the
-       * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]` */
-      /** T-1733 `local`: the cluster after an edit with only `cities` (the zones the edit touched)
+       * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]`.
+       * T-1733 `local`: the cluster after an edit with only `cities` (the zones the edit touched)
        * solved, against the others' frozen loads, ahead of its whole solve; its lines' figures carry
        * every population's riders, the market's as last solved */
       cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean };
