@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2302 T-1189's Europe replan (2026-11-05, agent europe): 38 countries' 628 zones to 462 (399 retired, 233 new); all 233 and Nice shipped (4 relaxed), 29 solve units joined, 35 origins moved to their named city. notes/T-2302.md.
+- T-1189 Replan the built countries by T-1140's merge rule (2026-11-05): Taiwan, the US and Puerto Rico (T-2301), Europe (T-2302) done; China's part with T-1185. notes/T-1189.md.
+- T-892 Portugal's three parked rows (2026-11-05): lez, meo, doo regrouped into new zones by T-2302's replan. notes/T-2302.md.
+
 - T-2528 Diagram water width (2026-11-05, agent diagrivers, tree): dial at 0.5; river bands at their real width times a smooth scale field (3 lines to 18 pitches, floored downstream, cut to the room); Long Island Sound open water (far-shore land votes sea). Core rivers still thin, Sound 3.7x Long Island: layout follow-ups. notes/T-2528.md.
 
 - T-2552 The load bar's model on a big save (2026-11-05, agent loadbar, tree): a file's wait no longer takes the last game's, the solve pace no longer comes from a tiny solve, a converged last period no longer sets the round, zone bars wait for their solve. Anita's save: no sit over 15 s (was 49 s at 94%, 40 s at 99%). notes/T-2552.md.

@@ -48,8 +48,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-1765 [P3] Zones whose origin was set (before T-1762) on the densest pixel anywhere in the zone, over 25 km outside the unit they lead with; Canada's five, Kerkyra, Siedlecki, Starogardzki and China's eleven city zones were rebuilt and shipped 2026-10-29 (2b8cdda6, b50802f3). Left: China's other 61 (county towns: Guyang 235 km, Nehe 145, Huzhu 129, Lancang 123). Open. notes/T-1765.md.
 - T-1375 [P3] The zone ring cut halves a ring by people round the centre it wraps, so a thin arm (Whistler and Pemberton, joined to the Fraser Valley zone round Vancouver's row) splits the ring's real body instead (Abbotsford 0.17M and Chilliwack-Mission 0.19M, T-1239): try shedding the arm that alone makes the wrap before halving; a Canada replan after. Open; notes/T-1239.md section 1.
 - T-1376 [P3] Les Îles-de-la-Madeleine (lel, 12,000 people, an island zone of Canada) parks in its build: `enrich_parks` finds under 85% of its park draw on a cell (beach and dune parks off the populated cells). Allow a small island zone through (as T-897's one-park islets) or leave it dead space. Open; notes/T-1239.md.
-- T-1189 [P2] Replan the built countries by T-1140's merge rule: US and Puerto Rico (162 of 187 rows), Europe (about 393 rows), Taiwan (3), each a dry run and a look, then builds, gates, joins and T-1053 successors. Waits for Anita's word ("we might run into other things that will make us want to rebuild again"; asked again 2026-10-26: not yet). China's part done 2026-10-25 with T-1185. Carries what T-1002, T-1005 part 2, T-1089 and T-903's merges asked (Zhubei split, wraps, rings, small Italian zones); T-1307, T-774 and T-891 first. Anita's go 2026-11-04. T-1307, T-891, T-774, T-1999 done; Taiwan done 2026-11-04 (5 zones to 9, 7 new shipped); US and Puerto Rico done 2026-11-04 (T-2301, 159 new shipped); Europe T-2302, dry look in the notes. notes/T-1189.md. What rides along: notes/T-1189.md "What rides along" and "Waits on a rebuild" below.
-- T-2302 [P2] T-1189's Europe part (T-2301's US part done 2026-11-04): 628 zones to 462 (399 removed, 233 new), 38 countries' joins. Steps in notes/T-1189.md "Next". Taking, 2026-11-04, europe; live state in notes/T-2302.md.
 - T-2300 [P3] Taiwan's tig ("Taitung", 1.29M, T-1189's replan) is the Central Range with both foothills: Hualien and Taitung's coast, Puli, Douliu, Pingtung's plain and Kaohsiung's hill districts, joined by shape across regions because the mountain townships fill the hull (compact 0.69-0.82). Open. notes/T-1189.md "Taiwan". notes/T-2300.md.
 - T-1193 [P2] T-1178 stage 2, what is left: rerun the solve units holding a pack in T-1192's seamless list outside mainland China (GB's Bristol group, Italy's Milan-Como, Puerto Rico; check whether Taiwan's ran with China's joins in T-1184 and T-1185), T-1261 is done; rerunning `pipeline/seams.py` first if ids changed; check Guangzhou-Foshan's commuters across near 1.3-1.5M. notes/T-1178.md.
 - T-1334 [P3] Other coastal districts dropped as Kwai Tsing was (T-1144)? List each built outline's OSM relations at its picked admin level with 0.25-0.5 of their land inside a plan unit and not picked (a coarse unit polygon missing reclaimed land or islands, the leftover under the 10% fill); rebuild any populated ones. Open.
@@ -246,8 +244,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Waits on a rebuild
 Tasks that land only when a pack or country is rebuilt, grouped by that rebuild, so whoever runs it knows what rides along (2026-10-26). The two replan groups are also in notes/T-1189.md "What rides along".
 
-### Europe replan (T-1189's Europe part)
-- T-892 [P3] Portugal's three parked rows (lez, meo, doo); maybe with T-1189. notes/someday.md
+### Europe's next rebuild (T-1189's Europe replan ran without these, T-2302, 2026-11-05)
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching. notes/someday.md
 - T-772 [P3] Dead-space units holding cities (Valladolid, Agder...); Anita: low priority. notes/someday.md
 - T-785 [P3] France's countryside zones on the France module's sources. notes/someday.md
@@ -259,7 +256,7 @@ Tasks that land only when a pack or country is rebuilt, grouped by that rebuild,
 - T-810 [P3] Commutes across open EU borders far too damped at 0.05. notes/someday.md
 - T-429 [P3] Cross-border long trips in Europe low on land pairs (Paris - Brussels). notes/someday.md
 - T-932 [P3] Countries solved in turn leave a held neighbour off its margins. notes/someday.md
-Also T-1345's Nice (T-769), and T-1344's Paris and London items if those metros are rebuilt.
+Also T-1344's Paris and London items if those metros are rebuilt.
 
 ### US replan (T-1189's US part)
 - T-1019 [P3] NCES schools, IPEDS and FAA enplanements for planned US rows. notes/someday.md

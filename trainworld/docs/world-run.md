@@ -72,6 +72,10 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   people in it are its, no zone may wrap it, and the join solves it with the new rows as one of the
   country's members (the registry's `country`). Add `--out <scratch.json>` for a dry run, and read
   its merge log in the plan's `zones.<ISO>.merges` before running the rows.
+- **A replan's order** (T-2302): the old rows are retired (unregistered, their files moved out of data/packs) before
+  the new rows build, since a build cuts every boundary file in data/packs out of its outline (`osm_units.cut_packs`);
+  a new row built beside its old zones' packs comes out a sliver and parks. Building elsewhere first (AWS, T-2301) and
+  landing after the retire avoids the gap.
 - **Zones removed** (T-1053): a replan, merge or re-split that takes zone ids out of the registry
   (a parked row of an earlier commit included) ends, once `zone_outlines.py` has rewritten the
   outlines, with `venv\Scripts\python.exe -I trainworld\pipeline\zone_successors.py` (seconds): each
