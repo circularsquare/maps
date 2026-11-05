@@ -49,6 +49,23 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   from 2a0541c2, port 6193, ids T-2538..39: T-2534 ground crossings kept outside dense cores, small city on its
   through line), **launchprep** (Opus, research only, writes research/launch.md: T-2537 launch checklist for Anita,
   ≤40 web searches).
+- launchprep DONE (T-2537): research/launch.md, checklist on top, committed e05fbcc3. Findings: no og/twitter tags on
+  the live page (T-2543, **linkpreview** Sonnet tree port 6191 adding tags + preview.png, wording for Anita); .wasm and
+  .json from GitHub Pages are DYNAMIC in Cloudflare (needs a Cache Rule on anita.garden/trainsworld/assets/*, dashboard,
+  Anita's); R2 cost ~$0 to 10k visitors/day; Reddit rules unread (403), Anita to read; phone test hers.
+- linkpreview LANDED 368d3bd2 (T-2543: og/twitter tags in app/index.html, app/public/preview.png = map-nyc candidate;
+  meta description "Build trains around the world!" -> "Build trains in any real city and see how many people ride.";
+  Anita to pick wording (3 options) and image (artifacts/trainworld/linkpreview/). Smoke only partial (1 core).
+- Anita ~11:30: no Cache Rule yet ("we wont have 100k visitors"); no Discord/subreddit ("a bit presumptuous"); card
+  text stays "Build trains around the world!"; card image = load-screen logo before a small globe; phone: NA save
+  failed early with the memory pre-check (4.3 GB vs 4 GB), Japan save loaded. **launchbits** (Sonnet, tree from
+  c0721519, port 6194): T-2544 card text + logo image, T-2545 load-fail messages with "works best on a computer".
+  **tourvideo** (Opus, tree from c0721519, port 6193): T-2546 deterministic frame-by-frame clip via ffmpeg.
+- uismall4 LANDED 42ccfc96 (T-2535 empty rail/bus line deletes without confirm; T-2536 no profit until trains + first
+  demand result, "calculating..." meanwhile; zero-rider case loosened via linesPending, untested). String added:
+  "calculating..." (Profit row).
+- Anita ~10:50: island shapes matter, Japan as a test case. Filed T-2540 (takes in T-2517); **diagislands** (Opus,
+  tree from 4ba1808b, port 6192, ids T-2541..42): water files are its, layout.ts is diagcross's (coordinate via me).
 - **bubbleload** (Opus, main tree read-only, scratch worktrees for old builds, ports 6188-89, ids T-2532..33):
   T-2531 [P1] Anita ~09:30 "i feel like loading of demand bubbles in the city we're looking at has honestly
   regressed"; measures builds 827 -> 956 -> master on her save artifacts/trainworld/anita-2026-11-05/
@@ -68,7 +85,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   more with regards to reflecting how thick the water is, but its pretty good" (T-2528). "ok, we can do 4 hours and
   layout jobs first."
 - Batch notes/todo-2026-11-05a.md (T-2519..T-2526).
-- Next free id **T-2540**.
+- Next free id **T-2547**.
 
 
 ## Next
