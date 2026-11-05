@@ -236,7 +236,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 `graph.ts` (complexes, each line's chain with the stations beside its track, edges with their lines and the stroke each is drawn in there, T-2405;
 built in the clock worker while the diagram is shown, T-2159), `layout.ts` (A, B with side terms, `sidePairs` T-2290, hops parallel on the ground `parallelHops` T-2520, segments, the snap,
-routing, line order, the water kept open `seaTerms` T-2541; `LAYOUT`, `LAYOUT_R2`; run in `workers/diagram.worker.ts`, T-2160), `blocks.ts` (city blocks:
+routing, line order, the water kept open `seaTerms` T-2541; `LAYOUT` from the distortion dial `DISTORT` and `dialled` T-2556, `LAYOUT_R2`; run in `workers/diagram.worker.ts`, T-2160), `blocks.ts` (city blocks:
 found, placed between A and B, held on a rebuild, and each block's real-to-drawn fit, T-2407), `borders.ts` (the zones'
 borders, decided in the drawing: a grid round the lines and pills, each cell the zone of its nearest pill, its
 boundaries fitted at 0, 45 and 90 degrees, each shared border once, T-2464), `waterReal.ts` (the water on the

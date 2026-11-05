@@ -3,7 +3,7 @@
 // While it is up the clock worker posts the graph after each network state; the page names its
 // stations and measures the names, and the layout worker lays it out, draws it and places the names,
 // one at a time, the newest waiting next, the last drawing staying up meanwhile. `?diagram=r2` lays
-// out with round 2's options.
+// out with round 2's options, `?distort=0.5` at that setting of the distortion dial (layout.ts `DISTORT`, T-2556).
 //
 // Clicks and hovers are the map's (T-2163): a station selects its complex, a line the line, with the
 // map's tags; what is selected draws full and the rest faded. The camera goes with the selection, or
@@ -255,7 +255,8 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
 }
 
 export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void {
-  const options = new URLSearchParams(location.search).get("diagram") === "r2" ? "r2" : undefined;
+  const q = new URLSearchParams(location.search), options = q.get("diagram") === "r2" ? "r2" : undefined;
+  const dial = q.get("distort"), distort = dial !== null && dial !== "" && Number.isFinite(+dial) ? +dial : undefined;
   const canvas = document.createElement("canvas");
   canvas.className = "diagram-canvas";
   Object.assign(canvas.style, { position: "absolute", inset: "0", width: "100%", height: "100%", zIndex: "3", display: "none", cursor: "grab", touchAction: "none" });
@@ -287,7 +288,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const zf = zoneFrame(g);
     // the zones whose water masks the water is drawn from (T-2169)
     const water = zf ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
   let outlineMap: Map<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;

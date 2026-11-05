@@ -36,6 +36,8 @@ export interface LayoutOptions {
   /** a hop's target between two local stops (draw.ts `localStops`), as a share of its evened length (T-2491; 1 or
    * left out for none) */
   local?: number;
+  /** T-2550: regions drawn smaller than this (targets over real lengths) are drawn at it; none where left out */
+  floor?: number;
   roundsA: number;
   roundsB: number;
   /** LSQR iterations a round */
@@ -43,10 +45,22 @@ export interface LayoutOptions {
 }
 
 /** round 2's mockups (artifacts/trainworld/t2146/r2-*.png), for comparison */
-export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room: 1.6, apart: 0.5, lonely: 1, roundsA: 10, roundsB: 30, iters: 400 };
+export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room: 1.6, apart: 0.5, lonely: 1, floor: 0.25, roundsA: 10, roundsB: 30, iters: 400 };
 /** "a little more compact" (Anita on round 2): shorter long hops, thicker strokes against the hops,
  * bundles a little closer (notes/T-2146.md, stage 2) */
-export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, lonely: 0.4, local: 0.4, roundsA: 10, roundsB: 30, iters: 400 };
+const TUNED: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, lonely: 0.4, local: 0.4, floor: 0.25, roundsA: 10, roundsB: 30, iters: 400 };
+
+/** T-2556: the distortion dial, 0 to 1. Each of the tuned options' scale factors (a hop's evened length over its real
+ * one, the lonely and local hops' shares, the sparse regions' floor) is drawn at its d-th power, so 1 is the drawing as
+ * tuned and 0 draws every hop at its real length, the room for bundles, pills and the water's and blocks' gaps aside.
+ * `?distort=` on the page's address sets it for that page. */
+export const DISTORT = 0.8;
+export function dialled(d: number): LayoutOptions {
+  d = Math.min(1, Math.max(0, d));
+  const f = (x: number) => (d === 1 ? x : pow(x, d));
+  return { ...TUNED, alpha: TUNED.alpha + (1 - TUNED.alpha) * (1 - d), lonely: f(TUNED.lonely), local: f(TUNED.local!), floor: f(TUNED.floor!) };
+}
+export const LAYOUT: LayoutOptions = dialled(DISTORT);
 
 /** a segment this near a 45 degree direction is snapped onto it */
 const SNAP_DEG = 11;
@@ -98,9 +112,8 @@ const OPEN_M = 1000;
 const COAST_M = 3000, PAIR_M = 40000, PAIR_N = 4, K_BAY = 1.25, W_SEA = 3, W_SEA_STAGE = 1;
 /** a pair's scale is taken along the shortest way round by track up to PATH_REACH times their distance, at most PATH_M */
 const PATH_REACH = 6, PATH_M = 200000;
-/** T-2550 (`liftSparse`): a region's scale is taken within LIFT_M of each LIFT_CELL square, metres; regions drawn smaller
- * than LIFT_FLOOR (targets over real lengths) are drawn at it */
-const LIFT_M = 60000, LIFT_CELL = 10000, LIFT_FLOOR = 0.25;
+/** T-2550 (`liftSparse`): a region's scale is taken within LIFT_M of each LIFT_CELL square, metres */
+const LIFT_M = 60000, LIFT_CELL = 10000;
 /** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
@@ -557,9 +570,9 @@ function seaTerms(g: DiagramGraph, L: Float64Array, pu: number, sea: LayoutSea):
 
 /** T-2550: big sparse regions drawn by their area more than their stations. A region's scale round each LIFT_CELL
  * square is its hops' targets over their real lengths, weighted by (1 - d^2 / LIFT_M^2)^2 for a hop's middle d from the
- * square's; each hop in a square below LIFT_FLOOR has its target raised by the shortfall. (A hop of L0 has its own
- * length as its target, so the floor is a share of the scale of a core of kilometre hops.) */
-function liftSparse(g: DiagramGraph, L: Float64Array): void {
+ * square's; each hop in a square below the floor (LayoutOptions.floor) has its target raised by the shortfall. (A hop of
+ * L0 has its own length as its target, so the floor is a share of the scale of a core of kilometre hops.) */
+function liftSparse(g: DiagramGraph, L: Float64Array, floor: number): void {
   const m = g.ea.length, RM = LIFT_M;
   const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
   const gl = new Float64Array(m), mx = new Float64Array(m), my = new Float64Array(m), grid = new Map<number, number[]>();
@@ -586,7 +599,7 @@ function liftSparse(g: DiagramGraph, L: Float64Array): void {
     }
     s[e] = v;
   }
-  for (let e = 0; e < m; e++) if (s[e] > 0 && s[e] < LIFT_FLOOR) L[e] *= LIFT_FLOOR / s[e];
+  for (let e = 0; e < m; e++) if (s[e] > 0 && s[e] < floor) L[e] *= floor / s[e];
 }
 
 function prep(g: DiagramGraph, o: LayoutOptions, sea?: LayoutSea | null): Prep {
@@ -648,7 +661,7 @@ function prep(g: DiagramGraph, o: LayoutOptions, sea?: LayoutSea | null): Prep {
     }
   }
   // big sparse regions given room by their area (T-2550), before the water reads the scale round each station
-  liftSparse(g, L);
+  liftSparse(g, L, o.floor ?? 0);
   const seaPairs = sea ? seaTerms(g, L, pu, sea) : new Float64Array(0);
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
@@ -1318,6 +1331,14 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
   // a rebuild: the drawing nearest the last one, where it had the place
   if (prev) {
     for (let v = 0; v < n; v++) if (xyVar[v] >= 0 && !isNaN(prev[v * 2])) (X0[xyVar[v]] = prev[v * 2]), (X0[xyVar[v] + 1] = prev[v * 2 + 1]);
+    // a new end (a line extended, T-2556) starts its routed offset from a neighbour the last drawing placed, not where
+    // the routing put it among places the drawing has since moved from
+    for (let v = 0; v < n; v++) if (xyVar[v] >= 0 && isNaN(prev[v * 2])) for (const e of P.nbr[v]) {
+      const o = P.ea[e] === v ? P.eb[e] : P.ea[e];
+      if (isNaN(prev[o * 2])) continue;
+      (X0[xyVar[v]] = prev[o * 2] + r.x[v] - r.x[o]), (X0[xyVar[v] + 1] = prev[o * 2 + 1] + r.y[v] - r.y[o]);
+      break;
+    }
     for (const pc of ps) {
       const legsOf: [number[], number, number, number][] = [[pc.leg0, pc.a, pc.d0[0], pc.d0[1]]];
       if (pc.d1) legsOf.push([pc.leg1, pc.z, -pc.d1[0], -pc.d1[1]]);

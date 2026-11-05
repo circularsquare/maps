@@ -10,7 +10,7 @@
 // sea open (T-2541).
 
 import type { DiagramGraph } from "../diagram/graph";
-import { LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
+import { dialled, LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
 import { drawing, type Drawing } from "../diagram/draw";
 import { placeNames, type NamePlan } from "../diagram/names";
 import { zoneBorders, type DiagramBorders, type ZoneShape } from "../diagram/borders";
@@ -27,7 +27,7 @@ export type ZoneFrame = [number, number, number];
 /** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
 export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
-  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] } }
+  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; distort?: number; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] } }
   | { kind: "zones"; zones: ZoneOutlines }
   | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
@@ -40,7 +40,7 @@ export type FromDiagram =
 const LAYOUT_SHARE = 0.85;
 
 let last: LastPlaces | null = null;
-let lastOptions: string | undefined;
+let lastOptions = "";
 const outlines = new Map<string, Float64Array[]>(), labels = new Map<string, ZoneLabel>();
 /** zones' place lists as the page sends them (T-2447), places in mercator */
 const towns = new Map<string, ZoneTowns>();
@@ -84,8 +84,9 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   }
   if (m.kind !== "graph") return;
   keep(m.zones ?? []);
-  if (m.options !== lastOptions) last = null;
-  lastOptions = m.options;
+  const opts = `${m.options}|${m.distort}`;
+  if (opts !== lastOptions) last = null;
+  lastOptions = opts;
   // the layout keeps the water on the ground open (T-2541): a first layout waits for the sea, a rebuild takes the last
   // found (its stations near where they were)
   const sea = m.water && m.frame ? (last && seaKnown ? seaKnown.sea : await seaOf(m.graph, m.water.packs, m.water.zones, m.frame)) : null;
@@ -95,7 +96,7 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
     sent = share;
     (self as unknown as Worker).postMessage({ kind: "progress", seq: m.seq, share } satisfies FromDiagram);
   };
-  const layout = layoutDiagram(m.graph, m.options === "r2" ? LAYOUT_R2 : LAYOUT, last, progress && ((s) => progress(s * LAYOUT_SHARE)), sea);
+  const layout = layoutDiagram(m.graph, m.options === "r2" ? LAYOUT_R2 : m.distort === undefined ? LAYOUT : dialled(m.distort), last, progress && ((s) => progress(s * LAYOUT_SHARE)), sea);
   last = lastPlaces(m.graph, layout);
   const t0 = performance.now();
   const d = drawing(m.graph, layout);
