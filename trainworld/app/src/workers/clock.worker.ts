@@ -78,7 +78,10 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const ferry = typeof f.ferry === "number" && Number.isFinite(f.ferry) ? { ferry: tidyHsr(f.ferry) } : {};
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);
-  return { ...faresOf(g, START_FARES), scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
+  // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
+  const curve = faresOf(g, START_FARES);
+  const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
+  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
