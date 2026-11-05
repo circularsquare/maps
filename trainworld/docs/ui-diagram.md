@@ -89,8 +89,8 @@ from the stations' own places. The layout worker makes the borders after the nam
 that arrive after a layout), between blocks as inside them.
 
 - **The region**: on a grid of one pitch, every cell within 5 pitches of a line's casing or a pill; then grown by
-  30 pitches and shrunk by 30 again (never inside the 5), so gaps and bays under about 60 pitches close and the
-  outline keeps well clear of the lines instead of hugging them (T-2488); then every gap
+  50 pitches and shrunk by 50 again (never inside the 5), so gaps and bays under about 100 pitches close and the
+  outline keeps well clear of the lines instead of hugging them (T-2488, T-2491); then every gap
   the network encloses filled. So each zone with stations is a closed outline round its own stations and lines, with
   no holes.
 - **The zones**: each cell takes the zone of the pill nearest it through the region (steps of a cell, straight or
@@ -101,8 +101,9 @@ that arrive after a layout), between blocks as inside them.
   runs at 0, 45 and 90 degrees: from each point the farthest one reachable by one run or two (one straight, one
   diagonal) staying within the point's tolerance of every point between, and moving no pill across. The tolerance is
   the point's clearance less 0.3 pitch, at least 0.7: on the region's edge, clearance from the lines and pills, at
-  most 3; between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius
-  of 3 pitches (less on short runs).
+  most 3, and outward (away from the lines) up to 10, so the edge fills notches and steps with long runs (T-2491);
+  between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius of 3
+  pitches (less on short runs).
 - **Drawn** under everything, the lines' casings cutting it, in the map's outline grey (#73798b) at 0.7 opacity,
   0.2 of a pitch wide; below a device px, a px wide and fainter by its width's share, never below half (the lines'
   rule, T-2408, with a higher floor). One path; a border two zones share is drawn once.
@@ -143,7 +144,8 @@ pill, so they clear its own line); east, west, north and south
 ## City names
 
 `diagram/cityNames.ts` (T-2438). Below a pitch of 1.47 px no station names are drawn; each city block (The layout,
-Blocks) has its name instead, in the station names' font, size, ink and halo, at full opacity. Placed in the layout
+Blocks) has its name instead, in the station names' font, size and halo, in the grey of the map's place names
+(`placeNameInk` in `map/basemap.ts`, each theme's own; T-2492). Placed in the layout
 worker after the borders, at levels k from -22 to -10 (0.16 to 1.24 px), each drawn from it to the next, none below
 the first; past its level a name only shrinks toward its anchor on the box's edge.
 
@@ -213,6 +215,9 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   station within 4 km whose lines share no colour with its own) has 0.4 of its target, at least 4 pitches
   (never more than it had), so the long thin single-line stretches between cities draw short while parallel
   suburban branches and junctions keep theirs. The pitch is set from the targets before this.
+- **Local hops** (T-2491): a hop between two local stops (The drawing, Pills), not lonely, has 0.4 of its target, at
+  least 3 pitches (never more than it had), so a long branch of plain stops is not drawn longer than the core it
+  leaves, while interchanges keep their room. Also after the pitch is set.
 - **Sides** (in A and B, each round): two stations that share no edge and lie nearer in reality than 1.5 times
   either one's mean real hop keep at least their spacing (their half widths plus half the median hop) between
   them along their real bearing (weight 3), so a line of short hops beside one of long hops cannot carry its

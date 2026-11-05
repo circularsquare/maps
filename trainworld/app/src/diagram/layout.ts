@@ -18,6 +18,7 @@
 import type { DiagramGraph } from "./graph";
 import { Terms } from "./lsqr";
 import { atan2, DIRS8 as DIRS, hyp, pow } from "./fmath";
+import { localStops } from "./draw";
 import { BLOCK_GAP, blockHops, crowded, findBlocks, finishBlocks, heldPairs, placeBlocks, samePairs, type Blocks } from "./blocks";
 
 export interface LayoutOptions {
@@ -32,6 +33,9 @@ export interface LayoutOptions {
   apart: number;
   /** a lonely hop's target, as a share of its evened length (T-2289; 1 for none) */
   lonely: number;
+  /** a hop's target between two local stops (draw.ts `localStops`), as a share of its evened length (T-2491; 1 or
+   * left out for none) */
+  local?: number;
   roundsA: number;
   roundsB: number;
   /** LSQR iterations a round */
@@ -42,7 +46,7 @@ export interface LayoutOptions {
 export const LAYOUT_R2: LayoutOptions = { L0: 1000, alpha: 0.35, puDiv: 12, room: 1.6, apart: 0.5, lonely: 1, roundsA: 10, roundsB: 30, iters: 400 };
 /** "a little more compact" (Anita on round 2): shorter long hops, thicker strokes against the hops,
  * bundles a little closer (notes/T-2146.md, stage 2) */
-export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, lonely: 0.4, roundsA: 10, roundsB: 30, iters: 400 };
+export const LAYOUT: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart: 0.5, lonely: 0.4, local: 0.4, roundsA: 10, roundsB: 30, iters: 400 };
 
 /** a segment this near a 45 degree direction is snapped onto it */
 const SNAP_DEG = 11;
@@ -97,6 +101,8 @@ export const URBAN_M = 2500, URBAN_N = 3, ALONE_M = 4000;
 /** A's rounds: the options' up to A_ROUNDS_FROM complexes, rising to A_ROUNDS_MAX at A_ROUNDS_AT (T-2289) */
 const A_ROUNDS_FROM = 2000, A_ROUNDS_AT = 8000, A_ROUNDS_MAX = 40;
 const LONELY_MIN = 4;
+/** a local hop's target is at least this many pitches (or its evened length, where shorter) (T-2491) */
+const LOCAL_MIN = 3;
 /** T-2407: a hop between blocks this many median hops long or more is a segment of its own */
 const LONG_HOP = 4;
 
@@ -197,9 +203,12 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
   }
   // the lonely stretches between cities drawn shorter, after the pitch is set from every hop (T-2289)
   const parts = cityParts(g);
-  if (o.lonely < 1) {
-    const lonely = parts.lonely;
-    for (let e = 0; e < m; e++) if (lonely[e]) L[e] = Math.max(Math.min(L[e], LONELY_MIN * pu), L[e] * o.lonely);
+  const lonely = parts.lonely;
+  if (o.lonely < 1) for (let e = 0; e < m; e++) if (lonely[e]) L[e] = Math.max(Math.min(L[e], LONELY_MIN * pu), L[e] * o.lonely);
+  // runs of plain stops (drawn small) closer together, so a long local branch is not drawn longer than the core (T-2491)
+  if ((o.local ?? 1) < 1) {
+    const small = localStops(g);
+    for (let e = 0; e < m; e++) if (!lonely[e] && small[g.ea[e]] && small[g.eb[e]]) L[e] = Math.max(Math.min(L[e], LOCAL_MIN * pu), L[e] * o.local!);
   }
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);

@@ -19,6 +19,7 @@ import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
 import { placesOfZone } from "../game/placeList";
 import { EARTH_C, toMerc01 } from "../map/geo";
+import { placeNameInk } from "../map/basemap";
 import { FADE_ALPHA, paint, pickAt, type DiagramFocus, type Drawing } from "./draw";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
 import { cityBox, paintCityNames } from "./cityNames";
@@ -423,7 +424,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
     // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
     const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR };
+    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR };
   };
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
@@ -463,7 +464,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
     // far out, the city names in place of the station names (T-2438)
     const cn = shown.names.cities;
-    if (cn) paintCityNames(ctx, cn, shown.d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font });
+    if (cn) paintCityNames(ctx, cn, shown.d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, halo: t.bg, font: t.font });
   };
   new ResizeObserver(() => draw()).observe(canvas);
   effect(() => {
@@ -634,7 +635,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 
 /** The whole diagram on a canvas of its own, unselected, at the largest names' level of at most
  * PICTURE_PITCH_PX a pitch that keeps it within PICTURE_MAX_SIDE and PICTURE_MAX_AREA. */
-function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; font: string; edge?: string; border?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
+function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; place: string; font: string; edge?: string; border?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
   const d = s.d, levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));
@@ -681,6 +682,6 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
   const mx = (box[0] + box[2]) / 2, my = (box[1] + box[3]) / 2;
   paint(ctx, d, W, H, mx, my, sc, t);
   paintNames(ctx, s.names, d, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
-  if (cn) paintCityNames(ctx, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
+  if (cn) paintCityNames(ctx, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.place, halo: t.bg, font: t.font });
   return { canvas: out, pitchPx: sc * d.pitch };
 }

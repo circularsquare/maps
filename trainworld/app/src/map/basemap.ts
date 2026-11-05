@@ -29,6 +29,10 @@ function mix(a: string, b: string, t: number) {
 
 type Paint = Record<string, Record<string, unknown>>;
 
+/** The basemap's label colour in a theme, a little stronger than the palette's label grey, which the halo used to
+ * lift off water and shade; the network diagram's city names share it (T-2492). */
+export const placeNameInk = (s: Shade) => (s === "dark" ? mix(SHADES.dark.label, "#ffffff", 0.3) : mix(SHADES.light.label, "#000000", 0.35));
+
 /** The three road weights (T-676), line width in pixels by zoom, the same in both themes. Roads
  * are one colour with no casing, so only these tell a motorway from a lane. */
 const zoomWidth = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops];
@@ -256,9 +260,8 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
         layout["text-field"] = guardEnglishName(layout["text-field"]);
         // T-1692: plain one-colour text, no halo (a halo in the land colour shows as an outline over shade)
         paint["text-halo-width"] = 0;
-        // a little stronger than the palette's label grey, which the halo used to lift off water and shade
-        L["text-color"] = mix(SHADES.light.label, "#000000", 0.35);
-        D["text-color"] = mix(SHADES.dark.label, "#ffffff", 0.3);
+        L["text-color"] = placeNameInk("light");
+        D["text-color"] = placeNameInk("dark");
         // T-1692: fewer labels at once, by a wider collision box
         layout["text-padding"] = Math.max(Number(layout["text-padding"]) || 0, layer.id.startsWith("label_c") || layer.id === "label_town" ? PLACE_PADDING : TEXT_PADDING);
       }

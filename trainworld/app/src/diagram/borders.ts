@@ -30,15 +30,18 @@ export interface Run { p: Float64Array; left: number; right: number; closed: boo
 const REACH_M = 40_000;
 /** in pitches: the grid's cell, and how far the region reaches past the lines' casings and the pills */
 const CELL = 1, MARGIN = 5;
-/** gaps and bays narrower than about twice this many pitches are closed (T-2488: wide, so outlines don't hug) */
-const CLOSE = 30;
+/** gaps and bays narrower than about twice this many pitches are closed (T-2488, T-2491: wide, so outlines neither hug
+ * the lines nor follow every branch) */
+const CLOSE = 50;
 /** a fitted border strays from the grid's by at most its clearance from the lines and pills less CLEAR, within
  * TOL_MIN and TOL_MAX pitches (TOL_EDGE on the region's edge, so its ends and corners keep their shape) */
 const CLEAR = 0.3, TOL_MIN = 0.7, TOL_MAX = 12, TOL_EDGE = 3;
+/** on the region's edge a fitted border may pass this many pitches further out than the grid's (T-2491) */
+const TOL_OUT = 10;
 /** corners are rounded with this radius, pitches */
 export const BORDER_RADIUS = 3;
 /** the region's margin and closing, the edge's tolerance and the corners' radius, pitches (checks vary them) */
-export interface BorderOpts { margin: number; close: number; tolEdge: number; radius: number }
+export interface BorderOpts { margin: number; close: number; tolEdge: number; tolOut: number; radius: number }
 /** the grid's tiles, cells a side */
 const SHIFT = 5, T = 1 << SHIFT, TT = T * T;
 /** the eight steps to a neighbouring cell (the four sides first), their lengths (5 and 7, about 1 and the root of 2)
@@ -54,7 +57,7 @@ const FAR = 65535;
 /** The borders of the zones holding stations, in the drawing `d` of `g` laid out at `x`, `y`. */
 export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, d: Drawing, shapes: ZoneShape[], detail = false, o: Partial<BorderOpts> = {}): DiagramBorders {
   const n = g.key.length;
-  const MG = o.margin ?? MARGIN, CL = o.close ?? CLOSE, TE = o.tolEdge ?? TOL_EDGE, RAD = o.radius ?? BORDER_RADIUS;
+  const MG = o.margin ?? MARGIN, CL = o.close ?? CLOSE, TE = o.tolEdge ?? TOL_EDGE, TO = o.tolOut ?? TOL_OUT, RAD = o.radius ?? BORDER_RADIUS;
   const zoneAll = stationZones(g, shapes);
   const drawnOf = new Int32Array(shapes.length).fill(-1), zones: string[] = [];
   for (let i = 0; i < n; i++) if (zoneAll[i] >= 0 && drawnOf[zoneAll[i]] < 0) (drawnOf[zoneAll[i]] = zones.length), zones.push(shapes[zoneAll[i]].id);
@@ -334,10 +337,11 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
     // points at the edges' middles, the corners where borders meet at the ends; the labels as e0 runs, which is the
     // way the run goes
     const order: number[] = [...back.map(([e]) => e).reverse(), e0, ...fwd.map(([e]) => e)];
-    const px: number[] = [], py: number[] = [], tol: number[] = [];
-    const corner = (v: number) => (px.push(cx(v)), py.push(cy(v)), tol.push(0));
+    const edge = el[e0] === OUT || er[e0] === OUT;
+    const px: number[] = [], py: number[] = [], tol: number[] = [], tolOut: number[] = [];
+    const corner = (v: number) => (px.push(cx(v)), py.push(cy(v)), tol.push(0), tolOut.push(0));
     if (!closed) corner(back.length ? back[back.length - 1][1] : ea[e0]);
-    for (const e of order) px.push((cx(ea[e]) + cx(eb[e])) / 2), py.push((cy(ea[e]) + cy(eb[e])) / 2), tol.push(tolOf(clr[e], el[e0] === OUT || er[e0] === OUT));
+    for (const e of order) px.push((cx(ea[e]) + cx(eb[e])) / 2), py.push((cy(ea[e]) + cy(eb[e])) / 2), tol.push(tolOf(clr[e], edge)), tolOut.push(TO * pitch);
     if (!closed) corner(fwd.length ? fwd[fwd.length - 1][1] : eb[e0]);
     let v: Float64Array;
     if (closed) {
@@ -346,8 +350,8 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
       for (let k = 1; k < px.length; k++) if (px[k] + py[k] < px[s] + py[s]) s = k;
       const rot = (a: number[]) => [...a.slice(s), ...a.slice(0, s + 1)];
       const qx = rot(px), qy = rot(py);
-      v = fitOcti(qx, qy, rot(tol), keepsSides(qx, qy));
-    } else v = fitOcti(px, py, tol, keepsSides(px, py));
+      v = fitOcti(qx, qy, rot(tol), keepsSides(qx, qy), edge ? { tol: rot(tolOut), left: el[e0] === OUT } : undefined);
+    } else v = fitOcti(px, py, tol, keepsSides(px, py), edge ? { tol: tolOut, left: el[e0] === OUT } : undefined);
     const c0 = cmds.length;
     rounded(v, closed, RAD * pitch, cmds);
     runs.push({ p: v, left: el[e0], right: er[e0], closed, c: [c0, cmds.length] });
@@ -450,7 +454,7 @@ function span(ax: number, ay: number, bx: number, by: number, rho: number, yc: n
 /** A polyline through px, py fitted with runs at 0, 45 and 90 degrees, its ends kept: from each point, the farthest
  * point reachable by one run or two (one straight, one diagonal) passing within `tol` of every point between (and
  * that `keeps` allows); runs going on the same way joined. Vertices as x, y pairs. */
-export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: number, j: number, bx: number, by: number) => boolean): Float64Array {
+export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: number, j: number, bx: number, by: number) => boolean, outer?: { tol: number[]; left: boolean }): Float64Array {
   const m = px.length, out: number[] = [px[0], py[0]];
   let dirX = 0, dirY = 0;
   /** the ways from point i to point j (one run, or a bend at bx, by), each that fits */
@@ -485,12 +489,18 @@ export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: n
     const bent = bx === bx;
     let worst = 0, bendNear = Infinity, bendTol = 0;
     for (let k = i + 1; k < j; k++) {
-      let e = bent ? Math.min(segD(px[k], py[k], px[i], py[i], bx, by), segD(px[k], py[k], bx, by, px[j], py[j])) : segD(px[k], py[k], px[i], py[i], px[j], py[j]);
-      if (e > tol[k]) return -1;
-      worst = Math.max(worst, e / tol[k]);
+      const e1 = segD(px[k], py[k], px[i], py[i], bent ? bx : px[j], bent ? by : py[j]), e2 = bent ? segD(px[k], py[k], bx, by, px[j], py[j]) : Infinity;
+      let e = Math.min(e1, e2), t = tol[k];
+      // on the region's edge the way may pass further out than in: it fills notches, never nears the lines (T-2491)
+      if (outer && e > t) {
+        const [ax, ay, cx, cy] = e1 <= e2 ? [px[i], py[i], bent ? bx : px[j], bent ? by : py[j]] : [bx, by, px[j], py[j]];
+        if (((cx - ax) * (py[k] - ay) - (cy - ay) * (px[k] - ax) < 0) === outer.left) t = outer.tol[k];
+      }
+      if (e > t) return -1;
+      worst = Math.max(worst, e / t);
       if (bent) {
         e = hyp(px[k] - bx, py[k] - by);
-        if (e < bendNear) (bendNear = e), (bendTol = tol[k]);
+        if (e < bendNear) (bendNear = e), (bendTol = outer ? Math.max(tol[k], outer.tol[k]) : tol[k]);
       }
     }
     if (bent && j > i + 1 && bendNear > bendTol + 1e-9) return -1;
