@@ -27,6 +27,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   North America save's import+reload hit the demand cache? loadnotes saw bubbles only at ~193 s) and T-2552 (load bar
   model: 97% early then creeps, other zones' bars sit at 99%, "A few seconds left" for 22 s).
 
+- **diagrivers** (agent a1fd51edf9f661771, Opus, tree .tw-trees/diagrivers from 2c951d73, port 6193): T-2528 dial
+  default 0.5 (Anita: "i kidna like 0.5"), water width follows the drawn land (Hudson/East River ~1/4 of Manhattan,
+  no collapse downstream, outskirt rivers thin), Long Island Sound as open water; Vignelli map as reference.
+  notes/T-2528.md has her words. Anita ~16:30: "yes we can carry on" (maps-17 continues past 500k).
+
 ## After Europe's join (in this order)
 1. Rebuild 8800 with scratch snapbuild.cmd (first use of the dist-new swap, T-2483), claim 4 cores, smoke light and
    dark; expect 12,515,598 once europe's market-rows.json is committed; check no water-mask RangeError. Ping Anita
@@ -100,7 +105,6 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- Diagram distortion: keep 0.8 or pick another (review/diagram-distort-japan.png, diagram-distort-nyc.png)?
 
 ## Lessons from this run
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
