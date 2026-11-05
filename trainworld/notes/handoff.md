@@ -70,6 +70,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2532 (edit bubbles wait for final, worker change), T-2533 (after cache hit solve zone in view first) open.
   **loadnotes** (Opus, tree from 810f0b9b, port 6194): T-2523 loading note on a waiting click, T-2524 progress hover,
   stall sign and stall profile (notes/T-2524.md).
+- Anita ~13:40 asked about trainworld/data's 95 GiB (102.4 GB). Filed T-2554; **diskprune** (Opus, main tree, no
+  app/sim edits): what each item is for, safe deletions (raw now; work/ and frozen/ only after join PID 6408 ends;
+  never pre-T2302), measured compression proposal. Next free id T-2555.
 - diagstraits LANDED 332d628b (agent at 570k, retired): T-2541 layout reads the ground sea, water hops >= 2x real,
   bay pairs kept apart; no islands merged, Seikan 0.27 -> 0.87, Boso scale 0.125 -> 0.30 of Kanto core; Hokkaido IoU
   0.47 -> 0.35 (T-2550); T-2551 NYC rivers, t2405 LIRR 1 -> 3 hidden, channel in 2 pieces. T-2542 checks use save frame.
