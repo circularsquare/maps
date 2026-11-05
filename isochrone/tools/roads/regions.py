@@ -52,20 +52,29 @@ def main():
             print("drop %s (%.0f%% covered by smaller extracts)" % (i, 100 * cover / g.area))
             continue
         kept.append(i)
-    kept += [i for i in EXTRA if i in by]
+    for i in EXTRA:
+        if i in by:
+            geo[i] = shape(by[i]["geometry"]).buffer(0)
+            kept.append(i)
     rows = []
+    # sizes already known (an earlier list) are kept: Geofabrik can take 30 s a HEAD when busy
+    known = {r["id"]: r["bytes"] for r in json.load(open(OUT))} if os.path.exists(OUT) else {}
     for i in kept:
         url = by[i]["properties"]["urls"]["pbf"]
-        try:
-            size = int(get(url, "HEAD").headers.get("Content-Length", 0))
-        except Exception as e:  # noqa: BLE001
-            print("HEAD failed for %s: %s" % (i, e))
-            size = 0
+        if known.get(i):
+            size = known[i]
+        else:
+            try:
+                size = int(get(url, "HEAD").headers.get("Content-Length", 0))
+            except Exception as e:  # noqa: BLE001
+                print("HEAD failed for %s: %s" % (i, e))
+                size = 0
         c = geo[i].centroid
         b = geo[i].bounds
         rows.append({"id": i, "url": url, "bytes": size, "lon": round(c.x, 2), "lat": round(c.y, 2),
                      "bounds": [round(v, 2) for v in b]})
-        time.sleep(0.2)
+        if i not in known:
+            time.sleep(0.2)
     rows.sort(key=lambda r: (r["lon"] // 30, -r["lat"]))
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:

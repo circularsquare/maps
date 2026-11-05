@@ -56,7 +56,7 @@ Fine level (`docs/fine.md`), into `data/fine/` (gitignored):
 |---|---|---|
 | `tools/fine/build.py <region>` | 1 x 1 degree L0.1 tiles: LC100 class and the L1 terrain factor (`.land`), OSM road bits from the Geofabrik extracts in `data/raw/osm/` (`.roads`); `index` rewrites `index.json`. Regions in `REGIONS` | Cluj 3.5 min, New York ~12 min |
 
-Roads (`docs/roads.md`), into `data/roads/` (gitignored): `tools/roads/regions.py` (the world's Geofabrik extracts, `regions.json`), `fetch.py` (download with md5 check), `build.py extract|reduce` (100 m road bits per tile, OR-merged across extracts; 1 km counts and kinds). ~5 min a GB of extract on one core.
+Roads (`docs/roads.md`), into `data/roads/` (gitignored): `tools/roads/regions.py` (the world's Geofabrik extracts, `regions.json`), `fetch.py` (download with md5 check), `build.py extract|reduce` (100 m road bits per tile, OR-merged across extracts; 1 km counts and kinds), `world.py` (the world pass: download, read and delete each extract in turn, two on disk at most, done.txt resume, stops under 6 GB free). ~5 min a GB of extract on one core.
 
 Canoe water and sea (`docs/canoe.md` 4, layouts in `notes/T-021.md`), into `data/canoe/`:
 

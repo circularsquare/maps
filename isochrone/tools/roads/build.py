@@ -51,6 +51,32 @@ def write_gz(path, *arrays):
     os.replace(tmp, path)
 
 
+class TileLock:
+    """One writer at a time per tile file, so two extracts read at once never lose each other's
+    roads in a shared border tile. A lock left by a killed process is broken after STALE s."""
+    STALE = 600
+
+    def __init__(self, path):
+        self.lock = path + ".lock"
+
+    def __enter__(self):
+        while True:
+            try:
+                os.close(os.open(self.lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+                return self
+            except FileExistsError:
+                try:
+                    if time.time() - os.path.getmtime(self.lock) > self.STALE:
+                        os.remove(self.lock)
+                        continue
+                except OSError:
+                    pass
+                time.sleep(0.2)
+
+    def __exit__(self, *exc):
+        os.remove(self.lock)
+
+
 class Tiles:
     """Road bits of the tiles one extract touches, in memory until flushed."""
 
@@ -120,9 +146,10 @@ class Tiles:
                 if not (w <= lon < e and s <= lat < nn):
                     continue
             path = os.path.join(BITS, name + ".bits.gz")
-            if os.path.exists(path):
-                arr = arr | read_gz(path, (N * N,))
-            write_gz(path, arr)
+            with TileLock(path):
+                if os.path.exists(path):
+                    arr = arr | read_gz(path, (N * N,))
+                write_gz(path, arr)
             n += 1
         self.t = {}
         return n

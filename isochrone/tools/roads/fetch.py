@@ -29,8 +29,8 @@ def md5_of(path):
     return h.hexdigest()
 
 
-def fetch(region):
-    name = region.rstrip("/").split("/")[-1]
+def fetch(region, name=None):
+    name = name or region.rstrip("/").split("/")[-1]
     url = BASE + region + "-latest.osm.pbf"
     path = os.path.join(OSM, name + ".osm.pbf")
     want = get(url + ".md5").read().decode().split()[0]
