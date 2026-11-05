@@ -6,7 +6,7 @@
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout, Piece } from "./layout";
 import { atan2, DIRS8, hyp } from "./fmath";
-import { LEVELS, type DiagramBorders } from "./borders";
+import type { DiagramBorders } from "./borders";
 
 /** a stroke is this share of a pitch wide; the rest is the gap between neighbours */
 export const STROKE_SHARE = 5 / 6.4;
@@ -62,9 +62,9 @@ export interface Drawing {
   /** per graph node, 1 for a local stop, drawn small (`localStops`) */
   small: Uint8Array;
   box: [number, number, number, number];
-  /** the zones' faint borders (borders.ts), set in the layout worker after the names; each level's Path2D made on
-   * the page when first painted */
-  borders?: DiagramBorders & { paths?: Path2D[] };
+  /** the zones' borders (borders.ts), set in the layout worker after the names; the Path2D made on the page when
+   * first painted */
+  borders?: DiagramBorders & { path?: Path2D };
 }
 
 /** a polyline offset left by `o`, one point per point (mitred, capped) */
@@ -463,19 +463,8 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, small: localStops(g), box: [x0, y0, x1, y1] };
 }
 
-/** a line's commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy to x, y */
-/** polylines as x, y pairs with NaN between them */
-function polyPath(c: Float64Array): Path2D {
-  const p = new Path2D();
-  let pen = false;
-  for (let i = 0; i + 1 < c.length; i += 2) {
-    if (c[i] !== c[i]) pen = false;
-    else if (pen) p.lineTo(c[i], c[i + 1]);
-    else p.moveTo(c[i], c[i + 1]), (pen = true);
-  }
-  return p;
-}
-
+/** a line's (or the borders') commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy
+ * to x, y */
 function toPath(c: Float64Array): Path2D {
   const p = new Path2D();
   for (let i = 0; i < c.length; ) {
@@ -577,11 +566,12 @@ function stopOn(r: Ribbon, i0: number, i1: number, cx: number, cy: number, ax: [
 /** `edge`: a thin outline round a pill's ring, so the ink ring shows on a dark background (T-2272) */
 export interface DiagramTheme {
   bg: string; ink: string; pill: string; selected: string; edge?: string;
-  /** the zones' borders' colour, and device px per CSS px (their width is BORDER_PX CSS px) */
-  border?: string; dpr?: number;
+  /** the zones' borders' colour */
+  border?: string;
 }
-/** zone borders (T-2168): CSS px wide, and their opacity where full */
-const BORDER_PX = 1, BORDER_ALPHA = 0.5;
+/** zone borders (T-2464): this share of a pitch wide at this opacity; below a device px, a px wide and fainter by its
+ * width's share, though never below BORDER_THIN of it (the lines' rule, T-2408, with a higher floor) */
+const BORDER_W = 0.2, BORDER_ALPHA = 0.7, BORDER_THIN = 0.5;
 /** the edge's width, in stroke widths */
 const EDGE_W = 0.16;
 
@@ -613,16 +603,14 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   ctx.setTransform(scale, 0, 0, -scale, w / 2 - cx * scale, h / 2 + cy * scale);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  // the zones' borders under everything, fading away from the stations; the lines' casings cut them
+  // the zones' borders under everything; the lines' casings cut them
   const bd = d.borders;
-  if (bd && theme.border) {
+  if (bd && theme.border && bd.cmds.length) {
     ctx.strokeStyle = theme.border;
-    ctx.lineWidth = (BORDER_PX * (theme.dpr ?? 1)) / scale;
-    const paths = (bd.paths ??= bd.levels.map(polyPath));
-    for (let k = 0; k < LEVELS; k++) {
-      ctx.globalAlpha = (BORDER_ALPHA * (k + 1)) / LEVELS;
-      if (bd.levels[k].length) ctx.stroke(paths[k]);
-    }
+    const px = BORDER_W * d.pitch * scale;
+    ctx.lineWidth = px < 1 ? 1 / scale : BORDER_W * d.pitch;
+    ctx.globalAlpha = BORDER_ALPHA * (px < 1 ? Math.max(BORDER_THIN, px) : 1);
+    ctx.stroke((bd.path ??= toPath(bd.cmds)));
     ctx.globalAlpha = 1;
   }
   // casings first, so neighbours sit a gap apart and bundles read as one ribbon

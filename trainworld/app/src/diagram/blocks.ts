@@ -37,7 +37,7 @@ export interface Block {
   /** how far the stage moved it, layout units */
   move: [number, number];
   /** its stations' real places to drawn ones, by least squares: x' = a x + b y + c, y' = d x + e y + f, with
-   * a to f in that order (T-2168's outlines and T-2169's water warp by it; notes/T-2407.md) */
+   * a to f in that order (for T-2169's water; notes/T-2407.md) */
   fit: [number, number, number, number, number, number];
 }
 

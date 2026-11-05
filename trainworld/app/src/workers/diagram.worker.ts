@@ -2,7 +2,7 @@
 // (diagram/draw.ts) and names (diagram/names.ts) out. Each layout starts from the last one's places, so
 // an edit moves little. The page sends one graph at a time (diagram/view.ts keeps only the newest
 // waiting), with its stations' names measured in the page's font. A first layout posts how far it has
-// got, for the loading bar (T-2235). The zones' borders (diagram/borders.ts, T-2168) and the city names
+// got, for the loading bar (T-2235). The zones' borders (diagram/borders.ts, T-2464) and the city names
 // far out (diagram/cityNames.ts, T-2438) are made after the names from the zone outlines and names the
 // page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone.
 
@@ -36,7 +36,7 @@ const outlines = new Map<string, Float64Array[]>(), labels = new Map<string, Zon
 let shown: { seq: number; graph: DiagramGraph; layout: DiagramLayout; d: Drawing; fontPx: number; frame?: ZoneFrame } | null = null;
 
 /** the borders of the zones the page has sent, in the graph's frame; undefined without both */
-function borders(graph: DiagramGraph, layout: DiagramLayout, pitch: number, frame?: ZoneFrame): DiagramBorders | undefined {
+function borders(graph: DiagramGraph, layout: DiagramLayout, d: Drawing, frame?: ZoneFrame): DiagramBorders | undefined {
   if (!frame || !outlines.size) return undefined;
   const [fx, fy, k] = frame, shapes: ZoneShape[] = [];
   for (const [id, rings] of outlines) shapes.push({ id, rings: rings.map((r) => {
@@ -44,7 +44,7 @@ function borders(graph: DiagramGraph, layout: DiagramLayout, pitch: number, fram
     for (let i = 0; i < r.length; i += 2) (out[i] = (r[i] - fx) * k), (out[i + 1] = -(r[i + 1] - fy) * k);
     return out;
   }) });
-  return zoneBorders(graph, layout.x, layout.y, layout.blocks, pitch, shapes);
+  return zoneBorders(graph, layout.x, layout.y, d, shapes);
 }
 
 /** the city names, by the zones the borders found */
@@ -59,7 +59,7 @@ self.onmessage = (e: MessageEvent<ToDiagram>) => {
   const m = e.data;
   if (m.kind === "zones") {
     keep(m.zones);
-    const s = shown, b = s && borders(s.graph, s.layout, s.d.pitch, s.frame);
+    const s = shown, b = s && borders(s.graph, s.layout, s.d, s.frame);
     if (b) (self as unknown as Worker).postMessage({ kind: "borders", seq: s!.seq, borders: b, cities: cities(s!.layout, s!.d, b, s!.fontPx) } satisfies FromDiagram);
     return;
   }
@@ -80,7 +80,7 @@ self.onmessage = (e: MessageEvent<ToDiagram>) => {
   const t1 = performance.now();
   const names = placeNames(m.graph, layout, d, m.names.text, m.names.width, m.names.width2, m.names.fontPx, undefined, progress && ((s) => progress(LAYOUT_SHARE + s * (1 - LAYOUT_SHARE))));
   const t2 = performance.now();
-  d.borders = borders(m.graph, layout, d.pitch, m.frame);
+  d.borders = borders(m.graph, layout, d, m.frame);
   const t3 = performance.now();
   if (d.borders) names.cities = cities(layout, d, d.borders, m.names.fontPx);
   shown = { seq: m.seq, graph: m.graph, layout, d, fontPx: m.names.fontPx, frame: m.frame };

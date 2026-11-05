@@ -2,8 +2,8 @@
 
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
-camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' faint borders (T-2168;
-notes/T-2168.md) and city names far out (T-2438); water is T-2169.
+camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' borders (T-2464;
+notes/T-2464.md) and city names far out (T-2438); water is T-2169.
 
 ## The button and key M
 
@@ -81,24 +81,30 @@ made a Path2D on the page when first painted.
 
 ## Zone borders
 
-`diagram/borders.ts`, `diagram/warp.ts` (T-2168). Each zone holding a station has its coarse outline (the map's
-own, `packs/outlines.json`) drawn under everything, in the map's outline grey (#73798b) a CSS px wide at half
-opacity, the lines' casings cutting it. A station's zone is the outline holding it, else the nearest within
-40 km. The page sends the outlines of the zones near the network once each, in mercator, with the graph's frame
-worked out from the stations' own places; the layout worker draws them after the names (and again, alone, for
-outlines that arrive after a layout). A border two zones share is drawn once.
+`diagram/borders.ts` (T-2464; notes/T-2464.md). The borders are decided in the drawing, the way the Tube map draws
+fare zones: a border says which drawn stations are in which zone, not where the ground boundary runs. A station's
+zone is the outline holding it (the map's coarse outlines, `packs/outlines.json`), else the nearest within 40 km;
+the page sends the outlines of the zones near the network once each, in mercator, with the graph's frame worked out
+from the stations' own places. The layout worker makes the borders after the names (and again, alone, for outlines
+that arrive after a layout), between blocks as inside them.
 
-- **The warp**: a real place goes where the blend of its 8 nearest stations puts it, weights 1/(d^2 + 50 m^2)^2,
-  each station carrying it by its own linear map (its hops' drawn vectors against their real ones, held toward
-  their drawn-to-real scale) for at most 20 pitches. So beside a station a border keeps the side it had in
-  reality, and between stations it stretches as the drawing does; one function covers the whole drawing, blocks
-  and gaps alike.
-- **Where it shows**: full within 6 pitches of a drawn station and in reality within the nearest station's median
-  hop (at least 1.5 km); gone by 16 pitches and twice that distance, in four steps. Only the blocks' stations
-  count (every station when there are no blocks): between blocks the drawing moves stations too far from their
-  real places for a border to keep its sides, so borders show inside blocks only.
-- **Shape**: densified to at most 0.75 pitch drawn and 500 m real, simplified within 0.6 pitch, corners cut
-  twice. Borders follow the layout, so they move only as the stations near them move.
+- **The region**: on a grid of one pitch, every cell within 2 pitches of a line's casing or a pill; then grown by
+  4 pitches and shrunk by 4 again (never inside the 2), so gaps and bays under about 8 pitches close; then every gap
+  the network encloses filled. So each zone with stations is a closed outline round its own stations and lines, with
+  no holes.
+- **The zones**: each cell takes the zone of the pill nearest it through the region (steps of a cell, straight or
+  diagonal, from the cells under each pill), so every station is on its own zone's side and a line leaving a zone
+  crosses the border between its two stations, near the middle. A station passed and never stopped at has no pill
+  and no say.
+- **Shape**: the grid's boundaries, each run between the points where borders meet traced once, are fitted with
+  runs at 0, 45 and 90 degrees: from each point the farthest one reachable by one run or two (one straight, one
+  diagonal) staying within the point's tolerance of every point between, and moving no pill across. The tolerance is
+  the point's clearance less 0.3 pitch, at least 0.7: on the region's edge, clearance from the lines and pills, at
+  most 0.8; between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius
+  of 2 pitches (less on short runs).
+- **Drawn** under everything, the lines' casings cutting it, in the map's outline grey (#73798b) at 0.7 opacity,
+  0.2 of a pitch wide; below a device px, a px wide and fainter by its width's share, never below half (the lines'
+  rule, T-2408, with a higher floor). One path; a border two zones share is drawn once.
 
 ## Names
 
@@ -264,7 +270,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   overlap: each hop and link the last layout had is held as it is drawn, the new ones get their targets, and
   boxes within the gap but not overlapping at the start are left so; each block's last places, B's and the
   drawing's, move by the block's move, so an edit inside a city moves no block.
-- **Exposed** (`layout.blocks`, for the zone borders and T-2169's water): per node its block (or none), per
+- **Exposed** (`layout.blocks`, for the city names and T-2169's water): per node its block (or none), per
   block its drawn box, its move, and an affine fit from real places to drawn ones over its stations.
 
 `LAYOUT_R2` keeps round 2's options (alpha 0.35, pitch the median hop over 12, edges 1.6 half widths).
