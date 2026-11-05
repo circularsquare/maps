@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2435 t325 bare check failing (2026-11-04, agent barecheck, tree .tw-trees/barecheck): broken by 8dc8961f (T-2215), whose `bare` answer put every period's No route legs in the first solving worker's part (sums off in the last bit) and sent one empty buffer twice; new `cell_unreach_mask_day` gives each part its own periods'. Check passes.
+- T-2452 Track displays for bus and ferry lines (2026-11-04, agent busviews, tree .tw-trees/busviews): Speed and Profit colour their routes (own width and dashes kept), hover rows say "bus"/"boat"; Line and Traffic already did (T-2274). Bus station-upkeep share fixed to match `line_upkeep`. checks/t2452-bus-views.mjs.
+- T-2453 Selected city's demand first (2026-11-04, agent cityfirst, tree .tw-trees/cityfirst): the city view's zone goes second in the downloads, opens and cluster order; its figures and trip-length graph come at its cluster's round 0, Tokyo save Seoul 29-35 s after selecting against 64-79 s; settled figures the same to the bit. `?perfOff=selected`. notes/T-2453.md; follow-ups T-2458, T-2459.
 - T-2451 Bus route legs only along roads (2026-11-04, agent ferrybus, tree .tw-trees/ferrybus): a click, drag or delete the roads do not reach is refused with the reason; detour cap 3x or +1 km; old straight legs re-searched on Edit route. Takes in T-2178; checks/t2451-bus-refusals.mjs.
 - T-2178 Bus legs over water refused (2026-11-04): done by T-2451, which refuses every leg off the roads.
 - T-1501 Cue for straight bus legs. Abandoned 2026-11-04: since T-2451 the tool draws no straight legs; only saves from before it hold any.

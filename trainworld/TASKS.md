@@ -89,8 +89,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 ## Interface
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
-- T-2452 [P3] The Line, Traffic, Speed and Profit track displays for bus and ferry lines too (T-2411's later stage). Open; taking, 2026-11-04, agent busviews.
-- T-2453 [P2] Demand loads the cities selected in the city view first, so their figures (the trip-length breakdown) come before others'. Measured (the delay is mostly the graph waiting for a final, not order); build proposed, waiting on maps-17; agent cityfirst. notes/T-2453.md.
+- T-2458 [P3] A zone selected in the city view during a load is solved coarse by the load's solve and refined only by a second whole solve after its final (Tokyo save: Seoul selected 8 s before the solve was sent, fine figures about 6 s after the final). Pick its level before the load's solve goes. notes/T-2453.md "Left as they are". Open.
+- T-2459 [P3] During a load a selected zone in another cluster than the zone in view's shows only at the second group's final (world save: Amsterdam 10.9 s, no sooner than before T-2453). When the focus pool already has the zone in view, solve the selected zone's cluster ahead instead; the hold would then need to count the focus pool's final. Measure first. notes/T-2453.md. Open.
 Anita's chat 2026-11-04 ~17:10 (verbatim in notes/todo-2026-11-04h.md; briefs quote it word for word):
 - T-2447 [P3] Network diagram city names: a block in a zone a bigger block already names (Japan: four more Nagano blocks, two Tokyo, two Nagasaki, two Shizuoka) goes unnamed; name it by its own place (a town from the zone's place list nearest the block, or its biggest station's town). notes/T-2438.md. Open.
 Anita's notes 2026-11-04 late afternoon (verbatim in notes/todo-2026-11-04g.md; briefs quote it word for word):
@@ -215,7 +215,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-2384 [P3] Remove the Drives view (Anita 2026-11-04: "yes we can remove drives and close it. i cant see a way to make it look nic, honestly"): `DRIVES_FEATURE` (game/ui.ts), map/driveArcs.ts, game/drives.ts, demandSums.ts's drives groupings, the client's `driveArcs` query and its sim tables, docs/demand-views.md "Car trips by pair of squares". Only the view: the pipeline's market drives (drive times between zones) stay. notes/T-2360.md "Drives". After the UI trees land; own tree (sim). Open.
 - T-2374 [P3] Cleanup A7: splits of demandClient.ts, clock.worker.ts, demand.worker.ts, renderer.ts (tools.ts optional), one agent per file, after T-2371 and T-2372. Open.
 - T-2375 [P3] Cleanup A9: main.ts's debug probes, one URL-parameter module, unused CSS, tsconfig `noUnused*`. Last of the app. Leftovers from T-2369 in notes/T-2375.md. Open.
-- T-2435 [P3] `checks/t325-bare-check.mjs` fails "everyday legs, day 0, worker 0" on master 1e34ad36 (found by T-2369, same with and without its changes): find which landing broke it and fix the check or the code. Open.
 - T-2377 [P3] Cleanup D5: trainworld/CLAUDE.md cut from ~3,570 to ~2,400 words, orchestrator text to docs/orchestrating.md. Agents decide the reorg (Anita 2026-11-04: "feel free to make decisions among yourselves regarding reorg"); show her the result after. Open.
 - T-2378 [P3] Cleanup D6: DECISIONS.md and ARCHIVE.md split by month, the lint capping entry length. At a quiet moment. Open.
 - T-2379 [P3] Cleanup E2: sim small items (10 uncalled WASM exports to plain impls, ~820 lines of ignored probes, `api.rs` clone, slips). Own tree. Open.
