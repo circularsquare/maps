@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2555 Diagram costs after T-2550 (2026-11-05, done by T-2556): at the dial's 0.8 the Tokyo capture's pill overlaps 5 -> 0, New York close pairs 2 -> 0, Tokyo's rebuild move passes, crossings kept 126 -> 142 of 253. notes/T-2556.md.
+- T-2556 Diagram distortion dial (2026-11-05, agent diagdial, tree): `DISTORT` (layout.ts; `?distort=` per page) takes the hop evening, lonely and local shares and sparse floor to its power; set at 0.8, Hokkaido 0.15 -> 0.18 of Kanto's scale. Also a rebuild's extended line end fixed (T-2417 passes). notes/T-2556.md.
 - T-2524 The focused city's load: progress hover, stall sign, profile (2026-11-05, agent loadnotes, tree): bars' hovers give the stage and time left, or "No progress for 1 min" after 90 s with nothing arriving. Profile: no stall, workers 90-100% busy; the bar's model runs ahead (T-2552), periods unbalanced (T-2553). notes/T-2524.md.
 - T-2523 A clicked bubble waiting with no note (2026-11-05, agent loadnotes, tree): a click whose answer waits puts the status on what it waits for ("Calculating trips after your change…", "…in 81 cities…"), time left or stall in its hover; under the loading card the card says it. notes/T-2524.md.
 - T-2550 Diagram: Hokkaido's shape, big sparse regions, islands with no station (2026-11-05, agent diaghokkaido, tree): water carries far land at the region's scale (no spit east of Hakodate), sparse regions floored at 0.25 scale, small station-less islands left out (all Japan 40 -> 15 land pieces). Hokkaido IoU 0.35 -> 0.62, the other islands up too. notes/T-2550.md.
