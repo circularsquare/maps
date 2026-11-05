@@ -34,6 +34,13 @@ const SPUR_M = 400, SPUR_WIDTHS = 3, RIVER_MIN_M = 600;
 const MEET_M = 600;
 /** tiles' sides, cells */
 const FT = 128, CT = 128;
+/** a coarse cell some mask covers (else what is there is not known); one in water that parts land masses (the sea, or
+ * water at least STRAIT coarse cells from land somewhere across, so about 600 m wide: rivers narrow upstream, so only
+ * straits and channels between seas part land, T-2540) */
+const COVERED = 8, PARTS = 16, STRAIT = 2;
+/** the sea far from the stations (T-2540): a grid of at least FAR_M cells, at most FAR_CELLS, over the coarse tiles and
+ * FAR_PAD past them, each place no mask covers taking the nearest known cell's */
+const FAR_M = 1000, FAR_CELLS = 1_500_000, FAR_PAD = 100_000;
 const EARTH_R = 6371008.8, RAD = Math.PI / 180;
 
 export interface RiverArc {
@@ -64,6 +71,11 @@ export interface RealWater {
   nodes: { x: number; y: number; sea: boolean; body: number; open: boolean }[];
   /** whether a place is sea (1), land or river (0), or unknown (-1: no mask says, or too far from the stations) */
   seaAt(x: number, y: number): number;
+  /** whether a place is sea, anywhere (T-2540): where no mask says, as the nearest place one does */
+  isSea(x: number, y: number): boolean;
+  /** which land mass a place is on: one id per land connected on the ground round water that parts it (the sea, and
+   * straits about 600 m wide or more; T-2540), -1 in such water */
+  massAt(x: number, y: number): number;
   /** which sea a place is in: one id per sea connected on the ground (T-2516), -1 where it is not sea */
   seaBody(x: number, y: number): number;
   /** the shortest way by water (any water on the coarse grid) from a place to a sea `ok` takes, within `maxM`: its
@@ -87,8 +99,8 @@ function maskRows(masks: WaterMask[], f: MercFrame) {
     return (2 * Math.atan(Math.exp(Math.PI * (1 - 2 * my))) - Math.PI / 2) / RAD;
   };
   /** fills `out` (cells of `h` metres from graph x `x0`, `n` of them) with 1 where some mask's pixel under the cell's
-   * middle at graph y `y` is water */
-  return (y: number, x0: number, h: number, n: number, out: Uint8Array, off: number) => {
+   * middle at graph y `y` is water, and `cov` with 1 where some mask covers it */
+  return (y: number, x0: number, h: number, n: number, out: Uint8Array, off: number, cov?: Uint8Array) => {
     const lat = latOf(y);
     for (let q = 0; q < masks.length; q++) {
       const m = masks[q], r = Math.floor((EARTH_R * (lat - m.lat) * RAD - m.y0) / m.cell);
@@ -96,6 +108,7 @@ function maskRows(masks: WaterMask[], f: MercFrame) {
       const { A, B } = cols[q];
       // the row's columns under the cells: cell i's middle is at column A + B (x0 + (i + 0.5) h)
       const cA = A + B * (x0 + 0.5 * h), cS = B * h;
+      if (cov) for (let i = Math.max(0, Math.ceil(-cA / cS)); i < Math.min(n, Math.ceil((m.w - cA) / cS)); i++) cov[off + i] = 1;
       const lo = m.rows[r], hi = m.rows[r + 1];
       if (hi <= lo) continue;
       // the first run ending after the first cell's column
@@ -177,12 +190,12 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       for (let i = Math.floor((x - r) / side); i <= Math.floor((x + r) / side); i++) for (let j = Math.floor((y - r) / side); j <= Math.floor((y + r) / side); j++) into.add(tkey(i, j));
     };
     for (let i = 0; i < n; i++) mark(g.x[i], g.y[i], R, side, want);
-    const W = CT + 2 * HALO, buf = new Uint8Array(W * W);
+    const W = CT + 2 * HALO, buf = new Uint8Array(W * W), cov = new Uint8Array(W * W);
     for (const key of want) {
       const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768;
-      buf.fill(0);
+      buf.fill(0), cov.fill(0);
       const x0 = (ti * CT - HALO) * hc;
-      for (let j = 0; j < W; j++) rowOf((tj * CT - HALO + j + 0.5) * hc, x0, hc, W, buf, j * W);
+      for (let j = 0; j < W; j++) rowOf((tj * CT - HALO + j + 0.5) * hc, x0, hc, W, buf, j * W, cov);
       let any = 0;
       for (let c = 0; c < W * W; c++) any |= buf[c];
       const out = new Uint8Array(CT * CT);
@@ -192,11 +205,16 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         const core = new Uint8Array(W * W);
         for (let c = 0; c < W * W; c++) core[c] = dl[c] >= 3 * rs ? 1 : 0;
         const dc = chamfer(core, W, W, true, 3 * (rs + near + 2));
+        // water parting land (T-2540): the sea, and water STRAIT cells across or more
+        for (let c = 0; c < W * W; c++) core[c] = dl[c] >= 3 * STRAIT ? 1 : 0;
+        const dw = chamfer(core, W, W, true, 3 * (STRAIT + 2));
         for (let j = 0; j < CT; j++) for (let i = 0; i < CT; i++) {
           const c = (j + HALO) * W + i + HALO;
-          out[j * CT + i] = (dc[c] <= 3 * rs && buf[c] ? 3 : dc[c] <= 3 * (rs + near) ? 2 : buf[c] ? 1 : 0) | (buf[c] ? 4 : 0);
+          const cls = dc[c] <= 3 * rs && buf[c] ? 3 : dc[c] <= 3 * (rs + near) ? 2 : buf[c] ? 1 : 0;
+          out[j * CT + i] = cls | (buf[c] ? 4 : 0) | (cls === 3 || (buf[c] && dw[c] <= 3 * STRAIT) ? PARTS : 0);
         }
       }
+      for (let j = 0; j < CT; j++) for (let i = 0; i < CT; i++) if (cov[(j + HALO) * W + i + HALO]) out[j * CT + i] |= COVERED;
       ctiles.set(key, out);
     }
   }
@@ -249,7 +267,130 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
     }
     return best;
   };
+  const { isSea, massAt } = farGround();
   const t1 = performance.now();
+
+  /** the sea anywhere, and the land masses (T-2540): the coarse tiles where a mask covers them; elsewhere a far grid,
+   * the masks' wide water where they cover it, else the nearest known cell's. Land masses are land connected round
+   * the water that parts them (PARTS), across the tiles and the far grid. */
+  function farGround() {
+    const cellAt = (x: number, y: number) => {
+      const i = Math.floor(x / hc), j = Math.floor(y / hc), t = ctiles.get(tkey(Math.floor(i / CT), Math.floor(j / CT)));
+      return t ? t[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)] : 0;
+    };
+    let tx0 = Infinity, ty0 = Infinity, tx1 = -Infinity, ty1 = -Infinity;
+    for (const key of ctiles.keys()) {
+      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768;
+      (tx0 = Math.min(tx0, ti)), (ty0 = Math.min(ty0, tj)), (tx1 = Math.max(tx1, ti + 1)), (ty1 = Math.max(ty1, tj + 1));
+    }
+    if (!(tx0 < tx1)) return { isSea: () => false, massAt: () => 0 };
+    const fx0 = tx0 * CT * hc - FAR_PAD, fy0 = ty0 * CT * hc - FAR_PAD, fx1 = tx1 * CT * hc + FAR_PAD, fy1 = ty1 * CT * hc + FAR_PAD;
+    const fh = Math.max(FAR_M, Math.sqrt(((fx1 - fx0) * (fy1 - fy0)) / FAR_CELLS));
+    const FW = Math.ceil((fx1 - fx0) / fh), FH = Math.ceil((fy1 - fy0) / fh), NF = FW * FH;
+    // the masks' water, opened by a cell (so rivers go), where they cover it
+    const raw = new Uint8Array(NF), cov = new Uint8Array(NF);
+    for (let j = 0; j < FH; j++) rowOf(fy0 + (j + 0.5) * fh, fx0, fh, FW, raw, j * FW, cov);
+    const core = new Uint8Array(NF);
+    for (let j = 1; j < FH - 1; j++) for (let i = 1; i < FW - 1; i++) {
+      const c = j * FW + i;
+      core[c] = raw[c] & raw[c - 1] & raw[c + 1] & raw[c - FW] & raw[c + FW] & raw[c - FW - 1] & raw[c - FW + 1] & raw[c + FW - 1] & raw[c + FW + 1];
+    }
+    // 0 land, 1 sea, 2 not known yet; filled from the known cells outward (breadth first, so the nearest by steps);
+    // `tiled`, cells whose middle a tile holds
+    const far = new Uint8Array(NF).fill(2), tiled = new Uint8Array(NF), q: number[] = [];
+    for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++) {
+      const c = j * FW + i, v = cellAt(fx0 + (i + 0.5) * fh, fy0 + (j + 0.5) * fh);
+      if (v & COVERED) (far[c] = (v & 3) === 3 ? 1 : 0), (tiled[c] = 1), q.push(c);
+      else if (cov[c] && raw[c]) {
+        // a mask's wide water (its land far out at sea may only be what it leaves out, so not known)
+        let wide = 0;
+        for (let dj = -1; dj <= 1 && !wide; dj++) for (let di = -1; di <= 1; di++) if (i + di >= 0 && i + di < FW && j + dj >= 0 && j + dj < FH && core[c + dj * FW + di]) (wide = 1);
+        if (wide) (far[c] = 1), q.push(c);
+      }
+    }
+    for (let k = 0; k < q.length; k++) {
+      const c = q[k], i = c % FW, v = far[c];
+      for (const nc of [i > 0 ? c - 1 : -1, i < FW - 1 ? c + 1 : -1, c - FW, c + FW]) if (nc >= 0 && nc < NF && far[nc] === 2) (far[nc] = v), q.push(nc);
+    }
+    if (!q.length) far.fill(0);
+    const farAt = (x: number, y: number) => {
+      const i = Math.min(FW - 1, Math.max(0, Math.floor((x - fx0) / fh))), j = Math.min(FH - 1, Math.max(0, Math.floor((y - fy0) / fh)));
+      return j * FW + i;
+    };
+    // land masses: the tiles' land labelled (4 neighbours), joined across tiles, and to the far grid's land where no
+    // tile is
+    const par: number[] = [];
+    const root = (v: number): number => {
+      while (par[v] !== v) (par[v] = par[par[v]]), (v = par[v]);
+      return v;
+    };
+    const join = (a: number, b: number) => void (par[root(a)] = root(b));
+    const parts = (t: Uint8Array, c: number, x: number, y: number) => (t[c] & COVERED ? (t[c] & PARTS) !== 0 : far[farAt(x, y)] === 1);
+    const labs = new Map<number, Int32Array>();
+    for (const [key, t] of ctiles) {
+      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, lab = new Int32Array(CT * CT).fill(-1);
+      for (let c = 0; c < CT * CT; c++) {
+        if (parts(t, c, (ti * CT + (c % CT) + 0.5) * hc, (tj * CT + Math.floor(c / CT) + 0.5) * hc)) continue;
+        const l = c % CT > 0 ? lab[c - 1] : -1, u = c >= CT ? lab[c - CT] : -1;
+        if (l < 0 && u < 0) (lab[c] = par.length), par.push(par.length);
+        else (lab[c] = l >= 0 ? l : u), l >= 0 && u >= 0 && join(l, u);
+      }
+      labs.set(key, lab);
+    }
+    const farBase = par.length;
+    for (let c = 0; c < NF; c++) par.push(c + farBase);
+    const farLand = (c: number) => !tiled[c] && far[c] === 0;
+    for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++) {
+      const c = j * FW + i;
+      if (!farLand(c)) continue;
+      if (i + 1 < FW && farLand(c + 1)) join(farBase + c, farBase + c + 1);
+      if (j + 1 < FH && farLand(c + FW)) join(farBase + c, farBase + c + FW);
+    }
+    for (const [key, lab] of labs) {
+      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768;
+      const nb = [labs.get(tkey(ti - 1, tj)), labs.get(tkey(ti + 1, tj)), labs.get(tkey(ti, tj - 1)), labs.get(tkey(ti, tj + 1))];
+      for (let q = 0; q < CT; q++) {
+        // [this tile's cell, the neighbour tile's cell, the place just past the edge]
+        const sides: [number, number, number, number][] = [
+          [q * CT, q * CT + CT - 1, (ti * CT - 0.5) * hc, (tj * CT + q + 0.5) * hc],
+          [q * CT + CT - 1, q * CT, (ti * CT + CT + 0.5) * hc, (tj * CT + q + 0.5) * hc],
+          [q, (CT - 1) * CT + q, (ti * CT + q + 0.5) * hc, (tj * CT - 0.5) * hc],
+          [(CT - 1) * CT + q, q, (ti * CT + q + 0.5) * hc, (tj * CT + CT + 0.5) * hc],
+        ];
+        sides.forEach(([c, oc, ox, oy], s) => {
+          if (lab[c] < 0) return;
+          const o = nb[s];
+          if (o) o[oc] >= 0 && join(lab[c], o[oc]);
+          else {
+            const f = farAt(ox, oy);
+            if (farLand(f)) join(lab[c], farBase + f);
+          }
+        });
+      }
+    }
+    const ids = new Map<number, number>();
+    const idOf = (v: number) => {
+      const r = root(v);
+      let id = ids.get(r);
+      if (id === undefined) ids.set(r, (id = ids.size));
+      return id;
+    };
+    return {
+      isSea: (x: number, y: number) => {
+        const v = cellAt(x, y);
+        return v & COVERED ? (v & 3) === 3 : far[farAt(x, y)] === 1;
+      },
+      massAt: (x: number, y: number) => {
+        const i = Math.floor(x / hc), j = Math.floor(y / hc), key = tkey(Math.floor(i / CT), Math.floor(j / CT)), lab = labs.get(key);
+        if (lab) {
+          const v = lab[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)];
+          return v < 0 ? -1 : idOf(v);
+        }
+        const f = farAt(x, y);
+        return farLand(f) ? idOf(farBase + f) : -1;
+      },
+    };
+  }
 
   // ---- rivers, on the fine grid near the track: water three cells across (an opening by a 3 by 3 square), less the
   // sea and its fringe. Per tile, 1 river, 2 wide water by the sea.
@@ -423,6 +564,8 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       const c = coarseAt(x, y);
       return c < 0 ? -1 : c === 3 ? 1 : 0;
     },
+    isSea,
+    massAt,
     seaBody,
     waterWay(x, y, ok, maxM) {
       const key = (i: number, j: number) => (i + 1e6) * 4e6 + (j + 1e6);

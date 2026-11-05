@@ -547,6 +547,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     if (!mouthAt.has(v)) mouthAt.set(v, mouthNear(real.nodes[v].x, real.nodes[v].y, real.nodes[v].body));
     return mouthAt.get(v)!;
   };
+  const mouthAny = (v: number) => mouthNear(real.nodes[v].x, real.nodes[v].y, -1);
   /** the routes along a course on the ground (`rr`, x, y pairs) from (fx, fy), leaving the way fd, to (tx, ty),
    * arriving the way td (-1 either way) */
   const course = (rr: number[], fx: number, fy: number, fd: number, tx: number, ty: number, td: number, own: Set<number>): number[][] => {
@@ -641,6 +642,10 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
         if (m) return ends.push("sea"), regions.push(m[2]), stats.mouths++, [m[0], m[1]];
         const w = way(v);
         if (w) return ends.push("way"), ways.set(v, A.river), nodePlace(v);
+        // T-2540: else into whatever sea is drawn near (the drawn sea's body is voted by the places its cells are carried
+        // back to, which can be a neighbouring sea's)
+        const any = mouthAny(v);
+        if (any) return ends.push("sea"), regions.push(any[2]), stats.mouths++, [any[0], any[1]];
         return ends.push("dry"), dryAt.add(v), nodePlace(v);
       }
       ends.push(deg[v] > 1 ? "river" : nd.open ? "open" : "free");

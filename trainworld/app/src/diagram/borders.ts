@@ -492,7 +492,8 @@ export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: n
       const e1 = segD(px[k], py[k], px[i], py[i], bent ? bx : px[j], bent ? by : py[j]), e2 = bent ? segD(px[k], py[k], bx, by, px[j], py[j]) : Infinity;
       let e = Math.min(e1, e2), t = tol[k];
       // on the region's edge the way may pass further out than in: it fills notches, never nears the lines (T-2491)
-      if (outer && e > t) {
+      // (or less far, where its outward tolerance is the smaller: the sea's coast along a strait, T-2540)
+      if (outer && (e > t || outer.tol[k] < t)) {
         const [ax, ay, cx, cy] = e1 <= e2 ? [px[i], py[i], bent ? bx : px[j], bent ? by : py[j]] : [bx, by, px[j], py[j]];
         if (((cx - ax) * (py[k] - ay) - (cy - ay) * (px[k] - ax) < 0) === outer.left) t = outer.tol[k];
       }
@@ -500,7 +501,7 @@ export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: n
       worst = Math.max(worst, e / t);
       if (bent) {
         e = hyp(px[k] - bx, py[k] - by);
-        if (e < bendNear) (bendNear = e), (bendTol = outer ? Math.max(tol[k], outer.tol[k]) : tol[k]);
+        if (e < bendNear) (bendNear = e), (bendTol = outer ? (outer.tol[k] < tol[k] ? outer.tol[k] : Math.max(tol[k], outer.tol[k])) : tol[k]);
       }
     }
     if (bent && j > i + 1 && bendNear > bendTol + 1e-9) return -1;

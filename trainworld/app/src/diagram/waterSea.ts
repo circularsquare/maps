@@ -1,7 +1,8 @@
 // The sea and lakes on the network diagram (T-2169; docs/ui-diagram.md "Water"), decided in the drawing the way the
 // zone borders are (borders.ts): on a grid over the drawing, each cell is sea where the places on the ground its nearest
-// drawn stations' local maps carry it to are sea (waterReal.ts `seaAt`), voted by nearness; every pill and the ground
-// round it is land. Small specks are dropped, and the coast is fitted with runs at 0, 45 and 90 degrees, free to stray
+// drawn stations' local maps carry it to are sea (waterReal.ts `isSea`), voted by nearness; every pill and the ground
+// round it is land; where the drawing squeezes two land masses or the sea between two stations together, a strait is
+// kept open (T-2540). Small specks are dropped, and the coast is fitted with runs at 0, 45 and 90 degrees, free to stray
 // seaward but hardly landward, so every station stays on land even where the shape departs from the real coast.
 
 import type { DiagramGraph } from "./graph";
@@ -18,9 +19,6 @@ const MARGIN = 40;
 const VOTERS = 4, LAND = 2.5;
 /** cells looked up together, a side, and the stations nearest their middle each cell's voters are taken from */
 const BLOCK = 4, CANDIDATES = 10;
-/** each station looks for the sea in RAYS ways on the ground, FACE_HOPS of its mean hop far and at least FACE_M, in
- * steps of STEP_M at least, metres */
-const RAYS = 16, FACE_HOPS = 3, FACE_M = 3000, STEP_M = 100;
 /** sea specks and lakes under this many square pitches, and land without a station under LAND_MIN, are dropped */
 const SEA_MIN = 60, LAND_MIN = 30;
 /** the coast smoothed at this scale before it is fitted: inlets and notches under about twice it across go, pitches */
@@ -30,8 +28,18 @@ const SMOOTH = 4;
 const TOL_SEA = 12, TOL_LAND = 8, TOL_MIN = 1, CLEAR = 1;
 /** corners rounded with this radius, pitches */
 const RADIUS = 4;
+/** a station on water on the ground takes the land mass found nearest, in steps of MASS_STEP out to MASS_FIND, metres */
+const MASS_STEP = 200, MASS_FIND = 2000;
+/** a strait never takes a pill nor PILL_CORE pitches round it; along one the coast strays at most STRAIT_TOL seaward
+ * (or 0.4 of a cell) */
+const PILL_CORE = 0.5, STRAIT_TOL = 0.5;
+/** seaward, a coast strays at most this share of the way across the sea to the next land */
+const GAP_SHARE = 0.35;
+/** two stations have the sea between them where the straight way on the ground crosses BETWEEN_M of sea in one run,
+ * and BETWEEN_SHARE of its length; looked at every BETWEEN_STEP_M (or a sixtieth of the way), metres */
+const BETWEEN_M = 2000, BETWEEN_SHARE = 0.3, BETWEEN_STEP_M = 250, SQUEEZE = 0.5;
 
-export interface SeaStats { cells: number; cell: number; sea: number; rings: number; refit: number; ms: number }
+export interface SeaStats { cells: number; cell: number; sea: number; straits: number; rings: number; refit: number; ms: number }
 
 /** The sea in the drawing `d` of `g` laid out at `x`, `y`, from `real`: path commands, filled even-odd. */
 export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, d: Drawing, real: RealWater, J: Float64Array): { cmds: Float64Array; rings: Float64Array[]; grid: SeaGrid; stats: SeaStats } {
@@ -51,32 +59,20 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     if (!(Math.abs(det) > 1e-18)) continue;
     (inv[i * 4] = e / det), (inv[i * 4 + 1] = -b / det), (inv[i * 4 + 2] = -c / det), (inv[i * 4 + 3] = a / det), (ok[i] = 1);
   }
-  // per station and each of RAYS ways on the ground, how far to the sea, up to FACE_HOPS of its mean hop (at least
-  // FACE_M); Infinity for no sea that near
-  const face = new Float64Array(n), cnt = new Float64Array(n);
-  for (let e = 0; e < g.ea.length; e++) {
-    const a = g.ea[e], b = g.eb[e], l = hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]);
-    (face[a] += l), (face[b] += l), cnt[a]++, cnt[b]++;
-  }
-  const toSea = new Float64Array(n * RAYS).fill(Infinity), toBody = new Int32Array(n * RAYS).fill(-1);
-  for (let i = 0; i < n; i++) {
-    const reach = Math.max(FACE_M, cnt[i] ? (FACE_HOPS * face[i]) / cnt[i] : 0), step = Math.max(STEP_M, reach / 40);
-    for (let r = 0; r < RAYS; r++) {
-      const ux = Math.cos((2 * Math.PI * r) / RAYS), uy = Math.sin((2 * Math.PI * r) / RAYS);
-      for (let s = step; s <= reach; s += step) if (real.seaAt(g.x[i] + ux * s, g.y[i] + uy * s) === 1) {
-        toSea[i * RAYS + r] = s;
-        toBody[i * RAYS + r] = real.seaBody(g.x[i] + ux * s, g.y[i] + uy * s);
-        break;
-      }
-    }
-  }
-  // a cell is sea where its nearest drawn stations, voting by nearness, each find it past the sea the way it lies from
-  // them on the ground (through their maps back to the ground)
+  // a cell is sea where its nearest drawn stations, voting by nearness, each find the sea on the ground at the place
+  // their maps carry it back to (T-2540)
   // (the nearest stations of each BLOCK by BLOCK square of cells looked up once, CANDIDATES of them, and each cell's
   // nearest taken among those)
   const kd = kdTree(x, y), cand = new Int32Array(CANDIDATES), cd = new Float64Array(CANDIDATES);
   const near = new Int32Array(VOTERS), nd = new Float64Array(VOTERS);
   const cls = new Uint8Array(NC), cellBody = new Int32Array(NC).fill(-1);
+  // each station's land mass on the ground, and each cell's: its nearest drawn station's (T-2540)
+  const mass = new Int32Array(n), cellMass = new Int32Array(NC).fill(-1), cellNear = new Int32Array(NC).fill(-1);
+  for (let i = 0; i < n; i++) {
+    let m = real.massAt(g.x[i], g.y[i]);
+    for (let s = MASS_STEP; m < 0 && s <= MASS_FIND; s += MASS_STEP) for (let a = 0; a < 8 && m < 0; a++) m = real.massAt(g.x[i] + s * Math.cos((a * Math.PI) / 4), g.y[i] + s * Math.sin((a * Math.PI) / 4));
+    mass[i] = m;
+  }
   for (let bj = 0; bj < H; bj += BLOCK) for (let bi = 0; bi < W; bi += BLOCK) {
     const nc = kd.nearest(x0 + (bi + BLOCK / 2) * h, y0 + (bj + BLOCK / 2) * h, CANDIDATES, cand, cd);
     for (let j = bj; j < Math.min(H, bj + BLOCK); j++) for (let i = bi; i < Math.min(W, bi + BLOCK); i++) {
@@ -91,30 +87,35 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
       }
     }
     let sea = 0, land = 0, bw = 0;
+    if (found) cellNear[j * W + i] = near[0];
+    for (let q = 0; q < found; q++) if (mass[near[q]] >= 0) { cellMass[j * W + i] = mass[near[q]]; break; }
     for (let q = 0; q < found; q++) {
       const k = near[q];
       if (!ok[k]) continue;
       const ox = px - x[k], oy = py - y[k], w = 1 / (nd[q] + pitch * pitch);
       const rx = inv[k * 4] * ox + inv[k * 4 + 1] * oy, ry = inv[k * 4 + 2] * ox + inv[k * 4 + 3] * oy;
-      const ray = Math.round((Math.atan2(ry, rx) / (2 * Math.PI)) * RAYS + RAYS) % RAYS;
-      if (toSea[k * RAYS + ray] <= hyp(rx, ry)) {
+      const gx = g.x[k] + rx, gy = g.y[k] + ry;
+      if (real.isSea(gx, gy)) {
         sea += w;
-        if (w > bw) (bw = w), (cellBody[j * W + i] = toBody[k * RAYS + ray]);
+        // (the far grid's sea knows no body)
+        const b = w > bw ? real.seaBody(gx, gy) : -1;
+        if (b >= 0) (bw = w), (cellBody[j * W + i] = b);
       } else land += w;
     }
     cls[j * W + i] = sea > land ? 1 : 0;
     }
   }
-  // every pill and the ground round it is land
-  const forced = new Uint8Array(NC);
+  // every pill and the ground round it is land (`core`: the pill and PILL_CORE round it, which a strait never takes)
+  const forced = new Uint8Array(NC), core = new Uint8Array(NC);
   d.pills.forEach((p, q) => {
-    const [r, o] = pillSize(d, d.pillOf[q]), R = r + o + p[4] + LAND * pitch;
+    const [r, o] = pillSize(d, d.pillOf[q]), R = r + o + p[4] + LAND * pitch, Rc = r + o + p[4] + PILL_CORE * pitch + 0.5 * h;
     const i0 = Math.max(0, Math.floor((Math.min(p[0], p[2]) - R - x0) / h)), i1 = Math.min(W - 1, Math.floor((Math.max(p[0], p[2]) + R - x0) / h));
     const j0 = Math.max(0, Math.floor((Math.min(p[1], p[3]) - R - y0) / h)), j1 = Math.min(H - 1, Math.floor((Math.max(p[1], p[3]) + R - y0) / h));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       // a cell is land when any of it is within R of the pill's axis
-      const cx = x0 + (i + 0.5) * h, cy = y0 + (j + 0.5) * h;
-      if (segD(cx, cy, p[0], p[1], p[2], p[3]) <= R + h * Math.SQRT1_2) (forced[j * W + i] = 1), (cls[j * W + i] = 0);
+      const cx = x0 + (i + 0.5) * h, cy = y0 + (j + 0.5) * h, dd = segD(cx, cy, p[0], p[1], p[2], p[3]);
+      if (dd <= R + h * Math.SQRT1_2) (forced[j * W + i] = 1), (cls[j * W + i] = 0);
+      if (dd <= Rc) core[j * W + i] = 1;
     }
   });
   // the lines' casings, and each cell's clearance from them and the land round the pills (chamfer steps, 3 a cell)
@@ -149,21 +150,69 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     const closed = grown(grown(open, true), false);
     for (let c = 0; c < NC; c++) cls[c] = forced[c] ? 0 : 1 - closed[c];
   }
+  // straits (T-2540): where cells nearest stations on different land masses on the ground meet, or nearest two
+  // stations with the sea between them on the ground, the sea, but in the pills' cores: so two land masses are never
+  // drawn as one, and a bay or strait the drawing squeezes stays open
+  const strait = new Uint8Array(NC), between = new Map<number, boolean>();
+  const seaBetween = (a: number, b: number) => {
+    const key = Math.min(a, b) * n + Math.max(a, b);
+    let v = between.get(key);
+    if (v === undefined) {
+      const L = hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]), steps = Math.max(2, Math.ceil(L / Math.max(BETWEEN_STEP_M, L / 60)));
+      let run = 0, best = 0;
+      for (let s = 1; s < steps; s++) {
+        if (real.isSea(g.x[a] + ((g.x[b] - g.x[a]) * s) / steps, g.y[a] + ((g.y[b] - g.y[a]) * s) / steps)) best = Math.max(best, ++run);
+        else run = 0;
+      }
+      // only where the drawing squeezes them together: drawn nearer than SQUEEZE of their distance on the ground at
+      // their own maps' scales (elsewhere the sea found through the maps shows the water)
+      const sa = Math.sqrt(Math.abs(J[a * 4] * J[a * 4 + 3] - J[a * 4 + 1] * J[a * 4 + 2])), sb = Math.sqrt(Math.abs(J[b * 4] * J[b * 4 + 3] - J[b * 4 + 1] * J[b * 4 + 2]));
+      const squeezed = hyp(x[b] - x[a], y[b] - y[a]) < SQUEEZE * L * Math.sqrt(sa * sb);
+      between.set(key, (v = squeezed && (best * L) / steps >= Math.max(BETWEEN_M, BETWEEN_SHARE * L)));
+    }
+    return v;
+  };
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const c = j * W + i, m = cellMass[c], a = cellNear[c];
+    if (a < 0 || core[c] || cls[c]) continue;
+    for (const nc of [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, j > 0 ? c - W : -1, j < H - 1 ? c + W : -1]) {
+      if (nc < 0) continue;
+      const b = cellNear[nc];
+      if (b < 0 || b === a) continue;
+      if ((m >= 0 && cellMass[nc] >= 0 && cellMass[nc] !== m) || seaBetween(a, b)) (strait[c] = 1), (cls[c] = 1);
+    }
+  }
+  let straitCells = 0;
+  for (let c = 0; c < NC; c++) straitCells += strait[c];
   const area = h * h / (pitch * pitch);
   dropSmall(cls, W, H, 1, SEA_MIN / area, forced);
   dropSmall(cls, W, H, 0, LAND_MIN / area, forced);
 
   // the coast: unit edges between sea and land cells, sea on the left, chained into rings at the grid's corners
   // (each edge with the landward tolerance its land cell's clearance allows)
-  const W1 = W + 1, out = new Map<number, number[]>(), ea: number[] = [], eb: number[] = [], et: number[] = [];
+  const W1 = W + 1, out = new Map<number, number[]>(), ea: number[] = [], eb: number[] = [], et: number[] = [], es: number[] = [];
   const sea = (i: number, j: number) => i >= 0 && j >= 0 && i < W && j < H && cls[j * W + i] === 1;
   const tolAt = (i: number, j: number) => {
     const cl = i >= 0 && j >= 0 && i < W && j < H ? (clear[j * W + i] / 3) * h : Infinity;
     return Math.max(TOL_MIN * pitch, Math.min(TOL_LAND * pitch, cl - CLEAR * pitch));
   };
-  const edge = (a: number, b: number, t: number) => {
+  // seaward, a coast strays little along a strait (within a cell of one), so it never closes it
+  const nearStrait = new Uint8Array(NC);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (strait[j * W + i] && cls[j * W + i]) for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) if (i + di >= 0 && i + di < W && j + dj >= 0 && j + dj < H) nearStrait[(j + dj) * W + i + di] = 1;
+  // and never more than GAP_SHARE of the way across the sea to the next land straight out from it, so a fitted coast
+  // never closes a strait or a bay that the grid has open
+  const gapCap = Math.ceil((2 * TOL_SEA * pitch) / h);
+  const seaTol = (i: number, j: number, di: number, dj: number) => {
+    if (i < 0 || j < 0 || i >= W || j >= H) return TOL_SEA * pitch;
+    if (nearStrait[j * W + i]) return Math.max(STRAIT_TOL * pitch, 0.4 * h);
+    let k = 0;
+    for (let a = i, b = j; k < gapCap && a >= 0 && b >= 0 && a < W && b < H && cls[b * W + a] === 1; k++, a += di, b += dj);
+    const open = k === gapCap || i + di * k < 0 || j + dj * k < 0 || i + di * k >= W || j + dj * k >= H;
+    return open ? TOL_SEA * pitch : Math.max(0.4 * h, Math.min(TOL_SEA * pitch, GAP_SHARE * k * h));
+  };
+  const edge = (a: number, b: number, t: number, ts: number) => {
     const e = ea.length;
-    ea.push(a), eb.push(b), et.push(t);
+    ea.push(a), eb.push(b), et.push(t), es.push(ts);
     const l = out.get(a);
     if (l) l.push(e);
     else out.set(a, [e]);
@@ -175,8 +224,8 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     // the edge east of cell (i, j), between it and (i + 1, j); and north, between it and (i, j + 1). Corner (i, j) is
     // the cell's south-west one: corner id (j + 1) * W1 + (i + 1) shifted by one so -1 fits
     const c = (ci: number, cj: number) => (cj + 1) * (W1 + 1) + (ci + 1);
-    if (s !== sea(i + 1, j)) s ? edge(c(i + 1, j), c(i + 1, j + 1), tolAt(i + 1, j)) : edge(c(i + 1, j + 1), c(i + 1, j), tolAt(i, j));
-    if (s !== sea(i, j + 1)) s ? edge(c(i + 1, j + 1), c(i, j + 1), tolAt(i, j + 1)) : edge(c(i, j + 1), c(i + 1, j + 1), tolAt(i, j));
+    if (s !== sea(i + 1, j)) s ? edge(c(i + 1, j), c(i + 1, j + 1), tolAt(i + 1, j), seaTol(i, j, -1, 0)) : edge(c(i + 1, j + 1), c(i + 1, j), tolAt(i, j), seaTol(i + 1, j, 1, 0));
+    if (s !== sea(i, j + 1)) s ? edge(c(i + 1, j + 1), c(i, j + 1), tolAt(i, j + 1), seaTol(i, j, 0, -1)) : edge(c(i, j + 1), c(i + 1, j + 1), tolAt(i, j), seaTol(i, j + 1, 0, 1));
   }
   const cxy = (v: number): [number, number] => [x0 + ((v % (W1 + 1)) - 1) * h, y0 + (Math.floor(v / (W1 + 1)) - 1) * h];
   const used = new Uint8Array(ea.length), rings: Float64Array[] = [], cells: [number[], number[]][] = [], cmds: number[] = [];
@@ -204,12 +253,12 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
   let refit = 0;
   for (let e0 = 0; e0 < ea.length; e0++) {
     if (used[e0]) continue;
-    const px: number[] = [], py: number[] = [], pt: number[] = [];
+    const px: number[] = [], py: number[] = [], pt: number[] = [], ps: number[] = [];
     let e = e0;
     for (let guard = 0; guard <= ea.length; guard++) {
       used[e] = 1;
       const [ax, ay] = cxy(ea[e]), [bx, by] = cxy(eb[e]);
-      px.push((ax + bx) / 2), py.push((ay + by) / 2), pt.push(et[e]);
+      px.push((ax + bx) / 2), py.push((ay + by) / 2), pt.push(et[e]), ps.push(es[e]);
       // at the end corner: the next unused edge, turning left first (so touching seas stay apart)
       const l = out.get(eb[e]) ?? [];
       const dx = bx - ax, dy = by - ay;
@@ -230,7 +279,7 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     const rot = (a: number[]) => [...a.slice(s), ...a.slice(0, s + 1)];
     const qx = rot(px), qy = rot(py);
     cells.push([qx, qy]);
-    rings.push(fitOcti(qx, qy, rot(pt), keepsSides(qx, qy), { tol: qx.map(() => TOL_SEA * pitch), left: true }));
+    rings.push(fitOcti(qx, qy, rot(pt), keepsSides(qx, qy), { tol: rot(ps), left: true }));
   }
   // each ring keeps every pill on its own side, but two rings fitted near each other can still cross: a ring near a
   // pill left in the sea is fitted again, tight
@@ -261,7 +310,8 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
       for (let k = 0; k < m; k++) {
         const ax = v[k * 2], ay = v[k * 2 + 1], bx = v[((k + 1) % m) * 2], by = v[((k + 1) % m) * 2 + 1];
         if (ay === by) continue;
-        const lo = Math.max(0, Math.ceil((Math.min(ay, by) - y0) / h - 0.5)), hi = Math.min(H - 1, Math.floor((Math.max(ay, by) - y0) / h - 0.5));
+        // (a row more each way: the test below decides, so a vertex on a row's middle counts once, T-2540)
+        const lo = Math.max(0, Math.ceil((Math.min(ay, by) - y0) / h - 0.5) - 1), hi = Math.min(H - 1, Math.floor((Math.max(ay, by) - y0) / h - 0.5) + 1);
         for (let j = lo; j <= hi; j++) {
           const yc = y0 + (j + 0.5) * h;
           if (ay > yc !== by > yc) xs[j].push(ax + ((yc - ay) * (bx - ax)) / (by - ay));
@@ -288,7 +338,7 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     body.push(best);
   }
   const grid: SeaGrid = { x0, y0, h, W, H, reg, body, depth: chamfer(wet, W, H, false, 65000) };
-  return { cmds: Float64Array.from(cmds), rings, grid, stats: { cells: NC, cell: h / pitch, sea: seaCells, rings: rings.length, refit, ms: performance.now() - t0 } };
+  return { cmds: Float64Array.from(cmds), rings, grid, stats: { cells: NC, cell: h / pitch, sea: seaCells, straits: straitCells, rings: rings.length, refit, ms: performance.now() - t0 } };
 }
 
 /** the sea as drawn on a grid of cells `h` wide from (x0, y0): each cell's region (-1 land), each region's sea on the
@@ -302,10 +352,11 @@ function dropSmall(cls: Uint8Array, W: number, H: number, c: number, min: number
     if (seen[s] || cls[s] !== c) continue;
     const q = [s];
     seen[s] = 1;
+    // (land holding a pill stays; a strait cut off inside the land, where pills left it no way through, goes)
     let pinned = false;
     for (let k = 0; k < q.length; k++) {
       const v = q[k], i = v % W, j = (v - i) / W;
-      if (forced[v]) pinned = true;
+      if (c === 0 && forced[v]) pinned = true;
       for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const ni = i + di, nj = j + dj;
         if (ni < 0 || nj < 0 || ni >= W || nj >= H) continue;
@@ -313,7 +364,7 @@ function dropSmall(cls: Uint8Array, W: number, H: number, c: number, min: number
         if (!seen[nv] && cls[nv] === c) (seen[nv] = 1), q.push(nv);
       }
     }
-    if (q.length < min && !(c === 0 && pinned)) for (const v of q) cls[v] = 1 - c;
+    if (q.length < min && !pinned) for (const v of q) cls[v] = 1 - c;
   }
 }
 

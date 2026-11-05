@@ -36,7 +36,11 @@ export function openSave(name) {
   const raw = gunzipSync(readFileSync(s.file));
   const api = new TrackApi(s.lon, s.lat, true);
   if (!api.load(raw.subarray(8 + raw.readUInt32LE(4)))) throw new Error(`${name} did not load`);
-  const frame = app.makeFrame({ kind: 'equirect', lon: s.lon, lat: s.lat });
+  // the save's own frame (T-2540: Japan's saves are at 139.7671, 35.6812, not the 139.7, 35.7 above, which put every
+  // place 6 km west of its water)
+  const o = api.frame_origin(), kind = api.frame_kind();
+  const frameSpec = { kind: kind === 2 ? 'merc' : kind === 1 ? 'lcc' : 'equirect', lon: o[0], lat: o[1] };
+  const frame = app.makeFrame(frameSpec);
   app.setAnchor(app.makeAnchor(s.lon, s.lat, 1));
   const local = (x, y) => { const [lng, lat] = frame.toLonLat(x, y); return app.toLocal(lng, lat); };
   const ei = api.edges_info(), edges = [], pts = new Map();
@@ -72,5 +76,5 @@ export function openSave(name) {
     const t2 = performance.now();
     return { g, ms: t2 - t1, besideMs: t1 - t0 };
   };
-  return { api, lines, edges, pts, complexOf, cx, stations, graph, name: (n) => api.node_name(n) };
+  return { api, lines, edges, pts, complexOf, cx, stations, graph, frameSpec, name: (n) => api.node_name(n) };
 }

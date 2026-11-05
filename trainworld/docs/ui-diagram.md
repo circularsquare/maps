@@ -110,8 +110,8 @@ that arrive after a layout), between blocks as inside them.
 
 ## Water
 
-`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516; notes/T-2169.md,
-notes/T-2497.md, notes/T-2516.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
+`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
+notes/T-2497.md, notes/T-2516.md, notes/T-2540.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
 coast drawn a little wrong shows less). The layout worker makes them last, after the borders, and posts them on their
 own, so the layout's time is not touched; the page names the zones near the network and the worker fetches their water
@@ -151,26 +151,40 @@ masks from the packs (the 25 m rasters the track model prices water with), each 
 - **Ends**: a mouth goes into the drawn sea of the body it meets: to the nearest cell of that body's drawn sea, at
   least a pitch past the band's edge from the coast, within 80 pitches of where its place on the ground is carried. A
   mouth at a sea not drawn near (Newark Bay) goes on by water on the ground (the coarse grid's water, the shortest way
-  within 30 km) to a sea that is drawn, as its own band (the Kill Van Kull to the harbour). An open end runs on
+  within 30 km) to a sea that is drawn, as its own band (the Kill Van Kull to the harbour); failing both, into whatever
+  drawn sea is nearest within those 80 pitches. An open end runs on
   straight, away from the drawing's middle, to 12 pitches past the drawing's box. A free end (the river ends on the
-  ground) runs 3 pitches past its last crossing, a wide river's 5. A river whose mouths all meet seas not drawn near nor
-  reached by water is not drawn.
+  ground) runs 3 pitches past its last crossing, a wide river's 5. A river whose mouths all find no drawn sea that way is
+  not drawn.
 - **Connected seas**: pieces of one body drawn apart (each 60 square pitches or more) and not joined by a drawn river
   are joined by a channel band, the shortest way between them on the drawing's grid, routed like a river, where that
   is within 40 pitches.
 - Corners are rounded at 2.5 pitches, unless that would cut across a line.
+- **The sea everywhere** (T-2540): past the coarse grid, a far grid (1 km a cell, coarser for a big network, at most
+  1.5 million cells; 100 km past the coarse grid) holds the masks' water at least three of its cells wide; a place no
+  mask covers takes the nearest known cell's (so open sea far from the stations is sea, and land between them land).
+- **Land masses**: land on the ground connected round the water that parts it is one land mass. The sea parts land,
+  and so does water at least about 600 m wide (three coarse cells) all the way across; rivers narrow upstream, so they
+  part nothing, while straits and channels between seas do (the Tsugaru, Kanmon and Seto straits).
 - **The sea in the drawing**: on a grid over the drawing (1.5 pitches a cell, coarser for a big drawing, at most a
   million cells; 40 pitches past the network's box), each cell is sea where its four nearest drawn stations, voting by
-  nearness, find it past the sea: each carries the cell's offset back to the ground through its local map and looks
-  the way it lies for the sea within three of its mean hops (at least 3 km). So a cell beyond a station on the sea side
-  is sea however far the drawing stretches the core. Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by
-  3 majority, twice; then opened and closed by 4 pitches, so inlets and notches under about 8 pitches across go, the
-  land round the pills kept), sea under 60 square pitches and land without a station under 30 dropped, the coast is
-  drawn the way a line is: fitted with runs at 0, 45 and 90 degrees, straying up to 12 pitches seaward and landward up
-  to its clearance from the lines and pills less a pitch (between 1 and 8), never moving a pill across it, so it runs
-  straight for long stretches (T-2497). A ring that, with another fitted near it, still leaves a station in the sea
-  is fitted again tight. Corners rounded at 4 pitches, filled even-odd. **Every station is on land**, even where the
-  coast departs from the real one. Each connected piece of drawn sea takes the body most of its cells' votes found.
+  nearness, find the sea on the ground at the place each carries the cell's offset back to through its local map. So
+  the coast between stations is the real one carried into the drawing, and open sea stays sea however far it lies.
+  Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
+  pitches, so inlets and notches under about 8 pitches across go, the land round the pills kept).
+- **Straits**: then a cell is sea where it meets a cell nearest another station, and the two nearest stations are on
+  different land masses, or the straight way between them on the ground crosses at least 2 km of sea in one run and
+  30% of its length; only a pill and half a pitch (and half a cell) round it stays land. So **land masses are drawn
+  apart** wherever the drawing leaves room between their stations, and a bay or strait the drawing squeezes (Tokyo Bay)
+  stays open as a channel.
+- Sea under 60 square pitches (but a strait) and land without a station under 30 dropped, the coast is drawn the way a
+  line is: fitted with runs at 0, 45 and 90 degrees, straying seaward up to 12 pitches but at most 0.35 of the way
+  across the sea to the next land straight out from it (within a cell of a strait, half a pitch or 0.4 of a cell), and
+  landward up to its clearance from the lines and pills less a pitch (between 1 and 8), never moving a pill across it,
+  so it runs straight for long stretches (T-2497) without closing a bay or strait the grid has open. A ring that, with
+  another fitted near it, still leaves a station in the sea is fitted again tight. Corners rounded at 4 pitches, filled
+  even-odd. **Every station is on land**, even where the coast departs from the real one. Each connected piece of
+  drawn sea takes the body most of its cells' votes found.
 - Drawn under the zone borders and the lines' casings: the sea filled, the rivers stroked at least a device px wide.
 
 ## Names

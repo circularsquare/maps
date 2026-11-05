@@ -5,7 +5,9 @@
 // once, between the same two stations, and no band crosses a line anywhere else; every station's pill is on land
 // (outside the sea's fill). Reported: rivers and crossings, and the times (the layout's and the water's).
 // T-2497: a band may cross other lines where it says it had to (`falseKeys`); also reported, the coast's bends and the
-// rivers' pieces and bands.
+// rivers' pieces and bands. T-2540: no two land masses on the ground (of ISLAND_MIN stations) drawn as one piece of
+// land; per land mass, its drawn pieces and its overlap with its ground shape carried by the similarity fitting its
+// stations; each save in its own frame (diagram-saves.mjs `frameSpec`).
 //   node trainworld/checks/t2169-water.mjs [nyc,tor,tyo,jpn] [--png]      (figures in artifacts/trainworld/t2169/, or
 //   WATER_OUT=<folder>/, which t2169-shots.mjs and t2169-game.mjs take too)
 import { existsSync, mkdirSync, openSync, readSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
@@ -40,7 +42,7 @@ function laidOut(city) {
   for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
   const names = [...g.key].map((k) => s.name(k) ?? '');
   s.api.free();
-  const fr = L.makeFrame({ kind: 'equirect', lon: O.lon, lat: O.lat }), k = g.k / L.EARTH_C;
+  const fr = L.makeFrame(s.frameSpec), k = g.k / L.EARTH_C;
   let fx = 0, fy = 0, w = Infinity, so = Infinity, e = -Infinity, n = -Infinity;
   g.key.forEach((key, i) => {
     const [lng, lat] = fr.toLonLat(...xy.get(key)), [mx, my] = L.toMerc01(lng, lat);
@@ -84,6 +86,8 @@ function masksNear(box) {
 }
 
 const figures = {};
+/** land masses with fewer stations are not reported (T-2540; Kobe's Port Island, 8, is drawn into Honshu) */
+const ISLAND_MIN = 10;
 for (const city of which) {
   const S = laidOut(city);
   const t0 = performance.now();
@@ -191,9 +195,115 @@ for (const city of which) {
     say(!cont.ends.dry, `${city}: every river end at the sea is drawn into it`, `${cont.ends.dry ?? 0} not`);
   }
   console.log(`     sea: ${JSON.stringify(W.seaStats)}; coast ${JSON.stringify(f.coast)}; river pieces ${JSON.stringify(f.pieces)}`);
+  f.islands = islands({ ...S, city }, W, real);
+  console.log(`     land masses (T-2540): ${f.islands.masses} on the ground with ${ISLAND_MIN}+ stations, drawn in ${f.islands.drawn} pieces, ${f.islands.merged} pieces holding more than one; ${f.islands.list.map((m) => `${m.name} ${m.stations} st, ${m.pieces} piece${m.pieces > 1 ? 's' : ''}${m.with.length ? ' with ' + m.with.join('+') : ''}, IoU ${m.iou}`).join('; ')}`);
+  say(f.islands.merged === 0, `${city}: no two land masses on the ground drawn as one`, `${f.islands.merged} merged`);
   say(wet.length === 0, `${city}: every station drawn on land`, `${wet.length} pills in the sea: ${wet.slice(0, 8).join(", ")}`);
   if (PNG) groundPng(city, S, real);
   if (PNG) writeFileSync(`${OUT}render-${city}.js`, `window.TW_DATA = window.TW_DATA || {}; window.TW_DATA[${JSON.stringify(city)}] = ${JSON.stringify(renderData(S, W), (k, v) => (ArrayBuffer.isView(v) ? Array.from(v) : v))};`);
+}
+
+/** T-2540: the land masses on the ground holding ISLAND_MIN stations or more, and how each is drawn: the pieces of drawn
+ * land holding its stations, which other masses share them, and the overlap (cells shared over cells in either) of its
+ * drawn land with its land on the ground carried into the drawing by the similarity that best fits its stations */
+function islands(S, W, real) {
+  const { g, lay, names } = S, n = g.key.length, G = W.seaGrid, NC = G.W * G.H;
+  const mass = new Int32Array(n);
+  for (let i = 0; i < n; i++) {
+    let m = real.massAt(g.x[i], g.y[i]);
+    for (let s = 200; m < 0 && s <= 2000; s += 200) for (let a = 0; a < 8 && m < 0; a++) m = real.massAt(g.x[i] + s * Math.cos((a * Math.PI) / 4), g.y[i] + s * Math.sin((a * Math.PI) / 4));
+    mass[i] = m;
+  }
+  const count = new Map();
+  for (const m of mass) if (m >= 0) count.set(m, (count.get(m) ?? 0) + 1);
+  const listed = [...count].filter(([, c]) => c >= ISLAND_MIN).sort((a, b) => b[1] - a[1]).map(([m]) => m);
+  // drawn land in pieces (4 neighbours)
+  const comp = new Int32Array(NC).fill(-1);
+  let nComp = 0;
+  for (let s = 0; s < NC; s++) {
+    if (G.reg[s] >= 0 || comp[s] >= 0) continue;
+    const q = [s];
+    comp[s] = nComp;
+    for (let k = 0; k < q.length; k++) {
+      const v = q[k], i = v % G.W;
+      for (const nv of [i > 0 ? v - 1 : -1, i < G.W - 1 ? v + 1 : -1, v - G.W, v + G.W]) if (nv >= 0 && nv < NC && G.reg[nv] < 0 && comp[nv] < 0) (comp[nv] = nComp), q.push(nv);
+    }
+    nComp++;
+  }
+  const cellOf = (x, y) => {
+    const i = Math.floor((x - G.x0) / G.h), j = Math.floor((y - G.y0) / G.h);
+    for (const [di, dj] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+      const ii = i + di, jj = j + dj;
+      if (ii >= 0 && jj >= 0 && ii < G.W && jj < G.H && comp[jj * G.W + ii] >= 0) return comp[jj * G.W + ii];
+    }
+    return -1;
+  };
+  const byComp = new Map(); // comp -> Map(mass -> stations)
+  for (let i = 0; i < n; i++) {
+    if (!listed.includes(mass[i])) continue;
+    const c = cellOf(lay.x[i], lay.y[i]);
+    if (c < 0) continue;
+    const mm = byComp.get(c) ?? byComp.set(c, new Map()).get(c);
+    mm.set(mass[i], (mm.get(mass[i]) ?? 0) + 1);
+  }
+  const owner = new Map();
+  for (const [c, mm] of byComp) owner.set(c, [...mm].sort((a, b) => b[1] - a[1])[0][0]);
+  const deg = new Int32Array(n);
+  for (let e = 0; e < g.ea.length; e++) deg[g.ea[e]]++, deg[g.eb[e]]++;
+  const list = listed.map((m) => {
+    const st = [];
+    for (let i = 0; i < n; i++) if (mass[i] === m) st.push(i);
+    let best = st[0];
+    for (const i of st) if (deg[i] > deg[best] || (deg[i] === deg[best] && names[i] < names[best])) best = i;
+    const comps = [...byComp].filter(([, mm]) => mm.has(m)).map(([c]) => c);
+    const withM = new Set();
+    for (const c of comps) for (const o of byComp.get(c).keys()) if (o !== m) withM.add(o);
+    // the similarity fit, ground -> drawing (complex least squares)
+    let gx = 0, gy = 0, dx = 0, dy = 0;
+    for (const i of st) (gx += g.x[i]), (gy += g.y[i]), (dx += lay.x[i]), (dy += lay.y[i]);
+    (gx /= st.length), (gy /= st.length), (dx /= st.length), (dy /= st.length);
+    let nr = 0, ni = 0, dd = 0;
+    for (const i of st) {
+      const ux = g.x[i] - gx, uy = g.y[i] - gy, vx = lay.x[i] - dx, vy = lay.y[i] - dy;
+      (nr += ux * vx + uy * vy), (ni += ux * vy - uy * vx), (dd += ux * ux + uy * uy);
+    }
+    const ar = nr / dd, ai = ni / dd, a2 = ar * ar + ai * ai;
+    let inter = 0, uni = 0;
+    for (let c = 0; c < NC; c++) {
+      const drawn = comp[c] >= 0 && owner.get(comp[c]) === m;
+      const px = G.x0 + ((c % G.W) + 0.5) * G.h - dx, py = G.y0 + (Math.floor(c / G.W) + 0.5) * G.h - dy;
+      // ground = conj(a) (p) / |a|^2
+      const qx = gx + (ar * px + ai * py) / a2, qy = gy + (ar * py - ai * px) / a2;
+      const ground = real.massAt(qx, qy) === m;
+      if (drawn && ground) inter++;
+      if (drawn || ground) uni++;
+    }
+    return { mass: m, name: names[best].split('/')[0], stations: st.length, pieces: comps.length, with: [...withM].map((o) => `#${listed.indexOf(o)}`), iou: +(inter / Math.max(1, uni)).toFixed(3) };
+  });
+  const merged = [...byComp.values()].filter((mm) => mm.size > 1).length;
+  for (const mm of byComp.values()) if (mm.size > 1) {
+    // which stations of the smaller masses in it
+    const [big] = [...mm].sort((a, b) => b[1] - a[1])[0];
+    const who = [];
+    for (let i = 0; i < n && who.length < 6; i++) if (mm.has(mass[i]) && mass[i] !== big && byComp.get(cellOf(lay.x[i], lay.y[i])) === mm) who.push(`${names[i]} (#${listed.indexOf(mass[i])})`);
+    console.log(`     merged piece: ${[...mm].map(([m, c]) => `#${listed.indexOf(m)} ${c} st`).join(', ')}: ${who.join(', ')}`);
+  }
+  if (PNG) {
+    // the drawn sea's grid, a cell a pixel: land by the mass owning its piece, stations by theirs (north up)
+    const hue = (m) => (m < 0 ? [120, 120, 120] : [[200, 60, 60], [60, 160, 60], [60, 90, 210], [200, 150, 30], [160, 60, 190], [30, 170, 180], [230, 110, 170]][listed.indexOf(m) % 7] ?? [120, 120, 120]);
+    const img = new Uint8Array(NC * 3);
+    for (let c = 0; c < NC; c++) {
+      const i = c % G.W, j = G.H - 1 - Math.floor(c / G.W), o = (j * G.W + i) * 3;
+      if (comp[c] < 0) img.set([205, 225, 235], o);
+      else img.set(owner.has(comp[c]) ? hue(owner.get(comp[c])).map((v) => 255 - (255 - v) * 0.25) : [245, 240, 230], o);
+    }
+    for (let k = 0; k < n; k++) {
+      const i = Math.floor((lay.x[k] - G.x0) / G.h), j = G.H - 1 - Math.floor((lay.y[k] - G.y0) / G.h);
+      if (i >= 0 && j >= 0 && i < G.W && j < G.H) img.set(listed.includes(mass[k]) ? hue(mass[k]) : [0, 0, 0], (j * G.W + i) * 3);
+    }
+    writeFileSync(`${OUT}${S.city}-islands.png`, png(G.W, G.H, img));
+  }
+  return { masses: listed.length, drawn: byComp.size, merged, list: list.map((m, k) => ({ ...m, name: `#${k} ${m.name}` })) };
 }
 
 /** the bands' crossings with the ribbons as drawn, against the crossings on the ground */
@@ -271,7 +381,7 @@ function renderData(S, W) {
   const fontPx = 12, wOf = (t) => t.length * 6.6;
   const width = Float32Array.from(names, wOf), width2 = Float32Array.from(names, (t) => { const p = L.splitName(t); return p ? Math.max(wOf(p[0]), wOf(p[1])) : 0; });
   const plan = L.placeNames(g, lay, d, names, width, width2, fontPx);
-  return { plan, pitch: d.pitch, stroke: d.stroke, lines: d.lines.map((l) => ({ colour: l.colour, fast: l.fast, cmds: [...l.cmds] })), lineOf: d.lineOf, ribbons: d.ribbons.map((r) => [...r]), chainAt: d.chainAt.map((c) => [...c]), pills: d.pills, pillOf: d.pillOf, passages: d.passages, passageOf: d.passageOf, hooks: d.hooks, small: [...d.small], box: d.box, x: [...lay.x], y: [...lay.y], text: names, water: { rivers: [...W.rivers], sea: W.sea ? [...W.sea] : [], band: W.band }, runs: (W.runs ?? []).flatMap((r) => r.parts.map((p, i) => ({ p: [...p], marks: i ? [] : r.marks, arc: r.arc, river: r.river }))), failed: W.failed ?? [], falsePts: W.falsePts ?? [] };
+  return { plan, pitch: d.pitch, stroke: d.stroke, lines: d.lines.map((l) => ({ colour: l.colour, fast: l.fast, cmds: [...l.cmds] })), lineOf: d.lineOf, ribbons: d.ribbons.map((r) => [...r]), chainAt: d.chainAt.map((c) => [...c]), pills: d.pills, pillOf: d.pillOf, passages: d.passages, passageOf: d.passageOf, hooks: d.hooks, small: [...d.small], box: d.box, x: [...lay.x], y: [...lay.y], text: names, water: { rivers: [...W.rivers], sea: W.sea ? [...W.sea] : [], band: W.band }, runs: (W.runs ?? []).flatMap((r) => r.parts.map((p, i) => ({ p: [...p], marks: i ? [] : r.marks, arc: r.arc, river: r.river }))), failed: W.failed ?? [], falsePts: W.falsePts ?? [], seaRings: (W.seaRings ?? []).map((v) => Array.from(v, (c) => Math.round(c))) };
 }
 writeFileSync(`${OUT}figures.json`, JSON.stringify(figures, null, 1));
 process.exit(failed ? 1 : 0);
@@ -287,9 +397,15 @@ function groundPng(city, S, real) {
   const img = new Uint8Array(W * H * 3).fill(250);
   const put = (px, py, c) => { if (px >= 0 && py >= 0 && px < W && py < H) img.set(c, (py * W + px) * 3); };
   for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
-    const s = real.seaAt(x0 + (px + 0.5) * mpp, y1 - (py + 0.5) * mpp);
+    const gx = x0 + (px + 0.5) * mpp, gy = y1 - (py + 0.5) * mpp, s = real.seaAt(gx, gy);
     if (s === 1) put(px, py, [170, 205, 225]);
-    else if (s < 0) put(px, py, [235, 235, 235]);
+    else if (real.isSea(gx, gy)) put(px, py, [200, 220, 235]);
+    else {
+      // T-2540: land masses, a colour each; water parting them dark
+      const m = real.massAt(gx, gy);
+      if (m < 0) put(px, py, [90, 120, 170]);
+      else put(px, py, s < 0 ? [235, 235, 235].map((v, k) => v - ((m * [37, 71, 113][k]) % 40)) : [250, 250, 250].map((v, k) => v - ((m * [37, 71, 113][k]) % 60)));
+    }
   }
   const line = (ax, ay, bx, by, c, r = 0) => {
     const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / mpp));
