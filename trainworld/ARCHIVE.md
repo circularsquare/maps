@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2549 Dock tab row has a top rule (2026-11-05, agent launchbits, tree): `.tabs` border-top in the rule colour, so the tabs read as a closed box; checked on desktop and a 412 px phone, light and dark.
+- T-2548 Phones: no purpose picker on the demand row (2026-11-05, agent launchbits, tree): hidden at the phone width; a Purpose choice under Demand bubbles in the settings tab sets the filter on every screen (DECISIONS).
+- T-2545 A load that fails says so (2026-11-05, agent launchbits, tree): "ran out of memory. works best on a computer." or "failed to load :( works best on a computer." on every failure screen, the pre-check too; a load found unfinished at the next start (iOS reload) says the memory one.
+- T-2544 Link card (2026-11-05, agent launchbits, tree): description back to "Build trains around the world!"; preview.png is the start logo before a globe, bottom variant (artifacts/trainworld/launchbits/card-side.png is the other).
 - T-2540 Diagram islands in a recognisable shape (2026-11-05, agent diagislands, tree): the sea is sampled through the stations' maps from ground known everywhere (rays gone); land masses parted by sea or ~600 m water are drawn apart. All Japan: four main islands and Okinawa separate (one piece before). notes/T-2540.md.
 - T-2517 Diagram seas drawn in pieces (2026-11-05, taken in by T-2540): Japan's drawn sea 48 regions joined into 45 -> 32 into 22, the ocean in 9 -> 5 pieces; New York's core bands winding where the layout scatters crossings goes with T-2541. notes/T-2540.md.
 

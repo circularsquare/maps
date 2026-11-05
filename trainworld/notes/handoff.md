@@ -64,6 +64,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
   "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
   after a deploy, so left as is.
+- diagislands LANDED dd30a3ac (records 03cbd629; agent at 502k, retired): T-2540 + T-2517 sea sampled through station
+  maps, land masses kept apart, Japan 4 islands separate (Honshu IoU 0.25 -> 0.54); also fixed checks' Japan frame
+  (6 km off) in diagram-saves.mjs. Anita: "the after diagram looks great". **diagstraits** (Opus, tree from 03cbd629,
+  port 6193, ids T-2550..51): T-2541 straits/bays kept wide, scale evened (Boso, Izu), + T-2542 checks' frame.
+  Anita: "peninsulas dont hae to be huge especially if theres nothing on them. middle groud, i guess." (passed on).
+- diagcross LANDED 2c7284d8 (records 0db0df66; agent at 455k, retired): T-2534 crossings held outside dense places
+  (12+ stations within 2.5 km), kept 0.23 -> 0.57; test save artifacts/trainworld/diagcross/through.save (New Haven
+  102 -> 5 pitches off the Shore Line). Filed T-2538 (routing loses crossings), T-2539 (t2407 limit). Review:
+  review/diagram-through-before/after.png. Next for layout: T-2541 (straits and bays kept wide; diagislands filed it)
+  once diagislands lands.
+- Newer-save notice reworded per Anita, c1109058: "This game was saved on a newer game version. Reload the page to
+  update." (bar + save tip), download tip "Download as a file, as saved on the newer game version".
 - uismall4 LANDED 42ccfc96 (T-2535 empty rail/bus line deletes without confirm; T-2536 no profit until trains + first
   demand result, "calculating..." meanwhile; zero-rider case loosened via linesPending, untested). String added:
   "calculating..." (Profit row).
