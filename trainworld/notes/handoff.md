@@ -1,85 +1,63 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38 (resumed after
-Anita's VS Code restart, ~19:00)
-Updated: 2026-11-04 22:51
+Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38
+Updated: 2026-11-05 09:45
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **8f9cb6af** (+ records). Landed 2026-11-04 evening: profit2, achieve, deadcode, diagborders, termtrain,
-  ferrybus (T-2451, T-2450), cityfirst (T-2453), busviews (T-2452), barecheck (T-2435), buspanel (T-2373), smallui
-  (T-2462, T-2463), ferrybus again (T-2467-69), diagzones (T-2464), diagnames (T-2447), "holiday load" hover, and
-  8f9cb6af **Ukraine + Crimea (T-2344)**: 33 rows shipped, kyi-ua group, borders with RU/BY factor 0.
-- **8800 = build at 8f9cb6af**: smoke PASSED light (dark ran in the background at ~22:55). LIVE = 821. Publish only on
-  Anita's word (release "later this week"; Mexico and Brazil before release).
-- **Cores cap 12** (Anita: "keep 4 cores free"); europe may raise to 14 after ~01:00 if she's quiet, back to 12 after.
-- Disk 39 GB free (pre-T2344 deleted).
+- master **3a2be5bf** (+ records commit). Main-tree smoke at 004354ca PASSED, 12,515,600: the 2 trips over 598 come
+  from europe's uncommitted market-rows.json (trees, with the committed one, give 598). Recheck after Europe's join.
+- **8800 = build 956 (a8a72002)**, from before Europe's retire. Not rebuilt since: waits for Europe's join (pack
+  writes). LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico, Brazil before release).
+- **Cores cap 12** (back from overnight 15 at ~08:00). Disk ~40 GB free.
 - **Pack lock: europe's** (T-2302). Then Mexico T-2436 -> Brazil T-2437.
-- Uncommitted: TODO.md (Anita's); agents' work as they go.
+- Uncommitted: TODO.md (Anita's); europe's files (world_plan.json, registry.json, market-rows.json, zone-names.json,
+  zone-successors.json, docs/world-run.md, notes/T-2302.md).
 
-## Anita today (2026-11-04), in her words where it matters
-- Cleanup: "we might be overdue for a code and documentation cleanup"; "feel free to make decisions among yourselves
-  regarding reorg" (T-2359 stages).
-- Profit view "looks good"; money plots, achievements, capacity dashes (kept dashed: "i cannot tell what is a crowding
-  indicator and what is just a red line"), Shift+1-7, 2 px bar edge, cross and Esc: all built and on 8800.
-- Diagram: blocks "nice"; faint zone borders and far-zoom city names built (T-2168, T-2438); water later (T-2169).
-- Sukabumi+Cianjur stays one zone ("no preference ... lets keep it"). Europe replan before Mexico and Brazil.
-- Batches: notes/todo-2026-11-04a.md .. -04i.md.
+## Landed 2026-11-05 (after build 956; none on 8800 yet)
+- loadwait 8e2bd280 (T-2476, T-2478), memhunt ecac1167 (T-2485), simtidy fb674fba (T-2379), codemap 27a59ef1 (T-2368,
+  T-2504), loadfix c8d22020 (T-2499 range race: reloads missed the demand cache; T-2459 Okinawa 842 -> 13 s),
+  drives 74c07452 (T-2384), focusmem a19c9e08 (T-2495 peak 3.9 -> 3.5 GB; T-2500 Tokyo graph 874 -> 193 s),
+  flags 118c615a (T-2370), t409 check c50034b8 (T-2513: stale check, no double count; T-2527 filed),
+  diagwater2 afe9bf07 (T-2497 octilinear coast + T-2516 continuous rivers to the sea, LI Sound joined, water colour
+  nearer land; still behind ?water; T-2510, T-2511, T-2517, T-2518 filed), demandtidy fb66c4ad (T-2371; T-2512 rest),
+  toolstidy 249ecb09 (T-2372: dragged curve labels culled), uismall3 004354ca (T-2525 "Done editing stops" -> "Edit
+  stops" pressed; T-2526 auto-names count lines stopping in the zone; T-2522 track bar text 12 -> 14 px; T-2519
+  headway cap 4 h, 15-min steps past 1 h), diagnames2 3a2be5bf (T-2521 big half-transparent grey city names centred
+  on their block, under the lines; only below the 1.47 px pitch switch, as before).
+- Strings shown to Anita: "Done editing stops" -> "Edit stops"; "worker 2: undefined" -> "worker 2: its code could
+  not be downloaded" (loadwait). Nothing else.
 
-## In flight (maps-17's; common brief scratch/common-brief-tree.md, from 8f9cb6af)
-- **europe** (Opus, main tree, pack lock, port 6197, ids T-2479..80): T-2302 Europe replan per notes/T-1189.md "Next";
-  go given if the dry counts match 628 -> 462 (399 removed, 233 new). Plan written exact (23:4x); backup
-  data/work/pre-T2302/pre (4 GB); build-only run batch 20261104-234553 (233 rows, 7 cores, no browser), several
-  hours. Build-first failed at home (cut_packs cuts new outlines by old packs on disk): now Taiwan's way, retire
-  (go given 00:00) -> build-only -> browser gate -> join. From the retire until the gate registers, Europe's
-  countryside zones are holes in the main tree's data: tree pages must avoid Europe; no 8800 rebuild until Europe's
-  pack writes end. Kit: scratch\europe; notes/T-2302.md has steps, PIDs, restart commands.
-- **8800 = build 956 (a8a72002)**, built 00:00 before the retire: uismall2's five fixes and the looser zone borders.
-  Smoke light PASSED; dark's browser checks all PASS, its Node check t1053-zone-ids failed on the main tree's
-  mid-retire data (expected until zone_successors runs; not an 8800 fault). It messages maps-17 when a browser gate starts
-  and ends: land trees only between gates.
-- uismall2 LANDED 0e50cf65 (T-2473, T-2474, T-2475 profit = whole local day of its kind, T-2477, T-2487 titles).
-  Not on 8800 yet.
-- loadwait LANDED 8e2bd280 (T-2476: zone in view takes cluster rounds without focus pool; graph with round 0;
-  T-2478 Vancouver: a failed boundary was kept dead for the page's life after 8800 rebuild 404s; now retried).
-  New string: "worker 2: undefined" -> "worker 2: its code could not be downloaded". Filed T-2483 (8800 build swap:
-  maps-17 rewrote scratch snapbuild.cmd to build into dist-new and swap; first use pending), T-2484, T-2499.
-- loadfix LANDED c8d22020 (T-2499: Chrome answered a Range request with a 200 holding only the range during a
-  whole-file download; clock worker sliced it empty and dropped the zone's bus street speeds/water mask/walks for the
-  session, so the network hash differed and reloads missed the cache; new workers/rangeFetch.ts. T-2459: Okinawa
-  842 s -> 13 s, figures bit-identical. T-2484 archived. Filed T-2500.) The same race likely explains the 2-trip
-  smoke wobble (598 vs 600) and diagshape's "water mask for nyc not loaded: RangeError": recheck after Europe.
-- simtidy LANDED fb674fba (T-2379: 10 exports to plain impls, 15 probes/833 lines, api.rs take instead of clone).
-  **Watch:** dev smoke after it on the main tree gave 12,515,600 rail trips a day against 12,515,598 at build 956.
-  The main data is mid-Europe-replan (market rows can move NYC's intercity a little), and api.rs's change was not
-  run through calib. After Europe's pack writes end, compare the 8800 smoke; if still 600, check whether Europe
-  explains it (smoke at fb674fba vs 09438360 on the same data) before blaming api.rs.
-- codemap DONE (T-2368: ~110 entries added, 20 removed); maps-17 fixed doc_lint's `old/` blind spot (T-2504).
-- drives LANDED 74c07452 (T-2384: 912 lines; smoke 12,515,598 before and after on its tree, so the 600 earlier was
-  the range race loadfix fixed).
-- **focusmem** (Opus, tree .tw-trees/focusmem from d0bc1e43, 6196, ids T-2508..09): T-2500 big-cluster selected
-  zone's graph, T-2495 focus pool memory (peak under 3.6 GB).
-- sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
-  filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
-  publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
-  data/frozen 20261104-131517 and -182622 (4 GB) after Europe's freeze; trees as they land.
-- T-2488 archived: Anita on the looser outlines (00:30, 2026-11-05): "look great!! big improvement"; hybrid shelved.
-- diagshape LANDED 38ce99f0 (T-2491 local hops 0.4, min 3 pitches; outline CLOSE 50 and outward edge tolerance 10;
-  T-2492 city names in the basemap's place grey). Japan's line length -9%, T-2405 hidden 1 -> 2, 3 pills touched by
-  a border on Japan: check Anita's view on 8800. Its Vite logged "clock worker: water mask for nyc not loaded:
-  RangeError" (data junction during Europe?): recheck after Europe's pack writes.
-- diagwater LANDED 988c5f40 behind `?water` (maps-17's call: rivers in pieces/stubs in NYC's core, sea coast a
-  blocky staircase). Show Anita game-nyc-light.png and game-tor-light.png (artifacts/trainworld/t2169/) and ask
-  whether to iterate (T-2497 gaps and stubs, smoother coast) or switch on. Agent retired (589k).
-- memhunt LANDED ecac1167 (T-2485: real save settles 2.97 -> 2.87 GB, load peak 4.22 -> 3.97 GB; the 3.8 was
-  mid-load; biggest: solving workers' WASM ~350 MB each, focus pool ~0.7 GB during a load). Filed T-2495 (focus pool
-  memory), T-2496 (WASM heap accounting). Cache format 8. Told loadfix to rebase.
-- Anita went to bed ~00:45 2026-11-05: "feel free to keep going with stuff after europe"; "feel free to up cores
-  overnight as usual and keep going after the normal context handover cap overnight" (recorded in trainworld/CLAUDE.md
-  and maps/CLAUDE.md, the latter uncommitted for her). **Cap set to 15; put it back to 12 at ~08:00 or when she's
-  back.** R2: 2026-10-30b purged (live 2026-11-03b, kept 2026-11-03); publish/20261103-051954 deleted.
-- Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
+## In flight
+- **europe** (Opus, main tree, pack lock, port 6197): all 234 rows built; gate 230/234; bef, krz, gzd, nic relaxed.
+  **gate2 running since 09:41** (browser, ~10 min; no app/WASM landings until it says ended), then
+  prejoin backup, join (detached, several hours), after-steps (terrain, market drives, inputs, stale,
+  zone_successors --set, smoke, docs). Kit: old scratch\europe; notes/T-2302.md has PIDs and restart commands.
+  Backup data/work/pre-T2302/pre (4 GB); undo `tools/country/restore.py T2302 pre --go`. Agent at ~335k tokens.
+- **diagparallel** (Opus, tree .tw-trees/diagparallel from c50034b8, port 6193, ids T-2529..30): T-2520 parallel
+  lines stay parallel (Manhattan's avenues). Rebases onto afe9bf07/3a2be5bf at landing.
+- **bubbleload** (Opus, main tree read-only, scratch worktrees for old builds, ports 6188-89, ids T-2532..33):
+  T-2531 [P1] Anita ~09:30 "i feel like loading of demand bubbles in the city we're looking at has honestly
+  regressed"; measures builds 827 -> 956 -> master on her save artifacts/trainworld/anita-2026-11-05/
+  north-america-day-361.save and the real save; also T-2508 (bubbles ~25 s after figures), which she wants looked into.
+
+## After Europe's join
+- Rebuild 8800 with the new snapbuild.cmd (first use of the dist-new swap, T-2483), smoke light and dark, confirm
+  12,515,598 and no water-mask RangeError, ping Anita. Delete world_run `*-backup` folders (4.2 GB), data/frozen
+  20261104-131517 and -182622 after Europe's freeze, pre-T2302 once clean.
+- Waiting tasks: T-2523 + T-2524 (load messaging, stall profile; after bubbleload's findings), T-2528 river width
+  (after T-2520), T-2512, T-2517, T-2518, T-2510.
+
+## Anita 2026-11-05, in her words where it matters
+- Overnight: "feel free to keep going with stuff after europe"; cores up and past the context cap overnight
+  (recorded; maps/CLAUDE.md line committed 0221ad6f, "fine to commit").
+- Diagram: borders "look great!! big improvement"; rivers (T-2516) "rivers look better! i think we could do a bit
+  more with regards to reflecting how thick the water is, but its pretty good" (T-2528). "ok, we can do 4 hours and
+  layout jobs first."
+- Batch notes/todo-2026-11-05a.md (T-2519..T-2526).
+- Next free id **T-2534**.
+
 
 ## Next
 1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show
