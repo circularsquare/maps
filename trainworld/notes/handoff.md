@@ -46,7 +46,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   New string: "worker 2: undefined" -> "worker 2: its code could not be downloaded". Filed T-2483 (8800 build swap:
   maps-17 rewrote scratch snapbuild.cmd to build into dist-new and swap; first use pending), T-2484, T-2499.
 - **loadfix** (Opus, tree .tw-trees/loadfix from 8e2bd280, 6196, ids T-2500..01): T-2499 reload cache miss, T-2459
-  worst case (Okinawa 18 min), T-2484 if room.
+  worst case (Okinawa 18 min), T-2484 if room. Told to rebase onto ecac1167 (memhunt).
+- **simtidy** (Sonnet, tree .tw-trees/simtidy from 09438360, 6199, ids T-2502..03): T-2379 sim small cleanup items
+  (Rust approved; WASM rebuild at landing).
+- After loadfix lands: T-2384 drives view removal (touches demandClient), T-2495 focus pool memory.
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
