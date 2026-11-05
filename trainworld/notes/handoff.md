@@ -38,10 +38,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
   data/frozen 20261104-131517 and -182622 (4 GB) after Europe's freeze; trees as they land.
-- **diaglines** (Opus, tree .tw-trees/diaglines from fb4c5e61, 6198, ids T-2489..90): T-2488 SPIKE, report before
-  landing: zone borders as layout lines (virtual nodes along real boundaries), plus her fallback (hull, 2-3 pitch
-  clearance); all built zones and neighbours. Anita: T-2464 "mostly just hugging the lines"; wants her idea answered
-  plainly ("make sure i read it").
+- diaglines spike DONE (T-2488, notes/T-2488.md): in-layout borders don't work (network shrinks inside them, layout
+  1.4-22x slower); on-top routed lines put 9% of Japan's stations outside. maps-17 landed her fallback 0a786c63
+  (margin 5, close 30, tolEdge 3, radius 3). Hybrid waits on Anita. Agent retired (392k).
 - Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
 
 ## Next
