@@ -7,6 +7,20 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 
 ## 2026-11-05
 
+- **T-2528: the distortion dial's default is 0.5** (was 0.8), Anita: "i kidna like 0.5". T-2556's one fail there (a
+  channel skipped for a river later left out) is fixed, so every water check passes at 0.5.
+- **T-2528: a river band is its real width at the drawing's smoothed scale**, a geometric mean of the nearest stations'
+  local scales with Gaussian weights (R 1.5 km), smoothed 1.5 km along the river, floored at half its widest stretch at
+  the real widths' ratio, clamped to 3 lines to 18 pitches. A smooth field rather than each station's own scale, after
+  Anita's "the factor by which we expand an area should be a little continuous": per-station scales jump 2.6 times
+  between a hop's ends at the 90th percentile in New York.
+- **T-2528: a band narrows to its room** (never over a pill, nor a line running alongside within 30 degrees that it does
+  not cross; lines across it pass over it). Covering stations or parallel lines with water reads as wrong geography, so
+  thin spots stay where the layout leaves no room (Manhattan's core) until the layout keeps rivers' sides.
+- **T-2528: land a voter carries a cell to across the sea, nearest a far-shore station that is not one of the cell's
+  voters, votes sea** (waterSea.ts `farShore`): a far shore is drawn where its own stations are. A layout term giving
+  rivers room (river part of a crossing hop at 2x, bank pairs held apart) was tried and left out: no gain in New York.
+
 - **T-2556: the diagram's distortion dial is set at 0.8** (1 is the drawing as tuned before, 0 every hop at its real length). Anita loves today's look but leans a little less distorted: 0.8 keeps the cores and the close-up schematic as they were, draws Hokkaido and northern Tohoku about a quarter bigger against the Kanto core (0.15 -> 0.18) and Kyushu's and Shikoku's shapes closer, with layout figures as good as master's or better. 0.5 reads most like Japan but shrinks Tokyo and New York's subway to small knots, a different look. Turn `DISTORT` in layout.ts to revisit; `?distort=` tries a setting. notes/T-2556.md.
 - **T-2081: Mexico's jobs are DENUE's units at their points plus the jobs DENUE leaves out, spread by tier 0's proxy.** DENUE has no farm work, street trade with no fixed site or paid domestic work, so its 38.3M workers are 0.304 a resident against the World Bank's 0.455; the 0.151 gap goes over each row's people by the proxy, so the country's total stays tier 0's. Each band counts at Censos Economicos 2019's mean sizes (0-5 people 2, 251 and more 900), which bring DENUE to 38.3M against the census's 36.0M. notes/T-2080.md.
 - **T-2080: Mexico's rural people sit at ITER's locality points**, each locality over the cells nearer it than any other within 2 km, by GHSL; rural AGEBs (median 93 km2) are not used. notes/T-2080.md.

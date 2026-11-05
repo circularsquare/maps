@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2528 Diagram water width (2026-11-05, agent diagrivers, tree): dial at 0.5; river bands at their real width times a smooth scale field (3 lines to 18 pitches, floored downstream, cut to the room); Long Island Sound open water (far-shore land votes sea). Core rivers still thin, Sound 3.7x Long Island: layout follow-ups. notes/T-2528.md.
+
 - T-2552 The load bar's model on a big save (2026-11-05, agent loadbar, tree): a file's wait no longer takes the last game's, the solve pace no longer comes from a tiny solve, a converged last period no longer sets the round, zone bars wait for their solve. Anita's save: no sit over 15 s (was 49 s at 94%, 40 s at 99%). notes/T-2552.md.
 - T-2557 A big save's reload and the demand cache (2026-11-05, agent loadbar): it hits (same network hash, cached result at 24-30 s); loadnotes' 193 s reload had cache writes off. The real save's first reload misses on a fare rounded on save (old saves only, not fixed). notes/T-2552.md.
 - T-2555 Diagram costs after T-2550 (2026-11-05, done by T-2556): at the dial's 0.8 the Tokyo capture's pill overlaps 5 -> 0, New York close pairs 2 -> 0, Tokyo's rebuild move passes, crossings kept 126 -> 142 of 253. notes/T-2556.md.
