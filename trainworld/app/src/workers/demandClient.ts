@@ -2773,9 +2773,11 @@ class DemandClient {
       if (!this.fpool) return;
       const shown = demandByDay.peek()[0].view;
       const alone = !shown || (shown.version === s.version);
-      demandByDay.value = alone ? await this.daysOf(s, s.layout, round, false, res) : this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
+      const days = alone ? await this.daysOf(s, s.layout, round, false, res) : this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
       if (!this.fpool) return;
+      // (before the figures go out: the bubbles' effect asks at once where they come from, T-2508)
       this.fshown.set(id, { s, ests, round });
+      demandByDay.value = days;
       focusZones.value = new Map(focusZones.peek()).set(id, final);
       if (!alone) this.askTurn(); // T-2453
       const l = this.flog.find((x) => x.version === s.version);
@@ -3207,8 +3209,9 @@ class DemandClient {
     return this.ask(make, [this.computeN], [], zone, undefined, true);
   }
 
-  /** Send `make(id)` to the given workers (all by default) and collect their replies. */
-  private ask(make: (id: number) => Query, which: number[] = this.workers.slice(0, this.computeN).map((_, i) => i), transfer: Transferable[] = [], zone?: CityId, t?: Target, toFocus = false): Promise<Reply[]> {
+  /** Send `make(id)` to the given workers (all solving workers by default) and collect their replies. */
+  private ask(make: (id: number) => Query, only?: number[], transfer: Transferable[] = [], zone?: CityId, t?: Target, toFocus = false): Promise<Reply[]> {
+    let which = only ?? this.workers.slice(0, this.computeN).map((_, i) => i);
     this.syncFocus();
     const id = this.nextQuery++;
     // `zone`: a nearby zone's question (T-276), about that zone whatever the focus does meanwhile
@@ -3218,7 +3221,9 @@ class DemandClient {
     // to its aux, any other to its solving workers)
     const fp = this.fpool, version = (q as { version?: number }).version;
     const pool = fp?.alive && (toFocus || (version !== undefined && this.fversions.has(version))) ? fp : null;
-    if (pool) which = which.includes(this.computeN) ? [pool.auxAt] : pool.workers.slice(0, pool.n).map((_, i) => i);
+    // (one solving worker asked by name stays one: `flows`, its sums transferred, went to both of two focus
+    // workers, the second post threw on the detached buffer and the far end never came, T-2531)
+    if (pool) which = which.includes(this.computeN) ? [pool.auxAt] : only?.length === 1 ? [Math.min(only[0], pool.n - 1)] : pool.workers.slice(0, pool.n).map((_, i) => i);
     const workers = pool?.workers ?? this.workers;
     return new Promise((done) => {
       this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? replies : []), focus: !!pool });
@@ -3475,6 +3480,16 @@ class DemandClient {
   private liveAt(at: Target): Target {
     const t = this.target();
     return t?.wait && t.version === at.version && t.round > at.round ? t : at;
+  }
+
+  /** T-2508: which solve `cellModes` reads a zone's legs from: the focus pool's (and whether settled), a
+   * cluster's final (T-392), or the view's. The bubbles are asked again when it changes, also while the
+   * view keeps its version (a game load's or an edit's figures put into the result shown before). */
+  legsKey(zone: CityId = activeCity.peek()): string {
+    const f = this.fpool?.alive ? this.fshown.get(zone) : undefined;
+    if (f) return `f${f.s.version}${f.round >= ROUNDS ? "F" : ""}`;
+    const src = this.cityVersion.get(zone);
+    return src !== undefined ? `c${src}` : `v${demandView.peek()?.version}`;
   }
 
   cellModes(everydayToo = true, zone?: CityId): Promise<CellModes | null> {
@@ -4177,10 +4192,14 @@ class DemandClient {
       const alone = !shown || shown.version === s.version;
       if (!final && s.showEstimates && !alone) return this.selectedRound(s, res, c.cities, round);
       if (!final && (!s.showEstimates || !alone)) return;
-      if (alone) demandByDay.value = await this.daysOf(s, fresh, round, false, res);
+      // (a final's zones are its version's before the figures go out: the bubbles' effect asks at once where they
+      // come from, T-2508)
+      const settle = () => { if (final) for (const id of c.cities) this.cityVersion.set(id, s.version); };
+      if (alone) { const days = await this.daysOf(s, fresh, round, false, res); settle(); demandByDay.value = days; }
       else {
         const ests = await this.daysOf(s, fresh, round, final, res, !c.market);
         const ids = new Set(s.layout.map((l) => l.id));
+        settle();
         demandByDay.value = demandByDay.peek().map((d, k) => {
           if (!d.view) return d;
           const est = ests[k];
@@ -4302,7 +4321,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   onLoadStop((why) => c.fail(why));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
-  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone) });
+  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;

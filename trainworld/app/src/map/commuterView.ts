@@ -15,7 +15,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
-import { cellModes, cityCells, demandUpdating, demandView, flows, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
+import { cellModes, cityCells, demandUpdating, demandView, flows, legsKey, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours, setBubbleShade } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
@@ -233,7 +233,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })());
 
   // ---- the city's bubbles ----
-  type ZoneShown = { dv: DemandView; end: BubbleEnd; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes };
+  /** `src`: the solve the legs came from (`legsKey`, T-2508) */
+  type ZoneShown = { dv: DemandView; end: BubbleEnd; purpose: PurposeFilter; bubbles: Bubbles; modes: CellModes; src: string };
   /** A zone's legs per cell for one result and purpose, and each end's bubbles built from them
    * (T-1904: kept per end, so Homes, Destinations and Total switch without a worker round trip) */
   type Built = { dv: DemandView; purpose: PurposeFilter; modes: CellModes; ends: Map<BubbleEnd, Promise<Bubbles>>; done: Map<BubbleEnd, Bubbles> };
@@ -266,8 +267,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     })();
   }
   /** whether bubbles already shown are the ones the current result, end and purpose would build */
-  const isCurrent = (s: ZoneShown, dv: DemandView, end: BubbleEnd, purpose: PurposeFilter, updating: boolean) =>
-    s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || updating) && s.bubbles.anchor.version === anchor().version;
+  // (T-2508: while updating, a view of the same version may carry the zone's figures of another solve: a game load's
+  // focus pool or an edit's local result put into the result shown before)
+  const isCurrent = (s: ZoneShown, dv: DemandView, end: BubbleEnd, purpose: PurposeFilter, updating: boolean, zone?: CityId) =>
+    s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || (updating && s.src === legsKey(zone))) && s.bubbles.anchor.version === anchor().version;
   let shown: ZoneShown | null = null;
   let built: Built | null = null;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
@@ -322,7 +325,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       }
       const old = focusSeen, was = shown;
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
-        const keep = was ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes } : null;
+        const keep = was ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes, src: was.src } : null;
         zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep, built });
         if (keep) view.setNearbyBubbles(old, painted(keep.bubbles).levels.map((l) => l.discs), keep.bubbles.anchor);
       } else worker?.terminate();
@@ -382,13 +385,14 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     // newer result's legs are on their way (which then replace it as they would the other end's)
     if (shown && shown.end !== end) tries = 0; // a pick starts its retries at the shortest pause
     const stand = shown && shown.end !== end && built?.purpose === purpose && built.dv === shown.dv ? built.done.get(end) : undefined;
-    if (stand && stand.anchor.version === anchor().version) showBubbles({ dv: built!.dv, end, purpose, bubbles: stand, modes: built!.modes });
+    if (stand && stand.anchor.version === anchor().version) showBubbles({ dv: built!.dv, end, purpose, bubbles: stand, modes: built!.modes, src: shown!.src });
     retry.value; // T-1493: asked again after an answer that did not come
     const ask = ++wanted, epoch = focusEpoch;
     // T-1533: an answer overtaken by a newer ask still shows while the zone has no bubbles at all, so
     // estimates landing faster than bubbles are built do not keep the zone bare until the last one
     const overtaken = () => ask !== wanted && (!!shown || epoch !== focusEpoch || purposeFilter.peek() !== purpose);
     void (async () => {
+      const src = legsKey();
       const same = built?.dv === dv && built.purpose === purpose;
       let modes = same ? built!.modes : null;
       if (!modes) {
@@ -409,7 +413,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const w = worker;
       const b = await endBubbles(entry, end, w);
       if (overtaken() || display.peek().commuterEnd !== end) return;
-      showBubbles({ dv, end, purpose, bubbles: b, modes });
+      showBubbles({ dv, end, purpose, bubbles: b, modes, src });
       if (selection.peek()?.kind === "commuters") refreshPick();
       buildRest(entry, w, () => built === entry && worker === w && epoch === focusEpoch);
     })();
@@ -447,7 +451,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       let z = zones.get(id);
       if (!z) zones.set(id, (z = { worker: null, city: null, cellsWorld: null, ask: 0, shown: null, built: null }));
       const s = z.shown;
-      if (s && isCurrent(s, dv, end, purpose, updating)) {
+      if (s && isCurrent(s, dv, end, purpose, updating, id)) {
         const b = z.built, w = z.worker, entry = z;
         if (settled && b && b.dv === s.dv && w) buildRest(b, w, () => zones.get(id) === entry && entry.built === b && entry.worker === w);
         continue;
@@ -479,6 +483,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
           return true;
         })();
         if (!(await entry.start) || !live() || !entry.city) return;
+        const src = legsKey(id);
         let kept = entry.built?.dv === dv && entry.built.purpose === purpose ? entry.built : null;
         if (!kept) {
           // null: the zone is not in the solve shown yet (opened since); the next result asks again
@@ -492,7 +497,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         if (!live()) return;
         const modes = mine.modes;
         buildRest(mine, w, () => zones.get(id) === entry && entry.built === mine && entry.worker === w);
-        entry.shown = { dv, end, purpose, bubbles: b, modes };
+        entry.shown = { dv, end, purpose, bubbles: b, modes, src };
         view.setNearbyBubbles(id, painted(b).levels.map((l) => l.discs), b.anchor);
         commuterStats.nearbyMs = performance.now() - t0;
         commuterStats.nearbyBuilds++;
@@ -855,7 +860,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let nearAnchor: Anchor = anchor(), farAnchor: Anchor = anchor();
   /** the far end summed into every level (in the worker: up to ~80k cells), relative to `farAnchor` */
   let farCells: Groups[] | null = null;
-  let flowAsk = 0;
+  let flowAsk = 0, farTries = 0;
   let lastFlowKey: unknown = null;
   /** the selection's last far-end answer, every purpose in it (T-158) */
   let lastFlows: { sel: Selection; dv: DemandView | null; f: Flows; parts?: { home: Flows; work: Flows } } | null = null;
@@ -959,6 +964,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const key = [sel, dv, purpose, anchor().version]; // the far end is summed again at a new draw anchor (T-317)
     if ((lastFlowKey as unknown[] | null)?.every((v, i) => v === key[i])) return;
     lastFlowKey = key;
+    if (prev?.sel !== sel) farTries = 0;
     const ask = ++flowAsk;
     const t1 = performance.now();
     commuterStats.pickAt = t1;
@@ -969,8 +975,14 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const answer = lastFlows?.sel === sel && lastFlows.dv === dv ? Promise.resolve({ f: lastFlows.f, parts: lastFlows.parts })
       : sel.end === "both" ? both(Uint32Array.from(sel.cells)) : flows(sel.end, Uint32Array.from(sel.cells)).then((f) => (f ? { f, parts: undefined } : null));
     void answer.then(async (got) => {
-      // null: the workers moved on; the next demand result asks again
-      if (ask !== flowAsk || !got || selection.peek() !== sel || !worker) return;
+      if (ask !== flowAsk || selection.peek() !== sel || !worker) return;
+      // null: the workers moved on, or (T-2523) hold no solve of the result shown yet (a cached result's, until
+      // its fresh solve is sent): while a solve runs it is asked again soon, else at the next demand result
+      if (!got) {
+        if (demandUpdating.peek()) window.setTimeout(() => { if (ask === flowAsk && selection.peek() === sel) { lastFlowKey = null; refreshPick(); } }, Math.min(RETRY_MAX_MS, RETRY_MS * 2 ** farTries++));
+        return;
+      }
+      farTries = 0;
       const f = got.f;
       lastFlows = { sel, dv, f, parts: got.parts };
       commuterStats.flowsAt = performance.now();

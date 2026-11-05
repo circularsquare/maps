@@ -508,6 +508,7 @@ export interface DemandQueries {
   intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
   intercityStation(stationId: string, members?: string[]): Promise<IntercityStation | null>;
   tripLengths(zone?: CityId): Promise<TripLengths | null>;
+  legsKey(zone?: CityId): string;
 }
 
 let queries: DemandQueries | null = null;
@@ -524,6 +525,8 @@ export const zoneTripLengths = (zone?: CityId): Promise<TripLengths | null> => q
  * New York. `purpose`: one purpose's legs only (T-158); longer trips have no local legs (zeros).
  * `city`: a nearby zone's (T-276), not cached; null while that zone is not in the solve shown. */
 export const cellModes = (purpose: PurposeFilter = "all", city?: CityId): Promise<CellModes | null> => queries?.cellModes(purpose, city) ?? Promise.resolve(null);
+/** T-2508: which solve `cellModes` would read the zone's legs from now (bubbles built from another are stale) */
+export const legsKey = (city?: CityId): string => queries?.legsKey(city) ?? "";
 /** A station's catchment and where its riders go, for the solve `demandView` shows; `top` zones
  * per direction (default 20). A few kB; ask on click. `members`: a station complex's stations,
  * summed (T-146). */
