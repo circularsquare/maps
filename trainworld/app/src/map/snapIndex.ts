@@ -49,7 +49,7 @@ export function nodesNear(w: WorldView, lx: number, ly: number, reach: number): 
 
 /** An edge with the track points it has near a place: `ks` the offsets into `pts` (x, y, z triples)
  * of the stretches starting there, ascending. */
-export interface EdgeNear {
+interface EdgeNear {
   edge: number;
   pts: Float32Array;
   ks: number[];

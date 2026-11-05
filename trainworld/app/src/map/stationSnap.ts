@@ -2,12 +2,12 @@
 // tracks, and the nearest spot with room when the platform would not fit the pointer's. Pure, so
 // checks/t671-station-snap-check.mjs runs it without a browser.
 
-export interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean; hsr?: boolean }
-export interface SnapNode { platform: number; ports: number; bus?: true }
+interface SnapEdge { id: number; a: number; b: number; built: boolean; lengthM: number; off?: boolean; tracks?: number; crossover?: boolean; hsr?: boolean }
+interface SnapNode { platform: number; ports: number; bus?: true }
 /** a spot on a track: the edge, and how far along it from node `a` to node `b`, 0 to 1 */
 export interface Spot { edge: number; frac: number }
 
-export function edgesByNode(edges: readonly SnapEdge[]): Map<number, number[]> {
+function edgesByNode(edges: readonly SnapEdge[]): Map<number, number[]> {
   const byNode = new Map<number, number[]>();
   for (const e of edges) for (const k of [e.a, e.b]) (byNode.get(k) ?? byNode.set(k, []).get(k)!).push(e.id);
   return byNode;

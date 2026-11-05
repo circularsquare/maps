@@ -1,15 +1,18 @@
 // The elevation and speed limit in the map's tags (T-526): the track hover and the track tool's
 // placing tag write them the same way, an icon then the value on its display colour.
 
-import { levelLabel, moneyShort, plural, speed } from "../game/format";
+import { distance, levelLabel, moneyShort, plural, speed } from "../game/format";
 import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
+import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
 import { busSpeedColour, inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
-import { guideVerbose } from "../game/ui";
+import { guideVerbose, highSpeed } from "../game/ui";
+import type { Level, LineInput } from "../game/types";
+import type { PreviewAnswer } from "../workers/clockClient";
+import { onScreen, placeAt } from "./screenPlace";
 
 const WATER_COLOUR = "#7fb3e0";
-import type { Level, LineInput } from "../game/types";
 
 /** An up and down arrow: elevation. */
 const ELEVATION_PATH = "M8 1.8v12.4M5 4.8l3-3 3 3M5 11.2l3 3 3-3";
@@ -155,4 +158,158 @@ export function factRow(...facts: HTMLElement[]): HTMLDivElement {
   d.className = "tag-facts";
   d.append(...facts);
   return d;
+}
+
+/** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */
+const TOP_KMH = 160;
+/** High-speed track's straight limit, km/h (the sim's `V_HSR`, T-817). */
+const HSR_KMH = 320;
+
+/**
+ * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being
+ * placed and the route's lowest speed limit. The multiplier is on `costTint`'s colour. When the
+ * segment could not be built ending here, why first.
+ */
+export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
+  const div = (...kids: (string | Node)[]) => {
+    const d = document.createElement("div");
+    d.append(...kids);
+    return d;
+  };
+  const out: HTMLDivElement[] = [];
+  if (!pv.ok) {
+    const why = div(describeIssues(pv.issues) || "Cannot be placed here.");
+    why.style.color = "var(--bad)"; // style.css's `.tool-tag.bad`, for this line only
+    out.push(why);
+  }
+  const nv = pv.verts.length / 4;
+  // the preview's limits already carry the track type's cap (T-995: high-speed track's is 320)
+  let top = Infinity;
+  if (pv.speeds?.length) {
+    for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
+  } else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
+  if (!Number.isFinite(top)) top = highSpeed.peek() ? HSR_KMH : TOP_KMH;
+  if (pv.ok) {
+    const tint = costTint(pv.mult);
+    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]),
+      `, ${moneyShort(pv.cost * 1e6)}`));
+  }
+  const [first, ...more] = placedLevels(pv.pts, level);
+  out.push(factRow(elevationFact(first, ...more), speedFact(top)));
+  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground)].filter((f) => f !== null);
+  if (ground.length) out.push(factRow(...ground));
+  return out;
+}
+
+/** The elevations a segment passes, in order and each once: where it starts, the top of a
+ * bridge (T-656) or the bottom of a dip, where it ends (T-707: a ramp names both its levels).
+ * `pts` x, y, height (m) triples; `level` when there are none. */
+function placedLevels(pts: ArrayLike<number>, level: number): number[] {
+  const n = pts.length / 3;
+  if (n < 1) return [level];
+  const a = pts[2] / 8, b = pts[(n - 1) * 3 + 2] / 8;
+  let hi = -Infinity, lo = Infinity;
+  for (let i = 2; i < pts.length; i += 3) {
+    hi = Math.max(hi, pts[i] / 8);
+    lo = Math.min(lo, pts[i] / 8);
+  }
+  const seq = [a];
+  if (hi > Math.max(a, b) + 0.25) seq.push(hi);
+  if (lo < Math.min(a, b) - 0.25) seq.push(lo);
+  seq.push(b);
+  return [...new Set(seq.map(Math.round))];
+}
+
+/** A curve of at least this radius, m, is too gentle to slow a train and gets no label. */
+const GENTLE_M = 5000;
+/** at most this many curve labels on the screen at once */
+const MAX_CURVE_LABELS = 300;
+
+/** Whether a curve of `radius` m (0: none) with speed limit `kmh` is labelled. T-1898: a wide curve
+ * on high-speed track is labelled while it holds trains under 320. */
+export function curveLabelled(radius: number, kmh: number): boolean {
+  return radius > 0 && (radius < GENTLE_M || (kmh > 160.5 && kmh < 319.5));
+}
+
+/** A curve's label: its middle in local units, and the curve's speed limit in km/h. */
+export interface CurveLabel {
+  x: number;
+  y: number;
+  kmh: number;
+}
+
+/**
+ * One label per curve from a preview's vertices (x, y, radius, km/h each): a curve fitted as
+ * several PIs (one turning more than a right angle) has the same radius at consecutive vertices
+ * and gets one label, at its middle one.
+ */
+export function curveLabels(verts: Float64Array): CurveLabel[] {
+  const out: CurveLabel[] = [];
+  const nv = verts.length / 4;
+  for (let i = 1; i < nv - 1; ) {
+    const r = verts[i * 4 + 2];
+    let j = i + 1;
+    while (j < nv - 1 && r > 0 && Math.abs(verts[j * 4 + 2] - r) < 0.5) j++;
+    const kmh = verts[i * 4 + 3];
+    if (curveLabelled(r, kmh)) {
+      const m = (i + j - 1) >> 1;
+      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], kmh });
+    }
+    i = j;
+  }
+  return out;
+}
+
+/** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
+ * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
+ * every frame. */
+export function setCurveLabel(el: HTMLElement, kmh: number) {
+  const key = String(kmh);
+  if (el.dataset.curve === key && el.firstChild) return;
+  el.dataset.curve = key;
+  el.replaceChildren(chip(speed(kmh), speedColour(kmh)));
+}
+
+/**
+ * Place curve labels on a `w` by `h` screen with `take(i)` giving the element for the i-th shown
+ * one; returns how many are shown. Only those on screen, none over another: a snapped route can
+ * have thousands of curves (T-727d), and zoomed out a long route keeps a few. `w` and `h` are the
+ * overlay's size, since reading the container's would lay the page out again after this frame's
+ * writes (T-1394).
+ */
+export function placeCurveLabels(labels: readonly CurveLabel[], toScreen: (x: number, y: number) => [number, number], w: number, h: number, take: (i: number) => HTMLElement): number {
+  const shown: [number, number][] = [];
+  for (const c of labels) {
+    const [x, y] = toScreen(c.x, c.y);
+    if (!onScreen(x, y, w, h, 40)) continue;
+    if (shown.some(([u, v]) => Math.abs(u - x) < 64 && Math.abs(v - y) < 22)) continue;
+    if (shown.length >= MAX_CURVE_LABELS) break;
+    shown.push([x, y]);
+    const el = take(shown.length - 1);
+    setCurveLabel(el, c.kmh);
+    placeAt(el, x, y, 8, 6);
+  }
+  return shown.length;
+}
+
+/** The curve labels of one tool, their elements made in `box` as needed. */
+export class CurveLabelPool {
+  private els: HTMLDivElement[] = [];
+
+  constructor(private box: HTMLElement) {}
+
+  /** Show `labels` (see `placeCurveLabels`) and hide the elements left over. */
+  place(labels: readonly CurveLabel[], toScreen: (x: number, y: number) => [number, number], w: number, h: number) {
+    const n = placeCurveLabels(labels, toScreen, w, h, (i) => {
+      let l = this.els[i];
+      if (!l) {
+        l = this.els[i] = document.createElement("div");
+        l.className = "pi-label";
+        this.box.appendChild(l);
+      }
+      l.style.display = "";
+      return l;
+    });
+    for (let i = n; i < this.els.length; i++) this.els[i].style.display = "none";
+  }
 }

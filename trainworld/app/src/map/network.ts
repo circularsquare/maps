@@ -8,6 +8,7 @@
 
 import { rgb } from "../game/palette";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
+import type { PreviewAnswer } from "../workers/clockClient";
 import type { ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
@@ -446,6 +447,36 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
     strokes.speed = speed;
   }
   return strokes;
+}
+
+/** One stroke set from a preview of several alignments (`parts`), red when it cannot be built. */
+export function previewStrokes(a: PreviewAnswer): Strokes | null {
+  const parts = a.parts ?? new Uint32Array([0, a.pts.length / 3]);
+  const all: Strokes[] = [];
+  for (let k = 0; k + 1 < parts.length; k++) {
+    const pts = a.pts.subarray(parts[k] * 3, parts[k + 1] * 3);
+    // the track model's crossings and junctions belong to the whole preview: given to the first part
+    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks));
+  }
+  if (!all.length) return null;
+  if (all.length === 1) return all[0];
+  const marks = all.flatMap((s) => (s.marks ? Array.from(s.marks) : []));
+  const n = all.reduce((s, x) => s + x.count, 0);
+  const out: Strokes = {
+    seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
+    flags: new Float32Array(n), dist: new Float32Array(n), count: n, marks: marks.length ? new Float32Array(marks) : undefined,
+  };
+  let o = 0;
+  for (const s of all) {
+    out.seg.set(s.seg.subarray(0, s.count * 4), o * 4);
+    out.colour.set(s.colour.subarray(0, s.count), o);
+    out.edge.set(s.edge.subarray(0, s.count), o);
+    out.level.set(s.level.subarray(0, s.count), o);
+    out.flags.set(s.flags.subarray(0, s.count), o);
+    out.dist.set(s.dist.subarray(0, s.count), o);
+    o += s.count;
+  }
+  return out;
 }
 
 /** A crossover's two diagonals as the placement preview (T-338), red when it cannot be built. */

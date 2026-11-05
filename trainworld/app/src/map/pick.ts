@@ -410,8 +410,8 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   }
 
   // Height/speed views do not draw line strokes; their hidden line buffers cannot win a hit.
-  // A selected line has a final highlight pass above the other line strokes. Preserve the
-  // existing repeat-click-to-track interaction even where that pass crosses another line.
+  // A selected line has a final highlight pass above the other line strokes; the repeat click that
+  // goes from the line to its track holds even where that pass crosses another line.
   // lines wider than the slop (traffic thickness, T-227) are hit across their drawn width
   const wide = ov.renderer.lineWidths, widePx = ov.renderer.slotPx;
   // lines sharing track side by side (T-1799): the band under the pointer, the selected line's only

@@ -23,21 +23,19 @@ import { edit, say, world } from "../game/world";
 import type { ClockClient } from "../workers/clockClient";
 import { effect } from "@preact/signals";
 import { toLocal } from "./geo";
-import { strokesFromEdges } from "./network";
-import { previewStrokes, setGrabbing } from "./nodeDrag";
+import { previewStrokes, strokesFromEdges } from "./network";
+import { endDrag, setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
-import { topSeg } from "./pick";
+import { SLOP_PX, topSeg } from "./pick";
 import { STATIONS_ZOOM } from "./stationGeometry";
 import { packToLngLat } from "../game/coords";
 import type { PreviewAnswer } from "../workers/clockClient";
-import { MARKS_ZOOM } from "./dragHandles";
-import { onScreen, placeAt } from "./screenPlace";
-import { curveLabels, setCurveLabel } from "./tools";
+import { MARKS_ZOOM, NODE_HIT_PX } from "./dragHandles";
+import { marksLayer, onScreen, placeAt } from "./screenPlace";
+import { curveLabels, CurveLabelPool } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
-/** how near a picked node a press grabs the pick (px), as for one node (map/nodeDrag.ts) */
-const NODE_PX = 9;
 /** T-1260: a finger held this long without moving more than HOLD_SLOP_PX draws a box (ms) */
 const HOLD_MS = 450;
 const HOLD_SLOP_PX = 8;
@@ -57,7 +55,7 @@ export class BlueprintBox {
    * why it cannot be moved while dragging */
   private marks: HTMLDivElement;
   private squares: HTMLDivElement[] = [];
-  private labels: HTMLDivElement[] = [];
+  private labels: CurveLabelPool;
   private tag: HTMLDivElement;
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
@@ -65,13 +63,12 @@ export class BlueprintBox {
     this.box.className = "bp-box";
     this.box.style.display = "none";
     map.getContainer().appendChild(this.box);
-    this.marks = document.createElement("div");
-    this.marks.className = "tool-marks";
+    this.marks = marksLayer(map);
+    this.labels = new CurveLabelPool(this.marks);
     this.tag = document.createElement("div");
     this.tag.className = "tool-tag bad";
     this.tag.style.display = "none";
     this.marks.appendChild(this.tag);
-    map.getContainer().appendChild(this.marks);
     overlay.afterMapFrame.push(() => this.place());
     const host = map.getCanvasContainer();
     host.addEventListener("pointerdown", (e) => this.onDown(e as PointerEvent));
@@ -115,17 +112,11 @@ export class BlueprintBox {
       const [x, y] = this.overlay.toScreen(...(m ? toLocal(...packToLngLat(n.x + m.dx, n.y + m.dy)) : toLocal(n.lng, n.lat)));
       if (!onScreen(x, y, cw, ch, 8)) continue;
       if (k >= MAX_SQUARES) break;
-      placeAt(this.el(this.squares, k++, "pi-mark"), x, y);
+      placeAt(this.square(k++), x, y);
     }
     for (let i = k; i < this.squares.length; i++) this.squares[i].style.display = "none";
     const pv = m?.preview;
-    const labels = pv ? curveLabels(pv.verts) : [];
-    labels.forEach((c, i) => {
-      const l = this.el(this.labels, i, "pi-label");
-      setCurveLabel(l, c.kmh);
-      placeAt(l, ...this.overlay.toScreen(c.x, c.y), 8, 6);
-    });
-    for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
+    this.labels.place(pv ? curveLabels(pv.verts) : [], (x, y) => this.overlay.toScreen(x, y), cw, ch);
     if (m && pv && !pv.ok && m.px !== undefined) {
       this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
       this.tag.style.display = "";
@@ -133,19 +124,15 @@ export class BlueprintBox {
     } else this.tag.style.display = "none";
   }
 
-  private el(list: HTMLDivElement[], i: number, cls: string): HTMLDivElement {
-    let e = list[i];
+  private square(i: number): HTMLDivElement {
+    let e = this.squares[i];
     if (!e) {
-      e = list[i] = document.createElement("div");
-      e.className = cls;
+      e = this.squares[i] = document.createElement("div");
+      e.className = "pi-mark";
       this.marks.appendChild(e);
     }
     e.style.display = "";
     return e;
-  }
-
-  get dragging() {
-    return (this.drag !== null && !this.drag.pan) || this.move !== null;
   }
 
   private movableOf: { pick: BpPicked | null; version: number; nodes: number[] } = { pick: null, version: -1, nodes: [] };
@@ -177,7 +164,7 @@ export class BlueprintBox {
     for (const id of nodes) {
       const n = w.nodes.get(id)!;
       const [sx, sy] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
-      if ((sx - x) ** 2 + (sy - y) ** 2 < NODE_PX * NODE_PX) return nodes;
+      if ((sx - x) ** 2 + (sy - y) ** 2 < NODE_HIT_PX * NODE_HIT_PX) return nodes;
     }
     const under = this.under(x, y).edges[0];
     return under !== undefined && bpPicked.peek().edges.includes(under) ? nodes : null;
@@ -193,9 +180,7 @@ export class BlueprintBox {
   }
 
   private endMove() {
-    setGrabbing(false);
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
+    endDrag(this.overlay);
     this.place();
   }
 
@@ -418,7 +403,7 @@ export class BlueprintBox {
     const n = this.overlay.renderer.net;
     if (!n) return;
     // the track under the pointer, even where a station is drawn over it
-    const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, ...this.point(e as PointerEvent), 7 * 7 + 1);
+    const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, ...this.point(e as PointerEvent), SLOP_PX * SLOP_PX + 1);
     if (ti < 0) return;
     const run: BpPicked = { edges: runOf(n.track.edge[ti]), stations: [] };
     bpPicked.value = e.shiftKey ? unionPicked(bpPicked.peek(), run) : onlyOneKind(run);
@@ -478,10 +463,10 @@ export class BlueprintBox {
     if (!n || !w) return none;
     const hits: BpPicked[] = [];
     if (this.map.getZoom() >= STATIONS_ZOOM) {
-      const i = this.overlay.renderer.stationAt(x, y, (a, b) => this.overlay.toScreen(a, b), 7);
+      const i = this.overlay.renderer.stationAt(x, y, (a, b) => this.overlay.toScreen(a, b), SLOP_PX);
       if (i >= 0) hits.push({ edges: [], stations: [Number(n.stationIds[i])] });
     }
-    const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, x, y, 7 * 7 + 1);
+    const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, x, y, SLOP_PX * SLOP_PX + 1);
     if (ti >= 0) hits.push({ edges: [n.track.edge[ti]], stations: [] });
     const bp = hits.map(onlyOneKind);
     return bp.find((h) => !h.built && (h.edges.length || h.stations.length)) ?? bp[0] ?? none;

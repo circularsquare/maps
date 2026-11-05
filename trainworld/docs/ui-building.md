@@ -246,7 +246,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **Curve labels**: while drawing, the start shows as a square and the curve its speed limit, on
   the speed colour at half strength, no radius [T-417, T-530] (one label for a curve split
   into several corners); the same labels show while a selected blueprint stretch is reshaped or a
-  node dragged (`setCurveLabel`, `map/tools.ts`). They show only for curves on screen and never
+  node dragged (`placeCurveLabels`, `map/trackTagRows.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
   [T-727d].
 - **Loose ends** [T-416, T-1485, T-1522, T-1534; `map/endMarkers.ts`]: while the track or station tool is on, a

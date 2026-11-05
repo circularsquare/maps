@@ -23,6 +23,8 @@ export interface CurveHandle {
 
 /** below this zoom no draggable point is marked (map/endMarkers.ts) or grabbed besides the nodes */
 export const MARKS_ZOOM = 9;
+/** a press this near a node, px, grabs it: the node drag, the pick's drag and the select tool's marks agree */
+export const NODE_HIT_PX = 9;
 /** a curve's handle is left out this near either end of its edge, px: the node's square is there */
 const NEAR_END_PX = 14;
 

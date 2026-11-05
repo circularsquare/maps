@@ -1,4 +1,4 @@
-// Dragging blueprint nodes (T-093): with the select or the track tool (T-734), press on a track end, a junction or a
+// Dragging blueprint nodes (T-093): with the select or the track tool, press on a track end, a junction or a
 // station and drag it. Only a blueprint node moves: every edge there is blueprint and its station,
 // if any, is not constructed. The blueprint track meeting there follows (the track model's
 // `move_node`: its corners stay, a junction or station keeps its heading). While dragging, the
@@ -27,15 +27,14 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { queryClock } from "../workers/clockClient";
 import type { PiInput } from "../workers/protocol";
 import type { Level } from "../game/types";
-import { MARKS_ZOOM, stationEnds, visibleCurves, type CurveHandle } from "./dragHandles";
+import { MARKS_ZOOM, NODE_HIT_PX, stationEnds, visibleCurves, type CurveHandle } from "./dragHandles";
 import { toLngLat, toLocal } from "./geo";
 import { live } from "./live";
-import { strokesFromPreview, type Strokes } from "./network";
+import { previewStrokes, strokesFromPreview } from "./network";
 import type { Overlay } from "./overlay";
-import { placeAt } from "./screenPlace";
-import { curveLabels, setCurveLabel } from "./tools";
+import { marksLayer, placeAt } from "./screenPlace";
+import { curveLabels, CurveLabelPool } from "./trackTagRows";
 
-const HIT_PX = 9;
 /** a press becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
 const DRAG_PX = 3;
 /** a curve's middle this near the pointer has settled, m */
@@ -79,20 +78,26 @@ export function setGrabbing(on: boolean) {
   document.documentElement.classList.toggle("grabbing", on);
 }
 
+/** A drag over: the grabbing cursor and the preview strokes go. */
+export function endDrag(overlay: Overlay) {
+  setGrabbing(false);
+  overlay.renderer.setPreview(null);
+  overlay.invalidate();
+}
+
 export class NodeDrag {
   private box: HTMLDivElement;
   private ring: HTMLDivElement;
   private tag: HTMLDivElement;
-  private labels: HTMLDivElement[] = [];
+  private labels: CurveLabelPool;
   private press: (Hit & { px: number; py: number; told?: boolean; pis?: Promise<Float64Array | null> }) | null = null;
   /** `x, y`: where the node goes, pack metres (node + `ox, oy` from the pointer); `lx, ly`: the pointer, local */
   private drag: { node: number; x: number; y: number; lx: number; ly: number; ox: number; oy: number; bend?: Bend } | null = null;
   private preview: PreviewAnswer | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
-    this.box = document.createElement("div");
-    this.box.className = "tool-marks";
-    map.getContainer().appendChild(this.box);
+    this.box = marksLayer(map);
+    this.labels = new CurveLabelPool(this.box);
     this.ring = document.createElement("div");
     this.ring.className = "snap-ring";
     this.tag = document.createElement("div");
@@ -115,7 +120,7 @@ export class NodeDrag {
     const w = world.peek();
     const t = tool.peek();
     if (!w || (t !== "select" && t !== "track")) return null;
-    let best = HIT_PX * HIT_PX, hit: Hit | null = null;
+    let best = NODE_HIT_PX * NODE_HIT_PX, hit: Hit | null = null;
     for (const n of w.nodes.values()) {
       if (n.bus || n.port) continue; // a bus stop or a port (T-2194) is no node of the track (T-1464)
       const [x, y] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
@@ -128,7 +133,7 @@ export class NodeDrag {
     }
     if (hit || this.map.getZoom() < MARKS_ZOOM) return hit;
     // T-1869: a platform's end, then a curve's middle
-    best = HIT_PX * HIT_PX;
+    best = NODE_HIT_PX * NODE_HIT_PX;
     for (const e of stationEnds(this.overlay)) {
       const d = (e.x - px) ** 2 + (e.y - py) ** 2;
       if (d < best) [best, hit] = [d, { node: e.node, movable: true, end: { x: e.x, y: e.y } }];
@@ -295,10 +300,8 @@ export class NodeDrag {
   }
 
   private clear() {
-    setGrabbing(false);
+    endDrag(this.overlay);
     this.preview = null;
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
     this.place();
     live.edgeEditor?.place();
     this.map.triggerRepaint();
@@ -321,49 +324,6 @@ export class NodeDrag {
       this.ring.style.display = "none";
       this.tag.style.display = "none";
     }
-    const labels = pv ? curveLabels(pv.verts) : [];
-    labels.forEach((c, i) => {
-      let l = this.labels[i];
-      if (!l) {
-        l = this.labels[i] = document.createElement("div");
-        l.className = "pi-label";
-        this.box.appendChild(l);
-      }
-      const [x, y] = this.overlay.toScreen(c.x, c.y);
-      l.style.display = "";
-      setCurveLabel(l, c.kmh);
-      placeAt(l, x, y, 8, 6);
-    });
-    for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
+    this.labels.place(pv ? curveLabels(pv.verts) : [], (x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
   }
-}
-
-/** One stroke set from a preview of several alignments (`parts`), red when it cannot be built. */
-export function previewStrokes(a: PreviewAnswer): Strokes | null {
-  const parts = a.parts ?? new Uint32Array([0, a.pts.length / 3]);
-  const all: Strokes[] = [];
-  for (let k = 0; k + 1 < parts.length; k++) {
-    const pts = a.pts.subarray(parts[k] * 3, parts[k + 1] * 3);
-    // the track model's crossings and junctions belong to the whole preview: given to the first part
-    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks));
-  }
-  if (!all.length) return null;
-  if (all.length === 1) return all[0];
-  const marks = all.flatMap((s) => (s.marks ? Array.from(s.marks) : []));
-  const n = all.reduce((s, x) => s + x.count, 0);
-  const out: Strokes = {
-    seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
-    flags: new Float32Array(n), dist: new Float32Array(n), count: n, marks: marks.length ? new Float32Array(marks) : undefined,
-  };
-  let o = 0;
-  for (const s of all) {
-    out.seg.set(s.seg.subarray(0, s.count * 4), o * 4);
-    out.colour.set(s.colour.subarray(0, s.count), o);
-    out.edge.set(s.edge.subarray(0, s.count), o);
-    out.level.set(s.level.subarray(0, s.count), o);
-    out.flags.set(s.flags.subarray(0, s.count), o);
-    out.dist.set(s.dist.subarray(0, s.count), o);
-    o += s.count;
-  }
-  return out;
 }

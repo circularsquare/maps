@@ -5,7 +5,7 @@
 // (workers/realRoute.worker.ts) finds the route and fits it; its real line is drawn as the ghost,
 // then the fitted track's preview replaces it with the usual tag. Nothing joining the two is a red
 // ghost and "No real track joins these points"; a pointer away from real track (or where there is no
-// graph) is an ordinary segment, which tools.ts draws as before.
+// graph) is an ordinary segment, which tools.ts draws.
 
 import type { Map as MlMap } from "maplibre-gl";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
@@ -69,8 +69,6 @@ export class RealSnap {
   /** timings of the last route, for checks (`window.tw.tools.real.last`) */
   last: { searchMs: number; states: number; fitMs: number; lengthM: number; corners: number; previewMs: number; worst: number } | null = null;
 
-  /** the reach's last answer, for checks: the worker's ms, from asking to the answer, chains reachable and drawn */
-  reachLast: { workerMs: number; ms: number; chains: number; drawn: number; points: number } | null = null;
   private reachSeq = 0;
   private reachAt = 0;
 
@@ -312,7 +310,6 @@ export class RealSnap {
     if (m.kind === "reach") {
       if (m.seq !== this.reachSeq || !this.from) return;
       realReach.value = { xy: m.xy, off: m.off, cls: m.cls };
-      this.reachLast = { workerMs: m.ms, ms: performance.now() - this.reachAt, chains: m.chains, drawn: m.cls.length, points: m.xy.length / 2 };
       return;
     }
     const s = this.spot;

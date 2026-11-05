@@ -5,7 +5,7 @@
 // The track tool has both (T-1811): the squares, a blueprint loose end's in the accent, and the
 // rings near the pointer at built loose ends. With either, a round mark at the middle of every
 // blueprint curve and a square at both ends of a blueprint platform (T-1869, map/dragHandles.ts).
-// They take no presses; the tools and the node drag work on the nodes underneath as before.
+// They take no presses; the tools and the node drag work on the nodes underneath.
 
 import type { Map as MlMap } from "maplibre-gl";
 import type { TrackEdge } from "../game/types";
@@ -15,9 +15,9 @@ import { effect } from "@preact/signals";
 import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
-import { MARKS_ZOOM, onCurveHandles, stationEnds, visibleCurves } from "./dragHandles";
+import { MARKS_ZOOM, NODE_HIT_PX, onCurveHandles, stationEnds, visibleCurves } from "./dragHandles";
 import type { Overlay } from "./overlay";
-import { onScreen, placeAt } from "./screenPlace";
+import { marksLayer, onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag" | "track";
 type Cls = "end-mark" | "pi-mark" | "pi-mark loose" | "pi-mark curve";
@@ -25,8 +25,6 @@ type Cls = "end-mark" | "pi-mark" | "pi-mark loose" | "pi-mark curve";
 /** below this zoom the markers would only crowd the map */
 const MIN_ZOOM = MARKS_ZOOM;
 const MAX_MARKS = 400;
-/** a point's reach for a click, px: nodeDrag's, so a press that drags and one that clicks agree */
-const HIT_PX = 9;
 /** a badge and the node it sits on agree to within this, local units (the cells are looked up with their neighbours) */
 const BADGE_CELL = 3;
 /** T-1485: loose ends show within this of the pointer, CSS px; every one in a city at once, many on
@@ -53,9 +51,7 @@ export class EndMarkers {
   private anchorV = -1;
 
   constructor(private map: MlMap, private overlay: Overlay) {
-    this.box = document.createElement("div");
-    this.box.className = "tool-marks";
-    map.getContainer().appendChild(this.box);
+    this.box = marksLayer(map);
     overlay.afterMapFrame.push(() => this.place());
     // T-1522: from the window, not MapLibre's mousemove, which stops while the map is dragged and over
     // anything laid on the map (the view tabs, a card), and left the rings round where it last was
@@ -144,16 +140,16 @@ export class EndMarkers {
     return false;
   }
 
-  /** Whether a select tool's square is drawn within `HIT_PX` of a screen point: drawn over the demand
+  /** Whether a select tool's square is drawn within `NODE_HIT_PX` of a screen point: drawn over the demand
    * bubbles, so a click there acts on the point, not the bubble (T-486). */
   at(px: number, py: number): boolean {
     if (this.wanted() !== "drag" || !this.shown()) return false;
     this.refresh("drag");
     for (const p of this.pts) {
       const [x, y] = this.overlay.toScreen(p.lx, p.ly);
-      if ((x - px) ** 2 + (y - py) ** 2 < HIT_PX * HIT_PX) return true;
+      if ((x - px) ** 2 + (y - py) ** 2 < NODE_HIT_PX * NODE_HIT_PX) return true;
     }
-    return this.handles().some((h) => (h.x - px) ** 2 + (h.y - py) ** 2 < HIT_PX * HIT_PX);
+    return this.handles().some((h) => (h.x - px) ** 2 + (h.y - py) ** 2 < NODE_HIT_PX * NODE_HIT_PX);
   }
 
   private shown(): boolean {

@@ -18,10 +18,10 @@ import type { Level } from "../game/types";
 import { toLocal } from "./geo";
 import { live } from "./live";
 import { strokesFromPreview } from "./network";
-import { setGrabbing } from "./nodeDrag";
-import { curveLabels, setCurveLabel } from "./tools";
+import { endDrag, setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
-import { placeAt } from "./screenPlace";
+import { marksLayer, placeAt } from "./screenPlace";
+import { curveLabelled, curveLabels, CurveLabelPool, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
 export interface EdgePi {
@@ -58,7 +58,7 @@ const toInput = (p: EdgePi): PiInput => ({ x: p.x, y: p.y, level: p.level as Lev
 export class EdgeEditor {
   private box: HTMLDivElement;
   private marks: HTMLDivElement[] = [];
-  private labels: HTMLDivElement[] = [];
+  private labels: CurveLabelPool;
   private tag: HTMLDivElement;
   private edge = -1;
   private version = -1;
@@ -68,10 +68,9 @@ export class EdgeEditor {
   private preview: PreviewAnswer | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
-    this.box = document.createElement("div");
-    this.box.className = "tool-marks";
-    map.getContainer().appendChild(this.box);
-    this.tag = document.createElement("div");
+    this.box = marksLayer(map);
+    this.labels = new CurveLabelPool(this.box);
+    this.tag =document.createElement("div");
     this.tag.className = "tool-tag";
     this.tag.style.display = "none";
     this.box.appendChild(this.tag);
@@ -161,22 +160,20 @@ export class EdgeEditor {
 
   private endPreview() {
     this.map.dragPan.enable();
-    setGrabbing(false);
+    endDrag(this.overlay);
     this.preview = null;
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
     this.version = -1; // reload the PIs as the worker has them (refused or not)
     void this.refresh();
   }
 
-  private el(list: HTMLDivElement[], i: number, cls: string): HTMLDivElement {
-    let m = list[i];
+  private mark(i: number): HTMLDivElement {
+    let m = this.marks[i];
     if (!m) {
-      m = list[i] = document.createElement("div");
+      m = this.marks[i] = document.createElement("div");
       this.box.appendChild(m);
-      if (list === this.marks) m.addEventListener("pointerdown", (e) => this.onDown(list.indexOf(m!), e));
+      m.addEventListener("pointerdown", (e) => this.onDown(this.marks.indexOf(m!), e));
     }
-    m.className = cls;
+    m.className = "pi-mark drag";
     m.style.display = "";
     return m;
   }
@@ -188,7 +185,7 @@ export class EdgeEditor {
     const pis = on ? this.shape.pis : [];
     for (let i = 0; i < pis.length; i++) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));
-      const m = this.el(this.marks, i, "pi-mark drag");
+      const m = this.mark(i);
       // the game's own tag (ui/tip.ts, T-210), set only when it changes as this runs every frame
       const tip = `Drag to move corner ${i + 1}`;
       if (m.dataset.tip !== tip) m.dataset.tip = tip;
@@ -198,22 +195,19 @@ export class EdgeEditor {
     // curve labels: from the preview while dragging (local units), else the stretch's own (a
     // T-079 stretch shows none until it is reshaped: its curves are not the ones listed)
     const pv = this.drag ? this.preview : null;
-    const labels: { at: [number, number]; kmh: number }[] = !on
+    const labels: CurveLabel[] = !on
       ? []
       : pv
-        ? curveLabels(pv.verts).map((c) => ({ at: [c.x, c.y] as [number, number], kmh: c.kmh }))
+        ? curveLabels(pv.verts)
         : this.shape.legacy
           ? []
           : this.shape.pis
-              .filter((c) => c.used > 0 && (c.used < 5000 || (c.kmh > 160.5 && c.kmh < 319.5)))
-              .map((c) => ({ at: this.local({ x: c.mx, y: c.my }), kmh: c.kmh }));
-    labels.forEach((c, i) => {
-      const [x, y] = this.overlay.toScreen(...c.at);
-      const l = this.el(this.labels, i, "pi-label");
-      setCurveLabel(l, c.kmh);
-      placeAt(l, x, y, 8, 6);
-    });
-    for (let i = labels.length; i < this.labels.length; i++) this.labels[i].style.display = "none";
+              .filter((c) => curveLabelled(c.used, c.kmh))
+              .map((c) => {
+                const [x, y] = this.local({ x: c.mx, y: c.my });
+                return { x, y, kmh: c.kmh };
+              });
+    this.labels.place(labels, (x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
     if (pv && !pv.ok && this.drag) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[this.drag.i]));
       this.tag.className = "tool-tag bad";

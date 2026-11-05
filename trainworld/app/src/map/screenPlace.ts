@@ -8,7 +8,17 @@
 // such an element is hidden (visibility, so the callers' own display switching is untouched) until
 // its point is on the globe's near side again.
 
+import type { Map as MlMap } from "maplibre-gl";
+
 type Placed = HTMLElement | SVGElement;
+
+/** An empty layer over the map for a tool's marks (style.css `.tool-marks`). */
+export function marksLayer(map: MlMap): HTMLDivElement {
+  const box = document.createElement("div");
+  box.className = "tool-marks";
+  map.getContainer().appendChild(box);
+  return box;
+}
 
 /**
  * Move `el` to (x, y) CSS px in the map container, plus (dx, dy), rounded to whole px unless

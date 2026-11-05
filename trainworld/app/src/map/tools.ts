@@ -2,7 +2,7 @@
 // stops to a line. Selecting (picking) is map/pick.ts; main.ts routes clicks here when a tool is
 // on.
 //
-// Track, drawn through points (T-418; the only way since T-422): the second click places a
+// Track, drawn through points (T-418): the second click places a
 // segment from the first, one curve leaving along the track there and passing through the click,
 // at once and never changed by later clicks; with Shift held or keepPlacing on (T-445) the next
 // segment starts at its end, until a double click, Escape or Enter.
@@ -26,13 +26,12 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { EARTH_R } from "../game/frame";
 import { describeIssues } from "../game/issues";
-import { count, distance, money, moneyShort, speed, unitMetres, unitShort } from "../game/format";
+import { count, distance, money, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
-import { speedColour } from "../game/palette";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, tool } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, snapBeside, snapping, tool } from "../game/ui";
 import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -48,13 +47,12 @@ import { circleOnScreen, endHeading } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
-import { placeAt } from "./screenPlace";
+import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
-import { chip, costTint, elevationFact, factRow, roadFact, speedFact, terrainFact, waterFact } from "./trackTagRows";
+import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
-import { snapBeside, snapping } from "../game/ui";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { FerryDraw } from "./ferryDraw";
@@ -205,9 +203,7 @@ export class Tools {
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     for (const k of ["keydown", "keyup"] as const) window.addEventListener(k, (e) => this.noSnapFrom(e));
     window.addEventListener("blur", () => this.noSnapFrom({ ctrlKey: false, metaKey: false }));
-    this.box = document.createElement("div");
-    this.box.className = "tool-marks";
-    map.getContainer().appendChild(this.box);
+    this.box = marksLayer(map);
     this.tag = document.createElement("div");
     this.tag.className = "tool-tag build-tag";
     this.tag.style.display = "none";
@@ -257,8 +253,7 @@ export class Tools {
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
       this.lastPreview = null;
-      this.overlay.renderer.setPreview(null);
-      this.overlay.invalidate();
+      this.clearPreview();
       if (!this.real.active) this.requestPreview();
       this.place();
     }, () => this.place(), () => this.freeLevel());
@@ -420,6 +415,7 @@ export class Tools {
 
   /** what the station tool would try at the pointer, in order (T-671) */
   private alts: Spot[] = [];
+  private stationTrack: { at: [number, number]; version: number; edges: Set<number> } | null = null;
 
   /** The edges of the track the last station placed this session is on (T-469): from its node
    * along the track both ways, through plain joints and stations, up to junctions. */
@@ -428,6 +424,10 @@ export class Tools {
     const w = world.peek();
     const at = this.lastPlaced;
     if (!w || !at) return out;
+    // kept per placement and network version: this runs per pointer move
+    const kept = this.stationTrack;
+    if (kept?.at === at && kept.version === w.version) return kept.edges;
+    this.stationTrack = { at, version: w.version, edges: out };
     let start: number | null = null, bd = 2; // metres
     for (const n of w.nodes.values()) {
       if (n.platform <= 0) continue;
@@ -610,8 +610,7 @@ export class Tools {
     this.hover = null;
     if (t === "delete") {
       this.delHover = null;
-      this.overlay.renderer.setPreview(null);
-      this.overlay.invalidate();
+      this.clearPreview();
     }
     this.place();
   }
@@ -677,7 +676,7 @@ export class Tools {
       this.handle.style.display = "none";
       return;
     }
-    const { clientWidth: W, clientHeight: H } = this.map.getContainer();
+    const W = this.overlay.cssW, H = this.overlay.cssH;
     const p = this.map.project([at.lng, at.lat]);
     host.style.display = "";
     const bw = host.offsetWidth, bh = host.offsetHeight;
@@ -755,8 +754,7 @@ export class Tools {
     this.previewKey = this.wantKey = "";
     this.real.reset();
     this.touchAt = null;
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
+    this.clearPreview();
     this.place();
   }
 
@@ -859,8 +857,7 @@ export class Tools {
     this.real.begin(this.start.ring);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
+    this.clearPreview();
     this.requestPreview();
     this.place();
   }
@@ -915,8 +912,7 @@ export class Tools {
       this.wantKey = "";
       this.lastPreview = null;
       this.previewKey = "";
-      this.overlay.renderer.setPreview(null);
-      this.overlay.invalidate();
+      this.clearPreview();
       return;
     }
     const req = this.routeReq(this.endOf(h));
@@ -949,6 +945,11 @@ export class Tools {
     if (!this.start) return false;
     const [lng, lat] = toLngLat(s.lx, s.ly);
     return metresBetween(this.start.lng, this.start.lat, lng, lat) > MAX_PIECE_KM * 1000;
+  }
+
+  private clearPreview() {
+    this.overlay.renderer.setPreview(null);
+    this.overlay.invalidate();
   }
 
   private showPreview(a: PreviewAnswer, key: string) {
@@ -1048,8 +1049,19 @@ export class Tools {
     this.askLegs();
     const L = this.legs;
     if (!L) return null;
+    // the same answer until the pointer, the unit or the legs change: this runs on every place()
+    const r = unitMetres(), kept = this.nearKept;
+    if (kept && kept.legs === L && kept.lng === lng && kept.lat === lat && kept.r === r) return kept.out;
+    const out = this.sumTripsNear(L, lng, lat, r);
+    this.nearKept = { legs: L, lng, lat, r, out };
+    return out;
+  }
+
+  private nearKept: { legs: object; lng: number; lat: number; r: number; out: { text: string; legs: number } | null } | null = null;
+
+  private sumTripsNear(L: NonNullable<Tools["legs"]>, lng: number, lat: number, r: number): { text: string; legs: number } | null {
     // the radius in world metres each way, so any frame's scale is right here
-    const f = getWorldFrame(), r = unitMetres();
+    const f = getWorldFrame();
     const [x, y] = f.fromLonLat(lng, lat);
     const dLat = (r / EARTH_R) * (180 / Math.PI), dLng = dLat / Math.cos((lat * Math.PI) / 180);
     const [ex] = f.fromLonLat(lng + dLng, lat), [, ny] = f.fromLonLat(lng, lat + dLat);
@@ -1105,7 +1117,6 @@ export class Tools {
     let best = Infinity, hit: (Removable & { lx: number; ly: number }) | null = null;
     const station=this.overlay.renderer.stationAt(px,py,(x,y)=>this.screen(x,y),5);
     if (station>=0) return {kind:"station",node:Number(n.stationIds[station]),lx:n.stations[station*3],ly:n.stations[station*3+1]};
-    if (hit) return hit;
     for (const node of w.nodes.values()) {
       if (!node.flying || node.ports < 3) continue;
       const [lx, ly] = toLocal(node.lng, node.lat);
@@ -1120,11 +1131,16 @@ export class Tools {
     if (s.kind === "node") {
       // a plain node (track end, junction): the stretch nearest to the pointer there
       let e = -1, bd = Infinity;
-      for (const [edge, pts] of n.edgePts)
-        for (let k = 0; k < pts.length; k += 3) {
-          const d = near(pts[k], pts[k + 1], 14);
-          if (d < bd) [bd, e] = [d, edge];
-        }
+      const tryPoint = (edge: number, pts: Float32Array, k: number) => {
+        const d = near(pts[k], pts[k + 1], 14);
+        if (d < bd) [bd, e] = [d, edge];
+      };
+      const at = pointerLocal(this.overlay, px, py), close = at ? edgesNear(n, at[0], at[1], 14 * at[2]) : null;
+      if (close) {
+        for (const { edge, pts, ks } of close) for (const k of ks) tryPoint(edge, pts, k), tryPoint(edge, pts, k + 3);
+      } else {
+        for (const [edge, pts] of n.edgePts) for (let k = 0; k < pts.length; k += 3) tryPoint(edge, pts, k);
+      }
       if (e >= 0) return { kind: "track", edge: e, lx: s.lx, ly: s.ly };
     }
     // a bus line has no track: under the rail, so only where no rail is (T-1513)
@@ -1173,8 +1189,7 @@ export class Tools {
   private clearDelHover() {
     if (!this.delHover) return;
     this.delHover = null;
-    this.overlay.renderer.setPreview(null);
-    this.overlay.invalidate();
+    this.clearPreview();
   }
 
   private deleteHover(px: number, py: number) {
@@ -1246,15 +1261,22 @@ export class Tools {
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
     if (id === null || !line) return;
     const before = line.stops.map(Number);
-    if (!before.includes(station)) return this.addStop(station, session);
-    const n = before.length;
-    const closedLoop = n >= 3 && before[0] === before[n - 1];
-    // a loop's first stop opens it; a first stop the marker offers to close closes it (T-798)
-    const stops = station === before[0] && closedLoop ? before.slice(0, -1)
-      : station === before[0] && tier === "close" && !closedLoop ? [...before, station]
-      // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
-      : before.filter((s) => s !== station);
-    const a = await edit({ op: "setStops", line: id, stops, autoFast: this.autoFast(id) });
+    let change: Parameters<typeof edit>[0];
+    if (!before.includes(station)) {
+      // the worker fits it in among the stops it holds then (T-648), so a queued click never works
+      // from stops an earlier one changed
+      change = { op: "insertStop", line: id, station, autoFast: this.autoFast(id) };
+    } else {
+      const n = before.length;
+      const closedLoop = n >= 3 && before[0] === before[n - 1];
+      // a loop's first stop opens it; a first stop the marker offers to close closes it (T-798)
+      const stops = station === before[0] && closedLoop ? before.slice(0, -1)
+        : station === before[0] && tier === "close" && !closedLoop ? [...before, station]
+        // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
+        : before.filter((s) => s !== station);
+      change = { op: "setStops", line: id, stops, autoFast: this.autoFast(id) };
+    }
+    const a = await edit(change);
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
@@ -1282,27 +1304,6 @@ export class Tools {
     if (newLine.peek()?.line === id && fast !== undefined) newLine.value = { line: id, fast };
   }
 
-  private async addStop(station: number, session: number) {
-    if (session !== this.lineSession || tool.peek() !== "line") return;
-    const id = lineDraft.peek().line;
-    if (id === null) return; // The Lines pane creates the line before entering this tool.
-    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-    if (!line) return;
-    if (line.stops.map(Number).includes(station)) {
-      say("That station is already a stop on this line.");
-      return;
-    }
-    // the worker fits it in among the stops it holds then (T-648), so a queued click never works
-    // from stops an earlier one changed
-    const a = await edit({ op: "insertStop", line: id, station, autoFast: this.autoFast(id) });
-    if (a.ok && session === this.lineSession && tool.peek() === "line") {
-      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
-      this.noteFast(id);
-      void settleNewLineColour(id);
-    }
-  }
-
   // ---------------------------------------------------------------- markers
 
   private el(i: number, cls: string): HTMLDivElement {
@@ -1315,6 +1316,19 @@ export class Tools {
     m.textContent = "";
     m.style.display = "";
     return m;
+  }
+
+  /** A 1 px SVG in the marks layer (`placeAt` moves it) with an empty child per tag in `kids`, at
+   * the back of the layer or the front. */
+  private svgMark(kids: string[], back: boolean): SVGSVGElement {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("width", "1");
+    svg.setAttribute("height", "1");
+    for (const k of kids) svg.appendChild(document.createElementNS(NS, k));
+    if (back) this.box.insertBefore(svg, this.box.firstChild);
+    else this.box.appendChild(svg);
+    return svg;
   }
 
   /** The placement ghost: the platform as it will be drawn, at the configured length along the
@@ -1352,13 +1366,7 @@ export class Tools {
     // draws dots below STATION_BOX_ZOOM
     const style={...this.overlay.renderer.stationStyle,boxes:true};
     const shape=stationShape(lx,ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
-    if (!this.ghost) {
-      this.ghost=document.createElementNS("http://www.w3.org/2000/svg","svg");
-      this.ghost.setAttribute("width","1");
-      this.ghost.setAttribute("height","1");
-      this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
-      this.box.appendChild(this.ghost);
-    }
+    this.ghost ??= this.svgMark(["path"], false);
     this.ring.style.display="none";
     this.ghost.style.display="";
     this.ghost.setAttribute("class",`station-ghost ${bad?"bad":"ok"}`);
@@ -1377,50 +1385,17 @@ export class Tools {
   /** the last pointer position, in screen px and degrees */
   private pointer: { px: number; py: number; lng: number; lat: number } | null = null;
 
-  /** The drawn tracks whose bounds come within `pad` of (x, y), but `skip`: the twin platform's
-   * candidates, bounds kept for one network version. */
-  private boxes: { version: number; box: Map<number, [number, number, number, number]> } | null = null;
-  private tracksNear(x: number, y: number, pad: number, skip: number[]): [number, ArrayLike<number>][] {
-    const n=this.overlay.renderer.net, v=world.peek()?.version ?? -1;
-    if (!n) return [];
-    if (this.boxes?.version!==v) {
-      const box=new Map<number,[number,number,number,number]>();
-      for (const [id,p] of n.edgePts) {
-        let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-        for (let k=0;k<p.length;k+=3) x0=Math.min(x0,p[k]),x1=Math.max(x1,p[k]),y0=Math.min(y0,p[k+1]),y1=Math.max(y1,p[k+1]);
-        box.set(id,[x0,y0,x1,y1]);
-      }
-      this.boxes={version:v,box};
-    }
-    const out:[number,ArrayLike<number>][]=[];
-    for (const [id,[x0,y0,x1,y1]] of this.boxes.box) {
-      if (skip.includes(id) || x<x0-pad || x>x1+pad || y<y0-pad || y>y1+pad) continue;
-      const p=n.edgePts.get(id);
-      if (p) out.push([id,p]);
-    }
-    return out;
-  }
-
   /** Faint rings 1 and 2 km, or miles in US units (ground distance), round the station being placed (T-312), under the
    * ghost, labelled at their tops. */
   private rings: SVGSVGElement | null = null;
   private stationRings(h: Snap) {
-    const NS="http://www.w3.org/2000/svg";
     if (!this.rings) {
-      const r=this.rings=document.createElementNS(NS,"svg");
-      r.setAttribute("width","1");
-      r.setAttribute("height","1");
-      r.setAttribute("class","station-rings");
-      for (let i=0;i<2;i++) {
-        r.appendChild(document.createElementNS(NS,"circle"));
-        r.appendChild(document.createElementNS(NS,"text"));
-      }
-      this.box.insertBefore(r,this.box.firstChild);
+      this.rings=this.svgMark(["circle","text","circle","text"],true);
+      this.rings.setAttribute("class","station-rings");
     }
-    const [lng,lat]=toLngLat(h.lx,h.ly);
-    const [cx,cy]=this.screen(h.lx,h.ly);
-    const [ex,ey]=this.screen(...toLocal(lng+unitMetres()/(EARTH_R*Math.cos(lat*Math.PI/180))*180/Math.PI,lat));
-    const km1=Math.hypot(ex-cx,ey-cy);
+    const unit=circleOnScreen([h.lx,h.ly,unitMetres()],(x,y)=>this.screen(x,y),toLngLat,toLocal);
+    if (!unit) return;
+    const {x:cx,y:cy,r:km1}=unit;
     this.rings.style.display="";
     placeAt(this.rings,cx,cy,0,0,false);
     const kids=this.rings.children;
@@ -1581,14 +1556,7 @@ export class Tools {
       if (this.circle) this.circle.style.display = "none";
       return;
     }
-    const NS = "http://www.w3.org/2000/svg";
-    if (!this.circle) {
-      this.circle = document.createElementNS(NS, "svg");
-      this.circle.setAttribute("width", "1");
-      this.circle.setAttribute("height", "1");
-      this.circle.appendChild(document.createElementNS(NS, "circle"));
-      this.box.insertBefore(this.circle, this.box.firstChild);
-    }
+    this.circle ??= this.svgMark(["circle"], true);
     this.circle.style.display = "";
     this.circle.setAttribute("class", "curve-circle" + (pv!.ok ? "" : " bad"));
     placeAt(this.circle, c.x, c.y, 0, 0, false);
@@ -1606,14 +1574,7 @@ export class Tools {
       if (this.tangent) this.tangent.style.display = "none";
       return;
     }
-    const NS = "http://www.w3.org/2000/svg";
-    if (!this.tangent) {
-      this.tangent = document.createElementNS(NS, "svg");
-      this.tangent.setAttribute("width", "1");
-      this.tangent.setAttribute("height", "1");
-      this.tangent.appendChild(document.createElementNS(NS, "line"));
-      this.box.insertBefore(this.tangent, this.box.firstChild);
-    }
+    this.tangent ??= this.svgMark(["line"], true);
     const [x0, y0] = this.screen(h.x, h.y);
     const [x1, y1] = this.screen(h.x + h.ux, h.y + h.uy);
     const l = Math.hypot(x1 - x0, y1 - y0);
@@ -1656,7 +1617,7 @@ export class Tools {
       this.bandKey = "";
       return;
     }
-    const c = this.map.getCenter(), box = this.map.getContainer(), W = box.clientWidth, H = box.clientHeight, dpr = devicePixelRatio || 1;
+    const c = this.map.getCenter(), W = this.overlay.cssW, H = this.overlay.cssH, dpr = devicePixelRatio || 1;
     const key = `${c.lng},${c.lat},${this.map.getZoom()},${this.map.getBearing()},${this.map.getPitch()},${W},${H},${world.peek()?.version},${document.documentElement.dataset.shade}`;
     if (this.bandEl && key === this.bandKey) return;
     this.bandKey = key;
@@ -1709,20 +1670,8 @@ export class Tools {
       if (pv && pv.verts.length >= 2) put(this.el(k++, "pi-mark"), pv.verts[0], pv.verts[1]);
       else put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       if (pv) {
-        // only those on screen: a snapped route can have thousands of curves (T-727d)
-        // and none over another, so zoomed out a long route keeps a few; the overlay's size, since
-        // reading the container's would lay the page out again after this move's writes (T-1394)
-        const W = this.overlay.cssW, H = this.overlay.cssH;
-        const shown: [number, number][] = [];
-        for (const c of curveLabels(pv.verts)) {
-          const [x, y] = this.screen(c.x, c.y);
-          if (x < -40 || y < -40 || x > W + 40 || y > H + 40) continue;
-          if (shown.some(([u, v]) => Math.abs(u - x) < 64 && Math.abs(v - y) < 22)) continue;
-          if (shown.push([x, y]) > 300) break;
-          const m = this.el(k++, "pi-label");
-          setCurveLabel(m, c.kmh);
-          put(m, c.x, c.y, 8, 6);
-        }
+        const from = k;
+        k += placeCurveLabels(curveLabels(pv.verts), (x, y) => this.screen(x, y), this.overlay.cssW, this.overlay.cssH, (i) => this.el(from + i, "pi-label"));
       }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
@@ -1755,12 +1704,8 @@ export class Tools {
         this.ring.style.display = "";
         put(this.ring, d.lx, d.ly);
       } else this.ring.style.display = "none";
-      if (what) {
-        this.tag.style.display = "";
-        this.tag.className = "tool-tag build-tag";
-        this.tag.textContent = `Remove ${what.what}`;
-        this.tag.style.transform = `translate(${Math.round(this.delAt[0] + 14)}px, ${Math.round(this.delAt[1] + 12)}px)`;
-      } else this.tag.style.display = "none";
+      if (what) this.showTag(`Remove ${what.what}`, false, ...this.delAt);
+      else this.tag.style.display = "none";
       return;
     }
     // the snap ring and the cursor tag
@@ -1771,10 +1716,7 @@ export class Tools {
     if (t === "station" && h?.kind === "free") {
       // T-1820: open ground takes no station; no ghost, only the reason by the pointer
       this.ring.style.display = "none";
-      this.tag.style.display = "";
-      this.tag.className = "tool-tag build-tag bad";
-      this.tag.textContent = NOT_ON_TRACK;
-      put(this.tag, h.lx, h.ly, 14, 12);
+      this.showTag(NOT_ON_TRACK, true, ...this.screen(h.lx, h.ly));
       return;
     }
     // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track
@@ -1794,43 +1736,38 @@ export class Tools {
       put(this.ring, ...toLocal(...this.real.ringAt));
     } else this.ring.style.display = "none";
     const pv = this.lastPreview, rt = t === "track" && this.start && h ? this.real.tag() : null;
+    const at = h ? this.screen(h.lx, h.ly) : null;
     if (rt) {
       // T-727d: a real route still being found (the spinner once it takes a while), or none
-      this.tag.className = "tool-tag build-tag" + (rt.bad ? " bad" : "");
       const kids: (string | Node)[] = [];
       if (rt.spin) kids.push(Object.assign(document.createElement("i"), { className: "spin" }));
       if (rt.text) kids.push(rt.text);
-      this.tag.style.display = kids.length ? "" : "none";
-      this.tag.replaceChildren(...kids);
-      put(this.tag, h!.lx, h!.ly, 14, 12);
+      if (kids.length) this.showTag(kids, rt.bad, ...at!);
+      else this.tag.style.display = "none";
     } else if (t === "track" && this.start && h && !this.real.active && this.tooFar(h)) {
-      this.tag.style.display = "";
-      this.tag.className = "tool-tag build-tag bad";
-      this.tag.textContent = tooFarText();
-      put(this.tag, h.lx, h.ly, 14, 12);
+      this.showTag(tooFarText(), true, ...at!);
     } else if (t === "track" && this.start && h && (pv || this.waiting())) {
-      this.tag.style.display = "";
-      this.tag.className = "tool-tag build-tag";
       const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek()) : [document.createElement("div")];
       // T-1039: still working on the newest ghost or the click
       if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
-      this.tag.replaceChildren(...rows);
-      put(this.tag, h.lx, h.ly, 14, 12);
+      this.showTag(rows, false, ...at!);
     } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)
-      this.tag.style.display = "";
-      this.tag.className = "tool-tag build-tag bad";
-      this.tag.textContent = v.why;
-      put(this.tag, h.lx, h.ly, 14, 12);
+      this.showTag(v.why, true, ...at!);
     } else if (t === "station" && h && h.kind !== "free") {
       const lines = this.helpLines(h, null);
-      if (lines.length) {
-        this.tag.style.display = "";
-        this.tag.className = "tool-tag build-tag";
-        this.tag.replaceChildren(...lines);
-        put(this.tag, h.lx, h.ly, 14, 12);
-      } else this.tag.style.display = "none";
+      if (lines.length) this.showTag(lines, false, ...at!);
+      else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
+  }
+
+  /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */
+  private showTag(content: string | (string | Node)[], bad: boolean, x: number, y: number) {
+    this.tag.style.display = "";
+    this.tag.className = "tool-tag build-tag" + (bad ? " bad" : "");
+    if (typeof content === "string") this.tag.textContent = content;
+    else this.tag.replaceChildren(...content);
+    placeAt(this.tag, x, y, 14, 12);
   }
 
   /** The station tool's tag lines: `first` if any, how far from the station placed last (T-312),
@@ -1855,106 +1792,3 @@ export class Tools {
 function sameStops(a: readonly number[], b: readonly number[]) {
   return a.length === b.length && a.every((s, i) => s === b[i]);
 }
-
-/**
- * One label per curve from a preview's vertices (x, y at the middle of each curve, radius, km/h):
- * a curve fitted as several PIs (one turning more than a right angle) has the same radius at
- * consecutive vertices and gets one label, at its middle one. Curves too gentle to slow a train
- * are not labelled.
- */
-export function curveLabels(verts: Float64Array): CurveLabel[] {
-  const out: CurveLabel[] = [];
-  const nv = verts.length / 4;
-  for (let i = 1; i < nv - 1; ) {
-    const r = verts[i * 4 + 2];
-    let j = i + 1;
-    while (j < nv - 1 && r > 0 && Math.abs(verts[j * 4 + 2] - r) < 0.5) j++;
-    // T-1898: a wide curve on high-speed track is labelled while it holds trains under 320
-    const kmh = verts[i * 4 + 3];
-    if (r > 0 && (r < 5000 || (kmh > 160.5 && kmh < 319.5))) {
-      const m = (i + j - 1) >> 1;
-      out.push({ x: verts[m * 4], y: verts[m * 4 + 1], radius: r, kmh });
-    }
-    i = j;
-  }
-  return out;
-}
-
-export interface CurveLabel {
-  x: number;
-  y: number;
-  /** m, and the curve's speed limit in km/h */
-  radius: number;
-  kmh: number;
-}
-
-/** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
- * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
- * every frame. */
-export function setCurveLabel(el: HTMLElement, kmh: number) {
-  const key = String(kmh);
-  if (el.dataset.curve === key && el.firstChild) return;
-  el.dataset.curve = key;
-  el.replaceChildren(chip(speed(kmh), speedColour(kmh)));
-}
-
-/**
- * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being
- * placed and the route's lowest speed limit (trackTagRows.ts). The multiplier is on `costTint`'s
- * colour. When the segment could not be built ending here, why first.
- */
-function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
-  const div = (...kids: (string | Node)[]) => {
-    const d = document.createElement("div");
-    d.append(...kids);
-    return d;
-  };
-  const out: HTMLDivElement[] = [];
-  if (!pv.ok) {
-    const why = div(describeIssues(pv.issues) || "Cannot be placed here.");
-    why.style.color = "var(--bad)"; // style.css's `.tool-tag.bad`, for this line only
-    out.push(why);
-  }
-  const nv = pv.verts.length / 4;
-  // the preview's limits already carry the track type's cap (T-995: high-speed track's is 320)
-  let top = Infinity;
-  if (pv.speeds?.length) {
-    for (const v of pv.speeds) if (v >= 0) top = Math.min(top, v);
-  } else for (let i = 1; i < nv - 1; i++) if (pv.verts[i * 4 + 2] > 0) top = Math.min(top, pv.verts[i * 4 + 3]);
-  if (!Number.isFinite(top)) top = highSpeed.peek() ? HSR_KMH : TOP_KMH;
-  if (pv.ok) {
-    const tint = costTint(pv.mult);
-    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]),
-      `, ${moneyShort(pv.cost * 1e6)}`));
-  }
-  const [first, ...more] = placedLevels(pv.pts, level);
-  out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground)].filter((f) => f !== null);
-  if (ground.length) out.push(factRow(...ground));
-  return out;
-}
-
-/** The elevations a segment passes, in order and each once: where it starts, the top of a
- * bridge (T-656) or the bottom of a dip, where it ends (T-707: a ramp names both its levels).
- * `pts` x, y, height (m) triples; `level` when there are none. */
-function placedLevels(pts: ArrayLike<number>, level: number): number[] {
-  const n = pts.length / 3;
-  if (n < 1) return [level];
-  const a = pts[2] / 8, b = pts[(n - 1) * 3 + 2] / 8;
-  let hi = -Infinity, lo = Infinity;
-  for (let i = 2; i < pts.length; i += 3) {
-    hi = Math.max(hi, pts[i] / 8);
-    lo = Math.min(lo, pts[i] / 8);
-  }
-  const seq = [a];
-  if (hi > Math.max(a, b) + 0.25) seq.push(hi);
-  if (lo < Math.min(a, b) - 0.25) seq.push(lo);
-  seq.push(b);
-  return [...new Set(seq.map(Math.round))];
-}
-
-/** The M1 train's top speed, km/h: straight track's limit (track-and-service.md 6.1). */
-const TOP_KMH = 160;
-/** High-speed track's straight limit, km/h (the sim's `V_HSR`, T-817). */
-const HSR_KMH = 320;
-

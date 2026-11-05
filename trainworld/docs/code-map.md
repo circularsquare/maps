@@ -203,7 +203,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time that narrow a pick
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the nearest spot with room for the platform, T-671, T-1870), `edgeEdit.ts`
-  (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093; a platform's end or a curve's middle, T-1869), `dragHandles.ts` (where the curve-middle and platform-end handles are, for the markers and the drag, T-1869), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777), `curveCircle.ts` (the circle of the segment being drawn, T-418),
+  (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093; a platform's end or a curve's middle, T-1869; `endDrag`, a drag's cleanup), `dragHandles.ts` (where the curve-middle and platform-end handles are, for the markers and the drag, T-1869; `NODE_HIT_PX`, a node's reach for a press), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777; `marksLayer`, a tool's layer of marks), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `stopMarkers.ts` (the toggle markers of stop editing, T-233; the gap to a station they cannot
   reach, drawn by `gapFlash.ts`, T-1896), `reversalMarks.ts` (the icon over
@@ -219,7 +219,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Tags and outlines: `trackHover.ts` and `networkTips.ts` (the hover tags on track, trains and
   stations, T-157, T-194), `stretchLoad.ts` (a stretch's average load in the track tag, T-2007), `hoverRest.ts` (the list of what else is under a resting pointer,
   T-732), `hovered.ts` (what is lit as hovered, from the tags and the list, read by both renderers, T-730), `trackTagRows.ts` (the elevation and speed rows with icons, shared with
-  the track tool's tag, T-526; `costTint`, a cost multiplier's colour there and in the Build tab, T-1159), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
+  the track tool's tag, T-526, which `placementTag` builds; `costTint`, a cost multiplier's colour there and in the Build tab, T-1159; the curve labels of the drawing tool and the three drags, `placeCurveLabels` and `CurveLabelPool`, T-417), `cityBoundaries.ts` and `boundaryGeometry.ts` (the metro outlines, one
   layer for the zones near the view, exact ones fetched only above `ZONE_LOAD_ZOOM`, and the outside
   shade, T-131, T-139, T-400, T-871), `coarseOutlines.ts` (reads
   `packs/outlines.json`, which `pipeline/zone_outlines.py` writes: every registered zone's coarse

@@ -3,14 +3,14 @@
 // each cell's items) and in idle time: 5-10 ms for the real New York network's 100,000 segments.
 
 /** cell sides, local units: a query uses the smallest whose side covers its width */
-export const CELL_SIDES = [256, 2048, 16384, 131072];
+const CELL_SIDES = [256, 2048, 16384, 131072];
 /** an item covering more cells than this is kept apart and handed to every query */
 const BIG_CELLS = 16;
 
 const hash = (cx: number, cy: number) => Math.imul(cx, 0x9e3779b1) ^ Math.imul(cy, 0x85ebca77);
 
 /** The items, by cell, of `box`: four numbers an item, two corners in any order. */
-export class CellIndex {
+class CellIndex {
   private cx: Int32Array;
   private cy: Int32Array;
   private used: Uint8Array;

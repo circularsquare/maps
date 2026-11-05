@@ -1,13 +1,12 @@
 // Stop editing on the map (T-233, docs/ui-building.md): while a line's stops are being edited every
 // station carries a round toggle marker over everything else. A stop is a disc in the line's
 // colour inside a white ring inside a dark one (no check, T-239); the others are hollow, with no
-// line colour at all (a plain grey ring, T-476). Stations
-// a stop can be added at without changing the line's path (on it, or past an end on track it can
-// carry on over, T-237) are drawn on top, a little smaller than the stops. The tiers are the clock
-// worker's, from the line tool's own search (`TrackApi::stop_tiers`). The rest
-// sit behind, smaller and greyer still: either joined to the
-// route by track (a click adds the stop and the route changes, as the line tool always did) or not
-// joined at all (a click says why it cannot be added).
+// line colour at all (a plain grey ring, T-476). Stations a stop can be added at without changing
+// the line's path (on it, or past an end on track it can carry on over, T-237) are drawn on top, a
+// little smaller than the stops. The tiers are the clock worker's, from the line tool's own search
+// (`TrackApi::stop_tiers`). The rest sit behind, smaller and greyer still: either joined to the
+// route by track (a click adds the stop and the route changes) or not joined at all (a click says
+// why it cannot be added).
 //
 // The markers are plain DOM over the map and take no pointer events: the map's own click and
 // mousemove (main.ts -> map/tools.ts) call `pick`, `hover` and `activate` here, so the wheel and
@@ -88,7 +87,7 @@ function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): M
  * rest. A line with no route yet (fewer than two stops) has nothing to stay on, so what joins its
  * stops is as good as on route; a line with no stops takes any station.
  */
-export function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> {
+function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> {
   const out = new Map<string, StopTier>();
   const stops = new Set(line.stops);
   const adj = new Map<number, number[]>();
@@ -144,8 +143,6 @@ export class StopMarkers {
   private index = new Map<string, number>();
   private netSeen: unknown = null;
   private size = 0;
-  private w = 0;
-  private h = 0;
   private reasonTimer = 0;
   private reasonFor: string | null = null;
   /** the last tiers asked of the clock worker; an older answer is dropped */
@@ -169,8 +166,6 @@ export class StopMarkers {
     this.tag.className = "tool-tag stop-tag";
     this.tag.style.display = "none";
     map.getContainer().append(this.box, this.tag);
-    this.measure();
-    map.on("resize", () => this.measure());
     overlay.afterMapFrame.push(() => this.place());
     effect(() => {
       const on = stopEditing.value;
@@ -227,12 +222,6 @@ export class StopMarkers {
     });
   }
 
-  private measure() {
-    const c = this.map.getCanvas();
-    this.w = c.clientWidth;
-    this.h = c.clientHeight;
-  }
-
   private tierOf(id: string): StopTier {
     return this.tiers.get(id) ?? "cut";
   }
@@ -260,7 +249,7 @@ export class StopMarkers {
         // the platform's middle, as the station is drawn
         const mx = n.stationShape?.[i * 4] ?? 0, my = n.stationShape?.[i * 4 + 1] ?? 0;
         [x, y] = this.overlay.toScreen(n.stations[i * 3] + mx, n.stations[i * 3 + 1] + my);
-        on = x > -pad && y > -pad && x < this.w + pad && y < this.h + pad;
+        on = x > -pad && y > -pad && x < this.overlay.cssW + pad && y < this.overlay.cssH + pad;
       }
       if (!on) {
         if (m?.shown) {
