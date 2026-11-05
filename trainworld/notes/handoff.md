@@ -64,10 +64,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
   "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
   after a deploy, so left as is.
+- Anita ~14:10: "i love how japan looks ... perhaps we could turn down distortion if its easy (maybe ... a distortion
+  dial thats easy for us to tune)". Filed T-2556; **diagdial** (Opus, tree from 8dd24b55, port 6193): DISTORT constant
+  + ?distort=, measures and pictures at 3-4 settings, picks a default.
 - **mexprep** (Opus, main tree; new pipeline/mexico.py only, data/raw/mexico; no shared pipeline edits until join PID
   6408 ends): T-2080 census 2020 population hook (Brazil's shape), T-2081 DENUE jobs. Mexico's build T-2436 itself
   waits for Europe. Brazil T-2437 needs no prep (brazil.py hook done); Sao Paulo hand-built since T-458.
-- Anita ~13:50: storage only where "basically free" (passed to diskprune).
+- Anita ~13:50: storage only where "basically free" (passed to diskprune). diskprune DONE: 11 GB raw deleted;
+  **after the join ends (and Europe's freeze exists): `venv\Scripts\python.exe -I trainworld\notes\t2554\after_join.py`
+  then `--go`** (~15 GB); then delete pre-T2302 once Europe checks clean (10.6 GB). maps-17's call: do the three small
+  code changes in T-2554 (routes.py stops writing drive_near_f.npy, world_run drops cells.*/walk_zone on ship, raw
+  t196/t142b caches .json.gz) after the join, as one small task; Anita told, may veto.
 - diaghokkaido LANDED 0d5ab8f4 (records 1034682c; agent 523k, retired): T-2550 sparse floor 0.25 of core scale,
   far land at region scale, station-less islands under 1/10 of land in their 100 km square dropped (1,187 of 1,310);
   Hokkaido IoU 0.35 -> 0.62, all islands up; diagram-game captures redone. Costs filed T-2555 (tyo-game 5 pill

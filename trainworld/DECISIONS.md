@@ -7,6 +7,9 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 
 ## 2026-11-05
 
+- **T-2081: Mexico's jobs are DENUE's units at their points plus the jobs DENUE leaves out, spread by tier 0's proxy.** DENUE has no farm work, street trade with no fixed site or paid domestic work, so its 38.3M workers are 0.304 a resident against the World Bank's 0.455; the 0.151 gap goes over each row's people by the proxy, so the country's total stays tier 0's. Each band counts at Censos Economicos 2019's mean sizes (0-5 people 2, 251 and more 900), which bring DENUE to 38.3M against the census's 36.0M. notes/T-2080.md.
+- **T-2080: Mexico's rural people sit at ITER's locality points**, each locality over the cells nearer it than any other within 2 km, by GHSL; rural AGEBs (median 93 km2) are not used. notes/T-2080.md.
+
 - **T-2550: big sparse regions get an absolute scale floor of 0.25** (a quarter of a kilometre-hop core's), lifting Hokkaido from 0.10 to 0.16 of the Kanto core and northern Tohoku by about a fifth: "a bit" bigger, Anita's middle ground. A floor against the network's own median lifted city suburbs too (Manhattan parallels 0.73 -> 0.62), so it was dropped. notes/T-2550.md.
 - **T-2550: an island with no station is left out under a tenth of the land in the 100 km square round it, else drawn once by the stations near the one nearest it** (Anita: "omitted (if small relative to their surroundings) or at least not expanded"). A tenth keeps Awaji (12%; she called it too big, not unwanted), Amakusa and Sado, and drops Shodoshima, Okushiri and the small Seto islands.
 - **T-2550: in the drawn sea, a station's map carries offsets past its hops' reach at its region's scale, and another peopled land mass's land is sea to it**, since a city's map carried far out drew empty land at city scale (the spit east of Hakodate). A stricter rule (land drawn only near its nearest station) cut holes inland and was dropped.

@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2524 The focused city's load: progress hover, stall sign, profile (2026-11-05, agent loadnotes, tree): bars' hovers give the stage and time left, or "No progress for 1 min" after 90 s with nothing arriving. Profile: no stall, workers 90-100% busy; the bar's model runs ahead (T-2552), periods unbalanced (T-2553). notes/T-2524.md.
+- T-2523 A clicked bubble waiting with no note (2026-11-05, agent loadnotes, tree): a click whose answer waits puts the status on what it waits for ("Calculating trips after your change…", "…in 81 cities…"), time left or stall in its hover; under the loading card the card says it. notes/T-2524.md.
 - T-2550 Diagram: Hokkaido's shape, big sparse regions, islands with no station (2026-11-05, agent diaghokkaido, tree): water carries far land at the region's scale (no spit east of Hakodate), sparse regions floored at 0.25 scale, small station-less islands left out (all Japan 40 -> 15 land pieces). Hokkaido IoU 0.35 -> 0.62, the other islands up too. notes/T-2550.md.
 - T-2531 Bubbles of the city in view felt regressed (2026-11-05, agent bubbleload): no build regressed them (827, 956, master alike on Anita's North America save); fixed the open-save bubbles (T-2508) and a click during a load that never answered on 956. T-2532, T-2533. notes/T-2531.md.
 - T-2508 A zone in view's bubbles during a load (2026-11-05, agent bubbleload): the game before's bubbles were held current while the focus pool's figures came in; `legsKey` in `isCurrent`, so bubbles come 1-11 s after the figures (were 125-200 s on her save). notes/T-2531.md.
