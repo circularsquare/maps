@@ -22,13 +22,6 @@ import { cameraMoving } from "../game/ui";
 
 /** ?perfOff=overlay (T-045, measurement only): skip the WebGL draw. */
 const NO_DRAW = perfOff("overlay");
-/**
- * Idle frames (T-073, adopted from T-045's ?perfTry=idle): with no trips this hour, no frames at
- * all; the clock wakes once a game minute. New game 13% -> 0.6% of a core. ?perfOff=idle reverts.
- * Skip duplicate clock-loop draws when MapLibre has queued a frame (T-075).
- */
-const IDLE = !perfOff("idle");
-const NO_DOUBLE = !perfOff("noDouble");
 /** ?perfOff=moving (T-1207, measurement only): nothing waits while the camera moves. */
 const THROTTLE = !perfOff("moving");
 
@@ -261,7 +254,8 @@ export class Overlay {
     this.rafId = 0;
     // MapLibre draws the overlay itself in a frame it renders (camera layer); ours would be a
     // second draw of the same frame.
-    if (NO_DOUBLE && this.mapFrameQueued()) return this.scheduleNext();
+    // (MapLibre has a frame queued: its own draw covers this one)
+    if (this.mapFrameQueued()) return this.scheduleNext();
     this.draw();
     this.replan();
   }
@@ -295,8 +289,8 @@ export class Overlay {
   /** After a frame: the next one at full rate with focus, at 10 fps without, none if stopped. */
   private scheduleNext() {
     if (!clock.ticking) return;
-    if (IDLE && this.renderer.net && this.renderer.tripCount === 0) {
-      // Nothing moves: one frame when the game minute turns, for the clock.
+    if (this.renderer.net && this.renderer.tripCount === 0) {
+      // Nothing moves (no trips this hour): one frame when the game minute turns, for the clock.
       if (this.slowTimer) return;
       const t = clock.now();
       const wait = (((Math.floor(t / 60) + 1) * 60 - t) / clock.rate()) * 1000;

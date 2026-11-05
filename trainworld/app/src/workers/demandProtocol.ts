@@ -101,8 +101,6 @@ export type ToDemand =
   | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
       warmEveryday?: boolean;
-      /** T-889: open each `open` alone, as it comes (`?perfOff=batchOpen`) */
-      oneByOne?: boolean;
       /** T-2495: the corridor table's columns through the binding's copies (`?perfOff=inPlace`) */
       copies?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
@@ -157,16 +155,11 @@ export type ToDemand =
       /** T-1543: this solving worker's part k of n: a free-flow round shown before it is solved (a
        * rough solve's, the zone in view's preview after an edit) is one period solved in n parts of
        * its origins, every period estimated from each part, sent as `result`s with `part` that the
-       * page adds up (`?perfOff=parts`: none) */
+       * page adds up */
       part?: [number, number];
       /** T-1174: every market part made afresh from the newest composition, as a worker started
        * now has them (sent after a worker is replaced, so all workers' parts are alike again) */
       freshParts?: boolean;
-      /** T-1609 `?perfOff=refine`: a cluster whose only new populations are zones opened again at
-       * another level is solved whole, not those zones alone against the others' frozen loads */
-      noLocal?: boolean;
-      /** T-1735 `?perfOff=window`: an edit's local solve leaves the whole market frozen */
-      noWindow?: boolean;
       /** T-1862 `?perfOff=noise`: a cluster keeps its result only on exactly the network it solved */
       exactKeep?: boolean;
       /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
@@ -178,9 +171,6 @@ export type ToDemand =
    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
-  /** T-2045: a solving worker of the main pool holds its solve and its opening at the next
-   * population (`on`) until let go, while the focus pool solves the zone in view first */
-  | { kind: "pause"; on: boolean }
   /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
   | { kind: "whole"; version: number }
   /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */

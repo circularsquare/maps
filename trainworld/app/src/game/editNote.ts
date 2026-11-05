@@ -19,7 +19,6 @@ import { trainKind } from "./format";
 import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
-import { perfOff } from "../perfFlags";
 import { DEMAND_INDEX, type WorldView } from "./types";
 import { shownDay, shownDayPhrase } from "./ui";
 import { world } from "./world";
@@ -184,7 +183,7 @@ export function startEditNote() {
     setPending(null);
     // a zone's level of detail changed between them (a change already under way at the first edit):
     // coarse and fine figures differ by more than a small edit moves (T-2180)
-    if (!was || !edited || (was.rough !== after.rough && !perfOff("lodHold"))) return;
+    if (!was || !edited || (was.rough !== after.rough)) return;
     const trips = { from: Math.round(was.trips), to: Math.round(after.trips) };
     const money = { from: was.money, to: after.money };
     if (trips.from === trips.to && Math.abs(money.to - money.from) < 500) return;

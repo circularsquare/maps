@@ -15,7 +15,7 @@ import { hoverAt } from "./demandHover";
 import { hoverHeld } from "../ui/blurHold";
 import { toLocal } from "./geo";
 import type { Overlay } from "./overlay";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
 import { BoxGrid, MIN_LABEL_ZOOM, tipBeside } from "./labelLayout";
 import { PlaceThrottle } from "./moving";
@@ -119,7 +119,6 @@ export class CapacityMarkers {
     this.items = sorted.map((m, i) => {
       const el = document.createElement("div");
       el.className = "cap-mark";
-      if (perfTry("labelLayers")) el.style.willChange = "transform"; // T-045 measurement
       el.innerHTML = capacityDot(m.rho, !!m.held);
       const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level);
       const junction = m.kind === 4 ? junctions[i] : null;

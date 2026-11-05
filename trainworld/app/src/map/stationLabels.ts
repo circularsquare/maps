@@ -19,7 +19,7 @@ import { NameIndex, labelGroups, linesAt, type NameGroup, type NameOp } from "./
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { PlaceThrottle } from "./moving";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
@@ -36,8 +36,6 @@ const FLOOR_FULL_ZOOM = 14;
 
 /** ?perfOff=labels (T-045, measurement only): DOM labels never placed. */
 const NO_LABELS = perfOff("labels");
-const LAYERED = perfTry("labelLayers");
-const PAN = !perfOff("labelPan");
 
 interface Label {
   el: HTMLDivElement;
@@ -101,7 +99,7 @@ export class StationLabels {
     container.appendChild(this.box);
     this.plane = document.createElement("div");
     this.plane.className = "stn-label-plane";
-    if (PAN) this.plane.style.willChange = "transform";
+    this.plane.style.willChange = "transform";
     this.box.appendChild(this.plane);
     overlay.afterMapFrame.push(() => this.place());
     // moveend can precede the final rendered camera: place on that frame, not the old matrix.
@@ -202,7 +200,6 @@ export class StationLabels {
     if (old) return { ...old, x, y, below };
     const el = document.createElement("div");
     el.className = cls;
-    if (LAYERED) el.style.willChange = "transform"; // ?perfTry=labelLayers (T-045)
     el.textContent = g.name;
     this.plane.appendChild(el);
     return { el, x, y, below, w: 0, h: 0 };
@@ -311,7 +308,7 @@ export class StationLabels {
     // while the camera moves, a full placement at most every MOVING_PLACE_MS (T-1207); a pan between
     // them moves the names as one, past the margin if need be
     const due = this.throttle.due();
-    if (PAN && (!this.needsPlacement || !due) && prev && W === this.placedSize[0] && H === this.placedSize[1]
+    if ((!this.needsPlacement || !due) && prev && W === this.placedSize[0] && H === this.placedSize[1]
       && m[3] === 0 && m[7] === 0
       && prev.every((v, i) => i === 12 || i === 13 || i === 14 || same(v, m[i]))) {
       const [x, y] = this.overlay.toScreen(0, 0);
@@ -330,7 +327,7 @@ export class StationLabels {
     this.anchor = this.overlay.toScreen(0, 0);
     this.plane.style.transform = "";
     this.shownLabels = [];
-    const margin = PAN ? PAN_MARGIN : 0;
+    const margin = PAN_MARGIN;
     // Reserve breathing room around each name, especially at neighbourhood scale.
     const [padX, padY] = labelPadding(zoom);
     const placedBoxes = new BoxGrid();

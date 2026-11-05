@@ -78,8 +78,8 @@ export class FocusPool {
   }
 
   /** A solve to every worker, each solving worker told its part of the origins (T-1543). */
-  solve(msg: Extract<ToDemand, { kind: "solve" }>, parts: boolean) {
-    this.workers.forEach((w, i) => w.postMessage(parts && this.n > 1 && i < this.n ? { ...msg, part: [i, this.n] } : msg));
+  solve(msg: Extract<ToDemand, { kind: "solve" }>) {
+    this.workers.forEach((w, i) => w.postMessage(this.n > 1 && i < this.n ? { ...msg, part: [i, this.n] } : msg));
   }
 
   /** the next round may start (the solve is sent with the barrier) */

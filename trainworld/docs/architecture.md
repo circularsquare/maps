@@ -338,7 +338,7 @@ Web first, so it can be shared as a link.
   everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), the device's
   memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
   between solves) and every worker composes afresh; no figure changes. It never grows back in a page
-  (T-1366). `?perfOff=restart,cap` turns either off; check `t1205-memory.mjs`.
+  (T-1366). `?perfOff=cap` turns the shrinking off; check `t1205-memory.mjs`.
 
 ### Threads, pipeline and determinism
 

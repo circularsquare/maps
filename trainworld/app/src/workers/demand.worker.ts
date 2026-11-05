@@ -120,7 +120,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" | "pause" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -480,28 +480,13 @@ function failed(err: unknown) {
   else sendMessage({ kind: "failed", error: String(err) });
 }
 
-/** Yield to the event loop so a waiting message (a newer network) is delivered; while `pause` holds
- * this worker (T-2045), wait there until it lets go or a newer solve comes. */
+/** Yield to the event loop so a waiting message (a newer network) is delivered. */
 async function yieldNow(): Promise<void> {
   await new Promise<void>((resolve) => {
     const ch = new MessageChannel();
     ch.port1.onmessage = () => resolve();
     ch.port2.postMessage(0);
   });
-  while (pauseGate && !pending) await pauseGate;
-}
-/** T-2045: the focus pool solving the zone in view first: this pool's solving and opening wait */
-let pauseGate: Promise<void> | null = null;
-let pauseEnd: (() => void) | null = null;
-function setPause(on: boolean) {
-  if (on && !pauseGate) pauseGate = new Promise<void>((r) => (pauseEnd = r));
-  else if (!on && pauseGate) { pauseEnd?.(); pauseGate = pauseEnd = null; }
-}
-/** wake the waiters (a newer solve came); still paused for the rest */
-function nudgePause() {
-  if (!pauseGate) return;
-  pauseEnd?.();
-  pauseGate = new Promise<void>((r) => (pauseEnd = r));
 }
 
 /**
@@ -772,14 +757,13 @@ function closeDeferred() {
 const openQueue: { msg: Extract<ToDemand, { kind: "open" }>; epoch: number }[] = [];
 let closeEpoch = 0;
 
-let oneByOne = false;
 /** T-2495: `?perfOff=inPlace`, the table's columns through the binding's copies (`inPlace`) */
 let copies = false;
 
 function openQueued(epoch: number): Promise<void> {
   // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
   // rough solve of the zone in view runs
-  return (oneByOne ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, 0))).then(() => roughRun ?? undefined).then(async () => { while (pauseGate) await pauseGate; }).then(() => {
+  return new Promise<void>((r) => setTimeout(r, 0)).then(() => roughRun ?? undefined).then(() => {
     let first = openQueue[0];
     // taken up by an earlier batch, or after a close that comes before it in the chain
     if (!first || first.epoch !== epoch) return;
@@ -794,7 +778,7 @@ function openQueued(epoch: number): Promise<void> {
     // T-1533: only market packs open together (one composition for them all); a city pack opens on
     // its own, so the zone in view's, moved ahead (`first`), waits for one pack at most
     let n = 1;
-    while (!oneByOne && !aux && !first.msg.packs.length && n < openQueue.length && openQueue[n].epoch === epoch && !openQueue[n].msg.packs.length) n++;
+    while (!aux && !first.msg.packs.length && n < openQueue.length && openQueue[n].epoch === epoch && !openQueue[n].msg.packs.length) n++;
     const batch = openQueue.splice(0, n).map((q) => q.msg);
     if (!started || dead) return;
     try {
@@ -845,7 +829,6 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         [raw, attractions] = await Promise.all([init(), loadAttractions()]);
         const t1 = performance.now();
         aux = !!msg.aux;
-        oneByOne = !!msg.oneByOne;
         copies = !!msg.copies;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
@@ -886,7 +869,6 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
     pending = pending?.freshParts && !msg.freshParts ? { ...msg, freshParts: true } : msg;
     wake?.();
-    nudgePause();
     if (msg.only) startRough();
     else void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "whole") {
@@ -896,8 +878,6 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     const group = msg.group ?? 0;
     if (!goAllows(msg.version, group, msg.round)) go = { version: msg.version, group, round: msg.round };
     wake?.();
-  } else if (msg.kind === "pause") {
-    setPause(msg.on);
   } else if (msg.kind === "view") {
     viewDay = msg.day;
     viewZones = new Set(msg.zones);
@@ -1707,7 +1687,7 @@ async function run() {
       // populations are zones opened again at another level (`fresh`), solves those alone against
       // the others' loads frozen from the last solve (`localSolve`)
       const localOf = new Map<JobCluster, Population[]>();
-      if (!job.barrier && !job.fresh && !job.noLocal && !only && mine.length) {
+      if (!job.barrier && !job.fresh &&!only && mine.length) {
         const all = maskOf(mine);
         for (const c of dirty) {
           // T-1733: a cluster last solved with its market set apart (T-1607) is kept that way: its
@@ -1734,7 +1714,7 @@ async function run() {
       // touched against those frozen loads; that result is sent, then the cluster is solved whole
       // as usual. `market`: the part's route nodes on this network; `sig`: the cluster it last solved
       const editOf = new Map<JobCluster, { fresh: Population[]; market: Uint32Array | null; sig: string | undefined }>();
-      if (!job.barrier && !job.fresh && !job.noLocal && !only && mine.length) {
+      if (!job.barrier && !job.fresh &&!only && mine.length) {
         const all = maskOf(mine);
         for (const c of dirty) {
           if (localOf.has(c)) continue;
@@ -2273,7 +2253,7 @@ async function run() {
         // T-1735: the market's pairs with an end in a zone a station changed since the market's last
         // whole solve serves, solved with the touched cities on the window's stations alone; the
         // frozen market less those pairs' old loads (`less`)
-        const part = c.part, base = part && e.market && lastNet && !job.noWindow ? marketNet.get(part) : undefined;
+        const part = c.part, base = part && e.market && lastNet ? marketNet.get(part) : undefined;
         const ed = base ? editedStations(base, lastNet!, nodeMap(base, lastNet!)) : null;
         const sub = ed && ed.minutes >= WINDOW_EDIT_MIN ? part!.beside() : null;
         const lessOf = new Map<number, Float32Array[]>();

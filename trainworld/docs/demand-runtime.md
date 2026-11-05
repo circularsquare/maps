@@ -102,8 +102,7 @@ solved with no station in it.
 - **Zones track crosses** (T-1047, `openCrossed`): a zone built track crosses (game/trackZones.ts)
   that no station reaches opens bare too, outside a load's card and only while no other bare
   opening is under way, one at a time, nearest the view's centre first. Nothing keeps it open: it
-  closes as any spare zone does, its figures still shown (`bareKept`). `?perfOff=track` turns it off.
-
+  closes as any spare zone does, its figures still shown (`bareKept`).
 ## Levels of detail
 
 **Levels of detail** (T-1223, `workers/demandLod.ts`, design notes/T-1206.md). Each zone the solves
@@ -137,8 +136,8 @@ close and reopen: the pack downloads again (the browser's cache) and each solvin
 its new level, one whose solve in hand covers the zone once that solve ends; the shown figures stay
 until a solve covers it at its new level (`flush` sends one as for a zone newly opened), the zone
 counting as open for the loading bar meanwhile. Zones changed in one check reopen together, so one
-solve covers them. That solve is a **local refine** (T-1609, notes/T-1609.md, `?perfOff=refine`
-off): in a solve without the barrier, a cluster whose network its other populations hold solved and
+solve covers them. That solve is a **local refine** (T-1609, notes/T-1609.md):
+in a solve without the barrier, a cluster whose network its other populations hold solved and
 whose only new populations are zones opened at another level (at most half its populations, never
 a market part) solves those alone, each period through its rounds and the capacity fit, crowding on
 the other populations' loads round by round as their last solve was priced on (T-1733's `trail`;
@@ -158,7 +157,7 @@ every zone fine and `?lod=coarse` every zone coarse, and neither changes them af
 browser's baseline code each take several times as long as one alone. So worker 0 opens a small
 synthetic everyday layer first (`warm.rs`, 22,500 cells), and the client holds the other solving
 workers' city packs until it is ready (`demandClient.ts` `held`). Compiled code is shared by a
-page's workers, so they all open on optimised code. `?perfOff=stagger` turns it off; timings in
+page's workers, so they all open on optimised code. Timings in
 notes/T-174.md and notes/demand-measurements.md.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
@@ -166,7 +165,7 @@ notes/T-174.md and notes/demand-measurements.md.
 by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
 that puts two periods of a demand level on one worker (2 workers: high demand's three periods), when they are dealt
 out level by level (high, then medium, then low: 0, 1, 2, 3 and 4 in that order, to workers 0, 1, 0, 1, 0), so an edit to one level's trains
-has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`, `?perfOff=spread` by index alone).
+has its periods solved side by side as far as the pool allows (T-124; `periodsOfWorker`).
 **A market set apart** (T-1607, `marketsOfWorkers`, `?perfOff=share` off). Five periods do not deal
 evenly over 2 to 4 workers, and on a big network a period's market is most of its work, so in a solve
 with the barrier (a load, a zone opened; never a rough solve) a period's market may be solved by
@@ -211,7 +210,7 @@ figures are at most one crowding round ahead of the bubbles; the answer for the 
 asked for at once, so each publish finds its answer waiting, and the final replaces it as always.
 A worker already past the round asked about answers nothing and the question goes to the newer
 round. After an edit questions about a zone being solved wait for its final (the workers hold a
-network the map does not show yet); others are answered at once ("Clusters" below). `?perfOff=ahead` turns all of this off. T-327, notes/T-327.md.
+network the map does not show yet); others are answered at once ("Clusters" below). T-327, notes/T-327.md.
 
 ## Clusters
 
@@ -333,7 +332,7 @@ about a published cluster's zones go to its solve. The top bar's faded split and
 last change" speak only for a zone still being solved (`plan`, `demandSolving`); the status tag shows
 while any solve runs, its step (`demandStep`) the local solve then the whole one after an edit, the
 rounds with the barrier (T-1790, docs/ui-panels.md "Status").
-**The local solve after an edit** (T-1733, notes/T-1733.md, `?perfOff=refine` off): before those
+**The local solve after an edit** (T-1733, notes/T-1733.md): before those
 whole solves, each cluster the edit touched is solved locally first when its market part and its
 untouched cities still hold what they last solved: only the city populations whose view changed (a
 station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%,
@@ -352,7 +351,7 @@ within that time is solved locally too; the whole solves follow as above and rep
 (`serviceFromSnapshot`; passages with an end among them too), so building stations ahead of their
 line changes no key and starts no solve; their positions still reach zones, whose packs open ahead
 of the line. The line then comes as one edit against the last solve, solved locally like any other.
-**The market's pairs in a window** (T-1735, notes/T-1735.md, `?perfOff=window` off): when the
+**The market's pairs in a window** (T-1735, notes/T-1735.md): when the
 edit's longest changed run (between a line's first and last changed stops: a stop added or dropped,
 or a hop's run time past 1%, trains an hour not counted; the edit diffed against the network the
 market part last solved on) is at least 20 minutes, the local solve also re-solves
@@ -450,9 +449,8 @@ pack (a copy of the one the main pool is sent, or downloaded again for a zone ne
 once the network is in, solves that zone as a rough solve does (no market, the free-flow round from
 one period in parts and estimates), but through every round and the capacity fit, kept as solved
 (`solve.keep`). The main pool goes on solving and opening meanwhile, so the zone takes about its own
-time, however big the save (`?perfTry=focusFirst` holds the main pool's solving workers at
-their next population and their opening meanwhile, `pause`: little sooner for the zone, the load's
-final much later, notes/T-2045.md). Each round shows as the zone's figures and its lines' (`onlyLines`):
+time, however big the save (holding the main pool's workers meanwhile settled the zone little
+sooner and put the load's final much later, notes/T-2045.md). Each round shows as the zone's figures and its lines' (`onlyLines`):
 alone while nothing else is shown, else put in the shown result as a cluster solved ahead is, and
 the load's own estimates keep them wherever the focus solve is as far on or done (`withFocus`). Its
 last round counts as final for the status tag and the clock cap (`focusZones`), not for the card or
@@ -481,7 +479,7 @@ scaled by the two periods' trips (commutes by the periods' shares, everyday trip
 purpose); the market, which has no estimate, is solved (accuracy: notes/T-1538.md). After an edit the estimates go out as the preview, then the worker solves those periods, which
 replaces them whole, so the cluster's rounds and final are the same to the bit. A rough solve
 crowds on from its estimates, and is never kept for a whole solve to reuse.
-**One period in parts** (T-1543, `?perfOff=parts` off). With two or more solving workers, both
+**One period in parts** (T-1543). With two or more solving workers, both
 free-flow rounds shown first are instead one period (the morning peak) solved by every solving
 worker together, each a part of its origins:
 the commutes' origin zones and the everyday layer's pairs dealt round-robin (`set_part(k, n)`,

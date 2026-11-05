@@ -30,7 +30,6 @@ import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercityView";
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
-import { perfOff } from "../perfFlags";
 import { logShare, modeBar } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
@@ -259,7 +258,6 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
    * ends not on show are built too, one after another */
   const ENDS: BubbleEnd[] = ["home", "work", "both"];
   function buildRest(b: Built, w: Worker, live: () => boolean) {
-    if (perfOff("prebuild")) return;
     void (async () => {
       for (const e of ENDS) {
         if (!live() || !demandView.peek()?.final) return;
@@ -383,7 +381,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     // T-1904: a switch to an end already built for the result on show takes it at once, also while a
     // newer result's legs are on their way (which then replace it as they would the other end's)
     if (shown && shown.end !== end) tries = 0; // a pick starts its retries at the shortest pause
-    const stand = shown && shown.end !== end && built?.purpose === purpose && !perfOff("prebuild") && built.dv === shown.dv ? built.done.get(end) : undefined;
+    const stand = shown && shown.end !== end && built?.purpose === purpose && built.dv === shown.dv ? built.done.get(end) : undefined;
     if (stand && stand.anchor.version === anchor().version) showBubbles({ dv: built!.dv, end, purpose, bubbles: stand, modes: built!.modes });
     retry.value; // T-1493: asked again after an answer that did not come
     const ask = ++wanted, epoch = focusEpoch;
@@ -457,7 +455,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       // another purpose's or end's bubbles would mislead: none meanwhile (a new result keeps the last)
       // (T-1904: an end already built for the result on show stands in at once)
       if (s && (s.purpose !== purpose || s.end !== end)) {
-        const st = s.purpose === purpose && z.built?.dv === s.dv && !perfOff("prebuild") ? z.built.done.get(end) : undefined;
+        const st = s.purpose === purpose && z.built?.dv === s.dv ? z.built.done.get(end) : undefined;
         if (st && st.anchor.version === anchor().version) {
           z.shown = { ...s, end, bubbles: st };
           view.setNearbyBubbles(id, painted(st).levels.map((l) => l.discs), st.anchor);

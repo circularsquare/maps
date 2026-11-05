@@ -69,7 +69,7 @@ import { startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
 import { startLineFigures } from "./game/lineFigures";
 import { startEditNote } from "./game/editNote";
-import { perfOff, perfTry } from "./perfFlags";
+import { perfOff } from "./perfFlags";
 import { DEMAND_INDEX, type Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
@@ -114,7 +114,6 @@ const num = (k: string, d: number) => {
 };
 const DEBUG = params.get("debug") === "1";
 const SYNTH = params.get("synth") === "1";
-const HOVER_CURSOR = perfTry("hoverCursor");
 
 // T-210: the game's own hover tag for every panel and control, never the browser's
 startTips();
@@ -468,8 +467,8 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
     if (tool.peek() !== "select") return tools.move(e);
     // a blueprint point drags even over a demand bubble (T-474), so its grab cursor comes first
     const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "grab" : demandHover?.(e.point.x, e.point.y) ? "pointer" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
-    // ?perfTry=hoverCursor (T-045): write the cursor only when it changes
-    if (!HOVER_CURSOR || map.getCanvas().style.cursor !== cur) map.getCanvas().style.cursor = cur;
+    // (written only when it changes: a style write each mouse move costs a restyle)
+    if (map.getCanvas().style.cursor !== cur) map.getCanvas().style.cursor = cur;
   });
 // The focused control's own keys stay with it: all of them in a text field, the arrows, Enter and
 // Space in a select (ui/keys.ts, T-183, the same rule as the search box's "/").

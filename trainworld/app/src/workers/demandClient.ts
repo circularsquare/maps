@@ -71,7 +71,7 @@ import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
 import { PERIODS, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
-import { perfOff, perfTry } from "../perfFlags";
+import { perfOff } from "../perfFlags";
 import { marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
@@ -147,7 +147,7 @@ export function periodsOfWorker(i: number, n: number): number[] {
   const qs = PERIODS.map((_, q) => q);
   const clash = qs.some((q) => qs.some((s) => s > q && PERIODS[s].demand === PERIODS[q].demand && s % n === q % n));
   const LEVEL = { high: 0, medium: 1, low: 2 };
-  const order = clash && !perfOff("spread") ? qs.slice().sort((a, b) => LEVEL[PERIODS[a].demand] - LEVEL[PERIODS[b].demand] || a - b) : qs;
+  const order = clash ? qs.slice().sort((a, b) => LEVEL[PERIODS[a].demand] - LEVEL[PERIODS[b].demand] || a - b) : qs;
   return order.filter((_, k) => k % n === i).sort((a, b) => a - b);
 }
 
@@ -496,7 +496,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span && !perfOff("span") ? { span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
   };
@@ -724,7 +724,7 @@ class DemandClient {
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     for (let i = 0; i <= n; i++) this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
     this.marketsOf = marketsOfWorkers(n);
-    for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1 && !perfOff("stagger")));
+    for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
@@ -770,7 +770,7 @@ class DemandClient {
   /** T-1904: the `view` message for the day and zones on screen now (read in an effect) */
   private viewMsg(): ToDemand {
     // (none with the bubbles off: Tokyo's take a worker about 0.3 s a round)
-    return { kind: "view", day: perfOff("daySums") ? 0 : shownDay.value, zones: display.value.commuters ? [activeCity.value, ...nearbyZones.value] : [] };
+    return { kind: "view", day: shownDay.value, zones: display.value.commuters ? [activeCity.value, ...nearbyZones.value] : [] };
   }
 
   /** Worker `i`, its WASM started at once; packs follow as they arrive (T-149). Messages from a
@@ -786,7 +786,7 @@ class DemandClient {
     w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}), ...(perfOff("inPlace") ? { copies: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
     w.postMessage(msg);
     return w;
   }
@@ -799,7 +799,7 @@ class DemandClient {
    */
   private prefetchViewed() {
     const t = tool.peek();
-    if ((t !== "track" && t !== "station" && t !== "blueprint") || perfOff("bareStart")) return;
+    if (t !== "track" && t !== "station" && t !== "blueprint") return;
     const svc = this.latest(), id = activeCity.peek();
     if (this.hold || !svc || svc.stations.length || !viewedZone.peek() || this.status.startsWith("failed")) return;
     if (!this.fetchingBare.has(id) || this.fetching.has(id) || this.fetchingUndecided.has(id)) return;
@@ -819,7 +819,7 @@ class DemandClient {
   stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null, built: string[][] | null = null) {
     // T-1223: a game loading: its fine set is made afresh, from the save's list if it has one
     this.lodReset(fine, built);
-    if (this.status.startsWith("failed") || perfOff("openAhead") || xy.length < 2) return;
+    if (this.status.startsWith("failed") || xy.length < 2) return;
     this.endFocus(); // (a game picked while another loaded)
     this.startFocus();
     const stations: Service["stations"] = [];
@@ -1165,7 +1165,7 @@ class DemandClient {
     const now = Date.now();
     // T-2180: no level changes while edits settle (the edit note's figures would mix them in), and
     // that time counts as looked at, so a fine zone's ten minutes left alone start after
-    if (editsSettling.peek() && !perfOff("lodHold")) {
+    if (editsSettling.peek()) {
       for (const id of this.fine) this.touched.set(id, now);
       return;
     }
@@ -1356,7 +1356,7 @@ class DemandClient {
    * first. Nothing keeps it open: it closes as a spare zone does and its figures stay (`bareKept`).
    */
   private openCrossed(reached: Set<CityId> | null) {
-    if (!reached || !this.nearbyOpen() || perfOff("track")) return;
+    if (!reached || !this.nearbyOpen()) return;
     const busy = (id: CityId) => this.fetchingUndecided.has(id) || (this.fetchingBare.has(id) && !this.bareOpen.has(id));
     if ([...this.fetchingBare, ...this.fetchingUndecided].some(busy)) return;
     const c = viewCentre.peek() ?? [0, 0], k = Math.cos((c[1] * Math.PI) / 180);
@@ -1375,7 +1375,7 @@ class DemandClient {
   private want(id: CityId, full: boolean | null) {
     if (this.fetching.has(id) || this.fetchingUndecided.has(id) || this.broken.has(id)) return;
     if (full) this.fetchCity(id, "full");
-    else if (full === null) this.fetchCity(id, this.fetchingBare.has(id) || perfOff("bareStart") ? "full" : "undecided");
+    else if (full === null) this.fetchCity(id, this.fetchingBare.has(id) ? "full" : "undecided");
     else if (!this.fetchingBare.has(id)) this.fetchCity(id, "bare");
   }
 
@@ -1471,9 +1471,8 @@ class DemandClient {
    * solving workers get no city pack until then. With five workers opening New York's everyday
    * layer at once from the browser's baseline WebAssembly code, the optimised code came seconds
    * late (7-8 s in every worker instead of 1.5-2 s); compiled code is shared by a page's workers,
-   * so after one worker's warm-up they all open on optimised code. Null once released (or with
-   * `?perfOff=stagger`, the old way). */
-  private held: (() => void)[] | null = perfOff("stagger") ? null : [];
+   * so after one worker's warm-up they all open on optimised code. Null once released. */
+  private held: (() => void)[] | null = [];
 
   /** `full`: to every worker; `bare` (T-325): to the aux worker alone; `undecided` (T-351): either,
    * by the reach known once it has downloaded. A pack opened bare and reached later is fetched
@@ -1547,7 +1546,7 @@ class DemandClient {
   private marketsHeld: { id: CityId; bytes: Uint8Array }[] = [];
   private heldRows: Uint8Array | null = null;
   private postMarkets() {
-    if ((this.marketsDownloading.size && !perfOff("batchOpen")) || !this.marketsHeld.length) return;
+    if (this.marketsDownloading.size || !this.marketsHeld.length) return;
     // T-1533: and after the city packs still downloading or held: a worker composing a big game's
     // market (a minute for China's 370) would hold up the zone in view's pack and its rough solve
     if (this.held?.length || [...this.fetching].some((id) => !isMarket(id) && !this.bytes.has(id))) return;
@@ -2159,7 +2158,7 @@ class DemandClient {
     const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.markets, s.coarse ?? [])]);
     // the bubbles, when they were asked for this result (the day shown, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
-    const cm = m && m.version === s.version && (m.day === 0 || !perfOff("daySums")) ? await m.p : null;
+    const cm = m && m.version === s.version ? await m.p : null;
     // T-1539: the network the loaded save worked out, so the next load of it shows this at once
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
@@ -2493,7 +2492,7 @@ class DemandClient {
    * shown stay until that solve's final, the same to the trip. */
   private memCheck() {
     this.memTimer = 0;
-    if (this.status.startsWith("failed") || perfOff("restart")) return;
+    if (this.status.startsWith("failed")) return;
     const over = this.overNeed();
     if (!over.length) return;
     const wait = this.quietIn();
@@ -2610,7 +2609,6 @@ class DemandClient {
   /** The load's whole solve has landed (or a cached result, a new network, a failure): the zones
    * shown from the focus pool keep their figures until the next publish replaces them. */
   private endFocus() {
-    this.mainPause(false);
     if (!this.fpool && !this.fshown.size) return;
     this.stopFocusPool();
     this.fshown.clear();
@@ -2647,15 +2645,6 @@ class DemandClient {
   /** ?debug=1: when the pool ended ahead of the load's final (`retireFocus`) */
   fretiredAt: number | null = null;
 
-  /** `?perfTry=focusFirst`: the main pool's solving workers hold their solve and opening while the
-   * focus pool solves the zone in view. Off: the pool is sized to half the cores, so both fit. */
-  private mainPause(on: boolean) {
-    if (on === this.mainPaused || (on && !perfTry("focusFirst"))) return;
-    this.mainPaused = on;
-    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "pause", on } satisfies ToDemand);
-  }
-  private mainPaused = false;
-
   /** T-2459: the focus pool has `id` of `svc` in hand: being solved, or shown */
   private focusSolves(svc: Service, id: CityId): boolean {
     return !!this.fpool?.alive && ((this.fsolve?.svc === svc && this.fsolve.cities[0] === id) || this.fshown.get(id)?.s.svc === svc);
@@ -2689,8 +2678,7 @@ class DemandClient {
     this.log.push(s);
     if (this.log.length > 50) this.log.shift();
     this.flog.push({ version, zone: id, sentAt: now, openAt: this.fopened?.get(id), roundAt: [] });
-    this.mainPause(true);
-    p.solve({ kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], keep: true, ids, ...(perfOff("estimate") ? { exact0: true } : {}) }, !perfOff("parts"));
+    p.solve({ kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], keep: true, ids, ...(perfOff("estimate") ? { exact0: true } : {}) });
     this.lengthsAhead(); // T-2476: the city view's graph of the zone, of round 0
   }
 
@@ -2728,7 +2716,6 @@ class DemandClient {
       s.results = s.byRound[r];
       s.published = r;
       if (r < ROUNDS) this.fpool?.go(s.version, r + 1);
-      else this.mainPause(false);
       this.publishFocus(s, r);
       if (r > 0) s.byRound[r - 1] = [];
     }
@@ -3144,7 +3131,7 @@ class DemandClient {
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
-    const barrier = (showEstimates || !!this.hold) && !perfOff("ahead");
+    const barrier = showEstimates || !!this.hold;
     this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
@@ -3161,7 +3148,7 @@ class DemandClient {
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -3170,7 +3157,7 @@ class DemandClient {
 
   /** A solve to every worker, each solving worker told its part of the origins (T-1543). */
   private postSolve(msg: Extract<ToDemand, { kind: "solve" }>) {
-    const n = perfOff("parts") ? 1 : this.computeN;
+    const n = this.computeN;
     this.workers.forEach((w, i) => w.postMessage(n > 1 && i < n ? { ...msg, part: [i, n] } : msg));
   }
 
@@ -3225,7 +3212,7 @@ class DemandClient {
     const ahead = s?.ahead?.cities.includes(zone) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : null;
     const published = ahead ?? s?.published ?? -1;
     // nothing shown yet (startup, no cache): asked of round 0, whose answer is in hand when it shows
-    if (!dv) return s && published < 0 && !perfOff("ahead") ? { version: s.version, round: 0, view: s.version, wait: true, solve: s, shown: -1 } : null;
+    if (!dv) return s && published < 0 ? { version: s.version, round: 0, view: s.version, wait: true, solve: s, shown: -1 } : null;
     const cv = this.cityVersion.get(zone);
     if (s && cv === s.version) return { version: cv, round: ROUNDS, view: dv.version, wait: false, solve: s };
     // T-1205: after a worker change the shown result is not in every worker: asked of the new final
@@ -3235,7 +3222,7 @@ class DemandClient {
     // figures, whatever the view is of (during a game load, the game before's final with the load's
     // estimates and the focus pool's figures put in)
     const unsettled = anyShown && !perfOff("selected") && !!s?.barrier && !s.rough && s.cities.includes(zone) && this.unsettledZone(zone);
-    if (s && published < ROUNDS && (dv.version === s.version || cached || unsettled) && !perfOff("ahead")) {
+    if (s && published < ROUNDS && (dv.version === s.version || cached || unsettled)) {
       // no worker starts a round before every worker has the one before (`go`), so every worker
       // has the round after the published one, or will
       return { version: s.version, round: published + 1, view: dv.version, wait: true, solve: s, shown: published };
@@ -3998,7 +3985,7 @@ class DemandClient {
     if (!final && !s.showEstimates) {
       // T-324: lines new or changed since the shown result have no figures; theirs come from the
       // first estimate at once, every other figure waits for the final round as above
-      if (round === 0 && s === this.cur && !perfOff("early")) this.publishNewLines(s, res);
+      if (round === 0 && s === this.cur) this.publishNewLines(s, res);
       return;
     }
     this.inOrder(async () => {
@@ -4142,7 +4129,7 @@ class DemandClient {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;
     // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
-    if (round === 0 && !final && !s.showEstimates && !perfOff("early")) return this.publishNewLines(s, res);
+    if (round === 0 && !final && !s.showEstimates) return this.publishNewLines(s, res);
     // T-1790: the zone in view's cluster solved ahead counts its own rounds
     if (s.barrier && c.cities.includes(activeCity.peek())) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     // T-2453: its zones' questions now go to its next round
@@ -4287,7 +4274,7 @@ let NEW_GAME = false;
 /** Start the pool for a city. With `?demandTest=1` it solves T-005's hand-made network. */
 export function startDemand(city = HOME_CITY, newGame = false) {
   if (client) return client;
-  NEW_GAME = newGame && !TEST && !perfOff("bareStart");
+  NEW_GAME = newGame && !TEST;
   const c = (client = new DemandClient(city));
   onLoadStop((why) => c.fail(why));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
