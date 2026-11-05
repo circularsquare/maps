@@ -64,6 +64,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
   "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
   after a deploy, so left as is.
+- **mexprep** (Opus, main tree; new pipeline/mexico.py only, data/raw/mexico; no shared pipeline edits until join PID
+  6408 ends): T-2080 census 2020 population hook (Brazil's shape), T-2081 DENUE jobs. Mexico's build T-2436 itself
+  waits for Europe. Brazil T-2437 needs no prep (brazil.py hook done); Sao Paulo hand-built since T-458.
+- Anita ~13:50: storage only where "basically free" (passed to diskprune).
+- diaghokkaido LANDED 0d5ab8f4 (records 1034682c; agent 523k, retired): T-2550 sparse floor 0.25 of core scale,
+  far land at region scale, station-less islands under 1/10 of land in their 100 km square dropped (1,187 of 1,310);
+  Hokkaido IoU 0.35 -> 0.62, all islands up; diagram-game captures redone. Costs filed T-2555 (tyo-game 5 pill
+  overlaps, NYC close pairs, crossings ~7/214 lower). Review: review/diagram-japan-hokkaido.png.
 - bubbleload DONE (agent at 510k, retired); its patch LANDED 810f0b9b (records d8a58853): T-2531 no regression across
   827/956/master on Anita's NA save; T-2508 bubbles 125-200 s -> seconds after figures (isCurrent + legsKey); T-2523's
   never-answering click on 956 fixed for good, retry while solving (72-99 s). T-2523 stays open for the loading note;
@@ -72,7 +80,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   stall sign and stall profile (notes/T-2524.md).
 - Anita ~13:40 asked about trainworld/data's 95 GiB (102.4 GB). Filed T-2554; **diskprune** (Opus, main tree, no
   app/sim edits): what each item is for, safe deletions (raw now; work/ and frozen/ only after join PID 6408 ends;
-  never pre-T2302), measured compression proposal. Next free id T-2555.
+  never pre-T2302), measured compression proposal. Next free id T-2556.
 - diagstraits LANDED 332d628b (agent at 570k, retired): T-2541 layout reads the ground sea, water hops >= 2x real,
   bay pairs kept apart; no islands merged, Seikan 0.27 -> 0.87, Boso scale 0.125 -> 0.30 of Kanto core; Hokkaido IoU
   0.47 -> 0.35 (T-2550); T-2551 NYC rivers, t2405 LIRR 1 -> 3 hidden, channel in 2 pieces. T-2542 checks use save frame.

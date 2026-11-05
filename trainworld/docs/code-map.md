@@ -826,7 +826,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (thresholds, filter and cap in its docstring), written gzip to `data/terrain/<id>.terrain` (never
   `data/packs`, so joins do not see them); `build [ids] [--force] [--jobs n]` skips files already made
   (about 25 minutes on one core for every zone), `mix` the class shares over the files, `probe lon
-  lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py`.
+  lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py slope`, whose
+  output `data/work/market_drives/slope60.npy` covers the world; the 10 GB raster is not kept on disk
+  (T-2554), so download it from `zone_terrain.SRC_URL` only to rerun `slope`.
 - `world_water.py` (T-1285): the world's coarse water mask, `data/terrain/world.water` (served and
   published as `packs/world.water`), from the OSM coastline polygons and Natural Earth's 1:10m lakes
   at 1/60 degree; `build` takes about 6 minutes on one core. The sim reads it as `cost::WorldWater`
