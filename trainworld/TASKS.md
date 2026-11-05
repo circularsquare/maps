@@ -214,7 +214,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-2359 [P2] Code and documentation cleanup (Anita 2026-11-04). Surveys done (T-2360/61/62); stages below, their order and waits in notes/T-2359.md (A = notes/T-2360.md app, E = T-2361.md engine, D = T-2362.md docs). Open while any stage is.
-- T-2368 [P2] Cleanup: code-map.md brought in line with the code (A8, E's code-map list, E1's checks part). After the UI trees land. Open.
+- T-2368 [P2] Cleanup: code-map.md brought in line with the code (A8, E's code-map list, E1's checks part). After the UI trees land. Open; taking, 2026-11-05, agent codemap.
 - T-2370 [P2] Cleanup A2: perfFlags.ts and URL switches whose decision is made (T-1114 app-core 9). After crowd and panels2 land. Open.
 - T-2371 [P3] Cleanup A3, A4: demand client/worker repeats and the clock protocol (T-1114 app-core 2, 3). After T-2370. Open.
 - T-2372 [P3] Cleanup A5: the build tools' four copies of the curve-label placer and the rest (T-1114 app-core 4). After trackbar and panels2 land. Open.
