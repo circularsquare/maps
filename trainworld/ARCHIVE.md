@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2379 Cleanup E2, sim small items (2026-11-05, agent simtidy, tree): 10 uncalled WASM exports now plain impls (track 1,427,793 -> 1,427,047 B, demand 1,678,773 -> 1,666,159 B), 15 finished ignored probes deleted (833 lines), `api.rs` clone gone, 3 slips fixed. Tests unchanged (361, 534). Detail: notes/T-2361.md stage 2.
 - T-2485 Player RAM (2026-11-05, agent memhunt, tree): the real save settles at 2.97 GB (two solving workers' WASM 367 + 328 MB the biggest) and holds 4.2 GB through its load (the focus pool ~0.7 GB; T-2472's 3.8 was mid-load). Narrower corridor table, sent by one worker: settled 2.87, peak 3.97 GB, figures identical. T-2495, T-2496. notes/T-2485.md.
 - T-2169 Diagram water (2026-11-05, agent diagwater, tree .tw-trees/diagwater): rivers 120-160 m and wider as bands crossing exactly the hops that cross them (gaps where the drawing leaves no clean way), the sea and lakes as octilinear coasts with every station on land; from the packs' water masks, after the layout. notes/T-2169.md.
 - T-2476 Demand wait, worst case (2026-11-05, agent loadwait, tree): a zone selected in another cluster during a big load waits for the whole solve (all of Japan, Okinawa 18 min; T-2459); built the zone in view's rounds without a focus pool (Tokyo 79 -> 44 s) and the graph with round 0 (10-15 s sooner). notes/T-2476.md.

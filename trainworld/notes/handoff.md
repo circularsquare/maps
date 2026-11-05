@@ -47,8 +47,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   maps-17 rewrote scratch snapbuild.cmd to build into dist-new and swap; first use pending), T-2484, T-2499.
 - **loadfix** (Opus, tree .tw-trees/loadfix from 8e2bd280, 6196, ids T-2500..01): T-2499 reload cache miss, T-2459
   worst case (Okinawa 18 min), T-2484 if room. Told to rebase onto ecac1167 (memhunt).
-- **simtidy** (Sonnet, tree .tw-trees/simtidy from 09438360, 6199, ids T-2502..03): T-2379 sim small cleanup items
-  (Rust approved; WASM rebuild at landing).
+- simtidy LANDED fb674fba (T-2379: 10 exports to plain impls, 15 probes/833 lines, api.rs take instead of clone).
+  **Watch:** dev smoke after it on the main tree gave 12,515,600 rail trips a day against 12,515,598 at build 956.
+  The main data is mid-Europe-replan (market rows can move NYC's intercity a little), and api.rs's change was not
+  run through calib. After Europe's pack writes end, compare the 8800 smoke; if still 600, check whether Europe
+  explains it (smoke at fb674fba vs 09438360 on the same data) before blaming api.rs.
 - After loadfix lands: T-2384 drives view removal (touches demandClient), T-2495 focus pool memory.
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
