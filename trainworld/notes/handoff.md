@@ -64,6 +64,23 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
   "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
   after a deploy, so left as is.
+- bubbleload DONE (agent at 510k, retired); its patch LANDED 810f0b9b (records d8a58853): T-2531 no regression across
+  827/956/master on Anita's NA save; T-2508 bubbles 125-200 s -> seconds after figures (isCurrent + legsKey); T-2523's
+  never-answering click on 956 fixed for good, retry while solving (72-99 s). T-2523 stays open for the loading note;
+  T-2532 (edit bubbles wait for final, worker change), T-2533 (after cache hit solve zone in view first) open.
+  **loadnotes** (Opus, tree from 810f0b9b, port 6194): T-2523 loading note on a waiting click, T-2524 progress hover,
+  stall sign and stall profile (notes/T-2524.md).
+- diagstraits LANDED 332d628b (agent at 570k, retired): T-2541 layout reads the ground sea, water hops >= 2x real,
+  bay pairs kept apart; no islands merged, Seikan 0.27 -> 0.87, Boso scale 0.125 -> 0.30 of Kanto core; Hokkaido IoU
+  0.47 -> 0.35 (T-2550); T-2551 NYC rivers, t2405 LIRR 1 -> 3 hidden, channel in 2 pieces. T-2542 checks use save frame.
+  Review: review/diagram-japan-straits.png, diagram-kanto.png. **diaghokkaido** (Opus, tree from 850f66ad, port 6193,
+  ids T-2552..53): T-2550 Hokkaido shape + rerun diagram-game.mjs captures; widened by Anita ~13:20 (Tohoku and
+  Hokkaido too small; islands with no stations left out if small, else not expanded; Awaji too big).
+- Anita ~11:50-13:00: load-fail text sentence case "This game works best on a computer." (6431a1fa); link card logo
+  big and centred over globe, full-size globe chosen (9dfc5db4). Video: she'll speed up a gameplay recording herself.
+- launchbits LANDED 6f92ae05 (records f736366d): T-2544 card = logo over globe (card-bottom.png), text "Build trains
+  around the world!"; T-2545 load-fail strings (shown to Anita), iOS reload flag tw-load-started; T-2548 purpose in
+  settings, hidden at phone layout; T-2549 top line on .tabs. Tree smoke (mine) 23 PASS 12,515,598.
 - diagislands LANDED dd30a3ac (records 03cbd629; agent at 502k, retired): T-2540 + T-2517 sea sampled through station
   maps, land masses kept apart, Japan 4 islands separate (Honshu IoU 0.25 -> 0.54); also fixed checks' Japan frame
   (6 km off) in diagram-saves.mjs. Anita: "the after diagram looks great". **diagstraits** (Opus, tree from 03cbd629,
