@@ -14,11 +14,12 @@ reasoning and what it replaced.
 - **Cells stay crisp at zoom 9-10**, no smoothed band edges (Anita: "not sure if smoothing is the
   right way forward... maybe rounding / diagonals makes more sense. or a hex map would also look
   nice"); diagonals and a hex look are tested as painting only (T-060).
-- **Corridors go from yellow (most shared) to dark red**, not white (Anita, T-052). A second colouring by
-  travel speed along each stretch comes as a switch (T-062). A globe view (T-059) and instant
-  hovers of our own (T-061) asked for the same day.
-- **River lines go faint** (Anita: "they look like routes"); the stretches a canoe route paddles
-  are the ones drawn bright (T-052).
+- **Corridor colour is speed along the stretch**, one ramp for every mode, and width is how many
+  trips share it (Anita: "lets just have color be directly reflecting speed, and not mode";
+  T-062). This replaces T-052's yellow-to-dark-red by share and its paddled blue. A globe view
+  (T-059) and instant hovers of our own (T-061) asked for the same day.
+- **River lines go faint** (Anita: "they look like routes"); the routes a canoe takes show as
+  corridors over them (T-052).
 
 ## 2026-10-26
 

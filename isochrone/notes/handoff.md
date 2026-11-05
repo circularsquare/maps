@@ -16,11 +16,14 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## In flight
 - T-010 stage 1, roads design + Cluj/New York test: agent addfc90633db2c1e0 (Opus), session
-  4a6a5ff2, started 13:10. Owns tools/roads/, docs/roads.md, notes/T-010*. Done when docs/roads.md
-  and notes/T-010.md have the design and numbers; may file T-053 to T-055. No world build.
-- T-037 window edge strip, then T-052 canoe look: agent aa378ee8ea1276653 (Sonnet), session
-  4a6a5ff2, started 13:10. Owns index.html, js/paint.js, js/riverlines.js. Done when both lines
-  are in ARCHIVE.md and t037_*/t052_* screenshots are in maps/artifacts/isochrone/; may file T-056.
+  4a6a5ff2, started 13:10. Owns tools/roads/, docs/roads.md, notes/T-010*. Tools built
+  (tools/roads/build.py, fetch.py, regions.py); rule comparison running as node PID 24268, log
+  notes/T-010/compare.log, ~8 tiles. Done when docs/roads.md and notes/T-010.md exist, stage 2
+  filed as T-053, data/raw/osm/ emptied (1.56 GB there now). Settled: add central-america to the
+  fetch; keep 100 m road bits for every tile. No world build.
+- Page agent aa378ee8ea1276653 (Sonnet), session 4a6a5ff2: T-037 and T-052 landed (7fdc77b6);
+  now T-063 water paler, then T-061 instant hovers (sent ~13:40). Owns index.html, js/paint.js,
+  js/riverlines.js. Done when both lines are in ARCHIVE.md and t063_*/t061_* screenshots exist.
 
 ## Long runs
 (none)
@@ -31,7 +34,7 @@ Read isochrone/CLAUDE.md and TASKS.md first.
    roads (T-057), then T-028 (page on our own surface).
 3. Page queue, in this order since all touch index.html / js/paint.js: T-052 (in flight, now
    with corridors yellow to dark red), T-063 water paler (sent), T-061 instant hovers (resume the page agent), T-062
-   corridors coloured by speed, T-060
+   corridor colour = speed only, width = trips, stretch hover with mode and speed, T-060
    diagonal / hex look test, T-059 globe (MapLibre 5).
 4. T-042 land hazard. T-039 (90 m slopes) before T-057's mountain tiles.
 5. Small work alongside: T-048, T-031, T-036.

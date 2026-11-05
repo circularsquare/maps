@@ -1,5 +1,7 @@
 # Archive
 
+- T-063 [P1] Water paler than land. Done 2026-11-05: on canoe starts `paint` mixes water cells (the canoe water kinds) 22% towards white (`WATER_MIX`), at every level; `paint(L, canoe)` takes the mode so a walking start never gets it.
+- T-061 [P1] Instant hovers. Done 2026-11-05: the 6 `title` tooltips (buttons) move to `data-tip` and show in the speeds panel's `#stip` box at once, above the button; wording unchanged.
 - T-052 [P3] Canoe look. Done 2026-11-05: river lines faint on every start; corridors coloured dark red to yellow by strength with a dark casing, paddled stretches (and the hover route's paddled part) bright blue; the ray fan-out is T-056.
 - T-037 [P3] Window edge strip. Done 2026-11-05: `paint` makes up to 4 canvas rows per cell row (capped at 20 M pixels), so the hole cut for a finer window lands within a fraction of a cell of its edge; the strip is now about 1 px at zoom 9.
 

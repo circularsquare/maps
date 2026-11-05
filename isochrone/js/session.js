@@ -34,7 +34,7 @@ export function init(msg) {
 
 function post(type, L, extra) {
     const t0 = performance.now();
-    const { px, cw, ch } = paint(L);
+    const { px, cw, ch } = paint(L, mode === 'canoe');
     const dist = L.dist.slice();   // the worker keeps its own for seeding
     const msg = Object.assign({ type, originId, mode, px, cw, ch, dist, W: L.W, H: L.H,
         west: L.west, east: L.east, north: L.north, south: L.south, cellDeg: L.cellDeg,
