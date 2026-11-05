@@ -64,7 +64,8 @@ guidelines: if one is clearly unhelpful in your situation, adapt it and say why.
 - `/takeover <project>` starts a new orchestrator from the file; `/handoff` brings it up to date,
   and covers winding down once another session has taken over (`.claude/skills/`).
 - Hooks (`.claude/hooks/orchestrator.py`): each session starts knowing its own id and where each
-  handoff stands; past 500k tokens of context, a note says it is a good time to cycle; a session
+  handoff stands; past 500k tokens of context, a note says it is a good time to cycle (overnight, while
+  Anita sleeps, keep going past it instead: Anita, 2026-11-05); a session
   that has been taken over can't start new agents (an `in-flight:` description gets through).
 - **Compact instructions.** If a session compacts anyway, keep: task ids, agent names and ids still
   running, PIDs, log paths and restart commands, what is uncommitted and whose, and Anita's latest
