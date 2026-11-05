@@ -19,7 +19,7 @@ export const BLOCK_GAP = 16;
 const BOX_GROW = 0.2;
 /** the solve: a hop's weight, a box kept apart, and the pull of each station to where it was, which only picks
  * one place where the hops leave a choice */
-const W_HOP = 1, W_BOX = 10, W_FREE = 1e-3;
+const W_HOP = 1, W_BOX = 10, W_FREE = 1e-3, W_TIE = 1, W_TIE_PT = 0.3;
 /** rounds (each moving boxes still overlapping), LSQR iterations in the first and in each later one */
 const ROUNDS = 12, ITERS = 2000, ITERS_MORE = 400;
 /** a hop leaves its block past the block's stations within this many gaps either side of its way */
@@ -57,7 +57,7 @@ export interface Blocks {
 }
 
 /** The blocks of a graph; `city` per node as layout.ts' cityParts gives it (its city's root node, or -1). */
-export function findBlocks(g: DiagramGraph, city: Int32Array): Blocks {
+export function findBlocks(g: DiagramGraph, city: Int32Array, ties: Float64Array = new Float64Array(0)): Blocks {
   const n = g.key.length, m = g.ea.length;
   const up = Int32Array.from({ length: n }, (_, i) => i);
   const root = (i: number): number => {
@@ -153,7 +153,7 @@ export function findBlocks(g: DiagramGraph, city: Int32Array): Blocks {
   const list: Block[] = Array.from({ length: nb }, () => ({ key: 0x7fffffff, box: [0, 0, 0, 0], move: [0, 0], fit: [1, 0, 0, 0, 1, 0] }));
   for (let i = 0; i < n; i++) if (of[i] >= 0) list[of[i]].key = Math.min(list[of[i]].key, g.key[i]);
   const active = nb >= 2;
-  const links = active ? islandLinks(g, of, nb) : new Int32Array(0);
+  const links = active ? islandLinks(g, of, nb, ties) : new Int32Array(0);
   const pairs: number[] = [];
   if (active) {
     for (let e = 0; e < m; e++) {
@@ -166,6 +166,32 @@ export function findBlocks(g: DiagramGraph, city: Int32Array): Blocks {
     }
   }
   return { of, core, list, active, links, pairs: Int32Array.from(pairs) };
+}
+
+/** A crossing held (layout.ts' crossTies, T-2534; k its index in `ties`, e1 the longer hop): the point at its share
+ * along e2 on e1's line, (nx, ny) that line's normal, with weight `wLine`; and the points at their shares along each
+ * the same, with `wPoint`. So a long hop drawn short keeps the network it crosses at that network's own scale,
+ * sliding along it, the point term only keeping it near its place. `col` maps a node to its variable; where the
+ * variables are moves, `pos` (x, y pairs) is added to each. */
+export function tieTerms(T: Terms, ea: Int32Array, eb: Int32Array, ties: Float64Array, k: number, nx: number, ny: number, wLine: number, wPoint: number, col: (v: number) => number, pos?: Float64Array): void {
+  const e1 = ties[k], e2 = ties[k + 1], t1 = ties[k + 2], t2 = ties[k + 3];
+  const v = [ea[e1], eb[e1], ea[e2], eb[e2]], w = [1 - t1, t1, t2 - 1, -t2];
+  const at = (u: number, c: number) => (pos ? pos[u * 2 + c] : 0);
+  if (wPoint > 0) for (let c = 0; c < 2; c++) {
+    let rhs = 0;
+    for (let i = 0; i < 4; i++) rhs -= w[i] * at(v[i], c);
+    T.add(v.map((u) => col(u) * 2 + c), w, rhs, wPoint);
+  }
+  if (wLine > 0) {
+    // n . ((1 - t2) a2 + t2 b2 - a1) = 0
+    const idx: number[] = [], cf: number[] = [];
+    let rhs = 0;
+    for (const [u, f] of [[v[2], 1 - t2], [v[3], t2], [v[0], -1]] as const) {
+      idx.push(col(u) * 2, col(u) * 2 + 1), cf.push(f * nx, f * ny);
+      rhs -= f * (nx * at(u, 0) + ny * at(u, 1));
+    }
+    T.add(idx, cf, rhs, wLine);
+  }
 }
 
 /** a layout's hops between blocks and links, as `pairs` lists them, for the next rebuild */
@@ -182,10 +208,10 @@ export function samePairs(B: Blocks, held: Set<string>): boolean {
   return true;
 }
 
-/** Links between the networks no track joins (counting a station between blocks with the blocks its hops reach):
- * the shortest real links that join them all (Kruskal), each between the nearest of up to LINK_SAMPLE stations a
- * network. */
-function islandLinks(g: DiagramGraph, of: Int32Array, nb: number): Int32Array {
+/** Links between the networks no track joins (counting a station between blocks with the blocks its hops reach, and
+ * networks whose lines cross on the ground, `ties`, as joined): the shortest real links that join them all (Kruskal),
+ * each between the nearest of up to LINK_SAMPLE stations a network. */
+function islandLinks(g: DiagramGraph, of: Int32Array, nb: number, ties: Float64Array): Int32Array {
   const n = g.key.length, m = g.ea.length;
   // units: the blocks, then each station between blocks
   const unit = new Int32Array(n);
@@ -196,10 +222,12 @@ function islandLinks(g: DiagramGraph, of: Int32Array, nb: number): Int32Array {
     while (up[i] !== i) (up[i] = up[up[i]]), (i = up[i]);
     return i;
   };
-  for (let e = 0; e < m; e++) {
-    const ra = root(unit[g.ea[e]]), rb = root(unit[g.eb[e]]);
+  const join = (a: number, b: number) => {
+    const ra = root(unit[a]), rb = root(unit[b]);
     if (ra !== rb) up[Math.max(ra, rb)] = Math.min(ra, rb);
-  }
+  };
+  for (let e = 0; e < m; e++) join(g.ea[e], g.eb[e]);
+  for (let k = 0; k < ties.length; k += 4) join(g.ea[ties[k]], g.ea[ties[k + 1]]);
   const members = new Map<number, number[]>();
   for (let i = 0; i < n; i++) {
     const r = root(unit[i]), v = members.get(r);
@@ -241,12 +269,24 @@ function islandLinks(g: DiagramGraph, of: Int32Array, nb: number): Int32Array {
 /** Whether, at places `pos` (x, y pairs), two blocks' boxes lie nearer than `margin`: a rebuild whose hops between
  * blocks are as before still places blocks where boxes overlap (a city grown into another), and after B where they
  * are nearer than half the gap. */
-export function crowded(B: Blocks, pos: Float64Array, margin = 0): boolean {
+export function crowded(B: Blocks, pos: Float64Array, margin = 0, tied?: Set<number>): boolean {
   const box = blockBoxes(B, pos), nb = B.list.length;
   for (let b = 0; b < nb; b++) for (let c = b + 1; c < nb; c++) {
+    if (tied?.has(b * nb + c)) continue;
     if (box[c * 4] - box[b * 4 + 2] < margin && box[b * 4] - box[c * 4 + 2] < margin && box[c * 4 + 1] - box[b * 4 + 3] < margin && box[b * 4 + 1] - box[c * 4 + 3] < margin) return true;
   }
   return false;
+}
+
+/** Pairs of blocks (b * blocks + c, b < c) a crossing on the ground ties (`ties`, layout.ts' crossTies, T-2534): a hop
+ * of one, or touching it, crosses a hop of the other. They are not kept apart, since one is drawn over the other's line. */
+export function tiedBlocks(g: DiagramGraph, B: Blocks, ties: Float64Array): Set<number> {
+  const nb = B.list.length, out = new Set<number>();
+  for (let k = 0; k < ties.length; k += 4) {
+    const e1 = ties[k], e2 = ties[k + 1];
+    for (const p of [B.of[g.ea[e1]], B.of[g.eb[e1]]]) for (const q of [B.of[g.ea[e2]], B.of[g.eb[e2]]]) if (p >= 0 && q >= 0 && p !== q) out.add(Math.min(p, q) * nb + Math.max(p, q));
+  }
+  return out;
 }
 
 /** each block's box at places `pos`: x0, y0, x1, y1 per block */
@@ -272,11 +312,14 @@ function blockBoxes(B: Blocks, pos: Float64Array): Float64Array {
  * so only what changed moves anything, and boxes already within the gap of each other but not overlapping are
  * left so, unless `strict` (after B, which grows a block's box, every pair is given the gap again).
  */
-export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Float64Array, gdx: Float64Array, gdy: Float64Array, pu: number, linkTarget: (d: number) => number, held: Set<string> | null, strict = false): Float64Array {
+export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Float64Array, gdx: Float64Array, gdy: Float64Array, pu: number, linkTarget: (d: number) => number, held: Set<string> | null, strict = false, ties: Float64Array = new Float64Array(0)): Float64Array {
   const n = g.key.length, nb = B.list.length, of = B.of;
   const unit = new Int32Array(n);
   let nu = nb;
   for (let i = 0; i < n; i++) unit[i] = of[i] >= 0 ? of[i] : nu++;
+  // crossings on the ground held (layout.ts' crossTies, T-2534) between units
+  const tieUnits = (k: number) => [g.ea[ties[k]], g.eb[ties[k]], g.ea[ties[k + 1]], g.eb[ties[k + 1]]].map((v) => unit[v]);
+  const tied = tiedBlocks(g, B, ties);
   const box = blockBoxes(B, pos), pad = (BLOCK_GAP * pu) / 2;
   const kept = (a: number, b: number) => held !== null && held.has(`${Math.min(g.key[a], g.key[b])},${Math.max(g.key[a], g.key[b])}`);
   const members: number[][] = Array.from({ length: nb }, () => []);
@@ -343,10 +386,16 @@ export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Fl
       T.add([ub * 2, ua * 2], [1, -1], hops[k + 2] * t - (pos[b * 2] - pos[a * 2]), W_HOP);
       T.add([ub * 2 + 1, ua * 2 + 1], [1, -1], hops[k + 3] * t - (pos[b * 2 + 1] - pos[a * 2 + 1]), W_HOP);
     }
+    for (let k = 0; k < ties.length; k += 4) {
+      const u = tieUnits(k);
+      if (u[0] === u[1] && u[1] === u[2] && u[2] === u[3]) continue;
+      const e = ties[k];
+      tieTerms(T, g.ea, g.eb, ties, k, -gdy[e], gdx[e], W_TIE, W_TIE_PT, (v) => unit[v], pos);
+    }
     for (let u = 0; u < nu * 2; u++) T.add([u], [1], 0, wAnchor[u >> 1]);
     // boxes kept apart, along the axis they overlap less on (on a first layout, from the hops' places on)
     if (held || r) for (let b = 0; b < nb; b++) for (let c = b + 1; c < nb; c++) {
-      if (near.has(b * nb + c) && !overlap(b, c, false)) continue;
+      if ((near.has(b * nb + c) && !overlap(b, c, false)) || tied.has(b * nb + c)) continue;
       const dx = cx[c] + x[c * 2] - cx[b] - x[b * 2], dy = cy[c] + x[c * 2 + 1] - cy[b] - x[b * 2 + 1];
       const nx = (hx[b] + hx[c]) * (1 + BOX_GROW) + 2 * pad, ny = (hy[b] + hy[c]) * (1 + BOX_GROW) + 2 * pad;
       let h = apart.get(b * nb + c);

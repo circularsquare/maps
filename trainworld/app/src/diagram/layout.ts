@@ -19,7 +19,7 @@ import type { DiagramGraph } from "./graph";
 import { Terms } from "./lsqr";
 import { atan2, DIRS8 as DIRS, hyp, pow } from "./fmath";
 import { localStops } from "./draw";
-import { BLOCK_GAP, blockHops, crowded, findBlocks, finishBlocks, heldPairs, placeBlocks, samePairs, type Blocks } from "./blocks";
+import { BLOCK_GAP, blockHops, crowded, findBlocks, finishBlocks, heldPairs, placeBlocks, samePairs, tiedBlocks, tieTerms, type Blocks } from "./blocks";
 
 export interface LayoutOptions {
   /** a hop's target length is L0 * (real length / L0) ^ alpha: the centre opens, the suburbs close in */
@@ -78,7 +78,12 @@ const W_SIDE_ACROSS = 1, ACROSS_ROUNDS = 3;
  * PAR_M of the other's line, and they overlap along it by at least half the shorter; their drawn lengths per real
  * metre are averaged with their partners' PAR_ROUNDS times */
 const PAR_COS = 0.9659258262890683, PAR_M = 1000, PAR_ROUNDS = 3;
-/** a rebuild's B rounds, and its pull to the last layout */
+/** T-2534 (`crossTies`): crossings on the ground held in the drawing, and each one's weight in A and B */
+const CROSS_COS = 0.9396926207859084, CROSS_END_M = 100, CROSS_DENSE_N = 12, CROSS_DENSE_M = 2500, CROSS_CELL_M = 3000;
+const W_CROSS_A = 3, W_CROSS_B = 10, W_CROSS_SNAP = 30, W_CROSS_PT_B = 3, W_CROSS_PT_SNAP = 10;
+/** stations within CROSS_SIDE_M of a crossing's longer hop kept on their side of it, at least their half width and
+ * CROSS_SIDE_PU pitches off, with weight W_SIDE */
+const CROSS_SIDE_M = 1500, CROSS_SIDE_PU = 2;/** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
 const SPREAD_PASSES = 4, SPREAD_OVER = 1.02;
@@ -192,6 +197,9 @@ interface Prep {
   keyNodes?: Uint8Array;
   /** hops parallel on the ground (`parallelHops`): e1, e2, and 1 where they run the same way, -1 where opposite */
   par: Int32Array;
+  /** crossings on the ground held (`crossTies`): e1, e2, t1, t2; and the stations near e1 kept on their side: e, v, share, side */
+  cross: Float64Array;
+  crossSides: Float64Array;
 }
 
 function sharesLine(g: DiagramGraph, e1: number, e2: number): boolean {
@@ -232,6 +240,121 @@ function parallelHops(g: DiagramGraph): Int32Array {
     }
   }
   return Int32Array.from(out);
+}
+
+/** The crossings on the ground held in the drawing (T-2534): pairs of hops sharing no station and no line whose
+ * tracks cross an odd number of times, at more than 20 degrees (CROSS_COS its cosine) and more than CROSS_END_M from
+ * every end of either, with fewer than CROSS_DENSE_N stations within CROSS_DENSE_M of the crossing (a city's dense
+ * core is left free, where holding every crossing would bend its lines about). `ties`: e1 (the longer track), e2 and
+ * the share of each one's track from its first node to the crossing. `sides`: per such longer hop, each station
+ * within CROSS_SIDE_M of its track outside dense places, the share of the track at its nearest point and the side
+ * it lies on (1 left, -1 right, going from the hop's first node): e, v, share, side. */
+export function crossTies(g: DiagramGraph): { ties: Float64Array; sides: Float64Array } {
+  const n = g.key.length, m = g.ea.length;
+  const pts: number[] = [], at = new Int32Array(m + 1);
+  for (let e = 0; e < m; e++) {
+    at[e] = pts.length / 2;
+    if (g.hop && g.hopAt && g.hopAt[e + 1] - g.hopAt[e] >= 2) for (let k = g.hopAt[e] * 2; k < g.hopAt[e + 1] * 2; k++) pts.push(g.hop[k]);
+    else pts.push(g.x[g.ea[e]], g.y[g.ea[e]], g.x[g.eb[e]], g.y[g.eb[e]]);
+  }
+  at[m] = pts.length / 2;
+  const cum = new Float64Array(pts.length / 2);
+  for (let e = 0; e < m; e++) for (let i = at[e] + 1; i < at[e + 1]; i++) cum[i] = cum[i - 1] + hyp(pts[i * 2] - pts[i * 2 - 2], pts[i * 2 + 1] - pts[i * 2 - 1]);
+  const cell = CROSS_CELL_M, grid = new Map<number, number[]>(), box = new Float64Array(m * 4);
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  for (let e = 0; e < m; e++) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = at[e]; i < at[e + 1]; i++) (x0 = Math.min(x0, pts[i * 2])), (x1 = Math.max(x1, pts[i * 2])), (y0 = Math.min(y0, pts[i * 2 + 1])), (y1 = Math.max(y1, pts[i * 2 + 1]));
+    (box[e * 4] = x0), (box[e * 4 + 1] = y0), (box[e * 4 + 2] = x1), (box[e * 4 + 3] = y1);
+    for (let cx = Math.floor(x0 / cell); cx <= Math.floor(x1 / cell); cx++) for (let cy = Math.floor(y0 / cell); cy <= Math.floor(y1 / cell); cy++) {
+      const k = key(cx, cy), v = grid.get(k);
+      if (v) v.push(e);
+      else grid.set(k, [e]);
+    }
+  }
+  const sg = new Map<number, number[]>(), R = CROSS_DENSE_M;
+  for (let i = 0; i < n; i++) {
+    const k = key(Math.floor(g.x[i] / R), Math.floor(g.y[i] / R)), v = sg.get(k);
+    if (v) v.push(i);
+    else sg.set(k, [i]);
+  }
+  const dense = (px: number, py: number) => {
+    let c = 0;
+    const cx = Math.floor(px / R), cy = Math.floor(py / R);
+    for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) for (const i of sg.get(key(gx, gy)) ?? []) if ((g.x[i] - px) * (g.x[i] - px) + (g.y[i] - py) * (g.y[i] - py) < R * R) c++;
+    return c >= CROSS_DENSE_N;
+  };
+  const seen = new Set<number>(), out: number[] = [];
+  for (const list of grid.values()) for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const e1 = Math.min(list[i], list[j]), e2 = Math.max(list[i], list[j]);
+    if (seen.has(e1 * m + e2)) continue;
+    seen.add(e1 * m + e2);
+    if (box[e1 * 4 + 2] < box[e2 * 4] || box[e2 * 4 + 2] < box[e1 * 4] || box[e1 * 4 + 3] < box[e2 * 4 + 1] || box[e2 * 4 + 3] < box[e1 * 4 + 1]) continue;
+    const a1 = g.ea[e1], b1 = g.eb[e1], a2 = g.ea[e2], b2 = g.eb[e2];
+    if (a1 === a2 || a1 === b2 || b1 === a2 || b1 === b2 || sharesLine(g, e1, e2)) continue;
+    let count = 0, t1 = 0, t2 = 0, cos = 1, px = 0, py = 0;
+    for (let p = at[e1]; p + 1 < at[e1 + 1]; p++) for (let q = at[e2]; q + 1 < at[e2 + 1]; q++) {
+      const ax = pts[p * 2], ay = pts[p * 2 + 1], rx = pts[p * 2 + 2] - ax, ry = pts[p * 2 + 3] - ay;
+      const cx = pts[q * 2], cy = pts[q * 2 + 1], sx = pts[q * 2 + 2] - cx, sy = pts[q * 2 + 3] - cy;
+      const den = rx * sy - ry * sx;
+      if (den === 0) continue;
+      const u = ((cx - ax) * sy - (cy - ay) * sx) / den, v = ((cx - ax) * ry - (cy - ay) * rx) / den;
+      if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
+      if (count++) continue;
+      const lr = hyp(rx, ry), ls = hyp(sx, sy), L1 = cum[at[e1 + 1] - 1], L2 = cum[at[e2 + 1] - 1];
+      t1 = L1 > 0 ? (cum[p] + u * lr) / L1 : 0.5;
+      t2 = L2 > 0 ? (cum[q] + v * ls) / L2 : 0.5;
+      cos = Math.abs((rx * sx + ry * sy) / (lr * ls));
+      (px = ax + u * rx), (py = ay + u * ry);
+    }
+    if (count % 2 === 0 || cos > CROSS_COS) continue;
+    let nearEnd = false;
+    for (const v of [a1, b1, a2, b2]) if (hyp(g.x[v] - px, g.y[v] - py) < CROSS_END_M) nearEnd = true;
+    if (nearEnd || dense(px, py)) continue;
+    // the hop with the longer track first
+    if (cum[at[e2 + 1] - 1] > cum[at[e1 + 1] - 1]) out.push(e2, e1, t2, t1);
+    else out.push(e1, e2, t1, t2);
+  }
+  // the stations near a crossing's longer hop, outside dense places, on the side of its track they are on
+  const sides: number[] = [], had = new Set<number>();
+  for (let k = 0; k < out.length; k += 4) {
+    const e = out[k], a = g.ea[e], b = g.eb[e];
+    if (had.has(e)) continue;
+    had.add(e);
+    const cdx = g.x[b] - g.x[a], cdy = g.y[b] - g.y[a], cl = hyp(cdx, cdy), L1 = cum[at[e + 1] - 1];
+    if (!(cl > 0) || !(L1 > 0)) continue;
+    const S = CROSS_SIDE_M;
+    for (let cx = Math.floor((box[e * 4] - S) / R); cx <= Math.floor((box[e * 4 + 2] + S) / R); cx++) for (let cy = Math.floor((box[e * 4 + 1] - S) / R); cy <= Math.floor((box[e * 4 + 3] + S) / R); cy++) {
+      for (const v of sg.get(key(cx, cy)) ?? []) {
+        if (v === a || v === b) continue;
+        let bd = Infinity, bs = 0, side = 0;
+        for (let p = at[e]; p + 1 < at[e + 1]; p++) {
+          const ax = pts[p * 2], ay = pts[p * 2 + 1], rx = pts[p * 2 + 2] - ax, ry = pts[p * 2 + 3] - ay, l2 = rx * rx + ry * ry;
+          if (!(l2 > 0)) continue;
+          const u = Math.max(0, Math.min(1, ((g.x[v] - ax) * rx + (g.y[v] - ay) * ry) / l2)), d = hyp(ax + u * rx - g.x[v], ay + u * ry - g.y[v]);
+          if (d >= bd) continue;
+          const l = Math.sqrt(l2), cr = rx * (g.y[v] - ay) - ry * (g.x[v] - ax);
+          // a stretch of track turned well off the hop's way says nothing of the side in the drawing
+          (bd = d), (bs = (cum[p] + u * l) / L1), (side = (rx * cdx + ry * cdy) / (l * cl) < 0.5 ? 0 : cr > 0 ? 1 : -1);
+        }
+        if (bd < S && side && bs > 0 && bs < 1 && !dense(g.x[v], g.y[v])) sides.push(e, v, bs, side);
+      }
+    }
+  }
+  return { ties: Float64Array.from(out), sides: Float64Array.from(sides) };
+}
+
+
+/** each station near a crossing's longer hop (`crossTies`' sides) that `pos` (x, y pairs) has nearer it than its half width
+ * and CROSS_SIDE_PU pitches, or on its other side, pushed out to that on its own side; `dir(e)` the hop's way now */
+function crossSideTerms(T: Terms, P: Prep, pos: Float64Array, dir: (e: number) => [number, number], wt: number): void {
+  const S = P.crossSides;
+  for (let k = 0; k < S.length; k += 4) {
+    const e = S[k], v = S[k + 1], s = S[k + 2], a = P.ea[e], b = P.eb[e], [dx, dy] = dir(e), nx = -dy * S[k + 3], ny = dx * S[k + 3];
+    const want = P.hw[v] + CROSS_SIDE_PU * P.pu;
+    const d = nx * (pos[v * 2] - (1 - s) * pos[a * 2] - s * pos[b * 2]) + ny * (pos[v * 2 + 1] - (1 - s) * pos[a * 2 + 1] - s * pos[b * 2 + 1]);
+    if (d < want) T.add([2 * v, 2 * v + 1, 2 * a, 2 * a + 1, 2 * b, 2 * b + 1], [nx, ny, -(1 - s) * nx, -(1 - s) * ny, -s * nx, -s * ny], want, wt);
+  }
 }
 
 function prep(g: DiagramGraph, o: LayoutOptions): Prep {
@@ -277,6 +400,21 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
     }
     for (let e = 0; e < m; e++) L[e] = s[e] * gl[e];
   }
+  // a hop crossing others on the ground at two places or more is long enough to pass them at their scale, with room
+  // either side (T-2534): a long single-line hop drawn short would squeeze the city it crosses
+  const { ties: cross, sides: crossSides } = crossTies(g);
+  if (cross.length) {
+    const lo = new Float64Array(m).fill(1), hi = new Float64Array(m), sc = new Float64Array(m), cnt = new Float64Array(m);
+    for (let k = 0; k < cross.length; k += 4) {
+      const e = cross[k], o = cross[k + 1];
+      (lo[e] = Math.min(lo[e], cross[k + 2])), (hi[e] = Math.max(hi[e], cross[k + 2]));
+      (sc[e] += L[o] / Math.max(1, hyp(g.x[g.eb[o]] - g.x[g.ea[o]], g.y[g.eb[o]] - g.y[g.ea[o]]))), cnt[e]++;
+    }
+    for (let e = 0; e < m; e++) if (cnt[e] >= 2) {
+      const gl = hyp(g.x[g.eb[e]] - g.x[g.ea[e]], g.y[g.eb[e]] - g.y[g.ea[e]]);
+      L[e] = Math.max(L[e], (hi[e] - lo[e]) * gl * (sc[e] / cnt[e]) + 2 * LONELY_MIN * pu);
+    }
+  }
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
   const adj = new Set<number>();
@@ -298,7 +436,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       through[v].add(e1 * m + e2).add(e2 * m + e1);
     }
   }
-  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city, par };
+  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city, par, cross, crossSides };
 }
 
 /** The cities and the lonely hops between them (T-2289): `city` per node, its city (-1 for a station in
@@ -530,6 +668,13 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
       if ((pos[b * 2] - pos[a * 2]) * ux + (pos[b * 2 + 1] - pos[a * 2 + 1]) * uy < want) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], want, W_SIDE);
       if (!octi && r >= rounds - ACROSS_ROUNDS) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [-uy, ux, uy, -ux], 0, W_SIDE_ACROSS);
     }
+    // crossings on the ground held (T-2534): in A on the longer hop's real way, in B on its direction and near the
+    // place, with the stations near it on their side
+    for (let k = 0; k < P.cross.length; k += 4) {
+      const e = P.cross[k], dx = K ? DIRS[K[e]][0] : P.gdx[e], dy = K ? DIRS[K[e]][1] : P.gdy[e];
+      tieTerms(T, P.ea, P.eb, P.cross, k, -dy, dx, K ? W_CROSS_B : W_CROSS_A, K ? W_CROSS_PT_B : 0, (v) => v);
+    }
+    if (K) crossSideTerms(T, P, pos, (e) => [DIRS[K[e]][0], DIRS[K[e]][1]], W_SIDE);
     closePairs(P, pos, pairs, B_NEAR);
     for (let k = 0; k < pairs.length; k += 2) {
       const a = pairs[k], b = pairs[k + 1];
@@ -725,6 +870,16 @@ function route(g: DiagramGraph, P: Prep, bx: Float64Array, by: Float64Array, pre
         turnTerm(T, P, v, Math.floor(k / m), k % m, W_SNAP_TURN);
       }
       for (let i = 0; i < q.length; i++) T.add([i], [1], q0[i], 1);
+      // crossings on the ground held, along each longer hop's way after B (T-2534)
+      const wayB = (e: number): [number, number] => {
+        const dx = q0[P.eb[e] * 2] - q0[P.ea[e] * 2], dy = q0[P.eb[e] * 2 + 1] - q0[P.ea[e] * 2 + 1], l = hyp(dx, dy) || 1;
+        return [dx / l, dy / l];
+      };
+      for (let k = 0; k < P.cross.length; k += 4) {
+        const [dx, dy] = wayB(P.cross[k]);
+        tieTerms(T, P.ea, P.eb, P.cross, k, -dy, dx, W_CROSS_SNAP, W_CROSS_PT_SNAP, (v) => v);
+      }
+      crossSideTerms(T, P, q, wayB, W_SIDE);
       closePairs(P, q, pairs);
       for (let k = 0; k < pairs.length; k += 2) pushed.add(pairs[k] * n + pairs[k + 1]);
       for (const pk of pushed) {
@@ -1583,7 +1738,8 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const n = g.key.length;
   const P = prep(g, o);
   const hop = median(P.L);
-  const blocks = findBlocks(g, P.city);
+  const blocks = findBlocks(g, P.city, P.cross);
+  const tied = tiedBlocks(g, blocks, P.cross);
   // with two blocks or more, A lays out each city as if alone, the hops between them left to the blocks' stage
   const skip = blocks.active ? blockHops(g, blocks) : undefined;
   let nA = n;
@@ -1610,7 +1766,13 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
     if (skip) {
       const s: number[] = [];
       for (let k = 0; k < P.side.length; k += 4) if (blocks.of[P.side[k]] >= 0 && blocks.of[P.side[k]] === blocks.of[P.side[k + 1]]) s.push(P.side[k], P.side[k + 1], P.side[k + 2], P.side[k + 3]);
-      PA = { ...P, side: Float64Array.from(s) };
+      // crossings within one block; those between blocks are the blocks' stage's
+      const c: number[] = [];
+      for (let k = 0; k < P.cross.length; k += 4) {
+        const e1 = P.cross[k], e2 = P.cross[k + 1], b = blocks.of[P.ea[e1]];
+        if (b >= 0 && !skip[e1] && !skip[e2] && blocks.of[P.ea[e2]] === b) c.push(e1, e2, P.cross[k + 2], P.cross[k + 3]);
+      }
+      PA = { ...P, side: Float64Array.from(s), cross: Float64Array.from(c) };
     }
     start = lsq(PA, false, roundsA, geo, 0.02, 0.001, 1, o.iters, step(0, progA), skip);
   }
@@ -1620,12 +1782,12 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   let mv: Float64Array | null = null;
   if (skip) {
     const held = warm ? last!.blocks ?? null : null;
-    if (!held || !samePairs(blocks, held) || crowded(blocks, start)) {
+    if (!held || !samePairs(blocks, held) || crowded(blocks, start, 0, tied)) {
       const linkTarget = (d: number) => {
         const l = o.L0 * pow(d / o.L0, o.alpha);
         return o.lonely < 1 ? Math.max(Math.min(l, LONELY_MIN * P.pu), l * o.lonely) : l;
       };
-      mv = placeBlocks(g, blocks, start, P.L, P.gdx, P.gdy, P.pu, linkTarget, held);
+      mv = placeBlocks(g, blocks, start, P.L, P.gdx, P.gdy, P.pu, linkTarget, held, false, P.cross);
       for (let i = 0; i < n * 2; i++) start[i] += mv[i];
     }
     // the hops between blocks keep the length placed, so B and the drawing do not pull the cities together again;
@@ -1643,8 +1805,8 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(progA, PROGRESS_B));
   // B and the drawing widen blocks (their bundles' room): boxes B brought within 3/4 of the gap are moved apart
   // to the gap again, each block and the hops between blocks as B left them
-  if (skip && crowded(blocks, B, 0.75 * BLOCK_GAP * P.pu)) {
-    const apart = placeBlocks(g, blocks, B, P.L, P.gdx, P.gdy, P.pu, () => 0, heldPairs(blocks), true);
+  if (skip && crowded(blocks, B, 0.75 * BLOCK_GAP * P.pu, tied)) {
+    const apart = placeBlocks(g, blocks, B, P.L, P.gdx, P.gdy, P.pu, () => 0, heldPairs(blocks), true, P.cross);
     for (let i = 0; i < n * 2; i++) B[i] += apart[i];
     if (mv) for (let i = 0; i < n * 2; i++) mv[i] += apart[i];
     else mv = apart;

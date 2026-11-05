@@ -270,16 +270,30 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 - **The blocks' stage**, between A and B, with two blocks or more: each block moves as one, and each station
   between blocks on its own, by one least squares solve: each hop between them runs its real bearing for its
   target plus, at each end in a block, the way from that station past the block's farthest station within 16
-  pitches either side of the bearing, plus half the gap (weight 1); blocks no track joins are linked, the
+  pitches either side of the bearing, plus half the gap (weight 1); each crossing (below) between them is held
+  (weight 1); blocks no track joins and no crossing ties are linked, the
   shortest links that join them all (each between the nearest pair of up to 64 stations a network), at a
   lonely hop's target for the real length (so islands and separate networks pack close); each block held to
   where it is at 0.001 times the root of its stations, each station between blocks at 0.001, which only picks
   where the hops leave a choice, the big cities staying. Then up to 11 more solves keep boxes apart (10): any
   two overlapping, grown by a fifth and padded by a gap of 16 pitches, are pushed apart along the axis they
-  overlap less on until the spacing is met. The hops between blocks then keep the length placed as their
+  overlap less on until the spacing is met; two blocks a crossing ties are not, since one is drawn over the
+  other's line. The hops between blocks then keep the length placed as their
   target, so B and the drawing do not pull cities together; a station between blocks on a hop 4 median hops
   long or more ends a segment. After B, boxes B brought within 12 pitches of each other are moved apart to the
   gap again, the hops between blocks held as B left them.
+- **Crossings** (T-2534): two hops cross on the ground when they share no station and no line and their tracks
+  cross an odd number of times, at 20 degrees or more, at least 100 m from every end of either. Outside dense
+  places, where fewer than 12 stations lie within 2.5 km of the crossing, each crossing is held in the drawing:
+  the point at its share of the shorter hop's track lies on the longer hop's line (A: its real way, weight 3,
+  crossings within one block; the blocks' stage: 1, crossings between blocks; B: its direction, 10; the snap: its
+  way after B, 30), and in the blocks' stage (0.3), B (3) and the snap (10) that point and the one at its share of
+  the longer hop are the same. So a city slides along a long hop drawn short and keeps its own scale. A hop
+  crossing others at two places or more is at least as long as the span between them at the crossed hops' scale,
+  plus 4 pitches each side. Each station within 1.5 km of a crossing's longer hop, outside dense places, stays on
+  its side of it in B and the snap (weight 3, its half width and 2 pitches off). So a long-distance line passing
+  through a small city's network, stopping at none of its stations, is drawn through it; a dense core is left
+  free, where holding every crossing would bend its lines about.
 - **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
   being such stations within 2.5 km of each other (`cityParts`). A hop whose lines are all of one colour,
   between two stations with two hops or fewer each, that leaves a city or joins two, with an end alone (no
