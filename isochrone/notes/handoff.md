@@ -21,9 +21,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - Uncommitted and others': docs/hazard.md, notes/T-042/, research/friction.md (T-042 agent).
 
 ## In flight
-- T-042 land hazard, stage 1 design + L10 sample: agent a41134b19636e2f86 (Opus), from ~14:00.
-  Owns docs/hazard.md, notes/T-042*, tools/hazard/, research/friction.md 6. No page changes, no
-  world build; may file T-066 to T-068. Done when docs/hazard.md and notes/T-042.md exist.
+- T-042 stage 1 landed: docs/hazard.md waits on Anita (notes/for-anita.md); then T-066 world
+  build (~35 min, ~6 GB RAM) and T-067 page. Agent a41134b19636e2f86 (Opus) idle, ~320k tokens.
+  CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
+- T-076 flaky "Failed to fetch" in smoke: page agent a188a1156511192ef (Sonnet).
 - T-036 landed (2f0b985b): dead-end river water. T-074 river water paler: page agent
   a188a1156511192ef (Sonnet), owns js/paint.js, the flag in js/canoe.js.
 

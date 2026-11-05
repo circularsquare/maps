@@ -139,7 +139,17 @@ export function route(msg) {
 }
 
 // ---- view: windows at L3, L1 and L0.1 ----
-async function refine() {
+// A failed window load (404, server down) is reported once; one for a view or click since replaced is
+// dropped, as the page has moved on (T-076).
+function refine() {
+    const cg = clickGen, vg = viewGen;
+    refineWindows().catch(e => {
+        if (cg !== clickGen || vg !== viewGen) return;
+        self.postMessage({ type: 'error', message: String(e && e.message || e) });
+    });
+}
+
+async function refineWindows() {
     if (!coarse || !coarse.dist || !view || clickPending) return;
     const cg = clickGen, vg = viewGen;
     const alive = () => cg === clickGen && vg === viewGen;

@@ -594,10 +594,15 @@ function drawCorridors() {
     window.corrDrawMs = performance.now() - t0;
 }
 
+// Requests cut by leaving the page are not failures to report.
+let leaving = false;
+addEventListener('pagehide', () => { leaving = true; });
+addEventListener('beforeunload', () => { leaving = true; });
+
 worker.addEventListener('message', (e) => {
     const m = e.data;
     if (m.type === 'none') { document.body.classList.remove('busy'); return; }
-    if (m.type === 'error') { document.body.classList.remove('busy'); console.error('search failed:', m.message); return; }
+    if (m.type === 'error') { document.body.classList.remove('busy'); if (!leaving) console.error('search failed:', m.message); return; }
     if (m.type === 'coarse') {
         document.body.classList.remove('busy');
         originId = m.originId;
