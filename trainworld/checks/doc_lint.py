@@ -201,17 +201,19 @@ for p in doc_paths:
 
 # 7c. dead names (a backticked identifier or code path no code defines)
 CODE_DIRS = ["app", "sim", "pipeline", "tools", "checks"]
-SKIP_DIRS = {"node_modules", "target", "dist", ".git", "pkg", "__pycache__", "old"}
+SKIP_DIRS = {"node_modules", "target", "dist", ".git", "pkg", "__pycache__"}
 CODE_EXT = (".ts", ".tsx", ".js", ".mjs", ".rs", ".py", ".toml", ".cmd", ".ps1", ".html", ".css")
 code_blobs = []
 basenames = collections.defaultdict(list)
 for d in CODE_DIRS:
     for root, dirs, files in os.walk(os.path.join(TW, d)):
         dirs[:] = [x for x in dirs if x not in SKIP_DIRS]
+        # an `old/` folder's files exist (docs may name them) but define no live identifier (T-2504)
+        retired = "old" in os.path.relpath(root, TW).split(os.sep)
         for fn in files:
             p = os.path.join(root, fn)
             basenames[fn].append(rel(p))
-            if fn.endswith(CODE_EXT) and os.path.getsize(p) < 2_000_000:
+            if not retired and fn.endswith(CODE_EXT) and os.path.getsize(p) < 2_000_000:
                 code_blobs.append(read(p))
 for fn in os.listdir(os.path.dirname(TW)):  # the maps root's own scripts (cores.py, serve.py)
     if fn.endswith(".py"):

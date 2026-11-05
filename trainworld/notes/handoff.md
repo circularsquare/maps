@@ -52,7 +52,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   The main data is mid-Europe-replan (market rows can move NYC's intercity a little), and api.rs's change was not
   run through calib. After Europe's pack writes end, compare the 8800 smoke; if still 600, check whether Europe
   explains it (smoke at fb674fba vs 09438360 on the same data) before blaming api.rs.
-- **codemap** (Sonnet, main tree, docs only, ids T-2504..05): T-2368 code-map.md brought in line.
+- codemap DONE (T-2368: ~110 entries added, 20 removed); maps-17 fixed doc_lint's `old/` blind spot (T-2504).
 - After loadfix lands: T-2384 drives view removal (touches demandClient), T-2495 focus pool memory.
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
