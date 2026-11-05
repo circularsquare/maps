@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+## 2026-11-05
+
+- **T-2536: a line's profit shows only once it has trains and a demand result has come for it** (an entry for the line, or none and its edit no longer pending, so a line nobody rides cannot stay on "calculating..."). Until then the Lines tab's Money cell is blank (the cell is narrow, and a blank matches a line with no counts), the line panel's Profit row reads "calculating..." (the project's word for unfinished figures) when the line has trains and is left out when it has none, and the line is left out of group and list totals. Top bar and money charts already count real track upkeep from the world, not per line, so they are unchanged.
+
 ## 2026-11-04
 - 2026-11-05 (agent uismall3, T-2519): the headway cap is 4 hours (14,400 s), up from 2. No reason for 2 hours was recorded. The limit is the timetable: `lattice_deps_local` lays departures per stretch of one demand level (0-6 low, 6-20 high, 20-24 medium, so 4 hours at the shortest) and puts at least one in each, so a headway past 4 hours runs more trains a day than it asks for (24 hours gives about 3, not 1) while demand reads it as 1 a day. The era look-back (4 h) and `overtake::cycle` (2 h, falls back to one slower headway) also stop there. Demand itself takes any headway (waits are half of it, loads are per hour). Past 1 hour the stepper moves in 15 minutes. Going to 24 hours needs a Rust change that lays a long headway's trains by day, not by stretch.
 - 2026-11-05 (agent uismall3, T-2526): a new line's auto-name skips every name used by a line with any stop in the city's zone (`stationZone`, the Lines tab's City column), whatever that line's home, so an intercity line "Line 1" that stops there counts. The zone, not the cluster: the Lines tab's City column and `nextLineName`'s argument are already zones, and a cluster is demand's grouping. A line with no stops counts in the city being viewed, as before. The colour pick still counts only the lines homed there.
