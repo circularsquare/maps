@@ -1,7 +1,21 @@
 // A level is a block of cells with its own grid and, once solved, its dist. L10 is the whole
 // world and wraps at 180 degrees; a window of L3 or L1 does not.
+import { cfg } from './config.js';
 
 const KM_PER_DEG = 111.195;
+
+// Land hazard code c (1..240) -> rate per walking hour, 10^((c - 240) / 40); 0 none (docs/hazard.md 4).
+export const HZ_RATE = new Float32Array(256);
+for (let c = 1; c <= 240; c++) HZ_RATE[c] = Math.pow(10, (c - 240) / 40);
+
+// L.hq: each land cell's hazard per km walked, rate x hours per km (0 on water), from the level's
+// band of codes.
+export function setHazard(L, codes) {
+    const { grid } = L, inv = cfg.inv, n = grid.length;
+    const hq = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const c = codes[i], s = grid[i]; if (c && s) hq[i] = HZ_RATE[c] * inv[s]; }
+    L.hq = hq;
+}
 
 // A level: a block of cells cellDeg wide, its top-left corner at (west, north).
 export function makeLevel(grid, W, H, west, north, cellDeg, wrap) {

@@ -115,12 +115,11 @@ works it out from the canoe data when it builds a level's canoe layer. Rates are
   (sea) or Hs from the lake's `kind` code with the sea grid's temperature there (lakes: the
   nearest sea's, a stand-in).
 - A sea or lake edge's hazard is its time x the mean of its two cells' rates; a river step's is
-  its time x its class rate. Carrying, walking and getting in or out are 0 until the land band.
+  its time x its class rate. Carrying, walking and getting in or out pay the land band's.
 
-**Land hazard** is 0 for now, so a walking start runs the walking loop unchanged. Next stage
-(T-042): a hazard band in every level's tiles and the L10 grid (uint8, a log-coded rate per
-cell; heat, cold, altitude, distance to water, ice, from CHELSA), carried at its rate x walking
-time; carrying the canoe counts the same rate over its doubled time.
+**Land hazard** (`docs/hazard.md`): a band beside every level's speeds (uint8, a log-coded rate
+per cell from thirst, cold, ice and altitude), paid at its rate x walking time; carrying the canoe
+counts the same rate over its doubled time, and getting in or out 0.25 h at the land cell's rate.
 
 **What K = 1000 does** on the check trips (notes/T-006.md): Brest to A Coruña goes round the
 coast (30 days, survival ~99%, against 16 days straight across at ~73%); Marseille to Barcelona
@@ -221,8 +220,8 @@ risk") to 10,000, costs nothing extra.
 - **One Dijkstra over the node ids** (`js/search.js`), over each node's out-edges: grid moves of
   its layer, its river steps, and transfers. Directed edges need only that a cost is always
   worked out from u to v. The heap is indexed, 4 children a node, each entry's weight kept
-  beside it. A walking start with no hazard runs a separate small loop (the old walking search),
-  which the general one matches cell for cell.
+  beside it. A walking start runs it too (land hazard, docs/hazard.md 4); with hazard off it runs
+  a separate small loop (the old walking search), which the general one matches cell for cell.
 - **Per level** (`js/canoe.js`, built when a level is loaded on a canoe start): `canoeOf`, one
   32-bit word a cell (water kind for grid edges, links, and flags: a land cell or a canoe node in
   the 3 x 3 round it, 20 km or more from shore, river edges leave it), the current a cell (0.01
@@ -233,9 +232,8 @@ risk") to 10,000, costs nothing extra.
 - **Arrays per node**: weight, time and hazard (Float32), and the move it was reached by (Uint8:
   1-16 a grid move of its own layer, 17-25 a transfer from the other layer at offset (dc, dr),
   26-33 a river step down and 34-41 up by move direction, 255 a window seed, 0 the start; the
-  predecessor's cell is this cell minus the move). `cfg.hazard` is on for canoe starts; with it
-  off, time is weight and both share one array. A walking start runs the walking loop (land
-  hazard is 0 until T-042).
+  predecessor's cell is this cell minus the move). `cfg.hazard` is on for both starts; with it
+  off, time is weight and both share one array.
 - **K** is one worker constant, `cfg.K` = 1000 h.
 - **Stop rule**: a node is not expanded once its time passes the 128-day limit or its survival
   falls below 1%. The search ends at the first weight past 128 days + K ln 100 (128 days while
@@ -255,7 +253,7 @@ risk") to 10,000, costs nothing extra.
 - **Hover**: the time at once (the page's own cell times), then from the worker a second line
   with how it was spent, "paddled 19 h, carried 6 h" on a canoe start (a part under a minute is
   left out; getting in and out counts as carried), and "survival 97%" (rounded down) when `cfg.hazard`
-  is on and the path's hazard is above 0. A walking start shows the route and survival, no split.
+  is on and the path's risk is 0.5% or more. A walking start shows the route and survival, no split.
 - **Route**: a thin white line with a dark halo from the start to the pointer, solid where
   paddled or walked, dashed where carried. `js/route.js` traces it in the worker on request: from
   the hovered cell's node with the least time (as painted) in the finest solved level holding the

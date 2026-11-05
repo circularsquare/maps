@@ -1,6 +1,7 @@
-// L3 and L1 tiles (data/tiles/) and L0.1 tiles (data/fine/): fetched on demand, kept in a
-// cache, cut into a window's grid.
+// L3 and L1 tiles (data/tiles/), L0.1 tiles (data/fine/) and the land hazard band
+// (data/hazard/): fetched on demand, kept in a cache, cut into a window's grid.
 // The fetch URL is relative to the worker entry, worker.js.
+import { cfg } from './config.js';
 
 let tiles = null;                // data/tiles/index.json, with a Set of tiles per level
 
@@ -16,7 +17,7 @@ export async function fetchGz(url) {
     return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
 }
 
-// One cache for speed and canoe tiles: url -> { p: Promise<Uint8Array>, bytes (expected size) },
+// One cache for speed, canoe and hazard tiles: url -> { p: Promise<Uint8Array>, bytes (expected size) },
 // oldest first.
 const tileCache = new Map();
 let cacheBytes = 0;
@@ -140,6 +141,57 @@ async function loadFineWindow(w) {
     });
     await Promise.all(jobs);
     return grid;
+}
+
+// ---- land hazard (docs/hazard.md 4): data/hazard/, uint8 codes on the speed tiles' grid ----
+// A tile the index does not list has no hazard anywhere (all 0).
+
+let hzIndex = null;
+const hzUrl = (p) => cfg.hazardBase + p;
+function hazardIndex() {
+    return hzIndex || (hzIndex = fetch(hzUrl('index.json')).then(r => {
+        if (!r.ok) throw new Error('hazard index ' + r.status);
+        return r.json();
+    }).then(ix => {
+        for (const k in ix.levels) ix.levels[k].set = new Set(ix.levels[k].tiles);
+        return ix;
+    }).catch(e => { hzIndex = null; throw e; }));
+}
+
+// The L10 world band, row-major from the north-west, as the speed grid.
+export async function loadHazardWorld() {
+    const ix = await hazardIndex();
+    return fetchGz(hzUrl(ix.world.file));
+}
+
+// The band cut into window w; an L0.1 window takes the L1 pixel under each cell.
+export async function loadHazardWindow(w) {
+    const ix = await hazardIndex();
+    if (w.f === 0.1) {
+        const k = 10;   // L0.1 cells per L1 cell
+        const col0 = Math.floor(w.col0 / k), row0 = Math.floor(w.row0 / k);
+        const w1 = { f: 1, col0, row0, cols: Math.floor((w.col0 + w.cols - 1) / k) - col0 + 1,
+                     rows: Math.floor((w.row0 + w.rows - 1) / k) - row0 + 1 };
+        const c1 = await hazardCut(ix, w1), out = new Uint8Array(w.cols * w.rows);
+        for (let r = 0; r < w.rows; r++) {
+            const src = (Math.floor((w.row0 + r) / k) - row0) * w1.cols;
+            for (let c = 0, i = r * w.cols; c < w.cols; c++, i++) out[i] = c1[src + Math.floor((w.col0 + c) / k) - col0];
+        }
+        return out;
+    }
+    return hazardCut(ix, w);
+}
+
+async function hazardCut(ix, w) {
+    const lv = ix.levels[w.f], T = lv.tile, TX = ix.tilesX;
+    const out = new Uint8Array(w.cols * w.rows);
+    const jobs = [];
+    forTiles(w, T, TX, (tr, tc, tcw) => {
+        if (!lv.set.has(tr * TX + tcw)) return;
+        jobs.push(getCached(hzUrl(lv.path + '/' + tr + '_' + tcw + '.bin.gz'), T * T).then(t => cutInto(out, w, t, 0, T, tr, tc)));
+    });
+    await Promise.all(jobs);
+    return out;
 }
 
 // Copy band `band` of a T x T tile (bands one after another) into a window-sized array.

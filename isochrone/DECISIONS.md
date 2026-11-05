@@ -5,6 +5,12 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Walking starts run the general search** (T-067, notes/T-067.md): with land hazard they need
+  time and hazard arrays; the general loop took 1.1-1.5x the walking loop's time at L10, so no
+  hazard-carrying copy of the walking loop was written. `solveWalk` stays for hazard off.
+- **Survival shows in the hover from 0.5% risk** (T-067), on both starts; it showed whenever the
+  path had any hazard. With land hazard 95% of the cells reached from Cluj have some, nearly all
+  tiny, and "survival 99%" (rounded down) on a walk to Vienna would overstate the risk fiftyfold.
 - **Corridors count a re-chosen tree over land** (T-056, notes/T-056.md): a land node takes,
   among near-equal land parents, the one most trips pass through when each trip is spread over
   routes within 3% (time), keeping every tree route within 1% of the fastest. The search's own

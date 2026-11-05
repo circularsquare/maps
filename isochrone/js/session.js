@@ -1,8 +1,8 @@
 // The state of one map session: the solved start, the last windows, and what to do on a click
 // or a new view. Posts every result to the page.
 import { cfg, setConfig } from './config.js';
-import { makeLevel, snap } from './levels.js';
-import { setTiles } from './tiles.js';
+import { makeLevel, snap, setHazard } from './levels.js';
+import { setTiles, loadHazardWorld } from './tiles.js';
 import { solve, cellTimes } from './search.js';
 import { loadWorld } from './canoedata.js';
 import { buildCanoe } from './canoe.js';
@@ -29,7 +29,16 @@ export function init(msg) {
     const cell = (m.north - m.south) / m.height;
     coarse = makeLevel(new Uint8Array(msg.bytes), m.width, m.height, m.west, m.north, cell, true);
     setTiles(msg.tiles);
+    hazardWorld().catch(() => { /* the click retries it and reports */ });
     self.postMessage({ type: 'ready', speeds: speeds() });
+}
+
+// The land hazard band of L10 (docs/hazard.md 4), loaded once; every start reads it.
+let hazard10 = null;
+function hazardWorld() {
+    if (!cfg.hazard) return Promise.resolve();
+    return hazard10 || (hazard10 = loadHazardWorld().then(codes => { setHazard(coarse, codes); })
+        .catch(e => { hazard10 = null; throw e; }));
 }
 
 function post(type, L, extra) {
@@ -101,8 +110,11 @@ async function runClick(g, lng, lat, m) {
     const start = snap(L, lng, lat, 8);
     if (start < 0) { if (alive()) { clickPending = false; self.postMessage({ type: 'none' }); } return; }
     const canoe = m === 'canoe';
-    let buildMs = 0;
-    if (canoe) { const t = performance.now(); await canoeWorld(); buildMs = Math.round(performance.now() - t); if (!alive()) return; }
+    const tl = performance.now();
+    await hazardWorld();
+    if (canoe) await canoeWorld();
+    const buildMs = Math.round(performance.now() - tl);
+    if (!alive()) return;
     const t0 = performance.now();
     const res = await solve(L, { idx: [start], w: [0], t: [0], hz: [0] }, alive, canoe);
     if (!res) return;

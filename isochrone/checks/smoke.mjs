@@ -18,6 +18,8 @@ const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application
 // console errors that are not the page's: the favicon the server has none of
 const NOISE = /favicon/;
 const NAIROBI = [36.82, -1.29];
+// a walking start in the Sahara and a point south-west of it with survival ~96% (land hazard, T-067)
+const TAMANRASSET = [5.53, 22.79], SAHARA_SW = [2.5, 18.8];
 // a hover on a point a few km from the start: minutes or hours, never days
 const TIP = /^(\d+ min|\d+ h( \d+ min)?)$/;
 
@@ -94,7 +96,7 @@ try {
   }
 
   if (!up) {
-    for (const n of ['click gives a new L10 solve', 'zoom 6 gives an L3 window', 'zoom 8 gives an L1 window', 'hover shows a time']) report(n, false, '(page did not load)');
+    for (const n of ['click gives a new L10 solve', 'zoom 6 gives an L3 window', 'zoom 8 gives an L1 window', 'hover shows a time', 'walking hover in the Sahara shows survival']) report(n, false, '(page did not load)');
   } else {
     // 2. a click elsewhere: Nairobi, at a zoom with no windows
     try {
@@ -139,6 +141,27 @@ try {
       report('hover shows a time', TIP.test(text) && finest === 1, `("${text}" from L${finest})`);
     } catch (e) {
       report('hover shows a time', false, first(e));
+    }
+
+    // 4a. land hazard: a walking start at Tamanrasset, a hover ~600 km south-west in the Sahara shows survival
+    try {
+      const n = await logLen();
+      await page.evaluate((c) => map.jumpTo({ center: c, zoom: 4 }), [4, 21]);
+      const xy = await page.evaluate((c) => { const p = map.project(c); return [p.x, p.y]; }, TAMANRASSET);
+      await page.mouse.click(xy[0], xy[1]);
+      await entry(10, n, 30000);
+      await page.click('#corrbtn');
+      const p = await page.evaluate((c) => { const q = map.project(c); return [q.x, q.y]; }, SAHARA_SW);
+      await page.mouse.move(p[0] - 5, p[1]);
+      await page.evaluate(() => { window.lastRoute = null; });
+      await page.mouse.move(p[0], p[1], { steps: 3 });
+      await page.waitForFunction(() => window.lastRoute, undefined, { timeout: 10000, polling: 100 });
+      const r = await page.evaluate(() => window.lastRoute);
+      await page.click('#corrbtn');
+      const s = /^survival (\d+)%$/.exec(r.split);
+      report('walking hover in the Sahara shows survival', r.mode === 'walk' && s && +s[1] < 100, `("${r.split}", ${(r.t / 8).toFixed(1)} days)`);
+    } catch (e) {
+      report('walking hover in the Sahara shows survival', false, first(e));
     }
   }
 

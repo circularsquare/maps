@@ -1,8 +1,8 @@
 # Land hazard
 
-**Approved by Anita 2026-11-05** (section 8). The band is built (`data/hazard/`, T-066); the page
-does not read it yet (T-067). The L10 sample, its check trips and how the numbers were reached are
-in `notes/T-042.md`. Sources and the checked numbers: research/friction.md 6.
+**Approved by Anita 2026-11-05** (section 8). The band is built (`data/hazard/`, T-066) and the
+page reads it (T-067, notes/T-067.md). The L10 sample, its check trips and how the numbers were
+reached are in `notes/T-042.md`. Sources and the checked numbers: research/friction.md 6.
 
 The search minimises time + K x hazard on every layer (K = 1000 h, SPEC 3), and the hover shows
 survival = exp(-sum of hazard x time) along the chosen path. Water hazard is built
@@ -94,8 +94,10 @@ extra: the build makes both months anyway.
 | Ice | LC100 2019 class 70 (data/surface/lc_class.tif); where LC100 has no class, RGI 6.0 regions 03, 05, 07, 09 (OGGM's open mirror) and Natural Earth 10 m glaciated areas (data/raw/ice/) | as LC100; NE public domain; RGI CC BY 4.0 |
 | Height | GMTED2010 mean (data/surface/elev.tif) | public domain |
 
-The info panel credits CHELSA (Karger et al. 2017, 2021) and OSM when the band is on. For 10,000
-BC the same rule reads CHELSA-TraCE21k at 12 ka and ICE-6G ice, and drops the OSM points (T-012).
+The info panel credits them all on both starts: CHELSA (Karger et al. 2017, 2021), RiverATLAS and
+HydroLAKES (HydroSHEDS), OSM, Copernicus Global Land Cover 2019, RGI 6.0, Natural Earth and
+GMTED2010. For 10,000 BC the same rule reads CHELSA-TraCE21k at 12 ka and ICE-6G ice, and drops
+the OSM points (T-012).
 
 ## 4. Storage and reading
 
@@ -125,16 +127,24 @@ straight crossing pays the same hazard as the fine one). A coarse cell with an a
 corner therefore reads a little worse than the best line through it, as its speed does; the finer
 windows correct it.
 
-**What the worker multiplies.** When a level loads, one table per cell: hq = rate x hours per km
-(`inv` of its speed), the hazard per km walked. Then:
+**What the worker multiplies.** L10's band loads once, on the first start of either mode; each
+L3 and L1 window loads its tiles beside its speeds (the same cache); an L0.1 window takes the L1
+pixel under each cell. Then one table per cell, `L.hq` = rate x hours per km (`inv` of its speed),
+the hazard per km walked, 0 on water (`setHazard`, js/levels.js). Then:
 - a land move: dh = length x f x the mean of hq over the cells whose `inv` the move averages
   (two, or four for a knight move), f = 1 walking, 2 carrying;
-- getting in or out: dh = 0.25 h x the land cell's rate, plus the half step on land as a move;
+- getting in or out: dh = 0.25 h x the land cell's rate, plus the land part of the step as a move
+  (half of it, or all of it to a canoe node on a land cell); the paddled half pays nothing;
 - weight += dt + K x dh, hazard += dh, exactly as water edges.
 
-A walking start then needs the time and hazard arrays: `solveWalk` gains them (or walking runs
-the general loop; whichever is faster, measured in stage 2). The stop rule is unchanged: a path
-stops when its survival falls under 1%.
+A walking start runs the general search (`solve`, js/search.js) with its time and hazard arrays;
+the walking-only loop `solveWalk` is kept for hazard off. At L10 it takes 1.1-1.5x the walking
+loop's time (~0.3-0.7 s a click). The stop rule is as at sea: a path stops when its survival falls
+under 1%.
+
+**Hover.** Survival (rounded down) shows on either start once the path's risk reaches 0.5%:
+almost every walk has some hazard (95% of the cells reached from Cluj), nearly all of it far
+smaller.
 
 ## 5. What it does to routes
 

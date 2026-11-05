@@ -20,13 +20,13 @@ The motivating question (Anita): "if you just have a canoe in 10,000 BC, how far
 Walking only, from the Malaria Atlas Project's 2020 walking-only friction surface (1 km, roads,
 land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid of ~10 km cells
 (4320 x 1740). One search from the clicked cell to everywhere (Dijkstra, 16 neighbours, wraps at
-180 degrees, a knight move may not hop a water cell) takes ~0.3 s in a worker. Bands from 1 hour
+180 degrees, a knight move may not hop a water cell) takes ~0.4 s in a worker. Bands from 1 hour
 to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
 Cluj-Napoca.
 
 A canoe start (the mode buttons, or `?mode=canoe`) searches carrying on land and the
 canoe on sea, lakes and rivers with currents (`docs/canoe.md`), and paints the sea; ~0.8 s a
-click at 10 km. The search minimises time + K x hazard (water hazard only so far), and keeps each node's move for tracing
+click at 10 km. The search minimises time + K x hazard (water and land, section 3), and keeps each node's move for tracing
 the route to the pointer.
 
 Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
@@ -40,7 +40,11 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
   is a rate per cell and mode; survival along the chosen path is exp(-sum of hazard x time), shown
   in the hover. Water hazard is built (rivers, rapids, waves offshore, cold water, supplies far
   from land; `docs/canoe.md` 3), so a canoe hugs coasts where a crossing is risky and the open
-  ocean is not crossed. Land hazard is 0 until the land band (T-042).
+  ocean is not crossed. Land hazard (thirst by distance to drinkable water, cold, ice, altitude;
+  `docs/hazard.md`) is paid by walking, carrying and getting in or out, so walks keep to rivers
+  and wells in deserts and go round Greenland's ice. A path stops where survival falls under 1%,
+  on land as at sea, so the ice sheet and the emptiest deserts stay unpainted. The hover shows
+  survival once the risk reaches 0.5%.
 - **Modes are layers of one graph.** Each mode (walking, canoe, later bike, car) is a layer of
   cells with its own speeds; switching between layers is an edge with a time cost. Turning a mode
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the
@@ -57,7 +61,8 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
   (for Anita's review, T-005); model and sources: research/canoe.md.
 - **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets,
   Beyer 2020 biomes at 12 ka for land cover). Sources: research/friction.md.
-- **Season.** Annual averages on land; local summer at sea (waves and currents June-August north of
+- **Season.** Annual averages for speeds on land, and the kinder of January and July at each place
+  for land hazard; local summer at sea (waves and currents June-August north of
   the equator, December-February south; sea ice from the least-ice month, August or February),
   the season a paddler would choose. A season switch is a later extra.
 

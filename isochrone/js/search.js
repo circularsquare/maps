@@ -150,10 +150,11 @@ const zeros = (n) => zeroArr.length >= n ? zeroArr.subarray(0, n) : (zeroArr = n
 // went false.
 //
 // An edge with hazard dh adds K x dh to the weight (nw) and dh to the node's hazard (hu in each
-// inlined relax). Water edges carry hazard (cn.hzr, cn.rHz); land and transfers are 0 until the
-// land band (T-042), so a walking start keeps the walking loop.
+// inlined relax). Water edges carry hazard (cn.hzr, cn.rHz); land moves and getting in or out
+// carry the land band's (L.hq, docs/hazard.md 4). A walking start with hazard off, or on a level
+// without the band, runs the walking loop.
 export async function solve(L, seeds, alive, canoe) {
-    if (!canoe) return solveWalk(L, seeds, alive);
+    if (!canoe && !(cfg.hazard && L.hq)) return solveWalk(L, seeds, alive);
     const { grid, W, H, wrap, dxKm, dyKm } = L;
     const cn = canoe ? L.cn : null;
     const { inv, maxHours, K, hzStop } = cfg;
@@ -176,6 +177,8 @@ export async function solve(L, seeds, alive, canoe) {
     const t = split ? new Float32Array(M).fill(Infinity) : w;
     const hz = new Float32Array(M);
     const pred = new Uint8Array(M);
+    // hazard per km walked by cell (0 on water); read-only zeros when off or not loaded
+    const hq = split && L.hq ? L.hq : zeros(N);
 
     // Indexed heap, 4 children a node (half the depth of a binary heap, the children in one cache
     // line), each entry's weight kept beside it (hk) so sifting reads no other per-node array.
@@ -243,7 +246,7 @@ export async function solve(L, seeds, alive, canoe) {
         const sr = r * 16;
         if (u < N && grid[u]) {
             // ---- land node: walk or carry ----
-            const invU = inv[grid[u]];
+            const invU = inv[grid[u]], hqU = hq[u];
             for (let k = 0; k < 16; k++) {
                 const r2 = r + MDR[k];
                 if (r2 < 0 || r2 >= H) continue;
@@ -253,20 +256,22 @@ export async function solve(L, seeds, alive, canoe) {
                 if (pos[v] === -2) continue;
                 const s = grid[v];
                 if (!s) continue;
-                let mean;
-                if (k < 8) mean = (invU + inv[s]) * 0.5;
+                let mean, mq;
+                if (k < 8) { mean = (invU + inv[s]) * 0.5; mq = (hqU + hq[v]) * 0.5; }
                 else {
                     let c0 = c + E0C[k], c1 = c + E1C[k];
                     if (wrap) { c0 = (c0 + W) % W; c1 = (c1 + W) % W; }
-                    const e0 = grid[(r + E0R[k]) * W + c0], e1 = grid[(r + E1R[k]) * W + c1];
+                    const i0 = (r + E0R[k]) * W + c0, i1 = (r + E1R[k]) * W + c1;
+                    const e0 = grid[i0], e1 = grid[i1];
                     if (!e0 || !e1) continue;
                     mean = (invU + inv[s] + inv[e0] + inv[e1]) * 0.25;
+                    mq = (hqU + hq[v] + hq[i0] + hq[i1]) * 0.25;
                 }
-                const dt = stepKm[sr + k] * mean * f, nw = wu + dt;
+                const len = stepKm[sr + k] * f, dt = len * mean, dh = len * mq, nw = wu + dt + K * dh;
                 {   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_GRID + k;
-                    if (split) { t[v] = tu + dt; hz[v] = hu; }
+                    if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
                     const pv = pos[v];
                     up(pv === -1 ? size++ : pv, v, w[v]);
                   } }
@@ -285,10 +290,13 @@ export async function solve(L, seeds, alive, canoe) {
                 // half a step paddled would let a path hop from river cell to river cell (T-006)
                 const s2 = grid[cell2];
                 const dt = xfer + 0.5 * len * (s2 ? f * (invU + inv[s2]) : f * invU + invP);
-                { const nw = wu + dt;   // relax, inlined
+                // getting in pays the land cell's rate (hq / inv) for its hours, plus the land
+                // part of the step as a move (hq is 0 on a water cell)
+                const dh = xfer * hqU / invU + 0.5 * len * f * (hqU + hq[cell2]);
+                { const nw = wu + dt + K * dh;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
-                    if (split) { t[v] = tu + dt; hz[v] = hu; }
+                    if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
                     const pv = pos[v];
                     up(pv === -1 ? size++ : pv, v, w[v]);
                   } }
@@ -298,7 +306,7 @@ export async function solve(L, seeds, alive, canoe) {
         // ---- canoe node ----
         const iu = info[cell];
         if (iu & NEAR_LAND) {
-            const su = grid[cell], fInvU = su ? f * inv[su] : invP;
+            const su = grid[cell], fInvU = su ? f * inv[su] : invP, hqC = hq[cell];
             // get out: the land node of this cell or a neighbour
             for (let j = 0; j < 9; j++) {
                 const r2 = r + ((j / 3) | 0) - 1;
@@ -309,10 +317,11 @@ export async function solve(L, seeds, alive, canoe) {
                 if (!s || pos[v] === -2) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
                 const dt = xfer + 0.5 * len * (f * inv[s] + fInvU);
-                { const nw = wu + dt;   // relax, inlined
+                const hqV = hq[v], dh = xfer * hqV / inv[s] + 0.5 * len * f * (hqV + hqC);
+                { const nw = wu + dt + K * dh;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
-                    if (split) { t[v] = tu + dt; hz[v] = hu; }
+                    if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
                     const pv = pos[v];
                     up(pv === -1 ? size++ : pv, v, w[v]);
                   } }

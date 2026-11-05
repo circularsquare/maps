@@ -5,9 +5,10 @@ export const cfg = {
     look: 'hex',                 // cell look (T-060): hex, crisp or diag; the page's ?look= (js/paint.js)
     inv: null,                   // hours per km for each stored value, -1 for water
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
+    hazardBase: 'data/hazard/',  // land hazard band (docs/hazard.md 4), relative to worker.js
     // the canoe model (docs/canoe.md 2, 3)
     K: 1000,                     // hours of weight per unit of hazard
-    hazard: true,                // water edges carry hazard on a canoe start; off, weight = time
+    hazard: true,                // water and land hazard (docs/hazard.md); off, weight = time
     // water hazard, per real hour on the water (docs/canoe.md 3, research/canoe.md 5)
     hz: {
         river: 1e-5, rapids: 1e-4,   // flat river; runnable rapids
@@ -33,6 +34,7 @@ export function setConfig(msg) {
     cfg.bands = msg.bands; cfg.alpha = msg.alpha; cfg.maxHours = msg.maxHours;
     if (msg.look) cfg.look = msg.look;
     if (msg.canoeBase) cfg.canoeBase = msg.canoeBase;
+    if (msg.hazardBase) cfg.hazardBase = msg.hazardBase;
     cfg.inv = new Float32Array(256).fill(-1);
     for (let v = 1; v < 256; v++) cfg.inv[v] = msg.meta.scale / v;
 }
