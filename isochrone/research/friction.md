@@ -344,14 +344,16 @@ of magnitude is the bar. Everything below is **rough**, with how each number was
 
 | Condition | Hazard per walking hour | Basis |
 |---|---|---|
-| Background, temperate, water and food around | ~1e-6 | Adult hunter-gatherer mortality ~1-2% a year (Gurven & Kaplan 2007, from memory, not rechecked), spread over waking hours. |
-| Hot desert, carrying water, known route | 3e-5 to 1e-4 | Tucson Sector 2015: 21 deaths per 10,000 Border Patrol apprehensions (~0.2% per crossing) over a crossing of roughly 2-4 days of walking (Arizona press reports of Pima County / Humane Borders counts). Apprehensions undercount crossings, so this leans high. |
-| Hot desert, no water | rises to 1e-2 to 1e-1 after ~1 day | Classic US Army desert table (FM 21-76, from Adolph's 1940s studies): at ~49 C shade maximum, about 2 days resting and 1 day walking without water; ~10 days below ~21 C resting. Quoted from memory, not verified here. |
-| Severe cold, no shelter (polar winter) | 1e-4 to 1e-3 | Guess. |
-| Ice sheet or glacier | 1e-4 to 1e-3 | Guess: crevasses, cold, no food or fuel. |
-| High altitude above base camp (~5,000-7,000 m) | 1e-5 to 1e-4 | Himalayan mountaineering: crude mortality 1-40 per 1,000 people above base camp over expeditions of a few weeks (Weinbruch & Nordby 2013 review, https://himalayandatabase.org/Research/Weinbruch-HiAltMed2013.html). |
-| Above 8,000 m | 3e-4 to 1e-2 | Same review: 4-134 deaths per 1,000 summiteers on a descent of 12-24 hours. |
-| Dense tropical forest or swamp | ~1e-5 | Guess (injury, getting lost, disease). |
+| Background, temperate, water and food around | ~5e-6 | Adult hunter-gatherer mortality ~1-2% a year (Gurven & Kaplan 2007, *Pop. Dev. Rev.* 33:321, https://gurven.anth.ucsb.edu/sites/secure.lsit.ucsb.edu.anth.d7_gurven/files/sitefiles/papers/GurvenKaplan2007pdr.pdf; the 15-40 rate not rechecked in the tables), over 8 walking hours a day (the whole day's risk charged to them). Not counted in the land band (docs/hazard.md). |
+| Hot desert, carrying water, known route | 3e-5 to 1e-4 | Tucson Sector 2015: 21 deaths per 10,000 Border Patrol apprehensions (~0.2% per crossing) over a crossing of roughly 2-4 days of walking (Arizona press reports of Pima County / Humane Borders counts). Apprehensions undercount crossings, so this leans high. Used as a check trip (Altar to Tucson in July, notes/T-042.md). |
+| Hot weather with water | ~1e-5 at ~50 C | Hajj 2024: 1,301 deaths among ~1.8 M pilgrims over ~5 days at up to 51.8 C in Mecca, most unregistered pilgrims walking in the sun without shelter (Saudi health ministry, e.g. https://gulfnews.com/world/gulf/saudi/hajj-2024-saudi-arabia-says-1301-deaths-mostly-unregistered-pilgrims-1.1719169731102; attendance from memory). Small beside thirst; not a factor of its own. |
+| Hot desert, walking, water carried | survival in days, by heat | **Checked** (2026-11-05) against FM 21-76 *Survival* (1957), fig. 196, from Adolph's *Physiology of Man in the Desert* (1947), OCR at https://archive.org/details/FM21-76Survival1957 (p. 224; the OCR drops single-digit cells, the rest match the usual table). Walking at night until exhausted, then resting, by max shade temperature: with no water 1 / 2 / 3 / 5 / 7 / 7.5 / 8 / 8 days at 49 / 43 / 38 / 32 / 27 / 21 / 16 / 10 C; with 10 US quarts (9.5 L) 3 / 3.5 / 5.5 / 8 / 11.5 / 13.5 / 14 / 14 days. Resting in shade with no water: 2 days at 49 C, ~10 days at 21 C and below. The old "1e-2 to 1e-1 after ~1 day" row is replaced by the distance-to-water rule built on the 10-quart column (docs/hazard.md). |
+| Severe cold, no shelter (polar winter) | 1e-4 to 1e-3 | Guess; no usable source found. In the land band only where the kinder of January and July is below -10 C at night (docs/hazard.md), so it hardly matters. |
+| Ice sheet | ~1e-3 | Anchor: Greenland ice-sheet crossing teams, fully equipped, ~24 a year 2010-12, were evacuated ~3% of the time (7% of all sport expeditions, 16 of 234; https://williamcolgan.net/blog/?p=262, from Danish Polar Centre counts); deaths are single cases (one in April 2013). A crossing is ~25-30 days, ~250 travel hours: ~1e-4 an hour for rescue-level trouble with polar gear. A walker without polar gear: ~10 times that. Thirst on the ice (no fuel, no liquid water) is the distance rule's. |
+| High altitude, trekking (3,000-5,500 m) | ~1e-6 | **Added.** Trekkers in Nepal 1987-91: 40 deaths among 275,950 trekkers (14 per 100,000), 10 from altitude sickness (Shlim & Gallie 1992, *Int. J. Sports Med.* 13 S74, https://www.thieme-connect.com/products/ejournals/abstract/10.1055/s-2007-1024601); a trek is 2-3 weeks, ~100 walking hours. Organised groups with lodges; a lone walker without them, several times more. |
+| High altitude above base camp (~5,000-7,000 m) | 1e-5 to 1e-4 | Himalayan mountaineering: crude mortality 1-40 per 1,000 people above base camp over expeditions of a few weeks (Weinbruch & Nordby 2013 review, https://himalayandatabase.org/Research/Weinbruch-HiAltMed2013.html). **Checked** 2026-11-05: the review page gives these ranges with no period; it includes technical climbing, so it is high for a walker on a pass. |
+| Above 8,000 m | 3e-4 to 1e-2 | Same review: 4-134 deaths per 1,000 summiteers on a descent of 12-24 hours. **Checked** as above. |
+| Dense tropical forest or swamp | ~1e-5 | Guess (injury, getting lost, disease). Not in the land band: MAP's speeds already slow it, and disease depends on who travels (docs/hazard.md). |
 
 **A design problem worth flagging:** thirst and hunger are not constant hazards. Death in a dry
 desert depends on how long since the last water, so a per-cell hazard that ignores history will
@@ -362,9 +364,15 @@ fresh water** (rivers, lakes, oases) times heat, which captures most of it; (b) 
 
 Climate and water layers:
 
-- **CHELSA V2.1** (1981-2010 monthly climatology, 30"; EnviDat, opendata.swiss "open" terms:
-  commercial use allowed, citation asked; https://www.envidat.ch/metadata/chelsa-climatologies).
-  Max temperature of the warmest month and min of the coldest month, ~100 MB a variable-month.
+- **CHELSA V2.1** (1981-2010 monthly climatology, 30"; EnviDat, https://www.envidat.ch/dataset/chelsa-climatologies).
+  **Licence checked 2026-11-05: CC0 1.0** (the EnviDat dataset page; chelsa-climate.org states
+  none). Citation asked: Karger et al. 2021, *Climatologies at high resolution for the earth's land
+  surface areas*, EnviDat, doi:10.16904/envidat.228, and Karger et al. 2017, *Sci. Data* 4:170122,
+  doi:10.1038/sdata.2017.122; it goes in the info panel when the band is on. Files:
+  `https://os.unil.cloud.switch.ch/chelsa02/chelsa/global/climatologies/<var>/1981-2010/CHELSA_<var>_<mm>_1981-2010_V.2.1.tif`
+  (uint16, K x 10, no scale tag; 43200 x 20880 from 84 N to 90 S), 150-170 MB each; bioclim
+  under `chelsa/global/bioclim/bioNN/1981-2010/`. The land band uses `tasmax` and `tasmin` for
+  January and July (data/raw/chelsa/, 640 MB).
 - **CHELSA-TraCE21k** (Karger et al. 2023, *Clim. Past* 19:439): the same 30" grid, monthly
   temperature and precipitation every 100 years back to 21 ka, so **12 ka climate at 1 km**.
   EnviDat https://doi.org/10.16904/envidat.211; licence listed as CC BY (2.0 on one mirror);
@@ -376,7 +384,11 @@ Climate and water layers:
 - **HydroRIVERS / HydroLAKES** (HydroSHEDS, free with attribution): for distance to water.
 
 Season is a real choice: crossing the Sahara or Siberia in July and January are different
-trips. Annual means are the simplest start.
+trips. The land band takes the kinder of January and July at each place (docs/hazard.md).
+
+- **OSM water points** (wells `man_made=water_well` 369 k, springs `natural=spring` 284 k,
+  settlements `place=city|town|village|hamlet` 4.0 M; QLever's OSM planet endpoint, ODbL, credit
+  "© OpenStreetMap contributors"), data/raw/osm_water/: the "today" water of the thirst rule.
 
 ---
 

@@ -1,0 +1,7 @@
+man_made=water_well: 368725 rows, 10 s
+natural=spring: 283708 rows, 6 s
+place=city: 15343 rows, 2 s
+place=town: 116792 rows, 6 s
+place=village: 1771692 rows, 23 s
+place=hamlet: 2126559 rows, 23 s
+done
