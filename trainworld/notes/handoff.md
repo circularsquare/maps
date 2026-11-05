@@ -31,12 +31,24 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## In flight
 - **europe** (Opus, main tree, pack lock, port 6197): all 234 rows built; gate 230/234; bef, krz, gzd, nic relaxed.
-  **gate2 running since 09:41** (browser, ~10 min; no app/WASM landings until it says ended), then
+  gate2 09:41-09:49, 234/234 gated; **join from ~09:50** (no browser: app landings fine; nothing writes data/packs or
+  data/terrain until it reports), then
   prejoin backup, join (detached, several hours), after-steps (terrain, market drives, inputs, stale,
   zone_successors --set, smoke, docs). Kit: old scratch\europe; notes/T-2302.md has PIDs and restart commands.
   Backup data/work/pre-T2302/pre (4 GB); undo `tools/country/restore.py T2302 pre --go`. Agent at ~335k tokens.
-- **diagparallel** (Opus, tree .tw-trees/diagparallel from c50034b8, port 6193, ids T-2529..30): T-2520 parallel
-  lines stay parallel (Manhattan's avenues). Rebases onto afe9bf07/3a2be5bf at landing.
+- diagparallel LANDED 4797d948 (records 3f5f4a7c): T-2520 Manhattan parallel pairs 0.53 -> 0.71; NYC layout 2.8 ->
+  3.6 s (+27%, over the brief's 20%: maps-17 landed anyway, the look is what Anita asked for); filed T-2529 (routing
+  breaks parallels), T-2530 (B convergence, Japan wrong-side 387 -> 481). Review: review/diagram-parallel-before/after.png.
+  Run checks/diagram-game.mjs captures again after the 8800 rebuild.
+- VS Code closed ~10:05: join survived (detached); diagparallel, bubbleload, europe resumed by message.
+- Anita ~10:20 asked for publishing / attention tips. ~10:40: "we can have an agent research more thoroughly and
+  compile a list of things fo rme to do"; no share button ("schematic map export already covers"); "i like the parallel
+  lines! :) i think itll look even better once we get water in" -> maps-17 switched water on by default (2a0541c2).
+- New batch notes/todo-2026-11-05b.md (T-2534..T-2536) + T-2537. Running: **uismall4** (Sonnet, tree from 2a0541c2,
+  port 6194: T-2535 no confirm for empty line delete, T-2536 no profit before first calc), **diagcross** (Opus, tree
+  from 2a0541c2, port 6193, ids T-2538..39: T-2534 ground crossings kept outside dense cores, small city on its
+  through line), **launchprep** (Opus, research only, writes research/launch.md: T-2537 launch checklist for Anita,
+  ≤40 web searches).
 - **bubbleload** (Opus, main tree read-only, scratch worktrees for old builds, ports 6188-89, ids T-2532..33):
   T-2531 [P1] Anita ~09:30 "i feel like loading of demand bubbles in the city we're looking at has honestly
   regressed"; measures builds 827 -> 956 -> master on her save artifacts/trainworld/anita-2026-11-05/
@@ -56,7 +68,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   more with regards to reflecting how thick the water is, but its pretty good" (T-2528). "ok, we can do 4 hours and
   layout jobs first."
 - Batch notes/todo-2026-11-05a.md (T-2519..T-2526).
-- Next free id **T-2534**.
+- Next free id **T-2540**.
 
 
 ## Next
