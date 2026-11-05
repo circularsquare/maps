@@ -43,9 +43,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   redone the Tube way (from which zone each drawn station is in; octilinear, even width, closed, between blocks).
   Anita on T-2168's: "not really visible at all", "very wavy", "dont fully contain the region", "why can't we just
   draw them the same way we draw lines?"
-- **ferrybus** (Opus, resumed, ~275k tokens; tree .tw-trees/ferrybus recreated from 2bcab3a0, 6187, ids T-2470..71):
-  T-2467 bus tool (no straight blue preview, first point refused off roads, snap to reachable road), T-2468 ferry
-  stops snap, T-2469 bus legs over bridges (Anita, 2026-11-04 ~21:00, verbatim in its brief).
+- ferrybus LANDED 4da1470f (T-2467 bus legs road or dashed red, first point refused, snap; T-2468 ferry port snap
+  200 m; T-2469 motorways so bridges). Agent at 400k: retired; follow-ups to a fresh agent. Not yet on 8800.
 - Next free id **T-2472** (T-2456..57 unused; T-2458, T-2459 filed).
 
 ## Next
