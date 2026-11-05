@@ -650,9 +650,25 @@ function gotRoute(m) {
 const MODE_WORD = ['walked', 'carried', 'paddled'];
 function lineAt() {
     if (!pointer || !corrOn || !map.getLayer('corridors') || map.getLayoutProperty('corridors', 'visibility') === 'none') return null;
-    const r = 4, p = [pointer.x, pointer.y];
-    const f = map.queryRenderedFeatures([[p[0] - r, p[1] - r], [p[0] + r, p[1] + r]], { layers: ['corridors'] })[0];
-    return f ? { mode: f.properties.m, kmh: f.properties.v } : null;
+    const r = 4, px = pointer.x, py = pointer.y;
+    // the nearest line to the pointer, the stronger on a tie (the box also holds faint lines beside it)
+    let best = null, bd = Infinity;
+    for (const f of map.queryRenderedFeatures([[px - r, py - r], [px + r, py + r]], { layers: ['corridors'] })) {
+        const g = f.geometry, runs = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+        let d = Infinity;
+        for (const run of runs) {
+            let a = map.project(run[0]);
+            for (let i = 1; i < run.length; i++) {
+                const b = map.project(run[i]), dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+                const u = l2 > 0 ? Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l2)) : 0;
+                d = Math.min(d, Math.hypot(a.x + u * dx - px, a.y + u * dy - py));
+                a = b;
+            }
+        }
+        d -= f.properties.s * 0.01;
+        if (d < bd) { bd = d; best = f; }
+    }
+    return best ? { mode: best.properties.m, kmh: best.properties.v } : null;
 }
 
 function drawTip() {

@@ -58,7 +58,7 @@ function dilate3(a, W, H, wrap) {
 
 // data: { kind, shore, links, steps } from canoedata.js; sea: the 0.25 degree sea grid.
 // Sets and returns L.cn = { E, canoeOf, cellOf, info, curr, curKmh, shore, hzr, rOff, rTo, rDt,
-// rCode, rHz }.
+// rCode, rHz, rKm (the step's river length, km) }.
 export function buildCanoe(L, data, sea) {
     const { grid, W, H } = L;
     const N = W * H;
@@ -121,7 +121,7 @@ export function buildCanoe(L, data, sea) {
     for (let i = 0; i < N; i++) rOff[i + 1] += rOff[i];
     const fill = rOff.slice(0, N);
     const rTo = new Int32Array(2 * nOpen), rDt = new Float32Array(2 * nOpen), rCode = new Uint8Array(2 * nOpen);
-    const rHz = new Float32Array(2 * nOpen);
+    const rHz = new Float32Array(2 * nOpen), rKm = new Float32Array(2 * nOpen);
     const p = cfg.paddle;
     for (let s = 0; s < steps.n; s++) {
         if (!open[s]) continue;
@@ -129,11 +129,11 @@ export function buildCanoe(L, data, sea) {
         const v = steps.v[s] * 3.6, km = steps.km[s];
         const rate = steps.cls[s] === CLS.rapids ? cfg.hz.rapids : cfg.hz.river;
         let e = fill[a]++;
-        rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m; rHz[e] = rDt[e] * rate;
+        rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m; rHz[e] = rDt[e] * rate; rKm[e] = km;
         e = fill[b]++;
-        rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate;
+        rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate; rKm[e] = km;
     }
-    L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr, rOff, rTo, rDt, rCode, rHz };
+    L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr, rOff, rTo, rDt, rCode, rHz, rKm };
     return L.cn;
 }
 

@@ -1,5 +1,7 @@
 # Archive
 
+- T-064 [P1] Corridor speeds are noisy. Done 2026-11-05: river steps were measured by straight cell length, not river length (0.2-15 km of river per 9 km step); now river length, a 13-edge window, cut hysteresis, nearest-line hover. Amazon main stem reads 10.9-11.3 km/h; notes/T-064.md.
+- T-048 [P3] River lines off the main thread. Done 2026-11-05: `js/riverworker.js` fetches, parses and joins the river files; the page's own time per rebuild fell from 146/607/154 ms (zoom 4/7/9) to 36/97/31, the rest being MapLibre's `setData`; look unchanged.
 - T-062 [P2] Corridors coloured by speed. Done 2026-11-05: one dark red to yellow ramp by km/h along each stretch (`SPEED_EDGES` in `js/corridors.js`), width still by trips; hovering a line shows "walked/carried/paddled, N km/h" in the cursor box; paddled blue dropped.
 - T-063 [P1] Water paler than land. Done 2026-11-05: on canoe starts `paint` mixes water cells (the canoe water kinds) 22% towards white (`WATER_MIX`), at every level; `paint(L, canoe)` takes the mode so a walking start never gets it.
 - T-061 [P1] Instant hovers. Done 2026-11-05: the 6 `title` tooltips (buttons) move to `data-tip` and show in the speeds panel's `#stip` box at once, above the button; wording unchanged.

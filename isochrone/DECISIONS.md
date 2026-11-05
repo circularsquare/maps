@@ -5,6 +5,8 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Corridor speed is along the river and smoothed** (T-064). A river step counts the river's own length (so a reach reads its model speed, not its lower over-ground speed), averaged over 6 edges each way of the same mode; lines are cut for speed only 0.4 km/h past a class edge, and coloured by their own mean km/h. Revisit the window (`SMOOTH`) if real changes, like a stretch of forest at L1, read too blurred.
+
 - **Window edge strip fixed by more canvas rows, not by moving the hole** (T-037). `paint` makes up to 4 canvas rows per cell row (capped at 20 M pixels, so L10 gets 2), because rounding the hole outwards opens a gap and inwards doubles the colour; a hairline of about 1 px remains. Revisit if memory on phones matters.
 
 - **100 m goes where T-047's rule puts it** (Anita: "2.8gb seems reasonable. that rule seems

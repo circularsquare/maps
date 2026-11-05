@@ -1,7 +1,8 @@
 // River lines for the page (T-045): the canoe's own river steps (data/canoe/rivers*, docs/canoe.md
 // 4) drawn as thin lines, wider for more water. Whole world from L10 when zoomed out, else the
 // L3 or L1 tiles round the view. Steps are joined into lines between confluences and smoothed
-// once, so the cell grid does not show as a staircase.
+// once, so the cell grid does not show as a staircase. The files are fetched, parsed and joined in
+// a worker of their own (js/riverworker.js, T-048); this side picks the tiles and draws.
 
 // Look (T-052): faint, so the lines read as background and not as routes; the corridors draw the
 // paddled stretches brightly.
@@ -13,99 +14,9 @@ const L10 = { W: 4320, deg: 1 / 12 };
 const TIER = z => z < 5 ? 10 : z < 7 ? 3 : 1;
 const MIN_Q = z => z < 3 ? 1000 : z < 4 ? 300 : z < 6 ? 100 : z < 7 ? 30 : z < 8 ? 3 : 1;
 const MAX_TILES = { 3: 40, 1: 20 };
-const CLOSED = new Set([2, 3, 4, 5, 6]);   // unrunnable, fall, dam, weir, reservoir (canoedata.js CLS)
-const riverLog = window.riverLog = [];     // { level, minQ, lines, ms } per rebuild, for checks
-
-async function fetchGz(url) {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(url + ' ' + r.status);
-    return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
-}
-
-// uint32 n, cell uint32[n], len uint16[n], dir uint8[n], v uint8[n] (0.01 m/s), cls uint8[n]
-function parse(b) {
-    const n = new DataView(b.buffer, b.byteOffset, 4).getUint32(0, true);
-    const cell = new Uint32Array(b.slice(4, 4 + 4 * n).buffer);
-    const o = 4 + 6 * n;
-    return { n, cell, dir: b.subarray(o, o + n), v: b.subarray(o + n, o + 2 * n), cls: b.subarray(o + 2 * n, o + 3 * n) };
-}
-const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
-// discharge by stored speed (0.01 m/s): v = 0.51 Q^0.11
-const Q_OF = Float64Array.from({ length: 256 }, (_, v) => Math.pow(Math.max(v, 1) / 51, 1 / 0.11));
-
-// Steps of one or more parsed files as lines. Each part: { rv, row0, col0, T (cells per row of
-// the file's cell numbering) }; cells are numbered globally as row * COLS + col on one grid of
-// `deg` degrees from 85N, 180W.
-function lines(parts, deg, minQ) {
-    const COLS = Math.round(360 / deg);
-    const up = [], dn = [], q = [], shut = [];
-    for (const { rv, row0, col0, T } of parts) {
-        for (let i = 0; i < rv.n; i++) {
-            const qq = Q_OF[rv.v[i]];
-            if (qq < minQ) continue;
-            const d = DIRS[rv.dir[i]];
-            if (!d) continue;
-            const lr = Math.floor(rv.cell[i] / T), r = row0 + lr, c = col0 + rv.cell[i] - lr * T;
-            up.push(r * COLS + c);
-            dn.push((r + d[1]) * COLS + ((c + d[0]) % COLS + COLS) % COLS);
-            q.push(qq);
-            shut.push(CLOSED.has(rv.cls[i]) ? 1 : 0);
-        }
-    }
-    const n = up.length;
-    // width class and closedness must match along a line
-    const wq = q.map(x => Math.min(8, Math.floor(Math.log10(x) * 2)));
-    const outOf = new Map(), inCount = new Map(), inStep = new Map();
-    for (let s = 0; s < n; s++) {
-        const o = outOf.get(up[s]);
-        if (o) o.push(s); else outOf.set(up[s], [s]);
-        inCount.set(dn[s], (inCount.get(dn[s]) || 0) + 1);
-        inStep.set(dn[s], s);
-    }
-    const same = (a, b) => wq[a] === wq[b] && shut[a] === shut[b];
-    const pt = k => {
-        const r = Math.floor(k / COLS), c = k - r * COLS;
-        return [-180 + (c + 0.5) * deg, 85 - (r + 0.5) * deg];
-    };
-    const used = new Uint8Array(n), features = [];
-    const follow = s0 => {
-        const coords = [pt(up[s0])];
-        let s = s0, lq = 0, len = 0;
-        for (;;) {
-            used[s] = 1; lq += Math.log10(q[s]); len++;
-            const p = pt(dn[s]), last = coords[coords.length - 1];
-            if (p[0] - last[0] > 180) p[0] -= 360; else if (last[0] - p[0] > 180) p[0] += 360;
-            coords.push(p);
-            if (inCount.get(dn[s]) !== 1) break;
-            const next = (outOf.get(dn[s]) || []).find(t => !used[t] && same(s, t));
-            if (next === undefined) break;
-            s = next;
-        }
-        features.push({ type: 'Feature', properties: { lq: lq / len, shut: shut[s0] },
-                        geometry: { type: 'LineString', coordinates: smooth(coords) } });
-    };
-    for (let s = 0; s < n; s++) {
-        if (used[s]) continue;
-        const k = up[s], inS = inStep.get(k);
-        if (inCount.get(k) === 1 && !used[inS] && same(inS, s)) continue;   // inside a line: its start comes first
-        follow(s);
-    }
-    for (let s = 0; s < n; s++) if (!used[s]) follow(s);   // loops
-    return features;
-}
-
-// One Chaikin pass, ends kept.
-function smooth(c) {
-    if (c.length < 3) return c;
-    const out = [c[0]];
-    for (let i = 0; i < c.length - 1; i++) {
-        const [x0, y0] = c[i], [x1, y1] = c[i + 1];
-        if (i > 0) out.push([0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1]);
-        if (i < c.length - 2) out.push([0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1]);
-    }
-    out.push(c[c.length - 1]);
-    return out;
-}
+// { level, minQ, lines, ms, workerMs } per rebuild, for checks: ms is the time on this thread
+// (taking the message and handing the lines to the map), workerMs the worker's own
+const riverLog = window.riverLog = [];
 
 // Adds the source and layer (before layer `before`) and keeps them to the view while shown.
 export function riverLines(map, base, before) {
@@ -118,22 +29,27 @@ export function riverLines(map, base, before) {
                 3, ['interpolate', ['linear'], ['get', 'lq'], 0, 0.4, 4, 1.6],
                 9, ['interpolate', ['linear'], ['get', 'lq'], 0, 1, 4, 3.5]],
         } }, before);
+    const worker = new Worker(new URL('./riverworker.js', import.meta.url), { type: 'module' });
     let on = false, shownKey = '', seq = 0;
-    let index = null, world = null;
-    const tiles = new Map();   // url -> Promise of parsed steps, oldest first
+    let index = null;
+    const abs = u => new URL(u, document.baseURI).href;   // the worker lives in js/, the urls are the page's
+    const pending = new Map();   // job id -> { level, minQ, key, t }
     const getIndex = () => index || (index = fetch(base + 'index.json').then(r => r.json()).then(ix => {
         for (const k in ix.rivers) ix.rivers[k].set = new Set(ix.rivers[k].tiles);
         return ix;
     }).catch(e => { index = null; throw e; }));
-    const getWorld = () => world || (world = fetchGz(base + 'rivers.bin.gz').then(parse).catch(e => { world = null; throw e; }));
-    const getTile = url => {
-        let p = tiles.get(url);
-        if (p) { tiles.delete(url); tiles.set(url, p); return p; }
-        p = fetchGz(url).then(parse);
-        p.catch(() => tiles.delete(url));
-        tiles.set(url, p);
-        while (tiles.size > 120) tiles.delete(tiles.keys().next().value);
-        return p;
+
+    worker.onmessage = ({ data }) => {
+        const job = pending.get(data.id);
+        pending.delete(data.id);
+        if (!job) return;
+        if (data.error) { console.warn('rivers:', data.error); return; }
+        if (data.id !== seq || !on) return;   // a newer view has been asked for
+        const t0 = performance.now();
+        shownKey = job.key;
+        map.getSource('rivers').setData({ type: 'FeatureCollection', features: data.features });
+        riverLog.push({ level: job.level, minQ: job.minQ, lines: data.features.length,
+                        ms: Math.round(performance.now() - t0), workerMs: data.ms });
     };
 
     async function update() {
@@ -155,21 +71,14 @@ export function riverLines(map, base, before) {
         }
         const key = f + '|' + minQ + '|' + (want ? want.map(w => w[2]).join() : '');
         if (key === shownKey) return;
-        const my = ++seq;
-        let parts, deg;
+        const id = ++seq;
+        pending.set(id, { level: f, minQ, key });
         if (f === 10) {
-            parts = [{ rv: await getWorld(), row0: 0, col0: 0, T: L10.W }];
-            deg = L10.deg;
+            worker.postMessage({ id, urls: [abs(base + 'rivers.bin.gz')], row0s: [0], col0s: [0], Ts: [L10.W], deg: L10.deg, minQ });
         } else {
-            const got = await Promise.all(want.map(w => getTile(w[2])));
-            parts = want.map(([tr, tcw, , T], i) => ({ rv: got[i], row0: tr * T, col0: tcw * T, T }));
-            deg = want.length ? 5 / want[0][3] : 1;
+            worker.postMessage({ id, urls: want.map(w => abs(w[2])), row0s: want.map(w => w[0] * w[3]), col0s: want.map(w => w[1] * w[3]),
+                Ts: want.map(w => w[3]), deg: want.length ? 5 / want[0][3] : 1, minQ });
         }
-        if (my !== seq || !on) return;
-        shownKey = key;
-        const t0 = performance.now(), features = lines(parts, deg, minQ);
-        map.getSource('rivers').setData({ type: 'FeatureCollection', features });
-        riverLog.push({ level: f, minQ, lines: features.length, ms: Math.round(performance.now() - t0) });
     }
     const go = () => update().catch(e => console.warn('rivers:', e.message));
     map.on('moveend', go);

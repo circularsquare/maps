@@ -201,6 +201,73 @@ function edgeFlux(L, canoe, coarser, cnt, par, org) {
     return added;
 }
 
+// The river length of the step from cell pc to cell `cell` reached by `code` in time d (two
+// rivers can share a cell pair; the one whose time matches is the one taken).
+function riverKm(cn, pc, cell, code, d) {
+    let best = -1, bd = Infinity;
+    for (let e = cn.rOff[pc], e1 = cn.rOff[pc + 1]; e < e1; e++) {
+        if (cn.rTo[e] !== cell || cn.rCode[e] !== code) continue;
+        const x = Math.abs(cn.rDt[e] - d);
+        if (x < bd) { bd = x; best = e; }
+    }
+    return best >= 0 ? cn.rKm[best] : -1;
+}
+
+// Each kept edge's speed (child n to its parent), km/h, as the search costs it (time only, no
+// hazard): the length travelled over the time taken, summed over the edge and up to SMOOTH edges
+// of its mode each way along the route (up towards the start, down along the child with the most
+// trips). A river step travels the river's own length, meanders included, so a reach reads its
+// model speed; the window evens out where a route hops between rivers sharing cells (T-064). A
+// transfer to a neighbouring cell is carried over the step, its 15 minutes included; one within a
+// cell travels nothing and takes the speed of the edges round it. Returns get(n) and dt(n), the
+// edge's own time (0 for a transfer within a cell).
+const SMOOTH = 6;
+// km/h past a class edge before a line is cut for speed (lines())
+const HYST = 0.4;
+function edgeSpeeds(L, canoe, nk, kept, mode) {
+    const { par, cnt } = L.corr;
+    const { t, pred } = L.res;
+    const W = L.W, N = W * L.H, cn = canoe ? L.cn : null;
+    const idx = new Map();
+    for (let i = 0; i < nk; i++) idx.set(stack[i], i);
+    const km = new Float32Array(nk), dt = new Float32Array(nk), md = new Uint8Array(nk);
+    const up = new Int32Array(nk).fill(-1), down = new Int32Array(nk).fill(-1);
+    for (let i = 0; i < nk; i++) {
+        const n = stack[i], p = par[n], code = pred[n];
+        md[i] = mode(n);
+        if (kept(p)) up[i] = idx.get(p);
+        const d = t[n] - t[p];
+        if (!(d > 0) || (FLIP[code] && DC[code] === 0 && DR[code] === 0)) continue;
+        const cell = n < N ? n : cn.cellOf[n - N], r = (cell / W) | 0;
+        let len = -1;
+        if (code >= P_DOWN) {
+            let pc = cell - r * W - DC[code];
+            if (pc < 0 || pc >= W) pc = (pc + W) % W;
+            len = riverKm(cn, (r - DR[code]) * W + pc, cell, code, d);
+        }
+        if (len < 0) len = Math.hypot(DC[code] * (L.dxKm[r] + L.dxKm[r - DR[code]]) * 0.5, DR[code] * L.dyKm);
+        km[i] = len; dt[i] = d;
+    }
+    for (let i = 0; i < nk; i++) {
+        const u = up[i];
+        if (u >= 0 && (down[u] < 0 || cnt[stack[i]] > cnt[stack[down[u]]])) down[u] = i;
+    }
+    // sums over the window round edge i; past it, when it holds no time (transfers only), on until
+    // some (of the same mode first)
+    const v = new Float32Array(nk);
+    for (let i = 0; i < nk; i++) {
+        let k = km[i], d = dt[i];
+        const m = md[i];
+        let j = up[i], s = 0;
+        for (; j >= 0 && md[j] === m && (s < SMOOTH || d === 0); j = up[j], s++) { k += km[j]; d += dt[j]; }
+        for (j = down[i], s = 0; j >= 0 && md[j] === m && (s < SMOOTH || d === 0); j = down[j], s++) { k += km[j]; d += dt[j]; }
+        for (j = up[i]; d === 0 && j >= 0; j = up[j]) { k += km[j]; d += dt[j]; }
+        for (j = down[i]; d === 0 && j >= 0; j = down[j]) { k += km[j]; d += dt[j]; }
+        v[i] = d > 0 ? k / d : 0;
+    }
+    return { get: (n) => v[idx.get(n)], dt: (n) => dt[idx.get(n)] };
+}
+
 // Polylines of the edges whose count is at least the level's threshold: { xy (lng, lat pairs),
 // off (start of each line in points, and the end), s (strength step 0..STEPS-1 of each line) }.
 // world: the L10 total, which sets the threshold and the top of the scale. coarser: as for count;
@@ -219,49 +286,54 @@ export function lines(L, canoe, world, coarser) {
     let nk = 0;
     for (let i = 0; i < nr; i++) { const n = reach[i]; if (kept(n)) stack[nk++] = n; }
     for (let i = 0; i < nk; i++) nch[par[stack[i]]]++;
-    // Speed along an edge (child n to its parent): its length over the time difference, km/h, as the
-    // search costs it (time only, no hazard). A transfer between layers (FLIP) has no speed of its
-    // own: 0, and its line takes the class of the edge before it.
-    const { t, pred } = L.res;
-    const edgeKm = (n) => {
-        const code = pred[n], cell = n < N ? n : cellOf[n - N], r = (cell / L.W) | 0;
-        return Math.hypot(DC[code] * L.dxKm[r], DR[code] * L.dyKm);
-    };
-    const edgeDt = (n) => t[n] - t[par[n]];
-    const edgeV = (n) => {
-        if (FLIP[pred[n]]) return 0;
-        const dt = edgeDt(n);
-        return dt > 1e-6 ? edgeKm(n) / dt : 0;
-    };
-    const cls = (n) => {
-        let v = edgeV(n);
-        if (v === 0 && par[par[n]] >= 0 && par[n] >= 0) v = edgeV(par[n]);
+    // the mode of the edge from n: walked 0, carried 1 (on the land layer of a canoe start, and
+    // getting in or out, as the hover's split counts it), paddled 2 (on the canoe layer)
+    // (a water cell's canoe node is the cell's own index, so n < N does not mean the land layer)
+    const { pred } = L.res, grid = L.grid;
+    const mode = (n) => canoe ? (!FLIP[pred[n]] && (n >= N || grid[n] === 0) ? 2 : 1) : 0;
+    const cellOfNode = (n) => n < N ? n : cellOf[n - N];
+    const speed = edgeSpeeds(L, canoe, nk, kept, mode);
+    const clsOf = (v) => {
         let k = 0;
         while (k < SPEED_EDGES.length && v >= SPEED_EDGES[k]) k++;
         return k;
     };
-    // walked 0, carried 1 (on the land layer of a canoe start), paddled 2 (on the canoe layer)
-    // (a water cell's canoe node is the cell's own index, so n < N does not mean the land layer)
-    const grid = L.grid;
-    const mode = (n) => canoe ? (n >= N || grid[n] === 0 ? 2 : 1) : 0;
-    // an edge continues the line of the edge before it when that is the only kept edge on, of one
-    // strength step, one speed class and one mode
-    const cont = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n) && mode(p) === mode(n) && cls(p) === cls(n); };
+    // an edge can continue the line of the edge before it when that is the only kept edge on, of
+    // one strength step and one mode
+    const joins = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n) && mode(p) === mode(n); };
+    // where lines are cut for speed: each edge's class label, outward from the start; an edge that
+    // joins keeps the label before it while its speed is within HYST km/h of that class
+    const lab = new Map(), chain = [];
+    const label = (n) => {
+        chain.length = 0;
+        for (let a = n; !lab.has(a); a = par[a]) { chain.push(a); if (!joins(a)) break; }
+        for (let i = chain.length - 1; i >= 0; i--) {
+            const x = chain[i], v = speed.get(x);
+            let c = clsOf(v);
+            if (joins(x)) {
+                const q = lab.get(par[x]);
+                const lo = q > 0 ? SPEED_EDGES[q - 1] : -Infinity, hi = q < SPEED_EDGES.length ? SPEED_EDGES[q] : Infinity;
+                if (v >= lo - HYST && v < hi + HYST) c = q;
+            }
+            lab.set(x, c);
+        }
+        return lab.get(n);
+    };
+    const cont = (n) => joins(n) && label(par[n]) === label(n);
     for (let i = 0; i < nk; i++) { const n = stack[i]; if (cont(n)) flag[par[n]] = 1; }
     const xy = [], off = [0], s = [], vs = [];
-    const cellOfNode = (n) => n < N ? n : cellOf[n - N];
     for (let i = 0; i < nk; i++) {
         const n = stack[i];
         if (flag[n]) continue;
-        // from a line's tip up to where it joins
-        const st = step(n) | (mode(n) << 3) | (cls(n) << 5);
-        let km = 0, dtSum = 0;
+        // from a line's tip up to where it joins; its km/h is the mean of its edges' speeds, each
+        // weighted by its time, and its colour that km/h's class
+        let vSum = 0, wSum = 0;
         let cur = n, cell = cellOfNode(n);
         let x = lngOf(L, cell), y = latOf(L, cell);
         const pts = [x, y];
         for (;;) {
             const p = par[cur];
-            if (!FLIP[pred[cur]] && edgeDt(cur) > 1e-6) { km += edgeKm(cur); dtSum += edgeDt(cur); }
+            { const w = speed.dt(cur) + 1e-3; vSum += speed.get(cur) * w; wSum += w; }
             const pc = cellOfNode(p);
             if (pc !== cell) {
                 cell = pc;
@@ -280,11 +352,12 @@ export function lines(L, canoe, world, coarser) {
             if (!cont(cur)) break;
             cur = p;
         }
-        if (pts.length < 4) continue;
+        const v10 = Math.min(255, Math.round(vSum / wSum * 10));
+        if (pts.length < 4 || !(v10 > 0)) continue;
         for (const v of pts) xy.push(v);
         off.push(xy.length / 2);
-        s.push(st);
-        vs.push(dtSum > 0 ? Math.min(255, Math.round(km / dtSum * 10)) : 0);
+        s.push(step(n) | (mode(n) << 3) | (clsOf(v10 / 10) << 5));
+        vs.push(v10);
     }
     for (let i = 0; i < nk; i++) { const n = stack[i]; nch[par[n]] = 0; flag[par[n]] = 0; }
     if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s, vs);
