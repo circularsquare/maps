@@ -26,10 +26,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-053 world roads build: roads agent addfc90633db2c1e0 (Opus) resumed ~16:45 with Anita's go;
   rotating extracts, <=2 on disk, stops under 6 GB free. It reports the run's command, log and
   liveness check once started (then add them under Long runs).
-- T-069 scroll bar, T-070 brighter red ramp, T-060 hex default + faster: agent a188a1156511192ef
-  (Sonnet). Owns index.html, js/paint.js, js/config.js look line.
-- T-071 upstream and carry speeds, research and recalibrate: agent aeeb2ba51b2f7341c (Opus).
-  Owns js/config.js canoe constants, research/canoe.md, docs/canoe.md speed sections.
+- Landed a636e28e: T-069 scroll bar, T-070 bright red ramp, T-060 hex default, T-072 smoothing
+  (first pass), T-071 upstream 0.4 / 2.5 km/h, carry x2 kept. Filed T-073 (small rivers fast).
+- T-072 second pass (simplify before smoothing; staircases still showed at zoom 9): page agent
+  a188a1156511192ef (Sonnet), owns index.html drawCorridors.
 
 ## Long runs
 (none)

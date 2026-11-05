@@ -1,7 +1,7 @@
 # Archive
 
 - T-071 [P1] Upstream paddling and carrying speeds. Done 2026-11-05: upstream max(p - 0.4 v, 2.5 km/h) (was 0.6, 1.5), 3.0 km/h on a huge river, from recorded upstream crews (2.5-3.5 km/h) and bank currents; carry x2 kept. Missouri trip carried 62% to 45%. notes/T-071.md.
-- T-072 [P1] Smooth corridor lines. Done 2026-11-05: `drawCorridors` in index.html runs two Chaikin passes on each line (ends fixed, cached per level, before the window cuts); a redraw takes ~10 ms with three levels; hover and colours unchanged.
+- T-072 [P1] Smooth corridor lines. Done 2026-11-05: `drawCorridors` in index.html simplifies each line (Douglas-Peucker, 0.7 cell, so single-cell stairs become straight runs) then three Chaikin passes; ends fixed so speed splits and junctions stay, cached per level, before the window cuts; a redraw ~10 ms; hover works.
 - T-060 [P1] Hex cell look. Done 2026-11-05: hex is the default (`?look=crisp` and `?look=diag` kept); pixel-to-cell map kept per geometry, 32-bit writes; L10 paint ~570 to ~100-130 ms on repeat clicks, windows ~100 to ~18 ms; image identical to before.
 - T-070 [P1] Brighter slow end of the corridor ramp. Done 2026-11-05: `CORR_RAMP` now bright red #f03a2e up to yellow #ffe84a with lightness close; the old #6e1414 to #c43a1a reds are gone. Faint (few-trip) lines still dim through `CORR_OPACITY` 0.55.
 - T-069 [P1] Horizontal scroll bar. Done 2026-11-05: the cursor hover box (`#tip`, 14 px right of the pointer) and the speeds-row box stuck out past the right edge (up to 88 px) and bottom (30 px); both now flip left or up at an edge (`placeAt`), and html/body are `overflow: hidden`.
