@@ -20,7 +20,7 @@ import { lineFares } from "./fareInEffect";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
-import type { DayLedger, HourLedger } from "../workers/saveFile";
+import { newDay, newHour, type DayLedger, type HourLedger } from "../workers/saveFile";
 
 /** [region, share] pairs adding up to 1 ("" outside every zone). */
 export type Shares = [string, number][];
@@ -205,10 +205,9 @@ export function regionLedger(zone: string | null): { ledger: DayLedger[]; hours:
   const r = m.regions?.[zone], l = live.regions?.[zone];
   const day = live.today?.day ?? m.ledger.at(-1)?.day, hour = live.hour?.hour ?? m.hours.at(-1)?.hour;
   const lastDay = r?.ledger.at(-1), lastHour = r?.hours.at(-1);
-  const zero = { fares: 0, running: 0, trains: 0, build: 0, rides: 0 };
   return {
     ledger: r?.ledger ?? [], hours: r?.hours ?? [],
-    today: l?.today ?? (lastDay?.day === day ? lastDay! : day !== undefined ? { day, ...zero } : null),
-    hour: l?.hour ?? (lastHour?.hour === hour ? lastHour! : hour !== undefined ? { hour, ...zero } : null),
+    today: l?.today ?? (lastDay?.day === day ? lastDay! : day !== undefined ? newDay(day) : null),
+    hour: l?.hour ?? (lastHour?.hour === hour ? lastHour! : hour !== undefined ? newHour(hour) : null),
   };
 }

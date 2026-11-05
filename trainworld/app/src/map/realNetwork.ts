@@ -21,9 +21,8 @@ import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, shade, snapping } from "../game/ui";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
+import { noritetsuBases, ringBox } from "../game/rings";
 
-const LOCAL_BASE = new URL("../noritetsu/", document.baseURI).href;
-const R2_BASE = "https://data.anita.garden/noritetsu/";
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow */
 const MIN_ZOOM = 4;
@@ -93,7 +92,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
     (index ??= (async () => {
-      for (const b of [LOCAL_BASE, R2_BASE]) {
+      for (const b of noritetsuBases(document.baseURI)) {
         try {
           const r = await fetch(b + "regions.json");
           const j = r.ok ? await r.json() : null;
@@ -101,11 +100,7 @@ export function startRealNetwork(map: maplibregl.Map) {
           base = b;
           regions = Object.entries(j.regions as Record<string, { parts: [number, number][][] }>).map(([cc, r]) => ({
             cc,
-            parts: r.parts.map((ring) => {
-              let w = 180, s = 90, e = -180, n = -90;
-              for (const [x, y] of ring) (w = Math.min(w, x)), (e = Math.max(e, x)), (s = Math.min(s, y)), (n = Math.max(n, y));
-              return [w, s, e, n] as [number, number, number, number];
-            }),
+            parts: r.parts.map((ring) => ringBox(ring.flat())),
           }));
           return;
         } catch {

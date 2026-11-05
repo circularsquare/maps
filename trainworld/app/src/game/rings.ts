@@ -1,6 +1,12 @@
 // Rings as flat lon, lat pairs (a Float64Array): the tests the real-network snap and its router share.
 // No DOM, so a worker imports it too.
 
+/** Where noritetsu's data is served from, in the order to try: next to the page (8800, the dev
+ * server's proxy), then Cloudflare R2. `page`: the page's URL. */
+export function noritetsuBases(page: string): string[] {
+  return [new URL("../noritetsu/", page).href, "https://data.anita.garden/noritetsu/"];
+}
+
 /** A ring's box: west, south, east, north. */
 export function ringBox(r: ArrayLike<number>): [number, number, number, number] {
   let w = 180, s = 90, e = -180, n = -90;

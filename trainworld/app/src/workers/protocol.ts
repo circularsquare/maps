@@ -155,7 +155,7 @@ export type ToClock =
    * `backupMs`: wall ms of the first backup step, 10 minutes, the others scaled with it (T-744, T-1826; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
-  | { kind: "init"; city: string; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
+  | { kind: "init"; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
       /** T-2058: how lines side by side are worked out (`bandTry` in perfFlags.ts) */
       bandMode?: string;
       /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
@@ -683,7 +683,7 @@ export type FromClock =
   /** a query's answer, in the track model's flat layout (pack metres) */
   | { kind: "answer"; seq: number; data: Float64Array }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
-  | { kind: "saved"; at: number; bytes: number; encodeMs: number; totalMs: number }
+  | { kind: "saved"; at: number }
   /** the answer to a save by hand (T-1251): when it was written, or why not */
   | { kind: "savedByHand"; at?: number; error?: string }
   /** T-1826: the player changed the game while nothing can write it (the page asks before closing) */

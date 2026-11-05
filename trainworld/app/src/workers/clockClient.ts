@@ -38,14 +38,14 @@ import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "
 import { addTerrainGrid } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
-export const saveSlotsState = signal<{ slots: import("./saveFile").SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: import("./saveFile").SlotBackup[]; newer?: boolean }>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
+export const saveSlotsState = signal<Omit<Extract<FromClock, { kind: "saveSlots" }>, "kind">>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
 export const savedByHand = signal<number | null>(null);
 
 /** T-1815: the panels' account reads, held while track previews are asked */
 const PANEL_READS = new Set(["today", "linesPeriods", "linePeriods", "lineAccount"]);
 const PANEL_HOLD_MS = 250;
-export function manageSaveSlot(action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore", key?: string, name?: string) {
+export function manageSaveSlot(action: Extract<ToClock, { kind: "saveSlot" }>["action"], key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
   if (action === "restore" && key) return void ifItFits({ key }, () => switchGame({ load: "restore" }, { kind: "restore", key, from: saveSlotsState.peek().active }));
@@ -70,7 +70,7 @@ export const clockWorkerStatus = signal("loading");
 /** T-2124: counts the games loaded into the worker (each `loaded`), so per-game page state starts again */
 export const gamesLoaded = signal(0);
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
-export const networkSnapshot = signal<NetworkSnapshot | null>(null);
+const networkSnapshot = signal<NetworkSnapshot | null>(null);
 
 export interface EditAnswer {
   ok: boolean;
@@ -87,25 +87,9 @@ export interface EditAnswer {
   early?: boolean;
 }
 
-export interface PreviewAnswer {
-  ok: boolean;
-  cost: number;
-  lengthM: number;
-  /** cost multiplier: the track's price over its length at the base price (T-085) */
-  mult: number;
-  /** metres on flat, rolling, hilly and mountain ground where the terrain is charged (T-1270) */
-  ground?: number[];
-  issues: string[];
-  verts: Float64Array;
-  pts: Float32Array;
-  speeds?: Float32Array;
-  /** where each alignment starts in `pts` (triples) when there are several (a node drag) */
-  parts?: Uint32Array;
-  /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
-  arc?: Float64Array;
-  /** where it makes a crossing or a flat junction (T-629): x, y, kind (0 crossing, 1 junction) */
-  marks?: Float32Array;
-}
+/** A preview's answer: the worker's "preview" message, but for the sequence number and what only the
+ * message's own handling reads. */
+export type PreviewAnswer = Omit<Extract<FromClock, { kind: "preview" }>, "kind" | "seq" | "stale" | "anchor">;
 
 /** A crossover preview (T-338): its cost US$M or why not, and its diagonals' centre lines. */
 export type CrossoverAnswer = Pick<Extract<FromClock, { kind: "crossoverCheck" }>, "ok" | "issues" | "cost" | "parts">;
@@ -168,7 +152,7 @@ function sameObjects<T>(a: readonly T[], b: readonly T[]): boolean {
 }
 
 /** The UI's world view from the worker's state. */
-function toWorld(s: ClockState, city: { population: number; jobs: number }): WorldView {
+function toWorld(s: ClockState): WorldView {
   let stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
     .map((n) => {
@@ -217,7 +201,7 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       cars: l.cars,
       carsSet: l.carsSet,
       fast: l.fast,
-      upkeep: (l.upkeep ?? 0) * 1e6,
+      upkeep: l.upkeep * 1e6,
       stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
       stopS: l.stopS,
       path: l.path,
@@ -225,8 +209,8 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       turnaroundS: l.turnaround,
       shift: l.shift,
       passed: Array.from({ length: l.passed.length >> 1 }, (_, k) => ({ gap: l.passed[k * 2], node: l.passed[k * 2 + 1] })),
-      reversals: l.reversals ?? [],
-      endTurns: l.endTurns ?? [],
+      reversals: l.reversals,
+      endTurns: l.endTurns,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null,
       ...(l.bus ? { bus: l.bus } : {}),
     });
@@ -252,11 +236,10 @@ function toWorld(s: ClockState, city: { population: number; jobs: number }): Wor
       for (let k = 0; k + 2 < v.length; k += 3) m.set(v[k], { rho: v[k + 1], tph: v[k + 2] });
       return m;
     }),
-    save: { version: 0, city: HOME_CITY, clock: clock.now(), cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
+    save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
     lineStats,
     edges,
     nodes,
-    city: { name: "New York", population: city.population, jobs: city.jobs, split: { train: 0, walk: 0, drive: 100 }, trainShareByPeriod: [] },
     money: {
       builtValue: s.builtCost * 1e6, blueprintCost: s.blueprintCost * 1e6,
     },
@@ -396,21 +379,45 @@ export interface GameChoice {
   pending?: boolean;
 }
 
+/** One request in flight to the worker; a newer one replaces a waiting one. */
+class Newest<Q, A extends unknown[]> {
+  busy = false;
+  waiting: { q: Q; cb: (...a: A) => void } | null = null;
+  private cb: ((...a: A) => void) | null = null;
+  /** true when `q` can go now; otherwise it waits, in place of an earlier waiting one */
+  ask(q: Q, cb: (...a: A) => void): boolean {
+    if (this.busy) {
+      this.waiting = { q, cb };
+      return false;
+    }
+    this.busy = true;
+    this.cb = cb;
+    return true;
+  }
+  /** The answer came: `deliver` hands it to the callback, then the waiting request goes through
+   * `go`, also when the callback throws (T-1001). */
+  answered(deliver: (cb: ((...a: A) => void) | null) => void, go: (q: Q, cb: (...a: A) => void) => void) {
+    this.busy = false;
+    try {
+      deliver(this.cb);
+    } finally {
+      const n = this.waiting;
+      this.waiting = null;
+      if (n) go(n.q, n.cb);
+    }
+  }
+}
+
 export class ClockClient {
   private worker: Worker | null = null;
   private waiting: [ToClock, Transferable[]][] = [];
   private seq = 0;
   private pending = new Map<number, (a: EditAnswer) => void>();
-  private stationBusy = false;
-  private stationNext: { at: StationAt; platform: number; cb: (ok: boolean, issues: string[], cost: number) => void } | null = null;
-  private stationCb: ((ok: boolean, issues: string[], cost: number) => void) | null = null;
-  private crossBusy = false;
-  private crossNext: { edge: number; x: number; y: number; cb: (a: CrossoverAnswer) => void } | null = null;
-  private crossCb: ((a: CrossoverAnswer) => void) | null = null;
-  private previewBusy = false;
-  private previewNext: { msg: (seq: number) => ToClock; cb: (a: PreviewAnswer) => void } | null = null;
-  private previewCb: ((a: PreviewAnswer) => void) | null = null;
-  private city = { population: 0, jobs: 0 };
+  private stations = new Newest<{ at: StationAt; platform: number }, [ok: boolean, issues: string[], cost: number]>();
+  private crossovers = new Newest<{ edge: number; x: number; y: number }, [a: CrossoverAnswer]>();
+  private previews = new Newest<(seq: number) => ToClock, [a: PreviewAnswer]>();
+  /** whether a preview is in flight (read by checks) */
+  private get previewBusy() { return this.previews.busy; }
   private epoch = NaN;
   private sawSlots = false;
   /** the last game load: where it came from and whether its save was converted to the world frame
@@ -492,7 +499,7 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     this.patchMode = q.get("patch") ?? "1";
-    this.worker.postMessage({ kind: "init", city: this.cityId, pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
+    this.worker.postMessage({ kind: "init", pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
     for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
     this.waiting = [];
   }
@@ -805,7 +812,7 @@ export class ClockClient {
     if (msg.state.net) msg.state.net.anchor = a;
     setMoneyState(msg.state.money);
     this.worldBefore = world.value;
-    world.value = toWorld(msg.state, this.city);
+    world.value = toWorld(msg.state);
     const es = this.earlyShares;
     this.earlyShares = null;
     if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line) });
@@ -988,36 +995,25 @@ export class ClockClient {
         break;
       }
       case "preview": {
-        this.previewBusy = false;
         // T-1001: a callback that throws still lets the preview waiting behind it go
-        try {
-          if (msg.stale) break;
+        this.previews.answered((cb) => {
+          if (msg.stale) return;
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
           if (msg.marks) this.toCurrentAnchor(msg.anchor, new Float64Array(0), msg.marks);
-          this.previewCb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
-        } finally {
-          const n = this.previewNext;
-          this.previewNext = null;
-          if (n) this.ask(n.msg, n.cb);
-        }
+          cb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, parts: msg.parts, arc: msg.arc, marks: msg.marks });
+        }, (q, cb) => this.ask(q, cb));
         break;
       }
       case "stationCheck": {
-        this.stationBusy = false;
-        this.stationCb?.(msg.ok, msg.issues, msg.cost);
-        const n = this.stationNext;
-        this.stationNext = null;
-        if (n) this.checkStation(n.at, n.platform, n.cb);
+        this.stations.answered((cb) => cb?.(msg.ok, msg.issues, msg.cost), (q, cb) => this.checkStation(q.at, q.platform, cb));
         break;
       }
       case "crossoverCheck": {
-        this.crossBusy = false;
-        for (const p of msg.parts) this.toCurrentAnchor(msg.anchor, new Float64Array(0), p);
-        this.crossCb?.(msg);
-        const n = this.crossNext;
-        this.crossNext = null;
-        if (n) this.checkCrossover(n.edge, n.x, n.y, n.cb);
+        this.crossovers.answered((cb) => {
+          for (const p of msg.parts) this.toCurrentAnchor(msg.anchor, new Float64Array(0), p);
+          cb?.(msg);
+        }, (q, cb) => this.checkCrossover(q.edge, q.x, q.y, cb));
         break;
       }
       case "snapshot":
@@ -1091,31 +1087,21 @@ export class ClockClient {
    * replaces a waiting one. */
   checkStation(at: StationAt, platform: number, cb: (ok: boolean, issues: string[], cost: number) => void) {
     this.lastPreviewAt = performance.now();
-    if (this.stationBusy) {
-      this.stationNext = { at, platform, cb };
-      return;
-    }
-    this.stationBusy = true;
-    this.stationCb = cb;
+    if (!this.stations.ask({ at, platform }, cb)) return;
     this.post({ kind: "previewStation", seq: ++this.seq, at, platform });
   }
 
   /** What a crossover on track `edge` near pack metres (x, y) would cost, or why not (T-338), with
    * its two diagonals to draw. One request in flight; a newer one replaces a waiting one. */
   checkCrossover(edge: number, x: number, y: number, cb: (a: CrossoverAnswer) => void) {
-    if (this.crossBusy) {
-      this.crossNext = { edge, x, y, cb };
-      return;
-    }
-    this.crossBusy = true;
-    this.crossCb = cb;
+    if (!this.crossovers.ask({ edge, x, y }, cb)) return;
     this.post({ kind: "previewCrossover", seq: ++this.seq, edge, x, y });
   }
 
   /** Drop a preview waiting to be sent, and the one in flight if it is not yet being worked out (a
    * drag was cancelled or finished, a run ended). */
   dropPreview() {
-    this.previewNext = null;
+    this.previews.waiting = null;
     this.staleInFlight();
   }
 
@@ -1123,21 +1109,18 @@ export class ClockClient {
   private previewSeq = 0;
   private previewStaleSent = false;
   private staleInFlight() {
-    if (!this.previewBusy || this.previewStaleSent) return;
+    if (!this.previews.busy || this.previewStaleSent) return;
     this.previewStaleSent = true;
     this.post({ kind: "previewStale", seq: this.previewSeq });
   }
 
   private ask(msg: (seq: number) => ToClock, cb: (a: PreviewAnswer) => void) {
     this.lastPreviewAt = performance.now();
-    if (this.previewBusy) {
-      this.previewNext = { msg, cb };
+    if (!this.previews.ask(msg, cb)) {
       // not yet started, or waiting for masks, it is dropped for this one (T-1039)
       this.staleInFlight();
       return;
     }
-    this.previewBusy = true;
-    this.previewCb = cb;
     this.previewSeq = ++this.seq;
     this.previewStaleSent = false;
     this.post(msg(this.previewSeq));

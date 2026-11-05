@@ -48,22 +48,22 @@ export interface DayLedger {
   points?: number;
 }
 
-/** One game hour's money, US$M (T-447); `hour` counts from day 0 00:00. */
-export interface HourLedger {
+/** One game hour's money, US$M (T-447); `hour` counts from day 0 00:00. The figures are `DayLedger`'s. */
+export interface HourLedger extends Omit<DayLedger, "day"> {
   hour: number;
-  fares: number;
-  running: number;
-  trains: number;
-  build: number;
-  /** upkeep (T-867), as in `DayLedger` */
-  upkeep?: number;
-  /** loan payments (T-2022) and old interest, as in `DayLedger` */
-  loan?: number;
-  interest?: number;
-  /** train rides taken (T-565), as in `DayLedger` */
-  rides?: number;
-  /** points earned (T-684), as in `DayLedger` */
-  points?: number;
+}
+
+/** An empty entry for game day `day` or hour `hour`. */
+export const newDay = (day: number): DayLedger => ({ day, fares: 0, running: 0, trains: 0, build: 0, rides: 0 });
+export const newHour = (hour: number): HourLedger => ({ hour, fares: 0, running: 0, trains: 0, build: 0, rides: 0 });
+
+/** Add (`sign` 1) or take away (-1) the figures a day's money and an hour's share: `e` into `to`. */
+export function addEntry(to: Omit<DayLedger, "day">, e: Omit<DayLedger, "day">, sign = 1): void {
+  to.fares += sign * e.fares;
+  to.running += sign * e.running;
+  to.upkeep = (to.upkeep ?? 0) + sign * (e.upkeep ?? 0);
+  to.rides = (to.rides ?? 0) + sign * (e.rides ?? 0);
+  to.points = (to.points ?? 0) + sign * (e.points ?? 0);
 }
 
 export interface SaveHeader {
@@ -172,7 +172,7 @@ export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffe
  * files do). Zones it names that the registry no longer has are `currentZones`' business (T-1053),
  * and which frame the track is in is the network bytes' (TWT5 world frame, TWT4 legacy, T-125).
  */
-export function isNortheastSave(h: SaveHeader): boolean {
+export function isThisWorld(h: SaveHeader): boolean {
   return h.city === registry.cities[0].id && (h.region === undefined || h.region === registry.world);
 }
 
@@ -313,8 +313,8 @@ export interface SlotSummary {
 }
 
 /** One city's panel in a save's picture (T-894): its registry id ("" for an unnamed panel over the
- * whole network), its stations, and where it is, as fractions of the picture's width and height. */
-/** `city`: a city id, or `WHOLE_PANEL` for the panel over everything built (T-2394) */
+ * whole network, or `WHOLE_PANEL` for the panel over everything built, T-2394), its stations, and
+ * where it is, as fractions of the picture's width and height. */
 export interface ThumbPanel { city: string; stations: number; x: number; y: number; w: number; h: number; }
 export const WHOLE_PANEL = "*";
 

@@ -34,7 +34,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
@@ -653,7 +653,16 @@ async function deletePlaying() {
 
 /** the empty network's save, for a new game (keeps the water mask) */
 let emptyTrack: Uint8Array | null = null;
-let moneyParams = [2.5, 2, 100, 9];
+/** the sim's money parameters (`money_params()`: an array by index) by name, the names of the
+ * `MoneyState` fields they fill; the first four are known before the model is up */
+function pricesOf(p: ArrayLike<number>) {
+  return {
+    carPrice: p[0], runCostCarKm: p[1], economy: p[2], runCostTrainKm: p[3], hsCarPrice: p[4], hsRunCostCarKm: p[5], hsRunCostTrainKm: p[6],
+    upkeepTrackKm: p[7], upkeepStation: p[8], upkeepSingle: p[9], upkeepHsr: p[10], busPrice: p[11], runCostBusKm: p[12], upkeepBusKm: p[13],
+    busRouteKm: p[14], upkeepViaductKm: p[15], upkeepCutKm: p[16], upkeepBoredKm: p[17], boatPrice: p[18], runCostBoatKm: p[19], upkeepPort: p[20], portPrice: p[21],
+  };
+}
+let prices = pricesOf([2.5, 2, 100, 9]);
 
 function send(msg: FromClock, transfer: Transferable[] = []) {
   postMessage(msg, { transfer });
@@ -689,11 +698,14 @@ const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
 
 /** the network, cash and fleet after the last load or edit */
-let kept: { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number } | null = null;
+type Kept = { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number };
+let kept: Kept | null = null;
+function modelNow(a: TrackApi): Kept {
+  return { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry() };
+}
 function keep() {
   try {
-    const a = api!;
-    kept = { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry() };
+    kept = modelNow(api!);
   } catch { /* the model is down; the next panic recovery says so */ }
 }
 
@@ -736,7 +748,7 @@ async function rebuildModel(fromKept: boolean) {
   const old = api!;
   let k = kept;
   if (!fromKept) {
-    try { k = { net: old.save(), cash: old.cash(), fleet: old.fleet(), fleetFast: old.fleet_fast(), fleetBus: old.fleet_bus(), fleetFerry: old.fleet_ferry() }; } catch { /* held: use what was kept */ }
+    try { k = modelNow(old); } catch { /* held: use what was kept */ }
   }
   if (!k) throw new Error("no network was kept");
   (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
@@ -1318,6 +1330,47 @@ const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow, pl
  * `?patch=0` reads them whole */
 const stateRows = new StateRows();
 
+/** an edge's points in local units (x, y, z each), made and kept if not yet */
+function drawnEdge(a: TrackApi, id: number): Float32Array {
+  let d = edgeDrawn.get(id);
+  if (!d) {
+    // T-1170: at a new anchor the kept mercator points move over; otherwise the track model's
+    let m = edgeMerc.get(id);
+    if (!m) {
+      const r = a.edge_render(id);
+      m = new Float64Array(r.length);
+      for (let k = 0; k < r.length; k += 3) {
+        const [mx, my] = toMerc01(...packLngLat(r[k], r[k + 1]));
+        m[k] = mx;
+        m[k + 1] = my;
+        m[k + 2] = r[k + 2];
+      }
+      edgeMerc.set(id, m);
+    }
+    d = localOf(m, 3);
+    edgeDrawn.set(id, d);
+    // the speeds are in no local unit: kept over an anchor move, so their pieces are too
+    if (!edgeSpeedDrawn.has(id)) edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
+  }
+  return d;
+}
+/** a line's first run, sampled, in local units (x, y each), made and kept if not yet */
+function drawnLine(a: TrackApi, id: number): Float32Array {
+  let d = lineDrawn.get(id);
+  if (!d) {
+    let m = lineMerc.get(id);
+    if (!m) {
+      const p = a.run_polyline(id, 0, SAMPLE_STEP);
+      m = new Float64Array(p.length);
+      for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
+      lineMerc.set(id, m);
+    }
+    d = localOf(m, 2);
+    lineDrawn.set(id, d);
+  }
+  return d;
+}
+
 function buildState(): ClockState {
   const tq0 = performance.now();
   const a = api!;
@@ -1325,29 +1378,7 @@ function buildState(): ClockState {
   stateRows.bind(a, frame);
   const edges = stateRows.edges(a);
   const drawn: Float32Array[] = [];
-  for (const { id } of edges) {
-    let d = edgeDrawn.get(id);
-    if (!d) {
-      // T-1170: at a new anchor the kept mercator points move over; otherwise the track model's
-      let m = edgeMerc.get(id);
-      if (!m) {
-        const r = a.edge_render(id);
-        m = new Float64Array(r.length);
-        for (let k = 0; k < r.length; k += 3) {
-          const [mx, my] = toMerc01(...packLngLat(r[k], r[k + 1]));
-          m[k] = mx;
-          m[k + 1] = my;
-          m[k + 2] = r[k + 2];
-        }
-        edgeMerc.set(id, m);
-      }
-      d = localOf(m, 3);
-      edgeDrawn.set(id, d);
-      // the speeds are in no local unit: kept over an anchor move, so their pieces are too
-      if (!edgeSpeedDrawn.has(id)) edgeSpeedDrawn.set(id, a.edge_render_speeds(id));
-    }
-    drawn.push(d);
-  }
+  for (const { id } of edges) drawn.push(drawnEdge(a, id));
   const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ups = upgradesOf(a);
@@ -1375,18 +1406,7 @@ function buildState(): ClockState {
   let nSamples = 0;
   for (const l of lines) {
     if (!l.ok) continue;
-    let d = lineDrawn.get(l.id);
-    if (!d) {
-      let m = lineMerc.get(l.id);
-      if (!m) {
-        const p = a.run_polyline(l.id, 0, SAMPLE_STEP);
-        m = new Float64Array(p.length);
-        for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
-        lineMerc.set(l.id, m);
-      }
-      d = localOf(m, 2);
-      lineDrawn.set(l.id, d);
-    }
+    const d = drawnLine(a, l.id);
     runs.push(d);
     lineTable.set([nSamples, d.length / 2, l.lengthM, SAMPLE_STEP], l.id * 4);
     nSamples += d.length / 2;
@@ -1477,12 +1497,12 @@ function entryIn<T extends { fares: number; running: number; trains: number; bui
 
 /** Game day `day`'s ledger entry; the ledger keeps LEDGER_DAYS days. */
 function dayEntry(day: number): DayLedger {
-  return entryIn(ledger, (d) => d.day, day, () => ({ day, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_DAYS);
+  return entryIn(ledger, (d) => d.day, day, () => newDay(day), LEDGER_DAYS);
 }
 
 /** The hour's entry in the hourly ledger (T-447); it keeps LEDGER_HOURS hours. */
 function hourEntry(hour: number): HourLedger {
-  return entryIn(hourLedger, (d) => d.hour, hour, () => ({ hour, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_HOURS);
+  return entryIn(hourLedger, (d) => d.hour, hour, () => newHour(hour), LEDGER_HOURS);
 }
 
 /** T-531: a region's entries for game day `day` and hour `hour`, made if missing. */
@@ -1490,8 +1510,8 @@ function regionEntries(zone: string, day: number, hour: number): [DayLedger, Hou
   let r = regions.get(zone);
   if (!r) regions.set(zone, (r = { days: [], hours: [] }));
   return [
-    entryIn(r.days, (d) => d.day, day, () => ({ day, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_DAYS),
-    entryIn(r.hours, (d) => d.hour, hour, () => ({ hour, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_HOURS),
+    entryIn(r.days, (d) => d.day, day, () => newDay(day), LEDGER_DAYS),
+    entryIn(r.hours, (d) => d.hour, hour, () => newHour(hour), LEDGER_HOURS),
   ];
 }
 
@@ -1500,7 +1520,7 @@ function regionNow(): RegionNow {
   const day = ledgerDay(moneyNow()), hour = Math.floor(moneyNow() / 3600), out: RegionNow = {};
   for (const [k, r] of regions) {
     const d = r.days[r.days.length - 1], h = r.hours[r.hours.length - 1];
-    if (d?.day === day) out[k] = { today: { ...d }, hour: h?.hour === hour ? { ...h } : { hour, fares: 0, running: 0, trains: 0, build: 0, rides: 0 } };
+    if (d?.day === day) out[k] = { today: { ...d }, hour: h?.hour === hour ? { ...h } : newHour(hour) };
   }
   return out;
 }
@@ -1508,12 +1528,12 @@ function regionNow(): RegionNow {
 /** T-531: the running lines' money by region for settling: each line's fare income tables and its
  * running cost per game hour at each demand level (as `running_cost`), with its local time. */
 function regionLines() {
-  const a = api!, li = a.lines_info(), unit = moneyParams[2] / 1e6;
+  const a = api!, li = a.lines_info(), unit = prices.economy / 1e6;
   const costs: { id: number; shift: number; run: number[]; tail: number[]; shares: [string, number][] }[] = [];
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue;
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
-    const [perTrainKm, perCarKm] = a.line_fast(id) ? [moneyParams[6], moneyParams[5]] : [moneyParams[3], moneyParams[1]];
+    const [perTrainKm, perCarKm] = a.line_fast(id) ? [prices.hsRunCostTrainKm, prices.hsRunCostCarKm] : [prices.runCostTrainKm, prices.runCostCarKm];
     const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit);
     costs.push({ id, shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
@@ -1570,7 +1590,7 @@ function mergeLedger<T extends { fares: number; running: number; trains: number;
     if (interest) (e as T).loan = (e.loan ?? 0) + interest;
     const k = at(e as T), d = by.get(k);
     if (!d) by.set(k, { ...e, rides: e.rides ?? 0, points: e.points ?? 0 } as T);
-    else { d.fares += e.fares; d.running += e.running; d.upkeep = (d.upkeep ?? 0) + (e.upkeep ?? 0); if (e.loan) d.loan = (d.loan ?? 0) + e.loan; d.trains += e.trains; d.build += e.build; d.rides = (d.rides ?? 0) + (e.rides ?? 0); d.points = (d.points ?? 0) + (e.points ?? 0); }
+    else { addEntry(d, e); if (e.loan) d.loan = (d.loan ?? 0) + e.loan; d.trains += e.trains; d.build += e.build; }
   }
   return [...by.values()].sort((a, b) => at(a) - at(b));
 }
@@ -1611,13 +1631,13 @@ function unsettleAfter(clockT: number): number {
     const fares = [...later, ...today].reduce((s, e) => s + e.fares, 0);
     const keep = { days: days.filter((d) => d.day <= D), hours: hours.filter((e) => e.hour <= H) };
     const d = keep.days.find((x) => x.day === D);
-    if (d) for (const e of today) { d.fares -= e.fares; d.running -= e.running; d.upkeep = (d.upkeep ?? 0) - (e.upkeep ?? 0); d.rides = (d.rides ?? 0) - (e.rides ?? 0); d.points = (d.points ?? 0) - (e.points ?? 0); }
+    if (d) for (const e of today) addEntry(d, e, -1);
     const carry = <T extends DayLedger | HourLedger>(list: T[], from: T[], at: (e: T) => number, key: number, make: () => T, cap: number) => {
       const trains = from.reduce((s, e) => s + e.trains, 0), build = from.reduce((s, e) => s + e.build, 0);
       if (trains || build) { const e = entryIn(list, at, key, make, cap); e.trains += trains; e.build += build; }
     };
-    carry(keep.days, later, (x) => x.day, D, () => ({ day: D, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_DAYS);
-    carry(keep.hours, laterH, (x) => x.hour, H, () => ({ hour: H, fares: 0, running: 0, trains: 0, build: 0, rides: 0 }), LEDGER_HOURS);
+    carry(keep.days, later, (x) => x.day, D, () => newDay(D), LEDGER_DAYS);
+    carry(keep.hours, laterH, (x) => x.hour, H, () => newHour(H), LEDGER_HOURS);
     return { ...keep, fares };
   };
   const net = trim(ledger, hourLedger);
@@ -1650,31 +1670,10 @@ function moneyState(): MoneyState {
     carsNeededFast: a.cars_needed_fast(),
     fleetBus: a.fleet_bus(),
     busesNeeded: a.buses_needed(),
-    busPrice: moneyParams[11],
-    runCostBusKm: moneyParams[12],
-    upkeepBusKm: moneyParams[13],
-    busRouteKm: moneyParams[14],
     fleetFerry: a.fleet_ferry(),
     boatsNeeded: a.boats_needed(),
-    boatPrice: moneyParams[18],
-    runCostBoatKm: moneyParams[19],
-    upkeepPort: moneyParams[20],
-    portPrice: moneyParams[21],
-    hsCarPrice: moneyParams[4],
-    hsRunCostCarKm: moneyParams[5],
-    hsRunCostTrainKm: moneyParams[6],
-    carPrice: moneyParams[0],
-    runCostCarKm: moneyParams[1],
-    runCostTrainKm: moneyParams[3],
-    upkeepTrackKm: moneyParams[7],
-    upkeepViaductKm: moneyParams[15],
-    upkeepCutKm: moneyParams[16],
-    upkeepBoredKm: moneyParams[17],
-    upkeepStation: moneyParams[8],
-    upkeepSingle: moneyParams[9],
-    upkeepHsr: moneyParams[10],
+    ...prices,
     upkeep: upkeepNow(),
-    economy: moneyParams[2],
     loan: loan && { ...loan },
     fares: { ...fares },
     runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
@@ -1958,8 +1957,6 @@ function saveBytes(): Promise<Uint8Array> {
   return encodeSave(header(), api!.save());
 }
 
-/** T-241: the saves list's picture of the network and its figures. Read at once, before anything
- * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
 // T-251: drawn at twice the size the saves list shows it (240 x 160, T-894), for sharp lines on high-density screens
 const THUMB_W = 480, THUMB_H = 320;
 /** T-894: one panel per city, the most stations first, at most four; fractions of the picture */
@@ -1973,6 +1970,8 @@ const THUMB_LAYOUTS: [number, number, number, number][][] = [
 const THUMB_GAP = 4, THUMB_PAD = 14, THUMB_TOP = 34;
 /** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
 let thumbShade: "light" | "dark" = "light";
+/** T-241: the saves list's picture of the network and its figures. Read at once, before anything
+ * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
 async function slotSummary(): Promise<SlotSummary> {
   // a save never waits long on them: without them a station takes the nearest centre's name
   await Promise.race([outlinesRead, new Promise((go) => setTimeout(go, 3000))]);
@@ -2000,12 +1999,7 @@ async function slotSummary(): Promise<SlotSummary> {
     const ei = a.edges_info();
     for (let i = 0; i < ei.length; i += 10) {
       const id = ei[i];
-      let d: ArrayLike<number> | undefined = edgeDrawn.get(id);
-      if (!d) {
-        const r = a.edge_render(id), out = new Float32Array(r.length);
-        for (let k = 0; k < r.length; k += 3) out.set([...packLocal(r[k], r[k + 1]), r[k + 2]], k);
-        d = out;
-      }
+      const d = drawnEdge(a, id);
       const xy = new Float32Array((d.length / 3) * 2);
       for (let k = 0, j = 0; k < d.length; k += 3, j += 2) { xy[j] = d[k]; xy[j + 1] = d[k + 1]; }
       track.push(xy);
@@ -2014,12 +2008,7 @@ async function slotSummary(): Promise<SlotSummary> {
     for (let i = 0; i < li.length; i += 22) {
       if (li[i + 2] !== 1) continue;
       const id = li[i];
-      let d: ArrayLike<number> | undefined = lineDrawn.get(id);
-      if (!d) {
-        const p = a.run_polyline(id, 0, SAMPLE_STEP), out = new Float32Array(p.length);
-        for (let k = 0; k < p.length; k += 2) out.set(packLocal(p[k], p[k + 1]), k);
-        d = out;
-      }
+      const d = drawnLine(a, id);
       routes.push({ colour: hex(li[i + 1]), xy: d });
     }
     type Box = [number, number, number, number];
@@ -2118,10 +2107,8 @@ function autosave(): Promise<boolean> {
   saveInFlight = (async () => {
     try {
       const day = Math.floor(gameNow() / 86400);
-      const t0 = performance.now();
       const bytesP = saveBytes(), summaryP = slotSummary();
       const bytes = await bytesP;
-      const encodeMs = performance.now() - t0;
       const summary = await summaryP;
       const at = Date.now();
       const name = newSlotName?.key === key ? newSlotName.name : undefined;
@@ -2144,7 +2131,7 @@ function autosave(): Promise<boolean> {
       savedAt = at;
       seenEdit = editAt;
       saveFailure = undefined;
-      send({ kind: "saved", at, bytes: bytes.length, encodeMs, totalMs: performance.now() - t0 });
+      send({ kind: "saved", at });
       await publishSlots();
       slotChanges?.postMessage({ key });
       return true;
@@ -2241,8 +2228,6 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         // Read after acquiring the guard: the previous owner may have saved just before release.
         const stored = await readStored(key);
         if (!stored) throw new Error("That save slot no longer exists.");
-        const decoded = await decodeSave(stored.bytes);
-        if (!isNortheastSave(decoded.header)) throw new Error("This save is for another world.");
         switching = true;
         loadingInto = key;
         const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; loadingInto = null; });
@@ -2302,7 +2287,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const h: SaveHeader = currentZones(fresh
     ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
     : decoded.header);
-  if (!isNortheastSave(h)) throw new Error("This save is for another world.");
+  if (!isThisWorld(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
   // T-1826: before any conversion, which would write only what this build read
   const unread = !fresh && (headerUnread(decoded.header, TrackApi.save_level()) || TrackApi.save_unread(track) > 0);
@@ -3438,7 +3423,7 @@ async function processMessage(msg: ToClock) {
       const model = newModel();
       loadHolidays();
       emptyTrack = model.save();
-      moneyParams = [...model.money_params()];
+      prices = pricesOf(model.money_params());
       void viewMasks(); // the view sent before the track model was up
       void worldWaterIntoModel();
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
@@ -3771,7 +3756,7 @@ async function handle(msg: ToClock) {
     lineRides = new Map((msg.lines ?? []).map((l) => [l.line, l.rides]));
   } else if (msg.kind === "regionShares") {
     lineShares = new Map(msg.lines.map((l) => [l.line, { fare: l.fare, ride: l.ride, run: l.run }]));
-    upkeepRegions = msg.upkeep ?? [];
+    upkeepRegions = msg.upkeep;
   } else if (msg.kind === "points") {
     linePoints = new Map(msg.lines.map((l) => [l.line, l.regions]));
   } else if (msg.kind === "star" && msg.share !== undefined) {
@@ -3833,9 +3818,9 @@ async function handle(msg: ToClock) {
     // a new demand result: the boarding account follows it (T-164), a few lines at a time, one
     // kind of day's riders a message (T-260)
     // an empty one clears the kind (an away day's once none is near, T-264)
-    if (peakC[msg.day ?? 0] && msg.packed.length >= PERIODS.length) peakC[msg.day ?? 0] = strengths(msg.packed.subarray(0, PERIODS.length));
-    api.set_riders(msg.packed, msg.day ?? 0);
-    if (msg.arrive) api.set_arrivals(msg.arrive, msg.day ?? 0);
+    if (peakC[msg.day] && msg.packed.length >= PERIODS.length) peakC[msg.day] = strengths(msg.packed.subarray(0, PERIODS.length));
+    api.set_riders(msg.packed, msg.day);
+    if (msg.arrive) api.set_arrivals(msg.arrive, msg.day);
     stepBoarding();
   } else if (msg.kind === "transfers") {
     // T-554: when riders changing lines reach their next platform; the account is unchanged.
@@ -3866,7 +3851,7 @@ async function handle(msg: ToClock) {
       : q.what === "upgradeCost" ? new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "platformCost" ? new Float64Array([api.platform_cost(new Uint32Array(q.nodes), q.platform)])
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
-      : q.what === "lineAccount" ? api.line_account(q.line, q.day ?? 0)
+      : q.what === "lineAccount" ? api.line_account(q.line, q.day)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)
       : q.what === "today" ? today()

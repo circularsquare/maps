@@ -123,10 +123,6 @@ export interface TrackNode {
 }
 
 export interface Save {
-  version: 0;
-  city: string;
-  /** game seconds since day 0 00:00 */
-  clock: number;
   /** US$ */
   cash: number;
   stations: StationInput[];
@@ -220,15 +216,6 @@ export function splitOf(trips: number, rail: number, walk: number, none: number)
   return { train: pct(rail), walk: pct(walk), drive: Math.max(0, 100 - pct(rail) - pct(walk) - n), none: n };
 }
 
-export interface CityStats {
-  name: string;
-  population: number;
-  jobs: number;
-  split: ModeSplit;
-  /** train share of trips by period, % */
-  trainShareByPeriod: [string, number][];
-}
-
 /** Construction totals. Cash, trains, fares and running costs: game/money.ts (T-028). */
 export interface MoneyStats {
   /** what is constructed cost, and what the blueprint would, US$ */
@@ -261,7 +248,6 @@ export interface WorldView {
   lineStats: Record<LineId, LineStats>;
   edges: TrackEdge[];
   nodes: Map<NodeId, TrackNode>;
-  city: CityStats;
   money: MoneyStats;
   canUndo: boolean;
   canRedo: boolean;

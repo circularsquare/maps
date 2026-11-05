@@ -20,7 +20,7 @@
 import init, { TrackApi } from "../wasm/track/sim";
 import { NEW_GAME_FRAME } from "../game/cities";
 import { EARTH_R, frameKindNumber } from "../game/frame";
-import { inRing, ringBox } from "../game/rings";
+import { inRing, noritetsuBases, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
 
 export type ToRouter =
@@ -78,7 +78,7 @@ let pageBase = "", graphBase = "";
 
 function regionOutlines(): Promise<Outline[]> {
   return (outlines ??= (async () => {
-    for (const b of [new URL("../noritetsu/", pageBase).href, "https://data.anita.garden/noritetsu/"]) {
+    for (const b of noritetsuBases(pageBase)) {
       try {
         const r = await fetch(b + "regions.json");
         const j = r.ok ? await r.json() : null;

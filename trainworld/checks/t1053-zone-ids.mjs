@@ -17,7 +17,7 @@ const gone = [...head].filter((z) => !have.has(z) && !(z in table));
 assert.deepEqual(gone, [], `zones removed since HEAD with no successor: ${gone.join(' ')}; run python trainworld/pipeline/zone_successors.py`);
 for (const [z, to] of Object.entries(table)) assert.ok(to === null || have.has(to) || to in table, `${z}'s successor ${to} is neither registered nor in the table`);
 
-const { zoneNow, currentZones, isNortheastSave } = await loadApp('src/workers/saveFile.ts');
+const { zoneNow, currentZones, isThisWorld } = await loadApp('src/workers/saveFile.ts');
 
 // zoneNow: registered ids as they are, removed ones through the table (chains too), else null
 const reg = new Set(['nyc', 'hfd', 'nhv']), at = (z) => reg.has(z);
@@ -58,7 +58,7 @@ const plain = { ...h, cities: ['nyc', 'hfd'], start: 'nyc', opened: ['nyc', 'hfd
 assert.deepEqual(currentZones(plain, now), plain);
 // legacy NYC saves (no world, no cities) and this world's open; another world's do not
 const world = JSON.parse(readFileSync(REG, 'utf8')).world;
-assert.ok(isNortheastSave({ ...h, region: undefined, cities: undefined }));
-assert.ok(isNortheastSave({ ...h, region: world }));
-assert.ok(!isNortheastSave({ ...h, region: world + '-other' }));
+assert.ok(isThisWorld({ ...h, region: undefined, cities: undefined }));
+assert.ok(isThisWorld({ ...h, region: world }));
+assert.ok(!isThisWorld({ ...h, region: world + '-other' }));
 console.log(`t1053 zone ids: PASS (${Object.keys(table).length} successors, ${head.size - [...head].filter((z) => have.has(z)).length} ids removed since HEAD)`);
