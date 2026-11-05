@@ -3,8 +3,8 @@
 A fourth level under L10, L3 and L1 (`docs/resolution.md`), so the map keeps sharpening past
 zoom 9: streets, bridges, ponds, river banks and single hillsides. **Stage 1 is built (T-038)**
 for New York and Cluj: land cover, OSM roads and bridges, the 1 km terrain factor, walking
-starts. Stages 2-4 are design. Which tiles get 100 m worldwide is **open**, for Anita's review
-("Where the fine level goes", T-047). Measurements: `notes/T-030.md`, `notes/T-038.md`,
+starts. Stages 2-4 are design. Which tiles get 100 m worldwide is the rule in "Where the fine
+level goes" (Anita approved it 2026-11-05; built as T-057). Measurements: `notes/T-030.md`, `notes/T-038.md`,
 `notes/T-047.md`.
 
 ## Grid
@@ -120,7 +120,7 @@ goes" keeps it to a few GB.
 
 ## Where the fine level goes
 
-**For Anita's review (T-047).** Measured on 42 sample tiles (`notes/T-047.md`): in each, the
+Measured on 42 sample tiles (`notes/T-047.md`): in each, the
 page's own search from five starts at 1 km and at 100 m, counting the share of the tile whose
 colour band changes or which only one level reaches.
 
@@ -139,7 +139,7 @@ whole 1 km pixel at road speed when a road crosses it, so rural times at 100 m a
 longer than the page shows now. That is fixed at 1 km for the whole world by our own surface
 with roads (T-010, T-028), much cheaper than 100 m everywhere.
 
-**Proposed rule:**
+**The rule:**
 
 | Tier | Test (from the 1 km layers) | Unit | Count | Size |
 |---|---|---|---|---|
@@ -149,9 +149,7 @@ with roads (T-010, T-028), much cheaper than 100 m everywhere.
 | everything else | stays at 1 km | | ~17,000 | |
 
 About **2.8 GB** with stage 2's elevation (towns ~1 MB a tile of area: class, roads, flat
-elevation; mountains ~1.5 MB: elevation is most of it). Wider choices: mountains from 50%
-rugged (2,022 tiles, ~3 GB more), or towns from 5% urban (9,595 blocks, ~0.6 GB in place of
-1.4). Quarter-degree blocks keep towns small: most of a 1 degree tile round a town is fields.
+elevation; mountains ~1.5 MB: elevation is most of it). Quarter-degree blocks keep towns small: most of a 1 degree tile round a town is fields.
 Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
 view stays at L1, as now.
 
@@ -197,7 +195,7 @@ world selection ~2.8 GB (R2's free tier is 10 GB of storage).
 | 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor. The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
 | 2 | T-039 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
 | 3 | T-050 | The canoe at L0.1: kind, bridge cells, river steps. | Paddling under bridges |
-| 4 | later | The tiles of "Where the fine level goes", once Anita has decided it. | |
+| 4 | T-057 | The tiles of "Where the fine level goes": towns and water country first, mountain tiles once stage 2 gives them elevation; roads from T-010's OSM pass. | 100 m round every town |
 
 ## Open
 

@@ -3,20 +3,20 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Where things stand (2026-10-26, end of session; paused by Anita).** Walking and canoe both
+**Where things stand (2026-11-05, work resumed after a pause from 2026-10-26).** Walking and canoe both
 work worldwide (L10 world, L3 and L1 view windows, 100 m in New York and Cluj). The canoe paddles
 rivers, lakes and sea with currents and carries overland; water danger is on with K = 1000 h and
 the hover shows survival. Corridors, a speeds panel, hill shading and river lines are on the page.
-Our own 1 km walking surface is built but not on the page. Smoke passes 15/15; all work committed,
-nothing running.
+Our own 1 km walking surface is built but not on the page. Smoke passed 15/15 at the pause.
 
-**Next up** (orchestrator's proposal; Anita has not picked yet): OSM roads at 1 km worldwide,
-fetched region by region since the planet won't fit on C: (T-010), then our own surface on the
-page (T-028), which fixes rural walking times 18-52% too short; then 10,000 BC land (T-012);
-then land danger (T-042). Open questions for Anita: `notes/for-anita.md`.
+**Next up** (Anita, 2026-11-05): OSM roads at 1 km worldwide, fetched region by region since
+the planet won't fit on C: (T-010), then our own surface on the page (T-028), which fixes rural
+walking times 18-52% too short; the 100 m tiles by T-047's rule from the same fetch (T-057);
+then land danger (T-042). 10,000 BC is for later. Open questions: `notes/for-anita.md`.
 
-Milestones answer Anita's question, "if you just have a canoe in 10,000 BC, how far can you
-get?", in order: the canoe in today's world, survival, then 10,000 BC.
+Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
+you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC moved to later
+(Anita, 2026-11-05: "not really that necessary").
 
 ## In progress
 
@@ -25,10 +25,16 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 ## M1: canoe, today
 
 - T-052 [P3] Canoe look: on canoe starts the blue river lines sit just under the corridors and weaken them (Amazon); pale corridors are low-contrast on the 1-4 h yellow band near the start; over uniform land (Sahara, steppe) corridor trunks fan out as straight rays along grid directions. Try fainter rivers on canoe starts and a darker corridor edge (notes/T-046 screenshots t046_*).
-- T-037 [P3] Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
+- T-037 [P3] taking, 2026-11-05. Window edge strip: with nearest resampling, the coarser canvas shows as a brighter strip (up to one coarser cell, ~5 px at zoom 9) along a finer window's north and south edges, since the hole is rounded inwards to whole canvas rows. Off screen once the view settles; fix by aligning hole rows to the finer window or painting the coarse edge row clear.
 - T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Once canoe routes show on the page (T-022), compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
 - T-036 [P3] Canoe: L1 river water no river step crosses (ponds and side channels HydroLAKES lacks, e.g. round the Danube mouth) has no canoe node, so it stays unreached and unpainted on a canoe start. Decide: still water when no step touches the patch, or leave (notes/T-022.md).
 - T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.
+
+## Roads and 100 m
+
+- T-010 [P1] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. Stage 1 (design and a Cluj / New York test, docs/roads.md, notes/T-010.md) taking, 2026-11-05; the world build after Anita's review.
+- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
+- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1.
 
 ## M2: survival
 
@@ -36,15 +42,9 @@ get?", in order: the canoe in today's world, survival, then 10,000 BC.
 - T-042 [P2] Land hazard band: a uint8 log-coded rate per cell in every level's tiles and the L10 grid (heat, cold, altitude, distance to water, ice; CHELSA climate; research/friction.md 6), read by walking and carrying (x their time) and by getting in and out; walking starts leave the walking-only loop. After T-006 stage 1 (docs/canoe.md 3).
 - T-043 [P3] Lake water temperature: lakes take the nearest sea's summer temperature for the cold factor of their wave hazard (docs/canoe.md 3), so a big cold lake far from a cold sea reads warm. Try ERA5 lake mix-layer temperature for lakes over ~100 km².
 
-## M3: 10,000 BC
-
-- T-012 [P2] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). After T-009.
-- T-010 [P2] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. After T-009.
-- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
-
 ## Later
 
-- T-047 [P1] Fine level only where it matters: design which 1-degree tiles get 100 m (cities, road-dense land, rugged terrain, straits and bridges) and which stay 1 km (flat farmland, desert, ice), with the world total under a few GB; for Anita's review. Design ready for Anita's review, docs/fine.md "Where the fine level goes" (notes/T-047.md).
+- T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
 - T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md).
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).

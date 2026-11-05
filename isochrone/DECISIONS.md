@@ -3,6 +3,15 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-11-05
+
+- **100 m goes where T-047's rule puts it** (Anita: "2.8gb seems reasonable. that rule seems
+  fine"): towns at 2% urban by quarter-degree block, mountains at 70% rugged, water country with
+  people. Not taken: mountains from 50% rugged (~3 GB more), towns from 5% urban (~0.8 GB less).
+- **10,000 BC moves to later** (Anita: "not really that necessary"); roads and 100 m come first.
+- **River lines go faint** (Anita: "they look like routes"); the stretches a canoe route paddles
+  are the ones drawn bright (T-052).
+
 ## 2026-10-26
 
 - **L0.1 windows sit on 0.05 degree steps**, not the 0.25 of L3 and L1: at zoom 12 the 0.25 steps
