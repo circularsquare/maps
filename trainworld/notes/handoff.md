@@ -45,8 +45,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2478 Vancouver: a failed boundary was kept dead for the page's life after 8800 rebuild 404s; now retried).
   New string: "worker 2: undefined" -> "worker 2: its code could not be downloaded". Filed T-2483 (8800 build swap:
   maps-17 rewrote scratch snapbuild.cmd to build into dist-new and swap; first use pending), T-2484, T-2499.
-- **loadfix** (Opus, tree .tw-trees/loadfix from 8e2bd280, 6196, ids T-2500..01): T-2499 reload cache miss, T-2459
-  worst case (Okinawa 18 min), T-2484 if room. Told to rebase onto ecac1167 (memhunt).
+- loadfix LANDED c8d22020 (T-2499: Chrome answered a Range request with a 200 holding only the range during a
+  whole-file download; clock worker sliced it empty and dropped the zone's bus street speeds/water mask/walks for the
+  session, so the network hash differed and reloads missed the cache; new workers/rangeFetch.ts. T-2459: Okinawa
+  842 s -> 13 s, figures bit-identical. T-2484 archived. Filed T-2500.) The same race likely explains the 2-trip
+  smoke wobble (598 vs 600) and diagshape's "water mask for nyc not loaded: RangeError": recheck after Europe.
 - simtidy LANDED fb674fba (T-2379: 10 exports to plain impls, 15 probes/833 lines, api.rs take instead of clone).
   **Watch:** dev smoke after it on the main tree gave 12,515,600 rail trips a day against 12,515,598 at build 956.
   The main data is mid-Europe-replan (market rows can move NYC's intercity a little), and api.rs's change was not

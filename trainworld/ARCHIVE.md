@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2459 Selected zone's cluster ahead during a load (2026-11-05, agent loadfix, tree): with the focus pool on the zone in view, the city view's zone's cluster goes first; all of Japan, Okinawa selected 842 -> 13 s, the clock 839 -> 160 s; settled figures identical. T-2500. notes/T-2459.md.
+- T-2484 Focus pool takes the selected zone next (2026-11-05, agent loadfix): not built; on the Tokyo save the focus pool finishes Tokyo at 25 s and Seoul already shows at 27 s from the main pool, so a second focus solve could not be sooner. notes/T-2459.md.
+- T-2499 Reload missed the demand cache (2026-11-05, agent loadfix, tree): Chrome answered a street-speed Range request with a 200 holding the range alone, read as the whole file, so buses ran at top speed and the cached network was one no reload makes; fixed (`rangeFetch.ts`, the load waits for street speeds); reloads hit. notes/T-2499.md.
+
 - T-2504 doc_lint knows `old/` folders' files (2026-11-05, maps-17): their names count as existing files, their code defines no live identifier; code-map's 83 false dead names gone.
 - T-2368 Cleanup A8, E code-map list, E1 checks part (2026-11-05, agent codemap): code-map.md matches the tree. Added 110 file entries (24 app, 23 sim, 27 pipeline, 9 tools, 27 checks) and 12 URL switches; removed 20 deleted-check entries; `src/ferry/` and 2 dead names fixed. doc_lint's remaining code-map findings are its `old/` skip (T-2504). Detail: notes/T-2359.md.
 - T-2379 Cleanup E2, sim small items (2026-11-05, agent simtidy, tree): 10 uncalled WASM exports now plain impls (track 1,427,793 -> 1,427,047 B, demand 1,678,773 -> 1,666,159 B), 15 finished ignored probes deleted (833 lines), `api.rs` clone gone, 3 slips fixed. Tests unchanged (361, 534). Detail: notes/T-2361.md stage 2.
