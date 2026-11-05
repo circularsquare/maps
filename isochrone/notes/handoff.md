@@ -30,7 +30,7 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 2. Then one region-by-region OSM pass for the 1 km roads (T-010 stage 2) and the 100 m tiles'
    roads (T-057), then T-028 (page on our own surface).
 3. Page queue, in this order since all touch index.html / js/paint.js: T-052 (in flight, now
-   with corridors yellow to dark red), T-061 instant hovers (resume the page agent), T-062
+   with corridors yellow to dark red), T-063 water paler (sent), T-061 instant hovers (resume the page agent), T-062
    corridors coloured by speed, T-060
    diagonal / hex look test, T-059 globe (MapLibre 5).
 4. T-042 land hazard. T-039 (90 m slopes) before T-057's mountain tiles.

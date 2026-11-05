@@ -3,6 +3,11 @@
 // L3 or L1 tiles round the view. Steps are joined into lines between confluences and smoothed
 // once, so the cell grid does not show as a staircase.
 
+// Look (T-052): faint, so the lines read as background and not as routes; the corridors draw the
+// paddled stretches brightly.
+const RIVER_COLOR = '#5b9bd5';
+const RIVER_OPACITY = 0.3, RIVER_OPACITY_SHUT = 0.14;
+
 const L10 = { W: 4320, deg: 1 / 12 };
 // level by zoom, the smallest discharge drawn (m³/s) by zoom, and the most tiles a view may load
 const TIER = z => z < 5 ? 10 : z < 7 ? 3 : 1;
@@ -107,8 +112,8 @@ export function riverLines(map, base, before) {
     map.addSource('rivers', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, tolerance: 0.3 });
     map.addLayer({ id: 'rivers', type: 'line', source: 'rivers', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-            'line-color': '#5b9bd5',
-            'line-opacity': ['case', ['==', ['get', 'shut'], 1], 0.3, 0.65],
+            'line-color': RIVER_COLOR,
+            'line-opacity': ['case', ['==', ['get', 'shut'], 1], RIVER_OPACITY_SHUT, RIVER_OPACITY],
             'line-width': ['interpolate', ['linear'], ['zoom'],
                 3, ['interpolate', ['linear'], ['get', 'lq'], 0, 0.4, 4, 1.6],
                 9, ['interpolate', ['linear'], ['get', 'lq'], 0, 1, 4, 3.5]],

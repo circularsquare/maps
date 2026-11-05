@@ -1,5 +1,8 @@
 # Archive
 
+- T-052 [P3] Canoe look. Done 2026-11-05: river lines faint on every start; corridors coloured dark red to yellow by strength with a dark casing, paddled stretches (and the hover route's paddled part) bright blue; the ray fan-out is T-056.
+- T-037 [P3] Window edge strip. Done 2026-11-05: `paint` makes up to 4 canvas rows per cell row (capped at 20 M pixels), so the hole cut for a finer window lands within a fraction of a cell of its edge; the strip is now about 1 px at zoom 9.
+
 - T-047 [P1] Fine level only where it matters. Done 2026-11-05: rule approved by Anita, towns, mountains and water country with people, ~2.8 GB (docs/fine.md "Where the fine level goes"); built as T-057. notes/T-047.md.
 - T-030 [P1] Finer than 1 km: design. Done 2026-10-26: docs/fine.md, a 100 m level from LC100, OSM roads and bridges, GLO-90; hexes rejected; Anita approved OSM and test regions, built as T-038; where it goes worldwide is T-047. notes/T-030.md.
 - T-046 [P1] Corridors. Done 2026-10-26: area-weighted path-tree counts drawn as pale lines by log(count), at L10 and in every window (coarse flux at edges, coarse lines where seeds own the window); a switch in the button row, default on. docs/corridors.md.

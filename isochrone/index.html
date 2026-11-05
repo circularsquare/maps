@@ -263,7 +263,7 @@ function addRelief(firstSymbol) {
                  'hillshade-highlight-color': 'rgba(255,255,255,0.5)', 'hillshade-accent-color': '#000' } },
         map.getLayer('water') ? 'water' : firstSymbol);
     import('./js/riverlines.js').then(m => {
-        rivers = m.riverLines(map, CANOE_BASE, map.getLayer('corridors') ? 'corridors' : firstSymbol);
+        rivers = m.riverLines(map, CANOE_BASE, map.getLayer('corridors-edge') ? 'corridors-edge' : firstSymbol);
         rivers.set(riversOn);
     });
 }
@@ -318,6 +318,19 @@ function quietBasemap() {
     }
 }
 
+// Corridor look (T-052). Colour by strength step s (0 faint to 7 most trips): dark red through
+// orange to yellow. Stretches the boat paddles (p = 1) are CORR_PADDLED. corrColor() is the one
+// place that picks a colour, so a second ramp (by speed, T-062) can slot in.
+const CORR_RAMP = ['#6e1414', '#9c1f17', '#c43a1a', '#e05a1c', '#f08019', '#f9a51c', '#fdc92a', '#ffe84a'];
+const CORR_PADDLED = '#4db8ff';
+const CORR_OPACITY = [0.55, 0.95];            // faintest and strongest step
+const CORR_EDGE = { color: '#000', opacity: 0.5, extra: 1.6 };   // casing: colour, opacity, px wider
+function corrColor() {
+    const ramp = ['interpolate', ['linear'], ['get', 's']];
+    CORR_RAMP.forEach((c, i) => ramp.push(i, c));
+    return ['case', ['==', ['get', 'p'], 1], CORR_PADDLED, ramp];
+}
+
 function addLayers() {
     quietBasemap();
     const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol');
@@ -331,13 +344,18 @@ function addLayers() {
     }
     // corridors: routes many trips share, stronger and wider the more they carry (s, 0-7)
     map.addSource('corridors', { type: 'geojson', data: EMPTY, tolerance: 0.2 });
-    map.addLayer({ id: 'corridors', type: 'line', source: 'corridors',
-        layout: { 'line-join': 'round', 'line-cap': 'round', visibility: corrOn ? 'visible' : 'none' },
-        paint: { 'line-color': '#f4f1ea',
-                 'line-opacity': ['interpolate', ['linear'], ['get', 's'], 0, 0.12, 7, 0.6],
-                 'line-width': ['interpolate', ['linear'], ['zoom'],
-                     2, ['interpolate', ['linear'], ['get', 's'], 0, 0.5, 7, 2.6],
-                     8, ['interpolate', ['linear'], ['get', 's'], 0, 1, 7, 4.5]] } },
+    const corrLayout = { 'line-join': 'round', 'line-cap': 'round', visibility: corrOn ? 'visible' : 'none' };
+    const corrWidth = extra => ['interpolate', ['linear'], ['zoom'],
+        2, ['+', extra, ['interpolate', ['linear'], ['get', 's'], 0, 0.5, 7, 2.6]],
+        8, ['+', extra, ['interpolate', ['linear'], ['get', 's'], 0, 1, 7, 4.5]]];
+    // a dark casing under each line, so pale and yellow trunks keep their edge on the yellow bands
+    map.addLayer({ id: 'corridors-edge', type: 'line', source: 'corridors', layout: corrLayout,
+        paint: { 'line-color': CORR_EDGE.color, 'line-opacity': CORR_EDGE.opacity, 'line-width': corrWidth(CORR_EDGE.extra) } },
+        firstSymbol && firstSymbol.id);
+    map.addLayer({ id: 'corridors', type: 'line', source: 'corridors', layout: corrLayout,
+        paint: { 'line-color': corrColor(),
+                 'line-opacity': ['interpolate', ['linear'], ['get', 's'], 0, CORR_OPACITY[0], 7, CORR_OPACITY[1]],
+                 'line-width': corrWidth(0) } },
         firstSymbol && firstSymbol.id);
     // the route to the pointer: paddled solid, carried dashed, walked solid
     map.addSource('route', { type: 'geojson', data: EMPTY });
@@ -346,7 +364,7 @@ function addLayers() {
         paint: { 'line-color': '#000', 'line-width': 3.5, 'line-opacity': 0.45 } });
     map.addLayer({ id: 'route', type: 'line', source: 'route', filter: ['!=', ['get', 'kind'], 1],
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#fff', 'line-width': 1.4 } });
+        paint: { 'line-color': ['case', ['==', ['get', 'kind'], 2], CORR_PADDLED, '#fff'], 'line-width': 1.4 } });
     map.addLayer({ id: 'route-carry', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 1],
         paint: { 'line-color': '#fff', 'line-width': 1.4, 'line-dasharray': [2, 1.5] } });
     addRelief(firstSymbol && firstSymbol.id);
@@ -430,7 +448,8 @@ corrBtn.classList.toggle('active', corrOn);
 corrBtn.onclick = () => {
     corrOn = !corrOn;
     corrBtn.classList.toggle('active', corrOn);
-    if (map.getLayer('corridors')) map.setLayoutProperty('corridors', 'visibility', corrOn ? 'visible' : 'none');
+    for (const id of ['corridors', 'corridors-edge'])
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', corrOn ? 'visible' : 'none');
     worker.postMessage({ type: 'corridors', on: corrOn });
     drawCorridors();
 };
@@ -474,7 +493,7 @@ function drawCorridors() {
             let parts = [[]];
             for (let j = c.off[i]; j < c.off[i + 1]; j++) parts[0].push([c.xy[2 * j], c.xy[2 * j + 1]]);
             if (h) for (const sh of [-360, 0, 360]) parts = parts.flatMap(p => clipOut(p, h.west + sh, h.east + sh, h.south, h.north));
-            for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] },
+            for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] & 7, p: c.s[i] >> 3 },
                 geometry: { type: 'LineString', coordinates: p } });
         }
     }

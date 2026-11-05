@@ -6,6 +6,7 @@ import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_GRID, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
 
 export const STEPS = 8;      // strength steps; a polyline is a run of one step
+export const PADDLED = 8;    // added to a line's step when it runs on the canoe layer (the boat paddles it)
 // Threshold: this share of all the area reached at L10, the same at every level. A lower one in
 // windows draws each coarse edge's flux across the window as its own straight line.
 const SHARE = 0.002;
@@ -217,7 +218,9 @@ export function lines(L, canoe, world, coarser) {
     for (let i = 0; i < nr; i++) { const n = reach[i]; if (kept(n)) stack[nk++] = n; }
     for (let i = 0; i < nk; i++) nch[par[stack[i]]]++;
     // an edge continues the line of the edge before it when that is the only kept edge on, of one step
-    const cont = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n); };
+    // and of the same kind: on the canoe layer (paddled) or not, sent as step + PADDLED (T-052)
+    const paddled = (n) => canoe && n >= N ? PADDLED : 0;
+    const cont = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n) && paddled(p) === paddled(n); };
     for (let i = 0; i < nk; i++) { const n = stack[i]; if (cont(n)) flag[par[n]] = 1; }
     const xy = [], off = [0], s = [];
     const cellOfNode = (n) => n < N ? n : cellOf[n - N];
@@ -225,7 +228,7 @@ export function lines(L, canoe, world, coarser) {
         const n = stack[i];
         if (flag[n]) continue;
         // from a line's tip up to where it joins
-        const st = step(n);
+        const st = step(n) + paddled(n);
         let cur = n, cell = cellOfNode(n);
         let x = lngOf(L, cell), y = latOf(L, cell);
         const pts = [x, y];

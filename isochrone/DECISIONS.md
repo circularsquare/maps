@@ -5,6 +5,8 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Window edge strip fixed by more canvas rows, not by moving the hole** (T-037). `paint` makes up to 4 canvas rows per cell row (capped at 20 M pixels, so L10 gets 2), because rounding the hole outwards opens a gap and inwards doubles the colour; a hairline of about 1 px remains. Revisit if memory on phones matters.
+
 - **100 m goes where T-047's rule puts it** (Anita: "2.8gb seems reasonable. that rule seems
   fine"): towns at 2% urban by quarter-degree block, mountains at 70% rugged, water country with
   people. Not taken: mountains from 50% rugged (~3 GB more), towns from 5% urban (~0.8 GB less).

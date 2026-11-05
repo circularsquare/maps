@@ -3,13 +3,18 @@ import { cfg } from './config.js';
 
 // RGBA pixels, linear in Web Mercator y (how MapLibre stretches an image between its
 // corners), one canvas column per cell column.
+const MAX_PIXELS = 20e6;
 const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
 export function paint(L) {
     const { W, H, dist, north, south } = L;
     const { bands, alpha } = cfg;
     const yTop = merc(north), yBot = merc(south);
     const lonRad = W * L.cellDeg * Math.PI / 180;
-    const cw = W, ch = Math.max(1, Math.min(8192, Math.round(cw * (yTop - yBot) / lonRad)));
+    const cw = W, ch0 = Math.max(1, Math.round(cw * (yTop - yBot) / lonRad));
+    // Several canvas rows per cell row, so the hole the page cuts for a finer window (whole canvas
+    // rows) lands within a fraction of a cell of the window's edge (T-037). Capped by pixel count.
+    const sub = Math.max(1, Math.min(4, Math.floor(MAX_PIXELS / (cw * ch0))));
+    const ch = Math.max(1, Math.min(8192, ch0 * sub));
     const px = new Uint8ClampedArray(cw * ch * 4);
     const edges = bands.map(b => b.h), cols = bands.map(b => b.color);
     const nb = edges.length;
