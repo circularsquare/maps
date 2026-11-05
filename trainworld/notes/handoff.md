@@ -23,9 +23,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   zone_successors --set, smoke, docs), report. Kit: old scratch\europe; notes/T-2302.md has PIDs and restart
   commands. Backup data/work/pre-T2302/pre; undo `tools/country/restore.py T2302 pre --go`. Its background wait died
   in the 10:05 VS Code restart and was re-set by message.
-- **loadbar** (agent a51952333953d7ac7, Opus, tree .tw-trees/loadbar from 88ea32a6, port 6194): T-2557 (does Anita's
-  North America save's import+reload hit the demand cache? loadnotes saw bubbles only at ~193 s) and T-2552 (load bar
-  model: 97% early then creeps, other zones' bars sit at 99%, "A few seconds left" for 22 s).
+- loadbar LANDED ab95782c (records 40bdc6a0): T-2552 bar steady (never >20 s on a percent; t2552-load-bar.mjs in
+  smoke), T-2557 the reload does hit the cache (loadnotes' run had cacheWrites off). Filed T-2559 (old saves' first
+  reload misses: fare base rounding), T-2560.
+- **cachecard** (agent a89d9e3c777e837e0, Opus, tree .tw-trees/cachecard from 40bdc6a0, port 6194): T-2560 on a cache
+  hit the card stays up to the fresh final (~187 s vs hit at ~28 s on her NA save); make it playable at the hit,
+  keeping T-347's edit hold.
 
 - **diagrivers** (agent a1fd51edf9f661771, Opus, tree .tw-trees/diagrivers from 2c951d73, port 6193): T-2528 dial
   default 0.5 (Anita: "i kidna like 0.5"), water width follows the drawn land (Hudson/East River ~1/4 of Manhattan,
