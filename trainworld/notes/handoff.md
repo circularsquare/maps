@@ -31,8 +31,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **europe** (Opus, main tree, pack lock, port 6197, ids T-2479..80): T-2302 Europe replan per notes/T-1189.md "Next";
   go given if the dry counts match 628 -> 462 (399 removed, 233 new). It messages maps-17 when a browser gate starts
   and ends: land trees only between gates.
-- **uismall2** (Opus, tree .tw-trees/uismall2, 6195, ids T-2481..82): T-2473 tutorial text stays greyed, T-2474 track
-  setting carries to new track, T-2475 expected profit ticking (explain, steady if noise), T-2477 no camera snap.
+- uismall2 LANDED 0e50cf65 (T-2473, T-2474, T-2475 profit = whole local day of its kind, T-2477, T-2487 titles).
+  Not on 8800 yet.
 - **loadwait** (Opus, tree .tw-trees/loadwait, 6196, ids T-2483..84): T-2476 worst-case demand wait, T-2478 Vancouver.
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
@@ -42,7 +42,6 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   landing: zone borders as layout lines (virtual nodes along real boundaries), plus her fallback (hull, 2-3 pitch
   clearance); all built zones and neighbours. Anita: T-2464 "mostly just hugging the lines"; wants her idea answered
   plainly ("make sure i read it").
-- uismall2 also has T-2487 (money plot titles name the scope).
 - Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
 
 ## Next
