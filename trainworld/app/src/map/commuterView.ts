@@ -55,6 +55,13 @@ const focusShown = signal(false);
 export const bubblesWaiting = computed(() => display.value.commuters && !cityOverview.value && selection.value?.kind !== "commuters"
   && viewedZone.value !== null && viewedZone.value === activeCity.value && !focusShown.value && !!demandView.value
   && !loadFailure.value && !zoneFailures.value.has(activeCity.value));
+/** T-1216, T-2523: a bubble selection whose far end is still to come; never where demand or the zone failed to
+ * load, which leaves the answer never coming */
+export const farWaiting = computed(() => {
+  const sel = selection.value, pick = commuterPick.value;
+  const failed = !!loadFailure.value || zoneFailures.value.has(activeCity.value);
+  return sel?.kind === "commuters" && !failed && (pick?.sel !== sel || !pick.far);
+});
 const RETRY_MS = 1000, RETRY_MAX_MS = 8000;
 /** T-2271: a bubble hover's mode bar is a quarter of the tag wide at 10 trips or fewer, the whole
  * tag at 100,000 or more, log scaled between */
@@ -1031,12 +1038,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     refreshPick();
   });
   // T-1216: the selected bubbles' loading mark, until their far end is drawn (the inspector's spinner
-  // covers the longer trips); none where demand or the zone failed to load, which leaves the answer never coming
-  effect(() => {
-    const sel = selection.value, pick = commuterPick.value;
-    const failed = !!loadFailure.value || zoneFailures.value.has(activeCity.value);
-    view.setLoading(sel?.kind === "commuters" && !failed && (pick?.sel !== sel || !pick.far));
-  });
+  // covers the longer trips)
+  effect(() => view.setLoading(farWaiting.value));
   // a new end in the settings drops a selection of the other end
   effect(() => {
     const d = display.value;

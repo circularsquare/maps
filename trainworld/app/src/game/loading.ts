@@ -11,6 +11,7 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { isMemoryFailure } from "./loadText";
+import { leftText } from "./loadBar";
 import { clock } from "./clock";
 import { cityById, type CityId } from "./cities";
 
@@ -159,6 +160,32 @@ export function loadFailed(why: string) {
 let aliveAt = performance.now();
 export const markAlive = () => { aliveAt = performance.now(); };
 export const lastAlive = () => aliveAt;
+
+/** T-2524: when the demand pool's loading last took a step (a pack's bytes or opening, a worker's result
+ * or other report, never a query's answer): a bar or note says it has stalled after STALL_MS without one */
+let stepAt = performance.now();
+export const markStep = () => { stepAt = performance.now(); };
+export const lastStep = () => stepAt;
+/** (`?stallMs=N` sets it, for checks) */
+export const STALL_MS = Number(typeof location === "undefined" ? 0 : new URLSearchParams(location.search).get("stallMs")) || 90_000;
+/** T-2524: what each zone of `zoneLoads` is waiting on (the stage, game/loadBar.ts `STAGE_TEXT`) and the time
+ * still expected, ms, as of `at` (performance.now()); null while there is no estimate */
+export interface ZoneStep { step: string; leftMs: number | null; at: number }
+export const zoneSteps = signal<ReadonlyMap<CityId, ZoneStep>>(new Map());
+/** T-2524: the running whole solve's time still expected (a load's, or the same network solved again after
+ * a cached result), as of `at`; null when no such solve runs or there is no estimate */
+export const solveLeft = signal<{ version: number; leftMs: number; at: number } | null>(null);
+/** The quiet since the last step, ms, once it is STALL_MS or more; else 0. */
+export const stalledMs = (now = performance.now()) => (now - stepAt >= STALL_MS ? now - stepAt : 0);
+/** T-2524: a load's hover lines after its name: the stage, then the time left counted down from `at`, or once
+ * nothing has arrived for STALL_MS, how long it has been */
+export function loadLines(z: { step?: string; leftMs: number | null; at: number } | undefined, now = performance.now()): string[] {
+  const out = z?.step ? [z.step] : [];
+  const quiet = stalledMs(now);
+  if (quiet) out.push(`No progress for ${quiet < 60_000 ? `${Math.floor(quiet / 10_000) * 10} s` : `${Math.floor(quiet / 60_000)} min`}`);
+  else if (z && z.leftMs !== null) out.push(leftText(Math.max(0, z.leftMs - (now - z.at))));
+  return out;
+}
 
 /** T-950: the demand pool's own stop (workers/demandClient.ts), so a failure found outside it ends
  * its work too */

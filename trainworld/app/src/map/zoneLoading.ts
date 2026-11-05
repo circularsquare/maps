@@ -15,7 +15,7 @@ import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
-import { loadFailure, mapBlank, zoneLoads } from "../game/loading";
+import { loadFailure, loadLines, mapBlank, zoneLoads, zoneSteps } from "../game/loading";
 import { nearbyZones } from "../game/zones";
 import { zoneShown } from "../game/realms";
 import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
@@ -106,21 +106,33 @@ export function startZoneLoading(map: MlMap): () => void {
     }
     (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(fc);
     const cardUp = loadingCardShown();
-    const shown = cardUp ? new Map<CityId, number>() : barsShown();
-    for (const [id, el] of bars) if (!shown.has(id)) { render(null, el); el.remove(); bars.delete(id); }
-    for (const [id, f] of shown) {
+    shownBars = cardUp ? new Map<CityId, number>() : barsShown();
+    for (const [id, el] of bars) if (!shownBars.has(id)) { render(null, el); el.remove(); bars.delete(id); }
+    for (const id of shownBars.keys()) {
       shape(id);
-      let el = bars.get(id);
-      if (!el) {
-        el = document.createElement("div");
-        el.className = "zone-load";
-        layer.appendChild(el);
-        bars.set(id, el);
-      }
-      const tip = `Loading ${cityById(id).name}, ${Math.floor(f * 100)}%`;
+      if (bars.has(id)) continue;
+      const el = document.createElement("div");
+      el.className = "zone-load";
+      layer.appendChild(el);
+      bars.set(id, el);
+    }
+    fill();
+    place();
+    // T-2524: the time left counts down and a stall shows with nothing arriving, so the hovers are written
+    // again each second while a bar is up
+    if (bars.size && !ticker) ticker = window.setInterval(fill, 1000);
+    else if (!bars.size && ticker) { clearInterval(ticker); ticker = 0; }
+  };
+  let ticker = 0, shownBars = new Map<CityId, number>();
+  /** each bar's fill and hover */
+  const fill = () => {
+    const now = performance.now(), steps = zoneSteps.peek();
+    for (const [id, f] of shownBars) {
+      const el = bars.get(id);
+      if (!el) continue;
+      const tip = [`Loading ${cityById(id).name}, ${Math.floor(f * 100)}%`, ...loadLines(steps.get(id), now)].join("\n");
       render(h(LoadBar, { fraction: f, step: tip, thin: true, tip }), el);
     }
-    place();
   };
 
   const add = () => {
@@ -150,6 +162,7 @@ export function startZoneLoading(map: MlMap): () => void {
     const ids = new Set(loads.keys());
     if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id) && zoneShown(id)) ids.add(id);
     loadingCardShown(); // the bars follow the card
+    zoneSteps.value; // and their hovers the stage and time left
     const blank = mapBlank.value; // T-1051: no grey either while a game loads
     // T-350: only the zone in view takes the fill: every other zone already lies under the outside
     // shade (map/cityBoundaries.ts), which is this same grey, and stacking would darken it
@@ -174,6 +187,7 @@ export function startZoneLoading(map: MlMap): () => void {
     map.off("resize", place);
     map.off("moveend", repick);
     for (const el of bars.values()) render(null, el);
+    if (ticker) clearInterval(ticker);
     box.remove();
     if (map.getLayer(SHADE)) map.removeLayer(SHADE);
     if (map.getSource(SHADE)) map.removeSource(SHADE);

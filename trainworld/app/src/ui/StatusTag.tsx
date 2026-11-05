@@ -2,17 +2,20 @@
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
 // Its hover says more.
 
-import { computed } from "@preact/signals";
-import { demandBehindFrom, demandScope, demandSolving, demandView, focusZones, refiningZone, viewRecomputing } from "../game/demand";
+import { computed, effect, signal } from "@preact/signals";
+import { demandBehindFrom, demandScope, demandSolving, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
-import { activeCity, cityById, viewedZone } from "../game/cities";
+import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
+import { STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
-import { cityNames,demandIdle, demandStopped, loadFailure, loadProgress, zoneFailures } from "../game/loading";
+import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, solveLeft, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
+import { selection } from "../game/ui";
+import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
-import { bubblesWaiting } from "../map/commuterView";
+import { bubblesWaiting, farWaiting } from "../map/commuterView";
 
 /** T-2409: whole game days since the oldest edit no final covers, while figures in play still miss it
  * (a line with no riders or old ones, or the zone in view recomputing); 0 otherwise. A computed, so
@@ -30,6 +33,47 @@ function recomputing(): string {
   const n = scope && !refiningZone.value ? demandSolving.value?.size ?? scope : 0;
   return n > 1 ? `Trips in ${count(n)} cities being recomputed…` : "Trips here being recomputed…";
 }
+
+/** T-2523: the zone a clicked thing's panel is still waiting on (a bubble's far end, a trip, a city's trips), or null */
+const clickWait = computed<CityId | null>(() => {
+  const sel = selection.value;
+  if (farWaiting.value) return activeCity.value;
+  if (sel?.kind === "trip" && sel.to) {
+    const v = tripView.value;
+    return v?.trip || v?.market || v?.failed ? null : activeCity.value;
+  }
+  if (sel?.kind === "city" && !demandIdle.value && (zoneLoads.value.has(sel.city) || !intercityDemand.value)) return sel.city;
+  return null;
+});
+
+/** T-2523: what that wait is on, in the words of the load's stages: the zone's packs, its own solve during a
+ * load (the focus pool), an edit's solve or a whole solve */
+function waitText(zone: CityId): string {
+  const name = cityById(zone).name;
+  if (zoneSteps.value.get(zone)?.step === STAGE_TEXT.data) return `Loading ${name}…`;
+  if (focusZones.value.get(zone) === false) return `Calculating trips in ${name}…`;
+  if (!demandUpdating.value) return "Loading data…";
+  if (demandBehindFrom.value !== null) return "Calculating trips after your change…";
+  const scope = demandScope.value;
+  const n = scope && !refiningZone.value ? demandSolving.value?.size ?? scope : 0;
+  return n > 1 ? `Calculating trips in ${count(n)} cities…` : `Calculating trips in ${name}…`;
+}
+
+/** its hover: the time left of a whole solve (or the zone's own load), or that nothing has come for a while */
+function waitTip(zone: CityId): string {
+  second.value;
+  const z = zoneSteps.value.get(zone);
+  const left = z ?? (focusZones.value.get(zone) === false ? undefined : solveLeft.value ?? undefined);
+  return loadLines(left ? { leftMs: left.leftMs, at: left.at } : undefined).join("\n");
+}
+/** a second's tick while a click waits, so its hover counts down */
+const second = signal(0);
+let ticking = 0;
+effect(() => {
+  const on = clickWait.value !== null;
+  if (on && !ticking) ticking = window.setInterval(() => second.value++, 1000);
+  else if (!on && ticking) { clearInterval(ticking); ticking = 0; }
+});
 
 export function StatusTag() {
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
@@ -49,6 +93,8 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? "Loading data…"
+    // T-2523: a click whose answer waits says what the game is working on
+    : clickWait.value ? waitText(clickWait.value)
     : behindDays.value >= 1 ? (behindDays.value === 1 ? "Calculation 1 day behind" : `Calculation ${count(behindDays.value)} days behind`)
     // T-1851: every case where the trips in view are rough, early, from before an edit or on their way
     // say one thing; once the zone in view is final, other zones still solving show nothing
@@ -58,6 +104,7 @@ export function StatusTag() {
   const base = (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
+    : clickWait.value ? waitTip(clickWait.value)
     : "");
   const tip = [base, clock.capped.value ? `Time capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
   return <div class="status-tag" role="status" data-tip={tip}>

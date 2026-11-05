@@ -251,9 +251,15 @@ riders counters keep their own smoothing (Live feel).
   like an unselected one. Only the zone in view gets the loading fill (over the basemap, under the
   labels and the network, whether or not a demand view is on); every other loading zone already lies
   under the outside shade, and a second fill would darken it. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,
-  filling as it loads (hover "Loading Toronto, 40%"; the top bar's load for the zones in it, a
+  filling as it loads (the top bar's load for the zones in it, a
   loaded game's zone still solving its solve's rounds and time against its expected final, else
-  the zone's own download and opening). At most 3 bars show at once: the zone in view, then the
+  the zone's own download and opening). Its hover [T-2524] is "Loading Toronto, 40%", then the
+  stage it waits on ("Loading city data", or "Calculating demand" once its pack is open and the solve
+  covering it runs), then the time left as the loading card words it ("About 2 min left", counted
+  down each second; the top bar's load's for its zones, the running whole solve's for a zone it holds
+  up, none for a zone's own download). When no step of any load has come for 90 s (a pack's bytes or
+  opening, a demand worker's result or report, never a query's answer; `game/loading.ts` `STALL_MS`,
+  `?stallMs=N`), "No progress for 1 min" in whole minutes takes the time left's place. At most 3 bars show at once: the zone in view, then the
   loading zones whose centres are nearest the map's centre, chosen again when the map stops moving [T-939]. A loading zone has no bubble in the zoomed-out overview, and the city inspector says "Calculating
   demand." for it [T-421]. The grey and bar go in one step when the figures arrive. A
   zone re-solving after an edit keeps its figures and is not grey. The bars hide while the startup

@@ -1177,6 +1177,18 @@ registry centre and zoom, or over New York with none [T-310].
   has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with
   no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in
   view always arrive.
+- **A click that waits** [T-2523]: a bubble selection whose far end has not come, a trip the explorer
+  is working out, or a city picked in the overview that is loading or has no trips to other places yet,
+  puts the status (after the cases above, before "Calculation 1 day behind") on what it waits for:
+  "Loading Boston…" while that zone's packs load, "Calculating trips in New York…" while a game load
+  solves the zone in view on its own (the focus pool), "Calculating trips after your change…" while an
+  edit's solve runs, "Calculating trips in 81 cities…" while a whole solve runs (the zones it still
+  has to finish, as "Trips in 81 cities being recomputed…" counts them; the zone's name for one), and
+  "Loading data…" with no solve running. Its hover has the time left as the loading card words it
+  (the zone's load's, else the running whole solve's; none for the zone's own solve), counted down each
+  second, or "No progress for 1 min" after 90 s with nothing arriving, as a zone's bar has it
+  ([ui-demand-views.md](ui-demand-views.md)). While the loading card is up it says the same in the
+  middle of the map, and the status shows nothing.
 - If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
   without demand, and takes every key until one is pressed. If the game itself never started (the
   clock worker failed to start, or the page's setup threw before its end), it has Try again alone

@@ -65,7 +65,7 @@ import {
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
-import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, onLoadStop, startup, takeGameLoadHold, zoneFailures, zoneLoads } from "../game/loading";
+import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, onLoadStop, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
@@ -1472,6 +1472,7 @@ class DemandClient {
       chunks.push(value);
       d.got += value.length;
       markAlive();
+      markStep();
       this.progressSoon();
     }
     // a compressed response's length is not its body's: the body is what was downloaded
@@ -1857,12 +1858,31 @@ class DemandClient {
   private zoneProgress() {
     const shown = cityDemandViews.peek(), now = performance.now();
     const next = new Map<CityId, number>();
+    const steps = new Map<CityId, ZoneStep>();
+    const load = loadProgress.peek();
+    const s = this.cur;
+    // T-2524: the time a whole solve with the barrier still needs (a load's, or a cached result's network
+    // solved again), for the zones it holds up and the note of a click waiting on it
+    const st = s && s.published < ROUNDS && !this.failed && (this.unsettled?.size || s.barrier)
+      ? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stopCount(s.svc), "all"), loadPace().later, now, PERIODS.length, solveWaves)
+      : null;
+    const was = solveLeft.peek();
+    const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, st.left, was ? now - was.at : 0), at: now } : null;
+    // (an estimate that only counts down is not worth a render: the bars and the note count down between)
+    const ends = (a: { leftMs: number | null; at: number }, b: { leftMs: number | null; at: number }) => (a.leftMs === null) === (b.leftMs === null) && Math.abs((a.at + (a.leftMs ?? 0)) - (b.at + (b.leftMs ?? 0))) < 1000;
+    if (!left || !was || left.version !== was.version || !ends(left, was)) solveLeft.value = left;
+    const sl = solveLeft.peek();
+    const solving: ZoneStep = { step: STAGE_TEXT.demand, leftMs: sl?.leftMs ?? null, at: sl?.at ?? now };
     let moving = false;
     for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
       if (isMarket(id) || shown.has(id) || next.has(id) || this.unsettled?.has(id) || this.failed) continue;
       let f: number;
-      if (this.job?.cities.includes(id)) f = this.job.best;
-      else {
+      if (this.job?.cities.includes(id)) {
+        f = this.job.best;
+        steps.set(id, { step: load?.step ?? STAGE_TEXT.data, leftMs: load?.leftMs ?? null, at: now });
+      } else {
+        // (open and in the running solve: waiting for that, whatever its share says; else for the packs)
+        steps.set(id, this.isOpen(id) && st && s?.cities.includes(id) ? solving : { step: STAGE_TEXT.data, leftMs: null, at: now });
         let got = 0, total = 0, at = Infinity;
         for (const file of [`${id}.json`, `${id}.bin`]) {
           const d = this.downloads.get(file);
@@ -1882,19 +1902,20 @@ class DemandClient {
     }
     // T-421: a game load's zones still solving after its card went at the view's final, until theirs
     // lands (through any newer solve: they have no final figures yet)
-    const s = this.cur;
-    if (s && this.unsettled?.size && s.published < ROUNDS && !this.failed) {
-      const stops = stopCount(s.svc);
-      const f = solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stops, "all"), loadPace().later, now, PERIODS.length, solveWaves).share;
+    if (s && st && this.unsettled?.size) {
       for (const id of this.unsettled) {
         if (next.has(id)) continue;
-        next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f)));
+        next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, st.share)));
+        steps.set(id, solving);
         moving = true;
       }
     }
     this.zoneBest = new Map(next);
     const prev = zoneLoads.peek();
     if (next.size !== prev.size || [...next].some(([id, f]) => prev.get(id) !== f)) zoneLoads.value = next;
+    const prevSteps = zoneSteps.peek();
+    const same = (a: ZoneStep, b?: ZoneStep) => !!b && a.step === b.step && ends(a, b);
+    if (steps.size !== prevSteps.size || [...steps].some(([id, z]) => !same(z, prevSteps.get(id)))) zoneSteps.value = steps;
     // a bare zone's load (and, T-421, a released solve's zones) moves with time; nothing else ticks for it
     if (moving && !this.progressTick) this.progressSoon();
   }
@@ -2723,6 +2744,7 @@ class DemandClient {
 
   private focusMessage(i: number, msg: FromDemand) {
     if (this.reply(i, msg)) return;
+    markStep();
     if (msg.kind === "sums") {
       if (!this.fversions.has(msg.version)) return;
       const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}`;
@@ -2847,10 +2869,12 @@ class DemandClient {
     if (msg.kind === "packOpened") {
       const item = msg.market ? marketItem(msg.id) : msg.id;
       if (i < this.computeN) this.packAcks.set(item, (this.packAcks.get(item) ?? 0) + 1);
+      markStep();
       return this.progressSoon();
     }
     if (this.reply(i, msg)) return;
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
+    markStep();
     if (msg.kind === "loads") {
       // T-1607: on to the worker solving the period's other side
       const to = msg.side === "cities" ? this.marketsOf.findIndex((qs) => qs.includes(msg.period)) : this.periodsOf.findIndex((qs, j) => j < this.computeN && qs.includes(msg.period));
