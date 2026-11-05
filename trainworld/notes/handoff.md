@@ -1,8 +1,10 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38 (past 500k tokens
-at 16:13 on 2026-11-05: a fresh orchestrator can take over from this file any time)
-Updated: 2026-11-05 16:15
+Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
+Previous: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17 (ListAgents no longer shows that name; likely
+maps-03 after the VS Code restart), handed over 2026-11-05 17:55, finishing in-flight work (mexico, cachecard,
+diagsmooth, watertoggle, sheet)
+Updated: 2026-11-05 17:55
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -16,47 +18,30 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Uncommitted: TODO.md (Anita's); europe's files (world_plan.json, registry.json, market-rows.json, zone-names.json,
   zone-successors.json, docs/world-run.md, notes/T-2302.md).
 
-## In flight
-- **europe** (agent a48ef8746df10ad7f, Opus, main tree, pack lock, ~345k tokens): join batch 20261105-095013, python
-  PID 6408 (cmd 17556), log artifacts/trainworld/countries/t2302-join.log, since 09:50; at 16:13 on Kosovo (psh-xk),
-  the late small groups. Then after-steps (terrain_fine, zone_terrain, market_drives, build_inputs, stale,
-  zone_successors --set, smoke, docs), report. Kit: old scratch\europe; notes/T-2302.md has PIDs and restart
-  commands. Backup data/work/pre-T2302/pre; undo `tools/country/restore.py T2302 pre --go`. Its background wait died
-  in the 10:05 VS Code restart and was re-set by message.
-- loadbar LANDED ab95782c (records 40bdc6a0): T-2552 bar steady (never >20 s on a percent; t2552-load-bar.mjs in
-  smoke), T-2557 the reload does hit the cache (loadnotes' run had cacheWrites off). Filed T-2559 (old saves' first
-  reload misses: fare base rounding), T-2560.
-- **cachecard** (agent a89d9e3c777e837e0, Opus, tree .tw-trees/cachecard from 40bdc6a0, port 6194): T-2560 on a cache
-  hit the card stays up to the fresh final (~187 s vs hit at ~28 s on her NA save); make it playable at the hit,
-  keeping T-347's edit hold.
+## In flight (maps-17 winding down; maps-93 took over ~18:20)
+- **mexico** (agent aa0915d6048b49d88, Opus, main tree, **pack lock**, port 6197, kit maps-17's old scratch\mexico):
+  T-2436 + T-2080/T-2081/T-2070 + T-2554's three pipeline changes. Order: T-2554 changes, wire mexico.py (notes/T-2080.md
+  "Wiring left"), dry counts to the orchestrator before building, then build/gate/join/after-steps; it messages at
+  browser gates (no app/WASM landings into the main tree during one). Expect pop_vs_plan parks (GHSL 10-15% under the
+  census in big cities). **Hand to maps-93.**
+- **sheet** (agent a26fa2ea5d56190eb, Opus, read-only on game code, scratch\sheet, writes notes/T-2566.md and
+  artifacts/trainworld/sheet/): T-2566 rubber-sheet warp, Anita chose "sheet first"; one-page summary of today's
+  diagram, design, Node prototype of New York and all Japan beside today's, open questions for Anita. Nothing enters
+  the game until she has seen the pictures. Ids T-2567..68. **Hand to maps-93.**
+- **watertoggle** (agent ad851a86eb0be20d5, Sonnet, tree .tw-trees/watertoggle from 4021db95, port 6195): T-2565 water
+  button in the diagram view, default off, persisted, off skips water work; hover "Show water". maps-17 lands it if it
+  reports before winding down, else maps-93.
+- **cachecard** (agent a89d9e3c777e837e0, Opus, tree .tw-trees/cachecard from 40bdc6a0, port 6194): T-2560, a cache-hit
+  reload playable at ~25 s instead of ~213 s on Anita's NA save (perfOff=cacheCard gives the old card). Blocker before
+  landing: cached vs fresh figure signature differ on the same network (6b5f90ad vs ca3d7bb9); told to explain (a
+  T-328-era cache bug gets its own task id from the orchestrator), smoke, t328 prepare/reload/edit, records, then report
+  once. Lands only if the difference is explained and not made worse.
+- T-2561 paused (diagsmooth retired at 468k): findings in notes/T-2561.md, parked diff in maps-17's old
+  scratch\diagsmooth\parked\ (t2561.diff); superseded by T-2566 unless the sheet is dropped.
+- Today's landings, 8800 at build 1056 (e0534793, smoke light+dark PASSED 12,515,598), Europe committed e8eb9758, disk
+  cleaned (67 GB free), Anita pushed master ~18:00.
 
-- europe DONE and COMMITTED e8eb9758 (T-2302: 628 -> 462 zones, 3,200 shipped, 0 Europe parked; T-1189, T-892
-  closed). **8800 = build 1053 (e8eb9758)**, built ~17:12 with the dist-new swap (worked: T-2483 can close), smoke
-  PASSED light and dark, 12,515,598. Pack lock free: Mexico next. Backups to delete: data/work/pre-T2302/{pre,
-  prejoin,removed,stale}.
-- **8800 = build 1056 (e0534793)** with the octilinear water fix (338ecad2), smoke PASSED; Anita pinged ~17:45.
-  Disk: after_join.py --go freed 15.6 GB, pre-T2302 deleted; 67 GB free. git gc run (loose objects 6,830 -> 2,987;
-  master 134 commits ahead of origin, pushing is Anita's). T-2483 archived (swap works).
-- Anita ~18:00 pushed master. Proposed a different diagram water/scale strategy (one continuous warp of the real map:
-  grid cells grown or shrunk, bounded scale change per distance, lenient absolute displacement cap by map size, real
-  water pushed through and snapped to 45/90). maps-17 paused diagsmooth (T-2561) to write findings; discussing with
-  her before a design + prototype task.
-- **mexico** (agent aa0915d6048b49d88, Opus, main tree, pack lock, port 6197, kit scratch\mexico): T-2554's three
-  pipeline changes first, then wire mexico.py, dry counts to maps-17, build/gate/join; messages at browser gates.
-- Anita ~17:20 on 8800: "this seems to have made water no longer follow 90 degree / 45 degree lines. thats bad, we
-  should stick to those." Sent to diagsmooth as first priority (T-2528's width runs / far-shore sea).
-- cachecard: playable at 25 s on a cache hit (was ~213 s), but cached vs fresh signature differ (6b5f90ad vs
-  ca3d7bb9, same network): told to explain (file T-2562 if a T-328-era cache bug), smoke, t328, records, then report.
-- diagrivers LANDED 70f1b840 (records f78de89a; agent 446k, retired): dial default 0.5, river width = real x smooth
-  scale field, Sound as open water (3.75x Long Island, too wide), core rivers thin in 30% of pitches. Review:
-  review/diagram-nyc-water-width.png, diagram-nyc-core-rivers.png. **diagsmooth** (agent a994a1837e88cba0d, Opus,
-  tree from f78de89a, port 6193, ids T-2562..63): T-2561 smooth layout scale, sea pairs from it, bank-side term.
-- (was) **diagrivers** (agent a1fd51edf9f661771, Opus, tree .tw-trees/diagrivers from 2c951d73, port 6193): T-2528 dial
-  default 0.5 (Anita: "i kidna like 0.5"), water width follows the drawn land (Hudson/East River ~1/4 of Manhattan,
-  no collapse downstream, outskirt rivers thin), Long Island Sound as open water; Vignelli map as reference.
-  notes/T-2528.md has her words. Anita ~16:30: "yes we can carry on" (maps-17 continues past 500k).
-
-## After Europe's join (in this order)
+## After Europe's join (steps 1-2 DONE; 3 is in mexico's brief; 4 is mexico's run)
 1. Rebuild 8800 with scratch snapbuild.cmd (first use of the dist-new swap, T-2483), claim 4 cores, smoke light and
    dark; expect 12,515,598 once europe's market-rows.json is committed; check no water-mask RangeError. Ping Anita
    (`python C:/Users/anita/projects/maps/tools/ping.py`). Rerun checks/diagram-game.mjs captures after (diaghokkaido
@@ -129,12 +114,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- Diagram water/scale redesign (~18:05): go ahead with (1) a one-page summary of how the diagram works now and what
-  failed, (2) a design for approach A (one continuous rubber-sheet warp built from station/demand density, her two
-  limits: bounded scale change per distance and a map-size cap on displacement; stations laid out on it, then real
-  water pushed through and snapped to 45/90 without closing straits), (3) a Node prototype drawing New York and all
-  Japan beside today's, shown to her before anything enters the game? A vs B (keep today's layout, fit a sheet after):
-  maps-17 recommends A (Wang and Chi 2011 focus+context metro maps; cartograms).
+- None open. Answered ~18:15: water is experimental behind a button, default off (T-2565); sheet first, rough
+  prototype outside the game (T-2566); "this sort of distortion scheme would solve the issue of region borders not
+  having their right shape". Distortion default 0.5 (her pick).
 
 ## Lessons from this run
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
