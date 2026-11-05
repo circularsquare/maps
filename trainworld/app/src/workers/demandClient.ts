@@ -1467,6 +1467,7 @@ class DemandClient {
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
       else send();
     });
+    if (rows) this.drives = null;
   }
   /** T-173: worker 0 opens a small synthetic everyday layer before it is ready, and the other
    * solving workers get no city pack until then. With five workers opening New York's everyday
@@ -1527,7 +1528,10 @@ class DemandClient {
       this.recovered(item);
       this.bytes.set(item, bytes.byteLength);
       // T-279: the routed drives change the market's figures as its packs do
-      this.hashPack(item, this.drives ? [bytes, this.drives] : [bytes]);
+      if (this.cacheOn) {
+        const h = this.packHashOf(item);
+        Promise.all([sha256(bytes as Uint8Array<ArrayBuffer>), this.drivesSha ?? ""]).then((hs) => h.set(hs.join("")), () => h.set("unhashed"));
+      }
       this.marketsDownloading.delete(id);
       this.marketsHeld.push({ id, bytes });
       this.heldRows = rows;
@@ -1560,11 +1564,17 @@ class DemandClient {
   private rows: Promise<Uint8Array> | null = null;
   private rowsSent = false;
   /** T-279: the routed drives (market-drives.bin), in with the rows and sent beside them; null
-   * where the file is missing, every drive then the rule's */
+   * where the file is missing, every drive then the rule's. T-2485: dropped once the workers have
+   * them (12 MB), downloaded again for a replacement worker; `drivesSha` keys the cache. */
   private drives: Uint8Array | null = null;
+  private drivesSha: Promise<string> | null = null;
   private marketRows(): Promise<Uint8Array> {
     return (this.rows ??= Promise.all([this.download(MARKET_ROWS), fetchMarketDrives()])
-      .then(([rows, drives]) => ((this.drives = drives), rows))
+      .then(([rows, drives]) => {
+        this.drives = drives;
+        if (drives && this.cacheOn) this.drivesSha = sha256(drives as Uint8Array<ArrayBuffer>);
+        return rows;
+      })
       .catch((err) => { this.rows = null; throw err; }));
   }
 
@@ -2184,14 +2194,14 @@ class DemandClient {
     const days: StoredDemand["days"] = [];
     // T-1008: the days share the market's table, copied once (the clone keeps it shared)
     const tables = new Map<CorridorTable, CorridorTable>();
-    const own = <T extends Uint32Array | Float64Array | Float32Array>(a: T): T => { const b = a.slice() as T; transfer.push(b.buffer as ArrayBuffer); return b; };
+    const own = <T extends Uint16Array | Uint32Array | Float64Array | Float32Array>(a: T): T => { const b = a.slice() as T; transfer.push(b.buffer as ArrayBuffer); return b; };
     for (const d of v.days) {
       const c = d.intercity?.corridors;
       if (c) {
         let t = tables.get(c.table);
         if (!t) {
           const s = c.table;
-          tables.set(s, (t = { key: s.key, n: s.n, from: own(s.from), to: own(s.to), longer: own(s.longer), commutes: own(s.commutes), air: own(s.air), car: own(s.car) }));
+          tables.set(s, (t = { key: s.key, n: s.n, from: own(s.from), to: own(s.to), longer: own(s.longer), commuteAt: own(s.commuteAt), commuteLegs: own(s.commuteLegs), air: own(s.air), car: own(s.car) }));
           await new Promise((r) => setTimeout(r, 0));
         }
         const copy: Corridors = { table: t, longerScale: c.longerScale, commuteScale: c.commuteScale, railAt: own(c.railAt), longerRail: own(c.longerRail), commuteRail: own(c.commuteRail) };
@@ -2354,13 +2364,13 @@ class DemandClient {
     };
     try {
       const markets = items.filter(isMarket).map(marketZone);
-      const [packs, barePacks, intercity, rows] = await Promise.all([
+      const [packs, barePacks, intercity, rows, drives] = await Promise.all([
         Promise.all(items.filter((x) => !isMarket(x)).map((id) => city(id as CityId))),
         Promise.all(bare.map(city)),
         Promise.all(markets.map(async (id) => ({ id, pack: await this.download(`${id}.market.json`) }))),
         markets.length ? this.download(MARKET_ROWS) : Promise.resolve(undefined),
+        markets.length ? fetchMarketDrives().then((d) => d ?? undefined) : Promise.resolve(undefined),
       ]);
-      const drives = this.drives?.slice();
       if (this.respawn.get(i) !== r || this.status.startsWith("failed")) return;
       // closed meanwhile: left out
       const full = packs.filter((p) => this.fetching.has(p.id)), mk = intercity.filter((m) => this.fetching.has(marketItem(m.id)));
@@ -3997,6 +4007,8 @@ class DemandClient {
   private publish(s: Solve, round: number) {
     if (round === 0) s.firstAt = performance.now();
     if (s === this.cur && s.barrier) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
+    // T-2485: the bubbles' sums of a round two behind this one are never read again (20 MB a load)
+    if (round >= 2) for (const k of [...this.pushed.keys()]) { const [v, r] = k.split(":"); if (Number(v) === s.version && Number(r) < round - 1) this.pushed.delete(k); }
     // T-232: a round before the final one is shown only when nothing final would be held instead
     const final = round >= ROUNDS && !s.rough;
     const res = s.results as Result[];

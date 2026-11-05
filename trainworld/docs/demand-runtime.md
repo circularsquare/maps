@@ -235,8 +235,10 @@ in two clusters is in neither, its trips fixed in the pack's totals like any oth
 rail path. The market's figures are its parts' added up: rail from each, the trips, pairs and
 corridor trips (which need no network) once. The corridors (place pairs with longer trips or
 commutes) are a table no network or period changes: each pair's places, its longer trips and
-commute legs a day, and its shares by plane and by car (game/demand.ts `CorridorTable`). A worker
-sends a table once, by its key (again after `corridorsAgain`); each period's result carries the
+commute legs a day (kept for the rows with any, a few in a thousand), and its shares by plane and by car
+(game/demand.ts `CorridorTable`; place numbers 16-bit while the market has under 65,536 places, T-2485).
+The worker holding period 0's market makes and sends a table once, by its key; after `corridorsAgain`,
+any worker's next result with the market sends it again. Each period's result carries the
 key, the period's factors of the trips and legs and the pairs with rail. A kind of day's corridors
 are the table times the day's scales plus its pairs with rail, so no publish or view walks every
 zone pair (T-789, T-1008). A market zone no station reaches is in no cluster;

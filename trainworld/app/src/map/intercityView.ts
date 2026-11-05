@@ -198,9 +198,14 @@ function totalsOf(t: CorridorTable): Float64Array {
   m = new Float64Array(Z * 3);
   for (let j = 0; j < t.n; j++) {
     const [a, b] = ends(t.from[j], t.to[j]);
-    const l = t.longer[j], c = t.commutes[j], f = l * t.air[j];
-    if (a >= 0) { m[3 * a] += l; m[3 * a + 1] += c; m[3 * a + 2] += f; }
-    if (b >= 0) { m[3 * b] += l; m[3 * b + 1] += c; m[3 * b + 2] += f; }
+    const l = t.longer[j], f = l * t.air[j];
+    if (a >= 0) { m[3 * a] += l; m[3 * a + 2] += f; }
+    if (b >= 0) { m[3 * b] += l; m[3 * b + 2] += f; }
+  }
+  for (let k = 0; k < t.commuteAt.length; k++) {
+    const j = t.commuteAt[k], [a, b] = ends(t.from[j], t.to[j]), c = t.commuteLegs[k];
+    if (a >= 0) m[3 * a + 1] += c;
+    if (b >= 0) m[3 * b + 1] += c;
   }
   tableTotals.set(t, m);
   return m;

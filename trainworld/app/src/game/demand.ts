@@ -137,14 +137,22 @@ export interface IntercityDemand { version: number; round: number; tripsPerDay: 
  * commute legs a day before a kind of day's scales, and the shares of its longer trips not by rail
  * that fly and that drive (T-378). One table serves every result of a market (T-1008).
  */
-export interface CorridorTable { key: string; n: number; from: Uint32Array; to: Uint32Array; longer: Float64Array; commutes: Float64Array; air: Float32Array; car: Float32Array }
+export interface CorridorTable {
+  key: string; n: number; from: PlaceIds; to: PlaceIds; longer: Float64Array;
+  /** the rows with commute legs, ascending, and their legs; every other row has none (T-2485: 24k of
+   * New York's 5.9M rows have any, so a full column was 47 MB of zeros) */
+  commuteAt: Uint32Array; commuteLegs: Float64Array;
+  air: Float32Array; car: Float32Array;
+}
+/** A market's place numbers: 16 bits while it has fewer than 65,536 places (T-2485) */
+export type PlaceIds = Uint16Array | Uint32Array;
 /** A kind of day's corridors: the table's longer trips and commute legs times `longerScale` and
  * `commuteScale`, and the pairs with rail (`railAt`, ascending) their longer trips and commute legs
  * by rail. */
 export interface Corridors { table: CorridorTable; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array }
 
 export const NO_CORRIDORS: Corridors = {
-  table: { key: "", n: 0, from: new Uint32Array(0), to: new Uint32Array(0), longer: new Float64Array(0), commutes: new Float64Array(0), air: new Float32Array(0), car: new Float32Array(0) },
+  table: { key: "", n: 0, from: new Uint16Array(0), to: new Uint16Array(0), longer: new Float64Array(0), commuteAt: new Uint32Array(0), commuteLegs: new Float64Array(0), air: new Float32Array(0), car: new Float32Array(0) },
   longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0),
 };
 
@@ -152,16 +160,19 @@ export const NO_CORRIDORS: Corridors = {
  * and the commute legs alone. */
 export interface CorridorFigures { trips: number; rail: number; air: number; car: number; commutes: number; commuteRail: number }
 
-/** Corridor `j`'s figures; `k` its place in `railAt` (-1 none; looked up when left out). */
-export function corridorAt(c: Corridors, j: number, k = railIndex(c, j)): CorridorFigures {
-  const t = c.table, tl = t.longer[j] * c.longerScale, cm = t.commutes[j] * c.commuteScale;
+/** Corridor `j`'s figures; `k` its place in `railAt` and `m` in the table's `commuteAt` (-1 none;
+ * looked up when left out). */
+export function corridorAt(c: Corridors, j: number, k = railIndex(c, j), m = sortedIndex(c.table.commuteAt, j)): CorridorFigures {
+  const t = c.table, tl = t.longer[j] * c.longerScale, cm = (m >= 0 ? t.commuteLegs[m] : 0) * c.commuteScale;
   const lr = k >= 0 ? c.longerRail[k] : 0, cr = k >= 0 ? c.commuteRail[k] : 0, rest = tl - lr;
   return { trips: tl + cm, rail: lr + cr, air: rest * t.air[j], car: rest * t.car[j] + cm - cr, commutes: cm, commuteRail: cr };
 }
 
 /** Corridor `j`'s place in `railAt`, -1 when it has no rail. */
-export function railIndex(c: Corridors, j: number): number {
-  const a = c.railAt;
+export const railIndex = (c: Corridors, j: number): number => sortedIndex(c.railAt, j);
+
+/** `j`'s place in the ascending `a`, -1 when it is not there. */
+export function sortedIndex(a: Uint32Array, j: number): number {
   let lo = 0, hi = a.length - 1;
   while (lo <= hi) {
     const m = (lo + hi) >> 1;
@@ -173,10 +184,11 @@ export function railIndex(c: Corridors, j: number): number {
 
 /** Every corridor whose places `keep` accepts, in table order, with its figures. */
 export function eachCorridor(c: Corridors, keep: (from: number, to: number) => boolean, f: (j: number, v: CorridorFigures) => void) {
-  const { from, to, n } = c.table, at = c.railAt;
-  for (let j = 0, k = 0; j < n; j++) {
+  const { from, to, n, commuteAt: ca } = c.table, at = c.railAt;
+  for (let j = 0, k = 0, m = 0; j < n; j++) {
     while (k < at.length && at[k] < j) k++;
-    if (keep(from[j], to[j])) f(j, corridorAt(c, j, k < at.length && at[k] === j ? k : -1));
+    while (m < ca.length && ca[m] < j) m++;
+    if (keep(from[j], to[j])) f(j, corridorAt(c, j, k < at.length && at[k] === j ? k : -1, m < ca.length && ca[m] === j ? m : -1));
   }
 }
 

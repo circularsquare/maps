@@ -40,7 +40,10 @@ the flight, the crossings, the routed drive) once, each way's share that flies o
 searching each airport's list was most of its time);
 the worker keeps their corridor numbers alone and sends the columns to the main thread, making them
 again if it asks (T-2122: the whole-world arrays it was made from, the kept copy and the dense trips
-were 0.5-0.6 GB in each solving worker). The bubbles' split for the zone in view's place comes from its rows; a pair
+were 0.5-0.6 GB in each solving worker). Only the worker holding period 0's market makes the columns
+(T-2485; the others work out the table's key from the arrays the WASM hands back), with 16-bit place
+numbers under 65,536 places and the commute legs only for the rows that have any: 118 MB for New
+York's 5.9M rows, against 188 MB in full columns. The bubbles' split for the zone in view's place comes from its rows; a pair
 with no row has no trips to split. Each period keeps its rail by corridor for the open places' corridors alone.
 Before, every composition built all 6.6 million pair rules and dense corridor tables again: 450 MB
 and 3-13 s in each solving worker, and 50 MB more for each period held. The figures are the same

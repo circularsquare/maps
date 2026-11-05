@@ -909,6 +909,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     }
   } else if (msg.kind === "corridorsAgain") {
     sentTables.clear();
+    tableAsked = true;
   } else if (msg.kind === "periods") {
     dealt = msg;
     if (!busy) deal();
@@ -1288,34 +1289,55 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
  * them all (it was tens of MB a part, and as many again to make). T-2122: the worker keeps only the
  * rows' corridors (`idx`, ascending, which a period's rail is matched against); the columns go to the
  * main thread as made and are made again if it asks (`corridorsAgain`), so no whole-world array
- * (12.7M corridors in 2026-11, against 3.9M rows) is held or copied here.
+ * (12.7M corridors in 2026-11, against 3.9M rows) is held or copied here. T-2485: only the worker
+ * holding period 0's market makes and sends it (every solving worker sent its own copy, 188 MB each
+ * on the New York save), any worker once the page asks again; place numbers 16-bit where they fit
+ * and commute legs only where there are any.
  */
 interface MadeTable { key: string; idx: Uint32Array; cols: CorridorTable | null }
 let madeTable: { id: number; made: MadeTable } | null = null;
 const sentTables = new Set<string>();
-function tableColumns(p: IntercityApi): CorridorTable {
+/** the page asked for the tables again (`corridorsAgain`): the next result with a market sends its own */
+let tableAsked = false;
+const sendsTable = (q: number) => tableAsked || (q === 0 && mkt.includes(0));
+/** The table's key (FNV-1a over the bits of every column as whole columns: from, to as u32, longer,
+ * commute legs on every row, air, car) and, with `make`, the table. */
+function tableColumns(p: IntercityApi, make: boolean): { key: string; table: CorridorTable | null } {
   const pairs = p.corridor_rows_pairs(), longer = p.corridor_rows_trips(), base = p.corridor_rows_commutes(), modes = p.corridor_rows_modes();
-  const n = longer.length, hasM = modes.length === 2 * n;
-  const t: CorridorTable = { key: "", n, from: new Uint32Array(n), to: new Uint32Array(n), longer, commutes: base.length === n ? base : new Float64Array(n), air: new Float32Array(n), car: new Float32Array(n) };
-  for (let j = 0; j < n; j++) {
-    t.from[j] = pairs[2 * j]; t.to[j] = pairs[2 * j + 1];
-    // T-378: before any shares are known, all by car
-    if (hasM) { t.air[j] = modes[2 * j]; t.car[j] = modes[2 * j + 1]; } else t.car[j] = 1;
-  }
-  // FNV-1a over the bits of every column
+  const n = longer.length, hasM = modes.length === 2 * n, legs = base.length === n ? base : null;
   let h = 0x811c9dc5;
-  for (const a of [t.from, t.to, t.longer, t.commutes, t.air, t.car]) {
+  for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j], 0x01000193);
+  for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j + 1], 0x01000193);
+  const words = (a: Float64Array) => {
     const w = new Uint32Array(a.buffer, a.byteOffset, a.byteLength / 4);
     for (let i = 0; i < w.length; i++) h = Math.imul(h ^ w[i], 0x01000193);
-  }
-  t.key = `${n}:${(h >>> 0).toString(36)}`;
-  return t;
+  };
+  words(longer);
+  if (legs) words(legs); else for (let i = 0; i < 2 * n; i++) h = Math.imul(h, 0x01000193);
+  // T-378: before any shares are known, all by car (1.0f is 0x3f800000)
+  const mw = new Uint32Array(modes.buffer, modes.byteOffset, modes.length);
+  for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j] : 0), 0x01000193);
+  for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j + 1] : 0x3f800000), 0x01000193);
+  const key = `${n}:${(h >>> 0).toString(36)}`;
+  if (!make) return { key, table: null };
+  const air = new Float32Array(n), car = new Float32Array(n);
+  if (hasM) for (let j = 0; j < n; j++) { air[j] = modes[2 * j]; car[j] = modes[2 * j + 1]; } else car.fill(1);
+  let most = 0;
+  for (let i = 0; i < pairs.length; i++) if (pairs[i] > most) most = pairs[i];
+  const from = most < 65536 ? new Uint16Array(n) : new Uint32Array(n), to = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
+  for (let j = 0; j < n; j++) { from[j] = pairs[2 * j]; to[j] = pairs[2 * j + 1]; }
+  // (a -0 kept too, so every figure is the same to the bit)
+  const at: number[] = [];
+  if (legs) for (let j = 0; j < n; j++) if (legs[j] !== 0 || Object.is(legs[j], -0)) at.push(j);
+  const commuteAt = Uint32Array.from(at), commuteLegs = new Float64Array(at.length);
+  for (let k = 0; k < at.length; k++) commuteLegs[k] = legs![at[k]];
+  return { key, table: { key, n, from, to, longer, commuteAt, commuteLegs, air, car } };
 }
 function corridorTable(p: IntercityApi): MadeTable {
   const id = p.corridors_id();
   if (madeTable?.id === id) return madeTable.made;
-  const cols = tableColumns(p);
-  const made = { key: cols.key, idx: p.corridor_rows(), cols };
+  const { key, table } = tableColumns(p, tableAsked || mkt.includes(0));
+  const made = { key, idx: p.corridor_rows(), cols: table };
   madeTable = { id, made };
   return made;
 }
@@ -1355,11 +1377,12 @@ function marketCorridors(parts: IntercityApi[], q: number) {
   rows.forEach((j, k) => { const [r, c] = rail.get(j)!; out[3 * k] = j; out[3 * k + 1] = r; out[3 * k + 2] = c; });
   // (transferred: made again for a `corridorsAgain`)
   let table: CorridorTable | undefined;
-  if (!sentTables.has(made.key)) {
-    table = made.cols ?? tableColumns(parts[0]);
+  if (!sentTables.has(made.key) && sendsTable(q)) {
+    table = made.cols ?? tableColumns(parts[0], true).table!;
     made.cols = null;
     made.key = table.key;
     sentTables.add(table.key);
+    tableAsked = false;
   }
   return { corridorKey: made.key, corridorTable: table, corridorShares: shares.length >= 2 ? [shares[0], shares[1]] as [number, number] : undefined, corridorRail: out };
 }
@@ -2032,7 +2055,7 @@ async function run() {
         })) as Record<CityId, number[]>;
         const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
         const t = market?.corridorTable;
-        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, ...(t ? [t.from, t.to, t.longer, t.commutes, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
+        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, ...(t ? [t.from, t.to, t.longer, t.commuteAt, t.commuteLegs, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       // T-1543: a free-flow round shown before it is solved (a rough solve's, the zone in view's

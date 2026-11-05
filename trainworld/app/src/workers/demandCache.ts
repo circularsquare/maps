@@ -21,7 +21,7 @@ import type { NetworkSnapshot } from "./protocol";
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
 export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
-export const CACHE_FORMAT = 7; // raise when the cached result's layout changes
+export const CACHE_FORMAT = 8; // raise when the cached result's layout changes
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;
