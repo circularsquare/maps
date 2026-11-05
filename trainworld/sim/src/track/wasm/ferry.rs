@@ -90,10 +90,6 @@ impl TrackApi {
     pub fn is_ferry(&self, line: u32) -> bool {
         self.w.net.is_ferry(line)
     }
-    /// The live ferry lines.
-    pub fn ferry_lines(&self) -> Vec<u32> {
-        self.w.net.ferry_lines()
-    }
     /// A ferry line's route: constructed (1/0), then x, y, kind, m/s per point; empty for any other
     /// line. Its ports are `line_stops`; `bus_stops` gives them as its service has them.
     pub fn ferry_route(&self, line: u32) -> Vec<f64> {
@@ -128,5 +124,12 @@ impl TrackApi {
         new_ports.sort_unstable();
         new_ports.dedup();
         vec![len, run, new_ports.len() as f64 * PORT_COST, ok as u8 as f64]
+    }
+}
+
+impl TrackApi {
+    /// The live ferry lines.
+    pub fn ferry_lines(&self) -> Vec<u32> {
+        self.w.net.ferry_lines()
     }
 }

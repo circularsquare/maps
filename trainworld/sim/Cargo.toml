@@ -71,7 +71,7 @@ name = "cross_everyday"
 path = "src/bin/cross_everyday.rs"
 required-features = ["demand"]
 
-# T-276: each zone pack's local trips a day with no rail (pipeline/zone_summary.py).
+# T-276: each zone pack's local trips a day with no rail (pipeline/zones.py).
 [[bin]]
 name = "zone_summary"
 path = "src/bin/zone_summary.rs"

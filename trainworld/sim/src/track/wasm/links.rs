@@ -37,12 +37,6 @@ impl TrackApi {
     pub fn link_charge(&self) -> f64 {
         self.link_charge
     }
-    /// A passage's price between two stations, US$M (T-1281), paid at once when both are
-    /// constructed; 0 when they cannot be joined.
-    pub fn passage_cost(&self, a: u32, b: u32) -> f64 {
-        let net = &self.w.net;
-        if a == b || !net.is_station(a) || !net.is_station(b) { 0.0 } else { upgrades::passage_price(net.passage_m(a, b)) }
-    }
     /// Undo a link between two stations. 0 done; 1 if they were not linked.
     pub fn unlink_stations(&mut self, a: u32, b: u32) -> u32 {
         if self.w.net.unlink(a, b) { 0 } else { 1 }
@@ -627,6 +621,13 @@ impl TrackApi {
 pub(super) const STATION_TRIM_MARGIN_M: f64 = 4.0;
 
 impl TrackApi {
+    /// A passage's price between two stations, US$M (T-1281), paid at once when both are
+    /// constructed; 0 when they cannot be joined.
+    pub fn passage_cost(&self, a: u32, b: u32) -> f64 {
+        let net = &self.w.net;
+        if a == b || !net.is_station(a) || !net.is_station(b) { 0.0 } else { upgrades::passage_price(net.passage_m(a, b)) }
+    }
+
     /// `delete_edge` for an edge with a station at an end that has track on both sides (T-1161):
     /// removing the edge would leave that station at a bare end, its platform running back from the
     /// node, so it would move half a platform. The edge is split just past the platform instead and

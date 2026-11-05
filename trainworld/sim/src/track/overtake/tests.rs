@@ -171,28 +171,6 @@ fn cap_waits(w: &TrackWorld, l: u32) -> f64 {
     w.svc.lines[l as usize].runs[0].stop_holds[0].iter().sum()
 }
 
-/// T-2245: a save's overtake plans, for looking into one: `T2245_TRACK=<the save's track bytes,
-/// gunzipped, after its JSON header> cargo test --release --lib plans_of_a_save -- --ignored --nocapture`.
-#[test]
-#[ignore]
-fn plans_of_a_save() {
-    let w = TrackWorld::new(super::super::save::decode(&std::fs::read(std::env::var("T2245_TRACK").unwrap()).unwrap()).unwrap());
-    for (l, ls) in w.svc.lines.iter().enumerate() {
-        let run = &ls.runs[0];
-        eprintln!("line {l}: trains {:?} tph {:?} pattern {:?}, free {:.1} min, level 0 {:.1} min, stop holds {:.0?}", w.net.line_trains[l], w.net.line_tph[l], pattern_tph(&w.net, l as u32, 0), run.free.duration / 60.0, run.prof[0].duration / 60.0, run.stop_holds[0]);
-    }
-    let cap = &w.svc.cap;
-    for r in (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Follow) {
-        for plan in cap.plans_of(r) {
-            let o = plan.outcome(&w.net, 0);
-            eprintln!("resource {r}: fast {:?} slow {:?}, spacing {:.0} s; level 0: offset {:.0} loss {:.0} behind {:.0} waits {:.0?}", plan.fast, plan.slow, plan.spacing, o.offset, o.loss, o.behind, o.waits);
-            for p in &plan.points {
-                eprintln!("  node {} stop {} passing {} slow {:.0?} fast {:.0?}", p.node, p.stop, p.passing, p.slow, p.fast);
-            }
-        }
-    }
-}
-
 
 /// T-2231: a station with passing tracks gives each direction two platform tracks: a stop is pooled
 /// over them, and a train that does not stop holds none.

@@ -17,6 +17,9 @@
 //! - `overtake`: passing tracks (T-2231): where slower lines wait for faster ones to pass.
 //! - `service`: per line and direction: runs, profiles per demand level, stop times, round trip,
 //!   trains needed, the trips to draw.
+//! - `related`: the lines related to a line (T-1168): where they meet it, spans beside it, crossings.
+//! - `roads`: roads that ground-level track crosses (T-1929), and their crossing cost.
+//! - `spacing`: each line's departure phase against the lines it shares track or a platform with (T-1925).
 //! - `streets`: the car's street speed by place, for a bus's speed (T-1577).
 //! - `span`: each stop's service span for demand (T-842): the share of a period's riders with a
 //!   train due within their tolerance.

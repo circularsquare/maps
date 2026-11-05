@@ -243,7 +243,9 @@ pub const WALK_REACH_KM: f32 = 10.0;
 /// T-2307: the walking rule leaves a trip whole when the station pairs it would refuse carry at
 /// most this share of the trip's station-pair weight: worth under 0.1 perceived minutes of rail,
 /// and loading and taking off such slivers was most of the rule's cost.
-pub const WALK_SLIVER: f32 = 0.01;/// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
+pub const WALK_SLIVER: f32 = 0.01;
+
+/// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
 /// (market US$) below this and not above it, and a dollar weighs GDP^-0.7 minutes (the fares'
 /// rule, app game/income.ts), so paid parking's minutes go as GDP^0.3 below it.
 pub const PARK_INCOME_KNEE_USD: f32 = 35_000.0;

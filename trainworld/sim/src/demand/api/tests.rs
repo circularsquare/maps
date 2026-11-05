@@ -1557,40 +1557,6 @@ fn a_boat_is_two_cars_and_boards_as_a_train() {
     assert!(g.rn_bus.iter().all(|&b| b == 0.0));
 }
 
-/// T-2278: paid parking by the pack country's income, and what it does with no rail at all: the
-/// car's share of the commutes and the everyday outings in each pack, with the factor and with
-/// the pack's country read as the US (factor 1). Packs from `T2278_PACKS` (ids, comma-separated).
-///
-///   T2278_PACKS=hoc,del,nyc cargo test --release --features demand --lib t2278 -- --ignored --nocapture
-#[test]
-#[ignore]
-fn t2278_car_shares_by_income() {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let ids = std::env::var("T2278_PACKS").unwrap_or_else(|_| "hoc,del,nyc,lon,tyo,par,seo".into());
-    for id in ids.split(',') {
-        let (h, b) = pack::load_raw(&format!("{root}/data/packs/{id}.json")).unwrap();
-        let v: serde_json::Value = serde_json::from_str(&h).unwrap();
-        let country = v["country"].as_str().unwrap_or("").to_string();
-        let as_us = h.replace(&format!("\"country\": \"{country}\""), "\"country\": \"US\"");
-        let shares = |h: &str| {
-            let a = DemandApi::new(h, &b).unwrap();
-            let f = a.base.park_income;
-            let c = a.info();
-            let e = crate::demand::everyday::EverydayApi::beside(&a, h, &b).unwrap().info();
-            let (mut t, mut w) = (0f64, 0f64);
-            for k in e.chunks_exact(3) {
-                t += k[0];
-                w += k[0] * k[1];
-            }
-            (f, 1.0 - c[3], 1.0 - w / t.max(1e-9), c[2], t)
-        };
-        let (f1, c1, e1, ct, et) = shares(&h);
-        let (f0, c0, e0, _, _) = shares(&as_us);
-        let all = |c: f64, e: f64| (c * ct + e * et) / (ct + et);
-        println!("{id} {country}: factor {f1:.3} (as US {f0:.3}); car share of commutes {:.2}% -> {:.2}%, everyday {:.2}% -> {:.2}%, all {:.2}% -> {:.2}%", 100.0 * c0, 100.0 * c1, 100.0 * e0, 100.0 * e1, 100.0 * all(c0, e0), 100.0 * all(c1, e1));
-    }
-}
-
 /// T-2365: the commutes by length add up to the periods' summaries, block by block, on any kind
 /// of day, through crowding rounds, the capacity cap and an estimated period.
 #[test]

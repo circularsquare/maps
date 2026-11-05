@@ -669,16 +669,17 @@ impl DemandApi {
     fn pass(&self, g: &Graph, p: &Params, q: usize, xfer: Option<(&XferIndex, &mut [f32])>) -> (f64, f64, Loads, u64, SubOut, FareSense, LenOut) {
         let sz = self.sz.as_ref().unwrap();
         // the strategies are shared with the other populations on the same service (T-119)
-        let (mo, l) = with_skims(g, p, &self.want, |sk| {
+        let (mo, l, od_sub) = with_skims(g, p, &self.want, |sk| {
             let er = station_exp(sk, p);
-            let mo = mode_choice_part(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part);
+            let mut mo = mode_choice_part(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part);
             drop(er);
             // the trips home: the same station pairs reversed
             let s = g.n_st;
             let (w, h) = (TO_WORK[q], TO_HOME[q]);
             let fw = w / (w + h);
             let fh = h / (w + h);
-            let mut od = mo.od.clone();
+            let od_sub = self.compact_od(&mo.od, s);
+            let mut od = std::mem::take(&mut mo.od);
             for a in 0..s {
                 for t in a + 1..s {
                     let (x, y) = (od[a * s + t], od[t * s + a]);
@@ -690,7 +691,7 @@ impl DemandApi {
                 Some((ix, x)) => assign_with_transfers(g, sk, &od, ix, x),
                 None => assign(g, sk, &od),
             };
-            (mo, l)
+            (mo, l, od_sub)
         });
         let sub = SubOut {
             rail_home: mo.rail_by_sub,
@@ -701,7 +702,7 @@ impl DemandApi {
             unr_lost_work: mo.unr_lost_to_sub,
             acc_home: mo.acc_home,
             acc_work: mo.acc_work,
-            od: self.compact_od(&mo.od, g.n_st),
+            od: od_sub,
         };
         (mo.rail, mo.rail_walk, l, mo.pairs, sub, mo.sense, mo.len)
     }

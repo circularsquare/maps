@@ -2,8 +2,6 @@
 
 use super::tests::small;
 use super::*;
-use crate::demand::network::{route_nodes, RealNet};
-use crate::demand::pack;
 
 /// A feeder bus north from the station at (x0, 0): its stops every `step` m up to `len`, each with
 /// its stretch of route (the station first, with none). Returns the line's stops' positions, the
@@ -90,81 +88,4 @@ fn a_feeder_bus_brings_riders_to_rail_and_no_bus_changes_nothing() {
             assert!((sz.cx[u] - 4000.0).abs() < 1500.0, "subzone at {} reaches the bus", sz.cx[u]);
         }
     }
-}
-
-/// T-1464 B1's gate: the real New York network as the commute layer solves it (five periods, free
-/// flow and three crowding rounds), then with 30 feeder buses, timed. Demand time may rise a third
-/// at most. `cargo test --release --features demand t1464_bus_cost -- --ignored --nocapture`
-#[test]
-#[ignore]
-fn t1464_bus_cost() {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let nyc = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
-    let (RealNet { st_xy, line_n, stops, times, tph, cars }, _) = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json"));
-    let ns = st_xy.len() / 2;
-    // 30 stations spread over the network, each with a 6 km feeder pointing away from the centre
-    let (mut cx, mut cy) = (0.0f32, 0.0f32);
-    for i in 0..ns {
-        cx += st_xy[2 * i];
-        cy += st_xy[2 * i + 1];
-    }
-    (cx, cy) = (cx / ns as f32, cy / ns as f32);
-    let mut order: Vec<usize> = (0..ns).collect();
-    order.sort_by(|&a, &b| (st_xy[2 * a] + 0.37 * st_xy[2 * a + 1]).total_cmp(&(st_xy[2 * b] + 0.37 * st_xy[2 * b + 1])));
-    let picks: Vec<usize> = (0..30).map(|k| order[(k * ns) / 30 + ns / 60]).collect();
-    let solve = |with_bus: bool| -> (f64, f64, f64, f64) {
-        let mut api = DemandApi::new(&nyc.0, &nyc.1).unwrap();
-        let (mut xy, mut n, mut st, mut ti, mut tp, mut ca) = (st_xy.clone(), line_n.clone(), stops.clone(), times.clone(), tph.clone(), cars.clone());
-        let mut cn = vec![0u32; stops.len()];
-        let mut cxy = vec![];
-        if with_bus {
-            for &s in &picks {
-                let (x0, y0) = (st_xy[2 * s], st_xy[2 * s + 1]);
-                let (dx, dy) = (x0 - cx, y0 - cy);
-                let d = dx.hypot(dy).max(1.0);
-                // across the line of the centre, so the feeders fan out rather than run along rails
-                let dir = (-dy / d, dx / d);
-                let (bstops, bcn, bcxy) = feeder(x0, y0, dir, 6000.0, 2000.0);
-                let first = (xy.len() / 2) as u32;
-                for p in &bstops[1..] {
-                    xy.extend(p);
-                }
-                let ids: Vec<u32> = std::iter::once(s as u32).chain(first..first + 3).collect();
-                st.extend(&ids);
-                let m = ids.len();
-                for run in 0..2 {
-                    for _ in 0..3 {
-                        for k in 0..m {
-                            let end = if run == 0 { k == m - 1 } else { k == 0 };
-                            ti.push(if end { 0.0 } else { bus_s(2000.0) });
-                        }
-                    }
-                }
-                tp.extend([8.0, 8.0, 4.0]);
-                ca.push(0.5);
-                n.push(m as u32);
-                cn.extend(&bcn);
-                cxy.extend(bcxy);
-            }
-            api.set_bus(&cn, &cxy);
-        }
-        let t0 = now_ms();
-        let set = api.set_network(&xy, &n, &st, &ti, &tp, &ca).unwrap();
-        let hop_km = route_nodes(&xy, &n, &st).2;
-        api.set_fares(2.9, 0.1, &hop_km).unwrap();
-        let mut rail = 0.0;
-        for q in 0..PERIODS {
-            api.solve(q);
-            for _ in 0..3 {
-                api.crowd(q);
-            }
-            rail += api.summary(q)[2] as f64;
-        }
-        (now_ms() - t0, set, rail, api.n_subzones() as f64)
-    };
-    let (t_base, set_base, rail_base, sz_base) = solve(false);
-    let (t_bus, set_bus, rail_bus, sz_bus) = solve(true);
-    println!("without buses: {t_base:.0} ms (set_network {set_base:.0}), rail {rail_base:.0}, {sz_base} subzones");
-    println!("with 30 buses: {t_bus:.0} ms (set_network {set_bus:.0}), rail {rail_bus:.0}, {sz_bus} subzones");
-    println!("demand time x{:.3}", t_bus / t_base);
 }

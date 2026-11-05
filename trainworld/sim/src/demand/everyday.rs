@@ -2520,16 +2520,6 @@ impl EverydayApi {
         }
         out
     }
-    /// Trips walked the whole way in period `q` by purpose (T-509: survey walk shares), as
-    /// `kind_totals` has them.
-    pub fn kind_walks_all(&self, q: usize) -> Vec<f64> {
-        let Some(Some(st)) = self.per.get(q) else {
-            return vec![];
-        };
-        (0..self.totals.len())
-            .map(|k| (self.walks[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
-            .collect()
-    }
     /// Riders in period `q` boarding at each route node after changing lines, every purpose (T-1530).
     pub fn transfers_in(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
@@ -2573,6 +2563,32 @@ impl EverydayApi {
 }
 
 impl EverydayApi {
+    /// Trips walked the whole way in period `q` by purpose (T-509: survey walk shares), as
+    /// `kind_totals` has them.
+    pub fn kind_walks_all(&self, q: usize) -> Vec<f64> {
+        let Some(Some(st)) = self.per.get(q) else {
+            return vec![];
+        };
+        (0..self.totals.len())
+            .map(|k| (self.walks[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
+            .collect()
+    }
+    /// `selection` on a kind of day (T-260): that day's trips and period shares.
+    pub fn selection_day(&self, end: u32, cells: &[u32], day: u32) -> Vec<f32> {
+        let n = self.engine.city.len();
+        let stride = 30 + 3 * n;
+        let mut out = vec![0.0; self.totals.len() * stride];
+        for (kind, (timing, far, legs)) in self.selection_parts(end, cells, day, u32::MAX).into_iter().enumerate() {
+            let base = kind * stride;
+            out[base..base + 30].copy_from_slice(&timing);
+            for (i, &c) in far.iter().enumerate() {
+                for m in 0..3 {
+                    out[base + 30 + m * n + c as usize] = legs[3 * i + m];
+                }
+            }
+        }
+        out
+    }
     fn modes_of(&self, only: Option<usize>, day: usize) -> Vec<f32> {
         self.modes_in(only, day, None)
     }
@@ -2663,22 +2679,6 @@ impl EverydayApi {
     /// Each enabled purpose: 30 timing values + 3 far-cell mode blocks. All legs; no cut.
     pub fn selection(&self, end: u32, cells: &[u32]) -> Vec<f32> {
         self.selection_day(end, cells, WEEKDAY as u32)
-    }
-    /// `selection` on a kind of day (T-260): that day's trips and period shares.
-    pub fn selection_day(&self, end: u32, cells: &[u32], day: u32) -> Vec<f32> {
-        let n = self.engine.city.len();
-        let stride = 30 + 3 * n;
-        let mut out = vec![0.0; self.totals.len() * stride];
-        for (kind, (timing, far, legs)) in self.selection_parts(end, cells, day, u32::MAX).into_iter().enumerate() {
-            let base = kind * stride;
-            out[base..base + 30].copy_from_slice(&timing);
-            for (i, &c) in far.iter().enumerate() {
-                for m in 0..3 {
-                    out[base + 30 + m * n + c as usize] = legs[3 * i + m];
-                }
-            }
-        }
-        out
     }
     /// `selection_day` packed for the demand worker (T-285): only the far cells some sample of
     /// the selection reaches, the same numbers. Per purpose kind: 30 timing values, `m`, then `m`

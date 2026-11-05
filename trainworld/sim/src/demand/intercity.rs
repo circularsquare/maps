@@ -4597,9 +4597,6 @@ impl IntercityApi {
         };
         self.set_network_in(&xy, line_n, stops, times, tph, cars)
     }
-    pub fn station_map(&self) -> Vec<u32> {
-        self.svc.as_ref().map_or(vec![], |s| s.st_map.clone())
-    }
     pub fn set_fares(&mut self, base: f32, per_km: f32, km: &[f32]) -> Result<(), String> {
         if !base.is_finite() || base < 0. || !per_km.is_finite() || per_km < 0. || km.iter().any(|x| !x.is_finite() || *x < 0.) || km.len() != self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()) {
             return Err("invalid intercity fare".into());
@@ -4854,20 +4851,6 @@ impl IntercityApi {
         }
         out
     }
-    /// Per corridor (place pair): its two places, longer trips in period `q` and their rail trips.
-    pub fn corridor_summary(&self, q: usize) -> Vec<f64> {
-        self.per(q).map_or(vec![], |s| {
-            let m = &self.m;
-            let mut out: Vec<f64> = m.each_corridor().flat_map(|(a, b)| [a as f64, b as f64, 0., 0.]).collect();
-            for (&c, &t) in m.cw.trips_at.iter().zip(&m.cw.trips) {
-                out[4 * c as usize + 2] = t * SHARES[q] as f64;
-            }
-            for (k, c) in m.open_corridors() {
-                out[4 * c + 3] = s.corridors.get(k);
-            }
-            out
-        })
-    }
     /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
     /// (neither: near places on two landmasses). The same whatever the network.
     pub fn corridor_modes(&self) -> Vec<f32> {
@@ -4927,30 +4910,11 @@ impl IntercityApi {
         let s = SHARES.get(q).copied().unwrap_or(0.) as f64;
         self.m.cw.leaving_by.iter().map(|v| v * s).collect()
     }
-    /// T-1008: the corridors' two places each, in `corridor_summary`'s order. With
-    /// `corridor_trips`, `commute_base` and `corridor_modes` the part of the corridors no network or
-    /// period changes, which the main thread is sent once.
-    pub fn corridor_pairs(&self) -> Vec<u32> {
-        self.m.each_corridor().flat_map(|(a, b)| [a as u32, b as u32]).collect()
-    }
     /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
     pub fn corridor_trips(&self) -> Vec<f64> {
         let mut out = vec![0f64; self.m.n_corridors()];
         for (&c, &t) in self.m.cw.trips_at.iter().zip(&self.m.cw.trips) {
             out[c as usize] = t;
-        }
-        out
-    }
-    /// T-1008: per corridor, the commutes between zones that `commute_corridors` counts, before the
-    /// period's legs (`corridor_shares(q)[1]`); empty where it gives none.
-    pub fn commute_base(&self) -> Vec<f64> {
-        let m = &self.m;
-        if m.cw.commuters <= 0. {
-            return vec![];
-        }
-        let mut out = vec![0f64; m.n_corridors()];
-        for &(c, n) in &m.cw.commute {
-            out[c as usize] = n;
         }
         out
     }
@@ -5006,16 +4970,9 @@ impl IntercityApi {
     pub fn entries(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| s.avg.entry.clone())
     }
-    pub fn exits(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| s.avg.exit.clone())
-    }
     /// Bit q set for each period solved.
     pub fn solved_mask(&self) -> u32 {
         (0..PERIODS).filter(|&q| self.per(q).is_some()).fold(0, |m, q| m | 1 << q)
-    }
-    /// `selection_flows` on a kind of day (T-260, `days.rs`): that day's trips and period shares.
-    pub fn selection_flows_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
-        self.selection(market, xy, share, day, self.solved_mask(), true)
     }
     /// T-377: `selection_flows_day`'s all-mode numbers alone (rail zero) over the periods in
     /// `mask`, solved or not: a market composed of every open pack answers them, its parts add
@@ -5032,6 +4989,52 @@ impl IntercityApi {
     /// T-377: whether `other` is this market's composition (a part beside it, or itself).
     pub fn same_market(&self, other: &IntercityApi) -> bool {
         Rc::ptr_eq(&self.m, &other.m)
+    }
+}
+
+impl IntercityApi {
+    pub fn station_map(&self) -> Vec<u32> {
+        self.svc.as_ref().map_or(vec![], |s| s.st_map.clone())
+    }
+    /// Per corridor (place pair): its two places, longer trips in period `q` and their rail trips.
+    pub fn corridor_summary(&self, q: usize) -> Vec<f64> {
+        self.per(q).map_or(vec![], |s| {
+            let m = &self.m;
+            let mut out: Vec<f64> = m.each_corridor().flat_map(|(a, b)| [a as f64, b as f64, 0., 0.]).collect();
+            for (&c, &t) in m.cw.trips_at.iter().zip(&m.cw.trips) {
+                out[4 * c as usize + 2] = t * SHARES[q] as f64;
+            }
+            for (k, c) in m.open_corridors() {
+                out[4 * c + 3] = s.corridors.get(k);
+            }
+            out
+        })
+    }
+    /// T-1008: the corridors' two places each, in `corridor_summary`'s order. With
+    /// `corridor_trips`, `commute_base` and `corridor_modes` the part of the corridors no network or
+    /// period changes, which the main thread is sent once.
+    pub fn corridor_pairs(&self) -> Vec<u32> {
+        self.m.each_corridor().flat_map(|(a, b)| [a as u32, b as u32]).collect()
+    }
+    /// T-1008: per corridor, the commutes between zones that `commute_corridors` counts, before the
+    /// period's legs (`corridor_shares(q)[1]`); empty where it gives none.
+    pub fn commute_base(&self) -> Vec<f64> {
+        let m = &self.m;
+        if m.cw.commuters <= 0. {
+            return vec![];
+        }
+        let mut out = vec![0f64; m.n_corridors()];
+        for &(c, n) in &m.cw.commute {
+            out[c as usize] = n;
+        }
+        out
+    }
+    pub fn exits(&self, q: usize) -> Vec<f32> {
+        self.per(q).map_or(vec![], |s| s.avg.exit.clone())
+    }
+    /// `selection_flows` on a kind of day (T-260, `days.rs`): that day's trips and period shares.
+    pub fn selection_flows_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
+        self.selection(market, xy, share, day, self.solved_mask(), true)
     }
 }
 impl IntercityApi {

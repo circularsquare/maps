@@ -462,49 +462,6 @@ fn origin_parts_add_up_to_the_period() {
     }
 }
 
-/// T-1543 on New York's real network, timed (`TW_PARTS=3`, `--ignored --nocapture`).
-#[test]
-#[ignore]
-fn origin_parts_on_new_york() {
-    let n: u32 = std::env::var("TW_PARTS").map_or(3, |v| v.parse().unwrap());
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let (h, b) = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
-    let net = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json")).0;
-    let gaps = parts_against_whole(&h, &b, &net, n, 0);
-    for (name, q, gap) in gaps.iter().filter(|g| g.2 > 1e-6) {
-        println!("{name}, period {q}: {gap:.2e}");
-    }
-    println!("worst: {:?}", gaps.iter().map(|g| g.2).fold(0.0, f64::max));
-}
-
-/// T-1874: New York's samples by purpose and its everyday opening and first network times, with
-/// a campus's homes one per 30 trips (2 to 100) against T-397's one per 8 (2 to 16).
-/// `cargo test --release --features demand t1874_samples -- --ignored --nocapture`
-#[test]
-#[ignore]
-fn t1874_samples() {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let (h, b) = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
-    let net = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json")).0;
-    for (name, sampling) in [("t397", Sampling { site: None, ..Sampling::FINE }), ("t1874", Sampling::FINE)] {
-        let lod = Lod { level: 0, sampling, chunk: Lod::of(lod::FINE).unwrap().chunk };
-        let (mut best_open, mut best_net) = (f64::MAX, f64::MAX);
-        let mut last = None;
-        for _ in 0..3 {
-            let t = now_ms();
-            let (_, mut e) = open(&h, &b, lod);
-            best_open = best_open.min(now_ms() - t);
-            let t = now_ms();
-            e.set_network(&net.st_xy, &net.line_n, &net.stops, &net.times, &net.tph, &net.cars).unwrap();
-            best_net = best_net.min(now_ms() - t);
-            last = Some(e);
-        }
-        let e = last.unwrap();
-        let by: Vec<usize> = (0..e.totals.len()).map(|k| e.start[k + 1] - e.start[k]).collect();
-        println!("{name}: samples {} {by:?}, pairs {}, totals {:?}, open {best_open:.0} ms, first network {best_net:.0} ms", e.destinations.len(), e.pairs.len(), e.totals.iter().map(|t| t.round()).collect::<Vec<_>>());
-    }
-}
-
 /// T-1538: a period estimated from another's free flow has its own trips, and solving it after
 /// replaces the estimate whole: its figures are a fresh solve's to the bit.
 #[test]
