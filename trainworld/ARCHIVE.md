@@ -2,6 +2,10 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2469 Bus legs over bridges (2026-11-04, agent ferrybus, tree .tw-trees/ferrybus): buses drive motorways too, where most long bridges and tunnels are; a click lands on one only where no street is near. Verrazzano, Brooklyn Bridge, Golden Gate pass; checks/t2451-bus-refusals.mjs.
+- T-2468 Ferry ports snap (2026-11-04, agent ferrybus): a click within 200 m of the shore, land or water, previews and places the port on the nearest shore; within 30 m of an existing port it is that port.
+- T-2467 Bus tool never straight blue (2026-11-04, agent ferrybus): legs draw along roads or dashed red, the pointer's not at all while its roads load; clicks wait for their roads, first point refused off roads, points land on the nearest reachable road within 100 m.
+
 - T-2373 Cleanup A6: bus panel shares the rail panel's parts (2026-11-04, agent buspanel, tree .tw-trees/buspanel): new ui/inspector/schedule.tsx and LineTitle.tsx serve rail, bus and ferry panels; about 590 lines of copies gone. Average load at the rated load for all three (ferries 1.5x); bus drift settled to the rail form (DECISIONS).
 - T-2462 Speed display colours for bus and ferry routes (2026-11-04, agent smallui): their own ramp, rail's red at 10 km/h to rail's yellow at 30; hover chip likewise. checks/t2462-bus-speed.mjs.
 - T-2463 Money plots stack one-off costs (2026-11-04, agent smallui): the pale red bar sits on top of the running costs bar, same width, capped at the top as before.

@@ -35,10 +35,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   gated, 0 parked (30 UA rows, 3 Crimean RU rows sif sel kcx), 53 min. Join UA,RU (mos-ru solve, ~1 h, 8 cores) started
   ~20:40, then zone_terrain, market_drives, build_inputs, stale, smoke. After it: `tools\country\setup_sim.py <kit>
   remove` for countries3's kit (session 8509086d's scratch, countries\). Backup data/work/pre-T2344/ goes once clean.
-- **buspanel** (Opus, tree .tw-trees/buspanel from 2bcab3a0, 6191, ids T-2460..T-2461): T-2373 bus/ferry panels
-  share the rail panel's schedule parts; one Average-load basis.
-- **smallui** (Sonnet, tree .tw-trees/smallui from 2bcab3a0, 6192): T-2462 bus/boat Speed ramp red to yellow, T-2463
-  money plot one-offs stacked on the expenses bar (Anita's answers, 2026-11-04 ~20:50).
+- buspanel LANDED 06d03711 (T-2373; filed T-2460 sim `rated()` boat 480 vs 320). Not yet on 8800; strings shown.
+  8800 rebuild waits for ukraine's pack writes; it then carries T-2453, T-2452, T-2435, T-2373.
+- smallui LANDED 908471d4 (T-2462 bus/boat Speed ramp 10-30 km/h red to yellow; T-2463 one-offs stacked on the
+  expenses bar). Not yet on 8800.
 - **diagzones** (Opus, tree .tw-trees/diagzones from 2bcab3a0, 6193, ids T-2465..T-2466): T-2464 diagram zone borders
   redone the Tube way (from which zone each drawn station is in; octilinear, even width, closed, between blocks).
   Anita on T-2168's: "not really visible at all", "very wavy", "dont fully contain the region", "why can't we just
