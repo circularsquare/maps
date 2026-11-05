@@ -1,5 +1,6 @@
 # Archive
 
+- T-062 [P2] Corridors coloured by speed. Done 2026-11-05: one dark red to yellow ramp by km/h along each stretch (`SPEED_EDGES` in `js/corridors.js`), width still by trips; hovering a line shows "walked/carried/paddled, N km/h" in the cursor box; paddled blue dropped.
 - T-063 [P1] Water paler than land. Done 2026-11-05: on canoe starts `paint` mixes water cells (the canoe water kinds) 22% towards white (`WATER_MIX`), at every level; `paint(L, canoe)` takes the mode so a walking start never gets it.
 - T-061 [P1] Instant hovers. Done 2026-11-05: the 6 `title` tooltips (buttons) move to `data-tip` and show in the speeds panel's `#stip` box at once, above the button; wording unchanged.
 - T-052 [P3] Canoe look. Done 2026-11-05: river lines faint on every start; corridors coloured dark red to yellow by strength with a dark casing, paddled stretches (and the hover route's paddled part) bright blue; the ray fan-out is T-056.

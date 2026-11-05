@@ -6,7 +6,9 @@ import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_GRID, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
 
 export const STEPS = 8;      // strength steps; a polyline is a run of one step
-export const PADDLED = 8;    // added to a line's step when it runs on the canoe layer (the boat paddles it)
+// Speed classes (km/h) a line's colour stands for: below the first edge is class 0, at or above the
+// last is class 7. A line's s byte is step | mode << 3 | class << 5; v is its km/h x 10.
+export const SPEED_EDGES = [1.5, 2.5, 3.5, 4.5, 5.5, 7, 9];
 // Threshold: this share of all the area reached at L10, the same at every level. A lower one in
 // windows draws each coarse edge's flux across the window as its own straight line.
 const SHARE = 0.002;
@@ -217,23 +219,49 @@ export function lines(L, canoe, world, coarser) {
     let nk = 0;
     for (let i = 0; i < nr; i++) { const n = reach[i]; if (kept(n)) stack[nk++] = n; }
     for (let i = 0; i < nk; i++) nch[par[stack[i]]]++;
-    // an edge continues the line of the edge before it when that is the only kept edge on, of one step
-    // and of the same kind: on the canoe layer (paddled) or not, sent as step + PADDLED (T-052)
-    const paddled = (n) => canoe && n >= N ? PADDLED : 0;
-    const cont = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n) && paddled(p) === paddled(n); };
+    // Speed along an edge (child n to its parent): its length over the time difference, km/h, as the
+    // search costs it (time only, no hazard). A transfer between layers (FLIP) has no speed of its
+    // own: 0, and its line takes the class of the edge before it.
+    const { t, pred } = L.res;
+    const edgeKm = (n) => {
+        const code = pred[n], cell = n < N ? n : cellOf[n - N], r = (cell / L.W) | 0;
+        return Math.hypot(DC[code] * L.dxKm[r], DR[code] * L.dyKm);
+    };
+    const edgeDt = (n) => t[n] - t[par[n]];
+    const edgeV = (n) => {
+        if (FLIP[pred[n]]) return 0;
+        const dt = edgeDt(n);
+        return dt > 1e-6 ? edgeKm(n) / dt : 0;
+    };
+    const cls = (n) => {
+        let v = edgeV(n);
+        if (v === 0 && par[par[n]] >= 0 && par[n] >= 0) v = edgeV(par[n]);
+        let k = 0;
+        while (k < SPEED_EDGES.length && v >= SPEED_EDGES[k]) k++;
+        return k;
+    };
+    // walked 0, carried 1 (on the land layer of a canoe start), paddled 2 (on the canoe layer)
+    // (a water cell's canoe node is the cell's own index, so n < N does not mean the land layer)
+    const grid = L.grid;
+    const mode = (n) => canoe ? (n >= N || grid[n] === 0 ? 2 : 1) : 0;
+    // an edge continues the line of the edge before it when that is the only kept edge on, of one
+    // strength step, one speed class and one mode
+    const cont = (n) => { const p = par[n]; return nch[p] === 1 && kept(p) && step(p) === step(n) && mode(p) === mode(n) && cls(p) === cls(n); };
     for (let i = 0; i < nk; i++) { const n = stack[i]; if (cont(n)) flag[par[n]] = 1; }
-    const xy = [], off = [0], s = [];
+    const xy = [], off = [0], s = [], vs = [];
     const cellOfNode = (n) => n < N ? n : cellOf[n - N];
     for (let i = 0; i < nk; i++) {
         const n = stack[i];
         if (flag[n]) continue;
         // from a line's tip up to where it joins
-        const st = step(n) + paddled(n);
+        const st = step(n) | (mode(n) << 3) | (cls(n) << 5);
+        let km = 0, dtSum = 0;
         let cur = n, cell = cellOfNode(n);
         let x = lngOf(L, cell), y = latOf(L, cell);
         const pts = [x, y];
         for (;;) {
             const p = par[cur];
+            if (!FLIP[pred[cur]] && edgeDt(cur) > 1e-6) { km += edgeKm(cur); dtSum += edgeDt(cur); }
             const pc = cellOfNode(p);
             if (pc !== cell) {
                 cell = pc;
@@ -256,18 +284,19 @@ export function lines(L, canoe, world, coarser) {
         for (const v of pts) xy.push(v);
         off.push(xy.length / 2);
         s.push(st);
+        vs.push(dtSum > 0 ? Math.min(255, Math.round(km / dtSum * 10)) : 0);
     }
     for (let i = 0; i < nk; i++) { const n = stack[i]; nch[par[n]] = 0; flag[par[n]] = 0; }
-    if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s);
-    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s) };
-    L.drawn = { xy: out.xy.slice(), off: out.off.slice(), s: out.s.slice() };
+    if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s, vs);
+    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s), v: new Uint8Array(vs) };
+    L.drawn = { xy: out.xy.slice(), off: out.off.slice(), s: out.s.slice(), v: out.v.slice() };
     return out;
 }
 
 // The coarser level's lines inside a window where the window's own routes do not go back to the
 // start (seeded from its border, or not reached): cut in pieces about a coarse cell long, each
 // kept when the window cell under its middle has no node routed from the start.
-function coarserLines(L, canoe, D, step, xy, off, s) {
+function coarserLines(L, canoe, D, step, xy, off, s, vs) {
     const { W, H, grid } = L;
     const org = L.corr.org, t = L.res.t, maxH = cfg.maxHours;
     const canoeOf = canoe ? L.cn.canoeOf : null;
@@ -281,7 +310,7 @@ function coarserLines(L, canoe, D, step, xy, off, s) {
     };
     for (let i = 0; i + 1 < D.off.length; i++) {
         let run = null;
-        const end = () => { if (run && run.length >= 4) { for (const v of run) xy.push(v); off.push(xy.length / 2); s.push(D.s[i]); } run = null; };
+        const end = () => { if (run && run.length >= 4) { for (const v of run) xy.push(v); off.push(xy.length / 2); s.push(D.s[i]); vs.push(D.v[i]); } run = null; };
         for (let j = D.off[i]; j + 1 < D.off[i + 1]; j++) {
             const x0 = D.xy[2 * j], y0 = D.xy[2 * j + 1], x1 = D.xy[2 * j + 2], y1 = D.xy[2 * j + 3];
             const k = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / step));

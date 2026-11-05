@@ -17,12 +17,15 @@ Where many trips from the start share a route (T-046). Code: `js/corridors.js`, 
   added to their parents, each parent queued once all its children are in (no sort by time).
 - **Lines.** An edge is drawn when its child's count is at least 0.2% of the area reached at
   L10; the same threshold at every level. Strength is log(count / threshold) over
-  log(L10 total / threshold) in 8 steps; width, opacity and colour rise with it: dark red
-  through orange to yellow (the ramp and a dark casing are constants at the top of the layer
-  code in `index.html`). On a canoe start the stretches on the canoe layer (paddled) are bright
-  blue instead; a line's step is sent as step + 8 when paddled.
-  Edges join into a polyline while the next one on is the only drawn edge and has the same step
-  and kind,
+  log(L10 total / threshold) in 8 steps; width and opacity rise with it. Colour is the speed
+  along the stretch (T-062): an edge's length over its time difference in the search (time only,
+  no hazard; a transfer between layers has none and takes the speed of the edge before it), in 8
+  classes at 1.5, 2.5, 3.5, 4.5, 5.5, 7 and 9 km/h (`SPEED_EDGES`), dark red through orange to
+  yellow (ramp and a dark casing are constants at the top of the layer code in `index.html`).
+  Each line also carries its mode (walked; on a canoe start carried on land or paddled on water)
+  and its mean km/h, shown when the pointer is on it. A line's byte is step | mode << 3 | class << 5.
+  Edges join into a polyline while the next one on is the only drawn edge and has the same step,
+  speed class and mode,
   and points in the middle of a straight run are dropped (~400 lines at L10).
 
 ## Windows (L3, L1, L0.1)

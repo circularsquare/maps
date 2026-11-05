@@ -334,17 +334,17 @@ function quietBasemap() {
     }
 }
 
-// Corridor look (T-052). Colour by strength step s (0 faint to 7 most trips): dark red through
-// orange to yellow. Stretches the boat paddles (p = 1) are CORR_PADDLED. corrColor() is the one
-// place that picks a colour, so a second ramp (by speed, T-062) can slot in.
+// Corridor look (T-052, T-062). Colour is the speed along the stretch, one ramp for every mode: its
+// class c (0-7) from SPEED_EDGES in js/corridors.js, km/h: under 1.5, 1.5, 2.5, 3.5, 4.5, 5.5, 7
+// and 9 or more, dark red through orange to yellow. Width and opacity are the strength s (how many
+// trips share the stretch). corrColor() is the one place that picks a colour.
 const CORR_RAMP = ['#6e1414', '#9c1f17', '#c43a1a', '#e05a1c', '#f08019', '#f9a51c', '#fdc92a', '#ffe84a'];
-const CORR_PADDLED = '#4db8ff';
 const CORR_OPACITY = [0.55, 0.95];            // faintest and strongest step
 const CORR_EDGE = { color: '#000', opacity: 0.5, extra: 1.6 };   // casing: colour, opacity, px wider
 function corrColor() {
-    const ramp = ['interpolate', ['linear'], ['get', 's']];
-    CORR_RAMP.forEach((c, i) => ramp.push(i, c));
-    return ['case', ['==', ['get', 'p'], 1], CORR_PADDLED, ramp];
+    const ramp = ['step', ['get', 'c'], CORR_RAMP[0]];
+    CORR_RAMP.forEach((c, i) => { if (i > 0) ramp.push(i, c); });
+    return ramp;
 }
 
 function addLayers() {
@@ -380,7 +380,7 @@ function addLayers() {
         paint: { 'line-color': '#000', 'line-width': 3.5, 'line-opacity': 0.45 } });
     map.addLayer({ id: 'route', type: 'line', source: 'route', filter: ['!=', ['get', 'kind'], 1],
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': ['case', ['==', ['get', 'kind'], 2], CORR_PADDLED, '#fff'], 'line-width': 1.4 } });
+        paint: { 'line-color': '#fff', 'line-width': 1.4 } });
     map.addLayer({ id: 'route-carry', type: 'line', source: 'route', filter: ['==', ['get', 'kind'], 1],
         paint: { 'line-color': '#fff', 'line-width': 1.4, 'line-dasharray': [2, 1.5] } });
     addRelief(firstSymbol && firstSymbol.id);
@@ -509,7 +509,7 @@ function drawCorridors() {
             let parts = [[]];
             for (let j = c.off[i]; j < c.off[i + 1]; j++) parts[0].push([c.xy[2 * j], c.xy[2 * j + 1]]);
             if (h) for (const sh of [-360, 0, 360]) parts = parts.flatMap(p => clipOut(p, h.west + sh, h.east + sh, h.south, h.north));
-            for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] & 7, p: c.s[i] >> 3 },
+            for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] & 7, m: (c.s[i] >> 3) & 3, c: c.s[i] >> 5, v: c.v[i] / 10 },
                 geometry: { type: 'LineString', coordinates: p } });
         }
     }
@@ -620,7 +620,7 @@ function setRoute(fc) { const s = map.getSource('route'); if (s) s.setData(fc); 
 function gotRoute(m) {
     routeBusy = false;
     if (routeWanted) askRoute();
-    if (!pointer || m.originId !== originId || !m.lng) { setRoute(EMPTY); split = ''; drawTip(); return; }
+    if (!pointer || m.originId !== originId || !m.lng || lineAt()) { setRoute(EMPTY); split = ''; drawTip(); return; }
     // runs of one kind as lines
     const features = [];
     let run = null;
@@ -645,8 +645,25 @@ function gotRoute(m) {
     drawTip();
 }
 
+// The corridor line under the pointer, if any: { mode, kmh } of that stretch (the lines carry them).
+const MODE_WORD = ['walked', 'carried', 'paddled'];
+function lineAt() {
+    if (!pointer || !corrOn || !map.getLayer('corridors') || map.getLayoutProperty('corridors', 'visibility') === 'none') return null;
+    const r = 4, p = [pointer.x, pointer.y];
+    const f = map.queryRenderedFeatures([[p[0] - r, p[1] - r], [p[0] + r, p[1] + r]], { layers: ['corridors'] })[0];
+    return f ? { mode: f.properties.m, kmh: f.properties.v } : null;
+}
+
 function drawTip() {
     if (!pointer) { tip.style.display = 'none'; return; }
+    const line = lineAt();
+    if (line) {
+        tip.textContent = `${MODE_WORD[line.mode]}, ${line.kmh.toFixed(1)} km/h`;
+        tip.style.display = 'block';
+        tip.style.left = (pointer.x + 14) + 'px';
+        tip.style.top = (pointer.y + 14) + 'px';
+        return;
+    }
     const h = timeAt(pointer.lng, pointer.lat);
     if (!(h <= MAX_HOURS)) { tip.style.display = 'none'; return; }
     tip.textContent = fmt(h);
@@ -665,7 +682,7 @@ function hover() { if (pointer) { drawTip(); askRoute(); } }
 map.on('mousemove', e => {
     pointer = { lng: e.lngLat.lng, lat: e.lngLat.lat, x: e.point.x, y: e.point.y };
     drawTip();
-    askRoute();
+    if (lineAt()) { split = ''; setRoute(EMPTY); } else askRoute();
 });
 map.getCanvas().addEventListener('mouseleave', () => {
     pointer = null; split = '';

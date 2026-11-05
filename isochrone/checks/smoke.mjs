@@ -128,11 +128,13 @@ try {
 
     // 4. hover on a point a little east of the start reads the finest level
     try {
+      await page.click('#corrbtn');   // off: a corridor line under the pointer would show its speed, not the time
       const xy = await page.evaluate((c) => { const p = map.project(c); return [p.x + 30, p.y]; }, NAIROBI);
       await page.mouse.move(xy[0] - 5, xy[1]);
       await page.mouse.move(xy[0], xy[1], { steps: 3 });
       await page.waitForFunction(() => document.getElementById('tip').style.display === 'block', undefined, { timeout: 10000, polling: 100 });
       const text = await page.evaluate(() => document.getElementById('tip').firstChild.textContent);
+      await page.click('#corrbtn');
       const finest = await page.evaluate(() => [1, 3, 10].find((k) => layers[k].shown));
       report('hover shows a time', TIP.test(text) && finest === 1, `("${text}" from L${finest})`);
     } catch (e) {
