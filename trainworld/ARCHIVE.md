@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2541 Diagram: room for straits and bays (2026-11-05, agent diagstraits, tree): the layout reads the sea on the ground; hops across water near twice their real length, shores held apart. All Japan: no islands merged, Seikan 0.27 -> 0.87 of its length, Tokyo Bay open, Boso 1/8 -> 1/3 the core's scale; Hokkaido's IoU fell (T-2550), New York rivers T-2551. notes/T-2541.md.
+- T-2542 The diagram checks' frames (2026-11-05, agent diagstraits, tree): t2464, t2438 and t2289 take each save's own frame, and every diagram check lays a real save out with the sea as the page does (diagram-saves.mjs `waterOf`). notes/T-2541.md.
 - T-2549 Dock tab row has a top rule (2026-11-05, agent launchbits, tree): `.tabs` border-top in the rule colour, so the tabs read as a closed box; checked on desktop and a 412 px phone, light and dark.
 - T-2548 Phones: no purpose picker on the demand row (2026-11-05, agent launchbits, tree): hidden at the phone width; a Purpose choice under Demand bubbles in the settings tab sets the filter on every screen (DECISIONS).
 - T-2545 A load that fails says so (2026-11-05, agent launchbits, tree): "ran out of memory. works best on a computer." or "failed to load :( works best on a computer." on every failure screen, the pre-check too; a load found unfinished at the next start (iOS reload) says the memory one.
