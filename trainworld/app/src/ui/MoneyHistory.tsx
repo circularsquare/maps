@@ -122,7 +122,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
 
   // T-2340, T-2444: each column a fares bar and a running costs bar side by side, the one-off costs (new
-  // trains, construction) a paler bar behind both, scaled to the larger of the first two; a one-off bar
+  // trains, construction) a paler bar stacked on the running costs bar, scaled to the larger of the first two; a one-off bar
   // past the top is cut with a cap so a build day cannot flatten the others (T-452)
   const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
   const y1 = yScale(top);
@@ -173,12 +173,13 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
-          const v = oneOff(e);
+          const v = oneOff(e), base = run(e);
+          const yTop = Math.max(PAD, y1(base + v)), yBase = y1(base);
           return <>
-            {v > 0 && bar("hist-oneoff", i, 0, 1, v)}
-            {v > top && <path class="hist-oneoff cap" d={`M${bx(i, 0, 1)},${PAD + 3}L${bx(i, 0.5, 1)},0L${bx(i, 1, 1)},${PAD + 3}Z`} />}
             {bar("hist-fares", i, 0, 2, e.fares)}
-            {bar("hist-costs", i, 1, 2, run(e))}
+            {bar("hist-costs", i, 1, 2, base)}
+            {v > 0 && yBase > yTop && <rect class={"hist-oneoff" + (i === last ? " now" : "")} x={bx(i, 1, 2)} y={yTop} width={bw / 2} height={yBase - yTop} />}
+            {base + v > top && <path class="hist-oneoff cap" d={`M${bx(i, 1, 2)},${PAD + 3}L${bx(i, 1.5, 2)},0L${bx(i, 2, 2)},${PAD + 3}Z`} />}
           </>;
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}

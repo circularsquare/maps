@@ -46,6 +46,11 @@ function rampColour(stops: [number, string][], v: number): string {
 /** The colour the Speed display gives `kmh`. */
 export const speedColour = (kmh: number) => rampColour(SPEED_STOPS, kmh);
 
+/** T-2462: the Speed display's colour for a bus or ferry route, its own scale since they run 10-30
+ * km/h: rail's red (its slowest) to rail's yellow (its 80 km/h stop). */
+export const BUS_SPEED_STOPS: [number, string][] = [[10, SPEED_STOPS[0][1]], [30, SPEED_STOPS[1][1]]];
+export const busSpeedColour = (kmh: number) => rampColour(BUS_SPEED_STOPS, kmh);
+
 /** T-2420, T-2440: the Profit view's colour by a stretch's fares over its costs: deep red at none,
  * orange at half, yellow just under break-even, pale green just over it, then light blue to deep blue
  * at three times (blue past green for red-green colour blindness), the same in both themes. */

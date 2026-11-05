@@ -622,10 +622,11 @@ the game is open, no hovers): 1d is the past 24 hours, hourly, 30d the past 30 d
 day, daily; over two charts, each on a
 linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
 theme, the tokens `--revenue` and `--expense`, T-1111), has two bars side by side in each column
-[T-2340, T-2444]: fares and running costs with upkeep and loan payments (T-867), and behind both a pale red bar
-of the one-off costs (new trains and construction; none when there are none), the bars filling the column
-less a 1.5 px gap before the next (the train rides' bars likewise), so a one-off bar shows only above the two. Fares and running costs set the scale, the larger of the two;
-a one-off bar is on the same scale, cut at the top with a red cap when larger, so a build day does
+[T-2340, T-2444]: fares and running costs with upkeep and loan payments (T-867), the bars filling the column
+less a 1.5 px gap before the next (the train rides' bars likewise). A pale red bar of the one-off costs (new
+trains and construction; none when there are none) sits on top of the running costs bar, the same width
+[T-2463]. Fares and running costs set the scale, the larger of the two;
+the stack's one-off part is on the same scale, cut at the top with a red cap when it would go past, so a build day does
 not flatten the others [T-452]; the top's figure at the right. Then
 train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides

@@ -7,7 +7,7 @@ import { ARTIFACTS, REAL_SAVE, collectErrors, importSave, launchChrome } from '.
 
 const BASE = process.argv[2] ?? 'http://localhost:6184/';
 const LABEL = process.argv[3] ?? 'after';
-const OUT = `${ARTIFACTS}profit2/`;
+const OUT = process.env.OUT_DIR ?? `${ARTIFACTS}profit2/`;
 mkdirSync(OUT, { recursive: true });
 const { ctx, close } = await launchChrome({ prefix: 'tw-t2444-', size: [1400, 900], deviceScaleFactor: 2 });
 const errors = [];

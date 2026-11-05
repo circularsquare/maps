@@ -4,7 +4,7 @@
 import { levelLabel, moneyShort, plural, speed } from "../game/format";
 import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { idleLines } from "../game/lineRunning";
-import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import { busSpeedColour, inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { guideVerbose } from "../game/ui";
 
@@ -82,7 +82,7 @@ export function speedFact(kmh: number): HTMLSpanElement {
 export function trainSpeedFact(kmh: number, vehicle = "train"): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(`Fastest ${vehicle} `, chip(speed(kmh), speedColour(kmh)));
+  s.append(`Fastest ${vehicle} `, chip(speed(kmh), vehicle === "train" ? speedColour(kmh) : busSpeedColour(kmh)));
   return s;
 }
 

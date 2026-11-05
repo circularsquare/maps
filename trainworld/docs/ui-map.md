@@ -292,7 +292,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
     network"). A running bus or ferry line's route [T-2452] is coloured by its own vehicles' speed the
     same way (the faster of its two runs' profiles at each route segment's middle, placed between its
-    stops by distance); mostly the under-40 red, since buses and boats are slow on this scale.
+    stops by distance), on a scale of its own [T-2462]: rail's red (#d85b4b) at 10 km/h and under to rail's
+    yellow (#d9a437) at 30 and over (`BUS_SPEED_STOPS`), the hover's chip likewise.
   - **Profit** [T-2420, T-2440, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by
     how much of its costs its fares cover on the day shown (fares over costs, a ratio, not their difference),
     worked out only while the view is on (`game/stretchMoney.ts`). A stretch is the track between two stations,
