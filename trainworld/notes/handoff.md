@@ -39,10 +39,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   8800 rebuild waits for ukraine's pack writes; it then carries T-2453, T-2452, T-2435, T-2373.
 - smallui LANDED 908471d4 (T-2462 bus/boat Speed ramp 10-30 km/h red to yellow; T-2463 one-offs stacked on the
   expenses bar). Not yet on 8800.
-- **diagzones** (Opus, tree .tw-trees/diagzones from 2bcab3a0, 6193, ids T-2465..T-2466): T-2464 diagram zone borders
-  redone the Tube way (from which zone each drawn station is in; octilinear, even width, closed, between blocks).
-  Anita on T-2168's: "not really visible at all", "very wavy", "dont fully contain the region", "why can't we just
-  draw them the same way we draw lines?"
+- diagzones LANDED 68b03bcf (T-2464 zone borders from nearest pill on a 1-pitch grid, closed octilinear, #73798b
+  0.7 opacity 0.2 pitch; a one-zone network shows one outline round it; 0 wrong-side on Japan/NE/NYC/Toronto). No
+  multi-zone screenshot: Anita to judge in her own game on 8800. Agent at 470k: retired.
+- **diagnames** (Sonnet, tree .tw-trees/diagnames from 68b03bcf, 6194, ids T-2472..73): T-2447 unnamed diagram blocks.
+- Commits after be462de3: 4da1470f ferrybus, b2ab0311 "holiday load" hover (Anita ok'd), 68b03bcf diagzones.
+  Bus/boat Speed scale stays 10-30 (Anita: "buses can just look alike").
 - ferrybus LANDED 4da1470f (T-2467 bus legs road or dashed red, first point refused, snap; T-2468 ferry port snap
   200 m; T-2469 motorways so bridges). Agent at 400k: retired; follow-ups to a fresh agent. Not yet on 8800.
 - Next free id **T-2472** (T-2456..57 unused; T-2458, T-2459 filed).
