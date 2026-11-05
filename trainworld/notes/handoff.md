@@ -56,7 +56,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   run through calib. After Europe's pack writes end, compare the 8800 smoke; if still 600, check whether Europe
   explains it (smoke at fb674fba vs 09438360 on the same data) before blaming api.rs.
 - codemap DONE (T-2368: ~110 entries added, 20 removed); maps-17 fixed doc_lint's `old/` blind spot (T-2504).
-- After loadfix lands: T-2384 drives view removal (touches demandClient), T-2495 focus pool memory.
+- **drives** (Sonnet, tree .tw-trees/drives from d0bc1e43, 6195, ids T-2506..07): T-2384 remove the Drives view
+  (sim + app; WASM rebuild at landing).
+- **focusmem** (Opus, tree .tw-trees/focusmem from d0bc1e43, 6196, ids T-2508..09): T-2500 big-cluster selected
+  zone's graph, T-2495 focus pool memory (peak under 3.6 GB).
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
