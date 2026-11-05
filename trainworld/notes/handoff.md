@@ -56,8 +56,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2492 city names in the basemap's place grey). Japan's line length -9%, T-2405 hidden 1 -> 2, 3 pills touched by
   a border on Japan: check Anita's view on 8800. Its Vite logged "clock worker: water mask for nyc not loaded:
   RangeError" (data junction during Europe?): recheck after Europe's pack writes.
-- **diagwater** (Opus, tree .tw-trees/diagwater from 38ce99f0, 6198, ids T-2497..98): T-2169 water, rivers as lines
-  (borderLines.ts way) then the ocean/lake edge.
+- diagwater LANDED 988c5f40 behind `?water` (maps-17's call: rivers in pieces/stubs in NYC's core, sea coast a
+  blocky staircase). Show Anita game-nyc-light.png and game-tor-light.png (artifacts/trainworld/t2169/) and ask
+  whether to iterate (T-2497 gaps and stubs, smoother coast) or switch on. Agent retired (589k).
 - **memhunt** (Opus, tree .tw-trees/memhunt from 1987aba1, 6199, ids T-2495..96): T-2485 player RAM (real save 3.8 GB).
 - Anita went to bed ~00:45 2026-11-05: "feel free to keep going with stuff after europe"; "feel free to up cores
   overnight as usual and keep going after the normal context handover cap overnight" (recorded in trainworld/CLAUDE.md
