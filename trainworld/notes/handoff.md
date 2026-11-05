@@ -30,8 +30,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   hit the card stays up to the fresh final (~187 s vs hit at ~28 s on her NA save); make it playable at the hit,
   keeping T-347's edit hold.
 
-- Europe's join ENDED ~16:40 (all shipped); europe agent on after-steps (market_drives build at 16:41). 8800 rebuild
-  waits for its report.
+- europe DONE and COMMITTED e8eb9758 (T-2302: 628 -> 462 zones, 3,200 shipped, 0 Europe parked; T-1189, T-892
+  closed). **8800 = build 1053 (e8eb9758)**, built ~17:12 with the dist-new swap (worked: T-2483 can close), smoke
+  PASSED light and dark, 12,515,598. Pack lock free: Mexico next. Backups to delete: data/work/pre-T2302/{pre,
+  prejoin,removed,stale}.
+- Anita ~17:20 on 8800: "this seems to have made water no longer follow 90 degree / 45 degree lines. thats bad, we
+  should stick to those." Sent to diagsmooth as first priority (T-2528's width runs / far-shore sea).
+- cachecard: playable at 25 s on a cache hit (was ~213 s), but cached vs fresh signature differ (6b5f90ad vs
+  ca3d7bb9, same network): told to explain (file T-2562 if a T-328-era cache bug), smoke, t328, records, then report.
 - diagrivers LANDED 70f1b840 (records f78de89a; agent 446k, retired): dial default 0.5, river width = real x smooth
   scale field, Sound as open water (3.75x Long Island, too wide), core rivers thin in 30% of pitches. Review:
   review/diagram-nyc-water-width.png, diagram-nyc-core-rivers.png. **diagsmooth** (agent a994a1837e88cba0d, Opus,
