@@ -2,7 +2,7 @@
 
 Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38 (resumed after
 Anita's VS Code restart, ~19:00)
-Updated: 2026-11-04 19:40
+Updated: 2026-11-04 19:50
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -11,7 +11,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2444 money plots), 7479ba4d achieve (T-2431, T-2285, T-2347, T-2446), 1797c894 deadcode (T-2369, T-1304),
   e8af5ad8 diagborders (T-2168 zone borders, T-2438 city names), 3dc94145 termtrain (T-2429). 670d3241 Jakarta
   (maps-5c). All worktrees removed; main tree's stale app/dist deleted.
-- **8800 = build 929 (3dc94145)**: Jakarta and everything above. Smoke PASSED light and dark. serve.py had died with
+- 92173326 ferrybus landed (T-2451 bus legs on roads only, T-2178; T-2450 ferries 32 km/h, saves write LFR2).
+- **8800 = build 932 (92173326)**: smoke PASSED light and dark. Build 929 had Jakarta and everything above. Smoke PASSED light and dark. serve.py had died with
   the restart: restarted detached (Start-Process python serve.py). LIVE = 821. Publish only on Anita's word (release
   "later this week"; Mexico and Brazil before release).
 - **Cores cap 12** (Anita: "lets keep 4 cores free"). Disk 45 GB free (pre-T2341, pre-T2418 deleted).
@@ -31,16 +32,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **ukraine** (Opus, main tree, pack lock, port 6197, ids T-2454..T-2455): T-2344 per notes/T-2344.md "Next" (go given
   for all writes). Long runs detached; their batch ids and logs go in notes/T-2344.md. Backup data/work/pre-T2344/.
   After it: `tools\country\setup_sim.py <kit> remove` for countries3's kit (session 8509086d's scratch, countries\).
-- **ferrybus** (Opus, tree .tw-trees/ferrybus, 6187, ids T-2456..T-2457): T-2451 bus legs only on roads (takes in
-  T-2178), then T-2450 ferries faster.
+- **busviews** (Opus, tree .tw-trees/busviews, 6189, ids T-2460..T-2461): T-2452 Line/Traffic/Speed/Profit displays
+  for bus and ferry lines.
 - **cityfirst** (Opus, tree .tw-trees/cityfirst, 6188, ids T-2458..T-2459): T-2453 selected city's demand first.
+  Measured (notes/T-2453.md): the trip-length graph waits for the final in every zone, and the selected zone's split
+  waits for its cluster's final; order matters only across clusters. Told to build its items 1-3 (graph asks the
+  next round / focus pool; cluster solved ahead publishes rounds; `next` ordering), item 4 only if still lagging.
 - While ukraine gates: no app/ or sim/ edits in the main tree; trees land only between its gates (a join is fine).
-- Next free id **T-2460**.
+- Next free id **T-2462**. (ferrybus left T-2456..57 unused.)
 
 ## Next
 1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show
    Anita strings old -> new.
-2. Open, not started: T-2452 bus/ferry track displays (after ferrybus), T-2435 t325-bare-check, T-2447 Nagano's
+2. Open, not started: T-2435 t325-bare-check, T-2447 Nagano's
    unnamed diagram blocks, T-2425 findings (notes/T-2425.md), T-2169 diagram water, T-2368 code-map, T-2370 flags,
    T-2379 sim small items, T-2373 bus panel, T-2384 drives removal, T-2404 blueprint, T-2396 dock height.
 

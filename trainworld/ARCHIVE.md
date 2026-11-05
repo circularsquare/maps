@@ -2,6 +2,11 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2451 Bus route legs only along roads (2026-11-04, agent ferrybus, tree .tw-trees/ferrybus): a click, drag or delete the roads do not reach is refused with the reason; detour cap 3x or +1 km; old straight legs re-searched on Edit route. Takes in T-2178; checks/t2451-bus-refusals.mjs.
+- T-2178 Bus legs over water refused (2026-11-04): done by T-2451, which refuses every leg off the roads.
+- T-1501 Cue for straight bus legs. Abandoned 2026-11-04: since T-2451 the tool draws no straight legs; only saves from before it hold any.
+- T-2450 Ferries a little faster (2026-11-04, agent ferrybus, tree .tw-trees/ferrybus): open water 25 to 32 km/h; Staten Island 24.9 to 21.2 min, Manly 31.7 to 26.1; LFR2 save block, LFR1 speeds moved to the new curve on load. notes/T-2177.md "T-2450".
+
 - T-2341 Jakarta as Jabodetabek (2026-11-04, agents countries2, countries3): jak 36.9M with Tangerang, new zones sum Sukabumi with Cianjur (5.56M), krw Karawang with Purwakarta, sra Serang with Cilegon; tan retired into jak; Java's group re-solved, terrain and drives. notes/T-2341.md.
 - T-2438 Network diagram far out: city names only (2026-11-04, agent diagnames, tree .tw-trees/diagborders): below 1.47 px a pitch each block shows its zone's name beside its box, station names hidden; checks/t2438-city-names.mjs. notes/T-2438.md.
 - T-2429 Train vanishing at a terminal on a count edit (2026-11-04, agent termtrain, tree .tw-trees/termtrain): a train standing at its terminal whose run the edit made quicker now waits from the edit for the new pattern's first departure (`Service::hand_over`); test `a_change_to_a_following_pair_on_full_track_moves_no_train`.
