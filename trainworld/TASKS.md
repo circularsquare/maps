@@ -69,7 +69,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
 - T-2532 [P3] After an edit the zone in view's bubbles wait for the whole re-solve's final (Anita's save 150-230 s) though its figures update with the local result (36-54 s): no worker keeps the local result's bubble sums, so `cellModes` for it comes back null. Keep and push them (`demand.worker.ts` `keepSums` for the local cluster's last round, `cellModes`' `sameNet`). Worker change. notes/T-2531.md "Edits". Open.
 - T-2559 [P3] Old saves' first reload misses the demand cache: a save from before T-1521 keeps its fare base exact (0.12979761789682243) until the slot saves rounded nodes (0.1298), so the first reload's network differs (`game/fareCurve.ts` `faresOf`, `isStraight` 1e-6). Either fix moves some figures slightly (the smoke figure or old saves' later loads). notes/T-2552.md. Open; taking, 2026-11-05, agent farebase.
-- T-2560 [P2] On a reload that hits the demand cache, the loading card stays up until the fresh final (T-347), so Anita's North America save shows the card ~187 s though its cached figures and bubbles are there at ~28 s: look at letting the card go at the cache hit (with the edit hold T-347 wanted), or say "Updating demand" on a smaller note. notes/T-2552.md. Open; taking, 2026-11-05, agent cachecard.
 - T-2533 [P3] After a reload finds the demand cache, nothing answers questions about the zone in view (a bubble's far ends, a station's riders) until the re-solve's round 0 (Anita's save: 72-99 s with T-2531's retry, 156-202 s without; a cache miss answers in 14 s from the focus pool): solve the zone in view first after a cache hit (focus pool or its cluster ahead), weighed against the focus pool's memory (T-2495). notes/T-2531.md "T-2523". Open.
 - T-2553 [P3] Balance the periods between solving workers by their measured time: on 2 workers worker 0 holds periods 0, 2, 4 and worker 1 waits 8-9 s a round for its third (about 27 s idle in a 143 s solve on Anita's save). notes/T-2524.md. Open.
 - T-1730 [P3] T-1609 follow-up: a browser check that an edit right after a local refine solves the cluster whole (the refined periods are marked `~local`), and that a zone going coarse is refined locally too; neither was run. notes/T-1609.md. Open.
@@ -93,10 +92,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 
 ## Interface
 Anita's notes 2026-11-05 evening (verbatim in notes/todo-2026-11-05c.md; briefs quote it word for word):
-- T-2569 [P2] Landing page save preview says "nothing built" for a few seconds while the save is still loading; say "loading..." while it loads. Open; taking, 2026-11-05, agent uismall5.
-- T-2570 [P3] Trouble list: also list lines with no stations assigned. Open; taking, 2026-11-05, agent uismall5.
-- T-2571 [P2] Trouble list icon sits high in its corner: bottom padding to match the right padding. Open; taking, 2026-11-05, agent uismall5.
-- T-2572 [P2] The "show" settings rows (demand bubbles, track colour, find a place and the rest): gap 5px to 3px. Open; taking, 2026-11-05, agent uismall5.
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
 Anita's notes 2026-11-05 late morning (verbatim in notes/todo-2026-11-05b.md; briefs quote it word for word):
@@ -230,7 +225,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-2359 [P2] Code and documentation cleanup (Anita 2026-11-04). Surveys done (T-2360/61/62); stages below, their order and waits in notes/T-2359.md (A = notes/T-2360.md app, E = T-2361.md engine, D = T-2362.md docs). Open while any stage is.
-- T-2527 [P3] `checks/t409-worker-check.mjs` (fixed in T-2513) barely tests the market's walker and longer-trip rules: its 4-stop test lines carry no everyday rail across a zone line (part 5 is 0 every period) and ~1e-7 longer-trip rail; give it lines that cross a zone line. Open; taking, 2026-11-05, agent t409strong.
+- T-2573 [P3] `checks/t409-worker-check.mjs` still does not exercise the walker rule: rail pairs carry no walking share (parts[6] = parts[7] exactly) even with stops by the walkable Boston/Providence cells; needs a line serving two stations at both ends of a walkable cross-pack pair. notes/T-2527.md. Open.
 - T-2512 [P3] Cleanup A4's rest: the clock worker, client and protocol items T-2371 left (T-2360 stage 4 items 16 rest, 18-20, 22 rest, 23-26, `isNortheastSave`), list in notes/T-2371.md. Open; taking, 2026-11-05, agent cleana4.
 - T-2460 [P3] A boat's rated load in the track sim (found in T-2373): `LineSvc::rated()` (sim/src/track/service.rs) calls a bus or boat full at its crush, so a boat's hourly stretch loads (`stretch_hours`) are over 480 while the app, the demand kernel and the docs give a boat 320 at the rated load. Nothing on a ferry panel reads them today; make it 320 if boat crowding is ever shown. Open.
 - T-2374 [P3] Cleanup A7: splits of demandClient.ts, clock.worker.ts, demand.worker.ts, renderer.ts (tools.ts optional), one agent per file, after T-2371 and T-2372. Open.
