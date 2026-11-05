@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2512 Cleanup A4's rest (2026-11-05, agent cleana4, tree): unused city/version/clock fields, one decode on opening a slot, ledger and money-param helpers, `Newest` for the preview, station and crossover waits, `isThisWorld`; smoke 12,515,598. Left: regions.json fetched once (item 26 step two). notes/T-2512.md.
 - T-2559 Old saves' first reload hits the demand cache (2026-11-05, agent farebase): `loadFares` (`clock.worker.ts`) takes an old save's fare base and rate from its rounded nodes at load; the real save's first reload is cached (t328 run 0), smoke 12,515,594 (was 12,515,598). notes/T-2552.md.
 - T-2527 t409-worker-check lines cross a zone line (2026-11-05, agent t409strong): loads bos, pvd, phl, lcs; a Boston to Providence line and a Philadelphia to Lancaster line; market rail 1e-7 became 23-142 (Boston 23-127, Philadelphia 3-17), part 5 0 became 0.8-21.8 every period; passes, fails when part 5 or the rail sum is mis-expected. The walker rule stays untested (rail takes no walkers here). notes/T-2527.md.
 - T-2560 A cache-hit reload is playable at the cache (2026-11-05, agent cachecard): the card and held clock go once the cached result's own network is in (Anita's North America save 16-25 s, was 131-236 s); the re-solve keeps the load's barrier; an edit meanwhile ends at a cold solve's figures. notes/T-2560.md.
