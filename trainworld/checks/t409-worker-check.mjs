@@ -9,17 +9,47 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ARTIFACTS, bundleDemandWorker, startWorker, network, workerPack as pack, marketPacks, marketRows } from './lib.mjs';
+import { ARTIFACTS, bundleDemandWorker, startWorker, workerPack as pack, marketPacks, marketRows } from './lib.mjs';
 const wrapper = await bundleDemandWorker('t409');
 const start = () => startWorker(wrapper);
+// T-2527: four packs, so that each test line crosses a zone line. The Boston line runs from South Station
+// to Providence, over the line between the Boston and Providence packs (two stops on each side of the
+// Boston pack's southern edge, at the cells where its walking outings are); the Philadelphia line runs out
+// to Lancaster County. Lines inside the Boston and Philadelphia packs alone carried no outing across a
+// zone line (part 5 was 0 every period) and ~1e-7 of market rail.
+const IDS = ['bos', 'pvd', 'phl', 'lcs'];
+const LINES = {
+  bos: [[-71.0552, 42.3523], [-71.2410, 42.0090], [-71.3140, 42.0090], [-71.4128, 41.8290]],
+  phl: [[-75.1818, 39.9556], [-75.4830, 40.0420], [-75.7040, 40.0060], [-76.1000, 40.0200]],
+};
+// lib.mjs's network(), for these lines
+const FRAME = { kind: 'equirect', lon: -73.985, lat: 40.758 }, R = 6371008.8, RAD = Math.PI / 180;
+const xyOf = ([lon, lat]) => [R * (lon - FRAME.lon) * RAD * Math.cos(FRAME.lat * RAD), R * (lat - FRAME.lat) * RAD];
+function network(ids, tph = { bos: [12, 10, 6], phl: [12, 10, 6] }) {
+  const stXY = [], lineN = [], stops = [], times = [], tphs = [], cars = [], hopKm = [];
+  for (const id of ids) {
+    const s0 = stXY.length / 2, pts = LINES[id].map(xyOf), m = pts.length;
+    for (const p of pts) stXY.push(...p);
+    lineN.push(m);
+    for (let k = 0; k < m; k++) stops.push(s0 + k);
+    const t = new Array(6 * m).fill(0);
+    for (let lev = 0; lev < 3; lev++) for (let k = 0; k < m - 1; k++) { t[lev * m + k] = 180; t[(3 + lev) * m + k + 1] = 180; }
+    times.push(...t);
+    tphs.push(...tph[id]);
+    cars.push(6);
+    const km = pts.slice(1).map((p, k) => Math.hypot(p[0] - pts[k][0], p[1] - pts[k][1]) / 1000);
+    hopKm.push(...km, 0, ...km.slice().reverse(), 0);
+  }
+  return { frame: FRAME, stXY: new Float32Array(stXY), complex: new Uint32Array(stXY.length / 2).map((_, i) => i), lineN: new Uint32Array(lineN), stops: new Uint32Array(stops), times: new Float32Array(times), tph: new Float32Array(tphs), cars: new Float32Array(cars), fare: { base: 2.9, perKm: 0.1 }, hopKm: new Float32Array(hopKm) };
+}
 // T-377: the zones' market packs; T-776: the world market's rows, which the page sends with the first
 const ROWS = marketRows();
-const market = marketPacks(['bos', 'phl']);
+const market = marketPacks(IDS);
 const ROUNDS = 3;
 const finals = (msgs, version) => [...new Map(msgs.filter((m) => m.kind === 'result' && !m.cluster && m.version === version && m.summary[0] === ROUNDS).map((m) => [m.period, m])).values()].sort((a, b) => a.period - b.period);
 async function worker() {
   const k = start(); await k.next((m) => m.kind === 'boot');
-  k.w.postMessage({ kind: 'init', packs: [pack('bos'), pack('phl')], intercity: market, rows: ROWS, periods: [0, 1, 2, 3, 4] });
+  k.w.postMessage({ kind: 'init', packs: IDS.map(pack), intercity: market, rows: ROWS, periods: [0, 1, 2, 3, 4] });
   const r = await k.next((m) => m.kind === 'ready' || m.kind === 'failed'); assert.equal(r.kind, 'ready', r.error);
   return k;
 }
@@ -49,8 +79,10 @@ for (let q = 0; q < 5; q++) {
   }
   same(noMs(B.citySummary.bos), noMs(b.citySummary.bos), `period ${q} Boston's summary`);
   same(noMs(B.citySummary.phl), noMs(p.citySummary.phl), `period ${q} Philadelphia's summary`);
+  same(noMs(B.citySummary.pvd), noMs(b.citySummary.pvd), `period ${q} Providence's summary`);
   const [m, mb, mp] = [B.intercitySummary, b.intercitySummary, p.intercitySummary];
-  assert(mb[2] > 0 && mp[2] > 0, `period ${q}: both parts carry longer trips`);
+  // T-2527: real figures (the lines used to carry ~1e-7): the least over the periods is 23 and 3
+  assert(mb[2] > 10 && mp[2] > 1, `period ${q}: both parts carry longer trips: ${mb[2]}, ${mp[2]}`);
   assert.equal(m[2], mb[2] + mp[2], `period ${q} market rail`);
   assert.equal(m[1], mb[1], `period ${q} market trips once`);
   assert.equal(mb[1], mp[1]);
@@ -58,6 +90,8 @@ for (let q = 0; q < 5; q++) {
   // four per purpose; each block's rail is the parts' added, its walkers those with no rail (the same
   // on any network) minus what each part's rail takes, the rest taken once
   const [P, Pb, Pp] = [B.intercityParts, b.intercityParts, p.intercityParts];
+  // T-2527: the Boston line carries everyday rail across a zone line (the least over the periods is 0.8)
+  assert(Pb[5] > 0.1 && Pb[4] > 1000, `period ${q}: everyday rail across a zone line: ${Pb[5]} of ${Pb[4]} legs`);
   const walkAt = new Map([[6, 7], ...Array.from({ length: (P.length - 8) >> 2 }, (_, k) => [8 + 4 * k + 2, 8 + 4 * k + 3])]);
   for (const base of walkAt.values()) assert(Object.is(Pb[base], Pp[base]), `period ${q} market parts[${base}] the same on any network`);
   const railAt = (i) => (i < 6 ? i % 2 === 1 : i >= 8 && (i - 8) % 4 === 1);

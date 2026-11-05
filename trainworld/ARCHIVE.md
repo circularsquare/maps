@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2559 Old saves' first reload hits the demand cache (2026-11-05, agent farebase): `loadFares` (`clock.worker.ts`) takes an old save's fare base and rate from its rounded nodes at load; the real save's first reload is cached (t328 run 0), smoke 12,515,594 (was 12,515,598). notes/T-2552.md.
 - T-2527 t409-worker-check lines cross a zone line (2026-11-05, agent t409strong): loads bos, pvd, phl, lcs; a Boston to Providence line and a Philadelphia to Lancaster line; market rail 1e-7 became 23-142 (Boston 23-127, Philadelphia 3-17), part 5 0 became 0.8-21.8 every period; passes, fails when part 5 or the rail sum is mis-expected. The walker rule stays untested (rail takes no walkers here). notes/T-2527.md.
 - T-2560 A cache-hit reload is playable at the cache (2026-11-05, agent cachecard): the card and held clock go once the cached result's own network is in (Anita's North America save 16-25 s, was 131-236 s); the re-solve keeps the load's barrier; an edit meanwhile ends at a cold solve's figures. notes/T-2560.md.
 - T-2569, T-2570, T-2571, T-2572 Small interface fixes (2026-11-05, agent uismall5): an account card reads "Loading..." until its picture fetch ends; lines with no stations are the trouble list's last rows; the trouble button sits 10 px from the bottom as from the right; the map's upper-left rows are 4 px apart (was 6).

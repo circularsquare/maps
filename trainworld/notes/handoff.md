@@ -4,19 +4,41 @@ Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 
 Previous: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17 (ListAgents no longer shows that name; likely
 maps-03 after the VS Code restart), handed over 2026-11-05 17:55, finishing in-flight work (mexico, cachecard,
 diagsmooth, watertoggle, sheet)
-Updated: 2026-11-05 17:55
+Updated: 2026-11-05 18:05
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **b2789380**. Main-tree smoke PASSED at 004354ca (12,515,600: the 2 over 598 are europe's uncommitted
-  market-rows.json; trees give 598). Every tree landed today smoked 12,515,598.
-- **8800 = build 956 (a8a72002)**, from before Europe's retire; waits for Europe's join to end. LIVE = 821. Publish
-  only on Anita's word (release "later this week"; Mexico and Brazil before release).
-- **Cores cap 12** (overnight 15 ended ~08:00). Disk 45.6 GB free.
-- **Pack lock: europe's** (T-2302). Then Mexico T-2436 -> Brazil T-2437.
-- Uncommitted: TODO.md (Anita's); europe's files (world_plan.json, registry.json, market-rows.json, zone-names.json,
-  zone-successors.json, docs/world-run.md, notes/T-2302.md).
+- master **5a25226a** (Anita pushed ~18:00). Real save smokes 12,515,598.
+- **8800 = build 1056 (e0534793)**, smoke light and dark PASSED. LIVE = 821. Publish only on Anita's word (release
+  "later this week"; Mexico and Brazil before release).
+- **Cores cap 12** while Anita is around. Disk ~67 GB free.
+- **Pack lock: mexico's** (T-2436). Then Brazil T-2437.
+- maps-17's subagents report to maps-17 (maps-03), which relays mexico's and sheet's reports to maps-93 and lands
+  watertoggle and cachecard itself if they qualify. maps-93 lands nothing in the main tree until maps-17 says done.
+
+## maps-93's agents
+- **uismall5** (Sonnet, tree .tw-trees/uismall5 from 5a25226a, port 6188): T-2569..T-2572, Anita's four TODO items of
+  the evening (notes/todo-2026-11-05c.md): save preview "Loading...", trouble list empty lines, trouble icon padding,
+  show-row gap 5 -> 3 px.
+- **kernelsplit** (Sonnet, tree .tw-trees/kernelsplit from 5a25226a, port 6187): T-2381, split demand/kernel.rs and
+  intercity.rs, moves only; tests and smoke unchanged.
+- **cleana4** (Sonnet, tree .tw-trees/cleana4, port 6186): T-2512 cleanup A4 rest; stays out of demandClient.ts.
+- farebase DONE, to land (tree .tw-trees/farebase; code: app/src/workers/clock.worker.ts `loadFares` only; records
+  in main tree: docs/track-and-service.md, DECISIONS, TASKS/ARCHIVE): T-2559, pre-T-1521 saves take fares from their
+  rounded nodes; first reload hits the cache. **Real save smoke figure 12,515,598 -> 12,515,594** once landed.
+  cleana4 also edits clock.worker.ts: expect a rebase at whichever lands second.
+- t409strong DONE (T-2527, uncommitted in main tree: checks/t409-worker-check.mjs, notes/T-2527.md, docs/code-map.md,
+  TASKS/ARCHIVE lines): part 5 now 0.8-22 a period, market rail 26-142; walker rule still untested, filed T-2573.
+- **followtrack** (Opus, tree .tw-trees/followtrack from c306d1bc, port 6184): T-1358 followTrack at least halved,
+  zones identical.
+- uismall5 reported; sent back for the trouble button vs attribution button overlap (T-2571).
+- watertoggle LANDED by maps-17 7bba88c2 (records 550e99ab): T-2565 "Show water" button, off by default; not on 8800
+  yet. Show Anita the hover string "Show water" (new).
+- Anita away ~18:10-21:10, "feel free to use all cores": cap 15.
+- Next free id **T-2574** (T-2567..68 are sheet's).
+- maps-93 scratch: C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\aa768402-8365-45e0-85b8-0c27fe256637\scratchpad
+  (snapbuild.cmd, snapbuild-frozen.cmd fixed, mark_taking.py, keep_hunks.py, lowdisk.ps1, common-brief-tree.md).
 
 ## In flight (maps-17 winding down; maps-93 took over ~18:20)
 - **mexico** (agent aa0915d6048b49d88, Opus, main tree, **pack lock**, port 6197, kit maps-17's old scratch\mexico):

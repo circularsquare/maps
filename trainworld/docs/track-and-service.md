@@ -1174,6 +1174,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   scale the player set kept at its factor over the income's, so its home country's fares weigh
   exactly as before and the rest within the scales' rounding (`game/income.ts`). A save from before T-1277 carries no
   `baseline` and its curve, New York's fares, is divided by the home country's old scale as it loads.
+  A save from before T-1521, or one with no nodes, takes its base and rate from its tidied (rounded)
+  nodes as it loads, the same as the slot writes next, so its first reload's network is every later one's
+  and the demand cache hits on it (`loadFares`, T-2559).
   An older save's two nodes, or a base and rate, load as the three nodes on their line (one below
   $0 at 0 km starting at $0 instead), any other curve as the line through its first and last node.
   The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1
