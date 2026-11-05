@@ -1147,9 +1147,9 @@ function query(msg: Query) {
       const f0 = new Float32Array(0);
       const commute = !b ? null : msg.purpose < 0 ? withNone(b.a.cell_modes_day(f0, day), b.a.cell_unreach_day(f0, day)) : f0;
       const e = msg.purpose === -2 ? null : b?.e;
-      // T-2215: the No route blocks are every period's (no mask form), so in the first part alone
-      const none = !e || (msg.purpose >= 0 && msg.purpose >= e.purpose_count()) ? f0 : e.cell_unreach_day(msg.purpose, day);
-      const parts = !e ? [] : groupMasks.map((m, i) => withNone(msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : msg.purpose < e.purpose_count() ? e.cell_modes_of_mask_day(msg.purpose, m, day) : f0, i === 0 ? none : f0));
+      const has = !!e && msg.purpose < e.purpose_count();
+      // each part its own buffer, even empty: every one is transferred
+      const parts = !e ? [] : groupMasks.map((m) => has ? withNone(msg.purpose === -1 ? e.cell_modes_mask_day(m, day) : e.cell_modes_of_mask_day(msg.purpose, m, day), e.cell_unreach_mask_day(msg.purpose, m, day)) : new Float32Array(0));
       sendMessage({ kind: "bare", id: msg.id, commute, masks: parts.length ? groupMasks : [], parts }, [...(commute ? [commute.buffer] : []), ...parts.map((p) => p.buffer)]);
     } else if (msg.kind === "bareFlows") {
       // T-336: a bare zone's selection with no rail: the commuters' far end as `flows` gives it

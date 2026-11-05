@@ -2649,6 +2649,13 @@ impl EverydayApi {
         let only = if kind >= 0 { Some(kind as usize) } else { None };
         self.modes_all(only, day as usize, None).split_off(6 * n)
     }
+    /// `cell_unreach_day` over the periods in `mask`, as `cell_modes_mask_day` (T-2435): a bare
+    /// zone's No route legs per solving worker's periods, adding up as a solve's do.
+    pub fn cell_unreach_mask_day(&self, kind: i32, mask: u32, day: u32) -> Vec<f32> {
+        let n = self.engine.city.len();
+        let only = if kind >= 0 { Some(kind as usize) } else { None };
+        self.modes_all(only, day as usize, Some(mask)).split_off(6 * n)
+    }
 }
 
 #[wasm_bindgen]
