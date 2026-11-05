@@ -286,7 +286,11 @@ Web first, so it can be shared as a link.
   read again after its .bin and both fetched again if it changed (a pack rewritten mid-load). A
   zone whose pack still cannot be downloaded is left out (not needed, waited for or held for),
   its failure shows on the status tag while it is in view, and it is tried again after 10, 30 and
-  then every 60 s; demand everywhere else carries on (T-484). A pack that downloads whole and
+  then every 60 s; demand everywhere else carries on (T-484). A zone boundary that cannot be
+  fetched counts as failed (a station near the zone counts as reaching it; the view is placed by
+  the zone centres) and is fetched again after 10, 30 and then every 60 s, and the coarse outlines
+  after 1, 4, 10, 30 and 60 s, so a server answering 404 for a while (a rebuild) never leaves the
+  zone in view unloaded for the page's life (T-2478). A pack that downloads whole and
   does not open in a worker (a parse or WASM error, or a market pack whose zone count disagrees
   with its market row) is treated the same way: the worker answers its `open` naming the pack
   in `rejected`, every worker drops it, the zone is left out and flagged, and it is tried again

@@ -44,9 +44,16 @@ export function footprint(id: CityId, fc: FeatureCollection<Polygon | MultiPolyg
 }
 
 /** T-404: footprints fetched so far, shared by the reach test and the focus rule; null: the
- * boundary could not be fetched (not tried again this page). */
+ * boundary could not be fetched, until it is tried again (T-2478: a server mid-rebuild answers 404 for
+ * a minute or two, and a failure kept for good left the zone in view dead space for the page's life). */
 const store = new Map<CityId, Footprint | null>();
 const loading = new Map<CityId, Promise<void>>();
+/** T-2478: the waits before a failed boundary is forgotten (and fetched by the next caller), the last repeating */
+const FOOTPRINT_RETRY_MS = [10_000, 30_000, 60_000];
+const failures = new Map<CityId, number>();
+let onForget: ((id: CityId) => void) | null = null;
+/** T-2478: `f` hears of each failed boundary as it is forgotten, so it can ask for it again. */
+export function onFootprintForgotten(f: (id: CityId) => void) { onForget = f; }
 
 /** The footprint if fetched: undefined while not, null if it failed. */
 export function footprintOf(id: CityId): Footprint | null | undefined {
@@ -60,9 +67,17 @@ export function loadFootprints(ids: Iterable<CityId>): Promise<void> {
     if (store.has(id)) continue;
     let p = loading.get(id);
     if (!p) {
-      p = cityBoundary(id).then((fc) => { store.set(id, footprint(id, fc)); }, (err) => {
+      p = cityBoundary(id).then((fc) => { store.set(id, footprint(id, fc)); failures.delete(id); }, (err) => {
         console.warn("zone boundary unavailable", id, err);
         store.set(id, null);
+        const n = failures.get(id) ?? 0;
+        failures.set(id, n + 1);
+        setTimeout(() => {
+          if (store.get(id) !== null) return;
+          store.delete(id);
+          loading.delete(id);
+          onForget?.(id);
+        }, FOOTPRINT_RETRY_MS[Math.min(n, FOOTPRINT_RETRY_MS.length - 1)]);
       });
       loading.set(id, p);
     }

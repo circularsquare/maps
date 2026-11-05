@@ -784,7 +784,8 @@ class DemandClient {
     const at = () => this.workers.indexOf(w);
     w.onmessage = (e: MessageEvent<FromDemand>) => { const j = at(); if (j >= 0) this.receive(j, e.data); };
     // an uncaught WASM trap is a panic as `dead` reports one
-    w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message) ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message}`)); };
+    // (T-2478: a worker whose script did not download has an error with no message)
+    w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
     const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
@@ -2639,6 +2640,7 @@ class DemandClient {
     this.flog.push({ version, zone: id, sentAt: now, openAt: this.fopened?.get(id), roundAt: [] });
     this.mainPause(true);
     p.solve({ kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], keep: true, ids, ...(perfOff("estimate") ? { exact0: true } : {}) }, !perfOff("parts"));
+    this.lengthsAhead(); // T-2476: the city view's graph of the zone, of round 0
   }
 
   private focusMessage(i: number, msg: FromDemand) {
@@ -3359,24 +3361,37 @@ class DemandClient {
   /** T-2365: a zone's trips a day by length on the day shown (game/tripLengths.ts), from every
    * solving worker's periods, or for a zone open bare the aux worker's; cached per zone, solve,
    * round and day; null while not known. */
-  tripLengths(zone?: CityId): Promise<TripLengths | null> {
+  tripLengths(zone?: CityId, ahead?: Target): Promise<TripLengths | null> {
     this.syncFocus();
     const dv = demandView.peek();
-    if (!dv) return Promise.resolve(null);
-    const city = zone ?? activeCity.peek(), day = shownDay.peek(), { version, round } = dv;
+    if (!dv && !ahead) return Promise.resolve(null);
+    const city = zone ?? activeCity.peek(), day = shownDay.peek(), version = dv?.version ?? ahead!.version, round = dv?.round ?? -1;
     // T-2453: as the views' questions are (T-327): while a solve steps through its rounds, of the round
     // after the one shown, answered on reaching it; a zone shown from the focus pool, there
-    const at = this.target(city, true) ?? { version, round, view: version, wait: false };
+    const at = ahead ?? this.target(city, true) ?? { version, round, view: version, wait: false };
     // (a question that waits for a round kept apart from one of a round in hand: a cluster's last
-    // round asked ahead comes back empty at the solve's final, and the graph then asks again)
-    const keyAt = (r: number, wait: boolean) => `${city}:${version}:${round}:${day}:${at.version}:${r}:${wait ? "w" : ""}`;
+    // round asked ahead comes back empty at the solve's final, and the graph then asks again;
+    // T-2476: one that waits is keyed by its solve and round alone, since the view shown moves on
+    // meanwhile wherever that solve's own rounds are the view: the focus pool's alone, its round 0 asked
+    // as the solve was sent came a round late, 9-20 s)
+    const keyAt = (r: number, wait: boolean) => (wait && !perfOff("lengths0") ? `${city}:${day}:${at.version}:${r}:w` : `${city}:${version}:${round}:${day}:${at.version}:${r}:${wait ? "w" : ""}`);
     const key = keyAt(at.round, at.wait);
     const had = this.lengthsP.get(key);
     // T-2453: as `viaRound`: the round shown's answer, when it was asked for in time (`lengthsAhead`),
     // with the next round's asked for at once
     const shown = at.wait && at.shown !== undefined && at.shown >= 0 ? this.lengthsP.get(keyAt(at.shown, true)) : undefined;
     if (had) return shown ?? had;
-    const p = (async (): Promise<TripLengths | null> => {
+    const p = this.lengthsRun(city, day, version, at);
+    this.lengthsP.set(key, p);
+    if (this.lengthsP.size > 12) this.lengthsP.delete(this.lengthsP.keys().next().value!);
+    p.then((v) => { if (!v && this.lengthsP.get(key) === p) this.lengthsP.delete(key); });
+    return shown ?? p;
+  }
+  private lengthsP = new Map<string, Promise<TripLengths | null>>();
+
+  /** One trip-lengths question at `at`, its answers added up (`version`: the view it is given for). */
+  private lengthsRun(city: CityId, day: DemandDay, version: number, at: Target): Promise<TripLengths | null> {
+    return (async (): Promise<TripLengths | null> => {
       // (T-2453: a zone open bare whose figures shown are of no solve, while a solve with it runs: that solve's)
       const bare = this.isBare(city) && !at.solve?.cities.includes(city);
       const replies = bare
@@ -3393,19 +3408,21 @@ class DemandClient {
       if (mask !== ALL_PERIODS || !sum || !edges || shownDay.peek() !== day) return null;
       return tripLengthsOf(version, day, edges, sum);
     })();
-    this.lengthsP.set(key, p);
-    if (this.lengthsP.size > 12) this.lengthsP.delete(this.lengthsP.keys().next().value!);
-    p.then((v) => { if (!v && this.lengthsP.get(key) === p) this.lengthsP.delete(key); });
-    return shown ?? p;
   }
-  private lengthsP = new Map<string, Promise<TripLengths | null>>();
 
   /** T-2453: the city view's zone has its trip lengths asked for each round as the round starts, so
    * its graph finds the round shown answered when it opens on it (a worker past a round answers
    * nothing of it) */
   private lengthsAhead() {
     const sel = selection.peek();
-    if (sel?.kind === "city" && !perfOff("selected")) void this.tripLengths(sel.city as CityId);
+    if (sel?.kind !== "city" || perfOff("selected")) return;
+    const id = sel.city as CityId, f = this.fsolve;
+    // T-2476: a focus solve of the zone that has shown no round yet: its round 0, so the graph comes with
+    // round 0's figures (asked once they showed, of round 1 by then, it came a round later: 9 s on the
+    // Tokyo save)
+    if (f && this.fpool?.alive && f.cities[0] === id && f.published < 0 && !perfOff("lengths0"))
+      void this.tripLengths(id, { version: f.version, round: 0, view: demandView.peek()?.version ?? f.version, wait: true, solve: f, shown: -1 });
+    else void this.tripLengths(id);
   }
   /** T-1435: the squares and the tables with no rail, from `driveTable`. */
   private async driveBase(city: CityId, day: DemandDay): Promise<Omit<DriveInput, "commuteRail" | "everydayRail"> | null> {
@@ -4101,20 +4118,28 @@ class DemandClient {
 
   /** T-2453: a round of a cluster solved ahead (T-402) while other figures are shown (the zone in
    * view's from the focus pool): the zone the city view shows, when the cluster has it and it shows
-   * nothing settled, takes that round's view of it; the lines and the rest wait for the final. */
+   * nothing settled, takes that round's view of it; the lines and the rest wait for the final.
+   * T-2476: so does the zone in view when no focus pool shows it (a small device, a focus pool that
+   * stopped), which otherwise showed its figures with no rail until the cluster's final. */
   private async selectedRound(s: Solve, res: Result[], cities: CityId[], round: number) {
-    const id = this.selectedZone();
-    if (!id || !cities.includes(id) || !this.unsettledZone(id)) return;
+    const view = !perfOff("viewRound") && this.viewedSet().has(activeCity.peek()) ? activeCity.peek() : null;
+    const want = () => [view, this.selectedZone()].filter((id): id is CityId => !!id && cities.includes(id) && this.unsettledZone(id));
+    const ids = want();
+    if (!ids.length) return;
     const ests = await this.daysOf(s, [], round, false, res, true);
-    if (s !== this.cur || this.cityVersion.get(id) === s.version || this.selectedZone() !== id) return;
+    if (s !== this.cur) return;
+    const now = want().filter((id) => ids.includes(id) && this.cityVersion.get(id) !== s.version);
+    if (!now.length) return;
     demandByDay.value = demandByDay.peek().map((d, k) => {
-      const v = ests[k]?.cities.get(id);
-      if (!d.view || !v) return d;
+      if (!d.view) return d;
       const cities = new Map(d.cities);
-      cities.set(id, { ...d.view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      for (const id of now) {
+        const v = ests[k]?.cities.get(id);
+        if (v) cities.set(id, { ...d.view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      }
       return { ...d, cities };
     });
-    this.lodShown([id], s.coarse);
+    this.lodShown(now, s.coarse);
   }
 
   private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean }, round: number) {

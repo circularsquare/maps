@@ -10,7 +10,7 @@ import { signal } from "@preact/signals";
 import { cityNear, cityWithin, hashView, zonesTouching, ZONE_REACH_M, type CityId } from "./cities";
 import { perfOff } from "../perfFlags";
 import { M_PER_DEG } from "./frame";
-import { atZero, distanceTo, footprintOf, loadFootprints, touchesBox, type Footprint } from "../workers/cityReach";
+import { atZero, distanceTo, footprintOf, loadFootprints, onFootprintForgotten, touchesBox, type Footprint } from "../workers/cityReach";
 
 /** Zones beside the focused one that show their bubbles, at most this many. */
 export const NEARBY = 3;
@@ -36,6 +36,8 @@ let bumpTimer = 0;
 const bumpLoaded = () => {
   if (!bumpTimer) bumpTimer = setTimeout(() => { bumpTimer = 0; zonesLoaded.value++; }, 250) as unknown as number;
 };
+// T-2478: a failed boundary forgotten is asked for again by the next placing, which the bump starts
+onFootprintForgotten((id) => { asked.delete(id); bumpLoaded(); });
 
 /** The footprints of `ids`, or null (and they are fetched) while any is not in. Failed ones are left out. */
 function footprintsOf(ids: CityId[]): Footprint[] | null {
@@ -89,9 +91,12 @@ export function placeAt(lon: number, lat: number): CityId | null {
   if (hit !== undefined && hit.lon === lon && hit.lat === lat && (hit.at < 0 || hit.at === zonesLoaded.peek())) return hit.id;
   const ids = around(lon, lat);
   const fs = ids.length ? footprintsOf(ids) : [];
-  const id = !ids.length ? null : !fs ? cityWithin(lon, lat) : (() => { const z = nearestZone(fs, lon, lat); return z && z.d <= ZONE_REACH_M ? z.id : null; })();
+  // T-2478: a boundary that failed may be the place's own: the centre's answer stands in until it is in
+  const failed = !!fs && ids.some((id) => footprintOf(id) === null);
+  const near = fs && (() => { const z = nearestZone(fs, lon, lat); return z && z.d <= ZONE_REACH_M ? z.id : null; })();
+  const id = !ids.length ? null : !fs || (failed && !near) ? cityWithin(lon, lat) : near;
   if (placed.size >= 200_000) placed.clear();
-  placed.set(key, { lon, lat, id, at: fs ? -1 : zonesLoaded.peek() });
+  placed.set(key, { lon, lat, id, at: fs && !failed ? -1 : zonesLoaded.peek() });
   return id;
 }
 /** T-884: places asked before, for good once every nearby boundary was in (footprints are fetched

@@ -39,12 +39,27 @@ export function decodeRing(flat: number[], q: number): Float64Array {
   return out;
 }
 
+/** T-2478: the waits before each new try of the file (a server mid-rebuild answers 404 for a minute or
+ * two); after the last the page goes on without it */
+const RETRY_MS = [1_000, 4_000, 10_000, 30_000, 60_000];
+
+async function fetchText(url: string): Promise<string> {
+  for (let k = 0; ; k++) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`${r.status} ${r.url}`);
+      return await r.text();
+    } catch (error) {
+      if (k >= RETRY_MS.length) throw error;
+      await new Promise((r) => setTimeout(r, RETRY_MS[k]));
+    }
+  }
+}
+
 async function load() {
   const out = { zones: new Map<string, MultiPolygon>(), water: new Map<string, MultiPolygon>() };
   try {
-    const r = await fetch(dataUrl("outlines.json"));
-    if (!r.ok) throw new Error(`${r.status} ${r.url}`);
-    const body = await r.text();
+    const body = await fetchText(dataUrl("outlines.json"));
     const { q, zones, water } = JSON.parse(body) as OutlineFile;
     const polygons = (rings: number[][]): MultiPolygon => ({
       type: "MultiPolygon",
@@ -112,9 +127,7 @@ function placeBy(rings: (id: string) => Float64Array[] | undefined) {
  * per zone when a place near it is first asked about. */
 export async function readOutlinesForPlaces(url: string): Promise<void> {
   try {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error(`${r.status} ${r.url}`);
-    const { q, zones } = (await r.json()) as OutlineFile;
+    const { q, zones } = JSON.parse(await fetchText(url)) as OutlineFile;
     placeBy((id) => zones[id]?.map((flat) => decodeRing(flat, q)));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);

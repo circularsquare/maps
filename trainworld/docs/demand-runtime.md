@@ -415,13 +415,16 @@ selected with its pack already queued), and a solve names it in `next`, so the w
 clusters to solve the zone in view's, then its, then the rest, and with the barrier solves its
 cluster alone first when the zone in view's needs no solving. While a load's other figures are
 shown (the focus pool's, the game before's), each round of a cluster solved ahead that has it
-gives it that round's figures (`selectedRound`); the cluster's lines and other zones still wait
-for its final. Its trips by length (the city view's graph, `tripLengths`) are asked where the views'
+gives it that round's figures (`selectedRound`), and the zone in view the same when no focus pool
+shows it (a small device, a focus pool that stopped; T-2476, `?perfOff=viewRound` off); the
+cluster's lines and other zones still wait for its final. Its trips by length (the city view's graph, `tripLengths`) are asked where the views'
 questions go (`target`): while a solve with the barrier steps through the rounds, of the round after
 the one shown for a zone with no settled figures, whatever version the view is of; of the focus pool
 for a zone shown from it. A worker past a round answers nothing of it, so the page asks for the city
-view's zone at each round's start (`lengthsAhead`) and hands the graph the round shown's answer when it
-opens on it, with the next round's asked at once; a round put in without the shown version or round
+view's zone at each round's start (`lengthsAhead`; a focus solve of that zone, of its round 0 as it is
+sent, T-2476) and hands the graph the round shown's answer when it opens on it, with the next round's
+asked at once (a question that waits for a round is kept by its solve and round, whatever view is shown
+meanwhile; `?perfOff=lengths0` off); a round put in without the shown version or round
 changing bumps `demandAskTurn`, and the graph and the top bar's hover ask again. On the Tokyo save
 (Tokyo in view, Seoul selected, 2 workers) Seoul's figures and graph come with its cluster's round 0,
 about 30 s after the load, where they came with the load's final at about 70 s. A zone selected while
