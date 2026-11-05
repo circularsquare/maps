@@ -144,8 +144,11 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   lines' width (3 x 5/6.4 of a pitch) and 18 pitches. So the Hudson and East River beside Manhattan, drawn large, are
   wide, the Hudson up past Yonkers stays a band, and an outskirt river such as the Navesink stays near the least
   width. Where the band would cover a pill, or a line running alongside it (within 30 degrees) that it does not cross,
-  it narrows to keep half a pitch off it, and widens again at most a quarter pitch a pitch of its length; it is drawn as
-  runs of one width, in quarter-pitch steps, each stroked with round ends.
+  it narrows to keep half a pitch off it. It is drawn as runs of one width, in quarter-pitch steps, so **every edge
+  of the water runs at 0, 45 or 90 degrees** (Anita, 2026-11-05): a run holds its width at least 4 pitches,
+  narrowing early to the least room ahead and widening only by half a pitch or more where that holds as long; a width
+  never changes at a bend, and where it changes the step is square (the runs cut square there), while a band's own
+  ends, and where rivers meet, are round.
 - **Rivers in the drawing**: bands with round ends. Each crossing is a straight
   run square to the hop's bundle, at the real share of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80%
   where it would otherwise end on another line), from the side the river comes from on the ground, on past the

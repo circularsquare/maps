@@ -27,7 +27,7 @@ window.render = (city, at, px, w, h, dark, dbg) => {
   c.width = w; c.height = h;
   const ctx = c.getContext('2d');
   const d = { ...D, lines: D.lines.map((l) => ({ ...l, cmds: Float64Array.from(l.cmds), path: undefined })), small: Uint8Array.from(D.small),
-    water: { rivers: D.water.rivers.map((r) => Float64Array.from(r)), sea: Float64Array.from(D.water.sea), bands: D.water.bands } };
+    water: { rivers: D.water.rivers.map((r) => Float64Array.from(r)), riverEnds: (D.water.riverEnds ?? []).map((r) => Float64Array.from(r)), sea: Float64Array.from(D.water.sea), bands: D.water.bands } };
   let cx, cy;
   // "fit": the whole drawing in the picture (px then the largest that fits, at most the view's)
   if (at === 'fit') { const b = D.box; cx = (b[0] + b[2]) / 2; cy = (b[1] + b[3]) / 2; px = Math.min(px, (0.96 * w * D.pitch) / (b[2] - b[0]), (0.96 * h * D.pitch) / (b[3] - b[1])); }

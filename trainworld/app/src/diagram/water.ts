@@ -15,10 +15,14 @@ import type { RealWater, RiverArc, Crossing } from "./waterReal";
 import { diagramSea, type SeaGrid, type SeaStats } from "./waterSea";
 
 export interface DiagramWater {
-  /** the rivers' centre lines as path commands (draw.ts `toPath`), one path per width, stroked with round ends */
+  /** the rivers' centre lines as path commands (draw.ts `toPath`), one path per width, stroked with square-cut (butt)
+   * ends, so a band's width steps square where it changes */
   rivers: Float64Array[];
   /** each path's width, layout units (T-2528) */
   bands: number[];
+  /** per width, a stub (path commands, a hundredth of a pitch long) at each end of a band, stroked with round ends: the
+   * band's own ends and where rivers meet stay round */
+  riverEnds?: Float64Array[];
   /** the sea's outline as path commands, filled even-odd */
   sea?: Float64Array;
   /** checks only: the sea's rings as fitted */
@@ -46,9 +50,11 @@ export const BAND = 3 * STROKE_SHARE;
  * SMOOTH_M either side, between BAND and BAND_CAP pitches; a stretch at least FLOOR_SHARE of the river's widest drawn
  * stretch, times their real widths' ratio (so a big river narrows gently downstream, a narrow branch stays narrow) */
 const BAND_CAP = 18, SMOOTH_M = 1500, FLOOR_SHARE = 0.5;
-/** a band is narrowed where it would cover a pill or a line it does not cross, to keep CLEAR_MARGIN pitches off it, and
- * widens again at most TAPER pitches a pitch of its length; widths are drawn in steps of WIDTH_STEP pitches */
-const CLEAR_MARGIN = 0.5, TAPER = 0.25, WIDTH_STEP = 0.25;
+/** a band is narrowed where it would cover a pill or a line it does not cross, to keep CLEAR_MARGIN pitches off it;
+ * widths are drawn in steps of WIDTH_STEP pitches, each width held over at least RUN_STEPS steps of a pitch at most
+ * (narrowing early where the room shrinks), widening only by WIDEN_MIN pitches or more, and never changing at a bend, so
+ * every edge of a band runs at 0, 45 or 90 degrees (Anita, 2026-11-05: water sticks to those) */
+const CLEAR_MARGIN = 0.5, WIDTH_STEP = 0.25, RUN_STEPS = 4, WIDEN_MIN = 0.5;
 /** a casing within this cosine of a band's way runs alongside it (30 degrees) */
 const ALONG = 0.866;
 /** a route's cost rises within this many pitches of a casing or pill beyond the band's half width */
@@ -863,7 +869,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
   }
   // T-2528: each band at its wanted widths, narrowed where it would cover a pill or a line it does not cross there, the
   // narrowing tapered; drawn as runs of one width
-  const byWidth = new Map<number, number[]>(), partW = new Map<Part, [Float64Array, Float64Array, Float64Array]>();
+  const byWidth = new Map<number, number[]>(), endsBy = new Map<number, number[]>(), partW = new Map<Part, [Float64Array, Float64Array, Float64Array]>();
   /** the room either side of a band's middle at (px, py), running (ux, uy): to the nearest pill, or casing running
    * alongside (within ALONG of its way) not in `skip` (ribbon segment indices), within `R`; lines across it it passes
    * under, as at a crossing */
@@ -897,16 +903,41 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       const room = roomAt(mx, my, (P[k * 2 + 2] - P[k * 2]) / l, (P[k * 2 + 3] - P[k * 2 + 1]) / l, want[k] / 2 + CLEAR_MARGIN * pitch, skip) - CLEAR_MARGIN * pitch;
       w[k] = Math.max(BAND * pitch, Math.min(want[k], 2 * room));
     }
-    // widening tapered both ways
-    for (let k = 1; k < ns; k++) w[k] = Math.min(w[k], w[k - 1] + TAPER * len[k]);
-    for (let k = ns - 2; k >= 0; k--) w[k] = Math.min(w[k], w[k + 1] + TAPER * len[k]);
+    // runs of one width, in steps (rounded down): each held RUN_STEPS steps, narrowing to the least room ahead, widening
+    // only by WIDEN_MIN where that holds as long; only ever narrower than the room allows
+    const step = WIDTH_STEP * pitch, qz = Float64Array.from(w, (v) => Math.max(BAND * pitch, Math.floor(v / step) * step));
+    const least = (k: number) => {
+      let v = Infinity;
+      for (let j = k; j < Math.min(ns, k + RUN_STEPS); j++) v = Math.min(v, qz[j]);
+      return v;
+    };
+    for (let k = 0; k < ns; ) {
+      const wd = least(k);
+      let j = k;
+      while (j < ns && qz[j] >= wd && !(j - k >= RUN_STEPS && j + RUN_STEPS <= ns && least(j) >= wd + WIDEN_MIN * pitch)) w[j++] = wd;
+      k = j;
+    }
+    // no width changes at a bend, where square-cut ends would leave a notch: the wider side narrowed past it
+    const bendAt = (k: number) => {
+      const ax = P[k * 2] - P[k * 2 - 2], ay = P[k * 2 + 1] - P[k * 2 - 1], bx = P[k * 2 + 2] - P[k * 2], by = P[k * 2 + 3] - P[k * 2 + 1];
+      return Math.abs(ax * by - ay * bx) > 1e-9 * (hyp(ax, ay) * hyp(bx, by) + 1e-18);
+    };
+    for (let moved = true, pass = 0; moved && pass < ns; pass++) {
+      moved = false;
+      for (let k = 1; k < ns; k++) if (w[k] !== w[k - 1] && bendAt(k)) (w[k] > w[k - 1] ? (w[k] = w[k - 1]) : (w[k - 1] = w[k])), (moved = true);
+    }
     if (detail) partW.set(q, [w, Float64Array.from(want), Float64Array.from(P)]);
-    // runs of one width (in steps, rounded down), each rounded at its corners unless that would cut across a line
-    const step = WIDTH_STEP * pitch;
+    // the band's two ends round (stubs stroked with round ends), at its end widths
+    if (ns)
+    for (const [k, px, py, ux, uy] of [[0, P[0], P[1], P[2] - P[0], P[3] - P[1]], [ns - 1, P[ns * 2], P[ns * 2 + 1], P[ns * 2 - 2] - P[ns * 2], P[ns * 2 - 1] - P[ns * 2 + 1]]]) {
+      const l = hyp(ux, uy) || 1, s = 0.01 * pitch, e = endsBy.get(w[k]) ?? endsBy.set(w[k], []).get(w[k])!;
+      e.push(0, px, py, 1, px + (ux / l) * s, py + (uy / l) * s);
+    }
+    // runs of one width, each rounded at its corners unless that would cut across a line
     for (let k0 = 0; k0 < ns; ) {
-      const ws = Math.max(BAND * pitch, Math.floor(w[k0] / step) * step);
+      const ws = w[k0];
       let k1 = k0 + 1;
-      while (k1 < ns && Math.max(BAND * pitch, Math.floor(w[k1] / step) * step) === ws) k1++;
+      while (k1 < ns && w[k1] === ws) k1++;
       const v = Float64Array.from(P.slice(k0 * 2, k1 * 2 + 2)), pts: number[] = [v[0], v[1]];
       // (the steps' points dropped where straight)
       for (let z = 1; z + 1 < v.length / 2; z++) {
@@ -934,7 +965,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
   }
   if (detail) for (const [ai, l] of byArc) runs.push({ parts: l.map((q) => Float64Array.from(q.p)), widths: l.map((q) => partW.get(q)![0]), wants: l.map((q) => partW.get(q)![1]), steps: l.map((q) => partW.get(q)![2]), arc: ai, river: l[0].river, edges: l.flatMap((q) => [...q.e]), marks: marks.get(ai) ?? [], falseKeys: l.flatMap((q) => [...q.f]), ends: l[0].ends, regions: l[0].regions });
   stats.ms = performance.now() - t0r;
-  return { rivers: widths.map((w) => Float64Array.from(byWidth.get(w)!)), bands: widths, sea: sea.cmds, seaRings: detail ? sea.rings : undefined, seaGrid: detail ? sea.grid : undefined, runs: detail ? runs : undefined, falsePts: detail ? falsePts : undefined, stats, seaStats: sea.stats };
+  return { rivers: widths.map((w) => Float64Array.from(byWidth.get(w)!)), bands: widths, riverEnds: widths.map((w) => Float64Array.from(endsBy.get(w) ?? [])), sea: sea.cmds, seaRings: detail ? sea.rings : undefined, seaGrid: detail ? sea.grid : undefined, runs: detail ? runs : undefined, falsePts: detail ? falsePts : undefined, stats, seaStats: sea.stats };
 }
 
 /** path commands (draw.ts `toPath`) as a polyline, curves sampled */

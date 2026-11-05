@@ -102,6 +102,43 @@ for (const city of which) {
     }
     f.coast = { pitches: Math.round(len / P), bendsPer100: +((100 * bends * P) / Math.max(1, len)).toFixed(2), short, offShare: +(off / Math.max(1e-9, len)).toFixed(4) };
   }
+  // every water edge at 0, 45 or 90 degrees (Anita, 2026-11-05): the sea's straight runs and the rivers' (a band's
+  // edges run beside its middle), the rivers' width steps square-cut on a straight stretch, round ends only at a band's
+  // ends (`riverEnds`); corners are rounded, so the curves between straight runs are not counted
+  {
+    const P = S.d.pitch, offAt = [];
+    let segs = 0, steps = 0, bentSteps = 0, close = 0;
+    const offOcti = (dx, dy) => { const a = ((Math.atan2(dy, dx) * 4) / Math.PI) % 1; return Math.min(Math.abs(a), 1 - Math.abs(a)) > 0.005; };
+    const lines = (c, what) => {
+      let px = 0, py = 0;
+      for (let i = 0; i < c.length; ) {
+        const op = c[i];
+        if (op === 2) ((px = c[i + 3]), (py = c[i + 4]), (i += 5));
+        else {
+          const x = c[i + 1], y = c[i + 2];
+          if (op === 1 && Math.hypot(x - px, y - py) > 0.02 * P) (segs++, offOcti(x - px, y - py) && offAt.push(`${what} at ${(x / P).toFixed(0)},${(y / P).toFixed(0)}`));
+          (px = x), (py = y), (i += 3);
+        }
+      }
+    };
+    if (W.sea) lines(W.sea, 'sea');
+    W.rivers.forEach((c, k) => lines(c, `river ${(W.bands[k] / P).toFixed(2)} p`));
+    for (const run of W.runs) run.widths.forEach((w, j) => {
+      const p = run.steps[j];
+      let last = -Infinity;
+      for (let k = 1; k < w.length; k++) {
+        if (w[k] === w[k - 1]) continue;
+        steps++;
+        const ax = p[k * 2] - p[k * 2 - 2], ay = p[k * 2 + 1] - p[k * 2 - 1], bx = p[k * 2 + 2] - p[k * 2], by = p[k * 2 + 3] - p[k * 2 + 1];
+        if (Math.abs(ax * by - ay * bx) > 1e-6 * Math.hypot(ax, ay) * Math.hypot(bx, by)) bentSteps++;
+        if (k - last < 3) close++;
+        last = k;
+      }
+    });
+    const capsOk = !!W.riverEnds && W.riverEnds.length === W.rivers.length;
+    f.octi = { segs, off: offAt.length, steps, bentSteps, closeSteps: close };
+    say(offAt.length === 0 && bentSteps === 0 && capsOk, `${city}: every water edge at 0, 45 or 90 degrees`, `${offAt.length} of ${segs} runs off ${offAt.slice(0, 4).join('; ')}; ${steps} width steps, ${bentSteps} at a bend; ${close} within 3 steps of the last; round ends apart ${capsOk ? 'yes' : 'NO'}`);
+  }
   // the rivers' pieces (T-2497): how many, how many under STUB pitches, their median length
   {
     const P = S.d.pitch, lens = [];

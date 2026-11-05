@@ -67,7 +67,7 @@ export interface Drawing {
    * first painted */
   borders?: DiagramBorders & { path?: Path2D };
   /** the water (water.ts), set on the page when the layout worker posts it; the Path2Ds made when first painted */
-  water?: DiagramWater & { riverPaths?: Path2D[]; seaPath?: Path2D };
+  water?: DiagramWater & { riverPaths?: Path2D[]; endPaths?: Path2D[]; seaPath?: Path2D };
 }
 
 /** a polyline offset left by `o`, one point per point (mitred, capped) */
@@ -616,10 +616,17 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   if (wa && theme.water) {
     ctx.fillStyle = ctx.strokeStyle = theme.water;
     if (wa.sea?.length) ctx.fill((wa.seaPath ??= toPath(wa.sea)), "evenodd");
-    const rp = (wa.riverPaths ??= wa.rivers.map(toPath));
+    // square-cut where a band's width steps, round at its ends (T-2528)
+    const rp = (wa.riverPaths ??= wa.rivers.map(toPath)), re = (wa.endPaths ??= (wa.riverEnds ?? []).map(toPath));
+    ctx.lineCap = "butt";
     for (let k = 0; k < rp.length; k++) {
       ctx.lineWidth = Math.max(wa.bands[k], 1 / scale);
       ctx.stroke(rp[k]);
+    }
+    ctx.lineCap = "round";
+    for (let k = 0; k < re.length; k++) {
+      ctx.lineWidth = Math.max(wa.bands[k], 1 / scale);
+      ctx.stroke(re[k]);
     }
   }
   // the zones' borders under everything else; the lines' casings cut them
