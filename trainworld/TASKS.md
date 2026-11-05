@@ -235,7 +235,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-2377 [P3] Cleanup D5: trainworld/CLAUDE.md cut from ~3,570 to ~2,400 words, orchestrator text to docs/orchestrating.md. Agents decide the reorg (Anita 2026-11-04: "feel free to make decisions among yourselves regarding reorg"); show her the result after. Open.
 - T-2378 [P3] Cleanup D6: DECISIONS.md and ARCHIVE.md split by month, the lint capping entry length. At a quiet moment. Open.
 - T-2380 [P3] Cleanup E3: retire data/packs/intercity.json (read by nothing, 13.8 MB copied into every deploy) and joint_gravity's branch that writes it. Between joins. Open.
-- T-2381 [P3] Cleanup E4, E5: split demand/kernel.rs (6,145 lines) and demand/intercity.rs (5,328) by their sections, moves only (T-1114 sim G). Not while T-2324 or T-1647 hold them. Open; taking, 2026-11-05, agent kernelsplit.
 - T-2382 [P3] Cleanup E6: pipeline and pack_gate small items (T-1114 pipeline F19-20, I). Between joins. Open.
 - T-2383 [P3] Cleanup E9: sim refactors after T-2381 (T-1114 sim H 20, 21, 23; `pass_window`, `realcorridors.build`). Open.
 - T-1114 [P3] A general code cleanup (Anita 2026-10-24): its leftovers are now T-2359's stages, except pipeline G (the nocar layer, changes pack bytes, with T-878 and T-926), which waits on the next data batch. notes/T-1114/.
