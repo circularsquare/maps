@@ -2,7 +2,7 @@
 // imported binding can't be assigned from another module.
 export const cfg = {
     bands: null, alpha: 190, maxHours: 1024,
-    look: 'crisp',               // cell look (T-060): crisp, diag or hex; the page's ?look= (js/paint.js)
+    look: 'hex',                 // cell look (T-060): hex, crisp or diag; the page's ?look= (js/paint.js)
     inv: null,                   // hours per km for each stored value, -1 for water
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
     // the canoe model (docs/canoe.md 2, 3)
@@ -20,8 +20,8 @@ export const cfg = {
         farKm: 20, exposure: 3,      // past farKm a paddling hour is this many real hours out
     },
     paddle: 5,                   // km/h on still water
-    upMin: 1.5,                  // km/h, the slowest upstream paddling (lining)
-    upShare: 0.6,                // upstream speed is paddle - upShare x river speed
+    upMin: 2.5,                  // km/h, the slowest upstream travel: lining or poling along the bank (T-071)
+    upShare: 0.4,                // upstream speed is paddle - upShare x river speed: the bank current (T-071)
     transfer: 0.25,              // hours to get in or out of the canoe
     carry: 2,                    // carrying the canoe takes this many times the walking time
     iceMax: 15,                  // % summer ice cover above which a sea cell has no canoe node

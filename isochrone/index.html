@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
 <style>
-html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0a0a; color: #ccc;
     font: 400 12px/1.4 'Nunito', system-ui, sans-serif; }
 #map { position: absolute; inset: 0; }
 .maplibregl-control-container { z-index: 2; }
@@ -214,7 +214,7 @@ async function loadGrid() {
     const bytes = await new Response(stream).arrayBuffer();
     worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
                          maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn,
-                         look: ['diag', 'hex'].includes(params.get('look')) ? params.get('look') : 'crisp' }, [bytes]);
+                         look: ['crisp', 'diag'].includes(params.get('look')) ? params.get('look') : 'hex' }, [bytes]);
     await workerReady;
 }
 
@@ -252,7 +252,7 @@ function drawSpeeds(s) {
         if (r.cls) d.className = r.cls;
         for (const c of r.cells) { const sp = document.createElement('span'); sp.textContent = c; d.appendChild(sp); }
         d.onmouseenter = () => { stip.textContent = r.hint; stip.style.display = 'block'; };
-        d.onmousemove = e => { stip.style.left = (e.clientX + 14) + 'px'; stip.style.top = (e.clientY + 14) + 'px'; };
+        d.onmousemove = e => placeAt(stip, e.clientX, e.clientY);
         d.onmouseleave = () => { stip.style.display = 'none'; };
         box.appendChild(d);
     }
@@ -269,7 +269,7 @@ document.addEventListener('mouseover', e => {
     stip.textContent = el.dataset.tip; stip.style.display = 'block';
     const r = el.getBoundingClientRect();
     stip.style.left = Math.max(4, Math.min(innerWidth - stip.offsetWidth - 4, r.left)) + 'px';
-    stip.style.top = (r.top - stip.offsetHeight - 6) + 'px';
+    stip.style.top = Math.max(0, r.top - stip.offsetHeight - 6) + 'px';
 });
 document.addEventListener('mouseout', e => {
     if (e.target.closest && e.target.closest('[data-tip]')) stip.style.display = 'none';
@@ -365,9 +365,9 @@ function quietBasemap() {
 
 // Corridor look (T-052, T-062). Colour is the speed along the stretch, one ramp for every mode: its
 // class c (0-7) from SPEED_EDGES in js/corridors.js, km/h: under 1.5, 1.5, 2.5, 3.5, 4.5, 5.5, 7
-// and 9 or more, dark red through orange to yellow. Width and opacity are the strength s (how many
+// and 9 or more, bright red through orange to yellow (lightness kept close, T-070). Width and opacity are the strength s (how many
 // trips share the stretch). corrColor() is the one place that picks a colour.
-const CORR_RAMP = ['#6e1414', '#9c1f17', '#c43a1a', '#e05a1c', '#f08019', '#f9a51c', '#fdc92a', '#ffe84a'];
+const CORR_RAMP = ['#f03a2e', '#f4502a', '#f66826', '#f88122', '#faa01f', '#fcb824', '#fed030', '#ffe84a'];
 const CORR_OPACITY = [0.55, 0.95];            // faintest and strongest step
 const CORR_EDGE = { color: '#000', opacity: 0.5, extra: 1.6 };   // casing: colour, opacity, px wider
 function corrColor() {
@@ -525,7 +525,25 @@ function clipOut(line, w, e, s, n) {
     return out;
 }
 
+// Chaikin corner cutting for drawing only (T-072): the lines follow cell centres, so a route at an
+// angle is a staircase. Ends stay where they are, so branches still meet. Coordinates to 1e-4 degree.
+const CORR_SMOOTH_PASSES = 2;
+function smoothLine(c) {
+    for (let pass = 0; pass < CORR_SMOOTH_PASSES && c.length > 2; pass++) {
+        const out = [c[0]], last = c.length - 1;
+        for (let i = 0; i < last; i++) {
+            const [x0, y0] = c[i], [x1, y1] = c[i + 1];
+            if (i > 0) out.push([0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1]);
+            if (i < last - 1) out.push([0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1]);
+        }
+        out.push(c[last]);
+        c = out;
+    }
+    return c.map(p => [Math.round(p[0] * 1e4) / 1e4, Math.round(p[1] * 1e4) / 1e4]);
+}
+
 function drawCorridors() {
+    const t0 = performance.now();
     const src = map.getSource('corridors');
     if (!src || !corrOn) return;
     // levels with lines for this start; each is cut where the next finer one shows
@@ -535,14 +553,20 @@ function drawCorridors() {
         const c = corr[k];
         const h = i0 + 1 < has.length ? layers[has[i0 + 1]].m : null;
         for (let i = 0; i < c.s.length; i++) {
-            let parts = [[]];
-            for (let j = c.off[i]; j < c.off[i + 1]; j++) parts[0].push([c.xy[2 * j], c.xy[2 * j + 1]]);
+            if (!c.sm) c.sm = [];
+            if (!c.sm[i]) {
+                const raw = [];
+                for (let j = c.off[i]; j < c.off[i + 1]; j++) raw.push([c.xy[2 * j], c.xy[2 * j + 1]]);
+                c.sm[i] = smoothLine(raw);
+            }
+            let parts = [c.sm[i]];
             if (h) for (const sh of [-360, 0, 360]) parts = parts.flatMap(p => clipOut(p, h.west + sh, h.east + sh, h.south, h.north));
             for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] & 7, m: (c.s[i] >> 3) & 3, c: c.s[i] >> 5, v: c.v[i] / 10 },
                 geometry: { type: 'LineString', coordinates: p } });
         }
     }
     src.setData({ type: 'FeatureCollection', features });
+    window.corrDrawMs = performance.now() - t0;
 }
 
 worker.addEventListener('message', (e) => {
@@ -703,8 +727,7 @@ function drawTip() {
     if (line) {
         tip.textContent = `${MODE_WORD[line.mode]}, ${line.kmh.toFixed(1)} km/h`;
         tip.style.display = 'block';
-        tip.style.left = (pointer.x + 14) + 'px';
-        tip.style.top = (pointer.y + 14) + 'px';
+        placeAt(tip, pointer.x, pointer.y);
         return;
     }
     const h = timeAt(pointer.lng, pointer.lat);
@@ -716,8 +739,14 @@ function drawTip() {
         tip.appendChild(d);
     }
     tip.style.display = 'block';
-    tip.style.left = (pointer.x + 14) + 'px';
-    tip.style.top = (pointer.y + 14) + 'px';
+    placeAt(tip, pointer.x, pointer.y);
+}
+
+// A hover box 14 px below and right of the pointer, flipped left or up where it would pass the window edge (T-069).
+function placeAt(el, x, y) {
+    const w = el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(0, x + 14 + w > innerWidth ? x - 14 - w : x + 14) + 'px';
+    el.style.top = Math.max(0, y + 14 + h > innerHeight ? y - 14 - h : y + 14) + 'px';
 }
 
 function hover() { if (pointer) { drawTip(); askRoute(); } }

@@ -18,10 +18,18 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   first so central-america is in the list).
 
 ## In flight
-- T-059 globe: agent abe9a2322cac44954 (Opus), started ~15:30. Owns index.html, js/paint.js,
-  js/riverlines.js, js/riverworker.js, js/windows.js / session.js view handling, smoke.mjs. Done
-  when T-059 is in ARCHIVE.md and t059_*.png exist.
+- T-042 land hazard, stage 1 design + L10 sample: agent a41134b19636e2f86 (Opus), started ~16:30.
+  Owns docs/hazard.md, notes/T-042*, tools/hazard/, research/friction.md 6. No page changes, no
+  world build; may file T-066 to T-068. Done when docs/hazard.md and notes/T-042.md exist.
 - Page agent aa378ee8ea1276653 (Sonnet) is idle at ~270k tokens; use a fresh agent for new page work.
+
+- T-053 world roads build: roads agent addfc90633db2c1e0 (Opus) resumed ~16:45 with Anita's go;
+  rotating extracts, <=2 on disk, stops under 6 GB free. It reports the run's command, log and
+  liveness check once started (then add them under Long runs).
+- T-069 scroll bar, T-070 brighter red ramp, T-060 hex default + faster: agent a188a1156511192ef
+  (Sonnet). Owns index.html, js/paint.js, js/config.js look line.
+- T-071 upstream and carry speeds, research and recalibrate: agent aeeb2ba51b2f7341c (Opus).
+  Owns js/config.js canoe constants, research/canoe.md, docs/canoe.md speed sections.
 
 ## Long runs
 (none)
@@ -29,9 +37,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 ## Next
 1. Anita reviews docs/roads.md (asked 2026-11-05 ~16:00); then T-053 (world roads, ~4 h on two
    cores) with T-057's 100 m road bits in the same pass; then T-028 (page on our own surface).
-2. Land T-059 globe.
+2. T-059 globe landed (035e299f, MapLibre 5.24.0). T-042 design in flight.
 3. Anita's pick for T-060 (crisp / diag / hex); T-065 creek-weaving and T-056 rays after she looks.
-4. T-042 land hazard. T-039 (90 m slopes) before T-057's mountain tiles. T-031, T-036 alongside.
+4. T-011 90 m terrain right after T-053 (Anita, 2026-11-05). T-042 land hazard. T-039 (90 m
+   slopes) before T-057's mountain tiles. T-031, T-036 alongside.
 
 ## Anita's standing asks
 - 2026-11-05: roads go ahead; T-047's 2.8 GB rule approved; 10,000 BC later (T-012 P3).

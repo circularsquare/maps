@@ -1,5 +1,10 @@
 # Archive
 
+- T-071 [P1] Upstream paddling and carrying speeds. Done 2026-11-05: upstream max(p - 0.4 v, 2.5 km/h) (was 0.6, 1.5), 3.0 km/h on a huge river, from recorded upstream crews (2.5-3.5 km/h) and bank currents; carry x2 kept. Missouri trip carried 62% to 45%. notes/T-071.md.
+- T-072 [P1] Smooth corridor lines. Done 2026-11-05: `drawCorridors` in index.html runs two Chaikin passes on each line (ends fixed, cached per level, before the window cuts); a redraw takes ~10 ms with three levels; hover and colours unchanged.
+- T-060 [P1] Hex cell look. Done 2026-11-05: hex is the default (`?look=crisp` and `?look=diag` kept); pixel-to-cell map kept per geometry, 32-bit writes; L10 paint ~570 to ~100-130 ms on repeat clicks, windows ~100 to ~18 ms; image identical to before.
+- T-070 [P1] Brighter slow end of the corridor ramp. Done 2026-11-05: `CORR_RAMP` now bright red #f03a2e up to yellow #ffe84a with lightness close; the old #6e1414 to #c43a1a reds are gone. Faint (few-trip) lines still dim through `CORR_OPACITY` 0.55.
+- T-069 [P1] Horizontal scroll bar. Done 2026-11-05: the cursor hover box (`#tip`, 14 px right of the pointer) and the speeds-row box stuck out past the right edge (up to 88 px) and bottom (30 px); both now flip left or up at an edge (`placeAt`), and html/body are `overflow: hidden`.
 - T-059 [P2] Globe. Done 2026-11-05: MapLibre 4.7.1 to 5.24.0 with the globe projection; the canvas time layers, corridors, routes, rivers and hill shading draw on it unchanged; windows follow a view clamped round the centre (`viewBox`); no hover or click off the globe. notes/T-059.md.
 - T-064 [P1] Corridor speeds are noisy. Done 2026-11-05: river steps were measured by straight cell length, not river length (0.2-15 km of river per 9 km step); now river length, a 13-edge window, cut hysteresis, nearest-line hover. Amazon main stem reads 10.9-11.3 km/h; notes/T-064.md.
 - T-048 [P3] River lines off the main thread. Done 2026-11-05: `js/riverworker.js` fetches, parses and joins the river files; the page's own time per rebuild fell from 146/607/154 ms (zoom 4/7/9) to 36/97/31, the rest being MapLibre's `setData`; look unchanged.

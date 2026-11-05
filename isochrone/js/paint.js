@@ -20,7 +20,8 @@ export function paint(L, canoe) {
     const info = canoe && L.cn ? L.cn.info : null;   // canoe starts: its low byte is the cell's water kind, 0 on land
     const edges = bands.map(b => b.h), cols = bands.map(b => b.color);
     const nb = edges.length;
-    if (cfg.look === 'diag' || cfg.look === 'hex') return paintLook(L, info, ch0, yTop, yBot);
+    if (cfg.look === 'hex') return paintHex(L, info, ch0, yTop, yBot);
+    if (cfg.look === 'diag') return paintLook(L, info, ch0, yTop, yBot);
     const px = new Uint8ClampedArray(cw * ch * 4);
     for (let y = 0; y < ch; y++) {
         const my = yTop - (y + 0.5) / ch * (yTop - yBot);
@@ -49,12 +50,82 @@ export function paint(L, canoe) {
 // place inside its cell.
 //   diag: where the two neighbours on a corner share a band that is not the cell's own, the corner
 //         triangle (legs DIAG_CUT of a cell) takes that band: step corners read as 45 degree cuts.
-//   hex:  pointy-top hexagons a cell across (HEX_SIZE), each taking the colour of the cell under its
-//         centre. Their density is 1.155 per cell, so no cell is dropped and about one in seven is
-//         shown twice.
+//   hex:  the default. Pointy-top hexagons a cell across (HEX_SIZE), each taking the colour of the
+//         cell under its centre. Their density is 1.155 per cell, so no cell is dropped and about
+//         one in seven is shown twice.
 const DIAG_CUT = 0.5;
 const HEX_SIZE = 1;
 const HEX_DY = 0.8660254;
+
+// Hex: which cell each canvas pixel shows depends only on the grid's geometry, so it is worked out
+// once per geometry (the last few kept: L10 repaints on every click with the same one) and a paint
+// is then one lookup per pixel into the cells' packed colours, written as 32-bit words.
+const hexMaps = new Map();
+function hexMap(L, XS, cw, ch, yTop, yBot) {
+    const { W, H, north, cellDeg } = L;
+    const key = `${W},${H},${XS},${ch},${yTop},${yBot},${north},${cellDeg}`;
+    let m = hexMaps.get(key);
+    if (m) { hexMaps.delete(key); hexMaps.set(key, m); return m; }
+    m = new Int32Array(cw * ch);
+    const s = HEX_SIZE, inv = 1 / s;
+    // per canvas column and for each of the two row parities (centres at whole or half units):
+    // the nearest centre's column in cells and its squared distance along x
+    const colP = [new Int32Array(cw), new Int32Array(cw)], dxP = [new Float64Array(cw), new Float64Array(cw)];
+    for (let p = 0; p < 2; p++) {
+        const off = p * 0.5;
+        for (let x = 0; x < cw; x++) {
+            const uu = (x + 0.5) / XS * inv, c = Math.floor(uu - off + 0.5) + off;
+            dxP[p][x] = (uu - c) * (uu - c);
+            colP[p][x] = Math.min(W - 1, Math.max(0, Math.floor(c * s)));
+        }
+    }
+    for (let y = 0; y < ch; y++) {
+        const my = yTop - (y + 0.5) / ch * (yTop - yBot);
+        const lat = (2 * Math.atan(Math.exp(my)) - Math.PI / 2) * 180 / Math.PI;
+        const vv = Math.min(H - 1e-6, Math.max(0, (north - lat) / cellDeg)) * inv;
+        const j0 = Math.floor(vv / HEX_DY), j1 = j0 + 1;
+        const p0 = j0 & 1, p1 = j1 & 1;
+        const dx0 = dxP[p0], dx1 = dxP[p1], cl0 = colP[p0], cl1 = colP[p1];
+        const cv0 = j0 * HEX_DY, cv1 = j1 * HEX_DY;
+        const d0 = (vv - cv0) * (vv - cv0), d1 = (vv - cv1) * (vv - cv1);
+        const r0 = Math.min(H - 1, Math.max(0, Math.floor(cv0 * s))) * W, r1 = Math.min(H - 1, Math.max(0, Math.floor(cv1 * s))) * W;
+        const o = y * cw;
+        for (let x = 0; x < cw; x++) {
+            m[o + x] = dx1[x] + d1 < dx0[x] + d0 ? r1 + cl1[x] : r0 + cl0[x];
+        }
+    }
+    hexMaps.set(key, m);
+    if (hexMaps.size > 3) hexMaps.delete(hexMaps.keys().next().value);
+    return m;
+}
+
+function paintHex(L, info, ch0, yTop, yBot) {
+    const { W, H, dist } = L;
+    const { bands, alpha } = cfg;
+    const edges = bands.map(b => b.h), nb = edges.length;
+    const XS = Math.max(1, Math.min(4, Math.floor(Math.sqrt(MAX_PIXELS / (W * ch0)))));
+    const cw = W * XS, ch = Math.min(8192, ch0 * XS);
+    // each band's packed colour, ABGR as a little-endian word (0: not painted)
+    const pack = (r, g, b) => ((alpha << 24) | (Math.round(b) << 16) | (Math.round(g) << 8) | Math.round(r)) >>> 0;
+    const land = bands.map(b => pack(b.color[0], b.color[1], b.color[2]));
+    const water = bands.map(b => pack(b.color[0] + (255 - b.color[0]) * WATER_MIX, b.color[1] + (255 - b.color[1]) * WATER_MIX, b.color[2] + (255 - b.color[2]) * WATER_MIX));
+    const C = new Uint32Array(W * H);
+    const last = edges[nb - 1];
+    let k = 0;   // neighbouring cells are mostly in the same band, so start from the last one's
+    for (let i = 0; i < C.length; i++) {
+        const h = dist[i];
+        if (!(h <= last)) continue;
+        while (k > 0 && h <= edges[k - 1]) k--;
+        while (h > edges[k]) k++;
+        C[i] = info && (info[i] & 0xFF) !== 0 ? water[k] : land[k];
+    }
+    const map = hexMap(L, XS, cw, ch, yTop, yBot);
+    const buf = new ArrayBuffer(cw * ch * 4);
+    const out = new Uint32Array(buf);
+    for (let p = 0; p < out.length; p++) out[p] = C[map[p]];
+    return { px: new Uint8ClampedArray(buf), cw, ch };
+}
+
 function paintLook(L, info, ch0, yTop, yBot) {
     const { W, H, dist, north } = L;
     const { bands, alpha } = cfg;
@@ -71,7 +142,6 @@ function paintLook(L, info, ch0, yTop, yBot) {
         B[i] = k;
     }
     const px = new Uint8ClampedArray(cw * ch * 4);
-    const hex = cfg.look === 'hex';
     const lat0 = L.cellDeg;
     for (let y = 0; y < ch; y++) {
         const my = yTop - (y + 0.5) / ch * (yTop - yBot);
@@ -81,19 +151,7 @@ function paintLook(L, info, ch0, yTop, yBot) {
         for (let x = 0; x < cw; x++) {
             const u = (x + 0.5) / XS, c = Math.min(W - 1, Math.floor(u)), fx = u - c;
             let cell = r * W + c;
-            if (hex) {
-                const s = HEX_SIZE, uu = u / s, vv = v / s;
-                const j0 = Math.floor(vv / HEX_DY);
-                let best = Infinity, bu = 0, bv = 0;
-                for (let j = j0; j <= j0 + 1; j++) {
-                    const off = (j & 1) ? 0.5 : 0;
-                    const cu = Math.round(uu - off) + off, cv = j * HEX_DY;
-                    const d = (uu - cu) * (uu - cu) + (vv - cv) * (vv - cv);
-                    if (d < best) { best = d; bu = cu; bv = cv; }
-                }
-                const hc = Math.min(W - 1, Math.max(0, Math.floor(bu * s))), hr = Math.min(H - 1, Math.max(0, Math.floor(bv * s)));
-                cell = hr * W + hc;
-            } else {
+            {
                 const b = B[cell];
                 const n = r > 0 ? cell - W : -1, s = r < H - 1 ? cell + W : -1;
                 const w = c > 0 ? cell - 1 : -1, e = c < W - 1 ? cell + 1 : -1;

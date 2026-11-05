@@ -5,6 +5,8 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Upstream is max(p - 0.4 v, 2.5 km/h), carrying stays x2** (T-071; were 0.6 and 1.5). Recorded upstream crews made 2.5-3.5 km/h per moving hour on big rivers (Lewis and Clark, Mackenzie, HBC brigades, a 2015 canoe up the Mississippi), and the bank current on a big river is ~0.25-0.4 of the mean; single-carry portages run 1.5-2 x walking time. Revisit with a small-canoe upstream log on a huge river, or if small rivers (4.3 km/h up at Q = 1) prove too fast. notes/T-071.md.
+
 - **Globe on MapLibre 5.24.0, the time layers unchanged** (T-059). 5.24.0 is the last 5.x (2026-04-23); 6.x (6.16.0 now) was not tried. MapLibre 5 draws canvas sources on the projection's subdivided tile mesh, linear in Mercator within the tile, so the Mercator-y canvases bend onto the sphere as they are: no plate carrée repaint, raster tiles or custom layer. The globe is always on (no switch) and turns flat at zoom 11-12 by MapLibre's own rule. Revisit if a later MapLibre stops reprojecting canvas sources, or for 6.x. notes/T-059.md.
 
 - **Corridor speed is along the river and smoothed** (T-064). A river step counts the river's own length (so a reach reads its model speed, not its lower over-ground speed), averaged over 6 edges each way of the same mode; lines are cut for speed only 0.4 km/h past a class edge, and coloured by their own mean km/h. Revisit the window (`SMOOTH`) if real changes, like a stretch of forest at L1, read too blurred.
@@ -18,6 +20,8 @@ reasoning and what it replaced.
 - **Cells stay crisp at zoom 9-10**, no smoothed band edges (Anita: "not sure if smoothing is the
   right way forward... maybe rounding / diagonals makes more sense. or a hex map would also look
   nice"); diagonals and a hex look are tested as painting only (T-060).
+- **Hex is the default cell look** (2026-11-05, Anita: "the hex looks nicer somehow. more
+  omnidirectional"); `?look=crisp` and `?look=diag` stay (T-060).
 - **Corridor colour is speed along the stretch**, one ramp for every mode, and width is how many
   trips share it (Anita: "lets just have color be directly reflecting speed, and not mode";
   T-062). This replaces T-052's yellow-to-dark-red by share and its paddled blue. A globe view

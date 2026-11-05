@@ -186,6 +186,24 @@ straits (several m/s), which no climatology captures; stage 1 ignores them.
   night. Earlier reed and bamboo rafts failed (too slow for the current).
 - **Oldest known boats**: dugouts, e.g. the Pesse canoe (Netherlands, about 8000 BC). Bark and
   skin boats probably existed earlier but do not survive.
+- **Upstream travel** (full table and working: notes/T-071.md). Recorded upstream canoe and boat
+  travel on big rivers made about 25-45 km a day in 10-16 hour days, so **about 2.5-3.5 km/h per
+  moving hour**, fairly even across river sizes: Lewis and Clark's dugouts up the upper Missouri
+  in 1805, "18 miles a day" often (~2.4-2.9 km/h); Mackenzie's return up the Mackenzie in 1789,
+  ~2,500 km in ~58 days by paddle and tracking line (~2.7-3.1 km/h); HBC York boats up the Hayes,
+  17 days against 10 down; the 1862 Portage La Loche brigade, 35 days up against 20 down; two
+  people a canoe up the Mississippi in winter 2015, ~28 km a day averaged over 87 days. Heavy
+  boats did less (Lewis and Clark's keelboat, 10-15 miles a day; Teixeira's Amazon flotilla,
+  1637-38, ~14 km a day). All are crews, mostly in heavier boats than the model's canoe, so rough.
+- **Bank current**: the local depth-averaged current goes roughly as depth^(2/3) across a channel
+  (Manning applied locally; Shiono and Knight 1991 add lateral shear), so in 1-2 m of water at
+  the margin of a big river (mean depth 5-12 m) it is ~0.25-0.4 of the section mean, with eddies
+  behind points running backwards. Crossings at bends meet the full current. An upstream
+  paddler meets about 0.3-0.5 of the mean overall (worked, not measured).
+- **Portage rates**: a single carry on a trail runs ~3 km/h (Boundary Waters planning: ~0.75 km
+  in ~30 min with unloading and loading; 20 min per km a trip), so about 1.5-2 x walking time;
+  a double carry about 3 x the single; voyageur brigades with several 41 kg loads a man about an
+  hour per half mile of portage (~0.8 km/h of progress, ~6 x walking).
 
 ### Recommended values (one representative canoe)
 
@@ -197,9 +215,9 @@ noted after.
 | Paddling speed on still water, p | **5 km/h** | trippers 3-5, dugout crossing ~5, voyageur crews 8 |
 | Paddling hours per day | **8** (same day as walking) | keeps the map's clock one convention; voyageurs did 14+ as professionals |
 | Downstream | p + v (mid-channel, full velocity) | |
-| Upstream | max(p - 0.6 v, 1.5 km/h) | 0.6: hugging the bank where current is slower (**guess**); 1.5 km/h floor: lining or poling along the bank, which is how people went up fast rivers (**guess**). So upstream is slow, never impossible, except at falls |
+| Upstream | max(p - 0.4 v, 2.5 km/h) | 0.4: the share of the mean current met keeping to the bank, eddies and inside bends (worked from the bank current above, 0.3-0.5); 2.5 km/h floor: lining or poling along the bank, near recorded tracking rates (2.5-3 km/h). Gives 4.3 km/h on a small river to 3.0 on a huge one, the 2.5-3.5 recorded per moving hour (T-071). Never impossible, except at falls |
 | Unrunnable reach (steep or fall) | portage: carry overland | |
-| Portage speed | MAP walking time x **2** | single carry with canoe and load; x3 for a solo double carry. Voyageurs on made trails lost little speed; trackless ground with a boat is much worse (**guess**) |
+| Portage speed | MAP walking time x **2** | a single carry with a light canoe and little kit (recorded 1.5-2 x on trails); a double carry would be ~3-5 x, a voyageur brigade's ~6 x. Trackless ground is in MAP's walking time already (T-071) |
 | Fall or dam | fixed **1 h** plus the carry around it | |
 | Put in or take out | **0.25 h** each | unloading and loading (**guess**) |
 | Sea | p, plus current by the triangle above | |
@@ -339,7 +357,7 @@ means paying 10 extra hours to cut death risk by 1%). This is Anita's call (it r
 - **Nodes**: the walking layer (as now), and a canoe layer: every sea and lake cell, plus every
   cell a paddleable river (mean flow >= 1 m3/s) passes through.
 - **River edges**: directed, between consecutive cells of each rasterised reach. Downstream time
-  = true length / (p + v); upstream = length / max(p - 0.6 v, 1.5 km/h), with v = 0.51 Q^0.11.
+  = true length / (p + v); upstream = length / max(p - 0.4 v, 2.5 km/h), with v = 0.51 Q^0.11.
   Reaches steeper than the rapids limit, and falls and dams, become portage edges both ways.
 - **Sea and lake edges**: 16 neighbours, time from the current triangle; lakes have no current.
   Sea cells with summer ice > 15% are closed.
@@ -398,6 +416,7 @@ Sea
 Speeds
 - Voyageur pace and portages: https://digital.library.mcgill.ca/nwc/history/12.htm , https://digital.library.mcgill.ca/nwc/history/08.htm , https://wolf-ridge.org/wp-content/uploads/2025/12/Voyageur-Canoe.pdf , https://ecvoyageurs.com/t2k/history.html
 - Trip-planning averages: https://forums.paddling.com/t/if-you-were-planning-a-trip/21898
+- Upstream travel and portage rates (T-071; each figure's source in notes/T-071.md): https://www.nps.gov/parkhistory/online_books/lewisandclark/intro38.htm , https://en.wikipedia.org/wiki/Portage_La_Loche_Brigade , https://nancymargueriteanderson.com/eleventh-leg/ , https://newscut.mprnews.org/2015/03/to-rediscover-n-america-5-friends-paddle-against-the-current/index.html , https://en.wikipedia.org/wiki/Pedro_Teixeira , https://williamsandhall.com/bwca-blog/portage-in-bwca , https://en.wikipedia.org/wiki/Portage
 - Taiwan-Yonaguni dugout voyage: https://earthsky.org/human-world/stone-age-ocean-voyage-re-enacted/ , https://www.bairdmaritime.com/work-boat-world/research-environment-training/feature-scientists-replicate-ancient-seafaring-with-rudimentary-canoe (papers: Kaifu et al., Science Advances, 25 June 2025)
 - Pesse canoe: https://en.wikipedia.org/wiki/Pesse_canoe
 

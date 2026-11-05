@@ -43,13 +43,19 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 |---|---|---|---|
 | walk / carry | land node to its 16 neighbours | as now; x 2 when carrying | no (until T-011) |
 | river down | canoe node to the next cell of a reach | length / (p + v) | yes |
-| river up | the reverse | length / max(p - 0.6 v, 1.5 km/h) | yes |
+| river up | the reverse | length / max(p - 0.4 v, 2.5 km/h) | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
 | sea | canoe node to neighbouring sea canoe nodes | length / s, s from the current | yes |
 | transfer | land node to the canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node) | both ways |
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
   D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s.
+- **Upstream** the canoe keeps to the bank, eddies and inside bends, where the current is slower
+  than the section mean v: it meets 0.4 v. Where that leaves under 2.5 km/h (v over 6.25 km/h,
+  Q over about 68,000 m³/s: only the Amazon from about Manaus down) it lines or poles along the
+  bank at 2.5 km/h. So upstream runs from
+  4.3 km/h on a small river (Q = 1 m³/s) to 3.8 on a big one (100) and 3.0 on a huge one (10,000),
+  near what recorded upstream canoe travel made per moving hour (research/canoe.md 4).
 - **River length** is the reach's real length spread over its cell steps, so meanders cost their
   length.
 - **Sea current** c is the mean of the edge's two cells from the drifter climatology, x0.5 within
@@ -68,8 +74,9 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 - **Portage has no edges of its own.** Unrunnable river steps are dropped: a fall, a dam, a weir,
   a reach steeper than 5 m/km (2 m/km where Q >= 1000), or OSM-mapped rapids where Q >= 1000. The search gets off (0.25 h), carries
   along the bank at walking x 2 and gets back on (0.25 h), about the research's "1 h plus the
-  carry" for a fall. Watersheds between rivers are crossed the same way. Upstream on a fast river,
-  carrying along the bank can beat lining at 1.5 km/h; the search takes the quicker.
+  carry" for a fall. Watersheds between rivers are crossed the same way. Upstream on a big
+  meandering river, carrying on a straighter line over open land or roads (2.4-2.5 km/h) can beat
+  paddling the bends at 3 km/h; the search takes the quicker.
 - **Rapids** of 1-5 m/km are run at the same speeds, with their own hazard class.
 
 ## 3. Time and danger
