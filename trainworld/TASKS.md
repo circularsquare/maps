@@ -92,7 +92,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
 Anita's notes 2026-11-05 morning (verbatim in notes/todo-2026-11-05a.md; briefs quote it word for word):
-- T-2520 [P3] Network diagram: New York's avenue lines drawn at different angles; mostly parallel lines should stay parallel (Anita: "if it seems too hard, we dont have to chase it"). Open; taking, 2026-11-05, agent diagparallel.
+- T-2529 [P3] Network diagram: parallel lines lost in the routing (after T-2520, 80-90% of parallel pairs share a direction after B but 62-70% once drawn): pieces off a direction get two legs chosen separately, so parallel pieces jog differently; couple their leg order or snap. notes/T-2520.md. Open.
+- T-2530 [P3] Network diagram: B converges slower since T-2520 (New York's layout 2.8 -> 3.6 s, B 1.37 -> 1.99 s); find a cheaper way to the same choices, and look at all Japan's near pairs drawn on the wrong side (387 -> 481). notes/T-2520.md. Open.
 - T-2531 [P1] Anita, 2026-11-05 ~10:00: "i feel like loading of demand bubbles in the city we're looking at has honestly regressed. am i imagining that, or maybe my save is just too big now, or did we actually do something that might have caused a regression". Measure time to the zone in view's bubbles across builds (827 -> 956 -> master), find any regression and its commit. Open; taking, 2026-11-05, agent bubbleload. notes/T-2531.md.
 - T-2523 [P2] A clicked demand bubble on a big save can take over a minute with no loading note: say what the game is working on. Open.
 - T-2524 [P2] The focused city's demand load: a progress indicator on hover, a way to tell a stall, and a profile of why it stalls. Open.

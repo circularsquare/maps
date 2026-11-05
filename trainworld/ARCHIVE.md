@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2520 Diagram: parallel lines stay parallel (2026-11-05, agent diagparallel, tree): hops parallel on the ground share a scale and a B direction, A holds near stations' offsets; pairs kept parallel New York 0.54 -> 0.68 (Manhattan 0.53 -> 0.71), Tokyo 0.60 -> 0.68; layout +27%/+16%. T-2529, T-2530. notes/T-2520.md.
 - T-2521 Diagram city names big and grey on their city (2026-11-05, agent diagnames2, tree): 1.5 to 7 times the station names' size, the place grey at half opacity, centred on the block's box, painted under the lines; overlaps shrink then drop. checks/t2438-city-names.mjs; docs/ui-diagram.md.
 - T-2519 Headway cap (2026-11-05, agent uismall3, tree): 2 h to 4 h (the timetable lays one departure per demand-level stretch, 4 h at the shortest, so longer would run extra trains); the stepper moves in 15 min from 1 h. No reason for 2 h was recorded. DECISIONS.
 - T-2522 Track bar text size (2026-11-05, agent uismall3, tree): the map element's 12 px reached the track and station bars; they now set the panels' 14 px (price stays 12 px).
