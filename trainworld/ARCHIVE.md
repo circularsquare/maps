@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2447 Diagram blocks named by their own place (2026-11-04, agent diagnames, tree .tw-trees/diagnames): a block whose zone's name a bigger block has takes the nearest city or town of the zone's place list to its stations, none twice; all Japan 31 -> 45 of 45 blocks named, New York, Northeast and Toronto unchanged. checks/t2438-city-names.mjs; docs/ui-diagram.md.
+
 - T-2464 Diagram zone borders redrawn (2026-11-04, agent diagzones, tree .tw-trees/diagzones): decided in the drawing (each cell the zone of its nearest pill), every zone a closed octilinear outline with rounded corners, between blocks too; no station on another's side on Japan, the Northeast, New York, Toronto; T-2168's warp removed. notes/T-2464.md.
 - T-2469 Bus legs over bridges (2026-11-04, agent ferrybus, tree .tw-trees/ferrybus): buses drive motorways too, where most long bridges and tunnels are; a click lands on one only where no street is near. Verrazzano, Brooklyn Bridge, Golden Gate pass; checks/t2451-bus-refusals.mjs.
 - T-2468 Ferry ports snap (2026-11-04, agent ferrybus): a click within 200 m of the shore, land or water, previews and places the port on the nearest shore; within 30 m of an existing port it is that port.
