@@ -8,7 +8,7 @@ import { lineMoneyTip, Money } from "../MoneyText";
 import { capitalise, count, duration, headway, money, plural, speed, trainKind } from "../../game/format";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
-import { crowdLevel, dayNote, PERIOD_STRIDE, runningToday, today } from "../../game/today";
+import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, profitKnown, runningToday, today } from "../../game/today";
 import { accountVersion, BOAT_CARS, BUS_CARS, capacity } from "../../game/boarding";
 import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -292,10 +292,12 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
       <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         {!pending && extra}
-        <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
-          <span class="grow">Profit</span>
-          <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
-        </li>
+        {profitKnown(l) ? (
+          <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
+            <span class="grow">Profit</span>
+            <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
+          </li>
+        ) : hasTrains(l) && <Row label="Profit"><span class="muted">calculating...</span></Row>}
         {load !== null && (
           <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "")} load over the entire line`}>
             <span class="grow">Average load</span>

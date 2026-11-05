@@ -81,7 +81,12 @@ line panel's Profit row, the Lines tab's Money) is the one figure that is not a 
 for today, a whole day of the line's local day now (fares at every hour of it on its own kind of day,
 minus a day's running cost and its upkeep share), its hover "Expected profit today: $x". It changes when
 the day turns, with the network or the riders worked out again, never with the hour, so it does not drift
-through a weekend as the past 24 hours would [T-2475, notes/T-2475.md]. The line panel's block has no heading, only the rule above it. The points (Cities
+through a weekend as the past 24 hours would [T-2475, notes/T-2475.md]. It shows only once the line runs
+trains and a demand result has landed for it, an entry for the line or none once its edit is no longer pending (`profitKnown`, game/today.ts) [T-2536]: before
+that the Lines tab's Money cell is blank, the line panel's Profit row reads "calculating..." (muted) when it has trains and is
+absent when it has none, and the line is left out of the group and Lines totals, so the upkeep alone is never
+shown as the line's loss. Deleting a rail or bus line with no stops asks nothing; one with stops asks "Delete <name>? Track
+and stations stay." [T-2535]. The line panel's block has no heading, only the rule above it. The points (Cities
 tab, top bar, leaderboard) say "in past 24h" too: they are a sum of the last 24 whole game
 hours, moving once an hour. They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on

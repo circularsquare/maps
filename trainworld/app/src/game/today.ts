@@ -13,6 +13,7 @@ import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
+import { linesPending } from "./lineFigures";
 import { moneyState } from "./money";
 import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
@@ -168,6 +169,19 @@ export function runningToday(l: LineInput, st: LineStats): number {
   }
   return cost;
 }
+
+/** T-2536: whether a line's profit has been worked out: it runs trains (or buses, boats) and a demand
+ * result with an entry for it has landed. Before that its figures are only the upkeep. */
+export function hasTrains(l: LineInput): boolean {
+  const held = todayService.value.get(l.id);
+  const tph = held ? held.tph : [l.tph.high, l.tph.medium, l.tph.low];
+  return tph.some((x) => x > 0);
+}
+/** A line with no riders gets no demand entry, so once its edit is no longer pending it counts as calculated too. */
+export const profitKnown = (l: LineInput) => {
+  const dv = demandView.value;
+  return hasTrains(l) && !!dv && (dv.lines.has(l.id) || !linesPending.value.has(l.id));
+};
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());

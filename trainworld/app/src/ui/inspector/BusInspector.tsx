@@ -257,7 +257,7 @@ export function BusInspector({ id }: { id: string }) {
   });
   const remove = () => {
     // T-2194: a ferry line leaves its ports and its boats go to the depot, so it goes at once (undoable)
-    if (ferry) return removeNow();
+    if (ferry || stopCount(bus) === 0) return removeNow();
     ask.value = { text: bus.built ? `Delete ${l.name}? Nothing is refunded for the route.` : `Delete ${l.name}?`, yes: "Delete line", no: "Keep line", run: () => {
       ask.value = null;
       void edit({ op: "removeLine", line: l.num }).then((a) => {

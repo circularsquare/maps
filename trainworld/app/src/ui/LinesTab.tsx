@@ -16,7 +16,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, periodLoad, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
 import { kindIn, lineCountry } from "../game/holidays";
 import { DAY_KINDS } from "../game/days";
 import { demandView, lineFiguresIn } from "../game/demand";
@@ -66,10 +66,11 @@ function RidersToday({ line }: { line: string }) {
 
 /** T-735, T-867, T-2475: a line's expected profit today: a whole day's fares of its kind of day now
  * minus a day's running cost and its share of upkeep. */
-const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.dayFares - runningToday(l, st) - st.upkeep : 0);
+const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d && profitKnown(l) ? d.dayFares - runningToday(l, st) - st.upkeep : 0);
 function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   const d = today.value.get(l.id);
-  if (!d) return <span class="val w-linemoney" />;
+  // T-2536: no figure before the first profit with trains (the upkeep alone is not a profit)
+  if (!d || !profitKnown(l)) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.dayFares - run - st.upkeep;
   return (
     <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, st.bus?.ferry ? "boats" : !!st.bus, dayNote(l, st))}>
@@ -104,13 +105,14 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   const pending = run.map((l) => pend.get(l.id)).filter((k): k is PendingKind => !!k).sort()[0];
   const riders = run.reduce((n, l) => n + (t.get(l.id)?.riders ?? 0), 0);
   const any = run.some((l) => t.has(l.id));
+  const anyProfit = run.some((l) => t.has(l.id) && profitKnown(l));
   const net = run.reduce((n, l) => n + lineNet(t.get(l.id), l, w.lineStats[l.id]), 0);
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
       {pending ? <PendingRiders k={pending} text={any ? count(riders) : ""} />
         : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in past 24h in total\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
-      {any ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${by((l) => money(lineNet(t.get(l.id), l, w.lineStats[l.id])))}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
+      {anyProfit ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${run.filter((l) => profitKnown(l)).map((l) => `${l.name}: ${money(lineNet(t.get(l.id), l, w.lineStats[l.id]))}`).join("\n")}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
       <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>
     </>
   );

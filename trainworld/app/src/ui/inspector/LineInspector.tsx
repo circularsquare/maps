@@ -589,16 +589,19 @@ function RailLineInspector({ id }: { id: string }) {
       if (a.ok && now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: now.stops.map(Number) };
     } finally { stopEditing = false; }
   };
+  const removeNow = () => {
+    ask.value = null;
+    void edit({ op: "removeLine", line: l.num }).then(a => {
+      if (!a.ok) return;
+      if (lineDraft.peek().line === l.num) live.tools?.exit();
+      const selected = selection.peek();
+      if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
+    });
+  };
   const remove = () => {
-    ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: () => {
-      ask.value = null;
-      void edit({ op: "removeLine", line: l.num }).then(a => {
-        if (!a.ok) return;
-        if (lineDraft.peek().line === l.num) live.tools?.exit();
-        const selected = selection.peek();
-        if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
-      });
-    }};
+    // T-2535: a line with no stops has nothing to lose, so it goes at once
+    if (l.stops.length === 0) return removeNow();
+    ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: removeNow };
   };
   const copy = async () => {
     if (copying) return;
