@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2531 Bubbles of the city in view felt regressed (2026-11-05, agent bubbleload): no build regressed them (827, 956, master alike on Anita's North America save); fixed the open-save bubbles (T-2508) and a click during a load that never answered on 956. T-2532, T-2533. notes/T-2531.md.
+- T-2508 A zone in view's bubbles during a load (2026-11-05, agent bubbleload): the game before's bubbles were held current while the focus pool's figures came in; `legsKey` in `isCurrent`, so bubbles come 1-11 s after the figures (were 125-200 s on her save). notes/T-2531.md.
 - T-2541 Diagram: room for straits and bays (2026-11-05, agent diagstraits, tree): the layout reads the sea on the ground; hops across water near twice their real length, shores held apart. All Japan: no islands merged, Seikan 0.27 -> 0.87 of its length, Tokyo Bay open, Boso 1/8 -> 1/3 the core's scale; Hokkaido's IoU fell (T-2550), New York rivers T-2551. notes/T-2541.md.
 - T-2542 The diagram checks' frames (2026-11-05, agent diagstraits, tree): t2464, t2438 and t2289 take each save's own frame, and every diagram check lays a real save out with the sea as the page does (diagram-saves.mjs `waterOf`). notes/T-2541.md.
 - T-2549 Dock tab row has a top rule (2026-11-05, agent launchbits, tree): `.tabs` border-top in the rule colour, so the tabs read as a closed box; checked on desktop and a 412 px phone, light and dark.
