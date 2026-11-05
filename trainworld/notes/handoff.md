@@ -34,7 +34,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **uismall2** (Opus, tree .tw-trees/uismall2, 6195, ids T-2481..82): T-2473 tutorial text stays greyed, T-2474 track
   setting carries to new track, T-2475 expected profit ticking (explain, steady if noise), T-2477 no camera snap.
 - **loadwait** (Opus, tree .tw-trees/loadwait, 6196, ids T-2483..84): T-2476 worst-case demand wait, T-2478 Vancouver.
-- **sizes** (Sonnet, main tree read-only, ids T-2485..86): T-2472 size summary into notes/T-2472.md.
+- sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
+  filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
+  publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
+  data/frozen 20261104-131517 and -182622 (4 GB) after Europe's freeze; trees as they land.
 - **diaglines** (Opus, tree .tw-trees/diaglines from fb4c5e61, 6198, ids T-2489..90): T-2488 SPIKE, report before
   landing: zone borders as layout lines (virtual nodes along real boundaries), plus her fallback (hull, 2-3 pitch
   clearance); all built zones and neighbours. Anita: T-2464 "mostly just hugging the lines"; wants her idea answered

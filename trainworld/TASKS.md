@@ -90,7 +90,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
 Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
-- T-2472 [P2] Size summary for Anita: R2, her computer, what an average player downloads, the player's RAM, anything else; and what could shrink. taking, 2026-11-04, sizes.
+- T-2472 [P2] Size summary for Anita: R2, her computer, what an average player downloads, the player's RAM, anything else; and what could shrink. Measured, report in notes/T-2472.md; waiting on Anita (disk deletions are hers to approve, list in section 2). done 2026-11-04, sizes.
+- T-2485 [P2] Player RAM: the real save takes 3.8 GB in Chrome (renderers 3.2 GB) against 1.5 GB for an empty New York game; heap-snapshot the demand, clock and shade workers, find what holds it, cut what a player would not miss. notes/T-2472.md section 4.
+- T-2486 [P3] Wire size: `.bin` is 76% of R2 (2.2 of 2.9 GB) and the biggest piece of each city's download, and the first line pulls 14.4 MB of worldwide data; compress `.bin` for whole-file reads, keep Range reads working, load the market files by region. notes/T-2472.md section 6.
 - T-2473 [P2] Tutorial text that only informs stays up, greyed, after its step is done instead of disappearing. taking, 2026-11-04, uismall2.
 - T-2474 [P2] Track tool: a setting changed on selected track (high speed, say) carries over to new track placed afterwards. taking, 2026-11-04, uismall2.
 - T-2475 [P2] Expected line profit ticks up and down continuously: find why (holidays and weekends?) and steady it if it's noise. taking, 2026-11-04, uismall2.
