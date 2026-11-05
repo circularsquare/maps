@@ -54,7 +54,7 @@ const TUNED: LayoutOptions = { L0: 1000, alpha: 0.3, puDiv: 9, room: 1.4, apart:
  * one, the lonely and local hops' shares, the sparse regions' floor) is drawn at its d-th power, so 1 is the drawing as
  * tuned and 0 draws every hop at its real length, the room for bundles, pills and the water's and blocks' gaps aside.
  * `?distort=` on the page's address sets it for that page. */
-export const DISTORT = 0.8;
+export const DISTORT = 0.5;
 export function dialled(d: number): LayoutOptions {
   d = Math.min(1, Math.max(0, d));
   const f = (x: number) => (d === 1 ? x : pow(x, d));

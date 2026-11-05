@@ -242,7 +242,8 @@ borders, decided in the drawing: a grid round the lines and pills, each cell the
 boundaries fitted at 0, 45 and 90 degrees, each shared border once, T-2464), `waterReal.ts` (the water on the
 ground from the zones' water masks: the sea and land masses (`groundSea`, which the layout reads first, T-2541),
 rivers thinned to centre lines, their crossings with the hops' tracks),
-`water.ts` (rivers drawn as bands routed between their crossings, never across another line, T-2169) and
+`water.ts` (rivers drawn as bands routed between their crossings, T-2169, T-2516; each band its real width at the
+drawing's smoothed scale `scaleAt`, cut to its room, T-2528) and
 `waterSea.ts` (the sea decided in the drawing by the nearest stations' look to the sea on the ground, its coast
 fitted at 0, 45 and 90 degrees, T-2169), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted

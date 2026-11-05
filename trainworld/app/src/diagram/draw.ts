@@ -67,7 +67,7 @@ export interface Drawing {
    * first painted */
   borders?: DiagramBorders & { path?: Path2D };
   /** the water (water.ts), set on the page when the layout worker posts it; the Path2Ds made when first painted */
-  water?: DiagramWater & { riverPath?: Path2D; seaPath?: Path2D };
+  water?: DiagramWater & { riverPaths?: Path2D[]; seaPath?: Path2D };
 }
 
 /** a polyline offset left by `o`, one point per point (mitred, capped) */
@@ -616,9 +616,10 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   if (wa && theme.water) {
     ctx.fillStyle = ctx.strokeStyle = theme.water;
     if (wa.sea?.length) ctx.fill((wa.seaPath ??= toPath(wa.sea)), "evenodd");
-    if (wa.rivers.length) {
-      ctx.lineWidth = Math.max(wa.band, 1 / scale);
-      ctx.stroke((wa.riverPath ??= toPath(wa.rivers)));
+    const rp = (wa.riverPaths ??= wa.rivers.map(toPath));
+    for (let k = 0; k < rp.length; k++) {
+      ctx.lineWidth = Math.max(wa.bands[k], 1 / scale);
+      ctx.stroke(rp[k]);
     }
   }
   // the zones' borders under everything else; the lines' casings cut them

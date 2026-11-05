@@ -15,10 +15,10 @@ import type { RealWater, RiverArc, Crossing } from "./waterReal";
 import { diagramSea, type SeaGrid, type SeaStats } from "./waterSea";
 
 export interface DiagramWater {
-  /** the rivers' centre lines as path commands (draw.ts `toPath`), stroked BAND pitches wide with round ends */
-  rivers: Float64Array;
-  /** the rivers' width, layout units */
-  band: number;
+  /** the rivers' centre lines as path commands (draw.ts `toPath`), one path per width, stroked with round ends */
+  rivers: Float64Array[];
+  /** each path's width, layout units (T-2528) */
+  bands: number[];
   /** the sea's outline as path commands, filled even-odd */
   sea?: Float64Array;
   /** checks only: the sea's rings as fitted */
@@ -28,7 +28,7 @@ export interface DiagramWater {
    * crossings it was routed through (graph edges); `ends`, per end of the arc, what it meets: "sea" (a region of the
    * drawn sea, `region`), "river" (another drawn arc), "open" (it runs on off the drawing), "free" (where the river
    * ends on the ground) or "dry" (the sea it meets is not drawn near) */
-  runs?: { parts: Float64Array[]; arc: number; river: number; edges: number[]; marks: number[]; falseKeys: string[]; ends: string[]; regions: number[] }[];
+  runs?: { parts: Float64Array[]; widths: Float64Array[]; wants: Float64Array[]; steps: Float64Array[]; arc: number; river: number; edges: number[]; marks: number[]; falseKeys: string[]; ends: string[]; regions: number[] }[];
   /** checks only: where bands cross lines the river does not, x, y */
   falsePts?: number[];
   /** checks only: the drawn sea on its grid */
@@ -40,8 +40,17 @@ export interface DiagramWater {
  * `mouths` drawn into the sea, `dry` ends meeting a sea that is not drawn near, `open` ends running off the drawing */
 export interface WaterStats { arcs: number; crossings: number; leftOut: number; turned: number; sections: number; widened: number; noRoute: number; falseCross: number; rivers: number; dropped: number; uncrossed: number; mouths: number; dry: number; open: number; channels: number; ms: number }
 
-/** a river band's width, pitches: three lines' (T-2516) */
+/** a river band's least width, pitches: three lines' (T-2516) */
 export const BAND = 3 * STROKE_SHARE;
+/** T-2528: a band is the river's real width at the drawing's scale round it (`scaleAt`), smoothed along the river over
+ * SMOOTH_M either side, between BAND and BAND_CAP pitches; a stretch at least FLOOR_SHARE of the river's widest drawn
+ * stretch, times their real widths' ratio (so a big river narrows gently downstream, a narrow branch stays narrow) */
+const BAND_CAP = 18, SMOOTH_M = 1500, FLOOR_SHARE = 0.5;
+/** a band is narrowed where it would cover a pill or a line it does not cross, to keep CLEAR_MARGIN pitches off it, and
+ * widens again at most TAPER pitches a pitch of its length; widths are drawn in steps of WIDTH_STEP pitches */
+const CLEAR_MARGIN = 0.5, TAPER = 0.25, WIDTH_STEP = 0.25;
+/** a casing within this cosine of a band's way runs alongside it (30 degrees) */
+const ALONG = 0.866;
 /** a route's cost rises within this many pitches of a casing or pill beyond the band's half width */
 const GAP = 1;
 /** the routing grid's cell, pitches; how far a route may stray from its course; bends' costs (pitches of length) */
@@ -588,23 +597,66 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
   const [bx0, by0, bx1, by1] = d.box;
   /** a drawn piece of band: its points, the hops it crosses as the river does and the lines it crosses that do not
    * (`${ribbon}|${edge}`), its arc */
-  type Part = { p: number[]; e: Set<number>; f: Set<string>; arc: number; river: number; ends: string[]; regions: number[] };
-  const cmds: number[] = [], runs: DiagramWater["runs"] = [], parts: Part[] = [], marks = new Map<number, number[]>(), falsePts: number[] = [];
+  type Part = { p: number[]; w: number[]; e: Set<number>; f: Set<string>; arc: number; river: number; ends: string[]; regions: number[] };
+  const runs: DiagramWater["runs"] = [], parts: Part[] = [], marks = new Map<number, number[]>(), falsePts: number[] = [];
   const ways = new Map<number, number>(), dryAt = new Set<number>();
+  // T-2528: each drawn arc sampled along its course, with the band's width wanted at each sample (before the room the
+  // drawing leaves is looked at)
+  const course0: { rs: number[]; ss: number[]; total: number; want: Float64Array }[] = [];
+  {
+    const minW = BAND * pitch, capW = BAND_CAP * pitch;
+    arcs.forEach((A, ai) => {
+      if (!drawn[ai]) return;
+      const P = A.pts, rs: number[] = [], ss: number[] = [];
+      let s = 0;
+      for (let k = 0; k + 3 < P.length; k += 2) {
+        const sl = hyp(P[k + 2] - P[k], P[k + 3] - P[k + 1]), parts = Math.max(1, Math.ceil(sl / DENSIFY_M));
+        for (let q = k ? 1 : 0; q <= parts; q++) {
+          const f = q / parts;
+          rs.push(P[k] + (P[k + 2] - P[k]) * f, P[k + 1] + (P[k + 3] - P[k + 1]) * f), ss.push(s + sl * f);
+        }
+        s += sl;
+      }
+      const m = ss.length, raw = new Float64Array(m), want = new Float64Array(m);
+      for (let q = 0; q < m; q++) raw[q] = 2 * A.half * warp.scaleAt(rs[q * 2], rs[q * 2 + 1]);
+      for (let q = 0, lo = 0, hi = 0, sum = 0; q < m; q++) {
+        while (hi < m && ss[hi] <= ss[q] + SMOOTH_M) sum += raw[hi++];
+        while (ss[lo] < ss[q] - SMOOTH_M) sum -= raw[lo++];
+        want[q] = sum / (hi - lo);
+      }
+      course0[ai] = { rs, ss, total: s, want };
+    });
+    // a river's floor: its widest stretch's share, at the real widths' ratio
+    const widest = new Map<number, [number, number]>();
+    course0.forEach((c, ai) => {
+      if (!c) return;
+      const top = Math.max(...c.want), r = arcs[ai].river, w = widest.get(r);
+      if (!w || top > w[0]) widest.set(r, [top, arcs[ai].half]);
+    });
+    course0.forEach((c, ai) => {
+      if (!c) return;
+      const [top, half] = widest.get(arcs[ai].river)!, floor = FLOOR_SHARE * top * Math.min(1, arcs[ai].half / half);
+      for (let q = 0; q < c.want.length; q++) c.want[q] = Math.min(capW, Math.max(minW, floor, c.want[q]));
+    });
+  }
+  const wayW = new Map<number, number>();
   arcs.forEach((A, ai) => {
     if (!drawn[ai]) return;
     stats.arcs++;
-    const P = A.pts, rs: number[] = [], ss: number[] = [];
-    let s = 0;
-    for (let k = 0; k + 3 < P.length; k += 2) {
-      const sl = hyp(P[k + 2] - P[k], P[k + 3] - P[k + 1]), parts = Math.max(1, Math.ceil(sl / DENSIFY_M));
-      for (let q = k ? 1 : 0; q <= parts; q++) {
-        const f = q / parts;
-        rs.push(P[k] + (P[k + 2] - P[k]) * f, P[k + 1] + (P[k + 3] - P[k + 1]) * f), ss.push(s + sl * f);
-      }
-      s += sl;
-    }
-    const total = s;
+    const { rs, ss, total, want } = course0[ai];
+    /** the band's width wanted at `at` metres along the arc, and its mean from `a` to `b` */
+    const wantAt = (at: number) => {
+      let q = 1;
+      while (q < ss.length - 1 && ss[q] < at) q++;
+      const f = Math.max(0, Math.min(1, (at - ss[q - 1]) / Math.max(1e-9, ss[q] - ss[q - 1])));
+      return want[q - 1] + (want[q] - want[q - 1]) * f;
+    };
+    const wantOver = (a: number, b: number) => {
+      if (b - a < DENSIFY_M) return wantAt((a + b) / 2);
+      let t = 0, c = 0;
+      for (let q = 0; q < ss.length; q++) if (ss[q] >= a && ss[q] <= b) (t += want[q]), c++;
+      return c ? t / c : wantAt((a + b) / 2);
+    };
     const realAt = (at: number): [number, number] => {
       let q = 1;
       while (q < ss.length - 1 && ss[q] < at) q++;
@@ -641,7 +693,7 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
         const m = mouth(v);
         if (m) return ends.push("sea"), regions.push(m[2]), stats.mouths++, [m[0], m[1]];
         const w = way(v);
-        if (w) return ends.push("way"), ways.set(v, A.river), nodePlace(v);
+        if (w) return ends.push("way"), ways.set(v, A.river), wayW.set(v, wantAt(v === A.a ? 0 : total)), nodePlace(v);
         // T-2540: else into whatever sea is drawn near (the drawn sea's body is voted by the places its cells are carried
         // back to, which can be a neighbouring sea's)
         const any = mouthAny(v);
@@ -658,8 +710,8 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     const [sx0, sy0] = s0 > 0 ? [NaN, NaN] : endAt(A.a);
     const [ex1, ey1] = s1 < total ? [NaN, NaN] : endAt(A.b);
     if (s1 < total) ends.push("free");
-    // pieces in order: routes (e -1) and crossings (e their hop)
-    type Piece = { p: number[]; e: number; fb?: boolean; also?: number[] };
+    // pieces in order: routes (e -1) and crossings (e their hop), each with the width wanted
+    type Piece = { p: number[]; e: number; w: number; fb?: boolean; also?: number[] };
     const pieces: Piece[] = [];
     let fromS = s0, fx = sx0, fy = sy0, fd = -1;
     /** the routes from the last place to (tx, ty), arriving the way td */
@@ -667,15 +719,16 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
       const rr: number[] = [...realAt(fromS)];
       for (let q = 0; q < ss.length; q++) if (ss[q] > fromS && ss[q] < toS) rr.push(rs[q * 2], rs[q * 2 + 1]);
       rr.push(...realAt(toS));
-      return course(rr, fx, fy, fd, tx, ty, td, own).map((p) => ({ p, e: -1, fb: true }));
+      const w = wantOver(fromS, toS);
+      return course(rr, fx, fy, fd, tx, ty, td, own).map((p) => ({ p, e: -1, w, fb: true }));
     };
     /** the lines a leg crosses where the river does not */
     const falseOf = (got: Piece[]) => got.reduce((t, pc) => t + (pc.fb ? crossKeys(pc.p, new Set()).size : 0), 0);
     for (const [c, dc] of cr) {
       if (c.s < s0 || c.s > s1) continue;
       if (fx !== fx) {
-        const ux = UX[dc.dir] * tl, uy = UY[dc.dir] * tl;
-        pieces.push({ p: [dc.ex - ux, dc.ey - uy, dc.ex, dc.ey], e: -1, fb: true }, { p: [dc.ex, dc.ey, dc.xx, dc.xy], e: c.e, also: also.get(c) });
+        const ux = UX[dc.dir] * tl, uy = UY[dc.dir] * tl, w = wantAt(c.s);
+        pieces.push({ p: [dc.ex - ux, dc.ey - uy, dc.ex, dc.ey], e: -1, w, fb: true }, { p: [dc.ex, dc.ey, dc.xx, dc.xy], e: c.e, w, also: also.get(c) });
         (fromS = c.s), (fx = dc.xx), (fy = dc.xy), (fd = dc.dir);
         continue;
       }
@@ -687,11 +740,11 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
         const back = leg(c.s, dc.xx, dc.xy, (dc.dir + 4) % 8);
         if (falseOf(back) < lf) (l = back), (run = [dc.xx, dc.xy, dc.ex, dc.ey]), (dir = (dc.dir + 4) % 8), stats.turned++;
       }
-      pieces.push(...l, { p: run, e: c.e, also: also.get(c) });
+      pieces.push(...l, { p: run, e: c.e, w: wantAt(c.s), also: also.get(c) });
       (fromS = c.s), (fx = run[2]), (fy = run[3]), (fd = dir);
     }
     if (ex1 === ex1) pieces.push(...leg(s1, ex1, ey1, -1));
-    else if (fd >= 0) pieces.push({ p: [fx, fy, fx + UX[fd] * tl, fy + UY[fd] * tl], e: -1, fb: true });
+    else if (fd >= 0) pieces.push({ p: [fx, fy, fx + UX[fd] * tl, fy + UY[fd] * tl], e: -1, w: wantAt(fromS), fb: true });
     // an end running on off what is looked at goes on straight, away from the drawing's middle, past its box
     const openRun = (px: number, py: number) => {
       const k = dirOf(px - (bx0 + bx1) / 2, py - (by0 + by1) / 2), M = OPEN_RUN * pitch;
@@ -702,20 +755,21 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     };
     if (pieces.length && ends[ends.length - 1] === "open") {
       const q = pieces[pieces.length - 1].p;
-      pieces.push({ p: openRun(q[q.length - 2], q[q.length - 1]), e: -1, fb: true });
+      pieces.push({ p: openRun(q[q.length - 2], q[q.length - 1]), e: -1, w: wantAt(total), fb: true });
     }
     if (pieces.length && ends[0] === "open" && s0 === 0) {
       const r = openRun(pieces[0].p[0], pieces[0].p[1]);
-      pieces.unshift({ p: [r[2], r[3], r[0], r[1]], e: -1, fb: true });
+      pieces.unshift({ p: [r[2], r[3], r[0], r[1]], e: -1, w: wantAt(0), fb: true });
     }
     // one band: the lines it crosses where the river does not counted
-    const out: Part = { p: [], e: new Set(), f: new Set(), arc: ai, river: A.river, ends, regions };
+    const out: Part = { p: [], w: [], e: new Set(), f: new Set(), arc: ai, river: A.river, ends, regions };
     for (const pc of pieces) {
       const allow = new Set(pc.e >= 0 ? [pc.e, ...(pc.also ?? [])] : []), bad = crossKeys(pc.p, allow);
       for (const k of bad) out.f.add(k);
       if (detail && bad.size) crossKeys(pc.p, allow, falsePts);
       for (const e of allow) out.e.add(e);
       for (let k = out.p.length ? 2 : 0; k < pc.p.length; k++) out.p.push(pc.p[k]);
+      for (let k = 2; k < pc.p.length; k += 2) out.w.push(pc.w);
     }
     if (out.p.length >= 4) parts.push(out);
     marks.set(ai, cr.flatMap(([, dc]) => [dc.ex, dc.ey, dc.xx, dc.xy]));
@@ -728,14 +782,44 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
     for (const q of course(w.pts, fx, fy, -1, w.to[0], w.to[1], -1, new Set())) for (let k = p.length ? 2 : 0; k < q.length; k++) p.push(q[k]);
     if (p.length < 4) continue;
     stats.mouths++;
-    parts.push({ p, e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + v, river, ends: ["river", "sea"], regions: [w.to[2]] });
+    const wv = wayW.get(v) ?? BAND * pitch;
+    parts.push({ p, w: p.slice(2).filter((_, k) => k % 2 === 0).map(() => wv), e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + v, river, ends: ["river", "sea"], regions: [w.to[2]] });
   }
-  // pieces of one sea on the ground drawn apart, and not joined by a river drawn, are joined by a channel where they
-  // are within CHANNEL pitches (T-2516; as river -1 - that sea)
+  // a river no wider than MAJOR_M where it is crossed is drawn only where it crosses no other line, else not at all
+  // (T-2516: never in pieces; small rivers crossing lines read as noise, T-2497)
+  {
+    // first a narrow arc at an end of what is drawn of a river (the Harlem River beside the Hudson) that crosses
+    // another line, and an arc left ending free with no crossing, until none is
+    const dg = new Int32Array(nn);
+    for (const q of parts) if (q.arc < arcs.length) dg[arcs[q.arc].a]++, dg[arcs[q.arc].b]++;
+    const endFree = (v: number) => dg[v] <= 1 && ((!real.nodes[v].sea && !real.nodes[v].open) || dryAt.has(v));
+    for (let again = true; again; ) {
+      again = false;
+      for (const q of parts) {
+        const A = arcs[q.arc];
+        if (!A || !q.p.length || A.a === A.b || !(endFree(A.a) || endFree(A.b)) || (q.e.size && !(A.half < MAJOR_M && q.f.size))) continue;
+        (stats.leftOut += q.e.size), (q.p.length = 0), dg[A.a]--, dg[A.b]--, (again = true);
+      }
+    }
+    const wide = new Set<number>(), dirty = new Set<number>(), all = new Set<number>();
+    arcs.forEach((A) => A.cross.length && A.half >= MAJOR_M && wide.add(A.river));
+    // (and a river left meeting no drawn sea: its mouths' seas are not drawn near, nor reached by water)
+    const crossed = new Set<number>(), reaches = new Set<number>();
+    for (const q of parts) if (q.p.length && q.ends.some((e) => e === "sea" || e === "way" || e === "open")) reaches.add(q.river);
+    for (const q of parts) if (q.p.length && q.e.size && reaches.has(q.river)) crossed.add(q.river);
+    for (const r of new Set(parts.map((q) => q.river))) if (r >= 0 && !crossed.has(r)) stats.dropped++;
+    for (const q of parts) if (q.river >= 0 && !crossed.has(q.river)) q.p.length = 0;
+    for (const q of parts) if (q.p.length && q.river >= 0) all.add(q.river), q.f.size && dirty.add(q.river);
+    for (const q of parts) if (dirty.has(q.river) && !wide.has(q.river)) (stats.leftOut += q.e.size), (q.p.length = 0);
+    for (const r of all) (dirty.has(r) && !wide.has(r) ? stats.dropped++ : stats.rivers++);
+    for (const q of parts) if (q.p.length) stats.dry += q.ends.filter((e) => e === "dry").length;
+  }
+  // pieces of one sea on the ground drawn apart, and not joined by a river still drawn (T-2528: a river left out above
+  // had joined them), are joined by a channel where they are within CHANNEL pitches (T-2516; as river -1 - that sea)
   {
     const nR = G.body.length, up = Array.from({ length: nR }, (_, r) => r), find = (r: number): number => (up[r] === r ? r : (up[r] = find(up[r])));
     const first = new Map<number, number>();
-    for (const q of parts) for (const r of q.regions) first.has(q.river) ? (up[find(r)] = find(first.get(q.river)!)) : first.set(q.river, r);
+    for (const q of parts) if (q.p.length) for (const r of q.regions) first.has(q.river) ? (up[find(r)] = find(first.get(q.river)!)) : first.set(q.river, r);
     const area = new Float64Array(nR);
     for (let c = 0; c < G.reg.length; c++) if (G.reg[c] >= 0) area[G.reg[c]]++;
     const lim = (CHANNEL * pitch) / G.h, dist = new Float32Array(G.reg.length), from = new Int32Array(G.reg.length);
@@ -771,58 +855,86 @@ export function diagramWater(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike
         const at = (c: number): [number, number] => [G.x0 + ((c % G.W) + 0.5) * G.h, G.y0 + (Math.floor(c / G.W) + 0.5) * G.h];
         const [sx, sy] = at(s0), [ex, ey] = at(hit);
         const p = routeOne(sx, sy, -1, ex, ey, -1, [sx, sy, ex, ey], new Set()).p;
-        parts.push({ p, e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + nn + G.reg[hit], river: -1 - b, ends: ["sea", "sea"], regions: [G.reg[s0], G.reg[hit]] });
+        parts.push({ p, w: p.slice(2).filter((_, k) => k % 2 === 0).map(() => BAND * pitch), e: new Set(), f: crossKeys(p, new Set()), arc: arcs.length + nn + G.reg.length + stats.channels, river: -1 - b, ends: ["sea", "sea"], regions: [G.reg[s0], G.reg[hit]] });
         up[find(G.reg[hit])] = main;
         stats.channels++;
       }
     }
   }
-  // a river no wider than MAJOR_M where it is crossed is drawn only where it crosses no other line, else not at all
-  // (T-2516: never in pieces; small rivers crossing lines read as noise, T-2497)
-  {
-    // first a narrow arc at an end of what is drawn of a river (the Harlem River beside the Hudson) that crosses
-    // another line, and an arc left ending free with no crossing, until none is
-    const dg = new Int32Array(nn);
-    for (const q of parts) if (q.arc < arcs.length) dg[arcs[q.arc].a]++, dg[arcs[q.arc].b]++;
-    const endFree = (v: number) => dg[v] <= 1 && ((!real.nodes[v].sea && !real.nodes[v].open) || dryAt.has(v));
-    for (let again = true; again; ) {
-      again = false;
-      for (const q of parts) {
-        const A = arcs[q.arc];
-        if (!A || !q.p.length || A.a === A.b || !(endFree(A.a) || endFree(A.b)) || (q.e.size && !(A.half < MAJOR_M && q.f.size))) continue;
-        (stats.leftOut += q.e.size), (q.p.length = 0), dg[A.a]--, dg[A.b]--, (again = true);
+  // T-2528: each band at its wanted widths, narrowed where it would cover a pill or a line it does not cross there, the
+  // narrowing tapered; drawn as runs of one width
+  const byWidth = new Map<number, number[]>(), partW = new Map<Part, [Float64Array, Float64Array, Float64Array]>();
+  /** the room either side of a band's middle at (px, py), running (ux, uy): to the nearest pill, or casing running
+   * alongside (within ALONG of its way) not in `skip` (ribbon segment indices), within `R`; lines across it it passes
+   * under, as at a crossing */
+  const roomAt = (px: number, py: number, ux: number, uy: number, R: number, skip: Set<number>) => {
+    let best = R;
+    const i0 = Math.floor((px - R) / OB), i1 = Math.floor((px + R) / OB), j0 = Math.floor((py - R) / OB), j1 = Math.floor((py + R) / OB);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (const s of obs.get(okey(i, j)) ?? []) {
+      if (s < pillsFrom) {
+        if (skip.has(s / 5)) continue;
+        const vx = segs[s + 2] - segs[s], vy = segs[s + 3] - segs[s + 1], vl = hyp(vx, vy);
+        if (vl > 0 && Math.abs(vx * ux + vy * uy) < ALONG * vl) continue;
       }
+      best = Math.min(best, segD(px, py, segs[s], segs[s + 1], segs[s + 2], segs[s + 3]) - segs[s + 4]);
     }
-    const wide = new Set<number>(), dirty = new Set<number>(), all = new Set<number>();
-    arcs.forEach((A) => A.cross.length && A.half >= MAJOR_M && wide.add(A.river));
-    // (and a river left meeting no drawn sea: its mouths' seas are not drawn near, nor reached by water)
-    const crossed = new Set<number>(), reaches = new Set<number>();
-    for (const q of parts) if (q.p.length && q.ends.some((e) => e === "sea" || e === "way" || e === "open")) reaches.add(q.river);
-    for (const q of parts) if (q.p.length && q.e.size && reaches.has(q.river)) crossed.add(q.river);
-    for (const r of new Set(parts.map((q) => q.river))) if (r >= 0 && !crossed.has(r)) stats.dropped++;
-    for (const q of parts) if (q.river >= 0 && !crossed.has(q.river)) q.p.length = 0;
-    for (const q of parts) if (q.p.length && q.river >= 0) all.add(q.river), q.f.size && dirty.add(q.river);
-    for (const q of parts) if (dirty.has(q.river) && !wide.has(q.river)) (stats.leftOut += q.e.size), (q.p.length = 0);
-    for (const r of all) (dirty.has(r) && !wide.has(r) ? stats.dropped++ : stats.rivers++);
-    for (const q of parts) if (q.p.length) stats.dry += q.ends.filter((e) => e === "dry").length;
+    return best;
+  };
+  for (const q of parts) {
+    if (!q.p.length) continue;
+    // the lines it crosses (as the river does, or where it had to) are no obstacle to it
+    const skip = new Set<number>();
+    for (let s = 0; s < ribE.length; s++) if (q.e.has(ribE[s]) || q.f.has(`${ribL[s]}|${ribE[s]}`)) skip.add(s);
+    // its segments cut into steps of at most a pitch, each at the room there
+    const P: number[] = [q.p[0], q.p[1]], want: number[] = [], len: number[] = [];
+    for (let k = 0; k + 3 < q.p.length; k += 2) {
+      const ax = q.p[k], ay = q.p[k + 1], bx = q.p[k + 2], by = q.p[k + 3], l = hyp(bx - ax, by - ay), m = Math.max(1, Math.ceil(l / pitch));
+      for (let z = 1; z <= m; z++) P.push(ax + ((bx - ax) * z) / m, ay + ((by - ay) * z) / m), want.push(q.w[k / 2]), len.push(l / m);
+    }
+    const ns = want.length, w = new Float64Array(ns);
+    for (let k = 0; k < ns; k++) {
+      const mx = (P[k * 2] + P[k * 2 + 2]) / 2, my = (P[k * 2 + 1] + P[k * 2 + 3]) / 2, l = Math.max(1e-9, len[k]);
+      const room = roomAt(mx, my, (P[k * 2 + 2] - P[k * 2]) / l, (P[k * 2 + 3] - P[k * 2 + 1]) / l, want[k] / 2 + CLEAR_MARGIN * pitch, skip) - CLEAR_MARGIN * pitch;
+      w[k] = Math.max(BAND * pitch, Math.min(want[k], 2 * room));
+    }
+    // widening tapered both ways
+    for (let k = 1; k < ns; k++) w[k] = Math.min(w[k], w[k - 1] + TAPER * len[k]);
+    for (let k = ns - 2; k >= 0; k--) w[k] = Math.min(w[k], w[k + 1] + TAPER * len[k]);
+    if (detail) partW.set(q, [w, Float64Array.from(want), Float64Array.from(P)]);
+    // runs of one width (in steps, rounded down), each rounded at its corners unless that would cut across a line
+    const step = WIDTH_STEP * pitch;
+    for (let k0 = 0; k0 < ns; ) {
+      const ws = Math.max(BAND * pitch, Math.floor(w[k0] / step) * step);
+      let k1 = k0 + 1;
+      while (k1 < ns && Math.max(BAND * pitch, Math.floor(w[k1] / step) * step) === ws) k1++;
+      const v = Float64Array.from(P.slice(k0 * 2, k1 * 2 + 2)), pts: number[] = [v[0], v[1]];
+      // (the steps' points dropped where straight)
+      for (let z = 1; z + 1 < v.length / 2; z++) {
+        const ux = v[z * 2] - pts[pts.length - 2], uy = v[z * 2 + 1] - pts[pts.length - 1], wx = v[z * 2 + 2] - v[z * 2], wy = v[z * 2 + 3] - v[z * 2 + 1];
+        if (Math.abs(ux * wy - uy * wx) > 1e-9 * pitch * pitch) pts.push(v[z * 2], v[z * 2 + 1]);
+      }
+      pts.push(v[v.length - 2], v[v.length - 1]);
+      const pv = Float64Array.from(pts);
+      let c: number[] = [];
+      rounded(pv, false, RADIUS * pitch, c);
+      if (crossKeys(flatten(c), q.e).size > crossKeys(pts, q.e).size) rounded(pv, false, 0, (c = []));
+      const into = byWidth.get(ws) ?? byWidth.set(ws, []).get(ws)!;
+      for (const x of c) into.push(x);
+      k0 = k1;
+    }
   }
+  const widths = [...byWidth.keys()].sort((a, b) => a - b);
   const byArc = new Map<number, Part[]>();
   for (const q of parts) {
     if (!q.p.length) continue;
-    const v = Float64Array.from(q.p);
-    // rounded corners, unless rounding would cut across a line
-    let c: number[] = [];
-    rounded(v, false, RADIUS * pitch, c);
-    if (crossKeys(flatten(c), q.e).size > q.f.size) rounded(v, false, 0, (c = []));
-    for (const x of c) cmds.push(x);
     (stats.crossings += q.e.size), (stats.falseCross += q.f.size);
     const l = byArc.get(q.arc);
     if (l) l.push(q);
     else byArc.set(q.arc, [q]);
   }
-  if (detail) for (const [ai, l] of byArc) runs.push({ parts: l.map((q) => Float64Array.from(q.p)), arc: ai, river: l[0].river, edges: l.flatMap((q) => [...q.e]), marks: marks.get(ai) ?? [], falseKeys: l.flatMap((q) => [...q.f]), ends: l[0].ends, regions: l[0].regions });
+  if (detail) for (const [ai, l] of byArc) runs.push({ parts: l.map((q) => Float64Array.from(q.p)), widths: l.map((q) => partW.get(q)![0]), wants: l.map((q) => partW.get(q)![1]), steps: l.map((q) => partW.get(q)![2]), arc: ai, river: l[0].river, edges: l.flatMap((q) => [...q.e]), marks: marks.get(ai) ?? [], falseKeys: l.flatMap((q) => [...q.f]), ends: l[0].ends, regions: l[0].regions });
   stats.ms = performance.now() - t0r;
-  return { rivers: Float64Array.from(cmds), band: BAND * pitch, sea: sea.cmds, seaRings: detail ? sea.rings : undefined, seaGrid: detail ? sea.grid : undefined, runs: detail ? runs : undefined, falsePts: detail ? falsePts : undefined, stats, seaStats: sea.stats };
+  return { rivers: widths.map((w) => Float64Array.from(byWidth.get(w)!)), bands: widths, sea: sea.cmds, seaRings: detail ? sea.rings : undefined, seaGrid: detail ? sea.grid : undefined, runs: detail ? runs : undefined, falsePts: detail ? falsePts : undefined, stats, seaStats: sea.stats };
 }
 
 /** path commands (draw.ts `toPath`) as a polyline, curves sampled */
@@ -905,11 +1017,14 @@ function simplify(p: number[], tol: number): number[] {
 /** the nearest stations blended, a station's weight 1 / (d^2 + EPS^2)^2, metres; a blended map's scale at most MAG_MAX
  * times the stations' median */
 const K = 8, EPS_M = 50, MAG_MAX = 2;
+/** `scaleAt`'s least reach, metres */
+const SCALE_R_M = 1500;
 
 export function makeWarp(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, reach: number, sideHops: number, gap: number) {
   const J = localMaps(g, x, y), all = kdTree(g.x, g.y);
   const n = g.key.length, scales = new Float64Array(n);
   for (let i = 0; i < n; i++) scales[i] = Math.sqrt(Math.abs(J[i * 4] * J[i * 4 + 3] - J[i * 4 + 1] * J[i * 4 + 2]));
+  const logs = Float64Array.from(scales, (s) => Math.log(Math.max(1e-9, s)));
   const medScale = scales.sort()[n >> 1] || 1;
   const near = new Int32Array(K), nd = new Float64Array(K);
   // each station's reach for the side terms: sideHops of its mean hop on the ground
@@ -969,6 +1084,20 @@ export function makeWarp(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<num
       }
       out[0] = found ? ax / sw : sx;
       out[1] = found ? ay / sw : sy;
+    },
+    /** T-2528: the drawing's scale round a place on the ground, layout units a metre: the nearest stations' own maps'
+     * scales, a geometric mean weighted by exp(-d^2 / 2 R^2), R SCALE_R_M or the fourth nearest's distance, so it
+     * changes smoothly from place to place */
+    scaleAt(sx: number, sy: number): number {
+      const found = all.nearest(sx, sy, SK, sn, sd);
+      if (!found) return medScale;
+      const R2 = Math.max(SCALE_R_M * SCALE_R_M, sd[Math.min(3, found - 1)]);
+      let sw = 0, sl = 0;
+      for (let q = 0; q < found; q++) {
+        const w = Math.exp(-sd[q] / (2 * R2));
+        (sl += w * logs[sn[q]]), (sw += w);
+      }
+      return sw > 0 ? Math.exp(sl / sw) : medScale;
     },
     /** the stations nearest a place on the ground */
     nearest: (sx: number, sy: number, k: number, idx: Int32Array, d2: Float64Array) => all.nearest(sx, sy, k, idx, d2),

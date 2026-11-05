@@ -43,6 +43,9 @@ const BETWEEN_M = 2000, BETWEEN_SHARE = 0.3, BETWEEN_STEP_M = 250, SQUEEZE = 0.5
 const REGION_M = 50000, REGION_MIN = 3, REGION_CELL = 10000;
 /** an island with no station is drawn by the stations within OWN_M of the one nearest it, on its land mass, metres */
 const OWN_M = 15000;
+/** T-2528 (`farShore`): the far shore's station is within FAR_SHORE_M of the land carried to; the way across looked at
+ * every FAR_STEP_M (or a thirtieth of it), metres */
+const FAR_SHORE_M = 8000, FAR_STEP_M = 500;
 
 export interface SeaStats { cells: number; cell: number; sea: number; straits: number; rings: number; refit: number; ms: number }
 
@@ -64,6 +67,26 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     if (!(Math.abs(det) > 1e-18)) continue;
     (inv[i * 4] = e / det), (inv[i * 4 + 1] = -b / det), (inv[i * 4 + 2] = -c / det), (inv[i * 4 + 3] = a / det), (ok[i] = 1);
   }
+  // T-2528: land a voter's map carries a cell to across the sea, nearest on the ground a station of the far shore that
+  // is not among the cell's voters, is that station's to draw (it is drawn elsewhere): to this voter it is sea. A shore
+  // drawn further from the far one than the water between them at its scale (Connecticut's from Long Island's) would
+  // otherwise draw the far shore's land into the water between them.
+  const gkd = kdTree(g.x, g.y), g1 = new Int32Array(1), gd1 = new Float64Array(1);
+  const farShore = (k: number, gx: number, gy: number, found: number) => {
+    const L = hyp(gx - g.x[k], gy - g.y[k]);
+    if (L < BETWEEN_M || !gkd.nearest(gx, gy, 1, g1, gd1) || gd1[0] > FAR_SHORE_M * FAR_SHORE_M) return false;
+    const s = g1[0];
+    if (s === k || mass[s] !== mass[k]) return false;
+    for (let q = 0; q < found; q++) if (near[q] === s) return false;
+    const steps = Math.max(2, Math.ceil(L / Math.max(FAR_STEP_M, L / 30)));
+    let run = 0;
+    for (let z = 1; z < steps; z++) {
+      if (real.isSea(g.x[k] + ((gx - g.x[k]) * z) / steps, g.y[k] + ((gy - g.y[k]) * z) / steps)) {
+        if ((++run * L) / steps >= Math.max(BETWEEN_M, BETWEEN_SHARE * L)) return true;
+      } else run = 0;
+    }
+    return false;
+  };
   // a cell is sea where its nearest drawn stations, voting by nearness, each find the sea on the ground at the place
   // their maps carry it back to (T-2540)
   // (the nearest stations of each BLOCK by BLOCK square of cells looked up once, CANDIDATES of them, and each cell's
@@ -126,6 +149,7 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
         const m = real.massAt(gx, gy), o = m >= 0 && !peopled.has(m) ? real.owner(m) : -1;
         if (m >= 0 && m !== mass[k] && peopled.has(m)) sea += w;
         else if (o >= 0 && (mass[o] !== mass[k] || (g.x[o] - g.x[k]) ** 2 + (g.y[o] - g.y[k]) ** 2 > OWN_M * OWN_M)) sea += w;
+        else if (o < 0 && farShore(k, gx, gy, found)) sea += w;
         else (land += w), o >= 0 && (lone += w);
       }
     }

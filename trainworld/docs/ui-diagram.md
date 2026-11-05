@@ -136,7 +136,17 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   ends) is not drawn. A narrow arc at an end of what is drawn (all its crossings under 150 m each side) that crosses
   another line is left out, and an arc left ending free with no crossing goes with it; a river narrow wherever it is
   crossed is drawn only where it crosses no other line, else not at all. So **no band is drawn in pieces**.
-- **Rivers in the drawing**: bands three lines wide (3 x 5/6.4 of a pitch) with round ends. Each crossing is a straight
+- **How wide** (T-2528): a band is the river's real width (its median along each arc) at the drawing's scale round it,
+  the scale field: at each place, the nearest 16 stations' own scales (their local maps', drawn over real), a geometric
+  mean weighted by exp(-d^2 / 2 R^2), R 1.5 km or the fourth nearest's distance, so it changes smoothly from place to
+  place. Smoothed along the river over 1.5 km either side, then at least half the river's widest drawn stretch times
+  their real widths' ratio (so a big river narrows gently downstream and a narrow branch stays narrow), between three
+  lines' width (3 x 5/6.4 of a pitch) and 18 pitches. So the Hudson and East River beside Manhattan, drawn large, are
+  wide, the Hudson up past Yonkers stays a band, and an outskirt river such as the Navesink stays near the least
+  width. Where the band would cover a pill, or a line running alongside it (within 30 degrees) that it does not cross,
+  it narrows to keep half a pitch off it, and widens again at most a quarter pitch a pitch of its length; it is drawn as
+  runs of one width, in quarter-pitch steps, each stroked with round ends.
+- **Rivers in the drawing**: bands with round ends. Each crossing is a straight
   run square to the hop's bundle, at the real share of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80%
   where it would otherwise end on another line), from the side the river comes from on the ground, on past the
   outermost casing by half a pitch; a run that crosses every line of another hop the river crosses serves for both.
@@ -181,7 +191,10 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   smaller than its own (T-2550: a city's map carried out over empty land drew it at the city's scale, a spit 180
   pitches long east of Hakodate and Awaji at Kobe's scale). A voter finding land of another land mass with stations on
   it, or an island with no station that is not its own to draw (above), counts it as sea, since those stations draw
-  it. Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
+  it. So does land it carries the cell to across the sea (a run of 2 km and 30% of the way on the ground) nearest a
+  station of the far shore within 8 km that is not among the cell's voters (T-2528: that shore is drawn where its own
+  stations are; Connecticut's maps carried the middle of Long Island Sound, drawn wider than the Sound at their scale,
+  onto Long Island, drawing it as land with lakes). Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
   pitches, so inlets and notches under about 8 pitches across go, the land round the pills kept).
 - **Straits**: then a cell is sea where it meets a cell nearest another station, and the two nearest stations are on
   different land masses, or the straight way between them on the ground crosses at least 2 km of sea in one run and
@@ -282,13 +295,13 @@ graph at a time, the newest waiting one next; the last drawing stays up meanwhil
 and names use no maths beyond `+ - * /` and square roots (`diagram/fmath.ts` has atan2 and powers from
 those), so every browser, and the Node checks, lay a graph out to the same bits.
 
-- **The distortion dial** (T-2556, `DISTORT` in layout.ts, from 0 to 1; set at 0.8): the terms that draw the network
+- **The distortion dial** (T-2556, `DISTORT` in layout.ts, from 0 to 1; set at 0.5, T-2528): the terms that draw the network
   off its real scale each go to the dial's power: a hop's target over its real length (`(length / 1000 m)^-0.7` at 1,
   so its target is `1000 m x (length / 1000 m)^(1 - 0.7 x dial)`), the lonely and local hops' share (0.4 at 1) and
   the big sparse regions' floor (0.25 at 1). So 1 evens hop lengths fully and 0 draws every hop at its real length;
   the room for bundles and pills, the gaps the water and the blocks keep, the octilinear snapping and the routing are
-  the same at any setting, so dense cores still open up. At 0.8 the power is 0.44, the lonely and local share 0.48 and
-  the floor 0.33; the figures below are the dial's 1. `?distort=0.5` in the page's address lays out at that setting.
+  the same at any setting, so dense cores still open up. At 0.5 the power is 0.65, the lonely and local share 0.63 and
+  the floor 0.5; the figures below are the dial's 1. `?distort=0.5` in the page's address lays out at that setting.
 - **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds up to 2,000
   complexes, rising evenly to 40 at 8,000 and over (a country's long stretches only reach their targets in
   that many; T-2289). With two blocks or more (below), A lays out each block as if alone: the hops between
@@ -333,7 +346,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   1 km has its own length as its target, so this is a quarter of the scale of a core of kilometre hops), each hop there
   has its target raised by the shortfall. So a big region with few stations is drawn more by its area than by its
   stations (Anita, 2026-11-05: "the sparse big regions of tohoku and hokkaido ar e a bit small"): on all Japan, at the
-  dial's 0.8, Hokkaido is drawn at about 0.17 to 0.18 of the Kanto core's scale and northern Tohoku 0.18 to 0.24,
+  dial's 0.5, Hokkaido is drawn at about 0.25 to 0.26 of the Kanto core's scale and northern Tohoku 0.25 to 0.27,
   while a single city's network is hardly touched (its sparsest edges only). After the lonely, local, parallel and crossing hops.
 - **Water** (T-2541): the layout reads the sea on the ground (Water below: the coarse and far grids and the land
   masses), which the worker finds before a first layout; a rebuild takes the last found. The scale round a station is
