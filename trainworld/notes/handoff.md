@@ -46,9 +46,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
   data/frozen 20261104-131517 and -182622 (4 GB) after Europe's freeze; trees as they land.
-- diaglines spike DONE (T-2488, notes/T-2488.md): in-layout borders don't work (network shrinks inside them, layout
-  1.4-22x slower); on-top routed lines put 9% of Japan's stations outside. maps-17 landed her fallback 0a786c63
-  (margin 5, close 30, tolEdge 3, radius 3). Hybrid waits on Anita. Agent retired (392k).
+- T-2488 archived: Anita on the looser outlines (00:30, 2026-11-05): "look great!! big improvement"; hybrid shelved.
+- **diagshape** (Opus, tree .tw-trees/diagshape from 1987aba1, 6198, ids T-2493..94): T-2491 Coney Island prong
+  (layout) + outline shape where unconstrained; T-2492 diagram city names faded grey like base-map town names.
+  Then T-2169 water (her direction: rivers as lines, ocean boundary as a line; borderLines.ts fits rivers).
+- **memhunt** (Opus, tree .tw-trees/memhunt from 1987aba1, 6199, ids T-2495..96): T-2485 player RAM (real save 3.8 GB).
+- Anita went to bed ~00:30 2026-11-05: "feel free to keep going with stuff after europe". Unanswered: R2 old versions,
+  delete publish/20261103-051954 (both wait for her).
 - Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
 
 ## Next
