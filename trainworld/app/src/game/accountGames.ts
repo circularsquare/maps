@@ -13,6 +13,8 @@ import { clockRunning, importGame, leaveToMenu, postAccount, saveSlotsState } fr
 export const accountList = signal<AccountList | null>(null);
 /** Pictures by game id and picture rev ("id:rev"), as data URLs. */
 export const accountPictures = signal<Record<string, string>>({});
+/** Pictures whose fetch is over, found or not (T-2569): a card without one reads "Loading..." until then. */
+const picturesTried = signal<Record<string, true>>({});
 /** The slots the sign-in question is about; null when there is nothing to ask. */
 export const mergeAsk = signal<SaveSlot[] | null>(null);
 /** Moves on whenever this browser's slots changed under the start menu (it lists them again). */
@@ -37,8 +39,9 @@ export function elsewhereAt(slot: SaveSlot): number {
 
 /** An account game as a card's slot: its picture, facts and name. */
 export function cardOf(g: AccountGame): SaveSlot {
-  const f = g.facts ?? {}, thumb = g.pictureRev ? accountPictures.value[`${g.id}:${g.pictureRev}`] : undefined;
+  const f = g.facts ?? {}, k = `${g.id}:${g.pictureRev}`, thumb = g.pictureRev ? accountPictures.value[k] : undefined;
   return {
+    loading: !!g.pictureRev && !thumb && !picturesTried.value[k],
     key: "account:" + g.id, name: g.name, at: typeof f.at === "number" ? f.at : g.savedAt * 1000, day: f.day ?? 0, thumb, panels: thumb ? f.panels : undefined, shade: f.shade,
     cities: f.cities ?? [], lines: f.lines, stations: f.stations, cash: f.cash, mode: f.mode,
   };
@@ -47,15 +50,21 @@ export function cardOf(g: AccountGame): SaveSlot {
 async function pictures(list: AccountList, slots: SaveSlot[]) {
   const ctx = cloudContext();
   if (!ctx) return;
-  const have = { ...accountPictures.peek() };
+  const have = { ...accountPictures.peek() }, tried = { ...picturesTried.peek() };
   const here = new Set(slots.map((s) => s.cloud?.id).filter(Boolean));
-  for (const g of list.games) {
-    const k = `${g.id}:${g.pictureRev}`;
-    if (!g.pictureRev || here.has(g.id) || have[k]) continue;
-    const p = await gamePicture(ctx, g.id);
-    if (p) have[k] = p;
+  try {
+    for (const g of list.games) {
+      const k = `${g.id}:${g.pictureRev}`;
+      if (!g.pictureRev || here.has(g.id) || have[k]) continue;
+      const p = await gamePicture(ctx, g.id).catch(() => undefined);
+      if (p) have[k] = p;
+      tried[k] = true;
+    }
+  } finally {
+    for (const g of list.games) tried[`${g.id}:${g.pictureRev}`] = true;
+    accountPictures.value = have;
+    picturesTried.value = tried;
   }
-  accountPictures.value = have;
 }
 
 let listing: Promise<void> | null = null;

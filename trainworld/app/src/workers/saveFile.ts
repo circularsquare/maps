@@ -333,7 +333,7 @@ export interface StoredSave extends Partial<SlotSummary> {
   edit?: number;
 }
 
-export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-2569: an account card whose picture is still being fetched */ loading?: boolean; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; }
 
 /** T-988: a slot's tie to a game on the account (`sync:<slot>`, deleted with the slot). Absent, or
  * without `acct`, for a slot tied to no account (a game made while signed out). The slot has changed

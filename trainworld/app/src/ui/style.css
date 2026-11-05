@@ -788,7 +788,7 @@ rect.now { fill-opacity: .45; }
 #map { position: relative; flex: 1; min-height: 0; background: var(--map-land); }
 /* T-231: the demand buttons and, under them, the demand stopped alert */
 .map-top-left { position: absolute; left: 10px; top: 10px; z-index: 4; max-width: calc(100% - 20px);
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; pointer-events: none; }
 .map-top-left > * { pointer-events: auto; }
 /* T-1868: the top row leaves the day and night picture's corner free */
 .map-top-row { max-width: calc(100cqw / var(--ui, 1) - var(--sky-w) - 30px); }
@@ -914,7 +914,7 @@ button.save-add:hover { color: var(--text); }
 /* T-1448: the station ridership circles, over the bubbles (later in the map, the same z) */
 #map canvas.overlay.stations { z-index: 2; }
 /* T-1435: where people drive, between the bubbles and the circles (the same z) */
-#map .maplibregl-control-container { position: relative; z-index: 3; }
+#map .maplibregl-control-container { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .stn-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .stn-label-plane { position: absolute; inset: 0; }
 .stn-label { position: absolute; left: 0; top: 0; font-size: 12px; color: var(--map-ink); white-space: nowrap;
@@ -1242,6 +1242,8 @@ button.save-add:hover { color: var(--text); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib a { color: var(--muted); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 !important; }
+/* T-2571: with the trouble button in the corner the attribution sits just left of it, on its baseline */
+#map:has(.trouble) .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-right: calc(10px + 48px * var(--ui, 1)) !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
 @container map-column (max-width: 1000px) {
@@ -1502,8 +1504,8 @@ button.save-add:hover { color: var(--text); }
   .guide:not(.open) .guide-steps li:not(.now) { display: none; }
   .guide:not(.open) .guide-steps:not(:has(.now)) li:last-child { display: grid; }
 }
-/* T-1433: the trouble list at the map's lower right, over the attribution button; quiet when shut */
-.trouble { position: absolute; right: 10px; bottom: 44px; z-index: 4; zoom: var(--ui, 1);
+/* T-1433: the trouble list in the map's lower right corner, as far in from the bottom as from the right (T-2571); quiet when shut */
+.trouble { position: absolute; right: 10px; bottom: 10px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
 /* T-2125: what the last edit did, under the view rows at the upper left: text on the map with a halo,

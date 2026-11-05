@@ -35,7 +35,7 @@ const NEAR_RHO = 0.9;
 
 type Item = {
   key: string;
-  /** worst first: 0 broken line, 1 reversal, 2 spot over capacity, 3 riders left behind, 4 delay, 5 full trains */
+  /** worst first: 0 broken line, 1 reversal, 2 spot over capacity, 3 riders left behind, 4 delay, 5 full trains, 6 line with no stations */
   tier: number;
   size: number;
   lead: ComponentChildren;
@@ -52,6 +52,11 @@ const goLine = (l: LineInput) => () => { locateLine(l.stops); pick({ kind: "line
 function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item[] {
   const out: Item[] = [];
   for (const l of w.save.lines) {
+    if (!l.stops.length) {
+      out.push({ key: "n" + l.id, tier: 6, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
+        value: <span class="trouble-fig"><Icon.alert /></span>, tip: "No stations", go: goLine(l) });
+      continue;
+    }
     const st = w.lineStats[l.id];
     if (!st) continue;
     if (st.status === "broken") {

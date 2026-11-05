@@ -312,7 +312,8 @@ past 24 hours' riders and the panels' Today counts always follow the clock.
 ## Trouble list
 
 [T-1433, `ui/TroubleList.tsx`] What is wrong on the network, in one list at the map's lower right,
-just above the attribution button. Shut, it is a small square button in the muted colour with an
+10 px in from the bottom and the right, with the map's attribution button just left of it on the same baseline
+(the attribution opens leftward). Shut, it is a small square button in the muted colour with an
 alert mark and the count; open, the list stands above it (300 px wide, scrolling past 260 px or half
 the window), and the button shows as on. Open or shut is remembered per browser
 (`anitabuilder-trouble-open`); it never opens by itself and makes no sound. With nothing on the list
@@ -326,7 +327,8 @@ the button is gone.
   the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count) where
   at least 3% of those who wanted their trains and 10 riders were left in the past 24 hours; lines
   whose trains left full at least a quarter of the time with fewer left behind (a train and
-  "26/81"). Within a kind the bigger figure goes first.
+  "26/81"); last, lines with no stations (its chip, an alert mark, the hover "No stations"; a click
+  selects the line). Within a kind the bigger figure goes first.
 - **A click** moves the camera as search does: a line to its stops, a place to zoom 14 or closer.
   With the select tool it also selects the line, the reversal's first line, a capacity tag's
   junction or station (a tag on plain track selects nothing).
@@ -468,7 +470,7 @@ click downloads the game, as the saved games panel's Download does.
 [T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
 
 - A square button with a magnifying glass at the map's upper left, under the station ridership row
-  (the last of the controls stacked there, in `.map-top-left`; the top right is the day and night
+  (the last of the controls stacked there, in `.map-top-left`, its rows 4 px apart; the top right is the day and night
   picture) [T-1868]. The open box is 250 px wide and its results drop over the map below it. A click, `/`, Ctrl+K or Ctrl+F, from anywhere but a text
   field or the confirmation dialog, opens the input in its place, focused. Ctrl+F is kept from the
   browser only then. Up and down move through results, Enter or a click picks, Escape clears and
@@ -852,7 +854,8 @@ keeps what it had and earns no more.
   for the game being played ("Saved just now" after a save by hand, while it is the last write) or
   "Saved ..." for the others (exact time on hover), the game day, the cities its stations are in,
   lines, stations and cash. A slot with no stored picture shows "No picture yet" until it is next
-  saved. Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
+  saved. A card of an account game whose picture is still being fetched shows "Loading..." in its place
+  (a game with nothing built ends on "Nothing built"). Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
   - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
     (hover "Make a copy"), download (hover "Download as a file", `trainsworld-nyc-day-12.save`),
     bin (hover "Delete", asked first: `Delete "Tokyo" from this browser? The game ends and you go

@@ -61,7 +61,7 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
   // T-1852: drawn in the theme now set, whichever it was saved in
   const now = shade.value;
   const src = useThumbIn(slot.thumb ?? "", slot.shade ?? "light", now);
-  if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
+  if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.loading ? "Loading..." : slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
   const panels = (slot.panels ?? []).filter((p) => p.city === WHOLE_PANEL || isCity(p.city));
   const sh = SHADES[now];
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
