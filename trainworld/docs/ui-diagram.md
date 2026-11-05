@@ -111,8 +111,7 @@ that arrive after a layout), between blocks as inside them.
 ## Water
 
 `diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516; notes/T-2169.md,
-notes/T-2497.md, notes/T-2516.md). Drawn only with `?water` in the address for now (`WATER_ON` in view.ts), until Anita
-has looked at it. Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
+notes/T-2497.md, notes/T-2516.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
 coast drawn a little wrong shows less). The layout worker makes them last, after the borders, and posts them on their
 own, so the layout's time is not touched; the page names the zones near the network and the worker fetches their water

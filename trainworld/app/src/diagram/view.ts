@@ -22,9 +22,6 @@ import { EARTH_C, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
 import { SHADES } from "../game/shadeTable";
 import { DATA_BASE } from "../game/dataBase";
-
-/** T-2169: water is drawn only with ?water in the address until Anita has looked at it */
-const WATER_ON = new URLSearchParams(location.search).has("water");
 import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
 import { mixOklab } from "../game/palette";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
@@ -288,8 +285,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     }
     busy = true;
     const zf = zoneFrame(g);
-    // T-2169: the zones whose water masks the water is drawn from; only with ?water until Anita has seen it
-    const water = zf && WATER_ON ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
+    // the zones whose water masks the water is drawn from (T-2169)
+    const water = zf ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
     worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
