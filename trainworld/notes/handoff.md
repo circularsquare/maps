@@ -47,9 +47,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
   data/frozen 20261104-131517 and -182622 (4 GB) after Europe's freeze; trees as they land.
 - T-2488 archived: Anita on the looser outlines (00:30, 2026-11-05): "look great!! big improvement"; hybrid shelved.
-- **diagshape** (Opus, tree .tw-trees/diagshape from 1987aba1, 6198, ids T-2493..94): T-2491 Coney Island prong
-  (layout) + outline shape where unconstrained; T-2492 diagram city names faded grey like base-map town names.
-  Then T-2169 water (her direction: rivers as lines, ocean boundary as a line; borderLines.ts fits rivers).
+- diagshape LANDED 38ce99f0 (T-2491 local hops 0.4, min 3 pitches; outline CLOSE 50 and outward edge tolerance 10;
+  T-2492 city names in the basemap's place grey). Japan's line length -9%, T-2405 hidden 1 -> 2, 3 pills touched by
+  a border on Japan: check Anita's view on 8800. Its Vite logged "clock worker: water mask for nyc not loaded:
+  RangeError" (data junction during Europe?): recheck after Europe's pack writes.
+- **diagwater** (Opus, tree .tw-trees/diagwater from 38ce99f0, 6198, ids T-2497..98): T-2169 water, rivers as lines
+  (borderLines.ts way) then the ocean/lake edge.
 - **memhunt** (Opus, tree .tw-trees/memhunt from 1987aba1, 6199, ids T-2495..96): T-2485 player RAM (real save 3.8 GB).
 - Anita went to bed ~00:45 2026-11-05: "feel free to keep going with stuff after europe"; "feel free to up cores
   overnight as usual and keep going after the normal context handover cap overnight" (recorded in trainworld/CLAUDE.md

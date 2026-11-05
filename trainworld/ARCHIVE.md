@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2491 Diagram prong and outline shape (2026-11-05, agent diagshape, tree .tw-trees/diagshape): hops between two local stops get 0.4 of their target (at least 3 pitches), so a branch of plain stops no longer outruns a sparse core (her game's stand-in: prong 109 -> 83 pitches); zone outlines close bays under 100 pitches and fit their outer edge up to 10 pitches outward (New York 154 -> 96 legs). notes/T-2491.md.
+- T-2492 Diagram city names in the basemap's label grey (2026-11-05, agent diagshape): `placeNameInk`, light #6f6d6a, dark #97938e; font, size and halo as station names.
+
 - T-2488 Diagram zone borders as layout lines, a spike (2026-11-04, agent diaglines; maps-17 landed the fallback 0a786c63): borders inside the layout float free of the shrunk network and slow it 1.4-22x; routed on top they leave 9% of Japan's stations outside. Landed: T-2464's outlines kept 5 pitches off the lines (Anita: "big improvement"). notes/T-2488.md.
 - T-2487 Money history titles name their scope (2026-11-04, agent uismall2, tree .tw-trees/uismall2): "Revenue and expenses in New York" / "... in all cities", "Train rides in ..." likewise, the place's registry name.
 - T-2477 No camera snap while a saved game loads (2026-11-04, agent uismall2): once the player drags, zooms, rotates, uses the keys, picks a search result or a Cities row after the pick, the load's fits (`fitAhead`, `fitOpened`) leave the camera be.
