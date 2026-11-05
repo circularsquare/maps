@@ -341,8 +341,10 @@ Today for a running line:
   and when the line's day is not a weekday one more line, "Today is a weekend", "Today is a holiday
   (Thanksgiving Day)" (no name when the calendar has none) or "Today is a holiday travel day", so a loss
   on it does not alarm, T-1893 `dayNote` in `game/today.ts`; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
-  aboard over the seconds each trip is under way times the riders a train holds at its rated load, 160 a car,
-  over every trip of today's kind of day from `linePeriods`, so able to pass 100%, at most crush's 150% [T-2186]; `averageLoad` in `LineInspector.tsx`; the hover says so),
+  aboard over the seconds each trip is under way times the riders a vehicle holds at its rated load, 160 a car,
+  over every trip of today's kind of day from `linePeriods`, so able to pass 100%, at most crush's 150% [T-2186];
+  one rule for trains, buses and boats [T-2373]: a bus's rated load is its crush, 80, so a bus stops at 100%, and a
+  boat's is 320 of 480 at crush; `averageLoad` in `ui/inspector/schedule.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left at platform as "x/y", x those a full train left behind and y those who
@@ -515,12 +517,15 @@ line panel's own remove button works as before.
 
 A bus line's panel (T-1464, ui/inspector/BusInspector.tsx) is the line panel cut down: Edit route
 in place of Edit stops (Save route while the route is open, which saves it; T-1514), Copy line (a planned copy) and Delete line (a constructed route refunds
-nothing); while planned, its Construct price with the route and the buses in the hover. Schedule:
-buses or a headway per demand level, as for trains, and the average speed. Stops: the ends and the
+nothing); while planned, its Construct price with the route and the buses in the hover. Its title,
+schedule and counts block are the line panel's own parts (`LineTitle.tsx`, `schedule.tsx`, T-2373), in
+buses: buses or a headway per demand level with the same hovers, the waiting spinner on a level with buses
+while demand loads, and the average speed; no crowding dots, copy buttons or track limits. Stops: the ends and the
 train stations met, the street stops between folded into one row each, minutes from the start.
 The counts block, headingless as the line panel's: riders, Changing to trains (riders a day changing between this bus and any rail
-line at the stations it meets), profit, average load and buses leaving full. No train kind, length,
-stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
+line at the stations it meets; hidden while the riders are worked out again, as the line panel's purposes), the one-figure profit,
+average load (against 80 a bus, its rated load and crush) and Buses leaving full; no riders left at
+platform. No train kind, length, stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
 the Build tab's quote has rows for bus routes and new buses.
 
 **A ferry line's panel** (T-2194) is the same panel in boats: Edit route opens the ferry tool on its
@@ -536,7 +541,7 @@ path found between A and B." where a leg finds no water. Not while the ferry too
 bus line's stops follow its route (its stations met and street stops), so its list has no editing:
 the route is edited on the map. Its counts block is the bus line's
 (T-2195): riders, Changing to trains (between this boat and any rail line at its ports' complexes),
-profit, average load (against 480 a boat at crush) and Boats leaving full. A boat's panel is a train's,
+profit, average load (against 320 a boat at the rated load, so up to 150% at crush's 480) and Boats leaving full. A boat's panel is a train's,
 named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
 boat this hour" (a bus's "Typical bus this hour"). A port's panel is a station's: "Port" under its
 name, no platform length or upgrades, its upkeep a port's (US$10k a game day), Construct port and

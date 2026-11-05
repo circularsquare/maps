@@ -2,50 +2,32 @@
 // its stops with the street stops folded into a row, and the past 24 hours with the riders changing to
 // trains. No train kind, length, stop editor or related-lines diagram. LineInspector.tsx hands a bus
 // line over to it. T-2194: a ferry line too (its row is a bus row with `ferry` set), in boats, its
-// stops its ports.
+// stops its ports. The schedule, title and past 24 hours are the rail panel's (schedule.tsx,
+// LineTitle.tsx, T-2373).
 
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { lineMoneyTip } from "../MoneyText";
-import { boatsText, busesText, count, distance, headway, money, plural, speed } from "../../game/format";
-import { LINE_PALETTE } from "../../game/palette";
-import { PERIODS } from "../../game/periods";
-import { dayNote, runningToday, today, useToday } from "../../game/today";
-import { accountVersion, BOAT_CARS, capacity } from "../../game/boarding";
-import { kindIn, lineCountry } from "../../game/holidays";
-import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
-import { ask, display, renameLinePrompt, selection, tool } from "../../game/ui";
+import { count, distance, money, plural } from "../../game/format";
+import { useToday } from "../../game/today";
+import { DEMAND_INDEX, type LineInput, type LineStats } from "../../game/types";
+import { ask, display, selection, tool } from "../../game/ui";
 import { live } from "../../map/live";
-import { liveMoney, moneyState } from "../../game/money";
 import { editBusRoute, editFerryRoute } from "../../game/lineActions";
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
-import { ColourPicker } from "../ColourPicker";
-import { autoTrainsFor, edit, headwayFromMinutes, headwayShown, linesById, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
-import { Chip, Icon, Row, Segmented, Stepper } from "../widgets";
-import { NameEdit } from "./NameEdit";
-import { locateLine } from "../locate";
-import { demandPending, Spinner } from "../Spinner";
+import { edit, linesById, say, stationNames, world } from "../../game/world";
+import { Icon } from "../widgets";
 import { demandView, complexTransfers } from "../../game/demand";
-import { useClockQuery } from "../useClockQuery";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { DEMAND_LABEL, levelTimes, StopTransfers, StretchHalf, stretchLooks, useLiveColour, useSymbolBox } from "./LineInspector";
-import { LineGroup } from "./LineGroup";
+import { StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
+import { AverageSpeed, PastDay, Schedule, useLinePeriods } from "./schedule";
+import { LineTitle, useLineTitle } from "./LineTitle";
 import { afterCopy } from "../../game/lineGroups";
 
-/** A bus and a boat hold this many riders at crush (`BUS_CRUSH`, `BOAT_CRUSH`, sim/src/track/params.rs). */
-const BUS_CRUSH = 80;
-const BOAT_CRUSH = capacity(BOAT_CARS).crush;
-/** How long a refused edit's control shakes, ms (style.css `.shake`). */
-const SHAKE_MS = 300;
-/** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
-const PERIOD_STRIDE = 11;
-
-const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
 const minutesText = (s: number) => `${Math.round(s / 60)}m`;
 
 // ---------------------------------------------------------------- the stops
@@ -205,84 +187,6 @@ function FerryPorts({ l, st, bus, colour, editable, time }: { l: LineInput; st: 
   );
 }
 
-// ---------------------------------------------------------------- the schedule
-
-/** What a stepper's button leads to: the bus count, and for a running line the buses it needs beyond
- * its busiest level, bought unless the depot has spare ones, or the buses it frees. */
-function changeTip(counts: [number, number, number], lev: number, to: number, st: LineStats): string {
-  const ferry = !!st.bus?.ferry, text = ferry ? boatsText : busesText;
-  const head = text(to);
-  const m = moneyState.value;
-  if (!m || st.status !== "running") return head;
-  const next = [...counts];
-  next[lev] = to;
-  const more = Math.max(...next) - Math.max(...counts);
-  const [owned, needed, price] = ferry ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : [m.fleetBus, m.busesNeeded, m.busPrice];
-  if (more > 0) {
-    const bought = Math.max(0, more - Math.max(0, owned - needed));
-    return head + "\n" + (bought > 0 ? `Buys ${text(bought)} for ${money(bought * price * 1e6)}` : `Uses ${text(more)} from the depot`);
-  }
-  return more < 0 ? head + `\nFrees ${text(-more)}, ${-more === 1 ? "which stays" : "which stay"} in the depot` : head;
-}
-
-/** One demand level's bus count and headway cells: a count stepper and the headway it gives, or the
- * headway stepper and the count it gives. A count refused for cash is red and shakes once. */
-function LevelCells({ l, st, d, auto }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null }) {
-  const lev = DEMAND_INDEX[d];
-  const trip = st.roundTripByLevel[lev];
-  const autoPending = auto ? auto.map((s, i) => s !== st.autoS?.[i]) : null;
-  const counts = (auto
-    ? st.trainsNeeded.map((n, i) => (autoPending![i] ? autoTrainsFor(st.roundTripByLevel[i], auto[i], 0, false) : n))
-    : (trainsShown(l.id) ?? st.trainsNeeded)) as [number, number, number];
-  const r = refusedForCash.value;
-  const refused = r && r.id === l.id && r.levs[lev] ? r : null;
-  const broke = refused !== null && liveMoney.value.cash < refused.need;
-  const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
-  const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined}>{child}</span>;
-  const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
-  if (!auto) {
-    const countPending = counts[lev] !== st.trainsNeeded[lev];
-    const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d];
-    return (
-      <>
-        <td>
-          {wrap(<Stepper value={n} label={st.bus?.ferry ? "boats on the line" : "buses on the line"} jump onStep={(s) => stepTrainCount(l.id, d, s)}
-            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - 1), st)} tipUp={changeTip(counts, lev, counts[lev] + 1, st)} />)}
-        </td>
-        <td>{headway(tph)}</td>
-      </>
-    );
-  }
-  const typeTip = "Headway in minutes. 0 is no service.";
-  return (
-    <>
-      <td>
-        <span class={"num" + (broke ? " bad" : "")} data-tip={`${(st.bus?.ferry ? boatsText : busesText)(counts[lev])} on the line keep the headway over its round trip`}>{counts[lev]}</span>
-      </td>
-      <td>
-        {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
-          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), 0, false), st)}
-          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), 0, false), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: typeTip }} />)}
-      </td>
-    </>
-  );
-}
-
-/** The line's average speed end to end, there and back over the round trip less the turning at the ends. */
-function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
-  const rt = st.roundTripByLevel[lev] ?? st.roundTripS;
-  const s = rt - 2 * st.turnaroundS;
-  if (!(s > 0) || !(st.km > 0)) return null;
-  const kmh = (2 * st.km) / (s / 3600);
-  return (
-    <li>
-      <span class="grow">Average speed</span>
-      <span class="val">{speed(kmh)}</span>
-    </li>
-  );
-}
-
 // ---------------------------------------------------------------- the past 24 hours
 
 /** The riders a day changing between this bus and a rail line, from demand's transfer pairs at the
@@ -309,54 +213,14 @@ function useChangesToTrains(l: LineInput, bus: ClockBus): number | null {
   return n;
 }
 
-/** The day's rider-seconds aboard over what the trips could hold at crush; null with no trips. */
-function averageLoad(v: Float64Array, st: LineStats): number | null {
-  const crush = st.bus?.ferry ? BOAT_CRUSH : BUS_CRUSH;
-  let aboard = 0, room = 0;
-  for (let i = 0; i < PERIODS.length; i++) {
-    const o = i * PERIOD_STRIDE;
-    if (!(v[o] > 0)) continue;
-    const times = st.fromStartByLevel[DEMAND_INDEX[PERIODS[i].demand]] ?? st.fromStartS;
-    aboard += v[o + 5];
-    room += v[o] * (times[times.length - 1] ?? 0) * crush;
-  }
-  return room > 0 ? Math.min(1, aboard / room) : null;
-}
-
-function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; bus: ClockBus; periods: Float64Array | null; kind: number }) {
-  const d = today.value.get(l.id);
-  const changing = useChangesToTrains(l, bus);
-  if (!d) return null;
-  const ferry = !!bus.ferry;
-  const load = periods ? averageLoad(periods, st) : null;
-  const run = runningToday(l, st);
+function ChangingToTrains({ l, bus }: { l: LineInput; bus: ClockBus }) {
+  const n = useChangesToTrains(l, bus);
+  if (n === null) return null;
   return (
-    <>
-      <div class="h divided" />
-      <ul class="rows">
-        <li data-tip={`${d.riders.toLocaleString("en-US")} riders in past 24h`}>
-          <span class="grow">Riders</span>
-          <span class="val">{count(d.riders)}</span>
-        </li>
-        {changing !== null && (
-          <li data-tip={`Riders per day who change between this ${ferry ? "boat" : "bus"} and a train`}>
-            <span class="grow">Changing to trains</span>
-            <span class="val">{count(changing)}</span>
-          </li>
-        )}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, ferry ? "boats" : true, dayNote(l, st))}>
-          <span class="grow">Profit</span>
-          <span class="val">{money(d.fares)} −<span class="crowd-bad">{money(run + st.upkeep)}</span></span>
-        </li>
-        {load !== null && (
-          <li data-tip={`Average ${["weekday", "Saturday", "Sunday", "holiday"][kind] ?? "day"} load over the entire line`}>
-            <span class="grow">Average load</span>
-            <span class="val">{Math.round(load * 100)}%</span>
-          </li>
-        )}
-        {d.fullTrains > 0 && <Row label={ferry ? "Boats leaving full" : "Buses leaving full"}><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} ${ferry ? "boats" : "buses"} departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-      </ul>
-    </>
+    <li data-tip={`Riders per day who change between this ${bus.ferry ? "boat" : "bus"} and a train`}>
+      <span class="grow">Changing to trains</span>
+      <span class="val">{count(n)}</span>
+    </li>
   );
 }
 
@@ -364,38 +228,12 @@ function PastDay({ l, st, bus, periods, kind }: { l: LineInput; st: LineStats; b
 
 export function BusInspector({ id }: { id: string }) {
   const w = world.value;
-  const [editFor, setEditFor] = useState<string | null>(null);
-  const [previewOf, setPreviewOf] = useState<{ id: string; hex: string } | null>(null);
-  const editing = editFor === id;
-  const setEditing = (open: boolean) => setEditFor(open ? id : null);
-  const preview = previewOf?.id === id ? previewOf.hex : null;
-  const setPreview = (hex: string | null) => setPreviewOf(hex === null ? null : { id, hex });
   const [copying, setCopying] = useState(false);
   const l = w ? linesById(w).get(id) : undefined;
-  const { dragColour, commitColour } = useLiveColour(l, setPreview);
-  const symbolBox = useSymbolBox(l);
-  useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
-  useEffect(() => {
-    if (!editing) return;
-    const away = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.("[data-line-edit]")) setEditing(false); };
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || (e.target as Element | null)?.closest?.(".name-edit")) return;
-      e.preventDefault();
-      e.stopPropagation();
-      setEditing(false);
-    };
-    window.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", esc, true);
-    return () => {
-      window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", esc, true);
-    };
-  }, [editing]);
+  const title = useLineTitle(id, l);
   const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
-  const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
-  const acct = accountVersion.value;
-  const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
+  const { kind, periods } = useLinePeriods(id, l);
   useToday();
   const st = w && l ? w.lineStats[l.id] : undefined;
   const bus = st?.bus;
@@ -404,7 +242,6 @@ export function BusInspector({ id }: { id: string }) {
   const names = stationNames(w);
 
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
-  const auto = headwayShown(l.id);
   const rows = stopRows(bus);
   const ferry = !!bus.ferry;
   const drawing = ferry ? tool.value === "ferry" && ferryDraft.value?.line === l.num : tool.value === "bus" && busDraft.value?.line === l.num;
@@ -440,7 +277,7 @@ export function BusInspector({ id }: { id: string }) {
     } finally { setCopying(false); }
   };
 
-  const shown = preview ?? l.colour;
+  const shown = title.shown;
   const stopName = (r: StopRow & { kind: "end" | "station" }) => (r.kind === "end" ? endName.get(r.i) ?? "End" : names.get(r.station) ?? "Station");
   const stopTime = (i: number) => times[i] !== undefined && (
     <span class="n num muted" data-tip={i === 0 ? "The first stop" : `Reached ${Math.round(times[i] / 60)} min after the first stop`}>{minutesText(times[i])}</span>
@@ -453,23 +290,7 @@ export function BusInspector({ id }: { id: string }) {
 
   return (
     <>
-      <div class="title" data-line-edit>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
-          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
-        <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
-          control={{ open: editing, set: setEditing }}>
-          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(l.stops)}>
-            <Icon.locate />
-          </button>
-        </NameEdit>
-      </div>
-      {editing && (
-        <div class="line-identity" data-line-edit>
-          <label>Symbol <input aria-label="Line symbol" {...symbolBox} /></label>
-          <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
-        </div>
-      )}
-      <LineGroup l={l} />
+      <LineTitle l={l} t={title} />
       <div class="sub muted">
         {plural(stopCount(bus), ferry ? "port" : "stop")}, {distance(bus.roadM)}
       </div>
@@ -488,32 +309,7 @@ export function BusInspector({ id }: { id: string }) {
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>
 
-      <div class="h">
-        Schedule
-        <span class="right">
-          <Segmented<boolean>
-            options={[
-              [false, ferry ? "Boats" : "Buses"],
-              [true, "Headway"],
-            ]}
-            value={auto !== null}
-            onChange={(v) => setAutoTrains(l.id, v)}
-          />
-        </span>
-      </div>
-      <table class="sched">
-        <tr>
-          <th>Demand</th>
-          <th>{ferry ? "Boats" : "Buses"}</th>
-          <th>Headway</th>
-        </tr>
-        {DEMANDS.map((d) => (
-          <tr class={d === now ? "now" : ""}>
-            <td>{st.status === "running" && demandPending.value && <Spinner class="row-dot" tip="Waiting for demand to load" />}<span data-tip={levelTimes(d)}>{DEMAND_LABEL[d]}</span></td>
-            <LevelCells l={l} st={st} d={d} auto={auto} />
-          </tr>
-        ))}
-      </table>
+      <Schedule l={l} st={st} now={now} />
       <ul class="rows">
         <AverageSpeed st={st} lev={lev} />
       </ul>
@@ -539,7 +335,7 @@ export function BusInspector({ id }: { id: string }) {
         ))}
       </ul>}
 
-      {st.status === "running" && <PastDay l={l} st={st} bus={bus} periods={periods} kind={kind} />}
+      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} extra={<ChangingToTrains l={l} bus={bus} />} />}
     </>
   );
 }

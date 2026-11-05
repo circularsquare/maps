@@ -5,52 +5,36 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { lineMoneyTip, Money } from "../MoneyText";
+import { Money } from "../MoneyText";
 import { andList, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
-import { crowdColour, LINE_PALETTE } from "../../game/palette";
-import { hourSpan, levelHours, PERIODS } from "../../game/periods";
-import { crowdLevel, dayNote, peakLoadText, PERIOD_STRIDE, runningToday, today, useToday } from "../../game/today";
-import { accountVersion, CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
+import { peakLoadText, today, useToday } from "../../game/today";
+import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
-import { DAY_KIND_NAME } from "../../game/days";
-import { kindIn, lineCountry } from "../../game/holidays";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { ask, display, lineDraft, purposeFilter, relatedLines, renameLinePrompt, selection, shownDayPhrase, tool } from "../../game/ui";
+import { ask, display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
-import { linesPending, pendingLabel } from "../../game/lineFigures";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
-import { ColourPicker } from "../ColourPicker";
-import { AUTO_SLACK, autoTrainsFor, noteHeadwayLimits, edit, headwayFromMinutes, headwayShown, linesAt, nextHeadway, refusedForCash, renameLine, say, setAutoTrains, setHeadway, stationNames, stationsById, stationsByNum, stepHeadway, stepLineCars, stepTrainCount, pendingCars, trainsShown, world, linesById, linesByNum } from "../../game/world";
+import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
 import { Alert, Chip, Icon, Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
-import { NameEdit } from "./NameEdit";
 import { BusInspector } from "./BusInspector";
-import { locateLine, locateStation } from "../locate";
-import { demandPending, Spinner } from "../Spinner";
-import { demandView, lineFiguresIn } from "../../game/demand";
+import { locateStation } from "../locate";
+import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
-import { LineGroup } from "./LineGroup";
 import { drawnReversed } from "../../game/northUp";
 import type { EditOp } from "../../workers/protocol";
-import { scrollerOf } from "../scroller";
 import { UPGRADE } from "../../game/upgrades";
-
-export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
-
-/** When a demand level runs, in the line's local time (the hour spans of game/periods.ts), every
- * kind of day alike (T-2335): "High demand period: 06:00-20:00". */
-export function levelTimes(d: Demand): string {
-  return `${DEMAND_LABEL[d]} demand period: ${levelHours(d).map(([a, b]) => hourSpan(a, b)).join(", ")}`;
-}
+import { AverageSpeed, carsBought, carsText, DEMAND_LABEL, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
+import { LineTitle, useLineTitle } from "./LineTitle";
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
 
@@ -124,10 +108,8 @@ function heldFrom(v: Float64Array): Held[] {
   return out;
 }
 
-/** What limits a line per level (T-679): its shortest headway in seconds with the other lines as
- * they run, and the spot named as the capacity alerts name it ("Terminus at West"); null where
- * nothing does. From the tail of `TrackApi.line_held`. */
-interface Limit { s: number; what: string }
+/** What limits a line per level (T-679, `Limit`); null where nothing does. From the tail of
+ * `TrackApi.line_held`. */
 function limitsFrom(v: Float64Array): (Limit | null)[] {
   const st = stationsNow();
   return DEMANDS.map((_, lev) => {
@@ -137,9 +119,6 @@ function limitsFrom(v: Float64Array): (Limit | null)[] {
     return { s, what: fullParts(kind, name).head + name };
   });
 }
-
-/** "Terminus at West takes one train every 4m00s at most", or with no room left "... is full" */
-const limitText = (lim: Limit) => (Number.isFinite(lim.s) ? `${lim.what} takes one train every ${duration(lim.s)} at most` : `${lim.what} is full`);
 
 /** A flat junction or flat crossing on the route (T-629): `TrackApi.line_marks`, after the stop
  * `gap` and drawn on the stops diagram between it and the next. */
@@ -221,98 +200,6 @@ function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: 
       {delayRow("Behind slower trains", behind, behindSpots)}
       {delayRow("Waiting for faster trains", forFaster, waitSpots)}
     </>
-  );
-}
-
-/** The line's average speed end to end: the distance both ways over the round trip less the turning
- * at the ends, so it counts the stops and the waiting at busy track but not the layover. */
-function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
-  const rt = st.roundTripByLevel[lev] ?? st.roundTripS;
-  // T-798: a loop once round in its lap, less a balloon's turning
-  const s = st.loop ? rt / 2 - (st.loop === "balloon" ? st.turnaroundS : 0) : rt - 2 * st.turnaroundS;
-  if (!(s > 0) || !(st.km > 0)) return null;
-  const km = st.loop ? st.km : 2 * st.km;
-  const kmh = km / (s / 3600);
-  return (
-    <li>
-      <span class="grow">Average speed</span>
-      <span class="val">{speed(kmh)}</span>
-    </li>
-  );
-}
-
-/** The line's past 24 hours (T-446, game/today.ts): riders, fares less running cost, and its trains
- * from the boarding account (T-230): how many left full, and who was left on the platform. Its own
- * component: it re-renders as the counts move. */
-function PastDay({ l, st, periods, kind }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number }) {
-  const d = today.value.get(l.id);
-  const pending = linesPending.value.get(l.id);
-  if (!d) {
-    if (!pending) return null;
-    return (
-      <>
-        <div class="h divided" />
-        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span></Row></ul>
-      </>
-    );
-  }
-  const load = periods ? averageLoad(periods, st) : null;
-  const run = runningToday(l, st);
-  // T-2392: while the riders are worked out again the old figures stay, the label above them
-  return (
-    <>
-      <div class="h divided">{pending && <span class="pending-note muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span>}</div>
-      <ul class="rows">
-        <Row label="Riders">{count(d.riders)}</Row>
-        {!pending && <PurposeSplit scope={[{ line: l.id }]} unit="riders" />}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, false, dayNote(l, st))}>
-          <span class="grow">Profit</span>
-          <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
-        </li>
-        {load !== null && (
-          <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase()} load over the entire line`}>
-            <span class="grow">Average load</span>
-            <span class="val">{Math.round(load * 100)}%</span>
-          </li>
-        )}
-        {d.fullTrains > 0 && <Row label="Trains leaving full"><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} trains departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-        <li data-tip={`${count(d.leftBehind)}/${count(d.riders + d.leftBehind)} riders were left behind.`}>
-          <span class="grow">Riders left at platform</span>
-          <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
-        </li>
-      </ul>
-    </>
-  );
-}
-
-
-/** T-820: the day's rider-seconds aboard over what the trips hold at the rated load (T-2186: so
- * past 1 up to crush's 1.5), each trip taken as its level's time from the first stop to the last;
- * null with no trips. */
-function averageLoad(v: Float64Array, st: LineStats): number | null {
-  let aboard = 0, room = 0;
-  for (let i = 0; i < PERIODS.length; i++) {
-    const o = i * PERIOD_STRIDE;
-    if (!(v[o] > 0)) continue;
-    const times = st.fromStartByLevel[DEMAND_INDEX[PERIODS[i].demand]] ?? st.fromStartS;
-    aboard += v[o + 5];
-    room += v[o] * (times[times.length - 1] ?? 0) * RATED_PER_CAR * st.cars;
-  }
-  return room > 0 ? Math.min(CRUSH_PER_CAR / RATED_PER_CAR, aboard / room) : null;
-}
-
-/** T-477, T-515, T-2236, T-2335: a demand level's name in the schedule table, after its crowding dot
- * on today's kind of day (`crowdLevel`, from the boarding account) while `v` has one: the fill graded
- * over the line's stretches, the ring (1 px out with a 1 px gap) at its fullest. One hover for both
- * (T-2334): the level's hours, then the dot's. */
-function LevelName({ v, d, stops, pending }: { v: Float64Array | null; d: Demand; stops: number; pending: boolean }) {
-  const c = v ? crowdLevel(v, d, stops) : null;
-  return (
-    <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
-      {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
-        : pending && <Spinner class="row-dot" tip="Waiting for demand to load" />}
-      {DEMAND_LABEL[d]}
-    </span>
   );
 }
 
@@ -445,30 +332,6 @@ function PlainStops({ looks, colour, loop, onDblClick, children }: { looks: bool
       {loop && <li class="loop-end bottom" aria-hidden="true" />}
     </ul>
   );
-}
-
-const carsText = (n: number) => plural(n, "car");
-
-/** What buying the cars a change needs costs, or that the depot's spare ones cover it. */
-const carsBought = (k: { carPrice: number; spare: number }, cars: number): string => {
-  const bought = Math.max(0, cars - k.spare);
-  return bought > 0 ? `Buys ${carsText(bought)} for ${money(bought * k.carPrice * 1e6)}` : `Uses ${carsText(cars)} from the depot`;
-};
-
-/** What a stepper's button leads to: the train count, and for a running line the cars it needs
- * beyond the line's busiest level, bought at the car price unless the depot has spare ones, or
- * the cars it frees, which stay owned for any line to use (T-631). */
-function changeTip(counts: [number, number, number], lev: number, to: number, st: LineStats): string {
-  const head = `${to} ${to === 1 ? "train" : "trains"}`;
-  const m = moneyState.value;
-  if (!m || st.status !== "running" || !st.cars) return head;
-  const next = [...counts];
-  next[lev] = to;
-  const cars = (Math.max(...next) - Math.max(...counts)) * st.cars;
-  if (cars > 0) {
-    return head + "\n" + carsBought(trainKind(m, st.fast), cars);
-  }
-  return cars < 0 ? head + `\nFrees ${carsText(-cars)}` : head;
 }
 
 /** Train length (T-733): 1 car up to what the line's shortest platform fits. At the cap the line
@@ -642,72 +505,6 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
   return `Trains reach ${speed(s.reached)}\n${why}` + (s.reached < s.limit - 1 ? "\nThe stops are too close together to reach it" : "");
 }
 
-const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
-
-/** How long a refused edit's control shakes, ms (T-625; style.css `.shake`) */
-const SHAKE_MS = 300;
-
-/** One demand level's trains and headway cells: a count stepper and the headway it gives, or (T-625)
- * the headway stepper and the count it gives. A count an edit was refused for cash is red, and
- * its control shakes once; a headway shorter than `limit` allows is red (T-625, T-679). */
-function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d: Demand; auto: [number, number, number] | null; limits: (Limit | null)[] }) {
-  const lev = DEMAND_INDEX[d];
-  const trip = st.roundTripByLevel[lev];
-  const limit = limits[lev];
-  const lim = limit?.s ?? 0;
-  const loop = !!st.loop;
-  // T-1276: a headway or count still on its way to the worker (an edit takes seconds on a big
-  // network) shows the other cell as it will be, not the world's from an edit or two before
-  const autoPending = auto ? auto.map((s, i) => s !== st.autoS?.[i]) : null;
-  const counts = (auto
-    ? st.trainsNeeded.map((n, i) => (autoPending![i] ? autoTrainsFor(st.roundTripByLevel[i], auto[i], limits[i]?.s ?? 0, loop) : n))
-    : (trainsShown(l.id) ?? st.trainsNeeded)) as [number, number, number];
-  const countPending = !auto && counts[lev] !== st.trainsNeeded[lev];
-  const r = refusedForCash.value;
-  const refused = r && r.id === l.id && r.levs[lev] ? r : null;
-  const broke = refused !== null && liveMoney.value.cash < refused.need;
-  const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
-  const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined} data-guide={d === DEMANDS[0] ? "trains" : counts[lev] < 1 ? "levels" : undefined}>{child}</span>;
-  const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
-  // T-798: a loop's trains are half each way, so its count steps by two
-  const k = st.loop ? 2 : 1;
-  if (!auto) {
-    const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
-    const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d];
-    return (
-      <>
-        <td>
-          {wrap(<Stepper value={n} label="trains on the line" jump onStep={(s) => stepTrainCount(l.id, d, s)}
-            tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
-        </td>
-        <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(tph)}</span> : headway(tph)}</td>
-      </>
-    );
-  }
-  const short = limit !== null && auto[lev] > 0 && auto[lev] * AUTO_SLACK < limit.s;
-  const real = l.tph[d] > 0 ? 3600 / l.tph[d] : 0;
-  // the world's running headway belongs to the headway it last took, so it waits for the edit
-  const clamped = !autoPending![lev] && !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
-  return (
-    <>
-      <td>
-        <span class={"num" + (broke ? " bad" : "")} data-tip={loop
-          ? `${counts[lev]} trains on the line, ${counts[lev] / 2} each way, keep the headway over its lap of ${duration(trip / 2)}`
-          : `${counts[lev]} ${counts[lev] === 1 ? "train" : "trains"} on the line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
-      </td>
-      <td>
-        {clamped && <span class="hw-real" data-tip={`${limitText(limit)}, so ${counts[lev]} ${counts[lev] === 1 ? "train runs" : "trains run"} every ${duration(real)}`}>{headwayText(real)}</span>}
-        {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
-          tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
-          tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends` : undefined }} />)}
-      </td>
-    </>
-  );
-}
-
-const NO_LIMITS: (Limit | null)[] = [null, null, null];
-
 /** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts). */
 function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
   const c = scheduleCopy.value;
@@ -723,101 +520,14 @@ function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-672: dragging a colour shows it at once (`setPreview`), and the line on the map follows with
- * one edit every 0.2 s at most; letting go sends the last colour. */
-export function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null) => void) {
-  const live = useRef({ hex: null as string | null, timer: 0, last: 0, busy: false, gap: 200 });
-  useEffect(() => () => clearTimeout(live.current.timer), []);
-  const sendLive = () => {
-    const s = live.current;
-    s.timer = 0;
-    if (s.hex === null || !l) return;
-    if (s.busy) { s.timer = window.setTimeout(sendLive, 50); return; }
-    const hex = s.hex;
-    s.hex = null;
-    s.busy = true;
-    s.last = performance.now();
-    void edit({ op: "lineLook", line: l.num, colour: hex }, true).then(() => {
-      s.busy = false;
-      s.gap = Math.max(200, 6 * (performance.now() - s.last)); // a slow machine follows less often, so edits take a fraction of its time
-    });
-  };
-  const dragColour = (hex: string) => {
-    setPreview(hex);
-    const s = live.current;
-    s.hex = hex;
-    if (!s.timer) s.timer = window.setTimeout(sendLive, Math.max(0, s.gap - (performance.now() - s.last)));
-  };
-  const commitColour = (hex: string) => {
-    if (!l) return;
-    clearTimeout(live.current.timer);
-    live.current.timer = 0;
-    live.current.hex = null;
-    setPreview(hex);
-    void edit({ op: "lineLook", line: l.num, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
-  };
-  return { dragColour, commitColour };
-}
-
-/** T-1812: the symbol box's props. What is typed is kept until the box is left (or Enter) and then
- * sent alone as the symbol set by hand, so a rename landing meanwhile cannot reset the box and a
- * symbol equal to the name's own letter still sticks. A box the player did not type in sends
- * nothing; blank sends "", which gives the badge back to the name's letter. */
-export function useSymbolBox(l: LineInput | undefined) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const typed = useRef(0), sent = useRef(-1);
-  const commit = () => {
-    if (draft === null || !l || sent.current === typed.current) return;
-    sent.current = typed.current;
-    const v = draft.trim(), at = typed.current;
-    if (v === (l.symbol ?? "")) { setDraft(null); return; }
-    void edit({ op: "lineLook", line: l.num, letter: v }).then(() => { if (typed.current === at) setDraft(null); });
-  };
-  return {
-    value: draft ?? l?.letter ?? "",
-    onInput: (e: { currentTarget: HTMLInputElement }) => { typed.current++; setDraft(e.currentTarget.value); },
-    onBlur: commit,
-    onKeyDown: (e: { key: string }) => { if (e.key === "Enter") commit(); },
-  };
-}
-
 /** One diagram stop edit at a time: a second click before the world has the first would count from stale indices. */
 let stopEditing = false;
 
 function RailLineInspector({ id }: { id: string }) {
   const w = world.value;
-  // T-670: one editor for the name, symbol and colour; T-672: the colour a drag shows before the edit is sent
-  const [editFor, setEditFor] = useState<string | null>(null);
-  const [previewOf, setPreviewOf] = useState<{ id: string; hex: string } | null>(null);
-  const editing = editFor === id;
-  const setEditing = (open: boolean) => setEditFor(open ? id : null);
-  const preview = previewOf?.id === id ? previewOf.hex : null;
-  const setPreview = (hex: string | null) => setPreviewOf(hex === null ? null : { id, hex });
   const [copying, setCopying] = useState(false);
   const l = w ? linesById(w).get(id) : undefined;
-  const { dragColour, commitColour } = useLiveColour(l, setPreview);
-  const symbolBox = useSymbolBox(l);
-  useEffect(() => { if (preview !== null && l && l.colour.toLowerCase() === preview.toLowerCase()) setPreview(null); }, [l?.colour, preview]);
-  // a click away, or Esc outside the name box (it handles its own), closes the editor
-  useEffect(() => {
-    if (!editing) return;
-    const away = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.("[data-line-edit]")) setEditing(false); };
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || (e.target as Element | null)?.closest?.(".name-edit")) return;
-      e.preventDefault();
-      e.stopPropagation();
-      setEditing(false);
-    };
-    window.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", esc, true);
-    return () => {
-      window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", esc, true);
-    };
-  }, [editing]);
-  // T-1894: the editor sits under the pinned title, so opening it scrolls the panel to its top
-  const titleEl = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (editing) scrollerOf(titleEl.current)?.scrollTo({ top: 0 }); }, [editing]);
+  const title = useLineTitle(id, l);
   // T-309: the demand level now in the line's own local time
   const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
@@ -828,11 +538,7 @@ function RailLineInspector({ id }: { id: string }) {
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
-  // T-477, T-491: crowding by period on today's kind of day, asked again as the account changes
-  // T-872, T-262: the line's country decides the kind of day
-  const kind = kindIn(lineCountry(l?.stops ?? []), Math.floor(lineSeconds(w?.lineStats[id]) / 86400));
-  const acct = accountVersion.value;
-  const periods = useClockQuery(l ? { what: "linePeriods", line: l.num, day: kind } : null, [l?.num, w?.version, acct, kind], (d) => (d.length ? d : null));
+  const { kind, periods } = useLinePeriods(id, l);
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
   // (the passed stations come with the world, so new stops never show with the old gaps, T-648;
@@ -850,7 +556,6 @@ function RailLineInspector({ id }: { id: string }) {
   const name = stationNames(w);
   const looks = traffic && st.status === "running" ? stretchLooks(l, l.stops.map((s) => name.get(s) ?? ""), crowded) : null;
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
-  const auto = headwayShown(l.id);
   const canAuto = l.stops.length >= 2 && st.status !== "broken";
 
   const build = async () => {
@@ -907,7 +612,7 @@ function RailLineInspector({ id }: { id: string }) {
     } finally { setCopying(false); }
   };
 
-  const shown = preview ?? l.colour;
+  const shown = title.shown;
   const nStops = l.stops.length;
   // T-1894: north (or for an east-west line, west) end on top; a loop as built
   const byId = stationsById(w);
@@ -1029,23 +734,7 @@ function RailLineInspector({ id }: { id: string }) {
 
   return (
     <>
-      <div class="title" data-line-edit ref={titleEl}>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
-          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><Chip line={{ ...l, colour: shown }} size="lg" plain /></button>
-        <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === id} onPrompted={() => { renameLinePrompt.value = null; }}
-          control={{ open: editing, set: setEditing }}>
-          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(l.stops)}>
-            <Icon.locate />
-          </button>
-        </NameEdit>
-      </div>
-      {editing && (
-        <div class="line-identity" data-line-edit>
-          <label>Symbol <input aria-label="Line symbol" {...symbolBox} /></label>
-          <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={dragColour} onCommit={commitColour} />
-        </div>
-      )}
-      <LineGroup l={l} />
+      <LineTitle l={l} t={title} />
       <div class="sub muted flush">
         {st.fast && "High-speed, "}{plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
       </div>
@@ -1066,39 +755,7 @@ function RailLineInspector({ id }: { id: string }) {
       </div>
       {editingStops && stopsBlock}
 
-      <div class="h">
-        Schedule
-        {canAuto && <ScheduleCopyButtons l={l} st={st} />}
-        {canAuto && (
-          <span class="right">
-            <Segmented<boolean>
-              options={[
-                [false, "Trains"],
-                [true, "Headway"],
-              ]}
-              value={auto !== null}
-              onChange={(v) => setAutoTrains(l.id, v)}
-            />
-          </span>
-        )}
-      </div>
-      <table class="sched">
-        <tr>
-          <th>Demand</th>
-          <th>Trains</th>
-          <th>Headway</th>
-        </tr>
-        {DEMANDS.map((d) => {
-          const dot = st.status === "running" && (trainsShown(l.id) ?? st.trainsNeeded)[DEMAND_INDEX[d]] > 0;
-          const v = dot && periods && lineFiguresIn(demandView.value, l.id, l.stops.length) ? periods : null;
-          return (
-          <tr class={d === now ? "now" : ""}>
-            <td><LevelName v={v} d={d} stops={l.stops.length} pending={dot && !v && demandPending.value} /></td>
-            <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
-          </tr>
-          );
-        })}
-      </table>
+      <Schedule l={l} st={st} now={now} limits={limits} crowd={periods} canAuto={canAuto} copy={<ScheduleCopyButtons l={l} st={st} />} />
       {st.status !== "broken" && <TrainType l={l} st={st} lev={lev} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status === "running" && held.length > 0 && (
@@ -1115,7 +772,7 @@ function RailLineInspector({ id }: { id: string }) {
         </ul>
       )}
 
-      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} />}
+      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit="riders" />} />}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}

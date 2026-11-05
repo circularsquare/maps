@@ -28,7 +28,8 @@ import { locateLine } from "../locate";
 import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
-import { DEMAND_LABEL, TwoRows } from "./LineInspector";
+import { TwoRows } from "./LineInspector";
+import { DEMAND_LABEL } from "./schedule";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;

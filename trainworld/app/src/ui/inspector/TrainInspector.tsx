@@ -9,7 +9,8 @@ import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
-import { BOAT_CARS, BUS_CARS, capacity, tripLoad } from "../../game/boarding";
+import { capacity, tripLoad } from "../../game/boarding";
+import { vehicleCars, vehicleOf } from "./schedule";
 import { Chip, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
@@ -34,7 +35,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
     <>
       <div class="title">
         <Chip line={l} size="lg" />
-        <span class="name">{l.name} {st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"}</span>
+        <span class="name">{l.name} {vehicleOf(st)}</span>
       </div>
       <div class="sub muted">Towards {name.get(stops[stops.length - 1])}</div>
       {at ? (
@@ -45,9 +46,9 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
           </Row>
         </ul>
       ) : (
-        <p class="muted">This {st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"} finished its trip and left service.</p>
+        <p class="muted">This {vehicleOf(st)} finished its trip and left service.</p>
       )}
-      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={st.bus?.ferry ? BOAT_CARS : st.bus ? BUS_CARS : st.cars} what={st.bus?.ferry ? "boat" : st.bus ? "bus" : "train"} profile={profile} dep={dep} />}
+      {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={vehicleCars(st)} what={vehicleOf(st)} profile={profile} dep={dep} />}
     </>
   );
 }
