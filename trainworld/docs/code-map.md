@@ -585,7 +585,8 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   screencast of the click's frames with a flash test, pixels the same before and after that a frame
   between draws otherwise, as a mask and a frame strip),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
-  against fresh final to the bit, a changed build, pack or network shows none), `old/t348-lag.mjs`
+  against fresh final to the bit, a changed build, pack or network shows none; `MODE=edit`, T-2560: an
+  edit made while the cache's network is solved again ends at a cold solve's figures), `old/t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
   joining the solve; optional Chrome trace) with `old/t348-analyze.mjs` (what each long task in a
   trace spent its time on), `old/t1008-load-lag.mjs` (long tasks, frame gaps and each demand message's

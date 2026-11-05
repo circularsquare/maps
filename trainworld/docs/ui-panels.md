@@ -1090,7 +1090,12 @@ registry centre and zoom, or over New York with none [T-310].
   zone in view has its final figures [T-347, T-421]: its fresh solve's last round, or that of the
   zone's own cluster, solved ahead of the rest (T-402: a Toronto view of a game with New York's
   network, about 6 s instead of 31 s); a new game until its viewed zone's figures, opened bare,
-  arrive (T-351). Zones still solving then show their own loading bar and grey ("A zone still loading
+  arrive (T-351). **A game whose last final result is kept for its very network** (T-328: the
+  same network, packs and build) holds the clock only until that network is in, the result shown
+  and the zone in view with figures [T-2560]: its figures are that network's final, so the game
+  plays on them while the workers solve the same network again. The status tag then says "Trips in 81 cities being recomputed…"
+  and the clock is capped, until the zone in view's cluster has its fresh final (the tag's own rule
+  in "Status and busy tags"). Zones still solving then show their own loading bar and grey ("A zone still loading
   is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
   middle of the map names the stage in hand over a filling bar [T-1194]: "Loading" (the game itself,
@@ -1109,9 +1114,8 @@ registry centre and zoom, or over New York with none [T-310].
   space); a line whose shown result has no riders for it as its stops are now (just given trains,
   its stops just changed) has the ring, never a dot, until one that does lands, since its trains run
   empty in the boarding account till then (`lineFiguresIn` in `game/demand.ts`, T-1279); and in a clicked bubble's panel in place of each line that waited ("Trip purposes", the far ends, "Inter-city trips") while they load.
-  Nothing else animates. The figures behind it are the solve's estimates, or the last
-  final result kept beside the save when there is one (T-328; the split's hover ends "(from the
-  last time this game was open)").
+  Nothing else animates. The figures behind it are the solve's estimates, or a cached result found
+  before the game's network is in (T-1539).
 - **Another game replaces this one by reloading the page into it** [T-1196]: Open, Open a file,
   Open as a copy and New game in the saves panel save the game in hand, let go of its slot, then
   reload with `?slot=<key>` or `?load=file|restore|new` (a file, a backup or a new game's spec waits in

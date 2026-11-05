@@ -947,7 +947,8 @@ and so are the city bubbles: the start menu's world map is blank. So is the map 
 view's first figures of that game are in, a cached result, a rough solve's or an estimate [T-1533], or
 else until the loading card goes and the clock is released): no shade, circles, zone outlines, outside
 shade, loading grey, city bubbles or labels over the basemap; they all arrive in one step, with no fade
-[T-1051]. The card and the held clock stay until the final [T-347].
+[T-1051]. The card and the held clock stay until the final [T-347], or go with a cached result of
+the game's own network once that network is in [T-2560].
 
 ## Globe
 

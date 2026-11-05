@@ -252,14 +252,15 @@ Web first, so it can be shared as a link.
 
 ### Loading, panics and memory
 
-- **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351]: input is never blocked. A
+- **Loading and readiness** [T-149, T-172, T-180, T-243, T-347, T-351, T-2560]: input is never blocked. A
   loaded game holds only the clock until every needed city is open and the fresh solve's final
   round has landed (`HOLD_ROUND`, `holdDone`; Anita, T-347). A viewed zone open bare is final from
   its opening: a new game (no station) opens its viewed zone bare, its solve covers the market
   alone, and the card goes when the bare figures arrive (T-351). The cached result
-  (section 11) is drawn behind the loading card without releasing it, and so are the zone in view's
-  first figures from a rough solve or an estimate (T-1533, [demand-runtime.md](demand-runtime.md)
-  "The zone in view first"). A city opened later (a pan,
+  (section 11) releases it as soon as the game's network is in and the zone in view has figures
+  (`cacheDone`, T-2560): it is the final of that very network. The zone in view's first figures
+  from a rough solve or an estimate are drawn behind the card without releasing it (T-1533,
+  [demand-runtime.md](demand-runtime.md) "The zone in view first"). A city opened later (a pan,
   construction) is a load without a hold and counts as done at its first estimate (`READY_ROUND`).
   **Startup order** (main.ts) [T-677]: the page sets up the map, overlay and UI, then waits on the
   start menu ([ui-panels.md](ui-panels.md) "Start menu"); the pick starts the demand pool, then the
@@ -585,10 +586,13 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   ones the new solve covers. A load's network is worked out from the save alone (it waits for the
   bus routes' street speeds, [track-and-service.md](track-and-service.md) 6.7, T-2499), so a reload
   of an unchanged game finds the result its last final wrote. When a whole game loads and the key matches, the result shows at once
-  (the bubbles once the zone's cells are open), the loading card stays up and the clock held until
-  the fresh final (T-347), the cached figures drawn behind the card with the status "Updating
-  demand"; the workers solve as on any load, their estimates not shown, other purposes' or days'
-  bubbles wait for them, a click is
+  (the bubbles once the zone's cells are open), and once the network is in the loading card goes
+  and the clock runs (T-2560). The workers solve the
+  same network as on any load, under the load's barrier (`cacheSolve`), their estimates not shown;
+  until that final the levels of detail stay as they are (as under a load's card, T-1223), and an
+  edit meanwhile is an edit like any other, its solve replacing that one. The status tag says
+  "Trips in 81 cities being recomputed…" until the zone in view's cluster has its final (ui-panels.md
+  "Status and busy tags"); other purposes' or days' bubbles wait for the workers, a click is
   answered from the newest round the workers reach ([demand-runtime.md](demand-runtime.md) "The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the

@@ -14,7 +14,8 @@
 //   game (`?new=1`) has no stations, so its reach is known at once and the viewed zone opens bare.
 // - T-301: packs (and the market) nobody needs any more close in every worker (`sweep`).
 // - Reports what it is loading (game/loading.ts `loadProgress`) and releases a loaded game's
-//   clock hold once that game's network has its final result (HOLD_ROUND, T-347).
+//   clock hold once that game's network has its final result (HOLD_ROUND, T-347), or shows its
+//   cached result (T-2560).
 // - The day's five periods are split over the pool by index (worker i solves periods i, i + n,
 //   ...). Each worker sends the free-flow estimate of all its periods first, then the crowding
 //   rounds.
@@ -112,8 +113,8 @@ const READY_ROUND = 0;
  * A loaded game's clock runs, and its loading card goes, once the zone in view has its final: the
  * solve's last round, or (T-421) that of the zone's cluster solved ahead of the rest (T-402), the
  * other zones then showing their own loading bars until the solve's final (`released`). The cached
- * result of the last time the game was open (T-328) is drawn meanwhile but does not release it.
- * A viewed zone open bare is final from its opening (T-351: `holdDone`).
+ * result of the last time the game was open (T-328) releases it once the network is in (T-2560:
+ * `cacheDone`). A viewed zone open bare is final from its opening (T-351: `holdDone`).
  */
 const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
@@ -732,6 +733,9 @@ class DemandClient {
   }
   /** a loaded game's clock hold: released when this version has its first estimate */
   private hold: { version?: number } | null = null;
+  /** T-2560: the network of a cached result whose hold went at the cache, until its solve's final or a newer
+   * network: that solve keeps the hold's barrier, and the levels of detail wait for it */
+  private cacheSolve: Service | null = null;
 
   // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
   private cacheOn = cacheAvailable() && !TEST;
@@ -1209,7 +1213,7 @@ class DemandClient {
     clearTimeout(this.lodTimer);
     this.lodTimer = 0;
     // (a game loading makes its first fine set from its own reach, in `ensure` or `stationsAhead`)
-    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || !this.lodZones || (this.ahead && !this.ahead.arrived)) return;
+    if (this.lod !== "auto" || this.failed || this.hold || this.cacheSolve || gameLoadArmed() || !this.lodZones || (this.ahead && !this.ahead.arrived)) return;
     const now = Date.now();
     // T-2180: no level changes while edits settle (the edit note's figures would mix them in), and
     // that time counts as looked at, so a fine zone's ten minutes left alone start after
@@ -2204,9 +2208,8 @@ class DemandClient {
     }
   }
 
-  /** Show a cached result as a final one under CACHE_VERSION, behind the loading card (the clock
-   * stays held, T-347); the solve of the same network carries on, its estimates are not shown, and
-   * its final round replaces it whole. */
+  /** Show a cached result as a final one under CACHE_VERSION; the solve of the same network carries
+   * on, its estimates are not shown, and its final round replaces it whole. */
   private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[]) {
     const days = fromStored(stored, ids);
     if (days.length !== DEMAND_DAYS.length) throw new Error("days");
@@ -2229,10 +2232,10 @@ class DemandClient {
     demandByDay.value = days;
     this.lodShown(cities, cities.filter((id) => this.levelFor(id) === LOD_COARSE));
     this.addBareViews();
-    demandUpdating.value = true; // "Updating demand" until the fresh final
-    // T-347: a game load's card and held clock stay until the fresh final lands (T-328 released
-    // them here); the card's bar carries on as it was
+    demandUpdating.value = true;
+    // T-2560: the card and the held clock go now, once the network is in (`cacheDone`)
     this.progress();
+    this.checkHold();
   }
 
   /** The figures shown are the cache's. */
@@ -2339,13 +2342,34 @@ class DemandClient {
     return !!s.focused && !!a && v.length > 0 && v.some((id) => !a.cities.includes(id));
   }
 
-  /** A held game's network has its final result (T-347), or its zone in view has (T-421): the clock runs. */
+  /**
+   * T-2560: a held game shows the cached result of its own network (T-328) and the zone in view has
+   * figures: that network, whose hold may go now. The cache is the final of exactly this network, build
+   * and packs, so the fresh final equals it; T-347 held the card through that solve for its lag.
+   */
+  private cacheDone(): Service | null {
+    if (!this.hold || this.failed || !this.cacheShown() || perfOff("cacheCard")) return null;
+    const c = this.log.find((s) => s.version === CACHE_VERSION)?.svc;
+    if (!c || this.latest() !== c) return null;
+    const shown = cityDemandViews.peek();
+    return [...this.viewedSet()].every((id) => this.cachedCities.has(id) || (this.isOpen(id) && shown.has(id))) ? c : null;
+  }
+
+  /** A held game's network has its final result (T-347), or its zone in view has (T-421), or it shows
+   * its network's cached result (T-2560): the clock runs. */
   private checkHold() {
     if (this.hold && this.idle()) return this.settleIdle(); // T-318
-    if (this.holdDone()) {
+    const done = this.holdDone(), cached = !done ? this.cacheDone() : null;
+    if (done || cached) {
       this.hold = null;
-      const s = this.cur!;
-      if (s.published < ROUNDS) {
+      const s = this.cur;
+      if (cached) {
+        // the load ends with the card, unremembered: its time says nothing of a load without the cache
+        this.cacheSolve = cached;
+        this.endJob();
+        loadProgress.value = null;
+        this.zoneProgress();
+      } else if (s && s.published < ROUNDS) {
         const solving = demandSolving.peek();
         this.unsettled = new Set(s.cities.filter((id) => solving?.has(id) ?? true));
         // their bars start from their own solve's share (the card's load ended without them)
@@ -2407,6 +2431,7 @@ class DemandClient {
     this.pendingQueries.clear();
     this.endJob();
     this.hold = null;
+    this.cacheSolve = null;
     this.endFocus();
     zoneLoads.value = new Map();
     console.error("demand:", why);
@@ -3105,6 +3130,7 @@ class DemandClient {
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
     if (gameLoad && this.ahead) this.ahead.arrived = true;
+    if (gameLoad) this.cacheSolve = null;
     // T-1539: the network the loaded save works out, for the cache written for it; and the one a
     // cached result shown ahead of it was for: the same network is that very service
     const early = this.early;
@@ -3126,6 +3152,8 @@ class DemandClient {
       return;
     }
     this.lastKey = key;
+    // T-2560: an edit after the cache's card went is an edit like any other
+    this.cacheSolve = null;
     this.lastStir = performance.now();
     if (gameLoad) this.uncovered = [];
     else this.uncovered.push({ svc, minute: clock.minute.peek() });
@@ -3152,6 +3180,7 @@ class DemandClient {
     // T-328: a whole game's network: its last final result may be kept beside the save (shown
     // already if it was found ahead of the network, T-1539)
     if (this.hold && this.cacheOn && !(early?.shown && svc === early.svc)) void this.tryCache(svc);
+    else if (this.hold && this.cacheShown()) this.checkHold(); // (T-2560: shown ahead of the network)
   }
 
   // --- T-1539: a loading save's cached result, shown before its network arrives ---
@@ -3226,7 +3255,8 @@ class DemandClient {
     // shown yet: before the first final result, after a whole-game load, or for a city just opened
     const shown = cityDemandViews.peek();
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
-    const barrier = showEstimates || !!this.hold;
+    // (T-2560: a cached result's network solved again after its card went, as under the card)
+    const barrier = showEstimates || !!this.hold || svc === this.cacheSolve;
     this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
@@ -4118,6 +4148,13 @@ class DemandClient {
           setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
           // T-1734: what was held back meanwhile
           if (s.barrier === false) this.flush();
+          // T-2560: the levels of detail waited for this solve as for a load's card (`checkHold`)
+          if (s.svc === this.cacheSolve) {
+            this.cacheSolve = null;
+            const now = Date.now();
+            for (const id of this.fine) if (this.touched.has(id)) this.touched.set(id, now);
+            this.lodSoon();
+          }
         }
         const t = this.timeRest;
         if (t?.version === s.version) {

@@ -2,7 +2,7 @@
 // scratch folder served by checks/static-serve.mjs (Range, no-store), headless Chrome with its own
 // temporary profile, default demand pool. A new game RUNS times, then the real NYC save
 // (T-007-real-nyc.save) RUNS times. Marks are ms since navigation: world = track drawn, clock =
-// clock released (the fresh final, T-347), final = the first final view, r3 = crowding round 3 (a
+// clock released (the fresh final, T-347, or a cached result of the same network, T-2560), final = the first final view, r3 = crowding round 3 (a
 // new game's bare view has none). Writes OUT/startup-LABEL.json.
 // MENU=1 (T-677): every load goes through the start menu, New game or the save's card clicked as soon
 // as the menu is up; `pick` is the click, and `fromPick` the marks less it. Without it the loads

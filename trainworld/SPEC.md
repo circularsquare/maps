@@ -312,8 +312,9 @@ Workers: one clock worker (track model, lines, money, boarding account, autosave
 demand workers that each own a fixed set of the five periods. Threads talk by transferring
 versioned snapshots. The page opens on a start menu (New game, then the saved games); the workers
 start with the pick (T-677). A loaded game holds only its clock, behind a loading card, until its
-fresh demand solve's final result lands (T-347; the last final result kept beside the save, T-328,
-is drawn behind the card meanwhile); input is never blocked. Another game opened from the saves
+fresh demand solve's final result lands (T-347), or until its network is in when the last final
+result kept beside the save is for that very network (T-328, T-2560: the game plays on it while the
+same network is solved again); input is never blocked. Another game opened from the saves
 panel reloads the page into it, which frees the last game's memory (T-1196). City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time); a save made just after a service edit carries the
 change over [T-206, T-1071].
