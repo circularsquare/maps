@@ -70,6 +70,14 @@ const W_TURN = 1;
 /** A and B (T-2290): two stations that share no edge and are nearer in reality than this many of their own mean
  * hop (the longer reach of the two) stay their spacing apart along their real bearing, with this weight */
 const SIDE_HOPS = 1.5, W_SIDE = 3;
+/** A's last ACROSS_ROUNDS rounds (T-2520): such a pair's offset across its real bearing is held at nothing with this
+ * weight, so lines running side by side are not sheared against each other */
+const W_SIDE_ACROSS = 1, ACROSS_ROUNDS = 3;
+/** T-2520: two hops are parallel on the ground when they share no station and no line, their bearings are within
+ * 15 degrees of each other (PAR_COS its cosine, written out so every engine agrees), each one's middle lies within
+ * PAR_M of the other's line, and they overlap along it by at least half the shorter; their drawn lengths per real
+ * metre are averaged with their partners' PAR_ROUNDS times */
+const PAR_COS = 0.9659258262890683, PAR_M = 1000, PAR_ROUNDS = 3;
 /** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
@@ -182,6 +190,48 @@ interface Prep {
   city: Int32Array;
   /** per node, 1 where a segment must end though the lines go on (a station between blocks on a long hop) */
   keyNodes?: Uint8Array;
+  /** hops parallel on the ground (`parallelHops`): e1, e2, and 1 where they run the same way, -1 where opposite */
+  par: Int32Array;
+}
+
+function sharesLine(g: DiagramGraph, e1: number, e2: number): boolean {
+  for (let i = g.first[e1]; i < g.first[e1 + 1]; i++) for (let j = g.first[e2]; j < g.first[e2 + 1]; j++) if (g.on[i] === g.on[j]) return true;
+  return false;
+}
+
+/** The pairs of hops parallel on the ground (T-2520: Manhattan's avenue lines), as PAR_COS and PAR_M say */
+function parallelHops(g: DiagramGraph): Int32Array {
+  const m = g.ea.length, len = new Float64Array(m), mx = new Float64Array(m), my = new Float64Array(m);
+  for (let e = 0; e < m; e++) {
+    const a = g.ea[e], b = g.eb[e];
+    (len[e] = hyp(g.x[b] - g.x[a], g.y[b] - g.y[a])), (mx[e] = (g.x[a] + g.x[b]) / 2), (my[e] = (g.y[a] + g.y[b]) / 2);
+  }
+  const cell = 2 * PAR_M + 2000, grid = new Map<number, number[]>();
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  for (let e = 0; e < m; e++) {
+    const k = key(Math.floor(mx[e] / cell), Math.floor(my[e] / cell)), v = grid.get(k);
+    if (v) v.push(e);
+    else grid.set(k, [e]);
+  }
+  const cosMax = PAR_COS, out: number[] = [];
+  for (let e1 = 0; e1 < m; e1++) {
+    if (len[e1] < 1) continue;
+    const a1 = g.ea[e1], b1 = g.eb[e1], ux = (g.x[b1] - g.x[a1]) / len[e1], uy = (g.y[b1] - g.y[a1]) / len[e1];
+    const cx = Math.floor(mx[e1] / cell), cy = Math.floor(my[e1] / cell);
+    for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) for (const e2 of grid.get(key(gx, gy)) ?? []) {
+      if (e2 <= e1 || len[e2] < 1) continue;
+      const a2 = g.ea[e2], b2 = g.eb[e2];
+      if (a1 === a2 || a1 === b2 || b1 === a2 || b1 === b2) continue;
+      const vx = (g.x[b2] - g.x[a2]) / len[e2], vy = (g.y[b2] - g.y[a2]) / len[e2], c = ux * vx + uy * vy;
+      if (Math.abs(c) < cosMax) continue;
+      if (Math.abs((my[e2] - my[e1]) * ux - (mx[e2] - mx[e1]) * uy) > PAR_M || Math.abs((my[e1] - my[e2]) * vx - (mx[e1] - mx[e2]) * vy) > PAR_M) continue;
+      const along = (i: number) => (g.x[i] - g.x[a1]) * ux + (g.y[i] - g.y[a1]) * uy;
+      const lo = Math.min(along(a2), along(b2)), hi = Math.max(along(a2), along(b2));
+      if (Math.min(len[e1], hi) - Math.max(0, lo) < 0.5 * Math.min(len[e1], len[e2])) continue;
+      if (!sharesLine(g, e1, e2)) out.push(e1, e2, c > 0 ? 1 : -1);
+    }
+  }
+  return Int32Array.from(out);
 }
 
 function prep(g: DiagramGraph, o: LayoutOptions): Prep {
@@ -210,6 +260,23 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
     const small = localStops(g);
     for (let e = 0; e < m; e++) if (!lonely[e] && small[g.ea[e]] && small[g.eb[e]]) L[e] = Math.max(Math.min(L[e], LOCAL_MIN * pu), L[e] * o.local!);
   }
+  // hops parallel on the ground drawn at one scale, so runs beside each other with stops at different spacings need
+  // not bend to fit each other (T-2520)
+  const par = parallelHops(g);
+  if (par.length) {
+    const gl = new Float64Array(m);
+    for (let e = 0; e < m; e++) gl[e] = Math.max(1, hyp(g.x[g.eb[e]] - g.x[g.ea[e]], g.y[g.eb[e]] - g.y[g.ea[e]]));
+    let s = Float64Array.from(L, (l, e) => l / gl[e]);
+    for (let it = 0; it < PAR_ROUNDS; it++) {
+      const num = Float64Array.from(s, (v, e) => v * gl[e]), den = Float64Array.from(gl);
+      for (let k = 0; k < par.length; k += 3) {
+        const a = par[k], b = par[k + 1];
+        (num[a] += s[b] * gl[b]), (den[a] += gl[b]), (num[b] += s[a] * gl[a]), (den[b] += gl[a]);
+      }
+      s = Float64Array.from(num, (v, e) => v / den[e]);
+    }
+    for (let e = 0; e < m; e++) L[e] = s[e] * gl[e];
+  }
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
   const adj = new Set<number>();
@@ -231,7 +298,7 @@ function prep(g: DiagramGraph, o: LayoutOptions): Prep {
       through[v].add(e1 * m + e2).add(e2 * m + e1);
     }
   }
-  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city };
+  return { n, ea: g.ea, eb: g.eb, L, gdx, gdy, hw, pu, dmin: o.apart * mid, nbr, adj, through, side: sidePairs(g, adj), city: parts.city, par };
 }
 
 /** The cities and the lonely hops between them (T-2289): `city` per node, its city (-1 for a station in
@@ -328,10 +395,21 @@ function sidePairs(g: DiagramGraph, adj: Set<number>): Float64Array {
 }
 
 /** each edge's octilinear direction: at each node its edges take distinct directions nearest their
- * angles, the surest first; where the two ends disagree, the end deviating less wins */
+ * angles, the surest first; where the two ends disagree, the end deviating less wins. An edge's angle is the
+ * mean of its own and those of the hops parallel to it on the ground, so they choose alike (T-2520). */
 function chooseDirs(P: Prep, pos: Float64Array): Int8Array {
   const m = P.ea.length, ang = new Float64Array(m);
-  for (let e = 0; e < m; e++) ang[e] = atan2(pos[P.eb[e] * 2 + 1] - pos[P.ea[e] * 2 + 1], pos[P.eb[e] * 2] - pos[P.ea[e] * 2]);
+  const ux = new Float64Array(m), uy = new Float64Array(m);
+  for (let e = 0; e < m; e++) {
+    const dx = pos[P.eb[e] * 2] - pos[P.ea[e] * 2], dy = pos[P.eb[e] * 2 + 1] - pos[P.ea[e] * 2 + 1], l = hyp(dx, dy);
+    if (l > 0) (ux[e] = dx / l), (uy[e] = dy / l);
+  }
+  const sx = Float64Array.from(ux), sy = Float64Array.from(uy);
+  for (let k = 0; k < P.par.length; k += 3) {
+    const a = P.par[k], b = P.par[k + 1], s = P.par[k + 2];
+    (sx[a] += s * ux[b]), (sy[a] += s * uy[b]), (sx[b] += s * ux[a]), (sy[b] += s * uy[a]);
+  }
+  for (let e = 0; e < m; e++) ang[e] = atan2(sy[e], sx[e]);
   const q = Math.PI / 4;
   const dev = (a: number) => Math.abs(a - Math.round(a / q) * q);
   const propD = new Float64Array(m).fill(Infinity), propK = new Int8Array(m);
@@ -450,6 +528,7 @@ function lsq(P: Prep, octi: boolean, rounds: number, start: Float64Array, wProx:
     for (let k = 0; k < S.length; k += 4) {
       const a = S[k], b = S[k + 1], ux = S[k + 2], uy = S[k + 3], want = P.dmin + P.hw[a] + P.hw[b];
       if ((pos[b * 2] - pos[a * 2]) * ux + (pos[b * 2 + 1] - pos[a * 2 + 1]) * uy < want) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [ux, uy, -ux, -uy], want, W_SIDE);
+      if (!octi && r >= rounds - ACROSS_ROUNDS) T.add([2 * b, 2 * b + 1, 2 * a, 2 * a + 1], [-uy, ux, uy, -ux], 0, W_SIDE_ACROSS);
     }
     closePairs(P, pos, pairs, B_NEAR);
     for (let k = 0; k < pairs.length; k += 2) {

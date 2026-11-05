@@ -293,7 +293,14 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 - **Sides** (in A and B, each round): two stations that share no edge and lie nearer in reality than 1.5 times
   either one's mean real hop keep at least their spacing (their half widths plus half the median hop) between
   them along their real bearing (weight 3), so a line of short hops beside one of long hops cannot carry its
-  stations past the other's to the wrong side (T-2290).
+  stations past the other's to the wrong side (T-2290). In A's last three rounds such a pair's offset across its
+  real bearing is also held at nothing (weight 1), so lines side by side are not sheared against each other (T-2520).
+- **Parallel hops** (T-2520): two hops are parallel on the ground when they share no station and no line, their
+  bearings are within 15 degrees, each one's middle lies within 1 km of the other's line, and they overlap along it
+  by at least half the shorter (Manhattan's avenue lines). Their targets are drawn at one scale: each hop's drawn
+  length per real metre is averaged with its partners' (weighted by real length) three times, after the lonely and
+  local hops and before the room for bundles. In B each edge's angle, for choosing its direction, is the mean of its
+  own and its partners', so lines side by side take the same direction.
 - **B**: 30 rounds of octilinear least squares from A: each edge toward the nearest free 45 degree
   direction at both ends, straight through two-edge stations, near the last round (0.1) and A (0.01),
   unconnected stations nearer than 1.12 times their spacing (their half widths plus half the median
