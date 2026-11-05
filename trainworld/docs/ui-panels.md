@@ -1124,8 +1124,8 @@ registry centre and zoom, or over New York with none [T-310].
   of those zones, and the whole game's, 1.5 GB plus 15 MB a zone plus the workers'. A worker over
   3.5 GB (a browser worker cannot pass 4) or, on a device reporting under 8 GB, a game over three
   quarters of it is refused: the start menu shows the reason over the saved games, and in a game a
-  notice says it ("not enough memory. this save needs about 4.3 GB and your device has about 4 GB.
-  works best on a computer.") [T-2545].
+  notice says it ("Not enough memory. This save needs about 4.3 GB and your device has about 4 GB.
+  This game works best on a computer.") [T-2545].
 - **The bar is three stages, each with its share** [T-1195, notes/T-1195.md; `game/loadBar.ts`]: the
   game, the city data and the solve each get the share of the bar their expected times give them,
   and the stage in hand moves inside its share by what has landed (bytes downloaded, packs open in
@@ -1180,8 +1180,8 @@ registry centre and zoom, or over New York with none [T-310].
 - If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
   without demand, and takes every key until one is pressed. If the game itself never started (the
   clock worker failed to start, or the page's setup threw before its end), it has Try again alone
-  [T-950]. The screen gives no reason, only "ran out of memory. works best on a computer." when the
-  failure was a failed allocation (`isMemoryFailure`, `game/loadText.ts`), else "failed to load :(
+  [T-950]. The screen gives no reason, only "Ran out of memory. This game works best on a computer." when
+  the failure was a failed allocation (`isMemoryFailure`, `game/loadText.ts`), else "Failed to load :( This game
   works best on a computer." [T-2545]; the cause goes to the console. The same two sentences come
   back for a game or a real network the clock worker could not load, and as the hover of the status
   tag's "Demand could not load". A page that finds the flag set in sessionStorage at its start

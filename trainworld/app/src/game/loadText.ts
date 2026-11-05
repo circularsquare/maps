@@ -1,9 +1,9 @@
 // T-2545: what a load that fails says. A memory failure says so; any other or unknown one says it
 // failed. Both add that the game works best on a computer. Pure, so the clock worker can use it too.
 
-export const COMPUTER_NOTE = "works best on a computer.";
-export const OUT_OF_MEMORY = `ran out of memory. ${COMPUTER_NOTE}`;
-export const LOAD_FAILED = `failed to load :( ${COMPUTER_NOTE}`;
+export const COMPUTER_NOTE = "This game works best on a computer.";
+export const OUT_OF_MEMORY = `Ran out of memory. ${COMPUTER_NOTE}`;
+export const LOAD_FAILED = `Failed to load :( ${COMPUTER_NOTE}`;
 
 /** Whether an error's text is a failed allocation: Rust's "out of memory" (`last_panic`), V8's "could not
  * allocate" and "Array buffer allocation failed", and WebAssembly.Memory refusing to grow. A dead worker's

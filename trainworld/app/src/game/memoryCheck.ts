@@ -42,9 +42,9 @@ const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));
 /** Why a game reaching `zones` will not fit here, in a sentence; null if it will. */
 export function memoryRefusal(zones: readonly string[]): string | null {
   const need = memoryNeed(zones);
-  if (need.wasmGB > WORKER_CAP_GB) return `not enough memory. this save covers ${need.zones} zones, each demand calculation needs about ${gb(need.wasmGB)} GB and browsers allow 4. ${COMPUTER_NOTE}`;
+  if (need.wasmGB > WORKER_CAP_GB) return `Not enough memory. This save covers ${need.zones} zones, each demand calculation needs about ${gb(need.wasmGB)} GB and browsers allow 4. ${COMPUTER_NOTE}`;
   const device = deviceGB();
-  if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return `not enough memory. this save needs about ${gb(need.totalGB)} GB and your device has about ${gb(device)} GB. ${COMPUTER_NOTE}`;
+  if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return `Not enough memory. This save needs about ${gb(need.totalGB)} GB and your device has about ${gb(device)} GB. ${COMPUTER_NOTE}`;
   return null;
 }
 
