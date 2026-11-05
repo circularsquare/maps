@@ -320,6 +320,9 @@ build: `packs/` to R2 `trainworld/<version>/`, the rest of dist to the website r
 notes/T-924.md has the commands). During a batch, publish a build on the last freeze
 (`pipeline/freeze.py build`, then `deploy.py --dist` that build; T-928), never one that copied
 data/packs mid-batch.
+The page's link preview (`og:` and `twitter:` tags in `app/index.html`, absolute URLs on anita.garden/trainsworld/)
+names `app/public/preview.png`, 1200x630, which the build copies beside index.html and `deploy.py` publishes with the
+rest of dist (T-2543). Redo the picture when the look changes; X and Bluesky cache cards.
 
 ## checks/: standing checks
 
