@@ -69,20 +69,23 @@ row's figures and hovers, losses red).
 ## The past 24 hours, shown as today
 
 [T-293, T-446, T-1893] The line and station panels and the Lines and Stations tabs count the past 24
-hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, fares, running
-cost, trains that left full, riders left behind. They follow the schedule as it is, so they move at
+hours, not a whole-day forecast, so nothing resets at midnight: riders, boardings, trains that left
+full, riders left behind (the profit is the exception, below). They follow the schedule as it is, so they move at
 once when it changes; the player is told "today" (Anita, T-1893: "24 h" was hard to keep
 consistent): labels and headings "Boardings today" or "Today"; their hovers say "N riders in
-past 24h" (Anita: today can mean the past 24 hours, and "past 24h" is the short form); the profit's hover "Expected
-profit today: $x" (it is today's projection). The line panel's block has no heading, only the rule above it. The points (Cities
+past 24h" (Anita: today can mean the past 24 hours, and "past 24h" is the short form). The profit (the
+line panel's Profit row, the Lines tab's Money) is the one figure that is not a count: the expected profit
+for today, a whole day of the line's local day now (fares at every hour of it on its own kind of day,
+minus a day's running cost and its upkeep share), its hover "Expected profit today: $x". It changes when
+the day turns, with the network or the riders worked out again, never with the hour, so it does not drift
+through a weekend as the past 24 hours would [T-2475, notes/T-2475.md]. The line panel's block has no heading, only the rule above it. The points (Cities
 tab, top bar, leaderboard) say "in past 24h" too: they are a sum of the last 24 whole game
 hours, moving once an hour. They are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
 riders arrived by its last departure in it less those still waiting, less the same at the
-departure before it). Fares are each line's hourly fare, the hour now by the share paid as the
-cash is [T-284] and the hour a day ago by the rest; running cost is each hour's trains, the hours
-at either end in part. Asked four times a wall second
+departure before it). The profit's fares are each line's hourly fare over its local day now; its
+running cost is each hour's trains over 24 hours, the same for any 24 of them. Asked four times a wall second
 while a panel shows them and the clock runs (`game/today.ts`); only the components showing them
 re-render. The map's demand views stay demand's whole-day picture.
 

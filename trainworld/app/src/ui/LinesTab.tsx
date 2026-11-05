@@ -64,14 +64,15 @@ function RidersToday({ line }: { line: string }) {
   return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in past 24h` : undefined}>{text}</span>;
 }
 
-/** T-735, T-867: a line's fares less running cost and its share of upkeep over the past 24 hours. */
-const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.fares - runningToday(l, st) - st.upkeep : 0);
+/** T-735, T-867, T-2475: a line's expected profit today: a whole day's fares of its kind of day now
+ * minus a day's running cost and its share of upkeep. */
+const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d ? d.dayFares - runningToday(l, st) - st.upkeep : 0);
 function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   const d = today.value.get(l.id);
   if (!d) return <span class="val w-linemoney" />;
-  const run = runningToday(l, st), net = d.fares - run - st.upkeep;
+  const run = runningToday(l, st), net = d.dayFares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={lineMoneyTip(d.fares, run, st.upkeep, st.bus?.ferry ? "boats" : !!st.bus, dayNote(l, st))}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, st.bus?.ferry ? "boats" : !!st.bus, dayNote(l, st))}>
       <Money dollars={net} />
     </span>
   );

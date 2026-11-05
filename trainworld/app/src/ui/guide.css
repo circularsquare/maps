@@ -1,2 +1,4 @@
 /* T-2263: the step in hand's note, under its words; the card's other rules are in style.css (.guide) */
 .guide-steps .guide-note { grid-column: 2 / -1; color: var(--muted); }
+/* T-2473: a done step's note stays for the rest of the card, greyed a step past the muted text */
+.guide-steps li.done .guide-note { color: color-mix(in srgb, var(--muted) 65%, var(--bg)); }

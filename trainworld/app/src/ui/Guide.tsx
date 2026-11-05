@@ -43,7 +43,7 @@ function Guide() {
             <span class="guide-box">{done[i] && <Icon.check />}</span>
             <span class="guide-words">{s.words}</span>
             {s.count && <span class="guide-count">{counter(s.count)}</span>}
-            {s.note && i === now && <span class="guide-note">{s.note}</span>}
+            {s.note && (i === now || done[i]) && <span class="guide-note">{s.note}</span>}
           </li>
         ))}
       </ol>

@@ -267,7 +267,7 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
 }
 
 /** The line's past 24 hours (T-446, game/today.ts): riders, `extra` rows (hidden while the riders are
- * worked out again), profit, the average load, and its vehicles from the boarding account (T-230): how
+ * worked out again), the expected profit for today (a whole day, T-2475), the average load, and its vehicles from the boarding account (T-230): how
  * many left full, and for a train line who was left on the platform. Its own component: it re-renders
  * as the counts move. */
 export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number; extra?: ComponentChildren }) {
@@ -292,9 +292,9 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
       <ul class="rows">
         <Row label="Riders">{count(d.riders)}</Row>
         {!pending && extra}
-        <li data-tip={lineMoneyTip(d.fares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
+        <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
           <span class="grow">Profit</span>
-          <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
+          <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
         </li>
         {load !== null && (
           <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "")} load over the entire line`}>

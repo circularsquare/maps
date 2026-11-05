@@ -29,6 +29,8 @@ export interface LineToday {
   stops: number[];
   /** fares taken, US$ */
   fares: number;
+  /** T-2475: fares a whole day of the line's local day now takes, US$: the expected profit's */
+  dayFares: number;
   /** trains that left full, out of `trains` that ran (T-481), riders left behind */
   fullTrains: number;
   trains: number;
@@ -185,11 +187,11 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
     const id = d[i], n = d[i + 1], nSpans = d[i + 6];
     const stops = Array.from(d.subarray(i + 7 + 2 * nSpans, i + 7 + 2 * nSpans + n));
     const e = i + 7 + 2 * nSpans + n;
-    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdLoad: d[e + 7] };
+    const t: LineToday = { riders: d[i + 2], fullTrains: d[i + 3], leftBehind: d[i + 4], stops, fares: 0, dayFares: 0, trainsNow: d[e], fullNow: d[e + 1], trains: d[e + 2], crowdLoad: d[e + 7] };
     at.push({ id: String(id), t });
     i = e + 8;
   }
-  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; out.set(a.id, a.t); });
+  at.forEach((a, k) => { a.t.fares = (d[i + k] ?? 0) * 1e6; a.t.dayFares = (d[i + count + k] ?? 0) * 1e6; out.set(a.id, a.t); });
   return out;
 }
 

@@ -1848,7 +1848,8 @@ function linesPeriods(a: TrackApi, lines: number[], day: number): Float64Array {
 
 /** T-446: every line's past 24 hours (`TrackApi.past_day`, `today`'s layout), then each listed
  * line's fares taken in them, US$M, in the same order: the hour now by the share already paid, as
- * `settle` pays the network's, and the hour a day ago by the rest. */
+ * `settle` pays the network's, and the hour a day ago by the rest; then each one's fares for the
+ * whole of its local day now (T-2475). */
 function today(): Float64Array {
   if (settle()) sendMoney();
   const now = Math.min(gameNow(), settledT);
@@ -1866,7 +1867,7 @@ let todayGen = 0;
 let todayLast: { key: string; data: Float64Array } | null = null;
 
 /** One line's day, in `TrackApi.today`'s per-line layout, with its fares (US$M). */
-interface LineDay { id: number; block: ArrayLike<number>; fare: number }
+interface LineDay { id: number; block: ArrayLike<number>; fare: number; day: number }
 
 /** Every line's block of `TrackApi.today(now)` with its fares taken: each hour since the line's
  * local midnight (T-309), at its local period and day, by the share already paid (`closed`: the
@@ -1890,7 +1891,10 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
         const t = h * 3600 + sh, w = h === hNow ? wNow : past && h === h0 ? 1 - wNow : 1;
         f += fareHour(per, t, kindOfLine(id)) * w;
       }
-      out.push({ id, block: v.subarray(i, i + len), fare: f });
+      // T-2475: the whole of the line's local day now, every hour on its own kind of day
+      let day = 0;
+      if (past && per) for (let h = Math.floor((now + sh) / 86400) * 24 - sh / 3600, e = h + 24; h < e; h++) day += fareHour(per, h * 3600 + sh, kindOfLine(id));
+      out.push({ id, block: v.subarray(i, i + len), fare: f, day });
     }
     i += len;
   }
@@ -1898,14 +1902,14 @@ function lineDaysAt(now: number, closed: boolean, shift?: number, past = false):
 }
 
 /** The flat array the panels read (game/today.ts `readToday`): the line count, each line's block,
- * then each line's fares. */
+ * then each line's fares, then each line's fares for its whole day now (T-2475). */
 function packDays(items: LineDay[]): Float64Array {
   const len = items.reduce((s, d) => s + d.block.length, 1);
-  const out = new Float64Array(len + items.length);
+  const out = new Float64Array(len + 2 * items.length);
   out[0] = items.length;
   let i = 1;
   for (const d of items) { out.set(d.block, i); i += d.block.length; }
-  items.forEach((d, k) => { out[i + k] = d.fare; });
+  items.forEach((d, k) => { out[i + k] = d.fare; out[i + items.length + k] = d.day; });
   return out;
 }
 

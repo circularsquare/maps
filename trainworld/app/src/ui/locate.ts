@@ -60,12 +60,25 @@ export function startOpenFit() {
   // T-977: untracked, since the camera move runs the map's listeners in this effect (zoomed out, the
   // city view's tags read the bubble scheme), and anything they read would make the fit run again
   effect(() => { if (fitView.value) untracked(fitOpened); });
+  // a gesture's events carry the pointer, wheel or key event; the game's own camera moves have none
+  live.map?.on("movestart", (e: { originalEvent?: Event }) => { if (e.originalEvent) cameraTaken = true; });
+}
+
+/** T-2477: the player has moved the camera since the game in hand was entered, so its fits leave it be. */
+let cameraTaken = false;
+/** A game is being entered: its fits may move the camera until the player does. */
+export function enterGame() {
+  cameraTaken = false;
+}
+/** A jump the player asked for (a search pick, a zone picked in the Cities tab), as a gesture counts. */
+export function playerMovedCamera() {
+  cameraTaken = true;
 }
 
 function fitOpened() {
   const w = world.peek();
   const map = live.map;
-  if (!w || !map) return;
+  if (!w || !map || cameraTaken) return;
   const all = w.save.stations;
   const built = all.filter((s) => s.built);
   const at = built.length ? built : all;
@@ -77,6 +90,7 @@ function fitOpened() {
 /** T-1539: the same fit from a loading save's built stations (`stationsAhead`, x, y in `frame`), as
  * soon as they are read: the game's figures can show before its first state. `homeAt`: the save's home. */
 export function fitAhead(frame: FrameSpec, xy: Float64Array, homeAt?: string) {
+  if (cameraTaken) return;
   const f = makeFrame(frame), lng: number[] = [], lat: number[] = [];
   for (let k = 0; k + 1 < xy.length; k += 2) {
     const [x, y] = f.toLonLat(xy[k], xy[k + 1]);

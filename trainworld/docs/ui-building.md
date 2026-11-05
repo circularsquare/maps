@@ -610,7 +610,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   [T-1898; `hsrPicked`, `TrackApi::set_edges_hsr`] (the kind all of it is solid, neither when
   mixed; High speed's hover gives its 1.5x price): every picked double piece to that kind in one
   undoable edit, single track and crossovers left as they are and counted in the message as for
-  elevation ("3 of 5 pieces set to high-speed track. 2 could not change."), then Disable and Enable as buttons with icon and word (one key, E, enables when any picked piece is off and
+  elevation ("3 of 5 pieces set to high-speed track. 2 could not change."). A level or kind picked here
+  (its key too) becomes the track tool's as well, as if picked in the track bar (High speed with its top design
+  speed, Regular with the speed before it), so the next track placed is laid the same way [T-2474]; a level
+  no picked piece could take leaves the tool as it was. Then Disable and Enable as buttons with icon and word (one key, E, enables when any picked piece is off and
   disables when all are on, T-2338; Enable's hover names it, and Disable's while all are on), each greyed when it would change nothing. For either kind: **Double up** while the pick
   holds double track (the track inspector's icon) [T-1680; `doubleUpPieces`, `doubleUpPicked`]: one
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),

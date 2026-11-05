@@ -20,11 +20,12 @@ import { builtCities, sumModes } from "../game/worldTotals";
 import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
-import { locateAllCities } from "./locate";
+import { locateAllCities, playerMovedCamera } from "./locate";
 import { Icon, SortHead } from "./widgets";
 
 /** Move the camera to a region's registry centre and zoom, at once; what search does for a city. */
 export function goToCity(city: City) {
+  playerMovedCamera();
   live.map?.jumpTo({ center: city.center, zoom: city.zoom });
   activeCity.value = city.id;
   // a station or bubble selection back in the old city would hold the focus there (main.ts)

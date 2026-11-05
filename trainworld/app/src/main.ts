@@ -90,7 +90,7 @@ import { choosing, startGameWait } from "./game/loading";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
-import { fitAhead, startOpenFit } from "./ui/locate";
+import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
 import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
 import { netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
@@ -614,6 +614,7 @@ onNetAhead(netAhead);
 // ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
 if (!urlChoice) showStartMenu((choice) => {
   // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
+  enterGame(); // T-2477: a pan before the pick does not count
   if (choice.game) viewStart(choice.game.start);
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));

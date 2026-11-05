@@ -8,7 +8,7 @@ import { bigDistance, distance, levelLabel } from "./format";
 import { describeIssues } from "./issues";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge } from "./types";
-import { ask, selection, tool } from "./ui";
+import { ask, buildLevel, selection, setTrackType, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
 
 export interface BpPicked {
@@ -251,6 +251,8 @@ export async function levelPicked(level: Level) {
   if (p.built || !p.edges.length) return;
   const a = await edit({ op: "edgesLevel", edges: p.edges, level }, true);
   const n = p.edges.length, skipped = a.skipped ?? 0, to = `level ${levelLabel(level)}`;
+  // T-2474: the track tool lays new track the way the player just set this
+  if (a.ok) buildLevel.value = level;
   if (!a.ok) say(n === 1 ? `This track cannot go to ${to}.` : `None of the ${n} pieces can go to ${to}.`, true);
   else if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
   else say(`${count(n, "piece", "pieces")} set to ${to}.`);
@@ -263,6 +265,7 @@ export async function hsrPicked(hsr: boolean) {
   if (p.built || !p.edges.length) return;
   const a = await edit({ op: "edgesHsr", edges: p.edges, hsr }, true);
   if (!a.ok) return;
+  setTrackType(hsr ? "hsr" : 2); // T-2474, as for the level
   const n = p.edges.length, skipped = a.skipped ?? 0, to = hsr ? "high-speed track" : "regular track";
   if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
   else say(`${count(n, "piece", "pieces")} set to ${to}.`);

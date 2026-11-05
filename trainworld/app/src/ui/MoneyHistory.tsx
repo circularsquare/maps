@@ -153,6 +153,8 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const marks = binned ? [] : list.map((e) => calendarAt(hours ? e.at * 3600 + 1800 : e.at * 86400 + 43200 - shift, only));
 
   const first = list[0];
+  // T-2487: the titles say which scope they are, being a scroll below the switch that sets it
+  const where = zone ? cityById(zone).name : "all cities";
   return (
     <>
       <div class="h">
@@ -169,7 +171,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
           />
         </span>
       </div>
-      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span></span><span class="right muted">{usd(top)}{per}</span></div>
+      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span> in {where}</span><span class="right muted">{usd(top)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
@@ -184,7 +186,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
       </svg>
-      <div class="hist-title small"><span>Train rides</span><span class="right muted">{count(rideTop)}{per}</span></div>
+      <div class="hist-title small"><span>Train rides in {where}</span><span class="right muted">{count(rideTop)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {

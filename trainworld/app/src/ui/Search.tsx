@@ -19,7 +19,7 @@ import type { LineInput } from "../game/types";
 import { world } from "../game/world";
 import { live } from "../map/live";
 import { keyIsTheirs } from "./keys";
-import { locateLine, locateStation } from "./locate";
+import { locateLine, locateStation, playerMovedCamera } from "./locate";
 import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
 
@@ -40,6 +40,7 @@ const PLACE_KIND: Record<string, string> = {
 export function goTo(hit: SearchHit) {
   const map = live.map;
   const selecting = tool.peek() === "select";
+  playerMovedCamera();
   // T-975: a city or place picked in a realm not shown shows it
   if (hit.kind === "city") {
     showZoneRealm(hit.city.id);

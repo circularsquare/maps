@@ -343,8 +343,9 @@ post-it at the map's upper right under the day and night picture, 240 px wide, n
 bold) and an x (no hover; screen readers get "Close the tutorial"), then a row of 12 px type per step: a
 12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
 carry a tick; the step in hand (the first not done) is in the text colour, steps after it muted. Ticks
-show at once. Some steps have a note, shown in the muted colour under the step's words only while it is
-the step in hand. The search results open over it. Two cards, one after the other.
+show at once. Some steps have a note under the step's words: in the muted colour while it is the step
+in hand, and once the step is ticked it stays for the rest of the card, greyer (the muted colour 65% over
+the background) [T-2473]; a step after the one in hand, not yet ticked, shows none. The search results open over it. Two cards, one after the other.
 
 **The first card**, reading demand, then laying a line:
 
@@ -620,7 +621,8 @@ with its minus when negative; hovers may give more. History
 [T-447, `ui/MoneyHistory.tsx`]: a 1d / 30d / All time switch [T-2271] (All time by default, kept while
 the game is open, no hovers): 1d is the past 24 hours, hourly, 30d the past 30 days and All time every
 day, daily; over two charts, each on a
-linear scale from zero [T-2181]. The first, "Revenue and expenses" (revenue blue and expenses red in every
+linear scale from zero [T-2181], each title ending with its scope, the place's name or "all cities", since
+the place switch is a scroll above [T-2487]. The first, "Revenue and expenses in New York" (revenue blue and expenses red in every
 theme, the tokens `--revenue` and `--expense`, T-1111), has two bars side by side in each column
 [T-2340, T-2444]: fares and running costs with upkeep and loan payments (T-867), the bars filling the column
 less a 1.5 px gap before the next (the train rides' bars likewise). A pale red bar of the one-off costs (new
@@ -628,7 +630,7 @@ trains and construction; none when there are none) sits on top of the running co
 [T-2463]. Fares and running costs set the scale, the larger of the two;
 the stack's one-off part is on the same scale, cut at the top with a red cap when it would go past, so a build day does
 not flatten the others [T-452]; the top's figure at the right. Then
-train rides [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
+"Train rides in all cities" (or the place's) [T-565] as bars up from zero, the top's figure at the right (hover: it exactly), the
 region's with the place on and the network's with the globe, from the same ledger entries (rides
 are counted as in track-and-service.md 6.4). Days are the ledger's, one each in order (T-488), every
 day kept (T-2143); while they span more than 90 days a column is a week (Monday to Sunday), past 90
@@ -1070,7 +1072,10 @@ registry centre and zoom, or over New York with none [T-310].
   zone are fitted in view instead (padding 70 px, no closer than zoom 12). A save with no stations opens on the zone it started in, else
   the world map. The view is not saved. A pick from this menu, a slot opened in the saves panel and
   an imported file fit; `?continue=1` and a raw `import` message (checks) keep the camera
-  [T-895; `startOpenFit` in `ui/locate.ts`, `fitNextGame` in `workers/clockClient.ts`].
+  [T-895; `startOpenFit` in `ui/locate.ts`, `fitNextGame` in `workers/clockClient.ts`]. Once the
+  player has moved the camera since the pick (a drag, the wheel, a pinch, a rotation, the arrow keys, a
+  search pick or a Cities tab double click), the game being entered fits it no more, so the player can
+  look round while it loads [T-2477; `enterGame` in `ui/locate.ts`].
 - URL switches that already say which game skip it: `?new=1` (a new game owning no slot; normal
   in New York, or `&mode=sandbox` and `&city=<zone id>`),
   `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` (the game opened last).
