@@ -18,8 +18,9 @@ const MAX_TILES = { 3: 40, 1: 20 };
 // (taking the message and handing the lines to the map), workerMs the worker's own
 const riverLog = window.riverLog = [];
 
-// Adds the source and layer (before layer `before`) and keeps them to the view while shown.
-export function riverLines(map, base, before) {
+// Adds the source and layer (before layer `before`) and keeps them to the view while shown;
+// viewBox() gives the view's {west, east, north, south} (the page's, kept sane on a globe).
+export function riverLines(map, base, before, viewBox) {
     map.addSource('rivers', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, tolerance: 0.3 });
     map.addLayer({ id: 'rivers', type: 'line', source: 'rivers', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
@@ -54,14 +55,14 @@ export function riverLines(map, base, before) {
 
     async function update() {
         if (!on) return;
-        const z = map.getZoom(), minQ = MIN_Q(z), b = map.getBounds();
+        const z = map.getZoom(), minQ = MIN_Q(z), b = viewBox();
         let f = TIER(z), want = null;
         if (f !== 10) {
             const ix = await getIndex(), rl = ix.rivers[f], TX = ix.tilesX;
             // the view and half of it again round it, in whole tiles
-            const pw = (b.getEast() - b.getWest()) / 2, ph = (b.getNorth() - b.getSouth()) / 2;
-            const r0 = Math.max(0, Math.floor((85 - b.getNorth() - ph) / 5)), r1 = Math.min(28, Math.floor((85 - b.getSouth() + ph) / 5));
-            const c0 = Math.floor((b.getWest() - pw + 180) / 5), c1 = Math.floor((b.getEast() + pw + 180) / 5);
+            const pw = (b.east - b.west) / 2, ph = (b.north - b.south) / 2;
+            const r0 = Math.max(0, Math.floor((85 - b.north - ph) / 5)), r1 = Math.min(28, Math.floor((85 - b.south + ph) / 5));
+            const c0 = Math.floor((b.west - pw + 180) / 5), c1 = Math.floor((b.east + pw + 180) / 5);
             want = [];
             for (let tr = r0; tr <= r1; tr++) for (let tc = c0; tc <= c1 && tc - c0 < TX; tc++) {
                 const tcw = ((tc % TX) + TX) % TX;

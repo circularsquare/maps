@@ -13,13 +13,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - 8800 serves this folder live (`localhost:8800/isochrone/`), no build step.
 - C: has ~15 GB free: world-scale OSM work fetches, reduces and deletes region by region.
 - Cores: the shared ledger was near its cap all day (trainworld); agents run on 1 core each.
-- Uncommitted and the roads agent's: docs/roads.md, tools/roads/, notes/T-010/.
+- T-010 stage 1 landed (57892f55): tools/roads/, rule share3, docs/roads.md waiting on Anita's
+  review. Roads agent addfc90633db2c1e0 (Opus) is idle; resume it for T-053 (rerun regions.py
+  first so central-america is in the list).
 
 ## In flight
-- T-010 stage 1, roads design: agent addfc90633db2c1e0 (Opus). Compare finished (all 8 tiles in
-  notes/T-010/compare.log; `any` and `share3` best in Romania). Asked ~15:20 to write
-  notes/T-010.md, settle the rule in docs/roads.md and explain why `any` does well on our surface.
-  Settled already: add central-america; keep 100 m road bits for every tile. Stage 2 is T-053.
 - T-059 globe: agent abe9a2322cac44954 (Opus), started ~15:30. Owns index.html, js/paint.js,
   js/riverlines.js, js/riverworker.js, js/windows.js / session.js view handling, smoke.mjs. Done
   when T-059 is in ARCHIVE.md and t059_*.png exist.
@@ -29,7 +27,7 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 (none)
 
 ## Next
-1. Land T-010 stage 1, then Anita reviews docs/roads.md; then T-053 (world roads, ~4 h on two
+1. Anita reviews docs/roads.md (asked 2026-11-05 ~16:00); then T-053 (world roads, ~4 h on two
    cores) with T-057's 100 m road bits in the same pass; then T-028 (page on our own surface).
 2. Land T-059 globe.
 3. Anita's pick for T-060 (crisp / diag / hex); T-065 creek-weaving and T-056 rays after she looks.

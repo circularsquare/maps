@@ -75,7 +75,8 @@ bridges, the 1 km terrain factor (`docs/fine.md`). Which tiles get 100 m worldwi
 
 ## 5. Interface
 
-House style (nycriders): bare title, legend panel bottom right, `i` panel bottom left with the
+The map is a globe when zoomed out and turns flat (Web Mercator) between zoom 11 and 12,
+MapLibre's own switch-over; there is no projection switch. House style (nycriders): bare title, legend panel bottom right, `i` panel bottom left with the
 sources, and beside it the mode buttons (walking, canoe; icons with hovers), which re-solve from
 the same start and keep `?mode=canoe` in the URL. Click sets the start. Hover shows the time to
 the point, on a canoe start how much was paddled and carried, survival while hazard is on, and

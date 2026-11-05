@@ -1,5 +1,6 @@
 # Archive
 
+- T-059 [P2] Globe. Done 2026-11-05: MapLibre 4.7.1 to 5.24.0 with the globe projection; the canvas time layers, corridors, routes, rivers and hill shading draw on it unchanged; windows follow a view clamped round the centre (`viewBox`); no hover or click off the globe. notes/T-059.md.
 - T-064 [P1] Corridor speeds are noisy. Done 2026-11-05: river steps were measured by straight cell length, not river length (0.2-15 km of river per 9 km step); now river length, a 13-edge window, cut hysteresis, nearest-line hover. Amazon main stem reads 10.9-11.3 km/h; notes/T-064.md.
 - T-048 [P3] River lines off the main thread. Done 2026-11-05: `js/riverworker.js` fetches, parses and joins the river files; the page's own time per rebuild fell from 146/607/154 ms (zoom 4/7/9) to 36/97/31, the rest being MapLibre's `setData`; look unchanged.
 - T-062 [P2] Corridors coloured by speed. Done 2026-11-05: one dark red to yellow ramp by km/h along each stretch (`SPEED_EDGES` in `js/corridors.js`), width still by trips; hovering a line shows "walked/carried/paddled, N km/h" in the cursor box; paddled blue dropped.

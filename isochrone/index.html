@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
 <style>
 html, body { margin: 0; height: 100%; background: #0a0a0a; color: #ccc;
     font: 400 12px/1.4 'Nunito', system-ui, sans-serif; }
@@ -96,7 +96,7 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
     <p><span class="walk-only">Seas and lakes cannot be crossed.</span> Ponds under 5 km² are waded at 1 km/h. Danger, weather, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script>
 // ---- bands: walking hours, 8 hours to a walking day ----
 const BANDS = [
@@ -164,6 +164,34 @@ const map = new maplibregl.Map({
     attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+// A globe zoomed out, flat Mercator from zoom 12 (MapLibre's own switch-over). The canvas sources
+// are drawn on the globe's tile mesh, so they stay painted in Mercator y (T-059).
+map.on('style.load', () => map.setProjection({ type: 'globe' }));
+
+// The view windows and river tiles are made for: {west, east, north, south}, west and east may
+// pass ±180. On a globe getBounds spans every longitude once a pole shows, and a tilted view
+// reaches the horizon, so each side is kept within 1.5 times what an untilted view at this zoom
+// shows round the centre.
+function viewBox() {
+    const b = map.getBounds(), c = map.getCenter(), z = map.getZoom();
+    const deg = 360 / (512 * 2 ** z);     // degrees of longitude per pixel at the centre, any latitude
+    const el = map.getContainer();
+    const hw = 1.5 * deg * el.clientWidth / 2;
+    const hh = 1.5 * deg * Math.cos(c.lat * Math.PI / 180) * el.clientHeight / 2;
+    let west = b.getWest(), east = b.getEast();
+    if (east - west >= 359.9) { west = c.lng - hw; east = c.lng + hw; }
+    else {
+        const s = Math.round((c.lng - (west + east) / 2) / 360) * 360;
+        west = Math.max(west + s, c.lng - hw); east = Math.min(east + s, c.lng + hw);
+    }
+    return { west, east, north: Math.min(b.getNorth(), c.lat + hh), south: Math.max(b.getSouth(), c.lat - hh) };
+}
+// Whether a screen point is on the planet (off the globe, unproject gives the nearest point on
+// its rim, which projects back elsewhere).
+function onPlanet(p) {
+    const q = map.project(map.unproject(p));
+    return Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 2;
+}
 
 let meta = null;
 let originMarker = null;
@@ -280,7 +308,7 @@ function addRelief(firstSymbol) {
                  'hillshade-highlight-color': 'rgba(255,255,255,0.5)', 'hillshade-accent-color': '#000' } },
         map.getLayer('water') ? 'water' : firstSymbol);
     import('./js/riverlines.js').then(m => {
-        rivers = m.riverLines(map, CANOE_BASE, map.getLayer('corridors-edge') ? 'corridors-edge' : firstSymbol);
+        rivers = m.riverLines(map, CANOE_BASE, map.getLayer('corridors-edge') ? 'corridors-edge' : firstSymbol, viewBox);
         rivers.set(riversOn);
     });
 }
@@ -389,7 +417,7 @@ function addLayers() {
 const EMPTY = { type: 'FeatureCollection', features: [] };
 
 // Send the canvas to the GPU once. MapLibre only re-reads a canvas source while it "plays";
-// play until a frame has drawn it, then stop (4.7.1 internals: tiles, _playing).
+// play until a frame has drawn it, then stop (4.7.1 and 5.24.0 internals: tiles, _playing).
 function upload(lv) {
     const src = map.getSource(lv.id);
     src.play();
@@ -571,9 +599,7 @@ function setOrigin(lng, lat) {
 
 let viewTimer = 0;
 function sendView() {
-    const b = map.getBounds();
-    worker.postMessage({ type: 'view', west: b.getWest(), east: b.getEast(),
-                         north: b.getNorth(), south: b.getSouth(), zoom: map.getZoom() });
+    worker.postMessage({ type: 'view', ...viewBox(), zoom: map.getZoom() });
 }
 map.on('moveend', () => { clearTimeout(viewTimer); viewTimer = setTimeout(sendView, 200); });
 
@@ -601,7 +627,7 @@ function timeAt(lng, lat) {
     return Infinity;
 }
 
-map.on('click', e => setOrigin(e.lngLat.lng, e.lngLat.lat));
+map.on('click', e => { if (onPlanet(e.point)) setOrigin(e.lngLat.lng, e.lngLat.lat); });
 
 // ---- hover: the time at once, then the route and its split from the worker ----
 // One route request in flight at a time; the pointer's latest point goes when it comes back.
@@ -696,16 +722,18 @@ function drawTip() {
 
 function hover() { if (pointer) { drawTip(); askRoute(); } }
 
+function leave() {
+    pointer = null; split = '';
+    tip.style.display = 'none';
+    setRoute(EMPTY);
+}
 map.on('mousemove', e => {
+    if (!onPlanet(e.point)) { if (pointer) leave(); return; }
     pointer = { lng: e.lngLat.lng, lat: e.lngLat.lat, x: e.point.x, y: e.point.y };
     drawTip();
     if (lineAt()) { split = ''; setRoute(EMPTY); } else askRoute();
 });
-map.getCanvas().addEventListener('mouseleave', () => {
-    pointer = null; split = '';
-    tip.style.display = 'none';
-    setRoute(EMPTY);
-});
+map.getCanvas().addEventListener('mouseleave', leave);
 
 Promise.all([loadGrid(), new Promise(res => map.once('load', res))]).then(() => {
     addLayers();

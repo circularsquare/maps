@@ -30,7 +30,10 @@ rebuilt from the tif.
 All of this runs in the worker (`worker.js`, `js/`); the page only shows what it sends.
 
 1. A click solves L10 for the whole world and paints it. A newer click cancels an older solve.
-2. The page sends the view (bounds and zoom) 200 ms after each camera move ends.
+2. The page sends the view (bounds and zoom) 200 ms after each camera move ends. Each side of
+   the bounds is kept within 1.5 times what an untilted view at that zoom shows round the
+   centre (`viewBox`), since on the globe a tilted view reaches the horizon and a visible pole
+   makes the bounds every longitude. River tiles are picked from the same box.
 3. Below zoom 5 only L10 shows. From zoom 5 the worker solves an **L3 window**: the view plus a
    quarter of its size on each side. From zoom 7 it solves an L3 window of the view plus its
    full size on each side (three times as wide and tall), then an **L1 window** of the view plus
@@ -55,7 +58,9 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
    page puts each into its own MapLibre canvas source (`walk`, `walk3`, `walk1`, finest on top,
    all below the basemap's first label layer, `raster-fade-duration: 0`, nearest resampling, so
    cells are sharp squares). The
-   canvas is uploaded to the GPU once per change, not every frame.
+   canvas is uploaded to the GPU once per change, not every frame. MapLibre 5 draws a canvas
+   source on the projection's tile mesh, linear in Mercator within the tile, so on the globe the
+   same canvases bend onto the sphere unchanged.
 9. **Holes.** Where a finer window is shown, the coarser canvas has that rectangle cleared, so
    coarse colours do not show through the window's water or unreached land. The hole is rounded
    inwards to whole canvas pixels.

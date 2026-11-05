@@ -5,6 +5,8 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Globe on MapLibre 5.24.0, the time layers unchanged** (T-059). 5.24.0 is the last 5.x (2026-04-23); 6.x (6.16.0 now) was not tried. MapLibre 5 draws canvas sources on the projection's subdivided tile mesh, linear in Mercator within the tile, so the Mercator-y canvases bend onto the sphere as they are: no plate carrée repaint, raster tiles or custom layer. The globe is always on (no switch) and turns flat at zoom 11-12 by MapLibre's own rule. Revisit if a later MapLibre stops reprojecting canvas sources, or for 6.x. notes/T-059.md.
+
 - **Corridor speed is along the river and smoothed** (T-064). A river step counts the river's own length (so a reach reads its model speed, not its lower over-ground speed), averaged over 6 edges each way of the same mode; lines are cut for speed only 0.4 km/h past a class edge, and coloured by their own mean km/h. Revisit the window (`SMOOTH`) if real changes, like a stretch of forest at L1, read too blurred.
 
 - **Window edge strip fixed by more canvas rows, not by moving the hole** (T-037). `paint` makes up to 4 canvas rows per cell row (capped at 20 M pixels, so L10 gets 2), because rounding the hole outwards opens a gap and inwards doubles the colour; a hairline of about 1 px remains. Revisit if memory on phones matters.

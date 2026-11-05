@@ -106,7 +106,7 @@ Subagents never commit. **Pushing needs Anita's word.**
 
 ## Build and run
 
-- `index.html` + `worker.js` (a module worker over `js/`): the page. Plain JS, MapLibre GL 4.7.1 from unpkg, no build step.
+- `index.html` + `worker.js` (a module worker over `js/`): the page. Plain JS, MapLibre GL 5.24.0 from unpkg (globe projection), no build step.
   The worker owns the grids and runs the searches; the main thread only paints and handles input.
 - `tools/build_grid.py` makes the coarse world grid (seconds); `tools/build_tiles.py` the L3 and
   L1 tiles (~3 min). Details: `docs/code-map.md`.

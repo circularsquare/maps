@@ -81,7 +81,7 @@ try {
     try {
       await page.waitForFunction(() => window.corrLog?.some((e) => e.level === 10), undefined, { timeout: 30000, polling: 100 });
       const c = await page.evaluate(() => window.corrLog.find((e) => e.level === 10));
-      const drawn = await page.evaluate(() => map.getSource('corridors')._data.features.length);
+      const drawn = await page.evaluate(async () => (await map.getSource('corridors').getData()).features.length);
       await page.click('#corrbtn');
       const off = await page.evaluate(() => map.getLayoutProperty('corridors', 'visibility'));
       await page.click('#corrbtn');
