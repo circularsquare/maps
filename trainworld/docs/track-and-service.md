@@ -1446,8 +1446,8 @@ crowding rounds. There are no signals (SPEC 2.1).
 ### 6.7 Bus lines
 
 A bus line (T-1464, T-1465; design notes/T-1445.md) is a line with no track: the player clicks points
-and between two clicks the route follows the basemap's roads; the app refuses a point they do not
-reach (T-2451). It shares lines' ids, schedules (buses or a headway per
+and between two clicks the route follows the basemap's roads, motorways and their bridges and tunnels
+included (T-2469); the app refuses a point they do not reach (T-2451, T-2467). It shares lines' ids, schedules (buses or a headway per
 demand level), trips, the boarding account and the fare curve; a bus is one 12 m vehicle.
 
 - **The route** is points, each with two bits: a corner (the player clicked it) and a road stretch
@@ -1499,9 +1499,10 @@ searches water.
   water). OSM's water stops at many canal bridges: along a `transportation` line marked as a bridge, land
   with water both ways across the line, 60 m or less in all, counts as water (a viaduct along a shore has
   water on one side only and stays land).
-- **Ports**: a click on land within 150 m of water gives a landing on the shore (where the line from the
-  click first meets water) and a berth, the nearest water with 6 m of room within 300 m of it, where routes
-  start and end. No water within 150 m: refused (`far-from-water`).
+- **Ports**: a click within 200 m of the shore, on land or on the water (T-2468), gives a landing on the
+  shore (where the line from the click to the nearest cell of the other kind changes kind) and a berth,
+  the nearest water with 6 m of room within 300 m of it, where routes start and end. No shore within
+  200 m: refused (`far-from-water` on land, `on-water` on the water).
 - **A leg** between two berths is searched on a raster of its box (the two ends plus 35% of their distance,
   at least 800 m round, then 3 km or their distance round if the waters do not meet), its cell the finest
   of 2.5 m or more that keeps the raster under 1.5M cells. A cell is sailable if its centre is 5 m or more

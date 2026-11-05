@@ -1,6 +1,7 @@
-// Drawing a ferry line (T-2194, design notes/T-2177.md 3.2): the player places ports only. A click on land
-// by the water puts a new port on the shore (its landing, and its berth in the water, from the water
-// worker, `ferry/ferryWater.ts`); a click on a port the network has stops there. Between consecutive ports
+// Drawing a ferry line (T-2194, design notes/T-2177.md 3.2): the player places ports only. A click near
+// the shore, on land or on the water, puts a new port on the nearest shore (its landing, and its berth in
+// the water, from the water worker, `ferry/ferryWater.ts`), shown under the pointer before the click
+// (T-2468); a click on or near a port the network has stops there. Between consecutive ports
 // the worker finds the route over the basemap's water (T-2192); a leg it cannot find is drawn straight and
 // red, and the line cannot be made until it is moved. With an existing line's ports loaded
 // (`begin(line, ...)`) finishing redraws it (`ferryRoute`), else it makes the line (`addFerryLine`).
@@ -25,7 +26,7 @@ import { edit, say, world } from "../game/world";
 import { metresBetween } from "../game/walks";
 import { keyIsTheirs } from "../ui/keys";
 import { FERRY_KEY } from "../ui/toolKeys";
-import { FerryWater, type LineRoute } from "../ferry/ferryWater";
+import { FerryWater, type LineRoute, type PortSnap } from "../ferry/ferryWater";
 import type { FerryPortIn } from "../workers/protocol";
 import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
@@ -45,7 +46,7 @@ interface DraftPort {
 
 /** What a click where the pointer is would do. */
 type Under = { kind: "handle"; i: number } | { kind: "port"; node: number; name: string; landing: Pt; berth: Pt }
-  | { kind: "shore" } | { kind: "water" } | { kind: "far" } | { kind: "unknown" };
+  | { kind: "shore"; landing: Pt; berth: Pt } | { kind: "water" } | { kind: "far" } | { kind: "unknown" };
 
 /** a click this near (px) to a port's circle is on it; a port within `PORT_NEAR_M` of the click too */
 const HANDLE_PX = 10;
@@ -86,7 +87,8 @@ export class FerryDraw {
   private pt: { x: number; y: number } | null = null;
   private under: Under = { kind: "unknown" };
   private probing = false;
-  private probed: { at: Pt; water: boolean; shore: boolean } | null = null;
+  /** where a click at `at` would put a port (T-2468: the pointer's spot is snapped as a click is) */
+  private probed: { at: Pt; snap: PortSnap } | null = null;
   private line: number | null = null;
   private dirty = false;
   private colour = "#1a7fb0";
@@ -236,6 +238,20 @@ export class FerryDraw {
     return hit;
   }
 
+  /** The network's port whose landing is within `PORT_NEAR_M` of a point, the nearest. */
+  private portNear(p: Pt): Extract<Under, { kind: "port" }> | null {
+    let best = PORT_NEAR_M, hit: Extract<Under, { kind: "port" }> | null = null;
+    for (const s of world.peek()?.save.stations ?? []) {
+      if (!s.port) continue;
+      const dm = metresBetween(s.lng, s.lat, p.lng, p.lat);
+      if (dm <= best) {
+        best = dm;
+        hit = { kind: "port", node: s.num, name: s.name, landing: { lng: s.lng, lat: s.lat }, berth: { lng: s.port[0], lat: s.port[1] } };
+      }
+    }
+    return hit;
+  }
+
   /** What a click at a screen point would do, as far as is known now (the water is asked after). */
   private underAt(px: number, py: number, at: Pt, touch = false): Under {
     const i = this.handleAt(px, py, touch ? TOUCH_HANDLE_PX : HANDLE_PX);
@@ -244,25 +260,31 @@ export class FerryDraw {
     if (port) return port;
     // the last answer stands while a newer one is asked, so the tag stays up and only its text changes (T-2273)
     const p = this.probed;
-    return p ? { kind: p.water ? "water" : p.shore ? "shore" : "far" } : { kind: "unknown" };
+    return p ? this.underOf(p.snap) : { kind: "unknown" };
   }
 
-  /** Ask the worker what is under the pointer; the newest position wins. */
+  private underOf(s: PortSnap): Under {
+    if (s.ok) {
+      const landing = { lng: s.landing[0], lat: s.landing[1] };
+      // a new port this close to one the network has would be that port
+      return this.portNear(landing) ?? { kind: "shore", landing, berth: { lng: s.berth[0], lat: s.berth[1] } };
+    }
+    return { kind: s.reason === "on-water" ? "water" : s.reason === "tiles" ? "unknown" : "far" };
+  }
+
+  /** Ask the worker where a click at the pointer would put a port; the newest position wins. */
   private probe() {
     if (this.probing || !this.at) return;
     const at = this.at;
     this.probing = true;
-    void this.water.probe([at.lng, at.lat]).then((r) => {
+    void this.water.port([at.lng, at.lat]).then((snap) => {
       this.probing = false;
-      if (r) this.probed = { at, ...r };
+      if (snap) this.probed = { at, snap };
       if (!this.active) return;
       const k = this.under.kind;
-      if (r && k !== "handle" && k !== "port") {
-        const next = r.water ? "water" : r.shore ? "shore" : "far";
-        if (next !== k) {
-          this.under = { kind: next };
-          this.place();
-        }
+      if (snap && k !== "handle" && k !== "port") {
+        this.under = this.underOf(snap);
+        this.place();
       }
       if (this.at && !same(this.at, at)) this.probe();
     });
@@ -299,11 +321,17 @@ export class FerryDraw {
     }
     this.busy = true;
     try {
-      const snap = await this.water.port([at.lng, at.lat]);
+      // the spot the pointer's preview showed, else asked now
+      const snap = this.probed && same(this.probed.at, at) ? this.probed.snap : await this.water.port([at.lng, at.lat]);
       if (!this.active) return;
       if (!snap || (!snap.ok && snap.reason === "tiles")) return void say("The water here did not load. Try again.", true);
       if (!snap.ok) return void say(snap.reason === "on-water" ? `${ON_WATER}.` : `${FAR_FROM_WATER}.`, true);
       const landing = { lng: snap.landing[0], lat: snap.landing[1] }, berth = { lng: snap.berth[0], lat: snap.berth[1] };
+      const near = this.portNear(landing);
+      if (near) {
+        if (this.ports.some((p) => p.node === near.node)) return;
+        return this.add({ node: near.node, landing: near.landing, berth: near.berth, name: near.name });
+      }
       const taken = () => new Set([...(world.peek()?.save.stations.map((s) => s.name) ?? []), ...this.ports.map((p) => p.name)]);
       const p: DraftPort = { node: null, landing, berth, name: "" };
       p.naming = newStationName(this.map, landing.lng, landing.lat, null, taken).then((n) => (p.name = n), () => (p.name = "Port"));
@@ -539,8 +567,14 @@ export class FerryDraw {
     const end = this.ports[this.endIndex()];
     const u = this.under;
     if (end && this.at && !touchInput.peek() && (u.kind === "shore" || u.kind === "port")) {
-      const a = xy(end.berth), b = xy(u.kind === "port" ? u.landing : this.at);
+      const a = xy(end.berth), b = xy(u.berth);
       parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
+    }
+    // where a click would put a new port (T-2468), its landing and berth as a port's, in the ghost colour
+    if (this.at && !touchInput.peek() && u.kind === "shore") {
+      const a = xy(u.landing), b = xy(u.berth);
+      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" style="stroke:var(--ferry-ghost);stroke-width:2.5px"/>`);
+      parts.push(`<circle cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="5.5" style="fill:var(--map-land);stroke:var(--ferry-ghost);stroke-width:2.5px"/>`);
     }
     // each port: a line from its landing to its berth and a station circle; the active end larger
     const ei = this.endIndex();

@@ -58,8 +58,9 @@ const MAX_TILES = 80;
 const FINE_CELL_M = 5;
 /** half the side of each end's fine box, m */
 const END_M = 700;
-/** a port click is at most this far from water, m; its berth at most `BERTH_REACH_M` from its landing */
-export const PORT_REACH_M = 150;
+/** a port click is at most this far from the shore, on land or on the water (T-2468), m; its berth at
+ * most `BERTH_REACH_M` from its landing */
+export const PORT_REACH_M = 200;
 const BERTH_REACH_M = 300;
 /** a berth's room, m: a little more than `HALF_M`, so the coarser raster of a long leg still finds it */
 const BERTH_ROOM_M = 6;

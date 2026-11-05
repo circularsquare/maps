@@ -1,13 +1,17 @@
 // The roads a bus route follows (T-1465, notes/T-1445.md "Stage 2"). Between two clicked points the
-// route takes the shortest path over the basemap's zoom 14 roads (`roadGraph.ts`), counting road length
+// route takes the shortest path over the basemap's zoom 14 roads and motorways (`roadGraph.ts`), counting road length
 // as it is; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
 // cap, or too long to search), and the tool keeps it out of a route. The tiles are fetched here,
 // straight from the basemap's own tile server, because the map holds only the zoom it is showing; they
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, RoadGraph, WORLD, gxOf, gyOf, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
-import { decodeRoads, type RoadLines } from "./roadTiles";
+import { EXTENT, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
+import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
+
+/** The roads a bus drives: the bus classes, and motorways (T-2469: most long bridges and tunnels are
+ * motorways, and their approaches too), which a click lands on only where no street is near. */
+const busRoad: RoadKeep = (cls) => (BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : 0);
 
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
@@ -15,6 +19,11 @@ export const SNAP_M = 100;
  * a short leg may still go round a block or to the next crossing. */
 export const DETOUR = 3;
 const DETOUR_M = 1000;
+/** A free end landing on a road other than the nearest pays this many metres of road for each metre it
+ * is from the click (`snapCost`), so the nearest reachable road wins unless another saves far more road;
+ * at most `MAX_ALTS` other roads are tried. */
+const SNAP_PEN = 3;
+const MAX_ALTS = 400;
 /** The route is thinned to within this (ground metres) of the road. */
 const THIN_M = 2.5;
 /** Tiles beyond which a leg is not searched (refused as `long`). */
@@ -116,7 +125,7 @@ export class BusRoads {
       const tpl = await this.url();
       if (tpl) {
         const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
-        if (r.status === 200) rl = decodeRoads(await r.arrayBuffer());
+        if (r.status === 200) rl = decodeRoads(await r.arrayBuffer(), busRoad);
         else if (r.status === 404 || r.status === 204) rl = { extent: EXTENT, lines: [] };
       }
     } catch {
@@ -214,8 +223,11 @@ export class BusRoads {
 
   /** The route between two clicked points: along the roads when a road path under the detour cap joins
    * the roads they land on, else `refused` (straight). Not `ready` while tiles load (straight
-   * meanwhile); the callback given at construction runs when they have. */
-  leg(a: Pt, b: Pt): Leg {
+   * meanwhile); the callback given at construction runs when they have. The `free` end (a point being
+   * placed or moved) may land on another road within `SNAP_M` where the nearest has no path (T-2467),
+   * each metre further from the click costing `SNAP_PEN` of road; the leg's first or last point is
+   * where it landed. */
+  leg(a: Pt, b: Pt, free: "a" | "b" | null = null): Leg {
     const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
     const mpu = metresPerUnit((ay + by) / 2);
     const line = (pa: [number, number], pb: [number, number], ready: boolean, refused?: BusRefusal): Leg => ({
@@ -232,7 +244,7 @@ export class BusRoads {
     if (tiles > MAX_TILES) return line([ax, ay], [bx, by], true, "long");
     if (!this.need(x0, y0, x1, y1)) return line([ax, ay], [bx, by], false);
     this.fresh();
-    const key = `${a.lng},${a.lat},${b.lng},${b.lat}`;
+    const key = `${a.lng},${a.lat},${b.lng},${b.lat},${free}`;
     const hit = this.legs.get(key);
     if (hit) return hit;
     const t0 = performance.now();
@@ -241,7 +253,20 @@ export class BusRoads {
     let out = line(pa, pb, true, sa && sb ? "path" : "far");
     if (sa && sb) {
       const direct = Math.hypot(pa[0] - pb[0], pa[1] - pb[1]) * mpu;
-      const path = this.graph.path(sa, sb, Math.max(direct * DETOUR, direct + DETOUR_M));
+      const cap = Math.max(direct * DETOUR, direct + DETOUR_M);
+      let path = this.graph.path(sa, sb, cap);
+      if (!path && free) {
+        // the nearest road has no path: another road near the free end may (searched from the fixed one)
+        const [fixed, near, fx, fy] = free === "b" ? [sa, sb, bx, by] : [sb, sa, ax, ay];
+        const alts = this.graph.snapsWithin(fx, fy, SNAP_M / mpu).slice(1, 1 + MAX_ALTS);
+        const got = alts.length ? this.graph.path(fixed, near, cap + SNAP_PEN * SNAP_M, alts, (c) => SNAP_PEN * this.graph.snapCost(c) * mpu) : null;
+        if (got && free === "a") {
+          const r: number[] = [];
+          for (let i = got.pts.length - 2; i >= 0; i -= 2) r.push(got.pts[i], got.pts[i + 1]);
+          got.pts = r;
+        }
+        path = got;
+      }
       if (path) {
         const pts = thin(path.pts, THIN_M / mpu);
         const ll: number[] = [];

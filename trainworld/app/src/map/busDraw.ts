@@ -1,8 +1,10 @@
 // Drawing a bus line (T-1464, design T-1445; editing T-1514): click points, no track. Between two
 // clicks the route follows the basemap's roads (T-1465, `busRoads.ts`); a click within 100 m of a road
-// lands on it, and a point the roads do not reach from its neighbour is refused (T-2451): a click or a
-// drag that would make such a leg is undone with the reason, and a leg found to have none once its
-// tiles load is drawn red and keeps the route from being saved. The clock worker
+// lands on the nearest the route reaches, and a point the roads do not reach from its neighbour is
+// refused (T-2451, T-2467): a click, drag or delete waits for the roads it needs, then is made or undone
+// with the reason. A leg is drawn along its roads or red and straight, never straight in the line's
+// colour; an older save's straight leg that finds no road stays red and keeps the route from being
+// saved. The clock worker
 // quotes the route as it is drawn (`busQuote`): road length, price and where the stops would go; the
 // stops and the tag by the pointer show that answer. With an existing line's route loaded
 // (`begin(line, ...)`) finishing redraws it (`busRoute`), else it makes the line (`addBusLine`).
@@ -52,6 +54,7 @@ const LONG_PRESS_MS = 500;
 
 /** a refusal as the tag over the pointer says it, and as the message after a click (T-2451) */
 const REFUSAL_TAG: Record<BusRefusal, string> = { far: "Too far from a road", path: "No road path found", long: "Too far between points" };
+const NOT_LOADED = "The roads here did not load. Try again.";
 const refusalSay = (r: BusRefusal) =>
   r === "far" ? `Too far from a road. Click within ${length(SNAP_M)} of one.` : r === "path" ? "No road path found." : "Too far between points. Add one on the way.";
 
@@ -90,11 +93,13 @@ const routeOf = (b: Built): number[] => {
 
 /** The route so far: every point with its kind, the corners (where each clicked point landed, one per
  * point in `pts` order, without the pointer's), whether every leg has its roads, and the run of route
- * points that is the leg to the pointer ([-1, -1] with none); the runs of the placed legs with no road
- * (`bad`), and why the pointer's leg, or the pointer alone before the first point, would be refused. */
+ * points that is the leg to the pointer ([-1, -1] with none); each leg's run of points and how it is
+ * drawn (`runs`: along its roads, red and straight with no road or none found yet, or not at all while
+ * the pointer's waits for its roads), and why the pointer's leg, or the pointer alone before the first
+ * point, would be refused. */
 interface Built {
   ll: number[]; kinds: number[]; corners: Pt[]; ready: boolean; dim: [number, number]; sig: string;
-  bad: [number, number][]; hoverRefused: BusRefusal | null;
+  runs: { from: number; to: number; draw: "road" | "bad" | "none" }[]; hoverRefused: BusRefusal | null; hoverRoad: boolean;
 }
 
 export class BusDraw {
@@ -145,7 +150,7 @@ export class BusDraw {
       // a held finger makes one too: its own long press has dealt with it (T-1517)
       if (touchInput.peek()) return;
       const i = this.handleAt(e.point.x, e.point.y);
-      if (i >= 0) this.remove(i);
+      if (i >= 0) void this.remove(i);
       else this.back();
     });
     // capture: before MapLibre's own handlers, so a press on a handle does not pan the map
@@ -262,14 +267,14 @@ export class BusDraw {
     let hoverLeg: Leg | null = null;
     const end = this.endPt();
     if (hover && end) {
-      hoverLeg = this.head ? this.roads.leg(hover, end) : this.roads.leg(end, hover);
+      hoverLeg = this.head ? this.roads.leg(hover, end, "a") : this.roads.leg(end, hover, "b");
       if (this.head) legs.unshift(hoverLeg);
       else legs.push(hoverLeg);
     }
     const ll: number[] = [], kinds: number[] = [], corners: Pt[] = [];
     let ready = true;
     const dim: [number, number] = [-1, -1];
-    const bad: [number, number][] = [];
+    const runs: Built["runs"] = [];
     let hoverRefused: BusRefusal | null = hoverLeg?.refused ?? null;
     if (!legs.length) {
       // one corner, or the pointer alone: where it would land
@@ -301,10 +306,13 @@ export class BusDraw {
       if (isHover) {
         dim[0] = from;
         dim[1] = kinds.length;
-      } else if (leg.refused) bad.push([from, kinds.length]);
+      }
+      // never a straight leg in the line's colour (T-2467): the pointer's draws nothing until its roads are in
+      runs.push({ from, to: kinds.length, draw: leg.road ? "road" : isHover && !leg.ready ? "none" : "bad" });
       if (!(isHover && !this.head)) corners.push({ lng: leg.pts[n - 2], lat: leg.pts[n - 1] });
     });
-    const b: Built = { ll, kinds, corners, ready, dim, bad, hoverRefused, sig: `${key}|${ll.length}|${ready}|${hoverLeg ? hoverLeg.road : ""}` };
+    const hoverRoad = !!hoverLeg?.road;
+    const b: Built = { ll, kinds, corners, ready, dim, runs, hoverRefused, hoverRoad, sig: `${key}|${ll.length}|${ready}|${hoverLeg ? hoverLeg.road : ""}` };
     if (this.builds.size > 40) this.builds.clear();
     this.builds.set(key, b);
     return b;
@@ -329,9 +337,9 @@ export class BusDraw {
   }
 
   private ask() {
-    // a leg to the pointer that would be refused is left out of the quote
+    // a leg to the pointer is quoted only once it follows roads
     const withHover = this.build(true);
-    const b = withHover.hoverRefused ? this.build(false) : withHover;
+    const b = withHover.dim[0] >= 0 && !withHover.hoverRoad ? this.build(false) : withHover;
     if (b.kinds.length < 2) {
       this.quote = null;
       this.wantKey = "";
@@ -413,7 +421,7 @@ export class BusDraw {
     this.map.dragPan.enable();
     this.noTap = true;
     navigator.vibrate?.(15);
-    this.remove(p.i);
+    void this.remove(p.i);
   }
 
   private onTouchEnd(e: PointerEvent) {
@@ -449,14 +457,34 @@ export class BusDraw {
     this.movePoint(p.i, this.at);
   }
 
-  /** Point `i` is now at `q`: the legs either side are searched again. */
+  /** Point `i` is now at `q`: the legs either side are searched again, the point landing where the
+   * first of them found a road for it (T-2467). */
   private movePoint(i: number, q: Pt) {
-    this.pts[i] = q;
-    if (i > 0) this.legs[i - 1] = this.roads.leg(this.pts[i - 1], q);
-    if (i < this.pts.length - 1) this.legs[i] = this.roads.leg(q, this.pts[i + 1]);
+    let at = q;
+    if (i > 0) {
+      const leg = this.roads.leg(this.pts[i - 1], q, "b");
+      this.legs[i - 1] = leg;
+      if (leg.road) at = { lng: leg.pts[leg.pts.length - 2], lat: leg.pts[leg.pts.length - 1] };
+    }
+    if (i < this.pts.length - 1) {
+      const leg = this.roads.leg(at, this.pts[i + 1], i > 0 ? null : "a");
+      this.legs[i] = leg;
+      if (i === 0 && leg.road) at = { lng: leg.pts[0], lat: leg.pts[1] };
+    }
+    this.pts[i] = at;
     this.roads.look(q);
     this.rev++;
     this.changed(true);
+  }
+
+  /** Wait (a few seconds at most) for `get` to give an answer that is not waiting for tiles. */
+  private async whenReady<T>(get: () => T, waiting: (t: T) => boolean): Promise<T> {
+    let t = get();
+    for (let k = 0; k < 40 && waiting(t); k++) {
+      await new Promise((r) => setTimeout(r, 100));
+      t = get();
+    }
+    return t;
   }
 
   private onUp() {
@@ -467,20 +495,33 @@ export class BusDraw {
     this.map.dragPan.enable();
     if (!was) return;
     setGrabbing(false);
-    // dropped where the roads do not reach: back where it was, unless its legs had no road before either
-    const i = was.i;
-    const lost = [i - 1, i].map((k) => (this.legs[k]?.refused && !was.legs[k]?.refused ? this.legs[k].refused : undefined)).find((r) => r);
-    if (lost) {
-      this.pts = was.pts;
-      this.legs = was.legs;
-      this.rev++;
-      this.changed();
-      say(refusalSay(lost), true);
-    }
     // MapLibre may still call a press that came back to its start a click
     this.dragEnded = true;
     setTimeout(() => (this.dragEnded = false));
     this.place();
+    void this.checkDrop(was);
+  }
+
+  /** Dropped where the roads do not reach: back where it was, unless its legs had no road before either. */
+  private async checkDrop(was: { i: number; pts: Pt[]; legs: Leg[] }) {
+    const i = was.i, sides = [i - 1, i].filter((k) => k >= 0 && k < this.legs.length);
+    if (sides.some((k) => !this.legs[k].ready)) {
+      this.busy = true;
+      try {
+        await this.whenReady(() => (this.loaded(), sides.every((k) => this.legs[k].ready)), (ok) => !ok);
+      } finally {
+        this.busy = false;
+      }
+      if (tool.peek() !== "bus") return;
+    }
+    const unready = sides.some((k) => !this.legs[k].ready);
+    const lost = unready ? "tiles" : sides.map((k) => (this.legs[k].refused && !was.legs[k]?.refused ? this.legs[k].refused : undefined)).find((r) => r);
+    if (!lost) return;
+    this.pts = was.pts;
+    this.legs = was.legs;
+    this.rev++;
+    this.changed();
+    say(lost === "tiles" ? NOT_LOADED : refusalSay(lost), true);
   }
 
   /** Drop a drag, the point back where it was; false with none. */
@@ -506,10 +547,21 @@ export class BusDraw {
   }
 
   /** Delete point `i`; the points either side are joined by a new leg. */
-  private remove(i: number) {
+  private async remove(i: number) {
     if (this.busy || i < 0 || i >= this.pts.length) return;
     if (i > 0 && i < this.pts.length - 1) {
-      const leg = this.roads.leg(this.pts[i - 1], this.pts[i + 1]);
+      const a = this.pts[i - 1], b = this.pts[i + 1];
+      let leg = this.roads.leg(a, b);
+      if (!leg.ready) {
+        this.busy = true;
+        try {
+          leg = await this.whenReady(() => this.roads.leg(a, b), (l) => !l.ready);
+        } finally {
+          this.busy = false;
+        }
+        if (tool.peek() !== "bus" || this.pts[i - 1] !== a || this.pts[i + 1] !== b) return;
+        if (!leg.ready) return void say(NOT_LOADED, true);
+      }
       // the points either side must still be joined by road, unless the legs it joins had none either
       if (leg.refused && !this.legs[i - 1].refused && !this.legs[i].refused) return void say("No road path found without this point.", true);
       this.legs.splice(i - 1, 2, leg);
@@ -542,7 +594,7 @@ export class BusDraw {
     }
     const i = this.handleAt(e.point.x, e.point.y);
     if (i >= 0) return this.handleClick(i);
-    this.add({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+    void this.add({ lng: e.lngLat.lng, lat: e.lngLat.lat });
   }
 
   /** A click on a point: the active end finishes, the other end becomes the active one. */
@@ -558,22 +610,39 @@ export class BusDraw {
     }
   }
 
-  private add(p: Pt) {
-    const end = this.endPt();
+  /** Add a point at the active end where the click lands on a road the route reaches (T-2467): waits
+   * for the roads there if they are still loading, then adds it or says why not. */
+  private async add(p: Pt) {
+    if (this.busy) return;
+    const end = this.endPt(), head = this.head;
     if (end) {
       const a = this.map.project([end.lng, end.lat]), b = this.map.project([p.lng, p.lat]);
       if (Math.hypot(a.x - b.x, a.y - b.y) < SAME_PX) return;
     }
-    // a point the roads do not reach is refused when that is known; one whose tiles are still loading
-    // goes on, and its leg turns red if it has no road
-    const leg = end ? (this.head ? this.roads.leg(p, end) : this.roads.leg(end, p)) : null;
-    const refused = leg ? leg.refused : this.roads.near(p) === false ? "far" : undefined;
+    const ask = () => (end ? (head ? this.roads.leg(p, end, "a") : this.roads.leg(end, p, "b")) : this.roads.near(p));
+    let got = ask();
+    const waiting = (g: Leg | boolean | null) => g === null || (typeof g === "object" && !g.ready);
+    if (waiting(got)) {
+      this.busy = true;
+      try {
+        got = await this.whenReady(ask, waiting);
+      } finally {
+        this.busy = false;
+      }
+      if (tool.peek() !== "bus" || this.endPt() !== end || this.head !== head) return;
+    }
+    if (waiting(got)) return void say(NOT_LOADED, true);
+    const leg = typeof got === "object" ? got : null;
+    const refused = leg ? leg.refused : got === false ? "far" : undefined;
     if (refused) return void say(refusalSay(refused), true);
-    if (this.head) {
-      this.pts.unshift(p);
+    // the point goes where it landed on its road
+    const n = leg ? leg.pts.length : 0;
+    const at = !leg ? this.roads.corner(p) ?? p : head ? { lng: leg.pts[0], lat: leg.pts[1] } : { lng: leg.pts[n - 2], lat: leg.pts[n - 1] };
+    if (head) {
+      this.pts.unshift(at);
       if (leg) this.legs.unshift(leg);
     } else {
-      this.pts.push(p);
+      this.pts.push(at);
       if (leg) this.legs.push(leg);
     }
     this.rev++;
@@ -584,7 +653,7 @@ export class BusDraw {
   private back() {
     if (this.busy) return;
     if (this.pts.length === 0) return this.host.exit();
-    this.remove(this.endIndex());
+    void this.remove(this.endIndex());
   }
 
   /** Keys: true if used. */
@@ -619,7 +688,7 @@ export class BusDraw {
   tap(e: MapMouseEvent) {
     if (this.noTap || this.busy) return;
     const p = { lng: e.lngLat.lng, lat: e.lngLat.lat };
-    if (this.pts.length === 0) return this.add(p);
+    if (this.pts.length === 0) return void this.add(p);
     const near = (q: Pt | null | undefined) => {
       if (!q) return false;
       const s = this.map.project([q.lng, q.lat]);
@@ -640,7 +709,7 @@ export class BusDraw {
     const p = this.touchAt;
     if (p) {
       this.touchAt = null;
-      this.add(p);
+      void this.add(p);
     } else void this.finish();
   }
 
@@ -687,7 +756,7 @@ export class BusDraw {
     try {
       await this.settle();
       if (tool.peek() !== "bus") return;
-      if (this.legs.some((l) => !l.ready)) return void say("The roads here did not load. Try again.", true);
+      if (this.legs.some((l) => !l.ready)) return void say(NOT_LOADED, true);
       if (this.legs.some((l) => l.refused)) return void say("No road path found for part of the route. Move or delete a point beside it.", true);
       const route = routeOf(this.build(false)), line = this.line;
       const q = parseQuote(await this.client.query({ what: "busQuote", line: line ?? NEW_LINE, route }));
@@ -750,17 +819,19 @@ export class BusDraw {
       return d;
     };
     if (n >= 2) {
-      const d = line(0, n);
-      const dim = b.dim[0] >= 0 ? line(b.dim[0], b.dim[1]) : "";
-      parts.push(`<path d="${d}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:7px;stroke-opacity:.9"/>`);
-      parts.push(`<path d="${d}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:${col};stroke-width:3.5px"/>`);
-      // legs with no road, and the pointer's if it would have none, red as the ferry tool's
-      for (const [f, t] of b.bad) parts.push(`<path d="${line(f, t)}" fill="none" stroke-linecap="round" style="stroke:var(--bad, #d33);stroke-width:3.5px"/>`);
-      if (dim && b.hoverRefused) {
-        parts.push(`<path d="${dim}" fill="none" style="stroke:var(--map-land);stroke-width:3.5px"/>`);
-        parts.push(`<path d="${dim}" fill="none" stroke-linecap="butt" style="stroke:var(--bad, #d33);stroke-width:3.5px;stroke-dasharray:7 4"/>`);
+      // legs along roads in the line's colour; one with no road, or none found yet, red, dashed and
+      // straight as the ferry tool's (T-2467)
+      const road = b.runs.filter((r) => r.draw === "road").map((r) => line(r.from, r.to)).join("");
+      const bad = b.runs.filter((r) => r.draw === "bad").map((r) => line(r.from, r.to)).join("");
+      if (road) {
+        parts.push(`<path d="${road}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:7px;stroke-opacity:.9"/>`);
+        parts.push(`<path d="${road}" fill="none" stroke-linejoin="round" stroke-linecap="round" style="stroke:${col};stroke-width:3.5px"/>`);
       }
-      else if (dim) parts.push(`<path d="${dim}" fill="none" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:2px;stroke-opacity:.45"/>`);
+      if (bad) {
+        parts.push(`<path d="${bad}" fill="none" style="stroke:var(--map-land);stroke-width:3.5px;stroke-opacity:.9"/>`);
+        parts.push(`<path d="${bad}" fill="none" stroke-linecap="butt" style="stroke:var(--bad, #d33);stroke-width:3.5px;stroke-dasharray:7 4"/>`);
+      }
+      if (b.dim[0] >= 0 && b.hoverRoad) parts.push(`<path d="${line(b.dim[0], b.dim[1])}" fill="none" stroke-linecap="round" style="stroke:var(--map-land);stroke-width:2px;stroke-opacity:.45"/>`);
     }
     const ring = (p: Pt, r: number, w: number) => {
       const s = xy(p);
@@ -779,7 +850,7 @@ export class BusDraw {
           parts.push(`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="9" style="fill:none;stroke:${col};stroke-width:2.5px"/>`);
         } else parts.push(ring(s, 3.6, 1.8));
       }
-    } else if (hover && n && this.pts.length === 0) parts.push(square({ lng: b.ll[0], lat: b.ll[1] }));
+    } else if (hover && n && this.pts.length === 0 && b.ready && !b.hoverRefused) parts.push(square({ lng: b.ll[0], lat: b.ll[1] }));
     // the handles: each clicked point a dot in the line's colour, the active end a ring, the one under
     // the pointer larger
     const end = this.endIndex();

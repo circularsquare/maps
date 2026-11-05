@@ -304,21 +304,28 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 [T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, beside
 Ferry, key U), the Lines tab's bus button beside New line, or U from any tab starts the bus tool for a
 new line; the Build tab's button again, while it is on, leaves it. Each click adds a
-point. A click within 100 m of a road lands on the nearest one. Between two points the route takes the
-shortest path over the basemap's zoom 14 roads (`busRoads.ts`; trunk, primary, secondary, tertiary,
-minor and bus-only roads, any direction, length as it is, no turn rules; motorways, service ways,
-tracks and paths are left out), at most 3 times the straight line or 1 km more than it, whichever is
-longer. A route never runs straight off the roads (T-2451): a click is refused, with a message at the
-map's bottom left, where no road is within 100 m ("Too far from a road. Click within 100 m of one."),
-where no road path joins it to the active end ("No road path found."), or where the two are too far
-apart to search (over about 100 zoom 14 tiles: "Too far between points. Add one on the way."); the tag
-over the pointer says which before the click, the leg to the pointer dashed red. A drag that drops a
-point where the roads do not reach puts it back with the same message, and a right click that would
-leave its neighbours with no road path between them is refused ("No road path found without this
-point."). While its roads are still loading a leg is straight; one that turns out to have no
-road is drawn red, the tag leads with why, and finishing is refused ("No road path found for part of
-the route. Move or delete a point beside it.", or "The roads here did not load. Try again." when its
-roads never came). A point on one
+point. Between two points the route takes the shortest path over the basemap's zoom 14 roads
+(`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
+long bridges and tunnels most cities carry on them (T-2469); any direction, length as it is, no turn
+rules; service ways, tracks and paths are left out), at most 3 times the straight line or 1 km more
+than it, whichever is longer. A click within 100 m of a road lands on the nearest one, a motorway
+counting 3 times as far and 30 m more, so a click by a street lands on the street; where that road
+has no path from the active end, it lands on the nearest other road within 100 m that has one, each
+metre further from the click counting as 3 m of road (T-2467). The point stays where it landed.
+
+A route never runs straight off the roads (T-2451, T-2467). A click, the first included, is refused
+with a message at the map's bottom left where no road is within 100 m ("Too far from a road. Click
+within 100 m of one."), where no road within 100 m has a path from the active end ("No road path
+found."), or where the two are too far apart to search (over about 100 zoom 14 tiles: "Too far between
+points. Add one on the way."); the tag over the pointer says which before the click, and the leg to the
+pointer is dashed red. A click whose roads are still loading waits for them (a few seconds at most,
+else "The roads here did not load. Try again."), and meanwhile the leg to the pointer is not drawn: a
+leg shows only along its roads in the line's colour, or dashed red. A drag that drops a point where the
+roads do not reach puts it back with the same message, and a right click that would leave its
+neighbours with no road path between them is refused ("No road path found without this point."). A
+straight stretch from an older save that finds no road is drawn dashed red, the tag leads with why, and
+finishing is refused ("No road path found for part of the route. Move or delete a point beside it.").
+A point on one
 carriageway of a divided road (the basemap draws the two as separate lines) may cross to the roughly
 parallel road 4 to 40 m across before the path follows a road, the hop counted at its length, so the
 route turns there instead of running to the next junction and back (T-1512; `across` in `roadGraph.ts`). The roads come from
@@ -361,15 +368,18 @@ each half the row, key O), the Lines tab's ferry button beside the bus one, or O
 the ferry tool for a new line. The player places **ports only**; between two consecutive ports the
 route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
 
-- **A click** on land by the water puts a new port on the shore: its landing where the click's line
-  first meets water, its berth in the water where boats stop, named as a new station is. A click on
-  a port the network has (within 10 px or 30 m) stops there, so lines share ports. A click on water
-  is refused ("Place ports on land by the water"), and on land more than 150 m from water ("Too far
-  from water"); the tag over the pointer says which before the click, "Place port" or "Stop at
-  <port>" where a click works. The tag stays up as the pointer moves, as the track tool's does:
-  while the water under a new position is asked it keeps the last answer, so only its text changes
-  (T-2273). From the active end to the pointer a dashed leg shows where the next click joins, dark
-  blue in light and light blue in dark (`--ferry-ghost`).
+- **A click** within 200 m of the shore, on land or on the water, puts a new port on the nearest shore
+  (T-2468): its landing where the line from the click to the nearest cell of the other kind (water from
+  land, land from water) crosses the shore, its berth in the water where boats stop, named as a new
+  station is. Before the click the pointer shows that port where it would go, a circle on the landing
+  and a line to the berth in `--ferry-ghost` (dark blue in light, light blue in dark). A click on a port
+  the network has (within 10 px or 30 m), or one whose landing would fall within 30 m of such a port's,
+  stops there, so lines share ports. A click on water more than 200 m from land is refused ("Place
+  ports on land by the water"), and on land more than 200 m from water ("Too far from water"); the tag
+  over the pointer says which before the click, "Place port" or "Stop at <port>" where a click works.
+  The tag stays up as the pointer moves, as the track tool's does: while the spot under a new position
+  is asked it keeps the last answer, so only its text changes (T-2273). From the active end's berth a
+  dashed leg in `--ferry-ghost` runs to the berth the next click would join.
 - **While drawing** each port is a circle on its landing with a short line to its berth, the active
   end larger; the route between is dashed in the line's colour, grey and straight while it is
   searched, red and straight where no water joins two ports. The tag gives the route's length and the
