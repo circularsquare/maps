@@ -30,7 +30,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   hit the card stays up to the fresh final (~187 s vs hit at ~28 s on her NA save); make it playable at the hit,
   keeping T-347's edit hold.
 
-- **diagrivers** (agent a1fd51edf9f661771, Opus, tree .tw-trees/diagrivers from 2c951d73, port 6193): T-2528 dial
+- Europe's join ENDED ~16:40 (all shipped); europe agent on after-steps (market_drives build at 16:41). 8800 rebuild
+  waits for its report.
+- diagrivers LANDED 70f1b840 (records f78de89a; agent 446k, retired): dial default 0.5, river width = real x smooth
+  scale field, Sound as open water (3.75x Long Island, too wide), core rivers thin in 30% of pitches. Review:
+  review/diagram-nyc-water-width.png, diagram-nyc-core-rivers.png. **diagsmooth** (agent a994a1837e88cba0d, Opus,
+  tree from f78de89a, port 6193, ids T-2562..63): T-2561 smooth layout scale, sea pairs from it, bank-side term.
+- (was) **diagrivers** (agent a1fd51edf9f661771, Opus, tree .tw-trees/diagrivers from 2c951d73, port 6193): T-2528 dial
   default 0.5 (Anita: "i kidna like 0.5"), water width follows the drawn land (Hudson/East River ~1/4 of Manhattan,
   no collapse downstream, outskirt rivers thin), Long Island Sound as open water; Vignelli map as reference.
   notes/T-2528.md has her words. Anita ~16:30: "yes we can carry on" (maps-17 continues past 500k).
