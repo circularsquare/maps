@@ -5,6 +5,15 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Land danger as designed** (T-042, docs/hazard.md section 8; Anita): OSM wells, springs and
+  villages count as water on today's map ("we can do well/spring/village as water"); each place
+  takes the kinder of January and July ("more intuitive"); a path stops under 1% survival on land
+  as at sea; the traveller as proposed (no polar gear, no disease or violence counted). She also
+  offered marking explicit desert areas "if it's easier and has similar effect"; distance to water
+  is kept since it is built and also covers dry gaps outside named deserts.
+- **Carrying the canoe stays at twice the walking time** (Anita: "twice walking seems
+  reasonable"; T-071).
+
 - **River water off the river line is a dead end, not still water** (T-036; was: no canoe node, unpainted). Each such cell is entered from the shore, a canoe node beside it, or a cell nearer its patch's edge, at 5 km/h, and left only to the shore. Full still-water edges would let a route paddle along the line's own water against no current (up the Amazon at 5 km/h against 3) or up an unrunnable river's gorge; dead ends paint every cell and allow only crossings of river water one cell wide, at both transfers. Carrying gains those crossings on canoe starts (L1 windows in Laos and the Amazon: 15-25% of nodes over 5% earlier); the K trips are unchanged. Revisit if river water should carry the river's current. notes/T-036.md.
 
 - **Upstream is max(p - 0.4 v, 2.5 km/h), carrying stays x2** (T-071; were 0.6 and 1.5). Recorded upstream crews made 2.5-3.5 km/h per moving hour on big rivers (Lewis and Clark, Mackenzie, HBC brigades, a 2015 canoe up the Mississippi), and the bank current on a big river is ~0.25-0.4 of the mean; single-carry portages run 1.5-2 x walking time. Revisit with a small-canoe upstream log on a huge river, or if small rivers (4.3 km/h up at Q = 1) prove too fast. notes/T-071.md.
