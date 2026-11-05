@@ -1,154 +1,85 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38
-Updated: 2026-11-05 09:45
+Orchestrator: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17, since 2026-11-04 16:38 (past 500k tokens
+at 16:13 on 2026-11-05: a fresh orchestrator can take over from this file any time)
+Updated: 2026-11-05 16:15
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **3a2be5bf** (+ records commit). Main-tree smoke at 004354ca PASSED, 12,515,600: the 2 trips over 598 come
-  from europe's uncommitted market-rows.json (trees, with the committed one, give 598). Recheck after Europe's join.
-- **8800 = build 956 (a8a72002)**, from before Europe's retire. Not rebuilt since: waits for Europe's join (pack
-  writes). LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico, Brazil before release).
-- **Cores cap 12** (back from overnight 15 at ~08:00). Disk ~40 GB free.
+- master **b2789380**. Main-tree smoke PASSED at 004354ca (12,515,600: the 2 over 598 are europe's uncommitted
+  market-rows.json; trees give 598). Every tree landed today smoked 12,515,598.
+- **8800 = build 956 (a8a72002)**, from before Europe's retire; waits for Europe's join to end. LIVE = 821. Publish
+  only on Anita's word (release "later this week"; Mexico and Brazil before release).
+- **Cores cap 12** (overnight 15 ended ~08:00). Disk 45.6 GB free.
 - **Pack lock: europe's** (T-2302). Then Mexico T-2436 -> Brazil T-2437.
 - Uncommitted: TODO.md (Anita's); europe's files (world_plan.json, registry.json, market-rows.json, zone-names.json,
   zone-successors.json, docs/world-run.md, notes/T-2302.md).
 
-## Landed 2026-11-05 (after build 956; none on 8800 yet)
-- loadwait 8e2bd280 (T-2476, T-2478), memhunt ecac1167 (T-2485), simtidy fb674fba (T-2379), codemap 27a59ef1 (T-2368,
-  T-2504), loadfix c8d22020 (T-2499 range race: reloads missed the demand cache; T-2459 Okinawa 842 -> 13 s),
-  drives 74c07452 (T-2384), focusmem a19c9e08 (T-2495 peak 3.9 -> 3.5 GB; T-2500 Tokyo graph 874 -> 193 s),
-  flags 118c615a (T-2370), t409 check c50034b8 (T-2513: stale check, no double count; T-2527 filed),
-  diagwater2 afe9bf07 (T-2497 octilinear coast + T-2516 continuous rivers to the sea, LI Sound joined, water colour
-  nearer land; still behind ?water; T-2510, T-2511, T-2517, T-2518 filed), demandtidy fb66c4ad (T-2371; T-2512 rest),
-  toolstidy 249ecb09 (T-2372: dragged curve labels culled), uismall3 004354ca (T-2525 "Done editing stops" -> "Edit
-  stops" pressed; T-2526 auto-names count lines stopping in the zone; T-2522 track bar text 12 -> 14 px; T-2519
-  headway cap 4 h, 15-min steps past 1 h), diagnames2 3a2be5bf (T-2521 big half-transparent grey city names centred
-  on their block, under the lines; only below the 1.47 px pitch switch, as before).
-- Strings shown to Anita: "Done editing stops" -> "Edit stops"; "worker 2: undefined" -> "worker 2: its code could
-  not be downloaded" (loadwait). Nothing else.
-
 ## In flight
-- **europe** (Opus, main tree, pack lock, port 6197): all 234 rows built; gate 230/234; bef, krz, gzd, nic relaxed.
-  gate2 09:41-09:49, 234/234 gated; **join from ~09:50** (no browser: app landings fine; nothing writes data/packs or
-  data/terrain until it reports), then
-  prejoin backup, join (detached, several hours), after-steps (terrain, market drives, inputs, stale,
-  zone_successors --set, smoke, docs). Kit: old scratch\europe; notes/T-2302.md has PIDs and restart commands.
-  Backup data/work/pre-T2302/pre (4 GB); undo `tools/country/restore.py T2302 pre --go`. Agent at ~335k tokens.
-- diagparallel LANDED 4797d948 (records 3f5f4a7c): T-2520 Manhattan parallel pairs 0.53 -> 0.71; NYC layout 2.8 ->
-  3.6 s (+27%, over the brief's 20%: maps-17 landed anyway, the look is what Anita asked for); filed T-2529 (routing
-  breaks parallels), T-2530 (B convergence, Japan wrong-side 387 -> 481). Review: review/diagram-parallel-before/after.png.
-  Run checks/diagram-game.mjs captures again after the 8800 rebuild.
-- VS Code closed ~10:05: join survived (detached); diagparallel, bubbleload, europe resumed by message.
-- Anita ~10:20 asked for publishing / attention tips. ~10:40: "we can have an agent research more thoroughly and
-  compile a list of things fo rme to do"; no share button ("schematic map export already covers"); "i like the parallel
-  lines! :) i think itll look even better once we get water in" -> maps-17 switched water on by default (2a0541c2).
-- New batch notes/todo-2026-11-05b.md (T-2534..T-2536) + T-2537. Running: **uismall4** (Sonnet, tree from 2a0541c2,
-  port 6194: T-2535 no confirm for empty line delete, T-2536 no profit before first calc), **diagcross** (Opus, tree
-  from 2a0541c2, port 6193, ids T-2538..39: T-2534 ground crossings kept outside dense cores, small city on its
-  through line), **launchprep** (Opus, research only, writes research/launch.md: T-2537 launch checklist for Anita,
-  ≤40 web searches).
-- launchprep DONE (T-2537): research/launch.md, checklist on top, committed e05fbcc3. Findings: no og/twitter tags on
-  the live page (T-2543, **linkpreview** Sonnet tree port 6191 adding tags + preview.png, wording for Anita); .wasm and
-  .json from GitHub Pages are DYNAMIC in Cloudflare (needs a Cache Rule on anita.garden/trainsworld/assets/*, dashboard,
-  Anita's); R2 cost ~$0 to 10k visitors/day; Reddit rules unread (403), Anita to read; phone test hers.
-- linkpreview LANDED 368d3bd2 (T-2543: og/twitter tags in app/index.html, app/public/preview.png = map-nyc candidate;
-  meta description "Build trains around the world!" -> "Build trains in any real city and see how many people ride.";
-  Anita to pick wording (3 options) and image (artifacts/trainworld/linkpreview/). Smoke only partial (1 core).
-- Anita ~11:30: no Cache Rule yet ("we wont have 100k visitors"); no Discord/subreddit ("a bit presumptuous"); card
-  text stays "Build trains around the world!"; card image = load-screen logo before a small globe; phone: NA save
-  failed early with the memory pre-check (4.3 GB vs 4 GB), Japan save loaded. **launchbits** (Sonnet, tree from
-  c0721519, port 6194): T-2544 card text + logo image, T-2545 load-fail messages with "works best on a computer".
-  tourvideo stopped and tree removed (Anita ~11:40: clip later, T-2546 on hold). Her phone notes: T-2548 hide the
-  purpose picker on phones (settings panel instead), T-2549 faint line above the dock tabs: both sent to launchbits.
-  "saved by a newer version" on her phone = live 821 opening a cloud save written by 8800 (newer); right for players
-  after a deploy, so left as is.
-- Anita ~14:10: "i love how japan looks ... perhaps we could turn down distortion if its easy (maybe ... a distortion
-  dial thats easy for us to tune)". Filed T-2556; **diagdial** (Opus, tree from 8dd24b55, port 6193): DISTORT constant
-  + ?distort=, measures and pictures at 3-4 settings, picks a default.
-- loadnotes LANDED 1cf096fc (records 88ea32a6; agent 400k): T-2523 click note in status tag, T-2524 bar hover stage/
-  time left/stall line (90 s, ?stallMs); profile: nothing stalls, the bar model runs ahead (T-2552), unequal periods
-  (T-2553), import+reload may miss the cache (T-2557). New strings shown to Anita. **loadbar** (Opus, tree from
-  88ea32a6, port 6194): T-2557 + T-2552.
-- **mexprep** (Opus, main tree; new pipeline/mexico.py only, data/raw/mexico; no shared pipeline edits until join PID
-  6408 ends): T-2080 census 2020 population hook (Brazil's shape), T-2081 DENUE jobs. Mexico's build T-2436 itself
-  waits for Europe. Brazil T-2437 needs no prep (brazil.py hook done); Sao Paulo hand-built since T-458.
-- Anita ~13:50: storage only where "basically free" (passed to diskprune). diskprune DONE: 11 GB raw deleted;
-  **after the join ends (and Europe's freeze exists): `venv\Scripts\python.exe -I trainworld\notes\t2554\after_join.py`
-  then `--go`** (~15 GB); then delete pre-T2302 once Europe checks clean (10.6 GB). maps-17's call: do the three small
-  code changes in T-2554 (routes.py stops writing drive_near_f.npy, world_run drops cells.*/walk_zone on ship, raw
-  t196/t142b caches .json.gz) after the join, as one small task; Anita told, may veto.
-- diaghokkaido LANDED 0d5ab8f4 (records 1034682c; agent 523k, retired): T-2550 sparse floor 0.25 of core scale,
-  far land at region scale, station-less islands under 1/10 of land in their 100 km square dropped (1,187 of 1,310);
-  Hokkaido IoU 0.35 -> 0.62, all islands up; diagram-game captures redone. Costs filed T-2555 (tyo-game 5 pill
-  overlaps, NYC close pairs, crossings ~7/214 lower). Review: review/diagram-japan-hokkaido.png.
-- bubbleload DONE (agent at 510k, retired); its patch LANDED 810f0b9b (records d8a58853): T-2531 no regression across
-  827/956/master on Anita's NA save; T-2508 bubbles 125-200 s -> seconds after figures (isCurrent + legsKey); T-2523's
-  never-answering click on 956 fixed for good, retry while solving (72-99 s). T-2523 stays open for the loading note;
-  T-2532 (edit bubbles wait for final, worker change), T-2533 (after cache hit solve zone in view first) open.
-  **loadnotes** (Opus, tree from 810f0b9b, port 6194): T-2523 loading note on a waiting click, T-2524 progress hover,
-  stall sign and stall profile (notes/T-2524.md).
-- Anita ~13:40 asked about trainworld/data's 95 GiB (102.4 GB). Filed T-2554; **diskprune** (Opus, main tree, no
-  app/sim edits): what each item is for, safe deletions (raw now; work/ and frozen/ only after join PID 6408 ends;
-  never pre-T2302), measured compression proposal. Next free id T-2556.
-- diagstraits LANDED 332d628b (agent at 570k, retired): T-2541 layout reads the ground sea, water hops >= 2x real,
-  bay pairs kept apart; no islands merged, Seikan 0.27 -> 0.87, Boso scale 0.125 -> 0.30 of Kanto core; Hokkaido IoU
-  0.47 -> 0.35 (T-2550); T-2551 NYC rivers, t2405 LIRR 1 -> 3 hidden, channel in 2 pieces. T-2542 checks use save frame.
-  Review: review/diagram-japan-straits.png, diagram-kanto.png. **diaghokkaido** (Opus, tree from 850f66ad, port 6193,
-  ids T-2552..53): T-2550 Hokkaido shape + rerun diagram-game.mjs captures; widened by Anita ~13:20 (Tohoku and
-  Hokkaido too small; islands with no stations left out if small, else not expanded; Awaji too big).
-- Anita ~11:50-13:00: load-fail text sentence case "This game works best on a computer." (6431a1fa); link card logo
-  big and centred over globe, full-size globe chosen (9dfc5db4). Video: she'll speed up a gameplay recording herself.
-- launchbits LANDED 6f92ae05 (records f736366d): T-2544 card = logo over globe (card-bottom.png), text "Build trains
-  around the world!"; T-2545 load-fail strings (shown to Anita), iOS reload flag tw-load-started; T-2548 purpose in
-  settings, hidden at phone layout; T-2549 top line on .tabs. Tree smoke (mine) 23 PASS 12,515,598.
-- diagislands LANDED dd30a3ac (records 03cbd629; agent at 502k, retired): T-2540 + T-2517 sea sampled through station
-  maps, land masses kept apart, Japan 4 islands separate (Honshu IoU 0.25 -> 0.54); also fixed checks' Japan frame
-  (6 km off) in diagram-saves.mjs. Anita: "the after diagram looks great". **diagstraits** (Opus, tree from 03cbd629,
-  port 6193, ids T-2550..51): T-2541 straits/bays kept wide, scale evened (Boso, Izu), + T-2542 checks' frame.
-  Anita: "peninsulas dont hae to be huge especially if theres nothing on them. middle groud, i guess." (passed on).
-- diagcross LANDED 2c7284d8 (records 0db0df66; agent at 455k, retired): T-2534 crossings held outside dense places
-  (12+ stations within 2.5 km), kept 0.23 -> 0.57; test save artifacts/trainworld/diagcross/through.save (New Haven
-  102 -> 5 pitches off the Shore Line). Filed T-2538 (routing loses crossings), T-2539 (t2407 limit). Review:
-  review/diagram-through-before/after.png. Next for layout: T-2541 (straits and bays kept wide; diagislands filed it)
-  once diagislands lands.
-- Newer-save notice reworded per Anita, c1109058: "This game was saved on a newer game version. Reload the page to
-  update." (bar + save tip), download tip "Download as a file, as saved on the newer game version".
-- uismall4 LANDED 42ccfc96 (T-2535 empty rail/bus line deletes without confirm; T-2536 no profit until trains + first
-  demand result, "calculating..." meanwhile; zero-rider case loosened via linesPending, untested). String added:
-  "calculating..." (Profit row).
-- Anita ~10:50: island shapes matter, Japan as a test case. Filed T-2540 (takes in T-2517); **diagislands** (Opus,
-  tree from 4ba1808b, port 6192, ids T-2541..42): water files are its, layout.ts is diagcross's (coordinate via me).
-- **bubbleload** (Opus, main tree read-only, scratch worktrees for old builds, ports 6188-89, ids T-2532..33):
-  T-2531 [P1] Anita ~09:30 "i feel like loading of demand bubbles in the city we're looking at has honestly
-  regressed"; measures builds 827 -> 956 -> master on her save artifacts/trainworld/anita-2026-11-05/
-  north-america-day-361.save and the real save; also T-2508 (bubbles ~25 s after figures), which she wants looked into.
+- **europe** (agent a48ef8746df10ad7f, Opus, main tree, pack lock, ~345k tokens): join batch 20261105-095013, python
+  PID 6408 (cmd 17556), log artifacts/trainworld/countries/t2302-join.log, since 09:50; at 16:13 on Kosovo (psh-xk),
+  the late small groups. Then after-steps (terrain_fine, zone_terrain, market_drives, build_inputs, stale,
+  zone_successors --set, smoke, docs), report. Kit: old scratch\europe; notes/T-2302.md has PIDs and restart
+  commands. Backup data/work/pre-T2302/pre; undo `tools/country/restore.py T2302 pre --go`. Its background wait died
+  in the 10:05 VS Code restart and was re-set by message.
+- **loadbar** (agent a51952333953d7ac7, Opus, tree .tw-trees/loadbar from 88ea32a6, port 6194): T-2557 (does Anita's
+  North America save's import+reload hit the demand cache? loadnotes saw bubbles only at ~193 s) and T-2552 (load bar
+  model: 97% early then creeps, other zones' bars sit at 99%, "A few seconds left" for 22 s).
 
-## After Europe's join
-- Rebuild 8800 with the new snapbuild.cmd (first use of the dist-new swap, T-2483), smoke light and dark, confirm
-  12,515,598 and no water-mask RangeError, ping Anita. Delete world_run `*-backup` folders (4.2 GB), data/frozen
-  20261104-131517 and -182622 after Europe's freeze, pre-T2302 once clean.
-- Waiting tasks: T-2523 + T-2524 (load messaging, stall profile; after bubbleload's findings), T-2528 river width
-  (after T-2520), T-2512, T-2517, T-2518, T-2510.
+## After Europe's join (in this order)
+1. Rebuild 8800 with scratch snapbuild.cmd (first use of the dist-new swap, T-2483), claim 4 cores, smoke light and
+   dark; expect 12,515,598 once europe's market-rows.json is committed; check no water-mask RangeError. Ping Anita
+   (`python C:/Users/anita/projects/maps/tools/ping.py`). Rerun checks/diagram-game.mjs captures after (diaghokkaido
+   redid them, but recheck on 8800's build).
+2. Disk: `venv\Scripts\python.exe -I trainworld\notes\t2554\after_join.py`, then `--go` (~15 GB; it refuses while a
+   batch lock is held and keeps frozen sets until a freeze newer than 20261104-222232 exists). Delete
+   data/work/pre-T2302 once Europe checks clean (10.6 GB).
+3. T-2554's three small code changes (maps-17's call, Anita told, may veto): routes.py stops writing
+   drive_near_f.npy; world_run drops cells.* and walk_zone.u8* when a row ships; raw t196/t142b caches as .json.gz.
+   One small agent, between runs.
+4. Mexico: wire pipeline/mexico.py per notes/T-2080.md "Wiring left" (ARCHETYPE MEX, ZONE_RULES module/plan_units,
+   the ten metro rows to archetype C module mexico under the plan lock), then T-2436's run (expect pop_vs_plan parks:
+   GHSL 10-15% under the census in big cities). Then Brazil T-2437 (no prep; brazil.py hook done).
+
+## Landed 2026-11-05 (after build 956; none on 8800 yet)
+- Loading and memory: loadwait (T-2476, T-2478), memhunt (T-2485), loadfix (T-2499 range race, T-2459), focusmem
+  (T-2495, T-2500), bubblefix 810f0b9b (T-2508 bubbles seconds after figures; T-2531 no regression across builds),
+  loadnotes 1cf096fc (T-2523 click note, T-2524 bar hover + stall line).
+- Cleanup: simtidy (T-2379), codemap (T-2368, T-2504), drives (T-2384), flags (T-2370), demandtidy (T-2371),
+  toolstidy (T-2372), t409 check (T-2513).
+- Diagram: water on by default 2a0541c2 (T-2497, T-2516), city names (T-2521), parallel lines (T-2520), crossings
+  (T-2534), islands (T-2540, T-2517), straits/bays (T-2541, T-2542), Hokkaido + sparse floor + station-less islands
+  (T-2550), distortion dial default 0.8 (T-2556, closed T-2555).
+- UI: uismall3 (T-2525, T-2526, T-2522, T-2519 headway 4 h), uismall4 (T-2535, T-2536), launchbits (T-2544 link card
+  = logo over globe, T-2545 load-fail text, T-2548 purpose picker in settings on phones, T-2549 tab top line),
+  newer-save notice reworded c1109058, load-fail text sentence case 6431a1fa, link card big centred logo 9dfc5db4.
+- Prep: mexprep cd58b687 (pipeline/mexico.py, T-2080/T-2081, wiring left), diskprune (T-2554, 11 GB raw deleted),
+  launch research (T-2537, research/launch.md).
+- Strings shown to Anita today, all acknowledged or chosen by her: "Edit stops"; "calculating..."; the newer-save
+  notice; "Not enough memory. ... This game works best on a computer."; "Ran out of memory. ..."; "Failed to load :(
+  ..."; "Purpose" (settings row); link card "Build trains around the world!"; the click notes ("Calculating trips
+  after your change…", "Calculating trips in N cities…", "Calculating trips in New York…", "Loading Boston…") and
+  bar hovers ("About 2 min left", "No progress for 1 min").
 
 ## Anita 2026-11-05, in her words where it matters
-- Overnight: "feel free to keep going with stuff after europe"; cores up and past the context cap overnight
-  (recorded; maps/CLAUDE.md line committed 0221ad6f, "fine to commit").
-- Diagram: borders "look great!! big improvement"; rivers (T-2516) "rivers look better! i think we could do a bit
-  more with regards to reflecting how thick the water is, but its pretty good" (T-2528). "ok, we can do 4 hours and
-  layout jobs first."
-- Batch notes/todo-2026-11-05a.md (T-2519..T-2526).
-- Next free id **T-2550** (T-2547 unused).
-
+- Diagram: "i love how japan looks"; "perhaps we could turn down distortion if its easy" (dial at 0.8, asked whether
+  to keep it); "peninsulas dont hae to be huge especially if theres nothing on them. middle groud"; islands with no
+  stations "can be either ommitted (if small relative to their surroundings) or at least not expanded".
+- Launch: she'll speed up her own gameplay recording (T-2546 on hold); no Discord/subreddit; no Cloudflare Cache Rule
+  yet; phone tested (NA save refused with the memory message, Japan loaded).
+- Disk: "anything that nonnegligibly slows down our edvelopment process to gain stoage we probably dont need ot do".
+- Batches: notes/todo-2026-11-05a.md, -05b.md.
+- Next free id **T-2559**.
 
 ## Next
-1. As agents report: land trees (typecheck, smoke), commit records by path, rebuild 8800, smoke light/dark, show
-   Anita strings old -> new.
-2. Open, not started: maybe a slow speed ramp for bus/boat in Speed (asked Anita), T-2458, T-2459 (cityfirst's
-   follow-ups), T-2447 Nagano's
-   unnamed diagram blocks, T-2425 findings (notes/T-2425.md), T-2169 diagram water, T-2368 code-map, T-2370 flags,
-   T-2379 sim small items, T-2373 bus panel, T-2384 drives removal, T-2404 blueprint, T-2396 dock height.
+1. As agents report: land trees (typecheck, smoke in the tree, `agent-tree.mjs land`), commit records by path, show
+   Anita strings old -> new and review pictures (copy to artifacts/trainworld/review/).
+2. Open and ready to start (cores allowing; Europe's join holds 6): T-2532 (edit bubbles wait for the final; worker
+   change), T-2533 (after a cache hit, solve the zone in view first), T-2553 (balance periods between workers), T-2512
+   (cleanup A4 rest), T-2374 app splits (now unblocked: T-2371, T-2372 done), T-2381 kernel/intercity splits, T-2529
+   and T-2538 (diagram routing loses parallels and crossings), T-2530, T-2539, T-2551, T-2528 (river width), T-2518 and
+   T-2498 (water time), T-2510 (Japan masks miss big rivers: data, after joins), T-2527 (t409 check strength), T-2558.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\c--Users-anita-projects-maps\4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6\scratchpad
@@ -169,6 +100,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
+- Diagram distortion: keep 0.8 or pick another (review/diagram-distort-japan.png, diagram-distort-nyc.png)?
 
 ## Lessons from this run
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
