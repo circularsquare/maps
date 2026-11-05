@@ -88,8 +88,9 @@ the page sends the outlines of the zones near the network once each, in mercator
 from the stations' own places. The layout worker makes the borders after the names (and again, alone, for outlines
 that arrive after a layout), between blocks as inside them.
 
-- **The region**: on a grid of one pitch, every cell within 2 pitches of a line's casing or a pill; then grown by
-  4 pitches and shrunk by 4 again (never inside the 2), so gaps and bays under about 8 pitches close; then every gap
+- **The region**: on a grid of one pitch, every cell within 5 pitches of a line's casing or a pill; then grown by
+  30 pitches and shrunk by 30 again (never inside the 5), so gaps and bays under about 60 pitches close and the
+  outline keeps well clear of the lines instead of hugging them (T-2488); then every gap
   the network encloses filled. So each zone with stations is a closed outline round its own stations and lines, with
   no holes.
 - **The zones**: each cell takes the zone of the pill nearest it through the region (steps of a cell, straight or
@@ -100,8 +101,8 @@ that arrive after a layout), between blocks as inside them.
   runs at 0, 45 and 90 degrees: from each point the farthest one reachable by one run or two (one straight, one
   diagonal) staying within the point's tolerance of every point between, and moving no pill across. The tolerance is
   the point's clearance less 0.3 pitch, at least 0.7: on the region's edge, clearance from the lines and pills, at
-  most 0.8; between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius
-  of 2 pitches (less on short runs).
+  most 3; between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius
+  of 3 pitches (less on short runs).
 - **Drawn** under everything, the lines' casings cutting it, in the map's outline grey (#73798b) at 0.7 opacity,
   0.2 of a pitch wide; below a device px, a px wide and fainter by its width's share, never below half (the lines'
   rule, T-2408, with a higher floor). One path; a border two zones share is drawn once.

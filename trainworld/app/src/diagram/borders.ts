@@ -29,14 +29,16 @@ export interface Run { p: Float64Array; left: number; right: number; closed: boo
 /** a station outside every outline is in the zone whose outline is nearest within this (cities.ts ZONE_REACH_M) */
 const REACH_M = 40_000;
 /** in pitches: the grid's cell, and how far the region reaches past the lines' casings and the pills */
-const CELL = 1, MARGIN = 2;
-/** gaps and bays narrower than about twice this many pitches are closed */
-const CLOSE = 4;
+const CELL = 1, MARGIN = 5;
+/** gaps and bays narrower than about twice this many pitches are closed (T-2488: wide, so outlines don't hug) */
+const CLOSE = 30;
 /** a fitted border strays from the grid's by at most its clearance from the lines and pills less CLEAR, within
  * TOL_MIN and TOL_MAX pitches (TOL_EDGE on the region's edge, so its ends and corners keep their shape) */
-const CLEAR = 0.3, TOL_MIN = 0.7, TOL_MAX = 12, TOL_EDGE = 0.8;
+const CLEAR = 0.3, TOL_MIN = 0.7, TOL_MAX = 12, TOL_EDGE = 3;
 /** corners are rounded with this radius, pitches */
-export const BORDER_RADIUS = 2;
+export const BORDER_RADIUS = 3;
+/** the region's margin and closing, the edge's tolerance and the corners' radius, pitches (checks vary them) */
+export interface BorderOpts { margin: number; close: number; tolEdge: number; radius: number }
 /** the grid's tiles, cells a side */
 const SHIFT = 5, T = 1 << SHIFT, TT = T * T;
 /** the eight steps to a neighbouring cell (the four sides first), their lengths (5 and 7, about 1 and the root of 2)
@@ -50,14 +52,15 @@ const OUT = -1, NONE = -2, OPEN = -3;
 const FAR = 65535;
 
 /** The borders of the zones holding stations, in the drawing `d` of `g` laid out at `x`, `y`. */
-export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, d: Drawing, shapes: ZoneShape[], detail = false): DiagramBorders {
+export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, d: Drawing, shapes: ZoneShape[], detail = false, o: Partial<BorderOpts> = {}): DiagramBorders {
   const n = g.key.length;
+  const MG = o.margin ?? MARGIN, CL = o.close ?? CLOSE, TE = o.tolEdge ?? TOL_EDGE, RAD = o.radius ?? BORDER_RADIUS;
   const zoneAll = stationZones(g, shapes);
   const drawnOf = new Int32Array(shapes.length).fill(-1), zones: string[] = [];
   for (let i = 0; i < n; i++) if (zoneAll[i] >= 0 && drawnOf[zoneAll[i]] < 0) (drawnOf[zoneAll[i]] = zones.length), zones.push(shapes[zoneAll[i]].id);
   const zoneOf = Int32Array.from(zoneAll, (z) => (z < 0 ? -1 : drawnOf[z]));
   if (!zones.length || !n) return { cmds: new Float64Array(0), zones, zoneOf, runs: detail ? [] : undefined };
-  const pitch = d.pitch, h = CELL * pitch, margin = MARGIN * pitch, reach = (MARGIN + CLOSE) * pitch;
+  const pitch = d.pitch, h = CELL * pitch, margin = MG * pitch, reach = (MG + CL) * pitch;
 
   // the grid: cell (i, j) spans x from ox + i h, y from oy + j h; sparse, in tiles, a tile's width of nothing all
   // round. A cell is named slot * TT + its index in its tile.
@@ -112,7 +115,7 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
   // closing: the region grown by CLOSE, then shrunk by CLOSE but never inside the margin, so gaps and bays narrower
   // than about twice CLOSE close up. `mark` holds steps from the margin while growing (0 inside it, 255 past the
   // growth), then from the cells grown past while shrinking (254 not yet reached).
-  const grow = Math.round((CLOSE / CELL) * 5);
+  const grow = Math.round((CL / CELL) * 5);
   const buckets: number[][] = Array.from({ length: grow + 8 }, () => []);
   /** pushes each cell whose mark is `inside` with a neighbour's not so into buckets[0], or by its step (marking it so) */
   const edgeCells = (inside: (m: number) => boolean, byStep: boolean) => slots.forEach((t, s) => {
@@ -303,7 +306,7 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
 
   // runs: chains of edges between corners where borders meet (other than two edges), each traced once
   const seen = new Uint8Array(ea.length), runs: Run[] = [], cmds: number[] = [];
-  const tolOf = (c: number, edge: boolean) => Math.max(TOL_MIN * pitch, Math.min((edge ? TOL_EDGE : TOL_MAX) * pitch, c - CLEAR * pitch));
+  const tolOf = (c: number, edge: boolean) => Math.max(TOL_MIN * pitch, Math.min((edge ? TE : TOL_MAX) * pitch, c - CLEAR * pitch));
   for (let e0 = 0; e0 < ea.length; e0++) {
     if (seen[e0] || (el[e0] < 0 && er[e0] < 0)) continue;
     seen[e0] = 1;
@@ -346,7 +349,7 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
       v = fitOcti(qx, qy, rot(tol), keepsSides(qx, qy));
     } else v = fitOcti(px, py, tol, keepsSides(px, py));
     const c0 = cmds.length;
-    rounded(v, closed, BORDER_RADIUS * pitch, cmds);
+    rounded(v, closed, RAD * pitch, cmds);
     runs.push({ p: v, left: el[e0], right: er[e0], closed, c: [c0, cmds.length] });
   }
   return { cmds: Float64Array.from(cmds), zones, zoneOf, runs: detail ? runs : undefined };
@@ -392,7 +395,7 @@ export function zoneBorders(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<
 }
 
 /** per graph node its shape's index: the outline holding it, else the nearest within REACH_M, else -1 */
-function stationZones(g: DiagramGraph, shapes: ZoneShape[]): Int32Array {
+export function stationZones(g: DiagramGraph, shapes: ZoneShape[]): Int32Array {
   const n = g.key.length;
   const box = shapes.map((s) => {
     const b = [Infinity, Infinity, -Infinity, -Infinity];
@@ -447,7 +450,7 @@ function span(ax: number, ay: number, bx: number, by: number, rho: number, yc: n
 /** A polyline through px, py fitted with runs at 0, 45 and 90 degrees, its ends kept: from each point, the farthest
  * point reachable by one run or two (one straight, one diagonal) passing within `tol` of every point between (and
  * that `keeps` allows); runs going on the same way joined. Vertices as x, y pairs. */
-function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: number, j: number, bx: number, by: number) => boolean): Float64Array {
+export function fitOcti(px: number[], py: number[], tol: number[], keeps?: (i: number, j: number, bx: number, by: number) => boolean): Float64Array {
   const m = px.length, out: number[] = [px[0], py[0]];
   let dirX = 0, dirY = 0;
   /** the ways from point i to point j (one run, or a bend at bx, by), each that fits */
@@ -552,7 +555,7 @@ function joinStraight(v: number[]): number[] {
 }
 
 /** the polyline `v` as path commands, its corners rounded with radius `r` (less where its runs are short) */
-function rounded(v: Float64Array, closed: boolean, r: number, cmd: number[]): void {
+export function rounded(v: Float64Array, closed: boolean, r: number, cmd: number[]): void {
   let m = v.length / 2;
   if (closed && m > 2 && hyp(v[0] - v[m * 2 - 2], v[1] - v[m * 2 - 1]) < 1e-9) m--;
   if (m < 2) return;
@@ -586,7 +589,7 @@ function rounded(v: Float64Array, closed: boolean, r: number, cmd: number[]): vo
   }
 }
 
-function segD(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+export function segD(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
   const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
   return hyp(px - ax - dx * t, py - ay - dy * t);
