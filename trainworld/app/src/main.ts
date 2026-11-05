@@ -86,7 +86,7 @@ import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, lastLoadDied, loadCannotFinish, startGameWait } from "./game/loading";
+import { choosing, lastLoadDied, loadCannotFinish, startGameWait, waitKey } from "./game/loading";
 import { OUT_OF_MEMORY } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
@@ -141,7 +141,7 @@ const startDemandPool = (newGame: boolean) => {
   startDemand(HOME_CITY, newGame);
 };
 if (urlChoice) {
-  startGameWait(urlChoice.slot ?? (urlChoice.newGame ? "new" : "last"));
+  startGameWait(waitKey(urlChoice));
   startDemandPool(!!urlChoice.newGame);
 }
 
@@ -621,7 +621,7 @@ if (!urlChoice) showStartMenu((choice) => {
   enterGame(); // T-2477: a pan before the pick does not count
   if (choice.game) viewStart(choice.game.start);
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
-  startGameWait(choice.slot ?? (choice.newGame ? "new" : "last"));
+  startGameWait(waitKey(choice));
   startDemandPool(!!choice.newGame && !choice.game?.real);
   pauseNewGame(choice.newGame);
   guideNewGame(!!choice.newGame);

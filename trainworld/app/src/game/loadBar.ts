@@ -111,6 +111,9 @@ export function nextLeft(prev: number | null, target: number, dt: number): numbe
 const WAVE_SLACK = 0.4;
 /** a late round with periods still out: each wave left takes this much of the average wave so far (the last wave holds fewer periods: 24% of a round against 38%) */
 const LAST_WAVE = 0.7;
+/** T-2552: a later round's first period in under this share of a wave's expected time is one that has converged (0.5 s
+ * against 10 s on Anita's 81-zone save): it says nothing of the round's pace */
+const QUICK_LAND = 0.5;
 function waveRatio(roundAt: readonly number[] | undefined, sentAt: number, firstLand: readonly (number | undefined)[] | undefined, d: number, waves: number): number {
   const r = d - 1, end = roundAt?.[r], land = firstLand?.[r];
   // (the first round carries the setup: its ratio is not the later ones')
@@ -130,13 +133,14 @@ function waveRatio(roundAt: readonly number[] | undefined, sentAt: number, first
  * what has landed of it or the time against its expectation (`timeShare`: creeping, never done until
  * published). The periods of a round land in waves, as many as `waves` (a worker takes that many
  * periods in turn): once the first is in (`firstLand`, when each round's first period landed), the round
- * is expected at that time times the waves' ratio (`waveRatio`), and the rounds after it at the mean of
+ * is expected at that time times the waves' ratio (`waveRatio`; the first round's `setup` ms counted once, and a
+ * later round's converged first period, in under QUICK_LAND of a wave, not at all), and the rounds after it at the mean of
  * the later rounds so far with it; a round past even that is expected to take as long again per wave as it
  * has so far, and with nothing landed a fifth of its time so far more. `ms` is the stage's expected
  * length, `left` the time still expected, `first` and `rest` the first round's and each later one's ms as
  * measured or expected.
  */
-export function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLand: readonly (number | undefined)[] | undefined, doneRound: number, prior: number, later: number, now: number, periods: number, waves: number): { ms: number; share: number; left: number; first: number; rest: number } {
+export function solveStage(sentAt: number, roundAt: readonly number[] | undefined, published: number, landed: number, firstLand: readonly (number | undefined)[] | undefined, doneRound: number, prior: number, later: number, now: number, periods: number, waves: number, setup = 0): { ms: number; share: number; left: number; first: number; rest: number } {
   const d = Math.min(published + 1, doneRound + 1);
   const at = (r: number) => roundAt?.[r] ?? sentAt;
   let first = d > 0 && at(0) > sentAt ? at(0) - sentAt : prior / (1 + doneRound * later);
@@ -145,8 +149,10 @@ export function solveStage(sentAt: number, roundAt: readonly number[] | undefine
   if (d > doneRound) return { ms: boundary - sentAt, share: 1, left: 0, first, rest };
   let exp = d === 0 ? first : rest;
   const firstLandAt = firstLand?.[d];
-  const waved = firstLandAt !== undefined && firstLandAt > boundary && landed > 0 && landed < periods;
-  if (waved) exp = (firstLandAt - boundary) * waveRatio(roundAt, sentAt, firstLand, d, waves);
+  const waved = firstLandAt !== undefined && firstLandAt > boundary && landed > 0 && landed < periods && (d === 0 || firstLandAt - boundary >= QUICK_LAND * exp / waves);
+  // (T-2552: the first round's setup, before any period, is once a round, not once a wave)
+  const once = d === 0 && waved && setup < firstLandAt - boundary ? setup : 0;
+  if (waved) exp = once + (firstLandAt - boundary - once) * waveRatio(roundAt, sentAt, firstLand, d, waves);
   const el = Math.max(0, now - boundary), part = Math.min(STEP_CAP, landed / periods);
   let curLeft = Math.max(exp - el, 0.2 * el * (1 - part));
   if (el > exp && landed > 0 && landed < periods && waves > 1) {
@@ -160,6 +166,27 @@ export function solveStage(sentAt: number, roundAt: readonly number[] | undefine
   const cur = Math.max(part, timeShare(boundary, exp, now));
   const doneMs = boundary - sentAt;
   return { ms, share: (doneMs + exp * cur) / Math.max(1, doneMs + exp + after * rest), left: curLeft + after * rest, first, rest };
+}
+
+/** The bar shown for the model's `fraction`, never going back: when the fraction falls (the shares change as the
+ * network arrives, an estimate grows) the bar keeps its place and the rest of the work is spread over the rest of it.
+ * `bar` holds the best shown so far and that place's anchor, and is updated. */
+export interface BarPlace { best: number; anchor?: { shown: number; frac: number } }
+export function keepPlace(bar: BarPlace, fraction: number): number {
+  const a = bar.anchor;
+  let shown = a ? a.shown + (1 - a.shown) * Math.max(0, fraction - a.frac) / Math.max(1e-6, 1 - a.frac) : fraction;
+  // (T-2552: a fall below the place's own fraction moves the place down to it, so the bar moves again with the
+  // next work done rather than when the fraction is back where it was)
+  if (shown < bar.best - 1e-6 || (a && fraction < a.frac)) { bar.anchor = { shown: bar.best, frac: fraction }; shown = bar.best; }
+  bar.best = Math.max(bar.best, Math.min(0.99, shown));
+  return bar.best;
+}
+
+/** T-343, T-2552: the bar of a zone loading outside the load in hand: its download, its opening and the solve that
+ * covers it (none for a zone opened bare), each by its share done and weighted by its expected ms */
+export function zoneShare(p: { dlMs: number; dl: number; openMs: number; open: number; solveMs: number; solve: number }): number {
+  const total = p.dlMs + p.openMs + p.solveMs;
+  return total > 0 ? (p.dlMs * p.dl + p.openMs * p.open + p.solveMs * p.solve) / total : 1;
 }
 
 /** a remembered wait still describes the game: its network has not changed by over a fifth */

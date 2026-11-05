@@ -66,7 +66,7 @@ import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, onLoadStop, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
-import { GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs } from "../game/loadBar";
+import { type BarPlace, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
 import { PERIODS, periodsMatch } from "../game/periods";
@@ -404,6 +404,12 @@ interface Download { got: number; total: number; at: number; end?: number }
  * last solve of the zone in view (LAST_SOLVE). The solve re-measures itself round by round (`solveStage`).
  */
 const OPEN_MS_PER_MB = { city: 220, market: 20 };
+/** T-2552: a game solve shorter than this says nothing of this browser's pace on a big one, nor of its later rounds
+ * against its first (a new game's empty network: 4.5 s against the model's 34 s, which then put an 81-zone save's
+ * solve at a third of its time) */
+const PACE_SOLVE_MS = 10000;
+/** a solve's setup in its workers (set_network, before its first period), the longest of those reported */
+const setupOf = (s: Solve) => s.setupMs.reduce((m, x) => Math.max(m, x ?? 0), 0);
 /** T-1195: and each city pack 450 ms besides its size (China's 169 packs took three times what their
  * MB alone gave, New York's 5 and the world save's 21 matched it) */
 const OPEN_CITY_MS = 450;
@@ -1825,7 +1831,8 @@ class DemandClient {
   /** T-325: whether a load needs a solve to finish: at startup, in a game load's hold, or when a
    * city of it must be covered by the solves (not a zone opened bare). */
   private jobNeedsSolve(job: NonNullable<DemandClient["job"]>): boolean {
-    if (job.startup || this.hold) return true;
+    // (T-2552: and a game load whose network has not arrived: the network in hand is the last game's)
+    if (job.startup || this.hold || (job.wait !== null && gameLoadArmed())) return true;
     const need = this.solveNeed(this.latest());
     return !need || job.cities.some((id) => need.has(id));
   }
@@ -1845,8 +1852,8 @@ class DemandClient {
     this.zoneProgress();
   }
 
-  /** T-343: the best share shown so far for each zone loading outside the load in hand */
-  private zoneBest = new Map<CityId, number>();
+  /** T-343, T-2552: each loading zone's bar as shown so far (its best and place) */
+  private zonePlaces = new Map<CityId, BarPlace>();
   /** T-421: a game load's zones still without their final after its card went at the view's */
   private unsettled: Set<CityId> | null = null;
   /** T-421: a startup solve released at the view's final, remembered (LAST_SOLVE) at its own */
@@ -1864,7 +1871,7 @@ class DemandClient {
     // T-2524: the time a whole solve with the barrier still needs (a load's, or a cached result's network
     // solved again), for the zones it holds up and the note of a click waiting on it
     const st = s && s.published < ROUNDS && !this.failed && (this.unsettled?.size || s.barrier)
-      ? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stopCount(s.svc), "all"), loadPace().later, now, PERIODS.length, solveWaves)
+      ? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stopCount(s.svc), "all"), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s))
       : null;
     const was = solveLeft.peek();
     const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, st.left, was ? now - was.at : 0), at: now } : null;
@@ -1874,6 +1881,17 @@ class DemandClient {
     const sl = solveLeft.peek();
     const solving: ZoneStep = { step: STAGE_TEXT.demand, leftMs: sl?.leftMs ?? null, at: sl?.at ?? now };
     let moving = false;
+    // T-2552: each bar keeps its place as the card's does (`keepPlace`); none is kept while the card is up, which
+    // hides the bars, so a zone's bar starts from its own share when it shows
+    const cardUp = !!clock?.held.peek();
+    const places = new Map<CityId, BarPlace>();
+    const placed = (id: CityId, f: number) => {
+      if (cardUp) return Math.min(0.99, f);
+      const p = this.zonePlaces.get(id) ?? { best: 0 };
+      places.set(id, p);
+      return keepPlace(p, Math.min(0.99, f));
+    };
+    const sn = this.solveNeed(this.latest());
     for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
       if (isMarket(id) || shown.has(id) || next.has(id) || this.unsettled?.has(id) || this.failed) continue;
       let f: number;
@@ -1893,24 +1911,40 @@ class DemandClient {
         const dlMs = at === Infinity ? 300 : dl >= 1 || got === 0 ? Math.max(300, now - at) : (now - at) / dl;
         const openMs = Math.max(300, (bytes ?? (total || GUESS_BYTES)) / 1e6 * OPEN_MS_PER_MB.city);
         const log = lastLoad(this.start.loads, (l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
-        const open = this.isOpen(id) ? 1 : log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0;
-        f = (dlMs * dl + openMs * open) / (dlMs + openMs);
+        // (a zone a solve covers opens in every solving worker: their acks are its real progress)
+        const toSolve = !!sn?.has(id);
+        const acked = toSolve ? Math.min(1, 0.9 * (this.packAcks.get(id) ?? 0) / this.computeN) : 0;
+        const open = this.isOpen(id) ? 1 : Math.max(acked, log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0);
+        // T-2552: and it waits for that solve: the one running, to its final with the barrier and to its first
+        // round without, else the next, expected as the solves before it took
+        let solveMs = 0, solve = 0;
+        if (toSolve) {
+          if (s && !s.rough && s.cities.includes(id)) {
+            const zs = st ?? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, READY_ROUND, solveEstimate(stopCount(s.svc)), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s));
+            solveMs = zs.ms;
+            solve = zs.share;
+          } else {
+            const svc = this.latest();
+            solveMs = solveEstimate(svc ? stopCount(svc) : null);
+          }
+          moving = true;
+        }
+        f = zoneShare({ dlMs, dl, openMs, open, solveMs, solve });
         if (!this.isOpen(id)) moving = true;
       }
-      const best = Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, f));
-      next.set(id, best);
+      next.set(id, placed(id, f));
     }
     // T-421: a game load's zones still solving after its card went at the view's final, until theirs
     // lands (through any newer solve: they have no final figures yet)
     if (s && st && this.unsettled?.size) {
       for (const id of this.unsettled) {
         if (next.has(id)) continue;
-        next.set(id, Math.max(this.zoneBest.get(id) ?? 0, Math.min(0.99, st.share)));
+        next.set(id, placed(id, st.share));
         steps.set(id, solving);
         moving = true;
       }
     }
-    this.zoneBest = new Map(next);
+    this.zonePlaces = places;
     const prev = zoneLoads.peek();
     if (next.size !== prev.size || [...next].some(([id, f]) => prev.get(id) !== f)) zoneLoads.value = next;
     const prevSteps = zoneSteps.peek();
@@ -1987,8 +2021,8 @@ class DemandClient {
         rememberPace({
           data: job.modelData && data - net > 500 ? (data - net) / job.modelData : pace.data,
           game: net - job.since > 200 ? (net - job.since) / GAME_MS : pace.game,
-          solve: job.modelSolve && end - data > 500 ? (end - data) / job.modelSolve : pace.solve,
-          later: r?.measured && r.first > 0 ? r.rest / r.first : pace.later,
+          solve: job.modelSolve && end - data > PACE_SOLVE_MS ? (end - data) / job.modelSolve : pace.solve,
+          later: r?.measured && r.first > 0 && end - data > PACE_SOLVE_MS ? r.rest / r.first : pace.later,
         });
       }
       // remembered for the next load's estimate (T-243): a startup's solve, so it describes the
@@ -2060,7 +2094,7 @@ class DemandClient {
       const landed = byRound[published + 1]?.filter(Boolean).length ?? 0;
       // (a cluster solved ahead keeps no landing times: seen here, to 0.1 s)
       if (a && landed > 0) (job.firstLand ??= [])[published + 1] ??= now;
-      const st = solveStage(s.sentAt, (a ?? s).roundAt, published, landed, a ? job.firstLand : s.roundFirstAt, doneRound, prior, job.pace.later, now, PERIODS.length, solveWaves);
+      const st = solveStage(s.sentAt, (a ?? s).roundAt, published, landed, a ? job.firstLand : s.roundFirstAt, doneRound, prior, job.pace.later, now, PERIODS.length, solveWaves, a ? 0 : setupOf(s));
       solveMs = st.ms;
       solve = st.share;
       solveLeft = st.left;
@@ -2086,11 +2120,7 @@ class DemandClient {
       demand: !needsSolve ? 1 : solve,
     };
     const fraction = Math.min(0.99, stagedFraction(job.shares, parts));
-    // When the shares change (the network arrives and the guess gives way to the model), the bar keeps
-    // its place and the rest of the work is spread over the rest of it.
-    let shown = job.anchor ? job.anchor.shown + (1 - job.anchor.shown) * Math.max(0, fraction - job.anchor.frac) / Math.max(1e-6, 1 - job.anchor.frac) : fraction;
-    if (shown < job.best - 1e-6) { job.anchor = { shown: job.best, frac: fraction }; shown = job.best; }
-    job.best = Math.max(job.best, Math.min(0.99, shown));
+    keepPlace(job, fraction);
     // T-1479: the time left, each stage's expected time less its time so far; a stage running late is
     // guessed to go on a share of its time so far. Unknown on a first load until its network is in.
     // T-1654: always a figure; a late round is estimated from the periods landed (`solveStage`).
@@ -2319,7 +2349,7 @@ class DemandClient {
         const solving = demandSolving.peek();
         this.unsettled = new Set(s.cities.filter((id) => solving?.has(id) ?? true));
         // their bars start from their own solve's share (the card's load ended without them)
-        for (const id of this.unsettled) this.zoneBest.delete(id);
+        for (const id of this.unsettled) this.zonePlaces.delete(id);
         // the load in hand ends with the card: the other zones show their own bars (`zoneProgress`)
         this.endJob();
         loadProgress.value = null;

@@ -253,7 +253,9 @@ riders counters keep their own smoothing (Live feel).
   under the outside shade, and a second fill would darken it. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,
   filling as it loads (the top bar's load for the zones in it, a
   loaded game's zone still solving its solve's rounds and time against its expected final, else
-  the zone's own download and opening). Its hover [T-2524] is "Loading Toronto, 40%", then the
+  the zone's own download and opening, then for a zone a solve covers that solve's rounds, to its final with the
+  barrier and to its first round without [T-2552]; a bar keeps its place as the card's does, and starts from its own
+  share when the card goes). Its hover [T-2524] is "Loading Toronto, 40%", then the
   stage it waits on ("Loading city data", or "Calculating demand" once its pack is open and the solve
   covering it runs), then the time left as the loading card words it ("About 2 min left", counted
   down each second; the top bar's load's for its zones, the running whole solve's for a zone it holds

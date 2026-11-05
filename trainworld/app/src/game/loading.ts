@@ -75,6 +75,10 @@ let holdArmed = true;
  * starts a new one. `key` names the game for the remembered length of its wait (the slot). */
 let wait = { seq: 0, since: 0, key: "last" };
 export const gameWait = () => wait;
+/** The key a picked game's wait starts under: its slot; a new game's "new"; T-2552: a file or backup being opened has
+ * no slot until it loads (the "loaded" message names it), so "pending", under which nothing is remembered, never
+ * the last game's "last" */
+export const waitKey = (choice: { slot?: string; newGame?: boolean; pending?: boolean }) => choice.slot ?? (choice.newGame ? "new" : choice.pending ? "pending" : "last");
 /** The start menu's pick (main.ts): the startup wait begins. */
 export function startGameWait(key: string) {
   setLoadFlag(true);

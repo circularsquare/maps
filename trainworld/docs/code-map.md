@@ -546,6 +546,10 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   `old/t1554-fare-display.mjs`), `t2022-loan-schedule.mjs` (node with `--experimental-strip-types`,
   no browser: `game/loan.ts`'s 60 equal payments drained in uneven slices, the total, zero after the
   last day, a payment on short cash, a save round trip and a pre-T-2022 loan; a second),
+  `t2552-load-bar.mjs` (node with `--experimental-strip-types`, no browser, in smoke: `game/loadBar.ts`'s solve
+  stage and kept place on the rounds of an 81-zone save's solve, with the solve expected right, at half and at
+  twice: never 20 s on one percent, "A few seconds left" only near the end, the time left at least a third of the
+  real one; a zone's bar through its opening and solve),
   `t1626-hsr-fare.mjs [url]` (a new game:
   the High speed fare row only once a line runs high-speed trains; on that line multipliers 1.0, 1.5
   and 2.0 lose riders and raise the fare a ride; a shot to artifacts/trainworld/t1626-money.png;

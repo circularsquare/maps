@@ -404,9 +404,10 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   const key = "slot-" + crypto.randomUUID();
   const lease = await leaseSlot(key);
   switching = true;
+  loadingInto = key;
   try {
     await load();
-  } catch (err) { lease?.release(); throw err; } finally { switching = false; }
+  } catch (err) { lease?.release(); throw err; } finally { switching = false; loadingInto = null; }
   held();
   activeLease?.release();
   activeSlot = key;
@@ -2240,7 +2241,8 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const decoded = await decodeSave(stored.bytes);
         if (!isNortheastSave(decoded.header)) throw new Error("This save is for another world.");
         switching = true;
-        const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; });
+        loadingInto = key;
+        const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; loadingInto = null; });
         activeLease?.release();
         activeSlot = key;
         hold(lease);
@@ -2280,6 +2282,8 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
 
 /** whether the game just loaded was converted from an older frame (T-308), for the "loaded" message */
 let convertedOnLoad = false;
+/** T-2552: the slot a game is being loaded into, which becomes the active one only after; for the "loaded" message */
+let loadingInto: string | null = null;
 
 /** Replace the game with a save's. Throws a player-readable reason, changing nothing. A save whose
  * track is not in the world frame is converted once, through longitude and latitude, and loaded in
@@ -2429,7 +2433,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   sendOpened();
   sendHome();
   send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
-  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game });
+  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: loadingInto ?? activeSlot });
   convertedOnLoad = false;
   sendState();
   clearTimeout(snapTimer);

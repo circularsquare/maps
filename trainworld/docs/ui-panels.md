@@ -1137,13 +1137,14 @@ registry centre and zoom, or over New York with none [T-310].
   expected to take 4 s; then the game stage as it took, the data as modelled (each city pack 450 ms
   plus 220 ms per MB, market packs 20 ms per MB and 1.5 s for their composition, downloads at their
   rate; times how this browser's last load compared with the model), the solve 34 s plus 148 ms a
-  zone it covers plus 7.88 ms times the square of its line stops, times how this browser's last game solve compared with that
-  [T-1479]. The solve's first round and its later ones are timed apart: before the first lands the
+  zone it covers plus 7.88 ms times the square of its line stops, times how this browser's last game solve of 10 s or
+  more compared with that [T-1479, T-2552]. A file or backup being opened has none of its own (never the last game's)
+  and is remembered under the slot it goes into [T-2552]. The solve's first round and its later ones are timed apart: before the first lands the
   later ones are expected at this browser's last ratio of the two (0.5 with none), after it at that
   ratio times the first, from the second on at their own mean; a round running late stretches the
-  rounds after it too. The bar never goes back: when the
-  shares change (the network arrives and the guess gives way to the model) it keeps its place and the
-  rest is spread over the rest of it. It is never full before the card goes. The pick and the game it
+  rounds after it too. The bar never goes back: when the model's share falls (the network arrives and the
+  guess gives way to the model, or an estimate grows) it keeps its place and the rest is spread over the rest
+  of it, moving again with the next work done [T-2552]. It is never full before the card goes. The pick and the game it
   opens are one wait. A game loaded in place while the last one's bar is still up (a check's direct
   load; the player's loads reload the page) starts the bar over from empty [T-840].
 - **Under the bar, the share done and the time left** [T-1479, T-1654]: "42%" at its left, "About 2 min
@@ -1151,7 +1152,9 @@ registry centre and zoom, or over New York with none [T-310].
   a stage past its expected time is guessed to go on a share of its time so far (a data stage 0.3 of it
   times the part not yet landed). The solve is the rounds still to come: the rounds so far give the
   rest (the remembered load's before the first lands); within a round, the periods land in waves, and
-  the first one in gives the round's length (times the waves' ratio, which the round before measures);
+  the first one in gives the round's length (times the waves' ratio, which the round before measures; the
+  first round's setup in the workers counted once, and a later round's first period in under half a wave's
+  expected time, one that has converged, not counted) [T-2552];
   a round past that is guessed to go on as long per wave as it has so far. It shows once the game's
   network is in (from the start when the slot's last load is remembered). It counts down with the
   clock and drops to a lower estimate at once; it never climbs by degrees: an estimate over 1.4 times
