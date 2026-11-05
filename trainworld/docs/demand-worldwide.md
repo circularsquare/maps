@@ -1087,7 +1087,8 @@ notes/T-420.md has the tables.
   pack's own curve and border factor inside it, region pairs across packs from the pack holding
   both, else the country's admin-1 default (US 0.23, Japan 0.5), else the pack-line default 0.5
   (`pack_line_default`; Japan's census fit was 0.4, raised by Anita in T-1163), national borders
-  0.05 (US-Canada, judgement). A line through one continuous city (10+ km of it with GHS-POP 1 km
+  0.05 (US-Canada, judgement), 0 where a border is closed to crossings (Ukraine with Russia and Belarus,
+  T-2344). A line through one continuous city (10+ km of it with GHS-POP 1 km
   pixels of 1,500+ people on both sides in one urban centre) eases up to 1 by that centre's people
   on the smaller side, 50,000 to 200,000 (T-1192, `seamless`, `pipeline/seams.py`; 41 pairs, 38 in
   China). Why it may not carry over: GHS-POP's 1 km grid and the 1,500 threshold find Chinese
