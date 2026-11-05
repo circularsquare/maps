@@ -67,6 +67,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Anita ~14:10: "i love how japan looks ... perhaps we could turn down distortion if its easy (maybe ... a distortion
   dial thats easy for us to tune)". Filed T-2556; **diagdial** (Opus, tree from 8dd24b55, port 6193): DISTORT constant
   + ?distort=, measures and pictures at 3-4 settings, picks a default.
+- loadnotes LANDED 1cf096fc (records 88ea32a6; agent 400k): T-2523 click note in status tag, T-2524 bar hover stage/
+  time left/stall line (90 s, ?stallMs); profile: nothing stalls, the bar model runs ahead (T-2552), unequal periods
+  (T-2553), import+reload may miss the cache (T-2557). New strings shown to Anita. **loadbar** (Opus, tree from
+  88ea32a6, port 6194): T-2557 + T-2552.
 - **mexprep** (Opus, main tree; new pipeline/mexico.py only, data/raw/mexico; no shared pipeline edits until join PID
   6408 ends): T-2080 census 2020 population hook (Brazil's shape), T-2081 DENUE jobs. Mexico's build T-2436 itself
   waits for Europe. Brazil T-2437 needs no prep (brazil.py hook done); Sao Paulo hand-built since T-458.
