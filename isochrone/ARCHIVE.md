@@ -1,5 +1,6 @@
 # Archive
 
+- T-023 [P2] M1 doc tidy and sweep. Done 2026-11-05: SPEC, docs and code-map brought to the day's changes (hex look, globe, corridor colour and hover, upstream speeds, carry x2, survival from 0.5%); measurements moved to notes/ (solve times to T-002, the 100 m table to T-047); TASKS top rewritten.
 - T-077 [P1] Corridors after the windows. Done 2026-11-05: counted once every level is painted, coarse first; slack pays K x hazard; a stale-state bug fixed; windows 1.5-2x faster than T-056, L10 not (target missed); ktrips walks. notes/T-077.md.
 - T-042 [P2] Land hazard band. Done 2026-11-05 in three stages: design approved by Anita (docs/hazard.md), world band (T-066), page (T-067); thirst by distance to water, ice, altitude, cold. notes/T-042.md.
 - T-067 [P2] Land hazard on the page (T-042 stage 3). Done 2026-11-05: walking, carrying and getting in or out pay the band at every level; walking runs the general search (1.1-1.5x); hover survival from 0.5% risk; credits. Trips match node; Cluj +0.1%. notes/T-067.md.

@@ -3,16 +3,21 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Where things stand (2026-11-05, work resumed after a pause from 2026-10-26).** Walking and canoe both
-work worldwide (L10 world, L3 and L1 view windows, 100 m in New York and Cluj). The canoe paddles
-rivers, lakes and sea with currents and carries overland; water danger is on with K = 1000 h and
-the hover shows survival. Corridors, a speeds panel, hill shading and river lines are on the page.
-Our own 1 km walking surface is built but not on the page. Smoke passed 15/15 at the pause.
+**Where things stand (2026-11-05, evening).** Walking and canoe both work worldwide (L10 world,
+L3 and L1 view windows, 100 m in New York and Cluj), on a globe, with hex cells. The canoe paddles
+rivers, lakes and sea with currents (upstream 0.4 of the current, floor 2.5 km/h) and carries
+overland at x2. Water and land danger are on with K = 1000 h; the hover shows survival from 0.5%
+risk. Corridors are coloured by speed, drawn by trips, re-chosen over land and hoverable; a
+speeds panel, hill shading and river lines are on the page. Our own 1 km walking surface and the
+roads design (share3 rule) are built but not on the page. The world roads pass (T-053) is running
+in the background. Smoke passes 15/15.
 
-**Next up** (Anita, 2026-11-05): OSM roads at 1 km worldwide, fetched region by region since
-the planet won't fit on C: (T-010), then our own surface on the page (T-028), which fixes rural
-walking times 18-52% too short; the 100 m tiles by T-047's rule from the same fetch (T-057);
-then land danger (T-042). 10,000 BC is for later. Open questions: `notes/for-anita.md`.
+**Next up** (Anita, 2026-11-05): when the roads pass ends, reduce and build the world GeoTIFF,
+then our own surface with roads on the page (T-028, which fixes rural walking times 18-52% too
+short) and the 100 m tiles by T-047's rule (T-057, towns and water country first). Then 90 m
+terrain (T-011), then T-039 and the mountain tiles. 10,000 BC is for later. M1 and M2 each wait
+on a doc tidy (T-023 done; M2's is T-078). Open questions: `notes/for-anita.md`; carry x2 or x3
+is open with her.
 
 Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
 you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC moved to later
@@ -20,7 +25,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-(none)
+- T-053 (below): the world roads pass, running detached.
 
 ## M1: canoe, today
 
@@ -28,19 +33,20 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 - T-075 [P3] Island water: water round an island that no river line comes near stays unreached on canoe starts (25 cells in the Amazon window at Santarem): the water is reached only from the island and the island only from the water (notes/T-036.md).
 - T-065 [P3] Upstream creek-weaving: going up the Madeira or Solimoes the cheapest canoe route weaves between small rivers that share an L10 cell, paddling down some and up others (4.3 km/h at Q = 1), since the Amazon main stem upstream sits at the 2.5 km/h floor (`upMin`, T-071); Belem to Manaus still paddles ~78 h downstream on the way up. A side effect of joining rivers that share a cell (docs/canoe.md 8). Decide whether it needs fixing once Anita has seen it (notes/T-064.md, notes/T-071.md).
 - T-073 [P3] Small rivers may be too fast both ways: upstream on a Q = 1 stream is 4.3 km/h, but shallow small rivers were often dragged or poled (Lewis and Clark up the Jefferson). Check small-river records and whether a depth or width limit belongs in the upstream rule (notes/T-071.md).
-- T-023 [P2] M1 doc tidy: spec against code, prune TASKS, fold notes. Last in M1.
 
 ## Roads and 100 m
 
 - T-010 [P1] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. Stage 1 done 2026-11-05: tools/roads/, rule share3 (e = min(1, 3 x road share of the cell); 4% median off 100 m in the test tiles, MAP 22%), design in docs/roads.md for Anita's review (notes/T-010.md). Stage 2 is T-053.
-- T-053 [P2] Roads world build (T-010 stage 2): fetch, extract and delete the 513 Geofabrik extracts of `data/roads/regions.json` one by one (84.6 GB), then `reduce` and a world GeoTIFF of the 1 km layer (docs/roads.md "Fetching the world"). A small driver (fetch the next while one is read) is the only new code. ~8 h on one core, ~4 h on two; peak disk ~4 GB. Approved by Anita 2026-11-05; taking, 2026-11-05 (notes/T-053.md).
+- T-053 [P2] Roads world build (T-010 stage 2): fetch, extract and delete the 513 Geofabrik extracts of `data/roads/regions.json` one by one (84.6 GB), then `reduce` and a world GeoTIFF of the 1 km layer (docs/roads.md "Fetching the world"). A small driver (fetch the next while one is read) is the only new code. ~8 h on one core, ~4 h on two; peak disk ~4 GB. Approved by Anita 2026-11-05; taking, 2026-11-05: `world.py --jobs 1` running since 14:52 (about 106 of 513 extracts at 18:00), log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
 - T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
 - T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1.
+- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
 
 ## M2: survival
 
-- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1 done 2026-10-26: water hazard on canoe starts, K = 1000 kept after the check trips (notes/T-006.md). Land: T-042 done 2026-11-05 (design, world band, page; walking trips in notes/T-042.md and T-067.md). Walking trips are in checks/ktrips.mjs (T-077); left: close with M2's doc tidy.
+- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1 done 2026-10-26: water hazard on canoe starts, K = 1000 kept after the check trips (notes/T-006.md). Land danger is done (T-042, 2026-11-05: design, world band, page; walking trips in checks/ktrips.mjs, notes/T-042.md and T-067.md). Left: close with M2's doc tidy (T-078).
 - T-043 [P3] Lake water temperature: lakes take the nearest sea's summer temperature for the cold factor of their wave hazard (docs/canoe.md 3), so a big cold lake far from a cold sea reads warm. Try ERA5 lake mix-layer temperature for lakes over ~100 km².
+- T-078 [P2] M2 doc tidy: spec against code, prune TASKS, fold notes (as T-023 did for M1). Last in M2, after T-006 and T-043 are closed or moved.
 
 ## Later
 
@@ -49,7 +55,6 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
-- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.

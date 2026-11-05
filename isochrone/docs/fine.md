@@ -110,29 +110,19 @@ goes" keeps it to a few GB.
 - **In `js/windows.js`**: `fineWindowFor`, then `solveWindow` as for L1, seeded on its ring from
   L1 (then L3, L10) by the same bilinear sample; reuse and cancelling as for L1. Tiles come
   through `js/tiles.js` with their own cache of decoded speed tiles (~100 MB, 1.44 MB a tile).
-- **Times**, headless Chrome, 1400 x 900, every cell land (Cluj): 0.1-0.2 s at zoom 12, 0.4 s at
-  zoom 11, 1.25-1.5 s at the cap (zoom 9.5). The first fetch of a region is 0.2-1.2 s. A bucket
-  queue in place of the heap is 1.3-1.6x faster (stage 2).
+- **Times**: about 1.5 s at the cap, much less when zoomed in (notes/T-038.md). A bucket queue in
+  place of the heap is 1.3-1.6x faster (stage 2).
 - **Paint**: a fourth canvas source on top (`walk01`), holes cut in L1, L3 and L10 under it.
-  Cells show as squares from about zoom 12 (5 px; 10-13 px at 13, 20-26 at 14). The map's
-  maximum zoom is 14.
+  Cells show from about zoom 12 (5 px; 10-13 px at 13, 20-26 at 14). The map's maximum zoom is 14.
 - **Hover** and the route read L0.1 first where it is shown.
 
 ## Where the fine level goes
 
-Measured on 42 sample tiles (`notes/T-047.md`): in each, the
-page's own search from five starts at 1 km and at 100 m, counting the share of the tile whose
-colour band changes or which only one level reaches.
-
-**What changes the answer at 100 m:**
-
-| Where | Share of the tile that looks different | Why |
-|---|---|---|
-| deltas, creek cities, lake tundra, New York | 20-95% | water that cuts land apart changes what is reached at all |
-| mountains | 22-58% | 90 m slopes; the 1 km slope smooths hillsides and valleys away |
-| mixed farmland, savanna, towns with hills or rivers | 10-25% | the search picks the faster patches the 1 km mean blurs |
-| one-piece cities (London, Trenton, Tokyo) | 5-14% | urban land is 5 km/h at both levels |
-| sand seas, ice, taiga, unbroken forest, flat open tundra | 2-10% | uniform at both levels |
+What changes the answer at 100 m, from 42 sample tiles (the table and method are in
+`notes/T-047.md`): water that cuts land apart (deltas, creek cities, lake tundra, New York),
+mountains (90 m slopes; the 1 km slope smooths hillsides and valleys away), and to a lesser degree
+mixed farmland and towns with hills or rivers. One-piece cities (urban land is 5 km/h at both
+levels), sand seas, ice, taiga, unbroken forest and flat open tundra change little.
 
 Most of what stands out in farmland today is MAP's road model, not resolution: MAP walks a
 whole 1 km pixel at road speed when a road crosses it, so rural times at 100 m are 18-52%
@@ -165,18 +155,15 @@ coarse cell already gives the fine answer.
 
 ## Hexes
 
-They do not help enough to re-grid:
+The grid and the search stay square at every level. The hex is a paint look only (the default on
+the page, `cfg.look`, `js/paint.js`): each cell is drawn as a hexagon on the canvas, and the pixel
+to cell map is kept per grid geometry. A real hex grid would not pay:
 
-- **Look**: a hex looks rounder than a square only when cells are big on screen. At 100 m a cell
-  is 1-5 px at zoom 10-12, so the shape does not show; where it does (L1 at zoom 8-9) the fix is
-  finer cells or smoother band edges.
 - **Search**: the worst extra length on a straight line is 2.7% for our squares with 16 moves,
   15.5% for hexes with 6 neighbours, 3.5% with 12.
 - **Cost**: every source is a latitude-longitude raster, so each layer would be resampled; hex
-  levels do not nest (H3 children overhang their parent), which breaks seeding and windows; and
-  hexes cannot go in a MapLibre canvas source.
-
-**Keep squares.**
+  levels do not nest (H3 children overhang their parent), which breaks seeding and windows.
+- At 100 m a cell is 1-5 px at zoom 10-12, so the look shows only from about zoom 12.
 
 ## Publishing
 
@@ -199,6 +186,5 @@ world selection ~2.8 GB (R2's free tier is 10 GB of storage).
 
 ## Open
 
-- **Which tiles get 100 m**: the rule above (~2.8 GB), a wider one, or more test regions first.
 - **Zoom 8-9** stays L1 (cells 3-8 px). Smoothing band edges by colouring an interpolated time
   instead of whole cells would soften it at every level, with no new data.

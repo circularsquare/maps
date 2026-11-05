@@ -121,12 +121,10 @@ works it out from the canoe data when it builds a level's canoe layer. Rates are
 per cell from thirst, cold, ice and altitude), paid at its rate x walking time; carrying the canoe
 counts the same rate over its doubled time, and getting in or out 0.25 h at the land cell's rate.
 
-**What K = 1000 does** on the check trips (notes/T-006.md): Brest to A Coruña goes round the
-coast (30 days, survival ~99%, against 16 days straight across at ~73%); Marseille to Barcelona
-follows the Gulf of Lion; Dover-Calais, Tarifa-Tangier and Taiwan-Yonaguni are crossed as before;
-Bergen to Iceland hops by Shetland, Orkney and the Faroes (~7% survival); the open North
-Atlantic is not crossed. K never makes a place unreachable by itself; the survival stop rule
-(section 5) does, in open ocean.
+**What K = 1000 does**: a canoe hugs coasts where a crossing is risky, short straits are crossed
+as before, and the open ocean is not crossed. K never makes a place unreachable by itself; the
+survival stop rule (section 5) does, in open ocean. The check trips and their figures are in
+`notes/T-006.md`.
 
 **A slider later.** K is one number in the worker; changing it re-solves (~0.3-0.8 s at L10),
 with no new data. A slider in the mode panel (T-008), log steps from 0 ("fastest, whatever the
@@ -297,13 +295,9 @@ unchanged, with dams and weirs open and the steps inside reservoirs used (reserv
 that era's land mask). Exposed shelves get no rivers in stage 1 (paleo rivers are later). Today's
 currents, waves and ice are reused.
 
-## 10. Build stages
+## 10. Not built yet
 
-| Id | Stage | Needs |
-|---|---|---|
-| T-020 | Rivers data: RiverATLAS to river steps at L1, L3, L10 (Q >= 1, v from Q, gradient classes), OSM falls, dams and weirs, HydroLAKES reservoirs | this review |
-| T-021 | Lakes and sea data: water tiles (`kind`, `shore`, `links`) at all levels, `sea.bin.gz` from drifters and ERA5 summer | this review |
-| T-022 | Search with layers: node ids, transfers, directed river and sea edges, weight = time + K x hazard (hazard 0 until T-006), seeding by layer, painting the sea; measure speed | T-019; T-020 and T-021 data (synthetic files meanwhile) |
-| T-024 | Canoe hover: time by kind and the route line, traced across levels (done) | T-022 |
-| T-008 | Mode panel: walking or canoe start (done); later K, the other toggles and the era switch | T-022 |
-| T-006 | Hazard rates: the water table and K tuned on the check trips (stage 1, built); then the land hazard band (T-042) | T-022 |
+- A slider for K and the other toggles in the mode panel, and the era switch (T-008 later parts).
+- Lake water temperature from ERA5 in place of the nearest sea's (T-043).
+- The canoe at 100 m (T-050, `docs/fine.md`).
+- 10,000 BC (T-012, section 9).

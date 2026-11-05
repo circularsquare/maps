@@ -14,8 +14,8 @@ out, so a walk across the Sahara or Greenland is no longer as safe as a walk in 
 A competent walker travelling light: clothing for the local climate, food for the way, 9.5 litres
 (10 US quarts) of water filled at every drinkable source, no polar gear, no stove fuel, no rescue.
 Risks that depend on who travels and on other people (disease, violence, getting lost) are not
-counted; nor is a background risk, so a walk through farmland reads survival 100% and the hover
-shows survival only where something here applies (water travel has its own small rates).
+counted; nor is a background risk, so a walk through farmland reads survival near 100% and the
+hover shows survival only from 0.5% risk (water travel has its own small rates).
 
 ## 2. Factors
 
@@ -143,37 +143,23 @@ loop's time (~0.3-0.7 s a click). The stop rule is as at sea: a path stops when 
 under 1%.
 
 **Hover.** Survival (rounded down) shows on either start once the path's risk reaches 0.5%:
-almost every walk has some hazard (95% of the cells reached from Cluj), nearly all of it far
-smaller.
+almost every walk has some hazard, nearly all of it far smaller, and "99%" on a walk through
+farmland would mislead.
 
 ## 5. What it does to routes
 
 K stays 1000 h: a cell's weight is its time x (1 + 1000 x rate), so 1e-4 an hour costs 10%
 more, 1e-3 twice, 1e-2 eleven times. Over most land the rate is under 1e-5 and routes do not
-move: from Cluj, K = 1000 changes the time to the cells reached by 0.1% on average and only 0.2%
-of them by more than 5%. Where it bites (the L10 sample, with OSM water, notes/T-042.md):
-
-- **Deserts**: routes keep to rivers and wells. Tamanrasset to Agadez bends east by wells (+1
-  day, survival 87% to 99%). With natural water only, Cairo to Khartoum's fastest line cuts the
-  Nile's bend across the Nubian desert (2% survival) and K = 1000 follows the river (+11 days,
-  96%). In July (the season rule
-  turned off), the fastest Tamanrasset to Agadez line would have 2% survival and K = 1000 takes a
-  route 7 days longer at 95%.
-- **Greenland**: straight over the ice sheet is 66 days and 1% survival; K = 1000 walks round the
-  south coast instead (88 days, 84%).
-- **High passes**: Leh to Manali shifts off the most glaciated cells (+2 days, 91% to 96%);
-  Kathmandu to Lhasa is unchanged (99%).
-- **Siberia, steppe, the outback**: unchanged or within a day, 99-100%, since the season rule
-  takes Siberia in July and the steppe in January.
-
-No absurd detours were found. The one long one: Tamanrasset to In Salah in July is out of reach
-without K (every line under 1%), and with it a 127-day loop by wells at 37%, at the time limit.
+move. Where it bites: deserts (routes keep to rivers and wells), Greenland (round the south coast,
+not over the ice sheet) and the most glaciated high passes. Siberia, the steppe and the outback
+are unchanged, since the season rule takes Siberia in July and the steppe in January. The check
+trips, their times and survival, with and without the OSM water points, are in `notes/T-042.md`
+and `notes/T-067.md`.
 
 **Unreached land.** The stop rule (survival under 1%) leaves the worst deserts and the ice
 sheet unpainted on a walking start, as the open ocean on a canoe start: Greenland's ice, the
 Libyan desert, the empty quarters of Mali, Mauritania and Arabia. Without the OSM water points
-the whole Sahara and Arabia away from the Nile and the Euphrates are out of reach, and a start in
-Riyadh reaches 21 cells.
+the whole Sahara and Arabia away from the Nile and the Euphrates would be out of reach.
 
 ## 6. Build
 

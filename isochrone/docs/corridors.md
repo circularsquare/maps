@@ -34,7 +34,7 @@ the counting between levels; the next view counts what is left (T-077).
   that may pass it trips is in, no sort by time), the shares worked out as a node is reached and
   only if it has trips enough; that order, backwards, puts every node after its parents for the
   choice; the counts then add up along it.
-- **Lines.** An edge is drawn when its child's count is at least 0.2% of the area reached at
+- **Threshold.** An edge is drawn when its child's count is at least 0.2% of the area reached at
   L10; the same threshold at every level. Strength is log(count / threshold) over
   log(L10 total / threshold) in 8 steps; width and opacity rise with it.
 - **Speed** (T-062, T-064). An edge's speed is the length travelled over its time in the search
@@ -47,9 +47,10 @@ the counting between levels; the next view counts what is left (T-077).
 - **Lines.** Edges join into a polyline while the next one on is the only drawn edge and has the
   same step and mode, and its speed is within 0.4 km/h of the speed class the line is in (classes
   at 1.5, 2.5, 3.5, 4.5, 5.5, 7 and 9 km/h, `SPEED_EDGES`). A line's km/h is the time-weighted
-  mean of its edges' speeds and its colour that km/h's class, dark red through orange to yellow
-  (ramp and a dark casing are constants at the top of the layer code in `index.html`), so the
-  number and the colour always agree. Its mode is walked, or on a canoe start carried (on land,
+  mean of its edges' speeds and its colour that km/h's class, bright red through orange to yellow
+  (ramp, opacity range and a dark casing are `CORR_*` constants in `index.html`), so the
+  number and the colour always agree. Width and opacity follow the strength. The page simplifies
+  each line (Douglas-Peucker, 0.7 cell) and smooths it with three Chaikin passes, ends fixed. Its mode is walked, or on a canoe start carried (on land,
   and getting in or out) or paddled. The pointer within 4 px of a line shows the nearest line's
   mode and km/h. A line's byte is step | mode << 3 | class << 5. Points in the middle of a
   straight run are dropped (~400 lines at L10 walking, ~2000 on a canoe start).

@@ -56,8 +56,9 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
    y with one column per cell column (as the L10 paint always was), each canvas row taking the
    value of the cell row it falls in, and sends it with its corners. The
    page puts each into its own MapLibre canvas source (`walk`, `walk3`, `walk1`, finest on top,
-   all below the basemap's first label layer, `raster-fade-duration: 0`, nearest resampling, so
-   cells are sharp squares). The
+   all below the basemap's first label layer, `raster-fade-duration: 0`, nearest resampling).
+   Cells are painted as hexagons by default (`cfg.look`, T-060; `?look=crisp` square blocks,
+   `?look=diag` cut corners); the look is paint only, the grid and search stay square. The
    canvas is uploaded to the GPU once per change, not every frame. MapLibre 5 draws a canvas
    source on the projection's tile mesh, linear in Mercator within the tile, so on the globe the
    same canvases bend onto the sphere unchanged.
@@ -66,23 +67,8 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
    inwards to whole canvas pixels.
 10. **Hover** reads the finest shown level whose window holds the pointer.
 
-### Measured solve times
-
-Headless Chrome with software WebGL on Anita's machine (the map drawing competes with the
-worker for CPU, so a normal browser should be a little faster). Solve = Dijkstra only; tiles
-come from the worker's cache after the first fetch (fetch 1-90 ms).
-
-| Case | Window | Solve | Paint |
-|---|---|---|---|
-| L10, whole world | 4320 x 1740 | 170-250 ms | 80-100 ms |
-| L3, 1400 x 900 screen, zoom 6 | 930 x 410 | 166 ms | 16 ms |
-| L1, 1400 x 900, zoom 7.5 | 990 x 480 | 239 ms | 24 ms |
-| L1, 1400 x 900, zoom 9 | 390 x 180 | 43 ms | 4 ms |
-| L3, 2560 x 1440 screen, zoom 5 | 2720 x 1050 (2.9M) | 700-800 ms | 50-75 ms |
-| L1, 2560 x 1440, zoom 7 | 2580 x 990 (2.6M, before the 2M cap) | 1.2 s | 90-115 ms |
-| L1, 2560 x 1440, zoom 7.2 | 2220 x 900 (2.0M) | 0.85-1.5 s | 70-100 ms |
-
-The page's longest frame gap during an L1 window solve was ~20 ms.
+Solve times by level and screen size: `notes/T-002.md`. The window caps (3 M cells at L3, 2 M at
+L1) keep an L1 window to about a second on a 2560 x 1440 screen.
 
 **What the seed gets wrong.** A path that leaves the window and comes back in is only as good as
 the coarse answer at the border. The coarse answer can also be a little early or late at the

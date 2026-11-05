@@ -24,9 +24,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-066 (bf42d32e) and T-067 (535656b3) landed: land danger on the page, T-042 archived.
   New on-page strings shown to Anita (survival on walking hovers from 0.5% risk; info panel
   danger paragraph and credits).
-- T-077 corridors after windows + faster counting + hazard in reparent slack + ktrips walking:
-  agent adc7a052a9841e8eb (Opus, launched after 535656b3). Owns js/corridors.js, js/session.js,
-  checks/ktrips.mjs, docs/corridors.md.
+- T-077 landed (bd409831): corridors after windows, faster in windows (L10 not), hazard in
+  reparent slack, a stale-node bug fixed, ktrips walking trips.
+- T-023 M1 doc tidy and sweep: agent (Sonnet, launched after bd409831). Owns SPEC.md, docs/,
+  TASKS.md, ARCHIVE.md, notes/ except handoff and for-anita. No code.
+- Roads pass at 18:02: 22.7 / 84.5 GB, 106 extracts done, ~8.6 h to go (log estimate).
   CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
 - T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
 - T-056 landed (e3730347): corridors re-chosen tree, counting 2-4x slower. T-077 (count after

@@ -31,13 +31,11 @@ The rule:
   times its terrain factor, as at 100 m. Ways that are not walkable (motorways, `foot=no`)
   change nothing; tunnels are left out.
 
-On the eight test tiles (Cluj and New York, four each) the rule's median time difference to
-100 m is 2-8%, and the 1 km map's summed times are 0.92-1.04 of the 100 m ones. MAP's L1 is
-2-50% off (1.05-1.52), our surface without roads 4-24% (0.77-0.97). Towns stay right: urban
-land is 5 km/h either way, and urban cells agree as well as the rest. What is left in rural
-Romania (the 1 km map 4-8% slow) is the off-road land cover mosaic, which a 100 m walker
-threads (grass beside fields) and a 1 km mean cannot; it is there with no roads at either
-level too. Numbers by tile: `notes/T-010.md`.
+Checked on eight test tiles (Cluj and New York, four each) the rule sits within a few percent of
+100 m, against 2-50% for MAP's L1. Towns stay right: urban land is 5 km/h either way. What is
+left in rural Romania is the off-road land cover mosaic, which a 100 m walker threads (grass
+beside fields) and a 1 km mean cannot; it is there with no roads at either level too. Numbers by
+tile: `notes/T-010.md`.
 
 ## What the layer stores
 
@@ -70,8 +68,8 @@ depend on terrain, so T-011's 90 m slopes leave it as it is. The OSM part depend
 
 ## Fetching the world
 
-The planet file (~90 GB) does not fit on C: (~15 GB free, shared). The pass goes extract by
-extract:
+The planet file (~90 GB) does not fit on C: (shared with other projects). The pass
+(`tools/roads/world.py`, running as T-053) goes extract by extract:
 
 1. **The list** (`tools/roads/regions.py`, into `data/roads/regions.json`): the leaves of
    Geofabrik's tree (index-v1.json, with outlines), minus groupings mostly covered by smaller
@@ -94,9 +92,9 @@ extract:
 5. **At the end**: `build.py reduce` (1 km counts and kinds per tile), then `roads_l1.tif`.
 
 **Time**: reading is ~5 min per GB of extract on one core (Romania 333 MB in 93 s; four US
-states, 1.2 GB, in 6.4 min), so **~7 h** for the world; downloads (8-12 MB/s, ~2.5 h) overlap
-it. On two cores, two extracts at a time, ~4 h. **Disk**: two extracts plus `bits/` and `l1/`,
-~4 GB at the peak.
+states, 1.2 GB, in 6.4 min), so **~7-8 h** for the world on one core (`--jobs 1`); downloads
+overlap it. **Disk**: at most two extracts plus `bits/` and `l1/`, ~4 GB at the peak; the pass
+stops when a download would leave under 6 GB free on the drive (`--min-free`).
 
 **The 100 m tiles** (T-057, "Where the fine level goes" in `docs/fine.md`) take their `.roads`
 from `bits/` after the pass: no extra download or reading, a few minutes of writing.

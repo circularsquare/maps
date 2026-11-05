@@ -20,18 +20,20 @@ The motivating question (Anita): "if you just have a canoe in 10,000 BC, how far
 Walking only, from the Malaria Atlas Project's 2020 walking-only friction surface (1 km, roads,
 land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid of ~10 km cells
 (4320 x 1740). One search from the clicked cell to everywhere (Dijkstra, 16 neighbours, wraps at
-180 degrees, a knight move may not hop a water cell) takes ~0.4 s in a worker. Bands from 1 hour
+180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a worker with land hazard. Bands from 1 hour
 to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
 Cluj-Napoca.
 
 A canoe start (the mode buttons, or `?mode=canoe`) searches carrying on land and the
 canoe on sea, lakes and rivers with currents (`docs/canoe.md`), and paints the sea; ~0.8 s a
 click at 10 km. The search minimises time + K x hazard (water and land, section 3), and keeps each node's move for tracing
-the route to the pointer.
+the route to the pointer. Cells are drawn as hexagons by default (`?look=crisp` gives squares,
+`?look=diag` cut corners); the look is paint only, the search runs on square cells.
 
 Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
 cover and GMTED2010 elevation with each layer kept apart, is built but not yet read by the page
-(`docs/surface.md`; T-028).
+(`docs/surface.md`; T-028). Roads become a layer of their own from OSM, on the same grid: the rule
+is designed (`docs/roads.md`) and the world pass is running (T-053); the page reads neither yet.
 
 ## 3. Travel model
 
@@ -44,7 +46,8 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
   `docs/hazard.md`) is paid by walking, carrying and getting in or out, so walks keep to rivers
   and wells in deserts and go round Greenland's ice. A path stops where survival falls under 1%,
   on land as at sea, so the ice sheet and the emptiest deserts stay unpainted. The hover shows
-  survival once the risk reaches 0.5%.
+  survival (rounded down) on either start once the path's risk reaches 0.5%: nearly every walk
+  has some hazard, and "99%" on a walk through farmland would mislead.
 - **Modes are layers of one graph.** Each mode (walking, canoe, later bike, car) is a layer of
   cells with its own speeds; switching between layers is an edge with a time cost. Turning a mode
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the
@@ -55,10 +58,12 @@ cover and GMTED2010 elevation with each layer kept apart, is built but not yet r
   research/friction.md 2).
 - **Small water.** Water patches under 5 km² at L1 are walked at MAP's 1 km/h instead of blocking
   (T-013).
-- **Canoe** is the next mode (Anita, 2026-10-14): a canoe start searches the canoe layer (sea,
-  lakes, paddleable rivers from 1 m³/s, with currents) and carrying on land. The canoe is never
-  left behind: overland it is carried, at twice the walking time. Design: `docs/canoe.md`
-  (for Anita's review, T-005); model and sources: research/canoe.md.
+- **Canoe**: a canoe start searches the canoe layer (sea, lakes, paddleable rivers from 1 m³/s,
+  with currents) and carrying on land. The canoe is never left behind: overland it is carried, at
+  twice the walking time (carry x2, Anita 2026-11-05). Paddling is 5 km/h on still
+  water; downstream adds the river's current, upstream is 5 km/h minus 0.4 of the current with a
+  floor of 2.5 km/h (lining or poling along the bank). Design: `docs/canoe.md`; model and
+  sources: research/canoe.md.
 - **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets,
   Beyer 2020 biomes at 12 ka for land cover). Sources: research/friction.md.
 - **Season.** Annual averages for speeds on land, and the kinder of January and July at each place
@@ -80,23 +85,31 @@ bridges, the 1 km terrain factor (`docs/fine.md`). Which tiles get 100 m worldwi
 
 ## 5. Interface
 
-The map is a globe when zoomed out and turns flat (Web Mercator) between zoom 11 and 12,
-MapLibre's own switch-over; there is no projection switch. House style (nycriders): bare title, legend panel bottom right, `i` panel bottom left with the
-sources, and beside it the mode buttons (walking, canoe; icons with hovers), which re-solve from
-the same start and keep `?mode=canoe` in the URL. Click sets the start. Hover shows the time to
-the point, on a canoe start how much was paddled and carried, survival while hazard is on, and
-the route from the start as a thin line, dashed where carried (`docs/canoe.md` 6).
+The map is a globe (MapLibre 5.24.0) when zoomed out and turns flat (Web Mercator) between zoom
+11 and 12, MapLibre's own switch-over; there is no projection switch. The time layers, corridors,
+routes, river lines and hill shading draw on both. The worker is sent a view box clamped round the
+centre, and a hover or click off the globe is ignored. House style (nycriders): bare title, legend
+panel bottom right, `i` panel bottom left with the sources, and beside it the mode buttons
+(walking, canoe; icons with hovers), which re-solve from the same start and keep `?mode=canoe` in
+the URL. Click sets the start. Hover boxes appear at once and flip to stay on screen. Hover shows
+the time to the point, on a canoe start how much was paddled and carried, survival (from 0.5%
+risk), and the route from the start as a thin line, dashed where carried (`docs/canoe.md` 6). On
+canoe starts water is painted 22% towards white, paler than land.
 
 Top left, under the title, a collapsible speeds panel lists the model's speeds in km/h, each row
 with a hover giving its basis: walking by ground type (MAP's land cover table), and on a canoe
-start still water, small, big and huge rivers (1, 100, 10,000 m³/s) and a 1 m/s sea current with
-and against, carrying on grass and getting in or out. The worker sends them with `ready`
+start still water, small, big and huge rivers (1, 100, 10,000 m³/s) down and up, a 1 m/s sea
+current with and against, carrying and getting in or out. The worker sends them with `ready`
 (`js/speeds.js`), worked out from the model constants. Two buttons in the row switch hill shading
 (Terrain Tiles on AWS, under the basemap's water and the time colours) and river lines (the
 canoe's own river steps, L10 world view below zoom 5, L3 tiles to 7, L1 above; wider for more
 water, faint where unrunnable); both default on, kept for the browser session.
 
-Corridors (default on, a button in the same row): pale lines over the colours, below the labels,
-where many trips from the start share a route, wider and stronger the more area they lead to, so
-trunks along rivers, valleys, roads and coasts branch and fade toward the tips. Counted from each
-solve's path tree in the worker, at L10 for the world and again in each window (`docs/corridors.md`).
+Corridors (default on, a button in the same row): lines over the colours, below the labels, where
+many trips from the start share a route. Width and strength grow with the area the stretch leads
+to, so trunks along rivers, valleys, roads and coasts branch and fade toward the tips. Colour is
+the speed along the stretch, one ramp for every mode: bright red (under 1.5 km/h) through orange
+to yellow (9 km/h and over). Lines are straightened and smoothed; hovering one shows whether it is
+walked, carried or paddled, and its km/h. Counted in the worker from the path tree (near-equal
+land parents re-chosen, so there are no spokes), at L10 for the world and again in each window,
+once every level of the view is painted (`docs/corridors.md`).
