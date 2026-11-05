@@ -36,7 +36,7 @@ def row_files(cid, row):
     for sub in (d / "work").iterdir() if (d / "work").is_dir() else []:
         if sub.is_dir() and sub.name not in SKIP_WORK:
             out |= set(glob.glob(str(sub / f"{cid}.*")))
-    pat = re.compile(rf"_{re.escape(cid)}\.(json|csv\.gz)$")
+    pat = re.compile(rf"_{re.escape(cid)}\.(json|json\.gz|csv\.gz)$")
     for sub in ("tier0", "t142b", "t196"):
         p = d / "raw" / sub
         if p.is_dir():

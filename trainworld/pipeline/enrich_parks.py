@@ -308,7 +308,7 @@ def main(city="nyc", dry=False):
         draw="factor x sqrt(max(area ha, 0.1)) x D / (D + 2000), D = residents per km2 of land within 2 km of the edge; split over the cells inside",
         limitations="relative draw, not visitor counts; no season, opening hours or amenities",
         sources=["OpenStreetMap leisure=park|common|recreation_ground|beach_resort|nature_reserve, botanical gardens, named beaches (ODbL), Overpass " +
-                 hashlib.sha256(b"".join(open(os.path.join(b.RAW, nm + ".json"), "rb").read() for nm in names)).hexdigest()[:16]])
+                 hashlib.sha256(b"".join(overpass.cache_bytes(nm) for nm in names)).hexdigest()[:16]])
     packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".parks.audit.json"), "w") as f:
         json.dump(dict(metadata=header["parks"], places=audit, omitted=omitted), f, indent=1)

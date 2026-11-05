@@ -1132,7 +1132,8 @@ class Run:
     # terrain grid too, which zone_terrain.py makes only where none is (T-1986: Australia's lnc)
     ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz")),
                   ("data/raw/ca", ("osm_jobs_{}.csv.gz",)), ("data/raw", ("osm_places_{}.json",)),
-                  ("data/raw/t142b", ("osm_*_{}.json",)), ("data/raw/t196", ("osm_*_{}.json",)),
+                  ("data/raw/t142b", ("osm_*_{}.json", "osm_*_{}.json.gz")),
+                  ("data/raw/t196", ("osm_*_{}.json", "osm_*_{}.json.gz")),
                   ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")),
                   ("data/terrain", ("{}.terrain",)))
 
@@ -1149,6 +1150,14 @@ class Run:
                     gone.append(p.name)
         if gone:
             print(f"  {cid}: cleared {len(gone)} old caches ({', '.join(gone)[:200]})", flush=True)
+
+    # T-2554: a build's hand-offs to its own later steps (build_city to the gravity, routes to the pack);
+    # nothing reads them once the row ships, and every build writes them again
+    HANDOFFS = ("{}.cells.bin", "{}.cells.json", "{}.walk_zone.u8", "{}.walk_zone.u8.part")
+
+    def drop_handoffs(self, cid):
+        for pat in self.HANDOFFS:
+            (self.work / pat.format(cid)).unlink(missing_ok=True)
 
     STREAK = 3
 
@@ -1363,6 +1372,7 @@ class Run:
                 continue
             self.set_row(i, "shipped", shipped=datetime.datetime.now().isoformat(timespec="seconds"))
             self.rec(i, result="shipped")
+            self.drop_handoffs(i)
             print(f"  {i}: SHIPPED", flush=True)
         try:  # T-800: the coarse outline of every registered zone; a failure only leaves the file as it was
             ok, _, tail = self.step("zone_outlines", ["--jobs", str(self.jobs)], f"{L}.outlines.log")

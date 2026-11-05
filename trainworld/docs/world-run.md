@@ -106,8 +106,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   6 GB, T-1080), and builds once region k's builds are done, while k's last gate chunk runs.
 - **Per row**: a `planned` row (new, or its units changed) first loses the per-city caches named
   after its id, which an earlier row of that id or its old outline left (T-1743, T-891):
-  `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `osm_*_<id>.json` in `data/raw/t142b` and
-  `t196`, `osm_places_<id>.json`, `data/work/<id>`'s outline, units and tier 0 signals, and
+  `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `osm_*_<id>.json.gz` (older ones `.json`) in
+  `data/raw/t142b` and `t196`, `osm_places_<id>.json`, `data/work/<id>`'s outline, units and tier 0 signals, and
   `data/terrain/<id>.terrain` (`zone_terrain.py` makes a grid only where none is, T-1986). Then
   `build_city`, `pack_gate stations` (the gate's station file, `docs/adding-a-city-by-hand.md` 8), `places`,
   with `--coarse T` `coarse_zones` (4 km blocks in thin country, T-852; off by default),
@@ -170,7 +170,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   a zone without a realm always shows), then `zone_aliases.py` rewrites
   `app/src/game/zone-aliases.json`, the search aliases of every zone (T-836, seconds; the same
   warning-only failure, so the new zones are found by their own name only until it is rerun).
-  Status `shipped`.
+  Status `shipped`; a shipped row's build hand-offs (`data/work/<id>.cells.*`, `walk_zone.u8*`) are deleted
+  then, since nothing reads them after (T-2554).
 - **Freeze** (T-928): a join with no market failure and no other run live ends with
   `pipeline/freeze.py`, which hard-links every file a production build copies into
   `data/frozen/<stamp>/` (seconds, no space; the newest three kept). A publish during a later

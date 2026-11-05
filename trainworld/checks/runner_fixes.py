@@ -5,7 +5,8 @@
 1. pair_files' index: a rewritten file is read again; market_zones.Groups for named packs gives
    those packs exactly what Groups for every pack gives them (made-up files in a temp folder).
 2. clear_row_caches clears an old `data/terrain/<id>.terrain` (and data/work caches), lookalikes kept
-   (a temp root).
+   (a temp root); a shipped row's cells and walk hand-offs go; Overpass caches are written gzipped and
+   old plain ones still read, hashed alike (T-2554).
 3. heal_market picks a registered pack naming a gone place over 400 km away (a copy of the
    registry, the market step recorded, not run; the live market packs only read).
 4. A run stops at its start when its gate port is taken (a dummy server), before anything runs.
@@ -94,6 +95,36 @@ def caches_check():
         world_run.Run({"jobs": 1, "root": str(root)}).clear_row_caches("zzq")
         left, kept = [p.name for p in made if p.exists()], [p.name for p in keep if p.exists()]
         report("clear_row_caches clears an old terrain grid", not left and len(kept) == len(keep), f"left {left}, kept {len(kept)} of {len(keep)}")
+        hand = [root / f"data/work/zzq.{x}" for x in ("cells.bin", "cells.json", "walk_zone.u8", "walk_zone.u8.part")]
+        stay = [root / "data/work/zzqa.cells.json", root / "data/work/zzq.tier0_signals.npz"]
+        for p in hand + stay:
+            p.write_text("x")
+        world_run.Run({"jobs": 1, "root": str(root)}).drop_handoffs("zzq")
+        left, kept = [p.name for p in hand if p.exists()], [p.name for p in stay if p.exists()]
+        report("a shipped row's build hand-offs go (T-2554)", not left and len(kept) == len(stay), f"left {left}, kept {kept}")
+
+
+def overpass_cache_check():
+    """T-2554: caches written gzipped, an old plain one read as it is and hashed the same."""
+    import overpass
+    keep = overpass.RAW
+    with tempfile.TemporaryDirectory() as d:
+        overpass.RAW = d
+        try:
+            doc = {"elements": [{"type": "node", "id": 1, "tags": {"name": "Parque México"}}]}
+            os.makedirs(os.path.join(d, "t196"))
+            plain = os.path.join(d, "t196", "osm_parks_zzq.json")
+            with open(plain, "w", encoding="utf-8") as f:
+                json.dump(doc, f)
+            raw = open(plain, "rb").read()
+            old_ok = overpass.read_cache("t196/osm_parks_zzq") == doc and overpass.cache_bytes("t196/osm_parks_zzq") == raw
+            overpass.write_cache("t196/osm_parks_zzq", doc)
+            gz = os.path.join(d, "t196", "osm_parks_zzq.json.gz")
+            new_ok = (os.path.exists(gz) and not os.path.exists(plain) and overpass.fetch("t196/osm_parks_zzq", "unused") == doc
+                      and overpass.cache_bytes("t196/osm_parks_zzq") == raw and overpass.cache_path("t196/osm_parks_zzx") is None)
+            report("Overpass caches gzipped, old plain ones read and hashed alike", old_ok and new_ok, f"plain {old_ok}, gzip {new_ok}")
+        finally:
+            overpass.RAW = keep
 
 
 def heal_check():
@@ -351,6 +382,7 @@ def pipeline_check():
 
 pairs_check()
 caches_check()
+overpass_cache_check()
 heal_check()
 port_check()
 browser_check()

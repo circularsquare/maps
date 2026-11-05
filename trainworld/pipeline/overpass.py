@@ -1,5 +1,7 @@
 """One cached Overpass request (T-142: airport terminals, medical facilities). The answer is kept
-in `data/raw/<name>.json`; delete it to refetch. Data (c) OpenStreetMap contributors, ODbL."""
+in `data/raw/<name>.json.gz` (older caches: `.json`, read as they are); delete it to refetch. Data
+(c) OpenStreetMap contributors, ODbL."""
+import gzip
 import json
 import os
 import time
@@ -23,11 +25,44 @@ def bbox_of(geom, pad=0.0):
     return (round(s - pad, 4), round(w - pad, 4), round(n + pad, 4), round(e + pad, 4))
 
 
+def cache_path(name):
+    """The cache file for `name` on disk (gzipped first, T-2554), or None."""
+    for ext in (".json.gz", ".json"):
+        path = os.path.join(RAW, name + ext)
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def cache_bytes(name):
+    """The cache's JSON text as bytes, the same for a gzipped file as for the plain one it came from
+    (packs record a hash of it)."""
+    path = cache_path(name)
+    if path is None:
+        raise FileNotFoundError(os.path.join(RAW, name + ".json.gz"))
+    with (gzip.open if path.endswith(".gz") else open)(path, "rb") as f:
+        return f.read()
+
+
+def read_cache(name):
+    return json.loads(cache_bytes(name))
+
+
+def write_cache(name, data):
+    path = os.path.join(RAW, name + ".json.gz")
+    os.makedirs(os.path.dirname(path), exist_ok=True)  # a sub-folder (t196/) deleted after use
+    tmp = path + ".tmp"
+    with gzip.open(tmp, "wt", encoding="utf-8", compresslevel=6) as f:
+        json.dump(data, f)
+    os.replace(tmp, path)
+    plain = os.path.join(RAW, name + ".json")
+    if os.path.exists(plain):
+        os.remove(plain)
+
+
 def fetch(name, q):
-    path = os.path.join(RAW, name + ".json")
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
+    if cache_path(name):
+        return read_cache(name)
     for attempt in range(6):
         url = OVERPASS[attempt % len(OVERPASS)]
         try:
@@ -42,11 +77,7 @@ def fetch(name, q):
                 print(f"  {name}: {data['remark']}", flush=True)
                 time.sleep(30)
                 continue
-            tmp = path + ".tmp"
-            os.makedirs(os.path.dirname(path), exist_ok=True)  # a sub-folder (t196/) deleted after use
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f)
-            os.replace(tmp, path)
+            write_cache(name, data)
             return data
         print(f"  {name}: {url} said {r.status_code}", flush=True)
         if r.status_code == 429:

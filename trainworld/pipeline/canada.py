@@ -963,11 +963,7 @@ def _elements(df, cols, node=False):
 
 
 def _write(name, elements, extract):
-    path = os.path.join(b.RAW, name + ".json")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path + ".tmp", "w", encoding="utf-8") as f:
-        json.dump({"elements": elements, "source": f"Geofabrik {__import__('osm_features').label(extract)} extract (T-277)"}, f)
-    os.replace(path + ".tmp", path)
+    overpass.write_cache(name, {"elements": elements, "source": f"Geofabrik {__import__('osm_features').label(extract)} extract (T-277)"})
 
 
 def osm_caches(city, boundary, extract=OSM_EXTRACT):
@@ -987,23 +983,22 @@ def osm_caches(city, boundary, extract=OSM_EXTRACT):
     mcols = ["osm_id", "osm_way_id", "name", "amenity", "aeroway", "leisure", "natural", "building", "other_tags"]
     t0 = time.time()
     term = f"{air.SUB}osm_terminals_{city}"
-    if not os.path.exists(os.path.join(b.RAW, term + ".json")):
+    if not overpass.cache_path(term):
         d = read("multipolygons", columns=mcols, bbox=bb, where="aeroway = 'terminal'")
         _write(term, _elements(d, ["aeroway", "amenity", "building"]), extract)
         print(f"  extract: {len(d)} terminals", flush=True)
     medn = f"{med.SUB}osm_medical_{city}"
     kinds = "('hospital','clinic','doctors','dentist')"
     hc = " OR ".join(f"other_tags LIKE '%\"healthcare\"=>\"{k}\"%'" for k in ("hospital", "clinic", "doctor", "dentist"))
-    if not os.path.exists(os.path.join(b.RAW, medn + ".json")):
+    if not overpass.cache_path(medn):
         p = read("points", columns=["osm_id", "name", "other_tags"], bbox=bb,
                  where=" OR ".join(f"other_tags LIKE '%\"amenity\"=>\"{k}\"%'" for k in ("hospital", "clinic", "doctors", "dentist")) + " OR " + hc)
         m = read("multipolygons", columns=mcols, bbox=bb, where=f"amenity IN {kinds} OR {hc}")
         _write(medn, _elements(p, [], node=True) + _elements(m, ["amenity", "building"]), extract)
         print(f"  extract: {len(p)} medical points, {len(m)} medical areas", flush=True)
     bld = f"{med.SUB}osm_hospital_buildings_{city}"
-    if not os.path.exists(os.path.join(b.RAW, bld + ".json")):
-        with open(os.path.join(b.RAW, medn + ".json"), encoding="utf-8") as f:
-            sites = [overpass.polygon(el) for el in json.load(f)["elements"] if el["type"] != "node" and (el["tags"].get("amenity") == "hospital" or el["tags"].get("healthcare") == "hospital")]
+    if not overpass.cache_path(bld):
+        sites = [overpass.polygon(el) for el in overpass.read_cache(medn)["elements"] if el["type"] != "node" and (el["tags"].get("amenity") == "hospital" or el["tags"].get("healthcare") == "hospital")]
         sites = [g for g in sites if g is not None]
         if sites:
             # building:levels and height come through other_tags, as Overpass gives them
@@ -1013,7 +1008,7 @@ def osm_caches(city, boundary, extract=OSM_EXTRACT):
         else:
             _write(bld, [], extract)
     pk = f"{parks.SUB}osm_parks_extract_{city}"
-    if not os.path.exists(os.path.join(b.RAW, pk + ".json")):
+    if not overpass.cache_path(pk):
         lei = "('park','common','recreation_ground','beach_resort','nature_reserve','garden')"
         m = read("multipolygons", columns=mcols, bbox=bb,
                  where=f"leisure IN {lei} OR (\"natural\" = 'beach' AND name IS NOT NULL)")
@@ -1021,8 +1016,7 @@ def osm_caches(city, boundary, extract=OSM_EXTRACT):
                  where="other_tags LIKE '%\"leisure\"=>\"park\"%'")
         _write(pk, _elements(m, ["leisure", "natural"]) + _elements(p, [], node=True), extract)
         print(f"  extract: {len(m)} park areas, {len(p)} park points; {time.time() - t0:.0f} s", flush=True)
-    with open(os.path.join(b.RAW, pk + ".json"), encoding="utf-8") as f:
-        return json.load(f)["elements"], [pk]
+    return overpass.read_cache(pk)["elements"], [pk]
 
 
 def enrich_osm(city):

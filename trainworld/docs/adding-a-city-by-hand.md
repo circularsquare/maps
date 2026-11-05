@@ -100,7 +100,7 @@ non-work purpose (schools, universities, everyday sectors, airports, medical vis
 (job places, schools and universities, terminals, medical, hospital buildings, parks, tier 0's place
 list) from the region's Geofabrik extract, read once by `pipeline/osm_features.py` into
 `data/raw/osm/<extract>.points.fgb` and `.areas.fgb` (T-363). Each script still keeps its own small
-per-city file (`osm_jobs_<id>.csv.gz`, `osm_medical_<id>.json` and the like; tier 0's
+per-city file (`osm_jobs_<id>.csv.gz`, `osm_medical_<id>.json.gz` and the like; tier 0's
 `data/work/<id>.tier0_signals.npz` holds the job places too); delete those to reread a city from the
 cache. The US path queries Overpass for parks, medical and airport terminals, which can be slow or
 down.

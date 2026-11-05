@@ -381,7 +381,8 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   minutes each; every zone at once is more than a worker's WASM holds), `t325-bare-check` (a
   zone opened bare against the same zone solved, bubbles and bubble clicks, to the bit; `ZONE=tor`
   for another), `t409-worker-check` (two networks with no track between
-  them solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
+  them, a Boston to Providence line and a Philadelphia to Lancaster line, each crossing a zone line,
+  solve as two clusters, each as it would alone, to the bit; about a minute), `t301-worker-check`
   (packs and the market closed and reopened, also mid-solve and bare: figures to the bit),
   `t1862-noise-keep` (Boston's line moved by settle noise beside a Philadelphia edit keeps its
   figures to the bit; noise adding up past 0.2% trains or 0.5 s, +1% trains, +1 s, a span step, a car
@@ -391,7 +392,8 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - Python: `token_usage.py <transcript.jsonl> ...` (an agent's token use from its transcript,
   CLAUDE.md "Token counts"), `world_field_check.py` (the world field's country totals and fixed
   links, T-375; from trainworld/), `runner_fixes.py` (the world runner's market file picking, cache
-  clearing, market heal and busy-port refusal, T-1976, T-1986; the gate's stuck-session handling,
+  clearing, market heal and busy-port refusal, T-1976, T-1986; a shipped row's hand-offs dropped and the
+  gzipped Overpass caches, T-2554; the gate's stuck-session handling,
   network retries and the region pipeline with stand-ins, T-2040, T-1979, T-1978, T-1980; nothing live
   written, about a minute), `admin_totals_check.py` (tier 0's census totals by unit: a unit cut by
   the outline, the old-census shares, a config's join on made-up files and the Indonesian and
@@ -962,7 +964,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.
 - Country modules, each a tier 0 adapter through `tier0.py`'s hooks like `france.py` (docs/adding-a-city-by-hand.md):
   `china.py` (Shanghai first, T-291), `germany.py` (Berlin, T-290), `india.py` (Mumbai, T-292), `korea.py` (the Seoul Capital Area, T-457), `brazil.py` (Sao Paulo, T-458), `nigeria.py` (Lagos, T-459), `australia.py` (planned rows' country keys, T-1857), `mexico.py` (planned rows' census people and DENUE jobs, T-2080; `mexico.py check` tries the hooks on stand-in outlines). `china_holidays_pattern.py` fills `china_holidays.json` with the usual pattern for years the State Council has not published.
-- `enrich_all.py`'s steps, each also run alone on a finished pack: `enrich_airports.py`, `enrich_everyday.py`, `enrich_parks.py`, `enrich_schools.py` (with `education_sources.py`), `enrich_universities.py`; they share `overpass.py` (one cached Overpass request) and `arcgis.py` (one cached, paged ArcGIS REST query).
+- `enrich_all.py`'s steps, each also run alone on a finished pack: `enrich_airports.py`, `enrich_everyday.py`, `enrich_parks.py`, `enrich_schools.py` (with `education_sources.py`), `enrich_universities.py`; they share `overpass.py` (one cached Overpass request, kept as `.json.gz`) and `arcgis.py` (one cached, paged ArcGIS REST query).
 - Calibration cities beside `calib_tyo.py`: `calib_lon.py`, `calib_par.py`, `calib_seo.py`, `calib_sdj.py` and `calib_tor.py` hold each city's trips file and targets for `realnet.py` and `calib.py`.
 - US helpers: `spread.py` (each census block's people and jobs over H3 cells), `wfh.py` (work from home from the ACS), `group_quarters.py` (people in institutional group quarters), `fit_decay.py` (the gravity decay fitted against LODES OD), `lumps.py` (job cells far above their neighbourhood), `look_water.py` (a look-image of a pack's water mask).
 - `tools/country/` (adding-a-country.md's scripts): `backup.py` and `restore.py` (the shared files a run or join rewrites, saved and put back), `setbuilt.py` (parked plan rows set back to built), `stale.py` (market packs naming a market place with no pack), `setup_sim.py` (a sim copy for a long run), `start_hidden.ps1` and `waitany.ps1` (a detached start and the one background wait), and the census inputs of `admin_totals.py`: `turkey_census.py` (Turkey's people by ilce), `india_census.py` (India's two files), `cambodia_census.py` (Cambodia by district).

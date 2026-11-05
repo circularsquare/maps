@@ -305,7 +305,7 @@ def main(city="nyc", dry=False):
         beds=stats, rate_per_resident=0.04, decay_m=5000,
         limitations="OSM coverage of doctors and dentists is uneven; sizes are judgement, not visit counts",
         sources=["OpenStreetMap amenity=hospital|clinic|doctors|dentist, healthcare=* (ODbL), Overpass " +
-                 hashlib.sha256(open(os.path.join(b.RAW, f"{SUB}osm_medical_{city}.json"), "rb").read()).hexdigest()[:16],
+                 hashlib.sha256(overpass.cache_bytes(f"{SUB}osm_medical_{city}")).hexdigest()[:16],
                  f"{rate_src}, {stats.get('rate_from')} {stats.get('year')} (CC BY 4.0)"])
     packio.write(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".medical.audit.json"), "w") as f:

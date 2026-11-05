@@ -1018,7 +1018,6 @@ def build(city, ex_arg=None, keep=False, workers=2, stage="all"):
     f = diag[2]
     print(f"  drive factors: near pairs {len(f):,}, median {np.median(f):.3f}, "
           f"share over 1.5 {np.mean(f > 1.5):.1%}, over 2 {np.mean(f > 2):.1%}; {stats['supercells']} supercells ({stats['seconds']} s)", flush=True)
-    np.save(os.path.join(ROOT, "data", "work", f"{city}.drive_near_f.npy"), np.column_stack([diag[0], diag[1], f]).astype(np.float32))
     import datetime
     walk_block = walk.header({"source": "the pack's water mask at 50 m (a pixel half water or more), less OSM ways a person may walk over a bridge on",
                               **winfo})
