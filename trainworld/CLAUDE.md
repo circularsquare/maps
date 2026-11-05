@@ -251,7 +251,10 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   orchestrator's own reply, not sent as a message: a message resumes the agent, which reports
   again (Anita, 2026-10-27). A long-lived agent
   past about 500k tokens (the figure in its task notice) with substantial work left writes its state
-  to its notes and is replaced by a fresh one (Anita, 2026-10-21).
+  to its notes and is replaced by a fresh one (Anita, 2026-10-21). Overnight, while she sleeps, the
+  orchestrator and its agents may run past that point and keep going rather than hand over (Anita,
+  2026-11-05: "keep going after the normal context handover cap overnight as usual"); the cores go to
+  12-15 then too ("CPU" above).
 - **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
   task ends with a retrospective (docs/adding-a-country.md 10); the orchestrator records each task's
   tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.

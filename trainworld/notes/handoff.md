@@ -51,8 +51,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   (layout) + outline shape where unconstrained; T-2492 diagram city names faded grey like base-map town names.
   Then T-2169 water (her direction: rivers as lines, ocean boundary as a line; borderLines.ts fits rivers).
 - **memhunt** (Opus, tree .tw-trees/memhunt from 1987aba1, 6199, ids T-2495..96): T-2485 player RAM (real save 3.8 GB).
-- Anita went to bed ~00:30 2026-11-05: "feel free to keep going with stuff after europe". Unanswered: R2 old versions,
-  delete publish/20261103-051954 (both wait for her).
+- Anita went to bed ~00:45 2026-11-05: "feel free to keep going with stuff after europe"; "feel free to up cores
+  overnight as usual and keep going after the normal context handover cap overnight" (recorded in trainworld/CLAUDE.md
+  and maps/CLAUDE.md, the latter uncommitted for her). **Cap set to 15; put it back to 12 at ~08:00 or when she's
+  back.** R2: 2026-10-30b purged (live 2026-11-03b, kept 2026-11-03); publish/20261103-051954 deleted.
 - Anita's batch: notes/todo-2026-11-04j.md. Next free id **T-2491**.
 
 ## Next
