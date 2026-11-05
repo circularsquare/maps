@@ -34,6 +34,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   closed). **8800 = build 1053 (e8eb9758)**, built ~17:12 with the dist-new swap (worked: T-2483 can close), smoke
   PASSED light and dark, 12,515,598. Pack lock free: Mexico next. Backups to delete: data/work/pre-T2302/{pre,
   prejoin,removed,stale}.
+- **8800 = build 1056 (e0534793)** with the octilinear water fix (338ecad2), smoke PASSED; Anita pinged ~17:45.
+  Disk: after_join.py --go freed 15.6 GB, pre-T2302 deleted; 67 GB free. git gc run (loose objects 6,830 -> 2,987;
+  master 134 commits ahead of origin, pushing is Anita's). T-2483 archived (swap works).
+- **mexico** (agent aa0915d6048b49d88, Opus, main tree, pack lock, port 6197, kit scratch\mexico): T-2554's three
+  pipeline changes first, then wire mexico.py, dry counts to maps-17, build/gate/join; messages at browser gates.
 - Anita ~17:20 on 8800: "this seems to have made water no longer follow 90 degree / 45 degree lines. thats bad, we
   should stick to those." Sent to diagsmooth as first priority (T-2528's width runs / far-shore sea).
 - cachecard: playable at 25 s on a cache hit (was ~213 s), but cached vs fresh signature differ (6b5f90ad vs

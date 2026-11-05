@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2483 8800's rebuild without a gap (2026-11-05, maps-17): the scratch snapbuild.cmd builds into dist-new and swaps it in (move dist dist-old, move dist-new dist), so a page open meanwhile keeps its files; used for builds 1053 and 1056.
 - T-2302 T-1189's Europe replan (2026-11-05, agent europe): 38 countries' 628 zones to 462 (399 retired, 233 new); all 233 and Nice shipped (4 relaxed), 29 solve units joined, 35 origins moved to their named city. notes/T-2302.md.
 - T-1189 Replan the built countries by T-1140's merge rule (2026-11-05): Taiwan, the US and Puerto Rico (T-2301), Europe (T-2302) done; China's part with T-1185. notes/T-1189.md.
 - T-892 Portugal's three parked rows (2026-11-05): lez, meo, doo regrouped into new zones by T-2302's replan. notes/T-2302.md.
