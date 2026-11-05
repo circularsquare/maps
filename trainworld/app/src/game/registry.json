@@ -23918,6 +23918,138 @@
       {
         "name": "Serang",
         "regionName": "Serang region"
+      },
+      {
+        "name": "Kyiv",
+        "regionName": "Kyiv region"
+      },
+      {
+        "name": "Kharkiv",
+        "regionName": "Kharkiv region"
+      },
+      {
+        "name": "Odesa",
+        "regionName": "Odesa region"
+      },
+      {
+        "name": "Horodok",
+        "regionName": "Horodok region"
+      },
+      {
+        "name": "Dnipro",
+        "regionName": "Dnipro region"
+      },
+      {
+        "name": "Vinnytsia",
+        "regionName": "Vinnytsia region"
+      },
+      {
+        "name": "Domanivka",
+        "regionName": "Domanivka region"
+      },
+      {
+        "name": "Tysmenytsia",
+        "regionName": "Tysmenytsia region"
+      },
+      {
+        "name": "Manevychi",
+        "regionName": "Manevychi region"
+      },
+      {
+        "name": "Nikopol",
+        "regionName": "Nikopol region"
+      },
+      {
+        "name": "Simferopol",
+        "regionName": "Simferopol region"
+      },
+      {
+        "name": "Sevastopol",
+        "regionName": "Sevastopol region"
+      },
+      {
+        "name": "Kerch",
+        "regionName": "Kerch region"
+      },
+      {
+        "name": "Khmelnytskyi",
+        "regionName": "Khmelnytskyi region"
+      },
+      {
+        "name": "Zhytomyr",
+        "regionName": "Zhytomyr region"
+      },
+      {
+        "name": "Sloviansk",
+        "regionName": "Sloviansk region"
+      },
+      {
+        "name": "Kaniv",
+        "regionName": "Kaniv region"
+      },
+      {
+        "name": "Shostka",
+        "regionName": "Shostka region"
+      },
+      {
+        "name": "Ivanychi",
+        "regionName": "Ivanychi region"
+      },
+      {
+        "name": "Kryvyi Rih",
+        "regionName": "Kryvyi Rih region"
+      },
+      {
+        "name": "Ternopil",
+        "regionName": "Ternopil region"
+      },
+      {
+        "name": "Nedanchytska",
+        "regionName": "Nedanchytska region"
+      },
+      {
+        "name": "Oleksandriia",
+        "regionName": "Oleksandriia region"
+      },
+      {
+        "name": "Kitsman",
+        "regionName": "Kitsman region"
+      },
+      {
+        "name": "Kremenchuk",
+        "regionName": "Kremenchuk region"
+      },
+      {
+        "name": "Stryi",
+        "regionName": "Stryi region"
+      },
+      {
+        "name": "Skvyra",
+        "regionName": "Skvyra region"
+      },
+      {
+        "name": "Rakhiv",
+        "regionName": "Rakhiv region"
+      },
+      {
+        "name": "Uzhhorodska",
+        "regionName": "Uzhhorodska region"
+      },
+      {
+        "name": "Poltava",
+        "regionName": "Poltava region"
+      },
+      {
+        "name": "Synelnykove",
+        "regionName": "Synelnykove region"
+      },
+      {
+        "name": "Izmali",
+        "regionName": "Izmali region"
+      },
+      {
+        "name": "Podilsk",
+        "regionName": "Podilsk region"
       }
     ],
     "rule": {
@@ -26509,7 +26641,7 @@
         56.296
       ],
       "place": 123,
-      "localTrips": 51313158.0,
+      "localTrips": 51314459.0,
       "country": "RU",
       "realm": "ru-west"
     },
@@ -26534,7 +26666,7 @@
         52.122
       ],
       "place": 124,
-      "localTrips": 3409709.0,
+      "localTrips": 3409754.0,
       "country": "RU",
       "realm": "ru-west"
     },
@@ -26559,7 +26691,7 @@
         60.966
       ],
       "place": 125,
-      "localTrips": 17406753.0,
+      "localTrips": 17407453.0,
       "country": "RU",
       "realm": "ru-west"
     },
@@ -103069,7 +103201,7 @@
       ],
       "place": 5516,
       "country": "RU",
-      "localTrips": 6312313.0,
+      "localTrips": 6312297.0,
       "realm": "ru-east"
     },
     {
@@ -103095,7 +103227,7 @@
       ],
       "place": 5539,
       "country": "RU",
-      "localTrips": 3364021.0,
+      "localTrips": 3364047.0,
       "realm": "ru-east"
     },
     {
@@ -103121,7 +103253,7 @@
       ],
       "place": 5540,
       "country": "RU",
-      "localTrips": 3260615.0,
+      "localTrips": 3260647.0,
       "realm": "ru-east"
     },
     {
@@ -103147,7 +103279,7 @@
       ],
       "place": 5541,
       "country": "RU",
-      "localTrips": 3232654.0,
+      "localTrips": 3232637.0,
       "realm": "ru-east"
     },
     {
@@ -103173,7 +103305,7 @@
       ],
       "place": 5542,
       "country": "RU",
-      "localTrips": 3403609.0,
+      "localTrips": 3404934.0,
       "realm": "ru-west"
     },
     {
@@ -103199,7 +103331,7 @@
       ],
       "place": 5543,
       "country": "RU",
-      "localTrips": 3407231.0,
+      "localTrips": 3407253.0,
       "realm": "ru-east"
     },
     {
@@ -103225,7 +103357,7 @@
       ],
       "place": 5544,
       "country": "RU",
-      "localTrips": 3215724.0,
+      "localTrips": 3215746.0,
       "realm": "ru-east"
     },
     {
@@ -103251,7 +103383,7 @@
       ],
       "place": 5545,
       "country": "RU",
-      "localTrips": 3116905.0,
+      "localTrips": 3116907.0,
       "realm": "ru-west"
     },
     {
@@ -103277,7 +103409,7 @@
       ],
       "place": 5546,
       "country": "RU",
-      "localTrips": 2999955.0,
+      "localTrips": 2999881.0,
       "realm": "ru-west"
     },
     {
@@ -103303,7 +103435,7 @@
       ],
       "place": 5547,
       "country": "RU",
-      "localTrips": 3018805.0,
+      "localTrips": 3018524.0,
       "realm": "ru-west"
     },
     {
@@ -103329,7 +103461,7 @@
       ],
       "place": 5548,
       "country": "RU",
-      "localTrips": 2934528.0,
+      "localTrips": 2934581.0,
       "realm": "ru-west"
     },
     {
@@ -103355,7 +103487,7 @@
       ],
       "place": 5549,
       "country": "RU",
-      "localTrips": 2812545.0,
+      "localTrips": 2812590.0,
       "realm": "ru-west"
     },
     {
@@ -103381,7 +103513,7 @@
       ],
       "place": 5550,
       "country": "RU",
-      "localTrips": 2890229.0,
+      "localTrips": 2890361.0,
       "realm": "ru-west"
     },
     {
@@ -103407,7 +103539,7 @@
       ],
       "place": 5551,
       "country": "RU",
-      "localTrips": 2949289.0,
+      "localTrips": 2949363.0,
       "realm": "ru-west"
     },
     {
@@ -103433,7 +103565,7 @@
       ],
       "place": 5552,
       "country": "RU",
-      "localTrips": 2829026.0,
+      "localTrips": 2828995.0,
       "realm": "ru-west"
     },
     {
@@ -103459,7 +103591,7 @@
       ],
       "place": 5553,
       "country": "RU",
-      "localTrips": 2774346.0,
+      "localTrips": 2774324.0,
       "realm": "ru-east"
     },
     {
@@ -103485,7 +103617,7 @@
       ],
       "place": 5554,
       "country": "RU",
-      "localTrips": 2624840.0,
+      "localTrips": 2624845.0,
       "realm": "ru-west"
     },
     {
@@ -103511,7 +103643,7 @@
       ],
       "place": 5555,
       "country": "RU",
-      "localTrips": 2652406.0,
+      "localTrips": 2652495.0,
       "realm": "ru-east"
     },
     {
@@ -103537,7 +103669,7 @@
       ],
       "place": 5556,
       "country": "RU",
-      "localTrips": 2468542.0,
+      "localTrips": 2468457.0,
       "realm": "ru-west"
     },
     {
@@ -103563,7 +103695,7 @@
       ],
       "place": 5557,
       "country": "RU",
-      "localTrips": 2455722.0,
+      "localTrips": 2455520.0,
       "realm": "ru-west"
     },
     {
@@ -103589,7 +103721,7 @@
       ],
       "place": 5558,
       "country": "RU",
-      "localTrips": 2414770.0,
+      "localTrips": 2414854.0,
       "realm": "ru-west"
     },
     {
@@ -103615,7 +103747,7 @@
       ],
       "place": 5559,
       "country": "RU",
-      "localTrips": 2362480.0,
+      "localTrips": 2362322.0,
       "realm": "ru-west"
     },
     {
@@ -103641,7 +103773,7 @@
       ],
       "place": 5560,
       "country": "RU",
-      "localTrips": 2298800.0,
+      "localTrips": 2298997.0,
       "realm": "ru-west"
     },
     {
@@ -103667,7 +103799,7 @@
       ],
       "place": 5561,
       "country": "RU",
-      "localTrips": 2449050.0,
+      "localTrips": 2449061.0,
       "realm": "ru-west"
     },
     {
@@ -103693,7 +103825,7 @@
       ],
       "place": 5562,
       "country": "RU",
-      "localTrips": 2335207.0,
+      "localTrips": 2335177.0,
       "realm": "ru-east"
     },
     {
@@ -103719,7 +103851,7 @@
       ],
       "place": 5563,
       "country": "RU",
-      "localTrips": 2326528.0,
+      "localTrips": 2326559.0,
       "realm": "ru-west"
     },
     {
@@ -103745,7 +103877,7 @@
       ],
       "place": 5564,
       "country": "RU",
-      "localTrips": 2380125.0,
+      "localTrips": 2380116.0,
       "realm": "ru-west"
     },
     {
@@ -103771,7 +103903,7 @@
       ],
       "place": 5565,
       "country": "RU",
-      "localTrips": 2101353.0,
+      "localTrips": 2101384.0,
       "realm": "ru-west"
     },
     {
@@ -103797,7 +103929,7 @@
       ],
       "place": 5590,
       "country": "RU",
-      "localTrips": 1572896.0,
+      "localTrips": 1573003.0,
       "realm": "ru-west"
     },
     {
@@ -103823,7 +103955,7 @@
       ],
       "place": 5591,
       "country": "RU",
-      "localTrips": 1701808.0,
+      "localTrips": 1701823.0,
       "realm": "ru-east"
     },
     {
@@ -103849,7 +103981,7 @@
       ],
       "place": 5592,
       "country": "RU",
-      "localTrips": 1678758.0,
+      "localTrips": 1678663.0,
       "realm": "ru-west"
     },
     {
@@ -103875,7 +104007,7 @@
       ],
       "place": 5593,
       "country": "RU",
-      "localTrips": 1602453.0,
+      "localTrips": 1602551.0,
       "realm": "ru-west"
     },
     {
@@ -103901,7 +104033,7 @@
       ],
       "place": 5594,
       "country": "RU",
-      "localTrips": 1535970.0,
+      "localTrips": 1536259.0,
       "realm": "ru-west"
     },
     {
@@ -103927,7 +104059,7 @@
       ],
       "place": 5595,
       "country": "RU",
-      "localTrips": 1643618.0,
+      "localTrips": 1643592.0,
       "realm": "ru-west"
     },
     {
@@ -103953,7 +104085,7 @@
       ],
       "place": 5596,
       "country": "RU",
-      "localTrips": 1579223.0,
+      "localTrips": 1579113.0,
       "realm": "ru-west"
     },
     {
@@ -103979,7 +104111,7 @@
       ],
       "place": 5597,
       "country": "RU",
-      "localTrips": 1670076.0,
+      "localTrips": 1670052.0,
       "realm": "ru-west"
     },
     {
@@ -104005,7 +104137,7 @@
       ],
       "place": 5599,
       "country": "RU",
-      "localTrips": 1507558.0,
+      "localTrips": 1507500.0,
       "realm": "ru-west"
     },
     {
@@ -104031,7 +104163,7 @@
       ],
       "place": 5600,
       "country": "RU",
-      "localTrips": 1585706.0,
+      "localTrips": 1585683.0,
       "realm": "ru-west"
     },
     {
@@ -104057,7 +104189,7 @@
       ],
       "place": 5601,
       "country": "RU",
-      "localTrips": 1394722.0,
+      "localTrips": 1395074.0,
       "realm": "ru-west"
     },
     {
@@ -104083,7 +104215,7 @@
       ],
       "place": 5602,
       "country": "RU",
-      "localTrips": 1393082.0,
+      "localTrips": 1393118.0,
       "realm": "ru-west"
     },
     {
@@ -104109,7 +104241,7 @@
       ],
       "place": 5603,
       "country": "RU",
-      "localTrips": 1466006.0,
+      "localTrips": 1466031.0,
       "realm": "ru-east"
     },
     {
@@ -104135,7 +104267,7 @@
       ],
       "place": 5604,
       "country": "RU",
-      "localTrips": 1485560.0,
+      "localTrips": 1485596.0,
       "realm": "ru-west"
     },
     {
@@ -104187,7 +104319,7 @@
       ],
       "place": 5606,
       "country": "RU",
-      "localTrips": 1396930.0,
+      "localTrips": 1396998.0,
       "realm": "ru-east"
     },
     {
@@ -104213,7 +104345,7 @@
       ],
       "place": 5607,
       "country": "RU",
-      "localTrips": 1399766.0,
+      "localTrips": 1399692.0,
       "realm": "ru-east"
     },
     {
@@ -104239,7 +104371,7 @@
       ],
       "place": 5608,
       "country": "RU",
-      "localTrips": 1372407.0,
+      "localTrips": 1372408.0,
       "realm": "ru-west"
     },
     {
@@ -104265,7 +104397,7 @@
       ],
       "place": 5609,
       "country": "RU",
-      "localTrips": 1257264.0,
+      "localTrips": 1257267.0,
       "realm": "ru-east"
     },
     {
@@ -104291,7 +104423,7 @@
       ],
       "place": 5610,
       "country": "RU",
-      "localTrips": 1212554.0,
+      "localTrips": 1212531.0,
       "realm": "ru-west"
     },
     {
@@ -104317,7 +104449,7 @@
       ],
       "place": 5611,
       "country": "RU",
-      "localTrips": 1058099.0,
+      "localTrips": 1058229.0,
       "realm": "ru-west"
     },
     {
@@ -104343,7 +104475,7 @@
       ],
       "place": 5612,
       "country": "RU",
-      "localTrips": 1175617.0,
+      "localTrips": 1175585.0,
       "realm": "ru-west"
     },
     {
@@ -104369,7 +104501,7 @@
       ],
       "place": 5613,
       "country": "RU",
-      "localTrips": 1116540.0,
+      "localTrips": 1116626.0,
       "realm": "ru-west"
     },
     {
@@ -104395,7 +104527,7 @@
       ],
       "place": 5614,
       "country": "RU",
-      "localTrips": 1152899.0,
+      "localTrips": 1152832.0,
       "realm": "ru-west"
     },
     {
@@ -104421,7 +104553,7 @@
       ],
       "place": 5640,
       "country": "RU",
-      "localTrips": 658321.0,
+      "localTrips": 658322.0,
       "realm": "ru-west"
     },
     {
@@ -104473,7 +104605,7 @@
       ],
       "place": 5642,
       "country": "RU",
-      "localTrips": 560338.0,
+      "localTrips": 560336.0,
       "realm": "ru-west"
     },
     {
@@ -104525,7 +104657,7 @@
       ],
       "place": 5644,
       "country": "RU",
-      "localTrips": 481754.0,
+      "localTrips": 481770.0,
       "realm": "ru-east"
     },
     {
@@ -104551,7 +104683,7 @@
       ],
       "place": 5646,
       "country": "RU",
-      "localTrips": 449806.0,
+      "localTrips": 449824.0,
       "realm": "ru-west"
     },
     {
@@ -104577,7 +104709,7 @@
       ],
       "place": 5647,
       "country": "RU",
-      "localTrips": 457002.0,
+      "localTrips": 456938.0,
       "realm": "ru-east"
     },
     {
@@ -104603,7 +104735,7 @@
       ],
       "place": 5648,
       "country": "RU",
-      "localTrips": 427720.0,
+      "localTrips": 427736.0,
       "realm": "ru-east"
     },
     {
@@ -104629,7 +104761,7 @@
       ],
       "place": 5649,
       "country": "RU",
-      "localTrips": 414893.0,
+      "localTrips": 414911.0,
       "realm": "ru-west"
     },
     {
@@ -104655,7 +104787,7 @@
       ],
       "place": 5650,
       "country": "RU",
-      "localTrips": 429031.0,
+      "localTrips": 429020.0,
       "realm": "ru-west"
     },
     {
@@ -104681,7 +104813,7 @@
       ],
       "place": 5651,
       "country": "RU",
-      "localTrips": 345086.0,
+      "localTrips": 345107.0,
       "realm": "ru-west"
     },
     {
@@ -104707,7 +104839,7 @@
       ],
       "place": 5652,
       "country": "RU",
-      "localTrips": 366143.0,
+      "localTrips": 366145.0,
       "realm": "ru-east"
     },
     {
@@ -104733,7 +104865,7 @@
       ],
       "place": 5653,
       "country": "RU",
-      "localTrips": 351641.0,
+      "localTrips": 351639.0,
       "realm": "ru-west"
     },
     {
@@ -104759,7 +104891,7 @@
       ],
       "place": 5655,
       "country": "RU",
-      "localTrips": 335160.0,
+      "localTrips": 335293.0,
       "realm": "ru-east"
     },
     {
@@ -104811,7 +104943,7 @@
       ],
       "place": 5658,
       "country": "RU",
-      "localTrips": 298117.0,
+      "localTrips": 298136.0,
       "realm": "ru-east"
     },
     {
@@ -104837,7 +104969,7 @@
       ],
       "place": 5660,
       "country": "RU",
-      "localTrips": 290278.0,
+      "localTrips": 290289.0,
       "realm": "ru-east"
     },
     {
@@ -104888,7 +105020,7 @@
       ],
       "place": 5663,
       "country": "RU",
-      "localTrips": 3373885.0,
+      "localTrips": 3373695.0,
       "realm": "ru-west"
     },
     {
@@ -104914,7 +105046,7 @@
       ],
       "place": 5664,
       "country": "RU",
-      "localTrips": 3572122.0,
+      "localTrips": 3572031.0,
       "realm": "ru-west"
     },
     {
@@ -104940,7 +105072,7 @@
       ],
       "place": 5665,
       "country": "RU",
-      "localTrips": 3517872.0,
+      "localTrips": 3517799.0,
       "realm": "ru-west"
     },
     {
@@ -104966,7 +105098,7 @@
       ],
       "place": 5666,
       "country": "RU",
-      "localTrips": 2185527.0,
+      "localTrips": 2185267.0,
       "realm": "ru-west"
     },
     {
@@ -104992,7 +105124,7 @@
       ],
       "place": 5667,
       "country": "RU",
-      "localTrips": 2368221.0,
+      "localTrips": 2368108.0,
       "realm": "ru-west"
     },
     {
@@ -105018,7 +105150,7 @@
       ],
       "place": 5668,
       "country": "RU",
-      "localTrips": 1761883.0,
+      "localTrips": 1761592.0,
       "realm": "ru-west"
     },
     {
@@ -105044,7 +105176,7 @@
       ],
       "place": 5669,
       "country": "RU",
-      "localTrips": 1865367.0,
+      "localTrips": 1865215.0,
       "realm": "ru-west"
     },
     {
@@ -105070,7 +105202,7 @@
       ],
       "place": 5671,
       "country": "RU",
-      "localTrips": 1557223.0,
+      "localTrips": 1557044.0,
       "realm": "ru-west"
     },
     {
@@ -105096,7 +105228,7 @@
       ],
       "place": 5673,
       "country": "RU",
-      "localTrips": 1470189.0,
+      "localTrips": 1470136.0,
       "realm": "ru-west"
     },
     {
@@ -105122,7 +105254,7 @@
       ],
       "place": 5674,
       "country": "RU",
-      "localTrips": 1321428.0,
+      "localTrips": 1321279.0,
       "realm": "ru-west"
     },
     {
@@ -105148,7 +105280,7 @@
       ],
       "place": 5675,
       "country": "RU",
-      "localTrips": 1280757.0,
+      "localTrips": 1280620.0,
       "realm": "ru-west"
     },
     {
@@ -105174,7 +105306,7 @@
       ],
       "place": 5676,
       "country": "RU",
-      "localTrips": 1129541.0,
+      "localTrips": 1129497.0,
       "realm": "ru-west"
     },
     {
@@ -105200,7 +105332,7 @@
       ],
       "place": 5677,
       "country": "RU",
-      "localTrips": 3442489.0,
+      "localTrips": 3442477.0,
       "realm": "ru-east"
     },
     {
@@ -105226,7 +105358,7 @@
       ],
       "place": 5678,
       "country": "RU",
-      "localTrips": 2233437.0,
+      "localTrips": 2233428.0,
       "realm": "ru-east"
     },
     {
@@ -105252,7 +105384,7 @@
       ],
       "place": 5679,
       "country": "RU",
-      "localTrips": 1547325.0,
+      "localTrips": 1547307.0,
       "realm": "ru-east"
     },
     {
@@ -105278,7 +105410,7 @@
       ],
       "place": 5680,
       "country": "RU",
-      "localTrips": 1484021.0,
+      "localTrips": 1484005.0,
       "realm": "ru-east"
     },
     {
@@ -105304,7 +105436,7 @@
       ],
       "place": 5681,
       "country": "RU",
-      "localTrips": 1094093.0,
+      "localTrips": 1094092.0,
       "realm": "ru-east"
     },
     {
@@ -105408,7 +105540,7 @@
       ],
       "place": 5685,
       "country": "RU",
-      "localTrips": 443323.0,
+      "localTrips": 443310.0,
       "realm": "ru-east"
     },
     {
@@ -105434,7 +105566,7 @@
       ],
       "place": 5686,
       "country": "RU",
-      "localTrips": 428196.0,
+      "localTrips": 428195.0,
       "realm": "ru-east"
     },
     {
@@ -105460,7 +105592,7 @@
       ],
       "place": 5687,
       "country": "RU",
-      "localTrips": 415973.0,
+      "localTrips": 415963.0,
       "realm": "ru-east"
     },
     {
@@ -105486,7 +105618,7 @@
       ],
       "place": 5688,
       "country": "RU",
-      "localTrips": 2847070.0,
+      "localTrips": 2847074.0,
       "realm": "ru-west"
     },
     {
@@ -105511,7 +105643,7 @@
       ],
       "place": 5689,
       "country": "RU",
-      "localTrips": 5229345.0,
+      "localTrips": 5229360.0,
       "realm": "ru-east"
     },
     {
@@ -105536,7 +105668,7 @@
       ],
       "place": 5690,
       "country": "RU",
-      "localTrips": 4335782.0,
+      "localTrips": 4335948.0,
       "realm": "ru-west"
     },
     {
@@ -105561,7 +105693,7 @@
       ],
       "place": 5691,
       "country": "RU",
-      "localTrips": 4423344.0,
+      "localTrips": 4423293.0,
       "realm": "ru-west"
     },
     {
@@ -105586,7 +105718,7 @@
       ],
       "place": 5692,
       "country": "RU",
-      "localTrips": 4351222.0,
+      "localTrips": 4351185.0,
       "realm": "ru-east"
     },
     {
@@ -105611,7 +105743,7 @@
       ],
       "place": 5693,
       "country": "RU",
-      "localTrips": 4232678.0,
+      "localTrips": 4232767.0,
       "realm": "ru-west"
     },
     {
@@ -105636,7 +105768,7 @@
       ],
       "place": 5694,
       "country": "RU",
-      "localTrips": 4075694.0,
+      "localTrips": 4075709.0,
       "realm": "ru-west"
     },
     {
@@ -105661,7 +105793,7 @@
       ],
       "place": 5695,
       "country": "RU",
-      "localTrips": 3785985.0,
+      "localTrips": 3786036.0,
       "realm": "ru-west"
     },
     {
@@ -105687,7 +105819,7 @@
       ],
       "place": 5696,
       "country": "RU",
-      "localTrips": 4293487.0,
+      "localTrips": 4293625.0,
       "realm": "ru-west"
     },
     {
@@ -105713,7 +105845,7 @@
       ],
       "place": 5697,
       "country": "RU",
-      "localTrips": 3931395.0,
+      "localTrips": 3931512.0,
       "realm": "ru-west"
     },
     {
@@ -105739,7 +105871,7 @@
       ],
       "place": 5698,
       "country": "RU",
-      "localTrips": 3888464.0,
+      "localTrips": 3888584.0,
       "realm": "ru-west"
     },
     {
@@ -105765,7 +105897,7 @@
       ],
       "place": 5699,
       "country": "RU",
-      "localTrips": 3883352.0,
+      "localTrips": 3883380.0,
       "realm": "ru-east"
     },
     {
@@ -105791,7 +105923,7 @@
       ],
       "place": 5700,
       "country": "RU",
-      "localTrips": 3797441.0,
+      "localTrips": 3797557.0,
       "realm": "ru-west"
     },
     {
@@ -105817,7 +105949,7 @@
       ],
       "place": 5701,
       "country": "RU",
-      "localTrips": 3796676.0,
+      "localTrips": 3796872.0,
       "realm": "ru-west"
     },
     {
@@ -105843,7 +105975,7 @@
       ],
       "place": 5702,
       "country": "RU",
-      "localTrips": 3568125.0,
+      "localTrips": 3568609.0,
       "realm": "ru-west"
     },
     {
@@ -105869,7 +106001,7 @@
       ],
       "place": 5703,
       "country": "RU",
-      "localTrips": 3566807.0,
+      "localTrips": 3566792.0,
       "realm": "ru-west"
     },
     {
@@ -105895,7 +106027,7 @@
       ],
       "place": 5704,
       "country": "RU",
-      "localTrips": 2324795.0,
+      "localTrips": 2324851.0,
       "realm": "ru-west"
     },
     {
@@ -105921,7 +106053,7 @@
       ],
       "place": 5705,
       "country": "RU",
-      "localTrips": 2389895.0,
+      "localTrips": 2389916.0,
       "realm": "ru-west"
     },
     {
@@ -105947,7 +106079,7 @@
       ],
       "place": 5706,
       "country": "RU",
-      "localTrips": 2258329.0,
+      "localTrips": 2258362.0,
       "realm": "ru-west"
     },
     {
@@ -105973,7 +106105,7 @@
       ],
       "place": 5707,
       "country": "RU",
-      "localTrips": 2232705.0,
+      "localTrips": 2232709.0,
       "realm": "ru-east"
     },
     {
@@ -105999,7 +106131,7 @@
       ],
       "place": 5708,
       "country": "RU",
-      "localTrips": 2213959.0,
+      "localTrips": 2215618.0,
       "realm": "ru-west"
     },
     {
@@ -106025,7 +106157,7 @@
       ],
       "place": 5709,
       "country": "RU",
-      "localTrips": 2104630.0,
+      "localTrips": 2104718.0,
       "realm": "ru-west"
     },
     {
@@ -106051,7 +106183,7 @@
       ],
       "place": 5710,
       "country": "RU",
-      "localTrips": 1708045.0,
+      "localTrips": 1708239.0,
       "realm": "ru-west"
     },
     {
@@ -106077,7 +106209,7 @@
       ],
       "place": 5711,
       "country": "RU",
-      "localTrips": 1927367.0,
+      "localTrips": 1927421.0,
       "realm": "ru-west"
     },
     {
@@ -106103,7 +106235,7 @@
       ],
       "place": 5712,
       "country": "RU",
-      "localTrips": 2085350.0,
+      "localTrips": 2085319.0,
       "realm": "ru-west"
     },
     {
@@ -106129,7 +106261,7 @@
       ],
       "place": 5713,
       "country": "RU",
-      "localTrips": 1887403.0,
+      "localTrips": 1888455.0,
       "realm": "ru-west"
     },
     {
@@ -106155,7 +106287,7 @@
       ],
       "place": 5714,
       "country": "RU",
-      "localTrips": 1867945.0,
+      "localTrips": 1868011.0,
       "realm": "ru-west"
     },
     {
@@ -106181,7 +106313,7 @@
       ],
       "place": 5715,
       "country": "RU",
-      "localTrips": 1792173.0,
+      "localTrips": 1792231.0,
       "realm": "ru-west"
     },
     {
@@ -106207,7 +106339,7 @@
       ],
       "place": 5716,
       "country": "RU",
-      "localTrips": 1717188.0,
+      "localTrips": 1717206.0,
       "realm": "ru-west"
     },
     {
@@ -106233,7 +106365,7 @@
       ],
       "place": 5717,
       "country": "RU",
-      "localTrips": 1672700.0,
+      "localTrips": 1672714.0,
       "realm": "ru-west"
     },
     {
@@ -106259,7 +106391,7 @@
       ],
       "place": 5718,
       "country": "RU",
-      "localTrips": 1613457.0,
+      "localTrips": 1613431.0,
       "realm": "ru-west"
     },
     {
@@ -106285,7 +106417,7 @@
       ],
       "place": 5719,
       "country": "RU",
-      "localTrips": 1692400.0,
+      "localTrips": 1692431.0,
       "realm": "ru-east"
     },
     {
@@ -106311,7 +106443,7 @@
       ],
       "place": 5720,
       "country": "RU",
-      "localTrips": 1231128.0,
+      "localTrips": 1231163.0,
       "realm": "ru-west"
     },
     {
@@ -106337,7 +106469,7 @@
       ],
       "place": 5721,
       "country": "RU",
-      "localTrips": 1058628.0,
+      "localTrips": 1058594.0,
       "realm": "ru-west"
     },
     {
@@ -106363,7 +106495,7 @@
       ],
       "place": 5722,
       "country": "RU",
-      "localTrips": 1092006.0,
+      "localTrips": 1092058.0,
       "realm": "ru-west"
     },
     {
@@ -106389,7 +106521,7 @@
       ],
       "place": 5723,
       "country": "RU",
-      "localTrips": 945632.0,
+      "localTrips": 945658.0,
       "realm": "ru-east"
     },
     {
@@ -106415,7 +106547,7 @@
       ],
       "place": 5724,
       "country": "RU",
-      "localTrips": 915082.0,
+      "localTrips": 915120.0,
       "realm": "ru-west"
     },
     {
@@ -106441,7 +106573,7 @@
       ],
       "place": 5725,
       "country": "RU",
-      "localTrips": 820730.0,
+      "localTrips": 820731.0,
       "realm": "ru-east"
     },
     {
@@ -106467,7 +106599,7 @@
       ],
       "place": 5726,
       "country": "RU",
-      "localTrips": 741419.0,
+      "localTrips": 741443.0,
       "realm": "ru-east"
     },
     {
@@ -106493,7 +106625,7 @@
       ],
       "place": 5727,
       "country": "RU",
-      "localTrips": 704742.0,
+      "localTrips": 704750.0,
       "realm": "ru-east"
     },
     {
@@ -106519,7 +106651,7 @@
       ],
       "place": 5728,
       "country": "RU",
-      "localTrips": 652564.0,
+      "localTrips": 652631.0,
       "realm": "ru-west"
     },
     {
@@ -106545,7 +106677,7 @@
       ],
       "place": 5729,
       "country": "RU",
-      "localTrips": 650946.0,
+      "localTrips": 650913.0,
       "realm": "ru-west"
     },
     {
@@ -106571,7 +106703,7 @@
       ],
       "place": 5731,
       "country": "RU",
-      "localTrips": 299252.0,
+      "localTrips": 299243.0,
       "realm": "ru-east"
     },
     {
@@ -106596,7 +106728,7 @@
       ],
       "place": 5732,
       "country": "RU",
-      "localTrips": 4684706.0,
+      "localTrips": 4684695.0,
       "realm": "ru-west"
     },
     {
@@ -106621,7 +106753,7 @@
       ],
       "place": 5733,
       "country": "RU",
-      "localTrips": 4645274.0,
+      "localTrips": 4645172.0,
       "realm": "ru-west"
     },
     {
@@ -106647,7 +106779,7 @@
       ],
       "place": 5734,
       "country": "RU",
-      "localTrips": 3936238.0,
+      "localTrips": 3930222.0,
       "realm": "ru-west"
     },
     {
@@ -106673,7 +106805,7 @@
       ],
       "place": 5735,
       "country": "RU",
-      "localTrips": 3963768.0,
+      "localTrips": 3963686.0,
       "realm": "ru-west"
     },
     {
@@ -106699,7 +106831,7 @@
       ],
       "place": 5736,
       "country": "RU",
-      "localTrips": 1976496.0,
+      "localTrips": 1976402.0,
       "realm": "ru-west"
     },
     {
@@ -106725,7 +106857,7 @@
       ],
       "place": 5737,
       "country": "RU",
-      "localTrips": 1860324.0,
+      "localTrips": 1860206.0,
       "realm": "ru-west"
     },
     {
@@ -106751,7 +106883,7 @@
       ],
       "place": 5738,
       "country": "RU",
-      "localTrips": 1975551.0,
+      "localTrips": 1975520.0,
       "realm": "ru-west"
     },
     {
@@ -106777,7 +106909,7 @@
       ],
       "place": 5739,
       "country": "RU",
-      "localTrips": 1051386.0,
+      "localTrips": 1051379.0,
       "realm": "ru-west"
     },
     {
@@ -106803,7 +106935,7 @@
       ],
       "place": 5740,
       "country": "RU",
-      "localTrips": 1118421.0,
+      "localTrips": 1118395.0,
       "realm": "ru-west"
     },
     {
@@ -106829,7 +106961,7 @@
       ],
       "place": 5741,
       "country": "RU",
-      "localTrips": 759688.0,
+      "localTrips": 759667.0,
       "realm": "ru-west"
     },
     {
@@ -106854,7 +106986,7 @@
       ],
       "place": 5742,
       "country": "RU",
-      "localTrips": 3866552.0,
+      "localTrips": 3866559.0,
       "realm": "ru-east"
     },
     {
@@ -106879,7 +107011,7 @@
       ],
       "place": 5743,
       "country": "RU",
-      "localTrips": 3858106.0,
+      "localTrips": 3858141.0,
       "realm": "ru-east"
     },
     {
@@ -106905,7 +107037,7 @@
       ],
       "place": 5744,
       "country": "RU",
-      "localTrips": 4332544.0,
+      "localTrips": 4332506.0,
       "realm": "ru-east"
     },
     {
@@ -106931,7 +107063,7 @@
       ],
       "place": 5745,
       "country": "RU",
-      "localTrips": 2042070.0,
+      "localTrips": 2042102.0,
       "realm": "ru-east"
     },
     {
@@ -106957,7 +107089,7 @@
       ],
       "place": 5746,
       "country": "RU",
-      "localTrips": 2052082.0,
+      "localTrips": 2052171.0,
       "realm": "ru-east"
     },
     {
@@ -106983,7 +107115,7 @@
       ],
       "place": 5747,
       "country": "RU",
-      "localTrips": 1973700.0,
+      "localTrips": 1973711.0,
       "realm": "ru-east"
     },
     {
@@ -107009,7 +107141,7 @@
       ],
       "place": 5748,
       "country": "RU",
-      "localTrips": 921142.0,
+      "localTrips": 921158.0,
       "realm": "ru-east"
     },
     {
@@ -107035,7 +107167,7 @@
       ],
       "place": 5749,
       "country": "RU",
-      "localTrips": 888499.0,
+      "localTrips": 888521.0,
       "realm": "ru-east"
     },
     {
@@ -107061,7 +107193,7 @@
       ],
       "place": 5750,
       "country": "RU",
-      "localTrips": 880694.0,
+      "localTrips": 880698.0,
       "realm": "ru-east"
     },
     {
@@ -107087,7 +107219,7 @@
       ],
       "place": 5751,
       "country": "RU",
-      "localTrips": 811366.0,
+      "localTrips": 811353.0,
       "realm": "ru-east"
     },
     {
@@ -107113,7 +107245,7 @@
       ],
       "place": 5752,
       "country": "RU",
-      "localTrips": 725644.0,
+      "localTrips": 725638.0,
       "realm": "ru-east"
     },
     {
@@ -107139,7 +107271,7 @@
       ],
       "place": 5754,
       "country": "RU",
-      "localTrips": 682888.0,
+      "localTrips": 682994.0,
       "realm": "ru-east"
     },
     {
@@ -107165,7 +107297,7 @@
       ],
       "place": 5755,
       "country": "RU",
-      "localTrips": 647905.0,
+      "localTrips": 647915.0,
       "realm": "ru-east"
     },
     {
@@ -107191,7 +107323,7 @@
       ],
       "place": 5756,
       "country": "RU",
-      "localTrips": 454743.0,
+      "localTrips": 454750.0,
       "realm": "ru-east"
     },
     {
@@ -107243,7 +107375,7 @@
       ],
       "place": 5758,
       "country": "RU",
-      "localTrips": 2135574.0,
+      "localTrips": 2135620.0,
       "realm": "ru-west"
     },
     {
@@ -107269,7 +107401,7 @@
       ],
       "place": 5759,
       "country": "RU",
-      "localTrips": 1615952.0,
+      "localTrips": 1616539.0,
       "realm": "ru-west"
     },
     {
@@ -107295,7 +107427,7 @@
       ],
       "place": 5761,
       "country": "RU",
-      "localTrips": 1206336.0,
+      "localTrips": 1206320.0,
       "realm": "ru-west"
     },
     {
@@ -107321,7 +107453,7 @@
       ],
       "place": 5762,
       "country": "RU",
-      "localTrips": 1022719.0,
+      "localTrips": 1022694.0,
       "realm": "ru-west"
     },
     {
@@ -107347,7 +107479,7 @@
       ],
       "place": 5763,
       "country": "RU",
-      "localTrips": 960978.0,
+      "localTrips": 960968.0,
       "realm": "ru-west"
     },
     {
@@ -107373,7 +107505,7 @@
       ],
       "place": 5764,
       "country": "RU",
-      "localTrips": 709266.0,
+      "localTrips": 709349.0,
       "realm": "ru-west"
     },
     {
@@ -107399,7 +107531,7 @@
       ],
       "place": 5765,
       "country": "RU",
-      "localTrips": 329588.0,
+      "localTrips": 329606.0,
       "realm": "ru-west"
     },
     {
@@ -107425,7 +107557,7 @@
       ],
       "place": 5766,
       "country": "RU",
-      "localTrips": 1755976.0,
+      "localTrips": 1755923.0,
       "realm": "ru-west"
     },
     {
@@ -107451,7 +107583,7 @@
       ],
       "place": 5768,
       "country": "RU",
-      "localTrips": 1316299.0,
+      "localTrips": 1316157.0,
       "realm": "ru-west"
     },
     {
@@ -107477,7 +107609,7 @@
       ],
       "place": 5769,
       "country": "RU",
-      "localTrips": 1640954.0,
+      "localTrips": 1641386.0,
       "realm": "ru-west"
     },
     {
@@ -107503,7 +107635,7 @@
       ],
       "place": 5770,
       "country": "RU",
-      "localTrips": 679054.0,
+      "localTrips": 678983.0,
       "realm": "ru-east"
     },
     {
@@ -107529,7 +107661,7 @@
       ],
       "place": 5771,
       "country": "RU",
-      "localTrips": 351151.0,
+      "localTrips": 351156.0,
       "realm": "ru-east"
     },
     {
@@ -111768,6 +111900,861 @@
       "country": "ID",
       "localTrips": 7966285.0,
       "realm": "java"
+    },
+    {
+      "id": "kyi",
+      "name": "Kyiv",
+      "origin": {
+        "lon": 30.6343,
+        "lat": 50.4115
+      },
+      "center": [
+        30.6343,
+        50.4115
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.612,
+        49.861,
+        31.533,
+        51.306
+      ],
+      "place": 5975,
+      "country": "UA",
+      "localTrips": 10197754.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "kha",
+      "name": "Kharkiv",
+      "origin": {
+        "lon": 36.2397,
+        "lat": 50.0003
+      },
+      "center": [
+        36.2397,
+        50.0003
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.972,
+        49.125,
+        36.911,
+        50.47
+      ],
+      "place": 5976,
+      "country": "UA",
+      "localTrips": 5405764.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "ode",
+      "name": "Odesa",
+      "origin": {
+        "lon": 30.7372,
+        "lat": 46.4844
+      },
+      "center": [
+        30.7372,
+        46.4844
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.849,
+        46.026,
+        31.356,
+        47.059
+      ],
+      "place": 5977,
+      "country": "UA",
+      "localTrips": 3772563.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "hod",
+      "name": "Horodok",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.0276,
+        "lat": 49.838
+      },
+      "center": [
+        24.0276,
+        49.838
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.978,
+        49.321,
+        25.602,
+        50.667
+      ],
+      "place": 5978,
+      "country": "UA",
+      "localTrips": 4719093.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "dnp",
+      "name": "Dnipro",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.0581,
+        "lat": 48.4623
+      },
+      "center": [
+        35.0581,
+        48.4623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        33.699,
+        47.799,
+        35.706,
+        49.212
+      ],
+      "place": 5979,
+      "country": "UA",
+      "localTrips": 4381387.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "viy",
+      "name": "Vinnytsia",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.4439,
+        "lat": 49.2196
+      },
+      "center": [
+        28.4439,
+        49.2196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.345,
+        47.942,
+        30.051,
+        49.879
+      ],
+      "place": 5980,
+      "country": "UA",
+      "localTrips": 4156725.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "dov",
+      "name": "Domanivka",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.013,
+        "lat": 46.9693
+      },
+      "center": [
+        32.013,
+        46.9693
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.198,
+        46.426,
+        33.275,
+        48.277
+      ],
+      "place": 5981,
+      "country": "UA",
+      "localTrips": 3935813.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "tyn",
+      "name": "Tysmenytsia",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.7074,
+        "lat": 48.9256
+      },
+      "center": [
+        24.7074,
+        48.9256
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.535,
+        47.706,
+        25.772,
+        49.527
+      ],
+      "place": 5982,
+      "country": "UA",
+      "localTrips": 3550613.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "mev",
+      "name": "Manevychi",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.2801,
+        "lat": 50.6225
+      },
+      "center": [
+        26.2801,
+        50.6225
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.072,
+        49.986,
+        27.758,
+        51.969
+      ],
+      "place": 5983,
+      "country": "UA",
+      "localTrips": 3171706.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "nil",
+      "name": "Nikopol",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.137,
+        "lat": 47.8406
+      },
+      "center": [
+        35.137,
+        47.8406
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.007,
+        47.354,
+        36.636,
+        48.159
+      ],
+      "place": 5984,
+      "country": "UA",
+      "localTrips": 3252646.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "sif",
+      "name": "Simferopol",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.1024,
+        "lat": 44.9521
+      },
+      "center": [
+        34.1024,
+        44.9521
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        32.454,
+        44.7,
+        34.818,
+        46.222
+      ],
+      "place": 5985,
+      "country": "RU",
+      "localTrips": 3427265.0,
+      "realm": "ru-west"
+    },
+    {
+      "id": "sel",
+      "name": "Sevastopol",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.5254,
+        "lat": 44.6054
+      },
+      "center": [
+        33.5254,
+        44.6054
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        33.353,
+        44.368,
+        34.5,
+        44.86
+      ],
+      "place": 5986,
+      "country": "RU",
+      "localTrips": 1748676.0,
+      "realm": "ru-west"
+    },
+    {
+      "id": "kcx",
+      "name": "Kerch",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.47,
+        "lat": 45.357
+      },
+      "center": [
+        36.47,
+        45.357
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.563,
+        44.774,
+        36.673,
+        45.781
+      ],
+      "place": 5987,
+      "country": "RU",
+      "localTrips": 1285442.0,
+      "realm": "ru-west"
+    },
+    {
+      "id": "kml",
+      "name": "Khmelnytskyi",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.0031,
+        "lat": 49.4191
+      },
+      "center": [
+        27.0031,
+        49.4191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.519,
+        48.392,
+        27.976,
+        50.613
+      ],
+      "place": 5988,
+      "country": "UA",
+      "localTrips": 3491155.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "zhy",
+      "name": "Zhytomyr",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.6496,
+        "lat": 50.2679
+      },
+      "center": [
+        28.6496,
+        50.2679
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.186,
+        49.501,
+        30.402,
+        51.7
+      ],
+      "place": 5989,
+      "country": "UA",
+      "localTrips": 3371114.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "sli",
+      "name": "Sloviansk",
+      "kind": "zone",
+      "origin": {
+        "lon": 37.5971,
+        "lat": 48.7363
+      },
+      "center": [
+        37.5971,
+        48.7363
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        36.032,
+        48.123,
+        38.267,
+        50.478
+      ],
+      "place": 5990,
+      "country": "UA",
+      "localTrips": 3191402.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "kvx",
+      "name": "Kaniv",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.0514,
+        "lat": 49.4476
+      },
+      "center": [
+        32.0514,
+        49.4476
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.624,
+        48.362,
+        33.125,
+        50.214
+      ],
+      "place": 5991,
+      "country": "UA",
+      "localTrips": 3123342.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "sht",
+      "name": "Shostka",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.8196,
+        "lat": 50.9106
+      },
+      "center": [
+        34.8196,
+        50.9106
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.953,
+        50.092,
+        35.722,
+        52.385
+      ],
+      "place": 5992,
+      "country": "UA",
+      "localTrips": 2796441.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "ivn",
+      "name": "Ivanychi",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.3582,
+        "lat": 50.7569
+      },
+      "center": [
+        25.3582,
+        50.7569
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        23.576,
+        50.269,
+        26.267,
+        51.988
+      ],
+      "place": 5993,
+      "country": "UA",
+      "localTrips": 2573675.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "kyv",
+      "name": "Kryvyi Rih",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.4124,
+        "lat": 47.8782
+      },
+      "center": [
+        33.4124,
+        47.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.796,
+        46.733,
+        34.482,
+        48.834
+      ],
+      "place": 5994,
+      "country": "UA",
+      "localTrips": 2525189.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "tep",
+      "name": "Ternopil",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.5986,
+        "lat": 49.5522
+      },
+      "center": [
+        25.5986,
+        49.5522
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.699,
+        48.68,
+        26.467,
+        50.285
+      ],
+      "place": 5995,
+      "country": "UA",
+      "localTrips": 2341708.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "nea",
+      "name": "Nedanchytska",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.2915,
+        "lat": 51.4987
+      },
+      "center": [
+        31.2915,
+        51.4987
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.52,
+        50.313,
+        33.53,
+        52.398
+      ],
+      "place": 5996,
+      "country": "UA",
+      "localTrips": 2442177.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "ole",
+      "name": "Oleksandriia",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.2667,
+        "lat": 48.5095
+      },
+      "center": [
+        32.2667,
+        48.5095
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.722,
+        47.731,
+        33.921,
+        49.264
+      ],
+      "place": 5997,
+      "country": "UA",
+      "localTrips": 2157530.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "ksm",
+      "name": "Kitsman",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.9508,
+        "lat": 48.283
+      },
+      "center": [
+        25.9508,
+        48.283
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.893,
+        47.706,
+        27.562,
+        48.649
+      ],
+      "place": 5998,
+      "country": "UA",
+      "localTrips": 2012008.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "kek",
+      "name": "Kremenchuk",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.4479,
+        "lat": 49.0204
+      },
+      "center": [
+        33.4479,
+        49.0204
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.115,
+        48.861,
+        34.499,
+        50.566
+      ],
+      "place": 5999,
+      "country": "UA",
+      "localTrips": 2046383.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "stx",
+      "name": "Stryi",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.4992,
+        "lat": 49.3525
+      },
+      "center": [
+        23.4992,
+        49.3525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.613,
+        48.642,
+        24.597,
+        49.949
+      ],
+      "place": 6000,
+      "country": "UA",
+      "localTrips": 1806029.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "sky",
+      "name": "Skvyra",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.113,
+        "lat": 49.7999
+      },
+      "center": [
+        30.113,
+        49.7999
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.46,
+        49.109,
+        32.296,
+        50.66
+      ],
+      "place": 6001,
+      "country": "UA",
+      "localTrips": 1761152.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "rkh",
+      "name": "Rakhiv",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.297,
+        "lat": 48.1793
+      },
+      "center": [
+        23.297,
+        48.1793
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.806,
+        47.878,
+        24.71,
+        48.753
+      ],
+      "place": 6002,
+      "country": "UA",
+      "localTrips": 1662190.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "uzo",
+      "name": "Uzhhorodska",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.2989,
+        "lat": 48.6134
+      },
+      "center": [
+        22.2989,
+        48.6134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.109,
+        48.074,
+        23.461,
+        49.072
+      ],
+      "place": 6003,
+      "country": "UA",
+      "localTrips": 1585919.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "pov",
+      "name": "Poltava",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.5428,
+        "lat": 49.5903
+      },
+      "center": [
+        34.5428,
+        49.5903
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        33.854,
+        48.721,
+        35.974,
+        50.374
+      ],
+      "place": 6004,
+      "country": "UA",
+      "localTrips": 1624969.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "sye",
+      "name": "Synelnykove",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.874,
+        "lat": 48.5284
+      },
+      "center": [
+        35.874,
+        48.5284
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.953,
+        47.797,
+        36.965,
+        49.366
+      ],
+      "place": 6005,
+      "country": "UA",
+      "localTrips": 1422005.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "iza",
+      "name": "Izmali",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.8512,
+        "lat": 45.3438
+      },
+      "center": [
+        28.8512,
+        45.3438
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.185,
+        45.182,
+        30.474,
+        46.577
+      ],
+      "place": 6006,
+      "country": "UA",
+      "localTrips": 1218239.0,
+      "realm": "ukraine"
+    },
+    {
+      "id": "pdi",
+      "name": "Podilsk",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.5477,
+        "lat": 47.7373
+      },
+      "center": [
+        29.5477,
+        47.7373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.917,
+        46.527,
+        31.401,
+        48.253
+      ],
+      "place": 6007,
+      "country": "UA",
+      "localTrips": 1099962.0,
+      "realm": "ukraine"
     }
   ]
 }

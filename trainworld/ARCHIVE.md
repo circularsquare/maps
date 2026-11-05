@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2344 Ukraine where the government holds the ground, Crimea with Russia (2026-11-04, agents countries2, countries3, ukraine): kyi kha ode and 27 zones (30.6M; don held) and Crimea's three Russian zones, all 33 shipped and joined (groups kyi-ua, mos-ru); occupied councils left out; borders with Russia and Belarus 0. notes/T-2344.md.
 - T-2447 Diagram blocks named by their own place (2026-11-04, agent diagnames, tree .tw-trees/diagnames): a block whose zone's name a bigger block has takes the nearest city or town of the zone's place list to its stations, none twice; all Japan 31 -> 45 of 45 blocks named, New York, Northeast and Toronto unchanged. checks/t2438-city-names.mjs; docs/ui-diagram.md.
 
 - T-2464 Diagram zone borders redrawn (2026-11-04, agent diagzones, tree .tw-trees/diagzones): decided in the drawing (each cell the zone of its nearest pill), every zone a closed octilinear outline with rounded corners, between blocks too; no station on another's side on Japan, the Northeast, New York, Toronto; T-2168's warp removed. notes/T-2464.md.

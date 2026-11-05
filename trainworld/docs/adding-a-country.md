@@ -139,7 +139,8 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
    was): one zone or the metro takes it, patched under the plan lock as T-1857 did (notes/T-1857.md); record
    in DECISIONS.md.
 5. **Borders** (NOTE borders): the built countries within 50 km. The default factor is the national 0.05
-   (`pipeline/borders.json`); a dense crossing (Singapore and Johor Bahru) needs a pair factor.
+   (`pipeline/borders.json`); a dense crossing (Singapore and Johor Bahru) needs a pair factor, a border closed to
+   crossings (Ukraine with Russia and Belarus) a pair factor of 0.
 6. **Machine**: smoke 20 of 20 on your own Vite (`checks/smoke.mjs`; a FAIL here is a stale WASM or
    another agent's edit, and every browser check would park); your Vite's and the run's ports free; disk
    free at least 15 GB plus twice the biggest extract; nobody else's run, join or terrain job writing

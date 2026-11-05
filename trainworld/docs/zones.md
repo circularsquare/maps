@@ -226,7 +226,8 @@ notes/T-1004.md.
 **Ukraine** (Anita, 2026-11-04, T-2344: "we can do de facto borders. crimea to russia if its drawable, and probably
 not draw the other contested areas") is zoned on geoBoundaries' village and town councils by their old raion, as
 Korea's. Crimea and Sevastopol go with Russia: a unit `de_facto` gives another side becomes that side's unit
-(`world_plan.DE_FACTO_TAKE`, ids kept), so Russia's zones step zones them. Land held by Russia elsewhere is left
+(`world_plan.DE_FACTO_TAKE`, ids kept), so Russia's zones step zones them (three zones, split by hand: Simferopol,
+Sevastopol, Kerch). Ukraine's borders with Russia and Belarus take a factor of 0 (closed to crossings). Land held by Russia elsewhere is left
 out (`LEFT_OUT`): a council with over half its area inside ISW and AEI's assessed line of control of 2026-09-29 is
 not zoned, one with less is zoned whole. The line only picks whole units (its terms are not an open licence); no
 edge of it is drawn or shipped. The Donetsk metro row stays held. notes/T-2344.md.

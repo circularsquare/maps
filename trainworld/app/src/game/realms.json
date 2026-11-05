@@ -12,6 +12,7 @@
     { "id": "nordic", "name": "Nordic countries", "countries": ["SE", "NO", "DK", "FI", "IS", "AX", "FO"] },
     { "id": "baltic", "name": "Baltic states", "countries": ["EE", "LV", "LT"] },
     { "id": "belarus", "name": "Belarus", "countries": ["BY"] },
+    { "id": "ukraine", "name": "Ukraine", "countries": ["UA"] },
     { "id": "balkans", "name": "Balkans", "countries": ["SI", "HR", "BA", "RS", "ME", "XK", "MK", "AL", "BG"] },
     { "id": "ro-md", "name": "Romania and Moldova", "countries": ["RO", "MD"] },
     { "id": "gr-cy", "name": "Greece and Cyprus", "countries": ["GR", "CY"] },
