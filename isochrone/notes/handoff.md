@@ -24,8 +24,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-042 land hazard, stage 1 design + L10 sample: agent a41134b19636e2f86 (Opus), from ~14:00.
   Owns docs/hazard.md, notes/T-042*, tools/hazard/, research/friction.md 6. No page changes, no
   world build; may file T-066 to T-068. Done when docs/hazard.md and notes/T-042.md exist.
-- T-036 dark unreached river cells on canoe starts: agent ac6f7eb49e7ed89dd (Opus), from ~14:50.
-  Owns js/canoe.js, js/canoedata.js, docs/canoe.md rule; asks before any canoe rebuild.
+- T-036 landed (2f0b985b): dead-end river water. T-074 river water paler: page agent
+  a188a1156511192ef (Sonnet), owns js/paint.js, the flag in js/canoe.js.
 
 ## Long runs
 - T-053 world roads pass: `python -u isochrone/tools/roads/world.py --jobs 1` from the maps root,

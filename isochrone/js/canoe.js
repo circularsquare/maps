@@ -56,6 +56,10 @@ function dilate3(a, W, H, wrap) {
     return out;
 }
 
+// A cell's `info` bit set where the cell is water of any kind, river water included, whether or not
+// it has a canoe node: what paint.js mixes towards white (T-063, T-074).
+export const PAINT_WATER = 1 << 20;
+
 // data: { kind, shore, links, steps } from canoedata.js; sea: the 0.25 degree sea grid.
 // Sets and returns L.cn = { E, canoeOf, cellOf, info, curr, curKmh, shore, hzr, rOff, rTo, rDt,
 // rCode, rHz, rKm (the step's river length, km) }.
@@ -108,7 +112,7 @@ export function buildCanoe(L, data, sea) {
             if (land) isLand[i] = 1;
             if (ok || onRiver[i]) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
             info[i] = (ok ? k : 0) | (LINK_LUT[data.links[i]] << 8) | (shore[i] >= 20 ? FAR : 0) |
-                      (onRiver[i] ? ON_RIVER : 0);
+                      (onRiver[i] ? ON_RIVER : 0) | (!land || kind[i] !== 0 ? PAINT_WATER : 0);
         }
     }
     // River water no open river step crosses (T-036): the line runs in the next cell, the river's
@@ -151,7 +155,7 @@ export function buildCanoe(L, data, sea) {
     for (const j of dead) {
         for (let k = 0; k < 8; k++) { const i = nbr(j, k); if (i >= 0 && into(i, j)) { nInto++; info[i] |= ON_RIVER; } }
     }
-    for (const j of dead) { canoeOf[j] = j; hasNode[j] = 1; info[j] = (shore[j] >= 20 ? FAR : 0) | (info[j] & ON_RIVER); }
+    for (const j of dead) { canoeOf[j] = j; hasNode[j] = 1; info[j] = (shore[j] >= 20 ? FAR : 0) | (info[j] & ON_RIVER) | PAINT_WATER; }
     const nearLand = dilate3(isLand, W, H, L.wrap), nearCanoe = dilate3(hasNode, W, H, L.wrap);
     for (let i = 0; i < N; i++) info[i] |= (nearLand[i] ? NEAR_LAND : 0) | (nearCanoe[i] ? NEAR_CANOE : 0);
     const cellOf = new Int32Array(E);

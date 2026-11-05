@@ -1,5 +1,7 @@
 // Solved levels to RGBA pixels.
 import { cfg } from './config.js';
+import { PAINT_WATER } from './canoe.js';
+const IS_WATER = 0xFF | PAINT_WATER;   // a cell's water kind byte, or the flag that also covers river water
 
 // RGBA pixels, linear in Web Mercator y (how MapLibre stretches an image between its
 // corners), one canvas column per cell column.
@@ -17,7 +19,7 @@ export function paint(L, canoe) {
     // rows) lands within a fraction of a cell of the window's edge (T-037). Capped by pixel count.
     const sub = Math.max(1, Math.min(4, Math.floor(MAX_PIXELS / (cw * ch0))));
     const ch = Math.max(1, Math.min(8192, ch0 * sub));
-    const info = canoe && L.cn ? L.cn.info : null;   // canoe starts: its low byte is the cell's water kind, 0 on land
+    const info = canoe && L.cn ? L.cn.info : null;   // canoe starts: its low byte is the cell's water kind, 0 on land; PAINT_WATER marks river water too
     const edges = bands.map(b => b.h), cols = bands.map(b => b.color);
     const nb = edges.length;
     if (cfg.look === 'hex') return paintHex(L, info, ch0, yTop, yBot);
@@ -35,7 +37,7 @@ export function paint(L, canoe) {
             let k = 0;
             while (h > edges[k]) k++;
             const o = (y * cw + x) * 4, col = cols[k];
-            if (info && (info[o0 + x] & 0xFF) !== 0) {
+            if (info && (info[o0 + x] & IS_WATER) !== 0) {
                 px[o] = col[0] + (255 - col[0]) * WATER_MIX; px[o + 1] = col[1] + (255 - col[1]) * WATER_MIX;
                 px[o + 2] = col[2] + (255 - col[2]) * WATER_MIX;
             } else { px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; }
@@ -117,7 +119,7 @@ function paintHex(L, info, ch0, yTop, yBot) {
         if (!(h <= last)) continue;
         while (k > 0 && h <= edges[k - 1]) k--;
         while (h > edges[k]) k++;
-        C[i] = info && (info[i] & 0xFF) !== 0 ? water[k] : land[k];
+        C[i] = info && (info[i] & IS_WATER) !== 0 ? water[k] : land[k];
     }
     const map = hexMap(L, XS, cw, ch, yTop, yBot);
     const buf = new ArrayBuffer(cw * ch * 4);
@@ -170,7 +172,7 @@ function paintLook(L, info, ch0, yTop, yBot) {
             const k = B[cell];
             if (k === 255) continue;
             const o = (y * cw + x) * 4, col = bands[k].color;
-            if (info && (info[cell] & 0xFF) !== 0) {
+            if (info && (info[cell] & IS_WATER) !== 0) {
                 px[o] = col[0] + (255 - col[0]) * WATER_MIX; px[o + 1] = col[1] + (255 - col[1]) * WATER_MIX;
                 px[o + 2] = col[2] + (255 - col[2]) * WATER_MIX;
             } else { px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; }
