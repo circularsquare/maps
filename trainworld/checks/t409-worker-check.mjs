@@ -54,7 +54,17 @@ for (let q = 0; q < 5; q++) {
   assert.equal(m[2], mb[2] + mp[2], `period ${q} market rail`);
   assert.equal(m[1], mb[1], `period ${q} market trips once`);
   assert.equal(mb[1], mp[1]);
-  same(B.intercityParts, B.intercityParts.map((v, i) => (i % 2 ? b.intercityParts[i] + p.intercityParts[i] : b.intercityParts[i])), `period ${q} market parts`);
+  // the market's parts (marketParts.ts): longer trips, commutes, everyday legs across a zone line, then
+  // four per purpose; each block's rail is the parts' added, its walkers those with no rail (the same
+  // on any network) minus what each part's rail takes, the rest taken once
+  const [P, Pb, Pp] = [B.intercityParts, b.intercityParts, p.intercityParts];
+  const walkAt = new Map([[6, 7], ...Array.from({ length: (P.length - 8) >> 2 }, (_, k) => [8 + 4 * k + 2, 8 + 4 * k + 3])]);
+  for (const base of walkAt.values()) assert(Object.is(Pb[base], Pp[base]), `period ${q} market parts[${base}] the same on any network`);
+  const railAt = (i) => (i < 6 ? i % 2 === 1 : i >= 8 && (i - 8) % 4 === 1);
+  same(P, P.map((_, i) => {
+    if (walkAt.has(i)) { const w = Pb[walkAt.get(i)]; return Math.max(0, w - ((w - Pb[i]) + (w - Pp[i]))); }
+    return railAt(i) ? Pb[i] + Pp[i] : Pb[i];
+  }), `period ${q} market parts`);
   // T-1008: the corridors with rail (row, rail, commute rail), each part's added up
   const railOf = (r) => { const m = new Map(); for (let i = 0; i < r.corridorRail.length; i += 3) m.set(r.corridorRail[i], [r.corridorRail[i + 1], r.corridorRail[i + 2]]); return m; };
   const [rB, rb, rp] = [railOf(B), railOf(b), railOf(p)];
@@ -62,7 +72,9 @@ for (let q = 0; q < 5; q++) {
   for (const [j, [r, c]] of rB) same([r, c], [(rb.get(j)?.[0] ?? 0) + (rp.get(j)?.[0] ?? 0), (rb.get(j)?.[1] ?? 0) + (rp.get(j)?.[1] ?? 0)], `period ${q} corridor ${j}`);
   same(B.corridorShares, b.corridorShares, `period ${q} corridor shares`);
 }
-out.figures = { periods: 5, lineLoadsCitySummariesMarketParts: 'identical', marketRail: both.results.map((r, q) => [r.intercitySummary[2], bos.results[q].intercitySummary[2], phl.results[q].intercitySummary[2]]) };
+out.figures = { periods: 5, lineLoadsCitySummariesMarketParts: 'identical', marketRail: both.results.map((r, q) => [r.intercitySummary[2], bos.results[q].intercitySummary[2], phl.results[q].intercitySummary[2]]),
+  // everyday legs across a zone line: rail (both, Boston's, Philadelphia's), walkers, walkers with no rail
+  marketEveryday: both.results.map((r, q) => [r.intercityParts[5], bos.results[q].intercityParts[5], phl.results[q].intercityParts[5], r.intercityParts[6], r.intercityParts[7]]) };
 // an edit to the Boston line: split, Philadelphia's cluster is kept
 const edit = network(['bos', 'phl'], { bos: [14, 10, 6], phl: [12, 10, 6] });
 const back = network(['bos', 'phl']);
