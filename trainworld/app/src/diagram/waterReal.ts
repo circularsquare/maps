@@ -42,6 +42,9 @@ const COVERED = 8, PARTS = 16, STRAIT = 2;
  * FAR_PAD past them, each place no mask covers taking the nearest known cell's */
 const FAR_M = 1000, FAR_CELLS = 1_500_000, FAR_PAD = 100_000;
 const EARTH_R = 6371008.8, RAD = Math.PI / 180;
+/** T-2550 (`dropIslands`): an island with no station under ISLE_SHARE of the land within ISLE_M of its middle is left
+ * out; a station on water takes the land found nearest, in steps of ISLE_STEP out to ISLE_FIND, metres */
+const ISLE_SHARE = 0.1, ISLE_M = 50000, ISLE_STEP = 200, ISLE_FIND = 2000;
 
 export interface RiverArc {
   /** its centre line, x, y pairs in graph metres, from node a to node b */
@@ -76,6 +79,8 @@ export interface RealWater {
   /** which land mass a place is on: one id per land connected on the ground round water that parts it (the sea, and
    * straits about 600 m wide or more; T-2540), -1 in such water */
   massAt(x: number, y: number): number;
+  /** an island with no station: the station nearest it, whose neighbours draw it (T-2550); -1 for any other mass */
+  owner(mass: number): number;
   /** which sea a place is in: one id per sea connected on the ground (T-2516), -1 where it is not sea */
   seaBody(x: number, y: number): number;
   /** the shortest way by water (any water on the coarse grid) from a place to a sea `ok` takes, within `maxM`: its
@@ -182,6 +187,7 @@ export interface GroundSea {
   coarseAt(x: number, y: number, raw?: boolean): number;
   isSea(x: number, y: number): boolean;
   massAt(x: number, y: number): number;
+  owner(mass: number): number;
   seaBody(x: number, y: number): number;
   /** the sea nearest a place within `r` coarse cells, -1 none */
   bodyNear(x: number, y: number, r?: number): number;
@@ -280,8 +286,8 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
     }
     return best;
   };
-  const { isSea, massAt } = farGround();
-  return { coarseAt, seaBody, bodyNear, isSea, massAt, ms: performance.now() - t0 };
+  const { isSea, massAt, owner } = farGround();
+  return { coarseAt, seaBody, bodyNear, isSea, massAt, owner, ms: performance.now() - t0 };
 
   /** the sea anywhere, and the land masses (T-2540): the coarse tiles where a mask covers them; elsewhere a far grid,
    * the masks' wide water where they cover it, else the nearest known cell's. Land masses are land connected round
@@ -296,7 +302,7 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
       const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768;
       (tx0 = Math.min(tx0, ti)), (ty0 = Math.min(ty0, tj)), (tx1 = Math.max(tx1, ti + 1)), (ty1 = Math.max(ty1, tj + 1));
     }
-    if (!(tx0 < tx1)) return { isSea: () => false, massAt: () => 0 };
+    if (!(tx0 < tx1)) return { isSea: () => false, massAt: () => 0, owner: () => -1 };
     const fx0 = tx0 * CT * hc - FAR_PAD, fy0 = ty0 * CT * hc - FAR_PAD, fx1 = tx1 * CT * hc + FAR_PAD, fy1 = ty1 * CT * hc + FAR_PAD;
     const fh = Math.max(FAR_M, Math.sqrt(((fx1 - fx0) * (fy1 - fy0)) / FAR_CELLS));
     const FW = Math.ceil((fx1 - fx0) / fh), FH = Math.ceil((fy1 - fy0) / fh), NF = FW * FH;
@@ -340,15 +346,22 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
     const join = (a: number, b: number) => void (par[root(a)] = root(b));
     const parts = (t: Uint8Array, c: number, x: number, y: number) => (t[c] & COVERED ? (t[c] & PARTS) !== 0 : far[farAt(x, y)] === 1);
     const labs = new Map<number, Int32Array>();
+    // per label (T-2550, `dropIslands`): its cells, their x and y summed, whether one meets the sea; per tile its labels
+    const la: number[] = [], lx: number[] = [], ly: number[] = [], lsea: number[] = [], span = new Map<number, [number, number]>();
     for (const [key, t] of ctiles) {
-      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, lab = new Int32Array(CT * CT).fill(-1);
+      const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, lab = new Int32Array(CT * CT).fill(-1), first = par.length;
       for (let c = 0; c < CT * CT; c++) {
-        if (parts(t, c, (ti * CT + (c % CT) + 0.5) * hc, (tj * CT + Math.floor(c / CT) + 0.5) * hc)) continue;
+        const x = (ti * CT + (c % CT) + 0.5) * hc, y = (tj * CT + Math.floor(c / CT) + 0.5) * hc;
+        if (parts(t, c, x, y)) continue;
         const l = c % CT > 0 ? lab[c - 1] : -1, u = c >= CT ? lab[c - CT] : -1;
-        if (l < 0 && u < 0) (lab[c] = par.length), par.push(par.length);
+        if (l < 0 && u < 0) (lab[c] = par.length), par.push(par.length), la.push(0), lx.push(0), ly.push(0), lsea.push(0);
         else (lab[c] = l >= 0 ? l : u), l >= 0 && u >= 0 && join(l, u);
+        const v = lab[c], i = c % CT;
+        la[v]++, (lx[v] += x), (ly[v] += y);
+        if ((i > 0 && (t[c - 1] & 3) === 3) || (i < CT - 1 && (t[c + 1] & 3) === 3) || (c >= CT && (t[c - CT] & 3) === 3) || (c < CT * CT - CT && (t[c + CT] & 3) === 3)) lsea[v] = 1;
       }
       labs.set(key, lab);
+      span.set(key, [first, par.length]);
     }
     const farBase = par.length;
     for (let c = 0; c < NF; c++) par.push(c + farBase);
@@ -381,14 +394,17 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         });
       }
     }
-    const ids = new Map<number, number>();
+    const owners = new Map<number, number>();
+    dropIslands();
+    const ids = new Map<number, number>(), rootOf: number[] = [];
     const idOf = (v: number) => {
       const r = root(v);
       let id = ids.get(r);
-      if (id === undefined) ids.set(r, (id = ids.size));
+      if (id === undefined) ids.set(r, (id = ids.size)), rootOf.push(r);
       return id;
     };
     return {
+      owner: (m: number) => (m >= 0 && m < rootOf.length ? owners.get(rootOf[m]) ?? -1 : -1),
       isSea: (x: number, y: number) => {
         const v = cellAt(x, y);
         return v & COVERED ? (v & 3) === 3 : far[farAt(x, y)] === 1;
@@ -403,6 +419,85 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         return farLand(f) ? idOf(farBase + f) : -1;
       },
     };
+
+    /** T-2550: an island with no station (land by the sea no station is on) under ISLE_SHARE of the land within ISLE_M
+     * of its middle, as squares (the far grid's land, its own included), is taken as sea; each one kept has an owner
+     * (`owners`), the station nearest it */
+    function dropIslands() {
+      const stats = new Map<number, number[]>(); // root -> [area m^2, x m^2, y m^2, meets the sea, stations]
+      const add = (r: number, a: number, x: number, y: number, s: number) => {
+        const v = stats.get(r);
+        if (v) (v[0] += a), (v[1] += x), (v[2] += y), (v[3] |= s);
+        else stats.set(r, [a, x, y, s, 0]);
+      };
+      for (let v = 0; v < farBase; v++) add(root(v), la[v] * hc * hc, lx[v] * hc * hc, ly[v] * hc * hc, lsea[v]);
+      for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++) {
+        const c = j * FW + i;
+        if (!farLand(c)) continue;
+        const s = (i > 0 && far[c - 1] === 1) || (i < FW - 1 && far[c + 1] === 1) || (j > 0 && far[c - FW] === 1) || (j < FH - 1 && far[c + FW] === 1) ? 1 : 0;
+        add(root(farBase + c), fh * fh, (fx0 + (i + 0.5) * fh) * fh * fh, (fy0 + (j + 0.5) * fh) * fh * fh, s);
+      }
+      const rootAt = (x: number, y: number) => {
+        const i = Math.floor(x / hc), j = Math.floor(y / hc), lab = labs.get(tkey(Math.floor(i / CT), Math.floor(j / CT)));
+        if (lab) {
+          const v = lab[(j - Math.floor(j / CT) * CT) * CT + (i - Math.floor(i / CT) * CT)];
+          return v < 0 ? -1 : root(v);
+        }
+        const f = farAt(x, y);
+        return farLand(f) ? root(farBase + f) : -1;
+      };
+      for (let k = 0; k < n; k++) {
+        let r = rootAt(g.x[k], g.y[k]);
+        for (let s = ISLE_STEP; r < 0 && s <= ISLE_FIND; s += ISLE_STEP) for (let a = 0; a < 8 && r < 0; a++) r = rootAt(g.x[k] + s * Math.cos((a * Math.PI) / 4), g.y[k] + s * Math.sin((a * Math.PI) / 4));
+        const v = r >= 0 ? stats.get(r) : undefined;
+        if (v) v[4]++;
+      }
+      // the far grid's land summed, for the land round a place
+      const W1 = FW + 1, sum = new Float64Array(W1 * (FH + 1));
+      for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++) sum[(j + 1) * W1 + i + 1] = (far[j * FW + i] === 0 ? 1 : 0) + sum[j * W1 + i + 1] + sum[(j + 1) * W1 + i] - sum[j * W1 + i];
+      const landNear = (x: number, y: number) => {
+        const i0 = Math.max(0, Math.floor((x - ISLE_M - fx0) / fh)), i1 = Math.min(FW, Math.ceil((x + ISLE_M - fx0) / fh));
+        const j0 = Math.max(0, Math.floor((y - ISLE_M - fy0) / fh)), j1 = Math.min(FH, Math.ceil((y + ISLE_M - fy0) / fh));
+        return i1 > i0 && j1 > j0 ? (sum[j1 * W1 + i1] - sum[j0 * W1 + i1] - sum[j1 * W1 + i0] + sum[j0 * W1 + i0]) * fh * fh : 0;
+      };
+      const gone = new Set<number>();
+      for (const [r, [a, x, y, s, st]] of stats) if (!st && s && a < ISLE_SHARE * Math.max(a, landNear(x / a, y / a))) gone.add(r);
+      if (gone.size) {
+        // taken as sea: their tiles' cells sea (and water parting land), with no label; their far cells sea
+        for (const [key, lab] of labs) {
+          const [first, last] = span.get(key)!;
+          let any = false;
+          for (let v = first; v < last && !any; v++) any = gone.has(root(v));
+          if (!any) continue;
+          const t = ctiles.get(key)!;
+          for (let c = 0; c < CT * CT; c++) if (lab[c] >= 0 && gone.has(root(lab[c]))) (t[c] |= 3 | 4 | PARTS), (lab[c] = -1);
+        }
+        for (let c = 0; c < NF; c++) if (farLand(c) && gone.has(root(farBase + c))) far[c] = 1;
+      }
+      // each island kept with no station: the station nearest it (by the far grid's cells, each taking the station
+      // fewest steps from it), whose neighbours alone draw it (land no station is on away from the sea, between wide
+      // rivers, has none: anyone draws it)
+      let left = 0;
+      for (const [r, v] of stats) if (!v[4] && v[3] && !gone.has(r)) left++;
+      if (!left) return;
+      const nearSt = new Int32Array(NF).fill(-1), q: number[] = [];
+      for (let k = 0; k < n; k++) {
+        const c = farAt(g.x[k], g.y[k]);
+        if (nearSt[c] < 0) (nearSt[c] = k), q.push(c);
+      }
+      for (let p = 0; p < q.length; p++) {
+        const c = q[p], i = c % FW;
+        for (const nc of [i > 0 ? c - 1 : -1, i < FW - 1 ? c + 1 : -1, c - FW, c + FW]) if (nc >= 0 && nc < NF && nearSt[nc] < 0) (nearSt[nc] = nearSt[c]), q.push(nc);
+      }
+      const best = new Map<number, number>();
+      for (let c = 0; c < NF; c++) {
+        const x = fx0 + ((c % FW) + 0.5) * fh, y = fy0 + (Math.floor(c / FW) + 0.5) * fh, k = nearSt[c];
+        const r = farLand(c) ? root(farBase + c) : tiled[c] ? rootAt(x, y) : -1, v = r >= 0 ? stats.get(r) : undefined;
+        if (!v || v[4] || !v[3] || gone.has(r) || k < 0) continue;
+        const d = (g.x[k] - x) ** 2 + (g.y[k] - y) ** 2;
+        if (!(best.get(r)! <= d)) best.set(r, d), owners.set(r, k);
+      }
+    }
   }
 }
 
@@ -412,7 +507,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame,
   const t1 = performance.now();
   const n = g.key.length, rowOf = maskRows(masks, frame), inMasks = maskCover(masks, frame);
   const hop = g.hop ?? new Float32Array(0), hopAt = g.hopAt ?? new Int32Array(g.ea.length + 1);
-  const hc = COARSE_M, { coarseAt, seaBody, bodyNear, isSea, massAt } = sea;
+  const hc = COARSE_M, { coarseAt, seaBody, bodyNear, isSea, massAt, owner } = sea;
 
   // ---- rivers, on the fine grid near the track: water three cells across (an opening by a 3 by 3 square), less the
   // sea and its fringe. Per tile, 1 river, 2 wide water by the sea.
@@ -588,6 +683,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame,
     },
     isSea,
     massAt,
+    owner,
     seaBody,
     waterWay(x, y, ok, maxM) {
       const key = (i: number, j: number) => (i + 1e6) * 4e6 + (j + 1e6);

@@ -167,18 +167,30 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
 - **Land masses**: land on the ground connected round the water that parts it is one land mass. The sea parts land,
   and so does water at least about 600 m wide (three coarse cells) all the way across; rivers narrow upstream, so they
   part nothing, while straits and channels between seas do (the Tsugaru, Kanmon and Seto straits).
+- **Islands with no station** (T-2550): a land mass by the sea that no station is on (a station on water takes the land
+  within 2 km) is left out, taken as sea everywhere, when its area is under a tenth of the land in the 100 km square
+  round its middle (the far grid's land, its own included): so Shodoshima, Okushiri and the small islands of the Seto
+  Inland Sea go, while Awaji, Amakusa and Sado stay. Each one kept is drawn once, by the stations within 15 km of the
+  station nearest it (by the far grid's steps), on that station's land mass.
 - **The sea in the drawing**: on a grid over the drawing (1.5 pitches a cell, coarser for a big drawing, at most a
   million cells; 40 pitches past the network's box), each cell is sea where its four nearest drawn stations, voting by
   nearness, find the sea on the ground at the place each carries the cell's offset back to through its local map. So
   the coast between stations is the real one carried into the drawing, and open sea stays sea however far it lies.
-  Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
+  Past its hops' mean drawn length a station carries the rest of the offset by its region's map (the similarity that
+  best fits its land mass's stations within 50 km of the middle of its 10 km square), where that draws the ground
+  smaller than its own (T-2550: a city's map carried out over empty land drew it at the city's scale, a spit 180
+  pitches long east of Hakodate and Awaji at Kobe's scale). A voter finding land of another land mass with stations on
+  it, or an island with no station that is not its own to draw (above), counts it as sea, since those stations draw
+  it. Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
   pitches, so inlets and notches under about 8 pitches across go, the land round the pills kept).
 - **Straits**: then a cell is sea where it meets a cell nearest another station, and the two nearest stations are on
   different land masses, or the straight way between them on the ground crosses at least 2 km of sea in one run and
   30% of its length; only a pill and half a pitch (and half a cell) round it stays land. So **land masses are drawn
   apart** wherever the drawing leaves room between their stations, and a bay or strait the drawing squeezes (Tokyo Bay)
   stays open as a channel.
-- Sea under 60 square pitches (but a strait) and land without a station under 30 dropped, the coast is drawn the way a
+- Sea under 60 square pitches (but a strait) and land without a station under 30 dropped, and land without a station
+  of any size too unless most of its cells' land votes found an island with no station (T-2550: a piece of a land mass
+  drawn again far from its own stations, off another station's map, goes), the coast is drawn the way a
   line is: fitted with runs at 0, 45 and 90 degrees, straying seaward up to 12 pitches but at most 0.35 of the way
   across the sea to the next land straight out from it (within a cell of a strait, half a pitch or 0.4 of a cell), and
   landward up to its clearance from the lines and pills less a pitch (between 1 and 8), never moving a pill across it,
@@ -309,6 +321,13 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   its side of it in B and the snap (weight 3, its half width and 2 pitches off). So a long-distance line passing
   through a small city's network, stopping at none of its stations, is drawn through it; a dense core is left
   free, where holding every crossing would bend its lines about.
+- **Big sparse regions** (T-2550): a region's scale round each 10 km square is the targets over the real lengths of
+  the hops with middles within 60 km of it, each weighted by (1 - d^2 / 60 km^2)^2; where that is under 0.25 (a hop of
+  1 km has its own length as its target, so this is a quarter of the scale of a core of kilometre hops), each hop there
+  has its target raised by the shortfall. So a big region with few stations is drawn more by its area than by its
+  stations (Anita, 2026-11-05: "the sparse big regions of tohoku and hokkaido ar e a bit small"): on all Japan Hokkaido
+  is drawn at about 0.16 of the Kanto core's scale and northern Tohoku 0.14 to 0.2, while a single city's network is
+  hardly touched (its sparsest edges only). After the lonely, local, parallel and crossing hops.
 - **Water** (T-2541): the layout reads the sea on the ground (Water below: the coarse and far grids and the land
   masses), which the worker finds before a first layout; a rebuild takes the last found. The scale round a station is
   the targets of the land hops with middles within 10 km over their real lengths. A **hop across water** (its ends on
@@ -321,8 +340,9 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   1.25 times its real distance at that scale apart along its real bearing, and 12 pitches between land masses: in A
   and B when nearer (weight 3; in A only within one block), and in the blocks' stage each pair of units is held to
   its pairs' lengths and bearings (weight 1 in all). So straits and bays get room before land does: Japan's four main
-  islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water round them, while land
-  with few stations keeps the lonely and local hops' short targets (Anita, 2026-11-05: peninsulas need not be big).
+  islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water round them, while a
+  small piece of land with few stations keeps the lonely and local hops' short targets (Anita, 2026-11-05: peninsulas
+  need not be big).
 - **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
   being such stations within 2.5 km of each other (`cityParts`). A hop whose lines are all of one colour,
   between two stations with two hops or fewer each, that leaves a city or joins two, with an end alone (no

@@ -38,6 +38,11 @@ const GAP_SHARE = 0.35;
 /** two stations have the sea between them where the straight way on the ground crosses BETWEEN_M of sea in one run,
  * and BETWEEN_SHARE of its length; looked at every BETWEEN_STEP_M (or a sixtieth of the way), metres */
 const BETWEEN_M = 2000, BETWEEN_SHARE = 0.3, BETWEEN_STEP_M = 250, SQUEEZE = 0.5;
+/** a station's region (`regionMaps`): the stations on its land mass within REGION_M of the middle of its REGION_CELL
+ * square, metres, at least REGION_MIN */
+const REGION_M = 50000, REGION_MIN = 3, REGION_CELL = 10000;
+/** an island with no station is drawn by the stations within OWN_M of the one nearest it, on its land mass, metres */
+const OWN_M = 15000;
 
 export interface SeaStats { cells: number; cell: number; sea: number; straits: number; rings: number; refit: number; ms: number }
 
@@ -73,6 +78,19 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
     for (let s = MASS_STEP; m < 0 && s <= MASS_FIND; s += MASS_STEP) for (let a = 0; a < 8 && m < 0; a++) m = real.massAt(g.x[i] + s * Math.cos((a * Math.PI) / 4), g.y[i] + s * Math.sin((a * Math.PI) / 4));
     mass[i] = m;
   }
+  // past its own hops' reach (their mean drawn length), a station's map back to the ground is its region's (T-2550): a
+  // city's map carried far out over empty land drew that land at the city's scale (a spit 180 pitches long east of
+  // Hakodate, Awaji at Kobe's scale)
+  const reach = new Float64Array(n), hops = new Float64Array(n);
+  for (let e = 0; e < g.ea.length; e++) {
+    const a = g.ea[e], b = g.eb[e], l = hyp(x[b] - x[a], y[b] - y[a]);
+    (reach[a] += l), (reach[b] += l), hops[a]++, hops[b]++;
+  }
+  for (let i = 0; i < n; i++) reach[i] = hops[i] ? reach[i] / hops[i] : 0;
+  const far = regionMaps(g, x, y, mass, inv), peopled = new Set(mass);
+  // per cell, whether most of its land votes found an island with no station (land drawn with no station on it is kept
+  // only as such an island, T-2550)
+  const isle = new Uint8Array(NC);
   for (let bj = 0; bj < H; bj += BLOCK) for (let bi = 0; bi < W; bi += BLOCK) {
     const nc = kd.nearest(x0 + (bi + BLOCK / 2) * h, y0 + (bj + BLOCK / 2) * h, CANDIDATES, cand, cd);
     for (let j = bj; j < Math.min(H, bj + BLOCK); j++) for (let i = bi; i < Math.min(W, bi + BLOCK); i++) {
@@ -86,23 +104,33 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
         (nd[s] = dd), (near[s] = k);
       }
     }
-    let sea = 0, land = 0, bw = 0;
+    let sea = 0, land = 0, bw = 0, lone = 0;
     if (found) cellNear[j * W + i] = near[0];
     for (let q = 0; q < found; q++) if (mass[near[q]] >= 0) { cellMass[j * W + i] = mass[near[q]]; break; }
     for (let q = 0; q < found; q++) {
       const k = near[q];
       if (!ok[k]) continue;
-      const ox = px - x[k], oy = py - y[k], w = 1 / (nd[q] + pitch * pitch);
-      const rx = inv[k * 4] * ox + inv[k * 4 + 1] * oy, ry = inv[k * 4 + 2] * ox + inv[k * 4 + 3] * oy;
+      const ox = px - x[k], oy = py - y[k], w = 1 / (nd[q] + pitch * pitch), r = Math.sqrt(nd[q]);
+      const f = r > reach[k] ? reach[k] / r : 1, lx = ox * f, ly = oy * f, fx = ox - lx, fy = oy - ly;
+      const rx = inv[k * 4] * lx + inv[k * 4 + 1] * ly + far[k * 4] * fx + far[k * 4 + 1] * fy;
+      const ry = inv[k * 4 + 2] * lx + inv[k * 4 + 3] * ly + far[k * 4 + 2] * fx + far[k * 4 + 3] * fy;
       const gx = g.x[k] + rx, gy = g.y[k] + ry;
       if (real.isSea(gx, gy)) {
         sea += w;
         // (the far grid's sea knows no body)
         const b = w > bw ? real.seaBody(gx, gy) : -1;
         if (b >= 0) (bw = w), (cellBody[j * W + i] = b);
-      } else land += w;
+      } else {
+        // land of another mass with stations on it is that mass's stations' to draw, and an island with none the
+        // stations' near the one nearest it: to any other station it is sea, so each is drawn once (T-2550)
+        const m = real.massAt(gx, gy), o = m >= 0 && !peopled.has(m) ? real.owner(m) : -1;
+        if (m >= 0 && m !== mass[k] && peopled.has(m)) sea += w;
+        else if (o >= 0 && (mass[o] !== mass[k] || (g.x[o] - g.x[k]) ** 2 + (g.y[o] - g.y[k]) ** 2 > OWN_M * OWN_M)) sea += w;
+        else (land += w), o >= 0 && (lone += w);
+      }
     }
     cls[j * W + i] = sea > land ? 1 : 0;
+    isle[j * W + i] = lone * 2 > land ? 1 : 0;
     }
   }
   // every pill and the ground round it is land (`core`: the pill and PILL_CORE round it, which a strait never takes)
@@ -186,7 +214,7 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
   for (let c = 0; c < NC; c++) straitCells += strait[c];
   const area = h * h / (pitch * pitch);
   dropSmall(cls, W, H, 1, SEA_MIN / area, forced);
-  dropSmall(cls, W, H, 0, LAND_MIN / area, forced);
+  dropSmall(cls, W, H, 0, LAND_MIN / area, forced, isle);
 
   // the coast: unit edges between sea and land cells, sea on the left, chained into rings at the grid's corners
   // (each edge with the landward tolerance its land cell's clearance allows)
@@ -345,18 +373,67 @@ export function diagramSea(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<n
  * ground (-1 unknown), each cell's depth into the sea (chamfer steps, 3 a cell) */
 export interface SeaGrid { x0: number; y0: number; h: number; W: number; H: number; reg: Int32Array; body: number[]; depth: Uint16Array }
 
-/** pieces of class `c` (4-connected) under `min` cells turned to the other class, but never a forced land cell to sea */
-function dropSmall(cls: Uint8Array, W: number, H: number, c: number, min: number, forced: Uint8Array) {
+/** per station, the map from drawn offsets back to the ground over its region (T-2550): the inverse of the similarity
+ * that best fits its region's stations on the ground (REGION_M), or its own map (`inv`) where that
+ * draws the ground smaller, or there are too few */
+function regionMaps(g: DiagramGraph, x: ArrayLike<number>, y: ArrayLike<number>, mass: Int32Array, inv: Float64Array): Float64Array {
+  const n = g.key.length, out = inv.slice(), R = REGION_M, R2 = R * R;
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  const grid = new Map<number, number[]>();
+  for (let i = 0; i < n; i++) {
+    const k = key(Math.floor(g.x[i] / R), Math.floor(g.y[i] / R)), v = grid.get(k);
+    if (v) v.push(i);
+    else grid.set(k, [i]);
+  }
+  // (one fit per REGION_CELL square and land mass, over the stations within REGION_M of the square's middle)
+  const S: number[] = [], fits = new Map<string, [number, number]>();
+  const fitOf = (cx: number, cy: number, m: number): [number, number] => {
+    const id = `${cx},${cy},${m}`, have = fits.get(id);
+    if (have) return have;
+    S.length = 0;
+    const mx = (cx + 0.5) * REGION_CELL, my = (cy + 0.5) * REGION_CELL, gcx = Math.floor(mx / R), gcy = Math.floor(my / R);
+    let gx = 0, gy = 0, dx = 0, dy = 0;
+    for (let a = gcx - 1; a <= gcx + 1; a++) for (let b = gcy - 1; b <= gcy + 1; b++) for (const j of grid.get(key(a, b)) ?? []) {
+      if (mass[j] !== m || (g.x[j] - mx) ** 2 + (g.y[j] - my) ** 2 > R2) continue;
+      S.push(j), (gx += g.x[j]), (gy += g.y[j]), (dx += x[j]), (dy += y[j]);
+    }
+    let fit: [number, number] = [0, 0];
+    if (S.length >= REGION_MIN) {
+      (gx /= S.length), (gy /= S.length), (dx /= S.length), (dy /= S.length);
+      let nr = 0, ni = 0, dd = 0;
+      for (const j of S) {
+        const ux = g.x[j] - gx, uy = g.y[j] - gy, vx = x[j] - dx, vy = y[j] - dy;
+        (nr += ux * vx + uy * vy), (ni += ux * vy - uy * vx), (dd += ux * ux + uy * uy);
+      }
+      if (dd > 0) fit = [nr / dd, ni / dd];
+    }
+    fits.set(id, fit);
+    return fit;
+  };
+  for (let i = 0; i < n; i++) {
+    const [a, b] = fitOf(Math.floor(g.x[i] / REGION_CELL), Math.floor(g.y[i] / REGION_CELL), mass[i]), s2 = a * a + b * b;
+    // (the inverse's scale against the station's own: a larger one carries a drawn offset farther on the ground)
+    const own = Math.abs(inv[i * 4] * inv[i * 4 + 3] - inv[i * 4 + 1] * inv[i * 4 + 2]);
+    if (!(s2 > 0) || 1 / s2 < own) continue;
+    (out[i * 4] = a / s2), (out[i * 4 + 1] = b / s2), (out[i * 4 + 2] = -b / s2), (out[i * 4 + 3] = a / s2);
+  }
+  return out;
+}
+
+/** pieces of class `c` (4-connected) under `min` cells turned to the other class, but never a forced land cell to sea;
+ * with `isle`, land holding no pill goes too unless most of it is an island with no station (T-2550) */
+function dropSmall(cls: Uint8Array, W: number, H: number, c: number, min: number, forced: Uint8Array, isle?: Uint8Array) {
   const seen = new Uint8Array(W * H);
   for (let s = 0; s < W * H; s++) {
     if (seen[s] || cls[s] !== c) continue;
     const q = [s];
     seen[s] = 1;
     // (land holding a pill stays; a strait cut off inside the land, where pills left it no way through, goes)
-    let pinned = false;
+    let pinned = false, lone = 0;
     for (let k = 0; k < q.length; k++) {
       const v = q[k], i = v % W, j = (v - i) / W;
       if (c === 0 && forced[v]) pinned = true;
+      if (isle) lone += isle[v];
       for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const ni = i + di, nj = j + dj;
         if (ni < 0 || nj < 0 || ni >= W || nj >= H) continue;
@@ -364,7 +441,7 @@ function dropSmall(cls: Uint8Array, W: number, H: number, c: number, min: number
         if (!seen[nv] && cls[nv] === c) (seen[nv] = 1), q.push(nv);
       }
     }
-    if (q.length < min && !pinned) for (const v of q) cls[v] = 1 - c;
+    if (!pinned && (q.length < min || (isle && lone * 2 < q.length))) for (const v of q) cls[v] = 1 - c;
   }
 }
 

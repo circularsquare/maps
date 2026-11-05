@@ -98,6 +98,9 @@ const OPEN_M = 1000;
 const COAST_M = 3000, PAIR_M = 40000, PAIR_N = 4, K_BAY = 1.25, W_SEA = 3, W_SEA_STAGE = 1;
 /** a pair's scale is taken along the shortest way round by track up to PATH_REACH times their distance, at most PATH_M */
 const PATH_REACH = 6, PATH_M = 200000;
+/** T-2550 (`liftSparse`): a region's scale is taken within LIFT_M of each LIFT_CELL square, metres; regions drawn smaller
+ * than LIFT_FLOOR (targets over real lengths) are drawn at it */
+const LIFT_M = 60000, LIFT_CELL = 10000, LIFT_FLOOR = 0.25;
 /** a rebuild's B rounds, and its pull to the last layout */
 const WARM_ROUNDS = 10, W_GEO_WARM = 0.05;
 /** the spread after drawing: passes, and how far past the spacing a move aims */
@@ -552,6 +555,40 @@ function seaTerms(g: DiagramGraph, L: Float64Array, pu: number, sea: LayoutSea):
   return Float64Array.from(out);
 }
 
+/** T-2550: big sparse regions drawn by their area more than their stations. A region's scale round each LIFT_CELL
+ * square is its hops' targets over their real lengths, weighted by (1 - d^2 / LIFT_M^2)^2 for a hop's middle d from the
+ * square's; each hop in a square below LIFT_FLOOR has its target raised by the shortfall. (A hop of L0 has its own
+ * length as its target, so the floor is a share of the scale of a core of kilometre hops.) */
+function liftSparse(g: DiagramGraph, L: Float64Array): void {
+  const m = g.ea.length, RM = LIFT_M;
+  const key = (cx: number, cy: number) => (cx + 32768) * 65536 + (cy + 32768);
+  const gl = new Float64Array(m), mx = new Float64Array(m), my = new Float64Array(m), grid = new Map<number, number[]>();
+  for (let e = 0; e < m; e++) {
+    const a = g.ea[e], b = g.eb[e];
+    gl[e] = Math.max(1, hyp(g.x[b] - g.x[a], g.y[b] - g.y[a]));
+    (mx[e] = (g.x[a] + g.x[b]) / 2), (my[e] = (g.y[a] + g.y[b]) / 2);
+    const k = key(Math.floor(mx[e] / RM), Math.floor(my[e] / RM)), v = grid.get(k);
+    if (v) v.push(e);
+    else grid.set(k, [e]);
+  }
+  const cell = new Map<number, number>(), s = new Float64Array(m);
+  for (let e = 0; e < m; e++) {
+    const ci = Math.floor(mx[e] / LIFT_CELL), cj = Math.floor(my[e] / LIFT_CELL), ck = key(ci, cj);
+    let v = cell.get(ck);
+    if (v === undefined) {
+      const px = (ci + 0.5) * LIFT_CELL, py = (cj + 0.5) * LIFT_CELL, gx = Math.floor(px / RM), gy = Math.floor(py / RM);
+      let sl = 0, sg = 0;
+      for (let a = gx - 1; a <= gx + 1; a++) for (let b = gy - 1; b <= gy + 1; b++) for (const f of grid.get(key(a, b)) ?? []) {
+        const q = 1 - ((mx[f] - px) * (mx[f] - px) + (my[f] - py) * (my[f] - py)) / (RM * RM);
+        if (q > 0) (sl += q * q * L[f]), (sg += q * q * gl[f]);
+      }
+      cell.set(ck, (v = sg > 0 ? sl / sg : 0));
+    }
+    s[e] = v;
+  }
+  for (let e = 0; e < m; e++) if (s[e] > 0 && s[e] < LIFT_FLOOR) L[e] *= LIFT_FLOOR / s[e];
+}
+
 function prep(g: DiagramGraph, o: LayoutOptions, sea?: LayoutSea | null): Prep {
   const n = g.key.length, m = g.ea.length;
   const L = new Float64Array(m), gdx = new Float64Array(m), gdy = new Float64Array(m);
@@ -610,6 +647,8 @@ function prep(g: DiagramGraph, o: LayoutOptions, sea?: LayoutSea | null): Prep {
       L[e] = Math.max(L[e], (hi[e] - lo[e]) * gl * (sc[e] / cnt[e]) + 2 * LONELY_MIN * pu);
     }
   }
+  // big sparse regions given room by their area (T-2550), before the water reads the scale round each station
+  liftSparse(g, L);
   const seaPairs = sea ? seaTerms(g, L, pu, sea) : new Float64Array(0);
   for (let e = 0; e < m; e++) L[e] = Math.max(L[e], (hw[g.ea[e]] + hw[g.eb[e]]) * o.room);
   const nbr: number[][] = Array.from({ length: n }, () => []);
