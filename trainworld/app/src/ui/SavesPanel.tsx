@@ -174,7 +174,7 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
   const [msg, setMsg] = useState("");
   const byHand = savedByHand.value, newer = saveSlotsState.value.newer;
   const autosaved = playing && writable && !(byHand && Math.abs(byHand - slot.at) < 2000);
-  const saveTip = writable ? "Save this game now (Ctrl+S)" : newer ? "A newer version saved this game. Reload the page to update." : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
+  const saveTip = writable ? "Save this game now (Ctrl+S)" : newer ? "This game was saved on a newer game version. Reload the page to update." : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
   return (
     <div class="save-card">
       <SlotThumb slot={slot} />
@@ -191,7 +191,7 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
         <div class="save-actions">
           {playing ? <>
             <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
-            <button class="btn icon save-download" data-tip={newer ? "Download as a file, as the newer version saved it" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
+            <button class="btn icon save-download" data-tip={newer ? "Download as a file, as saved on the newer game version" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
             <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
             <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
           </> : <>

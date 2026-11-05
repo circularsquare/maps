@@ -320,7 +320,7 @@ slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); }
  * `newerFile`, the file as it was loaded; Make a copy keeps the game as played here without them. */
 let newer = false;
 let newerFile: Uint8Array | null = null;
-const NEWER = "This game was saved by a newer version. Reload the page to update.";
+const NEWER = "This game was saved on a newer game version. Reload the page to update.";
 /** T-1826: a player's change (an edit, a list order, sandbox) not yet written, for the page's
  * "leave page?" prompt; the clock's own settling is not one */
 let edited = false;
