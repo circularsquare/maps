@@ -290,7 +290,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     (`SPEED_STOPS`; the stroke shader is built from the same stops); under 40 is the red. No key
     sits beside the display buttons for the speed or the elevation colours (T-1499): the track hover
     says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
-    network").
+    network"). A running bus or ferry line's route [T-2452] is coloured by its own vehicles' speed the
+    same way (the faster of its two runs' profiles at each route segment's middle, placed between its
+    stops by distance); mostly the under-40 red, since buses and boats are slow on this scale.
   - **Profit** [T-2420, T-2440, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by
     how much of its costs its fares cover on the day shown (fares over costs, a ratio, not their difference),
     worked out only while the view is on (`game/stretchMoney.ts`). A stretch is the track between two stations,
@@ -300,14 +302,21 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     each edge's upkeep (by trains a day, as the line's upkeep share is split) and of each station's, half to the
     stretch on each side. Summed over the lines on each edge, a line's edges come to its fares that day and its
     upkeep share exactly (`checks/t2411-profit-map.mjs`). Track no running line uses has its own upkeep, so it
-    reads 0. Construction and trains bought are left out, as in the Cities tab; bus and ferry lines are not
-    placed yet (drawn as in the other views; their share of a station's upkeep is off the track). Colours
+    reads 0. Construction and trains bought are left out, as in the Cities tab. A running bus or ferry line
+    [T-2452] has no track: each stretch between its stops is coloured by its own money by the same rule (fares
+    by paid passenger-km, its bus-km or boat-km cost by length, a bus route's upkeep by length, a ferry's
+    share of each port's upkeep half to each side; a bus pays no share of the stations it stops at, as
+    `line_upkeep` has it), so its stretches sum to its fares and upkeep share too. Colours
     (`PROFIT_STOPS`, blended in the stroke shader, the same in both themes): 0 #b2182b, 0.5 #e9853b, 0.95
     #f1d54a (yellow), 1.05 #96d58f (pale green), 1.6 #8ecae6, 3 and over #2166ac; blue past green so red-green
     colour blindness still reads it. Plain track is drawn where there are no figures: blueprint, and any stretch
     a running line is on that demand has no figures for yet (`lineFiguresIn`: the game loading, a new line not
     yet solved). No key (as T-1499): the hover gives the numbers.
-  In Elevation, Speed and Profit the width is uniform and trains keep their line colours.
+  In Elevation, Speed and Profit the width is uniform and trains keep their line colours. Bus and ferry
+  lines [T-2452] are drawn in every display but Elevation, keeping their own width, casing and dashes; in
+  Speed and Profit only their colour is the display's, the plain track grey (#77746f) where a running line
+  has no figure (no vehicles, the game loading) and on a ferry's landing strokes; a planned one keeps its
+  blueprint look.
 
 ### Blueprint track, line colours and marks
 
@@ -382,7 +391,10 @@ a train station the station's own circle stands for the stop. Selecting the line
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],
-the riders on the stretch between the stops under the pointer (a ferry's between the ports, T-2274); "Bus stop" or "End of the
+the riders on the stretch between the stops under the pointer (a ferry's between the ports, T-2274); in Speed then
+"Fastest bus 16 km/h" ("Fastest boat" on a ferry) on its colour, or "No buses run here" ("No boats"), and in
+Profit before the riders the track's money rows for that stretch with "Running buses" ("Running boats") in
+place of "Running trains", or "No buses run here" while none run [T-2452]; "Bus stop" or "End of the
 line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
 short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the

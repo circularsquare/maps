@@ -77,11 +77,12 @@ export function speedFact(kmh: number): HTMLSpanElement {
   return s;
 }
 
-/** The Speed view's train speed (T-1271): words, since the chip beside it is a limit. */
-export function trainSpeedFact(kmh: number): HTMLSpanElement {
+/** The Speed view's train speed (T-1271): words, since the chip beside it is a limit; a bus or ferry
+ * line's says its own vehicle (T-2452). */
+export function trainSpeedFact(kmh: number, vehicle = "train"): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append("Fastest train ", chip(speed(kmh), speedColour(kmh)));
+  s.append(`Fastest ${vehicle} `, chip(speed(kmh), speedColour(kmh)));
   return s;
 }
 

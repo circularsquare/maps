@@ -464,7 +464,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop);
   if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
   // a bus line has no strokes in the buffers (map/busLayer.ts); drawn under the track, so picked after it
-  if (ov.renderer.slotPx && ov.renderer.buses.any) {
+  if (ov.renderer.busesShown) {
     const bus = ov.renderer.buses.lineAt(ov, px, py);
     if (bus >= 0) return { kind: "line", line: String(bus) };
   }

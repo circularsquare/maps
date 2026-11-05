@@ -127,7 +127,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Other: `money.ts` (cash and ledger from the worker, fare income from riders, T-028; `baseTrips`, each line's share of the base fares, T-2104; `moneyTerms`, `moneyWorld` and `lineGeo`, what income, points and region shares read, kept while unchanged so a state redoes only what it changed, T-1209), `fareInEffect.ts` (each line priced at the fares its riders were solved with, so a fare edit pays only once demand settles, T-2266),
   `fareCurve.ts` (the fare curve through the player's three nodes, the first the base fare at 0 km: fare at a length, the first stretch's base and rate, the knots the sim takes, old saves' lines as three nodes, T-883, T-1112, T-1143), `income.ts` and `countryIncome.json` (fares by national income, T-1277: a fare dollar's perceived minutes by country, each country's fare scale by income or the player's, GDP per head at PPP from notes/T-1277/income_table.py, and at market rates (`usd`, the one the rule reads) and the car's running cost a km (`car`) from notes/T-1521/money_table.py, T-1521; T-1906: the start country's income scale (`START`), each country's default over it, and the panel's scale as a multiple of the default; T-1286: the market's fare factor per country; T-1431: the market's three income groups per country from the quintile shares `quint`, notes/T-1431/quintile_table.py), `fareEstimate.ts` (the Money tab's estimate of rail trips and fare income a day for a dragged or unsolved fare curve, from demand's fare sensitivity, T-1300), `fareUndo.ts` (fare changes' undo and redo while they are the last edits, handing over to the sim's, T-1130),
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
-  `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `stretchMoney.ts` (money by edge and track stretch for the Profit track display, T-2420), `points.ts`
+  `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `stretchMoney.ts` (money by edge and track stretch for the Profit track display, T-2420, and by bus or ferry stretch, T-2452), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `achievements.ts` (the achievements' tiers, firsts, their figures and words, posting the steps met to the clock worker, T-2124) and `continents.ts` (each country's continent, T-2124; their panel `ui/inspector/AchievementsView.tsx`, the medal and toasts `ui/Achievements.tsx`, styles `ui/achievements.css`, check `checks/t2124-achievements.mjs`), `realShare.ts` (the real networks' train shares the city view's Within bar marks, a table from `checks/t2145-real-share.mjs`, T-2145), `issues.ts`
   (the track model's refusals in plain words), `editNote.ts` (what the last edits did to train trips and profit a day, shown under the view rows at the map's upper left once demand settles, T-2125, T-2237; drawn by ui/EditNote.tsx; `checks/old/t2125-edit-note.mjs`), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
@@ -186,7 +186,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   (`ClockBus.ferry`, the clock worker's `ferryRow`), so `busLayer.ts` draws it dashed and `BusInspector.tsx`
   is its panel (`FerryPorts`, its port list); boats are `BOAT_CAR` in `network.ts` and the train shader's hull; check `checks/t2194-ferry-tool.mjs`.
   Bus and ferry lines' Traffic view widths: `demandLayers.ts` `busWidths`, drawn by `busLayer.ts` (`setTraffic`, per segment `a_w`, T-2274);
-  check `checks/t2273-ferry-panel.mjs`.
+  check `checks/t2273-ferry-panel.mjs`. Their Speed and Profit colours (T-2452): `busLayer.ts` per segment `a_col`
+  (`segColours`: speeds by `runSpeed` from the network's keyframes, `network.ts` `speedAt`; profit from `stretchMoney`'s
+  `buses`, handed over by `setProfit` in `main.ts`), hover rows `trackHover.ts` `busRows`; check `checks/t2452-bus-views.mjs`.
 - Station buildings (T-2218, ui-inspectors.md "Station buildings"): `buildingDraw.ts` (the tool: the
   outline's corners, handles, snaps and the quote's tag, an SVG over the map), `buildingNet.ts` (T-2219,
   in the clock worker with `network.ts`: each building's outline in local units, its members as drawn
@@ -511,6 +513,9 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   at 5x; port 6172, 2 demand workers, about 5 minutes; T-2266), `t2411-profit-map.mjs [url]` (the real save's
   Profit view: each rail line's edges sum to its weekday fares and upkeep share, the stretches to the network,
   the hover's rows; pictures in artifacts/trainworld/profit/; port 6195, a few minutes; T-2420),
+  `t2452-bus-views.mjs [url]` (t2195's real-ferries.save with three bus lines added: each bus and ferry line's
+  Profit stretches sum to its weekday fares and upkeep share, its hover in Line, Traffic, Speed and Profit,
+  pictures light and dark in artifacts/trainworld/busviews/; port 6189, 2 demand workers, about 4 minutes; T-2452),
   `t2092-first-service.mjs [url]` (a new game
   opens on Build; a new line's levels set one at a time; about two minutes),
   `t1826-saves.mjs [url]` (backup tiers simulated and live with `?backupMs=50`, a pull's backup, a

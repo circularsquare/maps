@@ -543,6 +543,8 @@ export class NetworkRenderer {
   onSelectionDrawn: () => void = () => {};
   /** A line's width in CSS px at the last draw, 0 when lines are not drawn (picking) */
   slotPx = 0;
+  /** the last map draw drew the bus and ferry lines (every track display but Level; picking) */
+  busesShown = false;
   /** Half a double track's drawn width in CSS px at the last draw once it has grown to its two
    * tracks' width (T-658), 0 further out (picking) */
   laneReachPx = 0;
@@ -1583,7 +1585,8 @@ export class NetworkRenderer {
     // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
     // again only when one of those changes; GL uploads outside the per-frame passes count as a change
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
-    const buses = !view && this.buses.any && !opt.byLevel && !opt.bySpeed && !opt.byProfit;
+    const buses = !view && this.buses.any && !opt.byLevel;
+    if (!view) this.busesShown = buses;
     const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
@@ -1593,7 +1596,8 @@ export class NetworkRenderer {
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
       const sh = shadeColours();
-      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing) });
+      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
+        paint: opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB });
     }
     gl.useProgram(this.strokeProg);
     const u = this.strokeU;

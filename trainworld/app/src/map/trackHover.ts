@@ -30,7 +30,7 @@ import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf, stopKey } from "../game/complexView";
 import { clockTime, forecast, money, moneyNegative } from "../game/format";
-import { stretchMoney } from "../game/stretchMoney";
+import { stretchMoney, type StretchFigures } from "../game/stretchMoney";
 import type { CrowdedStretch } from "../game/boarding";
 import { loadText } from "../game/today";
 import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
@@ -115,18 +115,33 @@ function named(l: LineInput): HTMLDivElement {
   return d;
 }
 
-/** A running bus line's riders on the stretch between its stops under the pointer, as a rail line's
- * tag says them (`lineTip`). */
-function busRiders(ov: Overlay, w: WorldView, line: number, px: number, py: number, traffic: boolean): TipLine[] {
+/** A running bus or ferry line's rows on the stretch between its stops under the pointer, as a rail
+ * line's tag and the track's say them: in Profit the stretch's money first (`profitRows`), then its
+ * riders (`lineTip`), then in Speed its vehicles' speed there (`trackFacts`), in the mode's own word. */
+function busRows(ov: Overlay, w: WorldView, line: number, px: number, py: number, view: string): TipLine[] {
   const l = w.save.lines.find((x) => x.num === line);
   if (!l) return [];
+  const ferry = !!w.lineStats[l.id]?.bus?.ferry, vehicles = ferry ? "boats" : "buses";
+  const k = ov.renderer.buses.stretchAt(ov, px, py, line);
+  const out: TipLine[] = [];
   const dv = demandView.peek();
-  if (!dv) return traffic ? ["Calculating demand"] : [];
+  if (view === "profit") {
+    const sm = stretchMoney.peek(), s = k >= 0 ? sm?.buses.get(line)?.stretches[k] : undefined;
+    if (!sm) { if (!dv) out.push("Calculating demand"); }
+    else if (s?.bare) out.push(`No ${vehicles} run here`);
+    else if (s) out.push(...stretchMoneyRows(s, vehicles));
+  }
   const purpose = purposeFilter.peek();
-  const day = dailyRiders(dv, l.id, l.stops, ov.renderer.buses.stretchAt(ov, px, py, line), purpose);
-  if (day === null) return traffic ? ["Calculating demand"] : [];
-  const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
-  return purpose === "all" ? [count] : [count, `${purposeName(purpose)} trips only`];
+  const day = dv ? dailyRiders(dv, l.id, l.stops, k, purpose) : null;
+  if (day !== null) {
+    out.push(`${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`);
+    if (purpose !== "all") out.push(`${purposeName(purpose)} trips only`);
+  } else if (view === "traffic") out.push("Calculating demand");
+  if (view === "speed") {
+    const v = ov.renderer.buses.speedAt(ov, px, py, line);
+    out.push(v !== null ? factRow(trainSpeedFact(v, ferry ? "boat" : "bus")) : `No ${vehicles} run here`);
+  }
+  return out;
 }
 
 /** The tag's lines at a point (CSS px in the map), or null: what the current track display draws
@@ -178,7 +193,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     if (hit) {
       const num = Number(hit.line);
       if (out) out.hot = { line: num };
-      return busLineTip(w, num, busRiders(ov, w, num, px, py, d.trackColour === "traffic"));
+      return busLineTip(w, num, busRows(ov, w, num, px, py, d.trackColour));
     }
   }
   // the ridership circles: over the bubbles, but the network beneath them keeps the hover (T-1448)
@@ -227,17 +242,26 @@ function profitRows(edge: number): TipLine[] {
   if (!sm) return demandView.peek() ? [] : ["Calculating demand"];
   const s = sm.stretchOf.get(edge);
   if (!s) return [];
-  const row = (label: string, v: number, after = "") => {
-    const d = document.createElement("div");
-    const m = Object.assign(document.createElement("span"), { textContent: money(v) });
-    if (moneyNegative(v)) m.className = "money-neg";
-    d.append(label, m, after);
-    return d;
-  };
-  if (s.bare) return ["No trains run here", row("Upkeep ", -s.upkeep, " per day")];
+  if (s.bare) return ["No trains run here", moneyRow("Upkeep ", -s.upkeep, " per day")];
+  return stretchMoneyRows(s, "trains");
+}
+
+/** A money row, negative money red. */
+function moneyRow(label: string, v: number, after = ""): HTMLDivElement {
+  const d = document.createElement("div");
+  const m = Object.assign(document.createElement("span"), { textContent: money(v) });
+  if (moneyNegative(v)) m.className = "money-neg";
+  d.append(label, m, after);
+  return d;
+}
+
+/** The Profit view's rows for a stretch something runs on, its running cost named for `vehicles`
+ * (T-2452: "buses", "boats"). */
+function stretchMoneyRows(s: StretchFigures, vehicles: string): TipLine[] {
+  const row = moneyRow;
   if (s.noFigures) return ["Calculating demand"];
   const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0, costs = s.running + s.upkeep;
-  const rows = [row("Profit ", profit, ` ${shownDayPhrase.peek()}`), row("", perKm, " per km"), row("Fares ", s.fares), row("Running trains ", -s.running), row("Upkeep ", -s.upkeep)];
+  const rows = [row("Profit ", profit, ` ${shownDayPhrase.peek()}`), row("", perKm, " per km"), row("Fares ", s.fares), row(`Running ${vehicles} `, -s.running), row("Upkeep ", -s.upkeep)];
   if (!(costs > 0)) return rows;
   const ratio = s.fares / costs, top = document.createElement("div");
   top.append("Fares cover ", chip(`${Math.round(100 * ratio).toLocaleString("en-US")}%`, profitColour(ratio)), " of costs");

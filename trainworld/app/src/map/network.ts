@@ -611,11 +611,11 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
 
 /** The demand level whose run profiles give the Speed view's train speeds (T-1271): the levels
  * differ in how long trains stand, not in how fast they move between stops. */
-const SPEED_LEVEL = 1;
+export const SPEED_LEVEL = 1;
 
 /** A run profile's speed at `x` m along its path, km/h: the moving phase holding `x` (phases are
  * t, s, v, a, notes/T-040.md "Keyframes"; a stop's standing phase spans no distance). */
-function speedAt(ph: Float32Array, first: number, count: number, x: number): number {
+export function speedAt(ph: Float32Array, first: number, count: number, x: number): number {
   let lo = first, hi = first + count - 1;
   if (count <= 0) return 0;
   while (lo < hi) {

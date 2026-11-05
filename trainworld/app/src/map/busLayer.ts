@@ -10,16 +10,22 @@
 // casing, a solid stroke from each port's landing to its berth, no stops (its ports are stations) and
 // no corridor.
 //
+// In the Speed and Profit track displays (T-2452) a running line's route takes the display's colour in
+// place of its own, its width, casing and dashes kept: Speed by its vehicles' run profiles as the rail
+// track's (`map/network.ts` `speedAt`), Profit by each stretch's fares over costs (`stretchMoney`'s
+// `buses`); the plain track grey where there is no figure, and on a ferry's landings.
+//
 // Cost: the geometry is built once per world change and anchor move and kept on the GPU; a frame with
 // no bus line returns at the first line of `draw`. Picking and the tags read the same arrays
 // (`lineAt`, `stopAt`), on pointer moves only.
 
-import { rgb } from "../game/palette";
+import { profitColour, rgb, speedColour } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
 import { anchor, kAtY, pxPerUnitAt, toLocal, type Anchor } from "./geo";
 import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
+import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
 import { factRow, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
@@ -60,6 +66,9 @@ interface BusSource {
   spurs: number[];
   /** the stops riders are counted between, in run 0's order (lng, lat): a ferry's berths, a bus's demand stops */
   marks: number[];
+  /** T-2452: those stops' places along each run's profile, m (`LineStats.stopS`), while it runs
+   * vehicles; else null */
+  stopS: number[][] | null;
 }
 
 /** The sources' geometry in local units of one anchor. */
@@ -111,6 +120,8 @@ uniform float u_px_per_unit; // device px a local unit spans
 in vec4 a_seg;
 in vec4 a_info;
 in float a_w;                // T-2274: the Traffic view's width by riders, a share of the line's own
+in float a_col;              // T-2452: the Speed or Profit view's colour packed as a_info.z; -1 the line's own, -2 plain track
+uniform vec3 u_track_rgb;
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;
@@ -122,8 +133,9 @@ void main() {
   bool bp = (flags & ${FLAG_BLUEPRINT}) != 0;
   bool sel = id == u_sel;
   if ((u_only >= 0 && id != u_only) || (u_only == -2 && !sel) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR}) != 0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float p = a_info.z;
-  vec3 col = vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
+  bool paint = u_pass == 1 && !bp;
+  float p = paint && a_col >= 0.0 ? a_col : a_info.z;
+  vec3 col = paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
   float w = u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
@@ -255,7 +267,15 @@ export interface BusStyle {
   shades: ShadeColours;
   fill: Float32Array;
   casingRgb: Float32Array;
+  /** T-2452: the track display colouring the routes, with the run profiles (the network's keyframes)
+   * the Speed view reads, and the plain track's colour */
+  paint: BusPaintKind;
+  phases: Float32Array;
+  meta: Float32Array;
+  trackRgb: Float32Array;
 }
+
+export type BusPaintKind = "speed" | "profit" | null;
 
 export class BusLayer {
   private gl: WebGL2RenderingContext | null = null;
@@ -279,7 +299,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
@@ -299,13 +319,16 @@ export class BusLayer {
         if (!b.ferry) for (const s of b.stops) stops.push(s.lng, s.lat, s.kind);
         for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, ferry: !!b.ferry, spurs, marks });
+        const st = w.lineStats[l.id], n = marks.length / 2;
+        const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
       }
     }
     const was = this.lines;
+    const sameS = (a: number[][] | null, b: number[][] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((s, k) => sameNums(s, b[k])));
     if (was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
     this.byId = new Map(next.map((l) => [l.id, l]));
@@ -405,6 +428,9 @@ export class BusLayer {
     put(this.segWidths(b), "a_w", 1, this.segProg!);
     this.wBuf = this.bufs[this.bufs.length - 1];
     this.widthsFor = b;
+    put(new Float32Array(b.count).fill(-1), "a_col", 1, this.segProg!);
+    this.cBuf = this.bufs[this.bufs.length - 1];
+    this.coloursFor = [b];
     gl.bindVertexArray(this.stopVao);
     put(b.stops, "a_stop", 4, this.stopProg!);
     gl.bindVertexArray(null);
@@ -427,6 +453,13 @@ export class BusLayer {
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       this.widthsFor = b;
     }
+    const cKey = [b, s.paint, s.paint === "speed" ? s.phases : null, s.paint === "speed" ? s.meta : null, s.paint === "profit" ? this.profit : null];
+    if (this.cBuf && (cKey.length !== this.coloursFor.length || cKey.some((v, i) => v !== this.coloursFor[i]))) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.cBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, this.segColours(b, s), gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+      this.coloursFor = cKey;
+    }
     const bus = s.wLine * WIDTH_SHARE;
     const u = this.su;
     gl.useProgram(this.segProg);
@@ -438,6 +471,7 @@ export class BusLayer {
     gl.uniform1f(u.u_extra, s.wSel * WIDTH_SHARE);
     gl.uniform3fv(u.u_casing_rgb, s.casingRgb);
     gl.uniform3fv(u.u_rail_rgb, s.rail);
+    gl.uniform3fv(u.u_track_rgb, s.trackRgb);
     gl.uniform1f(u.u_rail, Math.max(1 * dpr, s.railShare * bus));
     gl.uniform1f(u.u_px_per_unit, pxPerUnitAt(zoom) * dpr);
     gl.bindVertexArray(this.segVao);
@@ -585,6 +619,60 @@ export class BusLayer {
     return out;
   }
 
+  /** T-2452: the Profit view's figure per running line's number, each stretch's fares over costs
+   * (`stretchMoney`'s `buses`; `NO_PROFIT` where none); null outside the view. */
+  setProfit(ratios: Map<number, { ratio: Float32Array }> | null) {
+    if (ratios === this.profit) return;
+    this.profit = ratios;
+    this.version++;
+  }
+  private profit: Map<number, { ratio: Float32Array }> | null = null;
+  private cBuf: WebGLBuffer | null = null;
+  /** what the colours `cBuf` holds were made from */
+  private coloursFor: unknown[] = [];
+  /** the run profiles the last draw had, for the hover's speeds */
+  private keyframes: { phases: Float32Array; meta: Float32Array } | null = null;
+
+  /** Per route segment the display's colour packed (-1 the line's own, -2 plain track). */
+  private segColours(b: Built, s: BusStyle): Float32Array {
+    const out = new Float32Array(b.count).fill(-1);
+    if (!s.paint) return out;
+    if (s.paint === "speed") this.keyframes = { phases: s.phases, meta: s.meta };
+    for (const l of this.lines) {
+      const r = b.range.get(l.id), stops = r && this.stopsAlong(b, l.id);
+      if (!l.built || !r || !stops) continue;
+      // a ferry's landings have no figure of their own
+      for (let i = r[0] + r[1]; i < b.count && b.info[i * 4] === l.id; i++) out[i] = -2;
+      const ratio = this.profit?.get(l.id)?.ratio;
+      for (let i = r[0]; i < r[0] + r[1]; i++) {
+        const mid = b.cum[i] + 0.5 * Math.hypot(b.seg[i * 4 + 2] - b.seg[i * 4], b.seg[i * 4 + 3] - b.seg[i * 4 + 1]);
+        const k = stretchOf(stops, mid);
+        let v: number | null = null;
+        if (s.paint === "speed") {
+          const f = stops[k + 1] > stops[k] ? (mid - stops[k]) / (stops[k + 1] - stops[k]) : 0.5;
+          v = runSpeed(l, k, f, s.phases, s.meta);
+          out[i] = v === null ? -2 : pack(speedColour(v));
+        } else {
+          v = ratio && k < ratio.length && ratio[k] < 1e29 ? ratio[k] : null;
+          out[i] = v === null ? -2 : pack(profitColour(v));
+        }
+      }
+    }
+    return out;
+  }
+
+  /** T-2452: the speed the Speed view draws on line `line` under the pointer, km/h; null where its
+   * vehicles have no run profile (none run, or the game loading). */
+  speedAt(ov: Overlay, px: number, py: number, line: number): number | null {
+    const b = this.local(anchor());
+    const l = this.byId.get(line), r = b.range.get(line), at = ov.screenToLocal(px, py);
+    const stops = l && this.stopsAlong(b, line);
+    if (!l || !r || !stops || !at || !this.keyframes) return null;
+    const s = alongRoute(b, r, at[0], at[1]), k = stretchOf(stops, s);
+    const f = stops[k + 1] > stops[k] ? Math.max(0, Math.min(1, (s - stops[k]) / (stops[k + 1] - stops[k]))) : 0.5;
+    return runSpeed(l, k, f, this.keyframes.phases, this.keyframes.meta);
+  }
+
   /** The stop drawn under the pointer: its line, and whether it is an end. */
   stopAt(ov: Overlay, px: number, py: number): { line: number; end: boolean } | null {
     const L = this.last, b = this.built;
@@ -617,6 +705,24 @@ function nearestAlong(b: Built, from: number, to: number, x: number, y: number):
 }
 
 const alongRoute = (b: Built, r: [number, number], x: number, y: number) => nearestAlong(b, r[0], r[0] + r[1], x, y)[0];
+
+/** T-2452: the faster of a line's two runs at `f` of the way along run 0's stretch `k`, km/h, from
+ * the run profiles as the rail track's Speed view reads them; null without a profile. */
+function runSpeed(l: BusSource, k: number, f: number, phases: Float32Array, meta: Float32Array): number | null {
+  const S = l.stopS, n = S?.[0].length ?? 0;
+  if (!S || k < 0 || k > n - 2) return null;
+  let best: number | null = null;
+  for (const run of [0, 1]) {
+    const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    const first = meta[m], count = meta[m + 1];
+    if (!(count > 0)) continue;
+    // run 1 runs the stops backwards: its stretch n - 2 - k is run 0's k
+    const j = run === 0 ? k : n - 2 - k, g = run === 0 ? f : 1 - f;
+    const x = S[run][j] + g * (S[run][j + 1] - S[run][j]);
+    best = Math.max(best ?? 0, speedAt(phases, first, count, x));
+  }
+  return best;
+}
 
 /** The stretch a place along the route is on, between stops at `stops` (ascending). */
 function stretchOf(stops: number[], s: number): number {
