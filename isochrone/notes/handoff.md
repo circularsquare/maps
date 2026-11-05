@@ -29,11 +29,16 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 1. T-010 roads, stage 1 (in flight): design + a Cluj / New York test, to Anita for review.
 2. Then one region-by-region OSM pass for the 1 km roads (T-010 stage 2) and the 100 m tiles'
    roads (T-057), then T-028 (page on our own surface).
-3. T-042 land hazard. T-039 (90 m slopes) before T-057's mountain tiles.
-4. Small page work alongside: T-048, T-031, T-036.
+3. Page queue, in this order since all touch index.html / js/paint.js: T-052 (in flight, now
+   with corridors yellow to dark red), T-061 instant hovers (resume the page agent), T-062
+   corridors coloured by speed, T-060
+   diagonal / hex look test, T-059 globe (MapLibre 5).
+4. T-042 land hazard. T-039 (90 m slopes) before T-057's mountain tiles.
+5. Small work alongside: T-048, T-031, T-036.
 
 ## Anita's standing asks
 - 2026-11-05: roads go ahead; T-047's 2.8 GB rule approved; 10,000 BC is for later (T-012 P3);
   rivers faint, "if they show up as routes we take via boat they should be bright".
-- Open question in notes/for-anita.md: zoom 9-10 look.
+- Later 2026-11-05: a globe; instant hovers of our own; corridors yellow (most shared) fading to
+  dark red; cells stay crisp, no smoothing, try diagonals or a hex look.
 - Commits: the orchestrator commits isochrone/ paths as it goes; never push unasked.

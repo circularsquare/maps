@@ -9,6 +9,12 @@ reasoning and what it replaced.
   fine"): towns at 2% urban by quarter-degree block, mountains at 70% rugged, water country with
   people. Not taken: mountains from 50% rugged (~3 GB more), towns from 5% urban (~0.8 GB less).
 - **10,000 BC moves to later** (Anita: "not really that necessary"); roads and 100 m come first.
+- **Cells stay crisp at zoom 9-10**, no smoothed band edges (Anita: "not sure if smoothing is the
+  right way forward... maybe rounding / diagonals makes more sense. or a hex map would also look
+  nice"); diagonals and a hex look are tested as painting only (T-060).
+- **Corridors go from yellow (most shared) to dark red**, not white (Anita, T-052). A second colouring by
+  travel speed along each stretch comes as a switch (T-062). A globe view (T-059) and instant
+  hovers of our own (T-061) asked for the same day.
 - **River lines go faint** (Anita: "they look like routes"); the stretches a canoe route paddles
   are the ones drawn bright (T-052).
 
