@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2476 Demand wait, worst case (2026-11-05, agent loadwait, tree): a zone selected in another cluster during a big load waits for the whole solve (all of Japan, Okinawa 18 min; T-2459); built the zone in view's rounds without a focus pool (Tokyo 79 -> 44 s) and the graph with round 0 (10-15 s sooner). notes/T-2476.md.
+- T-2478 Vancouver stalled (2026-11-05, agent loadwait, tree): nothing wrong with Vancouver (17 clean loads); 8800 rebuilt twice under the page, and a failed zone boundary was kept for the page's life, so the zone never loaded; boundaries and outlines are now retried. T-2483. notes/T-2478.md.
 - T-2491 Diagram prong and outline shape (2026-11-05, agent diagshape, tree .tw-trees/diagshape): hops between two local stops get 0.4 of their target (at least 3 pitches), so a branch of plain stops no longer outruns a sparse core (her game's stand-in: prong 109 -> 83 pitches); zone outlines close bays under 100 pitches and fit their outer edge up to 10 pitches outward (New York 154 -> 96 legs). notes/T-2491.md.
 - T-2492 Diagram city names in the basemap's label grey (2026-11-05, agent diagshape): `placeNameInk`, light #6f6d6a, dark #97938e; font, size and halo as station names.
 

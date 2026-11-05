@@ -41,7 +41,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   and ends: land trees only between gates.
 - uismall2 LANDED 0e50cf65 (T-2473, T-2474, T-2475 profit = whole local day of its kind, T-2477, T-2487 titles).
   Not on 8800 yet.
-- **loadwait** (Opus, tree .tw-trees/loadwait, 6196, ids T-2483..84): T-2476 worst-case demand wait, T-2478 Vancouver.
+- loadwait LANDED 8e2bd280 (T-2476: zone in view takes cluster rounds without focus pool; graph with round 0;
+  T-2478 Vancouver: a failed boundary was kept dead for the page's life after 8800 rebuild 404s; now retried).
+  New string: "worker 2: undefined" -> "worker 2: its code could not be downloaded". Filed T-2483 (8800 build swap:
+  maps-17 rewrote scratch snapbuild.cmd to build into dist-new and swap; first use pending), T-2484, T-2499.
+- **loadfix** (Opus, tree .tw-trees/loadfix from 8e2bd280, 6196, ids T-2500..01): T-2499 reload cache miss, T-2459
+  worst case (Okinawa 18 min), T-2484 if room.
 - sizes DONE: notes/T-2472.md (R2 2.87 GB a version; disk ~118 GB; first load ~22 MB; real save ~3.8 GB RAM);
   filed T-2485 (renderer RAM), T-2486 (.bin compression). maps-17 deleted 7 GB (tw-* profiles, sim/target/debug,
   publish/2026-11-03). **Still to delete**: world_run `*-backup` folders (4.2 GB) once tonight's runs check clean;
