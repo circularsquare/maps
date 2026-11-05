@@ -19,9 +19,12 @@ export type DiagramNames = { text: string[]; width: Float32Array; width2: Float3
 export type ZoneOutlines = { id: string; rings: Float64Array[]; label: ZoneLabel }[];
 /** the graph's frame in mercator: graph metres are ((mx - frame[0]) * frame[2], -(my - frame[1]) * frame[2]) */
 export type ZoneFrame = [number, number, number];
+/** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
+export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
   | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; zones?: ZoneOutlines; frame?: ZoneFrame }
-  | { kind: "zones"; zones: ZoneOutlines };
+  | { kind: "zones"; zones: ZoneOutlines }
+  | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
   | { kind: "layout"; seq: number; graph: DiagramGraph; layout: DiagramLayout; drawing: Drawing; names: NamePlan; ms: { drawing: number; names: number; borders: number; cities: number } }
   | { kind: "borders"; seq: number; borders: DiagramBorders; cities?: CityNames }
@@ -33,6 +36,8 @@ const LAYOUT_SHARE = 0.85;
 let last: LastPlaces | null = null;
 let lastOptions: string | undefined;
 const outlines = new Map<string, Float64Array[]>(), labels = new Map<string, ZoneLabel>();
+/** zones' place lists as the page sends them (T-2447), places in mercator */
+const towns = new Map<string, ZoneTowns>();
 let shown: { seq: number; graph: DiagramGraph; layout: DiagramLayout; d: Drawing; fontPx: number; frame?: ZoneFrame } | null = null;
 
 /** the borders of the zones the page has sent, in the graph's frame; undefined without both */
@@ -47,9 +52,16 @@ function borders(graph: DiagramGraph, layout: DiagramLayout, d: Drawing, frame?:
   return zoneBorders(graph, layout.x, layout.y, d, shapes);
 }
 
-/** the city names, by the zones the borders found */
-const cities = (layout: DiagramLayout, d: Drawing, b: DiagramBorders, fontPx: number): CityNames =>
-  placeCityNames(d, layout.blocks, b.zoneOf, b.zones.map((id) => labels.get(id)), fontPx);
+/** the city names, by the zones the borders found; a zone whose place list has arrived carries its towns, in the
+ * graph's metres, for blocks the zone's own name is taken from (T-2447) */
+const cities = (graph: DiagramGraph, layout: DiagramLayout, d: Drawing, b: DiagramBorders, fontPx: number, frame?: ZoneFrame): CityNames => {
+  const [fx, fy, k] = frame ?? [0, 0, 1];
+  const zones = b.zones.map((id) => {
+    const l = labels.get(id), t = towns.get(id);
+    return l && t ? { ...l, towns: t.map((p) => ({ name: p.name, width: p.width, x: (p.x - fx) * k, y: -(p.y - fy) * k, big: p.big })) } : l;
+  });
+  return placeCityNames(d, graph, layout.blocks, b.zoneOf, zones, fontPx, b.zones);
+};
 
 const keep = (zones: ZoneOutlines) => {
   for (const z of zones) outlines.set(z.id, z.rings), labels.set(z.id, z.label);
@@ -57,10 +69,11 @@ const keep = (zones: ZoneOutlines) => {
 
 self.onmessage = (e: MessageEvent<ToDiagram>) => {
   const m = e.data;
-  if (m.kind === "zones") {
-    keep(m.zones);
-    const s = shown, b = s && borders(s.graph, s.layout, s.d, s.frame);
-    if (b) (self as unknown as Worker).postMessage({ kind: "borders", seq: s!.seq, borders: b, cities: cities(s!.layout, s!.d, b, s!.fontPx) } satisfies FromDiagram);
+  if (m.kind === "zones" || m.kind === "towns") {
+    if (m.kind === "zones") keep(m.zones);
+    else for (const t of m.towns) towns.set(t.id, t.list);
+    const s = shown, b = s && (m.kind === "towns" ? s.d.borders : borders(s.graph, s.layout, s.d, s.frame));
+    if (b) (self as unknown as Worker).postMessage({ kind: "borders", seq: s!.seq, borders: b, cities: cities(s!.graph, s!.layout, s!.d, b, s!.fontPx, s!.frame) } satisfies FromDiagram);
     return;
   }
   if (m.kind !== "graph") return;
@@ -82,7 +95,7 @@ self.onmessage = (e: MessageEvent<ToDiagram>) => {
   const t2 = performance.now();
   d.borders = borders(m.graph, layout, d, m.frame);
   const t3 = performance.now();
-  if (d.borders) names.cities = cities(layout, d, d.borders, m.names.fontPx);
+  if (d.borders) names.cities = cities(m.graph, layout, d, d.borders, m.names.fontPx, m.frame);
   shown = { seq: m.seq, graph: m.graph, layout, d, fontPx: m.names.fontPx, frame: m.frame };
   const ms = { drawing: t1 - t0, names: t2 - t1, borders: t3 - t2, cities: performance.now() - t3 };
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms } satisfies FromDiagram);

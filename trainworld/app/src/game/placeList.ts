@@ -49,7 +49,10 @@ function load(id: CityId): Promise<Place[]> {
   return p;
 }
 
-const loadAll = (ids: CityId[]) => Promise.all(ids.map((id) => load(id).catch(() => []))).then(() => undefined);
+/** T-2447: one zone's place list (fetched once); empty where it has none */
+export const placesOfZone = (id: CityId): Promise<Place[]> => load(id).catch(() => []);
+
+const loadAll =(ids: CityId[]) => Promise.all(ids.map((id) => load(id).catch(() => []))).then(() => undefined);
 
 /** Metres from (lng, lat) to a zone's box (0 inside it). */
 function boxDistance(c: City, lng: number, lat: number): number {

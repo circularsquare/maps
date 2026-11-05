@@ -148,8 +148,12 @@ the first; past its level a name only shrinks toward its anchor on the box's edg
 
 - **The name**: the zone (the borders' zone of each station) holding most of the block's stations, ties to a city
   zone, then to more local trips; its shown name, as the map's (`game/zoneNames.ts`). The page
-  sends it with the zone's outline. A name a bigger block already has is not shown again, so a zone with several
-  blocks (a prefecture's smaller cities) is named once, at its biggest.
+  sends it with the zone's outline. The biggest block of a zone has the zone's name. Each smaller block of the
+  zone (T-2447; Japan's prefectures hold several) has its own place: the nearest city or town of the zone's place
+  list (`game/placeList.ts`) to the middle of its stations, that no block in view has yet (a village, the 30
+  biggest, only when no city or town is left). No name is shown twice. The page fetches a zone's list only when
+  such a block exists, after the first drawing, and the worker names again when it arrives; until then (or with
+  no list or no place left) the block has no name.
 - **Where**: biggest block first, of up to twelve places the one covering the least line in px (grown by half a
   4 px gap), plus a small cost for the place: above the box centred, then flush with either side; below likewise;
   beside it; inside a corner (only where the box holds the name). Never over a name placed before it (with 6 px to

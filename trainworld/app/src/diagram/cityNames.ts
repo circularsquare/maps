@@ -12,7 +12,10 @@ import { NAME_LINE } from "./names";
 
 /** a zone as the page describes it: its shown name, the name's width in CSS px, its local trips a day (its size)
  * and whether it is a city zone */
-export interface ZoneLabel { name: string; width: number; trips: number; city: boolean }
+export interface ZoneLabel { name: string; width: number; trips: number; city: boolean; towns?: Town[] }
+/** a place of the zone's place list, for naming a block the zone's own name is taken from (T-2447): its name and
+ * width, its place in the graph's metres, and whether it is a city or town (a village only where none is left) */
+export interface Town { name: string; width: number; x: number; y: number; big: boolean }
 
 /** the levels, a pitch in CSS px: 7 times STEP to the powers LO to HI (0.16 to 1.24 px); the station names' faint
  * levels start at the next (names.ts FAINT_LO), so below it the city names are drawn and the station names not */
@@ -30,6 +33,8 @@ export interface CityNames {
   fontPx: number;
   /** a pitch in CSS px each level is placed for, rising, all below CITY_SWITCH */
   levels: number[];
+  /** ids of the zones with blocks that wait for the zone's place list to be named (T-2447) */
+  want: string[];
   /** per level, per name placed: its block, its anchor (layout units) and where the anchor lies on the name's box
    * (hx, hy: 0 its left or bottom, 0.5 its middle, 1 its right or top) */
   at: { block: Int32Array; x: Float64Array; y: Float64Array; hx: Float32Array; hy: Float32Array }[];
@@ -54,21 +59,56 @@ export function blockNames(blocks: Blocks, zoneOf: ArrayLike<number>, zones: (Zo
   });
 }
 
-/** The city names at every far level, for the drawing `d` and its blocks. */
-export function placeCityNames(d: Drawing, blocks: Blocks, zoneOf: ArrayLike<number>, zones: (ZoneLabel | undefined)[], fontPx: number): CityNames {
+/** Each block's name and its width: its zone's name for the biggest block of that zone, and for each smaller one
+ * (T-2447) the nearest city or town of its zone's place list (a village only when no city or town is left) to the
+ * middle of its stations, that no block has yet. No name twice. `want` lists the zones (indices into `zones`) that
+ * have such blocks and no place list yet; a block with no place left has "". */
+export function nameBlocks(g: { x: ArrayLike<number>; y: ArrayLike<number> }, blocks: Blocks, pick: number[], zones: (ZoneLabel | undefined)[]): { text: string[]; width: Float32Array; want: number[] } {
+  const nb = blocks.list.length, size = new Int32Array(nb), sx = new Float64Array(nb), sy = new Float64Array(nb), core = new Int32Array(nb);
+  for (let i = 0; i < blocks.of.length; i++) {
+    const b = blocks.of[i];
+    if (b < 0) continue;
+    size[b]++;
+    if (blocks.core[i]) (sx[b] += g.x[i]), (sy[b] += g.y[i]), core[b]++;
+  }
+  const text: string[] = Array(nb).fill(""), width = new Float32Array(nb), want = new Set<number>(), seen = new Set<string>();
+  const order = [...Array(nb).keys()].sort((p, q) => size[q] - size[p] || blocks.list[p].key - blocks.list[q].key);
+  const later: number[] = [];
+  for (const b of order) {
+    const z = pick[b];
+    if (z < 0) continue;
+    const l = zones[z]!;
+    if (seen.has(l.name)) later.push(b);
+    else seen.add(l.name), (text[b] = l.name), (width[b] = l.width);
+  }
+  for (const b of later) {
+    const l = zones[pick[b]]!;
+    if (!l.towns) {
+      want.add(pick[b]);
+      continue;
+    }
+    const mx = core[b] ? sx[b] / core[b] : 0, my = core[b] ? sy[b] / core[b] : 0;
+    let best: Town | null = null, bd = Infinity;
+    for (const t of l.towns) {
+      if (seen.has(t.name)) continue;
+      const dd = Math.hypot(t.x - mx, t.y - my) + (t.big ? 0 : 1e9);
+      if (dd < bd) (bd = dd), (best = t);
+    }
+    if (best) seen.add(best.name), (text[b] = best.name), (width[b] = best.width);
+  }
+  return { text, width, want: [...want] };
+}
+
+/** The city names at every far level, for the drawing `d`, graph `g` and its blocks. */
+export function placeCityNames(d: Drawing, g: { x: ArrayLike<number>; y: ArrayLike<number> }, blocks: Blocks, zoneOf: ArrayLike<number>, zones: (ZoneLabel | undefined)[], fontPx: number, zoneIds: string[] = []): CityNames {
   const t0 = performance.now();
   const nb = blocks.list.length, pitch = d.pitch, h = fontPx * NAME_LINE;
   const pick = blockNames(blocks, zoneOf, zones);
-  const text = pick.map((z) => (z >= 0 ? zones[z]!.name : "")), width = Float32Array.from(pick, (z) => (z >= 0 ? zones[z]!.width : 0));
-  // biggest block first; a name shown by a bigger block is not shown again
+  const { text, width, want } = nameBlocks(g, blocks, pick, zones);
   const size = new Int32Array(nb);
   for (const b of blocks.of) if (b >= 0) size[b]++;
-  const order: number[] = [], seen = new Set<string>();
-  for (const b of [...Array(nb).keys()].sort((p, q) => size[q] - size[p] || blocks.list[p].key - blocks.list[q].key)) {
-    if (!text[b] || seen.has(text[b])) continue;
-    seen.add(text[b]);
-    order.push(b);
-  }
+  // biggest block first
+  const order = [...Array(nb).keys()].filter((b) => text[b]).sort((p, q) => size[q] - size[p] || blocks.list[p].key - blocks.list[q].key);
   // the lines' segments
   const seg: number[] = [];
   for (const r of d.ribbons) for (let j = 0; j + 3 < r.length; j += 2) seg.push(r[j], r[j + 1], r[j + 2], r[j + 3]);
@@ -128,7 +168,7 @@ export function placeCityNames(d: Drawing, blocks: Blocks, zoneOf: ArrayLike<num
     levels.push(P);
     at.push({ block: Int32Array.from(out.block), x: Float64Array.from(out.x), y: Float64Array.from(out.y), hx: Float32Array.from(out.hx), hy: Float32Array.from(out.hy) });
   }
-  return { text, width, fontPx, levels, at, ms: performance.now() - t0 };
+  return { text, width, fontPx, levels, at, want: want.map((z) => zoneIds?.[z] ?? ""), ms: performance.now() - t0 };
 }
 
 /** the length of segment (x0, y0)-(x1, y1) inside box b (Liang-Barsky) */

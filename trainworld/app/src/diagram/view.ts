@@ -17,6 +17,7 @@ import type { DiagramNames, FromDiagram, ToDiagram, ZoneFrame, ZoneOutlines } fr
 import type { MultiPolygon } from "geojson";
 import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
+import { placesOfZone } from "../game/placeList";
 import { EARTH_C, toMerc01 } from "../map/geo";
 import { FADE_ALPHA, paint, pickAt, type DiagramFocus, type Drawing } from "./draw";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
@@ -307,6 +308,21 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       if (zones.length) worker.postMessage({ kind: "zones", zones } satisfies ToDiagram);
     }
   });
+  // T-2447: the place lists of the zones with blocks the zone's own name is taken from, each fetched once
+  const townsAsked = new Set<string>();
+  const wantTowns = (ids: string[] | undefined) => {
+    const ask = (ids ?? []).filter((id) => id && !townsAsked.has(id));
+    if (!ask.length || !worker) return;
+    for (const id of ask) townsAsked.add(id);
+    void Promise.all(ask.map(async (id) => {
+      const ps = await placesOfZone(id), big = ps.filter((p) => p.kind === "city" || p.kind === "town");
+      const villages = ps.filter((p) => p.kind === "village").sort((a, b) => b.pop - a.pop).slice(0, 30);
+      return { id, list: [...big, ...villages].map((p) => {
+        const [x, y] = toMerc01(p.lng, p.lat);
+        return { name: p.name, width: widthOf(p.name), x, y, big: p.kind !== "village" };
+      }) };
+    })).then((towns) => worker?.postMessage({ kind: "towns", towns } satisfies ToDiagram));
+  };
   let shownSeq = -1;
   client.onDiagram = (g) => {
     if (!diagramShown.peek()) return;
@@ -319,6 +335,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         }
         if (e.data.kind === "borders") {
           if (shown && e.data.seq === shownSeq) (shown.d.borders = e.data.borders), (shown.names.cities = e.data.cities), draw();
+          wantTowns(e.data.cities?.want);
           return;
         }
         busy = false;
@@ -333,6 +350,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? c.at.map((l, i) => [c.levels[i], [...l.block].map((b) => c.text[b])]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
         if (!placed) place();
         draw();
+        wantTowns(names.cities?.want);
         const next = waiting;
         waiting = null;
         if (next) send(next);

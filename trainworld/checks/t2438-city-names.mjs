@@ -4,10 +4,13 @@
 // "New York" alone at every city level, the Northeast names New York and Philadelphia, no two names meet at any
 // level, every name lies beside its block's box (within a gap of 4 px plus its own height), and below the switch no
 // station names are drawn while above it no city names are. Also how much line the names cover.
-//   node trainworld/checks/t2438-city-names.mjs [jpn,ne,nyc]      (about two minutes with Japan; figures in
+// T-2447: every block has a name and none repeats; where a bigger block of the zone has the zone's name, the
+// block takes the nearest city or town of the zone's place list (as the page loads it); New York, the Northeast
+// and Toronto are named as before, one name per block, none given.
+//   node trainworld/checks/t2438-city-names.mjs [jpn,ne,nyc,tor]      (about two minutes with Japan; figures in
 //   artifacts/trainworld/t2438/figures.json)
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { openSave } from './diagram-saves.mjs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { openSave, SAVES } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
@@ -15,11 +18,12 @@ const L = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { dr
 export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01, EARTH_C } from '@app/src/map/geo.ts';
 export { makeFrame } from '@app/src/game/frame.ts'; export * from '@app/src/diagram/cityNames.ts';
 export { placeNames, levelAt, guessWidth, NAME_LINE } from '@app/src/diagram/names.ts'; export { zoneName } from '@app/src/game/zoneNames.ts';`);
-const which = (process.argv[2] ?? 'jpn,ne,nyc').split(',');
+const which = (process.argv[2] ?? 'jpn,ne,nyc,tor').split(',');
 const TW = new URL('../', import.meta.url);
 const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
 const OUTL = JSON.parse(readFileSync(new URL('data/packs/outlines.json', TW)));
-const ORIGIN = { ne: [-73.985, 40.758], nyc: [-73.985, 40.758], jpn: [139.7, 35.7] };
+const ORIGIN = { ne: [-73.985, 40.758], nyc: [-73.985, 40.758], jpn: [139.7, 35.7], tor: [-79.3832, 43.6534] };
+SAVES.tor = { file: new URL('data/packs/real/tor.save', TW), lon: -79.3832, lat: 43.6534 };
 const FONT = 12;
 let failed = 0;
 const out = {};
@@ -60,16 +64,39 @@ for (const city of which) {
   const d = L.drawing(g, lay);
   const widths = text.map((t) => L.guessWidth(t, FONT));
   const plan = L.placeNames(g, lay, d, text, widths, widths.map(() => 0), FONT);
-  const b = L.zoneBorders(g, lay.x, lay.y, lay.blocks, d.pitch, shapes);
+  const b = L.zoneBorders(g, lay.x, lay.y, d, shapes);
   const zones = b.zones.map((id) => { const c = byId.get(id), name = L.zoneName(id, c.name); return { name, width: L.guessWidth(name, FONT), trips: c.localTrips ?? 0, city: c.kind !== 'zone' }; });
-  const cn = L.placeCityNames(d, lay.blocks, b.zoneOf, zones, FONT);
+  // T-2447: the first placing is as the page does it before any place list has arrived; the zones that asked
+  // (cn0.want) then get theirs, from data/packs/<id>.places.json as the page loads them, and it is placed again
+  const cn0 = L.placeCityNames(d, g, lay.blocks, b.zoneOf, zones, FONT, b.zones);
+  const before = cn0.text.filter(Boolean).length;
+  for (const id of cn0.want) {
+    const zi = b.zones.indexOf(id), f = new URL(`data/packs/${id}.places.json`, TW);
+    if (!existsSync(f)) { zones[zi].towns = []; continue; }
+    const pf = JSON.parse(readFileSync(f));
+    const ps = pf.places.map(([name, kind, lng, lat, pop]) => ({ name, kind: pf.kinds[kind], lng, lat, pop }));
+    const vil = ps.filter((p) => p.kind === 'village').sort((p, q) => q.pop - p.pop).slice(0, 30);
+    zones[zi].towns = [...ps.filter((p) => p.kind === 'city' || p.kind === 'town'), ...vil].map((p) => {
+      const [mx, my] = L.toMerc01(p.lng, p.lat);
+      return { name: p.name, width: L.guessWidth(p.name, FONT), x: (mx - fx) / k, y: -(my - fy) / k, big: p.kind !== 'village' };
+    });
+  }
+  const cn = cn0.want.length ? L.placeCityNames(d, g, lay.blocks, b.zoneOf, zones, FONT, b.zones) : cn0;
   const r = figures(d, lay.blocks, cn);
   r.ms = Math.round(cn.ms);
   r.blocks = lay.blocks.list.length;
   r.named = new Set(cn.text.filter(Boolean)).size;
+  r.namedBefore = before;
+  r.unnamed = cn.text.filter((t) => !t).length;
+  r.repeats = cn.text.filter((t, i) => t && cn.text.indexOf(t) !== i);
+  r.given = cn.text.map((t, i) => [t, cn0.text[i]]).filter(([t, o]) => t && !o).map(([t]) => t);
   out[city] = r;
-  console.log(`     ${city}: ${r.blocks} blocks, ${r.named} names; placed per level ${r.perLevel.join(' ')}; covering ${r.coverMedian} px of line (median), ${r.coverMax} at most; ${r.ms} ms`);
+  console.log(`     ${city}: ${r.blocks} blocks, ${before} named before, ${r.named} names after; placed per level ${r.perLevel.join(' ')}; covering ${r.coverMedian} px of line (median), ${r.coverMax} at most; ${r.ms} ms`);
   console.log(`     at ${cn.levels[r.wholeLevel].toFixed(2)} px: ${r.whole.join(', ')}`);
+  console.log(`     given to blocks that had none: ${r.given.join(', ') || '-'}`);
+  say(r.unnamed === 0, `${city}: every block has a name`, `${r.unnamed} without`);
+  say(!r.repeats.length, `${city}: no name twice`, r.repeats.join(', '));
+  if (city !== 'jpn') say(r.given.length === 0 && before === r.blocks, `${city}: names as before (one per block, none given)`);
   if (city === 'nyc') say(cn.at.every((l) => l.block.length === 1 && cn.text[l.block[0]] === 'New York'), 'nyc: "New York" alone at every city level', r.whole.join(', '));
   if (city === 'ne') say(cn.at.every((l) => [...l.block].map((x) => cn.text[x]).sort().join() === 'New York,Philadelphia'), 'ne: New York and Philadelphia at every city level', r.whole.join(', '));
   say(!r.meet, `${city}: no two city names meet at any level`, r.meet || '');
