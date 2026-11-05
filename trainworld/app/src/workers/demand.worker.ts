@@ -1673,8 +1673,10 @@ async function run() {
         }
         return pending ? null : inbox.get(key)!;
       };
-      // T-393: the cluster of the city in view first; T-2453: then those of `next`, in its order
-      const firsts = [...(job.first ? [job.first] : []), ...(job.next ?? [])];
+      // T-393: the cluster of the city in view first; T-2453: then those of `next`, in its order;
+      // T-2459: `next`'s first when the zone in view is solved elsewhere
+      const own = job.first ? [job.first] : [];
+      const firsts = job.barrier && job.focused ? [...(job.next ?? []), ...own] : [...own, ...(job.next ?? [])];
       const rank = (c: JobCluster) => { const k = firsts.findIndex((id) => c.cities.includes(id)); return k < 0 ? firsts.length : k; };
       if (firsts.length) dirty.sort((a, b) => rank(a) - rank(b));
       // T-392: after an edit (no barrier) the clusters are solved one after another, each to its last

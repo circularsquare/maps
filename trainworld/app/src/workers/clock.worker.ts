@@ -34,6 +34,7 @@ import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
+import { fetchRange } from "./rangeFetch";
 import { currentZones, decodeSave, encodeSave, isNortheastSave, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, isBackupOf, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
@@ -814,11 +815,8 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
       const row = head.arrays.find((a: any) => a.name === "water_row");
       const xs = head.arrays.find((a: any) => a.name === "water_x");
       if (!head.water || !row || !xs) return null;
-      const start = row.offset, end = xs.offset + xs.count * 2;
-      const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
-      if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
-      const buf = await res.arrayBuffer();
-      const base = res.status === 206 ? start : 0;
+      const base = row.offset;
+      const buf = await fetchRange(url + ".bin", base, xs.offset + xs.count * 2);
       const w = head.water;
       return {
         cell: w.cell_m, x0: w.origin_m[0], y0: w.origin_m[1], w: w.size[0], h: w.size[1],
@@ -931,13 +929,7 @@ function fetchStreets(id: string): Promise<StreetData | null> {
       const arr = (name: string) => head.arrays.find((a: any) => a.name === name);
       const need = ["pop", "jobs", "zone", "zone_gx", "zone_gy", "zone_cells9"].map(arr);
       if (!g?.grid_origin_m || !g.grid || !g.zone_m || need.some((a) => !a)) return null;
-      const get = async (a: any): Promise<ArrayBuffer> => {
-        const start = a.offset, end = start + a.count * DTYPE_BYTES[a.dtype];
-        const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
-        if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
-        const buf = await res.arrayBuffer();
-        return res.status === 206 ? buf : buf.slice(start, end);
-      };
+      const get = (a: any): Promise<ArrayBuffer> => fetchRange(url + ".bin", a.offset, a.offset + a.count * DTYPE_BYTES[a.dtype]);
       const size = arr("zone_size");
       const [pop, jobs, zone, gx, gy, cells9, sz] = await Promise.all([...need.map(get), size ? get(size) : Promise.resolve(new ArrayBuffer(0))]);
       return {
@@ -1244,13 +1236,14 @@ async function masksForLoaded(net: Uint8Array) {
     const r = a.edge_render(ei[i]);
     for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
   }
-  // T-1577: the street speeds under the bus routes (their points are no track)
+  // T-1577: the street speeds under the bus routes (their points are no track); T-2499: waited for,
+  // so the load's network is the save's alone (its buses timed on them), not whichever fetch won
   const bus: number[] = [];
   for (const id of a.bus_lines()) {
     const r = a.bus_route(id);
     for (let k = 1; k + 2 < r.length; k += 3) bus.push(r[k], r[k + 1]);
   }
-  if (bus.length) void ensureStreets(zonesOfPoints(bus));
+  if (bus.length) await ensureStreets(zonesOfPoints(bus));
   const missing = zonesOfPoints(xy).filter((id) => !masksIn.has(id));
   if (!missing.length) return;
   a.load(emptyTrack!);

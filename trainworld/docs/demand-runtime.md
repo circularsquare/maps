@@ -381,7 +381,7 @@ is still cut short by a newer network.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the first ranked zone's is one of them (T-402; the zone in view's, else the city view's, "The zone
-in view first" below): that cluster alone first, through every round, each
+in view first" below; the city view's first while the focus pool solves the zone in view, T-2459): that cluster alone first, through every round, each
 round sent as its own cluster result and shown where the solve's estimates are (a view of the
 cluster alone when nothing else is shown, else only its final, put in as after an edit); then the
 other clusters together, round by round, whose results are the solve's, with the first group's
@@ -415,7 +415,14 @@ the city view, when it is not the zone in view, comes second in each of those qu
 downloads and opens right after the zone in view's (`firstZones`; a `first` message when it is
 selected with its pack already queued), and a solve names it in `next`, so the worker orders the
 clusters to solve the zone in view's, then its, then the rest, and with the barrier solves its
-cluster alone first when the zone in view's needs no solving. While a load's other figures are
+cluster alone first when the zone in view's needs no solving. **Its cluster goes ahead of the zone
+in view's** (T-2459, `focused`, `?perfOff=focusAhead` off) when a solve with the barrier is sent while
+the focus pool (below) has the zone in view in hand, solving or shown: the zone in view's figures come
+from the focus pool to its last round meanwhile, so a selected zone in another cluster (an island, a
+country beside a big one) shows from its own cluster's rounds instead of waiting for all the rest. The
+loading card and the held clock then go when the focus pool's last round of the zone in view is shown
+(or the solve's final, if sooner), as they go at the zone in view's cluster's final otherwise (T-421).
+While a load's other figures are
 shown (the focus pool's, the game before's), each round of a cluster solved ahead that has it
 gives it that round's figures (`selectedRound`), and the zone in view the same when no focus pool
 shows it (a small device, a focus pool that stopped; T-2476, `?perfOff=viewRound` off); the
@@ -449,7 +456,8 @@ final much later, notes/T-2045.md). Each round shows as the zone's figures and i
 alone while nothing else is shown, else put in the shown result as a cluster solved ahead is, and
 the load's own estimates keep them wherever the focus solve is as far on or done (`withFocus`). Its
 last round counts as final for the status tag and the clock cap (`focusZones`), not for the card or
-the held clock, which wait for the whole solve. A zone newly in view during the load supersedes the
+the held clock, which wait for the zone in view's own final (its cluster's, or the whole solve's),
+except where the city view's zone's cluster went ahead of it (T-2459, above). A zone newly in view during the load supersedes the
 solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.
 Questions about a zone shown from it go to its workers (`ask`, `target`, `cellModes`: the aux's to
 its aux, any other to its solving workers; the cells from its aux while the main pool has not opened the zone). It ends (its

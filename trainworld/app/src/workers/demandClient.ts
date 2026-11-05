@@ -364,6 +364,9 @@ interface Solve {
   /** T-402: the cluster in view, stepped through its rounds alone ahead of the rest (a solve with
    * the barrier, `plan.ahead`): its cities and key in `clusterRes` */
   ahead?: { cities: CityId[]; key: string };
+  /** T-2459: sent while the focus pool solved the zone in view, so the city view's zone's cluster
+   * goes ahead of the zone in view's, whose focus figures then hold the clock's release */
+  focused?: boolean;
   /** T-1543: the parts of a period's result in so far, by cluster key, round and period */
   partsIn?: Map<string, Result[]>;
   /** T-2045: a focus solve's lines with figures (`result.onlyLines`) */
@@ -716,6 +719,8 @@ class DemandClient {
   private cachedModes: StoredDemand["modes"] | null = null;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
   cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
+  /** every read's `cacheLog`, oldest first */
+  cacheLogs: NonNullable<DemandClient["cacheLog"]>[] = [];
 
   constructor(_city: string) {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
@@ -1933,7 +1938,8 @@ class DemandClient {
       // (not a bare start's, T-351: its solve covers no zone and says nothing of the next game's)
       if (job.startup && s && s.cities.length) {
         const stops = s.svc.lines.reduce((n, l) => n + l.stops.length, 0);
-        const at = s.refinedAt ?? (s.ahead && s.clusterRes?.get(s.ahead.key)?.at);
+        // (T-2459: a card that went at the focus pool's final of the zone in view goes now)
+        const at = s.refinedAt ?? (this.selectedAhead(s) ? performance.now() : s.ahead && s.clusterRes?.get(s.ahead.key)?.at);
         const finalMs = at !== undefined ? Math.round(at - s.sentAt) : undefined;
         // T-421: a solve released at the view's final is remembered again at its own final (`publish`);
         // T-884: and now, since a later solve (a zone opened after the card) may take its place first
@@ -2080,6 +2086,7 @@ class DemandClient {
    * network, these packs and this build, and nothing of its solve is shown yet. */
   private async tryCache(svc: Service, ahead?: StoredDemand) {
     const log: NonNullable<DemandClient["cacheLog"]> = (this.cacheLog = { at: performance.now(), ...(ahead ? { ahead: true } : {}) });
+    this.cacheLogs.push(log);
     // T-1539: found ahead of the network, it stands while that save still loads and no network came
     const late = () => (ahead ? this.early?.svc !== svc || !gameLoadArmed() : this.latest() !== svc || (this.cur?.svc === svc && this.cur.published >= 0 && !this.cur.rough));
     try {
@@ -2234,7 +2241,16 @@ class DemandClient {
     if (s.rough) return false;
     if (s.published >= HOLD_ROUND) return true;
     const a = s.ahead, c = a && s.clusterRes?.get(a.key);
+    // T-2459: with the city view's zone's cluster ahead of the zone in view's, the zone in view's
+    // focus figures settled
+    if (this.selectedAhead(s) && [...this.viewedSet()].every((id) => focusZones.peek().get(id) && this.fshown.get(id)?.s.svc === s.svc)) return true;
     return !!c && c.published >= ROUNDS && [...this.viewedSet()].every((id) => a.cities.includes(id));
+  }
+
+  /** T-2459: `s` solves the city view's zone's cluster ahead of the zone in view's */
+  private selectedAhead(s: Solve): boolean {
+    const a = s.ahead, v = [...this.viewedSet()];
+    return !!s.focused && !!a && v.length > 0 && v.some((id) => !a.cities.includes(id));
   }
 
   /** A held game's network has its final result (T-347), or its zone in view has (T-421): the clock runs. */
@@ -2620,6 +2636,11 @@ class DemandClient {
   }
   private mainPaused = false;
 
+  /** T-2459: the focus pool has `id` of `svc` in hand: being solved, or shown */
+  private focusSolves(svc: Service, id: CityId): boolean {
+    return !!this.fpool?.alive && ((this.fsolve?.svc === svc && this.fsolve.cities[0] === id) || this.fshown.get(id)?.s.svc === svc);
+  }
+
   /** The zone in view, reached and with no settled figures, is solved in the focus pool. */
   private focusSoon() {
     const p = this.fpool, id = activeCity.peek();
@@ -2879,6 +2900,8 @@ class DemandClient {
       if (i === 0) {
         demandSolving.value = new Set(msg.solving.flat());
         if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
+        // (T-2459: the focus pool's final of the zone in view may already hold the clock's release)
+        if (msg.ahead && s.focused) { this.progress(); this.checkHold(); }
       }
       // T-1733: a worker that solves nothing locally first starts its whole solve at once, so the
       // local result can never be shown whole: the others go on too
@@ -3050,6 +3073,7 @@ class DemandClient {
     if (!this.cacheOn || perfOff("cacheAhead") || this.status.startsWith("failed")) return;
     void (async () => {
       const stored = await readDemandAhead<StoredDemand>(key);
+      if (!stored) this.cacheLogs.push({ at: performance.now(), ahead: true, miss: "none", hash: key });
       if (!stored?.ahead || stored.ahead.save !== key || this.loadKey?.key !== key || !gameLoadArmed()) return;
       const svc = serviceFromSnapshot(stored.ahead.snapshot);
       this.early = { svc, key: keyOf(svc) };
@@ -3111,7 +3135,11 @@ class DemandClient {
     // about 0.7 s on the real save
     demandSolving.value = null;
     const next = this.firstZones().slice(1);
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
+    // T-2459: the focus pool solves the zone in view to its last round, so the city view's zone's
+    // cluster goes ahead of it
+    const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
+    if (focused) this.cur.focused = true;
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("refine") ? { noLocal: true } : {}), ...(perfOff("window") ? { noWindow: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();

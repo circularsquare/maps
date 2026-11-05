@@ -153,10 +153,13 @@ export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; li
   });
 }
 
-/** Bytes of the typed arrays in a stored result, and the count of other numbers: its size, near enough. */
+/** Bytes of the typed arrays in a stored result, and the count of other numbers: its size, near enough.
+ * T-2499: an array the days share (the corridor table, T-1008) counts once, as it is stored. */
 export function storedSize(days: StoredDay[]): number {
   let bytes = 0;
+  const seen = new Set<unknown>();
   const walk = (x: unknown) => {
+    if (x && typeof x === "object") { if (seen.has(x)) return; seen.add(x); }
     if (ArrayBuffer.isView(x)) bytes += x.byteLength;
     else if (typeof x === "number") bytes += 8;
     else if (typeof x === "string") bytes += x.length;

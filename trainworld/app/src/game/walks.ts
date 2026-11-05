@@ -13,6 +13,7 @@ import { EARTH_R, makeFrame } from "./frame";
 import type { StationInput } from "./types";
 import { zoneAt } from "./zones";
 import { dataUrl } from "./dataBase";
+import { fetchRange } from "../workers/rangeFetch";
 
 // A step onto water, or a diagonal past a water corner, costs WATER_COST land steps (T-1164).
 const ORTH = 70, DIAG = 99, INF = 0x7fffffff, WATER_COST = 3, RING = 512;
@@ -45,11 +46,7 @@ function loadGrid(id: CityId) {
     const row = head.arrays?.find((a: { name: string }) => a.name === "walk_row");
     const xs = head.arrays?.find((a: { name: string }) => a.name === "walk_x");
     if (!wb || !row || !xs) return void grids.set(id, null);
-    const start = row.offset as number, end = xs.offset + xs.count * 2;
-    const res = await fetch(base + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
-    const all = await res.arrayBuffer();
-    const at = res.status === 206 ? start : 0;
-    const buf = all.slice(row.offset - at, end - at);
+    const buf = await fetchRange(base + ".bin", row.offset as number, xs.offset + xs.count * 2);
     grids.set(id, {
       x0: wb.origin_m[0], y0: wb.origin_m[1], cell: wb.cell_m, w: wb.size[0], h: wb.size[1],
       rowOff: new Uint32Array(buf, 0, row.count),

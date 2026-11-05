@@ -141,6 +141,9 @@ export type ToDemand =
       first?: CityId;
       /** T-2453: zones whose clusters come next, in order (the zone the city view shows) */
       next?: CityId[];
+      /** T-2459: the zone in view is solved elsewhere (the focus pool): with the barrier, `next`'s
+       * clusters go before `first`'s */
+      focused?: boolean;
       /** T-1533: a rough solve of these zones alone (no market), while the packs a whole solve needs
        * still open: it starts ahead of the opens waiting, which wait for it */
       only?: CityId[];
