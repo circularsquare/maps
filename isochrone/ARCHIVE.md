@@ -1,5 +1,6 @@
 # Archive
 
+- T-036 [P2] Unreached river water on canoe starts. Done 2026-11-05: river water no open step crosses (lines in the next cell, unrunnable rivers, ponds) is now a dead-end canoe node, entered at 5 km/h, left only to the shore; dark chains gone, K trips unchanged. notes/T-036.md.
 - T-071 [P1] Upstream paddling and carrying speeds. Done 2026-11-05: upstream max(p - 0.4 v, 2.5 km/h) (was 0.6, 1.5), 3.0 km/h on a huge river, from recorded upstream crews (2.5-3.5 km/h) and bank currents; carry x2 kept. Missouri trip carried 62% to 45%. notes/T-071.md.
 - T-072 [P1] Smooth corridor lines. Done 2026-11-05: `drawCorridors` in index.html simplifies each line (Douglas-Peucker, 0.7 cell, so single-cell stairs become straight runs) then three Chaikin passes; ends fixed so speed splits and junctions stay, cached per level, before the window cuts; a redraw ~10 ms; hover works.
 - T-060 [P1] Hex cell look. Done 2026-11-05: hex is the default (`?look=crisp` and `?look=diag` kept); pixel-to-cell map kept per geometry, 32-bit writes; L10 paint ~570 to ~100-130 ms on repeat clicks, windows ~100 to ~18 ms; image identical to before.

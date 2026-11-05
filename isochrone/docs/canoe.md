@@ -15,7 +15,7 @@ along the chosen path.
 |---|---|---|
 | walking | every land cell | walking start (as now) |
 | carrying | every land cell, walking time x 2 | canoe start |
-| canoe | every sea and lake cell, plus a canoe node on each land cell a paddleable river or a strait passes through | canoe start |
+| canoe | every sea, lake and river-water cell, plus a canoe node on each land cell a paddleable river or a strait passes through | canoe start |
 
 - **A canoe start is canoe + carrying; a walking start is walking alone.** You never leave the
   canoe, so plain walking cannot be reached from a canoe start, and a walking start never meets a
@@ -34,6 +34,15 @@ along the chosen path.
   keeps them open. River water has no grid edges; the canoe uses only the
   river edges running through it, so a wide river is never a current-free channel beside its own
   current.
+- **River water off the line** (T-036): a river-water cell no open river step crosses (the line
+  runs in the next cell, the river's steps there are closed, a pond HydroLAKES lacks) is a dead
+  end. Its depth is the number of 8-neighbour steps to the nearest land cell or other canoe node
+  (1 when one is next to it). It is entered by getting in from the shore, from a canoe node beside
+  it (depth 1), or from such a cell one depth less, at still-water speed with the flat-river
+  hazard; it is left only by getting out to the shore, so only depth-1 cells lead anywhere. No
+  route paddles along it: a crossing goes in and out at the same cell (river water one cell wide),
+  costing both transfers, so a chain of ponds is never a canoe route, and an unrunnable river's
+  water is never paddled.
 
 ## 2. Edges and times
 
@@ -238,7 +247,6 @@ risk") to 10,000, costs nothing extra.
   `docs/resolution.md`; caps in section 7.
 - **Painting** a cell takes the least time of its nodes. On a canoe start sea and lakes are
   painted too, since where the canoe gets at sea is the answer; walking keeps water unpainted.
-  River water no river step crosses has no node and stays unpainted.
 - **Start mode**: the mode buttons (walking, canoe) beside the `i` button; switching re-solves
   from the same start. The URL keeps it as `?mode=canoe`.
 
