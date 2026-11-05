@@ -773,6 +773,8 @@ const openQueue: { msg: Extract<ToDemand, { kind: "open" }>; epoch: number }[] =
 let closeEpoch = 0;
 
 let oneByOne = false;
+/** T-2495: `?perfOff=inPlace`, the table's columns through the binding's copies (`inPlace`) */
+let copies = false;
 
 function openQueued(epoch: number): Promise<void> {
   // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
@@ -840,10 +842,11 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     opening = opening.then(async () => {
       try {
         const t0 = performance.now();
-        [, attractions] = await Promise.all([init(), loadAttractions()]);
+        [raw, attractions] = await Promise.all([init(), loadAttractions()]);
         const t1 = performance.now();
         aux = !!msg.aux;
         oneByOne = !!msg.oneByOne;
+        copies = !!msg.copies;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
         shareMarkets = !!msg.share;
@@ -1284,35 +1287,70 @@ const sendsTable = (q: number) => tableAsked || (q === 0 && mkt.includes(0));
 /** The table's key (FNV-1a over the bits of every column as whole columns: from, to as u32, longer,
  * commute legs on every row, air, car) and, with `make`, the table. */
 function tableColumns(p: IntercityApi, make: boolean): { key: string; table: CorridorTable | null } {
-  const pairs = p.corridor_rows_pairs(), longer = p.corridor_rows_trips(), base = p.corridor_rows_commutes(), modes = p.corridor_rows_modes();
-  const n = longer.length, hasM = modes.length === 2 * n, legs = base.length === n ? base : null;
-  let h = 0x811c9dc5;
-  for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j], 0x01000193);
-  for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j + 1], 0x01000193);
-  const words = (a: Float64Array) => {
-    const w = new Uint32Array(a.buffer, a.byteOffset, a.byteLength / 4);
+  let h = 0x811c9dc5, n = 0;
+  const words = (w: Uint32Array) => {
     for (let i = 0; i < w.length; i++) h = Math.imul(h ^ w[i], 0x01000193);
   };
-  words(longer);
-  if (legs) words(legs); else for (let i = 0; i < 2 * n; i++) h = Math.imul(h, 0x01000193);
-  // T-378: before any shares are known, all by car (1.0f is 0x3f800000)
-  const mw = new Uint32Array(modes.buffer, modes.byteOffset, modes.length);
-  for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j] : 0), 0x01000193);
-  for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j + 1] : 0x3f800000), 0x01000193);
+  // each column read in place, one at a time (`inPlace`)
+  let from: Uint16Array | Uint32Array = new Uint32Array(0), to: Uint16Array | Uint32Array = new Uint32Array(0);
+  inPlace(raw!.intercityapi_corridor_rows_pairs, p, 4, (b, o, l) => new Uint32Array(b, o, l), () => p.corridor_rows_pairs(), (pairs) => {
+    n = pairs.length / 2;
+    for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j], 0x01000193);
+    for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j + 1], 0x01000193);
+    if (!make) return;
+    let most = 0;
+    for (let i = 0; i < pairs.length; i++) if (pairs[i] > most) most = pairs[i];
+    from = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
+    to = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
+    for (let j = 0; j < n; j++) { from[j] = pairs[2 * j]; to[j] = pairs[2 * j + 1]; }
+  });
+  const longer = inPlace(raw!.intercityapi_corridor_rows_trips, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_trips(), (a) => {
+    words(new Uint32Array(a.buffer, a.byteOffset, 2 * a.length));
+    return make ? (copies ? a : a.slice()) : null;
+  });
+  let commuteAt = new Uint32Array(0), commuteLegs = new Float64Array(0);
+  inPlace(raw!.intercityapi_corridor_rows_commutes, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_commutes(), (legs) => {
+    if (legs.length !== n) { for (let i = 0; i < 2 * n; i++) h = Math.imul(h, 0x01000193); return; }
+    words(new Uint32Array(legs.buffer, legs.byteOffset, 2 * n));
+    if (!make) return;
+    // (a -0 kept too, so every figure is the same to the bit)
+    const at: number[] = [];
+    for (let j = 0; j < n; j++) if (legs[j] !== 0 || Object.is(legs[j], -0)) at.push(j);
+    commuteAt = Uint32Array.from(at);
+    commuteLegs = new Float64Array(at.length);
+    for (let k = 0; k < at.length; k++) commuteLegs[k] = legs[at[k]];
+  });
+  const air = new Float32Array(make ? n : 0), car = new Float32Array(make ? n : 0);
+  inPlace(raw!.intercityapi_corridor_rows_modes, p, 4, (b, o, l) => new Float32Array(b, o, l), () => p.corridor_rows_modes(), (modes) => {
+    const hasM = modes.length === 2 * n;
+    // T-378: before any shares are known, all by car (1.0f is 0x3f800000)
+    const mw = new Uint32Array(modes.buffer, modes.byteOffset, modes.length);
+    for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j] : 0), 0x01000193);
+    for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j + 1] : 0x3f800000), 0x01000193);
+    if (!make) return;
+    if (hasM) for (let j = 0; j < n; j++) { air[j] = modes[2 * j]; car[j] = modes[2 * j + 1]; } else car.fill(1);
+  });
   const key = `${n}:${(h >>> 0).toString(36)}`;
-  if (!make) return { key, table: null };
-  const air = new Float32Array(n), car = new Float32Array(n);
-  if (hasM) for (let j = 0; j < n; j++) { air[j] = modes[2 * j]; car[j] = modes[2 * j + 1]; } else car.fill(1);
-  let most = 0;
-  for (let i = 0; i < pairs.length; i++) if (pairs[i] > most) most = pairs[i];
-  const from = most < 65536 ? new Uint16Array(n) : new Uint32Array(n), to = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
-  for (let j = 0; j < n; j++) { from[j] = pairs[2 * j]; to[j] = pairs[2 * j + 1]; }
-  // (a -0 kept too, so every figure is the same to the bit)
-  const at: number[] = [];
-  if (legs) for (let j = 0; j < n; j++) if (legs[j] !== 0 || Object.is(legs[j], -0)) at.push(j);
-  const commuteAt = Uint32Array.from(at), commuteLegs = new Float64Array(at.length);
-  for (let k = 0; k < at.length; k++) commuteLegs[k] = legs![at[k]];
-  return { key, table: { key, n, from, to, longer, commuteAt, commuteLegs, air, car } };
+  return { key, table: longer ? { key, n, from, to, longer, commuteAt, commuteLegs, air, car } : null };
+}
+
+/** The WASM's exports (`init`), for `inPlace`. */
+let raw: Awaited<ReturnType<typeof init>> | null = null;
+/**
+ * T-2495: a vector a market getter returns (`IntercityApi.corridor_rows_*`), read where it lies in the
+ * WASM's memory and freed there, without the copy the binding makes: the table's columns are 47 MB each
+ * on the New York save, and a worker's copies stayed until its next garbage collection, which a solve
+ * running in the WASM puts off for its whole length (about 190 MB a solving worker during a load).
+ * `use` must not call into the WASM (memory growth would detach the view). `size`: bytes an element.
+ */
+function inPlace<A, T>(get: (ptr: number) => [number, number], p: IntercityApi, size: number, view: (buf: ArrayBuffer, off: number, len: number) => A, copy: () => A, use: (a: A) => T): T {
+  if (copies) return use(copy());
+  const [ptr, len] = get((p as unknown as { __wbg_ptr: number }).__wbg_ptr);
+  try {
+    return use(view(raw!.memory.buffer as ArrayBuffer, ptr, len));
+  } finally {
+    raw!.__wbindgen_free(ptr, len * size, size);
+  }
 }
 function corridorTable(p: IntercityApi): MadeTable {
   const id = p.corridors_id();

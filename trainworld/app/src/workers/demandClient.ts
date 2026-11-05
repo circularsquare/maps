@@ -630,7 +630,7 @@ class DemandClient {
   private uncovered: { svc: Service; minute: number }[] = [];
   readonly log: Solve[] = [];
   private nextQuery = 1;
-  private pendingQueries = new Map<number, { left: number; replies: Reply[]; done: (r: Reply[]) => void }>();
+  private pendingQueries = new Map<number, { left: number; replies: Reply[]; done: (r: Reply[]) => void; focus?: boolean }>();
   /** T-285: the last queries' timings (epoch ms): sent, and per reply its worker, when the worker
    * took it up, how long it took, when it landed here (window.twDemand.client.qlog, ?debug=1) */
   qlog: { id: number; kind: string; sent: number; replies: { w: number; start: number; ms: number; at: number }[] }[] = [];
@@ -786,7 +786,7 @@ class DemandClient {
     w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("batchOpen") ? { oneByOne: true } : {}), ...(perfOff("inPlace") ? { copies: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
     w.postMessage(msg);
     return w;
   }
@@ -2604,7 +2604,7 @@ class DemandClient {
       message: (i, msg) => this.focusMessage(i, msg),
       opened: (id) => { (this.fopened ??= new Map()).set(id, performance.now()); this.focusSoon(); },
       failed: (why) => { console.warn(`demand: the focus pool stopped (${why})`); this.endFocus(); },
-    }, this.viewMsg());
+    }, this.viewMsg(), perfOff("focusAux"));
   }
 
   /** The load's whole solve has landed (or a cached result, a new network, a failure): the zones
@@ -2612,13 +2612,40 @@ class DemandClient {
   private endFocus() {
     this.mainPause(false);
     if (!this.fpool && !this.fshown.size) return;
-    this.fpool?.end();
-    this.fpool = this.fsolve = null;
+    this.stopFocusPool();
     this.fshown.clear();
-    this.fpushed.clear();
-    this.ffetching.clear();
     focusZones.value = new Map();
   }
+
+  /** The pool's workers go (their WASM memory with them); questions still waiting on them get no answer. */
+  private stopFocusPool() {
+    this.fpool?.end();
+    this.fpool = this.fsolve = null;
+    this.fpushed.clear();
+    this.ffetching.clear();
+    for (const [id, q] of this.pendingQueries) if (q.focus) { this.pendingQueries.delete(id); q.done([]); }
+  }
+
+  /**
+   * T-2495: the pool's workers end before the load's final once the main pool's own estimates are shown
+   * and the pool is no longer ahead of them for any zone it shows (its round no later than theirs) or
+   * has settled it (its last round shown): about 0.5 GB for the rest of the load. The zones it settled
+   * keep its figures until the final (`withFocus`, `focusZones`); their questions go to the main pool's
+   * next round meanwhile (`target`). `?perfOff=focusEnd` keeps the pool to the final.
+   */
+  private retireFocus() {
+    const p = this.fpool, s = this.cur, dv = demandView.peek();
+    if (!p?.alive || perfOff("focusEnd") || !s || s.rough || !s.showEstimates || s.published < 0 || s.published >= ROUNDS || dv?.version !== s.version) return;
+    // (a zone the main pool's estimates do not cover, or a solve that has shown nothing yet, keeps it)
+    const done = (id: CityId, f: { s: Solve; round: number }) => f.s.svc !== s.svc || (f.round >= 0 && s.cities.includes(id) && (f.round >= ROUNDS || f.round <= s.published));
+    const f = this.fsolve;
+    if (f && !done(f.cities[0], { s: f, round: f.published })) return;
+    for (const [id, v] of this.fshown) if (!done(id, v)) return;
+    this.fretiredAt = performance.now();
+    this.stopFocusPool();
+  }
+  /** ?debug=1: when the pool ended ahead of the load's final (`retireFocus`) */
+  fretiredAt: number | null = null;
 
   /** `?perfTry=focusFirst`: the main pool's solving workers hold their solve and opening while the
    * focus pool solves the zone in view. Off: the pool is sized to half the cores, so both fit. */
@@ -2715,7 +2742,7 @@ class DemandClient {
     this.inOrder(async () => {
       const w = this.cur;
       // (the load's own solve further on than a round before the last, or landed)
-      if (!this.fpool || (!final && w && !w.rough && w.svc === s.svc && w.published > round) || (w && this.cityVersion.get(id) === w.version)) return;
+      if (!this.fpool || (!final && w && !w.rough && w.svc === s.svc && w.published > round) || (w && this.cityVersion.get(id) === w.version)) return void this.retireFocus();
       const ests = await this.daysOf(s, lines, round, false, res, true);
       if (!this.fpool) return;
       const shown = demandByDay.peek()[0].view;
@@ -2730,13 +2757,15 @@ class DemandClient {
       this.lodShown([id], s.coarse);
       this.progress();
       this.checkHold();
+      this.retireFocus();
     });
   }
 
   /** The load's own estimates of a round, with the zones shown from the focus pool put back in where
    * the focus solve is as far on (or settled). */
   private withFocus(days: DayDemand[], s: Solve, round: number): DayDemand[] {
-    if (!this.fpool || !this.fshown.size) return days;
+    // (T-2495: also once the pool's workers have ended, `retireFocus`)
+    if (!this.fshown.size) return days;
     const ids = new Set(s.layout.map((l) => l.id));
     for (const [id, f] of this.fshown) {
       if (f.s.svc !== s.svc) continue;
@@ -3163,10 +3192,10 @@ class DemandClient {
     // to its aux, any other to its solving workers)
     const fp = this.fpool, version = (q as { version?: number }).version;
     const pool = fp?.alive && (toFocus || (version !== undefined && this.fversions.has(version))) ? fp : null;
-    if (pool) which = which.includes(this.computeN) ? [pool.n] : pool.workers.slice(0, pool.n).map((_, i) => i);
+    if (pool) which = which.includes(this.computeN) ? [pool.auxAt] : pool.workers.slice(0, pool.n).map((_, i) => i);
     const workers = pool?.workers ?? this.workers;
     return new Promise((done) => {
-      this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? replies : []) });
+      this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? replies : []), focus: !!pool });
       this.qlog.push({ id, kind: q.kind, sent: performance.timeOrigin + performance.now(), replies: [] });
       if (this.qlog.length > 200) this.qlog.shift();
       // T-260: the kind of day shown; each answer weighs its periods by it
@@ -3980,6 +4009,7 @@ class DemandClient {
       demandByDay.value = final ? days : this.withFocus(days, s, round);
       this.lodShown(s.cities, s.coarse);
       if (final && s === this.cur) this.endFocus();
+      else this.retireFocus();
       if (final) {
         s.refinedAt = performance.now();
         const k = this.uncovered.findIndex((u) => u.svc === s.svc);

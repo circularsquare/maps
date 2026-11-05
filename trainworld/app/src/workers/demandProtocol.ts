@@ -103,6 +103,8 @@ export type ToDemand =
       warmEveryday?: boolean;
       /** T-889: open each `open` alone, as it comes (`?perfOff=batchOpen`) */
       oneByOne?: boolean;
+      /** T-2495: the corridor table's columns through the binding's copies (`?perfOff=inPlace`) */
+      copies?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
       groups?: number[][];

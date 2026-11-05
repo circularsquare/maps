@@ -90,7 +90,7 @@ export function CityInspector({ id }: { id: string }) {
         </button>
       </div>
       <CityFigures city={city} built={built} />
-      {!market ? (
+      {!market && !lm ? (
         <p class="muted">Calculating demand</p>
       ) : (
         <>
@@ -115,19 +115,24 @@ export function CityInspector({ id }: { id: string }) {
                 </div>
               </li>
             ) : null}
-            <TripsBar
-              label="To other places"
-              tip="Visits, shopping and business, not commutes. Both directions are counted."
-              what={`inter-city trips to and from ${city.name}`}
-              parts={[
-                { name: "Train", n: interRail, cls: "seg-train" },
-                { name: "Car", n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
-                ...(interAir > 0 ? [{ name: "Plane", n: interAir, cls: "seg-other" }] : []),
-              ]}
-            />
+            {market && (
+              <TripsBar
+                label="To other places"
+                tip="Visits, shopping and business, not commutes. Both directions are counted."
+                what={`inter-city trips to and from ${city.name}`}
+                parts={[
+                  { name: "Train", n: interRail, cls: "seg-train" },
+                  { name: "Car", n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
+                  ...(interAir > 0 ? [{ name: "Plane", n: interAir, cls: "seg-other" }] : []),
+                ]}
+              />
+            )}
           </ul>
+          {/* T-2500: a zone still loading whose own figures are in (a load's round of its cluster) shows them
+              and its graph; its trips to other places wait */}
+          {!market && <p class="muted">Calculating demand</p>}
           {lm && <TripGraph city={city} />}
-          {top.length > 0 && (
+          {market && top.length > 0 && (
             <ul class="rows">
               <li class="muted small">Top destinations</li>
               {top.map(([place, p]) => (
@@ -138,7 +143,7 @@ export function CityInspector({ id }: { id: string }) {
               ))}
             </ul>
           )}
-          {!places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modeled here yet.</p>}
+          {market && !places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modeled here yet.</p>}
           {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
         </>
       )}

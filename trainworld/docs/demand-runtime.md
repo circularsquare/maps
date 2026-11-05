@@ -442,15 +442,15 @@ a solve runs reorders the opens at once, but the solve itself only from the next
 load with built stations starts a second pool, kept for that load alone (not on a phone, a tablet or a
 device of 4 GB or less, `smallDevice`, where its workers would be a few hundred MB more in a tab of about
 2 GB, T-2122):
-the main pool's solving
-workers but at most two (`FOCUS_WORKERS`, `?focusWorkers=n`; each worker is memory of its own),
-dealt the periods as a pool of that size is, and an aux worker. It opens the zone in view's
+one solving worker (`FOCUS_WORKERS`, `?focusWorkers=n` for more, never more than the main pool's;
+each worker is about 0.1 GB during a load, and a second showed the zone's first figures no sooner,
+T-2495), holding every period, and no aux worker of its own (`?perfOff=focusAux` gives it one): the
+questions an aux worker answers go to its first solving worker, between its populations. It opens the zone in view's
 pack (a copy of the one the main pool is sent, or downloaded again for a zone newly in view) and,
 once the network is in, solves that zone as a rough solve does (no market, the free-flow round from
 one period in parts and estimates), but through every round and the capacity fit, kept as solved
-(`solve.keep`). The main pool goes on solving and opening meanwhile: the pool is sized to half the
-logical cores less one, so the two fit the cores and the zone takes about its own time on two
-workers, however big the save (`?perfTry=focusFirst` holds the main pool's solving workers at
+(`solve.keep`). The main pool goes on solving and opening meanwhile, so the zone takes about its own
+time, however big the save (`?perfTry=focusFirst` holds the main pool's solving workers at
 their next population and their opening meanwhile, `pause`: little sooner for the zone, the load's
 final much later, notes/T-2045.md). Each round shows as the zone's figures and its lines' (`onlyLines`):
 alone while nothing else is shown, else put in the shown result as a cluster solved ahead is, and
@@ -459,10 +459,16 @@ last round counts as final for the status tag and the clock cap (`focusZones`), 
 the held clock, which wait for the zone in view's own final (its cluster's, or the whole solve's),
 except where the city view's zone's cluster went ahead of it (T-2459, above). A zone newly in view during the load supersedes the
 solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.
-Questions about a zone shown from it go to its workers (`ask`, `target`, `cellModes`: the aux's to
-its aux, any other to its solving workers; the cells from its aux while the main pool has not opened the zone). It ends (its
-workers terminated) when the whole solve's final lands, a cached result shows, the network changes
-or a worker of it fails; the main pool makes no rough solve while it runs. The figures it shows leave
+Questions about a zone shown from it go to its workers (`ask`, `target`, `cellModes`; the cells too
+while the main pool has not opened the zone). It ends (its workers terminated, questions waiting on them
+answered empty) when the whole solve's final lands, a cached result shows, the network changes
+or a worker of it fails; the main pool makes no rough solve while it runs. **It ends sooner**
+(T-2495, `retireFocus`, `?perfOff=focusEnd` off) once the main pool's own estimates are the view and,
+for every zone it solves or shows, it has shown a round of a zone those estimates cover and is no
+further on than they are, or has shown the zone's last round: on the real save at the main pool's
+round 0, about half the load's time. The zones it settled keep its figures until the final
+(`withFocus`, `focusZones`), and their questions go to the main pool's next round; a zone newly in
+view after that waits for the main pool, as without a focus pool. The figures it shows leave
 out the regional market's longer trips and the riders other zones put on shared lines, so the whole
 solve's final moves them a little (notes/T-2045.md); that solve itself is untouched and its figures
 are the same to the bit.

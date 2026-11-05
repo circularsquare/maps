@@ -1,16 +1,19 @@
 // T-2045: the zone in view solved alone and to its last round while a game load's whole solve runs,
 // in a pool of its own (docs/demand-runtime.md "The focus pool", notes/T-2045.md): n solving workers
-// (the main pool's count, at most FOCUS_WORKERS) dealt the periods as a pool of n is, then one aux
-// worker, which a question for the main pool's aux goes to here. It holds only
-// the zones it solves, at most MAX_ZONES, and is ended when the load's whole solve lands.
+// (the main pool's count, at most FOCUS_WORKERS) dealt the periods as a pool of n is. A question for the
+// main pool's aux goes to its first solving worker, answered between its populations (T-2495: an aux
+// worker of its own, `?perfOff=focusAux`, was about 0.1 GB more during a load). It holds only
+// the zones it solves, at most MAX_ZONES, and is ended when the load's whole solve lands, or once the
+// main pool's own estimates make it needless (demandClient `retireFocus`).
 
 import type { CityId } from "../game/cities";
 import type { FromDemand, ToDemand } from "./demandProtocol";
 
 /** zones the pool holds at once: each is a fine city in every one of its workers */
 export const FOCUS_MAX_ZONES = 3;
-/** solving workers at most (`?focusWorkers=n` for another), fewer when the main pool is smaller */
-export const FOCUS_WORKERS = 2;
+/** solving workers at most (`?focusWorkers=n` for another), fewer when the main pool is smaller; T-2495:
+ * one, since each worker is about 0.1 GB during a load and a second made the zone's first figures no sooner */
+export const FOCUS_WORKERS = 1;
 
 export interface FocusHooks {
   /** anything the main client handles for this pool: results, sums, query replies */
@@ -34,8 +37,12 @@ export class FocusPool {
   /** each worker's WebAssembly memory, bytes, as it last reported it (?debug=1's `memory()`) */
   readonly mem: number[] = [];
 
-  constructor(readonly n: number, periodsOf: number[][], private hooks: FocusHooks, view: ToDemand) {
-    for (let i = 0; i <= n; i++) {
+  /** the worker a question for an aux worker goes to: the pool's own aux, else its first solving worker */
+  readonly auxAt: number;
+
+  constructor(readonly n: number, periodsOf: number[][], private hooks: FocusHooks, view: ToDemand, withAux: boolean) {
+    this.auxAt = withAux ? n : 0;
+    for (let i = 0; i < n + (withAux ? 1 : 0); i++) {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);
       w.onerror = (e) => this.fail(`focus worker ${i}: ${e.message}`);
