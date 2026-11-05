@@ -297,7 +297,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
           <span class="val"><Money dollars={d.fares - run - st.upkeep} /></span>
         </li>
         {load !== null && (
-          <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase()} load over the entire line`}>
+          <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "")} load over the entire line`}>
             <span class="grow">Average load</span>
             <span class="val">{Math.round(load * 100)}%</span>
           </li>
