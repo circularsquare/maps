@@ -52,7 +52,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-1080 [P2] A world run at home can fail extract reads on Windows' commit limit (74.5 GB here): each parallel GDAL reader in `osm_features` commits a 6 GB node index, so with a join, a big profile and browsers up, Wisconsin's and Nebraska's reads failed "Failed to open dataset" with 31 GB of RAM free (T-1078). Open; notes/T-1004.md "Wave 2". notes/T-1080.md.
 - T-930 [P2] The join's re-gate re-checks only what a joint solve can change (mean commute, top zone share, joint borders, other packs unchanged) instead of every figure of every member: the GB join for hih (2026-10-22) spent 9.8 of its 31 minutes there. Open; notes/T-928.md section 4.
 - T-1309 [P3] 384 new Chinese zones show the planner's county name: a look at their names (docs/zones.md "Names"). Open.
-- T-428 [P3] `data/packs/intercity.json` (14 MB) is only the joint gravity's input and output, never read by the game since T-377: move it to data/work, out of what is published. Open; notes/T-428.md.
+- T-428 [P3] `data/packs/intercity.json` (14 MB) is only the joint gravity's input and output, never read by the game since T-377: move it to data/work, out of what is published. Open; notes/T-428.md. taking, 2026-11-06, agent packmove.
 - T-1635 [P3] On the live page a pack's whole-file fetch right after its Range reads (sed.bin) can fail once with `net::ERR_CACHE_OPERATION_NOT_SUPPORTED` (immutable Cache-Control); the client's retry gets it 0.9 s later, but it logs a console error and smoke counts it. Fetch whole files with `cache: "no-store"` or skip the Range reads when the whole file follows. Open. notes/T-1635.md.
 
 ## Demand
