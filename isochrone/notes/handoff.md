@@ -16,9 +16,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - Ledger was nearly full (trainworld 11 of cap 12) at the morning check.
 
 ## In flight
-- T-090 canoe corridor bug (Anita's Semnan start: corridors cut off, look shifted north), Opus
-  agent a615cd2144584c81f. Files: js/corridors.js, js/route.js, checks/. Will ask before any data
-  rebuild.
+- T-090 landed (df18aa48): corridor counts broke after a canoe parent read past the limit;
+  smoke 18/18, checks/corridors.mjs 7/7. Agent a615cd2144584c81f idle. Anita: reload once.
 - T-011 stage 1 (90 m terrain design, pilot, streaming downloader; holds T-089 and T-081), Opus
   agent a0fa8e1aa1250534e. Files: tools/terrain/, notes/T-011.md, data/raw/glo90, data/terrain.
   Reports before any world download; the orchestrator greenlights stage 2 (Anita already said
@@ -27,8 +26,7 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   a2e305ad8c2b66a43 (T-057/T-086), a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
 
 ## Next
-1. Land T-090 (smoke, before/after screenshots, commit).
-2. Review T-011's pilot; greenlight the world stream (stage 2), then the rebuild of every level
+1. Review T-011's pilot; greenlight the world stream (stage 2), then the rebuild of every level
    by crossing time (stage 3, keep data/tiles as a backup for Anita's before/after), then
    re-measure canoe cfg.access (notes/T-082.md). Then T-039 and T-057 mountain tiles.
 3. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075.
