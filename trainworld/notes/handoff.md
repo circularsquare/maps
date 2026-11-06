@@ -27,8 +27,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   in view at fine level while the whole solve runs (`?perfOff=refineAside`). Asked: cost to the whole solve, small
   devices, rough bubbles for a coarse zone.
 - **sheetscale** (Opus, tree, owns sheet.ts): T-2609 condense empty land at continent scale (her NA save).
-- **uitodo** (Sonnet, tree): T-2611 save panel buttons, T-2612 drop grey headway, T-2615 folding-map icon, T-2616
-  achievement renames + transfers metric hover, T-2617 String of pearls + Longest road 5000 km. Strings to show.
+- uitodo LANDED 10643cd7 (records 04c71a24): T-2611, T-2612, T-2615, T-2616, T-2617. Strings shown to Anita.
+- **headway** (Opus, tree, ~13:00): T-2607 trains wait at the terminal so the set headway holds.
+- costfr DONE (ded9ca84): research/upkeep-france.md; options shown to Anita (real, real halved = maps-93's pick,
+  tunnels only, keep).
 - **terrainnet** (Opus, tree): T-2613 downloading-terrain tag and the build-before-terrain question, T-2614 failed
   cloud save. Strings to show.
 - **costfr** (Opus, read-only): T-2618 French upkeep research -> research/upkeep-france.md; Anita decides adoption.
