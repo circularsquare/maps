@@ -88,12 +88,12 @@ let viewDay = 0;
 let viewZones = new Set<CityId>();
 /**
  * A city's bubble sums for `rounds` of a solve, kept for `subSums` and sent unasked with the last
- * round (`kept`: the weekday's, already worked out). The weekday's always (other zones' bubbles and
- * the cache read them); the day shown as well for the zones on screen, since a day other than a
+ * round (`kept`: the weekday's, already worked out). The weekday's always; the day shown as well for
+ * the zones on screen, since a day other than a
  * weekday is otherwise read from the live state, which is a round ahead by the time it is asked
  * (T-1904: the average day's bubbles waited a whole round, the cached result's for the final).
  */
-function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Sums) {
+function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Sums, local?: true) {
   const days = viewDay !== 0 && viewZones.has(id) ? [0, viewDay] : [0];
   for (const day of days) {
     const k: Sums = day === 0 ? kept ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everydayModes(everyday.get(id), 0) }
@@ -101,7 +101,7 @@ function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, k
     for (const r of rounds) sumsByRound.set(day === 0 ? `${id}:${r}` : `${id}:${r}:${day}`, k);
     const copy = k.sums.slice();
     const extra = k.everyday?.slice() ?? null;
-    sendMessage({ kind: "sums", version, round: rounds[rounds.length - 1], city: id, mask: k.mask, sums: copy, everyday: extra, ...(day ? { day } : {}) }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
+    sendMessage({ kind: "sums", version, round: rounds[rounds.length - 1], city: id, mask: k.mask, sums: copy, everyday: extra, ...(day ? { day } : {}), ...(local ? { local } : {}) }, [copy.buffer, ...(extra ? [extra.buffer] : [])]);
   }
 }
 /** T-2215: six mode blocks per cell with the two No route blocks (trips no way serves, home end
@@ -765,6 +765,8 @@ let closeEpoch = 0;
 
 /** T-2495: `?perfOff=inPlace`, the table's columns through the binding's copies (`inPlace`) */
 let copies = false;
+/** T-2596: `?perfOff=allSums` */
+let allSums = false;
 
 function openQueued(epoch: number): Promise<void> {
   // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
@@ -836,6 +838,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         const t1 = performance.now();
         aux = !!msg.aux;
         copies = !!msg.copies;
+        allSums = !!msg.allSums;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
         shareMarkets = !!msg.share;
@@ -2272,6 +2275,9 @@ async function run() {
           if (!(await localSolve(c, e.fresh, e.sig, shared, win))) { stale = true; break; }
           for (const p of e.fresh) cityOn.set(p, viewOf(c, p));
           const touched = citiesOf(c, e.fresh);
+          // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of
+          // its last result; the whole solve's of the same round replace them
+          for (const id of touched) keepSums(job.version, [job.rounds], id, cities.get(id)!, undefined, true);
           for (const q of mine) {
             const less = lessOf.get(q);
             const delta = sub && less ? marketBlocks(c, sub, q).map((v, i) => { const t = v.slice(), l = less[i]; if (l) for (let k = 0; k < t.length; k++) t[k] -= l[k]; return t; }) : undefined;
@@ -2439,7 +2445,9 @@ async function run() {
               // sent unasked, ahead of this round's last result: the client holds every worker's by
               // the time it publishes the round, and the bubbles need no query to a worker that is
               // busy with the next round
-              for (const [id, a] of sumsFor) keepSums(job.version, [round], id, a);
+              // T-2596: before the last round only the zones on screen (82 zones' took a worker 4 s a round)
+              const kept = round < job.rounds && !allSums ? sumsFor.filter(([id]) => viewZones.has(id)) : sumsFor;
+              for (const [id, a] of kept) keepSums(job.version, [round], id, a);
             }
             const { msg, transfer } = figures(q, round, performance.now() - t0, alone ? [alone] : jobClusters, sharing && shared(q) ? { at: mine.includes(q) ? [0, 2] : [1, 2], noMarket: mine.includes(q), side: mine.includes(q) ? "cities" : "market" } : undefined);
             // T-327: ahead of the result, so the client holds every worker's answer for a round by

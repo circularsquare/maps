@@ -1178,7 +1178,7 @@ registry centre and zoom, or over New York with none [T-310].
 - **After an edit** nothing changes until a final round: split, riders, bubbles and
   the boarding account keep the last finished forecast, the split faded and the status "Updating
   demand 1/2…" (Status, above), then each changes in one step [T-232]: the zones the local solve
-  covers when it lands, everything at the whole solve's final (docs/demand-runtime.md). Queries asked meanwhile (a station's riders, a bubble
+  covers when it lands, their bubbles with them [T-2532], everything at the whole solve's final (docs/demand-runtime.md). Queries asked meanwhile (a station's riders, a bubble
   selection, a trip) wait for that round. A line new or changed by the edit has no figures to keep,
   so it takes the free-flow estimate's riders as soon as that lands, as do stations only such
   lines serve [T-324]; until a running line has any figures its trains are striped

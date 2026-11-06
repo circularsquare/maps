@@ -829,7 +829,7 @@ class DemandClient {
     w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}),...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
     w.postMessage(msg);
     return w;
   }
@@ -3062,7 +3062,8 @@ class DemandClient {
       return;
     }
     if (msg.kind === "sums") {
-      const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}`;
+      // (T-2532: an edit's local result's apart, `cellModes` taking them until its whole solve's are all in)
+      const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}${msg.local ? ":local" : ""}`;
       const list = this.pushed.get(key);
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
       else if (this.cur && msg.version === this.cur.version) this.pushed.set(key, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
@@ -3741,8 +3742,10 @@ class DemandClient {
       // every worker sent its sums with the round (no question to a worker busy with the next
       // round); asked for only when one is missing. Another day than a weekday's only for the
       // zones on screen when the round was solved (T-1904)
-      const sent = (f ? this.fpushed : this.pushed).get(`${at.version}:${at.round}:${city}:${day}`);
-      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent && sent.length === (f ? this.fpool!.n : this.computeN) ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
+      // (T-2532: an edit's local result's, until its whole solve's are all in)
+      const full = (k: string) => { const l = (f ? this.fpushed : this.pushed).get(k); return l && l.length === (f ? this.fpool!.n : this.computeN) ? l : undefined; };
+      const sent = full(`${at.version}:${at.round}:${city}:${day}`) ?? full(`${at.version}:${at.round}:${city}:${day}:local`);
+      const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
       // the bit (T-328: the cached bubbles are compared with the fresh ones)
       for (const r of [...parts].sort((a, b) => a.mask - b.mask)) {

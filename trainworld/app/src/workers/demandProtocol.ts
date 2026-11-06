@@ -113,6 +113,8 @@ export type ToDemand =
       warmEveryday?: boolean;
       /** T-2495: the corridor table's columns through the binding's copies (`?perfOff=inPlace`) */
       copies?: boolean;
+      /** T-2596: every zone's bubble sums pushed each round, not only the zones on screen (`?perfOff=allSums`) */
+      allSums?: boolean;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
       groups?: number[][];
@@ -392,8 +394,9 @@ export type FromDemand =
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
-  /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119) */
-  | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number }
+  /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
+   * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */
+  | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number; local?: true }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
   /** `mask`: bit q set for each period included; null sums: no network, or not `version` */
   | { kind: "subSums"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null; everyday: Float32Array | null }

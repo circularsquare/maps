@@ -192,7 +192,10 @@ commuters by mode right after a round is published, when every worker is already
 the next round and cannot answer a question about the round before from its live state. So each
 worker sends its subzone sums for a round (`sub_sums`, per city) unasked, from the moment all its
 periods had that round and ahead of its last result for it; the client adds them up when the
-round is published. They are a weekday's; for the zone in view and the nearby zones (`view`, sent
+round is published. Before a solve's last round only the zones on screen's go (`view`; T-2596: all 82
+of a big save's took each worker about 4 s a round), at the last round every zone's, so a zone panned
+into view mid-solve gets its bubbles a round later (`?perfOff=allSums`: every zone each round). They
+are a weekday's; for the zone in view and the nearby zones (`view`, sent
 by the page whenever they or the day shown change) the day shown's too (`sub_sums_day`, T-1904),
 since the average day is the default and without them its bubbles waited a round behind the
 figures (notes/T-1904.md). The commuters by mode per cell (`cell_modes`) read only those sums and the
@@ -346,7 +349,9 @@ round crowds on the others' loads as that round of their last solve was priced o
 population, period and round, `trail`; a shared period's market loads per round as the other worker
 sent them), plus their own, so with nothing changed it repeats the whole solve; the market's are
 read through its old route nodes, carried to the new network's by line and station ids
-(`solve.ids`). Each is sent as a cluster result marked `local`, its cities the touched zones: the page
+(`solve.ids`). Each is sent as a cluster result marked `local`, its cities the touched zones, after
+those zones' subzone sums (marked `local`, kept apart on the page until the whole solve's of the same
+round are all in, T-2532), so their bubbles follow the figures: the page
 puts its lines, their stations and those zones' views in (never the market's own figures) and
 clears the lines' pending label ("constructing..." or "loading...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
