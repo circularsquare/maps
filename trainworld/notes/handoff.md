@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
-Updated: 2026-11-06 12:30
+Updated: 2026-11-06 18:15
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -18,74 +18,32 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Next country: Brazil T-2437 (no prep; brazil.py hook done). Disk 50 GB free.
 - maps-17 (now named maps-03) handed over fully at 21:37: no agents of its own left.
 
-## In flight (maps-93's agents, 2026-11-06 ~12:30)
-- **omaha** (Opus, main tree, **pack lock**): T-2595 doc rebuild (Mills County out of Douglas County); gate passed;
-  west-north-central join running. notes/T-2595.md. After it: commit its files, rerun smoke (linepanel saw "far new game
-  final" fail mid-join: the Kansas dead-space point got 0.012 riders; may need moving), 8800 rebuild.
-- **sheetwasm** (Opus, tree): T-2589 stage 2, the carry in Rust/WASM+SIMD bit-identical (stage B dropped).
-- **slcload** (Opus, tree, owns demand workers): T-2605. Measured on day-383: SLC's fine figures/bubbles wait 114 of
-  118 s behind the whole solve (own work 2-3 s). Fix written: `refineAside`, a one-worker focus pool refines the zone
-  in view at fine level while the whole solve runs (`?perfOff=refineAside`). Asked: cost to the whole solve, small
-  devices, rough bubbles for a coarse zone.
-- **sheetscale** (Opus, tree, owns sheet.ts): T-2609 condense empty land at continent scale (her NA save).
-- uitodo LANDED 10643cd7 (records 04c71a24): T-2611, T-2612, T-2615, T-2616, T-2617. Strings shown to Anita.
-- **headway** (Opus, tree, ~13:00): T-2607 trains wait at the terminal so the set headway holds.
-- terrainnet LANDED 2b0c1003 (records 1ec3dc46): T-2613 terrain tag/retries/Construct refused on missing ground,
-  T-2614 cloud retry + dot; maps-93 dropped the "!" from "Not on your account yet". Strings shown to Anita.
-- sheetwasm LANDED 120cc1ba (T-2589 st.2 carry in WASM, same bits, ~2x; main WASM rebuilt). profitpeek DONE
-  (notes/T-2604.md; page-only estimate in the edit note, sign wrong 3/14 near break-even: question to Anita).
-- slcload (T-2605): refineAside measured, SLC figures 6.7 s / bubbles 7.3 s arriving mid-solve (were 37-118 s), edit
-  in SLC 1.8/2.1 s, finals identical; T-2624 filed (trains-only edit's traffic waits). Finishing rerun + smoke.
-- omaha DONE, committed 3527e5bd (T-2595: cause was the simplified county file giving Mills/Sarpy to Cass NE;
-  unlap() in tiger_counties.py; doc rebuilt, west-north-central re-solved, freeze 20261106-123304); backups deleted;
-  pack lock free. T-2627 filed (join market step 1800 s limit).
-- slcload LANDED 780c9e79 (T-2605 refineAside; T-2624 filed). linelook LANDED fed16a6e (T-2623).
-- 8800 rebuild at 3527e5bd started ~16:00; then smoke light/dark, ping. Then T-428 (pack lock free now).
-- headway LANDED 4815d83b (records 4d24f8cb): T-2607 the headway set is the headway run (terminal stands); real
-  save unchanged (no headway lines). Main WASM rebuilt.
-- **sheetscale** (Opus, tree, resumed ~15:00): T-2609 cut bands done (NA empty middle 19% -> 6% of width); held for
-  Anita's asks: borders only of zones a line passes, water only touching station zones (octilinear edge to plain),
-  big zones with few stops squeeze (LA's NE). T-2625 filed (2D condensation).
-- **profitest** (Sonnet, tree, ~15:05): T-2626 profit estimate in the edit note ("Estimated −$5.3M profit/day").
-- upkeep re-aimed (Anita): long lines' profitability should stay as today after T-2619; propose the smallest offset.
-- **capview** (Opus, tree, ~14:20): T-2622 4x cap not by view (briefed on slcload's signal changes).
-- **linelook** (Sonnet, tree, ~14:20): T-2623 line diagram look with/without related lines.
-- **coarsemkt** (Opus, read-only + scratch crate, ~14:20): T-2621 market on a coarser graph, measure + prototype.
-- **upkeep** (Opus, tree, ~13:40): T-2619 Anita's upkeep set (ground 35k, viaduct 50k, C&C 100k, bored 130k,
-  underground station 200k a game day), T-2620 measure profits on her saves + propose a willingness-to-pay change
-  (demand change goes to her first).
-- costfr DONE (ded9ca84): research/upkeep-france.md; options shown to Anita (real, real halved = maps-93's pick,
-  tunnels only, keep).
-- **terrainnet** (Opus, tree): T-2613 downloading-terrain tag and the build-before-terrain question, T-2614 failed
-  cloud save. Strings to show.
-- **costfr** (Opus, read-only): T-2618 French upkeep research -> research/upkeep-france.md; Anita decides adoption.
-- **profitpeek** (Opus, read-only): T-2604 quick profit estimate, design note.
-- Queued: T-2607 (headway line with few trains runs at its round trip; sim service; free to start, cores permitting),
-  T-2610 (Hudson at the tip drawn as land since T-2599; after sheetwasm lands, carry/land cells).
-- Awaiting Anita: T-2606 cutnet recommends no cut (one line, LA-Chicago, joins the clusters; cutting saves no work);
-  archive on her OK. Upkeep doubling waits on T-2618.
-- **Release plan (Anita ~18:00):** not today; in first: upkeep (T-2619 + T-2620 offset), profit estimate (T-2626),
-  diagram polish (T-2629/T-2610). Then ja/zh-Hans/zh-TW "in next few days": **l10n-ui1, l10n-ui2, l10n-insp,
-  l10n-core** (Sonnet, trees, T-2632..T-2635 stage 1 strings by folder; rules in scratch l10n-brief.md) and
-  **l10n-lead** (Opus, tree, T-2636: Language setting in SettingsTab, fonts, glossary, translate+review runbook, time
-  estimate). Land the four as they finish (en.json/context.json merges); then start translator agents per the runbook.
-  hillwater LANDED 87d99345 (T-2628; Anita OK'd). T-2631 filed (refused market pack must fail smoke).
-- Before publishing (her word; release in English): omaha committed (3527e5bd), T-428 DONE 23538b19 (intercity.json in
-  data/work, out of build/freeze/deploy; the next real build proves vite.config.ts), 8800 build 1187 smoked. Nothing
-  left blocking but her word (and any landings she wants in first). Localization: T-2583 core landed;
-  T-2584 stage 1 (~2,350 strings) held until after release, then T-2585 ja/zh-Hans/zh-TW (Taiwan), T-2586 place names
-  where cheap, T-2587 es/de; research/localization.md.
-
-## Landed today (2026-11-06), all after 8800 build 1135 unless said
-- In build 1135 (983f5c3d, smoked 25/25 light+dark ~10:50, 12,515,594): Brazil T-2437 + T-2594, sheet default, NJ
-  fix, DC label, sheetspeed (T-2589 st.1), workerbal (T-2532, T-2596; T-2553 closed).
-- Since: smoothlines 90c69417 (T-2599: sheet.ts weights bug + routing; Japan sharp turns 1723 -> 67), linepanel
-  fd70463c (T-2600..T-2603 timetable chart, new WASM `line_trips`; main WASM rebuilt), T-2608 55a565fd (no key M,
-  hover "Show network diagram (work in progress)", "Show map").
-- Shown to Anita: diagram hover (OK'd). To show: kyushu-lines-3way.png, nyc-tip-3way.png, timetable-chart.png,
-  buildbar-after.png in artifacts/trainworld/review; strings "Stop editing", "Show timetable chart" / "Hide
-  timetable chart", "Close", "Leaves Ash 08:12" / "Reaches Gum 08:28".
-- Older history of this session: git log and ARCHIVE.md.
+## In flight (maps-93's agents, 2026-11-06 ~18:15)
+Agents report to maps-93. A new orchestrator taking over: their work is in the trees named; check each tree's
+`git -C .tw-trees/<name> status`, the task's notes and TASKS line, then land per "How to".
+- **upkeep** (Opus, tree .tw-trees/upkeep): T-2619 Anita's upkeep set (per game day: ground 35k a km, viaduct 50k, cut and
+  cover 100k, bored 130k, underground station 200k new, other stations 50k) and T-2620: measure line profits on her
+  saves and propose the smallest offset so long lines stay as hard as today (her words in the task line; not a fare
+  ratio change; demand changes go to her first). Before release.
+- **profitest** (Sonnet, tree): T-2626 profit estimate in the edit note ("Estimated −$5.3M profit/day"; +/- hovers if
+  easy). Rerunning its check after copying master's game/*.json (T-2631 trap). Before release.
+- **borders** (Opus, tree): T-2629 squeeze twice as fast + smoother zone borders, T-2610 Hudson at Manhattan's tip.
+  Before release.
+- **capview** (Opus, tree): T-2622 the 4x clock cap the same whatever the view. Told about T-2631 trap.
+- **coarsemkt** (Opus, read-only + scratch crate): T-2621 long trips on a coarser graph: measure, prototype,
+  recommendation to Anita before any build.
+- **l10n-ui1 / l10n-ui2 / l10n-insp / l10n-core** (Sonnet, trees): T-2632..T-2635 localization stage 1 by folder
+  (rules: scratch l10n-brief.md). Land each as it reports; en.json/context.json merge on rebase.
+- **l10n-lead** (Opus, tree): T-2636 Language setting (SettingsTab), fonts, glossary ja/zh-Hans/zh-TW, translate and
+  review runbook in docs/localization.md, time estimate. Then start translator agents per its runbook.
+- **Release plan (Anita ~18:00):** not today. In first: upkeep, profit estimate, diagram polish. Then publish on her word
+  (English), then ja/zh "in next few days". T-428 done (intercity.json out of packs); 8800 = build 1187 (ff7cb27f)
+  smoked; master has more since (hillwater, T-428): rebuild 8800 after the next landings.
+- **Awaiting Anita:** T-2606 close as "no cut"? (asked twice, unanswered). Her North America load felt ~4 min vs ~2:
+  probably CPU (agents ran over claims, fixed ~17:30); she will retry; if still slow, time against build 1135 quietly.
+- Queued, not started: T-2624 (trains-only edit's traffic waits for the whole solve), T-2625 (2D condensation), T-2627
+  (join market step 1800 s limit), T-2630 (checks pin themselves to their claim), T-2631 (refused market pack fails
+  smoke), T-2597, T-2593, T-2588, T-2592.
 
 ## Landed this session (maps-93)
 - uismall5 3d0939bc (T-2569..T-2572, Anita's evening TODO; also the map credits button, invisible since T-1435, now
@@ -97,7 +55,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   NA save), sheet's write-up db56555e (T-2566).
 - Strings shown to Anita (no answer yet): "Show water" (new hover); "Nothing built" -> "Loading..." while an account
   game's picture loads; "No stations" (new hover, trouble row).
-- Next free id **T-2579**.
+- Next free id **T-2637** (check TASKS/ARCHIVE; agents filed T-2624 themselves).
 
 ## Anita 2026-11-05, in her words where it matters
 - Diagram: "i love how japan looks"; "perhaps we could turn down distortion if its easy" (dial at 0.8, asked whether
@@ -110,14 +68,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## Next
 1. As agents report: land trees (typecheck, smoke in the tree, `agent-tree.mjs land`), commit records by path, show
-   Anita strings old -> new and review pictures (copy to artifacts/trainworld/review/).
-2. After 8800's smoke: Brazil T-2437 (pack lock; Opus agent, docs/adding-a-country.md; one big region, so T-2070's read
-   ahead still needs a multi-region country). Mind the 4 free cores: a country run at --jobs 4-6 only with little else.
-3. Open and ready (cores allowing): T-2532 and T-2553 (demand worker; after cachehit lands, same files), T-2374 app
-   splits (one file per agent; collides with any app work, so when few app agents run), T-2575 (regions.json once),
-   T-2573 (t409 walker), T-2578 (MX-US border), T-2496 (WASM memory per structure; Rust, after marketsearch lands),
-   T-2510 (Japan masks miss big rivers), T-2558 (Mexico everyday from DENUE). Diagram routing tasks (T-2529, T-2538,
-   T-2530, T-2539, T-2551, T-2518, T-2498) wait on the sheet's direction (T-2577).
+   Anita strings old -> new and pictures (copy to artifacts/trainworld/review/).
+2. When upkeep, profitest and borders have landed: rebuild 8800, smoke light and dark (pinned), ping Anita; publish on
+   her word ("How to" Publish).
+3. Localization: land T-2632..T-2635 as they come, then translator agents per l10n-lead's runbook (ja, zh-Hans,
+   zh-TW), then the swept files (EditNote, editNote/profitEstimate, lineFigures/editCap, diagram/).
+4. Cores: cap 12, 4 free while Anita is on the machine; check real CPU with Get-Counter, not just the ledger.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\aa768402-8365-45e0-85b8-0c27fe256637\scratchpad
