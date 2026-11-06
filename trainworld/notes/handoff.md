@@ -31,6 +31,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **headway** (Opus, tree, ~13:00): T-2607 trains wait at the terminal so the set headway holds.
 - terrainnet LANDED 2b0c1003 (records 1ec3dc46): T-2613 terrain tag/retries/Construct refused on missing ground,
   T-2614 cloud retry + dot; maps-93 dropped the "!" from "Not on your account yet". Strings shown to Anita.
+- sheetwasm LANDED 120cc1ba (T-2589 st.2 carry in WASM, same bits, ~2x; main WASM rebuilt). profitpeek DONE
+  (notes/T-2604.md; page-only estimate in the edit note, sign wrong 3/14 near break-even: question to Anita).
+- slcload (T-2605): refineAside measured, SLC figures 6.7 s / bubbles 7.3 s arriving mid-solve (were 37-118 s), edit
+  in SLC 1.8/2.1 s, finals identical; T-2624 filed (trains-only edit's traffic waits). Finishing rerun + smoke.
+- **capview** (Opus, tree, ~14:20): T-2622 4x cap not by view (briefed on slcload's signal changes).
+- **linelook** (Sonnet, tree, ~14:20): T-2623 line diagram look with/without related lines.
+- **coarsemkt** (Opus, read-only + scratch crate, ~14:20): T-2621 market on a coarser graph, measure + prototype.
 - **upkeep** (Opus, tree, ~13:40): T-2619 Anita's upkeep set (ground 35k, viaduct 50k, C&C 100k, bored 130k,
   underground station 200k a game day), T-2620 measure profits on her saves + propose a willingness-to-pay change
   (demand change goes to her first).
