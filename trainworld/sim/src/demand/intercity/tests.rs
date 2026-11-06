@@ -1294,6 +1294,19 @@ fn a_streamed_pass_is_the_pass_to_the_bit() {
     assert!(whole.c_rail > 0. && whole.rail > 0. && whole.xfer.iter().any(|&x| x > 0.), "commutes {} ({} pairs of {}), longer trips {} and transfers {}", whole.c_rail, api.cpairs.len(), api.m.commutes.len(), whole.rail, whole.xfer.iter().sum::<f32>());
     let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
     let loads = |l: &Loads| [&l.seg, &l.board, &l.alight, &l.rn_board, &l.rn_alight, &l.entry, &l.exit].map(|v| bits(v));
+    // T-2653: the far-zone table filled by column and filled by row give the same figures to the bit
+    {
+        use std::sync::atomic::Ordering::Relaxed;
+        super::pass::ST_BY_ZONE_OFF.store(true, Relaxed);
+        let rows = api.pass_on(g, p, 0, &skims_for(g, p, &api.want), ix);
+        super::pass::ST_BY_ZONE_OFF.store(false, Relaxed);
+        assert!(whole.st.iter().any(|&x| x > 0.) && whole.st.len() == api.st_pat.col.len());
+        assert_eq!(bits(&rows.st), bits(&whole.st));
+        assert_eq!(loads(&rows.loads), loads(&whole.loads));
+        assert_eq!(loads(&rows.c_loads), loads(&whole.c_loads));
+        assert_eq!((rows.rail.to_bits(), rows.c_rail.to_bits()), (whole.rail.to_bits(), whole.c_rail.to_bits()));
+        assert_eq!((bits(&rows.c_frac), bits(&rows.pair_rail), bits(&rows.xfer)), (bits(&whole.c_frac), bits(&whole.pair_rail), bits(&whole.xfer)));
+    }
     let one = strategy_bytes(g);
     let was = WINDOW_STRATEGY_BYTES.with(|c| c.get());
     // every strategy kept to its assignment, none, and a few: the ones not kept are searched again
@@ -2267,4 +2280,137 @@ fn corridor_mode_two_ways(m: &Market, a: usize, b: usize) -> [f32; 2] {
     let ((car, x), (_, y)) = (way(a, b), way(b, a));
     let air = 0.5 * (x + y);
     [air, if car { 1. - air } else { 0. }]
+}/// This process's working set and its peak, in bytes (T-2653), 0 off Windows.
+fn working_set() -> (usize, usize) {
+    #[cfg(windows)]
+    {
+        #[repr(C)]
+        struct Counters {
+            cb: u32,
+            faults: u32,
+            peak: usize,
+            ws: usize,
+            rest: [usize; 6],
+        }
+        extern "system" {
+            fn GetCurrentProcess() -> isize;
+            fn K32GetProcessMemoryInfo(h: isize, c: *mut Counters, cb: u32) -> i32;
+        }
+        let mut c = Counters { cb: std::mem::size_of::<Counters>() as u32, faults: 0, peak: 0, ws: 0, rest: [0; 6] };
+        // SAFETY: fills the struct; the pseudo-handle needs no closing
+        unsafe { K32GetProcessMemoryInfo(GetCurrentProcess(), &mut c, c.cb) };
+        (c.ws, c.peak)
+    }
+    #[cfg(not(windows))]
+    (0, 0)
+}
+/// T-2653: the market's pass on a captured net with the far-zone table filled by row (`0`) and by
+/// column (`1`) per `TW_MODES`, back to back in one process (`TW_REPS` rounds), every figure of each
+/// compared with the first's to the bit, the pass's sections timed and the memory printed.
+/// `TW_T780_NET=<net> TW_Q=0 TW_MODES=0,1 TW_REPS=3 cargo test --release --features demand --lib t2653_ab -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2653_ab() {
+    use std::sync::atomic::Ordering::Relaxed;
+    let env = |k: &str, d: &str| std::env::var(k).unwrap_or(d.into());
+    let q: usize = env("TW_Q", "0").parse().unwrap();
+    let modes: Vec<u32> = env("TW_MODES", "0,1").split(',').map(|v| v.parse().unwrap()).collect();
+    let reps: usize = env("TW_REPS", "1").parse().unwrap();
+    let crowd: f32 = env("TW_CROWD", "0").parse().unwrap();
+    let mut a = t780_net(&std::env::var("TW_T780_NET").unwrap(), MARKET_CHUNK);
+    let (ws0, _) = working_set();
+    let (nz, ne) = (a.served.len(), a.st_pat.col.len());
+    let zst_bytes = match &a.st_pat.zst {
+        Cols::Short(v) => 2 * v.len(),
+        Cols::Long(v) => 4 * v.len(),
+    };
+    eprintln!("set up: {} zones, {} stations, table {ne} entries ({:.1} MB), start half {} entries; index zst {:.1} MB + zoff {:.2} MB; working set {:.0} MB", nz, a.st_pat.off.len() - 1, 4. * ne as f64 / 1e6, a.st_pat.zoff[nz], zst_bytes as f64 / 1e6, 4. * a.st_pat.zoff.len() as f64 / 1e6, ws0 as f64 / 1e6);
+    let figs = |a: &IntercityApi, q: usize| -> Vec<(String, Vec<f64>)> {
+        let per = a.per(q).unwrap();
+        let f = |v: &[f32]| v.iter().map(|&x| x as f64).collect::<Vec<f64>>();
+        let mut out: Vec<(String, Vec<f64>)> = vec![];
+        let mut loads = |name: &str, l: &Loads| {
+            for (k, v) in [("seg", &l.seg), ("board", &l.board), ("alight", &l.alight), ("rn_board", &l.rn_board), ("rn_alight", &l.rn_alight), ("entry", &l.entry), ("exit", &l.exit), ("rn_fare_x", &l.rn_fare_x)] {
+                out.push((format!("{name}.{k}"), f(v)));
+            }
+            out.push((format!("{name}.pax_min"), vec![l.pax_min]));
+        };
+        loads("all", &per.avg);
+        loads("com", &per.c_avg);
+        if let Some(l) = &per.r_avg {
+            loads("lean", l);
+        }
+        for (i, l) in per.e_avg.iter().enumerate() {
+            if let Some(l) = l {
+                loads(&format!("ev{i}"), l);
+            }
+        }
+        out.push(("rail".into(), vec![per.rail, per.c_rail, per.e_rail, per.e_walk]));
+        out.push(("pair_rail".into(), f(&per.pair_rail)));
+        out.push(("st".into(), f(&per.st)));
+        out.push(("xfer".into(), f(&per.xfer)));
+        out.push(("c_frac".into(), f(&per.c_frac)));
+        out.push(("e_frac".into(), f(&per.e_frac)));
+        out.push(("cor".into(), per.corridors.v.clone()));
+        out.push(("cor_k".into(), per.corridors.k.iter().map(|&x| x as f64).collect()));
+        out
+    };
+    let cmp = |base: &[(String, Vec<f64>)], now: &[(String, Vec<f64>)]| -> String {
+        let mut diff = vec![];
+        for ((k, a), (_, b)) in base.iter().zip(now) {
+            if a.len() != b.len() {
+                diff.push(format!("{k}: length {} -> {}", a.len(), b.len()));
+                continue;
+            }
+            let (mut n, mut worst) = (0, 0f64);
+            for (x, y) in a.iter().zip(b) {
+                if x.to_bits() != y.to_bits() {
+                    n += 1;
+                    worst = worst.max((x - y).abs() / x.abs().max(y.abs()).max(1e-30));
+                }
+            }
+            if n > 0 {
+                diff.push(format!("{k}: {n} of {} differ, worst {worst:.2e}", a.len()));
+            }
+        }
+        if diff.is_empty() { "the same to the bit".into() } else { diff.join("; ") }
+    };
+    let mut base: Option<Vec<(String, Vec<f64>)>> = None;
+    let mut base_c: Option<Vec<(String, Vec<f64>)>> = None;
+    let mut total: Vec<f32> = vec![];
+    for rep in 0..reps {
+        for &mode in &modes {
+            for crowded in [false, true] {
+                if crowded && crowd <= 0. {
+                    continue;
+                }
+                super::pass::ST_BY_ZONE_OFF.store(mode == 0, Relaxed);
+                crate::demand::kernel::clear_skim_cache();
+                let (t0, c0) = (now_ms(), thread_cpu_ms());
+                if crowded {
+                    assert!(a.solve_crowded(q, &total));
+                } else {
+                    assert!(a.solve(q));
+                }
+                let (wall, cpu) = (now_ms() - t0, thread_cpu_ms() - c0);
+                let (ws, peak) = working_set();
+                let now = figs(&a, q);
+                if !crowded && total.is_empty() {
+                    let per = a.per(q).unwrap();
+                    total = per.avg.seg.iter().chain(&per.avg.rn_board).chain(&per.avg.rn_alight).map(|&x| x * crowd.max(1.)).collect();
+                }
+                let slot = if crowded { &mut base_c } else { &mut base };
+                let same = match slot {
+                    None => {
+                        *slot = Some(now);
+                        "(reference)".to_string()
+                    }
+                    Some(b) => cmp(b, &now),
+                };
+                let st_cap = a.per(q).unwrap().st.capacity();
+                eprintln!("rep {rep} mode {mode} {}: solve {wall:.0} ms wall, {cpu:.0} ms cpu; working set {:.0} MB, peak {:.0} MB; st {:.1} MB (capacity {:.1}); figures: {same}", if crowded { "crowded" } else { "free flow" }, ws as f64 / 1e6, peak as f64 / 1e6, 4. * ne as f64 / 1e6, 4. * st_cap as f64 / 1e6);
+            }
+        }
+    }
+    super::pass::ST_BY_ZONE_OFF.store(false, Relaxed);
 }

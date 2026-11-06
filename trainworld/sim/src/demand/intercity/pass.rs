@@ -1,5 +1,8 @@
 use super::*;
 
+/// T-2653: tests turn the far-zone table's by-column filling off, to compare a pass without it.
+pub(super) static ST_BY_ZONE_OFF: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 impl IntercityApi {
     pub(super) fn on(m: Rc<Market>) -> Self {
         IntercityApi {
@@ -250,16 +253,45 @@ impl IntercityApi {
         let nz = self.served.len();
         let zcol = &self.served_at;
         let pat = &self.st_pat;
-        let mut st = vec![0f32; pat.col.len()];
+        // T-2653: the table's start half (trips starting at a station, by the zone they go to) is
+        // filled by column while the pass runs, in `st` after the table's own `ne` entries: a zone's
+        // longer trips and commutes add into one short column, not a row per start station. Each
+        // entry gets the same adds in the same order, and is copied to its place in the rows at the end.
+        let ne = pat.col.len();
+        let by_zone = !windowed && pat.zoff.len() == nz + 1 && !ST_BY_ZONE_OFF.load(std::sync::atomic::Ordering::Relaxed);
+        let mut st = vec![0f32; ne + if by_zone { pat.zoff[nz] as usize } else { 0 }];
+        // z's own column: per station, where it is in the column
+        let mut zmap = vec![0u32; if by_zone { s } else { 0 }];
         // per station, where its row was last looked up, for starts and for ends
         let mut cur = vec![0u32; 2 * s];
         let at = |cur: &mut [u32], x: usize, c: usize| pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize]);
+        // a start entry's place in `st` while the pass runs: z's own column (`cz`) through `zmap`,
+        // another column's through the entry's place in the rows
+        let zslot = |cur: &mut [u32], zm: &[u32], cz: usize, x: usize, c: usize| if c == cz { zm[x] as usize } else { ne + pat.zpos(x, at(cur, x, c)) };
         // (a window's far-zone table is never read: its loads are what it is for)
-        let put = |st: &mut [f32], cur: &mut [u32], x: usize, c: usize, v: f32| {
-            if !windowed {
-                st[at(cur, x, c)] += v;
+        // a commute's or outing's entry: a start entry in another zone's column is looked up once a
+        // station for the pair (`memo`: the stamp of the pair it was found for, and its place)
+        let put_z = |st: &mut [f32], cur: &mut [u32], zm: &[u32], cz: usize, memo: &mut [(u32, u32)], stamp: u32, x: usize, c: usize, v: f32| {
+            if windowed {
+                return;
             }
+            let i = if by_zone && c < nz {
+                if c == cz {
+                    zm[x] as usize
+                } else {
+                    let m = &mut memo[x];
+                    if m.0 != stamp {
+                        *m = (stamp, zslot(cur, zm, cz, x, c) as u32);
+                    }
+                    m.1 as usize
+                }
+            } else {
+                at(cur, x, c)
+            };
+            st[i] += v;
         };
+        let (mut memo_a, mut memo_b) = (vec![(0u32, 0u32); if by_zone { s } else { 0 }], vec![(0u32, 0u32); if by_zone { s } else { 0 }]);
+        let mut stamp = 0u32;
         // a longer trip's entries in that table, its start stations' in the run of its station pairs
         // from one and its end stations' by place in its access list, each looked up once a pair
         let mut ends: Vec<usize> = vec![];
@@ -392,6 +424,14 @@ impl IntercityApi {
                     .collect()
             };
 
+            // (z's own column of the start half: where each of its stations is)
+            let cz = if by_zone && (zcol[z] as usize) < nz { zcol[z] as usize } else { usize::MAX };
+            if cz != usize::MAX {
+                let (a, b) = (pat.zoff[cz] as usize, pat.zoff[cz + 1] as usize);
+                for k in a..b {
+                    zmap[pat.zst.get(k)] = (ne + k) as u32;
+                }
+            }
             // the longer trips ending in z (T-1735, a window's swapped ones: starting there)
             if !ls(z).is_empty() {
                 let (mut bc, mut hc) = (None, None);
@@ -455,7 +495,7 @@ impl IntercityApi {
                             }
                             if !windowed {
                                 if sa != last_sa {
-                                    (last_sa, ia) = (sa, at(&mut cur, sa as usize, cb));
+                                    (last_sa, ia) = (sa, if by_zone { zslot(&mut cur, &zmap, cz, sa as usize, cb) } else { at(&mut cur, sa as usize, cb) });
                                 }
                                 while b[jb].0 != sb as usize {
                                     jb = (jb + 1) % b.len();
@@ -490,6 +530,7 @@ impl IntercityApi {
                 let (mut bc, mut hc_ride, mut hc_walk) = (None, None, None);
                 for &ci in cs(z) {
                     let ci = ci as usize;
+                    stamp += 1;
                     let cp = &self.cpairs[ci];
                     let n = m.commutes[cp.c as usize].2;
                     let (h, home) = c_home(ci);
@@ -533,10 +574,10 @@ impl IntercityApi {
                                 cc[ws[sa] as usize][sb] += bk;
                             }
                         }
-                        put(&mut st, &mut cur, sa, wc, a);
-                        put(&mut st, &mut cur, sb, nz + hc, a);
-                        put(&mut st, &mut cur, sb, hc, bk);
-                        put(&mut st, &mut cur, sa, nz + wc, bk);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_a, stamp, sa, wc, a);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_a, stamp, sb, nz + hc, a);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_b, stamp, sb, hc, bk);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_b, stamp, sa, nz + wc, bk);
                     }
                 }
             }
@@ -550,6 +591,7 @@ impl IntercityApi {
                 let (mut bc, mut hc_ride, mut hc_walk) = (None, None, None);
                 for &ei in es(z) {
                     let ei = ei as usize;
+                    stamp += 1;
                     let ep = &self.epairs[ei];
                     let pair = m.everyday[ep.e as usize];
                     let k = pair.kind as usize;
@@ -596,10 +638,10 @@ impl IntercityApi {
                                 ec[k][ws[sa] as usize][sb] += bk;
                             }
                         }
-                        put(&mut st, &mut cur, sa, ac, a);
-                        put(&mut st, &mut cur, sb, nz + hc, a);
-                        put(&mut st, &mut cur, sb, hc, bk);
-                        put(&mut st, &mut cur, sa, nz + ac, bk);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_a, stamp, sa, ac, a);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_a, stamp, sb, nz + hc, a);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_b, stamp, sb, hc, bk);
+                        put_z(&mut st, &mut cur, &zmap, cz, &mut memo_b, stamp, sa, nz + ac, bk);
                     }
                 }
             }
@@ -702,6 +744,21 @@ impl IntercityApi {
                     }
                 }
             }
+        }
+        if by_zone {
+            // T-2653: the start half back in row order (each entry is still 0 there)
+            let mut fill: Vec<u32> = pat.zoff[..nz].to_vec();
+            for x in 0..pat.off.len() - 1 {
+                for i in pat.row(x) {
+                    let c = pat.col.get(i);
+                    if c < nz {
+                        st[i] = st[ne + fill[c] as usize];
+                        fill[c] += 1;
+                    }
+                }
+            }
+            st.truncate(ne);
+            st.shrink_to_fit();
         }
         // T-1735: the window's legs turned round
         if let Some(l) = &mall {

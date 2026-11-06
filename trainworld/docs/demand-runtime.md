@@ -306,7 +306,14 @@ the window first needs it (`pass_searched`), the cities' cached tables dropped f
 ([regional.md](regional.md) 5.1, T-780), so the logsums and the far-zone table shrink with the
 pairs; the far-zone table a station click reads (`station_flows`) holds only the entries a station's
 zones can fill (`StPattern`, a tenth of all on Japan), and the zone pairs are counted before their
-table is made, so it is never grown by doubling.
+table is made, so it is never grown by doubling. While a pass runs, the table's start half (trips
+starting at a station, by destination zone) is filled one zone's column at a time, in a second array
+after the table (`StPattern::zoff`, `zst`, `zrow`, `zix`: each column's start stations and each start
+entry's place in its column, made with the pattern once per network, 36 MB on Japan, plus 24 MB for
+the second copy during a pass), and copied back to row order when the pass ends; every entry gets the same adds in the
+same order, so the table is the same to the bit, and a zone's longer trips and commutes add into one
+short column instead of a row per start station (T-2653). The commutes' and outings' trips home look
+a station's entry up once a pair.
 
 ## Solving clusters
 

@@ -440,7 +440,7 @@ impl IntercityApi {
             v.extend(cols);
             Cols::Long(v)
         };
-        self.st_pat = StPattern { off, col };
+        self.st_pat = StPattern::new(off, col, nz);
     }
     pub(super) fn set_network_in(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
         let t = now_ms();

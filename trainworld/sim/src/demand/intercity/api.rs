@@ -219,6 +219,15 @@ pub struct IntercityApi {
 pub(super) struct StPattern {
     pub(super) off: Vec<u32>,
     pub(super) col: Cols,
+    /// T-2653: the start half by column, the way a pass fills it: column c < the served zones'
+    /// count has its entries (start stations, ascending) at `zst[zoff[c]..zoff[c + 1]]`, each in
+    /// the order the rows are walked. Made with the pattern, once per network.
+    pub(super) zoff: Vec<u32>,
+    pub(super) zst: Cols,
+    /// Each start entry's place in that order (`zix`), the start entries of station x (a row's
+    /// first ones, its columns being ascending) at `zix[zrow[x]..zrow[x + 1]]`.
+    pub(super) zrow: Vec<u32>,
+    pub(super) zix: Vec<u32>,
 }
 
 /// Columns, as u16 while every one fits (Japan's whole network: 18,228 columns).
@@ -244,9 +253,57 @@ impl Cols {
             Cols::Long(v) => v[i] as usize,
         }
     }
+    pub(super) fn zeros(n: usize, short: bool) -> Cols {
+        if short {
+            Cols::Short(vec![0; n])
+        } else {
+            Cols::Long(vec![0; n])
+        }
+    }
+    pub(super) fn set(&mut self, i: usize, x: usize) {
+        match self {
+            Cols::Short(v) => v[i] = x as u16,
+            Cols::Long(v) => v[i] = x as u32,
+        }
+    }
 }
 
 impl StPattern {
+    /// The pattern of rows `off` and columns `col`, with its start half by column for `nz` served zones.
+    pub(super) fn new(off: Vec<u32>, col: Cols, nz: usize) -> StPattern {
+        let mut zoff = vec![0u32; nz + 1];
+        for i in 0..col.len() {
+            let c = col.get(i);
+            if c < nz {
+                zoff[c + 1] += 1;
+            }
+        }
+        for c in 0..nz {
+            zoff[c + 1] += zoff[c];
+        }
+        let stations = off.len().saturating_sub(1);
+        let mut zst = Cols::zeros(zoff[nz] as usize, stations <= u16::MAX as usize);
+        let mut fill = zoff.clone();
+        let (mut zrow, mut zix) = (Vec::with_capacity(stations + 1), Vec::with_capacity(zoff[nz] as usize));
+        for x in 0..stations {
+            zrow.push(zix.len() as u32);
+            for i in off[x] as usize..off[x + 1] as usize {
+                let c = col.get(i);
+                if c < nz {
+                    zst.set(fill[c] as usize, x);
+                    zix.push(fill[c]);
+                    fill[c] += 1;
+                }
+            }
+        }
+        zrow.push(zix.len() as u32);
+        StPattern { off, col, zoff, zst, zrow, zix }
+    }
+    /// The place in the start half by column (`zoff`) of the start entry `i` (in the rows) of station `x`.
+    #[inline(always)]
+    pub(super) fn zpos(&self, x: usize, i: usize) -> usize {
+        self.zix[self.zrow[x] as usize + i - self.off[x] as usize] as usize
+    }
     /// Where entry (station `s`, column `c`) sits, which must be one of the pattern's, searched
     /// from `cur` (a place in the row) outwards and left there: `demand` looks a row up in runs of
     /// one column, or of columns rising, so most lookups take a step or two.
