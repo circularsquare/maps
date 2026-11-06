@@ -384,7 +384,8 @@ goes at once, and one held since before them waits for the final, so edits comin
 local solve never keep a whole solve from starting. A worker replaced meanwhile still re-solves at
 once. So building steadily, a whole solve lands about every local solve plus whole solve (a line a
 minute on 2 workers: all of China every 60-90 s, all of Japan every 19-26 minutes), and an edit made during one
-shows its figures when it has landed and the local solve on top is done. A solve with the barrier (a load, a zone just opened)
+shows its figures when it has landed and the local solve on top is done (the zone in view's sooner, from a
+worker aside: "The zone in view aside" below). A solve with the barrier (a load, a zone just opened)
 is still cut short by a newer network.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
@@ -485,6 +486,17 @@ view after that waits for the main pool, as without a focus pool. The figures it
 out the regional market's longer trips and the riders other zones put on shared lines, so the whole
 solve's final moves them a little (notes/T-2045.md); that solve itself is untouched and its figures
 are the same to the bit.
+**The zone in view aside** (T-2605, `refineAside`, `?perfOff=refineAside` off). Outside a load, while a whole
+solve without the barrier runs (`firm`), anything newer for the zone in view waits for that solve's final: the
+zone gone fine (it covers the zone coarse) or an edit that touches the zone (held, T-1734). On a big game that is
+a minute or more. So a focus pool of one worker is started for that zone alone, solving it as during a load with
+the newest network (fine), each round shown as the zone's figures and bubbles, and as the figures of its lines
+the shown result has none for (new, or their stops changed, as T-324's). Its other lines keep the shown figures:
+from the zone alone their riders read lower than the shown ones (on Anita's day-383 save, Salt Lake City's two
+lines 50,400 a day against 67,800), however the edit moved them.
+Those figures stay over any solve that covers the zone coarse or is of an older network, its final included,
+and the pool ends when a solve of the main pool of that network shows the zone (its local result or final), or
+at a newer edit. They carry the same lie as during a load; the main pool's solves are untouched.
 **One period first** (T-1538, `?perfOff=estimate` off). A worker holds two or three of the five
 periods (the pool is at most 3), and on a big network each period's free flow takes seconds. So
 in a rough solve, and in that free-flow round after an edit, a worker solves its first period

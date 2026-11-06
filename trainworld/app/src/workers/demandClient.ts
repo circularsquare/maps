@@ -1259,6 +1259,7 @@ class DemandClient {
       this.fetchCity(id, "full");
     }
     this.lodShown();
+    if (change.length) this.refineAside();
   }
 
   /** The zones whose shown figures are coarse (`roughZones`) and the zone in view being worked out
@@ -1758,6 +1759,7 @@ class DemandClient {
     if (this.idle()) return this.settleIdle();
     if (!force && this.firm()) {
       if (this.waiting && this.cur) this.cur.heldFrom ??= performance.now();
+      this.refineAside();
       return;
     }
     this.closeStrays();
@@ -2778,6 +2780,59 @@ class DemandClient {
   fdlog: { id: CityId; at: number; got: number }[] = [];
   /** ?debug=1: when each zone opened in the focus pool */
   fopened: Map<CityId, number> | null = null;
+  /** T-2605: the zone the focus pool refines aside (outside a load), or null */
+  frefine: CityId | null = null;
+
+  /**
+   * T-2605: the zone in view went fine while a whole solve without the barrier runs, which solves it coarse; the
+   * main pool's refine of it waits for that solve's final (`firm`), a minute or more on a big game. So a focus
+   * pool solves the zone alone at fine level meanwhile, and its figures and bubbles stand for the zone (its lines
+   * keep the shown ones) until a solve of the main pool covers it fine. `?perfOff=refineAside` off.
+   */
+  private refineAside() {
+    const id = activeCity.peek(), s = this.cur, svc = this.latest();
+    if (perfOff("refineAside") || this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || (this.fpool?.alive && !this.frefine)) return;
+    if (!s || !svc || !this.firm() || !this.solveNeed(svc)?.has(id)) return;
+    // the zone gone fine, which the solve in hand covers coarse; or an edit of the zone held behind that solve
+    const relevel = this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id);
+    const edit = svc !== s.svc && (this.edited.get(id) ?? -Infinity) > Date.now() - (performance.now() - s.arrivedAt);
+    if (!relevel && !edit) return;
+    if (this.fpool?.alive && this.frefine === id && (this.fsolve?.svc ?? svc) === svc) return;
+    this.endFocus();
+    this.startFocus();
+    if (!this.fpool) return;
+    this.frefine = id;
+    this.focusSoon();
+  }
+
+  /** T-2605: `s` covers `id` coarse, or not at all */
+  private coarseIn(s: Solve, id: CityId): boolean {
+    return !s.cities.includes(id) || (s.coarse ?? []).includes(id);
+  }
+
+  /** T-2605: the zone refined aside keeps its figures over `s`: `s` covers it coarse, or is of an older network */
+  private asideOver(s: Solve): boolean {
+    const id = this.frefine, f = id ? this.fsolve ?? this.fshown.get(id)?.s : undefined;
+    return !!id && (this.coarseIn(s, id) || (!!f && f.svc !== s.svc && f.version > s.version));
+  }
+
+  /** T-2605: `days` with the zone refined aside put back in, over a solve it is kept over */
+  private refineOver(days: DayDemand[], s: Solve): DayDemand[] {
+    const id = this.frefine, f = id ? this.fshown.get(id) : undefined;
+    if (!id || !f || !this.asideOver(s)) return days;
+    return this.withZone(days, f.ests, [id], false, new Set(s.layout.map((l) => l.id)));
+  }
+
+  /** T-2605: `s`'s coarse zones as shown: the zone refined aside is shown fine over it */
+  private shownCoarse(s: Solve): CityId[] | undefined {
+    const id = this.frefine;
+    return id && this.fshown.has(id) && this.asideOver(s) ? (s.coarse ?? []).filter((x) => x !== id) : s.coarse;
+  }
+
+  /** T-2605: the focus pool stays past `s`'s final */
+  private refineKept(s: Solve): boolean {
+    return !!this.fpool?.alive && this.asideOver(s);
+  }
 
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
@@ -2830,7 +2885,7 @@ class DemandClient {
   /** The pool's workers go (their WASM memory with them); questions still waiting on them get no answer. */
   private stopFocusPool() {
     this.fpool?.end();
-    this.fpool = this.fsolve = null;
+    this.fpool = this.fsolve = this.frefine = null;
     this.fpushed.clear();
     this.ffetching.clear();
     for (const [id, q] of this.pendingQueries) if (q.focus) { this.pendingQueries.delete(id); q.done([]); }
@@ -2846,7 +2901,7 @@ class DemandClient {
    */
   private retireFocus() {
     const p = this.fpool, s = this.cur, dv = demandView.peek();
-    if (!p?.alive || perfOff("focusEnd") || !s || s.rough) return;
+    if (!p?.alive || perfOff("focusEnd") || !s || s.rough || this.frefine) return;
     // T-2533: with a cached result shown, once the same network's solve is sent (the pool and that solve together held
     // 1.0-1.3 GB more on Anita's North America save) and the focus solve's round 0 has answered what was asked of it;
     // at once if that solve already has a round of the zone in view
@@ -2878,8 +2933,8 @@ class DemandClient {
 
   /** The zone in view, reached and with no settled figures, is solved in the focus pool. */
   private focusSoon() {
-    const p = this.fpool, id = activeCity.peek();
-    if (!p?.alive || !viewedZone.peek() || !zonesLoadForView.peek()) return;
+    const p = this.fpool, id = this.frefine ?? activeCity.peek();
+    if (!p?.alive || (!this.frefine && (!viewedZone.peek() || !zonesLoadForView.peek()))) return;
     // T-2533: before the loading game's network, its pack opens there already if the save's stations reach the zone
     const a = this.ahead, early = gameLoadArmed() && !!a && !a.arrived;
     const svc = early ? null : this.latest();
@@ -2960,6 +3015,7 @@ class DemandClient {
    * else put in the shown result, as a cluster solved ahead is (T-402). */
   private publishFocus(s: Solve, round: number) {
     const id = s.cities[0], final = round >= ROUNDS, res = s.results as Result[];
+    if (this.frefine === id) return this.publishRefine(s, round, res);
     const lines = s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout;
     this.inOrder(async () => {
       const w = this.cur;
@@ -2991,13 +3047,45 @@ class DemandClient {
     });
   }
 
+  /** T-2605: a round of the zone refined aside: its own figures and bubbles over the shown ones. Its lines and
+   * stations, which carry only its riders here, keep the main pool's, unless it solves an edit held behind the
+   * solve in hand (the shown lines are then of the network before). */
+  private publishRefine(s: Solve, round: number, res: Result[]) {
+    const id = s.cities[0], final = round >= ROUNDS;
+    this.inOrder(async () => {
+      if (this.frefine !== id || !demandByDay.peek()[0]?.view) return;
+      // (the main pool's own solve of the network, sent since, has shown the zone)
+      const w = this.cur;
+      if (w && w.svc === s.svc && w.version > s.version && (this.cityVersion.get(id) === w.version || w.published >= ROUNDS)) return void this.endFocus();
+      // (only lines the shown figures have none for, new or with their stops changed, as T-324's: on a line shown
+      // already its riders from this zone alone would read lower than the shown ones, however the edit moved them)
+      const dv = demandView.peek(), base = this.log.find((x) => x.version === dv?.version);
+      const had = new Map((base?.layout ?? []).map((l) => [l.id, l.stops.join()]));
+      const lines = base?.svc === s.svc ? [] : (s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout).filter((l) => had.get(l.id) !== l.stops.join());
+      const days = await this.daysOf(s, lines, round, false, res, true);
+      if (this.frefine !== id) return;
+      const ests = lines.length ? days : days.map((d) => (d.view ? { ...d, view: { ...d.view, lines: new Map(), stations: new Map(), purposes: new Map() } } : d));
+      this.fshown.set(id, { s, ests, round });
+      demandByDay.value = this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
+      focusZones.value = new Map(focusZones.peek()).set(id, final);
+      this.askTurn();
+      const l = this.flog.find((x) => x.version === s.version);
+      if (l) l.roundAt[round] = performance.now();
+      this.lodShown([id], []);
+    });
+  }
+
   /** The load's own estimates of a round, with the zones shown from the focus pool put back in where
-   * the focus solve is as far on (or settled). */
-  private withFocus(days: DayDemand[], s: Solve, round: number): DayDemand[] {
+   * the focus solve is as far on (or settled); T-2605: and the zone refined aside over a solve of it coarse,
+   * its final too. */
+  private withFocus(days: DayDemand[], s: Solve, round: number, final = false): DayDemand[] {
     // (T-2495: also once the pool's workers have ended, `retireFocus`)
     if (!this.fshown.size) return days;
+    days = this.refineOver(days, s);
+    if (final) return days;
     const ids = new Set(s.layout.map((l) => l.id));
     for (const [id, f] of this.fshown) {
+      if (id === this.frefine) continue;
       if (f.s.svc !== s.svc) continue;
       if (f.round < ROUNDS && f.round < round) {
         this.fshown.delete(id);
@@ -4266,9 +4354,9 @@ class DemandClient {
       // a cache of the same network shown meanwhile (T-328) holds its estimates back
       if (!final && !s.showEstimates) return;
       // T-2045: the zones the focus pool has as far on keep its figures until this solve's final
-      demandByDay.value = final ? days : this.withFocus(days, s, round);
-      this.lodShown(s.cities, s.coarse);
-      if (final && s === this.cur) this.endFocus();
+      demandByDay.value = this.withFocus(days, s, round, final);
+      this.lodShown(s.cities, this.shownCoarse(s));
+      if (final && s === this.cur && !this.refineKept(s)) this.endFocus();
       else this.retireFocus();
       if (final) {
         s.refinedAt = performance.now();
@@ -4426,12 +4514,12 @@ class DemandClient {
       // (a final's zones are its version's before the figures go out: the bubbles' effect asks at once where they
       // come from, T-2508)
       const settle = () => { if (final) for (const id of c.cities) this.cityVersion.set(id, s.version); };
-      if (alone) { const days = await this.daysOf(s, fresh, round, false, res); settle(); demandByDay.value = days; }
+      if (alone) { const days = await this.daysOf(s, fresh, round, false, res); settle(); demandByDay.value = this.refineOver(days, s); }
       else {
         const ests = await this.daysOf(s, fresh, round, final, res, !c.market);
         const ids = new Set(s.layout.map((l) => l.id));
         settle();
-        demandByDay.value = demandByDay.peek().map((d, k) => {
+        const merged = demandByDay.peek().map((d, k) => {
           if (!d.view) return d;
           const est = ests[k];
           const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
@@ -4459,16 +4547,20 @@ class DemandClient {
           }
           return { view, cities, intercity: c.market ? est.intercity : d.intercity };
         });
+        demandByDay.value = this.refineOver(merged, s);
       }
-      this.lodShown(c.cities, s.coarse);
+      this.lodShown(c.cities, this.shownCoarse(s));
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
         if (s.barrier) this.askTurn(); // T-2453: its zones' questions now go to its final
-        // T-2045: a cluster's own final beats the focus pool's figures of its zones
-        if (c.cities.some((id) => this.fshown.has(id))) {
+        // T-2045: a cluster's own final beats the focus pool's figures of its zones (T-2605: not one solved coarse
+        // over the zone refined aside)
+        const kept = this.asideOver(s) ? this.frefine : null;
+        if (c.cities.some((id) => id !== kept && this.fshown.has(id))) {
           const z = new Map(focusZones.peek());
-          for (const id of c.cities) { this.fshown.delete(id); z.delete(id); }
+          for (const id of c.cities) if (id !== kept) { this.fshown.delete(id); z.delete(id); }
           focusZones.value = z;
+          if (this.frefine && c.cities.includes(this.frefine) && !kept) this.endFocus();
         }
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
         linesSettled(fresh.map((l) => l.id));
