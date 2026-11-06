@@ -21,7 +21,7 @@ import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/cap
 import { toggleEditStops } from "../../game/lineActions";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
-import { Alert, Chip, Icon, Row, Segmented, shakeEl, Stepper } from "../widgets";
+import { Alert, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
@@ -31,6 +31,7 @@ import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
+import { MareyButton } from "./MareyChart";
 import type { EditOp } from "../../workers/protocol";
 import { UPGRADE } from "../../game/upgrades";
 import { AverageSpeed, carsBought, carsText, DEMAND_LABEL, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
@@ -516,6 +517,7 @@ function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
         onClick={() => copySchedule(l, st)}><Icon.copy /></button>
       <button class="btn icon mini" aria-label="Paste the schedule" disabled={!c} data-tip={c ? `Paste the schedule copied from ${c.from}: ${scheduleText(c)}${cut}` : "Paste a schedule copied from a line"}
         onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
+      <MareyButton st={st} />
     </span>
   );
 }
@@ -752,7 +754,7 @@ function RailLineInspector({ id }: { id: string }) {
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil />Edit stops</button>
+        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil /><SwapLabel on={editingStops} off="Edit stops" onText="Stop editing" /></button>
         <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
         <button class="btn text danger" onClick={remove}>Delete line</button>
       </div>

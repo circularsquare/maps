@@ -1255,27 +1255,44 @@ impl Service {
     pub fn trips(&self, net: &Network, t0: f64, t1: f64) -> Vec<Trip> {
         let mut out: Vec<Trip> = vec![];
         let mut buf: Vec<Trip> = vec![];
-        for (l, ls) in self.lines.iter().enumerate() {
-            if !ls.running {
-                continue;
-            }
-            // far enough back that every train drawn in the window is handed over as it would be
-            // from any other window
-            let (dur, hcap) = self.reach(net, l);
-            let (a, b) = (t0 - dur - 2.0 * hcap - 60.0, t1 + dur + hcap + HANDOVER_TOL_S + 1.0);
-            buf.clear();
-            for r in 0..2 {
-                self.run_deps(net, l, r, a, b, &mut buf);
-            }
-            let eras = self.eras_of(l);
-            Self::hand_over(&mut buf, eras, ls.is_loop());
-            // a train that had left service before a change stays gone, whatever the new profile
-            // says about how long its trip would have taken
-            let gone = |t: &Trip| eras.iter().any(|e| t.draw < e.until && t.end > e.until && !e.drawn.contains(&(t.run, t.dep)));
-            out.extend(buf.iter().filter(|t| t.draw < t1 && t.end > t0 && !gone(t)));
+        for l in 0..self.lines.len() {
+            self.line_window(net, l, t0, t1, &mut buf, &mut out);
         }
         out.sort_by(|a, b| a.draw.total_cmp(&b.draw).then((a.line, a.run).cmp(&(b.line, b.run))));
         out
+    }
+
+    /// One running line's trips drawn in `[t0, t1)`, as `trips` gives them (T-2603, the line's
+    /// timetable chart, whose window can be hours long).
+    pub fn line_trips(&self, net: &Network, l: usize, t0: f64, t1: f64) -> Vec<Trip> {
+        let mut out: Vec<Trip> = vec![];
+        if l < self.lines.len() {
+            self.line_window(net, l, t0, t1, &mut vec![], &mut out);
+        }
+        out.sort_by(|a, b| a.draw.total_cmp(&b.draw).then(a.run.cmp(&b.run)));
+        out
+    }
+
+    /// Line `l`'s trips drawn in `[t0, t1)` onto `out`; `buf` is scratch.
+    fn line_window(&self, net: &Network, l: usize, t0: f64, t1: f64, buf: &mut Vec<Trip>, out: &mut Vec<Trip>) {
+        let ls = &self.lines[l];
+        if !ls.running {
+            return;
+        }
+        // far enough back that every train drawn in the window is handed over as it would be
+        // from any other window
+        let (dur, hcap) = self.reach(net, l);
+        let (a, b) = (t0 - dur - 2.0 * hcap - 60.0, t1 + dur + hcap + HANDOVER_TOL_S + 1.0);
+        buf.clear();
+        for r in 0..2 {
+            self.run_deps(net, l, r, a, b, buf);
+        }
+        let eras = self.eras_of(l);
+        Self::hand_over(buf, eras, ls.is_loop());
+        // a train that had left service before a change stays gone, whatever the new profile
+        // says about how long its trip would have taken
+        let gone = |t: &Trip| eras.iter().any(|e| t.draw < e.until && t.end > e.until && !e.drawn.contains(&(t.run, t.dep)));
+        out.extend(buf.iter().filter(|t| t.draw < t1 && t.end > t0 && !gone(t)));
     }
 
     /// Where a line's boarding account starts its day, in game time (T-164, T-206): 03:00 of a

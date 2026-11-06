@@ -110,6 +110,10 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn:disabled { color: var(--rule); cursor: default; background: var(--bg); }
 .btn.text { gap: 6px; grid-auto-flow: column; white-space: nowrap; }
 .btn.text svg { width: 14px; height: 14px; }
+/* T-2601: SwapLabel's two labels in one cell, the hidden one keeping its width */
+.swap-label { display: inline-grid; }
+.swap-label > * { grid-area: 1 / 1; text-align: center; }
+.swap-label > .off { visibility: hidden; }
 .group { display: inline-flex; }
 .group > .btn + .btn { margin-left: -1px; }
 /* T-1664: the speed slider opens under the fastest button; a slider speed shows on that button as text.
@@ -154,6 +158,26 @@ svg .stroke2 { stroke-width: 2; }
   max-height: calc(100% - 48px); overflow-y: auto; padding: 4px 14px 12px; background: var(--bg);
   border: 1px solid var(--rule); box-shadow: 0 2px 8px rgb(0 0 0 / 18%); }
 .help-panel h3 { font-size: inherit; margin: 10px 0 4px; }
+/* T-2603: the timetable chart (MareyChart.tsx), over the map beside the dock's foot */
+.marey { position: absolute; bottom: 10px; left: calc(100% + 10px); z-index: 20; padding: 6px 10px 4px; background: var(--bg);
+  border: 1px solid var(--rule); box-shadow: 0 2px 8px rgb(0 0 0 / 18%); max-width: calc(100vw - var(--dock-w) - 24px); overflow-x: auto; }
+.marey-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.marey-name { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.marey-chart { overflow: visible; stroke-width: 1; }
+.marey-chart text { fill: var(--muted); stroke: none; font-size: 11px; font-variant-numeric: tabular-nums; }
+.marey-chart .marey-stop { text-anchor: end; fill: var(--text); font-size: 12px; }
+.marey-chart .marey-time { text-anchor: middle; }
+.marey-grid { stroke: var(--rule); }
+.marey-tick { stroke: var(--shade); stroke-width: 1; }
+.marey-chart .run, .marey-stand { --run-ink: var(--run); stroke: var(--run-ink); }
+/* a dark line colour is lifted toward white on the dark panel, so navy and black lines stay visible */
+:root[data-shade="dark"] .marey-chart .run, :root[data-shade="dark"] .marey-stand { --run-ink: color-mix(in srgb, var(--run) 65%, #fff); }
+.marey-chart .run { fill: none; stroke-width: 1.6; pointer-events: none; }
+.marey-chart .run.on { stroke-width: 3.2; }
+.marey-chart .run-hit { fill: none; stroke: transparent; stroke-width: 9; pointer-events: stroke; }
+.marey-stand { stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
+.marey-past { fill: var(--bg); fill-opacity: 0.5; stroke: none; pointer-events: none; }
+.marey-now { stroke: var(--accent); stroke-width: 1.5; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
 .help-panel dd { margin: 0; }
@@ -643,7 +667,9 @@ rect.now { fill-opacity: .45; }
 .related-draw > * { pointer-events: visiblePainted; }
 .related-draw .link { cursor: pointer; }
 .related-draw .pill { fill: #fff; stroke: var(--net-ink); stroke-width: 2; }
-.related-draw .pill.passed { stroke-opacity: 0.4; }
+/* T-2602: the stations the line passes, fainter than muted: their names and their pills' rims */
+.related-draw .pill.passed { stroke-opacity: 0.25; }
+.stops.related-rows li.side .stop-name { color: color-mix(in srgb, var(--text) 36%, var(--bg)); }
 .related-bullet { position: absolute; z-index: 2; transform: translate(-50%, -50%); line-height: 0; }
 .stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
 .stops.related-rows li::before, .stops.related-rows li::after { display: none; }
@@ -975,8 +1001,9 @@ button.save-add:hover { color: var(--text); }
 @container map-column (max-width: 680px) { .blueprint-bar, .tool-bar { top: 148px; } }
 /* T-2282: the track and station tools' bars in the selection bar's box and place; the track bar's two
    rows, the level buttons as the Build tab had them */
-/* T-2522: the map element sets 12px/20px; the bar takes the body's 14px, as the Build tab had */
-.tool-bar, .tool-bar-pop { font: 14px/1.45 var(--font); }
+/* T-2600: the bars' text at the map controls' 12 px, the level numbers bigger (T-2522 had all at 14) */
+.tool-bar, .tool-bar-pop { font: 12px/1.45 var(--font); }
+.tool-bar .btn.lv, .tool-bar-pop .btn.lv { font-size: 15px; }
 .tool-bar { flex-direction: column; align-items: stretch; padding: 6px 10px; border-top: 2px solid var(--mode); } /* T-2446: the mode's colour, 2 px */
 .tool-bar .tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .tool-bar .tb-speed { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
@@ -1304,6 +1331,8 @@ button.save-add:hover { color: var(--text); }
   #tools { right: 10px; }
   #tool-notes { width: auto; max-width: none; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
+  /* T-2603: the timetable chart just above the dock, scrolling sideways when wider than the screen */
+  .marey { left: 0; right: 0; bottom: calc(100% + 1px); max-width: none; border-left: 0; border-right: 0; }
   /* T-1259, T-1852, T-1885: under the tab row the tab area takes the dock's whole height, the inspector
      always beside it (40% and 60% until the divider is dragged); a tab wider than its share scrolls */
   #dock { display: grid; grid-template-columns: minmax(0, var(--pane-w, 40%)) 0 minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); }
@@ -1618,7 +1647,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(.marey, #dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

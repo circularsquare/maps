@@ -3858,6 +3858,8 @@ async function handle(msg: ToClock) {
       : q.what === "lineHeld" ? api.line_held(q.line)
       : q.what === "lineMarks" ? api.line_marks(q.line)
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
+      // T-2603: the line's timetable chart, four numbers a trip (`TrackApi.line_trips`)
+      : q.what === "lineTrips" ? api.line_trips(q.line, q.t0, q.t1)
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())

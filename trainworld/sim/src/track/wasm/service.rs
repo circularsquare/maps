@@ -86,6 +86,16 @@ impl TrackApi {
             })
             .collect()
     }
+    /// T-2603: line `line`'s trips drawn in `[t0, t1)`, game seconds, in absolute time: per trip the
+    /// profile index, departure, end and next departure as `trips` gives them (NaN for none).
+    pub fn line_trips(&self, line: u32, t0: f64, t1: f64) -> Vec<f64> {
+        self.w
+            .svc
+            .line_trips(&self.w.net, line as usize, t0, t1)
+            .iter()
+            .flat_map(|t| [((t.line * 2 + t.run as u32) * 3 + t.level as u32) as f64, t.draw, t.end, t.next.unwrap_or(f64::NAN)])
+            .collect()
+    }
     /// A run's path resampled every `step` m (x, y pairs), for the renderer's line texture.
     pub fn run_polyline(&self, line: u32, run: usize, step: f64) -> Vec<f64> {
         let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };

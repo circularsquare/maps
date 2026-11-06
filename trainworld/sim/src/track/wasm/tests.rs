@@ -831,6 +831,17 @@ fn blueprint_construct_run() {
     let info = a.lines_info();
     assert_eq!(info[3], 1.0, "running");
     assert!(!a.trips(8.0 * 3600.0).is_empty());
+    // T-2603: one line's trips over a window are the drawn trips of each hour in it
+    let t0 = 8.0 * 3600.0;
+    let one = a.line_trips(id, t0, t0 + 3600.0);
+    let all = a.trips(t0);
+    assert_eq!(one.len(), all.len(), "{one:?} {all:?}");
+    for (x, y) in one.chunks(4).zip(all.chunks(4)) {
+        assert_eq!(x[0] as f32, y[0]);
+        assert!((x[1] - t0 - y[1] as f64).abs() < 0.01 && (x[2] - t0 - y[2] as f64).abs() < 0.01, "{x:?} {y:?}");
+    }
+    assert!(a.line_trips(id, t0, t0 + 4.0 * 3600.0).len() > one.len());
+    assert!(a.line_trips(id + 1, t0, t0 + 3600.0).is_empty());
     // Removing constructed track refunds nothing and breaks the line.
     let cash = a.cash();
     let e0 = a.edges_info()[0] as u32;

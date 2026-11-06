@@ -79,6 +79,8 @@ export const Icon = {
   save: () => <svg viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5v3.5h5v-3.5M4.5 13.5v-4.5h7v4.5" /></svg>,
   // copying a line's schedule and pasting it on another (T-1293)
   copy: () => <svg viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1" /><path d="M10.5 3.5v-1h-8v8h1" /></svg>,
+  // T-2603: the timetable chart, three train runs crossing between two stations
+  marey: () => <svg viewBox="0 0 16 16"><path d="M1.5 2.5h13M1.5 13.5h13M2 13.5l4-11M7.5 2.5l4 11M10 13.5l4-11" /></svg>,
   paste: () => <svg viewBox="0 0 16 16"><path d="M5.5 3h-2v11.5h9V3h-2" /><rect x="5.5" y="1.5" width="5" height="3" rx="0.5" /><path d="M6 8h4M6 10.5h4" /></svg>,
   // the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
   calendar: () => <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="11.5" rx="1" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" /></svg>,
@@ -337,6 +339,17 @@ export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPi
         </button>
       ))}
     </div>
+  );
+}
+
+/** T-2601: a button label that changes with its state, both laid in one cell so the button keeps
+ * the wider one's width either way (a changing width wrapped the row, T-2525). */
+export function SwapLabel({ on, off, onText }: { on: boolean; off: string; onText: string }) {
+  return (
+    <span class="swap-label">
+      <span class={on ? "off" : undefined} aria-hidden={on}>{off}</span>
+      <span class={on ? undefined : "off"} aria-hidden={!on}>{onText}</span>
+    </span>
   );
 }
 

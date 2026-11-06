@@ -252,7 +252,7 @@ purpose filter the purpose drawn is ringed in the bar.
   ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
   there for touch, where dragging rows is not; a bus line's panel has the same row. The row
   starts 6 px below the title, which covers that much of whatever follows it.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; it keeps its label and shows pressed while stops are being edited, T-2525), Copy line (duplicates route and settings with no trains, T-1161;
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; while stops are being edited it reads "Stop editing" and shows pressed, the button as wide in both states so the row never wraps differently, T-2525, T-2601), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the
   two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
@@ -273,7 +273,8 @@ purpose filter the purpose drawn is ringed in the bar.
   shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
   length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
   counts rounded up to even; paste is off until something is copied, its hover naming the line
-  copied from; each level's count or headway is set on its own, a new line's included (T-2123 took
+  copied from; a third, on a running line, opens the **timetable chart** (below, hover "Show timetable chart" /
+  "Hide timetable chart", pressed while open); each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 240
@@ -418,19 +419,39 @@ The stops (above Schedule while being edited [T-670]),
   row; rows are the line's stops (as in the plain list, bullets leaving out the lines drawn there,
   north up the same way), and only while stops are edited, the side lines' stops at a station the
   line passes (interlined: a station of the complex is on its path), at the nearest point of the
-  line, names muted, a click on the row's mark adding the stop (hover "Click to add a stop at 96
+  line, names fainter than muted text (36% of the text colour, T-2602), a click on the row's mark adding the stop (hover "Click to add a stop at 96
   St"; such a station leaves the "+ N stations passed" row) [T-1894]; a
   side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
   at each row both stop at next to one only one of them does (where an express's stops part from a
   local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
-  (10 px at a row with crossings, else 8; never sized by riders), its rim at 40% strength where the
-  line itself does not stop in that mark [T-1795]; the crossing lines as 3 px bars across the drawing, 2 px
+  (10 px at a row with crossings, else 8; never sized by riders), its rim at 25% strength where the
+  line itself does not stop in that mark [T-1795, T-2602]; the crossing lines as 3 px bars across the drawing, 2 px
   apart: the two bulleted ones at a row with up to two, and at a row with more [T-1786] all of
   them up to 6, the row 38 px tall, its pill 10 px wide and stretched to (bars − 1) × 5 + 13 px with
   5 px corners so each bar meets its straight side, and its bullets (up to 6, in the bars' order, the
   rest behind the "+") in two rows; a side line's own row keeps two bars. Hovers: a pill only ("6, 6 and 6X stop at 23 St",
   "4 and 5 pass"); the columns, their ends and the bars have none (T-2020), and a bullet names its line as everywhere.
   A click on a column, bullet or bar selects that line.
+
+#### The timetable chart
+
+[T-2603, `ui/inspector/MareyChart.tsx`, notes/T-2603.md] A Marey chart of the selected rail line, in
+a panel over the map at the dock's foot (on a phone, just above the dock): the line's chip and name, a
+close button (hover "Close"), and the chart. Time runs across, 600 px wide, on the line's own local
+clock (ticks every 10, 15, 30, 60 or 120 minutes, the first giving at most 8); the stops run down by
+their distance along the line (run 0's offsets, run 1's mapped through the stops both share), north up
+as the stops list, 20 px a stop between 120 and 340 px, a grey rule at each stop and its name at the
+left where it clears the name above by 12 px (the ends always). The window is 2 round trips or 3 of
+the longest headway, at least 2 and at most 8 hours, in whole hours, a quarter of it before now; it
+moves with the clock, the past under a half veil and now a line in the accent colour; not scrollable.
+Each trip the map draws (`TrackApi.line_trips`, the same departures, ends and hand-overs as
+`trips`; the timetable, without the display guard's lag) is a line in the line's colour, both
+directions alike, curved as its run profile goes (speeding up, slowing, standing at stops), then a
+dashed line at the terminal while its train stands for its next departure. Hover on a trip thickens it
+and names its ends: "Leaves Ash 08:12", "Reaches Gum 08:28". It follows the selected line; it closes
+with its button, the close button, Esc, or when no rail line is selected. The trips are asked for a
+quarter window either side and again as now enters the next quarter or the network changes; each
+profile's curve is one SVG path reused by every trip on it.
 
 #### The round trip
 
