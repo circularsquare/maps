@@ -39,7 +39,7 @@ Agents report to maps-93. A new orchestrator taking over: their work is in the t
 - **Release plan (Anita ~18:00):** not today. In first: upkeep, profit estimate, diagram polish. Then publish on her word
   (English), then ja/zh "in next few days". T-428 done (intercity.json out of packs); 8800 = build 1187 (ff7cb27f)
   smoked; master has more since (hillwater, T-428): rebuild 8800 after the next landings.
-- **Awaiting Anita:** T-2606 close as "no cut"? (asked twice, unanswered). Her North America load felt ~4 min vs ~2:
+- **Awaiting Anita:** (T-2606 closed "no cut" ~18:20.) Her North America load felt ~4 min vs ~2:
   probably CPU (agents ran over claims, fixed ~17:30); she will retry; if still slow, time against build 1135 quietly.
 - Queued, not started: T-2624 (trains-only edit's traffic waits for the whole solve), T-2625 (2D condensation), T-2627
   (join market step 1800 s limit), T-2630 (checks pin themselves to their claim), T-2631 (refused market pack fails
