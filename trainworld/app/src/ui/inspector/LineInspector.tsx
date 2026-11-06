@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { Money } from "../MoneyText";
-import { count, distance, duration, forecast, headway, length, money, speed, trainCostLine, trainKind } from "../../game/format";
+import { count, distance, duration, forecast, headway, length, money, runCostLineFactor, speed, trainCostLine, trainKind } from "../../game/format";
+import { lineRunFactor } from "../../game/regionMoney";
 import { t as tr, tList, tNumber, tSeries } from "../../i18n";
 import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
@@ -341,7 +342,9 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const capText = tr("lineInspector.fits", { length: length(short.length), name: short.name, cars: carsText(cap) });
   // T-1893: the number between the buttons carries the hover; the buttons have none
   const m = moneyState.value;
-  const tip = tr("lineInspector.carry", { cars: carsText(cars), rated: tNumber(cars * RATED_PER_CAR), crush: tNumber(cars * CRUSH_PER_CAR) }) + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
+  // T-2669: a line priced off the world list says by how much
+  const rf = lineRunFactor(l.num), rfText = Math.abs(rf - 1) >= 0.005 ? "\n" + runCostLineFactor(rf) : "";
+  const tip = tr("lineInspector.carry", { cars: carsText(cars), rated: tNumber(cars * RATED_PER_CAR), crush: tNumber(cars * CRUSH_PER_CAR) }) + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) + rfText : "");
   // T-751: a + at the cap offers to lengthen the platforms that stop it
   const step = (d: number) => {
     const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);

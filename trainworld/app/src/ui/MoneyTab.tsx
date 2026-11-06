@@ -1,6 +1,6 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, runCostLine, runCostRule, upkeepLines } from "../game/format";
+import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, runCostHere, runCostLine, runCostRule, upkeepLines } from "../game/format";
 import { borrow, repay, setFareFerry, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
@@ -8,7 +8,7 @@ import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
 import { FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
-import { FARE_BASELINE, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
+import { FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { selection } from "../game/ui";
 import { scopeZone, viewCentre } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
@@ -213,7 +213,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? "\n" + t("moneyTab.busesCost", { rule: busRunRule(m) }) : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? "\n" + t("moneyTab.boatsCost", { rule: boatRunRule(m) }) : "")}>{t("moneyTab.runningTrains")}</td>
+          <td data-tip={runCostLine(m) + (runScale(country) !== 1 ? "\n" + runCostHere(tCountry(country), runScale(country)) : "") + (m.fleetBus > 0 || m.busesNeeded > 0 ? "\n" + t("moneyTab.busesCost", { rule: busRunRule(m) }) : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? "\n" + t("moneyTab.boatsCost", { rule: boatRunRule(m) }) : "")}>{t("moneyTab.runningTrains")}</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>

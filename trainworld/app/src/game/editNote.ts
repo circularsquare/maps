@@ -19,6 +19,7 @@ import { demandByDay, demandUpdating, editsSettling, finalWorld, networkWorld, r
 import { DAY_KINDS, DEMAND_DAY_PHRASE } from "./days";
 import { editStamp, lastEdit } from "./editCap";
 import { trainKind } from "./format";
+import { lineRunFactor } from "./regionMoney";
 import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
@@ -129,6 +130,7 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
       const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
       const tph = [l.tph.high, l.tph.medium, l.tph.low];
       PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
+      run *= lineRunFactor(l.num); // T-2669
     }
     lines.set(l.id, { riders: r, money: fares - run - st.upkeep });
   }

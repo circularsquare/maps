@@ -26,6 +26,9 @@ export interface Fares {
   /** T-1521: "usd" for a curve and scales under the market-rate income rule; absent in a save
    * from before (game/income.ts `oldCurveFactor`) */
   basis?: "usd";
+  /** T-2670: the income power its start key (`scales["@"]`) was set under; absent in a save from
+   * before, whose key is T-1521's (0.7, game/income.ts `startFromOld`) */
+  income?: number;
   /** T-1626: the fare multiplier on high-speed lines; absent for `HSR_FARE` */
   hsr?: number;
   /** T-2194: the fare multiplier on ferry lines; absent for `FERRY_FARE` */

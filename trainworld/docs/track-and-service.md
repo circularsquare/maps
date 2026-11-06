@@ -1103,7 +1103,17 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   times 4 + 2 x cars: a 4-car train US$12 a train-km, 9 cars US$22, 12 cars US$28; under real
   figures so fares can cover it, T-805, T-807, real figures in research/running-costs.md;
   `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
-  `HS_RUN_COST_*`, T-817, T-867).
+  `HS_RUN_COST_*`, T-817, T-867). **Running costs follow the country** (T-2669, Anita 2026-11-06,
+  notes/T-2668.md option N): these are US prices; a country's are them times (its GDP per head over
+  the US's)^0.5 to a hundredth (`runScale`, game/income.ts: Mexico 0.39x, India 0.17x, Japan 0.63x;
+  1 outside every zone), since running trains is mostly wages. A line pays the mean of its km's
+  countries, each stretch between stops half to each stop's (its `run` shares, the same split as the
+  region ledgers; `runFactorOf`, `lineRunFactor` in game/regionMoney.ts), and so does a bus or ferry
+  line. The clock worker gives the track model each line's factor (`set_line_run_factors`, kept off the
+  save and cleared on a load, then sent again), which drains the cash by it; the line panel, Lines
+  tab, track hover and edit note take the same. Upkeep, construction and trains stay at world prices.
+  The Money tab's Running trains hover adds "Running costs in Mexico: 0.39x" for the country it shows,
+  and the line panel's train length hover "Running costs on this line: 0.39x", where not 1.
 - **Upkeep** (T-867, notes/T-867.md): constructed track and stations cost money every game day
   whether trains run or not, draining evenly through the day: a route-km of double track US$35k
   on the ground, US$50k on a viaduct (+1 to +3), US$100k in cut and cover (-1) and US$130k in a
@@ -1166,8 +1176,14 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
   never cheaper, so no fare is below the base or falls with distance. **Fares by country**
   (T-1277, T-1906, `app/src/game/income.ts`): each country charges the curve times its fare scale,
-  by default its `incomeScale`, (its GDP per head at market rates over India's)^0.7 in tenths (the US
-  11.6, the UK 8.5, Japan 6.1, China 3.1; T-1521). A new game's curve is its start country's fares and
+  by default its `incomeScale`: since T-2670 (Anita, 2026-11-06, notes/T-2668.md option N; T-1521 had
+  India's income to the 0.7) the US's 11.6 times (its GDP per head at market rates over the US's)^0.5 in
+  tenths (the UK 9.3, Japan 7.3, Mexico and China 4.6, India 2.0, Nigeria 1.4). The power is the minutes
+  a dollar's too (docs/demand-mode.md), so a default fare weighs the same with riders everywhere and
+  fares follow income more gently than T-1521's: a US start's Japan $1.55, Mexico $1.00, India $0.45.
+  The US keeps 11.6, so every saved curve charges the US as before; a save's start key from before
+  (`Fares.income` absent: set under 0.7) becomes its country's scale now (`startFromOld`; a US start's
+  11.6 stays), and the fares carry `income: 0.5` from then on. A new game's curve is its start country's fares and
   it stores that country's income scale as `scales["@"]` (`START`), so a country's default is its
   income scale over that one (1 where it started). There the player's own scales are kept as multiples
   of the default, 0.1 to 19.9 to a hundredth, so stored and shown are the same; a save from before
@@ -1180,9 +1196,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   so a displayed 1.30x acts as exactly 1.30 times the default (`multipleOf`, `tidyOwn`). A new game's curve is set once from the country it starts in (`startNodes` in
   `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at $0.0862, $0.2241 and
   $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the country's
-  `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.30, $3.40 and $12. While
+  `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.55, $4.10 and $14. While
   that curve is untouched, a country without the player's scale charges its own round start curve
-  (`roundedDefault`: a US start's Japan $1.30, not $1.3147).
+  (`roundedDefault`: a US start's Japan $1.55, not $1.5733).
   In a save from before, while a country's scale and the curve (the old start's) are untouched, its
   three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each

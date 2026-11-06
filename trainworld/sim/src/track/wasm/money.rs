@@ -89,13 +89,30 @@ impl TrackApi {
     pub fn running_cost(&self, level: usize) -> f64 {
         self.running_cost_in(level, f64::NAN)
     }
+    /// T-2669: each line's running cost over the world price list, as `[line id, factor]` pairs (its
+    /// countries' prices, worked out by the app); a line not listed pays the world price. Replaces
+    /// the last list.
+    pub fn set_line_run_factors(&mut self, pairs: &[f64]) {
+        self.run_factor.clear();
+        for p in pairs.chunks_exact(2) {
+            let (id, f) = (p[0] as usize, p[1]);
+            if !f.is_finite() || f <= 0.0 { continue }
+            if self.run_factor.len() <= id { self.run_factor.resize(id + 1, 1.0) }
+            self.run_factor[id] = f;
+        }
+    }
+    /// T-2669: a line's running cost over the world price list (1 unless the app set one).
+    pub fn line_run_factor(&self, line: u32) -> f64 {
+        self.run_factor.get(line as usize).copied().unwrap_or(1.0)
+    }
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
         let n = &self.w.net;
         let (mut train_km, mut car_km) = ([0.0; FLEETS], [0.0; FLEETS]);
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
-                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0;
+                // T-2669: priced in its countries' money, so a km costs the factor's share
+                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
                 let k = fleet_kind(n, l);
                 train_km[k] += tk;
                 car_km[k] += tk * s.cars as f64;

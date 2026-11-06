@@ -818,6 +818,13 @@ fn blueprint_construct_run() {
     assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
     assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 350.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0, 500.0, 1000.0, 1300.0, 8.0, 40.0, 100.0, 10.0, 2000.0]);
     assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
+    // T-2669: a line in a country at 0.39x its prices runs at 0.39x; the list is replaced, and a
+    // load clears it
+    let world = a.running_cost(0);
+    a.set_line_run_factors(&[id as f64, 0.39, 99.0, 0.5]);
+    assert!((a.running_cost(0) - 0.39 * world).abs() < 1e-9 && a.line_run_factor(id) == 0.39);
+    a.set_line_run_factors(&[]);
+    assert!((a.running_cost(0) - world).abs() < 1e-12 && a.line_run_factor(id) == 1.0);
     // Upkeep (T-867, T-1931, T-2619): $35k a km of double track on the ground and $50k a station at
     // grade a game day, all on the one line; built track no line uses goes to the rest.
     let up = a.upkeep();

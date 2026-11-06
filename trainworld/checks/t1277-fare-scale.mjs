@@ -1,4 +1,4 @@
-// T-1277, T-1521: fares by national income at market rates. A rider in New York and one in Mumbai,
+// T-1277, T-1521, T-2670: fares by national income at market rates. A rider in New York and one in Mumbai,
 // on the same small line (the WASM check's three-cell fixture), set up as the demand worker sets up each zone's
 // population: the country's minutes a fare dollar (`set_fare_weight`) and the curve times the
 // country's scale (`set_fares`). Each pays the starting curve times their own scale, a player's
@@ -48,14 +48,17 @@ let fails = 0;
 const check = (ok, msg) => { if (!ok) { fails++; console.log('  ' + msg); } };
 const near = (x, y, rel) => Math.abs(x - y) <= rel * Math.abs(y);
 
-check(incomeScale('IN') === 1, `India's scale ${incomeScale('IN')}, the baseline's, not 1`);
+// T-2670: the US keeps T-1521's 11.6; the rest by (income over the US's)^0.5, India 2.0
+check(incomeScale('IN') === 2, `India's scale ${incomeScale('IN')}, not 2`);
 check(incomeScale('US') === 11.6, `the US scale ${incomeScale('US')}, not 11.6`);
-check(near(fareWeight('US'), 4.4, 0.01) && near(fareWeight('IN'), 51.2, 0.01), `minutes a dollar: US ${fareWeight('US')}, India ${fareWeight('IN')}`);
+check(near(fareWeight('US'), 4.4, 0.01) && near(fareWeight('IN'), 25.39, 0.01), `minutes a dollar: US ${fareWeight('US')}, India ${fareWeight('IN')}`);
+check(near(app.curveWeight(), fareWeight('US') * 11.6, 0.01), `the market's curve weight ${app.curveWeight()}, not the US's scale times its minutes a dollar`);
 check(near(START_FARE.base * incomeScale('US'), 1.0, 1e-3), `New York's starting base fare $${START_FARE.base * incomeScale('US')}, not $1.00`);
 const ny = ride('US'), mum = ride('IN'), own = ride('US', { US: 1.6 });
 check(near(ny.usd, START_FARE.base * 11.6, 1e-4), `New York's base fare $${ny.usd}, not ${START_FARE.base} x 11.6`);
-check(near(mum.usd, START_FARE.base, 1e-4), `Mumbai's base fare $${mum.usd}, not ${START_FARE.base}`);
-check(near(own.usd, START_FARE.base * 1.6, 1e-4), `New York at the player's 1.6x pays $${own.usd}`);
+check(near(mum.usd, START_FARE.base * 2, 1e-4), `Mumbai's base fare $${mum.usd}, not ${START_FARE.base} x 2`);
+// T-2021: an older save's own scale acts as its multiple of the default to 0.01x (1.6 / 11.6 = 0.14x)
+check(near(own.usd, START_FARE.base * (Math.round((1.6 / 11.6) * 100) / 100) * 11.6, 1e-4), `New York at the player's 1.6x pays $${own.usd}`);
 check(near(ny.perceived, mum.perceived, 0.05), `at the income's scales the base fare weighs ${ny.perceived} min in New York, ${mum.perceived} in Mumbai`);
 console.log(`${fails ? 'FAIL' : 'PASS'} t1277 fare scales: base fare New York $${ny.usd.toFixed(2)} (${ny.scale}x, ${ny.perceived.toFixed(1)} min), Mumbai $${mum.usd.toFixed(2)} (${mum.scale}x, ${mum.perceived.toFixed(1)} min), New York at 1.6x $${own.usd.toFixed(2)}`);
 process.exitCode = fails ? 1 : 0;

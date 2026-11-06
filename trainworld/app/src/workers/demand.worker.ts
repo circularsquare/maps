@@ -27,7 +27,7 @@ import { PERIODS } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
-import { FARE_BASELINE, fareFactors, fareScale, fareWeight } from "../game/income";
+import { curveWeight, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
@@ -1752,11 +1752,11 @@ async function run() {
           p.set_passages(m.passages ?? new Uint32Array(0));
           p.set_span(m.span ?? new Float32Array(0));
           // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
-          // the market takes the curve as set, at the baseline country's weight, and (T-1286) each
+          // the market takes the curve as set, at `curveWeight` (T-2670), and (T-1286) each
           // trip's at its origin's scale over its income's
           let scale = 1, rounded: ReturnType<typeof roundedDefault> = null;
           if (p instanceof IntercityApi) {
-            p.set_fare_weight(fareWeight(FARE_BASELINE));
+            p.set_fare_weight(curveWeight()); // T-2670: the curve as set, as every country weighs it at its default
             p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
             p.set_sampled(!job.exactMarket);
             p.set_far_chunks(!job.nearChunks);
@@ -2026,7 +2026,7 @@ async function run() {
           return [a[0] + (v[10] ?? 0) * w, a[1] + (v[11] ?? 0) * w, a[2] + (v[2] ?? 0), a[3] + (v[12] ?? 0)];
         }, [0, 0, 0, 0]);
         const im = intercitySummary;
-        const fareSense: [number, number, number, number] = [ls[0], (im[10] ?? 0) * fareWeight(FARE_BASELINE), reach(ls[0], ls[1], ls[2], ls[3]), reach(im[10] ?? 0, im[11] ?? 0, im[2] ?? 0, im[12] ?? 0)];
+        const fareSense: [number, number, number, number] = [ls[0], (im[10] ?? 0) * curveWeight(), reach(ls[0], ls[1], ls[2], ls[3]), reach(im[10] ?? 0, im[11] ?? 0, im[2] ?? 0, im[12] ?? 0)];
         const parts = purposeParts(q, jobNodes, cs, hasMarket, pick);
         if (extra && hasMarket) {
           const at = (parts.keys.length - 1) * jobNodes;

@@ -9,7 +9,7 @@
 import { signal } from "@preact/signals";
 import { CITIES, REGISTRY, widenBox, zoneBox, ZONE_REACH_M } from "./cities";
 import { dataUrl } from "./dataBase";
-import { carUsdPerKm, FARE_BASELINE, fareWeight, incomeGroups } from "./income";
+import { carUsdPerKm, curveWeight, fareWeight, incomeGroups } from "./income";
 import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
@@ -425,7 +425,7 @@ export function rowsAnswer(from: MarketEnd, to: MarketEnd, day: number): (Market
     return {
       round: 0, trips: n, rail: 0, air: n * c.air, car: n * c.carShare,
       railPerceived: NaN, otherPerceived: NaN, carPerceived: car ? car.total : NaN, refPerceived: c.refMin,
-      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: fareWeight(FARE_BASELINE), why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
+      km: c.km, zonePairs: 0, served: 0, baseFarePerceived: 0, minPerUsd: curveWeight(), why: "noRail", pairs: [], routes: [], cut: 0, everyday: { legs: 0, rail: 0, walk: 0 }, commute: { legs: 0, rail: 0 },
     };
   });
 }

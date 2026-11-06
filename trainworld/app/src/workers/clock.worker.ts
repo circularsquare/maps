@@ -9,7 +9,7 @@
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
-import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
+import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
@@ -17,7 +17,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
-import { EVERY, FARE_BASELINE, incomeScale, oldCurveFactor, oldIncomeScale, scaleFromOld, START, tidyOwn } from "../game/income";
+import { EVERY, FARE_BASELINE, FARE_E, incomeScale, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -59,7 +59,7 @@ const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), sca
  * other country charges them by its income over that country's until the player sets a scale. */
 function startFares(spec?: NewGameSpec): Fares {
   const country = (spec?.start ? CITIES.find((x) => x.id === spec.start)?.country : undefined) ?? cityById(HOME_CITY).country;
-  return { ...faresOf({ nodes: startNodes(country) }, START_FARE), scales: { [START]: incomeScale(country) }, baseline: FARE_BASELINE, basis: "usd" };
+  return { ...faresOf({ nodes: startNodes(country) }, START_FARE), scales: { [START]: incomeScale(country) }, baseline: FARE_BASELINE, basis: "usd", income: FARE_E };
 }
 /** A save's fares. One from before T-1277 kept New York's fares, so its curve is divided by the home
  * country's scale; one from before T-1521 (no `basis`) is turned to the market-rate rule with every
@@ -72,6 +72,9 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const g = k === 1 ? f : { base: f.base * k, perKm: f.perKm * k, nodes: f.nodes?.map(([km, v]) => [km, v * k] as [number, number]) };
   const scales: Record<string, number> = {};
   for (const [c, v] of Object.entries(f.scales ?? {})) if (Number.isFinite(v)) scales[c] = old ? scaleFromOld(c, v) : v;
+  // T-2670: a start key from before is its country's income scale under T-1521's power; the same
+  // country's now (the US's is the same 11.6, so a game started there charges as it did)
+  if (scales[START] !== undefined && (f.income ?? OLD_FARE_E) !== FARE_E && scales[START] > 0) scales[START] = startFromOld(scales[START]);
   // T-2021: each country's own multiple is kept to the nearest 0.01x (the start and every-country keys are the default's, not a multiple)
   for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = tidyOwn(c, scales[c], scales);
   // T-1626: a save from before has none and charges the default
@@ -82,7 +85,7 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
   const curve = faresOf(g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
+  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -201,6 +204,24 @@ let regions = new Map<string, { days: DayLedger[]; hours: HourLedger[] }>();
 let lineShares = new Map<number, { fare: [string, number][]; ride: [string, number][]; run: [string, number][] }>();
 /** T-867: how the network's upkeep divides between regions, [region, share] (game/regionMoney.ts) */
 let upkeepRegions: [string, number][] = [];
+/** T-2669: each line's running cost at its countries' prices (`runFactorOf` on its `run` shares, as
+ * game/regionMoney.ts `lineRunFactor`), given to the track model, which drains the cash by it. Again
+ * after each state is built, since a load clears them there. */
+let runFactorsSent = "";
+/** Returns whether they changed. */
+function applyRunFactors(): boolean {
+  if (!api) return false;
+  const pairs: number[] = [];
+  for (const [id, s] of lineShares) {
+    const f = runFactorOf(s.run, zoneCountry);
+    if (f !== 1) pairs.push(id, f);
+  }
+  api.set_line_run_factors(new Float64Array(pairs));
+  const key = pairs.join();
+  if (key === runFactorsSent) return false;
+  runFactorsSent = key;
+  return true;
+}
 /** T-684: each running line's points per game hour by region and kind of day and period (game/points.ts) */
 let linePoints = new Map<number, [string, number[][]][]>();
 /** T-685: each region's star, the game second it was earned */
@@ -1481,6 +1502,7 @@ function buildState(): ClockState {
   }));
   placeLineCountries();
   syncHolidays();
+  applyRunFactors();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
   const meta = a.profile_meta();
   const nLines = meta.length / 24;
@@ -1617,7 +1639,8 @@ function regionLines() {
     if (li[i + 3] !== 1) continue;
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
     const [perTrainKm, perCarKm] = a.line_fast(id) ? [prices.hsRunCostTrainKm, prices.hsRunCostCarKm] : [prices.runCostTrainKm, prices.runCostCarKm];
-    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit);
+    const f = a.line_run_factor(id); // T-2669: its countries' prices
+    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit * f);
     costs.push({ id, shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
   const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
@@ -3377,7 +3400,7 @@ function apply(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
       return { r: 0 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
@@ -3846,6 +3869,8 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "regionShares") {
     lineShares = new Map(msg.lines.map((l) => [l.line, { fare: l.fare, ride: l.ride, run: l.run }]));
     upkeepRegions = msg.upkeep;
+    // the money state carries the running cost an hour, which the factors move
+    if (applyRunFactors()) sendMoney();
   } else if (msg.kind === "points") {
     linePoints = new Map(msg.lines.map((l) => [l.line, l.regions]));
   } else if (msg.kind === "star" && msg.share !== undefined) {

@@ -66,6 +66,8 @@ const citiesById = new Map(CITIES.map((c) => [c.id, c] as const));
 export const cityById = (id: CityId) => citiesById.get(id)!;
 /** Whether the registry has a city or zone of this id. */
 export const isCity = (id: string | null | undefined): boolean => !!id && citiesById.has(id);
+/** T-2669: a zone's country, null outside every zone or for one with none. */
+export const zoneCountry = (id: string | null | undefined): string | null => (id && isCity(id) ? cityById(id).country ?? null : null);
 const packFrames = new Map(CITIES.map(c => [c.id, makeFrame({ kind: "equirect", ...c.origin })] as const));
 const packFrame = (id: CityId): Frame => packFrames.get(id)!;
 

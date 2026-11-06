@@ -14,6 +14,8 @@ import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
 import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
+import { zoneCountry } from "./cities";
+import { runFactorOf } from "./income";
 import { groundDist, packToLngLat } from "./coords";
 import { lineFareMul } from "./fareCurve";
 import { lineFares } from "./fareInEffect";
@@ -97,6 +99,10 @@ export const lineShares = computed(() => {
   }
   return out;
 });
+
+/** T-2669: a running line's running cost over the world price list, by where its km are (its `run`
+ * shares, `runFactorOf`); the clock worker charges it the same. 1 before the line is placed. */
+export const lineRunFactor = (num: number): number => runFactorOf(lineShares.value.get(num)?.run, zoneCountry);
 
 /** T-867: a constructed edge's upkeep a game day, US$ (0 for blueprint and crossovers). */
 export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number; levelMin: number; levelMax: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {

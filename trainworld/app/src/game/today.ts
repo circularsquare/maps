@@ -16,6 +16,7 @@ import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
 import { linesPending, type PendingKind } from "./lineFigures";
 import { moneyState } from "./money";
+import { lineRunFactor } from "./regionMoney";
 import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
 import { crowdColour } from "./palette";
@@ -169,7 +170,8 @@ export function runningToday(l: LineInput, st: LineStats): number {
     const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
     cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
-  return cost;
+  // T-2669: at its countries' prices, as the clock worker drains it
+  return cost * lineRunFactor(l.num);
 }
 
 /** T-2536: whether a line's profit has been worked out: it runs trains (or buses, boats) and a demand

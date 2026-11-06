@@ -604,29 +604,33 @@ notes/T-420.md has the tables.
 
 ### Value of time, income and crowding
 
-- **Value of time and fare sensitivity** (T-1277, T-1166, T-1521). A fare dollar costs 4.4 x (GDP
-  per head / $90,000)^-0.7 perceived minutes, by the country the trip starts in: the US 4.4, the UK
-  6.0, Japan 8.4, China 16, India 51, Nigeria 89. GDP per head in current US dollars at market rates
+- **Value of time and fare sensitivity** (T-1277, T-1166, T-1521, T-2670). A fare dollar costs 4.4 x
+  (GDP per head / $90,000)^-0.5 perceived minutes, by the country the trip starts in: the US 4.4, the
+  UK 5.5, Japan 7.0, China and Mexico 11.2, India 25, Nigeria 38. GDP per head in current US dollars at market rates
   (World Bank NY.GDP.PCAP.CD, `app/src/game/countryIncome.json` `usd`, Taiwan from the IMF; game
-  dollars are US dollars). At market rates 0.7 is the exponent that keeps each country's minutes per
-  unit of its own money as T-1277's rule at PPP to the 0.5 had them (price levels rise with income);
-  it sits mid value-of-time literature (0.5-1 between countries: UK meta-analysis 0.9, HEATCO 0.7). Fares are
+  dollars are US dollars). T-1521 had 0.7 (T-1277's 0.5 at PPP); T-2670 (Anita, 2026-11-06, notes/T-2668.md
+  option N: "seems like a good compromise") has 0.5 at market rates for both the minutes a dollar and
+  the fare scale. Evidence (notes/T-2668.md 2b): between countries the value of time rises with real
+  income at about 0.5-1 (Wardman et al. 2016 1.0 at PPP, 0.72 on GDP per head at market rates; Shires
+  and de Jong 2009 0.47-0.67); 0.5 at market rates is 0.32 on real income, the level of within-country
+  studies of transit riders (0.1-0.4), the low end. Real short metro fares across 46 cities scale at
+  about income^0.66 (0.56-0.75), so the default fares now sit a little under that line; Anita prefers
+  the gentler scaling. Fares are
   the player's curve times each country's scale, by default its income over the start country's to
-  the same power (T-1906; over India's in a save from before), so at the default scales a fare
+  the same power (T-1906; the US's 11.6 times its income over the US's in a save from before), so at the default scales a fare
   weighs the same everywhere and a poorer country brings in less per rider; a scale the player sets
   moves inter-city riders from that country too (T-1286, every country's scale over its income's).
-  Anita (2026-11-02): 0.7 for the default fares, perhaps lower, never linear. In the local layers the car's money (ownership, parking) stays
+  Train running costs follow income at the same 0.5 (T-2669). In the local layers the car's money (ownership, parking) stays
   at 3 minutes a dollar everywhere. The regional market's longer trips split each country's people
   into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
   country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
   their car's money should scale too. Check: a country's transit fares against its income, and its
-  fare elasticity where a survey publishes one. **Starting fares** (T-1521, T-1670, T-1906): at market rates, real
-  standard-class fares in ten countries follow the income scale to the 0.7 as closely as at PPP to
-  the 0.5. The starting curve is one straight line set once for the start country, $2.50 plus 20
+  fare elasticity where a survey publishes one. **Starting fares** (T-1521, T-1670, T-1906, T-2670): the
+  starting curve is one straight line set once for the start country, $2.50 plus 20
   cents a km in the US ($6.50 at 20 km, $22.50 at 100; Anita: about $2.50 in the US, $1 in Japan),
-  elsewhere times (its income over the US's)^0.7, rounded: Japan $1.30, Germany $1.90, China $0.65,
-  India $0.22, the same in every game wherever it starts. Simple on purpose (Anita); near real metro and commuter fares in the US and Japan, over
-  China's and India's. Check: a country's published fare at 50-150 km against it (notes/T-1521.md).
+  elsewhere times (its income over the US's)^0.5, rounded: Japan $1.55, Germany $2.05, Mexico and China
+  $1.00, India $0.45, the same in every game wherever it starts. Simple on purpose (Anita); real short
+  metro fares sit at 0.5-2x these (Tokyo $1.20, Mexico City $0.26, Mumbai $0.23, London $3.83; notes/T-2668.md). Check: a country's published fare at 50-150 km against it (notes/T-1521.md).
   **High-speed fares** (T-1626): the fare above the base is times the player's high-speed multiplier
   (default 1.5) by the share of the trip's km on high-speed lines, in route choice, mode choice and
   the market alike. 1.5 is about JR's Nozomi ticket over its ordinary one (notes/T-1616.md); Europe's

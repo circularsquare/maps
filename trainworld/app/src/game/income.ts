@@ -6,15 +6,23 @@
 // (`Fares.scales`), else the default (`defaultScale`): its income scale, (its income over
 // `FARE_BASELINE`'s, a lower-middle-income country, to the same power, in tenths), over the start
 // country's in a new game (T-1906), whose curve is its start country's fares. GDP per head at market rates: countryIncome.json `usd`
-// (notes/T-1521/money_table.py, World Bank NY.GDP.PCAP.CD). At market rates the exponent is 0.7 where it was 0.5 at PPP: price levels rise
-// with income, and 0.7 keeps each country's minutes per unit of its own money as before (T-1521).
+// (notes/T-1521/money_table.py, World Bank NY.GDP.PCAP.CD). T-1521 had the exponent 0.7 (T-1277's 0.5 at PPP);
+// T-2670 (Anita, 2026-11-06, T-2668 option N) makes it 0.5 at market rates for both the fare scale and the
+// minutes a dollar, so a default fare still weighs the same with riders everywhere and fares scale more
+// gently with income (notes/T-2668.md). The income scale is anchored on the US's T-1521 figure, 11.6, so
+// every saved curve charges the US what it did.
 
 import table from "./countryIncome.json";
 
 export const FARE_W_REF = 4.4;
 export const FARE_Y_REF = 90000;
-export const FARE_E = 0.7;
-/** India, the largest lower-middle-income country (GDP per head about $2,700). */
+export const FARE_E = 0.5;
+/** T-2670: the power a save's fares were set under when it carries none (`Fares.income`): T-1521's. */
+export const OLD_FARE_E = 0.7;
+/** T-2670: the US's income scale, T-1521's, which every other country's is set from. */
+export const US_SCALE = 11.6;
+/** India, the largest lower-middle-income country (GDP per head about $2,700): its weight is the
+ * regional market's (`curveWeight`), and a country without a figure takes its income. */
 export const FARE_BASELINE = "IN";
 /** Fare scales, as stored, go from this to `SCALE_MAX`. */
 export const SCALE_MIN = 0.1;
@@ -28,11 +36,37 @@ const gdpOf = (country: string | undefined): number => (country && GDP[country])
 const tenth = (v: number) => Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 10) / 10));
 const hundredth = (v: number) => Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(v * 100) / 100));
 
+/** T-2669 (T-2668 option N): a country's train running costs over the world price list (the US's),
+ * (its GDP per head over the US's)^`RUN_E`, to a hundredth; 1 outside every zone or for a country
+ * without a figure. Mostly wages, so they follow income; upkeep, construction and trains stay at
+ * world prices. */
+export const RUN_E = 0.5;
+export const runScale = (country: string | null | undefined): number => {
+  const g = country ? GDP[country] : undefined;
+  return g ? Math.max(0.01, Math.round((g / GDP.US) ** RUN_E * 100) / 100) : 1;
+};
+/** T-2669: a line's running cost factor, its running km split between regions (`[zone, share]`,
+ * game/regionMoney.ts `lineShares`'s `run`) each at its country's `runScale`; 1 with none. */
+export function runFactorOf(shares: readonly [string, number][] | undefined, countryOf: (zone: string) => string | null | undefined): number {
+  if (!shares?.length) return 1;
+  let f = 0, t = 0;
+  for (const [z, s] of shares) { f += s * runScale(z ? countryOf(z) : null); t += s; }
+  return t > 0 ? f / t : 1;
+}
+
 /** Perceived minutes a fare dollar costs a rider from `country`. */
 export const fareWeight = (country: string | undefined): number => FARE_W_REF * (gdpOf(country) / FARE_Y_REF) ** -FARE_E;
 /** The fare scale a country's income gives: a save from before T-1906 charges it where the player
- * set none. */
-export const incomeScale = (country: string | undefined): number => tenth((gdpOf(country) / gdpOf(FARE_BASELINE)) ** FARE_E);
+ * set none. T-2670: the US's 11.6 times (its income over the US's)^`FARE_E`, in tenths (India 2.0,
+ * Mexico 4.6, Japan 7.3). */
+export const incomeScale = (country: string | undefined): number => tenth(US_SCALE * (gdpOf(country) / GDP.US) ** FARE_E);
+/** T-2670: perceived minutes a dollar of the curve as set, the regional market's weight: every country
+ * at its default scale weighs the curve about this (a country's scale times its minutes a dollar is
+ * the same everywhere but for the scales' tenths). */
+export const curveWeight = (): number => fareWeight(FARE_BASELINE) * incomeScale(FARE_BASELINE);
+/** T-2670: a start key (`START`) saved under T-1521's rule, its start country's income scale then, as
+ * that country's income scale now. */
+export const startFromOld = (s: number): number => tenth(US_SCALE * ((s ** (1 / OLD_FARE_E) * GDP[FARE_BASELINE]) / GDP.US) ** FARE_E);
 /** T-1906: the key in `Fares.scales` holding the income scale of the country a new game started in,
  * whose fares the curve is: every other country charges it times its income scale over that one. A
  * save from before has none, its curve in `FARE_BASELINE`'s units and each country at its income

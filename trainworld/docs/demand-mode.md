@@ -51,10 +51,14 @@ perceived minutes of the car's trip T the scale is 0.10 x sqrt(60 / T) (0.058 at
 by the ratio. The regional market damps the same way (docs/regional.md 5.1). **Catchment is soft** (T-090): there
 is no circle the player sees. A farther station makes the walk, and so the whole trip, worse, and
 the station loses riders where that trip gets worse than driving. **A fare dollar weighs by
-national income** (T-1277, with T-1166, T-1521): 4.4 x (GDP per head / $90,000)^-0.7 perceived
+national income** (T-1277, with T-1166, T-1521; T-2670): 4.4 x (GDP per head / $90,000)^-0.5 perceived
 minutes, GDP per head at market rates, by the trip's country (each zone population's pack country, `Params::fare_w`, set by the
 demand worker through `set_fare_weight`; `app/src/game/income.ts`, `countryIncome.json`): the US
-4.4, China 16, India 51. The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour),
+4.4, Japan 7.0, China and Mexico 11.2, India 25. Since T-2670 (Anita, 2026-11-06, notes/T-2668.md
+option N; 0.7 before) the power is 0.5, the same as the fare scale's, so a default fare weighs the
+same everywhere and riders in cities did not move (a Tijuana test line -2%, a Mumbai one -0.3%, from the
+default fares' rounding); the plane's fare and the car's money on the longer trips weigh less in
+poorer countries than before (below). The car's money stays at `FARE_MIN_PER_USD`, 3 minutes a dollar ($20 an hour),
 except on the regional market's longer trips, whose riders come in income groups that weigh every
 mode's money alike (T-1431, docs/regional.md 5.1). The
 fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares;
@@ -67,8 +71,8 @@ It is in each boarding's cost with the change's fixed minutes (`Params::change_m
 trip's first boarding takes off again, so route choice sees it on each strategy's expected
 changes and mode choice on the skim; fare income counts it at the route node boarded after the
 change (`fare_extra`, from `transfers_in`). The regional market's trips change free: its fares
-weigh by origin and income group on the base and km, which a cost inside the skim would miss. The regional market takes the curve unscaled at India's weight (the same perceived fare as
-every country at its default scale), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
+weigh by origin and income group on the base and km, which a cost inside the skim would miss. The regional market takes the curve unscaled at `curveWeight` (India's weight times its scale, the
+same perceived fare as every country at its default scale, T-2670), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of
 its strategy (the riders' split over lines by their departures), and the assignment counts that
 correction on the lines the trips ride, by their km on each, for fare income (T-1516). Crowding multiplies ride time

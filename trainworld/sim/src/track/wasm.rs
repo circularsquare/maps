@@ -113,6 +113,9 @@ pub struct TrackApi {
     link_charge: f64,
     /// The node of the port the last `add_port` added (T-2193), `u32::MAX` if refused.
     last_port: u32,
+    /// T-2669: per line id, its running cost over the world price list (its countries' prices,
+    /// `set_line_run_factors`); 1 for a line not listed. Never saved: the app sends it.
+    run_factor: Vec<f64>,
 }
 
 /// T-1071: the end of a track save that carries the service's eras (`Service::encode_eras`):
@@ -312,6 +315,7 @@ impl TrackApi {
             skipped: 0,
             link_charge: 0.0,
             last_port: u32::MAX,
+            run_factor: vec![],
         }
     }
 
@@ -559,6 +563,8 @@ impl TrackApi {
                 net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
+                // T-2669: the last game's lines' prices are not this one's; the app sends them again
+                self.run_factor.clear();
                 // lines saved at a frequency, not trains, are given trains (T-1146)
                 self.w.allocate_unallocated();
                 // a save made while trains changed over loads with them where they were (T-1071)

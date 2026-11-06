@@ -85,9 +85,15 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
 - **The track bar**, two rows. First "Level" (muted), the seven level buttons, the size they had in
   the Build tab, tinted in their Level colours, the chosen one solid with a dark outline, a light one
   in the dark theme [T-478, T-692]; hover "Ground level (Shift+4)" and so on, then "0.5x cost, $37.5M
-  per km", that level's multiplier and price as the price gives them [T-2271], then "Upkeep $35k per
-  km per day", that level's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006] (the
-  three lines are `levelTip` in `ui/trackPrice.ts`). Shift+1 to Shift+7 pick the drawing level from
+  per km", that level's multiplier and price as the price gives them [T-2271], then "0.7x upkeep",
+  that level's upkeep for the picked track type as a multiple of a viaduct's, the level whose cost is
+  1.0x too: 0.7x on the ground, 1.0x on a viaduct, 2.0x in cut and cover, 2.6x bored, times 1.5 on
+  high-speed track to two decimals as the cost (`upkeepMult`, T-2676, Anita 2026-11-06: "relative
+  multiples are probably just easier to understand"; T-2006 had dollars a km a day) (the three lines
+  are `levelTip` in `ui/trackPrice.ts`; the price's chip hover in the track bar ends with the same
+  upkeep line). The Money tab's Upkeep hover gives a viaduct's dollars a km a day and the other levels
+  as these multiples, and so do the blueprint's and the track inspector's upkeep hovers (`upkeepLines`,
+  `upkeepRule`); totals stay in dollars. Shift+1 to Shift+7 pick the drawing level from
   any tab, by key code, 4 being 0 [T-1701, T-1834], except that while the selection bar shows a blueprint pick
   with its level buttons they put the pick at that level, as the buttons do, and leave the drawing level alone [T-2285]; every segment's open-ground end takes the level
   picked (`Tools.freeLevel`). Then the **ramp switch** (track humping over a line seen side on; hover

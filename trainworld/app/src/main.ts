@@ -30,6 +30,7 @@ import { stopsById, world } from "./game/world";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
+import { lineRunFactor } from "./game/regionMoney";
 import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
@@ -723,7 +724,7 @@ if (DEBUG) {
 
   (window as any).tw = {
     failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
-    map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt,
+    map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,
