@@ -257,15 +257,20 @@ pill, so they clear its own line); east, west, north and south
 
 ## City names
 
-`diagram/cityNames.ts` (T-2438, T-2521). Below a pitch of 1.47 px no station names are drawn; each city block (The
-layout, Blocks) has its name instead: big, in the grey of the map's place names (`placeNameInk` in `map/basemap.ts`,
-each theme's own; T-2492) at half opacity, in the station names' font, centred on the middle of the block's box, and
-painted under the lines (a callback `paint` runs after the water and borders, before the line casings), so lines and
-stations cross it and it has no halo. Made in the layout worker after the borders (names and the box's middle), sized
-and placed on every paint.
+`diagram/cityNames.ts` (T-2438, T-2521, T-2581). Below a pitch of 1.47 px no station names are drawn; each city block
+(The layout, Blocks) has its name instead: bigger than station names, in the grey of the map's place names
+(`placeNameInk` in `map/basemap.ts`, each theme's own; T-2492) at half opacity, in the station names' font, and painted
+under the lines (a callback `paint` runs after the water and borders, before the line casings), so lines and stations
+cross it and it has no halo. Made in the layout worker after the borders (names and anchors), sized and placed on
+every paint.
 
-- **Size**: its width is 0.6 of the block's box on screen, within 1.5 to 7 times the station names' size (18 to 84
-  px), so a name grows with the zoom and stays small beside a small block.
+- **Where**: centred on its own stations as drawn: the block's city stations (its core, not the branches and pieces
+  taken in) in the zone it is named for, else the city stations, else all the block's stations; the middle of their
+  box with a tenth of them left out at each side, in x and in y, so a few far ones do not pull it. A block holds the
+  lines out of its city, which can run far (Washington's held the stations to Atlanta), so its own box is not used.
+- **Size**: near one screen size: 1.5 times the station names' size where its stations span 64 px on screen, times
+  that span's ratio to the power 0.15, within 1.25 to 2.5 times (15 to 30 px). Zooming out 15 times shrinks a name
+  by about a third, so a view far out is not covered by names.
 - **Overlaps**: biggest block (by stations) first. A name that would meet one already placed (with 6 px to spare)
   shrinks by a tenth at a time toward 1.5 times the station names' size; if it still meets one it is left out. A
   name off the screen blocks none.

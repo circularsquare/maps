@@ -24,7 +24,7 @@ import { inRing, noritetsuBases, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
 
 export type ToRouter =
-  | { kind: "init"; page: string; graphs: string }
+  | { kind: "init"; page: string; graphs: string; published: boolean }
   /** the view: the graphs of the regions in it are fetched ahead of a click */
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
@@ -74,11 +74,11 @@ const post = (m: FromRouter, t: Transferable[] = []) => (self as unknown as Work
 
 interface Outline { cc: string; rings: Float64Array[]; boxes: [number, number, number, number][] }
 let outlines: Promise<Outline[]> | null = null;
-let pageBase = "", graphBase = "";
+let pageBase = "", graphBase = "", published = false;
 
 function regionOutlines(): Promise<Outline[]> {
   return (outlines ??= (async () => {
-    for (const b of noritetsuBases(pageBase)) {
+    for (const b of noritetsuBases(pageBase, published)) {
       try {
         const r = await fetch(b + "regions.json");
         const j = r.ok ? await r.json() : null;
@@ -583,6 +583,7 @@ async function handle(m: ToRouter) {
   if (m.kind === "init") {
     pageBase = m.page;
     graphBase = m.graphs;
+    published = m.published;
     void sendCover();
   } else if (m.kind === "view") {
     const all = await regionOutlines();

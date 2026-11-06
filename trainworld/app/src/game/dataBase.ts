@@ -8,16 +8,16 @@
 // rather than a probe for a local-only file, so a published page makes no failing request, and its
 // data version is fixed by the same file that names its scripts (DECISIONS.md, T-924).
 
-function resolve(): string {
-  const doc = (globalThis as { document?: Document }).document;
-  // Node checks stub a document with no baseURI
-  const page = doc?.baseURI || "http://localhost/";
-  const meta = doc?.querySelector?.<HTMLMetaElement>('meta[name="tw-data"]')?.content;
-  return new URL(meta || "packs/", page).href;
-}
+const doc = (globalThis as { document?: Document }).document;
+const meta = doc?.querySelector?.<HTMLMetaElement>('meta[name="tw-data"]')?.content;
 
-/** Absolute URL of the folder holding the build's `packs/` files, ending in a slash. */
-export const DATA_BASE = resolve();
+/** Absolute URL of the folder holding the build's `packs/` files, ending in a slash. Node checks stub a document
+ * with no baseURI. */
+export const DATA_BASE = new URL(meta || "packs/", doc?.baseURI || "http://localhost/").href;
+
+/** Whether this is the published page (its index.html has the tw-data meta): data from other maps, such as
+ * noritetsu's real rail, is then on R2 rather than beside the page (T-941). */
+export const PUBLISHED = !!meta;
 
 /** A file in the data folder: `dataUrl("nyc.bin")`, `dataUrl("realgraph/")`. */
 export const dataUrl = (path: string) => new URL(path, DATA_BASE).href;

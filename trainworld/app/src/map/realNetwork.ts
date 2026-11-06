@@ -12,7 +12,7 @@
 //
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
 // regions.json (8800 serves it; the dev server proxies the path, vite.config.ts), else Cloudflare R2,
-// the way noritetsu's own page decides.
+// the way noritetsu's own page decides; the published page tries R2 first (T-941).
 
 import * as maplibregl from "maplibre-gl";
 import { effect, signal } from "@preact/signals";
@@ -22,6 +22,7 @@ import { display, shade, snapping } from "../game/ui";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { noritetsuBases, ringBox } from "../game/rings";
+import { PUBLISHED } from "../game/dataBase";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow */
@@ -92,7 +93,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
     (index ??= (async () => {
-      for (const b of noritetsuBases(document.baseURI)) {
+      for (const b of noritetsuBases(document.baseURI, PUBLISHED)) {
         try {
           const r = await fetch(b + "regions.json");
           const j = r.ok ? await r.json() : null;

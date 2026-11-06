@@ -2,9 +2,11 @@
 // No DOM, so a worker imports it too.
 
 /** Where noritetsu's data is served from, in the order to try: next to the page (8800, the dev
- * server's proxy), then Cloudflare R2. `page`: the page's URL. */
-export function noritetsuBases(page: string): string[] {
-  return [new URL("../noritetsu/", page).href, "https://data.anita.garden/noritetsu/"];
+ * server's proxy), then Cloudflare R2; R2 first on the published page (`published`, dataBase.ts' PUBLISHED),
+ * where nothing is beside it (T-941). `page`: the page's URL. */
+export function noritetsuBases(page: string, published: boolean): string[] {
+  const local = new URL("../noritetsu/", page).href, r2 = "https://data.anita.garden/noritetsu/";
+  return published ? [r2, local] : [local, r2];
 }
 
 /** A ring's box: west, south, east, north. */

@@ -1,10 +1,11 @@
-// T-2438, T-2521: the network diagram's city names far out (diagram/cityNames.ts) on all Japan, the shared Northeast
-// save, Toronto and the real New York save. Each save is laid out as the page's worker does, its zones found from their
-// coarse outlines the way t2168-borders.mjs does, and its city names made. Passes when the real New York save (one
-// block) is named "New York" alone, the Northeast names New York and Philadelphia, every block has a name and none
-// repeats (T-2447), painted into a recording canvas the names sit on their block's box middle, are at least 1.5
-// station-name sizes and meet no other, and below the switch no station names are drawn while above it no city names are.
-//   node trainworld/checks/t2438-city-names.mjs [jpn,ne,nyc,tor]      (about two minutes with Japan)
+// T-2438, T-2521, T-2581: the network diagram's city names far out (diagram/cityNames.ts) on all Japan, the shared
+// Northeast save, Toronto, the real New York save and Anita's North America save (na, where it is on disk). Each save is
+// laid out as the page's worker does, its zones found from their coarse outlines the way t2168-borders.mjs does, and
+// its city names made. Passes when the real New York save (one block) is named "New York" alone, the Northeast names
+// New York and Philadelphia, every block has a name and none repeats (T-2447), painted into a recording canvas the
+// names sit on their anchors, are 1.25 to 2.5 station-name sizes and meet no other, each anchor lies on its block's own
+// city stations, and below the switch no station names are drawn while above it no city names are.
+//   node trainworld/checks/t2438-city-names.mjs [jpn,ne,nyc,tor,na]      (about two minutes with Japan)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { openSave, SAVES, waterOf } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
@@ -14,11 +15,13 @@ const L = await loadApp(`export * from '@app/src/diagram/layout.ts'; export { dr
 export { zoneBorders } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';
 export * from '@app/src/diagram/cityNames.ts';
 export { placeNames, levelAt, guessWidth, NAME_LINE } from '@app/src/diagram/names.ts'; export { zoneName } from '@app/src/game/zoneNames.ts';`);
-const which = (process.argv[2] ?? 'jpn,ne,nyc,tor').split(',');
 const TW = new URL('../', import.meta.url);
 const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
 const OUTL = JSON.parse(readFileSync(new URL('data/packs/outlines.json', TW)));
 SAVES.tor = { file: new URL('data/packs/real/tor.save', TW), lon: -79.3832, lat: 43.6534 };
+// T-2581: Anita's North America game, Washington's block holding the lines to Atlanta
+SAVES.na = { file: new URL('../artifacts/trainworld/anita-2026-11-05/north-america-day-361.save', TW), lon: -73.985, lat: 40.758 };
+const which = (process.argv[2] ?? `jpn,ne,nyc,tor${existsSync(SAVES.na.file) ? ',na' : ''}`).split(',');
 const FONT = 12;
 let failed = 0;
 const out = {};
@@ -56,7 +59,7 @@ for (const city of which) {
   const zones = b.zones.map((id) => { const c = byId.get(id), name = L.zoneName(id, c.name); return { name, width: L.guessWidth(name, FONT), trips: c.localTrips ?? 0, city: c.kind !== 'zone' }; });
   // T-2447: the first placing is as the page does it before any place list has arrived; the zones that asked
   // (cn0.want) then get theirs, from data/packs/<id>.places.json as the page loads them, and it is placed again
-  const cn0 = L.placeCityNames(g, lay.blocks, b.zoneOf, zones, FONT, b.zones);
+  const cn0 = L.placeCityNames(g, lay, lay.blocks, b.zoneOf, zones, FONT, b.zones);
   const before = cn0.text.filter(Boolean).length;
   for (const id of cn0.want) {
     const zi = b.zones.indexOf(id), f = new URL(`data/packs/${id}.places.json`, TW);
@@ -69,7 +72,7 @@ for (const city of which) {
       return { name: p.name, width: L.guessWidth(p.name, FONT), x: (mx - fx) / k, y: -(my - fy) / k, big: p.kind !== 'village' };
     });
   }
-  const cn = cn0.want.length ? L.placeCityNames(g, lay.blocks, b.zoneOf, zones, FONT, b.zones) : cn0;
+  const cn = cn0.want.length ? L.placeCityNames(g, lay, lay.blocks, b.zoneOf, zones, FONT, b.zones) : cn0;
   const r = { ms: 0, blocks: lay.blocks.list.length };
   r.ms = Math.round(performance.now() - t0);
   r.named = new Set(cn.text.filter(Boolean)).size;
@@ -98,15 +101,24 @@ for (const city of which) {
       for (const c of calls) {
         const b = [...cn.order].find((q) => cn.text[q] === c.t);
         if (Math.abs(c.x - (W / 2 + (cn.mx[b] - cx) * scale)) > 1e-6 || Math.abs(c.y - (H / 2 - (cn.my[b] - cy) * scale)) > 1e-6) bad ||= `${c.t} off centre`;
-        if (c.f < 1.5 * FONT - 1e-6) bad ||= `${c.t} at ${c.f.toFixed(1)} px`;
+        if (c.f < 1.25 * FONT - 1e-6 || c.f > 2.5 * FONT + 1e-6) bad ||= `${c.t} at ${c.f.toFixed(1)} px`;
       }
       for (let i = 0; i < calls.length; i++) for (let j = 0; j < i; j++) {
         const a = calls[i], o = calls[j], wa = L.guessWidth(a.t, a.f), wo = L.guessWidth(o.t, o.f), ha = a.f * L.NAME_LINE, ho = o.f * L.NAME_LINE;
         if (Math.abs(a.x - o.x) < (wa + wo) / 2 && Math.abs(a.y - o.y) < (ha + ho) / 2) bad ||= `${a.t} meets ${o.t}`;
       }
-      say(!bad, `${city}: at ${px} px a pitch (view ${where}) ${calls.length} names, centred, big, apart`, bad);
+      say(!bad, `${city}: at ${px} px a pitch (view ${where}) ${calls.length} names, centred, 1.25 to 2.5 sizes, apart`, bad);
     }
   }
+  // T-2581: each name sits inside the drawn box of its block's own city stations (a block's lines out of its city,
+  // Washington's to Atlanta, once moved it far off)
+  let off = '';
+  for (const q of cn.order) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < lay.blocks.of.length; i++) if (lay.blocks.of[i] === q && lay.blocks.core[i]) (x0 = Math.min(x0, lay.x[i])), (y0 = Math.min(y0, lay.y[i])), (x1 = Math.max(x1, lay.x[i])), (y1 = Math.max(y1, lay.y[i]));
+    if (x0 <= x1 && !(cn.mx[q] >= x0 && cn.mx[q] <= x1 && cn.my[q] >= y0 && cn.my[q] <= y1)) off += `${cn.text[q]} `;
+  }
+  say(!off, `${city}: every name on its own city's stations`, off);
   const below = L.CITY_SWITCH * 0.99, above = L.CITY_SWITCH * 1.01;
   const nCalls = (p) => { let n = 0; L.paintCityNames({ save() {}, setTransform() {}, fillText: () => n++ }, cn, d.pitch, W, H, (box[0] + box[2]) / 2, (box[1] + box[3]) / 2, p / d.pitch, 1, { ink: '', font: '' }); return n; };
   say(L.levelAt(plan, below) < 0 && nCalls(above) === 0 && nCalls(below) >= 0 && L.levelAt(plan, above) >= 0,

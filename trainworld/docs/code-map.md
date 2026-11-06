@@ -248,8 +248,8 @@ drawing's smoothed scale `scaleAt`, cut to its room, T-2528) and
 fitted at 0, 45 and 90 degrees, T-2169), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted
 on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level
-in the layout worker, painted, and `nameAt`, T-2162), `cityNames.ts` (a name per city block far out, centred on its box,
-big and grey under the lines, T-2438, T-2521), `view.ts` (key M, the canvas, pan and zoom, clicks,
+in the layout worker, painted, and `nameAt`, T-2162), `cityNames.ts` (a name per city block far out, centred on its own
+city's stations, grey under the lines, T-2438, T-2521, T-2581), `view.ts` (key M, the canvas, pan and zoom, clicks,
 hovers and the camera, the picture, the names picked and measured, the layout worker and its progress;
 `ui/DiagramButton.tsx` its button and `DiagramTopLeft`, the save button and loading bar, T-2163, T-2235;
 the station tag is `complexTip` in `map/networkTips.ts`).

@@ -355,7 +355,11 @@ Web first, so it can be shared as a link.
   header. Locally they sit beside the page (`packs/<id>.json`, `.bin`, `packs/intercity.json`);
   published, they are on R2 under a versioned prefix that `tools/deploy.py` writes into the page as
   a `tw-data` meta, never chosen by hostname (`game/dataBase.ts`, T-924; T-060, notes/T-026.md).
-  The main thread fetches each once and hands each worker a copy.
+  The main thread fetches each once and hands each worker a copy. The real-rail layer's files are
+  noritetsu's: beside the page (`../noritetsu/`) first, then R2 (`data.anita.garden/noritetsu/`); a page
+  with the meta asks R2 first, since nothing is beside the published page (`game/rings.ts`, T-941).
+  Two glyph ranges are left out on purpose (Canadian syllabics, `pipeline/glyphs.py`): their 404s make
+  MapLibre draw those letters itself, and smoke ignores them on any host.
 - **Determinism**: the simulation is a pure function of (save, pack versions, game time). For the
   hour or two after an edit to a line's service the trains drawn also depend on the game time the
   edit took effect; the save carries it (the service's eras, T-206, T-1071).
