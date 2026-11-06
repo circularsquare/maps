@@ -100,6 +100,8 @@ export interface DisplaySettings {
   lighterMap: "auto" | "on" | "off";
   /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
   rotateMap: boolean;
+  /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
+  chartOtherLines: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -144,6 +146,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   hillshade: false,
   lighterMap: "auto",
   rotateMap: false,
+  chartOtherLines: true,
 };
 
 const STORE = "trainworld-ui";

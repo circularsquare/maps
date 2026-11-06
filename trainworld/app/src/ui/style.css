@@ -174,7 +174,12 @@ svg .stroke2 { stroke-width: 2; }
   border: 1px solid var(--rule); box-shadow: 0 2px 8px rgb(0 0 0 / 18%); max-width: calc(100vw - var(--dock-w) - 24px); overflow-x: auto; }
 .marey-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
 .marey-name { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.marey-chart { overflow: visible; stroke-width: 1; }
+/* T-2665: the trains are one layer in .marey-scroll, moved by a transform as the clock runs */
+.marey-chart { position: relative; }
+.marey-chart svg { position: absolute; left: 0; top: 0; overflow: visible; stroke-width: 1; }
+.marey-plot { position: absolute; top: 0; overflow: hidden; }
+.marey-scroll { position: absolute; left: 0; top: 0; will-change: transform; }
+.marey-lit, .marey-over { pointer-events: none; }
 .marey-chart text { fill: var(--muted); stroke: none; font-size: 11px; font-variant-numeric: tabular-nums; }
 .marey-chart .marey-stop { text-anchor: end; fill: var(--text); font-size: 12px; }
 .marey-chart .marey-time { text-anchor: middle; }
@@ -187,6 +192,15 @@ svg .stroke2 { stroke-width: 2; }
 .marey-chart .run.on { stroke-width: 3.2; }
 .marey-chart .run-hit { fill: none; stroke: transparent; stroke-width: 9; pointer-events: stroke; }
 .marey-stand { stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
+/* T-2660: other lines' trains, quieter than the line's own; flat junctions and crossings as dashed rules */
+.marey-chart .run.other { stroke-width: 1; stroke-opacity: 0.55; }
+.marey-chart .run.other.on { stroke-width: 2.4; stroke-opacity: 1; }
+.marey-pass { --run-ink: var(--run); fill: var(--run-ink); stroke: var(--bg); stroke-width: 1; }
+:root[data-shade="dark"] .marey-pass { --run-ink: color-mix(in srgb, var(--run) 65%, #fff); }
+.marey-flat { stroke: var(--text); stroke-opacity: 0.4; stroke-dasharray: 4 3; }
+.marey-flat-mark .hit { fill: transparent; stroke: none; }
+.marey-flat-mark rect { fill: #fff; stroke: var(--net-ink); stroke-width: 1.5; }
+.marey-flat-mark path { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
 .marey-past { fill: var(--bg); fill-opacity: 0.5; stroke: none; pointer-events: none; }
 .marey-now { stroke: var(--accent); stroke-width: 1.5; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }

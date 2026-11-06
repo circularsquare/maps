@@ -438,23 +438,48 @@ The stops (above Schedule while being edited [T-670]),
 
 #### The timetable chart
 
-[T-2603, `ui/inspector/MareyChart.tsx`, notes/T-2603.md] A Marey chart of the selected rail line, in
-a panel over the map at the dock's foot (on a phone, just above the dock): the line's chip and name, a
-close button (hover "Close"), and the chart. Time runs across, 600 px wide, on the line's own local
-clock (ticks every 10, 15, 30, 60 or 120 minutes, the first giving at most 8); the stops run down by
+[T-2603, T-2660, T-2665, `ui/inspector/MareyChart.tsx`, `ui/inspector/mareyShare.ts`, notes/T-2603.md,
+notes/T-2660.md] A Marey chart of the selected rail line, in a panel over the map at the dock's foot (on
+a phone, just above the dock): the line's chip and name, the other lines toggle (below), a close button
+(hover "Close"), and the chart. Time runs across, 600 px wide, on the line's own local clock (ticks
+every 5, 10, 15, 30, 60, 120, 180 or 240 minutes, the first giving at most 8); the stops run down by
 their distance along the line (run 0's offsets, run 1's mapped through the stops both share), north up
-as the stops list, 20 px a stop between 120 and 340 px, a grey rule at each stop and its name at the
-left where it clears the name above by 12 px (the ends always). The window is 2 round trips or 3 of
-the longest headway, at least 2 and at most 8 hours, in whole hours, a quarter of it before now; it
-moves with the clock, the past under a half veil and now a line in the accent colour; not scrollable.
+as the stops list (the top-down rule, `drawnReversed`, not T-2661's left-to-right one), 20 px a stop
+between 120 and 340 px, a grey rule at each stop and its name at the left where it clears the name
+above by 12 px (the ends always). The span is by default 2 round trips or 3 of the longest headway, at
+least 2 hours; on a busy line no more than 12 of its shortest headways or half a round trip (one trip
+end to end), whichever is longer, and at least half an hour; at most 8 hours; in whole quarter hours [T-2665].
+The mouse wheel over the chart zooms it out (down) or in (up), 1.25 times a notch, from a quarter hour
+to 24 hours, kept until another line is shown. A quarter of the span is before now; it moves with the
+clock, the past under a half veil and now a line in the accent colour; not scrollable.
 Each trip the map draws (`TrackApi.line_trips`, the same departures, ends and hand-overs as
 `trips`; the timetable, without the display guard's lag) is a line in the line's colour, both
 directions alike, curved as its run profile goes (speeding up, slowing, standing at stops), then a
 dashed line at the terminal while its train stands for its next departure. Hover on a trip thickens it
 and names its ends: "Leaves Ash 08:12", "Reaches Gum 08:28". It follows the selected line; it closes
-with its button, the close button, Esc, or when no rail line is selected. The trips are asked for a
-quarter window either side and again as now enters the next quarter or the network changes; each
-profile's curve is one SVG path reused by every trip on it.
+with its button, the close button, Esc, or when no rail line is selected.
+
+**Other lines** [T-2660]: every other rail line that runs over the line's track has its trains drawn
+on the stretches they share, mapped onto this line's distance through the track both use (direction
+aware, so a line that joins for a few km shows only there; the network's path table, `pathTable`), in
+its own colour, 1 px at 55% under the line's own trains; hover thickens one and names its line and
+ends ("Q", "Leaves Ash 08:12", "Reaches Gum 08:28"). **Flat junctions and flat crossings** on the
+line's path that another line uses or crosses (`TrackApi.line_marks`; flyovers and stations are not)
+are a dashed rule across the chart at their distance, with the line panel's diamond (junction) or
+cross (crossing) at its right end and the line panel's hover ("Flat junction near Harbour", "Also used
+by A and C"). Where another route's trains cross the line's path at grade (the train guard's
+conflicts, `TrackApi.guard_conflicts`: a flat crossing, or a junction move that crosses one of the
+line's), a dot in that line's colour on the rule marks each of its trains passing, hover "Q passes at
+08:12": the line's trains near a dot must take turns with it there. The toggle (the related lines icon,
+hover "Hide other lines" / "Show other lines", pressed while on; shown only on a line with other lines
+to draw) hides the other lines' trains and dots but not the rules; on at first, remembered on this
+device with the display settings (`chartOtherLines`). Their trips are asked for the same window as
+the line's, one `lineTrips` query a line.
+
+The trips are asked for a quarter span either side and again as now enters the next quarter, the span
+changes or the network changes. The time ticks and every train are one SVG layer built once per
+answer and moved by a CSS transform as the clock runs, so a new minute redraws only the time labels,
+the veil and the now line; each profile's curve is one SVG path reused by every trip on it.
 
 #### The round trip
 
