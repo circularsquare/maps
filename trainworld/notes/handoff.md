@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
-Updated: 2026-11-06 07:30
+Updated: 2026-11-06 08:40
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -9,8 +9,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master **d5b02108** (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
 - **8800 = build 1088 (6f9d765a)**, Mexico and cachehit; smoke light and dark PASSED ~22:20, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
   and Brazil before release).
-- **Cores cap 15 overnight** (Anita ~01:00 on 11-06: "usual 15"); back to 12 with 4 free when she is up (~21:45 on
-  11-05: "keep 4 cores free": real use, not just claims). Check with
+- **Cores cap 12, 4 free** (Anita up ~08:30 on 11-06; ~21:45 on 11-05: "keep 4 cores free": real use, not just
+  claims). Check with
   `Get-Counter '\Processor(_Total)\% Processor Time'` (75% = 4 free), not summed per-process CPU deltas (maps-93's 5 s
   sample over-counted cachehit's Chrome, which pins itself to its granted cores).
 - **Pack lock free.** Mexico T-2436 done (105 zones, 3,200 -> 3,305 shipped, freeze 20261105-200211; backups deleted).
@@ -37,6 +37,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   run 1 parked them before any build and build_row clears caches only for `planned`. Fix: clear for `parked` too;
   rerun --rows of the 36 with the sudeste join (~1.5-2 h; its gate holds app/WASM). maps-93 also asked it to look for
   the same fault in other countries (report only) and add a gate guard if cheap.
+  ~08:15: the 36 rebuilt and shipped (batch 20261106-073027; sudeste re-solved 46 min). Guard `reused_caches` in
+  world_run.py; tools/aws/land.py clears a landed id's caches. Now: terrain grids for the 36 + T-2594's 21 US zones
+  (all 21 differ), then after-steps, smoke, report. Then commit, 8800 rebuild, then **T-2595 (Omaha doc/wod
+  overlap; Anita: "yea lets do omaha", before release)** with a fresh agent (brazil is past 500k).
+- **sheetspeed** (Opus, tree, launched ~08:35): T-2589 + T-2592, diagram rebuild speed on the sheet without a
+  visible change (aim Japan < 15 s, NY < 4 s).
+- **workerbal** (Opus, tree, launched ~08:35): T-2553 then T-2532, demand worker balance and bubbles after an edit;
+  figures must match (12,515,594).
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
   13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
   Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
