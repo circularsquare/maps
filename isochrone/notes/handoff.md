@@ -24,8 +24,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   data/terrain/world.out/.err. 1,436 of 18,984 tiles at 12:16. Compute ~35 core-hours left, so
   runs ~12 h on 3 workers. Restart if needed: stop the launcher's process tree only (check the
   command line first), then start `python isochrone/tools/terrain/launch.py 3` detached from the
-  maps root (resumes from data/terrain/done.txt). A background wait in this session
-  (scratchpad/orch/wait_pid.py 38812) fires when it exits.
+  maps root with `--min-free 40 --ahead 1` (resumes from data/terrain/done.txt). A background
+  wait in this session (scratchpad/orch/wait_pid.py 35848) fires when it exits.
 - T-011 stage 3 landed behind a switch: build_tiles.py two passes (L1 from planes, L3/L10 by
   crossing), directed search, `localhost:8800/isochrone/?tiles=t011` reads data/tiles_t011 (built
   from the run's planes to ~75N plus the pilot tiles and an Alps block). L1/L10 0.91 -> 1.01,
@@ -48,6 +48,9 @@ Read isochrone/CLAUDE.md and TASKS.md first.
    must weigh L1 growing ~3x (176 -> ~530 MB).
 
 ## Anita's standing asks
+- 2026-11-06 14:15: trainworld is the higher priority; keep ~40 GB free on C:. The terrain run
+  restarted 14:17 as `launch.py 3 --min-free 40 --ahead 1` (launcher PID 35848); with C: at
+  ~17 GB it computes what it holds and then waits for free space. MAP's friction raster deleted.
 - 2026-11-06 afternoon: don't raise the shared core cap; isochrone proceeds slowly within its 4
   while she works on other things.
 - 2026-11-06: page text needs no sign-off for now (in CLAUDE.md); 90 m downloads go ahead,

@@ -1,6 +1,6 @@
 """Claim cores in the maps ledger under this process's pid, then run world.py with what was granted.
 
-    python isochrone/tools/terrain/launch.py <want>     (from the maps root, detached)
+    python isochrone/tools/terrain/launch.py <want> [world.py run options]     (from the maps root, detached)
 
 The claim lives as long as this process, which waits on world.py.
 """
@@ -15,6 +15,6 @@ out = subprocess.run([sys.executable, os.path.join(ROOT, "cores.py"), "claim", s
                      capture_output=True, text=True, cwd=ROOT).stdout
 granted = int(out.strip().splitlines()[-1])
 print("granted %d of %d" % (granted, want), flush=True)
-rc = subprocess.call([sys.executable, "isochrone/tools/terrain/world.py", "run", "--workers", str(granted)], cwd=ROOT)
+rc = subprocess.call([sys.executable, "isochrone/tools/terrain/world.py", "run", "--workers", str(granted)] + sys.argv[2:], cwd=ROOT)
 subprocess.run([sys.executable, os.path.join(ROOT, "cores.py"), "release", "iso-terrain"], cwd=ROOT)
 sys.exit(rc)
