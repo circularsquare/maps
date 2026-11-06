@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2576 `toWorld` per edit (2026-11-05, agent toworld, tree): `edgesOf` keeps each edge's view per worker row and the edge-to-lines map while line paths are the same; a train-count edit's `toWorld` 5.9 -> 2.4 ms at 6x on the real save (0.40), states deep-equal to before; edits that change lines cost about what they did. notes/T-2576.md.
+
 - T-1358 followTrack's cost (2026-11-05, agent followtrack, tree): edges settled by their box, the rest in one batched walk; own work 99 -> 54 ms at 6x (0.55, accepted by maps-93 against the 0.5 target: exact, zones identical); `toWorld` split to T-2576. notes/T-1358.md.
 - T-2324 The walking rule's cost, the rest of T-2307 (2026-11-05, agent walkcost, tree): exact speedups in the commute lanes and the everyday check; New York's calib 3.2% over T-1059's with later tasks' 5.9% taken out (9.3% straight), figures identical, smoke 12,515,594. notes/T-2324.md.
 - T-2381 Cleanup E4, E5 (2026-11-05, agent kernelsplit): demand/kernel.rs (6,207 lines) is 937 plus seven stage files in kernel/ (gravity, access, subzones, search, mode, assign, stalls), and demand/intercity.rs (5,355) is 950 plus nine files in intercity/ (logsum, costs, market, build, api, pass, setup, exports, selection); moves only, moved private items and fields are `pub(super)`, `super::` paths in moved code are `super::super::`; tests 361 and 534 as before, smoke 12,515,598.

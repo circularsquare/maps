@@ -23,8 +23,14 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## maps-93's agents
 - Landed ~18:25-18:50: cleana4 97c6e153 (T-2512; T-2575 filed for its item 26 step two), kernelsplit 8696ae95 (T-2381,
   main WASM rebuilt in a gate-free window mexico confirmed), sheet's notes db56555e. **8800 = build 1074 (163d9725)**, smoke light and dark PASSED 18:44, 12,515,594.
-- **walkcost** (Opus, tree .tw-trees/walkcost from 163d9725, port 6182): T-2324 walking rule cost to within 5% of
-  T-1059; Rust (kernel/ submodules); landing rebuilds main WASM: only between mexico's gates.
+- walkcost LANDED 83f433fd (records 55ab534f): T-2324, exact speedups, figures bit for bit; the rule costs 5.6% of
+  the calib solve; 3.2% over T-1059 net of other tasks' 5.9% (its reckoning, in DECISIONS). Main WASM rebuilt during
+  Mexico's join. **8800 not rebuilt since 163d9725: rebuild after Mexico's join ends** (mixed packs otherwise).
+- followtrack LANDED 665dd025 (records 97530112): T-1358, own work 99 -> 54 ms at 6x (0.55, accepted), exact.
+- **toworld** (Sonnet, tree .tw-trees/toworld from 97530112, port 6180): T-2576 toWorld per edit halved (T-1380's
+  pattern for edges).
+- **marketsearch** (Opus, tree .tw-trees/marketsearch from 55ab534f, port 6181): T-1647 native Japan pass 15% faster,
+  exact.
 - **followtrack** (Opus, tree .tw-trees/followtrack from c306d1bc, port 6184): T-1358 followTrack at least halved,
   zones identical.
 - **cachehit** (Opus, tree .tw-trees/cachehit from 79d0c5ee, port 6183): T-2574 cache-hit bar, then T-2533 zone in
