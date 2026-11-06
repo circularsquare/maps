@@ -18,10 +18,24 @@ five trees upkeep, capview, borders2, dianames, l10n-core as they report, then w
 - Unit 3 (ui/inspector, 623 keys + inspector.* 8 in 3a; scratch unit3.md, back-brief.md, review-brief.md +
   review3.md): all six halves translated and merged. Reviewing: **rev-ja-3a, rev-tw-3a, rev-hans-3b, rev-tw-3b**;
   back-translating: **back-hans-3a, back-ja-3b** (then rev-hans-3a, rev-ja-3b). OWED: zh-TW opencc passes for 3a
-  (after rev-hans-3a) and maybe 3b. Glossary also: ja transfer accepts 乗継; line except marketTrip.everydayTip.
+  and 3b (both reviewers report without it): one fresh agent runs both once rev-hans-3a and rev-hans-3b merged. Glossary also: ja transfer accepts 乗継; line except marketTrip.everydayTip.
   Glossary (uncommitted): new "round trip" term; i18n.mjs ignores a term inside a longer term (passing track, round
   trip); excepts boardings/marketTrip.atAirportsTip, trip/trainInspector.finished, running costs/marketTrip.running.
   stopnote removed demandStopped.{memory,stopped,tip,unknown}: dropped from the translations (scratch dropkeys.mjs).
+- LANDED l10n-core 2c10069e (T-2635, from maps-93; en.json/context.json by scratch merge3json.py, a real 3-way; fixed
+  TripInspector to CostTerm.id). Main typecheck clean; 2124 English messages. maps-93's l10n-core notes: callers still
+  pass English fragments (upkeepText, splitTip/splitTable); WEEKDAY_LONG in game/days.ts (TopBar, Cities, GoalTicks
+  keep local copies); "Saved {time}" now en-US time (same as T-2655's date item); skipped leftovers on T-2643.
+  Visible English changes to show Anita: held trains "1k trains held out of service" -> "1,234 trains ...".
+- Unit 3 reviews DONE: rev-tw-3b, rev-hans-3b, rev-ja-3a (none needed retranslating). rev-tw-3a DONE (2 small
+  meaning fixes, 20 rewrites). rev-hans-3a DONE (3 small meaning fixes), rev-ja-3b DONE (none, 44 rewrites). Running: **occ-tw-3** (zh-TW opencc pass for both halves,
+  also fixing 3b's 旅次單程 -> 單程旅次 (marketTrip.everydayOf / everydayTip) and, if it reads better, the
+  「…上車人次{count}」 keys to 「有{count}上車人次」 across both halves together.
+- **farescale** (Opus, read-only): T-2668 fares by country (Anita ~15:45: ^0.7 too strong? Tijuana lines lose money
+  with lots of riders). Evidence + Tijuana breakdown + proposal; ids T-2669-70. Anita: "we can wait for them to
+  finish" (agents) before the 8800 rebuild.
+- Unit 4 translators (game 338 = 4a; map + workers + ui leftovers + no-file = 4b; scratch unit4.md):
+  **tr-ja-4a/4b, tr-hans-4a/4b, tr-tw-4a/4b** (Opus), ~15:40.
 - LANDED stopnote 838c46e7 (T-2657). Shots: artifacts/trainworld/stopnote/notice-light.png.
 - **attract** (Opus, read-only): T-2663 attractions worldwide, measure and answer. Ids T-2666-67.
 - **riderspace** (Sonnet, tree): T-2664 line panel riders block tighter.
@@ -83,7 +97,7 @@ five trees upkeep, capview, borders2, dianames, l10n-core as they report, then w
 - **T-2660** timetable chart shows interlining lines + flat junctions (Anita ~15:20): start an agent (Opus, design
   calls) in a fresh tree once l10n-insp has landed. Asked maps-93 (~15:20) whether I may land l10n-insp and farends
   between its landings.
-- Id ranges: maps-93's agents T-2643..T-2649, maps-b9 from T-2650 (next unassigned **T-2668**).
+- Id ranges: maps-93's agents T-2643..T-2649, maps-b9 from T-2650 (next unassigned **T-2671**).
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad
   (helpers copied from maps-93's; snapbuild-frozen.cmd path fixed; common-brief-tree.md rewritten for maps-b9).
 
