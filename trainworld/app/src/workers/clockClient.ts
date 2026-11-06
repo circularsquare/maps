@@ -150,7 +150,75 @@ function sameObjects<T>(a: readonly T[], b: readonly T[]): boolean {
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
 }
+/** T-2576: a line's distinct edge ids (its path's half-indices), kept per line row */
+const lineEdgeIds = new WeakMap<object, number[]>();
+let lastEdgeLineRows: readonly ClockState["lines"][number][] = [];
+let lastEdgeLines = new Map<number, string[]>();
 
+/** whether two line rows run over the same edges: the same row, or the same line with the same path */
+function samePaths(a: readonly ClockState["lines"][number][], b: readonly ClockState["lines"][number][]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i], y = b[i];
+    if (x === y) continue;
+    if (x.id !== y.id || x.path.length !== y.path.length) return false;
+    for (let k = 0; k < x.path.length; k++) if (x.path[k] !== y.path[k]) return false;
+  }
+  return true;
+}
+let lastEdgeRows: readonly object[] = [];
+let lastEdgeViews: TrackEdge[] = [];
+/** The UI's track edges from the state's rows and lines (T-2576): an edge row that was in the last state gives
+ * its old view while the lines over it are the same, and the lists of lines are kept while every line
+ * runs the same path (an edit of a line's trains changes its row, not its path). */
+function edgesOf(s: ClockState): TrackEdge[] {
+  let edgeLines = lastEdgeLines;
+  let linesSame = true;
+  if (!sameObjects(s.lines, lastEdgeLineRows)) {
+    if (samePaths(s.lines, lastEdgeLineRows)) lastEdgeLineRows = s.lines;
+    else {
+      linesSame = false;
+      edgeLines = new Map<number, string[]>();
+      for (const l of s.lines) {
+        let ids = lineEdgeIds.get(l);
+        if (!ids) lineEdgeIds.set(l, ids = [...new Set(l.path.map((p) => p >> 1))]);
+        const id = String(l.id);
+        for (const p of ids) {
+          const v = edgeLines.get(p);
+          if (v) v.push(id);
+          else edgeLines.set(p, [id]);
+        }
+      }
+      lastEdgeLineRows = s.lines;
+      lastEdgeLines = edgeLines;
+    }
+  }
+  if (linesSame && s.edges === lastEdgeRows) return lastEdgeViews;
+  const none: string[] = [];
+  // where the row at i stood in the last state: usually i, one more or less after an edge was
+  // removed or added; a row not found there gets a new view
+  let shift = 0;
+  const lastRows = lastEdgeRows, lastViews = lastEdgeViews;
+  const out = s.edges.map((e, i) => {
+    let j = i + shift;
+    if (lastRows[j] !== e) {
+      if (lastRows[j + 1] === e) j = i + ++shift;
+      else if (j > 0 && lastRows[j - 1] === e) j = i + --shift;
+      else j = -1;
+    }
+    if (j >= 0 && linesSame) return lastViews[j];
+    const ls = edgeLines.get(e.id) ?? none;
+    const v = j >= 0 ? lastViews[j] : undefined;
+    if (v && sameObjects(v.lines, ls)) return v;
+    return {
+      id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+      levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: ls === none ? [] : ls,
+    };
+  });
+  lastEdgeRows = s.edges;
+  lastEdgeViews = out;
+  return out;
+}
 /** The UI's world view from the worker's state. */
 function toWorld(s: ClockState): WorldView {
   let stations: StationInput[] = s.nodes
@@ -176,13 +244,7 @@ function toWorld(s: ClockState): WorldView {
   if (sameObjects(lines, lastLines)) lines = lastLines;
   else lastLines = lines;
   const lineStats: Record<string, LineStats> = {};
-  const edgeLines = new Map<number, string[]>();
   for (const l of s.lines) {
-    for (const p of new Set(l.path.map((p) => p >> 1))) {
-      const v = edgeLines.get(p) ?? [];
-      v.push(String(l.id));
-      edgeLines.set(p, v);
-    }
     const had = statsViews.get(l);
     if (had) {
       lineStats[String(l.id)] = had;
@@ -215,10 +277,7 @@ function toWorld(s: ClockState): WorldView {
       ...(l.bus ? { bus: l.bus } : {}),
     });
   }
-  const edges: TrackEdge[] = s.edges.map((e) => ({
-    id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
-    levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: edgeLines.get(e.id) ?? [],
-  }));
+  const edges = edgesOf(s);
   // the last map while the rows are the same, so the snap's node grid (map/snapIndex.ts) stays
   let nodes = lastNodeMap;
   if (!sameObjects(s.nodes, lastNodeRows)) {
