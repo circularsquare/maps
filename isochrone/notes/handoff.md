@@ -1,7 +1,7 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-06 11:30
+Updated: 2026-11-06 18:45 (terrain run 11,230 of 18,984 tiles, ~6 h left on 3 workers; C: 130 GB free after Anita's cleanup)
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
