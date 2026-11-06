@@ -42,8 +42,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   a188a1156511192ef (Sonnet), owns js/paint.js, the flag in js/canoe.js.
 
 ## Long runs
+- **PAUSED 2026-11-05 ~23:00 at Anita's ask** ("if ur doing big downloads could u pause for a
+  while"): driver and reader stopped, 376 of 513 done, claim released. Restart only when she says.
+  gcc-states is in failed.txt only because the stop killed its read; the rerun redoes it.
 - T-053 world roads pass: `python -u isochrone/tools/roads/world.py --jobs 1` from the maps root,
-  driver PID 25032, started 14:52, ledger claim `iso-roads`. Log `isochrone/data/roads/world.log`
+  was PID 25032, started 14:52, ledger claim `iso-roads`. Log `isochrone/data/roads/world.log`
   (stderr world.err; per extract data/roads/logs/). Alive: `Get-Process -Id 25032` and the
   newest log line. Done when data/roads/done.txt has 513 lines; failures in failed.txt. ~7-8 h.
   Restart: same command, then claim again with the new PID (notes/T-053.md). When it ends:
