@@ -18,7 +18,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - maps-17 (now named maps-03) handed over fully at 21:37: no agents of its own left.
 
 ## In flight (maps-93's agents)
-- **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Dry counts ~23:00:
+- brazil DONE, committed 983f5c3d (T-2437 Brazil 177 rows, T-2594 21 US terrain grids, reused-cache guard,
+  land.py clears caches); backups deleted. 8800 rebuild at 983f5c3d started ~10:20; then omaha (T-2595, ~35-45 min,
+  pack lock, main tree). History of the Brazil run below.
+- (history) **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Dry counts ~23:00:
   177 rows (19 metros + 158 zones, 194M GHSL), reach rule without join_km, 23 zones under 0.5M, dead space 62 units
   1.86M (roadless Amazon), sao kept as hand-built (OD 2017 coverage). maps-93 said go ~23:00; run ~2.5-3 h, 5 regions
   (tests T-2070's read ahead). Messages at the first gate and the last gate's end. Run 1 (20261105-230654) faulted
