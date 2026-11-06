@@ -8,7 +8,9 @@ data/grid.bin.gz (a coarse cell is water where its speed is 0). Classifies L1 wa
 (inside the Natural Earth 10 m ocean polygon, or river-free water joined to it within GROW
 pixels), lake (inside a HydroLAKES polygon; its fetch wave height coded in kind) or river water
 (the rest). Writes data/canoe/: water.bin.gz (L10), l3/<r>_<c>.bin.gz, l1/<r>_<c>.bin.gz and
-index.json. Byte layouts: notes/T-021.md.
+index.json. Byte layouts: notes/T-021.md. The coarse `links` written here join cell to cell;
+`rivers.py build`, run after, rewrites them unit to unit and adds the `pieces` key (T-088), which
+this script drops from index.json.
 
 --cache DIR keeps the L1 kind and shore arrays (1.5 GB) between runs, for checks.
 --tiles DIR --grid FILE --out DIR build a test set from other speed levels (T-085: MAP's, in

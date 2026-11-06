@@ -4,8 +4,11 @@
     python tools/canoe/rivers.py lakes     # HydroLAKES -> work/lakes_l1.npy (0, 1 lake, 2 reservoir) + reservoir pour points   ~4 min
     python tools/canoe/rivers.py snap      # OSM falls/dams/weirs/rapids + reservoir pour points -> work/barriers.npz   ~1 min
     python tools/canoe/rivers.py desert    # hot desert rivers (tools/hotdesert.py) -> work/desert.npz   ~1 min
-    python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~4 min, ~8 GB
-                                           #    (L1 from the reaches, L3 and L10 as L1 contracted: contract_level)
+    python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~7 min, ~8 GB
+                                           #    (L1 from the reaches, L3 and L10 as L1 contracted: contract_level),
+                                           #    and the water pieces of L3 and L10 (T-088): pieces.bin.gz, pieces/l3,
+                                           #    and the links band of water.bin.gz and l3/ rewritten piece to piece
+    python tools/canoe/rivers.py contract  # L3 and L10 contracted again from the L1 river tiles as written
     python tools/canoe/rivers.py index     # put the rivers key back into data/canoe/index.json
 
 Work files go in data/raw/rivers_work/. Inputs: data/raw/riveratlas/RiverATLAS_v10.gdb (or the zip,
@@ -331,21 +334,22 @@ def load_water(level):
     return water
 
 
-def load_kind(level):
+def load_kind(level, band=0):
     """The canoe water `kind` of a level (tools/canoe/water.py, built first): 0 land, 1 sea, 2 river
-    water, 3+ lake; a tile the index does not list is open sea."""
+    water, 3+ lake; a tile the index does not list is open sea. band 1: `shore` (78 in an unlisted
+    tile, a stand-in), band 2: `links` (255 there)."""
     src = KIND_DIR or OUT
     with open(os.path.join(src, "index.json")) as fh:
         lv = json.load(fh)["levels"][str(level)]
     W, H = L1W // level, L1H // level
     if level == 10:
-        return np.frombuffer(gzip.open(os.path.join(src, lv["file"])).read(), np.uint8)[:W * H].reshape(H, W)
+        return np.frombuffer(gzip.open(os.path.join(src, lv["file"])).read(), np.uint8)[band * W * H:(band + 1) * W * H].reshape(H, W).copy()
     size = lv["tile"]
-    kind = np.ones((H, W), np.uint8)
+    kind = np.full((H, W), (1, 78, 255)[band], np.uint8)
     for t in lv["tiles"]:
         tr, tc = divmod(t, 72)
         b = np.frombuffer(gzip.open(os.path.join(src, lv["path"], "%d_%d.bin.gz" % (tr, tc))).read(), np.uint8)
-        kind[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size] = b[:size * size].reshape(size, size)
+        kind[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size] = b[band * size * size:(band + 1) * size * size].reshape(size, size)
     return kind
 
 
@@ -511,7 +515,7 @@ ACC_KM = 0.1                # km per unit of the access byte
 CONTRACT_CHUNK = 400000     # L1 river pixels at a time in the access sums
 
 
-def contract_level(level, s1, water1, kind1):
+def contract_level(level, s1, water1, kind1, shore1=None):
     """The river steps of L3 or L10 as the L1 ones contracted (T-082, docs/canoe.md 4).
 
     A piece is a run of L1 river pixels inside one coarse cell joined by open L1 steps. Each piece is
@@ -573,6 +577,13 @@ def contract_level(level, s1, water1, kind1):
     slot = np.empty(npc, np.int64)
     slot[o] = np.where(lw | ~live[o], 0, rank - nwet[gid] + dry_from)
     multi = int((np.bincount(gid, live[o].astype(np.int64)) > 1).sum())
+    wp = None
+    if shore1 is not None:
+        # T-088: in a cell with several water pieces, a unit is a water piece with the river pieces
+        # it touches (several pieces when a river joins them inside the cell), or a dry river piece
+        wp = water_units(k, kind1, water1, shore1, nodes, lab, npc, plen, pcell, live)
+        sp = wp["piece_split"]
+        slot[sp] = wp["piece_slot"][sp]
     if slot.max() > 255:
         log("L%d: %d pieces over slot 255 put on slot 255" % (level, int((slot > 255).sum())))
         slot = np.minimum(slot, 255)
@@ -629,11 +640,127 @@ def contract_level(level, s1, water1, kind1):
     stats = {"steps": int(len(kk)), "pieces": int(npc), "cells_with_pieces": int(gid[-1] + 1) if npc else 0,
              "cells_with_several": multi, "pieces_off_slot_0": int((slot > 0).sum()), "km": float(ln[kk].sum()),
              "access_km_median": float(np.median(acc[~wet])) if (~wet).any() else 0.0}
+    if wp is not None:
+        stats.update(wp["stats"])
     return dict(cell=a[kk], row=a[kk] // Wc, col=a[kk] % Wc, dir=dirs[kk].astype(np.uint8),
                 length=np.clip(np.rint(ln[kk] * 100), 1, 65535).astype(np.uint16),
                 v=np.clip(np.rint(vv[kk] * 100), 0, 255).astype(np.uint8), cls=c2[kk].astype(np.uint8),
                 slot_a=sa[kk].astype(np.uint8), slot_b=sb[kk].astype(np.uint8),
-                acc_a=acc_b(qa[kk]), acc_b=acc_b(qb[kk]), stats=stats, W=Wc)
+                acc_a=acc_b(qa[kk]), acc_b=acc_b(qb[kk]), stats=stats, W=Wc, water=wp)
+
+
+OPP_DIR = np.array([1, 0, 3, 2, 7, 6, 5, 4])    # the reverse of each MOVES direction
+
+
+def water_units(k, kind1, water1, shore1, nodes, lab, npc, plen, pcell, live):
+    """T-088 (docs/canoe.md 4): the canoe nodes of cells holding several L1 water pieces
+    (tools/canoe/pieces.py). Returns the slot of each river piece in such a cell, the water units
+    the worker cannot infer from the cell bands (further slots, and slot 0 of a river-water cell),
+    the water links between units other than the cells' own nodes, and the cells' `links` band
+    with each bit meaning: the two cells' own nodes (slot 0) touch."""
+    import scipy.sparse
+    from scipy.sparse.csgraph import connected_components
+    import pieces
+    Wc, Hc = L1W // k, L1H // k
+    kc = load_kind(k).ravel()
+    copen = (kc == 1) | (kc >= 3)
+    land_c = ~load_water(k)
+    wp = pieces.label_level(k, kind1, water1, shore1, kc.reshape(Hc, Wc), nodes, land_c)
+    land_c = land_c.ravel()
+    G, split, rc = wp["G"], wp["split"], wp["river_comp"]
+    # units: pieces of water (0..G-1) joined by the river pieces of split cells (G + piece)
+    psplit = split[pcell]
+    t = rc >= 0
+    nn = G + npc
+    g = scipy.sparse.coo_matrix((np.ones(int(t.sum()), np.int8), (rc[t], G + lab[t])), shape=(nn, nn)).tocsr()
+    _, cc = connected_components(g, directed=False)
+    del g
+    ccw, ccp = cc[:G], cc[G:]
+    nu = int(cc.max()) + 1
+    member = np.zeros(nu, bool)
+    member[ccw] = True
+    member[ccp[psplit]] = True
+    ucell = np.zeros(nu, np.int64)
+    ucell[ccp[psplit]] = pcell[psplit]
+    ucell[ccw] = wp["comp_cell"]
+    u_sea = np.bincount(ccw, wp["n_sea"], minlength=nu)
+    u_lake = np.bincount(ccw, wp["n_lake"], minlength=nu)
+    u_code = np.zeros(nu, np.uint8)
+    np.maximum.at(u_code, ccw, wp["lake_code"])
+    u_shore = np.full(nu, 255, np.uint8)
+    np.minimum.at(u_shore, ccw, wp["shore"])
+    pl = psplit & live
+    u_rlen = np.bincount(ccp[pl], plen[pl], minlength=nu)
+    u_live = np.bincount(ccp[pl], minlength=nu) > 0
+    u_open = u_sea + u_lake
+    isw = u_open > 0
+    U = np.nonzero(member)[0]
+    kcu = kc[ucell[U]]
+    op = copen[ucell[U]]
+    w, lv = isw[U], u_live[U]
+    # which unit is the cell's own node (slot 0): in a sea or lake cell the largest water of the
+    # cell's kind; in a river-water cell the longest river, one touching water first
+    pri = np.where(op, np.select([w, lv], [0, 1], 2), np.select([lv & w, lv, w], [0, 1, 2], 3))
+    cls_n = np.where(kcu == 1, u_sea[U], np.where(kcu >= 3, u_lake[U], 0))
+    sc1 = np.where(op & w, cls_n, np.where(lv, u_rlen[U], u_open[U]))
+    o = np.lexsort((-u_open[U], -sc1, pri, ucell[U]))
+    cs = ucell[U][o]
+    first = np.ones(len(o), bool)
+    first[1:] = cs[1:] != cs[:-1]
+    grp = np.cumsum(first) - 1
+    rank = np.arange(len(o)) - np.nonzero(first)[0][grp]
+    uslot = np.zeros(nu, np.int64)
+    uslot[U[o]] = np.where(w[o] | lv[o], np.minimum(rank, 255), 0)
+    piece_slot = uslot[ccp]
+    # a unit's access: the least of its pieces' (a unit of several pieces joined by a river is
+    # nearer the land than that, a rare overestimate)
+    u_acc = np.full(nu, np.inf, np.float32)
+    np.minimum.at(u_acc, ccw, wp["acc"])
+    u_acc[~np.isfinite(u_acc)] = 0
+    # water units the worker needs listed: further slots, slot 0 where the cell is not sea or lake,
+    # and every water unit on a land cell for its access; the one water piece of a land cell that
+    # is not split, for its access
+    Wu = U[w & ((uslot[U] > 0) | ~op | land_c[ucell[U]])]
+    ukind = np.where(u_sea[Wu] >= u_lake[Wu], 1, u_code[Wu]).astype(np.uint8)
+    one = np.nonzero(land_c & copen & ~split)[0]
+    shore_c = load_kind(k, 1).ravel()
+    cell_ = np.concatenate([ucell[Wu], one])
+    slot_ = np.concatenate([uslot[Wu], np.zeros(len(one), np.int64)])
+    o2 = np.lexsort((slot_, cell_))
+    acc_ = np.concatenate([u_acc[Wu], wp["acc_cell"][one]])
+    units = dict(cell=cell_[o2], slot=slot_[o2].astype(np.uint8),
+                 kind=np.concatenate([ukind, kc[one]]).astype(np.uint8)[o2],
+                 shore=np.concatenate([u_shore[Wu], shore_c[one]]).astype(np.uint8)[o2],
+                 acc=np.clip(np.rint(acc_ / ACC_KM), 0, 255).astype(np.uint8)[o2])
+    # water links between units
+    tw = wp["touch"]
+    ua, ub, ca, d = tw["ua"], tw["ub"], tw["cell"], tw["dir"].astype(np.int64)
+    mv = np.array(MOVES, np.int64)
+    cb = ((ca // Wc + mv[d, 1]) * Wc + (ca % Wc + mv[d, 0]) % Wc)
+    sa = np.where(ua >= 0, uslot[cc[np.maximum(ua, 0)]], 0)
+    sb = np.where(ub >= 0, uslot[cc[np.maximum(ub, 0)]], 0)
+    bit = (sa == 0) & (sb == 0) & copen[ca] & copen[cb]
+    links = load_kind(k, 2).ravel().copy()
+    sc_ = np.nonzero(split)[0]
+    for q in range(8):
+        links[sc_] &= np.uint8(~(1 << q) & 255)
+        nb = (sc_ // Wc + mv[q, 1]) * Wc + (sc_ % Wc + mv[q, 0]) % Wc
+        ok = (nb >= 0) & (nb < Wc * Hc)
+        links[nb[ok]] &= np.uint8(~(1 << OPP_DIR[q]) & 255)
+    for q in (0, 2, 4, 5):
+        s = bit & (d == q)
+        links[ca[s]] |= np.uint8(1 << q)
+        links[cb[s]] |= np.uint8(1 << OPP_DIR[q])
+    r = ~bit
+    key = ((ca[r] * 8 + d[r]) * 256 + sa[r]) * 256 + sb[r]
+    key = np.unique(key)
+    lk = dict(cell=key // (8 * 65536), dir=((key // 65536) % 8).astype(np.uint8),
+              slot_a=((key // 256) % 256).astype(np.uint8), slot_b=(key % 256).astype(np.uint8))
+    stats = {"split_cells": int(split.sum()), "water_pieces_in_split_cells": G, "water_units": int(w.sum()),
+             "water_units_listed": len(units["cell"]), "water_access_km_median": float(np.median(acc_)) if len(acc_) else 0.0,
+             "water_links_listed": len(key), "links_changed": int((links != load_kind(k, 2).ravel()).sum())}
+    log("L%d water: %s" % (k, stats))
+    return dict(piece_split=psplit, piece_slot=piece_slot, units=units, links=lk, links_band=links.reshape(Hc, Wc), stats=stats)
 
 
 def pack(cell, length, dirs, v, cls, extra=()):
@@ -729,20 +856,116 @@ def stage_build(levels=(10, 3, 1)):
 
     sub = (mx, my, sub_km, sub_reach, sub_v, sub_nat, sub_hum, sub_lake)
     summary = {"q_min": QMIN, "reaches": int(R), "km": float(r["length_km"].sum()), "levels": {}}
-    index = {}
     # L1 from the reaches; L3 and L10 as L1 contracted (contract_level, T-082)
     t0 = time.time()
     s1 = steps_for_level(1, sub, (q, down, order))
     log("L1: %d steps (%.0f s)" % (len(s1["cell"]), time.time() - t0))
-    water1 = kind1 = None
+    write_levels(s1, levels, summary)
+
+
+def load_l1_steps():
+    """The L1 river steps as written (rivers/l1 tiles), for contracting again without the reaches."""
+    with open(os.path.join(OUT, "rivers", "index.json")) as fh:
+        lv = json.load(fh)["1"]
+    size = lv["tile"]
+    parts = {n: [] for n in ("row", "col", "dir", "length", "v", "cls")}
+    for t in lv["tiles"]:
+        tr, tc = divmod(t, 72)
+        b = gzip.open(os.path.join(OUT, lv["path"], "%d_%d.bin.gz" % (tr, tc))).read()
+        n = int(np.frombuffer(b[:4], "<u4")[0])
+        o = 4
+        cell = np.frombuffer(b[o:o + 4 * n], "<u4").astype(np.int64); o += 4 * n
+        parts["length"].append(np.frombuffer(b[o:o + 2 * n], "<u2")); o += 2 * n
+        for name in ("dir", "v", "cls"):
+            parts[name].append(np.frombuffer(b[o:o + n], np.uint8)); o += n
+        parts["row"].append(tr * size + cell // size)
+        parts["col"].append(tc * size + cell % size)
+    s1 = {n: np.concatenate(p) for n, p in parts.items()}
+    s1["cell"] = s1["row"] * L1W + s1["col"]
+    log("L1 steps read back: %d" % len(s1["row"]))
+    return s1
+
+
+def stage_contract():
+    """L3 and L10 contracted again from the L1 river tiles as written, and the canoe water of those
+    levels (T-088), without rebuilding L1."""
+    s1 = load_l1_steps()
+    write_levels(s1, (3, 10), {"levels": {}})
+
+
+def pack_water(units, links, ucell, lcell):
+    """T-088 water units and links of a level or tile (js/canoedata.js parsePieces)."""
+    n = np.array([len(ucell)], "<u4")
+    m = np.array([len(lcell)], "<u4")
+    return gzip.compress(n.tobytes() + ucell.astype("<u4").tobytes() + units["slot"].tobytes() + units["kind"].tobytes()
+                         + units["shore"].tobytes() + units["acc"].tobytes() + m.tobytes() + lcell.astype("<u4").tobytes()
+                         + links["dir"].tobytes() + links["slot_a"].tobytes() + links["slot_b"].tobytes(), compresslevel=9)
+
+
+def write_water(level, wo):
+    """The water units and links of a level (pieces.bin.gz at L10, pieces/l3 tiles), and the
+    level's links band put back into its canoe water files. Returns (index entry, bytes)."""
+    import water as watermod
+    units, links, band = wo["units"], wo["links"], wo["links_band"]
+    with open(os.path.join(OUT, "index.json")) as fh:
+        wl = json.load(fh)["levels"][str(level)]
+    Wc = L1W // level
+    if level == 10:
+        nbytes = write(os.path.join(OUT, "pieces.bin.gz"), pack_water(units, links, units["cell"], links["cell"]))
+        path = os.path.join(OUT, wl["file"])
+        b = np.frombuffer(gzip.open(path).read(), np.uint8).reshape(3, -1).copy()
+        b[2] = band.ravel()
+        watermod.write_gz(path, [b[0], b[1], b[2]])
+        return {"file": "pieces.bin.gz"}, nbytes
+    size = TILE[level]
+    tid_u = (units["cell"] // Wc // size) * 72 + (units["cell"] % Wc) // size
+    tid_l = (links["cell"] // Wc // size) * 72 + (links["cell"] % Wc) // size
+    tids = np.union1d(tid_u, tid_l)
+    d = os.path.join(OUT, "pieces", "l%d" % level)
+    nbytes = 0
+    for t in tids.tolist():
+        su, sl = np.nonzero(tid_u == t)[0], np.nonzero(tid_l == t)[0]
+        loc = lambda c: (c // Wc % size) * size + c % Wc % size
+        nbytes += write(os.path.join(d, "%d_%d.bin.gz" % (t // 72, t % 72)),
+                        pack_water({k: v[su] for k, v in units.items()}, {k: v[sl] for k, v in links.items()},
+                                   loc(units["cell"][su]), loc(links["cell"][sl])))
+    listed = set(wl["tiles"])
+    changed = unlisted = 0
+    for tr in range(L1H // level // size):
+        for tc in range(72):
+            sl_ = band[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size]
+            t = tr * 72 + tc
+            if t not in listed:
+                unlisted += int((sl_ != 255).any())
+                continue
+            path = os.path.join(OUT, wl["path"], "%d_%d.bin.gz" % (tr, tc))
+            b = np.frombuffer(gzip.open(path).read(), np.uint8).reshape(3, size, size).copy()
+            if (b[2] == sl_).all():
+                continue
+            b[2] = sl_
+            watermod.write_gz(path, [b[0], b[1], b[2]])
+            changed += 1
+    log("L%d: links rewritten in %d water tiles (%d unlisted open-sea tiles would change, left as they are)" % (level, changed, unlisted))
+    return {"tile": size, "path": "pieces/l%d" % level, "tiles": tids.tolist()}, nbytes
+
+
+def write_levels(s1, levels, summary):
+    index = {}
+    rip = os.path.join(OUT, "rivers", "index.json")
+    if 1 not in levels and os.path.exists(rip):
+        with open(rip) as fh:
+            index = json.load(fh)
+    pieces_ix = {}
+    water1 = kind1 = shore1 = None
     for level in sorted(levels):
         t0 = time.time()
         if level == 1:
             s = s1
         else:
             if water1 is None:
-                water1, kind1 = load_water(1), load_kind(1)
-            s = contract_level(level, s1, water1, kind1)
+                water1, kind1, shore1 = load_water(1), load_kind(1), load_kind(1, 1)
+            s = contract_level(level, s1, water1, kind1, shore1)
+            pieces_ix[str(level)], s["stats"]["water_bytes"] = write_water(level, s["water"])
         st = s["stats"]
         extra = () if level == 1 else (s["slot_a"], s["slot_b"], s["acc_a"], s["acc_b"])
         if level == 10:
@@ -769,9 +992,15 @@ def stage_build(levels=(10, 3, 1)):
         summary["levels"][str(level)] = st
         log("L%d: %d steps, %.2f M km, %.1f MB in %d files (%.0f s)" %
             (level, st["steps"], st["km"] / 1e6, st["bytes"] / 1e6, st["files"], time.time() - t0))
-    if 1 in levels and 3 in levels:
+    if 3 in levels and "1" in index:
         write(os.path.join(OUT, "rivers", "index.json"), json.dumps(index, separators=(",", ":")).encode())
         merge_index()
+    if 3 in levels and 10 in levels:
+        ip = os.path.join(OUT, "index.json")
+        with open(ip) as fh:
+            ix = json.load(fh)
+        ix["pieces"] = pieces_ix
+        write(ip, json.dumps(ix, separators=(",", ":")).encode())
     with open(os.path.join(WORK, "summary.json"), "w") as fh:
         json.dump(summary, fh, indent=1)
 
@@ -788,7 +1017,7 @@ def main():
         stage_snap()
     elif stage == "desert":
         stage_desert()
-    elif stage == "build":
+    elif stage in ("build", "contract"):
         # --tiles DIR --grid FILE --out DIR: a test set from other speed levels (T-085);
         # --kind DIR: the canoe water to read `kind` from, when not --out (T-082)
         global TILES_DIR, GRID_FILE, OUT, KIND_DIR
@@ -807,7 +1036,10 @@ def main():
                     OUT = v
             else:
                 lv.append(int(a))
-        stage_build(tuple(lv) or (10, 3, 1))
+        if stage == "contract":
+            stage_contract()
+        else:
+            stage_build(tuple(lv) or (10, 3, 1))
     elif stage == "index":
         merge_index()
     else:

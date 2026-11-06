@@ -15,7 +15,7 @@ along the chosen path.
 |---|---|---|
 | walking | every land cell | walking start (as now) |
 | carrying | every land cell, walking time x 2 | canoe start |
-| canoe | every sea, lake and river-water cell, plus a canoe node on each land cell a paddleable river or a strait passes through; at L3 and L10 one more node for each further piece of river in the cell that the cell's own does not join (section 4) | canoe start |
+| canoe | every sea, lake and river-water cell, plus a canoe node on each land cell a paddleable river or a strait passes through; at L3 and L10 one more node for each further piece of river or of sea or lake water in the cell that the cell's own does not join (section 4) | canoe start |
 
 - **A canoe start is canoe + carrying; a walking start is walking alone.** You never leave the
   canoe, so plain walking cannot be reached from a canoe start, and a walking start never meets a
@@ -24,7 +24,7 @@ along the chosen path.
 - **Node ids.** Ids 0..N-1 are the cells: a land cell's id is its land node, a sea or lake cell's
   its canoe node. Canoe nodes on land cells (river cells, and at L3 and L10 coastal and strait
   cells) get ids from N on, found through a per-cell table `canoeOf` (-1 where none), then a
-  cell's further river nodes (`extra0`, `extraN`): 0.76 M and 0.40 M at L10.
+  cell's further nodes, river pieces and water units (`extra0`, `extraN`): 0.76 M and 0.44 M at L10.
 - **Water** is the speed levels' water (our surface since T-028, `docs/resolution.md`: an L1 cell
   is water when LC100 has it half or more water, small water under 5 km² is land), read from
   `data/tiles` and the L10 grid, so canoe and walking agree cell for cell (T-085); a coarse cell is
@@ -43,7 +43,9 @@ along the chosen path.
   end. Its depth is the number of 8-neighbour steps to the nearest land cell or other canoe node
   (1 when one is next to it). It is entered by getting in from the shore, from a canoe node beside
   it (depth 1), or from such a cell one depth less, at still-water speed with the flat-river
-  hazard; it is left only by getting out to the shore, so only depth-1 cells lead anywhere. No
+  hazard; it is left only by getting out to the shore, so only depth-1 cells lead anywhere. A sea
+  or lake cell with no land, no water it is linked to, no river and no water link beside it (a
+  one-pixel HydroLAKES pond inside river water, T-075) counts as river water off the line. No
   route paddles along it: a crossing goes in and out at the same cell (river water one cell wide),
   costing both transfers, so a chain of ponds is never a canoe route, and an unrunnable river's
   water is never paddled.
@@ -59,7 +61,7 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 | river up | the reverse | length / max(p - 0.4 v, 2.5 km/h) | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
 | sea | canoe node to neighbouring sea canoe nodes | length / s, s from the current | yes |
-| transfer | land node to a canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node); within the cell at L3 and L10, half the river piece's access carried as well | both ways |
+| transfer | land node to a canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node); within the cell at L3 and L10, half the piece's access carried as well (a piece of river or of sea or lake) | both ways |
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
   D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s.
@@ -88,12 +90,12 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   equator, February south) have no canoe node.
 - **Moves on water**: 8 neighbours; the 8 knight moves only where all four cells involved are
   open water and linked along both two-step paths (walking needs all four on land); past 20 km
-  from shore 8 neighbours only (section 7). At L3 and L10 a canoe edge exists only where the
-  two cells' L1 water touches across their shared border (`links`, section 5): a strait narrower
-  than a cell (the Bosporus, the Danish straits, fjords) stays open at L10, and two waters a few
-  km apart are not joined. Inside one coarse cell all its water counts as joined, so an isthmus
-  narrower than a cell can be crossed at L10 where one cell holds water of both sides; the L1
-  window corrects it. (Corinth is not: no L10 or L3 cell holds both gulfs.)
+  from shore 8 neighbours only (section 7). At L3 and L10 a canoe edge joins two water units
+  (section 4) only where their L1 water touches across the cells' shared border (`links` between
+  the cells' own nodes, the listed water links between any others): a strait narrower than a
+  cell (the Bosporus, the Danish straits, fjords) stays open at L10, two waters a few km apart
+  are not joined, and neither are two lakes in one cell that an isthmus parts at L1. Knight
+  moves at sea use the cells' own nodes only.
 - **Portage has no edges of its own.** Unrunnable river steps are dropped: a fall, a dam, a weir,
   a reach steeper than 5 m/km (2 m/km where Q >= 1000), or OSM-mapped rapids where Q >= 1000. The search gets off (0.25 h), carries
   along the bank at walking x 2 and gets back on (0.25 h), about the research's "1 h plus the
@@ -154,6 +156,8 @@ risk") to 10,000, costs nothing extra.
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
 | `data/canoe/rivers.bin.gz` | L10, whole world | 1.24 M river steps, with slots and access | 6.7 MB |
 | `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 20.8 MB, 906 tiles; 38.1 MB, 913 tiles |
+| `data/canoe/pieces.bin.gz` | L10, whole world | 222k water units, 65k water links (T-088) | 0.7 MB |
+| `data/canoe/pieces/l3/` | L3, 5° tiles | 723k water units, 52k water links | 2.0 MB, 1058 tiles |
 
 - Tiles share the speed tiles' grid and names (`docs/resolution.md`); `data/canoe/index.json`
   lists them, and the sea grid, and under `rivers` the river tiles (`{"1": {"tile", "path":
@@ -175,9 +179,10 @@ risk") to 10,000, costs nothing extra.
   beyond; 0 on land, 1 on a land pixel with a canoe node. A coarse cell stores the least over
   its water pixels (a coastal paddler hugs the coast). The grid ends at 60S, so Antarctica does
   not count as land.
-- **links** (uint8, L3 and L10): bit k set when L1 sea or lake pixels of the cell and of
-  neighbour k are 8-neighbours across their border (a diagonal: the two corner pixels), and both
-  cells have a canoe node. k follows `js/search.js`'s moves as (dc, dr), dr down: 0 (1,0) E,
+- **links** (uint8, L3 and L10): bit k set when L1 sea or lake pixels of the two cells' own
+  water units (slot 0, below) are 8-neighbours across their border (a diagonal: the two corner
+  pixels), and both cells are sea or lake. `water.py` writes it cell to cell; `rivers.py build`
+  rewrites it unit to unit, so it runs after `water.py`. k follows `js/search.js`'s moves as (dc, dr), dr down: 0 (1,0) E,
   1 (-1,0) W, 2 (0,1) S, 3 (0,-1) N, 4 (1,1) SE, 5 (1,-1) NE, 6 (-1,1) SW, 7 (-1,-1) NW. Bits are
   symmetric (a cell's bit k equals its neighbour's opposite bit) and wrap at 180°.
 - **Sea grid**: 1440 x 580 cells of 0.25° from 180W, 85N. Local summer: June-August north of the
@@ -226,6 +231,25 @@ risk") to 10,000, costs nothing extra.
   coarse river node within its own cell carries half that distance at the cell's walking speed
   (`cfg.access`, 0.5): the land node stands for the whole cell, the river for a line through it.
   Measurements and why half: notes/T-082.md.
+- **Water units** (T-088, `tools/canoe/pieces.py` and `water_units` in `rivers.py`). A water
+  piece is an 8-connected run of L1 sea or lake pixels inside one coarse cell. A cell is *split*
+  when it holds two or more, or any while it is river water (kind 2). In a split cell a unit is a
+  water piece with the river pieces that touch it (so a river joining two lakes inside the cell
+  makes them one unit), or a dry river piece. The cell's own node (slot 0) is, in a sea or lake
+  cell, the unit with the most pixels of the cell's kind; in a river-water cell the longest
+  river, one touching water first. Other units with water or an open river take slots 1, 2, ...
+  by size, water first. A cell that is not split keeps T-082's rule. A water unit's access is the
+  mean straight distance from the cell's L1 land pixels to the unit's water (the least of its
+  pieces' where a river joins several), carried at `cfg.access` like a river's.
+- **Pieces files** (`pieces.bin.gz` at L10, `pieces/l3/<r>_<c>.bin.gz`, the `pieces` key of
+  `index.json`): gzip of uint32 n, then cell (uint32[n]; local in a tile), slot, kind, shore and
+  access (0.1 km) uint8[n]: the water units the bands do not give, which are those on further
+  slots, slot 0 of a river-water cell, and every water unit on a land cell (for its access); then
+  uint32 m, cell uint32[m], direction (0 E, 2 S, 4 SE, 5 NE), slot of the cell's unit, slot of the
+  neighbour's unit, uint8[m]: the water links other than between two cells' own nodes, each once,
+  stored with the tile of its first cell. A unit's kind is sea when it has at least as many sea as
+  lake pixels, else its largest lake code; its shore the least over its pixels. Without the key
+  the worker builds T-082's graph.
 - **Gradient classes**: flat under 1 m/km, rapids 1-5, unrunnable above 5 (above 2 where Q >=
   1000 m³/s); a fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller
   rivers' OSM rapids are class rapids). Gradient is RiverATLAS `sgr_dk_rav`; north of 60N, where
@@ -253,15 +277,18 @@ risk") to 10,000, costs nothing extra.
   beside it. A walking start runs it too (land hazard, docs/hazard.md 4); with hazard off it runs
   a separate small loop (the old walking search), which the general one matches cell for cell.
 - **Per level** (`js/canoe.js`, built when a level is loaded on a canoe start): `canoeOf` and the
-  further river nodes of a cell (`extra0`, `extraN`, from the steps' slots), one 32-bit word a cell
+  further nodes of a cell (`extra0`, `extraN`, from the steps' and the water units' slots), one 32-bit word a cell
   (water kind for grid edges, links, and flags: a land cell or a canoe node in the 3 x 3 round it,
   20 km or more from shore, river edges leave it), the current a cell (0.01 m/s, halved within
   5 km of shore), each river node's access, and the river steps as out-edges by node (each open
-  step and its upstream twin, with its time). Further river nodes have river edges and transfers
-  only, no grid edges. Steps of the closed classes are left out. A water cell the canoe data calls
+  step and its upstream twin, with its time). Further nodes have no grid moves of their own: their
+  water links are edges in the same lists as river steps, both ways, coded as the grid move they
+  stand for and costed as one (current at sea from each unit's own shore, still water on a lake,
+  the hazard of each end's kind and shore; none to an iced sea unit). Steps of the closed classes are left out. A water cell the canoe data calls
   land (kind 0 where the speed is 0) is sea. Iced sea cells get no canoe node unless a river step
   ends there. Where the predecessor code leaves the node ambiguous (a cell with several canoe
-  nodes), `canoeFrom` picks the one the search took, for routes, corridors and the check trips.
+  nodes), `canoeFrom` picks the one the search took, for routes, corridors and the check trips: for
+  a grid move, a water link whose cost gives the node's weight exactly, else the cell's own node.
 - **Arrays per node**: weight, time and hazard (Float32), and the move it was reached by (Uint8:
   1-16 a grid move of its own layer, 17-25 a transfer from the other layer at offset (dc, dr),
   26-33 a river step down and 34-41 up by move direction, 255 a window seed, 0 the start; the
@@ -313,7 +340,8 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
   start about the same (notes/T-006.md).
 - **Window caps** on a canoe start: 1.5 M cells at L3 (3 M walking), 2 M at L1 as walking, each
   ~1.1-1.3 s at the cap. A 1400 x 900 view's windows take 0.1-0.35 s each.
-- **Memory** at L10 on a canoe start: ~8.7 M nodes (0.4 M of them further river nodes, T-082); the per-cell canoe tables ~130 MB, the
+- **Memory** at L10 on a canoe start: ~8.7 M nodes (0.44 M of them further nodes, T-082, T-088);
+  building the canoe layer takes ~1.4 s once per session; the per-cell canoe tables ~130 MB, the
   search ~21 bytes a node while it runs (~175 MB) and 9 a node kept for seeding and tracing,
   against ~90 MB walking.
 
@@ -321,16 +349,18 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
 
 - Distributaries and braids are missing (one channel per delta); tides are ignored; river flow is
   the annual mean (no low season).
-- Sea and lake water in one L3 or L10 cell is all one node, so lakes an isthmus parts at L1 are
-  joined there, and a river touching any of them joins them all: L10 is still ~15% fast in lake
-  country and on some coasts (Jyvaskyla, New York; notes/T-082.md). Rivers are pieces (section 4);
-  water bodies are not yet.
+- A coarse canoe node on a land cell stands at the cell's centre for a transfer to or from a
+  neighbouring cell, wherever its water lies in the cell, so L10 still finds chains of lakes and
+  rivers a little cheaper than L1 does: ~10% fast round Jyvaskyla and New York, ~5% at Utrecht
+  (notes/T-088.md). Where coarse walking is slow (mountains, forest: T-080, T-081) the access
+  hours are too, so L10 runs 10-20% slow in fjord country (Sogndal) and on the Amazon (Coari).
 - A window's ring seeds every canoe node of a cell from the coarse cell's best one, so at the
-  ring a river can take a neighbouring river's time.
+  ring a river or lake can take a neighbouring one's time.
 - Window seams as for walking (`docs/resolution.md`), per layer.
-- A one-pixel HydroLAKES pond inside river water with no land beside it is unreachable, and so
-  are the river-water cells whose only nearer edge is that pond (4 cells in a 3.2 x 2.4 degree
-  L1 box over the Sundarbans, notes/T-085.md).
+- River water round an island that no river line comes near is unreached on a canoe start, and
+  so is the island: depth counts from the island's shore too, so the water between the line and
+  the island has no way down to it (25 cells in the Amazon L1 window at Santarem, T-075,
+  notes/T-036.md).
 
 ## 9. 10,000 BC
 

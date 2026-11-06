@@ -5,6 +5,14 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **Coarse canoe water is split into units like the rivers, and water units on land cells pay
+  access too** (T-088, notes/T-088.md): separate L1 sea or lake pieces in an L3 or L10 cell are
+  separate canoe nodes, linked piece to piece. Splitting alone moved Jyvaskyla L1/L10 only 1.16 ->
+  1.14; the half access T-082 gives river pieces, given to water units as well, took it to 1.10
+  (lakes 1.07 -> 1.01) at the cost of fjords (Sogndal 0.91 -> 0.80) and Coari (0.90 -> 0.85),
+  where coarse walking is slow (T-081). Exempting the start's own cell from access was tried
+  (Coari 0.91, Sogndal 0.85, Jyvaskyla 1.11) and not kept: one rule for every piece, and the
+  per-destination error was a little lower without it.
 - **Coarse canoe rivers are the L1 river network merged per coarse cell** (T-082,
   notes/T-082.md): each separate river piece in an L3 or L10 cell is its own canoe node, and
   getting in or out pays half the piece's mean distance from the cell's land, carried

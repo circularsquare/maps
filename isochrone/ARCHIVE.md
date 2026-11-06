@@ -1,5 +1,7 @@
 # Archive
 
+- T-088 [P3] Lake country too fast at L10. Done 2026-11-06: each separate run of sea or lake water in a split coarse cell is its own canoe node (with the river pieces touching it), extra links listed in `pieces.bin.gz` and `pieces/l3/`; water units on land cells pay the half access as river pieces. Lakes L1/L10 1.07 -> 1.01, Jyvaskyla 1.16 -> 1.10; Coari 0.90 -> 0.85 and Sogndal 0.91 -> 0.80 from coarse walking bias (T-081); one-pixel river ponds fixed (part of T-075). notes/T-088.md.
+
 - T-082 [P2] Canoe at L10 in river country too fast. Done 2026-11-06: L3 and L10 river steps are the L1 network merged per coarse cell, one canoe node per river piece, getting in or out pays half the piece's access distance carried; Coari L1/L10 2.08 -> 0.90, Khulna 1.47 -> 0.97, L3 unchanged; old data gives old times exactly; smoke 17/17. Lake country left as T-088. notes/T-082.md.
 
 - T-085 [P2] Canoe water on our mask. Done 2026-11-06: water.py and the river steps rebuilt on the LC100 mask, canoe kind now matches the speed levels cell for cell (1.7 M L1 mismatches each way -> 0); a river step is dropped in a lake only when both cells are sea or lake; ktrips changes all from shore distances (Bergen-Reykjavik loses Sule Skerry, 414 -> 361 h). notes/T-085.md.

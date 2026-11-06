@@ -56,19 +56,81 @@ function dilate3(a, W, H, wrap) {
     return out;
 }
 
+// The water links of a level (T-088) as directed edges: { n, from, to (nodes), cellFrom, dt, hz, km,
+// code (P_GRID + plain move) }, costed as search.js costs a sea or lake grid move. An end is a listed
+// water unit (its own kind and shore) or a cell's own sea or lake node; iced sea ends are left out.
+function waterLinks(L, data, sea, pieces, info, nodeAt, seaRow, seaCol) {
+    const { W, dxKm, dyKm } = L;
+    const unit = new Map();
+    for (let q = 0; q < pieces.n; q++) unit.set(pieces.cell[q] * 256 + pieces.slot[q], q);
+    const p = cfg.paddle, cur = sea.unit * 0.5 * 3.6 * 0.5;
+    // an end: node, kind, hazard rate, current east and north (0.01 m/s, halved within 5 km of shore)
+    const end = (cell, slot, o) => {
+        const q = unit.get(cell * 256 + slot);
+        let k, sh;
+        if (q !== undefined) { k = pieces.kind[q]; sh = pieces.shore[q]; }
+        else if (!slot) { k = info[cell] & 0xFF; sh = data.shore[cell]; }
+        else return false;
+        if (!k) return false;
+        const node = nodeAt(cell, slot);
+        if (node < 0) return false;
+        const r = (cell / W) | 0, s = seaRow[r] * sea.W + seaCol[cell - r * W];
+        if (k === 1 && sea.ice[s] > cfg.iceMax) return false;
+        const m = sh <= 5 ? 1 : 2;
+        o.node = node; o.k = k;
+        o.rate = waterRate(SHORE_KM[sh], k === 1 ? sea.hs[s] * 0.05 : (k - 3) * 0.05, sea.sst[s]);
+        o.cx = k === 1 ? sea.u[s] * m : 0; o.cy = k === 1 ? sea.v[s] * m : 0;
+        return true;
+    };
+    const A = {}, B = {};
+    const n2 = 2 * pieces.m;
+    const out = { n: 0, from: new Int32Array(n2), to: new Int32Array(n2), cellFrom: new Int32Array(n2),
+                  dt: new Float32Array(n2), hz: new Float32Array(n2), km: new Float32Array(n2), code: new Uint8Array(n2) };
+    const add = (a, b, ca, len, ex, ey, mv) => {
+        let dt;
+        if (a.k >= 3 || b.k >= 3) dt = len / p;
+        else {
+            const mx = (a.cx + b.cx) * cur, my = (a.cy + b.cy) * cur;
+            if (mx === 0 && my === 0) dt = len / p;
+            else {
+                const cross = mx * ey - my * ex, q = p * p - cross * cross;
+                if (q <= 0) return;
+                const s = mx * ex + my * ey + Math.sqrt(q);
+                if (s <= 0) return;
+                dt = len / s;
+            }
+        }
+        const k = out.n++;
+        out.from[k] = a.node; out.to[k] = b.node; out.cellFrom[k] = ca; out.dt[k] = dt;
+        out.hz[k] = dt * 0.5 * (a.rate + b.rate); out.km[k] = len; out.code[k] = P_GRID + mv;
+    };
+    for (let q = 0; q < pieces.m; q++) {
+        const ca = pieces.a[q], cb = pieces.b[q];
+        if (!end(ca, pieces.sa[q], A) || !end(cb, pieces.sb[q], B)) continue;
+        const mv = DIR_MOVE[pieces.dir[q]], r = (ca / W) | 0;
+        const dx = MDC[mv] * (dxKm[r] + dxKm[r + MDR[mv]]) * 0.5, dy = MDR[mv] * dyKm;
+        const len = Math.sqrt(dx * dx + dy * dy), ex = dx / len, ey = -dy / len;
+        add(A, B, ca, len, ex, ey, mv);
+        add(B, A, cb, len, -ex, -ey, OPP[mv]);
+    }
+    return out;
+}
+
 // A cell's `info` bit set where the cell is water of any kind, river water included, whether or not
 // it has a canoe node: what paint.js mixes towards white (T-063, T-074).
 export const PAINT_WATER = 1 << 20;
 
-// data: { kind, shore, links, steps } from canoedata.js; sea: the 0.25 degree sea grid.
-// Sets and returns L.cn = { E (canoe nodes beyond the cells), E1 (of them, the cells' own; then the
-// further river nodes, extra0[cell] .. + extraN[cell] - 1, T-082), canoeOf, cellOf, acc (km, by node
+// data: { kind, shore, links, steps, pieces (L3, L10, or null) } from canoedata.js; sea: the 0.25
+// degree sea grid. Sets and returns L.cn = { E (canoe nodes beyond the cells), E1 (of them, the
+// cells' own; then the further nodes, river pieces and water units, extra0[cell] .. + extraN[cell] - 1,
+// T-082, T-088), canoeOf, cellOf, acc (km, by node
 // - N, or null), info, curr, curKmh, shore, hzr, rOff (by node), rTo (node), rDt, rCode, rHz, rKm
 // (the step's river length, km) }.
 export function buildCanoe(L, data, sea) {
     const { grid, W, H } = L;
     const N = W * H;
     const { kind, shore, steps } = data;
+    const pieces = data.pieces || null;
     // sea grid row and column of each cell row and column
     const seaRow = new Int32Array(H), seaCol = new Int32Array(W);
     for (let r = 0; r < H; r++)
@@ -90,6 +152,34 @@ export function buildCanoe(L, data, sea) {
         if (sa) { if (sa > extraN[a]) extraN[a] = sa; } else onRiver[a] = 1;
         if (sb) { if (sb > extraN[b]) extraN[b] = sb; } else onRiver[b] = 1;
     }
+    // water units (L3, L10: separate pieces of sea or lake in one cell, T-088) on further slots, and
+    // a water unit on slot 0 of a river-water cell (wet0); cells a water link touches (linked)
+    const wet0 = new Uint8Array(pieces ? N : 0), linked = new Uint8Array(pieces ? N : 0);
+    if (pieces) {
+        for (let q = 0; q < pieces.n; q++) {
+            const c = pieces.cell[q], s = pieces.slot[q];
+            if (s) { if (s > extraN[c]) extraN[c] = s; } else if (kind[c] === 2) wet0[c] = 1;
+            if (pieces.acc[q] > 0) anyAcc = true;
+        }
+        for (let q = 0; q < pieces.m; q++) { linked[pieces.a[q]] = 1; linked[pieces.b[q]] = 1; }
+    }
+    // A sea or lake cell with no land, no water it is linked to, no river and no water link beside
+    // it (a one-pixel pond inside river water, T-075) is river water off the line (below).
+    const pond = new Uint8Array(N);
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+        const i = r * W + c, k = kind[i];
+        if (grid[i] || k === 2 || onRiver[i] || extraN[i] || (pieces && (linked[i] || wet0[i]))) continue;
+        let alone = true;
+        for (let b = 0; b < 8; b++) {
+            const r2 = r + FILE_DIRS[b][1];
+            if (r2 < 0 || r2 >= H) continue;
+            let c2 = c + FILE_DIRS[b][0];
+            if (c2 < 0 || c2 >= W) { if (!L.wrap) continue; c2 = (c2 + W) % W; }
+            const j = r2 * W + c2, kj = kind[j];
+            if (grid[j] || ((data.links[i] >> b) & 1 && kj !== 2)) { alone = false; break; }
+        }
+        if (alone) pond[i] = 1;
+    }
     // nodes, water kind and current
     const info = new Int32Array(N), curr = new Int32Array(N), canoeOf = new Int32Array(N).fill(-1);
     const hasNode = new Uint8Array(N), isLand = new Uint8Array(N);
@@ -99,7 +189,7 @@ export function buildCanoe(L, data, sea) {
         const so = seaRow[r] * sea.W;
         for (let c = 0; c < W; c++) {
             const i = r * W + c, land = grid[i] > 0;
-            let k = kind[i];
+            let k = pond[i] ? 2 : kind[i];
             if (!land && k === 0) k = 1;            // water by the speed grid: sea
             let ok = k === 1 || k >= 3;
             if (ok && k === 1) {
@@ -116,7 +206,7 @@ export function buildCanoe(L, data, sea) {
                 hzr[i] = waterRate(SHORE_KM[shore[i]], k === 1 ? sea.hs[s] * 0.05 : (k - 3) * 0.05, sea.sst[s]);
             }
             if (land) isLand[i] = 1;
-            if (ok || onRiver[i]) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
+            if (ok || onRiver[i] || (pieces && wet0[i])) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
             info[i] = (ok ? k : 0) | (LINK_LUT[data.links[i]] << 8) | (shore[i] >= 20 ? FAR : 0) |
                       (onRiver[i] || extraN[i] ? ON_RIVER : 0) | (!land || kind[i] !== 0 ? PAINT_WATER : 0);
         }
@@ -137,7 +227,7 @@ export function buildCanoe(L, data, sea) {
     let front = [];
     const dead = [];
     for (let i = 0; i < N; i++) {
-        if (grid[i] || hasNode[i] || kind[i] !== 2) continue;
+        if (grid[i] || hasNode[i] || (kind[i] !== 2 && !pond[i])) continue;
         depth[i] = -1;
         for (let k = 0; k < 8; k++) {
             const j = nbr(i, k);
@@ -189,8 +279,17 @@ export function buildCanoe(L, data, sea) {
             if (na >= N) acc[na - N] = steps.aa[s];
             if (nb >= N) acc[nb - N] = steps.ab[s];
         }
+        if (pieces) for (let q = 0; q < pieces.n; q++) {
+            const v = nodeAt(pieces.cell[q], pieces.slot[q]);
+            if (v >= N) acc[v - N] = pieces.acc[q];
+        }
     }
-    // river edges, by source node: down a -> b, up b -> a; then the edges into dead-end cells
+    const p = cfg.paddle;
+    // water links (T-088): each end's node, kind, hazard rate and current; both ways, as sea or lake
+    // grid moves between the two units
+    const wl = pieces ? waterLinks(L, data, sea, pieces, info, nodeAt, seaRow, seaCol) : null;
+    // river edges, by source node: down a -> b, up b -> a; then the edges into dead-end cells and
+    // the water links
     const M = N + E;
     const rOff = new Int32Array(M + 1);
     for (let s = 0; s < steps.n; s++) {
@@ -200,12 +299,17 @@ export function buildCanoe(L, data, sea) {
     for (const j of dead) {
         for (let k = 0; k < 8; k++) { const i = nbr(j, k); if (i >= 0 && into(i, j)) rOff[canoeOf[i] + 1]++; }
     }
+    if (wl) for (let q = 0; q < wl.n; q++) rOff[wl.from[q] + 1]++;
     for (let i = 0; i < M; i++) rOff[i + 1] += rOff[i];
     const fill = rOff.slice(0, M);
-    const nE = 2 * nOpen + nInto;
+    const nE = 2 * nOpen + nInto + (wl ? wl.n : 0);
     const rTo = new Int32Array(nE), rDt = new Float32Array(nE), rCode = new Uint8Array(nE);
     const rHz = new Float32Array(nE), rKm = new Float32Array(nE);
-    const p = cfg.paddle;
+    if (wl) for (let q = 0; q < wl.n; q++) {
+        const e = fill[wl.from[q]]++;
+        rTo[e] = wl.to[q]; rDt[e] = wl.dt[q]; rCode[e] = wl.code[q]; rHz[e] = wl.hz[q]; rKm[e] = wl.km[q];
+        info[wl.cellFrom[q]] |= ON_RIVER;
+    }
     for (const j of dead) {
         const r = (j / W) | 0;
         for (let k = 0; k < 8; k++) {
@@ -247,7 +351,22 @@ export function eachCanoeNode(cn, cell, fn) {
 // is the same from each); else the cell's own.
 export function canoeFrom(L, res, n, code, pcell) {
     const cn = L.cn, N = L.W * L.H;
-    if (!cn.extraN[pcell] || code < P_XFER) return cn.canoeOf[pcell];   // grid moves leave the cell's own node only
+    if (!cn.extraN[pcell]) return cn.canoeOf[pcell];
+    if (code < P_XFER) {
+        // a grid move: from the cell's own node, or from any of its nodes by a water link (T-088),
+        // which is the one if its cost gives exactly the node's weight
+        let best = -1, bw = Infinity;
+        eachCanoeNode(cn, pcell, (m) => {
+            if (!(res.w[m] < Infinity)) return false;
+            for (let e = cn.rOff[m], e1 = cn.rOff[m + 1]; e < e1; e++) {
+                if (cn.rTo[e] !== n || cn.rCode[e] !== code) continue;
+                const x = res.w[m] + cn.rDt[e] + cfg.K * (cfg.hazard ? cn.rHz[e] : 0);
+                if (x < bw) { bw = x; best = m; }
+            }
+            return false;
+        });
+        return best >= 0 && Math.fround(bw) <= res.w[n] ? best : cn.canoeOf[pcell];
+    }
     const river = code >= P_DOWN;
     // getting out within the cell carries the node's access (search.js)
     const out = code === P_XFER + 4 && cn.acc && L.grid[pcell] ? cfg.carry * cfg.access * cfg.inv[L.grid[pcell]] : 0;

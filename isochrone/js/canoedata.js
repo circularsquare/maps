@@ -22,6 +22,7 @@ const index = () => indexP || (indexP = fetch(url('index.json')).then(r => {
 }).then(ix => {
     for (const k in ix.levels) if (ix.levels[k].tiles) ix.levels[k].set = new Set(ix.levels[k].tiles);
     for (const k in ix.rivers) ix.rivers[k].set = new Set(ix.rivers[k].tiles);
+    for (const k in ix.pieces || {}) if (ix.pieces[k].tiles) ix.pieces[k].set = new Set(ix.pieces[k].tiles);
     return ix;
 }));
 
@@ -65,6 +66,46 @@ function addSteps(out, rv, toCell) {
     }
 }
 
+// Water units and links of a coarse level (T-088, tools/canoe/rivers.py pack_water): uint32 n, cell
+// uint32[n], slot, kind, shore, access (0.1 km) uint8[n]; then uint32 m, cell uint32[m], dir, slotA,
+// slotB uint8[m]. Units are the water nodes the cell bands do not give (further slots, and slot 0
+// of a river-water cell); a link joins unit slotA of its cell to unit slotB of the neighbour in dir.
+function parsePieces(b) {
+    const dv = new DataView(b.buffer, b.byteOffset, b.length);
+    const n = dv.getUint32(0, true);
+    let o = 4;
+    const cell = new Uint32Array(b.slice(o, o + 4 * n).buffer); o += 4 * n;
+    const col = (k) => { const c = b.subarray(o, o + k); o += k; return c; };
+    const slot = col(n), kind = col(n), shore = col(n), acc = col(n);
+    const m = dv.getUint32(o, true); o += 4;
+    const lcell = new Uint32Array(b.slice(o, o + 4 * m).buffer); o += 4 * m;
+    const ldir = col(m), lsa = col(m), lsb = col(m);
+    return { n, cell, slot, kind, shore, acc, m, lcell, ldir, lsa, lsb };
+}
+function piecesOut(nu, nl) {
+    return { n: 0, cell: new Int32Array(nu), slot: new Uint8Array(nu), kind: new Uint8Array(nu), shore: new Uint8Array(nu),
+             acc: new Float32Array(nu), m: 0, a: new Int32Array(nl), b: new Int32Array(nl), dir: new Uint8Array(nl),
+             sa: new Uint8Array(nl), sb: new Uint8Array(nl) };
+}
+// toCell(c) -> level cell or -1; toPair(c, dc, dr) -> [a, b] or null, as for river steps
+function addPieces(out, pv, toCell, toPair) {
+    for (let i = 0; i < pv.n; i++) {
+        const c = toCell(pv.cell[i]);
+        if (c < 0) continue;
+        const k = out.n++;
+        out.cell[k] = c; out.slot[k] = pv.slot[i]; out.kind[k] = pv.kind[i]; out.shore[k] = pv.shore[i];
+        out.acc[k] = pv.acc[i] * 0.1;
+    }
+    for (let i = 0; i < pv.m; i++) {
+        const d = FILE_DIRS[pv.ldir[i]];
+        if (!d) continue;
+        const ab = toPair(pv.lcell[i], d[0], d[1]);
+        if (!ab) continue;
+        const k = out.m++;
+        out.a[k] = ab[0]; out.b[k] = ab[1]; out.dir[k] = pv.ldir[i]; out.sa[k] = pv.lsa[i]; out.sb[k] = pv.lsb[i];
+    }
+}
+
 function parseSea(b, g) {
     const n = g.width * g.height;
     return { W: g.width, H: g.height, deg: g.step, west: g.west, north: g.north, unit: SEA_UNIT,
@@ -77,20 +118,28 @@ function parseSea(b, g) {
 export function loadWorld(W, H) {
     return worldP || (worldP = (async () => {
         const ix = await index();
-        const [w, s, r] = await Promise.all([fetchGz(url(ix.levels['10'].file)), fetchGz(url(ix.sea.file)),
-                                            fetchGz(url('rivers.bin.gz'))]);
+        const pf = ix.pieces && ix.pieces['10'];
+        const [w, s, r, pc] = await Promise.all([fetchGz(url(ix.levels['10'].file)), fetchGz(url(ix.sea.file)),
+                                                 fetchGz(url('rivers.bin.gz')), pf ? fetchGz(url(pf.file)) : null]);
         const N = W * H;
         const rv = parseRivers(r);
         const steps = stepsOut(rv.n);
         let ab = [0, 0];
-        addSteps(steps, rv, (cell, dc, dr) => {
+        const toPair = (cell, dc, dr) => {
             const row = (cell / W) | 0, col = cell - row * W, r2 = row + dr;
             if (r2 < 0 || r2 >= H) return null;
             ab[0] = cell; ab[1] = r2 * W + (col + dc + W) % W;
             return ab;
-        });
+        };
+        addSteps(steps, rv, toPair);
+        let pieces = null;
+        if (pc) {
+            const pv = parsePieces(pc);
+            pieces = piecesOut(pv.n, pv.m);
+            addPieces(pieces, pv, (c) => c, toPair);
+        }
         return { kind: w.subarray(0, N), shore: w.subarray(N, 2 * N), links: w.subarray(2 * N, 3 * N),
-                 sea: parseSea(s, ix.sea), steps };
+                 sea: parseSea(s, ix.sea), steps, pieces };
     })().catch(e => { worldP = null; throw e; }));
 }
 
@@ -110,11 +159,17 @@ export async function loadWindowWater(w, grid, shoreAt) {
             if (bands === 3) cutInto(links, w, t, 2, T, tr, tc);
         }));
     });
-    const raw = [];
+    const raw = [], rawP = [];
     if (rl) forTiles(w, T, TX, (tr, tc, tcw) => {
         if (!rl.set.has(tr * TX + tcw)) return;
         jobs.push(getCached(url(rl.path + '/' + tr + '_' + tcw + '.bin.gz'), 0)
             .then(b => raw.push([tr, tc, parseRivers(b)])));
+    });
+    const pl = ix.pieces && ix.pieces[w.f];
+    if (pl) forTiles(w, T, TX, (tr, tc, tcw) => {
+        if (!pl.set.has(tr * TX + tcw)) return;
+        jobs.push(getCached(url(pl.path + '/' + tr + '_' + tcw + '.bin.gz'), 0)
+            .then(b => rawP.push([tr, tc, parsePieces(b)])));
     });
     await Promise.all(jobs);
     for (const [tr, tc] of missing) {
@@ -132,15 +187,24 @@ export async function loadWindowWater(w, grid, shoreAt) {
     }
     const steps = stepsOut(raw.reduce((s, x) => s + x[2].n, 0));
     let ab = [0, 0];
-    for (const [tr, tc, rv] of raw) {
-        const rr = tr * T - w.row0, cc = tc * T - w.col0;
-        addSteps(steps, rv, (cell, dc, dr) => {
-            const lr = (cell / T) | 0, r = rr + lr, c = cc + cell - lr * T;
-            const r2 = r + dr, c2 = c + dc;
-            if (r < 0 || r >= w.rows || c < 0 || c >= w.cols || r2 < 0 || r2 >= w.rows || c2 < 0 || c2 >= w.cols) return null;
-            ab[0] = r * w.cols + c; ab[1] = r2 * w.cols + c2;
-            return ab;
-        });
+    const pairIn = (rr, cc) => (cell, dc, dr) => {
+        const lr = (cell / T) | 0, r = rr + lr, c = cc + cell - lr * T;
+        const r2 = r + dr, c2 = c + dc;
+        if (r < 0 || r >= w.rows || c < 0 || c >= w.cols || r2 < 0 || r2 >= w.rows || c2 < 0 || c2 >= w.cols) return null;
+        ab[0] = r * w.cols + c; ab[1] = r2 * w.cols + c2;
+        return ab;
+    };
+    for (const [tr, tc, rv] of raw) addSteps(steps, rv, pairIn(tr * T - w.row0, tc * T - w.col0));
+    let pieces = null;
+    if (pl) {
+        pieces = piecesOut(rawP.reduce((s, x) => s + x[2].n, 0), rawP.reduce((s, x) => s + x[2].m, 0));
+        for (const [tr, tc, pv] of rawP) {
+            const rr = tr * T - w.row0, cc = tc * T - w.col0;
+            addPieces(pieces, pv, (cell) => {
+                const lr = (cell / T) | 0, r = rr + lr, c = cc + cell - lr * T;
+                return r < 0 || r >= w.rows || c < 0 || c >= w.cols ? -1 : r * w.cols + c;
+            }, pairIn(rr, cc));
+        }
     }
-    return { kind, shore, links, steps };
+    return { kind, shore, links, steps, pieces };
 }
