@@ -138,6 +138,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   having their right shape". Distortion default 0.5 (her pick).
 
 ## Lessons from this run
+- 2026-11-06 ~17:30: CPU at 100% with 11 cores claimed: an unpinned smoke Chrome took ~15 cores, agents' probe
+  Chromes ran over or without claims, rustc unclaimed; Anita's NA load ~2 -> ~4 min. All agents told to pin
+  (`start /affinity`), brief updated, smoke8800.cmd pinned to 0xF000, T-2630 filed. Check real CPU with Get-Counter
+  after launching browser agents, not just the ledger.
 - Agents' scratch folders can hold tens of GB (marketsearch: 37 x 1 GB dumps, found at 10 GB free during Brazil's run,
   2026-11-06 01:50). When disk drops, measure the session scratch folders first; the common brief now says to clean up.
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
