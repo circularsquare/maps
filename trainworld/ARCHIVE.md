@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2324 The walking rule's cost, the rest of T-2307 (2026-11-05, agent walkcost, tree): exact speedups in the commute lanes and the everyday check; New York's calib 3.2% over T-1059's with later tasks' 5.9% taken out (9.3% straight), figures identical, smoke 12,515,594. notes/T-2324.md.
 - T-2381 Cleanup E4, E5 (2026-11-05, agent kernelsplit): demand/kernel.rs (6,207 lines) is 937 plus seven stage files in kernel/ (gravity, access, subzones, search, mode, assign, stalls), and demand/intercity.rs (5,355) is 950 plus nine files in intercity/ (logsum, costs, market, build, api, pass, setup, exports, selection); moves only, moved private items and fields are `pub(super)`, `super::` paths in moved code are `super::super::`; tests 361 and 534 as before, smoke 12,515,598.
 - T-2512 Cleanup A4's rest (2026-11-05, agent cleana4, tree): unused city/version/clock fields, one decode on opening a slot, ledger and money-param helpers, `Newest` for the preview, station and crossover waits, `isThisWorld`; smoke 12,515,598. Left: regions.json fetched once (item 26 step two). notes/T-2512.md.
 - T-2559 Old saves' first reload hits the demand cache (2026-11-05, agent farebase): `loadFares` (`clock.worker.ts`) takes an old save's fare base and rate from its rounded nodes at load; the real save's first reload is cached (t328 run 0), smoke 12,515,594 (was 12,515,598). notes/T-2552.md.

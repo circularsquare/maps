@@ -73,7 +73,8 @@ are written "06:00" to match the top bar clock (you wrote "6:00"; say if you wan
 ### Demand rules (T-2265, T-2278, T-2276, done overnight)
 - **Walking check in real minutes**: a station pair is refused only when walking the whole way is quicker in real
   minutes (no fare, crowding or weights); T-1782's "only a little quicker" fade is gone. Real save 11.72M -> 12.51M
-  rail trips a day (+6.7%). It made the demand solve about 10% slower; T-2307 got back a quarter of that, the rest is T-2324.
+  rail trips a day (+6.7%). It made the demand solve about 10% slower; T-2307 and T-2324 got back most of that (now
+  about 3% over the old rule, figures unchanged; notes/T-2324.md).
 - **Parking by income**: paid parking times min(1, (GDP per head / $35,000)^0.3), from parking price surveys across
   57 cities (notes/T-2278.md). India 0.46, Vietnam 0.56, China 0.76, Turkey 0.83; 1 from Japan and Korea up. With no
   rail, Ho Chi Minh City's car share 53.7% -> 60.6%, Delhi 59.7% -> 60.9%, rich cities unchanged. Curve:

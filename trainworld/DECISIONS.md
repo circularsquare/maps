@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+- 2026-11-05 (agent's call, T-2436): Mexico is zoned with no density floor (`ZONE_RULES["MEX"]` `min_density` 0): its
+  northern municipios are huge with one town each, and the default 20 a km2 left 6.9M people dead (Ciudad Acuna, Caborca,
+  Ramos Arizpe). `fua_whole` 0.3M joins Zacatecas and Guadalupe, one town. notes/T-2436.md.
+
 ## 2026-11-05
 
 - **T-2528: the distortion dial's default is 0.5** (was 0.8), Anita: "i kidna like 0.5". T-2556's one fail there (a
@@ -1130,3 +1134,4 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 - 2026-11-05 (agent's call, T-2528 follow-up, Anita: "we should stick to those [90 / 45 degree lines]"): a river band's width changes as square-cut steps (runs stroked with butt ends, round stubs only at a band's ends and where rivers meet), each width held at least 4 pitches, narrowing early to the least room ahead, widening only by half a pitch or more, never at a bend; the quarter-pitch-a-pitch taper is gone. So a band can be a little narrower than its room allowed over a stretch; checked by t2169-water's "every water edge at 0, 45 or 90 degrees".
 - 2026-11-05 (agent's call, T-2560, revisiting T-347): a reload that shows the cached result of the game's own network (T-328: same network, packs and build, the fresh final the same figures) drops its loading card and runs its clock once that network is in, about 25 s on Anita's North America save instead of 130-210 s at the fresh final. T-347 held the card for lag that T-348 found only in the first seconds; measured over the re-solve, the page holds 60 fps with no long task over 200 ms until the final. The re-solve keeps the load's barrier and the levels of detail wait for it (`cacheSolve`); an edit meanwhile is an ordinary edit; the existing "Trips in 81 cities being recomputed…" tag and the 4x cap show until the zone in view's cluster is final. `?perfOff=cacheCard` gives the old card. notes/T-2560.md.
 - 2026-11-05 (agent's call, T-2559): a save's fares are normalised at load, a save from before T-1521 or with no nodes takes its base and rate from its rounded nodes (as the slot writes them), so its first reload hits the demand cache; the real save's smoke figure moved from 12,515,598 to 12,515,594 rail trips a day (0.00003%). New games and the rounding itself are unchanged (`clock.worker.ts` `loadFares`).
+- 2026-11-05 (agent's call, T-2324): the walking rule's cost is judged with the other tasks since T-2307 taken out (they made New York's calib 5.9% dearer with the rule off): the solve is 3.2% over T-1059's that way, 9.3% measured straight against bb48b358. Every T-2324 speedup is exact (figures identical); the everyday home row cache the task line suggested was slower (homes repeat only about 2.9 pairs at a time) and is not used. notes/T-2324.md.

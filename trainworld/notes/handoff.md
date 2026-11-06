@@ -4,39 +4,37 @@ Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 
 Previous: session 4a9d3a95-b5e4-4ac5-ab4b-4ef63d690cc6, name maps-17 (ListAgents no longer shows that name; likely
 maps-03 after the VS Code restart), handed over 2026-11-05 17:55, finishing in-flight work (mexico, cachecard,
 diagsmooth, watertoggle, sheet)
-Updated: 2026-11-05 18:05
+Updated: 2026-11-05 18:20
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **5a25226a** (Anita pushed ~18:00). Real save smokes 12,515,598.
-- **8800 = build 1056 (e0534793)**, smoke light and dark PASSED. LIVE = 821. Publish only on Anita's word (release
-  "later this week"; Mexico and Brazil before release).
-- **Cores cap 12** while Anita is around. Disk ~67 GB free.
-- **Pack lock: mexico's** (T-2436). Then Brazil T-2437.
-- maps-17's subagents report to maps-17 (maps-03), which relays mexico's and sheet's reports to maps-93 and lands
-  watertoggle and cachecard itself if they qualify. maps-93 lands nothing in the main tree until maps-17 says done.
+- master **79d0c5ee**. **Real save smokes 12,515,594** since farebase (T-2559) landed.
+- 8800 = build 1074 (163d9725), smoke light and dark PASSED. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico and Brazil before release).
+- **Cores cap 15**: Anita away ~18:10-21:10 ("feel free to use all cores"); back to 12 when she returns.
+- **Pack lock: mexico's** (T-2436; batch 20261105-182304, python 27744, log artifacts/trainworld/t2436-run.log). Then
+  Brazil T-2437. Mexico gates come every 10 built rows (~3 min each; gate 1 18:57-19:00, 10 gated, 0 parked);
+  All 105 rows gated (98 + 7 relaxed: Los Cabos pop, three mountain towns jobs share, three desert zones water).
+  **Join (MX, 6 cores) writing data/packs ~1 h from ~19:50**: app/WASM landings fine; nothing writes packs/terrain.
+- maps-17 (maps-03) relays mexico's and sheet's reports; landing is maps-93's since 18:15 (maps-17's word). Mexico's
+  run starts after maps-93's landings; **no app/WASM landing into the main tree while mexico's browser gate runs**
+  (it messages maps-17 before a gate; maps-17 asks maps-93).
 
 ## maps-93's agents
-- **uismall5** (Sonnet, tree .tw-trees/uismall5 from 5a25226a, port 6188): T-2569..T-2572, Anita's four TODO items of
-  the evening (notes/todo-2026-11-05c.md): save preview "Loading...", trouble list empty lines, trouble icon padding,
-  show-row gap 5 -> 3 px.
-- **kernelsplit** (Sonnet, tree .tw-trees/kernelsplit from 5a25226a, port 6187): T-2381, split demand/kernel.rs and
-  intercity.rs, moves only; tests and smoke unchanged.
-- **cleana4** (Sonnet, tree .tw-trees/cleana4, port 6186): T-2512 cleanup A4 rest; stays out of demandClient.ts.
-- farebase DONE, to land (tree .tw-trees/farebase; code: app/src/workers/clock.worker.ts `loadFares` only; records
-  in main tree: docs/track-and-service.md, DECISIONS, TASKS/ARCHIVE): T-2559, pre-T-1521 saves take fares from their
-  rounded nodes; first reload hits the cache. **Real save smoke figure 12,515,598 -> 12,515,594** once landed.
-  cleana4 also edits clock.worker.ts: expect a rebase at whichever lands second.
-- t409strong DONE (T-2527, uncommitted in main tree: checks/t409-worker-check.mjs, notes/T-2527.md, docs/code-map.md,
-  TASKS/ARCHIVE lines): part 5 now 0.8-22 a period, market rail 26-142; walker rule still untested, filed T-2573.
+- Landed ~18:25-18:50: cleana4 97c6e153 (T-2512; T-2575 filed for its item 26 step two), kernelsplit 8696ae95 (T-2381,
+  main WASM rebuilt in a gate-free window mexico confirmed), sheet's notes db56555e. **8800 = build 1074 (163d9725)**, smoke light and dark PASSED 18:44, 12,515,594.
+- **walkcost** (Opus, tree .tw-trees/walkcost from 163d9725, port 6182): T-2324 walking rule cost to within 5% of
+  T-1059; Rust (kernel/ submodules); landing rebuilds main WASM: only between mexico's gates.
 - **followtrack** (Opus, tree .tw-trees/followtrack from c306d1bc, port 6184): T-1358 followTrack at least halved,
   zones identical.
-- uismall5 reported; sent back for the trouble button vs attribution button overlap (T-2571).
-- watertoggle LANDED by maps-17 7bba88c2 (records 550e99ab): T-2565 "Show water" button, off by default; not on 8800
-  yet. Show Anita the hover string "Show water" (new).
-- Anita away ~18:10-21:10, "feel free to use all cores": cap 15.
-- Next free id **T-2574** (T-2567..68 are sheet's).
+- **cachehit** (Opus, tree .tw-trees/cachehit from 79d0c5ee, port 6183): T-2574 cache-hit bar, then T-2533 zone in
+  view answers within ~20 s of a cache hit.
+- Landed 18:15: uismall5 3d0939bc (T-2569..T-2572; also fixed the map credits button, invisible since T-1435, now
+  just left of the trouble button), farebase f3b3cb18 (T-2559), records 79d0c5ee (with t409strong's T-2527).
+  watertoggle (maps-17) 7bba88c2, cachecard (maps-17) 9a68feb5.
+- Strings to show Anita: "Show water" (new hover); "Nothing built" -> "Loading..." while an account game's picture
+  loads; "No stations" (new hover, trouble row). Review: artifacts/trainworld/uismall5/attrfix-both.png.
+- Next free id **T-2575** (T-2567..68 are sheet's).
 - maps-93 scratch: C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\aa768402-8365-45e0-85b8-0c27fe256637\scratchpad
   (snapbuild.cmd, snapbuild-frozen.cmd fixed, mark_taking.py, keep_hunks.py, lowdisk.ps1, common-brief-tree.md).
 
@@ -136,7 +134,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- None open. Answered ~18:15: water is experimental behind a button, default off (T-2565); sheet first, rough
+- T-2566 sheet (to ask when she is back ~21:10; pictures review/sheet-nyc-core.png, review/sheet-japan.png; notes/T-2566.md):
+  1 core size against countryside (agent: halfway back to today's); 2 scale at most double per 40 pitches, right?;
+  3 busy places bigger by demand (left out: map would change size with ridership); 4 narrow rivers at real width too
+  thin: keep today's thin band only where a line crosses?; 5 real state borders back, a station may sit a few pitches
+  on the wrong side once straightened: fine or bend the border? T-2567/T-2568 wait on her go.
+- Earlier, answered ~18:15: water is experimental behind a button, default off (T-2565); sheet first, rough
   prototype outside the game (T-2566); "this sort of distortion scheme would solve the issue of region borders not
   having their right shape". Distortion default 0.5 (her pick).
 
