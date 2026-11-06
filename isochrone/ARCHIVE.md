@@ -1,5 +1,7 @@
 # Archive
 
+- T-090 [P1] Canoe corridors from Semnan drawn in pieces. Done 2026-11-06: `canoeFrom` left out the hazard on getting out, so a parent could be read back past the limit; that left `nch` dirty for every later count, breaking trunks over a session. Fixed, guarded; `checks/corridors.mjs`, smoke 18/18. notes/T-090.md.
+
 - T-087 [P3] Road share factor on a farm grid. Done 2026-11-06: L1 by 100 m crossing time fits 15 tiles to 2.7% mean / 6.8% worst (factor 3: 9.0 / 20.7) and removes the land cover floor; became T-089, now part of T-011. Mekong canals off for every rule. notes/T-087.md.
 
 - T-088 [P3] Lake country too fast at L10. Done 2026-11-06: each separate run of sea or lake water in a split coarse cell is its own canoe node (with the river pieces touching it), extra links listed in `pieces.bin.gz` and `pieces/l3/`; water units on land cells pay the half access as river pieces. Lakes L1/L10 1.07 -> 1.01, Jyvaskyla 1.16 -> 1.10; Coari 0.90 -> 0.85 and Sogndal 0.91 -> 0.80 from coarse walking bias (T-081); one-pixel river ponds fixed (part of T-075). notes/T-088.md.

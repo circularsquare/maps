@@ -102,20 +102,23 @@ export function count(L, canoe, coarser) {
     let total = s.total;
     // the parents of land nodes re-chosen (T-056); ord then holds every node after its children
     const C10 = coarser && coarser.find(C => C.wrap);
-    reparent(L, canoe, par, nr, dtl, C10 ? C10.corr.total : total);
+    const no = reparent(L, canoe, par, nr, dtl, C10 ? C10.corr.total : total);
+    // nch is shared by every level and click: a node left unordered would leave it dirty and break
+    // the counts of whatever node has its index next time (T-090)
+    if (no !== nr) for (let i = 0; i < nr; i++) nch[reach[i]] = 0;
     // A window holding the start: which nodes' routes go back to it (org 1) and which to a border
     // seed (2). Near the border the seeds often win (a coarse time a little earlier than the fine
     // one), and downstream on a river they win far in; there the coarser level's lines are kept.
     let org = null;
     if (coarser && roots.length) {
         org = new Uint8Array(M);
-        for (let i = nr - 1; i >= 0; i--) {
+        for (let i = no - 1; i >= 0; i--) {
             const n = ord[i], p = par[n];
             org[n] = p >= 0 ? org[p] : pred[n] === P_NONE ? 1 : 2;
         }
     }
     if (coarser) total += edgeFlux(L, canoe, coarser, cnt, par, org);
-    for (let i = 0; i < nr; i++) { const n = ord[i], p = par[n]; if (p >= 0) cnt[p] += cnt[n]; }
+    for (let i = 0; i < no; i++) { const n = ord[i], p = par[n]; if (p >= 0) cnt[p] += cnt[n]; }
     L.corr = { par, cnt, total, nr, org, dtl };
     return L.corr;
 }
@@ -189,7 +192,16 @@ function links(L, canoe, par, cnt, dtl, nr, roots) {
             let pc = cell - r * W - DC[code];
             if (pc < 0 || pc >= W) pc = wrap ? (pc + W) % W : pc;
             const pcell = (r - DR[code]) * W + pc;
-            p = (FLIP[code] ? gv !== 0 : gv === 0) ? (extraN && extraN[pcell] ? canoeFrom(L, L.res, v, code, pcell) : canoeOf[pcell]) : pcell;
+            if (!(FLIP[code] ? gv !== 0 : gv === 0)) p = pcell;
+            else if (!(extraN && extraN[pcell])) p = canoeOf[pcell];
+            else {
+                // a parent is reached no later and at no more weight than its child. One read back
+                // wrong among a cell's canoe nodes could be unreached or past the time limit:
+                // outside the counted tree, it would leave nch dirty for every later count (T-090).
+                // Then the cell's node that fits.
+                p = canoeFrom(L, L.res, v, code, pcell);
+                if (p >= 0 && !(t[p] <= t[v] && w[p] <= w[v])) p = earliest(L.cn, pcell, L.res, v);
+            }
         }
         par[v] = p;
         if (p < 0) { dtl[v] = 0; continue; }
@@ -211,13 +223,28 @@ function links(L, canoe, par, cnt, dtl, nr, roots) {
             if (u < 0 || !grid[u] || !(w[u] < wv) || !(t[u] <= maxH)) continue;
             m |= 1 << j;
             nch[u]++;
+            // the start as a candidate is counted like a root (a window's start can have no children)
+            if (pred[u] === P_NONE && !roots.includes(u)) { roots.push(u); reach[nr++] = u; }
         }
         if (m) share[v] = m | kv << MOVE | (inner ? INNER : 0);
     }
     return { total, nr };
 }
 
-// world: the area reached at L10, whose share SHARE is the drawing threshold.
+// The canoe node of a cell with the least weight among those reached no later and at no more
+// weight than node v, or -1.
+function earliest(cn, cell, res, v) {
+    const { t, w } = res;
+    let best = -1;
+    eachCanoeNode(cn, cell, (m) => {
+        if (t[m] <= t[v] && w[m] <= w[v] && (best < 0 || w[m] < w[best])) best = m;
+        return false;
+    });
+    return best;
+}
+
+// world: the area reached at L10, whose share SHARE is the drawing threshold. Returns how many
+// nodes it ordered (all nr of them when the links form a tree).
 function reparent(L, canoe, par, nr, dtl, world) {
     const { W, H, grid } = L;
     const { t, w } = L.res;
@@ -335,6 +362,7 @@ function reparent(L, canoe, par, nr, dtl, world) {
         par[v] = best;
         dtl[v] = moveTime(L, best, v, bk, f);
     }
+    return no;
 }
 
 // The time of land move k from u into v (a candidate's: a knight move's two cells are land).

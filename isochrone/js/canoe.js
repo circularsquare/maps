@@ -368,8 +368,14 @@ export function canoeFrom(L, res, n, code, pcell) {
         return best >= 0 && Math.fround(bw) <= res.w[n] ? best : cn.canoeOf[pcell];
     }
     const river = code >= P_DOWN;
-    // getting out within the cell carries the node's access (search.js)
-    const out = code === P_XFER + 4 && cn.acc && L.grid[pcell] ? cfg.carry * cfg.access * cfg.inv[L.grid[pcell]] : 0;
+    // getting out within the cell carries the node's access, and pays the land's hazard on it, as
+    // the search costs it (search.js; without the hazard a later node could be picked, T-090)
+    let out = 0;
+    if (code === P_XFER + 4 && cn.acc && L.grid[pcell]) {
+        const iv = cfg.inv[L.grid[pcell]];
+        out = cfg.carry * cfg.access * iv;
+        if (cfg.hazard && L.hq) out *= 1 + cfg.K * L.hq[pcell] / iv;
+    }
     let best = -1, bw = Infinity;
     eachCanoeNode(cn, pcell, (m) => {
         if (!(res.w[m] < Infinity)) return false;

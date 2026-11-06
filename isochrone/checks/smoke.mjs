@@ -282,6 +282,33 @@ try {
       } catch (e) {
         report('mode buttons switch walking and canoe', false, first(e));
       }
+      // after the session's starts and windows, the canoe start's L10 corridors still lead back to
+      // the start: each line ends at the start's cell or on another line (T-090: counts left dirty by
+      // one start broke later starts' lines into pieces)
+      try {
+        await page.waitForFunction(() => corr[10] && corr[10].originId === originId, undefined, { timeout: 60000, polling: 100 });
+        const r = await page.evaluate(() => {
+          const c = corr[10], m = layers[10].m, o = originMarker.getLngLat();
+          const key = (x, y) => x.toFixed(4) + ',' + y.toFixed(4);
+          const seen = new Map();
+          for (let i = 0; i + 1 < c.off.length; i++) for (let j = c.off[i]; j < c.off[i + 1]; j++) {
+            const k = key(c.xy[2 * j], c.xy[2 * j + 1]);
+            seen.set(k, (seen.get(k) || 0) + 1);
+          }
+          const sx = m.west + (Math.floor((o.lng - m.west) / m.cellDeg) + 0.5) * m.cellDeg;
+          const sy = m.north - (Math.floor((m.north - o.lat) / m.cellDeg) + 0.5) * m.cellDeg;
+          let loose = 0;
+          for (let i = 0; i + 1 < c.off.length; i++) {
+            const j = c.off[i + 1] - 1, x = c.xy[2 * j], y = c.xy[2 * j + 1];
+            if ((Math.abs(x - sx) < 1e-3 && Math.abs(y - sy) < 1e-3) || seen.get(key(x, y)) > 1) continue;
+            loose++;
+          }
+          return { lines: c.s.length, loose };
+        });
+        report('canoe corridors lead back to the start', r.lines > 20 && r.loose === 0, `(${r.lines} lines, ${r.loose} loose ends)`);
+      } catch (e) {
+        report('canoe corridors lead back to the start', false, first(e));
+      }
     } catch (e) {
       report('canoe checks', false, first(e));
     }
