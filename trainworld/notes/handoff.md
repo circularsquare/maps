@@ -47,8 +47,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - sheetspeed LANDED 2af717b9: T-2589 stage 1, same picture bit for bit, all Japan 49 -> 38 s, NY 10.9 -> 9.3 s;
   T-2589/T-2592 stay open (left: carry in WASM+SIMD, est. 3-4x, Rust tree; layout tolerance is a look call);
   T-2597 filed. Not on 8800 yet.
-- **sheetwasm** (Opus, tree, launched ~10:00, Rust go-ahead): T-2589 stage 2: carry in Rust/WASM+SIMD bit-identical,
-  then (if time) layout early stop within ~1 px on the four views, DECISIONS line.
+- **sheetwasm** (Opus, tree, launched ~10:00, Rust go-ahead): T-2589 stage 2: carry in Rust/WASM+SIMD bit-identical
+  only (stage B, layout.ts, dropped ~10:40: smoothlines owns layout.ts).
+- **omaha** (Opus, main tree, pack lock from ~10:35 "go packs"): T-2595 doc rebuild + west-north-central join,
+  ~35-45 min. Messages at its gate's start/end (hold app/WASM landings). notes/T-2595.md.
+- **smoothlines** (Opus, tree, ~10:45): T-2599 diagram zigzags/sharp turns (Anita on Kyushu: "lots of sharp 60
+  degree turns"); owns layout.ts, draw.ts.
+- **linepanel** (Opus, tree, ~10:45): T-2600 build controls text, T-2601 "Stop editing", T-2602 faded passed
+  stations, T-2603 Marey diagram. Strings to show Anita.
+- **profitpeek** (Opus, main tree read-only, ~10:45): T-2604 quick profit estimate, design note only.
+- 8800 = build at 983f5c3d (Brazil, sheet default, NJ fix, DC label, sheetspeed, workerbal); smoke light/dark
+  running ~10:35.
+- Anita asked (TODO.md): cross-border fares, "charge people based on where they get on": answered, already so
+  (each trip pays its origin country's scale; region income by boarding stop).
 - workerbal LANDED 858098e0: T-2532 (edit's bubbles 95 -> 25 s), T-2596 (bubble sums only for zones on screen
   before the last round, ~8-11 s off a solve), T-2553 closed with no change. Not on 8800 yet.
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
