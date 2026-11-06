@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2577 Network diagram sheet, prototype rounds 2 and 3 (2026-11-05/06, agents sheet2, sheet3): land keeps its shape and water takes the stretch, Japan reads as Japan, Manhattan as Long Island (0.82/1.14), 0 stations off their land, Harlem shown; Anita: "lets put it in" (T-2568, T-2567, T-2580). notes/T-2566.md.
+- T-2566 Network diagram on one continuous rubber-sheet warp, design and round 1 prototype (2026-11-05, agent sheet): summary, design, New York and Japan pictures; continued as T-2577. notes/T-2566.md.
+- T-2561 Network diagram layout's scale as a smooth field (2026-11-05): superseded by the sheet (T-2566); findings in notes/T-2561.md.
 - T-1647 Cheaper market searches per node (2026-11-05, agent marketsearch, tree): the search's queue keeps copies, route nodes' edges in one record, settled stations return early, cheaper bans; the longer trips' far-zone entries looked up once a pair; native Japan pass 17.6% less CPU, figures identical. notes/T-1647.md.
 - T-2533 The zone in view answers after a cache hit (2026-11-05, agent cachehit, tree): the focus pool stays, solves the zone to round 0 only and answers its questions until the main solve is sent; a click at the card 13-19 s (real, was 31-34), 14 s (North America, was 91), 16 s (Tokyo, was 55); peaks within run noise. notes/T-2533.md.
 - T-2574 The card's bar on a cache hit (2026-11-05, agent cachehit, tree): from the read's match the bar runs over the cache's own path, and the card shows it full with no time left for 0.4 s before going (was gone at 10-39%, minutes "left"); a miss as before. notes/T-2533.md.

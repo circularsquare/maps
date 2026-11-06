@@ -17,20 +17,28 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - maps-17 (now named maps-03) handed over fully at 21:37: no agents of its own left.
 
 ## In flight (maps-93's agents)
-- **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Sends dry counts
-  before building (wait for maps-93's go), messages at the first gate and the last gate's end. No app/WASM landings
+- **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Dry counts ~23:00:
+  177 rows (19 metros + 158 zones, 194M GHSL), reach rule without join_km, 23 zones under 0.5M, dead space 62 units
+  1.86M (roadless Amazon), sao kept as hand-built (OD 2017 coverage). maps-93 said go ~23:00; run ~2.5-3 h, 5 regions
+  (tests T-2070's read ahead). Messages at the first gate and the last gate's end. Run 1 (20261105-230654) faulted
+  after 37 min on a 2-point OSM ring in the sudeste admin read; fix on_invalid="ignore" in osm_units.admin_areas, restart
+  with --rows on all 177 (~23:45). Run 2 batch 20261105-234843; gates from 00:00 (hold app/WASM landings). Disk 21.4 GB
+  at 00:15: the drop was Brazil's extracts and caches (one-off); ~16 MB a row now; expects 10-13 GB at the end, plus
+  ~5.5 GB once it deletes the pbfs and caches before the join (it will). Its watcher stops the run at 10 GB. No app/WASM landings
   while its gates run. Notes/PIDs/restart in notes/T-2437.md.
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
   13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
   Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
-- **marketsearch** (Opus, tree .tw-trees/marketsearch from 55ab534f, port 6181): T-1647 native Japan pass 15% faster,
-  exact. Rust: landing rebuilds the main WASM.
+- marketsearch LANDED 5e7b5b4d (records 10552501): T-1647, native Japan pass 17.6% less CPU, exact; open levers in
+  notes/T-1647.md. Not on 8800 yet (perf only; fold into the next rebuild).
 - sheet2 DONE (retired, 492k): T-2577 round 2 in notes/T-2566.md "Round 2"; Japan reads as Japan (Honshu kept 0.92
   vs 0.76), 88-91% hops one straight run, Harlem shown (cause: waterReal.ts FINE_M 40 m x 3 cells = 120 m minimum),
   0 stations on the wrong side. Fails: Tokyo core cramped (needs T-2568's fine lattice), stray 5.7 pitches, Hudson
   pinched at Midtown. Anita ~22:40: "japan looks great!" but Manhattan's shape is messed up, stations on water or off
-  Manhattan, downtown's tip wrong. **sheet3** (Opus, read-only, scratch\sheet3) does round 3 (still T-2577): Manhattan
-  shape, 0 stations on water or the wrong landmass, downtown tip; Japan kept. T-2567/T-2568 wait on it.
+  Manhattan, downtown's tip wrong. sheet3 DONE (retired, 465k): round 3 in notes/T-2566.md "Round 3"; Manhattan 0.82/1.14
+  (= Long Island), 0 stations off their land (NY and Japan), East River open at the tip, Manhattan ~25% bigger. Japan
+  still on round 2's unsettled solver (a settled one shrinks Kyushu): T-2568 grows. Shown to Anita ~00:45 with 2
+  questions (review/sheet3-*.png); T-2567/T-2568 scope per its notes, wait on her.
 
 ## Landed this session (maps-93)
 - uismall5 3d0939bc (T-2569..T-2572, Anita's evening TODO; also the map credits button, invisible since T-1435, now
