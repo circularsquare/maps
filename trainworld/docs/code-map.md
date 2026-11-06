@@ -253,7 +253,8 @@ rivers thinned to centre lines, their crossings with the hops' tracks),
 `water.ts` (rivers drawn as bands routed between their crossings, T-2169, T-2516; each band its real width at the
 drawing's smoothed scale `scaleAt`, cut to its room, T-2528) and
 `waterSea.ts` (the sea decided in the drawing by the nearest stations' look to the sea on the ground, its coast
-fitted at 0, 45 and 90 degrees, T-2169), `lsqr.ts`
+fitted at 0, 45 and 90 degrees, T-2169), `sheet.ts` (the rubber sheet behind `?sheet=1`: a quadtree lattice
+stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted
 on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level
 in the layout worker, painted, and `nameAt`, T-2162), `cityNames.ts` (a name per city block far out, centred on its own
@@ -311,7 +312,8 @@ T-972), `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's ha
 never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?focusWorkers=N` (the focus pool's size),
 `?memFree=MB` (the free memory a check pretends), `?lod=` (a fixed level of detail, `workers/demandLod.ts`), `?opened=all` (no realm
 hidden; checks that visit zones in every realm), `?patch=check|shiftcheck|0` (patched against whole builds, `game/patchMode.ts`),
-`?diagram=r2` (the diagram's round 2 layout options), `?rawdem=1` (the hillshade as it comes), `?logo=0` (no start menu logo),
+`?diagram=r2` (the diagram's round 2 layout options), `?sheet=1` (the diagram's worker solves the rubber sheet too,
+kept as `window.twSheet`, T-2568), `?rawdem=1` (the hillshade as it comes), `?logo=0` (no start menu logo),
 `?quietMs=N` (how long the loading card may hear nothing before the failure screen), `?keepMs=N` (the hour after which the keep dot appears), `?track` / `?notrack` (plays and playtime
 pings on or off, `game/playtime.ts`), and the start menu's `?city=<zone id>` and `?mode=sandbox` (with `?new=1`), `?slot=<key>` and
 `?load=file|restore|new`; `?lang=<code>|pseudo` (a language, or every message in ⟦ ⟧, `i18n/index.ts`, T-2583); `?perfOff=...` (CPU A/B switches, `src/perfFlags.ts`, which lists them; notes/T-045.md).

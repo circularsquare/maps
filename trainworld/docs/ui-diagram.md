@@ -460,3 +460,21 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   block its drawn box, its move, and an affine fit from real places to drawn ones over its stations.
 
 `LAYOUT_R2` keeps round 2's options (alpha 0.35, pitch the median hop over 12, edges 1.6 half widths).
+
+## The rubber sheet
+
+**Off by default; `?sheet=1` in the page's address turns it on (T-2568).** On, the page sends the worker the zones near
+the network with each graph, and before laying it out the worker reads their water masks, finds the sea on the ground
+(as Water does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md, notes/T-2568.md):
+each station's place on a sheet of the ground stretched so the network has room where it is dense, land kept near its
+shape and water giving way. The worker posts it as a `sheet` message, which the page keeps as `window.twSheet` and does
+not draw yet: the layout and the drawing are as with the flag off. Off, the page sends no `sheet` and none of this runs.
+
+- **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
+  with a floor, doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
+- **The lattice**: a quadtree of square cells, fine where the field is high or changes fast and near coasts with lines,
+  coarse elsewhere (512 finest cells along a city map's longer side, 1024 on a map 600 km across or more).
+- **The rounds**: each cell's map is pulled toward its planned size at its current turn, with a cost to stretch it
+  unevenly by its kind (land near lines, other land, water, small islands); a cell near folding is held. Solved by
+  multigrid on the quadtree's levels, coarse to fine, then rounds with the holds frozen (a hold may only tighten) until
+  the stations move under half a pitch, so no cell folds.

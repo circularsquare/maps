@@ -7,7 +7,8 @@
 // page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone. The
 // water (diagram/waterReal.ts, diagram/water.ts, T-2169) comes last, from the water masks of the zones the page names,
 // fetched here from the packs, and is posted on its own; its sea part is found before a first layout, which keeps the
-// sea open (T-2541).
+// sea open (T-2541). With the page's `sheet` (`?sheet=1`, T-2568) the rubber sheet (diagram/sheet.ts) is made and posted first,
+// from the same masks; nothing reads it yet.
 
 import type { DiagramGraph } from "../diagram/graph";
 import { dialled, LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
@@ -17,6 +18,7 @@ import { zoneBorders, type DiagramBorders, type ZoneShape } from "../diagram/bor
 import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityNames";
 import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import { diagramWater, type DiagramWater } from "../diagram/water";
+import { rubberSheet, type Sheet } from "../diagram/sheet";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
 export type DiagramNames = { text: string[]; width: Float32Array; width2: Float32Array; fontPx: number };
@@ -27,14 +29,15 @@ export type ZoneFrame = [number, number, number];
 /** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
 export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
-  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; distort?: number; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] } }
+  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; distort?: number; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] }; sheet?: { packs: string; zones: string[] } }
   | { kind: "zones"; zones: ZoneOutlines }
   | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
   | { kind: "layout"; seq: number; graph: DiagramGraph; layout: DiagramLayout; drawing: Drawing; names: NamePlan; ms: { drawing: number; names: number; borders: number; cities: number } }
   | { kind: "borders"; seq: number; borders: DiagramBorders; cities?: CityNames }
   | { kind: "water"; seq: number; water: DiagramWater; ms: { masks: number; ground: number; drawn: number } }
-  | { kind: "progress"; seq: number; share: number };
+  | { kind: "progress"; seq: number; share: number }
+  | { kind: "sheet"; seq: number; sheet: Sheet; ms: { masks: number; ground: number; sheet: number } };
 
 /** the layout's share of a first build's time; the drawing and names take the rest */
 const LAYOUT_SHARE = 0.85;
@@ -90,6 +93,7 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   // the layout keeps the water on the ground open (T-2541): a first layout waits for the sea, a rebuild takes the last
   // found (its stations near where they were)
   const sea = m.water && m.frame ? (last && seaKnown ? seaKnown.sea : await seaOf(m.graph, m.water.packs, m.water.zones, m.frame)) : null;
+  if (m.sheet && m.frame) await sheetOf(m.seq, m.graph, m.sheet.packs, m.sheet.zones, m.frame);
   let sent = -1;
   const progress = last ? undefined : (share: number) => {
     if (share - sent < 0.01) return;
@@ -153,6 +157,17 @@ async function seaOf(g: DiagramGraph, packs: string, zones: string[], frame: Zon
   const got = await masksFor(packs, zones), key = groundKey(g, frame, got.length);
   if (seaKnown?.key !== key) seaKnown = { key, sea: groundSea(g, got, frame) };
   return seaKnown.sea;
+}
+/** `?sheet=1` (T-2568): the rubber sheet of the graph, posted on its own before the layout; the layout does not read it
+ * yet (T-2567) */
+async function sheetOf(seq: number, g: DiagramGraph, packs: string, zones: string[], frame: ZoneFrame) {
+  const t0 = performance.now();
+  const got = await masksFor(packs, zones);
+  const t1 = performance.now(), key = groundKey(g, frame, got.length);
+  if (seaKnown?.key !== key) seaKnown = { key, sea: groundSea(g, got, frame) };
+  const t2 = performance.now();
+  const sheet = rubberSheet(g, { masks: got, frame, sea: seaKnown.sea });
+  (self as unknown as Worker).postMessage({ kind: "sheet", seq, sheet, ms: { masks: t1 - t0, ground: t2 - t1, sheet: performance.now() - t2 } } satisfies FromDiagram);
 }
 async function water(seq: number, packs: string, zones: string[], frame: ZoneFrame) {
   const t0 = performance.now();

@@ -3,7 +3,8 @@
 // While it is up the clock worker posts the graph after each network state; the page names its
 // stations and measures the names, and the layout worker lays it out, draws it and places the names,
 // one at a time, the newest waiting next, the last drawing staying up meanwhile. `?diagram=r2` lays
-// out with round 2's options, `?distort=0.5` at that setting of the distortion dial (layout.ts `DISTORT`, T-2556).
+// out with round 2's options, `?distort=0.5` at that setting of the distortion dial (layout.ts `DISTORT`, T-2556), and `?sheet=1`
+// has the worker make the rubber sheet too (diagram/sheet.ts, T-2568), kept on `window.twSheet` for checks.
 //
 // Clicks and hovers are the map's (T-2163): a station selects its complex, a line the line, with the
 // map's tags; what is selected draws full and the rest faded. The camera goes with the selection, or
@@ -260,6 +261,7 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
 export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void {
   const q = new URLSearchParams(location.search), options = q.get("diagram") === "r2" ? "r2" : undefined;
   const dial = q.get("distort"), distort = dial !== null && dial !== "" && Number.isFinite(+dial) ? +dial : undefined;
+  const sheetOn = q.get("sheet") === "1";
   const canvas = document.createElement("canvas");
   canvas.className = "diagram-canvas";
   Object.assign(canvas.style, { position: "absolute", inset: "0", width: "100%", height: "100%", zIndex: "3", display: "none", cursor: "grab", touchAction: "none" });
@@ -293,7 +295,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const zf = zoneFrame(g);
     // the zones whose water masks the water is drawn from (T-2169)
     const water = zf && diagramWater.peek() ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water } satisfies ToDiagram);
+    // T-2568: `?sheet=1` has the worker make the rubber sheet too, from the same zones' water masks
+    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } } : {};
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water, ...sheet } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
   let outlineMap: Map<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
@@ -348,6 +352,11 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         }
         if (e.data.kind === "water") {
           if (shown && e.data.seq === shownSeq && diagramWater.peek()) (shown.d.water = e.data.water), (waterMs = e.data.ms), draw();
+          return;
+        }
+        if (e.data.kind === "sheet") {
+          // for checks: the last sheet, its places and lattice (nothing draws it yet)
+          (window as unknown as { twSheet: unknown }).twSheet = e.data;
           return;
         }
         if (e.data.kind === "borders") {
