@@ -29,6 +29,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **sheetscale** (Opus, tree, owns sheet.ts): T-2609 condense empty land at continent scale (her NA save).
 - uitodo LANDED 10643cd7 (records 04c71a24): T-2611, T-2612, T-2615, T-2616, T-2617. Strings shown to Anita.
 - **headway** (Opus, tree, ~13:00): T-2607 trains wait at the terminal so the set headway holds.
+- terrainnet LANDED 2b0c1003 (records 1ec3dc46): T-2613 terrain tag/retries/Construct refused on missing ground,
+  T-2614 cloud retry + dot; maps-93 dropped the "!" from "Not on your account yet". Strings shown to Anita.
+- **upkeep** (Opus, tree, ~13:40): T-2619 Anita's upkeep set (ground 35k, viaduct 50k, C&C 100k, bored 130k,
+  underground station 200k a game day), T-2620 measure profits on her saves + propose a willingness-to-pay change
+  (demand change goes to her first).
 - costfr DONE (ded9ca84): research/upkeep-france.md; options shown to Anita (real, real halved = maps-93's pick,
   tunnels only, keep).
 - **terrainnet** (Opus, tree): T-2613 downloading-terrain tag and the build-before-terrain question, T-2614 failed
