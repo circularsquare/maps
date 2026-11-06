@@ -50,7 +50,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   sheetgame 4eb03074; records a0015ee4. 8800 not rebuilt since 6f9d765a: rebuild after Brazil's join (with marketsearch).
 - sheetwater LANDED b992833f (records 1c5235fb): T-2580, **the sheet is the diagram's default** (?sheet=0 = old), clean
   octilinear water, Harlem shown. NY 11 s, Japan 50 s. Filed T-2590 (delete old layout), T-2591 (false sea in NW New
-  Jersey, P1), T-2592 (map step speed). **njwater** (Opus, tree .tw-trees/njwater, port 6173): T-2591.
+  Jersey, P1), T-2592 (map step speed). njwater LANDED 7dac5b9b (records bc69b2c6): T-2591 fixed (cut rule, wider
+  mask load); T-2593 filed. Review: artifacts/trainworld/njwater/cmp-nyc-whole.png.
   Review for Anita: artifacts/trainworld/sheetwater/cmp-tip.png.
 - (was) sheetlines LANDED bb7cca4b (records b2b468bb). sheetwater (Opus, tree .tw-trees/sheetwater from b2b468bb, port
   6174): T-2580 part 1 clean octilinear coasts/rivers/borders on the sheet, part 2 sheet as default (?sheet=0 fallback).
