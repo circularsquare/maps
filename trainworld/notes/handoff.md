@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
-Updated: 2026-11-05 21:37
+Updated: 2026-11-06 07:30
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -32,6 +32,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   IBGE macro-regions (as China/India/US), sao in sudeste. Then setbuilt, a gate-only rerun (~1 h, browser gates: hold
   app/WASM), join again. No app/WASM landings
   while its gates run. Notes/PIDs/restart in notes/T-2437.md.
+  07:15: all 177 shipped (run 4; join 218 min in five regions; stale 0). Then it found 36 sudeste rows built on
+  stale caches left by older rows of the same id (osm_jobs/education from European places, terrain from 10-30/11-03):
+  run 1 parked them before any build and build_row clears caches only for `planned`. Fix: clear for `parked` too;
+  rerun --rows of the 36 with the sudeste join (~1.5-2 h; its gate holds app/WASM). maps-93 also asked it to look for
+  the same fault in other countries (report only) and add a gate guard if cheap.
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
   13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
   Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
