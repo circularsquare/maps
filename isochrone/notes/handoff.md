@@ -1,7 +1,7 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-06 01:58
+Updated: 2026-11-06 02:50
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
@@ -19,19 +19,21 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   Anita says yes), T-079 desert a75105d4c451ffaf1 (Opus), roads addfc90633db2c1e0 (Opus).
 
 ## In flight
-- T-028 own surface + roads on the page: agent a9b36a2c84531c427 (Opus, 01:55). Owns
-  tools/build_grid.py, build_tiles.py, smallwater.py, tools/roads/, data/tiles, the L10 grid,
-  data/surface, js/tiles.js, levels.js, speeds.js, search.js, config.js, index.html, SPEC 2-3,
-  docs/surface, roads, resolution, code-map. Keeps the old tiles as a backup. Ledger iso-t028.
-  Will list player-facing strings old -> new (speeds panel, credits) for Anita.
-- T-057 100 m tiles, towns and water country: agent a2e305ad8c2b66a43 (Opus, 01:55). Owns
-  tools/fine/, data/fine, docs/fine.md, notes/T-057.md. No page code until T-028 lands; then
-  resume it for any window/block changes. Ledger iso-t057.
+- T-028 and T-057 landed (7e807cd7): page on our surface with roads; 4,672 fine tiles (0.52 GB),
+  partial town tiles need T-086 to show. MAP's tiles kept in data/tiles_map2020/ until Anita
+  has compared. Eight new speeds-panel and info strings to show her (notes/T-028.md).
+- T-084 road grade cap + hazard band on our mask: T-028's agent a9b36a2c84531c427 (resumed
+  ~02:45). Owns tools/build_tiles.py, data/tiles, tools/hazard/, data/hazard, js/speeds.js,
+  docs/roads.md, hazard.md.
+- T-085 canoe water + river steps on our mask: T-079's agent a75105d4c451ffaf1. Owns
+  tools/canoe/, canoe data, docs/canoe.md.
+- T-086 100 m in partial town tiles (page): T-057's agent a2e305ad8c2b66a43. Owns js/tiles.js
+  fine functions, js/windows.js, checks/smoke.mjs, docs/fine.md.
 
 ## Next
-1. Land T-028 (screenshots, ktrips, strings to Anita), then T-057's page part if any.
-2. T-011 90 m terrain (Anita queued it after roads): held until T-028 lands, since T-028 owns
-   data/surface and T-011 replaces its terrain; also 100-130 GB of downloads, and Anita asked
+1. Land T-084, T-085, T-086.
+2. T-011 90 m terrain (Anita queued it after roads): asked her whether to start the downloads
+   (100-130 GB streamed); T-084 must land first (both touch the terrain side); Anita asked
    for a pause on big downloads once on 2026-11-05 (then said resume). Then T-039, T-057
    mountain tiles.
 3. T-081 crossing-time rule for L10/L3 if Anita says yes (asked 2026-11-05, recommended);
