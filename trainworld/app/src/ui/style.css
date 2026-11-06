@@ -1560,6 +1560,8 @@ button.save-add:hover { color: var(--text); }
   font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 0 2px var(--bg), 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 4px var(--bg); }
 .edit-row { display: flex; align-items: center; gap: 4px; width: fit-content; }
 .edit-row.money-neg { color: var(--bad); }
+.edit-row.estimating { color: var(--muted); }
+.edit-row.estimating .edit-arrow { stroke: var(--muted); }
 /* T-2390: the bullets of the lines whose riders moved most */
 .edit-lines { gap: 3px; margin-top: 1px; text-shadow: none; }
 .edit-arrow { width: 12px; height: 12px; flex: none; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;

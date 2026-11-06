@@ -6,6 +6,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { count, exact, money, moneyNegative } from "../game/format";
 import { editNote, holdNote, NOTE_COUNT_MS, shownChange, type FromTo } from "../game/editNote";
+import type { ProfitEstimate } from "../game/profitEstimate";
 import { world } from "../game/world";
 import { Chip } from "./widgets";
 
@@ -16,6 +17,11 @@ const Arrow = ({ up }: { up: boolean }) => (
 );
 
 const signed = (n: number, text: string) => (n > 0 ? "+" : n < 0 ? "−" : "") + text.replace(/^−/, "");
+
+/** T-2626: the estimate's hover, its two parts; a part under $500 is left out. */
+const estimateTip = (e: ProfitEstimate, day: string) =>
+  [[e.running, "Running cost"], [e.fares, "Fares about"]].filter(([v]) => Math.abs(v as number) >= 500)
+    .map(([v, what]) => `${what} ${signed(v as number, money(Math.abs(v as number)))} ${day}`).join("\n");
 
 export function EditNote() {
   const n = editNote.value;
@@ -35,7 +41,7 @@ export function EditNote() {
   const name = n.line && lines.find((l) => l.id === n.line!.id)?.name;
   const moved = n.moved.flatMap((x) => { const l = lines.find((y) => y.id === x.id); return l ? [{ l, riders: x.riders }] : []; });
   const dt = n.trips.to - n.trips.from, dm = n.money.to - n.money.from;
-  const tr = Math.round(shownChange(dt, n.at)), m = shownChange(dm, n.at);
+  const tr = Math.round(shownChange(dt, n.at)), m = n.estimating ? dm : shownChange(dm, n.at, performance.now(), n.start);
   const tripsText = signed(dt, Math.abs(dt) >= 10_000 ? count(Math.abs(tr)) : exact(Math.abs(tr)));
   // the line's part: its riders (its boardings) under the train trips, its profit under the profit
   const tip = (what: string, t: FromTo, lineWhat: string, line: FromTo | undefined, f: (v: number) => string) =>
@@ -49,9 +55,9 @@ export function EditNote() {
         </div>
       )}
       {Math.abs(dm) >= 500 && (
-        <div class={"edit-row" + (moneyNegative(dm) ? " money-neg" : "")} data-tip={tip("Profit", n.money, "", n.line?.money, money)}>
+        <div class={"edit-row" + (n.estimating ? " estimating" : moneyNegative(dm) ? " money-neg" : "")} data-tip={n.est ? estimateTip(n.est, n.day) : tip("Profit", n.money, "", n.line?.money, money)}>
           <Arrow up={dm > 0} />
-          <span>{signed(dm, money(m))} profit/day</span>
+          <span>{n.estimating ? "Estimated " : ""}{signed(dm, money(m))} profit/day</span>
         </div>
       )}
       {moved.length > 0 && (

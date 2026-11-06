@@ -745,6 +745,23 @@ those who got on, less the load carried on.
   to 5 and only those that moved by 100 or more [T-2390]: each a small bullet that selects its line
   on a click, its hover the line's name over its before and after ("4" / "812,400 to 790,113 riders
   per weekday").
+  - **Estimating** [T-2626; `game/profitEstimate.ts`]: after a trains, headway or cars edit on a
+    running line (and no other kind of edit since the last settled state) the note shows at once the
+    profit row alone, as an estimate: "Estimated −$5.3M profit/day" in muted text (`--muted`, the arrow
+    grey, never red or green), no trips row and no line bullets. The hover gives its two parts for the
+    day shown, "Running cost +$9.6M per weekday" over "Fares about +$4.3M per weekday"; a part under
+    $500 is left out. Running cost is the clock's running cost an hour against the last settled
+    state's, exact. Fares are that state's, plus the wait term: each boarding waits half the headway,
+    so a period's riders change by boardings x (exp(e x change in wait) - 1) on each line whose trains
+    an hour changed (a line left with no trains loses its riders), e being `DemandView.fareSense.local`
+    per minute over the rail trips (the minutes a fare dollar costs are the boardings' mean over the
+    lines' countries), and each rider gained or lost pays the network's mean fare a trip. A cars edit
+    moves no wait, so its estimate is running cost alone. The estimate is read against the last settled
+    state, so edits add up and a line's early local result does not move it. It stays, and follows
+    the network, while demand settles, with no 8 s limit; the settled note then replaces it, its profit
+    easing from the estimate to the solved figure. With no estimate (any other edit, a figure under
+    $500, a zone that changed level of detail) the note waits as before. The line panel and the Lines
+    tab keep their "loading..." figures.
   - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
     (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
     track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier
