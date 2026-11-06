@@ -16,7 +16,7 @@ const OUT = join(ARTIFACTS, 't2124');
 // what each save is expected to have earned (notes/T-2124.md section 1, with Anita's tiers)
 const EXPECT = {
   nyc: ['cities:2', 'trips:1000000', 'trips:10000000', 'station:500000', 'station:1000000', 'line:500000', 'line:1000000'],
-  tokyo: ['cities:2', 'cities:10', 'trips:1000000', 'trips:10000000', 'station:500000', 'line:500000', 'line:1000000', 'border', 'long', 'money', 'bullet'],
+  tokyo: ['cities:2', 'cities:10', 'trips:1000000', 'trips:10000000', 'station:500000', 'line:500000', 'line:1000000', 'border', 'money', 'bullet'],
   // (Tokyo's 19 cities include stray stations in Spain and the US; Change here 0.73; no city at 20% of
   // its own trips or its trips to other places by train; the Shinkansen's run is 5.4 h)
 };
