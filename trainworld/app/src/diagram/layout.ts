@@ -1214,6 +1214,21 @@ function portOfLine(l: number[], end: number, tiny: number): number {
  * each round). A first layout meets them by sweeps of projections; a rebuild (`prev`, the last drawing's
  * places) by Hildreth's method from the last drawing, which finds the drawing nearest it, each term's
  * pull capped, so an edit moves little. Returns the places to draw from, and each bent piece's bend. */
+/** a term of the separation: its variables and coefficients, target, equality or least value, |c|^2, correction */
+interface SepRow { idx: Int32Array; c: Float64Array; t: number; eq: boolean; n2: number; mu: number; key: number }
+/** terms packed into flat arrays for the sweeps (row r's entries from start[r] to start[r + 1]; sq the root of n2) */
+interface Rows { n: number; start: Int32Array; idx: Int32Array; c: Float64Array; t: Float64Array; eq: Uint8Array; n2: Float64Array; sq: Float64Array; mu: Float64Array; rows: SepRow[] }
+function packRows(rows: SepRow[]): Rows {
+  const n = rows.length, start = new Int32Array(n + 1);
+  for (let r = 0; r < n; r++) start[r + 1] = start[r] + rows[r].idx.length;
+  const idx = new Int32Array(start[n]), c = new Float64Array(start[n]), t = new Float64Array(n), eq = new Uint8Array(n), n2 = new Float64Array(n), sq = new Float64Array(n), mu = new Float64Array(n);
+  rows.forEach((row, r) => {
+    idx.set(row.idx, start[r]), c.set(row.c, start[r]);
+    (t[r] = row.t), (eq[r] = +row.eq), (n2[r] = row.n2), (sq[r] = Math.sqrt(row.n2)), (mu[r] = row.mu);
+  });
+  return { n, start, idx, c, t, eq, n2, sq, mu, rows };
+}
+
 function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Float64Array, by: Float64Array, prev: Float64Array | null, links?: Links, keepLegs?: Set<number>): { q: Float64Array; bends: Map<number, [number, number]> } {
   const n = P.n;
   // the variables: x, y of each piece end (and of stations on a piece with no length), then one
@@ -1429,7 +1444,7 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
   const want = (a: number, b: number) => P.dmin + P.hw[a] + P.hw[b];
   const pairs: number[] = [];
   // each term a row of the variables, its target, and whether it is an equality or a least value
-  interface Row { idx: Int32Array; c: Float64Array; t: number; eq: boolean; n2: number; mu: number; key: number }
+  type Row = SepRow;
   const emit = (to: Row[], t: number, eq: boolean, key = -1) => {
     const idx = Int32Array.from(row.keys()), c = Float64Array.from(row.values());
     row.clear();
@@ -1441,47 +1456,55 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
    * the term met the least way, its correction kept; the sweeps converge to the drawing nearest X0
    * that meets every term, which moves little when X0 moves little */
   const cap = prev ? SEP_CAP * median(P.L) : Infinity;
-  const hild = (X: Float64Array, list: Row[]) => {
+  const hild = (X: Float64Array, F: Rows) => {
     let worst = 0;
-    for (const r of list) {
-      let cz = r.mu * r.n2;
-      for (let k = 0; k < r.idx.length; k++) cz += r.c[k] * X[r.idx[k]];
+    const { start, idx, c, t, eq, n2, sq, mu } = F;
+    for (let r = 0; r < F.n; r++) {
+      const a = start[r], b = start[r + 1], nr = n2[r], mr = mu[r];
+      let cz = mr * nr;
+      for (let k = a; k < b; k++) cz += c[k] * X[idx[k]];
       // each correction at most `cap` long: where the terms cannot all be met, they settle on a
       // compromise rather than drift
-      const m = cap / Math.sqrt(r.n2);
-      let l = Math.min(m, Math.max(r.eq ? -m : 0, (r.t - cz) / r.n2));
-      const step = r.mu + l;
+      const m = cap / sq[r];
+      let l = Math.min(m, Math.max(eq[r] ? -m : 0, (t[r] - cz) / nr));
+      const step = mr + l;
       if (step === 0) continue;
-      worst = Math.max(worst, Math.abs(step) * Math.sqrt(r.n2));
-      for (let k = 0; k < r.idx.length; k++) X[r.idx[k]] += step * r.c[k];
-      r.mu = -l;
+      worst = Math.max(worst, Math.abs(step) * sq[r]);
+      for (let k = a; k < b; k++) X[idx[k]] += step * c[k];
+      mu[r] = -l;
     }
     return worst;
   };
   /** sweeps of projections: each term not met moves its variables the least way that meets it */
-  const project = (X: Float64Array, list: Row[]) => {
+  const project = (X: Float64Array, F: Rows) => {
     let worst = 0;
-    for (const r of list) {
-      let v = -r.t;
-      for (let k = 0; k < r.idx.length; k++) v += r.c[k] * X[r.idx[k]];
-      if (r.eq ? Math.abs(v) < 1e-12 : v >= 0) continue;
-      const l = v / r.n2;
+    const { start, idx, c, t, eq, n2 } = F;
+    for (let r = 0; r < F.n; r++) {
+      const a = start[r], b = start[r + 1];
+      let v = -t[r];
+      for (let k = a; k < b; k++) v += c[k] * X[idx[k]];
+      if (eq[r] ? Math.abs(v) < 1e-12 : v >= 0) continue;
+      const l = v / n2[r];
       worst = Math.max(worst, Math.abs(l));
-      for (let k = 0; k < r.idx.length; k++) X[r.idx[k]] -= l * r.c[k];
+      for (let k = a; k < b; k++) X[idx[k]] -= l * c[k];
     }
     return worst;
   };
+  // the fixed terms packed once (their corrections copied back to the rows after each settle)
+  let fixedRows: Rows | null = null;
   /** sweeps of `list` then the fixed terms until both are met within `tol` */
   const settle = (X: Float64Array, list: Row[], sweep: typeof project, sweeps = SEP_SWEEPS) => {
+    const L = packRows(list), Fx = (fixedRows ??= packRows(fixed));
     for (let s = 0; s < sweeps; s++) {
-      let w = sweep(X, list);
+      let w = sweep(X, L);
       for (let f = 0; f < FIX_REPEAT; f++) {
-        const wf = sweep(X, fixed);
+        const wf = sweep(X, Fx);
         w = Math.max(w, wf);
         if (wf < tol) break;
       }
-      if (w < tol) return;
+      if (w < tol) break;
     }
+    for (const F of [L, Fx]) for (let r = 0; r < F.n; r++) F.rows[r].mu = F.mu[r];
   };
   const tol = 1e-4 * P.pu;
   // straight pieces stay straight; stations keep their order and gaps along their legs, and a bent
@@ -1826,9 +1849,8 @@ function spread(P: Prep, r: Routed): void {
   const crowd = (v: number, px: number, py: number) => {
     let c = 0;
     for (let o = 0; o < n; o++) {
-      if (o === v || P.adj.has(Math.min(o, v) * n + Math.max(o, v))) continue;
       const w = want(v, o), dx = pos[o * 2] - px, dy = pos[o * 2 + 1] - py;
-      if (Math.abs(dx) < w && Math.abs(dy) < w && dx * dx + dy * dy < w * w) c++;
+      if (Math.abs(dx) < w && Math.abs(dy) < w && dx * dx + dy * dy < w * w && o !== v && !P.adj.has(Math.min(o, v) * n + Math.max(o, v))) c++;
     }
     return c;
   };

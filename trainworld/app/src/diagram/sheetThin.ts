@@ -231,20 +231,24 @@ export function smoothEdges(G: MapGrid) {
 
 /** cells marked `fresh` (land with no zone yet) take the zone of the nearest zoned land, by steps of a side */
 function fillZones(G: MapGrid, fresh: Uint8Array) {
-  const { w: W, h: H } = G, q: number[] = [];
-  for (let c = 0; c < W * H; c++) if (fresh[c] && G.D[c] === G.NOZ) {
-    const i = c % W;
-    for (const u of [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, c - W, c + W]) if (u >= 0 && u < W * H && !fresh[u] && isZone(G, G.D[u])) { q.push(c); break; }
-  }
+  const { w: W, h: H } = G, N = W * H, q: number[] = [];
+  // the first of c's side neighbours (left, right, up, down) that is zoned and not fresh, -1 none
+  const zonedBy = (c: number) => {
+    const i = c % W, ok = (u: number) => !fresh[u] && isZone(G, G.D[u]);
+    return i > 0 && ok(c - 1) ? c - 1 : i < W - 1 && ok(c + 1) ? c + 1 : c >= W && ok(c - W) ? c - W : c + W < N && ok(c + W) ? c + W : -1;
+  };
+  for (let c = 0; c < N; c++) if (fresh[c] && G.D[c] === G.NOZ && zonedBy(c) >= 0) q.push(c);
   for (let k = 0; k < q.length; k++) {
     const c = q[k];
     if (!fresh[c]) continue;
-    const i = c % W;
-    let z = G.NOZ;
-    for (const u of [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, c - W, c + W]) if (u >= 0 && u < W * H && !fresh[u] && isZone(G, G.D[u])) { z = G.D[u]; break; }
-    if (z === G.NOZ) continue;
-    (G.D[c] = z), (fresh[c] = 0);
-    for (const u of [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, c - W, c + W]) if (u >= 0 && u < W * H && fresh[u] && G.D[u] === G.NOZ) q.push(u);
+    const u0 = zonedBy(c);
+    if (u0 < 0) continue;
+    (G.D[c] = G.D[u0]), (fresh[c] = 0);
+    const i = c % W, add = (u: number) => { if (fresh[u] && G.D[u] === G.NOZ) q.push(u); };
+    if (i > 0) add(c - 1);
+    if (i < W - 1) add(c + 1);
+    if (c >= W) add(c - W);
+    if (c + W < N) add(c + W);
   }
 }
 

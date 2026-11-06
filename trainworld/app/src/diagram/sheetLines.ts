@@ -166,30 +166,40 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
     const wy = bw[k] * fin.qy[bn[k]] + bw[k + 1] * fin.qy[bn[k + 1]] + bw[k + 2] * fin.qy[bn[k + 2]];
     (dx[s] = SX[s] - wx), (dy[s] = SY[s] - wy);
   }
-  const ws = new Float64Array(n).fill(1), UX = new Float64Array(N), UY = new Float64Array(N);
+  // the moves of both axes solved at once, interleaved (x then y per node): each pass over the matrix serves both
+  const ws = new Float64Array(n).fill(1), U = new Float64Array(2 * N), rhs = new Float64Array(2 * N), U0y = new Float64Array(N);
   const carry: Carry = { gw, gh, x0, y0, h, rx, ry, sx: SX, sy: SY, ownMass, landX, landY, raster: R };
   const rounds = cityMap(g) ? o.carryCity : o.carryCountry;
   const bads: number[] = [], its: number[] = [];
   const tm = [0, 0, 0];
   const A = carryMatrix(gw, gh, lamH, lamV, bn, bw, ws);
+  // the reweighting below only scales the stations' stencils, so which nodes have corner terms stays as it is
+  const corner = cornersOf(A);
   // the multigrid made once; a later round changes only a few stations' weights, and is made again only where its
   // solve does not settle in MG_STALE iterations
   let mg = multigrid(gw, gh, A), fresh = true;
   tm[0] += performance.now() - tl;
+  const tol = o.carryTol;
   for (let round = 0; round <= rounds; round++) {
     let ta = performance.now();
-    for (const axis of [0, 1]) {
-      const rhs = new Float64Array(N), d = axis ? dy : dx, U = axis ? UY : UX;
-      for (let s = 0, k = 0; s < n; s++, k += 3) for (let c = 0; c < 3; c++) rhs[bn[k + c]] += ws[s] * bw[k + c] * d[s];
-      let it = pcg9(gw, gh, A, rhs, U, mg, o.carryTol, fresh ? 60 : MG_STALE);
-      if (!fresh && it >= MG_STALE) {
-        const tb = performance.now();
-        (mg = multigrid(gw, gh, A)), (fresh = true), (tm[0] += performance.now() - tb);
-        it += pcg9(gw, gh, A, rhs, U, mg, o.carryTol, 60);
+    rhs.fill(0);
+    for (let s = 0, k = 0; s < n; s++, k += 3) for (let c = 0; c < 3; c++) (rhs[2 * bn[k + c]] += ws[s] * bw[k + c] * dx[s]), (rhs[2 * bn[k + c] + 1] += ws[s] * bw[k + c] * dy[s]);
+    // the axes as if solved one after the other: x first; where x does not settle under the old multigrid, it is made
+    // again and y solved from where it was with the new one, else y goes on under the old one as far as it can
+    if (!fresh) for (let v = 0; v < N; v++) U0y[v] = U[2 * v + 1];
+    const it = pcg9(gw, gh, A, corner, rhs, U, mg, tol, fresh ? 60 : MG_STALE, [true, true]);
+    if (!fresh && (it[0] >= MG_STALE || it[1] >= MG_STALE)) {
+      const tb = performance.now(), redoY = it[0] >= MG_STALE;
+      (mg = multigrid(gw, gh, A)), (fresh = true), (tm[0] += performance.now() - tb);
+      if (redoY) {
+        for (let v = 0; v < N; v++) U[2 * v + 1] = U0y[v];
+        it[1] = 0;
       }
-      its.push(it);
+      const more = pcg9(gw, gh, A, corner, rhs, U, mg, tol, 60, [it[0] >= MG_STALE, redoY || it[1] >= MG_STALE]);
+      (it[0] += more[0]), (it[1] += more[1]);
     }
-    for (let v = 0; v < N; v++) (rx[v] = fin.qx[v] + UX[v]), (ry[v] = fin.qy[v] + UY[v]);
+    its.push(it[0], it[1]);
+    for (let v = 0; v < N; v++) (rx[v] = fin.qx[v] + U[2 * v]), (ry[v] = fin.qy[v] + U[2 * v + 1]);
     tm[1] += performance.now() - ta, (ta = performance.now());
     let bad = 0;
     for (let s = 0, k = 0; s < n; s++, k += 3) {
@@ -347,15 +357,25 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   // cleaned: a 3 by 3 majority
   {
     const old = D.slice();
-    const cnt = new Map<number, number>();
+    // the labels round a cell in the order first met, with their counts (the first of the most wins)
+    const lab = new Int32Array(9), cnt = new Int32Array(9);
     for (let j = 1; j + 1 < GH; j++) for (let i = 1; i + 1 < GW; i++) {
-      const c = j * GW + i;
-      if (old[c] === OUT || pill[c]) continue;
+      const c = j * GW + i, o0 = old[c];
+      if (o0 === OUT || pill[c]) continue;
       let w = 0;
-      cnt.clear();
-      for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const v = old[c + b * GW + a]; if (v === 0) w++; else if (v !== OUT) cnt.set(v, (cnt.get(v) ?? 0) + 1); }
-      if (old[c] === 0 && w <= 3 && cnt.size) { let bv = 0, bc = -1; for (const [v, k] of cnt) if (k > bc) (bc = k), (bv = v); D[c] = bv; }
-      else if (old[c] !== 0 && w >= 6) D[c] = 0;
+      for (let b = -GW; b <= GW; b += GW) for (let a = -1; a <= 1; a++) if (old[c + b + a] === 0) w++;
+      if (o0 === 0 && w <= 3) {
+        let m = 0;
+        for (let b = -GW; b <= GW; b += GW) for (let a = -1; a <= 1; a++) {
+          const v = old[c + b + a];
+          if (v === 0 || v === OUT) continue;
+          let k = 0;
+          while (k < m && lab[k] !== v) k++;
+          if (k === m) (lab[m] = v), (cnt[m++] = 0);
+          cnt[k]++;
+        }
+        if (m) { let bv = 0, bc = -1; for (let k = 0; k < m; k++) if (cnt[k] > bc) (bc = cnt[k]), (bv = lab[k]); D[c] = bv; }
+      } else if (o0 !== 0 && w >= 6) D[c] = 0;
     }
   }
   // narrow rivers a hop crosses as bands (with the water), the grid's own water under them taken out; thin water and
@@ -373,15 +393,26 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
       const wet = D[s0] === 0, id = area.length;
       let head = 0, tail = 0, st = 0;
       (qq[tail++] = s0), (comp[s0] = id);
+      const take = (u: number) => { if (comp[u] < 0 && D[u] !== OUT && (D[u] === 0) === wet) (comp[u] = id), (qq[tail++] = u); };
       while (head < tail) {
         const v = qq[head++], i = v % GW;
         if (pill[v]) st = 1;
-        for (const u of [i > 0 ? v - 1 : -1, i < GW - 1 ? v + 1 : -1, v - GW, v + GW]) if (u >= 0 && u < NC && comp[u] < 0 && D[u] !== OUT && (D[u] === 0) === wet) (comp[u] = id), (qq[tail++] = u);
+        if (i > 0) take(v - 1);
+        if (i < GW - 1) take(v + 1);
+        if (v >= GW) take(v - GW);
+        if (v + GW < NC) take(v + GW);
       }
       area.push(tail * hd * hd), hasSt.push(st), wetK.push(wet);
     }
     for (let c = 0; c < NC; c++) { const k = comp[c]; if (k < 0) continue; if (wetK[k] && area[k] < 40) D[c] = NOZ; else if (!wetK[k] && !hasSt[k] && area[k] < 30) D[c] = 0; }
-    for (let pass = 0; pass < 3; pass++) for (let c = 0; c < NC; c++) if (D[c] === NOZ) { const i = c % GW; for (const u of [i > 0 ? c - 1 : -1, i < GW - 1 ? c + 1 : -1, c - GW, c + GW]) if (u >= 0 && u < NC && isZ(D[u])) { D[c] = D[u]; break; } }
+    for (let pass = 0; pass < 3; pass++) for (let c = 0; c < NC; c++) {
+      if (D[c] !== NOZ) continue;
+      const i = c % GW;
+      if (i > 0 && isZ(D[c - 1])) D[c] = D[c - 1];
+      else if (i < GW - 1 && isZ(D[c + 1])) D[c] = D[c + 1];
+      else if (c >= GW && isZ(D[c - GW])) D[c] = D[c - GW];
+      else if (c + GW < NC && isZ(D[c + GW])) D[c] = D[c + GW];
+    }
   };
   dropSmall();
   thinPass(G, true, thG, thinStats);
@@ -590,7 +621,10 @@ export function drawnMass(C: Carry, s: number, wn: number): number {
 }
 
 // ---- the carry's least squares: a 9-point matrix on the lattice (slot (dj + 1) * 3 + di + 1 per node), solved by
-// conjugate gradients with a multigrid V-cycle (bilinear prolongation, Galerkin coarse levels, Gauss-Seidel)
+// conjugate gradients with a multigrid V-cycle (operator-dependent prolongation, Galerkin coarse levels, Gauss-Seidel),
+// both axes at once: vectors hold x and y per node, interleaved. A node's terms are summed in one fixed order (itself,
+// west, east, the row below, the row above), the same on the lattice's edges with the terms off it left out; inside it
+// the loops need no tests.
 function carryMatrix(gw: number, gh: number, lamH: Float64Array, lamV: Float64Array, bn: Int32Array, bw: Float64Array, ws: Float64Array): Float64Array {
   const N = gw * gh, A = new Float64Array(N * 9);
   for (let v = 0; v < N; v++) {
@@ -604,38 +638,119 @@ function carryMatrix(gw: number, gh: number, lamH: Float64Array, lamV: Float64Ar
   }
   return A;
 }
-function mul9(nx: number, ny: number, A: Float64Array, x: Float64Array, y: Float64Array) {
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    const v = j * nx + i, b = v * 9;
-    let s = A[b + 4] * x[v];
-    if (i > 0) s += A[b + 3] * x[v - 1];
-    if (i + 1 < nx) s += A[b + 5] * x[v + 1];
-    if (j > 0) { s += A[b + 1] * x[v - nx]; if (i > 0) s += A[b] * x[v - nx - 1]; if (i + 1 < nx) s += A[b + 2] * x[v - nx + 1]; }
-    if (j + 1 < ny) { s += A[b + 7] * x[v + nx]; if (i > 0) s += A[b + 6] * x[v + nx - 1]; if (i + 1 < nx) s += A[b + 8] * x[v + nx + 1]; }
-    y[v] = s;
+/** y = A x at node (i, j) on the lattice's edge, or from - A x */
+function mulEdge(nx: number, ny: number, A: Float64Array, x: Float64Array, y: Float64Array, i: number, j: number, from: Float64Array | null) {
+  const v = j * nx + i, b = v * 9, p = 2 * v, q = 2 * nx;
+  let sx = A[b + 4] * x[p], sy = A[b + 4] * x[p + 1];
+  if (i > 0) (sx += A[b + 3] * x[p - 2]), (sy += A[b + 3] * x[p - 1]);
+  if (i + 1 < nx) (sx += A[b + 5] * x[p + 2]), (sy += A[b + 5] * x[p + 3]);
+  if (j > 0) {
+    (sx += A[b + 1] * x[p - q]), (sy += A[b + 1] * x[p - q + 1]);
+    if (i > 0) (sx += A[b] * x[p - q - 2]), (sy += A[b] * x[p - q - 1]);
+    if (i + 1 < nx) (sx += A[b + 2] * x[p - q + 2]), (sy += A[b + 2] * x[p - q + 3]);
+  }
+  if (j + 1 < ny) {
+    (sx += A[b + 7] * x[p + q]), (sy += A[b + 7] * x[p + q + 1]);
+    if (i > 0) (sx += A[b + 6] * x[p + q - 2]), (sy += A[b + 6] * x[p + q - 1]);
+    if (i + 1 < nx) (sx += A[b + 8] * x[p + q + 2]), (sy += A[b + 8] * x[p + q + 3]);
+  }
+  if (from) (y[p] = from[p] - sx), (y[p + 1] = from[p + 1] - sy);
+  else (y[p] = sx), (y[p + 1] = sy);
+}
+/** per node whether any of its corner terms is not 0 (on the finest level only stations' nodes have them: a term of 0
+ * left out adds nothing) */
+function cornersOf(A: Float64Array): Uint8Array {
+  const N = A.length / 9, f = new Uint8Array(N);
+  for (let v = 0, b = 0; v < N; v++, b += 9) f[v] = +(A[b] !== 0 || A[b + 2] !== 0 || A[b + 6] !== 0 || A[b + 8] !== 0);
+  return f;
+}
+function mul9(nx: number, ny: number, A: Float64Array, x: Float64Array, y: Float64Array, corner: Uint8Array, from: Float64Array | null = null) {
+  const q = 2 * nx;
+  for (let j = 0; j < ny; j++) {
+    if (j === 0 || j + 1 === ny || nx < 3) {
+      for (let i = 0; i < nx; i++) mulEdge(nx, ny, A, x, y, i, j, from);
+      continue;
+    }
+    mulEdge(nx, ny, A, x, y, 0, j, from);
+    for (let v = j * nx + 1, b = v * 9, p = 2 * v, end = j * nx + nx - 1; v < end; v++, b += 9, p += 2) {
+      const a1 = A[b + 1], a3 = A[b + 3], a4 = A[b + 4], a5 = A[b + 5], a7 = A[b + 7];
+      let sx = a4 * x[p], sy = a4 * x[p + 1];
+      (sx += a3 * x[p - 2]), (sy += a3 * x[p - 1]);
+      (sx += a5 * x[p + 2]), (sy += a5 * x[p + 3]);
+      (sx += a1 * x[p - q]), (sy += a1 * x[p - q + 1]);
+      if (corner[v]) {
+        const a0 = A[b], a2 = A[b + 2], a6 = A[b + 6], a8 = A[b + 8];
+        (sx += a0 * x[p - q - 2]), (sy += a0 * x[p - q - 1]);
+        (sx += a2 * x[p - q + 2]), (sy += a2 * x[p - q + 3]);
+        (sx += a7 * x[p + q]), (sy += a7 * x[p + q + 1]);
+        (sx += a6 * x[p + q - 2]), (sy += a6 * x[p + q - 1]);
+        (sx += a8 * x[p + q + 2]), (sy += a8 * x[p + q + 3]);
+      } else (sx += a7 * x[p + q]), (sy += a7 * x[p + q + 1]);
+      if (from) (y[p] = from[p] - sx), (y[p + 1] = from[p + 1] - sy);
+      else (y[p] = sx), (y[p + 1] = sy);
+    }
+    mulEdge(nx, ny, A, x, y, nx - 1, j, from);
   }
 }
-function gs9(nx: number, ny: number, A: Float64Array, x: Float64Array, r: Float64Array, fwd: boolean) {
+/** one Gauss-Seidel step at node (i, j) on the lattice's edge */
+function gsEdge(nx: number, ny: number, A: Float64Array, x: Float64Array, r: Float64Array, i: number, j: number) {
+  const v = j * nx + i, b = v * 9, p = 2 * v, q = 2 * nx;
+  let sx = r[p], sy = r[p + 1];
+  if (i > 0) (sx -= A[b + 3] * x[p - 2]), (sy -= A[b + 3] * x[p - 1]);
+  if (i + 1 < nx) (sx -= A[b + 5] * x[p + 2]), (sy -= A[b + 5] * x[p + 3]);
+  if (j > 0) {
+    (sx -= A[b + 1] * x[p - q]), (sy -= A[b + 1] * x[p - q + 1]);
+    if (i > 0) (sx -= A[b] * x[p - q - 2]), (sy -= A[b] * x[p - q - 1]);
+    if (i + 1 < nx) (sx -= A[b + 2] * x[p - q + 2]), (sy -= A[b + 2] * x[p - q + 3]);
+  }
+  if (j + 1 < ny) {
+    (sx -= A[b + 7] * x[p + q]), (sy -= A[b + 7] * x[p + q + 1]);
+    if (i > 0) (sx -= A[b + 6] * x[p + q - 2]), (sy -= A[b + 6] * x[p + q - 1]);
+    if (i + 1 < nx) (sx -= A[b + 8] * x[p + q + 2]), (sy -= A[b + 8] * x[p + q + 3]);
+  }
+  const d = A[b + 4];
+  (x[p] = d > 0 ? sx / d : 0), (x[p + 1] = d > 0 ? sy / d : 0);
+}
+function gs9(nx: number, ny: number, A: Float64Array, x: Float64Array, r: Float64Array, fwd: boolean, corner: Uint8Array) {
+  const q = 2 * nx;
   for (let jj = 0; jj < ny; jj++) {
     const j = fwd ? jj : ny - 1 - jj;
-    for (let ii = 0; ii < nx; ii++) {
-      const i = fwd ? ii : nx - 1 - ii, v = j * nx + i, b = v * 9;
-      let s = r[v];
-      if (i > 0) s -= A[b + 3] * x[v - 1];
-      if (i + 1 < nx) s -= A[b + 5] * x[v + 1];
-      if (j > 0) { s -= A[b + 1] * x[v - nx]; if (i > 0) s -= A[b] * x[v - nx - 1]; if (i + 1 < nx) s -= A[b + 2] * x[v - nx + 1]; }
-      if (j + 1 < ny) { s -= A[b + 7] * x[v + nx]; if (i > 0) s -= A[b + 6] * x[v + nx - 1]; if (i + 1 < nx) s -= A[b + 8] * x[v + nx + 1]; }
-      x[v] = A[b + 4] > 0 ? s / A[b + 4] : 0;
+    if (j === 0 || j + 1 === ny || nx < 3) {
+      for (let ii = 0; ii < nx; ii++) gsEdge(nx, ny, A, x, r, fwd ? ii : nx - 1 - ii, j);
+      continue;
     }
+    // inside the row (first to last, or back) the terms off the lattice need no tests, and a node with no corner terms
+    // skips them
+    const v0 = fwd ? j * nx + 1 : j * nx + nx - 2, dv = fwd ? 1 : -1;
+    gsEdge(nx, ny, A, x, r, fwd ? 0 : nx - 1, j);
+    for (let k = 0, v = v0; k < nx - 2; k++, v += dv) {
+      const b = v * 9, p = 2 * v;
+      const a1 = A[b + 1], a3 = A[b + 3], a5 = A[b + 5], a7 = A[b + 7], d = A[b + 4];
+      let sx = r[p], sy = r[p + 1];
+      (sx -= a3 * x[p - 2]), (sy -= a3 * x[p - 1]);
+      (sx -= a5 * x[p + 2]), (sy -= a5 * x[p + 3]);
+      (sx -= a1 * x[p - q]), (sy -= a1 * x[p - q + 1]);
+      if (corner[v]) {
+        const a0 = A[b], a2 = A[b + 2], a6 = A[b + 6], a8 = A[b + 8];
+        (sx -= a0 * x[p - q - 2]), (sy -= a0 * x[p - q - 1]);
+        (sx -= a2 * x[p - q + 2]), (sy -= a2 * x[p - q + 3]);
+        (sx -= a7 * x[p + q]), (sy -= a7 * x[p + q + 1]);
+        (sx -= a6 * x[p + q - 2]), (sy -= a6 * x[p + q - 1]);
+        (sx -= a8 * x[p + q + 2]), (sy -= a8 * x[p + q + 3]);
+      } else (sx -= a7 * x[p + q]), (sy -= a7 * x[p + q + 1]);
+      (x[p] = d > 0 ? sx / d : 0), (x[p + 1] = d > 0 ? sy / d : 0);
+    }
+    gsEdge(nx, ny, A, x, r, fwd ? nx - 1 : 0, j);
   }
 }
 /** one V-cycle of the levels from (nx, ny, A) as a preconditioner: z from r */
 function multigrid(nx0: number, ny0: number, A0: Float64Array): (r: Float64Array, z: Float64Array) => void {
-  // per level its matrix, and (but the coarsest) each node's 4 coarse parents and weights (pc, pw; unused slots weight 0)
-  const lev: { nx: number; ny: number; A: Float64Array; x: Float64Array; b: Float64Array; r: Float64Array; pc: Int32Array; pw: Float64Array }[] = [];
+  // per level its matrix, and (but the coarsest) each node's 4 coarse parents and weights (pc, pw; unused slots weight 0,
+  // after the node's pn used ones)
+  const lev: { nx: number; ny: number; A: Float64Array; corner: Uint8Array; x: Float64Array; b: Float64Array; r: Float64Array; pc: Int32Array; pw: Float64Array; pn: Uint8Array }[] = [];
   let nx = nx0, ny = ny0, A = A0;
   for (;;) {
-    const N = nx * ny, L = { nx, ny, A, x: new Float64Array(N), b: new Float64Array(N), r: new Float64Array(N), pc: new Int32Array(0), pw: new Float64Array(0) };
+    const N = nx * ny, L = { nx, ny, A, corner: cornersOf(A), x: new Float64Array(2 * N), b: new Float64Array(2 * N), r: new Float64Array(2 * N), pc: new Int32Array(0), pw: new Float64Array(0), pn: new Uint8Array(0) };
     lev.push(L);
     if (nx <= 5 && ny <= 5) break;
     const cx = (nx >> 1) + 1, cy = (ny >> 1) + 1, C = new Float64Array(cx * cy * 9), pc = new Int32Array(4 * N), pw = new Float64Array(4 * N);
@@ -687,7 +802,9 @@ function multigrid(nx0: number, ny0: number, A0: Float64Array): (r: Float64Array
         }
       }
     }
-    (L.pc = pc), (L.pw = pw);
+    const pn = new Uint8Array(N);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) pn[j * nx + i] = (i & 1 ? 2 : 1) * (j & 1 ? 2 : 1);
+    (L.pc = pc), (L.pw = pw), (L.pn = pn);
     (nx = cx), (ny = cy), (A = C);
   }
   // the coarsest by a dense Cholesky factor
@@ -706,53 +823,74 @@ function multigrid(nx0: number, ny0: number, A0: Float64Array): (r: Float64Array
   }
   const yv = new Float64Array(m);
   const dense = (b: Float64Array, x: Float64Array) => {
-    for (let i = 0; i < m; i++) { let s = b[i]; for (let k = 0; k < i; k++) s -= M[i * m + k] * yv[k]; yv[i] = s / M[i * m + i]; }
-    for (let i = m - 1; i >= 0; i--) { let s = yv[i]; for (let k = i + 1; k < m; k++) s -= M[k * m + i] * x[k]; x[i] = s / M[i * m + i]; }
+    for (let a = 0; a < 2; a++) {
+      for (let i = 0; i < m; i++) { let s = b[2 * i + a]; for (let k = 0; k < i; k++) s -= M[i * m + k] * yv[k]; yv[i] = s / M[i * m + i]; }
+      for (let i = m - 1; i >= 0; i--) { let s = yv[i]; for (let k = i + 1; k < m; k++) s -= M[k * m + i] * x[2 * k + a]; x[2 * i + a] = s / M[i * m + i]; }
+    }
   };
   const cycle = (d: number) => {
     const F = lev[d];
     if (d === lev.length - 1) return dense(F.b, F.x);
     F.x.fill(0);
-    gs9(F.nx, F.ny, F.A, F.x, F.b, true);
-    mul9(F.nx, F.ny, F.A, F.x, F.r);
-    for (let v = 0; v < F.r.length; v++) F.r[v] = F.b[v] - F.r[v];
+    gs9(F.nx, F.ny, F.A, F.x, F.b, true, F.corner);
+    mul9(F.nx, F.ny, F.A, F.x, F.r, F.corner, F.b);
     const C = lev[d + 1];
     C.b.fill(0);
-    const { pc, pw } = F, N = F.r.length;
-    for (let v = 0; v < N; v++) { const r = F.r[v]; if (r) for (let p = 4 * v; p < 4 * v + 4; p++) C.b[pc[p]] += pw[p] * r; }
+    const { pc, pw, pn } = F, N = F.nx * F.ny, Cb = C.b, Cx = C.x, Fr = F.r, Fx = F.x;
+    // a parent of weight 0 (the unused slots) adds nothing either way, so only the node's pn are read
+    for (let v = 0; v < N; v++) {
+      const rx = Fr[2 * v], ry = Fr[2 * v + 1];
+      if (rx || ry) for (let p = 4 * v, e = p + pn[v]; p < e; p++) { const c = 2 * pc[p], w = pw[p]; (Cb[c] += w * rx), (Cb[c + 1] += w * ry); }
+    }
     cycle(d + 1);
-    for (let v = 0; v < N; v++) { let s = 0; for (let p = 4 * v; p < 4 * v + 4; p++) s += pw[p] * C.x[pc[p]]; F.x[v] += s; }
-    gs9(F.nx, F.ny, F.A, F.x, F.b, false);
+    for (let v = 0; v < N; v++) {
+      let sx = 0, sy = 0;
+      for (let p = 4 * v, e = p + pn[v]; p < e; p++) { const c = 2 * pc[p], w = pw[p]; (sx += w * Cx[c]), (sy += w * Cx[c + 1]); }
+      (Fx[2 * v] += sx), (Fx[2 * v + 1] += sy);
+    }
+    gs9(F.nx, F.ny, F.A, F.x, F.b, false, F.corner);
   };
   return (r, z) => { lev[0].b.set(r); cycle(0); z.set(lev[0].x); };
 }
-/** conjugate gradients on A x = b from x, preconditioned by `prec`; its iterations */
-function pcg9(nx: number, ny: number, A: Float64Array, b: Float64Array, x: Float64Array, prec: (r: Float64Array, z: Float64Array) => void, tol: number, maxIt: number): number {
+/** conjugate gradients on A x = b from x for each axis `on` (x and y interleaved), preconditioned by `prec`; each
+ * axis's iterations. An axis settled or off is left as it is while the other goes on. */
+function pcg9(nx: number, ny: number, A: Float64Array, corner: Uint8Array, b: Float64Array, x: Float64Array, prec: (r: Float64Array, z: Float64Array) => void, tol: number, maxIt: number, on: [boolean, boolean]): [number, number] {
   const m = x.length, r = new Float64Array(m), z = new Float64Array(m), p = new Float64Array(m), q = new Float64Array(m);
-  mul9(nx, ny, A, x, q);
-  let bn = 0;
-  for (let i = 0; i < m; i++) (r[i] = b[i] - q[i]), (bn += b[i] * b[i]);
-  bn = Math.sqrt(bn) || 1;
+  const it: [number, number] = [0, 0], go = [on[0] && maxIt > 0, on[1] && maxIt > 0];
+  mul9(nx, ny, A, x, q, corner);
+  let bn0 = 0, bn1 = 0;
+  for (let i = 0; i < m; i += 2) (r[i] = b[i] - q[i]), (bn0 += b[i] * b[i]), (r[i + 1] = b[i + 1] - q[i + 1]), (bn1 += b[i + 1] * b[i + 1]);
+  const bn = [Math.sqrt(bn0) || 1, Math.sqrt(bn1) || 1];
   prec(r, z);
   p.set(z);
-  let rz = 0;
-  for (let i = 0; i < m; i++) rz += r[i] * z[i];
-  let it = 0;
-  for (; it < maxIt; it++) {
-    mul9(nx, ny, A, p, q);
-    let pq = 0;
-    for (let i = 0; i < m; i++) pq += p[i] * q[i];
-    if (!(pq > 0)) break;
-    const al = rz / pq;
-    let rn = 0;
-    for (let i = 0; i < m; i++) (x[i] += al * p[i]), (r[i] -= al * q[i]), (rn += r[i] * r[i]);
-    if (Math.sqrt(rn) / bn < tol) { it++; break; }
+  let rz0 = 0, rz1 = 0;
+  for (let i = 0; i < m; i += 2) (rz0 += r[i] * z[i]), (rz1 += r[i + 1] * z[i + 1]);
+  const rz = [rz0, rz1];
+  while (go[0] || go[1]) {
+    mul9(nx, ny, A, p, q, corner);
+    let pq0 = 0, pq1 = 0;
+    for (let i = 0; i < m; i += 2) (pq0 += p[i] * q[i]), (pq1 += p[i + 1] * q[i + 1]);
+    const pq = [pq0, pq1];
+    for (let a = 0; a < 2; a++) {
+      if (!go[a]) continue;
+      if (!(pq[a] > 0)) { go[a] = false; continue; }
+      const al = rz[a] / pq[a];
+      let rn = 0;
+      for (let i = a; i < m; i += 2) (x[i] += al * p[i]), (r[i] -= al * q[i]), (rn += r[i] * r[i]);
+      if (Math.sqrt(rn) / bn[a] < tol) (it[a]++, (go[a] = false));
+    }
+    if (!go[0] && !go[1]) break;
     prec(r, z);
-    let rz2 = 0;
-    for (let i = 0; i < m; i++) rz2 += r[i] * z[i];
-    const be = rz2 / rz;
-    rz = rz2;
-    for (let i = 0; i < m; i++) p[i] = z[i] + be * p[i];
+    let rz20 = 0, rz21 = 0;
+    for (let i = 0; i < m; i += 2) (rz20 += r[i] * z[i]), (rz21 += r[i + 1] * z[i + 1]);
+    const rz2 = [rz20, rz21];
+    for (let a = 0; a < 2; a++) {
+      if (!go[a]) continue;
+      const be = rz2[a] / rz[a];
+      rz[a] = rz2[a];
+      for (let i = a; i < m; i += 2) p[i] = z[i] + be * p[i];
+      if (++it[a] >= maxIt) go[a] = false;
+    }
   }
   return it;
 }

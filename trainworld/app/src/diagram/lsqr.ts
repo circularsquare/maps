@@ -60,17 +60,37 @@ export function lsqr(start: Int32Array, col: Int32Array, val: Float64Array, b: F
   let alpha = norm(v);
   if (alpha === 0) return x;
   for (let i = 0; i < n; i++) v[i] /= alpha, (w[i] = v[i]);
+  // the iterations' A^T u gathered by column (the rows of each column in order, as the scatter above adds them); each
+  // step's vector updates, norms and scalings in the loops that read them, in the same order
+  const cs = new Int32Array(n + 1), at = new Int32Array(start[m]), av = new Float64Array(start[m]);
+  for (let k = 0; k < start[m]; k++) cs[col[k] + 1]++;
+  for (let i = 0; i < n; i++) cs[i + 1] += cs[i];
+  {
+    const fill = cs.slice(0, n);
+    for (let r = 0; r < m; r++) for (let k = start[r]; k < start[r + 1]; k++) { const p = fill[col[k]]++; (at[p] = r), (av[p] = val[k]); }
+  }
   let rhobar = alpha, phibar = beta, anorm = 0, xnorm = norm(x);
   for (let it = 0; it < iters; it++) {
-    Av(v, tm);
-    for (let r = 0; r < m; r++) u[r] = tm[r] - alpha * u[r];
-    beta = norm(u);
+    let ss = 0;
+    for (let r = 0; r < m; r++) {
+      let s = 0;
+      for (let k = start[r]; k < start[r + 1]; k++) s += val[k] * v[col[k]];
+      const ur = s - alpha * u[r];
+      u[r] = ur;
+      ss += ur * ur;
+    }
+    beta = Math.sqrt(ss);
     if (beta > 0) for (let r = 0; r < m; r++) u[r] /= beta;
     anorm = Math.sqrt(anorm * anorm + alpha * alpha + beta * beta);
-    ATu(u, tn);
-    for (let i = 0; i < n; i++) v[i] = tn[i] - beta * v[i];
-    alpha = norm(v);
-    if (alpha > 0) for (let i = 0; i < n; i++) v[i] /= alpha;
+    ss = 0;
+    for (let i = 0; i < n; i++) {
+      let s = 0;
+      for (let k = cs[i]; k < cs[i + 1]; k++) s += av[k] * u[at[k]];
+      const vi = s - beta * v[i];
+      v[i] = vi;
+      ss += vi * vi;
+    }
+    alpha = Math.sqrt(ss);
     const rho = Math.sqrt(rhobar * rhobar + beta * beta), c = rhobar / rho, s = beta / rho;
     const theta = s * alpha;
     rhobar = -c * alpha;
@@ -79,6 +99,7 @@ export function lsqr(start: Int32Array, col: Int32Array, val: Float64Array, b: F
     const t1 = phi / rho, t2 = -theta / rho;
     let xs = 0;
     for (let i = 0; i < n; i++) {
+      if (alpha > 0) v[i] /= alpha;
       x[i] += t1 * w[i];
       w[i] = v[i] + t2 * w[i];
       xs += x[i] * x[i];
