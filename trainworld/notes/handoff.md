@@ -7,7 +7,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## State
 - master **d5b02108** (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
-- **8800 = build 1135 (983f5c3d)**, Brazil and all landings to then; smoke light and dark PASSED ~10:50 on 11-06, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
+- **8800 = build 1187 (ff7cb27f)**, everything landed through sheetscale (T-2609); smoke light and dark PASSED 25/25
+  ~17:00 on 11-06, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
   and Brazil before release).
 - **Cores cap 12, 4 free** (Anita up ~08:30 on 11-06; ~21:45 on 11-05: "keep 4 cores free": real use, not just
   claims). Check with
