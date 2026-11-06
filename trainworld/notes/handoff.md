@@ -57,7 +57,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   stations, T-2603 Marey diagram. Strings to show Anita.
 - **profitpeek** (Opus, main tree read-only, ~10:45): T-2604 quick profit estimate, design note only.
 - **slcload** (Opus, tree, ~11:00): T-2605 city in view's demand load (Anita: "how long do we expect , say, loading
-  salt lake city"); stage 1 numbers by message first, then cut the biggest share. Owns the demand workers.
+  salt lake city"); narrowed: zone in view waits behind a whole solve mid-game; her current save is
+  Downloads\trainsworld-north-america-day-383.save (has SLC lines). Owns the demand workers.
+- **cutnet** (Opus, main tree read-only + scratch crate, ~11:30): T-2606 measure and design an east/west cut for NA
+  (T-1650 dropped geographic cuts on Japan/China data); recommendation goes to Anita before any build.
+- smoothlines found sheet.ts makeProb swaps two barycentric weights (stations mirrored in their cell; 29% of
+  straight triples turn > 60 deg on the sheet); fixing in its tree, pictures for the fix alone.
 - **8800 = build 1135 (983f5c3d)** (Brazil, sheet default, NJ fix, DC label, sheetspeed, workerbal); smoke light
   and dark PASSED 25/25 ~10:50, 12,515,594.
 - Anita asked (TODO.md): cross-border fares, "charge people based on where they get on": answered, already so
