@@ -1,5 +1,7 @@
 # Archive
 
+- T-085 [P2] Canoe water on our mask. Done 2026-11-06: water.py and the river steps rebuilt on the LC100 mask, canoe kind now matches the speed levels cell for cell (1.7 M L1 mismatches each way -> 0); a river step is dropped in a lake only when both cells are sea or lake; ktrips changes all from shore distances (Bergen-Reykjavik loses Sule Skerry, 414 -> 361 h). notes/T-085.md.
+
 - T-086 [P2] 100 m in partial town tiles. Done 2026-11-06: block masks in fineIndex, absent blocks filled from L1 with roads, a window from 5% of the view in 100 m blocks; Lagos and Sao Paulo at zoom 12, seam step 0.6 min; smoke 17/17 with a Lagos check. notes/T-086.md.
 - T-084 [P1] Road grade cap at 1 km. Done 2026-11-06: roads take the height factor and slope up to a 10% grade; Alps L10 vs MAP 1.64 -> 1.38, flat land unchanged; hazard band rebuilt on our land (both `dist` and `tiles`), MAP's kept in data/hazard_map2020. notes/T-084.md.
 

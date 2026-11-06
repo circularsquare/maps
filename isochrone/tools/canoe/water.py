@@ -11,6 +11,8 @@ pixels), lake (inside a HydroLAKES polygon; its fetch wave height coded in kind)
 index.json. Byte layouts: notes/T-021.md.
 
 --cache DIR keeps the L1 kind and shore arrays (1.5 GB) between runs, for checks.
+--tiles DIR --grid FILE --out DIR build a test set from other speed levels (T-085: MAP's, in
+data/tiles_map2020/) into another folder.
 """
 import gzip
 import json
@@ -315,8 +317,11 @@ def write_tiles(level, planes, size, land):
 
 
 def main():
+    global TILES, GRID, OUT
     t0 = time.time()
-    cache = sys.argv[sys.argv.index("--cache") + 1] if "--cache" in sys.argv else None
+    arg = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else None
+    cache = arg("--cache")
+    TILES, GRID, OUT = arg("--tiles") or TILES, arg("--grid") or GRID, arg("--out") or OUT
     lands = load_land()
     land = lands[1]
     log("land loaded: L1 %.3f, L3 %.3f, L10 %.3f land" % (land.mean(), lands[3].mean(), lands[10].mean()))

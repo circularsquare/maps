@@ -311,18 +311,39 @@ def densify(r):
     return mx, my, sub_km, sub_reach, sub_deg, first
 
 
+TILES_DIR = os.path.join(HERE, "data", "tiles")     # the speed levels whose water the steps follow
+GRID_FILE = os.path.join(HERE, "data", "grid.bin.gz")
+
+
 def load_water(level):
     if level == 10:
-        g = np.frombuffer(gzip.open(os.path.join(HERE, "data", "grid.bin.gz")).read(), np.uint8)
+        g = np.frombuffer(gzip.open(GRID_FILE).read(), np.uint8)
         return (g == 0).reshape(L1H // 10, L1W // 10)
     size = TILE[level]
     W, H = L1W // level, L1H // level
     water = np.ones((H, W), bool)
-    for p in glob.glob(os.path.join(HERE, "data", "tiles", "l%d" % level, "*.bin.gz")):
+    for p in glob.glob(os.path.join(TILES_DIR, "l%d" % level, "*.bin.gz")):
         tr, tc = map(int, os.path.basename(p).split(".")[0].split("_"))
         t = np.frombuffer(gzip.open(p).read(), np.uint8).reshape(size, size)
         water[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size] = t == 0
     return water
+
+
+def load_kind(level):
+    """The canoe water `kind` of a level (tools/canoe/water.py, built first): 0 land, 1 sea, 2 river
+    water, 3+ lake; a tile the index does not list is open sea."""
+    with open(os.path.join(OUT, "index.json")) as fh:
+        lv = json.load(fh)["levels"][str(level)]
+    W, H = L1W // level, L1H // level
+    if level == 10:
+        return np.frombuffer(gzip.open(os.path.join(OUT, lv["file"])).read(), np.uint8)[:W * H].reshape(H, W)
+    size = lv["tile"]
+    kind = np.ones((H, W), np.uint8)
+    for t in lv["tiles"]:
+        tr, tc = divmod(t, 72)
+        b = np.frombuffer(gzip.open(os.path.join(OUT, lv["path"], "%d_%d.bin.gz" % (tr, tc))).read(), np.uint8)
+        kind[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size] = b[:size * size].reshape(size, size)
+    return kind
 
 
 def _merge(e, e2):
@@ -449,7 +470,12 @@ def steps_for_level(level, sub, reach_info):
     dc = (cb - ca + W // 2) % W - W // 2
     adj = (np.abs(dr) <= 1) & (np.abs(dc) <= 1) & ((dr != 0) | (dc != 0))
     both_water = water[a] & water[b]
-    in_lake = both_water & (lake >= 0.5 * ln)
+    # dropped in a lake only where both cells are open water (sea or lake canoe nodes) that join
+    # inflow to outflow; a river-water cell has no grid edges, so its step stays (T-085)
+    kind = load_kind(level).ravel()
+    both_open = ((kind[a] == 1) | (kind[a] >= 3)) & ((kind[b] == 1) | (kind[b] >= 3))
+    del kind
+    in_lake = both_water & both_open & (lake >= 0.5 * ln)
     keep = adj & ~in_lake
     resv = both_water & (res >= 0.5 * ln) & (hum == 0)
     # one class per step: fall, dam, weir, unrunnable, reservoir, rapids, flat. A dam or weir goes
@@ -618,8 +644,22 @@ def main():
     elif stage == "desert":
         stage_desert()
     elif stage == "build":
-        lv = tuple(int(x) for x in sys.argv[2:]) or (10, 3, 1)
-        stage_build(lv)
+        # --tiles DIR --grid FILE --out DIR: a test set from other speed levels (T-085)
+        global TILES_DIR, GRID_FILE, OUT
+        args, lv = sys.argv[2:], []
+        while args:
+            a = args.pop(0)
+            if a in ("--tiles", "--grid", "--out"):
+                v = args.pop(0)
+                if a == "--tiles":
+                    TILES_DIR = v
+                elif a == "--grid":
+                    GRID_FILE = v
+                else:
+                    OUT = v
+            else:
+                lv.append(int(a))
+        stage_build(tuple(lv) or (10, 3, 1))
     elif stage == "index":
         merge_index()
     else:

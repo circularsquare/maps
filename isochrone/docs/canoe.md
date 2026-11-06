@@ -25,13 +25,17 @@ along the chosen path.
   its canoe node. Canoe nodes on land cells (river cells, and at L3 and L10 coastal and strait
   cells) get ids from N on, found through a per-cell table `canoeOf` (-1 where none): 0.73 M extra
   at L10.
-- **Water** is as now: MAP's water value; a coarse cell is water when under a quarter of its L1
-  pixels are land. Water is **sea** inside the ocean (Natural Earth 10 m ocean polygon for
-  today, and water joined to it within 8 L1 pixels where NE's coast and MAP's differ), **lake**
-  inside a HydroLAKES polygon, else **river water** (wide rivers MAP marks as water: the Amazon,
+- **Water** is the speed levels' water (our surface since T-028, `docs/resolution.md`: an L1 cell
+  is water when LC100 has it half or more water, small water under 5 km² is land), read from
+  `data/tiles` and the L10 grid, so canoe and walking agree cell for cell (T-085); a coarse cell is
+  water when under a quarter of its L1 pixels are land. A walkable bridge (a road byte on a water
+  cell) makes the cell land on the page but not in the canoe data: a land node over sea or river
+  water, as a strait. Water is **sea** inside the ocean (Natural Earth 10 m ocean polygon for
+  today, and water joined to it within 8 L1 pixels where NE's coast and ours differ), **lake**
+  inside a HydroLAKES polygon, else **river water** (wide rivers LC100 has as water: the Amazon,
   the lower Danube). An L1 land pixel that NE's ocean touches keeps its land node and gets a sea
-  canoe node too: MAP walks over some straits (the Bosporus, a gap in the Dardanelles), and this
-  keeps them open. River water has no grid edges; the canoe uses only the
+  canoe node too: the land mask closes some straits narrower than a cell (the Bosporus is cut
+  where under half of a pixel is water), and this keeps them open. River water has no grid edges; the canoe uses only the
   river edges running through it, so a wide river is never a current-free channel beside its own
   current.
 - **River water off the line** (T-036): a river-water cell no open river step crosses (the line
@@ -145,11 +149,11 @@ risk") to 10,000, costs nothing extra.
 | File | Level | Holds | Size |
 |---|---|---|---|
 | `data/canoe/water.bin.gz` | L10, whole world | 3 bytes a cell: `kind`, `shore`, `links` | 1.1 MB |
-| `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.1 MB, 1130 tiles |
-| `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 15.0 MB, 1141 tiles |
+| `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.5 MB, 1122 tiles |
+| `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 13.7 MB, 1140 tiles |
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
 | `data/canoe/rivers.bin.gz` | L10, whole world | 1.02 M river steps | 4.1 MB |
-| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 3.6 M and 11.1 M river steps | 15.1 MB, 906 tiles; 38.4 MB, 913 tiles |
+| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 3.6 M and 11.0 M river steps | 15.0 MB, 906 tiles; 38.1 MB, 913 tiles |
 
 - Tiles share the speed tiles' grid and names (`docs/resolution.md`); `data/canoe/index.json`
   lists them, and the sea grid, and under `rivers` the river tiles (`{"1": {"tile", "path":
@@ -201,9 +205,10 @@ risk") to 10,000, costs nothing extra.
   first step; where several reaches meet there, the one with the most discharge carries on. Two
   rivers on the same (cell, direction) keep one record: an open class first, then dam, weir or
   reservoir, then a closed one, the bigger river among equals. A coarse step stores the total
-  fine length and the length-weighted mean v. A step whose two cells are water at that level
-  (speed 0) and half of whose length lies in a HydroLAKES lake is dropped (the water cells join
-  inflow to outflow); in a reservoir it is kept with class 6. On land cells the step is kept
+  fine length and the length-weighted mean v. A step whose two cells are sea or lake water at that level
+  (`kind` 1 or 3+, so their grid edges join inflow to outflow) and half of whose length lies in a
+  HydroLAKES lake is dropped; one with a river-water end is kept, as river water has no grid
+  edges (T-085: dropping it cut river fragments off in the Sundarbans' channels); in a reservoir it is kept with class 6. On land cells the step is kept
   whatever it crosses.
 - **Gradient classes**: flat under 1 m/km, rapids 1-5, unrunnable above 5 (above 2 where Q >=
   1000 m³/s); a fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller
@@ -297,6 +302,9 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
 - Distributaries and braids are missing (one channel per delta); tides are ignored; river flow is
   the annual mean (no low season); two rivers sharing an L10 cell are joined there.
 - Window seams as for walking (`docs/resolution.md`), per layer.
+- A one-pixel HydroLAKES pond inside river water with no land beside it is unreachable, and so
+  are the river-water cells whose only nearer edge is that pond (4 cells in a 3.2 x 2.4 degree
+  L1 box over the Sundarbans, notes/T-085.md).
 
 ## 9. 10,000 BC
 
