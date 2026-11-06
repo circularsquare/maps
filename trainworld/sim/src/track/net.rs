@@ -603,6 +603,17 @@ impl Network {
         self.frame
     }
 
+    /// T-2607: the trains line `l` runs at level `lev` over a round trip of `trip_s`: its count, but
+    /// on a line keeping a headway no more than the headway needs (a fraction), the time left over
+    /// spent waiting at the ends, so the headway set is the headway run.
+    pub fn running_trains(&self, l: usize, lev: usize, trip_s: f64) -> f64 {
+        let n = self.line_trains.get(l).copied().flatten().map_or(0.0, |c| c[lev] as f64);
+        match self.line_auto.get(l).copied().flatten() {
+            Some(a) if a[lev] > 0 && trip_s > 0.0 => n.min(trip_s / a[lev] as f64),
+            _ => n,
+        }
+    }
+
     /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
     pub fn line_phase_of(&self, l: u32) -> [f32; 3] {
         self.line_phase.get(l as usize).copied().unwrap_or([0.0; 3])

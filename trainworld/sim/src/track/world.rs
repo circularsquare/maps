@@ -237,7 +237,7 @@ impl TrackWorld {
             if !self.net.line_ok(l as u32) || !self.svc.lines[l].ok || self.switching == Some(l as u32) { continue; }
             let trip = self.svc.lines[l].round_trip;
             for lev in (0..LEVELS).filter(|&lev| worst[l][lev].0 <= 2.0 - FULL_RHO) {
-                let short = counts[lev] as f64 - self.net.line_tph[l][lev] as f64 * trip[lev] / 3600.0;
+                let short = self.net.running_trains(l, lev, trip[lev]) - self.net.line_tph[l][lev] as f64 * trip[lev] / 3600.0;
                 let mut held = if short > 0.01 { short.floor() as u32 } else { 0 };
                 if self.svc.lines[l].is_loop() { held &= !1; }
                 if held > 0 { counts[lev] -= held.min(counts[lev]); trimmed = true; }
@@ -277,7 +277,7 @@ impl TrackWorld {
             for (j, &id) in ids.iter().enumerate() {
                 let counts = self.net.line_trains[id as usize].unwrap();
                 for lev in 0..LEVELS {
-                    let short = counts[lev] as f64 - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
+                    let short = self.net.running_trains(id as usize, lev, trips[j][lev]) - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
                     // T-517: a line short of its fleet's rate is settled when a track it uses is full
                     let held = short > 0.0 && worst[id as usize][lev].0 >= FULL_RHO;
                     // T-1283: a round trip that jumps as the rate passes a threshold (a hold coming
@@ -330,8 +330,12 @@ impl TrackWorld {
                     let probe = probed.as_ref().map_or(self.svc.lines[i].round_trip[lev], |p| p[j][lev]);
                     let rise = ((probe - trip) / 0.01).max(0.0);
                     let old = rates[j][lev] as f64;
-                    let residual = old * trip - counts[lev] as f64 * 3600.0;
-                    self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else {
+                    let runs = self.net.running_trains(i, lev, trip);
+                    let residual = old * trip - runs * 3600.0;
+                    self.net.line_tph[i][lev] = (if counts[lev] == 0 || trip <= 0.0 { 0.0 } else if runs < counts[lev] as f64 {
+                        // T-2607: the headway set, whatever the round trip
+                        runs * 3600.0 / trip
+                    } else {
                         (old - residual / (trip + rise)).max(0.0)
                     }) as f32;
                 }

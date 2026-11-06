@@ -634,10 +634,9 @@ makes it wait there instead. Per demand level, from the two
 lines' headways and free profiles, train by train over one cycle of departures (the shortest whole
 number of the slower headway that is a whole number of the faster one, at most 12 of them and 2 hours,
 else 2 hours), after a warm-up. The headways are those the timetable runs to (T-2245,
-`overtake::pattern_tph`): a line keeping a headway the player set is timetabled at it, though its
-whole trains run a little more often (two lines set to 10 minutes run 580 and 571 s apart on the test
-line below, which would drift past each other so no placement fits for long); other lines at their
-rates. At every place either run stops, each train keeps `s` behind the one ahead (only
+`overtake::pattern_tph`): a line keeping a headway the player set is timetabled at it, as its trains
+run it (or up to 0.5% over it, 6.3 "Headway mode"), so two lines set to 10 minutes meet at the same
+stations every trip; other lines at their rates. At every place either run stops, each train keeps `s` behind the one ahead (only
 `PASS_CLEAR_S`, 60 s, behind a slower train stepping aside at a passing point); at each passing point
 a slower train waits for every faster train that would otherwise come within `s` of it before its next
 passing point, leaving 60 s after the last of them passes and late enough to be `s` behind it at the
@@ -844,7 +843,13 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   asks for; T-2519). Its counts are then derived: the fewest trains with round trip over headway, the round
   trip being the capacity-adjusted one with running, dwell, turnaround and waiting (`auto_trains`;
   the real headway may run 0.5% over the chosen one, so a few seconds of drift in the round trip
-  buy no train). At the track's limit the count is clamped (T-679, `clamp_auto`): when the headway
+  buy no train). **The headway set is the headway run** (T-2607, `Network::running_trains`): where
+  the fleet's round trip leaves time over at that headway (one train an hour on a 38 minute round
+  trip, say), its trains wait it out at the ends, half at each, standing at the terminal platform
+  (6.3 "Departures"), so the departures, the drawn trains, demand's rates and the running cost are
+  the headway set's; the waits are not counted as terminal occupancy (6.2). Only a fleet short of
+  the headway (the 0.5% above, or held by the track below) runs at its round trip over its trains.
+  At the track's limit the count is clamped (T-679, `clamp_auto`): when the headway
   is no shorter than the line's shortest headway (6.2, with the other lines' rates as they stand,
   `Capacity::line_limits`) or within the 0.5% of it, the line takes no more trains than fit, at least
   one, so it runs just over the headway set (4:07 for 4:00, say) and no train is held out. A headway
@@ -875,7 +880,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   without trains, high demand before an empty evening) departs until its own end, so the line's last
   trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
   A whole-line fleet's reverse departures are offset by the forward trip so
-  each train turns straight back. **Spaced from other lines** (T-1925, notes/T-1900.md D1): every
+  each train turns straight back; a headway line's by the forward trip and half the time its trains
+  wait out (Headway mode above), so they stand that long at each end (T-2607). **Spaced from other lines** (T-1925, notes/T-1900.md D1): every
   departure of a level, both runs, leaves a phase after those times, under a headway
   (`Network::line_phase`, `Lattice::phase`), picked so the line's trains and those of each line it
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
@@ -916,8 +922,9 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   a run takes that run's next departure from A, standing there as the timing hold, and trains enter
   and leave service at A only), and headways even out as
   trains turn; the same happens at every change of period. A train that had left service before
-  a change never comes back. In steady service with a whole-line fleet every train is ready at
-  exactly its next departure and nothing stands longer. Each drawn trip names the departure its
+  a change never comes back. In steady service with a fleet set by count every train is ready at
+  exactly its next departure and nothing stands longer; a headway line's stand their share of the
+  time over at each end. Each drawn trip names the departure its
   train takes next (`Trip::next`, the fourth number per trip of `TrackApi.trips`, NaN when it
   leaves service), so a selected train is followed onto its next trip (T-245). Eras are dropped
   once no train of theirs can be drawn (an hour plus the longest trip and two headways after the

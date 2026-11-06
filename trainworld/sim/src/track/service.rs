@@ -902,7 +902,19 @@ impl Service {
         // stays evenly spaced around the complete circuit.
         let off = std::array::from_fn(|lev| {
             let t = tph[lev] as f64;
-            if net.line_trains[l].is_some() && t > 0.0 && !ls.is_loop() { ls.trip_len(net, l as u32, 0, lev) % (3600.0 / t) } else { 0.0 }
+            if net.line_trains[l].is_none() || t <= 0.0 || ls.is_loop() {
+                return 0.0;
+            }
+            let (h, there) = (3600.0 / t, ls.trip_len(net, l as u32, 0, lev));
+            // T-2607: a headway line's trains wait out the time its round trip leaves them, half at
+            // each end (1e-3 trains: what a settle leaves of a round trip that is whole headways)
+            let wait = if net.line_auto[l].is_some_and(|a| a[lev] > 0) {
+                let trip = there + ls.trip_len(net, l as u32, 1, lev);
+                ((trip / h - 1e-3).ceil() * h - trip).clamp(0.0, h)
+            } else {
+                0.0
+            };
+            (there + 0.5 * wait) % h
         });
         // a loop's middle is half a lap from its first stop (T-798): the same figure
         let lead = (0.25 * (ls.runs[0].prof[1].duration + ls.runs[1].prof[1].duration)).clamp(0.0, LEAD_MAX_S);

@@ -281,8 +281,8 @@ impl TrackApi {
     /// Trains of a whole-line fleet that full track keeps from running at a level (T-517), or 0.
     pub(super) fn waiting(&self, line: u32, level: usize) -> f64 {
         let (n, svc) = (&self.w.net, &self.w.svc);
-        let (Some(Some(counts)), Some(ls)) = (n.line_trains.get(line as usize), svc.lines.get(line as usize)) else { return 0.0 };
-        let short = counts[level] as f64 - n.line_tph[line as usize][level] as f64 * ls.round_trip[level] / 3600.0;
+        let (Some(Some(_)), Some(ls)) = (n.line_trains.get(line as usize), svc.lines.get(line as usize)) else { return 0.0 };
+        let short = n.running_trains(line as usize, level, ls.round_trip[level]) - n.line_tph[line as usize][level] as f64 * ls.round_trip[level] / 3600.0;
         if short > 0.01 { short } else { 0.0 }
     }
 

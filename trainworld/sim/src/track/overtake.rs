@@ -121,9 +121,8 @@ pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run,
 }
 
 /// T-2245: the rate a line's overtakes are timetabled at: the headway the player set where the line
-/// keeps one (its trains, a whole number, run it a little more often, the rest taken up at the ends),
-/// else its rate. Two lines both set to 10 minutes then meet at the same stations every trip; at
-/// their rates (580 and 571 s on the 180 km test line) they drift past each other and no phase fits.
+/// keeps one, though its whole trains may run up to `AUTO_SLACK` over it (T-2607), else its rate. Two
+/// lines both set to 10 minutes then meet at the same stations every trip rather than drift apart.
 pub fn pattern_tph(net: &Network, l: u32, lev: usize) -> f32 {
     let tph = net.line_tph[l as usize][lev];
     match net.line_auto[l as usize] {

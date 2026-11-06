@@ -753,6 +753,37 @@ fn a_steady_fleet_is_handed_over_without_standing() {
 }
 
 #[test]
+fn a_headway_line_runs_the_headway_set_and_waits_at_the_ends() {
+    // T-2607: one train an hour over a round trip well under an hour, and three trains for a
+    // headway of a little over a third of the round trip
+    let (mut w, id) = fleet_line(4);
+    let rt = w.svc.lines[id as usize].round_trip;
+    let mid = (rt[MEDIUM] / 2.6).ceil() as u32;
+    assert!(rt[HIGH] < 3000.0, "{rt:?}");
+    w.apply(Op::AutoTrains { id, auto: Some([3600, mid, 3600]), trains: Some([4, 4, 4]) }).unwrap();
+    w.apply(Op::AutoTrains { id, auto: Some([3600, mid, 3600]), trains: w.net.line_trains[id as usize] }).unwrap();
+    assert_eq!(w.net.line_trains[id as usize], Some([1, 3, 1]));
+    let tph = w.net.line_tph[id as usize];
+    assert!((tph[HIGH] - 1.0).abs() < 1e-4 && (tph[LOW] - 1.0).abs() < 1e-4, "{tph:?}");
+    assert!((3600.0 / tph[MEDIUM] as f64 - mid as f64).abs() < 0.01, "{tph:?} for {mid} s");
+    // the trains stand out the time left over, half at each end, and go on
+    let ls = &w.svc.lines[id as usize];
+    for (lev, t0, n, h) in [(HIGH, 3.0 * 86400.0 + 9.0 * 3600.0, 1.0, 3600.0), (MEDIUM, 3.0 * 86400.0 + 20.5 * 3600.0, 3.0, mid as f64)] {
+        let trip = ls.trip_len(&w.net, id, 0, lev) + ls.trip_len(&w.net, id, 1, lev);
+        let trips: Vec<_> = w.svc.trips(&w.net, t0, t0 + 2.0 * 3600.0).into_iter().filter(|t| t.level as usize == lev && t.dep > t0 && t.dep + 2.0 * trip < t0 + 2.0 * 3600.0).collect();
+        assert!(trips.len() >= 2, "level {lev}");
+        let mut out: Vec<f64> = trips.iter().filter(|t| t.run == 0).map(|t| t.dep).collect();
+        out.sort_by(f64::total_cmp);
+        assert!(out.windows(2).all(|p| (p[1] - p[0] - h).abs() < 0.01), "level {lev}: {out:?}");
+        for t in &trips {
+            let ready = t.draw + ls.trip_len(&w.net, id, t.run as usize, lev);
+            assert!(t.next.is_some(), "{t:?} goes on");
+            assert!((t.end - ready - 0.5 * (n * h - trip)).abs() < 1.5, "level {lev}: {t:?} stands {} s", t.end - ready);
+        }
+    }
+}
+
+#[test]
 fn changing_the_fleet_moves_no_train() {
     for (from, to) in [(6u32, 9u32), (9, 6), (6, 7), (7, 6)] {
         let (mut w, id) = fleet_line(from);
