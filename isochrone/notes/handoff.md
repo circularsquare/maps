@@ -48,6 +48,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
    must weigh L1 growing ~3x (176 -> ~530 MB).
 
 ## Anita's standing asks
+- 2026-11-06 afternoon: don't raise the shared core cap; isochrone proceeds slowly within its 4
+  while she works on other things.
 - 2026-11-06: page text needs no sign-off for now (in CLAUDE.md); 90 m downloads go ahead,
   keeping ~20 GB free on C:; tell her if room would need cleanup outside isochrone (not needed:
   peak ~6 GB).
