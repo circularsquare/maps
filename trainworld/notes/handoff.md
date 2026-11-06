@@ -62,7 +62,17 @@ agent, like occ-tw-3), commit, and pass 5 screenshots for all units (checks/l10n
 files (EditNote, editNote/profitEstimate, lineFigures/editCap after capview, diagram/ after borders2+dianames; T-2643
 leftovers) need stage 1 then translation; T-2655 code faults (list on its TASKS line) need a code agent.
 
+## Translation status (16:30)
+- **All 2124 English messages translated and reviewed in ja, zh-Hans, zh-TW** (units 1-4, last commit 70bd30cb).
+- **l10nfix** (Opus, tree .tw-trees/l10nfix): T-2655 code that pieces English (list on its TASKS line). Its changed
+  keys need a quick review pass after landing. Still to do: pass 5 screenshots (checks/l10n-shots.mjs) per language;
+  T-2643 swept files (EditNote/editNote/profitEstimate after ridersnow; lineFigures/editCap after capview+ridersnow;
+  diagram/ after borders2+dianames), then their translation; then OFFERED in i18n/intl.ts on Anita's release word.
+
 ## Waiting on Anita
+- **T-2669** running costs and upkeep at each country's fare scale (construction, trains stay world prices): money
+  only. **T-2670** value of time 0.7 -> 0.6 (demand change). farescale's note notes/T-2668.md (fares' ^0.7 is
+  supported: fitted 0.66; Tijuana's loss is costs not scaling).
 - T-2667: fill thin countries with OSM tourism places (changes demand). attract recommended yes. notes/T-2663.md.
 - T-2668 proposal when farescale reports.
 - Strings shown, no answer yet = fine: the demand-stopped notice ("Demand stopped, so the game is paused. Reload the
