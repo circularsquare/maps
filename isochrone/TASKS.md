@@ -24,7 +24,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-053 (below): the world roads pass, running detached.
+- T-028 and T-057 (below), agents launched 2026-11-06 01:55.
 - T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only build_grid.py and build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs in T-028.
 - T-082 [P2] Canoe at L10 in river country too fast: L1/L10 1.92 at Coari, 1.45 at Khulna; L10 paddles nearly end to end since a 10 km cell almost always holds some river and the walk to it disappears. L3 and L1 agree (notes/T-080.md).
 
@@ -39,9 +39,9 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Roads and 100 m
 
 - T-010 [P1] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. Stage 1 done 2026-11-05: tools/roads/, rule share3 (e = min(1, 3 x road share of the cell); 4% median off 100 m in the test tiles, MAP 22%), design in docs/roads.md for Anita's review (notes/T-010.md). Stage 2 is T-053.
-- T-053 [P2] Roads world build (T-010 stage 2): fetch, extract and delete the 513 Geofabrik extracts of `data/roads/regions.json` one by one (84.6 GB), then `reduce` and a world GeoTIFF of the 1 km layer (docs/roads.md "Fetching the world"). A small driver (fetch the next while one is read) is the only new code. ~8 h on one core, ~4 h on two; peak disk ~4 GB. Approved by Anita 2026-11-05; taking, 2026-11-05: `world.py --jobs 1` running since 14:52 (paused ~23:00 at Anita's ask with 376 of 513 done, resumed 23:35), log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
-- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
-- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1.
+- T-053 [P2] Roads world build (T-010 stage 2). Done 2026-11-06 01:47: all 513 extracts read (chugoku's download timed out three times and was rerun), `reduce` gave 16,183 tiles in data/roads/l1 (data/roads 0.7 GB); the world GeoTIFF moves to T-028. To archive with T-010, log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
+- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md). Taking, 2026-11-06 (agent, Opus): road byte per cell at every level, old tiles kept as a backup for comparing.
+- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1. Taking, 2026-11-06 (agent, Opus): towns and water country, `.roads` from data/roads/bits; no page code until T-028 lands.
 - T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
 
 ## M2: survival

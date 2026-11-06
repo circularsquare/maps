@@ -1,64 +1,43 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-05 21:40
+Updated: 2026-11-06 01:58
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## State
-- Landed today, all committed, smoke 15/15 each time (last 65fd440e): rivers faint; corridors
-  coloured by speed along the stretch (river length, smoothed), width by trips, nearest-line
-  hover, lines straightened and smoothed (T-052, T-062, T-064, T-070, T-072); paler water on
-  canoe starts (T-063); instant hovers, no scroll bar (T-061, T-069); hex the default cell look,
-  `?look=crisp|diag` kept (T-060); river lines in a worker (T-048); globe on MapLibre 5.24.0
-  (T-059); upstream 0.4 of the current, floor 2.5 km/h, carry x2 kept (T-071); roads design and
-  tools, rule share3 (T-010 stage 1, docs/roads.md).
-- 8800 serves this folder live (`localhost:8800/isochrone/`), no build step.
-- C: had 52 GB free at 14:52. The roads pass keeps <=2 extracts on disk and stops under 6 GB.
-- Cores: the shared ledger is at its 12 cap (trainworld); isochrone agents get 1 each.
-- Idle agents (resume for follow-ups): roads addfc90633db2c1e0 (Opus), page a188a1156511192ef
-  (Sonnet), T-071 upstream aeeb2ba51b2f7341c (Opus), globe abe9a2322cac44954 (Opus).
-- Uncommitted and others': docs/hazard.md, notes/T-042/, research/friction.md (T-042 agent).
+- All landed work is committed; smoke 16/16 at the last check (after T-079). 8800 serves this
+  folder live (`localhost:8800/isochrone/`), no build step.
+- Landed 2026-11-05: globe, hex look, corridors by speed, faint rivers, paler water, instant
+  hovers, land danger (T-042/066/067), corridors after windows (T-077), M1 doc tidy (T-023),
+  desert wadis (T-079, tools/hotdesert.py shared by canoe and hazard), level-bias study (T-080).
+- Roads pass T-053 finished 2026-11-06 01:47: 513 of 513 extracts (chugoku rerun after three
+  download timeouts), `build.py reduce` gave 16,183 tiles in data/roads/l1; data/roads 0.7 GB.
+  failed.txt lists 13 names, all later done. iso-roads claim gone.
+- C: 48 GB free at 01:50 (it swings; other sessions). Ledger cap 15 overnight.
+- Idle agents (resume for follow-ups): T-080 level bias a754c1f8965d2be43 (Opus; T-081 if
+  Anita says yes), T-079 desert a75105d4c451ffaf1 (Opus), roads addfc90633db2c1e0 (Opus).
 
 ## In flight
-- T-066 (bf42d32e) and T-067 (535656b3) landed: land danger on the page, T-042 archived.
-  New on-page strings shown to Anita (survival on walking hovers from 0.5% risk; info panel
-  danger paragraph and credits).
-- T-077 landed (bd409831): corridors after windows, faster in windows (L10 not), hazard in
-  reparent slack, a stale-node bug fixed, ktrips walking trips.
-- T-023 M1 doc tidy landed (c306d1bc).
-- T-079 landed: desert wadis no longer paddle (tools/hotdesert.py shared by canoe and hazard);
-  river data and hazard band rebuilt, smoke 16/16. Agent a75105d4c451ffaf1 idle. T-083 filed.
-- T-080 done (agent a754c1f8965d2be43 idle, resume for T-081): zooming in makes walks ~19%
-  faster L10->L1, not slower; L0.1 is 21% slower than L1 from the MAP vs LC100+OSM gap. Fix
-  T-081 (crossing-time rule) asked of Anita; T-082 canoe at L10 filed.
-- Roads pass at 21:29: 313 of 513 extracts done, 55 GB free; at this rate it ends ~02:00.
-  CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
-- T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
-- T-056 landed (e3730347): corridors re-chosen tree, counting 2-4x slower. T-077 (count after
-  windows paint, speed up `reparent`) waits for T-067 to free js/session.js; fresh agent (the
-  T-056 one is at ~455k tokens).
-- T-036 landed (2f0b985b): dead-end river water. T-074 river water paler: page agent
-  a188a1156511192ef (Sonnet), owns js/paint.js, the flag in js/canoe.js.
-
-## Long runs
-- Paused ~23:00 at Anita's ask, resumed 23:35 at her word (PID 25140, stdout now
-  `data/roads/world.out`, 137 extracts / 19.3 GB to go, 25.5 GB free). gcc-states sits in
-  failed.txt only because the pause killed its read; this run redoes it.
-- T-053 world roads pass: `python -u isochrone/tools/roads/world.py --jobs 1` from the maps root,
-  first run PID 25032 from 14:52, ledger claim `iso-roads`. Log `isochrone/data/roads/world.log`
-  (stderr world.err; per extract data/roads/logs/). Alive: `Get-Process -Id 25032` and the
-  newest log line. Done when data/roads/done.txt has 513 lines; failures in failed.txt. ~7-8 h.
-  Restart: same command, then claim again with the new PID (notes/T-053.md). When it ends:
-  `build.py reduce`, the GeoTIFF, then T-028 and T-057's .roads; release `iso-roads`.
+- T-028 own surface + roads on the page: agent a9b36a2c84531c427 (Opus, 01:55). Owns
+  tools/build_grid.py, build_tiles.py, smallwater.py, tools/roads/, data/tiles, the L10 grid,
+  data/surface, js/tiles.js, levels.js, speeds.js, search.js, config.js, index.html, SPEC 2-3,
+  docs/surface, roads, resolution, code-map. Keeps the old tiles as a backup. Ledger iso-t028.
+  Will list player-facing strings old -> new (speeds panel, credits) for Anita.
+- T-057 100 m tiles, towns and water country: agent a2e305ad8c2b66a43 (Opus, 01:55). Owns
+  tools/fine/, data/fine, docs/fine.md, notes/T-057.md. No page code until T-028 lands; then
+  resume it for any window/block changes. Ledger iso-t057.
 
 ## Next
-1. When T-053 ends: reduce + GeoTIFF, then T-028 (page on our own surface with roads), T-057
-   (100 m tiles: towns and water country first).
-2. T-011 90 m terrain right after T-053 (Anita, 2026-11-05), then T-039, T-057 mountain tiles.
-3. Land T-079 (desert wadis) and review T-080's proposal with Anita.
-4. Anita has checked survival and upstream trips (fine, 2026-11-05). T-065 creek-weaving, T-073
-   small rivers, T-031 (fold into a river rebuild) still open.
+1. Land T-028 (screenshots, ktrips, strings to Anita), then T-057's page part if any.
+2. T-011 90 m terrain (Anita queued it after roads): held until T-028 lands, since T-028 owns
+   data/surface and T-011 replaces its terrain; also 100-130 GB of downloads, and Anita asked
+   for a pause on big downloads once on 2026-11-05 (then said resume). Then T-039, T-057
+   mountain tiles.
+3. T-081 crossing-time rule for L10/L3 if Anita says yes (asked 2026-11-05, recommended);
+   it goes into T-028's coarse averaging function.
+4. Open: T-082 canoe at L10, T-083 desert river permanence, T-065, T-073, T-031 (fold into the
+   next river rebuild), T-075.
 
 ## Anita's standing asks
 - 2026-11-05: roads go ahead (rotating, she lacks 84 GB free); T-047's 2.8 GB rule approved;
@@ -66,5 +45,6 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - Corridor colour = speed along the stretch, width = trips, the red end not dark; hover a line
   for its mode and speed; smooth lines, no staircases.
 - Rivers faint; water paler than land; hovers instant; a globe; hex cells by default.
-- Carry x2 (settled 2026-11-05).
+- Carry x2. Survival and upstream canoe trips checked by her and fine (2026-11-05).
+- Pause big downloads when she asks; resume at her word.
 - Commits: the orchestrator commits isochrone/ paths as it goes; never push unasked.
