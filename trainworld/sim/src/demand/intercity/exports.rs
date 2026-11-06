@@ -45,6 +45,16 @@ impl IntercityApi {
     pub fn set_sampled(&mut self, on: bool) {
         self.set_chunk(if on { MARKET_CHUNK } else { 0. });
     }
+    /// T-2641: with sampled pairs, the chunk grows with the trip's distance and far place pairs are
+    /// dealt over both places' zones (`?perfOff=farChunks` turns it off); the next network sets
+    /// its pairs up again.
+    pub fn set_far_chunks(&mut self, on: bool) {
+        if on != self.far_chunks {
+            self.far_chunks = on;
+            self.svc = None;
+            self.served.clear();
+        }
+    }
     /// T-1735: from the next `set_network` on, only the pairs with an end in a window of zones:
     /// those with a station marked in `st_mask` (one byte per station that call takes) in an access
     /// list, and `zones` (indices as `window_zones` gives them). Each pair is searched towards its

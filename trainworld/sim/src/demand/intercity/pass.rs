@@ -30,6 +30,7 @@ impl IntercityApi {
             span_in: vec![],
             bus_in: (vec![], vec![]),
             chunk: 0.,
+            far_chunks: true,
             served_comp: vec![],
             st_pat: StPattern::default(),
             win: vec![],

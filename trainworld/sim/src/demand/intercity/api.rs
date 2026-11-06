@@ -200,6 +200,9 @@ pub struct IntercityApi {
     pub(super) st_pat: StPattern,
     /// T-780: trips a day each way a sampled zone pair carries (`solved_pairs`); 0 solves every pair.
     pub(super) chunk: f64,
+    /// T-2641: with `chunk`, the chunk grows with distance and far place pairs are dealt over both
+    /// places' zones (`solved_pairs`); false: T-780's chunk at every distance.
+    pub(super) far_chunks: bool,
     /// T-1735: per zone, whether it is in the window (`set_window`); empty: no window, every pair
     pub(super) win: Vec<bool>,
     /// T-1735: the window the next network takes: stations (as `set_network` numbers them) whose
@@ -309,7 +312,15 @@ pub(super) fn find_from<T: Copy + Ord>(row: &[T], c: T, cur: &mut u32) -> usize 
 /// a chunk is always solved; smaller ones are solved for a chunk or not at all. The chunks are dealt
 /// over every zone, served or not, so a station serving another zone adds pairs without dealing
 /// the rest again.
-pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize, usize) -> bool, chunk: f64) -> (Vec<u64>, Vec<f64>) {
+///
+/// With `far` (T-2641) the chunk grows with the distance to the place's first zone, `chunk` times
+/// that distance over `FAR_CHUNK_KM` from 1 to `FAR_CHUNK_MAX`, and place pairs at least
+/// `FAR_DEAL_KM` apart are dealt once over both places' zones: each served origin zone's run of
+/// the far place's zones follows the last one's, from a start fixed by the two places' ids, so an
+/// origin zone with less than a chunk to a far place gets a whole chunk or nothing. A zone's trips
+/// with a far place then stay whole only on average over the place's zones, and a far place's
+/// zones get their riders in lumps. Each pair is still priced on its own zones' stations.
+pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize, usize) -> bool, chunk: f64, far: bool) -> (Vec<u64>, Vec<f64>) {
     let min = m.rule.min_trips;
     let n = served.len();
     let mut any = vec![0u64; (n as u64 * n.saturating_sub(1) as u64 / 2).div_ceil(64) as usize];
@@ -343,6 +354,8 @@ pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize,
         some[m.zones[z].place] = true;
     }
     let mut run: Vec<(usize, f64)> = vec![];
+    // T-2641: per place pair, the trips dealt so far
+    let mut deal: HashMap<(u32, u32), f64> = HashMap::new();
     for (i, &a) in served.iter().enumerate() {
         let za = &m.zones[a];
         let mut b = a + 1;
@@ -368,6 +381,8 @@ pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize,
             }
             let Some(&(first, _)) = run.first() else { continue };
             let total: f64 = run.iter().map(|e| e.1).sum();
+            let km = m.zone_km(za, &m.zones[first]);
+            let chunk = if far { chunk * (km / FAR_CHUNK_KM).clamp(1., FAR_CHUNK_MAX) } else { chunk };
             let draws = (total / chunk).ceil();
             let mut solve = |zb: usize, trips: f64| {
                 let k = at[zb];
@@ -375,6 +390,24 @@ pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize,
                     keep(&mut any, i, k as usize, trips);
                 }
             };
+            if far && fixed.is_some() && km >= FAR_DEAL_KM {
+                let e = deal.entry((za.place as u32, place as u32)).or_insert(0.);
+                let lo0 = *e;
+                *e += total;
+                let u = unit_hash(za.place as u32, place as u32);
+                // chunks before trips x: those at (j + u) chunk below x
+                let before = |x: f64| (x / chunk - u).ceil().max(0.);
+                let mut lo = lo0;
+                for &(zb, t) in &run {
+                    let hi = lo + t;
+                    let got = before(hi) - before(lo);
+                    lo = hi;
+                    if got > 0. {
+                        solve(zb, got * chunk);
+                    }
+                }
+                continue;
+            }
             if draws >= run.len() as f64 {
                 for &(zb, t) in &run {
                     solve(zb, t);

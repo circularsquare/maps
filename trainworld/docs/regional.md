@@ -74,12 +74,19 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   in the market's zone order are dealt in chunks of about 1 trip a day each way (`MARKET_CHUNK`),
   by systematic sampling over that place's zones by their trips from a start fixed by the two
   zones' ids (`solved_pairs`). A pair of at least a chunk is always solved; a smaller one carries a
-  chunk or is not solved. Each zone's trips with each later place are exact, the rest exact on
-  average, and the dealing runs over every zone, served or not, so a newly served zone adds pairs
-  without dealing the others again. Mode and station choice within a pair are unchanged. A
+  chunk or is not solved. The chunk grows with distance [T-2641]: `MARKET_CHUNK` times the distance to
+  the place's first zone over 50 km, from 1 to 16 times. Place pairs at least 250 km apart are dealt
+  once over both places' zones: each served origin zone's run of the far place's zones follows the
+  last one's, from a start fixed by the two places, so an origin zone with less than a chunk to a far
+  place gets a whole chunk or none. A zone's trips with a place under 250 km away are exact; with a
+  far place they are exact on average over the place's origin zones, so a far city's long-distance
+  riders reach its stations in lumps (one zone's station can show twice its far riders and the next
+  none), while totals by line and by city hold. The dealing runs over every
+  destination zone, served or not, so a newly served destination zone adds pairs without dealing the
+  others again; a far place pair's run depends on the served origin zones before it. Mode and station choice within a pair are unchanged. A
   selection's rail with a place is its sampled pairs' rail spread over the place's zones it could
   ride to, by their trips; a station's far-zone rows stay the sampled pairs'. `?perfOff=chunks`
-  solves every pair.
+  solves every pair, `?perfOff=farChunks` deals them in the same chunk at every distance.
 - **Elsewhere**: a place's or a 6 km zone's departures less its trips with every place are its
   trips with places that have no zone; shown, never solved, their modes not modelled.
 

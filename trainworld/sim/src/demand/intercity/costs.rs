@@ -12,6 +12,11 @@ pub(super) const MARKETS: usize = 3;
 pub(super) const MARKET_STRATEGY_BYTES: usize = 256 << 20;
 /// T-780: the trips a day each way a sampled zone pair carries (`solved_pairs`).
 pub(super) const MARKET_CHUNK: f64 = 1.;
+/// T-2641: the chunk grows by this distance's multiples (`solved_pairs`), to `FAR_CHUNK_MAX` times
+/// `MARKET_CHUNK`; place pairs from `FAR_DEAL_KM` apart are dealt over both places' zones.
+pub(super) const FAR_CHUNK_KM: f64 = 50.;
+pub(super) const FAR_CHUNK_MAX: f64 = 16.;
+pub(super) const FAR_DEAL_KM: f64 = 250.;
 /// A destination's strategy for `IntercityApi::assigned`: a table's, or searched for it alone.
 pub(super) enum Held<'a> {
     Ref(Strategy<'a>),

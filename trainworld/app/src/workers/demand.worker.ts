@@ -1759,6 +1759,7 @@ async function run() {
             p.set_fare_weight(fareWeight(FARE_BASELINE));
             p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
             p.set_sampled(!job.exactMarket);
+            p.set_far_chunks(!job.nearChunks);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
             const ll = new Float64Array(m.stXY.length);
             for (let k = 0; k < ll.length; k += 2) [ll[k], ll[k + 1]] = worldToLonLat(m.stXY[k], m.stXY[k + 1]);

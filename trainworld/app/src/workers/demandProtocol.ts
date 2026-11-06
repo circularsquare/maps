@@ -147,6 +147,8 @@ export type ToDemand =
       wide?: boolean;
       /** T-780, T-874 `?perfOff=chunks`: the market and the commutes solve every zone pair, none sampled */
       exactMarket?: boolean;
+      /** T-2641 `?perfOff=farChunks`: the market deals a far trip's end zones in T-780's chunk at every distance */
+      nearChunks?: boolean;
       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
       fresh?: boolean;
       /** T-393: the city in view: its cluster is solved first */

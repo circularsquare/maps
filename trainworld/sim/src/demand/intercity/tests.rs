@@ -1637,8 +1637,9 @@ fn eachway_with_its_curves_is_eachway() {
         }
     }
 }
-/// T-780: sampled pairs keep each zone's trips with each place after it, always solve a pair of at
-/// least a chunk, carry whole chunks or a big pair's own trips, and are the same every time.
+/// T-780: sampled pairs (T-2641: with the chunk at every distance, `far` off) keep each zone's trips
+/// with each place after it, always solve a pair of at least a chunk, carry whole chunks or a big
+/// pair's own trips, and are the same every time.
 #[test]
 fn sampled_pairs_keep_each_zones_trips_with_each_place() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
@@ -1646,10 +1647,10 @@ fn sampled_pairs_keep_each_zones_trips_with_each_place() {
     let m = &api.m;
     let served: Vec<usize> = (0..m.zones.len()).collect();
     let joined = |_: usize, _: usize| true;
-    let (any0, each0) = solved_pairs(m, &served, &joined, 0.);
+    let (any0, each0) = solved_pairs(m, &served, &joined, 0., false);
     let chunk = 1.;
-    let (any, each) = solved_pairs(m, &served, &joined, chunk);
-    assert_eq!((&any, &each), (&solved_pairs(m, &served, &joined, chunk).0, &solved_pairs(m, &served, &joined, chunk).1));
+    let (any, each) = solved_pairs(m, &served, &joined, chunk, false);
+    assert_eq!((&any, &each), (&solved_pairs(m, &served, &joined, chunk, false).0, &solved_pairs(m, &served, &joined, chunk, false).1));
     assert!(each.len() * 10 < each0.len() * 8, "{} sampled pairs of {}", each.len(), each0.len());
     // per zone and later place: (exact trips, sampled trips)
     let n = served.len();
@@ -1676,7 +1677,107 @@ fn sampled_pairs_keep_each_zones_trips_with_each_place() {
     for ((i, p), (t0, t1)) in by {
         assert!((t0 - t1).abs() <= 1e-9 * t0.max(1.), "zone {i} with place {p}: {t0} trips, {t1} sampled");
     }
-}/// T-780: with sampled pairs no far zone of a selection shows more rail than trips, and its rail by
+}/// T-2641: with far chunks the pairs under `FAR_DEAL_KM` apart keep each zone's trips with each place
+/// as before, and each place pair at least that far apart keeps its trips to within 5% (each origin
+/// zone's run is off by up to a chunk, one way or the other, so a small place pair by more) of its pairs' own; the pairs are fewer, never a pair that is
+/// not one, the same every time, and each carries a whole number of its chunk.
+#[test]
+fn far_chunk_pairs_keep_each_place_pairs_trips() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm", "osa"]))).unwrap();
+    let m = &api.m;
+    let served: Vec<usize> = (0..m.zones.len()).collect();
+    let joined = |_: usize, _: usize| true;
+    let (any0, each0) = solved_pairs(m, &served, &joined, 0., false);
+    let (anyc, eachc) = solved_pairs(m, &served, &joined, MARKET_CHUNK, false);
+    let (any, each) = solved_pairs(m, &served, &joined, MARKET_CHUNK, true);
+    let again = solved_pairs(m, &served, &joined, MARKET_CHUNK, true);
+    assert_eq!((&any, &each), (&again.0, &again.1));
+    assert!(each.len() < eachc.len(), "{} far-chunk pairs of {} chunked", each.len(), eachc.len());
+    let n = served.len();
+    // per zone and later place, and per place pair: exact trips, chunked, far-chunked
+    let mut zp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
+    let mut pp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
+    let (mut bit, mut k0, mut kc, mut k1) = (0, 0, 0, 0);
+    let mut far_seen = 0;
+    let mut kind: HashMap<(usize, usize), bool> = HashMap::new();
+    for i in 0..n {
+        for k in i + 1..n {
+            let (on0, onc, on1) = (any0[bit / 64] >> (bit % 64) & 1 == 1, anyc[bit / 64] >> (bit % 64) & 1 == 1, any[bit / 64] >> (bit % 64) & 1 == 1);
+            bit += 1;
+            let (za, zb) = (&m.zones[i], &m.zones[k]);
+            let t0 = if on0 { k0 += 1; each0[k0 - 1] } else { 0. };
+            if onc {
+                kc += 1;
+            }
+            let t1 = if on1 { k1 += 1; each[k1 - 1] } else { 0. };
+            assert!(!on1 || on0, "a far-chunk pair that is not a pair");
+            if !on0 {
+                continue;
+            }
+            // as dealt: by the distance to the place's first zone of a pair with this zone
+            let far = *kind.entry((i, zb.place)).or_insert(!m.pr(za.place, zb.place).near && m.zone_km(za, zb) >= FAR_DEAL_KM);
+            if far {
+                far_seen += 1;
+                let e = pp.entry((za.place, zb.place)).or_default();
+                e.0 += t0;
+                e.1 += t1;
+                if on1 {
+                    let w = t1 / MARKET_CHUNK;
+                    assert!((w - w.round()).abs() < 1e-6 || t1 >= MARKET_CHUNK, "{t1} trips is not whole chunks");
+                }
+            } else {
+                let e = zp.entry((i, zb.place)).or_default();
+                e.0 += t0;
+                e.1 += t1;
+            }
+        }
+    }
+    assert!(far_seen > 0, "no far pairs in the test packs");
+    for ((i, p), (t0, t1)) in zp {
+        // a place under the distance but its first zone over it can differ from the pair test: allow a chunk
+        assert!((t0 - t1).abs() <= FAR_CHUNK_MAX * MARKET_CHUNK + 1e-9 * t0.max(1.), "zone {i} with place {p}: {t0} trips, {t1} far-chunked");
+    }
+    for ((a, b), (t0, t1)) in pp {
+        assert!((t0 - t1).abs() <= 0.05 * t0 + 2. * FAR_CHUNK_MAX * MARKET_CHUNK, "places {a}, {b}: {t0} trips, {t1} far-chunked");
+    }
+}
+/// T-2641: the market at free flow on a captured net with far chunks off and on, back to back in
+/// this process (`TW_FAR` = e.g. `0,1,0,1`), every period in `TW_Q`: pairs, solve time, and every
+/// line's boardings (all riders), for `checks`' comparison.
+/// `TW_T780_NET=<net> TW_T2641_OUT=<out.json> TW_Q=0,1 TW_FAR=0,1,0,1
+///   cargo test --release --features demand t2641_dump -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2641_dump() {
+    let qs: Vec<usize> = std::env::var("TW_Q").unwrap_or("0,1".into()).split(',').map(|v| v.parse().unwrap()).collect();
+    let fars: Vec<bool> = std::env::var("TW_FAR").unwrap_or("0,1".into()).split(',').map(|v| v == "1").collect();
+    let net_path = std::env::var("TW_T780_NET").unwrap();
+    let mut out = vec![];
+    for &far in &fars {
+        let t = now_ms();
+        let mut a = t780_net_with(&net_path, MARKET_CHUNK, |a| a.set_far_chunks(far));
+        let set_up = now_ms() - t;
+        let mut periods = vec![];
+        for &q in &qs {
+            let t = now_ms();
+            assert!(a.solve(q));
+            let solve = now_ms() - t;
+            let per = a.per(q).unwrap();
+            let g = &per.g;
+            let nl = g.rn_line.iter().copied().max().map_or(0, |l| l as usize + 1);
+            let mut all = vec![0f64; nl];
+            for (r, &x) in per.avg.rn_board.iter().enumerate() {
+                all[g.rn_line[r] as usize] += x as f64;
+            }
+            eprintln!("far {far} q{q}: {} pairs, solve {solve:.0} ms (set up {set_up:.0}), rail {:.1}", a.pairs.len() / 2, per.rail);
+            periods.push(serde_json::json!({"q": q, "solve_ms": solve, "rail": per.rail, "c_rail": per.c_rail, "e_rail": per.e_rail, "line_all": all}));
+        }
+        out.push(serde_json::json!({"far": far, "pairs": a.pairs.len() / 2, "set_up_ms": set_up, "periods": periods}));
+    }
+    std::fs::write(std::env::var("TW_T2641_OUT").unwrap(), serde_json::json!({"net": net_path, "runs": out}).to_string()).unwrap();
+}
+/// T-780: with sampled pairs no far zone of a selection shows more rail than trips, and its rail by
 /// place is the zones' added up.
 #[test]
 fn sampled_selection_rail_stays_within_trips() {

@@ -112,7 +112,7 @@ impl IntercityApi {
         let inw = |z: usize| win.is_empty() || win[z];
         let joined = |i: usize, k: usize| (inw(served[i]) || inw(served[k])) && comp[i].iter().any(|c| comp[k].binary_search(c).is_ok());
         self.pairs = vec![];
-        let (any, each) = solved_pairs(&m, &served, &joined, self.chunk);
+        let (any, each) = solved_pairs(&m, &served, &joined, self.chunk, self.far_chunks);
         let mut pairs = Vec::with_capacity(2 * each.len());
         let (mut bit, mut next) = (0, each.into_iter());
         for (i, &a) in served.iter().enumerate() {

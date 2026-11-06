@@ -1138,4 +1138,8 @@ notes/T-420.md has the tables.
   country with few zones gains little and moves little. Why it may
   not carry over: a station fed by few small pairs (a rural stop on a long-distance line) shows the
   sampling most, by a quarter or so of its market riders on Japan. Check: `t756-reach.mjs compare
-  <label> chunks` on the country's network.
+  <label> chunks` on the country's network. The chunk grows with the trip's distance and place pairs
+  250 km or more apart are dealt over both places' zones (T-2641, regional.md 5.1): about 1.7-1.9 times
+  on the market's pass over North America, 1.1 on all Japan; a far city's stations get their
+  long-distance riders in lumps, a few small lines (1,000-3,000 riders a day) move 2-5%.
+  `?perfOff=farChunks` turns it off.
