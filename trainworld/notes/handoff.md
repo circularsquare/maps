@@ -7,7 +7,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 
 ## State
 - master **d5b02108** (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
-- **8800 = build 1084 (d5b02108)**, with Mexico; smoke light and dark PASSED ~21:55, 12,515,594; Anita pinged. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
+- **8800 = build 1088 (6f9d765a)**, Mexico and cachehit; smoke light and dark PASSED ~22:20, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
   and Brazil before release).
 - **Cores cap 12**; Anita ~21:45: "keep 4 cores free": real use, not just claims. Check with
   `Get-Counter '\Processor(_Total)\% Processor Time'` (75% = 4 free), not summed per-process CPU deltas (maps-93's 5 s
@@ -17,15 +17,20 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - maps-17 (now named maps-03) handed over fully at 21:37: no agents of its own left.
 
 ## In flight (maps-93's agents)
-- **cachehit** (Opus, tree .tw-trees/cachehit from 79d0c5ee, port 6183, ~360k tokens): T-2574 cache-hit bar, then
-  T-2533 zone in view answers within ~20 s of a cache hit. Running North America batches; retire after its report.
+- **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Sends dry counts
+  before building (wait for maps-93's go), messages at the first gate and the last gate's end. No app/WASM landings
+  while its gates run. Notes/PIDs/restart in notes/T-2437.md.
+- cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
+  13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
+  Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
 - **marketsearch** (Opus, tree .tw-trees/marketsearch from 55ab534f, port 6181): T-1647 native Japan pass 15% faster,
   exact. Rust: landing rebuilds the main WASM.
-- **sheet2** (Opus, read-only, scratch\sheet2, writes notes/T-2566.md "Round 2" and artifacts/trainworld/sheet2/):
-  T-2577 diagram sheet round 2 from Anita's review (verbatim in notes/T-2566.md): aspect change costs most on land
-  with lines, less on land without lines, much less on water; cores halfway back; more octilinear; line rivers with a
-  higher minimum width, the Harlem River; stations always on their own side of zone borders. Pictures to Anita;
-  T-2567/T-2568 wait on her.
+- sheet2 DONE (retired, 492k): T-2577 round 2 in notes/T-2566.md "Round 2"; Japan reads as Japan (Honshu kept 0.92
+  vs 0.76), 88-91% hops one straight run, Harlem shown (cause: waterReal.ts FINE_M 40 m x 3 cells = 120 m minimum),
+  0 stations on the wrong side. Fails: Tokyo core cramped (needs T-2568's fine lattice), stray 5.7 pitches, Hudson
+  pinched at Midtown. Anita ~22:40: "japan looks great!" but Manhattan's shape is messed up, stations on water or off
+  Manhattan, downtown's tip wrong. **sheet3** (Opus, read-only, scratch\sheet3) does round 3 (still T-2577): Manhattan
+  shape, 0 stations on water or the wrong landmass, downtown tip; Japan kept. T-2567/T-2568 wait on it.
 
 ## Landed this session (maps-93)
 - uismall5 3d0939bc (T-2569..T-2572, Anita's evening TODO; also the map credits button, invisible since T-1435, now
