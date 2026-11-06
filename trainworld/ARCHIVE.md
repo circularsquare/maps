@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2608 Network diagram key M removed for release (2026-11-06, maps-93, Anita: "lets maybe remove the schematic map hotkey (m) for release and say like (work in progress) on the tooltip"): hover "Show network diagram (work in progress)", "Show map" back; the button and Esc remain.
+- T-2599 Network diagram lines triangular (2026-11-06, agent smoothlines, tree): a sheet.ts bug mirrored stations across their cell's diagonal; fixed, and the routing lines legs up along lines and splits less. Sharp turns the real line lacks: Japan 1723 -> 67, New York 168 -> 50. notes/T-2599.md.
+- T-2603 Timetable chart (Marey chart) for a line (2026-11-06, agent linepanel, tree): a third icon by the schedule's copy and paste opens it at the dock's foot; time across, stops down by distance, the trips the map draws (new `TrackApi.line_trips`), 2-8 h around now. notes/T-2603.md.
+- T-2602 Line diagram: passed stations fainter (2026-11-06, agent linepanel, tree): while stops are edited, the related lines view's passed stations' names at 36% of the text colour and their pills' rims at 25%.
+- T-2601 Edit stops reads "Stop editing" while on (2026-11-06, agent linepanel, tree): both labels share one cell, so the button is as wide in both states and the row never rewraps.
+- T-2600 Build controls text sizes (2026-11-06, agent linepanel, tree): the track and station bars' text at the map controls' 12 px, the level buttons' numbers at 15 px.
 
 - T-2437 Brazil, the whole country (2026-11-06, agent brazil): 19 metros and 158 zones on the 2022 census by tract (rule `BRA`: reach without `join_km`; 62 Amazon municipios dead), all 177 shipped in five solve regions by macro-region; sao kept. Runner fixes: parked rows clear their id's caches, a guard on reused caches. notes/T-2437.md.
 - T-2594 21 US zones' stale terrain grids (2026-11-06, agent brazil): all 21 differed from their zones (an earlier row's grids under AWS-landed rows) and were rebuilt; `tools/aws/land.py` clears a landed id's caches. notes/T-2437.md.

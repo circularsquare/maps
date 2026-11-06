@@ -1,4 +1,4 @@
-// The network diagram's view (T-2160, T-2161, T-2162, T-2163): the button and key M swap the map for a
+// The network diagram's view (T-2160, T-2161, T-2162, T-2163): the button swaps the map for a
 // 2D canvas of the laid-out diagram (ribbons, rounded bends, pills, names), drag to pan, wheel to zoom.
 // While it is up the clock worker posts the graph after each network state; the page names its
 // stations and measures the names, and the layout worker lays it out, draws it and places the names,
@@ -61,7 +61,6 @@ export const diagramReady = signal(false);
 /** T-2565: whether the water is worked out and drawn; experimental, so off until the player turns it on, and kept per browser */
 const WATER_STORE = "anitabuilder-diagram-water";
 export const diagramWater = signal((() => { try { return localStorage.getItem(WATER_STORE) === "1"; } catch { return false; } })());
-export const DIAGRAM_KEY = "m";
 /** a pitch this many CSS px when the diagram first opens */
 const START_PITCH_PX = 7;
 /** a pointer within this many CSS px of a pill or line is on it */
@@ -628,13 +627,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (keyIsTheirs(e) || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     const k = e.key.toLowerCase();
     // a build key goes back to the map, where main.ts's keys do the rest
-    if (diagramShown.peek() && BUILD_KEYS.has(k)) {
-      diagramShown.value = false;
-      return;
-    }
-    if (k !== DIAGRAM_KEY) return;
-    e.preventDefault();
-    diagramShown.value = !diagramShown.peek();
+    if (diagramShown.peek() && BUILD_KEYS.has(k)) diagramShown.value = false;
   });
 
   saver = () => {

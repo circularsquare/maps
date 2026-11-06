@@ -511,7 +511,6 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | Shift+1 to Shift+7 | draw at elevation +3 down to -3 (Shift+4 is ground level); by key code, digit row only; with a blueprint pick in the selection bar, put the pick at that level instead [T-2285] | any tab |
 | B, L, A, F, Y | open the Build, Lines, Stations, Finances or Cities tab (`TAB_KEYS`; a half-drawn route stays) | any tab |
 | U, O | start a new bus line, a new ferry line (`BUS_KEY`, `FERRY_KEY`) | any tab |
-| M | swap the map for the network diagram, and back (`DIAGRAM_KEY`, `diagram/view.ts`) | any tab |
 | T | explore a trip; the tab stays | any tab |
 | D | demand bubbles: None, Homes, Destinations, Total and round again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |

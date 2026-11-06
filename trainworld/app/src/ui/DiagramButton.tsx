@@ -4,10 +4,10 @@ import { LoadBar } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { Icon } from "./widgets";
 
-/** T-2160: the network diagram in place of the map, and back (key M). */
+/** T-2160: the network diagram in place of the map, and back (no key while it is a work in progress, T-2608). */
 export function DiagramButton() {
   const on = diagramShown.value;
-  const tip = on ? "Show map (M)" : "Show network diagram (M)";
+  const tip = on ? "Show map" : "Show network diagram (work in progress)";
   return <button type="button" class={"btn icon map-diagram" + (on ? " on" : "")} data-tip={tip} aria-label={tip} aria-pressed={on}
     onClick={() => (diagramShown.value = !on)}>
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -25,7 +25,7 @@ export function DiagramTopLeft() {
   const share = diagramProgress.value;
   return <div class="map-top-left">
     <div class="map-top-row">
-      <button type="button" class="btn icon diagram-exit" data-tip="Show map (M)" aria-label="Show map (M)" onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
+      <button type="button" class="btn icon diagram-exit" data-tip="Show map" aria-label="Show map" onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
       <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip="Show water" aria-label="Show water" aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip="Save picture" aria-label="Save picture" onClick={saveDiagramPicture}><Icon.download /></button>}
       {share !== null && <div class="status-tag" role="status">

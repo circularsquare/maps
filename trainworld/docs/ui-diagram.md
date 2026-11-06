@@ -11,11 +11,12 @@ and Water below, which describe the layout before it, kept behind `?sheet=0` in 
 
 A button at the top left of the Cities tab, on the row with the leaderboards' trophy and the
 achievements' medal at its right (`ui/DiagramButton.tsx`, placed by `AchievementsButton`; Anita,
-2026-11-03), and key **M** (`diagram/view.ts`) swap the map for the diagram, and back. Hover: "Show
-network diagram (M)", and while the diagram is up "Show map (M)". **Esc** goes back to the map too, once
+2026-11-03) swaps the map for the diagram, and back; no key does while the diagram is a work in progress
+(Anita, 2026-11-06, T-2608). Hover: "Show network diagram (work in progress)", and while the diagram is up
+"Show map". **Esc** goes back to the map too, once
 nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
-the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map (M)", T-2416), the
+the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map", T-2416), the
 save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: the bunny's train, "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
