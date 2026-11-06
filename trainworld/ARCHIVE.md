@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2567 Network diagram sheet in the game, stage 2 (2026-11-06, agent sheetlines, tree): with `?sheet=1` the lines laid out on the sheet, the map carried with them, sea and real zone borders drawn (diagram/sheetLines.ts); round 3's measures met, flag off unchanged. notes/T-2567.md.
 - T-2568 Network diagram sheet in the game, stage 1 (2026-11-06, agent sheetgame, tree): diagram/sheet.ts in the layout worker behind `?sheet=1` (not drawn yet), quadtree lattice, multigrid CG, settled schedule; Japan retuned (Kyushu 92% of round 3), New York as round 3, 0 folds; 1.2-3 s a solve, accepted by maps-93 (today's layout takes ~3 s), speed in T-2589. notes/T-2568.md.
 - T-2579 Tokyo save's cache-hit re-solve off the cache (2026-11-06, agent tokyocache, tree): the import's solve counted New York, opened for the page's start camera; such a zone now closes before a load's solve (`closeStrays`) and the cache keys by the zones sent. Tokyo: three hits, every final the cold one. notes/T-2579.md.
 - T-2583 Localization stage 0 (2026-11-06, agent i18ncore, tree): `app/src/i18n/` (`t`, `tRich`, language signal, ICU messages through intl-messageformat, +33 KB min / 10 KB gzip), glossary of 57 terms, `checks/i18n.mjs` with the inline-text worklist (2,357 strings); `game/remove.ts` converted, English unchanged. docs/localization.md.

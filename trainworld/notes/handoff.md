@@ -25,7 +25,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   after 37 min on a 2-point OSM ring in the sudeste admin read; fix on_invalid="ignore" in osm_units.admin_areas, restart
   with --rows on all 177 (~23:45). Run 2 batch 20261105-234843; gates from 00:00 (hold app/WASM landings). Disk 21.4 GB
   at 00:15: the drop was Brazil's extracts and caches (one-off); ~16 MB a row now; expects 10-13 GB at the end, plus
-  ~5.5 GB once it deletes the pbfs and caches before the join (it will). Its watcher stops the run at 10 GB. No app/WASM landings
+  ~5.5 GB once it deletes the pbfs and caches before the join (it will). Its watcher stops the run at 10 GB.
+  02:40: 177/177 gated (168 + 9 relaxed in rerun 20261106-023246). Join (BR) next: nothing writes data/packs or
+  data/terrain until it reports; app/WASM landings fine. Join 1 faulted: the joint group (sao + 175 rows) had 934k
+  gravity zones over MAX_GROUP_ZONES 400k; rows parked and unregistered (only bav joined). Fix: SOLVE_REGIONS["BRA"] by
+  IBGE macro-regions (as China/India/US), sao in sudeste. Then setbuilt, a gate-only rerun (~1 h, browser gates: hold
+  app/WASM), join again. No app/WASM landings
   while its gates run. Notes/PIDs/restart in notes/T-2437.md.
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
   13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
@@ -41,7 +46,16 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   still on round 2's unsettled solver (a settled one shrinks Kyushu): T-2568 grows. Shown to Anita ~00:45 with 2
   questions (review/sheet3-*.png). Anita ~00:55 approved ("lets put it in"; round 3's Manhattan size; light line
   edges fine; coasts and rivers wiggly, minor: T-2580; her screenshot artifacts/trainworld/sheet3/anita-wiggly-peninsula.png).
-- sheetgame DONE, **to land after Brazil's last gate** (tree .tw-trees/sheetgame: diagram/sheet.ts new,
+- Landed ~02:30 in Brazil's gap: livefix 5c46a2c1, tokyocache 4ce63913, i18ncore affb0221 (npm install run in main),
+  sheetgame 4eb03074; records a0015ee4. 8800 not rebuilt since 6f9d765a: rebuild after Brazil's join (with marketsearch).
+- sheetlines DONE (retired, 499k), **to land after Brazil's gate** (tree .tw-trees/sheetlines: diagram/sheetLines.ts new,
+  layout.ts, sheet.ts, diagram.worker.ts, docs; records in main): T-2567 lines drawn on the sheet behind ?sheet=1, round
+  3's measures within ~10%, 0 stations off land; New York 9 s, Japan 47 s (flag off today: 14 s, 94 s). T-2589 left
+  open (the carry is the cost now). Picture artifacts/trainworld/sheetlines/g3-nyc-tip.png. Next: T-2580 (stage 3,
+  clean octilinear coasts and borders, narrow rivers, then the sheet default) by a fresh Opus agent after landing.
+- Localization stage 1 (T-2584) held until after release: it rewrites ~2,350 strings across every panel, too much churn
+  right before publishing. Tell Anita.
+- (landed) sheetgame (tree .tw-trees/sheetgame: diagram/sheet.ts new,
   diagram.worker.ts, view.ts, docs ui-diagram/code-map; records in main): T-2568 behind `?sheet=1`, not drawn; speed
   1.2-3 s (missed the 1 s aim; maps-93 accepted, today's layout ~3 s; T-2589 filed). Land livefix BEFORE sheetgame
   (both touch diagram.worker.ts). Then a fresh Opus agent for T-2567 (stage 2) from master, with T-2589's per-network
