@@ -38,7 +38,18 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Manhattan, downtown's tip wrong. sheet3 DONE (retired, 465k): round 3 in notes/T-2566.md "Round 3"; Manhattan 0.82/1.14
   (= Long Island), 0 stations off their land (NY and Japan), East River open at the tip, Manhattan ~25% bigger. Japan
   still on round 2's unsettled solver (a settled one shrinks Kyushu): T-2568 grows. Shown to Anita ~00:45 with 2
-  questions (review/sheet3-*.png); T-2567/T-2568 scope per its notes, wait on her.
+  questions (review/sheet3-*.png). Anita ~00:55 approved ("lets put it in"; round 3's Manhattan size; light line
+  edges fine; coasts and rivers wiggly, minor: T-2580; her screenshot artifacts/trainworld/sheet3/anita-wiggly-peninsula.png).
+- **sheetgame** (Opus, tree .tw-trees/sheetgame from 53c1c698, port 6178): T-2568 [P1] sheet solver in the layout
+  worker behind an off-by-default flag, Japan retuned on the settled solver, <1 s. Then T-2567 and T-2580 by new briefs.
+- **livefix** (Opus, tree .tw-trees/livefix, port 6179): T-2581 [P1] diagram "Washington, DC" placed near Atlanta and
+  names too big zoomed out (fix generally); then T-941 live page's 404s. Touches diagram label code: order its landing
+  against sheetgame's.
+- **tokyocache** (Opus, tree .tw-trees/tokyocache, port 6177): T-2579 Tokyo save's re-solve after a cache hit ends off
+  the cache.
+- Before publishing (Anita asked ~00:55 what to finish first): Brazil (T-2437), T-2581, T-941, T-2579; T-428 after
+  Brazil's join (moves intercity.json out of packs; touches the join's code). marketsearch on 8800 with the next
+  rebuild. Then publish on her word.
 
 ## Landed this session (maps-93)
 - uismall5 3d0939bc (T-2569..T-2572, Anita's evening TODO; also the map credits button, invisible since T-1435, now
