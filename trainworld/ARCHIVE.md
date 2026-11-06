@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2533 The zone in view answers after a cache hit (2026-11-05, agent cachehit, tree): the focus pool stays, solves the zone to round 0 only and answers its questions until the main solve is sent; a click at the card 13-19 s (real, was 31-34), 14 s (North America, was 91), 16 s (Tokyo, was 55); peaks within run noise. notes/T-2533.md.
+- T-2574 The card's bar on a cache hit (2026-11-05, agent cachehit, tree): from the read's match the bar runs over the cache's own path, and the card shows it full with no time left for 0.4 s before going (was gone at 10-39%, minutes "left"); a miss as before. notes/T-2533.md.
 - T-2436 Mexico, the whole country (2026-11-05, agent mexico): 10 metro rows and 95 zones of municipios, no density floor; all 105 shipped on the census and DENUE hook (7 relaxed), one joint group; load checks on mex, mot, gud, oax pass. notes/T-2436.md.
 - T-2080 Mexico's 2020 census population hook (2026-11-05, agents mexprep and mexico): `mexico.plan_population`, wired as archetype C module mexico; in every Mexican row. notes/T-2080.md.
 - T-2081 Mexico's jobs from DENUE (2026-11-05, agents mexprep and mexico): `mexico.plan_jobs`, 38.3M workers plus the gap share; in every Mexican row. notes/T-2080.md.
