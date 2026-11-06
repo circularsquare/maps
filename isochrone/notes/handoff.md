@@ -27,14 +27,14 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - **T-011 stage 3**, page side (build_tiles.py reads the planes, d1/e1 planes, directed search,
   L3/L10 by crossing, output to a new folder behind a `?tiles=t011` switch), Opus agent
   a3e69e0de8c33f136.
-- **cross.mjs speed-up**, a copy `tools/terrain/cross_fast.mjs` to swap in at the run's next
-  restart, Sonnet agent aa3eb522dfaa8baa2.
+- cross.mjs speed-up landed (234674ee): 1.4-1.8x, byte-identical; swapped into the live run at
+  11:36 (node starts per tile, so no restart was needed). ~35 core-hours left at most.
 - Idle agents, retire: a0fa8e1aa1250534e (T-011 stage 1, ~465k), a615cd2144584c81f (T-090),
   a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43, a754c1f8965d2be43, a9b36a2c84531c427,
   a75105d4c451ffaf1.
 
 ## Next
-1. When cores free up or cross_fast lands: restart the run with more workers and the fast engine.
+1. When cores free up: restart the run with more workers.
 2. When the world run ends: stage 3 builds the full folder; swap it in (keep data/tiles as
    t011's before), show Anita before/after (mountains get faster: 0.64-0.83 of today's), then
    re-measure canoe cfg.access (notes/T-082.md), then T-039 and T-057 mountain tiles.
