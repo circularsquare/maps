@@ -45,6 +45,7 @@
 //   focusEnd the focus pool's workers stay until the load's final
 //   cacheFocus  a loaded game showing its cached demand result ends the focus pool, so the zone in view's questions wait for the re-solve
 //   focusAux the focus pool has an aux worker of its own
+//   strays   a zone opened in every worker before a loading game's reach was known stays for the load's solve (T-2579)
 //   inPlace  the demand workers read the corridor table's columns through the binding's copies
 //   `?focusWorkers=n` sets the focus pool's solving workers (default FOCUS_WORKERS).
 //
@@ -67,6 +68,6 @@
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "noise" | "firm" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "inPlace" | "focusAux" | "cacheFocus") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "stillThrottle" | "share" | "noise" | "firm" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "inPlace" | "focusAux" | "cacheFocus" | "strays") => off.has(part);
 /** how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

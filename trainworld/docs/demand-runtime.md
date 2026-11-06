@@ -93,7 +93,9 @@ solved with no station in it.
   the bit to the full solve's; the network's own totals leave the bare zone out, as after a pan.
   A saved game's network arrives after its viewed pack has downloaded, so a save's viewed pack
   goes to every worker; waiting for the reach would cost every save that reaches its viewed zone
-  more than it saves.
+  more than it saves. In a game load's hold, a zone sent that way that the network, once known,
+  neither reaches nor views (the last game's place, a save opened from a file) closes before the
+  load's solve (`closeStrays`, T-2579), so the load's figures are the same however the page started.
 - **The first station** (T-351): with no station in the game, picking the track, station or
   blueprint tool opens the bare viewed zone in every solving worker as well (`prefetchViewed`),
   with no solve started for it, so a first line's solve need not wait. Timings: notes/T-351.md.

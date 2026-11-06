@@ -352,6 +352,9 @@ interface Solve {
   markets: CityId[];
   /** T-1223: of `cities`, those open coarse when it was sent */
   coarse?: CityId[];
+  /** T-2579: `cities` and `markets` as sent, which the cache keys its result by; a close afterwards
+   * (`closeFull`) trims the two above, but the figures still hold what was closed */
+  sent?: { cities: CityId[]; markets: CityId[] };
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
@@ -1555,7 +1558,10 @@ class DemandClient {
         const reached = this.knownReach();
         bare = reached !== null && !reached.has(id) && !this.fetching.has(id);
         if (bare) { log.bare = true; this.fetchingBare.add(id); }
-        else this.fetching.add(id);
+        else {
+          if (reached === null && !this.fetching.has(id)) this.unknownReach.add(id);
+          this.fetching.add(id);
+        }
       }
       this.bytes.set(id, bin.byteLength);
       const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
@@ -1754,6 +1760,7 @@ class DemandClient {
       if (this.waiting && this.cur) this.cur.heldFrom ??= performance.now();
       return;
     }
+    this.closeStrays();
     // T-325: a solve waits for, and covers, the cities stations reach and those opened in every
     // worker; a zone opened bare is never waited for and starts no solve
     if (this.waiting) {
@@ -1773,6 +1780,24 @@ class DemandClient {
     // (T-1223: or opened again at another level since)
     const coarse = new Set(s.coarse ?? []);
     if ([...need].some((id) => !s.cities.includes(id) || coarse.has(id) !== (this.levelPosted.get(id) === LOD_COARSE)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
+  }
+
+  /**
+   * T-2579: zones opened in every worker before the reach was known (`fetchCity`: the zone in view as
+   * the page started, the last game's place while a save loads). In a game load's hold, once its network's
+   * reach is known, one it neither reaches nor views closes before the solve covers it: the load's
+   * figures, and the cache written from them, hold no zone that another load of the same network
+   * would not open.
+   */
+  private unknownReach = new Set<CityId>();
+  private closeStrays() {
+    if (!this.hold || !this.unknownReach.size || perfOff("strays")) return;
+    const reached = this.knownReach();
+    if (!reached) return;
+    for (const id of this.unknownReach) if (reached.has(id) || !this.fetching.has(id)) this.unknownReach.delete(id);
+    const viewed = this.viewedSet();
+    const stray = [...this.unknownReach].filter((id) => !viewed.has(id) && this.opened.has(id) && !this.releveling.has(id));
+    if (stray.length) this.closeFull(stray, []);
   }
 
   /**
@@ -2290,9 +2315,9 @@ class DemandClient {
     const days = demandByDay.peek();
     if (days.some((d) => d.view?.version !== s.version)) return;
     const t0 = performance.now();
-    const canon = canonical(s.svc);
-    const stored = toStored(days, s.cities, canon);
-    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(s.cities, s.markets, s.coarse ?? [])]);
+    const canon = canonical(s.svc), sent = s.sent ?? s;
+    const stored = toStored(days, sent.cities, canon);
+    const [hash, key] = await Promise.all([sha256(canon.text), this.keyFor(sent.cities, sent.markets, s.coarse ?? [])]);
     // the bubbles, when they were asked for this result (the day shown, every purpose, the viewed zone)
     const m = this.modesP, city = this.focusCity;
     const cm = m && m.version === s.version ? await m.p : null;
@@ -3360,7 +3385,8 @@ class DemandClient {
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
     // (T-2560: a cached result's network solved again after its card went, as under the card)
     const barrier = showEstimates || !!this.hold || svc === this.cacheSolve;
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates, barrier };
+    const markets = [...this.opened].filter(isMarket).map(marketZone);
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     if (this.cacheShown()) this.retireFocus(); // (T-2533)
