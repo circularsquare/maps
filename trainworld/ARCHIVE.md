@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2619 Upkeep raised before release (2026-11-06, agent upkeep, tree): per game day ground 35k a km, viaduct 50k, cut and cover 100k, bored 130k, stations 50k and 200k underground (-1 to -3); hovers and docs follow. Real NYC save: rail trips unchanged, profit -19%; her NA save -8.6%. Long lines: notes/T-2620.md.
+- T-2665 Dense timetable charts lag (2026-11-06, agent marey, tree): the default span shrinks on a busy line (12 shortest headways or half a round trip; NYC 7 from 3 h to 45 min), the wheel zooms from 15 min to a day, and the trains slide as one layer, so a game minute costs about nothing (was ~26 ms on one core). notes/T-2660.md.
+- T-2660 Timetable chart shows other lines that share its track (2026-11-06, agent marey, tree): their trains on the shared stretches, faint in their colour, toggle "Show other lines" (on, remembered); flat junctions and crossings as dashed rules with dots where crossing trains pass. Shown on London's real save; NYC's shares none. notes/T-2660.md.
 - T-2664 Line panel riders block tighter (2026-11-06, agent riderspace, tree): scoped to the line panel (.line-day): divider to Riders 13.6 -> 9.1 px, Riders to bar 5.4 -> 0.9 px, bar 7.2 -> 4.5 px. Shots artifacts/trainworld/riderspace/.
 - T-2673 Build track menu Regular / High speed text centred (2026-11-06, agent riderspace, tree): 2px top padding on the track bar's segmented buttons only; levels and other segmented controls unchanged.
 - T-2661 Line strips read west to east (2026-11-06, agent westleft, tree): the demand level hover's crowding bar (line panel and Lines list) runs west end to east end, north end first for a near north-south line, loops as built; `lineReversed` / `leftToRightReversed` in `game/northUp.ts`.
