@@ -32,6 +32,9 @@ tests natively.
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
 - The rest of `src/track/`: `net.rs` (the network: nodes, edges, stations and lines as flat arrays by stable id, with everything derived from them), `geom.rs` (alignment geometry: points of intersection with an arc fitted at each, straights between, ramps), `cross.rs` (where track crosses track, on a 1 km grid of edges), `bridge.rs` (a ground-level segment over water becomes a bridge, T-656), `roads.rs` (the road lines ground-level track crosses, fed tile by tile, T-1929), `capacity.rs` (resources, utilisation per demand level, Kingman's delay, holds), `profile.rs` (run-time profiles along a line's path under speed limits), `spacing.rs` (the phase of each line's departures, T-1925), `save.rs` (the network part of a save), `names.rs` (tidies station and line names from a real network, T-1442), `params.rs` (every tuning constant of the track model), `bench.rs` (the synthetic network `bin/track_bench.rs` times). Test modules sit beside their file (`frame_tests.rs`, `merc_tests.rs`, `related_tests.rs`, `transition_tests.rs`, `wasm/*_tests.rs`).
+- `src/diagram.rs`: the network diagram's carry solve (`CarrySolver`: conjugate gradients with the black box multigrid,
+  both axes as one f64x2), bit for bit `app/src/diagram/sheetLines.ts`' JavaScript one; behind feature `diagram` (on by
+  default, so in the track module); the diagram worker loads it (T-2589, notes/T-2589.md).
 - `src/demand/`: the demand kernel, behind feature `demand` (on in the app's build): `api.rs`
   (`DemandApi`, the demand workers' API), `intercity.rs` (the regional market: its types and pair rules, with `intercity/logsum.rs` the rail logsums and sparse tables, `costs.rs` drive, ferry and air costs, `market.rs` the market's methods, `build.rs` building a market and `MarketPacks`, `api.rs` `IntercityApi` and its access lists, `pass.rs` the pass and `pass_window`, `setup.rs` serving stations and the network, `exports.rs` the wasm calls, `selection.rs` the selection and corridor outputs; `intercity/market_trip.rs` its trip explorer query, T-866; `intercity/drives.rs` the routed drives between places and the ferry, T-279; its pass goes through a window of destination zones,
   `pass_window`, searching destinations as the window needs them on a big cluster, `pass_searched`
@@ -257,7 +260,7 @@ fitted at 0, 45 and 90 degrees, T-2169; these three, the layout's A and blocks' 
 are the `?sheet=0` path), `sheet.ts` (the rubber sheet, the diagram's default: a quadtree lattice
 stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568), `sheetLines.ts` (the layout's
 octilinear stages run from the sheet, the map carried with the stations, and its sea and zone borders, `sheetLines` and
-`sheetMap`, T-2567), `sheetThin.ts` (the sheet's map before its coasts are traced: thin water and land drawn again as
+`sheetMap`, T-2567; its carry's solve in WASM through `carryWasm.ts`, T-2589), `sheetThin.ts` (the sheet's map before its coasts are traced: thin water and land drawn again as
 bands, nibs smoothed, a city map's narrow rivers as bands, T-2580), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted
 on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level

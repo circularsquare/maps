@@ -173,51 +173,57 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
   const bads: number[] = [], its: number[] = [];
   const tm = [0, 0, 0];
   const A = carryMatrix(gw, gh, lamH, lamV, bn, bw, ws);
-  // the reweighting below only scales the stations' stencils, so which nodes have corner terms stays as it is
-  const corner = cornersOf(A);
   // the multigrid made once; a later round changes only a few stations' weights, and is made again only where its
   // solve does not settle in MG_STALE iterations
-  let mg = multigrid(gw, gh, A), fresh = true;
+  const solver = (carrySolverMaker ?? jsCarrySolver)(gw, gh, A);
+  let fresh = true;
+  const touched: number[] = [];
   tm[0] += performance.now() - tl;
   const tol = o.carryTol;
-  for (let round = 0; round <= rounds; round++) {
-    let ta = performance.now();
-    rhs.fill(0);
-    for (let s = 0, k = 0; s < n; s++, k += 3) for (let c = 0; c < 3; c++) (rhs[2 * bn[k + c]] += ws[s] * bw[k + c] * dx[s]), (rhs[2 * bn[k + c] + 1] += ws[s] * bw[k + c] * dy[s]);
-    // the axes as if solved one after the other: x first; where x does not settle under the old multigrid, it is made
-    // again and y solved from where it was with the new one, else y goes on under the old one as far as it can
-    if (!fresh) for (let v = 0; v < N; v++) U0y[v] = U[2 * v + 1];
-    const it = pcg9(gw, gh, A, corner, rhs, U, mg, tol, fresh ? 60 : MG_STALE, [true, true]);
-    if (!fresh && (it[0] >= MG_STALE || it[1] >= MG_STALE)) {
-      const tb = performance.now(), redoY = it[0] >= MG_STALE;
-      (mg = multigrid(gw, gh, A)), (fresh = true), (tm[0] += performance.now() - tb);
-      if (redoY) {
-        for (let v = 0; v < N; v++) U[2 * v + 1] = U0y[v];
-        it[1] = 0;
+  try {
+    for (let round = 0; round <= rounds; round++) {
+      let ta = performance.now();
+      rhs.fill(0);
+      for (let s = 0, k = 0; s < n; s++, k += 3) for (let c = 0; c < 3; c++) (rhs[2 * bn[k + c]] += ws[s] * bw[k + c] * dx[s]), (rhs[2 * bn[k + c] + 1] += ws[s] * bw[k + c] * dy[s]);
+      // the axes as if solved one after the other: x first; where x does not settle under the old multigrid, it is made
+      // again and y solved from where it was with the new one, else y goes on under the old one as far as it can
+      if (!fresh) for (let v = 0; v < N; v++) U0y[v] = U[2 * v + 1];
+      const it = solver.solve(rhs, U, tol, fresh ? 60 : MG_STALE, [true, true]);
+      if (!fresh && (it[0] >= MG_STALE || it[1] >= MG_STALE)) {
+        const tb = performance.now(), redoY = it[0] >= MG_STALE;
+        solver.remake(), (fresh = true), (tm[0] += performance.now() - tb);
+        if (redoY) {
+          for (let v = 0; v < N; v++) U[2 * v + 1] = U0y[v];
+          it[1] = 0;
+        }
+        const more = solver.solve(rhs, U, tol, 60, [it[0] >= MG_STALE, redoY || it[1] >= MG_STALE]);
+        (it[0] += more[0]), (it[1] += more[1]);
       }
-      const more = pcg9(gw, gh, A, corner, rhs, U, mg, tol, 60, [it[0] >= MG_STALE, redoY || it[1] >= MG_STALE]);
-      (it[0] += more[0]), (it[1] += more[1]);
-    }
-    its.push(it[0], it[1]);
-    for (let v = 0; v < N; v++) (rx[v] = fin.qx[v] + U[2 * v]), (ry[v] = fin.qy[v] + U[2 * v + 1]);
-    tm[1] += performance.now() - ta, (ta = performance.now());
-    let bad = 0;
-    for (let s = 0, k = 0; s < n; s++, k += 3) {
-      if (!ownMass[s] || drawnMass(carry, s, 12) === ownMass[s]) continue;
-      // its weight times wUp, in the matrix too
-      const dw = ws[s] * (o.wUp - 1);
-      ws[s] *= o.wUp;
-      for (let p = 0; p < 3; p++) for (let q = 0; q < 3; q++) {
-        const u = bn[k + p], w = bn[k + q], di = (w % gw) - (u % gw), dj = Math.floor(w / gw) - Math.floor(u / gw);
-        A[u * 9 + (dj + 1) * 3 + di + 1] += dw * bw[k + p] * bw[k + q];
+      its.push(it[0], it[1]);
+      for (let v = 0; v < N; v++) (rx[v] = fin.qx[v] + U[2 * v]), (ry[v] = fin.qy[v] + U[2 * v + 1]);
+      tm[1] += performance.now() - ta, (ta = performance.now());
+      let bad = 0;
+      for (let s = 0, k = 0; s < n; s++, k += 3) {
+        if (!ownMass[s] || drawnMass(carry, s, 12) === ownMass[s]) continue;
+        // its weight times wUp, in the matrix too
+        const dw = ws[s] * (o.wUp - 1);
+        ws[s] *= o.wUp;
+        for (let p = 0; p < 3; p++) for (let q = 0; q < 3; q++) {
+          const u = bn[k + p], w = bn[k + q], di = (w % gw) - (u % gw), dj = Math.floor(w / gw) - Math.floor(u / gw), at = u * 9 + (dj + 1) * 3 + di + 1;
+          A[at] += dw * bw[k + p] * bw[k + q];
+          touched.push(at);
+        }
+        bad++;
       }
-      bad++;
+      if (touched.length) solver.changed(touched), (touched.length = 0);
+      bads.push(bad);
+      progress?.(0.6 + (0.4 * (round + 1)) / (rounds + 1));
+      fresh = false;
+      tm[2] += performance.now() - ta;
+      if (!bad) break;
     }
-    bads.push(bad);
-    progress?.(0.6 + (0.4 * (round + 1)) / (rounds + 1));
-    fresh = false;
-    tm[2] += performance.now() - ta;
-    if (!bad) break;
+  } finally {
+    solver.free();
   }
   tick("carry");
   (ms.carryBuild = Math.round(tm[0])), (ms.carrySolve = Math.round(tm[1])), (ms.carryCheck = Math.round(tm[2]));
@@ -619,6 +625,27 @@ export function drawnMass(C: Carry, s: number, wn: number): number {
   }
   return found;
 }
+
+/** the carry's solver over the matrix A it was made with (its multigrid made with it): `changed` after the caller
+ * changed A's entries `at`, `remake` its multigrid from A as it is, `solve` as pcg9 below */
+export interface CarrySolver {
+  changed(at: number[]): void;
+  remake(): void;
+  solve(b: Float64Array, x: Float64Array, tol: number, maxIt: number, on: [boolean, boolean]): [number, number];
+  free(): void;
+}
+export type CarrySolverMaker = (gw: number, gh: number, A: Float64Array) => CarrySolver;
+
+function jsCarrySolver(gw: number, gh: number, A: Float64Array): CarrySolver {
+  // the reweighting only scales the stations' stencils, so which nodes have corner terms stays as it is
+  const corner = cornersOf(A);
+  let mg = multigrid(gw, gh, A);
+  return { changed() {}, remake: () => void (mg = multigrid(gw, gh, A)), solve: (b, x, tol, maxIt, on) => pcg9(gw, gh, A, corner, b, x, mg, tol, maxIt, on), free() {} };
+}
+/** the solver sheetLines uses: the JavaScript's below unless the diagram worker sets the WASM one (carryWasm.ts,
+ * sim/src/diagram.rs), which gives the same bits faster (T-2589) */
+let carrySolverMaker: CarrySolverMaker | null = null;
+export const setCarrySolver = (make: CarrySolverMaker | null) => void (carrySolverMaker = make);
 
 // ---- the carry's least squares: a 9-point matrix on the lattice (slot (dj + 1) * 3 + di + 1 per node), solved by
 // conjugate gradients with a multigrid V-cycle (operator-dependent prolongation, Galerkin coarse levels, Gauss-Seidel),

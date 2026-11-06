@@ -504,6 +504,9 @@ none of this runs.
   again, until none is (up to 8 rounds on a city map, 12 on a country's). So water takes the difference between
   neighbouring land masses' moves, and every station is on its own land. Solved by conjugate gradients with a multigrid
   whose prolongation follows the matrix (black box multigrid), made once and again only where a solve does not settle.
+  The solve runs in WASM (`sim/src/diagram.rs`, in the track module, which the diagram worker loads), with the same
+  arithmetic in the same order as the JavaScript one in `sheetLines.ts`, so the same bits; `?perfOff=carryWasm` (or a
+  module that does not load) solves in JavaScript.
 - **The map**: a grid over the drawing (at most 4 million cells on a city map, 12 million on a country's) takes, cell by
   cell through the carried map's triangles, the ground under it: water, or the zone the land is in (the zones' outlines
   the page sends). A land mass with no station on it that the masks' edge cuts across counts as water: its masked cells

@@ -7,10 +7,12 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["track-api"]
+default = ["track-api", "diagram"]
 # T-051: the clock worker's `TrackApi` (src/track/wasm.rs). On by default; the demand workers'
 # module is built with `--no-default-features --features demand`, so it carries no track model.
 track-api = []
+# T-2589: the network diagram's carry on the rubber sheet (src/diagram.rs), in the track module for the diagram worker.
+diagram = []
 # Demand kernel (src/demand/, T-005, T-019, T-020). The app's wasm build enables it (T-026: the
 # demand workers' `DemandApi`); plain `cargo test` and the pipeline-free builds leave it off.
 demand = ["dep:serde_json", "dep:serde"]

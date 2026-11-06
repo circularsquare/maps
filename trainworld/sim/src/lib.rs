@@ -6,6 +6,10 @@
 #[cfg(feature = "demand")]
 pub mod demand;
 
+/// T-2589: the network diagram's carry solve (`diagram::CarrySolver`), for the diagram worker.
+#[cfg(feature = "diagram")]
+pub mod diagram;
+
 /// T-040 track model: geometry, validity, costs, edits, run-time profiles, capacity. The clock
 /// worker's API is `track::wasm::TrackApi`.
 pub mod track;

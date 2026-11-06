@@ -10,6 +10,7 @@
 // sea open (T-2541). With the page's `sheet` (its default; `?sheet=0` sends none; T-2568, T-2567, T-2580) the rubber
 // sheet (diagram/sheet.ts) is made first, from the same masks, and posted; the lines are laid out on it and the map
 // carried with them (diagram/sheetLines.ts), whose water (with the page's `water`) and zone borders replace the ones above.
+// The carry is solved in the track module's WASM (T-2589; the page's `?perfOff=carryWasm` the same in JavaScript).
 
 import type { DiagramGraph } from "../diagram/graph";
 import { dialled, LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
@@ -20,7 +21,8 @@ import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityN
 import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import { diagramWater, type DiagramWater } from "../diagram/water";
 import { rubberSheet, sheetWarp, type Sheet } from "../diagram/sheet";
-import { riverCellM, SHEET_LINES, sheetLines, sheetMap, type SheetLines } from "../diagram/sheetLines";
+import { riverCellM, setCarrySolver, SHEET_LINES, sheetLines, sheetMap, type CarrySolverMaker, type SheetLines } from "../diagram/sheetLines";
+import { wasmCarrySolver } from "../diagram/carryWasm";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
 export type DiagramNames = { text: string[]; width: Float32Array; width2: Float32Array; fontPx: number };
@@ -31,7 +33,7 @@ export type ZoneFrame = [number, number, number];
 /** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
 export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
-  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; distort?: number; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] }; sheet?: { packs: string; zones: string[] } }
+  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; options?: "r2"; distort?: number; zones?: ZoneOutlines; frame?: ZoneFrame; water?: { packs: string; zones: string[] }; sheet?: { packs: string; zones: string[]; carryJs?: boolean } }
   | { kind: "zones"; zones: ZoneOutlines }
   | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
@@ -137,8 +139,9 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
 /** The layout on the rubber sheet (T-2567, T-2580; the page's default, `?sheet=0` the layout above), its borders and
  * (with the page's `water`) its sea and narrow rivers from the map carried with the stations, posted with the layout; how
  * far it has got posted for the loading bar, in shares of the time (the lines and the carry most of it) */
-async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: string; zones: string[] }, frame: ZoneFrame) {
+async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: string; zones: string[]; carryJs?: boolean }, frame: ZoneFrame) {
   const t0 = performance.now();
+  setCarrySolver(at.carryJs ? null : await carryWasm());
   let sent = -1;
   const progress = (share: number) => {
     if (share - sent < 0.01) return;
@@ -177,6 +180,20 @@ async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: st
   (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3, rivers: t5r - t5, map: t6 - t5r }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms: { drawing: t5 - t4, names: 0, borders: t6 - t5, cities: 0 } } satisfies FromDiagram);
 }
+
+/** the carry's solver in WASM (T-2589), from the track module, loaded with the first sheet; null if it did not load (the
+ * JavaScript one gives the same, slower) */
+let carryMaker: Promise<CarrySolverMaker | null> | null = null;
+const carryWasm = () =>
+  (carryMaker ??= import("../wasm/track/sim")
+    .then(async (w) => {
+      await w.default();
+      return w.CarrySolver ? wasmCarrySolver(w.CarrySolver) : null;
+    })
+    .catch((e) => {
+      console.warn("The diagram's carry solves in JavaScript: its WASM did not load", e);
+      return null;
+    }));
 
 // ---- the water (T-2169): each zone's mask fetched once, as the clock worker fetches it (a range of the pack's .bin)
 const masks = new Map<string, Promise<WaterMask | null>>();

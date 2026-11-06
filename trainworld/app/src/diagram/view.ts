@@ -25,6 +25,7 @@ import { EARTH_C, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
 import { SHADES } from "../game/shadeTable";
 import { DATA_BASE } from "../game/dataBase";
+import { perfOff } from "../perfFlags";
 import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
 import { mixOklab } from "../game/palette";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
@@ -298,7 +299,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const water = zf && diagramWater.peek() ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
     // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591); `?sheet=0` the layout
     // before it
-    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id) } } : {};
+    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) } } : {};
     worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water, ...sheet } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
