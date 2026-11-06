@@ -1,7 +1,7 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-05 21:30
+Updated: 2026-11-05 21:40
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
@@ -26,7 +26,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   danger paragraph and credits).
 - T-077 landed (bd409831): corridors after windows, faster in windows (L10 not), hazard in
   reparent slack, a stale-node bug fixed, ktrips walking trips.
-- T-023 M1 doc tidy landed (c306d1bc). No agents running.
+- T-023 M1 doc tidy landed (c306d1bc).
+- T-079 desert wadis (Opus agent a75105d4c451ffaf1, 21:40): owns tools/canoe/, tools/hazard/ (shared mask),
+  the canoe river data, docs/canoe.md, notes/T-079.md. Rebuilds river data; ledger iso-t079.
+- T-080 level bias (Opus agent a754c1f8965d2be43, 21:40): measurement + proposal, no page code;
+  owns notes/T-080.md, a new checks script, scratch t080. Ledger iso-t080.
 - Roads pass at 21:29: 313 of 513 extracts done, 55 GB free; at this rate it ends ~02:00.
   CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
 - T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
@@ -48,8 +52,9 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 1. When T-053 ends: reduce + GeoTIFF, then T-028 (page on our own surface with roads), T-057
    (100 m tiles: towns and water country first).
 2. T-011 90 m terrain right after T-053 (Anita, 2026-11-05), then T-039, T-057 mountain tiles.
-3. Land T-042 design for Anita; land T-036.
-4. Anita looks at T-065 creek-weaving, T-056 rays; T-073 small rivers, T-031 alongside.
+3. Land T-079 (desert wadis) and review T-080's proposal with Anita.
+4. Anita has checked survival and upstream trips (fine, 2026-11-05). T-065 creek-weaving, T-073
+   small rivers, T-031 (fold into a river rebuild) still open.
 
 ## Anita's standing asks
 - 2026-11-05: roads go ahead (rotating, she lacks 84 GB free); T-047's 2.8 GB rule approved;

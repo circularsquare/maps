@@ -25,6 +25,8 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## In progress
 
 - T-053 (below): the world roads pass, running detached.
+- T-079 [P1] Desert wadis paddled: a canoe start at Riyadh paddles across Arabia at 8.2 km/h (Anita, 2026-11-05). WaterGAP gives dry catchments phantom mean flow (notes/T-042.md); apply the hazard build's hot desert rule (driest month >= 0.1 m³/s) to canoe reaches, keep the Nile, Niger, Euphrates and the like, rebuild the river data. Taking, 2026-11-05 (agent, Opus).
+- T-080 [P2] Level bias: zooming in seems to make trips strictly slower (Anita, 2026-11-05: "is there a way we could like predict the rough scale of this bias"). Measure L10/L3/L1/L0.1 times on the same trips, separate the causes, propose a fix that makes a coarse level an unbiased guess of the finer one (effective speed per coarse cell, a factor, or T-007's portals). Measurement and proposal only. Taking, 2026-11-05 (agent, Opus).
 
 ## M1: canoe, today
 
