@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2618 Upkeep against French rail, research (2026-11-06, agent costfr): game ground track is ~1/4 of French maintenance plus renewal (by T-867's design), stations ~1/2, tunnels ~1/7 of Paris RER; Sets A (realistic) and B (tunnels only) proposed, Anita decides. research/upkeep-france.md.
 - T-2608 Network diagram key M removed for release (2026-11-06, maps-93, Anita: "lets maybe remove the schematic map hotkey (m) for release and say like (work in progress) on the tooltip"): hover "Show network diagram (work in progress)", "Show map" back; the button and Esc remain.
 - T-2599 Network diagram lines triangular (2026-11-06, agent smoothlines, tree): a sheet.ts bug mirrored stations across their cell's diagonal; fixed, and the routing lines legs up along lines and splits less. Sharp turns the real line lacks: Japan 1723 -> 67, New York 168 -> 50. notes/T-2599.md.
 - T-2603 Timetable chart (Marey chart) for a line (2026-11-06, agent linepanel, tree): a third icon by the schedule's copy and paste opens it at the dock's foot; time across, stops down by distance, the trips the map draws (new `TrackApi.line_trips`), 2-8 h around now. notes/T-2603.md.
