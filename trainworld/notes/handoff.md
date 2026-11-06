@@ -32,7 +32,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world version, settle only from a later result. Touches game/lineFigures.ts (capview holds it: merge at landing),
   editNote.ts, demandClient.ts, demand.ts, today.ts, schedule.tsx, LinesTab.tsx. ~310k tokens: retire after landing.
 - **marey** (Opus, tree): T-2660 timetable chart other lines + flat junctions; T-2665 dense charts span + wheel zoom.
-- **westleft** (Sonnet, tree): T-2661 west end left (helper game/northUp.ts); marey uses it after landing.
+- LANDED westleft 18c10362 (T-2661; today.ts conflict resolved keeping t("today.peak") + flip), riderspace 75ea5b27 (T-2664, T-2673).
 - **riderspace** (Sonnet, tree): T-2664 riders block tighter + T-2673 build menu "Regular/High speed" 1px.
 - **attract2** (Sonnet, tree): T-2666 attraction classes + 2 km reach (Wikidata refetch).
 - **searchleaf** (Opus, tree): T-2652 leaf stations in kernel/search.rs (Japan searches 1.4x+, exact).
