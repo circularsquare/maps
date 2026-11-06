@@ -277,8 +277,8 @@ export class StationLabels {
     for (let i = 0; !bad && i < want.length; i++) {
       const g = want[i], l = this.labels[i], below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
       const f = feats[i] as unknown as { properties: { name: string }; geometry: { coordinates: number[] } };
-      if (l.el.textContent !== g.name || l.below !== below || l.el.className.includes("plan") === g.built || l.el.className.includes("park") !== g.park) bad = `label ${i} (${g.name})`;
-      else if (f.properties.name !== g.name || f.geometry.coordinates[0] !== g.lng || f.geometry.coordinates[1] !== g.lat || this.shadowKeys[i] !== shadowText(g, below)) bad = `shadow feature ${i} (${g.name})`;
+      if (l.el.textContent !== g.name || l.below !== below || l.el.className.includes("plan") === g.built || l.el.className.includes("park") !== g.park) bad = `label ${i} (${g.name})`; // i18n-ignore
+      else if (f.properties.name !== g.name || f.geometry.coordinates[0] !== g.lng || f.geometry.coordinates[1] !== g.lat || this.shadowKeys[i] !== shadowText(g, below)) bad = `shadow feature ${i} (${g.name})`; // i18n-ignore
     }
     if (bad) console.error(`T-1380 check: the station names patched from changes differ from a whole build: ${bad}`);
   }

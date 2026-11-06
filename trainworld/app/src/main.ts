@@ -88,7 +88,7 @@ import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, lastLoadDied, loadCannotFinish, startGameWait, waitKey } from "./game/loading";
-import { OUT_OF_MEMORY } from "./game/loadText";
+import { outOfMemoryText } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
 import { viewStart } from "./ui/locate";
@@ -133,7 +133,7 @@ startLoadingGate();
 // start no game, or a game too big for the device would load and die again
 const lastDied = lastLoadDied();
 const urlChoice = lastDied ? null : choiceFromUrl();
-if (lastDied) loadCannotFinish(OUT_OF_MEMORY, true);
+if (lastDied) loadCannotFinish(outOfMemoryText(), true);
 // Demand pool (T-026) first: its downloads and pack opening are the longest part of startup, so
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
@@ -657,13 +657,13 @@ if (DEBUG) {
     lastMapFrames = overlay.mapFrames;
     lastAt = now;
     perfText.value = [
-      `${renderer.tripCount.toLocaleString()} trips this hour${SYNTH ? " (synthetic)" : ""}`,
-      `Draw   ${overlay.drawMs.avg().toFixed(3)} ms avg, ${overlay.drawMs.max().toFixed(2)} max`,
-      `Map    ${mapN ? (mapMs / mapN).toFixed(2) + " ms, " + mapPerS.toFixed(0) + " frames/s" : "idle"}`,
-      `GPU    ${renderer.gpuMs === null ? "no timer" : renderer.gpuMs.toFixed(2) + " ms"}`,
-      `Frame  ${gap ? gap.toFixed(1) + " ms, worst " + overlay.frameGap.max().toFixed(0) + " ms" : "idle"}`,
-      `Clock  ${clock.ticking ? clock.rate() + "x" : "stopped"}, epoch ${renderer.epoch}, ${renderer.rebases} re-bases`,
-      `Worker ${clockWorkerStatus.value}`,
+      `${renderer.tripCount.toLocaleString()} trips this hour${SYNTH ? " (synthetic)" : ""}`, // i18n-ignore
+      `Draw   ${overlay.drawMs.avg().toFixed(3)} ms avg, ${overlay.drawMs.max().toFixed(2)} max`, // i18n-ignore
+      `Map    ${mapN ? (mapMs / mapN).toFixed(2) + " ms, " + mapPerS.toFixed(0) + " frames/s" : "idle"}`, // i18n-ignore
+      `GPU    ${renderer.gpuMs === null ? "no timer" : renderer.gpuMs.toFixed(2) + " ms"}`, // i18n-ignore
+      `Frame  ${gap ? gap.toFixed(1) + " ms, worst " + overlay.frameGap.max().toFixed(0) + " ms" : "idle"}`, // i18n-ignore
+      `Clock  ${clock.ticking ? clock.rate() + "x" : "stopped"}, epoch ${renderer.epoch}, ${renderer.rebases} re-bases`, // i18n-ignore
+      `Worker ${clockWorkerStatus.value}`, // i18n-ignore
     ].join("\n");
     mapMs = mapN = 0;
   }, 250);

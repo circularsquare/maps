@@ -19,6 +19,7 @@
 // no bus line returns at the first line of `draw`. Picking and the tags read the same arrays
 // (`lineAt`, `stopAt`), on pointer moves only.
 
+import { t } from "../i18n";
 import { busSpeedColour, profitColour, rgb } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
@@ -734,7 +735,7 @@ function stretchOf(stops: number[], s: number): number {
 /** A tag row of a line's badge and its name, as the resting hover's list has them. */
 function nameRow(w: WorldView, line: number): HTMLElement | string {
   const l = w.save.lines.find((x) => x.num === line);
-  if (!l) return `Line ${line}`;
+  if (!l) return t("busLayer.line", { num: line });
   const name = Object.assign(document.createElement("span"), { textContent: l.name });
   return factRow(lineBullet(l, true), name);
 }
@@ -744,11 +745,11 @@ function nameRow(w: WorldView, line: number): HTMLElement | string {
 export function busLineTip(w: WorldView, line: number, rows: TipLine[] = []): TipLine[] {
   const l = w.save.lines.find((x) => x.num === line);
   const b = l ? w.lineStats[l.id]?.bus : undefined, built = b ? b.built : true;
-  const kind = b?.ferry ? "Ferry line" : "Bus line";
-  return built ? [nameRow(w, line), kind, ...rows] : [nameRow(w, line), kind, "Not running yet"];
+  const kind = b?.ferry ? t("busLayer.ferryLine") : t("busLayer.busLine");
+  return built ? [nameRow(w, line), kind, ...rows] : [nameRow(w, line), kind, t("busLayer.notRunning")];
 }
 
 /** The tag for one of its stops. */
 export function busStopTip(w: WorldView, line: number, end: boolean): TipLine[] {
-  return [end ? "End of the line" : "Bus stop", nameRow(w, line)];
+  return [end ? t("busLayer.endOfLine") : t("busLayer.busStop"), nameRow(w, line)];
 }

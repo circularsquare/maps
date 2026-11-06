@@ -69,6 +69,18 @@ Workers send codes and figures, never words; the main thread words them (as `gam
 model's refusals). A worker that must write text imports `i18n/intl.ts` for formatting and is passed the
 language with its job.
 
+The clock worker's notices and save reasons are sent as message keys (`"clockWorker.newer"`, `"issues.internal"`);
+`workers/clockClient.ts` `workerText` turns a key into text on the main thread. Default names written into a save
+("Saved game", "Bus 3") are the save's data and stay as made; so do diagnostic details in logs.
+
+## Names kept in lists and constants
+
+A list read by index (`DAY_KIND_NAME`, `MONTH_LONG`, `PERIODS[i].name`, `TERRAIN_NAMES`) keeps its shape and reads its
+message when read: `game/lazyText.ts` `lazyTexts([...keys])` for a plain list, a `get name()` in an object literal
+for a record. A constant text that only a few files read is `export let X = ""` set by an `effect` that calls `t` (as
+`heldTip`, `IDLE_TIP`). Where code compares a name with a literal, the object carries a stable `id` beside the
+translated `label` (`CostTerm` in `game/trip.ts`).
+
 ## Choosing a language
 
 `setLanguage(lang)` fetches that language's messages, then sets `language` and `<html lang>` (`en`, `ja`,

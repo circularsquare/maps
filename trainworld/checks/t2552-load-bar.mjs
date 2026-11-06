@@ -3,7 +3,7 @@
 // round, the last one's quick converged period included, and a zone's own bar keeps moving through its opening and
 // the solve that covers it.
 //   node --experimental-strip-types trainworld/checks/t2552-load-bar.mjs
-import { keepPlace, solveStage, zoneShare, leftText, nextLeft } from '../app/src/game/loadBar.ts';
+import { keepPlace, solveStage, zoneShare, FEW_MS, nextLeft } from '../app/src/game/loadBarCore.ts';
 
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -48,7 +48,7 @@ for (const [name, prior, later] of [['remembered (a reload)', 143, 0.6], ['model
   }
   report(`${name}: the bar never sits 20 s on one percent`, longest <= 20, `longest ${longest.toFixed(1)} s from ${at.toFixed(1)} s`);
   // "A few seconds left" only in the last 15 s, and the time left never under a third of the real one past the first minute
-  const few = r.filter((x) => leftText(x.left) === 'A few seconds left' && x.real > 15000);
+  const few = r.filter((x) => x.left < FEW_MS && x.real > 15000);
   report(`${name}: "A few seconds left" only near the end`, few.length === 0, few.length ? `from ${few[0].t.toFixed(1)} s, ${(few[0].real / 1000).toFixed(0)} s still to go` : '');
   const low = r.filter((x) => x.t > SENT + 60 && x.left < x.real / 3);
   report(`${name}: time left at least a third of the real one after the first minute`, low.length === 0, low.length ? `${low.length} ticks, first at ${low[0].t.toFixed(1)} s: ${(low[0].left / 1000).toFixed(0)} s shown, ${(low[0].real / 1000).toFixed(0)} s real` : '');

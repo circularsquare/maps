@@ -2,6 +2,7 @@
 // none of it is in the save. Settings and theme are remembered per browser (localStorage), which
 // may be unavailable (private window), so every read and write is guarded.
 
+import { t } from "../i18n";
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, whenAway, whenBack, whenOut, type DemandDay } from "./days";
 import { loadNunito } from "./fonts";
@@ -316,12 +317,12 @@ export const shownDay = computed<DemandDay>(() => {
 const superDay = computed(() => {
   const d = shownDay.value;
   const when = d === AWAY_DAY ? whenAway.value : d === OUT_DAY ? whenOut.value : d === BACK_DAY ? whenBack.value : null;
-  return when ? `a day of ${when}` : null;
+  return when || null;
 });
 /** The shown day as a hover ends a figure: "per weekday", "per Saturday", "per day of Golden Week", "per day". */
-export const shownDayPhrase = computed(() => (superDay.value ? `per ${superDay.value.slice(2)}` : DEMAND_DAY_PHRASE[shownDay.value]));
+export const shownDayPhrase = computed(() => (superDay.value ? t("days.perSuper", { when: superDay.value }) : DEMAND_DAY_PHRASE[shownDay.value]));
 /** "on a weekday", "on a day of Golden Week", "a day": the points hovers' ending. */
-export const shownDayOn = computed(() => (superDay.value ? `on ${superDay.value}` : DEMAND_DAY_ON[shownDay.value]));
+export const shownDayOn = computed(() => (superDay.value ? t("days.onSuper", { when: superDay.value }) : DEMAND_DAY_ON[shownDay.value]));
 
 export function setDisplay<K extends keyof DisplaySettings>(k: K, v: DisplaySettings[K]) {
   display.value = { ...display.value, [k]: v };

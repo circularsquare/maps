@@ -21,7 +21,8 @@ import { meet, ontoLine, snapCorner, snapLine, SNAP_RAD } from "../game/building
 import { buildingById, buildingDraft } from "../game/buildingView";
 import { segmentGap } from "../game/complexes";
 import { groundScale, lngLatToPack, packToLngLat } from "../game/coords";
-import { area, money, plural } from "../game/format";
+import { area, money } from "../game/format";
+import { t } from "../i18n";
 import { describeIssue, describeIssues } from "../game/issues";
 import { shadeColours } from "../game/shades";
 import { selection, tool } from "../game/ui";
@@ -405,7 +406,7 @@ export class BuildingDraw {
 
   touchState(): TouchCtl | null {
     if (!touchInput.peek() || !this.pts.length) return null;
-    return { confirm: this.closed ? !this.busy : this.pts.length >= 3 ? true : null, confirmTip: this.closed ? (this.id === null ? "Construct" : "Save outline") : "Close the outline", back: !this.closed, stopTip: "Cancel" };
+    return { confirm: this.closed ? !this.busy : this.pts.length >= 3 ? true : null, confirmTip: this.closed ? (this.id === null ? t("buildingDraw.construct") : t("buildingDraw.saveOutline")) : t("buildingDraw.closeOutline"), back: !this.closed, stopTip: t("buildingDraw.cancel") };
   }
 
   touchPoint() {
@@ -452,7 +453,7 @@ export class BuildingDraw {
   /** Construct the outline, or save the edited one; refused with the reason, the tool staying on. */
   async finish() {
     if (this.busy || !this.active) return;
-    if (!this.closed) return void say("Close the outline first.", true);
+    if (!this.closed) return void say(t("buildingDraw.closeFirst"), true);
     const corners = this.flat();
     if (this.id !== null && corners.join() === this.start) return this.host.exit();
     this.busy = true;
@@ -465,8 +466,8 @@ export class BuildingDraw {
         return;
       }
       const name = buildingById(id ?? a.node ?? -1)?.name ?? "";
-      if (id === null) say(`Station building built at ${name} for ${money(a.charge * 1e6)}.`);
-      else say(a.charge >= 0.0005 ? `${name} station building changed for ${money(a.charge * 1e6)}.` : `${name} station building changed.`);
+      if (id === null) say(t("buildingDraw.built", { name, cost: money(a.charge * 1e6) }));
+      else say(a.charge >= 0.0005 ? t("buildingDraw.changedFor", { name, cost: money(a.charge * 1e6) }) : t("buildingDraw.changed", { name }));
       const from = this.from;
       this.host.exit();
       if (from !== null) selection.value = { kind: "station", station: from };
@@ -535,16 +536,16 @@ export class BuildingDraw {
     const row = (text: string, bad = false) => Object.assign(document.createElement("div"), { textContent: text, className: bad ? "bad" : "" });
     const rows: HTMLElement[] = [];
     const u = this.under;
-    if (u.kind === "corner" && this.closed) rows.push(row(this.pts.length > 3 ? "Drag to move, right click to delete" : "Drag to move"));
-    else if (u.kind === "mid") rows.push(row("Drag to add a corner"));
-    else if (u.kind === "first") rows.push(row("Click to close the outline"));
+    if (u.kind === "corner" && this.closed) rows.push(row(this.pts.length > 3 ? t("buildingDraw.dragDelete") : t("buildingDraw.drag")));
+    else if (u.kind === "mid") rows.push(row(t("buildingDraw.addCorner")));
+    else if (u.kind === "first") rows.push(row(t("buildingDraw.clickClose")));
     const q = this.quote, c = this.quoted();
     if (q && c && q.key === c.join() && !this.drag) {
       if (q.issues.length) rows.push(...q.issues.map((k) => row(describeIssue(k).replace(/\.$/, ""), true)));
       else {
         rows.push(row(area(q.m2)));
-        rows.push(row(this.id === null ? money(q.price * 1e6) : `${money(q.price * 1e6)} for the added floor`));
-        rows.push(row(plural(q.members, "station") + " inside"));
+        rows.push(row(this.id === null ? money(q.price * 1e6) : t("buildingDraw.addedFloor", { cost: money(q.price * 1e6) })));
+        rows.push(row(t("buildingDraw.stationsInside", { count: q.members })));
       }
     } else if (q && this.drag && q.key === c?.join()) rows.push(row(area(q.m2)));
     if (!rows.length) {

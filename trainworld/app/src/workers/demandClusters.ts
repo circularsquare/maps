@@ -405,7 +405,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
       lp[i] = tph[3 * i + lev];
       a += m;
     });
-    return hashOf([`${head}|level ${lev}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]);
+    return hashOf([`${head}|level ${lev}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]); // i18n-ignore
   });
   // T-842: a period's own span, where there is one
   const nr = 2 * nStops;

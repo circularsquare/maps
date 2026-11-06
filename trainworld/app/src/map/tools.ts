@@ -21,6 +21,7 @@
 //
 // Everything drawn is blueprint until constructed (SPEC 6.4).
 
+import { t as tr, tNumber } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
@@ -73,7 +74,7 @@ const SNAP_EDGE_PX = 15;
 // a branch; a node (a loose end to carry on from) keeps more
 const TRACK_NODE_PX = 12;
 const TRACK_EDGE_PX = 8;
-const NOT_ON_TRACK = "Place stations on track";
+const notOnTrack = () => tr("tools.notOnTrack");
 /** T-2271: the station tool's trips-near bar is empty at 1,000 trips and full at 1M, log scaled
  * (New York's lines have 30k-1M within 1 km); its ticks (style.css `.size-bar`) are 10k and 100k */
 const NEAR_BAR_LO = 1e3, NEAR_BAR_HI = 1e6;
@@ -126,7 +127,7 @@ interface Placed {
 const MAX_PIECE_KM = 500;
 /** a click or ghost waiting this long on the worker shows the spinner in the tag, ms (T-1039) */
 const WAIT_MS = 300;
-const tooFarText = () => `Too far for one piece of track (${distance(MAX_PIECE_KM * 1000)} at most). Press Esc to start somewhere else.`;
+const tooFarText = () => tr("tools.tooFar", { max: distance(MAX_PIECE_KM * 1000) });
 
 /** An x, y, z polyline less the shares `fromA` and `fromB` of its length at its two ends. */
 function trimPolyline(pts: Float32Array, fromA: number, fromB: number): Float32Array {
@@ -652,10 +653,10 @@ export class Tools {
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
       const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
-      return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: "Place this track", back: !!this.touchAt || this.chain.length > 0, stopTip: "Stop drawing" };
+      return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: tr("tools.placeTrack"), back: !!this.touchAt || this.chain.length > 0, stopTip: tr("tools.stopDrawing") };
     }
-    if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: "Place the station", back: false, stopTip: "Cancel" };
-    if (t === "delete" && this.touchAt && this.delHover) return { confirm: true, confirmTip: "Remove", back: false, stopTip: "Cancel" };
+    if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: tr("tools.placeStation"), back: false, stopTip: tr("tools.cancelStation") };
+    if (t === "delete" && this.touchAt && this.delHover) return { confirm: true, confirmTip: tr("tools.remove"), back: false, stopTip: tr("tools.cancelRemove") };
     return null;
   }
 
@@ -819,7 +820,7 @@ export class Tools {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
       rc = await this.real.click(e.point.x, e.point.y);
       if (rc?.kind === "refuse" || this.start !== from) {
-        if (rc?.kind === "refuse") say("No real track joins these points.", true);
+        if (rc?.kind === "refuse") say(tr("tools.noRealTrack"), true);
         return;
       }
       if (!rc && this.tooFar(s)) {
@@ -845,7 +846,7 @@ export class Tools {
       if (a.node !== undefined) this.earlyNode = a.node;
     }
     if (!a.ok || this.start !== from) return;
-    say(p ?`Blueprint added: ${distance(p.lengthM)}, ${money(p.cost * 1e6)} to construct.` : "Blueprint added.");
+    say(p ? tr("tools.blueprintCost", { distance: distance(p.lengthM), cost: money(p.cost * 1e6) }) : tr("tools.blueprint"));
     if (!chain || this.endRun || a.node === undefined) {
       this.reset();
       return;
@@ -986,7 +987,7 @@ export class Tools {
     const first = this.snap(e.point.x, e.point.y, e.lngLat);
     if (first.kind === "free") {
       // T-1820: stations go on track only
-      say(NOT_ON_TRACK, true);
+      say(notOnTrack(), true);
       return;
     }
     // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
@@ -1003,7 +1004,7 @@ export class Tools {
     const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
-      say(`${name} added as a blueprint station.`);
+      say(tr("tools.blueprintStation", { name }));
     } else if (r.issues.length) say(describeIssues(r.issues), true);
   }
 
@@ -1074,8 +1075,8 @@ export class Tools {
     if (!cells) return null;
     // two significant figures: the figure is rough by nature
     const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
-    const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : r2.toLocaleString("en-US");
-    return { text: `${n ?? "Under 50"} trips within 1${unitShort()}`, legs: sum };
+    const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : tNumber(r2);
+    return { text: n === null ? tr("tools.nearUnder", { unit: unitShort() }) : tr("tools.near", { n, unit: unitShort() }), legs: sum };
   }
 
   /** The station placed last in this session (T-312), found by its position so a rename shows. */
@@ -1239,7 +1240,7 @@ export class Tools {
     const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
     const hit=station>=0?Number(n.stationIds[station]):-1;
     if (hit < 0) {
-      say("Click a circle to add or remove a stop. Press Enter when done.");
+      say(tr("tools.lineHelp"));
       return;
     }
     this.toggleStop(hit);
@@ -1251,7 +1252,7 @@ export class Tools {
   toggleStop(station: number, tier?: StopTier) {
     const session = this.lineSession;
     this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
-      if (session === this.lineSession) say("Could not change that stop. Please try again.", true);
+      if (session === this.lineSession) say(tr("tools.stopFailed"), true);
     });
   }
 
@@ -1440,7 +1441,7 @@ export class Tools {
     const cand=(s:Spot):Candidate=>s.kind==="node"?{kind:"node",node:s.node}:{kind:"edge",edge:s.edge,frac:fractionAlong(n.edgePts.get(s.edge)??[],s.lx,s.ly)};
     const roomOf=(s:Spot)=>this.roomSnap(s);
     const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),roomOf);
-    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||"Cannot be placed here."};
+    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||tr("tools.cannotPlace")};
     if (spots.length>=HOLD_AT && !(g.spot?known(g.spot)===null:spots.every((s)=>known(s)))) {
       // a bundle of tracks where the worker has not yet confirmed the guess: there it is often
       // refused for what the page cannot see, so the ghost stays as it was until the answer (if it
@@ -1470,7 +1471,7 @@ export class Tools {
     };
     void firstAccepted(spots,trial,roomOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
       if (key!==this.guess?.key) return; // a newer spot is already asked
-      const why=spot?"":describeIssues(issues)||"Cannot be placed here.";
+      const why=spot?"":describeIssues(issues)||tr("tools.cannotPlace");
       this.answer={key,spot:spot??(guess.held?spots[0]:guess.spot),ok:!!spot,why};
       if (tool.peek()==="station" && (this.answer.ok!==guess.ok || this.answer.why!==guess.why || this.answer.spot!==guess.spot)) this.place();
     });
@@ -1704,7 +1705,7 @@ export class Tools {
         this.ring.style.display = "";
         put(this.ring, d.lx, d.ly);
       } else this.ring.style.display = "none";
-      if (what) this.showTag(`Remove ${what.what}`, false, ...this.delAt);
+      if (what) this.showTag(tr("tools.removeWhat", { what: what.what }), false, ...this.delAt);
       else this.tag.style.display = "none";
       return;
     }
@@ -1716,7 +1717,7 @@ export class Tools {
     if (t === "station" && h?.kind === "free") {
       // T-1820: open ground takes no station; no ghost, only the reason by the pointer
       this.ring.style.display = "none";
-      this.showTag(NOT_ON_TRACK, true, ...this.screen(h.lx, h.ly));
+      this.showTag(notOnTrack(), true, ...this.screen(h.lx, h.ly));
       return;
     }
     // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track

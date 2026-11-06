@@ -9,6 +9,7 @@
 //     Elevation colour (T-1871).
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
 
+import { t } from "../i18n";
 import { levelLabel } from "../game/format";
 import { BAD_RED, rgbf } from "../game/palette";
 import { perfOff } from "../perfFlags";
@@ -260,13 +261,13 @@ export function markAt(ov: Overlay, marks: Float32Array, px: number, py: number,
 export function markTip(marks: Float32Array, i: number): TipLine[] {
   const shape = marks[i + 2], level = marks[i + 5], blueprint = marks[i + 4] > 0.5;
   const out: TipLine[] = [];
-  if (shape === M_RAMP) out.push(`Ramp up to ${levelLabel(level)}`);
-  else if (shape === M_PORTAL) out.push(`Ramp down to ${levelLabel(level)}`);
-  else if (shape === M_BAD) out.push("Tracks cross on a ramp less than a level apart");
+  if (shape === M_RAMP) out.push(t("gradeMarks.rampUp", { level: levelLabel(level) }));
+  else if (shape === M_PORTAL) out.push(t("gradeMarks.rampDown", { level: levelLabel(level) }));
+  else if (shape === M_BAD) out.push(t("gradeMarks.badCross"));
   else {
-    out.push(shape === M_JUNCTION ? "Flat junction" : "Flat crossing");
+    out.push(t(shape === M_JUNCTION ? "gradeMarks.junction" : "gradeMarks.crossing"));
     out.push(elevationFact(level));
   }
-  if (blueprint && shape !== M_BAD) out.push("Blueprint");
+  if (blueprint && shape !== M_BAD) out.push(t("gradeMarks.blueprint"));
   return out;
 }

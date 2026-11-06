@@ -11,6 +11,7 @@
 // as always; a tap adds or takes out a piece, a hold then drag adds a box (T-1260).
 // Construct and the quote leave out switched-off pieces; they are drawn grey (renderer.ts).
 
+import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { bpHover } from "../game/blueprintStretches";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
@@ -118,7 +119,7 @@ export class BlueprintBox {
     const pv = m?.preview;
     this.labels.place(pv ? curveLabels(pv.verts) : [], (x, y) => this.overlay.toScreen(x, y), cw, ch);
     if (m && pv && !pv.ok && m.px !== undefined) {
-      this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
+      this.tag.textContent = describeIssues(pv.issues) || t("blueprintBox.cannotMove");
       this.tag.style.display = "";
       placeAt(this.tag, m.px, m.py!, 14, -30);
     } else this.tag.style.display = "none";
@@ -361,7 +362,7 @@ export class BlueprintBox {
       } else {
         this.client.dropPreview();
         const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy, design: designSpeed.peek() });
-        if (!a.ok && !a.issues.length) say(m.issues.length ? describeIssues(m.issues) : "This cannot be moved there.", true);
+        if (!a.ok && !a.issues.length) say(m.issues.length ? describeIssues(m.issues) : t("blueprintBox.cannotMoveThis"), true);
         this.endMove();
         return;
       }

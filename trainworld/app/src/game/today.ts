@@ -6,6 +6,7 @@
 // (T-284); asked again four times a wall second while a panel shows them and the clock runs, as
 // the cash moves. The names say "today" from T-293.
 
+import { t } from "../i18n";
 import { computed, signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { clock, lineSeconds } from "./clock";
@@ -58,7 +59,7 @@ export function crowdClass(load: number): "" | "crowd-warn" | "crowd-bad" {
 /** "132%" */
 export const loadText = (share: number) => `${Math.round(share * 100)}%`;
 /** A crowded stretch's hover line (T-2236): "Peak load 132% at 08:00". */
-export const peakLoadText = (c: CrowdedStretch) => `Peak load ${loadText(c.load)} at ${clockTime(c.hour * 60)}`;
+export const peakLoadText = (c: CrowdedStretch) => t("today.peakAt", { load: loadText(c.load), time: clockTime(c.hour * 60) });
 
 /** Numbers per period in `TrackApi.line_periods` (`PERIOD_STRIDE` in boarding.rs). */
 export const PERIOD_STRIDE = 11;
@@ -120,15 +121,15 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { lo
       most = Math.max(most, x);
     }
     peak = Math.max(peak, most);
-    lines.push(`${hourSpan(p.from, p.to)} load: ${loadText(most)}`);
+    lines.push(t("today.periodLoad", { span: hourSpan(p.from, p.to), load: loadText(most) }));
   }
   if (!(trains > 0)) return null;
   const over = per.filter((x) => x >= CROWD_GRADES[0]).length;
   // T-2263: the tutorial warns where only a short stretch is full
   const short = guideVerbose.value && over > 0 && over * 2 <= s;
-  const tip = `Peak load ${loadText(peak)}\n${tipStrip(per.map(crowdColour), true)}`
+  const tip = `${t("today.peak", { load: loadText(peak) })}\n${tipStrip(per.map(crowdColour), true)}`
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "")
-    + (short ? "\nOnly a short stretch is crowded. More trains would run mostly empty, and may cost more than they earn." : "");
+    + (short ? "\n" + t("today.shortStretch") : "");
   return { load: stretchLoad(per), peak, tip };
 }
 
@@ -138,12 +139,12 @@ export function dayNote(l: LineInput, st: LineStats): string | null {
   const country = lineCountry(l.stops), day = Math.floor(lineSeconds(st) / 86400);
   const kind = kindIn(country, day);
   if (kind === 0) return null;
-  if (kind === 1 || kind === 2) return "Today is a weekend";
+  if (kind === 1 || kind === 2) return t("today.weekend");
   if (kind === 3) {
     const name = country ? holidayOn(country, day) : null;
-    return `Today is a holiday${name ? ` (${name})` : ""}`;
+    return t("today.holiday", { named: !!name, name: name ?? "" });
   }
-  return "Today is a holiday travel day";
+  return t("today.travelDay");
 }
 
 const LEVEL_INDEX = { high: 0, medium: 1, low: 2 } as const;

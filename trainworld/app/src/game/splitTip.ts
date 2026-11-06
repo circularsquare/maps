@@ -1,10 +1,13 @@
 // The hover of a mode split bar (T-550): the top bar's, and a row of the Money tab's Cities section.
 
+import { t, tNumber } from "../i18n";
 import { count } from "./format";
 import { modeColours } from "./palette";
 import type { TripLengths } from "./tripLengths";
 import type { ModeSplit } from "./types";
 import { tipBullet, tipGrid, tipSpan, tipStrip } from "../ui/tip";
+
+const percent = (v: number) => tNumber(v, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
 
 /** The split in rides (trip legs) a day, `all` their total (`modeRides`). */
 export type SplitRides = ModeSplit & { all: number };
@@ -14,13 +17,14 @@ export type SplitRides = ModeSplit & { all: number };
  * follows (" (an early estimate)"). With no split yet every share is "–". */
 export function splitTip(where: string, split: ModeSplit | null, rides: SplitRides | null, note: string): string {
   const s = split ?? { train: 0, walk: 0, drive: 0 };
-  const pct = (v: number) => (split ? v.toFixed(1) + "%" : "–");
+  const pct = (v: number) => (split ? percent(v) : "–");
   // T-2215: No route only where some trips have none
   const none = (s.none ?? 0) > 0;
+  const v = { train: pct(s.train), walk: pct(s.walk), drive: pct(s.drive), none: pct(s.none ?? 0) };
   const body = rides
-    ? `Train ${pct(s.train)} (${count(rides.train)}), Walking ${pct(s.walk)} (${count(rides.walk)}), Driving ${pct(s.drive)} (${count(rides.drive)}), ${none ? `No route ${pct(s.none!)} (${count(rides.none ?? 0)}), ` : ""}all ${count(rides.all)} trips`
-    : `Train ${pct(s.train)}, Walking ${pct(s.walk)}, Driving ${pct(s.drive)}${none ? `, No route ${pct(s.none!)}` : ""}`;
-  return `Trips per day${where}: ${body}${note}`;
+    ? t(none ? "splitTip.ridesNone" : "splitTip.rides", { ...v, trainN: count(rides.train), walkN: count(rides.walk), driveN: count(rides.drive), noneN: count(rides.none ?? 0), all: count(rides.all) })
+    : t(none ? "splitTip.sharesNone" : "splitTip.shares", v);
+  return t("splitTip.line", { where, body, note });
 }
 
 /**
@@ -30,29 +34,29 @@ export function splitTip(where: string, split: ModeSplit | null, rides: SplitRid
  * as `splitTip`'s.
  */
 export function splitTable(where: string, split: ModeSplit | null, rides: SplitRides | null, lengths: TripLengths | null, note: string): string {
-  const head = `Per day${where}${note}`;
-  if (!split) return `${head}\nTrip count: –`;
+  const head = t("splitTip.perDay", { where, note });
+  if (!split) return t("splitTip.noSplit", { head });
   const c = modeColours();
   // T-2215's No route where some trips have none, here where its share shows as 0.1% or more
   const none = (split.none ?? 0) >= 0.05;
   const modes: { name: string; colour: string; trips: number; km: (t: TripLengths) => Float64Array }[] = [
-    { name: "Train", colour: c.train, trips: split.train, km: (t) => t.km.rail },
-    { name: "Walking", colour: c.walk, trips: split.walk, km: (t) => t.km.walk },
-    { name: "Driving", colour: c.drive, trips: split.drive, km: (t) => t.km.drive },
-    ...(none ? [{ name: "No route", colour: c.none, trips: split.none ?? 0, km: (t: TripLengths) => t.km.none }] : []),
+    { name: t("splitTip.train"), colour: c.train, trips: split.train, km: (l) => l.km.rail },
+    { name: t("splitTip.walking"), colour: c.walk, trips: split.walk, km: (l) => l.km.walk },
+    { name: t("splitTip.driving"), colour: c.drive, trips: split.drive, km: (l) => l.km.drive },
+    ...(none ? [{ name: t("splitTip.noRoute"), colour: c.none, trips: split.none ?? 0, km: (l: TripLengths) => l.km.none }] : []),
   ];
   const sum = (a: Float64Array) => a.reduce((s, v) => s + Math.max(0, v), 0);
   const km = lengths ? modes.map((m) => sum(m.km(lengths))) : null;
   const kmAll = lengths ? sum(lengths.km.rail) + sum(lengths.km.walk) + sum(lengths.km.drive) + sum(lengths.km.none) : 0;
   const colours = modes.map((m) => m.colour);
-  const pct = (v: number) => v.toFixed(1) + "%";
+  const pct = percent;
   const rows: string[][] = [
-    ["Trip count", tipSpan(modes.length, tipStrip(colours, false, modes.map((m) => m.trips))), rides ? count(rides.all) : ""],
-    ...(km && kmAll > 0 ? [["Distance", tipSpan(modes.length, tipStrip(colours, false, km)), `${count(kmAll)} km`]] : []),
+    [t("splitTip.tripCount"), tipSpan(modes.length, tipStrip(colours, false, modes.map((m) => m.trips))), rides ? count(rides.all) : ""],
+    ...(km && kmAll > 0 ? [[t("splitTip.distance"), tipSpan(modes.length, tipStrip(colours, false, km)), `${count(kmAll)} km`]] : []),
     [""],
     ["", ...modes.map((m) => `${tipBullet("", m.colour)}${m.name}`), ""],
-    ["Trip count", ...modes.map((m) => pct(m.trips)), ""],
-    ...(km && kmAll > 0 ? [["Distance", ...km.map((v) => pct((100 * v) / kmAll)), ""]] : []),
+    [t("splitTip.tripCount"), ...modes.map((m) => pct(m.trips)), ""],
+    ...(km && kmAll > 0 ? [[t("splitTip.distance"), ...km.map((v) => pct((100 * v) / kmAll)), ""]] : []),
   ];
   return `${head}\n${tipGrid(rows)}`;
 }

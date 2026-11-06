@@ -4,9 +4,10 @@
 // real track and the pointer resting near real track for 120 ms, the router worker
 // (workers/realRoute.worker.ts) finds the route and fits it; its real line is drawn as the ghost,
 // then the fitted track's preview replaces it with the usual tag. Nothing joining the two is a red
-// ghost and "No real track joins these points"; a pointer away from real track (or where there is no
+// ghost and t("realSnap.noTrack"); a pointer away from real track (or where there is no
 // graph) is an ordinary segment, which tools.ts draws.
 
+import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
@@ -39,7 +40,7 @@ const COVER_PAD = 0.05;
 /** The route the second click places: its real ends (lng, lat) and the fitted corners between. */
 export interface RealRoute { first: [number, number]; last: [number, number]; pis: PiInput[] }
 
-/** What a click places: a route, a refusal ("No real track joins these points"), or nothing to do
+/** What a click places: a route, a refusal (t("realSnap.noTrack")), or nothing to do
  * with the real network (an ordinary segment). */
 export type RealClick = { kind: "route"; route: RealRoute } | { kind: "refuse" } | null;
 
@@ -226,7 +227,7 @@ export class RealSnap {
   tag(): { text: string; bad: boolean; spin: boolean } | null {
     const s = this.spot;
     if (!this.active || !s) return null;
-    if (s.phase === "none") return { text: "No real track joins these points", bad: true, spin: false };
+    if (s.phase === "none") return { text: t("realSnap.noTrack"), bad: true, spin: false };
     if (s.phase === "done") return null;
     return { text: "", bad: false, spin: s.t0 > 0 && performance.now() - s.t0 > SLOW_MS };
   }

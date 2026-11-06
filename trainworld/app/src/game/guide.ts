@@ -15,6 +15,7 @@ import { trainsShown, world } from "./world";
 import { zoomedOut } from "../map/intercityView";
 import type { WorldView } from "./types";
 import { saveGuide } from "../workers/clockClient";
+import { t } from "../i18n";
 import type { GuideSave } from "../workers/saveFile";
 
 export type GuideId = "zoom" | "track" | "stations" | "construct" | "line" | "stops" | "trains" | "crowd" | "levels"
@@ -41,28 +42,28 @@ export const GUIDE_TRACK_M = 5000, GUIDE_STATIONS = 3, GUIDE_APART_M = 500;
 /** the last step's train share, % (Anita, T-2263: the region star's 10% was too far for a tutorial) */
 export const GUIDE_SHARE = 2;
 const WORDS: Record<Exclude<GuideId, "star">, string> = {
-  zoom: "Zoom into a city",
-  split: "Hover the red and green bar at the top of the screen to see how people travel",
-  homes: "Show Homes on the map",
-  bubble: "Click a red bubble to see where its trips go",
-  trip: "Click one of its destinations to see that trip",
-  track: "Place 5km of track",
-  stations: "Place stations on the track (space them 1-2km apart)",
-  construct: "Construct your blueprints",
-  line: "Create a line",
-  stops: "Assign stops for the line by clicking them on the map",
-  trains: "Add trains to the line",
-  play: "Unpause the game",
-  crowd: "Hover the dot by High to see if there are enough trains",
-  levels: "Add trains at high, medium and low demand",
-  traffic: "Show line traffic on the map",
+  get zoom() { return t("guide.zoom"); },
+  get split() { return t("guide.split"); },
+  get homes() { return t("guide.homes"); },
+  get bubble() { return t("guide.bubble"); },
+  get trip() { return t("guide.trip"); },
+  get track() { return t("guide.track"); },
+  get stations() { return t("guide.stations"); },
+  get construct() { return t("guide.construct"); },
+  get line() { return t("guide.line"); },
+  get stops() { return t("guide.stops"); },
+  get trains() { return t("guide.trains"); },
+  get play() { return t("guide.play"); },
+  get crowd() { return t("guide.crowd"); },
+  get levels() { return t("guide.levels"); },
+  get traffic() { return t("guide.traffic"); },
 };
 const NOTES: Partial<Record<GuideId, string>> = {
-  split: "Green is walking, red is cars and other modes, blue is your trains.",
-  homes: "A bubble shows trips from homes there. Red bubbles mostly drive and green bubbles mostly walk.",
-  crowd: "If trains are crowded, they will show as >100% capacity, and people will be less likely to ride. To carry more, you can increase train length.",
-  levels: "If only a short stretch is crowded, adding more trains can end up costing more than they earn.",
-  traffic: "Thicker lines represent more riders. Red borders indicate track at full capacity.",
+  get split() { return t("guide.splitNote"); },
+  get homes() { return t("guide.homesNote"); },
+  get crowd() { return t("guide.crowdNote"); },
+  get levels() { return t("guide.levelsNote"); },
+  get traffic() { return t("guide.trafficNote"); },
 };
 const step = (id: Exclude<GuideId, "star">, met: boolean, count?: GuideStep["count"]): GuideStep => ({ id, words: WORDS[id], note: NOTES[id], count, met });
 
@@ -128,7 +129,7 @@ function secondSteps(w: WorldView, trains: (line: string) => readonly number[] |
     step("crowd", crowdSeen.value),
     step("levels", levels >= 3, { have: levels, goal: 3 }),
     step("traffic", display.value.trackColour === "traffic"),
-    { id: "star", words: `Reach ${GUIDE_SHARE}% train share in ${cityById(city)?.name ?? "a city"}`, count: { have: starred ? GUIDE_SHARE : Math.min(share, GUIDE_SHARE), goal: GUIDE_SHARE, unit: "%" }, met: starred || share >= GUIDE_SHARE },
+    { id: "star", words: t("guide.star", { share: GUIDE_SHARE, city: cityById(city)?.name ?? t("guide.aCity") }), count: { have: starred ? GUIDE_SHARE : Math.min(share, GUIDE_SHARE), goal: GUIDE_SHARE, unit: "%" }, met: starred || share >= GUIDE_SHARE },
   ];
 }
 

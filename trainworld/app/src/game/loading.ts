@@ -9,6 +9,7 @@
 // the player can look around and build while demand loads. Only a failed load puts up a screen
 // (ui/LoadingScreen.tsx).
 
+import { t } from "../i18n";
 import { computed, effect, signal } from "@preact/signals";
 import { isMemoryFailure } from "./loadText";
 import { leftText } from "./loadBar";
@@ -200,7 +201,7 @@ export const stalledMs = (now = performance.now()) => (now - stepAt >= STALL_MS 
 export function loadLines(z: { step?: string; leftMs: number | null; at: number } | undefined, now = performance.now()): string[] {
   const out = z?.step ? [z.step] : [];
   const quiet = stalledMs(now);
-  if (quiet) out.push(`No progress for ${quiet < 60_000 ? `${Math.floor(quiet / 10_000) * 10} s` : `${Math.floor(quiet / 60_000)} min`}`);
+  if (quiet) out.push(quiet < 60_000 ? t("loading.stalledSeconds", { n: Math.floor(quiet / 10_000) * 10 }) : t("loading.stalledMinutes", { n: Math.floor(quiet / 60_000) }));
   else if (z && z.leftMs !== null) out.push(leftText(Math.max(0, z.leftMs - (now - z.at))));
   return out;
 }

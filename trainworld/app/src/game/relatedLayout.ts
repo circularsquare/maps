@@ -3,6 +3,7 @@
 // `decodeRelated`'s groups. Pure, so a Node check can run it (checks/t1168-layout.mjs); drawn by
 // ui/inspector/RelatedStops.tsx.
 
+import { t, tList } from "../i18n";
 import type { RelatedGroup } from "./relatedLines";
 
 /** The selected line's width, a side line's (as thin as a crossing line's bar, Anita 2026-10-26; 2.5
@@ -91,9 +92,6 @@ export interface RelatedLayout {
 interface Row { lStop: number; ref: { line: number; stop: number }; sL: number; complex: number; stops: Set<number>; cross: number[]; marks: number[] }
 interface Item { g: number; line: number; r0: number; r1: number; up: boolean; down: boolean; shared: number; own: number; side?: "L" | "R"; slot?: number }
 
-function andList(xs: string[]): string {
-  return xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
-}
 
 /** A loop's last stop is its first: a meeting there belongs to the first row, except where a line
  * beside it runs on across the seam to the end, whose column then goes on past the last row. */
@@ -306,7 +304,7 @@ export function relatedLayout(groupsIn: RelatedGroup[], o: LayoutOpts): RelatedL
     const who = (it: Item | null) => o.lineName(it ? it.line : L);
     const stopping = on.filter(({ it }) => stopsHere(it)).map(({ it }) => who(it));
     const passing = on.filter(({ it }) => !stopsHere(it)).map(({ it }) => who(it));
-    const tip = `${andList(stopping)} ${stopping.length === 1 ? "stops" : "stop"} at ${name(i)}` + (passing.length ? `\n${andList(passing)} ${passing.length === 1 ? "passes" : "pass"}` : "");
+    const tip = t("relatedLayout.stops", { n: stopping.length, lines: tList(stopping), station: name(i) }) + (passing.length ? "\n" + t("relatedLayout.passes", { n: passing.length, lines: tList(passing) }) : "");
     let run: number[] = [], withLine = false;
     for (const c of [...on, null]) {
       if (c && stopsHere(c.it)) { run.push(c.x); if (!c.it) withLine = true; }

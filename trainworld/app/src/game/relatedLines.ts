@@ -56,7 +56,7 @@ export function decodeRelated(v: ArrayLike<number>): RelatedGroup[] {
   while (i + 17 <= v.length) {
     const [nm, nt, ng, no] = [v[i + 13], v[i + 14], v[i + 15], v[i + 16]];
     const g: RelatedGroup = {
-      line: v[i], kind: v[i + 1] === 1 ? "beside" : "crossing", shared: v[i + 2] === 1, dir: v[i + 3] < 0 ? -1 : 1,
+      line: v[i], kind: v[i + 1] === 1 ? "beside" : "crossing", shared: v[i + 2] === 1, dir: v[i + 3] < 0 ? -1 : 1, // i18n-ignore
       sL0: v[i + 4], sL1: v[i + 5], sO0: v[i + 6], sO1: v[i + 7], stopsBefore: v[i + 8], stopsAfter: v[i + 9],
       split: Number.isNaN(v[i + 11]) ? null : { stray: v[i + 10], run: v[i + 11], lStep: v[i + 12] },
       meetings: [], track: [], gaps: [], own: [],

@@ -1,10 +1,11 @@
 // T-1270: the terrain classes the track price adds for (sim `TERRAIN_SURCHARGE`, params.rs), with
 // their names and the colour the track tool's tag and the blueprint breakdown give them.
 
+import { lazyTexts } from "./lazyText";
 import { signal } from "@preact/signals";
 
 // T-1547: classes 1 and 2 are both "Hills"; the surcharge shown beside the name tells them apart
-export const TERRAIN_NAMES = ["Flat", "Hills", "Hills", "Mountains"] as const;
+export const TERRAIN_NAMES = lazyTexts(["terrain.flat", "terrain.hills", "terrain.hills", "terrain.mountains"]);
 /** what each class adds to the level's multiplier (sim `TERRAIN_SURCHARGE`, T-1890) */
 export const TERRAIN_SURCHARGES = [0, 0.5, 1.2, 3] as const;
 /** what water adds to track's multiplier at any level (sim `WATER_SURCHARGE`) */

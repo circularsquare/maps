@@ -15,6 +15,7 @@ import { awayNear, awaySoon, dateRange, rushRun, rushSoon, whenAway, whenBack, w
 import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
+import { t, type MessageKey } from "../i18n";
 
 export const data = signal<HolidayData | null>(null);
 let asked = false, watching = false;
@@ -252,13 +253,13 @@ export function calendarAt(t: number, only: string | null): { lines: string[]; o
 
 /** Names the calendar gives one holiday in different countries (T-1098), and the name it is shown by
  * when several countries keep it on one date. */
-const SAME: [RegExp, string][] = [
-  [/^((international|national) )?(labou?r|workers'|worker's)( day)?$|^may day$|^labou?r day and international workers' solidarity day$|^international workers' solidarity day$|^holiday of spring and labou?r$|^festa dei lavoratori$/i, "Labor Day"],
-  [/^(catholic )?christmas( day)?( \(by new style\))?$|^natale$/i, "Christmas Day"],
-  [/^boxing day$|^saint stephen's day$|^santo stefano$|^second day of christmas$|^christmas second day$|^day (after|following) christmas$/i, "Boxing Day"],
-  [/^new year's day$|^international new year day$|^capodanno$/i, "New Year's Day"],
+const SAME: [RegExp, MessageKey][] = [
+  [/^((international|national) )?(labou?r|workers'|worker's)( day)?$|^may day$|^labou?r day and international workers' solidarity day$|^international workers' solidarity day$|^holiday of spring and labou?r$|^festa dei lavoratori$/i, "holidays.laborDay"],
+  [/^(catholic )?christmas( day)?( \(by new style\))?$|^natale$/i, "holidays.christmasDay"],
+  [/^boxing day$|^saint stephen's day$|^santo stefano$|^second day of christmas$|^christmas second day$|^day (after|following) christmas$/i, "holidays.boxingDay"],
+  [/^new year's day$|^international new year day$|^capodanno$/i, "holidays.newYearsDay"],
 ];
-const sameAs = (name: string) => SAME.find(([re]) => re.test(name))?.[1] ?? name;
+const sameAs = (name: string) => { const key = SAME.find(([re]) => re.test(name))?.[1]; return key ? t(key) : name; };
 
 export interface HolidayGroup {
   name: string;

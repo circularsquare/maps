@@ -7,6 +7,7 @@
 // (T-221). The trip stays selected when the tool is left (Esc), so
 // it can be read in the inspector, until the selection is cleared.
 
+import { t as tr, tNumber } from "../i18n";
 import { computed, effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
@@ -266,7 +267,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     if (answered && marks?.to && !drawn?.parts.length) {
       const anyRoute = v.trip ? v.trip.periods.some((p) => p?.routes.length && (p.railOffered || countsTrain(v.mix))) : (v.market?.periods ?? []).some((p) => p?.routes.length);
       const d = metresBetween(...packToLngLat(marks.from[0], marks.from[1]), ...packToLngLat(marks.to[0], marks.to[1]));
-      straight = [anyRoute ? "No train route at this time of day" : "No train route between these two points", `${distance(d)} in a straight line`];
+      straight = [tr(anyRoute ? "tripView.noRoutePeriod" : "tripView.noRoute"), tr("tripView.straight", { distance: distance(d) })];
     } else straight = null;
     redraw();
   };
@@ -288,11 +289,11 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     const z = map.getZoom();
     const tol = HIT_PX * unitPerPxAt(z);
     const loc = (p: [number, number]) => { const [lng, lat] = packToLngLat(p[0], p[1]); return toLocal(lng, lat); };
-    for (const [p, tip, at, st] of [[marks.to, "Where the trip ends", "The trip ends at", marks.toStation], [marks.from, "Where the trip starts", "The trip starts at", marks.fromStation]] as const) {
+    for (const [p, tip, at, st] of [[marks.to, "tripView.endsWhere", "tripView.endsAt", marks.toStation], [marks.from, "tripView.startsWhere", "tripView.startsAt", marks.fromStation]] as const) {
       if (!p) continue;
       const [x, y] = loc(p);
       const name = stationName(st);
-      if (Math.hypot(x - lx, y - ly) <= tol * 1.5) return [name ? `${at} ${name}` : tip];
+      if (Math.hypot(x - lx, y - ly) <= tol * 1.5) return [name ? tr(at, { name }) : tr(tip)];
     }
     const parts = drawn?.parts ?? [];
     for (const s of drawn?.stops ?? []) {
@@ -446,7 +447,7 @@ async function exploreMarket(end: "home" | "work", cells: Uint32Array, fars: Mar
   const all = asked as (MarketPeriod | null)[][];
   // T-885: a group of far ends as one
   const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.id, s.name]));
-  const periods = all.length === 1 ? all[0] : all[0].map((_, q) => mergeMarketPeriods(all.map((a) => a[q]), routeLabel(names)));
+  const periods = all.length === 1 ? all[0] : all[0].map((_, q) => mergeMarketPeriods(all.map((a) => a[q]), routeLabel(names))); // i18n-ignore
   let busiest: number | null = null;
   // T-880: every kind of trip between the two ends counts
   const n = (p: MarketPeriod) => p.trips + p.commute.legs + p.everyday.legs;
@@ -594,12 +595,12 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     const s = st.get(id);
     return s ? toLocal(s.lng, s.lat) : null;
   };
-  const name = (id: string) => names.get(id) ?? "a station";
+  const name = (id: string) => names.get(id) ?? tr("tripView.aStation");
   const from = packLocal(fromPack), to = packLocal(toPack);
   const segs = strokesByLine(net);
   const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
   const out: Drawn = { parts: [], stops: [] };
-  const share = (r: TripRoute) => `${Math.round(100 * r.share)}% of the train trips between these places take this route`;
+  const share = (r: TripRoute) => tr("tripView.share", { share: tNumber(Math.round(100 * r.share)) });
   // the main one on top, then the route opened in the inspector (T-870) over it
   const label = routeLabel(names);
   const open = openRoute.peek();
@@ -619,23 +620,23 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     // T-865: an averaged trip's pair walks from its own cells
     const start = pair?.from ? packLocal(pair.from) : from, end = pair?.to ? packLocal(pair.to) : to;
     if (a && pair) out.parts.push({ pts: [start, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [`To ${name(first.from)}`, `On foot or by car, effective time ${minutes(pair.accessPerceived)} on average over the area`]
-      : [`${pair.accessRide ? "Drive" : "Walk"} ${distance(pair.accessM)} to ${name(first.from)}, ${minutes(pair.accessMin)}`, pair.accessRide ? "Straight-line distance from the homes near here" : "Straight-line distance from this home"] });
+      ? [tr("tripView.to", { name: name(first.from) }), tr("tripView.accessArea", { time: minutes(pair.accessPerceived) })]
+      : [tr("tripView.access", { drive: !!pair.accessRide, distance: distance(pair.accessM), name: name(first.from), time: minutes(pair.accessMin) }), tr(pair.accessRide ? "tripView.straightHomes" : "tripView.straightHome")] });
     for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track, !!w.lineStats[l.line]?.bus));
     if (b && pair) out.parts.push({ pts: [b, end], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [`From ${name(last.to)}`, `On foot or dropped off, effective time ${minutes(pair.egressPerceived)} on average over the area`]
-      : [`Walk ${distance(pair.egressM)} from ${name(last.to)}, ${minutes(pair.egressMin)}`, "Straight-line distance to this place"] });
+      ? [tr("tripView.from", { name: name(last.to) }), tr("tripView.egressArea", { time: minutes(pair.egressPerceived) })]
+      : [tr("tripView.egress", { distance: distance(pair.egressM), name: name(last.to), time: minutes(pair.egressMin) }), tr("tripView.straightPlace")] });
     if (main) {
       for (const l of legs) {
         if (l.kind !== "ride") continue;
         l.stations.forEach((id, k) => {
           const p = pos(id);
           const ends = k === 0 || k === l.stations.length - 1;
-          const line = ln.get(l.line)?.name ?? "the line";
+          const line = ln.get(l.line)?.name ?? tr("tripView.theLine");
           // T-1902: the main route's boardings, changes and last stop named on the map, as in the inspector's rows
           const label = ends && r === t.routes[0] && !labelled.has(name(id)) ? name(id) : undefined;
           if (label) labelled.add(label);
-          if (p) out.stops.push({ at: p, big: ends, tip: [name(id), k === 0 ? `Board ${line} here` : k === l.stations.length - 1 ? `Leave ${line} here` : `${line} stops here`], label });
+          if (p) out.stops.push({ at: p, big: ends, tip: [name(id), k === 0 ? tr("tripView.board", { line }) : k === l.stations.length - 1 ? tr("tripView.leave", { line }) : tr("tripView.stopsHere", { line })], label });
         });
       }
     }
@@ -646,7 +647,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
 function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Map<string, { name: string; colour: string }>, pos: (id: string) => [number, number] | null, name: (id: string) => string, share: string, track: (l: TripLeg) => [number, number][] | null, bus = false) {
   if (l.kind === "walk") {
     const pts = [pos(l.from), pos(l.to)].filter((p): p is [number, number] => !!p);
-    return { pts, colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [`Walk from ${name(l.from)} to ${name(l.to)}, ${minutes(l.min)}`, share] };
+    return { pts, colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: [tr("tripView.walk", { from: name(l.from), to: name(l.to), time: minutes(l.min) }), share] };
   }
   const line = ln.get(l.line);
   const pts = track(l) ?? l.stations.map(pos).filter((p): p is [number, number] => !!p);
@@ -654,8 +655,8 @@ function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Ma
   return {
     pts, colour: line?.colour ?? NET_INK, width, dash: false, alpha,
     tip: [
-      `${line?.name ?? "A line"} from ${name(l.from)} to ${name(l.to)}`,
-      `${count(l.stops)} ${l.stops === 1 ? "stop" : "stops"}, ${minutes(l.min)} on the ${bus ? "bus" : "train"} after a ${minutes(l.waitMin)} wait${crowd >= 0.5 ? `; effective time ${minutes(l.perceived)} with crowding` : ""}`,
+      tr("tripView.ride", { line: line?.name ?? tr("tripView.aLine"), from: name(l.from), to: name(l.to) }),
+      tr("tripView.rideDetail", { stops: l.stops, time: minutes(l.min), bus, wait: minutes(l.waitMin), crowded: crowd >= 0.5, perceived: minutes(l.perceived) }),
       share,
     ],
   };

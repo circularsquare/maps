@@ -361,8 +361,8 @@ export interface SyncRecord {
   error?: string;
 }
 export const ORIGINAL_SLOT = "autosave";
-export const ORIGINAL_NAME = "Original game";
-export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); }
+export const ORIGINAL_NAME = "Original game"; // i18n-ignore: a slot's saved name
+export function slotName(key: string, save?: StoredSave | null): string { return save?.name || (key === ORIGINAL_SLOT ? ORIGINAL_NAME : "Saved game"); } // i18n-ignore: a slot's saved name
 
 /** T-1829: a connection the browser closes (site data cleared, the database deleted in another tab)
  * is forgotten, so the next call opens the database again, made afresh if it went. */
@@ -590,14 +590,14 @@ export function nextGameName(slots: { name: string }[]): string {
   const names = new Set(slots.map((s) => s.name));
   let n = slots.length + 1;
   while (names.has(`Game ${n}`)) n++;
-  return `Game ${n}`;
+  return `Game ${n}`; // i18n-ignore: a slot's saved name
 }
 
 /** A new game's slot name (T-728): its start city, or "World" for a map start, then " sandbox" for
  * a sandbox, then " 2", " 3" and on if a slot already has the name. */
 export function newGameName(slots: { name: string }[], spec: NewGameSpec): string {
   const start = registry.cities.find((c) => c.id === spec.start);
-  const base = (start ? zoneName(start.id, start.name) : "World") + (spec.mode === "sandbox" ? " sandbox" : "");
+  const base = (start ? zoneName(start.id, start.name) : "World") + (spec.mode === "sandbox" ? " sandbox" : ""); // i18n-ignore: a slot's saved name
   const names = new Set(slots.map((s) => s.name));
   let name = base;
   for (let n = 2; names.has(name); n++) name = `${base} ${n}`;

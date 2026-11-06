@@ -13,6 +13,7 @@
 // dragging still reach the map under a marker. Everything else the mode changes (the demand views
 // hidden, other lines dimmed) is a class on the page and one renderer option (main.ts, style.css).
 
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
@@ -324,18 +325,18 @@ export class StopMarkers {
 
   /** What hovering a marker says. */
   private words(id: string): string[] {
-    const name = this.names.get(id) ?? "Station";
+    const name = this.names.get(id) ?? t("stopMarkers.station");
     switch (this.tierOf(id)) {
-      case "on": return [name, "Click to remove the stop"];
-      case "close": return [name, "Click to close the loop"];
-      case "open": return [name, "Click to open the loop"];
-      case "route": return [name, "Click to add a stop"];
-      case "reroute": return [name, "Click to add a stop and change the route"];
+      case "on": return [name, t("stopMarkers.remove")];
+      case "close": return [name, t("stopMarkers.closeLoop")];
+      case "open": return [name, t("stopMarkers.openLoop")];
+      case "route": return [name, t("stopMarkers.add")];
+      case "reroute": return [name, t("stopMarkers.addReroute")];
       case "reverse": {
         const at = this.revAt.get(id);
-        return [name, `Click to add a stop. Trains reverse at ${at === "" ? "the end of the track" : this.names.get(at ?? "") ?? "a station"}`];
+        return [name, at === "" ? t("stopMarkers.reverseEnd") : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? "") }) : t("stopMarkers.reverseSome")];
       }
-      default: return [name, "No track joins it to this line"];
+      default: return [name, t("stopMarkers.noTrack")];
     }
   }
 
@@ -367,10 +368,10 @@ export class StopMarkers {
   /** A click on the marker of station `id`. */
   activate(id: string, px: number, py: number) {
     if (this.tierOf(id) === "cut") {
-      const name = this.names.get(id) ?? "That station";
+      const name = this.names.get(id) ?? t("stopMarkers.thatStation");
       this.hideTag();
       this.reasonFor = id;
-      this.showTag([`${name} is not on track this line can reach.`, "Draw track from the line to it first."], px, py, true);
+      this.showTag([t("stopMarkers.cutOff", { name }), t("stopMarkers.drawFirst")], px, py, true);
       this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
       this.showGap(id);
       return;

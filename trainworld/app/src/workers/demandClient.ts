@@ -26,6 +26,7 @@
 //   boundary; game/demand.ts keeps the last finished result until every period of the new one
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
@@ -764,6 +765,7 @@ class DemandClient {
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.focusSoon(); });
     const n = (this.computeN = this.poolN = poolSize());
     solveWaves = Math.ceil(PERIODS.length / n);
+    // i18n-ignore: a stored name or a developer diagnostic
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     for (let i = 0; i <= n; i++) this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
     this.marketsOf = marketsOfWorkers(n);
@@ -826,8 +828,9 @@ class DemandClient {
     w.onmessage = (e: MessageEvent<FromDemand>) => { const j = at(); if (j >= 0) this.receive(j, e.data); };
     // an uncaught WASM trap is a panic as `dead` reports one
     // (T-2478: a worker whose script did not download has an error with no message)
+    // i18n-ignore
     w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
-    w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); };
+    w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
     const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
     w.postMessage(msg);
@@ -1578,6 +1581,7 @@ class DemandClient {
       }
       const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(this.firstZones().includes(id) ? { first: true } : {}) };
       this.workers[this.computeN].postMessage(msg, [own]);
+    // i18n-ignore: a stored name or a developer diagnostic
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
 
@@ -1603,7 +1607,7 @@ class DemandClient {
       this.postMarkets();
     }).catch((err) => {
       this.marketsDownloading.delete(id);
-      this.unreachable(item, id, `market pack ${id}: ${String(err)}`);
+      this.unreachable(item, id, `market pack ${id}: ${String(err)}`); // i18n-ignore
       this.postMarkets();
     });
   }
@@ -1668,7 +1672,7 @@ class DemandClient {
     }, wait) as unknown as number : 0;
     this.broken.set(item, { tries, timer });
     const failures = new Map(zoneFailures.peek());
-    failures.set(zone, `${why}. ${retry ? "It is tried again within a minute." : "It stays out until the page is reloaded."}`);
+    failures.set(zone, t("demandClient.zoneFailed", { why, retry }));
     zoneFailures.value = failures;
     this.ensure();
     // a game load's hold may have been waiting for this zone alone
@@ -1695,7 +1699,7 @@ class DemandClient {
       this.unack(item);
       this.packAcks.delete(item);
     }
-    this.unreachable(item, r.id, `${r.market ? "market pack" : "city pack"} ${r.id} would not open: ${r.error}`, fails < 2);
+    this.unreachable(item, r.id, `${r.market ? "market pack" : "city pack"} ${r.id} would not open: ${r.error}`, fails < 2); // i18n-ignore
   }
 
   /** `item` downloaded: whatever failed before for it is over, unless it also did not open. */
@@ -2525,7 +2529,7 @@ class DemandClient {
   private workerDied(i: number, why: string, planned = false) {
     if (this.failed) return;
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
-    if (!planned && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`);
+    if (!planned && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
     if (planned) console.info(`demand: worker ${i} restarted to give back memory: ${why}`);
     else { console.warn(`demand: worker ${i} panicked, replaced: ${why}`); this.respawns++; }
     this.respawn.set(i, { left: null, solving: false, planned });
@@ -2573,7 +2577,7 @@ class DemandClient {
       if (bares.length) w.postMessage({ kind: "open", packs: bares, bare: true } satisfies ToDemand, bares.map((p) => p.bin));
       if (!r.left.size) this.reopened(i);
     } catch (err) {
-      if (this.respawn.get(i) === r) this.fail(`worker ${i}: its replacement could not reopen its packs: ${String(err)}`);
+      if (this.respawn.get(i) === r) this.fail(`worker ${i}: its replacement could not reopen its packs: ${String(err)}`); // i18n-ignore
     }
   }
 
@@ -2681,7 +2685,7 @@ class DemandClient {
     if (!over.length) return;
     const wait = this.quietIn();
     if (wait > 0) return this.memSoon(wait);
-    for (const o of over) this.workerDied(o.i, `${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`, true);
+    for (const o of over) this.workerDied(o.i, `${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`, true); // i18n-ignore
   }
 
   /** Before a solve: fewer solving workers when their projected memory with the rest of the page would
@@ -2697,6 +2701,7 @@ class DemandClient {
     const aux = (this.needOf(this.computeN) ?? 0) + js, budget = memBudget();
     let n = this.computeN;
     while (n > 1 && other + n * (per + js) + aux > budget) n--;
+    // i18n-ignore
     if (n < this.computeN) this.shrink(n, `about ${mb(per + js)} MB a solving worker, ${mb(aux)} MB the aux worker, ${mb(other)} MB the rest of the page, against ${mb(budget)} MB`);
   }
 
@@ -2735,7 +2740,7 @@ class DemandClient {
 
   /** Dev server only (`?debug=1`, `twDemand.client.debugRestart`): restart workers as `memCheck` does. */
   debugRestart(...workers: number[]) {
-    if (import.meta.env.DEV) for (const i of workers) this.workerDied(i, "a test restart", true);
+    if (import.meta.env.DEV) for (const i of workers) this.workerDied(i, "a test restart", true); // i18n-ignore
   }
 
   /** Each worker's memory as last reported, MB (`twDemand.client.memory()`, checks). */
@@ -3132,7 +3137,8 @@ class DemandClient {
   }
 
   private receive(i: number, msg: FromDemand) {
-    if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`);
+    if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`); // i18n-ignore
+    // i18n-ignore
     if (msg.kind === "dead") return this.workerDied(i, `${msg.error}${msg.panic ? ` (${msg.panic})` : ""}, ${Math.round(msg.memBytes / 2 ** 20)} MB of WASM memory`);
     if (msg.kind === "packOpened") {
       const item = msg.market ? marketItem(msg.id) : msg.id;

@@ -2,6 +2,8 @@
 // bullet reads this (ui/widgets.tsx's Chip, map/trackTagRows.ts's lineBullet) and draws dimmed
 // where a line is not running, so a line left without trains is not forgotten.
 
+import { effect } from "@preact/signals";
+import { t } from "../i18n";
 import { computed } from "@preact/signals";
 import { demandAt, lineSeconds } from "./clock";
 import { DEMAND_INDEX, type LineStats } from "./types";
@@ -31,4 +33,5 @@ export const idleLines = computed<ReadonlySet<string>>(() => {
 export const isIdleLine = (id: string): boolean => idleLines.value.has(id);
 
 /** The hover line a dimmed bullet adds. */
-export const IDLE_TIP = "Not running";
+export let IDLE_TIP = "";
+effect(() => { IDLE_TIP = t("lineRunning.idle"); });

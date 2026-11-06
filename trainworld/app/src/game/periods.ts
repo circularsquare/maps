@@ -5,6 +5,7 @@
 // workers report the Rust table when they start and the demand client checks the two agree
 // (workers/demandClient.ts), so an edit to one without the other shows up as a console error.
 
+import { t } from "../i18n";
 import type { Demand } from "./types";
 
 export interface Period {
@@ -16,11 +17,11 @@ export interface Period {
 }
 
 export const PERIODS: readonly Period[] = [
-  { name: "Morning peak", from: 6, to: 10, demand: "high" },
-  { name: "Midday", from: 10, to: 16, demand: "high" },
-  { name: "Evening peak", from: 16, to: 20, demand: "high" },
-  { name: "Evening", from: 20, to: 24, demand: "medium" },
-  { name: "Night", from: 0, to: 6, demand: "low" },
+  { get name() { return t("periods.morningPeak"); }, from: 6, to: 10, demand: "high" },
+  { get name() { return t("periods.midday"); }, from: 10, to: 16, demand: "high" },
+  { get name() { return t("periods.eveningPeak"); }, from: 16, to: 20, demand: "high" },
+  { get name() { return t("periods.evening"); }, from: 20, to: 24, demand: "medium" },
+  { get name() { return t("periods.night"); }, from: 0, to: 6, demand: "low" },
 ];
 
 const LEVEL_INDEX: Record<Demand, number> = { high: 0, medium: 1, low: 2 };

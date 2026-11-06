@@ -5,6 +5,7 @@
 // (DECISIONS 2026-10-26, T-1531).
 // Redrawn with each MapLibre frame and when the figures change, never per train frame.
 
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
@@ -100,7 +101,7 @@ export function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: Worl
       k++;
     }
     if (!k) continue;
-    out.push({ x: x / k, y: y / k, riders, transfers: mode === "transfers" ? riders : transfers, station: top, name: names.get(top) ?? "Station" });
+    out.push({ x: x / k, y: y / k, riders, transfers: mode === "transfers" ? riders : transfers, station: top, name: names.get(top) ?? t("stationCircles.station") });
   }
   circles = out.sort((a, b) => b.riders - a.riders);
   return circles;

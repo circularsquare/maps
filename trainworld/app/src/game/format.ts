@@ -2,6 +2,7 @@
 
 import type { Level } from "./types";
 import { display } from "./ui";
+import { t, tList, tNumber } from "../i18n";
 
 // one formatter each: `toLocaleString` makes a new one per call, 5-10 µs, which a panel of a few
 // thousand rows felt (T-1165)
@@ -18,7 +19,7 @@ export const forecast = (n: number): string => exact(n >= 1000 ? Math.round(n / 
 export const plural = (n: number, one: string, many = one + "s"): string => `${UP_TO_3.format(n)} ${n === 1 ? one : many}`;
 
 /** ["a", "b", "c"] -> "a, b and c" */
-export const andList = (names: string[]): string => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`);
+export const andList = (names: string[]): string => tList(names);
 
 export const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -91,7 +92,7 @@ export function distance(m: number): string {
 /** A long length with thousands separators, whole above 100: "4,499 km", "62.4 km". */
 export function bigDistance(m: number): string {
   const v = m / (us() ? M_PER_MILE : 1000);
-  return `${v.toLocaleString("en-US", { maximumFractionDigits: v >= 100 ? 0 : 1 })} ${us() ? "mi" : "km"}`;
+  return `${tNumber(v, { maximumFractionDigits: v >= 100 ? 0 : 1 })} ${us() ? "mi" : "km"}`;
 }
 
 /** A position along something and its whole length: "1.2 of 5.4 km". */
@@ -113,7 +114,7 @@ export function wholeDistance(m: number): string {
 /** Short lengths to the unit: platforms, curve radii, a walk. 1250 -> "1,250 m" or "4,100 ft"; feet to the nearest 10. */
 export function length(m: number): string {
   const v = us() ? Math.round((m * FT_PER_M) / 10) * 10 : Math.round(m);
-  return `${v.toLocaleString("en-US")} ${us() ? "ft" : "m"}`;
+  return `${tNumber(v)} ${us() ? "ft" : "m"}`;
 }
 
 /** A floor's area, three significant figures: 90700 -> "90,700 m²" or "976,000 sq ft" (T-2218). */
@@ -124,7 +125,7 @@ export function area(m2: number): string {
 
 /** A price per area, US$ a m²: 2000 -> "$2,000 per m²" or "$186 per sq ft". */
 export function perArea(usdPerM2: number): string {
-  return us() ? `$${exact(usdPerM2 / (FT_PER_M * FT_PER_M))} per sq ft` : `$${exact(usdPerM2)} per m²`;
+  return us() ? t("format.perSqFt", { amount: "$" + exact(usdPerM2 / (FT_PER_M * FT_PER_M)) }) : t("format.perM2", { amount: "$" + exact(usdPerM2) });
 }
 
 /** A distance from here: metres to the nearest 10, then kilometres; feet, then miles. */
@@ -145,13 +146,13 @@ export function speed(kmh: number, nearest = 1): string {
 
 /** Round lengths a scale bar can show, shortest first, in metres with their labels. */
 export function scaleBars(): [number, string][] {
-  if (us()) return [50, 100, 200, 500, 1000, 2000, 5280].map((ft) => [ft / FT_PER_M, ft === 5280 ? "1 mi" : `${ft.toLocaleString("en-US")} ft`]);
+  if (us()) return [50, 100, 200, 500, 1000, 2000, 5280].map((ft) => [ft / FT_PER_M, ft === 5280 ? `${tNumber(1)} mi` : `${tNumber(ft)} ft`]);
   return [10, 20, 50, 100, 200, 500, 1000].map((m) => [m, m >= 1000 ? `${m / 1000} km` : `${m} m`]);
 }
 
 /** The unit a per-distance price is quoted in. */
 export function distUnit(): string {
-  return us() ? "mile" : "km";
+  return t("format.distUnit", { us: us() });
 }
 
 /** A price or quantity per km, per shown unit. */
@@ -165,34 +166,34 @@ const perUnitText = (perKm: number) => {
 };
 /** T-807: "$9 per train-km plus $2 per car-km", in the shown unit. */
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
-  return `${perUnitText(m.runCostTrainKm)} per train-${distUnit()} plus ${perUnitText(m.runCostCarKm)} per car-${distUnit()}`;
+  return t("format.runCostRule", { train: perUnitText(m.runCostTrainKm), car: perUnitText(m.runCostCarKm), unit: distUnit() });
 }
 type UpkeepRates = { upkeepTrackKm: number; upkeepViaductKm: number; upkeepCutKm: number; upkeepBoredKm: number; upkeepStation: number; economy: number };
 /** T-867, T-1931: "$20k per km of ground track per day, $25k on a viaduct, $35k in cut and cover, $40k in a bored tunnel and $50k per station per day", at the game's economy, in the shown unit. */
 export function upkeepRule(m: UpkeepRates): string {
   const km = (v: number) => money(perDistance(v * m.economy));
-  return `${km(m.upkeepTrackKm)} per ${distUnit()} of ground track per day, ${km(m.upkeepViaductKm)} on a viaduct, ${km(m.upkeepCutKm)} in cut and cover, ${km(m.upkeepBoredKm)} in a bored tunnel and ${money(m.upkeepStation * m.economy)} per station per day`;
+  return t("format.upkeepRule", { track: km(m.upkeepTrackKm), unit: distUnit(), viaduct: km(m.upkeepViaductKm), cut: km(m.upkeepCutKm), bored: km(m.upkeepBoredKm), station: money(m.upkeepStation * m.economy) });
 }
 /** T-1838, T-1931: the Upkeep row's hover, six lines: "$20k per km of ground track per day", "$25k on a viaduct", "$35k in cut and cover", "$40k in a bored tunnel", "$50k per station per day", "High speed rail 1.5x". */
 export function upkeepLines(m: UpkeepRates & { upkeepHsr: number }): string {
   const km = (v: number) => money(perDistance(v * m.economy));
-  return `${km(m.upkeepTrackKm)} per ${distUnit()} of ground track per day\n${km(m.upkeepViaductKm)} on a viaduct\n${km(m.upkeepCutKm)} in cut and cover\n${km(m.upkeepBoredKm)} in a bored tunnel\n${money(m.upkeepStation * m.economy)} per station per day\nHigh speed rail ${m.upkeepHsr}x`;
+  return t("format.upkeepLines", { track: km(m.upkeepTrackKm), unit: distUnit(), viaduct: km(m.upkeepViaductKm), cut: km(m.upkeepCutKm), bored: km(m.upkeepBoredKm), station: money(m.upkeepStation * m.economy), hsr: m.upkeepHsr });
 }
 /** T-2006: the elevation hovers' line, "Upkeep $25k per km per day"; `perKm` is one km of the track type at that level (regionMoney `edgeUpkeep`). */
 export function levelUpkeepLine(perKm: number): string {
-  return `Upkeep ${money(perDistance(perKm))} per ${distUnit()} per day`;
+  return t("format.levelUpkeepLine", { amount: money(perDistance(perKm)), unit: distUnit() });
 }
 /** T-1838: the Running trains row's hover: "Trains cost $4 per km, plus $2 per train car". */
 export function runCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
-  return `Trains cost ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per train car`;
+  return t("format.runCostLine", { train: perUnitText(m.runCostTrainKm), unit: distUnit(), car: perUnitText(m.runCostCarKm) });
 }
 /** T-1893: the train length's hover line: "Running a train costs $4 per km, plus $2 per car". */
 export function trainCostLine(m: { runCostTrainKm: number; runCostCarKm: number }): string {
-  return `Running a train costs ${perUnitText(m.runCostTrainKm)} per ${distUnit()}, plus ${perUnitText(m.runCostCarKm)} per car`;
+  return t("format.trainCostLine", { train: perUnitText(m.runCostTrainKm), unit: distUnit(), car: perUnitText(m.runCostCarKm) });
 }
 /** The upkeep rule as a sentence; `lead` is "Upkeep" or "Once constructed, upkeep". */
 export function upkeepText(m: UpkeepRates & { upkeepHsr: number; upkeepSingle: number }, lead: string): string {
-  return `${lead} is ${upkeepRule(m)}, whether trains run or not. High-speed track costs ${m.upkeepHsr} times as much and single track ${m.upkeepSingle} times.`;
+  return t("format.upkeepText", { lead, rule: upkeepRule(m), hsr: m.upkeepHsr, single: m.upkeepSingle });
 }
 type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
 /** One kind of train's car price, running costs and spare cars (T-817: high-speed or ordinary). */
@@ -202,14 +203,14 @@ export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCost
     : { carPrice: m.carPrice, runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, spare: Math.max(0, m.fleet - m.carsNeeded) };
 }
 
-export const busesText = (n: number) => plural(n, "bus", "buses");
+export const busesText = (n: number) => t("format.buses", { n });
 /** T-1464: "$3 per bus-km", in the shown unit. */
-export const busRunRule = (m: { runCostBusKm: number }) => `${perUnitText(m.runCostBusKm)} per bus-${distUnit()}`;
+export const busRunRule = (m: { runCostBusKm: number }) => t("format.busRunRule", { amount: perUnitText(m.runCostBusKm), unit: distUnit() });
 /** T-1464: a route's price on Construct, "$1M per km of route". */
-export const busRouteRule = (m: { busRouteKm: number }) => `${money(perDistance(m.busRouteKm * 1e6))} per ${distUnit()} of route`;
-export const boatsText = (n: number) => plural(n, "boat");
+export const busRouteRule = (m: { busRouteKm: number }) => t("format.busRouteRule", { amount: money(perDistance(m.busRouteKm * 1e6)), unit: distUnit() });
+export const boatsText = (n: number) => t("format.boats", { n });
 /** T-2194: "$40 per boat-km", in the shown unit. */
-export const boatRunRule = (m: { runCostBoatKm: number }) => `${perUnitText(m.runCostBoatKm)} per boat-${distUnit()}`;
+export const boatRunRule = (m: { runCostBoatKm: number }) => t("format.boatRunRule", { amount: perUnitText(m.runCostBoatKm), unit: distUnit() });
 
 /** Mile, and the metres a ruler marking it stands for (the placing rings). */
 export const unitMetres = () => (us() ? M_PER_MILE : 1000);
@@ -217,7 +218,7 @@ export const unitShort = () => (us() ? "mi" : "km");
 
 /** headway in minutes from trains an hour */
 export function headway(tph: number): string {
-  if (!tph) return "none";
+  if (!tph) return t("format.headwayNone");
   const m = 60 / tph;
   return (Number.isInteger(m) ? m : m.toFixed(1)) + " min";
 }
@@ -248,5 +249,8 @@ export function levelLabel(l: number): string {
   return l > 0 ? "+" + l : l < 0 ? "−" + -l : "0";
 }
 
-const LEVEL_NAMES: Record<Level, string> = { 3: "High viaduct", 2: "Viaduct", 1: "Viaduct", 0: "Ground level", [-1]: "Cut and cover", [-2]: "Tunnel", [-3]: "Deep tunnel" };
-export const levelName = (l: Level): string => LEVEL_NAMES[l];
+const LEVEL_NAMES: Record<Level, () => string> = {
+  3: () => t("format.levelHighViaduct"), 2: () => t("format.levelViaduct"), 1: () => t("format.levelViaduct"), 0: () => t("format.levelGround"),
+  [-1]: () => t("format.levelCutCover"), [-2]: () => t("format.levelTunnel"), [-3]: () => t("format.levelDeepTunnel"),
+};
+export const levelName = (l: Level): string => LEVEL_NAMES[l]();

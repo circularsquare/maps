@@ -6,6 +6,7 @@
 //
 // Every edit answers with an "edited" message and, if it applied, a new "state".
 
+import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zonesTouching } from "../game/cities";
@@ -41,7 +42,7 @@ import { RoadFeed } from "./roadFeed";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, stampAll, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
-import { loadFailText } from "../game/loadText";
+import { loadFailKey } from "../game/loadText";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -324,7 +325,7 @@ slotChanges?.addEventListener("message", () => { if (api) void publishSlots(); }
  * `newerFile`, the file as it was loaded; Make a copy keeps the game as played here without them. */
 let newer = false;
 let newerFile: Uint8Array | null = null;
-const NEWER = "This game was saved on a newer game version. Reload the page to update.";
+const NEWER: MessageKey = "clockWorker.newer";
 /** T-1826: a player's change (an edit, a list order, sandbox) not yet written, for the page's
  * "leave page?" prompt; the clock's own settling is not one */
 let edited = false;
@@ -368,12 +369,12 @@ async function publishSlots(error?: string) {
   const taken = !!activeSlot && cloudTaken === activeSlot;
   const writable = writableNow();
   noteUnsaved();
-  const reason = newer ? NEWER : saveFailure || (!storageReady ? "Browser storage is unavailable. Download this game as a file to keep it."
-    : taken ? "Autosave is off here because this game was opened on another device."
-    : !activeLease ? testPage ? "Autosave is off in this test page. Make a copy to keep the game."
-      : leaseTaken ? "Autosave is off here because this game was saved in another tab."
-      : navigator.locks ? "Autosave is off here because this slot was opened in another tab. Make a copy, or close the other tab and reload."
-      : "This browser cannot protect save slots. Download this game as a file to keep it." : undefined);
+  const reason: MessageKey | string | undefined = newer ? NEWER : saveFailure || (!storageReady ? "clockWorker.noStorage"
+    : taken ? "clockWorker.otherDevice"
+    : !activeLease ? testPage ? "clockWorker.testPage"
+      : leaseTaken ? "clockWorker.otherTabSaved"
+      : navigator.locks ? "clockWorker.otherTabOpened"
+      : "clockWorker.noLocks" : undefined);
   send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}) });
 }
 /** T-1829: the playing slot's name as last listed, kept should the database be cleared under it */
@@ -612,6 +613,7 @@ async function openOnAccount(ctx: CloudContext) {
 /** T-1196: a pending file or backup's bytes and the name of the slot it goes into; null if the backup
  * has gone */
 async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string; version?: { origin?: string; edit: number; at: number } } | null> {
+  // i18n-ignore: a stored name or a developer diagnostic
   if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game", version: p.origin ? { origin: p.origin, edit: p.edit ?? Date.now(), at: p.edit ?? Date.now() } : undefined };
   const from = backupSlot(p.key);
   if (!from) return null;
@@ -702,9 +704,9 @@ function anchorSpec() {
 // an edit's panic always goes back to it, any other panic to the live network when it can still be
 // read). The main thread logs the panic and tells the player ("recovered").
 
-const EDIT_UNDONE = "That edit failed and was undone.";
-const MODEL_RESTORED = "The train simulation failed and was restored to your last edit.";
-const MODEL_DOWN = "The train simulation stopped working. Reload the page to go on. Your last autosave is kept.";
+const EDIT_UNDONE: MessageKey = "issues.internal";
+const MODEL_RESTORED: MessageKey = "clockWorker.modelRestored";
+const MODEL_DOWN: MessageKey = "clockWorker.modelDown";
 /** more panics than this in a minute, or in all, and the model is left down: it is failing for a reason a rebuild does not cure */
 const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
@@ -787,14 +789,14 @@ async function recover(err: unknown, what: string, notice: string, at: number, f
   panicTimes.push(now);
   while (panicTimes[0] < now - 60_000) panicTimes.shift();
   panicCount++;
-  const detail = `Rust panic in ${what}: ${err instanceof Error ? err.stack || err.message : String(err)}`;
+  const detail = `Rust panic in ${what}: ${err instanceof Error ? err.stack || err.message : String(err)}`; // i18n-ignore
   try {
     if (panicTimes.length > MAX_PANICS_PER_MINUTE || panicCount > MAX_PANICS) throw new Error("too many panics");
     await rebuildModel(fromKept);
     send({ kind: "recovered", detail, notice });
   } catch (e) {
     modelDown = true;
-    send({ kind: "recovered", detail: `${detail}\nnot rebuilt: ${e}`, notice: MODEL_DOWN, down: true });
+    send({ kind: "recovered", detail: `${detail}\nnot rebuilt: ${e}`, notice: MODEL_DOWN, down: true }); // i18n-ignore
   }
   recoveredAt = performance.now();
 }
@@ -807,12 +809,12 @@ function panicLater(err: unknown, what: string) {
 addEventListener("error", (e) => {
   if (!isPanic(e.error)) return;
   e.preventDefault();
-  panicLater(e.error, "a timer");
+  panicLater(e.error, "a timer"); // i18n-ignore
 });
 addEventListener("unhandledrejection", (e) => {
   if (!isPanic(e.reason)) return;
   e.preventDefault();
-  panicLater(e.reason, "background work");
+  panicLater(e.reason, "background work"); // i18n-ignore
 });
 
 // ---------------------------------------------------------------- water masks on demand (T-302)
@@ -860,7 +862,7 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
     // a failed fetch is tried again by the next edit or view that needs it, or by `retryGround`
     p.catch((err) => {
       if (waterFetches.get(id) === p) waterFetches.delete(id);
-      send({ kind: "error", message: `water mask for ${id} not loaded: ${err}` });
+      send({ kind: "error", message: `water mask for ${id} not loaded: ${err}` }); // i18n-ignore
     });
   }
   return p;
@@ -1080,7 +1082,7 @@ function worldWaterIntoModel(): Promise<void> {
     // land until then (Construct waits for it)
     p.catch((err) => {
       if (worldWaterFetch === p) worldWaterFetch = null;
-      send({ kind: "error", message: `world water mask not loaded: ${err}` });
+      send({ kind: "error", message: `world water mask not loaded: ${err}` }); // i18n-ignore
     });
   }
   return worldWaterFetch.then((b) => {
@@ -1237,7 +1239,7 @@ function queueFollowUp() {
 }
 async function guardedFollowUp() {
   try { runFollowUp(); } catch (err) {
-    if (isPanic(err)) await recover(err, "an edit's state", MODEL_RESTORED, performance.now());
+    if (isPanic(err)) await recover(err, "an edit's state", MODEL_RESTORED, performance.now()); // i18n-ignore
     else send({ kind: "error", message: String(err) });
   }
 }
@@ -2220,7 +2222,7 @@ function autosave(): Promise<boolean> {
       edited ||= wasEdited;
       if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
       savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
-      saveFailure = "The browser could not save this game. Download it as a file to keep your changes.";
+      saveFailure = "clockWorker.browserCouldNotSave";
       await publishSlots(saveFailure);
       return false;
     } finally { saveInFlight = null; }
@@ -2263,7 +2265,7 @@ async function saveByHand() {
     saveFailure = undefined;
     dirty = true;
     byHandNext = true;
-    if (!await autosave()) throw new Error(saveFailure ?? "This game could not be saved. Download it as a file to keep it.");
+    if (!await autosave()) throw new Error(saveFailure ?? "clockWorker.couldNotSave");
     send({ kind: "savedByHand", at: savedAt });
   } catch (err) {
     send({ kind: "savedByHand", error: (err as Error).message });
@@ -2284,6 +2286,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const bytes = await bytesP;
         // T-2037: a copy is another version of the same game
         gameOrigin ??= newGameId();
+        // i18n-ignore: a stored name or a developer diagnostic
         await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...await summaryP, origin: gameOrigin, edit: editAt || undefined });
         seenEdit = editAt;
         void cloudAfterWrite(key, false, true); // T-988: a new game on the account
@@ -3072,7 +3075,7 @@ function addPorts(a: TrackApi, ports: FerryPortIn[]): Uint32Array | null {
 }
 
 /** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number (T-2194: "Ferry n"). */
-function nextBusName(a: TrackApi, word = "Bus "): string {
+function nextBusName(a: TrackApi, word = "Bus "): string { // i18n-ignore: a line's saved name
   const taken = new Set<string>();
   const info = a.lines_info();
   for (let i = 0; i < info.length; i += 22) taken.add(a.line_name(info[i]));
@@ -3282,7 +3285,7 @@ function apply(op: EditOp): Applied {
       if (!ports) return { r: 1 };
       const id = a.new_line_id();
       const [h, m, l] = NEW_FERRY_HEADWAYS;
-      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, NEW_FERRY_DWELL_S, NEW_FERRY_TURNAROUND_S, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id };
+      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, NEW_FERRY_DWELL_S, NEW_FERRY_TURNAROUND_S, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id }; // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);
@@ -3560,7 +3563,7 @@ async function processMessage(msg: ToClock) {
             void autosave();
             return;
           } catch (err) {
-            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("real network:", err), loadFailText(String(err))), frame: frameSpec(), game });
+            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("real network:", err), loadFailKey(String(err))), frame: frameSpec(), game });
           }
         }
         const empty = msg.game && { ...msg.game, real: undefined };
@@ -3585,7 +3588,7 @@ async function processMessage(msg: ToClock) {
             hold(await leaseSlot(activeSlot));
             await publishSlots();
           }
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("last game:", err), loadFailText(String(err))), frame: frameSpec(), game });
+          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("last game:", err), loadFailKey(String(err))), frame: frameSpec(), game });
         }
       }
       keep();
@@ -3647,10 +3650,10 @@ function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, numbe
 }
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
-function failAnswer(msg: ToClock) {
-  if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 });
-  if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 });
-  if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] });
+function failAnswer(msg: ToClock) { // i18n-ignore
+  if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 }); // i18n-ignore
+  if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 }); // i18n-ignore
+  if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] }); // i18n-ignore
   if (isPreview(msg)) send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
   if (msg.kind === "query") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
 }
@@ -3681,6 +3684,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
   } else {
     try {
       const name = msg.name?.trim();
+      // i18n-ignore: a stored name or a developer diagnostic
       if (msg.kind === "import") await intoNewSlot(name || "Loaded game", () => loadGame(new Uint8Array(msg.bytes), "file"), true);
       else {
         const spec = msg.game;
@@ -3801,7 +3805,7 @@ async function handle(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early });
+    const answer = (early?: boolean) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early }); // i18n-ignore
     if (r !== 0) return answer();
     dirty = edited = true; editAt = Date.now();
     if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());

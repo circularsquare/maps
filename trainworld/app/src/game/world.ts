@@ -4,6 +4,7 @@
 // the clock worker sends a new state (workers/clockClient.ts). Edits go to the worker as ops
 // (workers/protocol.ts); a refused edit puts its reasons, in plain words, in `notice`.
 
+import { t } from "../i18n";
 import { signal, type Signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import type { EditAnswer } from "../workers/clockClient";
@@ -196,7 +197,7 @@ const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
   const short = trainBuyCheck?.(id, trains);
   if (short) {
     refusedForCash.value = { id, levs: trains.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
-    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
     return;
   }
   if (!was || trains.some((n, i) => n !== was[i])) clickSound({ op: "setTrainCount" });
@@ -222,7 +223,7 @@ export function stepLineCars(id: LineId, shown: number, cap: number, by: number,
   const st = world.peek()?.lineStats[id];
   const short = checkCash && st && to > st.cars ? carBuyCheck?.(id, (to - st.cars) * Math.max(...st.trainsNeeded)) : null;
   if (short) {
-    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
     return Promise.resolve(false);
   }
   clickSound({ op: "lineCars" });
@@ -322,7 +323,7 @@ const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
     const short = trainBuyCheck!(id, trains);
     if (short) {
       refusedForCash.value = { id, levs: secs!.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
-      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true);
+      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
       return;
     }
   }
@@ -435,7 +436,7 @@ function stopsOf(w: WorldView) {
         const d = groundDist(s.x, s.y, p.x, p.y);
         if (s.name && d < best) { best = d; near = s.name; }
       }
-      names.set(id, near ? `Bus stop near ${near}` : "Bus stop");
+      names.set(id, near ? t("world.busStopNear", { name: near }) : t("world.busStop"));
     }
   }
   stopMemo.set(w, (m = { byId, names, bus }));

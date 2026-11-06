@@ -250,6 +250,7 @@ export async function newStationName(map: MlMap, lng: number, lat: number, track
   const t = taken();
   const listed = placeName(s.near, t) ?? tilePlace(map, lng, lat, t);
   if (listed) return listed;
+  // i18n-ignore: the default name is saved with the station
   for (let k = 1; ; k++) if (!t.has(`Station ${k}`)) return `Station ${k}`;
 }
 

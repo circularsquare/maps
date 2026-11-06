@@ -4,6 +4,7 @@
 // marker on it, and hides with the stations below STATIONS_ZOOM. Hovering it names the lines that
 // reverse there; a click selects the first of them (not while stops are edited).
 
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { WorldView } from "../game/types";
@@ -107,8 +108,8 @@ export class ReversalMarks {
       el.innerHTML = ICON;
       const words = [
         r.name,
-        ...r.lines.map((l) => `${l.name} reverses here`),
-        r.station.startsWith("end:") ? `${REVERSALS_AN_HOUR} trains an hour at most reverse here` : `${REVERSALS_AN_HOUR} trains an hour at most reverse here from each side`,
+        ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name })),
+        t("reversalMarks.limit", { n: REVERSALS_AN_HOUR, end: r.station.startsWith("end:") }),
       ];
       el.onmouseenter = el.onmousemove = () => tipBeside(this.tip, el, this.map.getContainer(), words, "right");
       el.onmouseleave = () => (this.tip.style.display = "none");

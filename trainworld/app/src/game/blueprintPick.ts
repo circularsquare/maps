@@ -10,6 +10,7 @@ import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge } from "./types";
 import { ask, buildLevel, selection, setTrackType, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
+import { t, tList } from "../i18n";
 
 export interface BpPicked {
   /** track pieces (edge ids) and stations (node ids) */
@@ -186,8 +187,8 @@ export async function doubleUpPicked(pieces: number[]) {
     if (a.ok) done++;
     else why ||= describeIssues(a.issues);
   }
-  if (!done) say(why || "This track cannot be doubled up.", true);
-  else if (done < pieces.length) say(`${done} of ${pieces.length} runs doubled up. ${why}`.trim());
+  if (!done) say(why || t("blueprintPick.doubleNone"), true);
+  else if (done < pieces.length) say(t("blueprintPick.doubleSome", { done, total: pieces.length, why }).trim());
 }
 
 /** What the picked pieces are now: how many are switched off, their track's length, and the one
@@ -241,7 +242,6 @@ export async function enableAll() {
   if (edges.length + stations.length) await edit({ op: "blueprintOff", edges, stations, off: false }, true);
 }
 
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** T-815: the picked blueprint track on one elevation, one undoable edit; pieces that cannot
  * change (a flat crossing would form, no corners to raise, a ramp with no room) are left as they
@@ -250,12 +250,12 @@ export async function levelPicked(level: Level) {
   const p = bpPicked.peek();
   if (p.built || !p.edges.length) return;
   const a = await edit({ op: "edgesLevel", edges: p.edges, level }, true);
-  const n = p.edges.length, skipped = a.skipped ?? 0, to = `level ${levelLabel(level)}`;
+  const n = p.edges.length, skipped = a.skipped ?? 0, to = t("blueprintPick.levelTo", { level: levelLabel(level) });
   // T-2474: the track tool lays new track the way the player just set this
   if (a.ok) buildLevel.value = level;
-  if (!a.ok) say(n === 1 ? `This track cannot go to ${to}.` : `None of the ${n} pieces can go to ${to}.`, true);
-  else if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
-  else say(`${count(n, "piece", "pieces")} set to ${to}.`);
+  if (!a.ok) say(t("blueprintPick.cannotGo", { n, to }), true);
+  else if (skipped) say(t("blueprintPick.setSome", { done: n - skipped, n, to, skipped }));
+  else say(t("blueprintPick.setAll", { n, to }));
 }
 
 /** T-1898: the picked blueprint double track made high-speed or regular, one undoable edit; single
@@ -266,9 +266,9 @@ export async function hsrPicked(hsr: boolean) {
   const a = await edit({ op: "edgesHsr", edges: p.edges, hsr }, true);
   if (!a.ok) return;
   setTrackType(hsr ? "hsr" : 2); // T-2474, as for the level
-  const n = p.edges.length, skipped = a.skipped ?? 0, to = hsr ? "high-speed track" : "regular track";
-  if (skipped) say(`${n - skipped} of ${n} pieces set to ${to}. ${skipped} could not change.`);
-  else say(`${count(n, "piece", "pieces")} set to ${to}.`);
+  const n = p.edges.length, skipped = a.skipped ?? 0, to = t(hsr ? "blueprintPick.toHsr" : "blueprintPick.toRegular");
+  if (skipped) say(t("blueprintPick.setSome", { done: n - skipped, n, to, skipped }));
+  else say(t("blueprintPick.setAll", { n, to }));
 }
 
 /** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
@@ -277,11 +277,11 @@ export async function removePicked() {
   const p = bpPicked.peek(), s = pickedState.peek();
   if (!p.edges.length && !p.stations.length) return;
   const big = isBigDelete(s.lengthM);
-  const what = [s.edges ? `${(big ? bigDistance : distance)(s.lengthM)} of ${p.built ? "built " : ""}track` : "", s.stations ? count(s.stations, p.built ? "built station" : "station", p.built ? "built stations" : "stations") : ""].filter(Boolean).join(" and ");
+  const what = tList([s.edges ? t("blueprintPick.trackOf", { length: (big ? bigDistance : distance)(s.lengthM), built: !!p.built }) : "", s.stations ? t("blueprintPick.stationsPicked", { n: s.stations, built: !!p.built }) : ""].filter(Boolean));
   const go = async () => {
     ask.value = null;
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });
-    if (a.ok) say(`Removed ${what}.`);
+    if (a.ok) say(t("remove.done", { what }));
   };
   const lines = await lineEffects(p.edges, p.stations);
   if (!p.built && !lines.length && !big) return void go();

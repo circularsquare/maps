@@ -8,6 +8,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, getWorldFrame, worldFrameEpoch, type CityId } from "../game/cities";
 import { cellModes, cityCells, demandView, type DemandView } from "../game/demand";
 import { count } from "../game/format";
+import { t } from "../i18n";
 import { M_PER_DEG, M_PER_DEG_LAT } from "../game/frame";
 import type { DemandDay } from "../game/days";
 import { nearbyZones } from "../game/zones";
@@ -179,7 +180,7 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
       if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX || hiddenOnGlobe(a.lng, a.lat)) continue;
       const all = a.train + a.walk + a.drive;
       return [
-        `${count(all)} trips ${shownDayPhrase.peek()} to and from this airport`,
+        t("airportMarks.hover", { trips: count(all), when: shownDayPhrase.peek() }),
         modeBar(a.train, a.walk, a.drive),
       ];
     }

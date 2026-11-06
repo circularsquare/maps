@@ -3,6 +3,7 @@
 // renderer's buffers; "trips" go to the renderer; network snapshots go to whoever registered
 // with `onNetworkSnapshot` (the demand pool, T-026).
 
+import { t, tDate, type MessageKey } from "../i18n";
 import { effect, signal } from "@preact/signals";
 import type { DiagramGraph } from "../diagram/graph";
 import { clock } from "../game/clock";
@@ -37,6 +38,13 @@ import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid, groundNet } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
+
+/** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
+export function workerText(s: string): string;
+export function workerText(s: string | undefined): string | undefined;
+export function workerText(s: string | undefined): string | undefined {
+  return s && /^(clockWorker|issues|loadText)\.[A-Za-z]+$/.test(s) ? t(s as MessageKey) : s;
+}
 
 export const saveSlotsState = signal<Omit<Extract<FromClock, { kind: "saveSlots" }>, "kind">>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
@@ -273,7 +281,7 @@ function toWorld(s: ClockState): WorldView {
       passed: Array.from({ length: l.passed.length >> 1 }, (_, k) => ({ gap: l.passed[k * 2], node: l.passed[k * 2 + 1] })),
       reversals: l.reversals,
       endTurns: l.endTurns,
-      loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null,
+      loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       ...(l.bus ? { bus: l.bus } : {}),
     });
   }
@@ -320,7 +328,7 @@ function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: strin
   a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
   const named = name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  a.download = `trainsworld-${named || "game"}-day-${day}.save`;
+  a.download = `trainsworld-${named || "game"}-day-${day}.save`; // i18n-ignore
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
 }
@@ -343,17 +351,17 @@ export async function importGame(file: File, version?: { origin: string; edit: n
  * when the file cannot open. */
 export async function fileChoice(file: File, version?: { origin: string; edit: number }): Promise<GameChoice | string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  try { await decodeSave(bytes); } catch { return "This file is not a saved game."; }
+  try { await decodeSave(bytes); } catch { return t("clockClient.notSave"); }
   const why = await saveRefusal({ bytes });
   if (why) return why;
-  if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "", ...version })) return "Browser storage is unavailable.";
+  if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "", ...version })) return t("clockClient.noStorage");
   return { pending: true };
 }
 /** T-2037: a backup of slot `from` opened from the start menu, as `fileChoice` does a file. */
 export async function backupChoice(key: string, from: string): Promise<GameChoice | string> {
   const why = await saveRefusal({ key });
   if (why) return why;
-  if (!await writePending({ kind: "restore", key, from })) return "Browser storage is unavailable.";
+  if (!await writePending({ kind: "restore", key, from })) return t("clockClient.noStorage");
   return { pending: true };
 }
 /** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
@@ -548,8 +556,8 @@ export class ClockClient {
     if (this.worker) return;
     this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
-    this.worker.onerror = (e) => this.failed(e.message || "its script did not load");
-    this.worker.onmessageerror = () => this.failed("a message could not be read");
+    this.worker.onerror = (e) => this.failed(e.message || "its script did not load"); // i18n-ignore
+    this.worker.onmessageerror = () => this.failed("a message could not be read"); // i18n-ignore
     const q = new URLSearchParams(location.search);
     const fresh = !!choice.fresh;
     // T-320: a check or stress page never writes over a saved game
@@ -566,8 +574,8 @@ export class ClockClient {
   /** T-950: the worker failed; before its first game no game will come, so the card gives way to the
    * failure screen */
   private failed(why: string) {
-    clockWorkerStatus.value = "failed to load: " + why;
-    if (!world.peek()) loadCannotFinish(`The train simulation could not start (${why}).`, true);
+    clockWorkerStatus.value = "failed to load: " + why; // i18n-ignore
+    if (!world.peek()) loadCannotFinish(t("clockClient.cannotStart", { why }), true);
   }
 
   constructor(cityId = HOME_CITY) {
@@ -828,7 +836,7 @@ export class ClockClient {
       const kind = this.stateKind(st);
       if (expectedMs(kind, units, STATE_MS_GUESS[kind]) > BUSY_MS) {
         this.deferred = [msg];
-        this.stateBusy = { token: showBusy(kind === "load" || kind === "redraw" ? "Drawing the network" : "Updating the network"), kind, units };
+        this.stateBusy = { token: showBusy(t(kind === "load" || kind === "redraw" ? "clockClient.drawing" : "clockClient.updating")), kind, units };
         afterPaint(() => {
           const q = this.deferred ?? [];
           this.deferred = null;
@@ -908,7 +916,7 @@ export class ClockClient {
     if (msg.kind === "ready" || msg.kind === "loaded" || msg.kind === "state" || msg.kind === "snapshot" || msg.kind === "stationsAhead") markAlive();
     switch (msg.kind) {
       case "ready":
-        clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`;
+        clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`; // i18n-ignore
         setWorldFrame(msg.frame);
         break;
       case "error":
@@ -916,8 +924,8 @@ export class ClockClient {
         break;
       case "recovered":
         console.error("clock worker:", msg.detail);
-        if (msg.down) clockWorkerStatus.value = "track model down after a panic";
-        say(msg.notice, true);
+        if (msg.down) clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
+        say(workerText(msg.notice), true);
         break;
       case "failed":
         console.error("clock worker:", msg.error);
@@ -981,7 +989,7 @@ export class ClockClient {
         this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
         this.fitNext = false;
         if (msg.error) {
-          say(msg.error, true);
+          say(workerText(msg.error), true);
           if (msg.from === "file") break;
         }
         // a different game: its clock waits for its demand (T-149); the snapshot follows
@@ -995,13 +1003,13 @@ export class ClockClient {
         this.forgetSent();
         gamesLoaded.value++;
         clock.set(msg.clock);
-        if (msg.from === "file") say(`Game loaded, day ${Math.floor(msg.clock / 86400)}.`);
-        if (msg.from === "new" && !msg.error) say("New game started.");
+        if (msg.from === "file") say(t("clockClient.loaded", { day: Math.floor(msg.clock / 86400) }));
+        if (msg.from === "new" && !msg.error) say(t("clockClient.newGame"));
         break;
       case "left": {
         const then = this.onLeft;
         this.onLeft = null;
-        if (msg.error) say(msg.error, true);
+        if (msg.error) say(workerText(msg.error), true);
         else { askBeforeLeaving(false); then?.(); }
         break;
       }
@@ -1015,7 +1023,7 @@ export class ClockClient {
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: msg.reason, error: msg.error, backups: msg.backups, newer: msg.newer };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
@@ -1024,7 +1032,7 @@ export class ClockClient {
         }
         this.sawSlots = true;
         // the reason a slot is not written stays in the top bar (ui/TopBar.tsx SaveNotice), not here
-        if (msg.error) say(msg.error, true);
+        if (msg.error) say(workerText(msg.error), true);
         break;
       }
       case "saved":
@@ -1037,7 +1045,7 @@ export class ClockClient {
         // a refusal is said with the saveSlots message that follows it
         if (msg.at) {
           savedByHand.value = msg.at;
-          say(`Saved ${new Date(msg.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`);
+          say(t("clockClient.saved", { time: tDate(msg.at, { hour: "numeric", minute: "2-digit" }) }));
         }
         break;
       case "answer": {

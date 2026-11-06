@@ -6,6 +6,7 @@
 // 6.4). Track drawn while the track ran through the clicked points (T-079) shows its clicks as
 // the squares; its first reshape makes them corners like on any other track.
 
+import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { describeIssues } from "../game/issues";
@@ -187,7 +188,7 @@ export class EdgeEditor {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));
       const m = this.mark(i);
       // the game's own tag (ui/tip.ts, T-210), set only when it changes as this runs every frame
-      const tip = `Drag to move corner ${i + 1}`;
+      const tip = t("edgeEdit.dragCorner", { num: i + 1 });
       if (m.dataset.tip !== tip) m.dataset.tip = tip;
       placeAt(m, x, y);
     }
@@ -211,7 +212,7 @@ export class EdgeEditor {
     if (pv && !pv.ok && this.drag) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[this.drag.i]));
       this.tag.className = "tool-tag bad";
-      this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
+      this.tag.textContent = describeIssues(pv.issues) || t("edgeEdit.cannotMove");
       this.tag.style.display = "";
       placeAt(this.tag, x, y, 14, -30);
     } else this.tag.style.display = "none";

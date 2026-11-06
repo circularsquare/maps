@@ -24,6 +24,7 @@ import { startPlaytime } from "./playtime";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
 import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
+import { t } from "../i18n";
 
 export interface AccountView {
   id: string;
@@ -96,19 +97,19 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   const s = session.peek();
-  if (opts.auth !== false && s) headers.Authorization = "Bearer " + s.token;
+  if (opts.auth !== false && s) headers.Authorization = "Bearer " + s.token; // i18n-ignore
   let r: Response;
   try {
     r = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   } catch {
-    throw new ApiError("The server could not be reached.", 0);
+    throw new ApiError(t("account.unreachable"), 0);
   }
   let j: any = null;
   if (r.status !== 204) { try { j = await r.json(); } catch { /* no body */ } }
   if (!r.ok) {
     // a dead token means signed out; a wrong current password (keep401) does not
     if (r.status === 401 && opts.auth !== false && !opts.keep401 && s) tokenGone();
-    const msg = typeof j?.error === "string" ? j.error : `The server answered ${r.status}.`;
+    const msg = typeof j?.error === "string" ? j.error : t("account.answered", { status: r.status });
     throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status);
   }
   return j as T;
@@ -117,10 +118,10 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
 export async function sendFeedback(f: { name: string; contact: string; message: string; version: string }) {
-  if (!BASE) throw new ApiError("This copy of the game has no server to send to.", 0);
+  if (!BASE) throw new ApiError(t("account.noServer"), 0);
   // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
   const cfg = accountConfig.peek();
-  if (cfg && !cfg.trainworldFeedback) throw new ApiError("Feedback can't be sent yet. Try again in a few days.", 404);
+  if (cfg && !cfg.trainworldFeedback) throw new ApiError(t("account.feedbackNotYet"), 404);
   await api("POST", "trainworld/feedback", { kind: "feedback", message: f.message, name: f.name, contact: f.contact, context: { version: f.version } });
 }
 

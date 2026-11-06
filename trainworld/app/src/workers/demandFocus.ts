@@ -45,7 +45,7 @@ export class FocusPool {
     for (let i = 0; i < n + (withAux ? 1 : 0); i++) {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);
-      w.onerror = (e) => this.fail(`focus worker ${i}: ${e.message}`);
+      w.onerror = (e) => this.fail(`focus worker ${i}: ${e.message}`); // i18n-ignore
       const aux = i === n;
       w.postMessage({ kind: "init", packs: [], periods: aux ? [] : periodsOf[i], aux, warmEveryday: false, ...(aux ? { groups: periodsOf.slice(0, n) } : { markets: periodsOf[i], share: false }) } satisfies ToDemand);
       w.postMessage(view);
@@ -107,9 +107,9 @@ export class FocusPool {
     if (this.ended) return;
     const mem = (msg as { memBytes?: number }).memBytes;
     if (mem) this.mem[i] = mem;
-    if (msg.kind === "failed" || msg.kind === "dead") return this.fail(`focus worker ${i}: ${msg.error}`);
+    if (msg.kind === "failed" || msg.kind === "dead") return this.fail(`focus worker ${i}: ${msg.error}`); // i18n-ignore
     if (msg.kind === "opened") {
-      for (const r of msg.rejected ?? []) if (!r.market) return this.fail(`focus worker ${i}: ${r.id} did not open`);
+      for (const r of msg.rejected ?? []) if (!r.market) return this.fail(`focus worker ${i}: ${r.id} did not open`); // i18n-ignore
       for (const id of Object.keys(msg.cityInfo) as CityId[]) {
         if (!this.opening.has(id)) continue;
         const a = (this.acks.get(id) ?? 0) + 1;

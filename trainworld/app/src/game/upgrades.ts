@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 // Station upgrades (T-1281, notes/T-1281.md): the bits are `sim/src/track/upgrades.rs`'s.
 
 export const UPGRADE = { terminal: 1, parkRide: 2, waitingRoom: 4, passing: 8 } as const;
@@ -19,13 +20,13 @@ export interface UpgradeText {
 }
 
 export const UPGRADE_TEXT: UpgradeText[] = [
-  { bit: UPGRADE.terminal, name: "Terminal", does: "Upgrade turning capacity from 15 trains per hour to 30 trains per hour." },
-  { bit: UPGRADE.parkRide, name: "Parking lot", does: "Traveling to this station from far away feels 10 minutes shorter.",
-    doesAll: "Traveling to any station in this complex from far away feels 10 minutes shorter." },
-  { bit: UPGRADE.waitingRoom, name: "Waiting room", does: "Waiting here for a train feels 20% shorter.",
-    doesAll: "Waiting at any station in this complex for a train feels 20% shorter." },
+  { bit: UPGRADE.terminal, get name() { return t("upgrades.terminal"); }, get does() { return t("upgrades.terminalDoes"); } },
+  { bit: UPGRADE.parkRide, get name() { return t("upgrades.parking"); }, get does() { return t("upgrades.parkingDoes"); },
+    get doesAll() { return t("upgrades.parkingDoesAll"); } },
+  { bit: UPGRADE.waitingRoom, get name() { return t("upgrades.waiting"); }, get does() { return t("upgrades.waitingDoes"); },
+    get doesAll() { return t("upgrades.waitingDoesAll"); } },
   // T-2232: Anita's wording
-  { bit: UPGRADE.passing, name: "Passing tracks", does: "Allow faster trains to pass slower trains that are stopped here." },
+  { bit: UPGRADE.passing, get name() { return t("upgrades.passing"); }, get does() { return t("upgrades.passingDoes"); } },
 ];
 
 /** A passage's price (sim `upgrades::passage_price`), US$M: a base plus a rate a km of the straight line. */

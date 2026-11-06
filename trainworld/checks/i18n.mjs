@@ -227,6 +227,7 @@ function scan({ parseAst }) {
     if (/^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+$/.test(t)) return false;   // message keys
     if (/[{};=]|=>|\bfunction\b|\bvoid\b|^\s*(precision|uniform|in |out |vec|float|#version)/.test(t)) return false;   // code, GLSL
     if (/^[a-z-]+( [a-z-]+)+$/.test(t) && t.split(" ").every((w) => /-/.test(w) || w.length < 3)) return false;   // class lists
+    if (/^ *\w*([|:] *\w*)+$/.test(t) || /^[#.][a-z][\w .-]*$/.test(t) || /^([A-Z]{2} )+[A-Z]{2}$/.test(t) || /^(Feature|Point)$/.test(t) || /^(tool-tag|pi-mark|overlay|stn-label|chip|spin) [a-z-]+$/.test(t) || /^[a-z]+(,[a-z]+)+$/.test(t) || /^(color: |\d+ \d+px|\d+ \d+px )/.test(t) || /^\d+ \d+px\b/.test(t) || /^translate\(/.test(t) || /^[A-Z][a-z]+([A-Z][a-z0-9]+)+$/.test(t) || /^M[\d. -]+[A-Za-z][\dA-Za-z. -]*$/.test(t) || /^(Noto Sans|Zen Maru Gothic) Regular$/.test(t)) return false;   // CSS transforms, CamelCase codes and GeoJSON types, SVG paths, font stacks
     return true;
   };
   function* walk(d) {

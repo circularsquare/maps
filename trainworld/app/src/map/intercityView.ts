@@ -23,6 +23,7 @@
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
+import { t as tr } from "../i18n";
 import { computed, effect, signal } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
@@ -340,17 +341,17 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
       const v = local.get(c.id);
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
-      const localLine = `${count(localAll)} trips ${day} within ${c.name}`;
+      const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: c.name });
       const lm = localModes(v);
       const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
       const inter = !own || isOwn ? total(c.place) : t;
-      const interLine = `${count(inter.all)} inter-city trips ${day} to and from ${c.name}`;
+      const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: c.name });
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
       const tag = !own
         ? [localLine, localBar, interLine, interBar]
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
-          : [`${count(t.all)} trips ${day} between ${own.name} and ${c.name}`, interBar, "Click to explore these trips"];
+          : [tr("intercityView.between", { count: count(t.all), when: day, a: own.name, b: c.name }), interBar, tr("intercityView.explore")];
       return [{ ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) }];
     });
     points.sort((a, b) => b.all - a.all);
@@ -369,7 +370,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // so its 1 px outline leaves some fill; then a quarter bigger (T-1886: beside the opened zones' bubbles it read small)
       if (p.unbuilt) r = (UNBUILT_GROW * Math.max(2, Math.floor((r * pxPerUnit * size) / 2))) / (pxPerUnit * size);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, p.unbuilt ? 1 : BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
-      label(`${p.city.name} · ${count(p.all)} trips`);
+      label(tr("intercityView.label", { name: p.city.name, count: count(p.all) }));
     });
     const first = points.findIndex((p) => p.isOwn);
     marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };
@@ -436,7 +437,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     }) : flows.zones.filter(z => shownCount(z.all) && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
-    const trips = shown ? "inter-city trips" : `${purposeWords(filter as PurposeKey)} trips`;
+    const trips = shown ? tr("intercityView.interCityTrips") : tr("intercityView.purposeTrips", { purpose: purposeWords(filter as PurposeKey) });
     // T-1246: the in-city far end's scale (its busiest bubble about its hexagon's area), so a far
     // zone's bubble reads against them; with none drawn yet, the busiest of these takes that size
     const perTrip = farAreaPerTrip.peek() || (0.6 * RES_AREA_M2[bubbleLevel(map.getZoom())]) / (points[0]?.all || 1);
@@ -451,9 +452,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const c = bubbleColour(z.rail, walk, rest);
       const r = FAR_RADIUS * Math.sqrt((perTrip * z.all) / Math.PI) * kAtLat(lat);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 0], i * DISC);
-      const place = z.name || "here";
-      tags.push([`${count(z.all)} ${trips} ${shownDayPhrase.peek()} ${verb} ${place}`, modeBar(z.rail, walk, rest), "Click to explore these trips"]);
-      if (regional) label(`${z.name} · ${count(z.all)} trips`);
+      const place = z.name || tr("intercityView.here");
+      tags.push([tr("intercityView.farTag", { verb, count: count(z.all), trips, when: shownDayPhrase.peek(), place }), modeBar(z.rail, walk, rest), tr("intercityView.explore")]);
+      if (regional) label(tr("intercityView.label", { name: z.name, count: count(z.all) }));
     });
     const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });
     marks = { discs, anchor: a, tags, far };
@@ -538,7 +539,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         }
         const all = mergePlaces(h.starts, w.ends);
         intercityPick.value = { sel, data: { ...h, starts: all, ends: all, byPurpose: by }, own };
-        show(all, "to and from", own, by, "home", { home: h.starts, work: w.ends });
+        show(all, "both", own, by, "home", { home: h.starts, work: w.ends });
         return;
       }
       const r = await intercitySelection(sel.end, cells);

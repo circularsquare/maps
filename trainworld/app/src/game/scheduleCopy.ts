@@ -1,9 +1,10 @@
 // A line's schedule settings copied for pasting onto another line (T-1293): its trains or
 // headways per level, train length and kind of train. Kept in the browser, so it outlasts the game.
 
+import { t, tList, tNumber } from "../i18n";
 import { signal } from "@preact/signals";
 import { CAR_M } from "./boarding";
-import { andList, plural } from "./format";
+
 import type { LineInput, LineStats } from "./types";
 import { clickSound, edit, headwayShown, say, stationsById, trainsShown, world } from "./world";
 
@@ -46,7 +47,7 @@ export function copySchedule(l: LineInput, st: LineStats) {
   const c = scheduleOf(l, st);
   scheduleCopy.value = c;
   try { localStorage.setItem(STORE, JSON.stringify(c)); } catch { /* storage unavailable: the copy lasts this visit */ }
-  say(`Schedule of ${l.name} copied.`);
+  say(t("scheduleCopy.copied", { line: l.name }));
 }
 
 /** The most cars a line's shortest platform fits, and that platform; null with no stations. */
@@ -60,12 +61,11 @@ export function carsCap(l: LineInput): { cap: number; name: string; m: number } 
   return short ? { cap: Math.max(1, Math.floor(short.length / CAR_M)), name: short.name, m: short.length } : null;
 }
 
-const mins = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
+const mins = (s: number) => (s > 0 ? t("scheduleCopy.minutes", { n: tNumber(+(s / 60).toFixed(2)) }) : t("format.headwayNone"));
 
 /** "Headways 3 min, 5 min and 10 min, 6 cars, high speed", high, medium and low in order. */
 export function scheduleText(c: ScheduleCopy): string {
-  const levels = c.headway ? `Headways ${andList(c.headway.map(mins))}` : `${andList(c.trains.map(String))} trains`;
-  return `${levels}, ${plural(c.cars, "car")}, ${c.fast ? "high speed" : "ordinary"}`;
+  return t(c.headway ? "scheduleCopy.withHeadways" : "scheduleCopy.withTrains", { list: tList((c.headway ? c.headway.map(mins) : c.trains.map(String))), cars: c.cars, fast: c.fast });
 }
 
 /** Put the copy on a line: kind of train, length (cut to what its platforms fit), then the
@@ -88,5 +88,5 @@ export async function pasteSchedule(l: LineInput, st: LineStats) {
     const trains = c.trains.map((n) => Math.ceil(n / k) * k) as Levels;
     if (!(await edit({ op: "setTrainCount", line: l.num, trains }, false, true)).ok) return;
   }
-  if (fit && cars < c.cars) say(`The platform at ${fit.name} is too short for ${plural(c.cars, "car")}. ${l.name}'s trains stay at ${plural(cars, "car")}.`);
+  if (fit && cars < c.cars) say(t("scheduleCopy.tooShort", { station: fit.name, wanted: c.cars, line: l.name, kept: cars }));
 }

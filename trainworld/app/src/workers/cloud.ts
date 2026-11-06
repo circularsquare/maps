@@ -6,6 +6,7 @@
 // write and claims the game it opens (clock.worker.ts); the main thread settles every slot on the
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
+import { t } from "../i18n";
 import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
 
@@ -38,10 +39,21 @@ const MAX_SAVE = 4 << 20, MAX_PICTURE = 512 << 10, MAX_NAME = 200, MAX_CITIES = 
 /** A card whose game another device saved this recently says so. */
 export const ELSEWHERE_MS = 10 * 60_000;
 
-export const WHY_OFFLINE = "Offline";
-export const WHY_UNREACHABLE = "The server could not be reached";
-export const WHY_FULL = "Your account is full. Delete a game to make room.";
-export const WHY_TOO_BIG = "This game is too big to keep on your account.";
+export const WHY_OFFLINE = "Offline"; // i18n-ignore: stored with the slot; shown through whyText
+export const WHY_UNREACHABLE = "The server could not be reached"; // i18n-ignore: stored with the slot; shown through whyText
+export const WHY_FULL = "Your account is full. Delete a game to make room."; // i18n-ignore: stored with the slot; shown through whyText
+export const WHY_TOO_BIG = "This game is too big to keep on your account."; // i18n-ignore: stored with the slot; shown through whyText
+
+/** A stored upload failure (one of the WHY_ texts above, or any other) as the page shows it. */
+export function whyText(why: string): string {
+  switch (why) {
+    case WHY_OFFLINE: return t("cloud.offline");
+    case WHY_UNREACHABLE: return t("cloud.unreachable");
+    case WHY_FULL: return t("cloud.full");
+    case WHY_TOO_BIG: return t("cloud.tooBig");
+    default: return why;
+  }
+}
 
 /** Called on a 401: the session is dead (the main thread drops the token). */
 let tokenGone: () => void = () => {};
@@ -66,7 +78,7 @@ export const editedThere = (g: AccountGame, rec: SyncRecord) => g.rev !== rec.re
 interface Answer { status: number; json?: any; bytes?: Uint8Array; headers?: Headers }
 
 async function call(ctx: CloudContext, method: string, path: string, body?: BodyInit | object, want: "json" | "bytes" = "json"): Promise<Answer> {
-  const headers: Record<string, string> = { Authorization: "Bearer " + ctx.token };
+  const headers: Record<string, string> = { Authorization: "Bearer " + ctx.token }; // i18n-ignore
   let payload: BodyInit | undefined;
   if (body instanceof FormData) payload = body;
   else if (body !== undefined) { headers["Content-Type"] = "application/json"; payload = JSON.stringify(body); }
@@ -225,6 +237,7 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
       return "failed";
     }
     const fd = new FormData();
+    // i18n-ignore: a stored name or a developer diagnostic
     fd.append("meta", JSON.stringify({ name: clip(stored.name || "Saved game"), facts: factsOf(stored), baseRev: rec.rev, device: ctx.device, force }));
     fd.append("save", new Blob([stored.bytes as BlobPart], { type: "application/octet-stream" }), "game.save");
     const pic = pictureOf(stored.thumb);

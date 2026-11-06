@@ -4,6 +4,7 @@
 // neighbourhoods come from each city's OSM place list (T-177, game/placeList.ts), once the box has
 // loaded them; addresses are not searched (notes/T-148.md).
 
+import { t } from "../i18n";
 import { CITIES, type City } from "./cities";
 import { zoneAt } from "./zones";
 import { complexes } from "./complexView";
@@ -226,7 +227,7 @@ export function lineList(names: string[]): string {
   const first = sorted[0].split(" ")[0];
   const shared = sorted.every((n) => n.startsWith(first + " ") && n.length > first.length + 1);
   const parts = shared ? sorted.map((n) => n.slice(first.length + 1)) : sorted;
-  const shown = parts.slice(0, 3).join(", ") + (parts.length > 3 ? ` and ${parts.length - 3} more` : "");
+  const shown = parts.length > 3 ? t("search.lineListMore", { names: parts.slice(0, 3).join(", "), n: parts.length - 3 }) : parts.join(", ");
   return shared ? `${first} ${shown}` : shown;
 }
 

@@ -7,6 +7,7 @@
 // (`DemandApi.trip` and `EverydayApi.trip` in sim/src/demand/trip.rs, and the selection's far end,
 // asked of the demand workers); this file only names them. Main thread only.
 
+import { t as tr } from "../i18n";
 import { signal } from "@preact/signals";
 import { lngLatToPack } from "./coords";
 import { stationNameNear } from "./places";
@@ -444,6 +445,9 @@ export function routeCrowding(r: TripRoute) {
 /** One term of a route's perceived total: what it is, its real amount (minutes, dollars for the
  * fare, or a count of changes) with the weight it counts at, and its perceived minutes. */
 export interface CostTerm {
+  /** the term's stable English id, for code that tells terms apart */
+  id: string;
+  /** the term as the player reads it */
   label: string;
   real: number;
   weight: number;
@@ -463,14 +467,14 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
     // T-915: a drive to the station in its parts, which add up to its perceived minutes
     if (pair.accessRide) {
       const drive = pair.accessPerceived - pair.rideExtra;
-      out.push({ label: "starting the drive", real: 0, weight: 1, perceived: pair.rideStart, unit: "min" });
-      out.push({ label: "drive", real: pair.accessMin, weight: pair.accessMin > 0 ? drive / pair.accessMin : 1, perceived: drive, unit: "min" });
-      out.push({ label: pair.rideDropOff ? "drop-off" : "parking at the station", real: 0, weight: 1, perceived: pair.rideStation, unit: "min" });
-      out.push({ label: "parking at home", real: 0, weight: 1, perceived: pair.rideHome, unit: "min" });
-      out.push({ label: "car", real: pair.rideCar / CAR_MIN_PER_USD, weight: CAR_MIN_PER_USD, perceived: pair.rideCar, unit: "usd" });
+      out.push({ id: "starting the drive", label: tr("trip.startingDrive"), real: 0, weight: 1, perceived: pair.rideStart, unit: "min" }); // i18n-ignore
+      out.push({ id: "drive", label: tr("trip.drive"), real: pair.accessMin, weight: pair.accessMin > 0 ? drive / pair.accessMin : 1, perceived: drive, unit: "min" });
+      out.push({ id: pair.rideDropOff ? "drop-off" : "parking at the station", label: tr(pair.rideDropOff ? "trip.dropOff" : "trip.parkingStation"), real: 0, weight: 1, perceived: pair.rideStation, unit: "min" }); // i18n-ignore
+      out.push({ id: "parking at home", label: tr("trip.parkingHome"), real: 0, weight: 1, perceived: pair.rideHome, unit: "min" }); // i18n-ignore
+      out.push({ id: "car", label: tr("trip.car"), real: pair.rideCar / CAR_MIN_PER_USD, weight: CAR_MIN_PER_USD, perceived: pair.rideCar, unit: "usd" });
     }
     const walkPerc = pair.egressPerceived + (pair.accessRide ? 0 : pair.accessPerceived);
-    if (tot.walkMin > 0) out.push({ label: "walk", real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });
+    if (tot.walkMin > 0) out.push({ id: "walk", label: tr("trip.walk"), real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });
   }
   let waitP = 0, xferP = 0, changeP = 0;
   for (const l of r.legs) {
@@ -479,17 +483,17 @@ export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
   }
   const { crowding, fullWait } = routeCrowding(r);
   const wait = tot.wait - fullWait;
-  out.push({ label: "wait", real: wait, weight: wait > 0 ? (waitP - fullWait) / wait : 1, perceived: waitP - fullWait, unit: "min" });
-  if (fullWait >= 0.05) out.push({ label: "waiting for a train with room", real: fullWait, weight: 1, perceived: fullWait, unit: "min" });
-  out.push({ label: "ride", real: tot.ride, weight: 1, perceived: tot.ride, unit: "min" });
-  if (crowding >= 0.05) out.push({ label: "crowding", real: 0, weight: 1, perceived: crowding, unit: "min" });
-  if (tot.xfer > 0) out.push({ label: "walk between stations", real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" });
+  out.push({ id: "wait", label: tr("trip.wait"), real: wait, weight: wait > 0 ? (waitP - fullWait) / wait : 1, perceived: waitP - fullWait, unit: "min" });
+  if (fullWait >= 0.05) out.push({ id: "waiting for a train with room", label: tr("trip.waitRoom"), real: fullWait, weight: 1, perceived: fullWait, unit: "min" }); // i18n-ignore
+  out.push({ id: "ride", label: tr("trip.ride"), real: tot.ride, weight: 1, perceived: tot.ride, unit: "min" });
+  if (crowding >= 0.05) out.push({ id: "crowding", label: tr("trip.crowding"), real: 0, weight: 1, perceived: crowding, unit: "min" });
+  if (tot.xfer > 0) out.push({ id: "walk between stations", label: tr("trip.walkBetween"), real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" }); // i18n-ignore
   if (changeP > 0) out.push(tot.changes > 1
-    ? { label: "changes", real: tot.changes, weight: changeP / tot.changes, perceived: changeP, unit: "count" }
-    : { label: "change", real: 0, weight: 1, perceived: changeP, unit: "min" });
+    ? { id: "changes", label: tr("trip.changes"), real: tot.changes, weight: changeP / tot.changes, perceived: changeP, unit: "count" }
+    : { id: "change", label: tr("trip.change"), real: 0, weight: 1, perceived: changeP, unit: "min" });
   const fare = tot.fareUsd - tot.xferUsd;
-  out.push({ label: "fare", real: fare, weight: t.minPerUsd, perceived: fare * t.minPerUsd, unit: "usd" });
-  if (tot.xferUsd > 0) out.push({ label: "transfer fare", real: tot.xferUsd, weight: t.minPerUsd, perceived: tot.xferUsd * t.minPerUsd, unit: "usd" });
+  out.push({ id: "fare", label: tr("trip.fare"), real: fare, weight: t.minPerUsd, perceived: fare * t.minPerUsd, unit: "usd" });
+  if (tot.xferUsd > 0) out.push({ id: "transfer fare", label: tr("trip.transferFare"), real: tot.xferUsd, weight: t.minPerUsd, perceived: tot.xferUsd * t.minPerUsd, unit: "usd" }); // i18n-ignore
   return out;
 }
 

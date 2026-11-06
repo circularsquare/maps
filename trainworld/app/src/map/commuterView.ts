@@ -10,6 +10,7 @@
 // workers/commuters.worker.ts; the selection's few thousand cells are summed here. The bubbles
 // show each new result as soon as it lands (T-906).
 
+import { t } from "../i18n";
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
@@ -547,10 +548,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   });
 
   // ---- hover ----
-  const endWord = (end: BubbleEnd) => (end === "home" ? "from here" : end === "work" ? "to here" : "to and from here");
   // T-2271: the bar's width says the count's size too, on a log scale, never under a quarter
-  const bubbleTag = (end: BubbleEnd, t: number, w: number, d: number, u: number, ...rest: string[]) =>
-    [`${count(t + w + d + u)} ${tripWords()} ${shownDayPhrase.peek()} ${endWord(end)}`, modeBar(t, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(t + w + d + u, BAR_LO, BAR_HI)), ...rest];
+  const bubbleTag = (end: BubbleEnd, tr: number, w: number, d: number, u: number, ...rest: string[]) =>
+    [t("commuterView.bubble", { end, count: count(tr + w + d + u), words: tripWords(), when: shownDayPhrase.peek() }), modeBar(tr, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(tr + w + d + u, BAR_LO, BAR_HI)), ...rest];
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
@@ -558,7 +558,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
       if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i], near.none[i]);
       i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      if (i >= 0 && far) return bubbleTag(otherEnd(sel.end), far.train[i], far.walk[i], far.drive[i], far.none[i], "Click to explore this trip");
+      if (i >= 0 && far) return bubbleTag(otherEnd(sel.end), far.train[i], far.walk[i], far.drive[i], far.none[i], t("commuterView.exploreTrip"));
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
@@ -571,7 +571,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const sel = selection.peek();
     if (sel?.kind !== "city") return [];
     const c = cityById(sel.city);
-    return c.place === cityById(activeCity.peek()).place ? [] : [`Click to explore trips with ${c.name}`];
+    return c.place === cityById(activeCity.peek()).place ? [] : [t("commuterView.exploreWith", { name: c.name })];
   };
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {

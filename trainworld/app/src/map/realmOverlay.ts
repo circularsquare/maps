@@ -10,6 +10,7 @@
 // click would (T-1151). Zoomed out past the world (CITY_MARKS_MIN_ZOOM) there are no circles, no
 // hover and no click.
 
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import type { MultiPolygon } from "geojson";
@@ -45,7 +46,7 @@ export function hiddenRealmTip(map: MlMap, px: number, py: number): string[] | n
   if (marksOffAt(map) || tool.peek() !== "select" || linking.peek() !== null) return null;
   const at = map.unproject([px, py]);
   const id = hiddenRealmAt(at.lng, at.lat);
-  return id ? [realmName(id), "Click to load"] : null;
+  return id ? [realmName(id), t("realmOverlay.clickLoad")] : null;
 }
 
 export function startRealmOverlay(map: MlMap): () => void {
@@ -67,7 +68,8 @@ export function startRealmOverlay(map: MlMap): () => void {
       layer.appendChild(el);
       const name = realmName(l.id);
       render(h("button", {
-        type: "button", "aria-label": `Show ${name}`, "data-tip": `${name}\nClick the shaded area to show the cities there`,
+        type: "button", "aria-label": t("realmOverlay.show", { name }), "data-tip": `${name}
+${t("realmOverlay.tip")}`,
         onClick: () => showRealm(l.id),
       }), el);
       buttons.set(l.id, (b = { el, w: SIZE, h: SIZE }));

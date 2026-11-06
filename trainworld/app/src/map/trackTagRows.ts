@@ -1,7 +1,9 @@
 // The elevation and speed limit in the map's tags (T-526): the track hover and the track tool's
 // placing tag write them the same way, an icon then the value on its display colour.
 
-import { distance, levelLabel, moneyShort, plural, speed } from "../game/format";
+import { t, tRich } from "../i18n";
+import type { ComponentChild, ComponentChildren } from "preact";
+import { distance, levelLabel, moneyShort, speed } from "../game/format";
 import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
@@ -64,7 +66,7 @@ function icon(path: string, name: string): SVGSVGElement {
 export function elevationFact(level: number, ...also: number[]): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(ELEVATION_PATH, "Level"));
+  s.append(icon(ELEVATION_PATH, t("trackTagRows.level")));
   for (const v of [level, ...also]) {
     const l = Math.max(-3, Math.min(3, Math.round(v))) as Level;
     s.append(chip(levelLabel(l), LEVEL_COLOURS[l]));
@@ -76,7 +78,7 @@ export function elevationFact(level: number, ...also: number[]): HTMLSpanElement
 export function speedFact(kmh: number): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(SPEED_PATH, "Speed limit"), chip(speed(kmh), speedColour(kmh)));
+  s.append(icon(SPEED_PATH, t("trackTagRows.speedLimit")), chip(speed(kmh), speedColour(kmh)));
   return s;
 }
 
@@ -85,8 +87,13 @@ export function speedFact(kmh: number): HTMLSpanElement {
 export function trainSpeedFact(kmh: number, vehicle = "train"): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(`Fastest ${vehicle} `, chip(speed(kmh), vehicle === "train" ? speedColour(kmh) : busSpeedColour(kmh)));
+  s.append(...kids(tRich("trackTagRows.fastest", { vehicle, speed: chip(speed(kmh), vehicle === "train" ? speedColour(kmh) : busSpeedColour(kmh)) as unknown as ComponentChild })));
   return s;
+}
+
+/** A message's children as DOM pieces: its text and the nodes passed in as values. */
+export function kids(c: ComponentChildren): (string | Node)[] {
+  return ([c] as unknown[]).flat(Infinity).filter((x) => x !== null && x !== undefined && x !== false).map((x) => (typeof x === "object" ? (x as Node) : String(x)));
 }
 
 /** A mountain: the ground's terrain class (T-1270). */
@@ -104,7 +111,7 @@ export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElem
   if (k === undefined) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(TERRAIN_PATH, "Terrain"), chip(`${TERRAIN_NAMES[k]} +${TERRAIN_SURCHARGES[k].toFixed(1)}x`, TERRAIN_COLOURS[k], 0.6));
+  s.append(icon(TERRAIN_PATH, t("trackTagRows.terrain")), chip(t("trackTagRows.terrainAdds", { terrain: TERRAIN_NAMES[k], mult: TERRAIN_SURCHARGES[k].toFixed(1) }), TERRAIN_COLOURS[k], 0.6));
   return s;
 }
 
@@ -114,7 +121,7 @@ export function waterFact(ground: ArrayLike<number> | undefined): HTMLSpanElemen
   if (!ground || (ground[4] ?? 0) < 1) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(WATER_PATH, "Water"), chip(`Water +${WATER_SURCHARGE}x`, WATER_COLOUR, 0.6));
+  s.append(icon(WATER_PATH, t("trackTagRows.water")), chip(t("trackTagRows.waterAdds", { mult: WATER_SURCHARGE }), WATER_COLOUR, 0.6));
   return s;
 }
 
@@ -130,7 +137,7 @@ export function roadFact(ground: ArrayLike<number> | undefined): HTMLSpanElement
   const s = document.createElement("span");
   s.className = "tag-fact";
   // T-2263: the tutorial's longer wording
-  s.append(icon(ROAD_PATH, "Roads"), chip(`${plural(n, guideVerbose.peek() ? "road crossing" : "crossing")} +${moneyShort((ground[6] ?? 0) * 1e6)}`, ROAD_COLOUR, 0.6));
+  s.append(icon(ROAD_PATH, t("trackTagRows.roads")), chip(t("trackTagRows.roadsAdd", { verbose: guideVerbose.peek(), count: Number(n.toPrecision(3)), cost: moneyShort((ground[6] ?? 0) * 1e6) }), ROAD_COLOUR, 0.6));
   return s;
 }
 
@@ -178,7 +185,7 @@ export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[]
   };
   const out: HTMLDivElement[] = [];
   if (!pv.ok) {
-    const why = div(describeIssues(pv.issues) || "Cannot be placed here.");
+    const why = div(describeIssues(pv.issues) || t("trackTagRows.cannotPlace"));
     why.style.color = "var(--bad)"; // style.css's `.tool-tag.bad`, for this line only
     out.push(why);
   }
@@ -191,8 +198,7 @@ export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[]
   if (!Number.isFinite(top)) top = highSpeed.peek() ? HSR_KMH : TOP_KMH;
   if (pv.ok) {
     const tint = costTint(pv.mult);
-    out.push(div(`${distance(pv.lengthM)}, cost `, chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]),
-      `, ${moneyShort(pv.cost * 1e6)}`));
+    out.push(div(...kids(tRich("trackTagRows.lengthCost", { length: distance(pv.lengthM), mult: chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]) as unknown as ComponentChild, cost: moneyShort(pv.cost * 1e6) }))));
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));

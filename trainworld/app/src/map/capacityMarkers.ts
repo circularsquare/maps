@@ -6,6 +6,7 @@
 // A junction's dot is a link to the junction's inspector, where a flyover can be built (T-080).
 // Hovering a dot says what it means (T-099). The dots sit under the demand views' canvas.
 
+import { t, tNumber } from "../i18n";
 import { effect } from "@preact/signals";
 import { CAPACITY_KINDS } from "../game/capacityKinds";
 import { duration } from "../game/format";
@@ -59,9 +60,9 @@ export function capacityDot(rho: number, over: boolean): string {
  * and each train's wait at the level in force. */
 export function capacityTip(kind: number, rho: number, tph: number, waitS: number, level: number): string[] {
   const k = CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
-  const tip = [`${k.short} at ${rho > 1.005 ? ">100%" : `${Math.round(rho * 100)}%`} of capacity`];
-  if (rho > 0) tip.push(`${Math.round(tph)}/${Math.round(tph / rho)} trains per hour`);
-  if (Math.round(waitS) >= 2) tip.push(`at ${DEMAND[level] ?? "this"} demand, slows trains by ${duration(waitS)}`);
+  const tip = [t("capacityMarkers.use", { kind: k.short, load: rho > 1.005 ? ">100%" : `${tNumber(Math.round(rho * 100))}%` })];
+  if (rho > 0) tip.push(t("capacityMarkers.tph", { now: tNumber(Math.round(tph)), max: tNumber(Math.round(tph / rho)) }));
+  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: DEMAND[level], wait: duration(waitS) }) : t("capacityMarkers.slowsThis", { wait: duration(waitS) }));
   return tip;
 }
 

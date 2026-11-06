@@ -120,7 +120,7 @@ export function startHover(map: MlMap) {
     const t = hoverAt(map, px, py);
     if (!t) return hide();
     setPointerDisc(hoverDisc());
-    const html = t.filter(Boolean).map((s) => (s.startsWith("<div") ? s : `<div>${s}</div>`)).join("");
+    const html = t.filter(Boolean).map((s) => (s.startsWith("<div") ? s : `<div>${s}</div>`)).join(""); // i18n-ignore
     if (html !== last) {
       tag.innerHTML = html;
       last = html;

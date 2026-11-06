@@ -5,6 +5,7 @@
 // Ids are the UI's: a line or station id as a string (the clock worker's numeric ids go through
 // String()).
 
+import { t } from "../i18n";
 import { computed, signal } from "@preact/signals";
 import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
@@ -398,7 +399,7 @@ export const INTERCITY_PLACES = REGISTRY.market.places.map(p => p.name);
  * that stay within it are all 40 km or longer (the market has none shorter). */
 export function intercityPlaceName(place: number, own = -1): string {
   const name = REGISTRY.market.places[place]?.regionName ?? "";
-  return place === own ? `Other ${name} places` : name;
+  return place === own ? t("demand.otherPlaces", { name }) : name;
 }
 
 /** Longer trips (non-commute, T-117) to or from one place, a day. */

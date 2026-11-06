@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { edit, lineById, say, stationsById, world } from "./world";
 import { lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
@@ -38,7 +39,7 @@ function linesStoppingIn(city: CityId | null): LineInput[] {
 /** T-813, T-2526: "Line m" with m the lowest number no line stopping in the city has as its name. */
 export function nextLineName(city: CityId | null): string {
   const taken = new Set(linesStoppingIn(city).map((l) => l.name));
-  for (let k = 1; ; k++) if (!taken.has(`Line ${k}`)) return `Line ${k}`;
+  for (let k = 1; ; k++) if (!taken.has(t("lineActions.defaultName", { n: k }))) return t("lineActions.defaultName", { n: k });
 }
 
 /** T-1278: lines with a stop this near where a new line starts set its colour, m ... */
@@ -174,5 +175,5 @@ export async function constructBlueprints() {
   const items = w ? await blueprintQuote(w.version, true) : null;
   if (!items?.some((r) => r.cost > 0)) return;
   const a = await edit({ op: "constructAll" });
-  if (a.ok) say(`Constructed for ${money(a.charge * 1e6)}.`);
+  if (a.ok) say(t("lineActions.constructed", { cost: money(a.charge * 1e6) }));
 }

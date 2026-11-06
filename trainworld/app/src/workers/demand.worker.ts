@@ -199,7 +199,7 @@ const held = new Map<Population, string>();
 const heldQ = new Map<Population, string[]>();
 /** T-1609: a period solved alone against its cluster's frozen loads (`heldQ` psig plus this), which
  * a later solve may refine against again but never keeps as a whole solve's */
-const LOCAL = "~local";
+const LOCAL = "~local"; // i18n-ignore
 /** T-1609: per cluster `sig` and period, the last whole solve's loads before the capacity fit over
  * those after it, where they differ (route nodes of the whole network, the three blocks as `step`'s
  * totals): the frozen loads a local refine crowds on are the populations' capped loads times this */
@@ -521,7 +521,7 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer; level?
   if (market?.length && !aux) {
     if (!marketPacks) {
       if (!marketRows) {
-        for (const m of market) reject(m.id, true, "the market's rows have not arrived");
+        for (const m of market) reject(m.id, true, "the market's rows have not arrived"); // i18n-ignore
         return opened(packs, isBare, rejected);
       }
       marketPacks = new MarketPacks(marketWorld(typeof marketRows === "string" ? marketRows : new TextDecoder().decode(marketRows)));
@@ -2286,6 +2286,7 @@ async function run() {
             const { msg, transfer } = figures(q, job.rounds, 0, [c], undefined, sharedOf(c, q, shared), delta);
             sendMessage({ kind: "result", ...msg, cluster: { cities: touched, market: false, lines: c.lines.slice(), local: true } }, transfer);
           }
+          // i18n-ignore
           if (import.meta.env.DEV) console.info(`T1733 v${job.version} local solve of ${touched.length} zones (${touched.slice(0, 8).join(",")}) of ${c.cities.length} after an edit${sub ? `, the market's pairs of ${sub.window_zones().length} of its zones` : ""}: ${Math.round(performance.now() - t0)} ms`);
         } finally {
           if (whole) c.views.set(c.part!, whole);

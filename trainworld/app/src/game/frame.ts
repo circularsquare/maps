@@ -97,7 +97,7 @@ function lcc({ lon: lon0, lat: lat0 }: FrameSpec): Frame {
 /** The frame a track save's bytes are in (`TrackApi.frame_kind`): TWT6 is Mercator (2), TWT5 the
  * Northeast conic (1), older formats the legacy one (0). */
 export function frameKindName(kind: number): FrameKind {
-  return kind === 2 ? "merc" : kind === 1 ? "lcc" : "equirect";
+  return kind === 2 ? "merc" : kind === 1 ? "lcc" : "equirect"; // i18n-ignore
 }
 /** The number `TrackApi.set_empty_frame` and `convert_save_frame` take for a frame kind. */
 export function frameKindNumber(kind: FrameKind): number {

@@ -8,11 +8,12 @@
 import { computed, effect, signal } from "@preact/signals";
 import { cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
-import { continentOf } from "./continents";
-import { AVERAGE_DAY } from "./days";
+import { continentLabel, continentOf } from "./continents";
+import { AVERAGE_DAY, WEEKDAY_LONG } from "./days";
 import { demandByDay, demandUpdating, eachCorridor, lineFiguresIn, roughZones, type Corridors } from "./demand";
-import { andList, bigDistance, clockTime, dayOf, money, speed } from "./format";
-import { countryName } from "./holidays";
+import { bigDistance, clockTime, dayOf, money, speed } from "./format";
+import { t, tCountry, tList, tNumber } from "../i18n";
+
 import { stationZone } from "./listScope";
 import { moneyState } from "./money";
 import { readToday, runningToday } from "./today";
@@ -37,20 +38,20 @@ export interface Tiered { id: TieredId; name: string; tiers: number[] }
 
 /** Anita, 2026-11-03: the first tier not had with a first line, the top one only by going far. */
 export const TIERED: Tiered[] = [
-  { id: "cities", name: "Cities served", tiers: [2, 10, 25, 100] },
-  { id: "trips", name: "Trips per day", tiers: [1e6, 10e6, 100e6, 300e6, 1e9] },
-  { id: "station", name: "Busiest station", tiers: [500e3, 1e6, 2e6, 5e6] },
-  { id: "line", name: "Busiest line", tiers: [500e3, 1e6, 3e6, 10e6] },
+  { id: "cities", get name() { return t("achievements.nameCities"); }, tiers: [2, 10, 25, 100] },
+  { id: "trips", get name() { return t("achievements.nameTrips"); }, tiers: [1e6, 10e6, 100e6, 300e6, 1e9] },
+  { id: "station", get name() { return t("achievements.nameStation"); }, tiers: [500e3, 1e6, 2e6, 5e6] },
+  { id: "line", get name() { return t("achievements.nameLine"); }, tiers: [500e3, 1e6, 3e6, 10e6] },
 ];
 export const tierKey = (id: TieredId, tier: number) => `${id}:${tier}`;
 
 /** A tier's step in words: with what earned it (`a`), else the rule ("at one station"); `toast`, under
  * the achievement's name, where "served" would repeat it. */
 export function tierText(id: TieredId, tier: number, a?: Achieved | Detail, toast = false): string {
-  if (id === "cities") return toast ? `${tier} cities` : `${tier} cities served`;
-  if (id === "trips") return `${short(tier)} trips/day`;
-  if (id === "station") return `${short(tier)} boardings/day at ${a?.of ?? "one station"}`;
-  return `${short(tier)} riders/day on ${a?.of ?? "one line"}`;
+  if (id === "cities") return t(toast ? "achievements.citiesToast" : "achievements.citiesServed", { n: tier });
+  if (id === "trips") return t("achievements.tripsDay", { n: short(tier) });
+  if (id === "station") return t("achievements.stationBoardings", { n: short(tier), of: a?.of ?? t("achievements.oneStation") });
+  return t("achievements.lineRiders", { n: short(tier), of: a?.of ?? t("achievements.oneLine") });
 }
 
 /** The firsts in the panel's order (Sea crossing comes with T-2150). */
@@ -76,26 +77,28 @@ export const SLEEPER_S = 12 * 3600;
 export const SLEEPER_RIDERS = 1;
 
 const pct = (v: number) => `${Math.floor(v)}%`;
+const decimals = (v: number, dp: number) => tNumber(v, { minimumFractionDigits: dp, maximumFractionDigits: dp });
+/** The countries of a Over-the-border record: new ones store ISO codes, older saves the English names. */
+const placeName = (s: string) => (/^[A-Z]{2}$/.test(s) ? tCountry(s) : s);
 export const FIRSTS: First[] = [
-  { id: "border", name: "Over the border", rule: () => "A line with stops in two countries", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
-  { id: "continents", name: "Bicontinental", rule: () => "A line with stops on two continents", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
-  { id: "long", name: "Longest road", rule: () => `A line ${bigDistance(LONG_M)} long`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long` },
-  { id: "pearls", name: "String of pearls", rule: () => `A profitable line at least ${bigDistance(PEARLS_M)} long`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long and in profit` },
-  { id: "money", name: "Money train", rule: () => `A line with ${money(MONEY_USD)} profit in a day`, text: (a) => `${a.of} made ${money(a.v ?? 0)} profit today` },
-  { id: "bullet", name: "Bullet train", rule: () => `A train at ${speed(BULLET_KMH)}`, text: (a) => `${a.of} reaches ${speed(a.v ?? 0)}` },
-  { id: "circle", name: "City circles", rule: () => `A circle line of ${CIRCLE_STOPS} stops`, text: (a) => `${a.of} is a circle of ${a.v} stops` },
-  { id: "change", name: "Transfers world", rule: () => `One transfer per trip on average, with ${short(CHANGE_MIN_TRIPS)} trips/day`, text: (a) => `${(a.v ?? 0).toFixed(2)} transfers per trip`,
-    now: () => { const v = demandFigures.value?.transfersPerTrip; return v === undefined ? "" : `Now ${v.toFixed(2)} transfers per trip`; } },
-  { id: "city", name: "Trains city", rule: () => `A city with ${CITY_SHARE}% of its trips by train`, text: (a) => `${pct(a.v ?? 0)} of trips within ${a.of} go by train` },
-  { id: "intercity", name: "Grounded", rule: () => `A city with ${INTERCITY_SHARE}% of its trips to other places by train`, text: (a) => `${pct(a.v ?? 0)} of trips between ${a.of} and other places go by train` },
-  { id: "sleeper", name: "Sleeper", rule: () => `A rider on one train for ${SLEEPER_S / 3600} hours`, text: (a) => `Riders spend ${(a.v ?? 0).toFixed(1)} hours on ${a.of}` },
+  { id: "border", get name() { return t("achievements.nameBorder"); }, rule: () => t("achievements.ruleBorder"), text: (a) => t("achievements.textBorder", { of: a.of, places: tList((a.in ?? []).map(placeName)) }) },
+  { id: "continents", get name() { return t("achievements.nameContinents"); }, rule: () => t("achievements.ruleContinents"), text: (a) => t("achievements.textContinents", { of: a.of, places: tList((a.in ?? []).map(continentLabel)) }) },
+  { id: "long", get name() { return t("achievements.nameLong"); }, rule: () => t("achievements.ruleLong", { length: bigDistance(LONG_M) }), text: (a) => t("achievements.textLong", { of: a.of, length: bigDistance(a.v ?? 0) }) },
+  { id: "pearls", get name() { return t("achievements.namePearls"); }, rule: () => t("achievements.rulePearls", { length: bigDistance(PEARLS_M) }), text: (a) => t("achievements.textPearls", { of: a.of, length: bigDistance(a.v ?? 0) }) },
+  { id: "money", get name() { return t("achievements.nameMoney"); }, rule: () => t("achievements.ruleMoney", { amount: money(MONEY_USD) }), text: (a) => t("achievements.textMoney", { of: a.of, amount: money(a.v ?? 0) }) },
+  { id: "bullet", get name() { return t("achievements.nameBullet"); }, rule: () => t("achievements.ruleBullet", { speed: speed(BULLET_KMH) }), text: (a) => t("achievements.textBullet", { of: a.of, speed: speed(a.v ?? 0) }) },
+  { id: "circle", get name() { return t("achievements.nameCircle"); }, rule: () => t("achievements.ruleCircle", { n: CIRCLE_STOPS }), text: (a) => t("achievements.textCircle", { of: a.of, n: a.v ?? 0 }) },
+  { id: "change", get name() { return t("achievements.nameChange"); }, rule: () => t("achievements.ruleChange", { trips: short(CHANGE_MIN_TRIPS) }), text: (a) => t("achievements.textChange", { n: decimals(a.v ?? 0, 2) }),
+    now: () => { const v = demandFigures.value?.transfersPerTrip; return v === undefined ? "" : t("achievements.nowChange", { n: decimals(v, 2) }); } },
+  { id: "city", get name() { return t("achievements.nameCity"); }, rule: () => t("achievements.ruleCity", { share: CITY_SHARE }), text: (a) => t("achievements.textCity", { share: pct(a.v ?? 0), of: a.of }) },
+  { id: "intercity", get name() { return t("achievements.nameIntercity"); }, rule: () => t("achievements.ruleIntercity", { share: INTERCITY_SHARE }), text: (a) => t("achievements.textIntercity", { share: pct(a.v ?? 0), of: a.of }) },
+  { id: "sleeper", get name() { return t("achievements.nameSleeper"); }, rule: () => t("achievements.ruleSleeper", { hours: SLEEPER_S / 3600 }), text: (a) => t("achievements.textSleeper", { hours: decimals(a.v ?? 0, 1), of: a.of }) },
 ];
 
-const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 /** "Monday, day 406, at 14:08" on the game clock. */
 export function when(at: number): string {
-  const t = Math.floor(at / 60), d = dayOf(t);
-  return `${WEEKDAY_LONG[weekdayOf(d)]}, day ${d}, at ${clockTime(t)}`;
+  const m = Math.floor(at / 60), d = dayOf(m);
+  return t("achievements.when", { weekday: WEEKDAY_LONG[weekdayOf(d)], day: d, time: clockTime(m) });
 }
 
 /** Rail lines with trains set at some level; a blueprint, a line with no trains and buses never count. */
@@ -144,7 +147,7 @@ export const networkFigures = computed(() => {
       const c = continentOf(cc, s.lng, s.lat);
       if (c) continents.add(c);
     }
-    if (countries.size > 1 && !firsts.has("border")) firsts.set("border", { of: l.name, in: [...countries].map(countryName) });
+    if (countries.size > 1 && !firsts.has("border")) firsts.set("border", { of: l.name, in: [...countries] });
     if (continents.size > 1 && !firsts.has("continents")) firsts.set("continents", { of: l.name, in: [...continents] });
     const m = st.km * 1000;
     if (m >= LONG_M && (!long || m > long.v!)) long = { of: l.name, v: m };

@@ -5,6 +5,7 @@
 // riders change between any two stations of a complex (T-161). Stations the distance rule groups
 // cannot be split: only the player's own links can be undone (DECISIONS 2026-10-12).
 
+import { t } from "../i18n";
 import { signal } from "@preact/signals";
 import { LINK_MAX_M } from "./complexes";
 import { groundDist } from "./coords";
@@ -31,11 +32,11 @@ export function cancelLink(): boolean {
 export function linkRefusal(a: StationId, b: StationId): string | null {
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === a), sb = st.find((s) => s.id === b);
-  if (!sa || !sb) return "Pick a station for the passage.";
-  if (a === b) return "Pick another station for the passage.";
-  if (complexOf(a).includes(b)) return `${sb.name} is already in this complex.`;
+  if (!sa || !sb) return t("links.pickStation");
+  if (a === b) return t("links.pickAnother");
+  if (complexOf(a).includes(b)) return t("links.alreadyComplex", { name: sb.name });
   const d = groundDist(sa.x, sa.y, sb.x, sb.y);
-  if (d > LINK_MAX_M) return `${sb.name} is ${distance(d)} away. A passage reaches ${roughDistance(LINK_MAX_M)}.`;
+  if (d > LINK_MAX_M) return t("links.tooFar", { name: sb.name, away: distance(d), reach: roughDistance(LINK_MAX_M) });
   return null;
 }
 
@@ -58,7 +59,7 @@ export async function linkPicked(picked: Selection): Promise<void> {
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === from)!, sb = st.find((s) => s.id === picked.station)!;
   const a = await edit({ op: "link", a: sa.num, b: sb.num, on: true });
-  if (a.ok) say(a.charge > 0 ? `Passage between ${sa.name} and ${sb.name} built for ${money(a.charge * 1e6)}.` : `Passage between ${sa.name} and ${sb.name} added. It is built with the stations.`);
+  if (a.ok) say(a.charge > 0 ? t("links.built", { a: sa.name, b: sb.name, cost: money(a.charge * 1e6) }) : t("links.added", { a: sa.name, b: sb.name }));
 }
 
 /** Undo the player's link between two stations. */
@@ -67,7 +68,7 @@ export async function unlink(a: StationId, b: StationId) {
   const sa = st.find((s) => s.id === a), sb = st.find((s) => s.id === b);
   if (!sa || !sb) return;
   const r = await edit({ op: "link", a: sa.num, b: sb.num, on: false });
-  if (r.ok) say(`Passage between ${sa.name} and ${sb.name} removed.`);
+  if (r.ok) say(t("links.removed", { a: sa.name, b: sb.name }));
 }
 
 /** The player's links with an end in `members` (a station or a complex). */

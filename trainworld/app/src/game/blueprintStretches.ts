@@ -6,6 +6,7 @@
 import { signal } from "@preact/signals";
 import type { Level, TrackEdge, WorldView } from "./types";
 import { edit } from "./world";
+import { t } from "../i18n";
 
 export interface BpRow {
   kind: "stretch" | "station";
@@ -47,7 +48,7 @@ export const bpHover = signal<number[]>([]);
 
 /** a stretch end this close to a station (pack metres, about half the longest platform) is named by it */
 const NEAR_STATION_M = 250;
-const END_WORDS ={ junction: "a junction", end: "a track end", built: "built track" } as const;
+const END_WORDS = { get junction() { return t("blueprintStretches.endJunction"); }, get end() { return t("blueprintStretches.endTrack"); }, get built() { return t("blueprintStretches.endBuilt"); } };
 
 /** The parts of the blueprint, biggest first, from world `w` and the pieces' prices. */
 export function blueprintParts(w: WorldView, pieces: ArrayLike<number>): BpPart[] {
@@ -81,7 +82,7 @@ export function blueprintParts(w: WorldView, pieces: ArrayLike<number>): BpPart[
   for (const e of bp) push(byRoot, find(e.a), e);
   const splits = (n: number) => isStation(n) || (bpAt.get(n)?.length ?? 0) !== 2 || (allAt.get(n)?.length ?? 0) >= 3;
   const endName = (n: number): { name: string; station: boolean } => {
-    if (isStation(n)) return { name: stationByNum.get(n)?.name || "Station", station: true };
+    if (isStation(n)) return { name: stationByNum.get(n)?.name || t("blueprintStretches.station"), station: true };
     // track drawn from a station starts at its platform's end, so a station that close names the end
     const at = w.nodes.get(n);
     let best: string | null = null, bd = NEAR_STATION_M;
@@ -106,7 +107,7 @@ export function blueprintParts(w: WorldView, pieces: ArrayLike<number>): BpPart[
     const [c, on] = stationCost.get(n) ?? [0, false];
     const s = stationByNum.get(n);
     const level = (s?.level ?? 0) as Level;
-    return { kind: "station", label: s?.name || "Station", edges: (allAt.get(n) ?? []).map((e) => e.id), stations: [n], nodes: [n], lengthM: 0, cost: c, onCost: on ? c : 0, on: !s?.off, off: !!s?.off, levelMin: level, levelMax: level, crossings: 0, crossingCost: 0, ends: [n] };
+    return { kind: "station", label: s?.name || t("blueprintStretches.station"), edges: (allAt.get(n) ?? []).map((e) => e.id), stations: [n], nodes: [n], lengthM: 0, cost: c, onCost: on ? c : 0, on: !s?.off, off: !!s?.off, levelMin: level, levelMax: level, crossings: 0, crossingCost: 0, ends: [n] };
   };
   for (const edges of byRoot.values()) {
     const seen = new Set<number>();
@@ -195,8 +196,8 @@ export function blueprintParts(w: WorldView, pieces: ArrayLike<number>): BpPart[
   /** `crossovers`: the crossover diagonals, which have no row and switch with the part */
   function partOf(rows: BpRow[], named: number[], junctions: number, jCost: number, jOn: number, crossovers: number[]): BpPart {
     const first = named[0], last = named[named.length - 1];
-    const name = (n: number) => stationByNum.get(n)?.name || "Station";
-    const label = !named.length ? "Track" : name(first) === name(last) ? name(first) : `${name(first)} to ${name(last)}`;
+    const name = (n: number) => stationByNum.get(n)?.name || t("blueprintStretches.station");
+    const label = !named.length ? t("blueprintStretches.track") : name(first) === name(last) ? name(first) : t("blueprintStretches.fromTo", { from: name(first), to: name(last) });
     const p: BpPart = {
       label, rows, edges: [], stations: [], nodes: [], lengthM: 0, cost: jCost, onCost: jOn, on: false, off: false,
       levelMin: 3, levelMax: -3, stationCount: new Set(named.map(name)).size, junctions, junctionCost: jCost, junctionOnCost: jOn,

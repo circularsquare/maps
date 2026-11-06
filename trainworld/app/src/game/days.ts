@@ -7,6 +7,8 @@
 // workers/demandClient.ts). Plain data and one signal: the clock worker imports it too.
 
 import { signal } from "@preact/signals";
+import { t } from "../i18n";
+import { lazyTexts } from "./lazyText";
 
 /** 0 weekday, 1 Saturday, 2 Sunday, 3 a superholiday's away day (T-264, a scaled Sunday), 4 its
  * going-out day and 5 its coming-back day (T-1373: a weekday and a Sunday with twice a weekday's
@@ -16,7 +18,7 @@ export const DAY_KINDS: DayKind[] = [0, 1, 2, 3, 4, 5];
 export const AWAY_DAY = 3;
 export const OUT_DAY = 4;
 export const BACK_DAY = 5;
-export const DAY_KIND_NAME = ["Weekday", "Saturday", "Sunday", "Holiday day", "Going-out day", "Coming-back day"] as const;
+export const DAY_KIND_NAME = lazyTexts(["days.kindWeekday", "days.kindSaturday", "days.kindSunday", "days.kindHoliday", "days.kindGoingOut", "days.kindComingBack"]);
 
 /** The days a demand view can show (T-464): the six kinds, then the average day (5 weekdays, a
  * Saturday and a Sunday over 7, sim/src/demand/days.rs). The index into `demandByDay` and the `day`
@@ -25,13 +27,15 @@ export type DemandDay = DayKind | 6;
 export const DEMAND_DAYS: DemandDay[] = [0, 1, 2, 3, 4, 5, 6];
 export const AVERAGE_DAY = 6;
 /** How a figure for the day shown ends: "12,400 trip legs per day". The Day choice names the day. */
-export const DEMAND_DAY_PHRASE = ["per weekday", "per Saturday", "per Sunday", "per holiday day", "per going-out day", "per coming-back day", "per day"] as const;
+export const DEMAND_DAY_PHRASE = lazyTexts(["days.perWeekday", "days.perSaturday", "days.perSunday", "days.perHoliday", "days.perGoingOut", "days.perComingBack", "days.perDay"]);
 /** "points on a weekday": the same, as the points hovers end */
-export const DEMAND_DAY_ON = ["on a weekday", "on a Saturday", "on a Sunday", "on a holiday day", "on a going-out day", "on a coming-back day", "per day"] as const;
+export const DEMAND_DAY_ON = lazyTexts(["days.onWeekday", "days.onSaturday", "days.onSunday", "days.onHoliday", "days.onGoingOut", "days.onComingBack", "days.perDay"]);
 /** The ordinary kind a superholiday's day stands in for while none is near (T-1373): a day away and a
  * coming-back day a Sunday, a going-out day a weekday. */
 export const PLAIN_KIND: DayKind[] = [0, 1, 2, 2, 0, 2];
-const WEEKDAY_NAME =["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAY_NAME = lazyTexts(["days.shortMonday", "days.shortTuesday", "days.shortWednesday", "days.shortThursday", "days.shortFriday", "days.shortSaturday", "days.shortSunday"]);
+/** "Monday" to "Sunday", indexed by `weekdayOf`. */
+export const WEEKDAY_LONG = lazyTexts(["days.longMonday", "days.longTuesday", "days.longWednesday", "days.longThursday", "days.longFriday", "days.longSaturday", "days.longSunday"]);
 
 /** Day of the week of game day `day`, 0 Monday. */
 export const weekdayOf = (day: number): number => ((day - 1) % 7 + 7) % 7;
@@ -42,8 +46,8 @@ export const dayKindOf = (day: number): DayKind => { const w = weekdayOf(day); r
  * each year starts a weekday later, as real non-leap years do. */
 export const DAY1_OF_YEAR = 26;
 const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-export const MONTH_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_SHORT = lazyTexts(["days.shortMonthJanuary", "days.shortMonthFebruary", "days.shortMonthMarch", "days.shortMonthApril", "days.shortMonthMay", "days.shortMonthJune", "days.shortMonthJuly", "days.shortMonthAugust", "days.shortMonthSeptember", "days.shortMonthOctober", "days.shortMonthNovember", "days.shortMonthDecember"]);
+export const MONTH_LONG = lazyTexts(["days.longMonthJanuary", "days.longMonthFebruary", "days.longMonthMarch", "days.longMonthApril", "days.longMonthMay", "days.longMonthJune", "days.longMonthJuly", "days.longMonthAugust", "days.longMonthSeptember", "days.longMonthOctober", "days.longMonthNovember", "days.longMonthDecember"]);
 /** Day of the year of game day `day`, 0 January 1. */
 export const dayOfYear = (day: number): number => ((day - 1 + DAY1_OF_YEAR) % 365 + 365) % 365;
 /** The weekday (0 Monday) of January 1 of game day `day`'s year: which real year's holidays it
@@ -58,11 +62,11 @@ export function dateOf(day: number): { month: number; date: number } {
 /** "Feb 24" */
 export function shortDate(day: number): string {
   const { month, date } = dateOf(day);
-  return `${MONTH_SHORT[month]} ${date}`;
+  return t("days.shortDate", { month: MONTH_SHORT[month], day: date });
 }
 /** "Mon Feb 24" */
 export function dateName(day: number): string {
-  return `${weekdayName(day)} ${shortDate(day)}`;
+  return t("days.dateName", { weekday: weekdayName(day), date: shortDate(day) });
 }
 
 /** The kind of day at time `t` (seconds). Callers pass local time (T-309, game/localTime.ts): a
@@ -94,7 +98,7 @@ export const whenBack = signal<string | null>(null);
 export function dateRange(from: number, to: number): string {
   const a = dateOf(from), b = dateOf(to - 1);
   if (to - from <= 1) return shortDate(from);
-  return a.month === b.month ? `${MONTH_SHORT[a.month]} ${a.date}-${b.date}` : `${shortDate(from)}-${shortDate(to - 1)}`;
+  return a.month === b.month ? t("days.rangeSameMonth", { month: MONTH_SHORT[a.month], from: a.date, to: b.date }) : t("days.rangeAcross", { from: shortDate(from), to: shortDate(to - 1) });
 }
 /** Whether kind `k`'s own figures are made now (T-264, T-1373): the ordinary kinds always, a
  * superholiday's only while one is near. */

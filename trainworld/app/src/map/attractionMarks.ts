@@ -11,6 +11,7 @@ import { activeCity, cityById, getWorldFrame, widenBox, worldFrameEpoch, zoneBox
 import { loadAttractions, visitsOn, type Attraction } from "../game/attractions";
 import { cellModes, cityCells, demandView, type DemandView } from "../game/demand";
 import { count } from "../game/format";
+import { t, tNumber } from "../i18n";
 import type { DemandDay } from "../game/days";
 import { nearbyZones } from "../game/zones";
 import { purposeFilter, shownDay, shownDayPhrase } from "../game/ui";
@@ -192,9 +193,9 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
     for (const a of shown) {
       const m = map.project([a.lng, a.lat]);
       if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX || hiddenOnGlobe(a.lng, a.lat)) continue;
-      const lines = [escape(a.name), `About ${count(visitsOn(a.visitors, shownDay.peek()))} visits ${shownDayPhrase.peek()}`];
+      const lines = [escape(a.name), t("attractionMarks.visits", { visits: count(visitsOn(a.visitors, shownDay.peek())), when: shownDayPhrase.peek() })];
       const modes = modesAt(a), legs = modes ? modes.train + modes.walk + modes.drive + modes.none : 0;
-      if (modes && legs > 0) lines.push(`${Math.round((100 * modes.train) / legs)}% by train`, modeBar(modes.train, modes.walk, modes.drive, modes.none));
+      if (modes && legs > 0) lines.push(t("attractionMarks.byTrain", { share: tNumber(Math.round((100 * modes.train) / legs)) }), modeBar(modes.train, modes.walk, modes.drive, modes.none));
       return lines;
     }
     return null;

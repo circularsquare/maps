@@ -33,7 +33,9 @@ import { clockTime, forecast, money, moneyNegative } from "../game/format";
 import { stretchMoney, type StretchFigures } from "../game/stretchMoney";
 import type { CrowdedStretch } from "../game/boarding";
 import { loadText } from "../game/today";
-import { chip, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
+import { t, tNumber, tRich, type MessageKey } from "../i18n";
+import type { ComponentChild, ComponentChildren } from "preact";
+import { chip, kids, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { stretchLoad, tripsLanded } from "./stretchLoad";
 import { crowdColour, profitColour } from "../game/palette";
 import { floorAt } from "./buildingFloors";
@@ -73,36 +75,36 @@ export function lineSizeAt(ov: Overlay, num: number, seg: number): number {
 function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, traffic: boolean, i: number, full: CrowdedStretch | null): TipLine[] {
   const num = n.lines.colour[i];
   const l = w?.save.lines.find((x) => x.num === num);
-  const name = l ? named(l) : `Line ${num}`;
+  const name = l ? named(l) : t("trackHover.line", { num });
   const status = l ? w?.lineStats[l.id]?.status : undefined;
-  if (status === "planned") return [name, "Not running yet"];
-  if (status === "broken") return [name, "Not running"];
+  if (status === "planned") return [name, t("trackHover.notRunningYet")];
+  if (status === "broken") return [name, t("trackHover.notRunning")];
   if (!l) return [name];
   // T-1907: the riders in every track view; outside Traffic a tag without them says nothing of demand
-  if (!dv) return traffic ? [name, "Calculating demand"] : [name];
+  if (!dv) return traffic ? [name, t("trackHover.calculating")] : [name];
   const k = n.lines.stretch ? n.lines.stretch[i] : -1;
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops, k, purpose);
-  if (day === null) return traffic ? [name, "Calculating demand"] : [name];
-  const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
+  if (day === null) return traffic ? [name, t("trackHover.calculating")] : [name];
+  const count = t("trackHover.riders", { n: day < 0.5 ? "0" : forecast(day), when: shownDayPhrase.peek() });
   // the purpose filter (T-158) says what it counted
-  const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  const out: TipLine[] = purpose === "all" ? [name, count] : [name, count, t("trackHover.tripsOnly", { purpose: purposeName(purpose) })];
   if (!traffic) return out;
   // T-2007: the stretch's average load, every purpose's riders against the day's trips at the rated load
   const st = w?.lineStats[l.id];
   const all = purpose === "all" ? day : dailyRiders(dv, l.id, l.stops, k, "all");
   const load = st && w && all !== null ? stretchLoad(num, w.version, st.cars, shownDay.peek(), all) : null;
-  if (load !== null && load !== undefined) out.push(`Average load ${Math.round(load * 100)}%`);
+  if (load !== null && load !== undefined) out.push(t("trackHover.avgLoad", { share: tNumber(Math.round(load * 100)) }));
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
   const lev = DEMAND_INDEX[clock.demand.peek()];
   if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
-    out.push(Object.assign(document.createElement("div"), { textContent: `Track at capacity at ${clock.demand.peek()} demand`, style: "color: var(--bad)" }));
+    out.push(Object.assign(document.createElement("div"), { textContent: t("trackHover.atCapacity", { demand: clock.demand.peek() }), style: "color: var(--bad)" }));
   }
   // T-2236: the crowding mark's load (the boarding account's busiest hour), on its crowding colour
   // as the line panel's dots
   if (full) {
     const d = document.createElement("div");
-    d.append("Peak load ", chip(loadText(full.load), crowdColour(full.load)), ` at ${clockTime(full.hour * 60)}`);
+    d.append(...kids(tRich("trackHover.peakLoad", { load: chip(loadText(full.load), crowdColour(full.load)) as unknown as ComponentChild, time: clockTime(full.hour * 60) })));
     out.push(d);
   }
   return out;
@@ -127,19 +129,19 @@ function busRows(ov: Overlay, w: WorldView, line: number, px: number, py: number
   const dv = demandView.peek();
   if (view === "profit") {
     const sm = stretchMoney.peek(), s = k >= 0 ? sm?.buses.get(line)?.stretches[k] : undefined;
-    if (!sm) { if (!dv) out.push("Calculating demand"); }
-    else if (s?.bare) out.push(`No ${vehicles} run here`);
+    if (!sm) { if (!dv) out.push(t("trackHover.calculating")); }
+    else if (s?.bare) out.push(t("trackHover.noVehicles", { vehicles }));
     else if (s) out.push(...stretchMoneyRows(s, vehicles));
   }
   const purpose = purposeFilter.peek();
   const day = dv ? dailyRiders(dv, l.id, l.stops, k, purpose) : null;
   if (day !== null) {
-    out.push(`${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`);
-    if (purpose !== "all") out.push(`${purposeName(purpose)} trips only`);
-  } else if (view === "traffic") out.push("Calculating demand");
+    out.push(t("trackHover.riders", { n: day < 0.5 ? "0" : forecast(day), when: shownDayPhrase.peek() }));
+    if (purpose !== "all") out.push(t("trackHover.tripsOnly", { purpose: purposeName(purpose) }));
+  } else if (view === "traffic") out.push(t("trackHover.calculating"));
   if (view === "speed") {
     const v = ov.renderer.buses.speedAt(ov, px, py, line);
-    out.push(v !== null ? factRow(trainSpeedFact(v, ferry ? "boat" : "bus")) : `No ${vehicles} run here`);
+    out.push(v !== null ? factRow(trainSpeedFact(v, ferry ? "boat" : "bus")) : t("trackHover.noVehicles", { vehicles }));
   }
   return out;
 }
@@ -157,8 +159,8 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   // T-1124: riders changing trains on their walk
   const bub = ov.cssW > 0 && ov.cssH > 0 ? ov.renderer.bubbles.at(px / ov.cssW, py / ov.cssH) : null;
   if (bub) {
-    const to = w?.save.lines.find((x) => x.num === bub.line)?.name ?? `Line ${bub.line}`;
-    return [`${forecast(bub.riders)} riders changing to ${to}`];
+    const to = w?.save.lines.find((x) => x.num === bub.line)?.name ?? t("trackHover.line", { num: bub.line });
+    return [t("trackHover.changing", { n: forecast(bub.riders), line: to })];
   }
   // a build tool is about the track: no train under the pointer, a search through every train on
   // each pointer move (T-1394)
@@ -232,39 +234,40 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   if (on.length) {
     return [...money, ...edgeRiders(n, hit.edge, on), ...facts, lineBullets(on)];
   }
-  return !w && lineOnEdge(n, hit.edge) ? [...facts, "A line runs here"] : [...money, ...facts];
+  return !w && lineOnEdge(n, hit.edge) ? [...facts, t("trackHover.lineRuns")] : [...money, ...facts];
 }
 
 /** T-2420: the Profit view's rows for the track stretch an edge is on: the share of its costs the fares cover on
  * its colour, its profit, per km, then fares, running trains and upkeep; bare track its upkeep. None for blueprint track. */
 function profitRows(edge: number): TipLine[] {
   const sm = stretchMoney.peek();
-  if (!sm) return demandView.peek() ? [] : ["Calculating demand"];
+  if (!sm) return demandView.peek() ? [] : [t("trackHover.calculating")];
   const s = sm.stretchOf.get(edge);
   if (!s) return [];
-  if (s.bare) return ["No trains run here", moneyRow("Upkeep ", -s.upkeep, " per day")];
+  if (s.bare) return [t("trackHover.noTrains"), moneyRow("trackHover.upkeepDay", -s.upkeep)];
   return stretchMoneyRows(s, "trains");
 }
 
 /** A money row, negative money red. */
-function moneyRow(label: string, v: number, after = ""): HTMLDivElement {
+function moneyRow(key: MessageKey, v: number, more: Record<string, string> = {}): HTMLDivElement {
   const d = document.createElement("div");
   const m = Object.assign(document.createElement("span"), { textContent: money(v) });
   if (moneyNegative(v)) m.className = "money-neg";
-  d.append(label, m, after);
+  d.append(...kids(tRich(key, { amount: m as unknown as ComponentChild, ...more })));
   return d;
 }
+
 
 /** The Profit view's rows for a stretch something runs on, its running cost named for `vehicles`
  * (T-2452: "buses", "boats"). */
 function stretchMoneyRows(s: StretchFigures, vehicles: string): TipLine[] {
   const row = moneyRow;
-  if (s.noFigures) return ["Calculating demand"];
+  if (s.noFigures) return [t("trackHover.calculating")];
   const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0, costs = s.running + s.upkeep;
-  const rows = [row("Profit ", profit, ` ${shownDayPhrase.peek()}`), row("", perKm, " per km"), row("Fares ", s.fares), row(`Running ${vehicles} `, -s.running), row("Upkeep ", -s.upkeep)];
+  const rows = [row("trackHover.profit", profit, { when: shownDayPhrase.peek() }), row("trackHover.perKm", perKm), row("trackHover.fares", s.fares), row("trackHover.running", -s.running, { vehicles }), row("trackHover.upkeep", -s.upkeep)];
   if (!(costs > 0)) return rows;
   const ratio = s.fares / costs, top = document.createElement("div");
-  top.append("Fares cover ", chip(`${Math.round(100 * ratio).toLocaleString("en-US")}%`, profitColour(ratio)), " of costs");
+  top.append(...kids(tRich("trackHover.faresCover", { share: chip(`${tNumber(Math.round(100 * ratio))}%`, profitColour(ratio)) as unknown as ComponentChild })));
   return [top, ...rows];
 }
 
@@ -276,10 +279,10 @@ function linesOn(w: WorldView | null, edge: number): LineInput[] {
 
 /** T-2218: a station building's floor: its name, and that it has no station inside when so. */
 function buildingTip(b: BuildingInput): TipLine[] {
-  if (!(buildingMembersById.peek().get(b.id)?.length)) return [b.name, "Station building", "No station inside"];
+  if (!(buildingMembersById.peek().get(b.id)?.length)) return [b.name, t("trackHover.building"), t("trackHover.noStation")];
   // T-2219: the hall's crowd, while platform crowds are drawn
   const hall = hallWaiting.peek().get(b.id) ?? 0;
-  return hall >= 1 ? [b.name, "Station building", `${Math.round(hall).toLocaleString("en-US")} riders waiting in the hall`] : [b.name, "Station building"];
+  return hall >= 1 ? [b.name, t("trackHover.building"), t("trackHover.hall", { n: tNumber(Math.round(hall)) })] : [b.name, t("trackHover.building")];
 }
 
 /** The elevation and speed limit at a point of an edge's track stroke, on one row (T-473, T-526,
@@ -292,7 +295,7 @@ function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: num
   // T-1271: the Speed view draws the trains' speed where they run, the limit elsewhere; say which
   if (display.peek().trackColour === "speed") {
     const v = T.trainSpeed?.[i] ?? -1;
-    rows.unshift(v >= 0 ? factRow(trainSpeedFact(v)) : "No trains run here");
+    rows.unshift(v >= 0 ? factRow(trainSpeedFact(v)) : t("trackHover.noTrains"));
   }
   return rows;
 }
@@ -312,8 +315,8 @@ function edgeRiders(n: NetworkBuffers, edge: number, on: LineInput[]): string[] 
     if (day === null) return [];
     sum += day;
   }
-  const count = `${sum < 0.5 ? "0" : forecast(sum)} riders ${shownDayPhrase.peek()}`;
-  return purpose === "all" ? [count] : [count, `${purposeName(purpose)} trips only`];
+  const count = t("trackHover.riders", { n: sum < 0.5 ? "0" : forecast(sum), when: shownDayPhrase.peek() });
+  return purpose === "all" ? [count] : [count, t("trackHover.tripsOnly", { purpose: purposeName(purpose) })];
 }
 
 function lineOnEdge(n: NetworkBuffers, edge: number): boolean {

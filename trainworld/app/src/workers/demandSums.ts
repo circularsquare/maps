@@ -246,7 +246,7 @@ export function flowsBody(p: Float32Array, purposeParts: PurposePart[]): Omit<Fl
     outward: [0,1,2].map(m => Array.from(values.subarray(m*5,m*5+5))),
     returning: [0,1,2].map(m => Array.from(values.subarray(15+m*5,20+m*5))),
   });
-  result.purposes.push(purpose("Work", work));
+  result.purposes.push(purpose("Work", work)); // i18n-ignore
   if (everyday.length) {
     const kinds = purposeNames!.length;
     if (!kinds) return null;

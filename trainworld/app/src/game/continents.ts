@@ -5,6 +5,8 @@
 // gulf (Sinai is Asia), Turkey at the Bosporus, the Sea of Marmara and the Dardanelles (Thrace is
 // Europe).
 
+import { t } from "../i18n";
+
 export type Continent = "Africa" | "Asia" | "Europe" | "North America" | "South America" | "Oceania";
 
 const TABLE: Record<Continent, string> = {
@@ -28,9 +30,22 @@ function inThrace(lng: number, lat: number): boolean {
 
 /** The continent of a point in country `cc` (ISO 3166 alpha-2); null for a country not listed. */
 export function continentOf(cc: string, lng: number, lat: number): Continent | null {
-  if (cc === "RU") return lng > 60 ? "Asia" : "Europe";
-  if (cc === "KZ") return lng < 51.5 ? "Europe" : "Asia";
-  if (cc === "EG") return lng > 32.34 && (lat >= 29.95 || lng > 32.55 + 0.55 * (29.97 - lat)) ? "Asia" : "Africa";
-  if (cc === "TR") return inThrace(lng, lat) ? "Europe" : "Asia";
+  if (cc === "RU") return lng > 60 ? "Asia" : "Europe"; // i18n-ignore
+  if (cc === "KZ") return lng < 51.5 ? "Europe" : "Asia"; // i18n-ignore
+  if (cc === "EG") return lng > 32.34 && (lat >= 29.95 || lng > 32.55 + 0.55 * (29.97 - lat)) ? "Asia" : "Africa"; // i18n-ignore
+  if (cc === "TR") return inThrace(lng, lat) ? "Europe" : "Asia"; // i18n-ignore
   return OF.get(cc) ?? null;
+}
+
+/** A continent (a stored `Continent` name) in the current language; any other text as it is. */
+export function continentLabel(name: string): string {
+  switch (name) {
+    case "Africa": return t("continents.africa");
+    case "Asia": return t("continents.asia");
+    case "Europe": return t("continents.europe");
+    case "North America": return t("continents.northAmerica");
+    case "South America": return t("continents.southAmerica");
+    case "Oceania": return t("continents.oceania");
+    default: return name;
+  }
 }

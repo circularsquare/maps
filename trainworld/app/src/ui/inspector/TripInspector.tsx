@@ -45,7 +45,7 @@ const trips = (n: number, f: PurposeFilter) => tripsAmount(count(n), n, f);
  * main route's sum by a last term. `pooled` false: the route's own sum alone (T-870). */
 function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
   const terms: Term[] = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
-    label: termLabel(x.label),
+    label: termLabel(x.id),
     real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
     weight: x.weight,
     perceived: x.perceived,
@@ -207,7 +207,7 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const by = (rt: TripRoute) => {
     const m = new Map<string, number>();
     for (const x of routeTerms(t, rt)) {
-      const k = x.label === "changes" ? "change" : x.label;
+      const k = x.id === "changes" ? "change" : x.id;
       m.set(k, (m.get(k) ?? 0) + x.perceived);
     }
     return m;

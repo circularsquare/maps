@@ -18,6 +18,7 @@
 // Constructed nodes are left to the map (a drag over a station pans as usual), except the one
 // selected, where a drag says why it stays put.
 
+import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
@@ -185,7 +186,7 @@ export class NodeDrag {
       if (p.told || Math.hypot(px - p.px, py - p.py) < DRAG_PX) return;
       if (!p.movable) {
         // the press stays ours until let go (no pan), said once
-        say("Built track and stations cannot be moved.", true);
+        say(t("nodeDrag.builtFixed"), true);
         p.told = true;
         return;
       }
@@ -282,7 +283,7 @@ export class NodeDrag {
       return;
     }
     const a = await edit({ op: "moveNode", node: d.node, x: d.x, y: d.y, design: designSpeed.peek() });
-    if (!a.ok && !a.issues.length) say("This cannot be moved there.", true);
+    if (!a.ok && !a.issues.length) say(t("nodeDrag.cannotMoveThis"), true);
     this.clear();
     if (a.ok) live.tools?.nodeMoved(d.node);
   }
@@ -317,7 +318,7 @@ export class NodeDrag {
       placeAt(this.ring, x, y);
       if (pv && !pv.ok) {
         this.tag.style.display = "";
-        this.tag.textContent = describeIssues(pv.issues) || "Cannot be moved there.";
+        this.tag.textContent = describeIssues(pv.issues) || t("nodeDrag.cannotMove");
         placeAt(this.tag, x, y, 14, -30);
       } else this.tag.style.display = "none";
     } else {

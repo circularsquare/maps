@@ -113,7 +113,7 @@ export class StationSound {
     const dest: AudioNode = pan ?? out;
     const length = soundLength(Math.random());
     this.chime(dest, now, level, a.note, a.crowded, length === "short" ? 0.6 : 1);
-    const cap = together ? 0 : a.speed === 1 || length !== "full" ? 2 : MAX_POPS;
+    const cap = together ? 0 : a.speed === 1 || length !== "full" ? 2 : MAX_POPS; // i18n-ignore
     // pops follow the chime, getting off first, then getting on a moment later
     let offPops = Math.random() < OFF_SKIP ? 0 : Math.min(cap, a.off);
     let onPops = Math.min(cap, a.on), onAt = 0.75;

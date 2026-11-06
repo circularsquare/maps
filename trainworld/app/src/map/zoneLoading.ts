@@ -8,6 +8,7 @@
 // edit keeps its figures and is never grey. The bars hide while the startup card is up, which says
 // the same thing in the middle of the map.
 
+import { t, tNumber } from "../i18n";
 import { effect } from "@preact/signals";
 import { h, render } from "preact";
 import type { FeatureCollection, MultiPolygon } from "geojson";
@@ -130,7 +131,7 @@ export function startZoneLoading(map: MlMap): () => void {
     for (const [id, f] of shownBars) {
       const el = bars.get(id);
       if (!el) continue;
-      const tip = [`Loading ${cityById(id).name}, ${Math.floor(f * 100)}%`, ...loadLines(steps.get(id), now)].join("\n");
+      const tip = [t("zoneLoading.loading", { name: cityById(id).name, share: tNumber(Math.floor(f * 100)) }), ...loadLines(steps.get(id), now)].join("\n");
       render(h(LoadBar, { fraction: f, step: tip, thin: true, tip }), el);
     }
   };

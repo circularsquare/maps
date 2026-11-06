@@ -38,7 +38,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
       compact: true,
       customAttribution: [
         '<a href="https://openfreemap.org">OpenFreeMap</a> <a href="https://www.openmaptiles.org/">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        "© EuroGeographics for the administrative boundaries",
+        "© EuroGeographics for the administrative boundaries", // i18n-ignore: attribution, as the data owner words it
       ],
     },
     dragRotate: false,
@@ -67,7 +67,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
 function warnOnNetworkFailure(map: maplibregl.Map) {
   map.on("error", (e) => {
     const err = e.error;
-    if (err instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(err.message)) console.warn(`Map: ${(e as { sourceId?: string }).sourceId ?? "a resource"} did not load (${err.message})`);
+    if (err instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(err.message)) console.warn(`Map: ${(e as { sourceId?: string }).sourceId ?? "a resource"} did not load (${err.message})`); // i18n-ignore
     else console.error(err);
   });
 }

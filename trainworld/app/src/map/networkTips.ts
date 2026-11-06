@@ -10,6 +10,7 @@
 //   busiest station's, and says so (T-217).
 // - A ridership circle away from any station: the same count, for the circle's complex.
 
+import { t, tNumber } from "../i18n";
 import { capacity, crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
@@ -33,9 +34,9 @@ export type TipLine = string | HTMLElement;
 function circleLines(c: Pick<Circle, "riders" | "transfers">): TipLine[] {
   const m = display.peek().stationUse, day = shownDayPhrase.peek(), col = circleColours();
   const out: TipLine[] = m === "total"
-    ? [part(circleColour(c.transfers / c.riders, col), `${forecast(c.riders)} riders ${day}`), part(col.entries, `${forecast(c.riders - c.transfers)} entries`), part(col.transfers, `${forecast(c.transfers)} transfers`)]
-    : [part(m === "origins" ? col.entries : col.transfers, `${forecast(c.riders)} ${m === "origins" ? "entries" : "transfers"} ${day}`)];
-  if (purposeFilter.peek() !== "all") out.push("All purposes");
+    ? [part(circleColour(c.transfers / c.riders, col), t("networkTips.riders", { n: forecast(c.riders), when: day })), part(col.entries, t("networkTips.entries", { n: forecast(c.riders - c.transfers) })), part(col.transfers, t("networkTips.transfers", { n: forecast(c.transfers) }))]
+    : [part(m === "origins" ? col.entries : col.transfers, t("networkTips.use", { mode: m, n: forecast(c.riders), when: day }))];
+  if (purposeFilter.peek() !== "all") out.push(t("networkTips.allPurposes"));
   return out;
 }
 
@@ -61,7 +62,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const l = w.save.lines.find((x) => x.id === line);
   const net = ov.renderer.net;
   if (!l || !net) return null;
-  const name = `${l.name} train`;
+  const name = t("networkTips.train", { name: l.name });
   const r = ov.renderer;
   const i = r.tripIndex(profile, dep - r.tripsEpoch);
   // a train standing at a terminal for its next departure is drawn past its trip (T-206), and one
@@ -70,7 +71,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const st = w.lineStats[l.id];
   if (!at || !st || !display.peek().trainLoad) return [name];
   const dv = demandView.peek();
-  if (!dv) return [name, "Calculating demand"];
+  if (!dv) return [name, t("networkTips.calculating")];
   const n = l.stops.length, run = Math.floor(profile / 3) % 2;
   const stopS = st.stopS[run] ?? [];
   let seg = 0;
@@ -80,11 +81,11 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const { crush } = capacity(st.cars);
   // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
-  const est = dv.lines.get(l.id)?.estimate ? " (estimate)" : "";
-  if (own !== null) return [name, `${exact(atEnd ? 0 : own)}/${exact(crush)} riders on board${!atEnd && own >= crush - 0.5 ? ", full" : ""}${est}`];
+  const est = !!dv.lines.get(l.id)?.estimate;
+  if (own !== null) return [name, t("networkTips.onBoard", { n: exact(atEnd ? 0 : own), cap: exact(crush), full: !atEnd && own >= crush - 0.5, est })];
   // no account for this train yet (its line's stops just changed): no gauge either, and no
   // forecast average in its place (T-230, Anita)
-  return [name, "Calculating demand"];
+  return [name, t("networkTips.calculating")];
 }
 
 /** A tag row of an optional line bullet, a label and a count, the count in the alert colour when
@@ -109,24 +110,24 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
   // zoomed out, the dot's pie (T-228, T-553): everyone waiting at it and its fullest platform
   const dot = r.dotCrowd(i);
   if (dot) {
-    if (dot.waiting < 1) return ["Nobody waiting on the platforms"];
-    const fullest = dot.share >= 1 ? "full" : `${Math.round(dot.share * 100)}% full`;
-    return [waitRow(null, "", `${exact(dot.waiting)} waiting`, dot.share >= 1), `Fullest platform ${fullest}`];
+    if (dot.waiting < 1) return [t("networkTips.nobody")];
+    const fullest = dot.share >= 1 ? t("networkTips.fullestFull") : t("networkTips.fullestPct", { share: tNumber(Math.round(dot.share * 100)) });
+    return [waitRow(null, "", t("networkTips.waiting", { n: exact(dot.waiting) }), dot.share >= 1), fullest];
   }
-  const node = Number(id), t = clock.now() - r.tripsEpoch;
+  const node = Number(id), now = clock.now() - r.tripsEpoch;
   const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const out: TipLine[] = [];
   for (let q = 0; q < b.queueCount; q++) {
     const base = q * QUEUE_STRIDE;
     if (b.queues[base] !== node) continue;
-    const { waiting } = crowdAt(b, q, t);
+    const { waiting } = crowdAt(b, q, now);
     if (waiting < 1) continue;
     const l = w.save.lines.find((x) => x.id === String(b.queues[base + 1]));
     if (!l) continue;
-    const to = names.get(b.queues[base + 2] === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "the end";
-    out.push(waitRow(lineBullet(l, true), `to ${to}`, `${exact(waiting)} waiting`,(r.queueShare(q) ?? 0) >= 1));
+    const to = names.get(b.queues[base + 2] === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "";
+    out.push(waitRow(lineBullet(l, true), to ? t("networkTips.toStation", { name: to }) : t("networkTips.toEnd"), t("networkTips.waiting", { n: exact(waiting) }),(r.queueShare(q) ?? 0) >= 1));
   }
-  return out.length ? out : ["Nobody waiting on the platforms"];
+  return out.length ? out : [t("networkTips.nobody")];
 }
 
 /** The tag for station `i` of the network buffers. */
@@ -141,10 +142,10 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   // T-313), as bullets (T-559)
   const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id)).map((l) => [l.letter + l.colour, l])).values()];
   if (serving.length) out.push(lineBullets(serving));
-  if (!s.built) out.push("Blueprint");
+  if (!s.built) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(ov, w, id);
-    out.push(...(c ? circleLines(c) : ["Calculating demand"]));
+    out.push(...(c ? circleLines(c) : [t("networkTips.calculating")]));
   }
   if (s.built) out.push(...crowdLines(ov, w, id, i));
   return out;
@@ -157,10 +158,10 @@ export function complexTip(ov: Overlay, w: WorldView, ids: readonly string[], na
   const at = new Set(ids), out: TipLine[] = [name];
   const serving = [...new Map(w.save.lines.filter((l) => l.stops.some((s) => at.has(s))).map((l) => [l.letter + l.colour, l])).values()];
   if (serving.length) out.push(lineBullets(serving));
-  if (!w.save.stations.some((s) => at.has(s.id) && s.built)) out.push("Blueprint");
+  if (!w.save.stations.some((s) => at.has(s.id) && s.built)) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(ov, w, ids[0]);
-    out.push(...(c ? circleLines(c) : ["Calculating demand"]));
+    out.push(...(c ? circleLines(c) : [t("networkTips.calculating")]));
   }
   return out;
 }
@@ -178,7 +179,7 @@ export function upgradeTip(ov: Overlay, w: WorldView, i: number, bit: number): T
     const byId = new Map(w.save.stations.map((x) => [x.id, x]));
     const k = complexes.peek().of.get(id), members = k === undefined ? [id] : complexes.peek().members[k];
     const sharing = members.filter((m) => hasUpgrade(byId.get(m)?.upgrades, bit)).length;
-    if (sharing > 1) out.push(`Shared by ${sharing} stations`);
+    if (sharing > 1) out.push(t("networkTips.shared", { count: sharing }));
   }
   if (bit === UPGRADE.waitingRoom && s.built) out.push(...crowdLines(ov, w, id, i));
   return out;

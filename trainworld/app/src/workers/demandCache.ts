@@ -97,7 +97,7 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
 
 export async function sha256(data: BufferSource | string): Promise<string> {
   const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
-  const h = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)); // i18n-ignore
   let s = "";
   for (const b of h) s += b.toString(16).padStart(2, "0");
   return s;

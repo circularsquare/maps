@@ -15,10 +15,11 @@
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
 
+import { t } from "../i18n";
 import { signal } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
-import { distance, moneyShort, plural } from "../game/format";
+import { distance, moneyShort } from "../game/format";
 import { newFerryLine, nextFreeColour } from "../game/lineActions";
 import { moneyState } from "../game/money";
 import { ask, renameLinePrompt, selection, tool } from "../game/ui";
@@ -53,9 +54,9 @@ const HANDLE_PX = 10;
 const TOUCH_HANDLE_PX = 18;
 const PORT_NEAR_M = 30;
 
-export const FAR_FROM_WATER = "Too far from water";
-export const ON_WATER = "Place ports on land by the water";
-export const NO_WATER_PATH = "No water path found";
+const farFromWater = () => t("ferryDraw.tagFar");
+const onWater = () => t("ferryDraw.tagOnWater");
+const noWaterPath = () => t("ferryDraw.tagPath");
 
 /** What the tool is doing, for the panels: null while it is off. `line` the line whose route is
  * redrawn (its number), null for a new line; `points` the ports placed so far. */
@@ -324,8 +325,8 @@ export class FerryDraw {
       // the spot the pointer's preview showed, else asked now
       const snap = this.probed && same(this.probed.at, at) ? this.probed.snap : await this.water.port([at.lng, at.lat]);
       if (!this.active) return;
-      if (!snap || (!snap.ok && snap.reason === "tiles")) return void say("The water here did not load. Try again.", true);
-      if (!snap.ok) return void say(snap.reason === "on-water" ? `${ON_WATER}.` : `${FAR_FROM_WATER}.`, true);
+      if (!snap || (!snap.ok && snap.reason === "tiles")) return void say(t("ferryDraw.notLoaded"), true);
+      if (!snap.ok) return void say(t(snap.reason === "on-water" ? "ferryDraw.sayOnWater" : "ferryDraw.sayFar"), true);
       const landing = { lng: snap.landing[0], lat: snap.landing[1] }, berth = { lng: snap.berth[0], lat: snap.berth[1] };
       const near = this.portNear(landing);
       if (near) {
@@ -334,7 +335,7 @@ export class FerryDraw {
       }
       const taken = () => new Set([...(world.peek()?.save.stations.map((s) => s.name) ?? []), ...this.ports.map((p) => p.name)]);
       const p: DraftPort = { node: null, landing, berth, name: "" };
-      p.naming = newStationName(this.map, landing.lng, landing.lat, null, taken).then((n) => (p.name = n), () => (p.name = "Port"));
+      p.naming = newStationName(this.map, landing.lng, landing.lat, null, taken).then((n) => (p.name = n), () => (p.name = t("ferryDraw.port")));
       this.add(p);
     } finally {
       this.busy = false;
@@ -416,7 +417,7 @@ export class FerryDraw {
 
   touchState(): TouchCtl | null {
     if (!touchInput.peek() || !this.ports.length) return null;
-    return { confirm: this.ports.length >= 2 ? !this.busy : null, confirmTip: this.line === null ? "Make the line" : "Save the route", back: true, stopTip: "Cancel" };
+    return { confirm: this.ports.length >= 2 ? !this.busy : null, confirmTip: this.line === null ? t("ferryDraw.makeLine") : t("ferryDraw.saveRoute"), back: true, stopTip: t("ferryDraw.cancel") };
   }
 
   touchPoint(): Pt | null {
@@ -449,7 +450,7 @@ export class FerryDraw {
     const k = r.legs.findIndex((l) => l.reason);
     if (k < 0) return null;
     const a = this.ports[k]?.name, b = this.ports[k + 1]?.name;
-    return a && b ? `${NO_WATER_PATH} between ${a} and ${b}.` : `${NO_WATER_PATH}.`;
+    return a && b ? t("ferryDraw.pathBetween", { a, b }) : t("ferryDraw.sayPath");
   }
 
   /** Make the line, or redraw the route, from the ports placed; refused with the reason. An edit that
@@ -458,7 +459,7 @@ export class FerryDraw {
     if (this.busy || tool.peek() !== "ferry") return;
     if (this.line !== null && !this.dirty) return this.host.exit();
     if (this.ports.length < 2) {
-      say("Place at least two ports to make a ferry line.", true);
+      say(t("ferryDraw.twoPorts"), true);
       return;
     }
     this.busy = true;
@@ -470,7 +471,7 @@ export class FerryDraw {
       if (!r || this.routeKey !== this.berthKey()) return;
       const refused = this.refusedLeg();
       if (refused || !r.ok) {
-        say(refused ?? `${NO_WATER_PATH}.`, true);
+        say(refused ?? t("ferryDraw.sayPath"), true);
         return;
       }
       const route = routeArray(r);
@@ -484,20 +485,20 @@ export class FerryDraw {
       if (line === null) {
         const a = await edit({ op: "addFerryLine", ports, route, name: "", colour: this.colour }, true);
         if (!a.ok || a.line === undefined) {
-          say("The ferry line could not be added. Try other ports.", true);
+          say(t("ferryDraw.addFailed"), true);
           return;
         }
-        say(`Ferry line added: ${distance(r.m)}, ${moneyShort(cost * 1e6)} to construct.`);
+        say(t("ferryDraw.added", { distance: distance(r.m), cost: moneyShort(cost * 1e6) }));
         this.host.exit();
         renameLinePrompt.value = String(a.line);
         selection.value = { kind: "line", line: String(a.line) };
       } else {
         const a = await edit({ op: "ferryRoute", line, ports, route }, true);
         if (!a.ok) {
-          say("The route could not be changed. Try other ports.", true);
+          say(t("ferryDraw.changeFailed"), true);
           return;
         }
-        say(`Route changed: ${distance(r.m)}.`);
+        say(t("ferryDraw.changed", { distance: distance(r.m) }));
         this.host.exit();
       }
     } finally {
@@ -514,7 +515,7 @@ export class FerryDraw {
     if (!l || !st?.ferry) return false;
     const ports = order.map((i) => st.ferry!.ports[i]).filter((p) => !!p);
     if (ports.length < 2) {
-      say("A ferry line needs at least two ports.", true);
+      say(t("ferryDraw.needTwoPorts"), true);
       return false;
     }
     const got = await this.water.line(ports.map((p) => ({ at: p.berth, kind: 1 as const })));
@@ -523,11 +524,11 @@ export class FerryDraw {
     if (k >= 0 || !r.ok) {
       const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.num, s.name]));
       const a = names.get(ports[k]?.node ?? -1), b = names.get(ports[k + 1]?.node ?? -1);
-      say(a && b ? `${NO_WATER_PATH} between ${a} and ${b}.` : `${NO_WATER_PATH}.`, true);
+      say(a && b ? t("ferryDraw.pathBetween", { a, b }) : t("ferryDraw.sayPath"), true);
       return false;
     }
     const a = await edit({ op: "ferryRoute", line, ports: ports.map((p) => ({ node: p.node })), route: routeArray(r) }, true);
-    if (!a.ok) say("The route could not be changed. Try other ports.", true);
+    if (!a.ok) say(t("ferryDraw.changeFailed"), true);
     return a.ok;
   }
 
@@ -603,18 +604,18 @@ export class FerryDraw {
     let bad = false;
     if (u.kind === "handle") {
       const ends = this.ports.length >= 2 && (u.i === 0 || u.i === this.ports.length - 1);
-      if (ends) rows.push(row(u.i === this.endIndex() ? (this.line === null ? "Click to make the line" : "Click to save the route") : "Click to draw from this end"));
-      rows.push(row("Right click to delete"));
-    } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : `Stop at ${u.name}`));
-    else if (u.kind === "shore") rows.push(row("Place port"));
-    else if (u.kind === "water") (rows.push(row(ON_WATER, true)), (bad = true));
-    else if (u.kind === "far") (rows.push(row(FAR_FROM_WATER, true)), (bad = true));
+      if (ends) rows.push(row(u.i === this.endIndex() ? (this.line === null ? t("ferryDraw.clickMake") : t("ferryDraw.clickSave")) : t("ferryDraw.clickFrom")));
+      rows.push(row(t("ferryDraw.rightDelete")));
+    } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : t("ferryDraw.stopAt", { name: u.name })));
+    else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
+    else if (u.kind === "water") (rows.push(row(onWater(), true)), (bad = true));
+    else if (u.kind === "far") (rows.push(row(farFromWater(), true)), (bad = true));
     if (this.ports.length >= 2 && u.kind !== "handle") {
-      if (r && r.legs.some((l) => l.reason)) (rows.push(row(NO_WATER_PATH, true)), (bad = true));
+      if (r && r.legs.some((l) => l.reason)) (rows.push(row(noWaterPath(), true)), (bad = true));
       else if (r) {
         const p = this.price();
         rows.push(row(`${distance(r.m)}, ${moneyShort(p.cost * 1e6)}${this.built ? " more" : ""}`));
-        rows.push(row(plural(this.ports.length, "port")));
+        rows.push(row(t("ferryDraw.ports", { count: this.ports.length })));
       }
     }
     if (!rows.length) {

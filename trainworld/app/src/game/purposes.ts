@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 // Trip purposes as the map's purpose filter (T-158) and the purpose pie (T-143) name and colour
 // them. Plain data: the demand workers import it too.
 //
@@ -13,7 +14,21 @@ export type PurposeFilter = PurposeKey | "all";
 export const EVERYDAY_KEYS: PurposeKey[] = ["shopping", "social", "school", "university", "airport", "medical", "attractions"];
 /** The same as the selection inspector names them (demand.worker.ts `EVERYDAY_PURPOSES`); the
  * inspector shows school and university as one (`shownName`). */
-export const EVERYDAY_NAMES = ["Errands", "Leisure", "School", "University", "Airports", "Medical", "Attractions"];
+export const EVERYDAY_NAMES = ["Errands", "Leisure", "School", "University", "Airports", "Medical", "Attractions"]; // i18n-ignore: ids the demand worker sends; shown through shownName
+/** A purpose row's name from the demand worker (an English id from EVERYDAY_NAMES, or "Work") in the current language; any other text as it is. */
+export function purposeLabel(name: string): string {
+  switch (name) {
+    case "Errands": return t("purposes.errands");
+    case "Leisure": return t("purposes.leisure");
+    case "School": return t("purposes.school");
+    case "University": return t("purposes.university");
+    case "Airports": return t("purposes.airports");
+    case "Medical": return t("purposes.medical");
+    case "Attractions": return t("purposes.attractions");
+    case "Work": return t("purposes.work");
+    default: return name;
+  }
+}
 
 /** The model's purposes the player sees as another one (T-192, Anita: merge school and
  * university). The model keeps them apart, as their homes, places and timing differ; the filter,
@@ -24,18 +39,18 @@ export const shownKey = (key: PurposeKey): PurposeKey => SHOWN_AS[key] ?? key;
 /** The model purposes a shown purpose counts: itself and any shown as it. */
 export const membersOf = (key: PurposeKey): PurposeKey[] => [key, ...(Object.keys(SHOWN_AS) as PurposeKey[]).filter((k) => SHOWN_AS[k] === key)];
 /** The inspector's name for a model purpose's row ("University" is shown as "School"). */
-export const shownName = (name: string): string => (/^(school|university)/i.test(name) ? "School" : name);
+export const shownName = (name: string): string => (/^(school|university)/i.test(name) ? t("purposes.school") : purposeLabel(name));
 
 /** Shown purposes, in the filter's order. */
 export const PURPOSES: { key: PurposeKey; name: string }[] = [
-  { key: "work", name: "Work" },
-  { key: "school", name: "School" },
-  { key: "shopping", name: "Errands" },
-  { key: "social", name: "Leisure" },
-  { key: "medical", name: "Medical" },
-  { key: "airport", name: "Airports" },
-  { key: "attractions", name: "Attractions" },
-  { key: "longer", name: "Inter-city trips" },
+  { key: "work", get name() { return t("purposes.work"); } },
+  { key: "school", get name() { return t("purposes.school"); } },
+  { key: "shopping", get name() { return t("purposes.errands"); } },
+  { key: "social", get name() { return t("purposes.leisure"); } },
+  { key: "medical", get name() { return t("purposes.medical"); } },
+  { key: "airport", get name() { return t("purposes.airports"); } },
+  { key: "attractions", get name() { return t("purposes.attractions"); } },
+  { key: "longer", get name() { return t("purposes.intercity"); } },
 ];
 
 /** The purposes the map's filter offers (T-305, Anita): the inter-city trips are left out, so
@@ -44,10 +59,10 @@ export const FILTER_PURPOSES = PURPOSES.filter((p) => p.key !== "longer");
 /** A filter value as the filter can hold it: the inter-city trips fall back to all purposes. */
 export const asFilter = (v: string): PurposeFilter => (FILTER_PURPOSES.some((p) => p.key === v) ? (v as PurposeKey) : "all");
 
-export const purposeName = (key: PurposeFilter): string => (key === "all" ? "All purposes" : PURPOSES.find((p) => p.key === key)?.name ?? key);
+export const purposeName = (key: PurposeFilter): string => (key === "all" ? t("purposes.all") : PURPOSES.find((p) => p.key === key)?.name ?? key);
 
 /** "work", "errands", "airport": the purpose inside a sentence, before "trips". */
-export const purposeWords = (key: PurposeKey): string => (key === "airport" ? "airport" : purposeName(key).toLowerCase());
+export const purposeWords = (key: PurposeKey): string => (key === "airport" ? t("purposes.airportWord") : purposeName(key).toLowerCase());
 
 // Purpose colours are independent of the UI theme. Green is reserved for future events.
 // School and university (shown as "School") share school's blue-green since T-192; with university's amber gone the
