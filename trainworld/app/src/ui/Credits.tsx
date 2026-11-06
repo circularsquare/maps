@@ -23,7 +23,7 @@ const LINES = [
   <>IBGE. Metrô de São Paulo origin and destination survey 2017. Ministry of the Interior and Safety (Korea). Census of India 2011. Shanghai Municipal Statistics Bureau.</>, // i18n-ignore
   <>World Bank (CC BY 4.0), Maddison Project Database 2023 (CC BY 4.0), Eurostat, Wikidata and OurAirports.</>, // i18n-ignore
   <>Large lakes from Natural Earth. Terrain classes from GEDTM30 (OpenGeoHub, CC BY 4.0). Hill shading from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Terrain Tiles</a> on AWS Open Data.</>, // i18n-ignore
-  <>Fonts Zen Maru Gothic, Noto Sans and Nunito, under the SIL Open Font License 1.1.</>, // i18n-ignore
+  <>Fonts Zen Maru Gothic, Huninn, Noto Sans and Nunito, under the SIL Open Font License 1.1.</>, // i18n-ignore
   <>Finger snap recording by freesound_community, cork pop by Universfield, wood knock by rohhsadotcom and magazine insert by freesounds-4u, all from <a href="https://pixabay.com/" target="_blank" rel="noopener">Pixabay</a>.</>, // i18n-ignore
   <>All data was adapted for this game.</>, // i18n-ignore
   <>The game's data files are under the <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License (ODbL)</a>, as the OpenStreetMap data they come from is.</>, // i18n-ignore
