@@ -38,7 +38,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Roads and 100 m
 
 - T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; mountain tiles wait for T-039.
-- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show. Anita said go 2026-11-06, keeping C: above ~20 GB free. Holds T-089 and T-081: every level by crossing time, L1 from a 100 m walker on LC100 + roads bits + GLO-90. Stage 1 (design, pilot, streaming downloader) taking, 2026-11-06 (notes/T-011.md); world run waits for the orchestrator's look at the pilot.
+- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show. Anita said go 2026-11-06, keeping C: above ~20 GB free. Holds T-089 and T-081: every level by crossing time, L1 from a 100 m walker on LC100 + roads bits + GLO-90. Stage 1 done 2026-11-06 (notes/T-011.md): rule = directed one-cell crossing scaled by a 3-cell strip, 8 values a cell, 3.0% / 3.2% mean off the 100 m walker (today 19% / 16%); downloader and `tools/terrain/world.py` tested on 9 tiles; world ~3 h download, ~50 core-hours compute at today's load. World run waits for the orchestrator's look.
 
 ## M2: survival
 

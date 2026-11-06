@@ -59,6 +59,8 @@ Fine level (`docs/fine.md`), into `data/fine/` (gitignored):
 
 Roads (`docs/roads.md`), into `data/roads/` (gitignored): `tools/roads/regions.py` (the world's Geofabrik extracts, `regions.json`), `fetch.py` (download with md5 check), `build.py extract|reduce` (100 m road bits per tile, OR-merged across extracts; 1 km counts and kinds), `world.py` (the world pass: download, read and delete each extract in turn, two on disk at most, done.txt resume, stops under 6 GB free). ~5 min a GB of extract on one core.
 
+Terrain (T-011, design in `notes/T-011.md` until the rebuild lands), into `data/terrain/` (gitignored), GLO-90 streamed through `data/raw/glo90/`: `tools/terrain/glo90.py` (tile names, the bucket's tile list, `fetch`, `Stream`: parallel GETs in list order with a download-ahead limit and the disk guard, never under 22 GB free; `read_fine`, elevation at fine-cell centres), `walk.py` (the directed 100 m walker's move costs, `crossings` of L1 cells by block sweeps in numpy, `strip_ratio`, `tile_l1`: a tile's 8 directed L1 planes; `csr` for whole-grid checks), `cross.mjs` (the same costs and crossings in node, `walk.crossings_js`), `plan.py` (the world list `plan.json`: 18,984 tiles with L1 land, road cells, which keep elevation for the fine level), `world.py run|status` (the run: stream, convert, compute on a pool, `done.txt` resume, `world.log`, `world.pid`).
+
 Canoe water and sea (`docs/canoe.md` 4, layouts in `notes/T-021.md`), into `data/canoe/`:
 
 | File | What | Time |
