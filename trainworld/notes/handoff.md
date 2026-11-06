@@ -27,8 +27,8 @@ Agents report to maps-93. A new orchestrator taking over: their work is in the t
   ratio change; demand changes go to her first). Before release.
 - **profitest** (Sonnet, tree): T-2626 profit estimate in the edit note ("Estimated −$5.3M profit/day"; +/- hovers if
   easy). Rerunning its check after copying master's game/*.json (T-2631 trap). Before release.
-- **borders** (Opus, tree): T-2629 squeeze twice as fast + smoother zone borders, T-2610 Hudson at Manhattan's tip.
-  Before release.
+- borders LANDED f71755b6 (records b1fdceb9): T-2629 done, T-2610 closed (rivers open on master); T-2637 filed.
+  Anita's NA load: the card said ~6 min, real ~3 min: not slow, the estimate is off (T-2638, later).
 - **capview** (Opus, tree): T-2622 the 4x clock cap the same whatever the view. Told about T-2631 trap.
 - **coarsemkt** (Opus, read-only + scratch crate): T-2621 long trips on a coarser graph: measure, prototype,
   recommendation to Anita before any build.
