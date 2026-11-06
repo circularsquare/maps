@@ -24,9 +24,9 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md).
+- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md). Taking, 2026-11-06 (agent, Sonnet): measurement only.
 - T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only `coarse()` in build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs later. If it lands, re-measure the canoe's `cfg.access` (0.4-0.6, notes/T-082.md).
-- T-088 [P3] Lake country too fast at L10: all sea and lake water in a coarse cell is one canoe node, so lakes split by a strip of land at L1 are joined (L1/L10 Jyvaskyla 1.16, New York 1.15, Utrecht 1.08). Same idea as T-082 for water bodies, with piece-to-piece water edges (notes/T-082.md).
+- T-088 [P3] Lake country too fast at L10: all sea and lake water in a coarse cell is one canoe node, so lakes split by a strip of land at L1 are joined (L1/L10 Jyvaskyla 1.16, New York 1.15, Utrecht 1.08). Same idea as T-082 for water bodies, with piece-to-piece water edges (notes/T-082.md). Taking, 2026-11-06 (agent, Opus), with T-075's small cases.
 
 ## M1: canoe, today
 
