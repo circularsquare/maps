@@ -415,7 +415,7 @@
   "moneyHistory.revenue": "Revenue",
   "moneyHistory.rides": "Train rides {count}",
   "moneyHistory.ridesTitle": "Train rides in {where}",
-  "moneyHistory.running": "Running costs {amount}",
+  "moneyHistory.running": "Ongoing costs {amount}",
   "moneyHistory.runningTrains": "Running trains {amount}",
   "moneyHistory.soFar": "{when} so far",
   "moneyHistory.span1d": "1d",

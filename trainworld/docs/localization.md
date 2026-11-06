@@ -174,7 +174,8 @@ OpenCC for `--opencc`: `npm install --prefix <scratch>/opencc opencc-js`, then p
 - Japanese: labels and buttons as plain nouns or short verb phrases (撤去, 線路を削除); full sentences in
   です・ます; katakana only where Japanese players use it; never 〜することができます.
 - Chinese: short and plain; 你 or no pronoun, never 您; no 赋能, 无缝, 沉浸式. zh-Hans is mainland usage, zh-TW
-  Taiwan's (捷運, 公車, 月台, 轉乘, 預設, 載入, 背景執行).
+  Taiwan's (捷運, 公車, 月台, 轉乘, 預設, 載入, 背景執行; click 按一下, double click 按兩下, right click 按右鍵,
+  key combinations with + as in Shift+按一下).
 - Narrow places (the note says button, segmented, short or narrow): no longer than the English looks; lint
   flags them.
 
