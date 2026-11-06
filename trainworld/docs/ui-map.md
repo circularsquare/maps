@@ -767,8 +767,11 @@ those who got on, less the load carried on.
     track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier
     ones add up: the note is the change since the last settled state.
   - **Settled**: the day shown's demand result is final, demand is not updating, no city is loading,
-    and every running line's figures are for its stops as they are; then a newer result than the one
-    before the edits, or 8 s with no edit and no demand update (an edit that starts no solve).
+    every running line's figures are for its stops as they are, and the final shown was solved for a
+    network made at or after the world version the last edit came in [T-2658] (`finalWorld`, ui-inspectors.md
+    Lines tab), so a final of an earlier edit's network, shown the moment before the held edit is sent,
+    is never taken for the edit's; or, when no network came after the edit (it changed nothing demand
+    reads), 8 s with no edit and no demand update. Both sides of a note are so settled.
     A switch of the shown day, or 5 minutes without settling, makes none. A network with no line
     running counts as settled with 0 train trips, so a new game's first line has a note.
   - **Like with like** [T-2180]: while edits settle (`editsSettling`) no zone changes its level of

@@ -14,7 +14,7 @@ import { world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
-import { linesPending } from "./lineFigures";
+import { linesPending, type PendingKind } from "./lineFigures";
 import { moneyState } from "./money";
 import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
@@ -184,6 +184,17 @@ export const profitKnown = (l: LineInput) => {
   const dv = demandView.value;
   return hasTrains(l) && !!dv && (dv.lines.has(l.id) || !linesPending.value.has(l.id));
 };
+
+/** T-2658: why a line's riders show as being worked out: its change not yet solved (`linesPending`), or
+ * solved with riders the boarding account has not counted yet (seconds on a big game: the figure would
+ * read 0 meanwhile), "build" when it has no counts at all. Undefined once its figures show. */
+export function pendingOf(l: LineInput): PendingKind | undefined {
+  const k = linesPending.value.get(l.id);
+  if (k) return k;
+  const d = today.value.get(l.id);
+  if (d && d.riders > 0) return undefined;
+  return (demandView.value?.lines.get(l.id)?.ridersPerDay ?? 0) > 0 && hasTrains(l) ? (d ? "change" : "build") : undefined;
+}
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
 export const today = signal<Map<string, LineToday>>(new Map());

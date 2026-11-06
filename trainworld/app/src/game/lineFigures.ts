@@ -1,11 +1,12 @@
 // T-1665: what holds back while demand is worked out. The clock runs no faster than DEMAND_CAP while the
 // player's edits are not yet in the figures, and a line the player just changed is pending (Lines tab,
-// line panel) until the result that counts it lands (T-1733: its cluster's local result, or the solve's end).
+// line panel) until the result that counts it lands (T-1733: its cluster's local result, or the final;
+// T-2658: of a network made after the change, never an older one finishing first).
 
 import { computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { editStamp, lineStopped, quietEdits, resetEdits, wideCovered, wideEdits } from "./editCap";
-import { demandBehindFrom, demandUpdating } from "./demand";
+import { demandBehindFrom, demandUpdating, finalWorld, networkWorld } from "./demand";
 import { demandStopped, loadProgress } from "./loading";
 import { openedZones } from "./openedZones";
 import { world } from "./world";
@@ -20,13 +21,22 @@ export const linesPending = signal<ReadonlyMap<string, PendingKind>>(new Map());
 /** The label over a pending line's riders. */
 export const pendingLabel = (k: PendingKind) => (k === "build" ? "constructing..." : "loading...");
 
-/** T-1733: these lines' riders have landed (a cluster's result, local or whole) */
-export function linesSettled(ids: Iterable<string>) {
+/** T-2658: the world version each pending line's last change was seen at */
+const since = new Map<string, number>();
+
+/** T-1733: these lines' riders have landed (a cluster's result, local or whole), solved for the world
+ * as it was at version `at` (T-2658): a line changed after it stays pending */
+export function linesSettled(ids: Iterable<string>, at = Infinity) {
   const set = new Map(linesPending.peek());
   let changed = false;
-  for (const id of ids) changed = set.delete(id) || changed;
+  for (const id of ids) {
+    if ((since.get(id) ?? -1) > at) continue;
+    since.delete(id);
+    changed = set.delete(id) || changed;
+  }
   if (changed) linesPending.value = set;
 }
+const settleAll = (at = Infinity) => linesSettled([...linesPending.peek().keys()], at);
 
 /** Wall ms to wait for a solve to start before deciding the edit needs none (a line with no riders, or
  * demand idle), so the label never sticks. */
@@ -87,20 +97,31 @@ export function startLineFigures() {
     const loading = clock.held.peek();
     if (prev && !loading) for (const [id, was] of prev) if (was.running && !next.get(id)?.running) { lineStopped(); break; }
     prev = next;
+    // a loaded game starts with nothing pending (its world versions are its own)
+    if (loading) { since.clear(); if (linesPending.peek().size) linesPending.value = new Map(); }
     if (loading || !changed.length) return;
     const set = new Map(linesPending.peek());
     // a line still constructing stays so until its riders land
-    for (const [id, k] of changed) if (set.get(id) !== "build") set.set(id, k);
+    for (const [id, k] of changed) {
+      if (set.get(id) !== "build") set.set(id, k);
+      since.set(id, w.version);
+    }
     linesPending.value = set;
+    // T-2658: an edit no network came for (nothing demand reads changed) leaves the figures as they are
     setTimeout(() => {
-      if (!demandUpdating.peek() && linesPending.peek().size) linesPending.value = new Map();
+      if (!demandUpdating.peek() && networkWorld.peek() < w.version) settleAll(w.version);
     }, NO_SOLVE_MS);
   });
+
+  // T-2658: the whole final for the world as it is settles every line; a final of an older network (another
+  // edit's, the moment before the held one is sent) only those changed before it
+  finalWorld.subscribe((at) => settleAll(at));
+  // demand that stopped will finish nothing
+  demandStopped.subscribe((s) => { if (s) settleAll(); });
 
   let wasUpdating = demandUpdating.peek();
   demandUpdating.subscribe((on) => {
     if (wasUpdating && !on) resetEdits();
-    if (wasUpdating && !on && linesPending.peek().size) linesPending.value = new Map();
     wasUpdating = on;
   });
 }

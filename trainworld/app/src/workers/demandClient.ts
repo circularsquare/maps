@@ -40,6 +40,8 @@ import {
   demandStep,
   demandScope,
   demandUpdating,
+  networkWorld,
+  finalWorld,
   demandBehindFrom,
   demandView,
   setDemandQueries,
@@ -955,6 +957,7 @@ class DemandClient {
 
   private settleIdle() {
     demandUpdating.value = false; // a waiting network stays: it is solved when the view or a station needs a pack
+    finalWorld.value = networkWorld.peek(); // (T-2658: nothing in it to solve)
     this.uncovered = [];
     demandBehindFrom.value = null;
     this.endJob();
@@ -1849,6 +1852,8 @@ class DemandClient {
     this.postSolve(msg);
   }
   private rough: { svc: Service; id: CityId } | null = null;
+  /** T-2658: the world version each network was last given at */
+  private netWorld = new WeakMap<Service, number>();
   /** `svc` has lines the shown result has no figures for (new, or their stops changed) */
   private hasNewLines(svc: Service): boolean {
     const v = demandView.peek()?.version;
@@ -3363,7 +3368,13 @@ class DemandClient {
       this.setAlone(early.svc, svc.alone);
       svc = early.svc;
     } else if (early?.shown) this.dropEarly(early.svc);
+    // T-2658: the world as it is now is in this network (a world's state comes before the snapshot made after it)
+    const wv = world.peek()?.version ?? -1;
+    networkWorld.value = wv;
     if (key === this.lastKey) {
+      const same = this.latest();
+      if (same) this.netWorld.set(same, wv);
+      if (same && !this.waiting && this.cur?.svc === same && demandView.peek()?.final && demandView.peek()?.version === this.cur.version) finalWorld.value = wv;
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's; stations
       // built or removed on no line may reach other zones (T-2410)
       const held = this.latest();
@@ -3373,6 +3384,7 @@ class DemandClient {
       return;
     }
     this.lastKey = key;
+    this.netWorld.set(svc, wv);
     // T-2560: an edit after the cache's card went is an edit like any other
     this.cacheSolve = null;
     this.lastStir = performance.now();
@@ -4361,6 +4373,7 @@ class DemandClient {
       if (!final && !s.showEstimates) return;
       // T-2045: the zones the focus pool has as far on keep its figures until this solve's final
       demandByDay.value = this.withFocus(days, s, round, final);
+      if (final) finalWorld.value = this.netWorld.get(s.svc) ?? -1;
       this.lodShown(s.cities, this.shownCoarse(s));
       if (final && s === this.cur && !this.refineKept(s)) this.endFocus();
       else this.retireFocus();
@@ -4569,7 +4582,7 @@ class DemandClient {
           if (this.frefine && c.cities.includes(this.frefine) && !kept) this.endFocus();
         }
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
-        linesSettled(fresh.map((l) => l.id));
+        linesSettled(fresh.map((l) => l.id), this.netWorld.get(s.svc) ?? -1);
         if (c.local) {
           s.localShownAt ??= performance.now();
           setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);

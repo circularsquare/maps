@@ -127,8 +127,15 @@ purpose filter the purpose drawn is ringed in the bar.
   figures too, the label at the right of its heading and the purpose split hidden. The label stays
   until the riders that count the change land: its cluster's local result after the
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
-  run or more those in a window of zones round it re-solved, T-1735) or the whole solve [T-1665,
-  `game/lineFigures.ts`]; a game load shows none.
+  run or more those in a window of zones round it re-solved, T-1735) or the whole final [T-1665,
+  `game/lineFigures.ts`], and only a result solved for a network made after the change [T-2658]: each
+  network demand is given carries the world version it was made at (`networkWorld`, and `finalWorld`
+  for the whole final shown, in game/demand.ts), and the label stays while the result shown is older
+  than the change, so an earlier edit's solve finishing first (the edit waits for it, T-1734) never
+  reads as the change's figures. The label then stays while the result has riders for the line that the
+  boarding account has not counted yet (no count, or 0; `pendingOf` in game/today.ts, which the rows and the
+  panel read), so a figure never reads 0 before its riders show. An edit that brings demand no new network (nothing demand reads
+  changed) drops the label after 8 s; demand stopping drops it at once; a game load shows none.
   What an edit did to riders and profit is not in this tab: it is on the map
   ([ui-map.md](ui-map.md) "Edit note").
 - **Trains to add** [T-472, T-1677, T-2236]: a row's train count (the trains its level needs now, the bare

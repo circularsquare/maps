@@ -11,14 +11,14 @@ import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
-import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, profitKnown, runningToday, today } from "../../game/today";
+import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, pendingOf, profitKnown, runningToday, today } from "../../game/today";
 import { accountVersion, BOAT_CARS, BUS_CARS, capacity } from "../../game/boarding";
 import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { useClockQuery } from "../useClockQuery";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
-import { linesPending, pendingLabel } from "../../game/lineFigures";
+import { pendingLabel } from "../../game/lineFigures";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, setAutoTrains, setHeadway, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
@@ -277,7 +277,7 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
  * as the counts move. */
 export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number; extra?: ComponentChildren }) {
   const d = today.value.get(l.id);
-  const pending = linesPending.value.get(l.id);
+  const pending = pendingOf(l);
   if (!d) {
     if (!pending) return null;
     return (

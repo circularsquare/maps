@@ -17,7 +17,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, pendingOf, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
 import { lineReversed } from "../game/northUp";
 import { kindIn, lineCountry } from "../game/holidays";
 import { DAY_KINDS } from "../game/days";
@@ -27,7 +27,7 @@ import { Chip, Icon, SortHead } from "./widgets";
 import { lineMoneyTip, Money } from "./MoneyText";
 import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
-import { linesPending, pendingLabel, type PendingKind } from "../game/lineFigures";
+import { pendingLabel, type PendingKind } from "../game/lineFigures";
 
 /** the word for a line that is not running; nothing for a running one */
 const statusText = (s: string) => (s === "planned" ? t("linesTab.planned") : s === "broken" ? t("linesTab.broken") : "");
@@ -45,7 +45,8 @@ function PendingRiders({ k, text }: { k: PendingKind; text: string }) {
 }
 
 /** T-446: one line's riders in the past 24 hours, its own component so only it re-renders as the count moves. */
-function RidersToday({ line }: { line: string }) {
+function RidersToday({ l }: { l: LineInput }) {
+  const line = l.id;
   const d = today.value.get(line);
   const o = openings.value.get(line);
   const [, frame] = useState(0);
@@ -60,7 +61,7 @@ function RidersToday({ line }: { line: string }) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
-  const k = linesPending.value.get(line);
+  const k = pendingOf(l);
   if (k) return <PendingRiders k={k} text={d ? count(d.riders) : ""} />;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
@@ -103,9 +104,8 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
     return <span class="val muted">{statusText(st)}</span>;
   }
   const by = (f: (l: LineInput) => string) => run.map((l) => `${l.name}: ${f(l)}`).join("\n");
-  const pend = linesPending.value;
   // a line being constructed names the group's state over one only loading
-  const pending = run.map((l) => pend.get(l.id)).filter((k): k is PendingKind => !!k).sort()[0];
+  const pending = run.map((l) => pendingOf(l)).filter((k): k is PendingKind => !!k).sort()[0];
   const riders = run.reduce((n, l) => n + (tod.get(l.id)?.riders ?? 0), 0);
   const any = run.some((l) => tod.has(l.id));
   const anyProfit = run.some((l) => tod.has(l.id) && profitKnown(l));
@@ -345,7 +345,7 @@ export function LinesTab() {
           <span class="val muted">{statusText(st.status)}</span>
         ) : (
           <>
-            <RidersToday line={l.id} />
+            <RidersToday l={l} />
             <MoneyToday l={l} st={st} />
             <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} />
           </>

@@ -15,7 +15,7 @@
 // to the solved figure.
 
 import { effect, signal } from "@preact/signals";
-import { demandByDay, demandUpdating, editsSettling, roughZones, type DayDemand, type DemandView } from "./demand";
+import { demandByDay, demandUpdating, editsSettling, finalWorld, networkWorld, roughZones, type DayDemand, type DemandView } from "./demand";
 import { DAY_KINDS, DEMAND_DAY_PHRASE } from "./days";
 import { editStamp, lastEdit } from "./editCap";
 import { trainKind } from "./format";
@@ -147,7 +147,11 @@ export function startEditNote() {
    * a city loading). A city that loads meanwhile is no worry: one no line reaches has no train trips,
    * and track into a new zone loads it as part of the edit. */
   let pending: { since: number; last: number; lines: Set<number>; estimable: boolean } | null = null;
-  const setPending = (p: typeof pending) => { pending = p; editsSettling.value = !!p; };
+  const setPending = (p: typeof pending) => { pending = p; editsSettling.value = !!p; if (!p) editWorld = -1; };
+  /** T-2658: the world version the last edit's state came in (Infinity until it comes): the figures settle
+   * once the whole final shown was solved at it or later */
+  let editWorld = -1;
+  world.subscribe((w) => { if (w && editWorld === Infinity) editWorld = w.version; });
   let hide = 0, wake = 0;
   const tick = signal(0);
   const later = (ms: number) => { clearTimeout(wake); wake = setTimeout(() => { tick.value++; }, ms) as unknown as number; };
@@ -162,6 +166,7 @@ export function startEditNote() {
     if (!base) return;
     if (pending) pending.last = now;
     else setPending({ since: now, last: now, lines: new Set(), estimable: true });
+    editWorld = Infinity;
     const op = lastEdit;
     pending!.estimable &&= !!op && ESTIMABLE.has(op.op);
     // the line it is about (a copy's source is not: the copy is new)
@@ -200,10 +205,12 @@ export function startEditNote() {
     // first line counts from there)
     const idle = !w.save.lines.some((l) => w.lineStats[l.id]?.status === "running");
     if (updating || loading || !inc || !m || (!idle && (!dv?.final || !solvedForNow(w, dv)))) { estimate(w, m, now); return; }
-    const version = idle ? -1 : dv!.version;
-    if (pending && base && version === base.version && now - pending.last < NO_SOLVE_MS) {
+    // T-2658: not before a final solved with the edits in it (an older solve's final comes first while the
+    // edit waits for it); an edit no network came for (nothing demand reads) settles after NO_SOLVE_MS
+    const atWorld = finalWorld.value, given = networkWorld.value;
+    if (pending && base && !idle && atWorld < editWorld && (given >= editWorld || now - pending.last < NO_SOLVE_MS)) {
       estimate(w, m, now);
-      later(NO_SOLVE_MS - (now - pending.last) + 50);
+      if (given < editWorld) later(NO_SOLVE_MS - (now - pending.last) + 50);
       return;
     }
     const after = figuresOf(w, idle ? null : dd, kind, inc, m);

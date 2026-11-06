@@ -212,6 +212,11 @@ export const intercityDemand = computed<IntercityDemand | null>(() => demandByDa
 /** A solve is running for a newer network than the one `demandView` shows (or, T-328, the shown
  * figures are the cache's and the same network is being solved again). */
 export const demandUpdating = signal(false);
+/** T-2658: the world version (`WorldView.version`) as the newest network reached demand, and as the
+ * network of the whole final shown did: what the player sees at a world version is solved once the
+ * second reaches it. -1 before any. */
+export const networkWorld = signal(-1);
+export const finalWorld = signal(-1);
 /** T-2409: the game minute (world time) of the oldest edit no final result covers yet, or null */
 export const demandBehindFrom = signal<number | null>(null);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
