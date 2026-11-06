@@ -380,7 +380,7 @@ The stops (above Schedule while being edited [T-670]),
   shows each station once, its bar going on past the first and last stops and curving round to
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
   "Open the loop") [T-1391]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
-  a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; **while stops are
+  a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; the plain list's bar and dots are painted half a pixel off the pixel grid (`--soft` in `style.css`) as the related view's SVG is, so both views have the same soft edges and ring weight [T-2623]; **while stops are
   edited** a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
   and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove
   the stop at 225 St", "Shift-click to end the line here"; none on a stop the line needs: a line of
@@ -409,7 +409,8 @@ The stops (above Schedule while being edited [T-670]),
   line running beside it (shared track, or its track within 100 m + 3.5% of the first 5 km of its own
   run + 2% of the rest of the line's between stations both reach; a line meeting only twice gets 2%
   throughout unless neither line stops between the two; a line whose stops are all on the line's
-  route always) in a 3 px column (as thin as a crossing line's bar), 2 px apart from the line and
+  route always) in a 2.5 px column (as thin as a crossing line's bar; 3 px before T-2623, strong
+  beside the 6 px line), 2.5 px apart from the line and
   from each other whether on shared or its own track [T-1786], right for one stopping more often over the span and left
   otherwise, at most 3 a side and only as many as fit in 40% of the panel; where the other line goes
   on, its column goes straight on 13 px past the line's own first or last row, and elsewhere turns

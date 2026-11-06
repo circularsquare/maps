@@ -600,14 +600,17 @@ rect.now { fill-opacity: .45; }
 .fare-rows .fr-what input.v { width: 44px; text-align: center; border-color: var(--accent); outline: 0; }
 
 /* stops strip, drawn in the line's colour */
-.stops { list-style: none; margin: 0; padding: 0; }
+/* T-2623: the plain list's bar, dots and stretches are shifted half a pixel so they are painted
+   between device pixels as the related lines view's drawing is (its SVG is not snapped to the grid): the
+   same soft edges and the same ring weight in both views */
+.stops { list-style: none; margin: 0; padding: 0; --soft: 0.5px; }
 .stops li { position: relative; display: flex; align-items: center; gap: 6px; min-height: 25px; padding-left: 28px; }
-.stops li::before { content: ""; position: absolute; left: 7px; width: 6px; top: 0; bottom: 0; background: var(--c); }
+.stops li::before { content: ""; position: absolute; left: 7px; width: 6px; top: 0; bottom: 0; background: var(--c); transform: translateX(var(--soft)); }
 .stops li:first-child::before { top: 50%; }
 .stops li:last-child::before { bottom: 50%; }
 /* T-1886: the dot centred on the bar's middle (10px) by a transform, since a scaled border is
    floored to whole pixels and an offset worked out from its width lands left of the bar */
-.stops li::after { content: ""; position: absolute; left: 10px; top: 50%; transform: translate(-50%, -50%); box-sizing: content-box;
+.stops li::after { content: ""; position: absolute; left: 10px; top: 50%; transform: translate(calc(-50% + var(--soft)), -50%); box-sizing: content-box;
                    width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .stops li.xfer::after { width: 10px; height: 10px; }
 /* T-646: the stations a line passes, offered as stops (no dot), and those about to be added (faint dot) */
@@ -650,7 +653,7 @@ rect.now { fill-opacity: .45; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
 /* flat junctions and crossings on the route (T-629): between the dot above and the next one */
-.stops .route-mark { position: absolute; left: 4px; top: calc(50% + var(--at) * 100%); width: 12px; height: 12px; margin-top: -6px; z-index: 1; }
+.stops .route-mark { position: absolute; left: 4px; top: calc(50% + var(--at) * 100%); width: 12px; height: 12px; margin-top: -6px; z-index: 1; transform: translateX(var(--soft)); }
 .stops .route-mark.junction::before { content: ""; position: absolute; left: 1px; top: 1px; width: 6px; height: 6px; background: #fff; border: 2px solid var(--net-ink); transform: rotate(45deg); }
 .stops .route-mark.crossing::before, .stops .route-mark.crossing::after { content: ""; position: absolute; left: 0; top: 4px; width: 12px; height: 4px; background: var(--net-ink); border-radius: 1px; box-shadow: 0 0 0 1px #fff; }
 .stops .route-mark.crossing::before { transform: rotate(45deg); }
@@ -671,6 +674,7 @@ rect.now { fill-opacity: .45; }
 .stops.related-rows li.side .stop-name { color: color-mix(in srgb, var(--text) 36%, var(--bg)); }
 .related-bullet { position: absolute; z-index: 2; transform: translate(-50%, -50%); line-height: 0; }
 .stops.related-rows li { padding-left: calc(var(--gw) + 4px); }
+.stops.related-rows { --soft: 0px; }
 .stops.related-rows li::before, .stops.related-rows li::after { display: none; }
 .stops.related-rows .route-mark { left: calc(var(--spine) - 6px); z-index: 2; }
 /* T-1786: a row with more than two crossing lines is 1.5 rows tall, its bullets in two rows */
@@ -692,7 +696,7 @@ rect.now { fill-opacity: .45; }
 :root { --full-mark: #c0392b; }
 :root[data-shade="dark"] { --full-mark: #f0584f; }
 .stops.traffic li::before { display: none; }
-.stops .stretch { position: absolute; left: 2px; width: 16px; }
+.stops .stretch { position: absolute; left: 2px; width: 16px; transform: translateX(var(--soft)); }
 .stops .stretch.down { top: 50%; bottom: 0; }
 .stops .stretch.up { top: 0; bottom: 50%; }
 .stops .stretch::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(8px - var(--w) / 2); width: var(--w); background: var(--c); }

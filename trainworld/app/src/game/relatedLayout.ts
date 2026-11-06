@@ -5,9 +5,10 @@
 
 import type { RelatedGroup } from "./relatedLines";
 
-/** The selected line's width, a side line's (as thin as a crossing line's bar, Anita 2026-10-26)
- * and the one gap between any two lines side by side, shared track or not (T-1786), px. */
-export const BAR = 6, LINE = 3, GAP = 2;
+/** The selected line's width, a side line's (as thin as a crossing line's bar, Anita 2026-10-26; 2.5
+ * since T-2623, Anita: 3 was strong beside the 6) and the one gap between any two lines side by side,
+ * shared track or not (T-1786), px. The pitch stays 5. */
+export const BAR = 6, LINE = 2.5, GAP = 2.5;
 /** Side lines' and crossing bars' pitch, px. */
 export const PITCH = LINE + GAP;
 /** A turn's corner radius; how far a turn runs out past the outermost column; a line going on past
