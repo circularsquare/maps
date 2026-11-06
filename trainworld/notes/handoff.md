@@ -1,57 +1,47 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21, name maps-b9, since 2026-11-06 14:10
-Updated: 2026-11-06 17:42 (Get-Date). maps-b9 is past 600k tokens: ready to be replaced any time.
+Updated: 2026-11-06 18:54 (Get-Date). maps-b9 is past 600k tokens: ready to be replaced any time.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **72d62101** = 8800 **build 1265** (18:40; dev smoke and 8800 light + dark all 25/25, no "Nn" errors: those
-  were starved 1-2 core tree runs). Next rebuild: after fares (tree fares, waiting on Anita) and attract2 land.
-  Rebuild: claim 4, `node trainworld/checks/dev-nowatch.mjs 6191`, scratch `smokedev.cmd 6191`, stop that Vite by PID,
-  snapbuild.cmd <hash>, smoke8800.cmd, tell Anita to reload.
-- LIVE = 821. Publish only on Anita's word (English first; ja/zh "in next few days"; languages switch on via OFFERED in
-  i18n/intl.ts). maps-eb's play count ships with the next release build.
-- Cores cap 12, 4 free while Anita is on; check real CPU with Get-Counter. iso-terrain (isochrone) holds 3.
-- maps-93 is done (17:40, all its trees landed or forwarded). The upkeep tree still needs
-  `node trainworld/checks/agent-tree.mjs remove upkeep --force` (a process held files there).
-- Uncommitted records (commit after searchleaf and ridersnow land, by path): ARCHIVE/DECISIONS/TASKS lines for T-2652,
-  T-2653, T-2622, T-2655, T-2658, T-2666?; notes/T-2652.md, T-2653.md, T-2658.md, T-2666.md. TODO.md is Anita's.
+- master **78e8e359**. 8800 = **build 1265 (72d62101)**: has everything up to ridersnow (T-2658); NOT fares option N
+  (08133e44), the about links (cf923482). Rebuild once namespread/attract2/ridersnow T-2678 land: claim 4,
+  `node trainworld/checks/dev-nowatch.mjs 6191`, scratch `smokedev.cmd 6191`, stop that Vite by PID, snapbuild.cmd <hash>,
+  smoke8800.cmd (light + dark), tell Anita to reload.
+- Anita is OUT from ~18:50 for a few hours ("do you have things to work on for the next few hours?"): cap raised to 14
+  (`python cores.py cap 12` when she is back). Her jekyll server stays (~3 cores outside the ledger).
+- LIVE = 821. Publish only on Anita's word (English first; ja/zh soon; languages switch on via OFFERED in i18n/intl.ts).
+  maps-eb's play count ships with the next release build.
+- maps-93 is done. The upkeep tree still needs `node trainworld/checks/agent-tree.mjs remove upkeep --force`.
+- Core pins: parking 0xF0, namespread 0xF00, l10nshots 0xF000; orchestrator smokes use 0xF000 (wait for l10nshots).
 
 ## Landed this session (maps-b9)
-- translations units 1-4 (all messages in ja, zh-Hans, zh-TW, reviewed); T-2656 drives fix + play count 5a71e6f6;
-  l10n-insp 2c04f007 (T-2634); farends 75e04c44 (T-2641); stopnote 838c46e7 (T-2657); l10n-core 2c10069e (T-2635);
-  dianames 093d7b82 (T-2640); borders2 e67d966d; 7e8d913e (huninn.css to main.ts: dev workers had not started since
-  2c10069e); upkeep 1c9b3c72 (T-2619); westleft 18c10362 (T-2661); riderspace 75ea5b27 (T-2664, T-2673); marey 3d8cf723
-  (T-2660, T-2665); fartable 2776067f (T-2653, WASM rebuilt); l10nfix 4da69460 (T-2655); capview 51d5e03f (T-2622).
+- translations units 1-4; T-2656 + play count 5a71e6f6; T-2634 2c04f007; T-2641 75e04c44; T-2657 838c46e7; T-2635
+  2c10069e; T-2640 093d7b82; borders2 e67d966d; 7e8d913e (huninn.css); T-2619 1c9b3c72; T-2661 18c10362; T-2664/T-2673
+  75ea5b27; T-2660/T-2665 3d8cf723; T-2653 2776067f; T-2655 4da69460; T-2622 51d5e03f; T-2652 731614e5; T-2658 5a4aef70;
+  about links cf923482 (website-58's relay: "About this game" on the start menu + Settings, credits list -> link to
+  anita.garden/projects/trainsworld/#sources); fares option N 08133e44 (T-2669, T-2670, T-2676; Anita: "lower in
+  mexico/india is okay ... lets land").
 
-## In flight (maps-b9's agents; SendMessage by Agent id; trees under .tw-trees/)
-- **ridersnow** (Opus, tree, ~350k): T-2658 done and smoked; its land stopped on conflicts with capview (lineFigures.ts)
-  and l10nfix (LinesTab.tsx, schedule.tsx). Sent back to resolve mid-rebase, re-run t2622-cap-view + smoke, report;
-  then `land ridersnow "<sentence>"` (land re-runs the rebase from its finished state). Retire after landing.
-- **searchleaf** (Opus, tree): T-2652; running its smoke. Land (sim -> WASM rebuild), then T-2642 and T-2621 close (its
-  ARCHIVE lines are already written for T-2652 and T-2642; check T-2621).
-- **attract2** (Sonnet, tree): T-2666 attraction classes + 2 km reach; on cargo tests.
-- **l10nsmall** (Opus, main tree, merge only): translates the 4 new mareyChart keys and reviews l10nfix's 9 changed keys.
-- namespread STOPPED, tree .tw-trees/namespread kept (code + docs done, unchecked): T-2675 borders 30 km / 50% and
-  T-2674 name spread. To run when cores free: `node trainworld/checks/t2438-city-names.mjs na,jpn,ne`, typecheck,
-  smoke, shots (scratch namespread\shots.mjs), 0 stations on wrong side NA/NY/Japan, NY unchanged; then land.
-  Its DECISIONS lines are in the main tree. Needs a fresh agent or a resumed one (its id is in maps-b9's transcript).
+## In flight (maps-b9's agents; SendMessage by Agent id)
+- **ridersnow** a6a0fe24228763673 (Opus, MAIN tree, ~380k): T-2678 pending riders show the old figure, "calculating..."
+  for "constructing..." (Anita 18:45). Retire after.
+- **l10nsmall** ad2c18ea6567fefa9 (Opus, main tree, merge only): the 5 upkeep/running-cost keys fares left untranslated.
+- **parking** a1e7652663fd3f414 (Opus, tree parking): T-2677 parking power 0.3 -> 0.5 (Anita approved; land on report
+  unless numbers move >5%).
+- **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): resumed to rebase, run checks, report (T-2674, T-2675).
+- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666; last seen on cargo tests (21:46 UTC). Ask if quiet.
+- **l10nshots** a33678a02637e9875 (Opus, main tree): pass 5 screenshots ja/zh-Hans/zh-TW; layout fixes come back to me.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
-- linesPending was cleared when any demand update ends (T-1733), incl. a camera-started rough solve (ridersnow's T-2658
-  rule replaces that blanket clear: check after it lands whether this is gone).
+- linesPending cleared on any demand update end (T-1733): T-2658 replaced the blanket clear; check it is gone.
 
 ## Waiting on Anita
-- Answered 17:50: fares option **N**. BUILT in tree .tw-trees/fares (agent farescale, 610k: retire after landing; smoke
-  25/25 in the tree; T-2669, T-2670, T-2676 viaduct = 1.0x upkeep; notes/T-2668.md section 7). NOT landed: asked Anita
-  (~18:30) whether the regional market's rail share halving on 100-250 km in India/Mexico (Mumbai-Pune 14->4%, Delhi-Agra
-  42->22%; the car's fuel weighs half the minutes) and Mexico's in-city rail -2% (5-cent rounding) are fine. On landing:
-  translate format.levelUpkeepLine, format.upkeepLines, format.upkeepRule + 2 new running-cost keys (removed from ja/zh);
-  filed T-2677 (parking power 0.3 -> 0.5, a demand change). T-2667 yes but after release work (P2, open);
-  her jekyll stays running (~3 cores outside the ledger: size claims for it).
 - T-2620 (keep old rates on track >5 km from stations): maps-93's question.
+- T-2667 OSM attractions: yes, after release work.
 - Strings shown, no answer = fine.
 
 ## Next
@@ -64,7 +54,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2678**.
+   (Brazil, pack lock free). Next unassigned id **T-2679**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
