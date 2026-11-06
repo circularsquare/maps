@@ -217,14 +217,22 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     // when an origin's lane first reaches its station (`till_gen`)
     let till_w = if rule { (0..sz.n).map(|u| sz.acc_off[u + 1] - sz.acc_off[u]).max().unwrap_or(0) as usize } else { 0 };
     assert!(till_w <= 64, "the walking rule's masks hold 64 access entries");
+    // (rows in whole eights, tested eight entries at a time)
+    let till_w = till_w.next_multiple_of(8);
     let mut till = vec![0f32; s * till_w];
     let mut till_at = vec![0u32; if rule { s } else { 0 }];
+    // T-2324: per station the most of its row (only rows with rides are longer than eight)
+    let mut till_mx = vec![0f32; if rule { s } else { 0 }];
     let mut till_gen = 0u32;    // each access entry's distance band, for the refused pairs' take-off
     let acc_band: Vec<u8> = if rule { sz.acc_d.iter().map(|&d| dist_band(d) as u8).collect() } else { vec![] };
     // T-710: the station choice's scale and offset by distance band (`er` holds a table per band)
     let nb = p.n_bands();
     let bands: Vec<(f32, f32)> = (0..nb).map(|b| p.band(b)).collect();
     let (ss, na) = (s * s, sz.acc_st.len());
+    // T-2324: per station and band, `er` from each of the origin's access entries to it, for the
+    // refused pairs' weights (filled as `till`, by band)
+    let mut till_er = vec![0f32; nb * s * till_w];
+    let mut till_er_at = vec![0u32; if rule { nb * s } else { 0 }];
     // per subzone: its part of the zone's row / column factor
     let ou: Vec<f32> = (0..sz.n).map(|u| sz.origin_weight(u, z, gr, share)).collect();
     let dv: Vec<f32> = (0..sz.n)
@@ -385,6 +393,10 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     // and the zone pair's walking with no rail (`NoRail::split`, T-558), and its distance band
     let mut fzw = vec![0f32; dz.len()];
     let mut fzb = vec![0u8; dz.len()];
+    // T-2324: and the walk's detour factor for the walking rule, found when a lane first needs it
+    // (`wf_at`: the origin zone it was found for)
+    let mut wf_z = vec![0f32; dz.len()];
+    let mut wf_at = vec![u32::MAX; dz.len()];
     let pair_walk = gr.wroutes.is_some() || !gr.wf_off.is_empty();
     let drive = p.routes.as_deref().filter(|r| r.has_drive());
     let ride_min2 = (p.ride_min_km * 1000.0).powi(2);
@@ -630,9 +642,16 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     lane_bad.clear();
                     let (d_lane, s_lane) = (d.to_array(), ssum.to_array());
                     let mut keep = [1f32; 8];
+                    // T-2324: each egress step's row sums and weights by lane, for the slivers' bound
+                    let (rv_a, ev_a): ([[f32; 8]; KE], [[f32; 8]; KE]) = (std::array::from_fn(|k| rv[k].to_array()), std::array::from_fn(|k| ev[k].to_array()));
                     for l in (0..8).filter(|&l| near >> l & 1 != 0) {
                         let qd = q[l];
-                        let direct = d_lane[l] * gr.walk_factor(i, sz.zone[dd_sub[qd] as usize] as usize);
+                        let zk = visit_k[(c[l][1] & 0x7fff_ffff) as usize] as usize;
+                        if wf_at[zk] != oi as u32 {
+                            wf_at[zk] = oi as u32;
+                            wf_z[zk] = gr.walk_factor(i, dz[zk].zid as usize);
+                        }
+                        let direct = d_lane[l] * wf_z[zk];
                         if !p.walk_rule_at(direct) {
                             continue;
                         }
@@ -640,69 +659,114 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         // takes longer than walking (`walk_ok`; no route takes 65,535 m, past
                         // every walk the rule compares with)
                         let ne = eg_n[qd] as usize;
-                        let nk = if rr[l] != 0 { n_all } else { walk.len() };
+                        let all = rr[l] != 0;
+                        let nk = if all { n_all } else { walk.len() };
                         let mut slow_k = [0u64; KE];
                         let mut any = 0u64;
                         for kk in 0..ne {
                             let (t, wt) = (eg_st[qd][kk] as usize, sz.acc_d[eg_k[qd][kk] as usize]);
-                            let row = &mut till[t * till_w..t * till_w + n_all];
+                            let row = &mut till[t * till_w..(t + 1) * till_w];
                             if till_at[t] != till_gen {
                                 till_at[t] = till_gen;
+                                let mut mx = f32::NEG_INFINITY;
                                 for (c, k) in row.iter_mut().zip(walk.start..ride.end) {
                                     *c = acc_walk[k] + walk_tab[sz.acc_st[k] as usize * s + t] as f32;
+                                    mx = mx.max(*c);
                                 }
+                                till_mx[t] = mx;
                             }
-                            let m = row[..nk].iter().enumerate().fold(0u64, |m, (j, &c)| m | (!(c + wt <= direct) as u64) << j);
+                            // T-2324: a longer row's most passes, so all do (f32 sums keep their
+                            // order); eight or fewer (any walks) are tested at once
+                            if nk > 8 && till_mx[t] + wt <= direct {
+                                continue;
+                            }
+                            let (direct8, wt8) = (F8::splat(direct), F8::splat(wt));
+                            let m = row.chunks_exact(8).take(nk.div_ceil(8)).enumerate().fold(0u64, |m, (g, c)| m | (direct8.lt_mask(F8::new(c.try_into().unwrap()) + wt8) as u64) << (8 * g));
+                            // (past the origin's entries the row holds another's)
+                            let m = if nk < 64 { m & ((1 << nk) - 1) } else { m };
                             slow_k[kk] = m;
                             any |= m;
                         }
                         if any == 0 {
                             continue;
                         }
-                        let (b, c_b) = (bl[l], if rr[l] != 0 { c_u[bl[l]] } else { 1.0 });
+                        // T-2324: a lane is a sliver for certain where its egress entries with
+                        // any refused pair carry at most `WALK_SLIVER` of its weight (the margin
+                        // covers the two sums' rounding)
+                        let bound: f32 = (0..ne).filter(|&kk| slow_k[kk] != 0).map(|kk| rv_a[kk][l] * ev_a[kk][l]).sum();
+                        if bound <= 0.9999 * WALK_SLIVER * s_lane[l] {
+                            continue;
+                        }
+                        let (b, c_b) = (bl[l], if all { c_u[bl[l]] } else { 1.0 });
                         let er_b = &er[b * ss..(b + 1) * ss];
-                        let lo = lane_bad.len() as u32;
-                        let mut bad = 0f32;
-                        for (j, k) in (walk.start..walk.start + nk).enumerate() {
-                            if any >> j & 1 == 0 {
-                                continue;
-                            }
-                            let a = sz.acc_st[k] as usize;
-                            for kk in 0..ne {
-                                if slow_k[kk] >> j & 1 == 0 {
-                                    continue;
+                        // T-2324: per egress station and band, its station pairs' weights from
+                        // each access entry, filled as a lane first reads them
+                        for kk in 0..ne {
+                            let t = eg_st[qd][kk] as usize;
+                            if till_er_at[t * nb + b] != till_gen {
+                                till_er_at[t * nb + b] = till_gen;
+                                let row = &mut till_er[(t * nb + b) * till_w..(t * nb + b) * till_w + n_all];
+                                for (e, k) in row.iter_mut().zip(walk.start..ride.end) {
+                                    *e = er_b[sz.acc_st[k] as usize * s + t];
                                 }
-                                let t = eg_st[qd][kk] as usize;
-                                let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
-                                let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
+                            }
+                        }
+                        let er_at = |t: usize, j: usize| till_er[(t * nb + b) * till_w + j];
+                        let w_of = |k: usize| acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
+                        // per access entry, a bit per egress entry its station pair into is refused
+                        let mut by_j = [0u8; 64];
+                        for (kk, &m) in slow_k[..ne].iter().enumerate() {
+                            let mut m = m;
+                            while m != 0 {
+                                by_j[m.trailing_zeros() as usize] |= 1 << kk;
+                                m &= m - 1;
+                            }
+                        }
+                        // (the refused pairs in order: access entry, then egress entry)
+                        let mut bad = 0f32;
+                        let mut aj = any;
+                        while aj != 0 {
+                            let j = aj.trailing_zeros() as usize;
+                            aj &= aj - 1;
+                            let w = w_of(walk.start + j);
+                            let mut km = by_j[j];
+                            while km != 0 {
+                                let kk = km.trailing_zeros() as usize;
+                                km &= km - 1;
+                                let cw = w * er_at(eg_st[qd][kk] as usize, j) * eg_e[qd * nb + b][kk];
                                 if cw > 0.0 {
                                     bad += cw;
-                                    lane_bad.push((a as u32, t as u32, cw, k as u32, kk as u8));
                                 }
                             }
                         }
                         // T-2307: a sliver refused is let be (`WALK_SLIVER`)
                         if bad <= WALK_SLIVER * s_lane[l] {
-                            lane_bad.truncate(lo as usize);
                             continue;
                         }
-                        if bad > 0.5 * s_lane[l] {
-                            // most of the lane refused: taking that off a spread at the kept rate
-                            // would cancel too far for f32, so its kept pairs are loaded one by one
-                            lane_bad.truncate(lo as usize);
-                            let mut kept = 0f32;
-                            for (j, k) in (walk.start..walk.start + nk).enumerate() {
-                                let a = sz.acc_st[k] as usize;
-                                let w = acc_e[b * na + k] * if k < walk.end { c_b } else { 1.0 };
-                                for kk in 0..ne {
-                                    let t = eg_st[qd][kk] as usize;
-                                    let cw = w * er_b[a * s + t] * eg_e[qd * nb + b][kk];
-                                    if cw > 0.0 && slow_k[kk] >> j & 1 == 0 {
-                                        kept += cw;
-                                        lane_bad.push((a as u32, t as u32, cw, k as u32, kk as u8));
-                                    }
+                        let lo = lane_bad.len() as u32;
+                        // most of the lane refused: taking that off a spread at the kept rate
+                        // would cancel too far for f32, so its kept pairs are loaded one by one
+                        let most = bad > 0.5 * s_lane[l];
+                        let mut kept = 0f32;
+                        let all_k = ((1u32 << ne) - 1) as u8;
+                        for (j, k) in (walk.start..walk.start + nk).enumerate() {
+                            let mut km = if most { !by_j[j] & all_k } else { by_j[j] };
+                            if km == 0 {
+                                continue;
+                            }
+                            let (a, w) = (sz.acc_st[k], w_of(k));
+                            while km != 0 {
+                                let kk = km.trailing_zeros() as usize;
+                                km &= km - 1;
+                                let t = eg_st[qd][kk];
+                                let cw = w * er_at(t as usize, j) * eg_e[qd * nb + b][kk];
+                                if cw > 0.0 {
+                                    kept += cw;
+                                    lane_bad.push((a, t, cw, k as u32, kk as u8));
                                 }
                             }
+                        }
+                        if most {
                             keep[l] = kept / s_lane[l];
                             whole |= 1 << l;
                         } else {

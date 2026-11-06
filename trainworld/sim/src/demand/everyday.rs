@@ -1445,26 +1445,40 @@ impl EverydayApi {
                     debug_assert!(b.len() <= 32);
                     let mut sum = all_sum;
                     if check {
-                        // T-2307: a sliver refused is let be (`WALK_SLIVER`)
-                        let (mut kept, mut bad) = (0.0, 0.0);
-                        let mut n = 0;
+                        // T-2324: the refused pairs' bits first, with no branch on each pair
+                        // (refusals are common and come unpredictably), then the sums where any is
+                        let mut any = 0u32;
                         for (ka, m) in a.clone().zip(kept_rows.iter_mut()) {
-                            let all = acc_from[ka] + rule_to[v] <= walk_on;
+                            if acc_from[ka] + rule_to[v] <= walk_on {
+                                continue;
+                            }
+                            let (x, row) = (acc_walk[ka], &sk.walk[sz.acc_st[ka] as usize * s..][..s]);
+                            let mut r = 0u32;
                             for (j, kb) in b.clone().enumerate() {
-                                let c = pair_c[n];
-                                n += 1;
-                                if all || walk_ok(acc_walk[ka], sk.walk[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize], acc_walk[kb], walk_on) {
-                                    kept += c;
-                                } else {
-                                    *m &= !(1 << j);
-                                    bad += c;
+                                // `walk_ok`, both tests taken
+                                let w = row[sz.acc_st[kb] as usize];
+                                let ok = (w != u16::MAX) & (x + w as f32 + acc_walk[kb] <= walk_on);
+                                r |= (!ok as u32) << j;
+                            }
+                            *m = !r;
+                            any |= r;
+                        }
+                        if any != 0 {
+                            // T-2307: a sliver refused is let be (`WALK_SLIVER`); each sum in the
+                            // pairs' order, a 0 added for each pair the other takes
+                            let (mut kept, mut bad) = (0.0f32, 0.0f32);
+                            for (&m, cs) in kept_rows.iter().zip(pair_c.chunks_exact(b.len())) {
+                                for (j, &c) in cs.iter().enumerate() {
+                                    let k = (m >> j & 1) as f32;
+                                    kept += c * k;
+                                    bad += c * (1.0 - k);
                                 }
                             }
-                        }
-                        if bad > WALK_SLIVER * all_sum {
-                            sum = kept;
-                        } else {
-                            kept_rows.fill(u32::MAX);
+                            if bad > WALK_SLIVER * all_sum {
+                                sum = kept;
+                            } else {
+                                kept_rows.fill(u32::MAX);
+                            }
                         }
                     }
                     let (a0, b0) = (a.start, b.start);

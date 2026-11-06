@@ -288,13 +288,16 @@ levels:
    station takes on to any destination, `Skims::walk_max`), and a lane whose distance is past that
    and its destination's longest egress walk, or past walking's reach, is taken as before. The rest
    test each egress entry against the origin's real minutes to its station from every access entry
-   (`till`, a row per station filled when a lane first reaches it), with no table read where all
-   pass; only the refused pairs are read, the lane's logsum scaled by the share kept, loaded as
-   usual and the refused pairs taken off again, or, where most are refused, the kept pairs loaded
-   alone (f32 would lose too much in the taking off). The everyday pass looks each pair's station
-   pairs up once into a bit each for its three passes; the pair choice (`walk_kept`) and the trip
-   explorer skip the refused pairs in their own loops. Long trips between cities and the everyday
-   outings across a zone line do not apply it.
+   (`till`, a row per station filled when a lane first reaches it), eight entries at a time, a
+   longer row passed whole where its most passes (T-2324). Only the refused pairs' weights are
+   read (from `till_er`, filled the same way per band), and none where the egress entries with a
+   refused pair carry at most `WALK_SLIVER` of the lane's weight; the lane's logsum is scaled by
+   the share kept, loaded as usual and the refused pairs taken off again, or, where most are
+   refused, the kept pairs loaded alone (f32 would lose too much in the taking off). The everyday
+   pass looks each pair's station pairs up once into a bit each for its three passes, the bits
+   first with no branch per pair and the sums only where one is refused; the pair choice
+   (`walk_kept`) and the trip explorer skip the refused pairs in their own loops. Long trips
+   between cities and the everyday outings across a zone line do not apply it.
 
 #### Loading and crowding
 
