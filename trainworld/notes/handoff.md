@@ -41,8 +41,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   world_run.py; tools/aws/land.py clears a landed id's caches. Now: terrain grids for the 36 + T-2594's 21 US zones
   (all 21 differ), then after-steps, smoke, report. Then commit, 8800 rebuild, then **T-2595 (Omaha doc/wod
   overlap; Anita: "yea lets do omaha", before release)** with a fresh agent (brazil is past 500k).
-- **sheetspeed** (Opus, tree, launched ~08:35): T-2589 + T-2592, diagram rebuild speed on the sheet without a
-  visible change (aim Japan < 15 s, NY < 4 s).
+- sheetspeed LANDED 2af717b9: T-2589 stage 1, same picture bit for bit, all Japan 49 -> 38 s, NY 10.9 -> 9.3 s;
+  T-2589/T-2592 stay open (left: carry in WASM+SIMD, est. 3-4x, Rust tree; layout tolerance is a look call);
+  T-2597 filed. Not on 8800 yet.
 - **workerbal** (Opus, tree, launched ~08:35): T-2553 then T-2532, demand worker balance and bubbles after an edit;
   figures must match (12,515,594).
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
