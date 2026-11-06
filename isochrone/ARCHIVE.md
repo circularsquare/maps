@@ -1,5 +1,7 @@
 # Archive
 
+- T-087 [P3] Road share factor on a farm grid. Done 2026-11-06: L1 by 100 m crossing time fits 15 tiles to 2.7% mean / 6.8% worst (factor 3: 9.0 / 20.7) and removes the land cover floor; became T-089, now part of T-011. Mekong canals off for every rule. notes/T-087.md.
+
 - T-088 [P3] Lake country too fast at L10. Done 2026-11-06: each separate run of sea or lake water in a split coarse cell is its own canoe node (with the river pieces touching it), extra links listed in `pieces.bin.gz` and `pieces/l3/`; water units on land cells pay the half access as river pieces. Lakes L1/L10 1.07 -> 1.01, Jyvaskyla 1.16 -> 1.10; Coari 0.90 -> 0.85 and Sogndal 0.91 -> 0.80 from coarse walking bias (T-081); one-pixel river ponds fixed (part of T-075). notes/T-088.md.
 
 - T-082 [P2] Canoe at L10 in river country too fast. Done 2026-11-06: L3 and L10 river steps are the L1 network merged per coarse cell, one canoe node per river piece, getting in or out pays half the piece's access distance carried; Coari L1/L10 2.08 -> 0.90, Khulna 1.47 -> 0.97, L3 unchanged; old data gives old times exactly; smoke 17/17. Lake country left as T-088. notes/T-082.md.

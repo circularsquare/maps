@@ -24,8 +24,8 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md). Measured 2026-11-06 (notes/T-087.md): factor 3 fits dense and winding nets (2.5-3.3) but leaves straight grids 11-18% too slow (Iowa wants 5-6); a straightness rule fits all ten usable tiles to 3.9% mean; a 1 km mean of land cover is also 10-20% slower than a 100 m walker even without roads. Done 2026-11-06: L1 by 100 m crossing time (T-080's rule one level down) is 2.0% mean / 3.3% worst on ten tiles, 2.7% / 6.8% with three prairie grids (factor 3: 9.0% / 20.7%; straightness rule 4.2% / 11.6%) and also removes the land cover floor; ~15-21 core-hours for the world at margin 1-2. Mekong canals stay off for every rule (blocked-direction tail). Becomes T-089.
-- T-089 [P2] Every level by crossing time: L1 from the 100 m grid (LC100 + roads bits + terrain factor, with and without roads, road byte = their ratio), L3 and L10 from L1 (T-081); margin 1-2; then re-measure the canoe's `cfg.access` (notes/T-087.md, T-080.md, T-082.md). Shifts every time on the map; waits for Anita's yes.
+- T-090 [P1] Canoe corridors from Semnan drawn in pieces, cut off and too far north (Kama, Kazakhstan). taking, 2026-11-06.
+- T-089 [P2] Every level by crossing time: L1 from the 100 m grid (LC100 + roads bits + terrain factor, with and without roads, road byte = their ratio), L3 and L10 from L1 (T-081); margin 1-2; then re-measure the canoe's `cfg.access` (notes/T-087.md, T-080.md, T-082.md). Folded into T-011 (2026-11-06): one world rebuild with 90 m terrain, directed, instead of two.
 - T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only `coarse()` in build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs later. If it lands, re-measure the canoe's `cfg.access` (0.4-0.6, notes/T-082.md).
 
 ## M1: canoe, today
@@ -39,7 +39,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Roads and 100 m
 
 - T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; mountain tiles wait for T-039.
-- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
+- T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show. Anita said go 2026-11-06, keeping C: above ~20 GB free. Holds T-089 and T-081: every level by crossing time, L1 from a 100 m walker on LC100 + roads bits + GLO-90. Stage 1 (design, pilot, streaming downloader) started 2026-11-06; world run waits for the orchestrator's look at the pilot.
 
 ## M2: survival
 

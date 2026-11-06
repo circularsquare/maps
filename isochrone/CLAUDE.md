@@ -130,5 +130,8 @@ Subagents never commit. **Pushing needs Anita's word.**
 - **UI** follows the maps house style (riders/nycriders): bare title, dark panels, few words,
   sentence-case labels, no transitions, every drawn number gets a hover. Panels show what can
   change; no explanatory or one-time text.
+- **Page text needs no sign-off for now** (Anita, 2026-11-06: "we're not at the stage where i
+  care that much about text yet"). Write it to the User-facing text rules and land it; don't list
+  changed strings for her.
 - **Asks for Anita** go in the "For you" block of the orchestrator's final message, never in
   `TODO.md`. Ones that outlive the session go in `notes/for-anita.md`.
