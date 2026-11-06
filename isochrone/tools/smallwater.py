@@ -1,15 +1,15 @@
-"""Small water: which exact-0.06 pixels of the MAP surface are ponds to walk through.
+"""Small water: which water pixels of a 1 km surface are ponds to walk through.
 
-MAP gives 0.06 min/m (1 km/h) to seas and lakes alike. A connected patch of those pixels with
-an area under MAX_KM2 counts as land at 1 km/h (docs/resolution.md, "Small water"); build_tiles.py
-and build_grid.py both use this, so every level agrees.
+A connected patch of water pixels with an area under MAX_KM2 counts as land at 1 km/h
+(docs/resolution.md, "Small water"). build_tiles.py runs it on our surface (water: walk_today 0);
+tools/hazard/build.py still runs it on the MAP surface (water: exactly 0.06), the default.
 
 Patches are 8-connected, so a diagonal channel stays one body of water. They are found strip by
-strip (STRIP rows, the same strips both builds read): each strip is labelled on its own, and
+strip (STRIP rows, the strips the builds read): each strip is labelled on its own, and
 labels that touch across a strip edge, or across the 180 degree seam, are merged before any
 area is summed. Usage:
 
-    sw = SmallWater(ds)          # one pass over the tif, ~30 s
+    sw = SmallWater(ds, is_water=lambda a: a == 0)   # one pass over the tif, ~30 s
     ...
     small = sw.mask(strip_index, a)   # bool, True where a pixel of strip `strip_index` is small water
 """
@@ -34,8 +34,8 @@ def row_area_km2(row0, rows):
     return R_KM ** 2 * np.radians(PIX_DEG) * (np.sin(top) - np.sin(bot))
 
 
-def _label(a):
-    lab, n = ndimage.label(a == WATER, structure=STRUCT, output=np.int32)
+def _label(water):
+    lab, n = ndimage.label(water, structure=STRUCT, output=np.int32)
     return lab, n
 
 
@@ -46,16 +46,17 @@ def _pairs(p, q):
 
 
 class SmallWater:
-    def __init__(self, ds, max_km2=MAX_KM2, log=print):
+    def __init__(self, ds, max_km2=MAX_KM2, log=print, is_water=lambda a: a == WATER):
         w, h = ds.width, ds.height
         assert h % STRIP == 0
+        self.is_water = is_water
         self.strips = h // STRIP
         offsets, area, edges = [], [], []   # first global label of each strip, km2 per label, touching pairs
         total = 0
         prev_bottom = None
         for i in range(self.strips):
             a = ds.read(1, window=((i * STRIP, (i + 1) * STRIP), (0, w)))
-            lab, n = _label(a)
+            lab, n = _label(is_water(a))
             ra = row_area_km2(i * STRIP, STRIP)
             wts = np.broadcast_to(ra[:, None], lab.shape)
             area.append(np.bincount(lab.ravel(), weights=wts.ravel(), minlength=n + 1)[1:])
@@ -88,8 +89,8 @@ class SmallWater:
         self.small_area_km2 = float(comp_area[small].sum())
 
     def mask(self, i, a):
-        """True where pixel is exact-0.06 water in a patch under the area limit (strip i, array a)."""
-        lab, n = _label(a)
+        """True where pixel is water in a patch under the area limit (strip i, array a)."""
+        lab, n = _label(self.is_water(a))
         lut = np.zeros(n + 1, dtype=bool)
         o = self._offsets[i]
         lut[1:] = self._small_by_label[o:o + n]

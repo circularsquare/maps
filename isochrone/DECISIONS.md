@@ -3,6 +3,26 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-11-06
+
+- **Town blocks stored inside whole 1 degree tile files, absent blocks zeroed, a 16-bit block
+  mask per tile in index.json** (T-057, notes/T-057.md). Whole tiles round every town were twice
+  the size (1.2 against 0.6 GB at stage 1, ~3.5 against ~1.4 GB with elevation); block files would
+  have meant 4x the requests and a new layout for no size gain. The page reads partial tiles once
+  it fills absent blocks from L1 speeds (written out in the note).
+- **The page reads our surface with OSM roads, MAP's surface retired from it** (T-028,
+  notes/T-028.md). L0.1 against L1 went from 1.21 to 0.99 at Cluj and New York. MAP's levels are
+  kept in `data/tiles_map2020/` to compare and roll back.
+- **Roads as a byte beside the speed at every level, folded in when a level loads** (T-028), not
+  baked into the speed: "no roads" then costs no data, the fold is one loop per window, and the
+  files cost 68 MB more (L1 213 MB in all against MAP's 118). A water cell's byte is its bridge's
+  speed (over 5 km/h) instead of the single code 255, so a bridge keeps its terrain factor.
+- **Water at L1 is LC100's half-or-more rule, with LC100's missing islands put back where GMTED
+  is above 2 m** (T-028). The 0.75 threshold would agree more with MAP's mask but MAP's is not the
+  truth here (it marks steep and icy land 1 km/h "water", and misses the dry Aral bed); LC100 has
+  Samoa, Tahiti, Kerguelen and Chongming as sea, so a pixel all sea in LC100 with GMTED land is
+  land at 3 km/h x terrain. Canoe water and the hazard band stay on MAP's mask until rebuilt.
+
 ## 2026-11-05
 
 - **Desert rivers run on water carried in from outside the desert** (T-079, notes/T-079.md), for

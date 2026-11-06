@@ -17,12 +17,13 @@ The motivating question (Anita): "if you just have a canoe in 10,000 BC, how far
 
 ## 2. Now built
 
-Walking only, from the Malaria Atlas Project's 2020 walking-only friction surface (1 km, roads,
-land cover and slope; Weiss et al. 2020, CC BY 4.0), averaged onto a global grid of ~10 km cells
-(4320 x 1740). One search from the clicked cell to everywhere (Dijkstra, 16 neighbours, wraps at
-180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a worker with land hazard. Bands from 1 hour
-to 128 days, a day being 8 hours of walking. Water cannot be crossed. The default start is
-Cluj-Napoca.
+Walking only, on our own 1 km surface: the Malaria Atlas Project's recipe (Weiss et al. 2020)
+rebuilt from Copernicus LC100 2019 land cover and GMTED2010 height and slope (`docs/surface.md`),
+with OSM roads and paths as a layer of their own (`docs/roads.md`), averaged onto a global grid of
+~10 km cells (4320 x 1740). One search from the clicked cell to everywhere (Dijkstra, 16
+neighbours, wraps at 180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a
+worker with land hazard. Bands from 1 hour to 128 days, a day being 8 hours of walking. Water is
+crossed only on bridges. The default start is Cluj-Napoca.
 
 A canoe start (the mode buttons, or `?mode=canoe`) searches carrying on land and the
 canoe on sea, lakes and rivers with currents (`docs/canoe.md`), and paints the sea; ~0.8 s a
@@ -30,10 +31,10 @@ click at 10 km. The search minimises time + K x hazard (water and land, section 
 the route to the pointer. Cells are drawn as hexagons by default (`?look=crisp` gives squares,
 `?look=diag` cut corners); the look is paint only, the search runs on square cells.
 
-Our own off-road walking surface, MAP's recipe rebuilt at 1 km from Copernicus LC100 2019 land
-cover and GMTED2010 elevation with each layer kept apart, is built but not yet read by the page
-(`docs/surface.md`; T-028). Roads become a layer of their own from OSM, on the same grid: the rule
-is designed (`docs/roads.md`) and the world pass is running (T-053); the page reads neither yet.
+Every level stores the off-road speed and, beside it, a road byte per cell that the worker folds
+in as it loads the level, so turning roads off later needs no other data. The canoe water and the
+land hazard band are still cut to MAP's land and water; where ours differs (about 2% of 1 km land
+cells) the search handles it without holes (`notes/T-028.md`).
 
 ## 3. Travel model
 
@@ -53,11 +54,16 @@ is designed (`docs/roads.md`) and the world pass is running (T-053); the page re
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the
   data to prepare.
 - **Directed edges.** Water flows: paddling downstream is faster than upstream, so the graph is
-  directed. Walking is symmetric while speeds come from the MAP surface; once slopes come from
-  our own elevation (T-011) walking is directed too, downhill faster than uphill (directed Tobler,
-  research/friction.md 2).
-- **Small water.** Water patches under 5 km² at L1 are walked at MAP's 1 km/h instead of blocking
-  (T-013).
+  directed. Walking is symmetric while slope comes in as MAP's undirected factor; once slopes
+  come from 90 m elevation (T-011) walking is directed too, downhill faster than uphill (directed
+  Tobler, research/friction.md 2).
+- **Roads.** A walkable OSM way is walked at 5 km/h times the terrain factor, as any ground; a 1 km
+  cell blends road and off-road time by three times its share of 100 m road cells, capped at all
+  road (`docs/roads.md`). Walkable bridges carry walks over water; tunnels are left out.
+- **Water.** A 1 km cell is water when LC100 has it half water or more; islands LC100 leaves out
+  are put back from GMTED2010. Water patches under 5 km² are waded at 1 km/h (MAP's rate) instead
+  of blocking (T-013). A coarse cell is land when a quarter of its 1 km cells are
+  (`docs/resolution.md`).
 - **Canoe**: a canoe start searches the canoe layer (sea, lakes, paddleable rivers from 1 m³/s,
   with currents) and carrying on land. The canoe is never left behind: overland it is carried, at
   twice the walking time (carry x2, Anita 2026-11-05). Paddling is 5 km/h on still
@@ -97,7 +103,7 @@ risk), and the route from the start as a thin line, dashed where carried (`docs/
 canoe starts water is painted 22% towards white, paler than land.
 
 Top left, under the title, a collapsible speeds panel lists the model's speeds in km/h, each row
-with a hover giving its basis: walking by ground type (MAP's land cover table), and on a canoe
+with a hover giving its basis: walking by ground type (LC100 classes at MAP's survey speeds), and on a canoe
 start still water, small, big and huge rivers (1, 100, 10,000 m³/s) down and up, a 1 m/s sea
 current with and against, carrying and getting in or out. The worker sends them with `ready`
 (`js/speeds.js`), worked out from the model constants. Two buttons in the row switch hill shading

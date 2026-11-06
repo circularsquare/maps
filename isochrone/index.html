@@ -90,11 +90,11 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 </div>
 <div id="info" class="panel">
     <p>Click anywhere to set the start. <span class="walk-only">Each colour is how long it takes to walk there. A day is 8 hours of walking.</span><span class="canoe-only" hidden>Each colour is how long it takes to get there with a canoe. A day is 8 hours of paddling or carrying.</span></p>
-    <p>Speeds come from the Malaria Atlas Project walking-only friction surface (Weiss et al., Nature Medicine 2020, CC BY 4.0), which sets a pace for every square kilometre from roads, land cover and slope. It was made to measure how far people live from health care. The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
+    <p>Walking speeds follow the Malaria Atlas Project's recipe (Weiss et al., Nature Medicine 2020, CC BY 4.0): a pace for each kind of ground, slowed by height and slope. Ground is from Copernicus Global Land Cover 2019 (CC BY 4.0), height and slope from GMTED2010 (USGS), and roads and paths from OpenStreetMap (ODbL). The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
     <p id="canoeCredits" hidden>The canoe goes 5 km/h on still water and is carried overland at half walking speed. Rivers come from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0). Falls, dams and weirs are from OpenStreetMap (ODbL), the coast from Natural Earth. Sea currents are from the NOAA Global Drifter Program, and summer waves and sea ice from ERA5 (Copernicus Climate Change Service, CC BY 4.0).</p>
     <p>Danger on land is thirst, cold, ice and height. Temperatures and rain are from CHELSA (Karger et al. 2017, 2021), and each place takes January or July, whichever is safer. Drinking water is rivers from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0), and wells, springs and villages from OpenStreetMap (ODbL). Ice is from Copernicus Global Land Cover 2019 (CC BY 4.0), the Randolph Glacier Inventory 6.0 (CC BY 4.0) and Natural Earth, and height from GMTED2010 (USGS). Places with under 1% survival are left blank.</p>
     <p>Hill shading is from the <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank">Terrain Tiles on AWS</a>, built by Mapzen from SRTM, GMTED2010 and 3DEP (USGS), ETOPO1 (NOAA), EU-DEM (Copernicus) and national models, <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">credited in full here</a>. River lines are the ones the canoe uses, wider for more water and faint where it has to be carried.</p>
-    <p><span class="walk-only">Seas and lakes cannot be crossed.</span> Ponds under 5 km² are waded at 1 km/h. Weather, disease, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
+    <p><span class="walk-only">Seas and lakes are crossed only on bridges.</span> Ponds under 5 km² are waded at 1 km/h. Weather, disease, borders and rest are not counted. Basemap from <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> and <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>, drawn with <a href="https://maplibre.org" target="_blank">MapLibre GL</a>.</p>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
@@ -210,12 +210,17 @@ const workerReady = new Promise(res => {
 async function loadGrid() {
     meta = await (await fetch('data/grid.json')).json();
     const tiles = await (await fetch('data/tiles/index.json')).json();
-    const resp = await fetch('data/grid.bin.gz');
-    const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
-    const bytes = await new Response(stream).arrayBuffer();
-    worker.postMessage({ type: 'init', meta, tiles, bytes, bands: BANDS, alpha: OVERLAY_ALPHA,
+    const gunzip = async url => {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(url + ' ' + resp.status);
+        return new Response(resp.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+    };
+    // L10 speeds, and its road bytes (docs/roads.md) when the build has them
+    const [bytes, roads] = await Promise.all([gunzip('data/grid.bin.gz'), meta.roads ? gunzip('data/' + meta.roads) : null]);
+    worker.postMessage({ type: 'init', meta, tiles, bytes, roads, bands: BANDS, alpha: OVERLAY_ALPHA,
                          maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn,
-                         look: ['crisp', 'diag'].includes(params.get('look')) ? params.get('look') : 'hex' }, [bytes]);
+                         look: ['crisp', 'diag'].includes(params.get('look')) ? params.get('look') : 'hex' },
+                       roads ? [bytes, roads] : [bytes]);
     await workerReady;
 }
 
@@ -229,11 +234,11 @@ const fac = x => '×' + x.toFixed(2);
 function drawSpeeds(s) {
     const rows = [];
     const row = (cells, hint, cls) => rows.push({ cells, hint, cls });
-    row(['On foot', '', ''], `The Malaria Atlas Project's walking surface: for each kind of ground, the median answer of 407 people asked how long 1 km takes. Height and slope slow it: ${s.elev.map(([m, f]) => `${fac(f)} at ${m} m`).join(', ')}; ${s.slope.map(([d, f]) => `${fac(f)} on a ${d}° slope`).join(', ')}.`, 'sec');
+    row(['On foot', '', ''], `For each kind of ground, the median answer of 407 people asked how long 1 km takes (Malaria Atlas Project). Height and slope slow it: ${s.elev.map(([m, f]) => `${fac(f)} at ${m} m`).join(', ')}; ${s.slope.map(([d, f]) => `${fac(f)} on a ${d}° slope`).join(', ')}.`, 'sec');
     for (const w of s.walk) {
         const v = w.min === w.max ? kmh(w.min) : kmh(w.min) + '-' + kmh(w.max);
         const hint = w.label.startsWith('Ponds') ? 'Water patches under 5 km² are waded at 1 km/h, MAP’s rate for crossing a wetland or swimming.'
-            : w.label.startsWith('Roads') ? 'Every road and path is walked at 5 km/h. Towns were not in the survey and are set to 5 km/h too.'
+            : w.label.startsWith('Roads') ? 'Roads and paths are walked at 5 km/h, slowed by height and slope like other ground. Towns were not in the survey and are set to 5 km/h too.'
             : w.parts.map(([n, k]) => `${n} ${kmh(k)}`).join(', ');
         row([w.label, v, ''], hint);
     }

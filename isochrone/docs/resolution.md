@@ -6,24 +6,38 @@ How the map looks sharp up close without solving the whole world at full detail.
 
 | Level | Cell | Grid | Where solved | Data |
 |---|---|---|---|---|
-| L10 | ~10 km (1/12 degree) | 4320 x 1740, whole world | every click | `data/grid.bin.gz` (`tools/build_grid.py`) |
-| L3 | ~3 km (1/40 degree) | 14400 x 5800, in tiles | a window round the view, from zoom 5 | `data/tiles/l3/` |
-| L1 | ~1 km (1/120 degree) | 43200 x 17400, in tiles | a window round the view, from zoom 7 | `data/tiles/l1/` |
+| L10 | ~10 km (1/12 degree) | 4320 x 1740, whole world | every click | `data/grid.bin.gz`, roads `data/grid_roads.bin.gz` |
+| L3 | ~3 km (1/40 degree) | 14400 x 5800, in tiles | a window round the view, from zoom 5 | `data/tiles/l3/`, roads `r3/` |
+| L1 | ~1 km (1/120 degree) | 43200 x 17400, in tiles | a window round the view, from zoom 7 | `data/tiles/l1/`, roads `r1/` |
 | L0.1 | ~100 m (1/1200 degree) | 1 degree tiles, where built | a window round the view once the view fits in 1.5 M cells (zoom ~9.4 on 1400 x 900), walking starts | `data/fine/` (`docs/fine.md`) |
 
 L0.1's sources, tiles and when it is solved are in `docs/fine.md`; it is seeded (from L1, then
 L3, L10), painted (canvas source `walk01`), holed and hovered as the windows below.
 
-L1 is the MAP surface itself. L3 and L10 are made from it the same way: a cell's speed is the mean
-of its pixels' time per metre, and a cell is land when a quarter of its pixels are. All levels are
-uint8 speed (km/h x 40, 0 = water).
+L1 is our own surface (`docs/surface.md`: LC100 land cover, GMTED2010 height and slope) under the
+water rule below. L3 and L10 are made from L1's cells by one rule, `coarse()` in
+`tools/build_tiles.py`: a cell's speed is the mean of its L1 cells' time per metre, and a cell is
+land when a quarter of its L1 cells are (T-081 would change this function only). Every level
+stores the off-road speed (uint8 km/h x 40, 0 = water) and beside it a road byte per cell
+(`docs/roads.md`, "The page part"), which the worker folds into the speed as it loads a level
+(`applyRoads` in `js/tiles.js`; `cfg.roads` off skips the road files).
 
-**Tiles** (`tools/build_tiles.py`, ~3 min, reads the tif in 600-row strips): 5 degree tiles for
-both levels, 600 x 600 cells at L1 and 200 x 200 at L3, 72 x 29 of them, named
-`l<level>/<tile row>_<tile col>.bin.gz` (row 0 at 85N, col 0 at 180W). All-water tiles are not
-written; `data/tiles/index.json` lists the ones that exist per level (as `row * 72 + col`).
-L1 is 1141 tiles, 117.6 MB gzipped; L3 is 1130 tiles, 17.8 MB. `data/tiles/` is gitignored and
-rebuilt from the tif.
+**Tiles** (`tools/build_tiles.py`, ~2.5 min on 3 cores, all three levels in one pass over 600-row
+strips): 5 degree tiles for both windowed levels, 600 x 600 cells at L1 and 200 x 200 at L3, 72 x 29
+of them, named `l<level>/<tile row>_<tile col>.bin.gz` (row 0 at 85N, col 0 at 180W), road bytes
+the same in `r<level>/`. A speed tile is written where it has land, a road tile where it has a
+road byte; `data/tiles/index.json` lists both per level (as `row * 72 + col`, the road tiles under
+`roads`). L1 is 1137 tiles, 155 MB gzipped, and 1041 road tiles, 58 MB; L3 is 1121 tiles, 18 MB,
+and 1024 road tiles, 9 MB; L10 is 1.9 MB and 1.0 MB. The build writes `data/tiles_next/`;
+`build_tiles.py swap <name>` serves it by renames and moves what was served to `data/<name>/`.
+`data/` is gitignored.
+
+**Water at L1.** A cell is water when LC100's inland water and sea cover half of it or more (as
+`walk_today.tif`). LC100 has some islands and archipelagos as sea outright (Samoa, Tahiti,
+Kerguelen, South Georgia, Chongming, the Sundarbans, much of the Chilean archipelago): a cell
+LC100 has as 98% sea or more where GMTED2010 is above 2 m is land, at 3 km/h (bare or sparse, a
+middle guess) times its terrain factor. A water cell a walkable bridge crosses is land when roads
+are on (`docs/roads.md`).
 
 ## The view refine
 
@@ -79,14 +93,13 @@ px at zoom 9) shows both levels at once and so reads a little brighter, because 
 rounded inwards to whole canvas rows; the edges sit in the margin, off screen once the view has
 settled.
 
-**Small water.** MAP gives exactly 0.06 min/m (1 km/h) to seas and lakes alike, including ponds
-of one 1 km pixel (about 2% of pixels round Cluj, from satellite land cover). A connected patch
-of those pixels (8-connected, so a diagonal channel stays one body) under 5 km², its area summed
-from pixel areas at their latitude, is land at that 1 km/h in every level: it counts as land
-pixels when the L1 cells are made and when L3 and L10 cells are averaged. Larger patches stay
-water. `tools/smallwater.py` finds the patches, labelling each 600-row strip and merging labels
-that touch across strip edges and the 180 degree seam, so a patch is measured whole; both builds
-use it. A sea or lake inlet that joins a bigger body is part of it and stays water.
+**Small water.** A connected patch of L1 water cells (8-connected, so a diagonal channel stays one
+body) under 5 km², its area summed from cell areas at their latitude, is land at 1 km/h (MAP's
+rate for wading or swimming) in every level: it counts as land cells when L1 is made and when L3
+and L10 cells are averaged. Larger patches stay water. `tools/smallwater.py` finds the patches,
+labelling each 600-row strip and merging labels that touch across strip edges and the 180 degree
+seam, so a patch is measured whole. A sea or lake inlet that joins a bigger body is part of it and
+stays water.
 
 ## Thin barriers (Anita's ridge question)
 
@@ -99,8 +112,8 @@ Averaging time per metre over a cell keeps the time to cross the cell **straight
   ridge price.
 - **Walking alongside is over-charged.** A path running parallel to the ridge, in the valley
   beside it, still pays the ridge's share of the cell.
-- **The slope is already smoothed in the source.** MAP works at 1 km, so a 100 m wide, 1 km tall
-  wall is already a gentler slope in its data. No averaging of ours can recover it; only a finer
+- **The slope is already smoothed in the source.** Our elevation is 1 km (GMTED2010), so a 100 m
+  wide, 1 km tall wall is already a gentler slope in the data. No averaging of ours can recover it; only a finer
   elevation model can (research T-004).
 
 The view refine fixes the first two wherever you look closely. In the Alps from Brig, a point

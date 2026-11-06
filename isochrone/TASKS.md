@@ -24,8 +24,10 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-028 and T-057 (below), agents launched 2026-11-06 01:55.
-- T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only build_grid.py and build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs in T-028.
+- T-084 [P1] Road grade cap at 1 km: since T-028 hillside roads are walked at 5 km/h times the cell's terrain factor, so the Alps went 1.64x slower at L10 (MAP walked every road pixel at 5 km/h on any slope). Roads take the altitude factor but slope capped at a road grade (~10%, as docs/fine.md's street cap); build only. Then rebuild the hazard band on our land/water mask (`land` from our L1 in tools/hazard/build.py, ~7 min). Taking, 2026-11-06 (T-028's agent).
+- T-085 [P2] Canoe water on our mask: canoe water and river steps still use MAP's land/water (1.69 M L1 cells our water/canoe land, 3.2 M the other way; the search copes, notes/T-028.md). Rebuild `water.py` (~11 min, 6 GB) then the river steps on our mask; check ktrips and holes. Taking, 2026-11-06 (T-079's agent).
+- T-086 [P2] 100 m in partial town tiles (T-057's page part): fineIndex masks, absent blocks filled from L1 with roads, `fineWindowFor` by present blocks with a minimum fine share, a Lagos smoke check (notes/T-057.md). Taking, 2026-11-06 (T-057's agent).
+- T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only `coarse()` in build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs in T-028.
 - T-082 [P2] Canoe at L10 in river country too fast: L1/L10 1.92 at Coari, 1.45 at Khulna; L10 paddles nearly end to end since a 10 km cell almost always holds some river and the walk to it disappears. L3 and L1 agree (notes/T-080.md).
 
 ## M1: canoe, today
@@ -38,10 +40,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## Roads and 100 m
 
-- T-010 [P1] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. Stage 1 done 2026-11-05: tools/roads/, rule share3 (e = min(1, 3 x road share of the cell); 4% median off 100 m in the test tiles, MAP 22%), design in docs/roads.md for Anita's review (notes/T-010.md). Stage 2 is T-053.
-- T-053 [P2] Roads world build (T-010 stage 2). Done 2026-11-06 01:47: all 513 extracts read (chugoku's download timed out three times and was rerun), `reduce` gave 16,183 tiles in data/roads/l1 (data/roads 0.7 GB); the world GeoTIFF moves to T-028. To archive with T-010, log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
-- T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md). Taking, 2026-11-06 (agent, Opus): road byte per cell at every level, old tiles kept as a backup for comparing.
-- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1. Taking, 2026-11-06 (agent, Opus): towns and water country, `.roads` from data/roads/bits; no page code until T-028 lands.
+- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; mountain tiles wait for T-039.
 - T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
 
 ## M2: survival

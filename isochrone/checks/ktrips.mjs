@@ -18,13 +18,14 @@ const { makeLevel, snap, setHazard } = await imp('levels.js');
 const { solve, cellTimes, MDC, MDR, P_GRID, P_XFER, P_DOWN, P_UP } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
 const { buildCanoe } = await imp('canoe.js');
-const { loadHazardWorld } = await imp('tiles.js');
+const { loadHazardWorld, applyRoads } = await imp('tiles.js');
 
 const meta = JSON.parse(readFileSync(ROOT + 'data/grid.json', 'utf8'));
 setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
 const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 const cell = (meta.north - meta.south) / meta.height;
 const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north, cell, true);
+if (cfg.roads && meta.roads) applyRoads(L.grid, gunzipSync(readFileSync(ROOT + 'data/' + meta.roads)));
 setHazard(L, await loadHazardWorld());
 const d = await loadWorld(L.W, L.H);
 let t0 = performance.now();

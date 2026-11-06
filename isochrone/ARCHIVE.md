@@ -1,5 +1,9 @@
 # Archive
 
+- T-028 [P2] Page on our own surface with roads. Done 2026-11-06: `tools/build_tiles.py` builds L1, L3, L10 from walk_today.tif plus a road byte per cell (time with roads over without, x 250; bridges over water), folded in by the worker so "no roads" costs no data; water = LC100 half water, islands LC100 calls sea (GMTED > 2 m) land at 3 km/h; MAP's tiles kept in data/tiles_map2020/. L0.1/L1 1.21 -> 0.99; rural walks 1.1-1.3x longer; the Alps 1.64x slower at L10 (T-084). build_grid.py deleted. notes/T-028.md.
+- T-053 [P2] Roads world build (T-010 stage 2). Done 2026-11-06 01:47: 513 extracts read (chugoku rerun after three download timeouts), one pause at Anita's ask; `reduce` gave 16,183 tiles in data/roads/l1, data/roads 0.7 GB. notes/T-053.md.
+- T-010 [P1] Roads as their own layer from OSM. Done 2026-11-06: rule share3 (stage 1, docs/roads.md), world build T-053, on the page T-028. notes/T-010.md.
+
 - T-079 [P1] Desert wadis paddled. Done 2026-11-05: WaterGAP invents both mean and driest-month flow in dry catchments (Wadi ad-Dawasir 292 m³/s), so the driest-month test failed; inside the hot desert mask (shared, `tools/hotdesert.py`) a reach carries only flow from upstream outside the desert, scaled by WaterGAP's losses minus 3 cm/day over its width, and is a river while that stays Q >= 1 and driest month >= 0.1. 188,100 km dropped, Nile, Niger, Euphrates, Indus, Colorado, Amu Darya kept; canoe rivers and the hazard band rebuilt; smoke 16/16. notes/T-079.md.
 - T-080 [P2] Level bias. Done 2026-11-05: zooming in makes walks faster, L1/L10 0.81 (0.56-0.98), from speed contrast (the mean of time per metre misses the fast pixels a path keeps to); L0.1 is 1.21 of L1 from the MAP vs LC100+OSM source gap. Fix proposed as T-081, canoe at L10 filed as T-082. notes/T-080.md.
 

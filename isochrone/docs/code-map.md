@@ -16,13 +16,13 @@ Where things live. Update the line for a file you add, move or change the job of
 | `js/canoe.js` | `buildCanoe`: a level's canoe layer from its data (`canoeOf`, the per-cell word, current, river edges, and the edges into river water off the line, T-036); `shoreAt`. |
 | `js/canoedata.js` | Canoe file layouts (docs/canoe.md 4): `loadWorld` (L10 water, sea grid, river steps, once), `loadWindowWater` (L3/L1 water tiles and river tiles cut to a window; missing tiles are open sea). |
 | `js/windows.js` | `windowFor` (window bounds and caps, lower on canoe starts), `fineWindowFor` (the L0.1 window, or none: view over the cap, a canoe start, tiles missing), `contains`, `solveWindow` (speeds and land hazard loaded together) with the border-ring seeding from the coarser levels, per layer. |
-| `js/tiles.js` | L3 and L1 tile fetch, the shared 250 MB cache of speed, canoe and hazard tiles (`getCached`), `loadWindow` (tiles cut into a window grid), `cutInto`, `forTiles`. Land hazard (`data/hazard/`): `loadHazardWorld` (L10), `loadHazardWindow` (L3/L1 tiles, missing tiles 0; L0.1 the L1 pixel under each cell). L0.1: `fineIndex` (`data/fine/index.json`), `fineSpeed` (class, roads and terrain factor to speeds, docs/fine.md), its own ~100 MB cache of decoded tiles. |
+| `js/tiles.js` | L3 and L1 tile fetch, the shared 250 MB cache of speed, road, canoe and hazard tiles (`getCached`), `loadWindow` (speed and road tiles cut into a window grid), `applyRoads` (road bytes folded into speeds, docs/roads.md; L10 too, from `session.js`), `cutInto`, `forTiles`. Land hazard (`data/hazard/`): `loadHazardWorld` (L10), `loadHazardWindow` (L3/L1 tiles, missing tiles 0; L0.1 the L1 pixel under each cell). L0.1: `fineIndex` (`data/fine/index.json`; reads its whole tiles only, not yet `partial`), `fineSpeed` (class, roads and terrain factor to speeds, docs/fine.md), its own ~100 MB cache of decoded tiles. |
 | `js/paint.js` | `paint`: a solved level's cell times to RGBA in Web Mercator y; water paler on canoe starts; the cell looks (T-060, `cfg.look`): `hex` the default (pixel-to-cell map kept per grid geometry, packed 32-bit colours), `?look=crisp` square cells, `?look=diag` cut corners. |
-| `js/speeds.js` | `speeds()`: the table the page's speeds panel shows, sent with `ready`: MAP's walking table, its height and slope factors, and the canoe speeds worked out from `cfg`. |
+| `js/speeds.js` | `speeds()`: the table the page's speeds panel shows, sent with `ready`: our LC100 walking table (MAP's survey speeds), the height and slope factors, and the canoe speeds worked out from `cfg`. |
 | `js/riverlines.js` | Page side (dynamic import from `index.html`): `riverLines` adds the `rivers` line layer from the canoe river files, L10 / L3 / L1 by zoom; picks the tiles and draws what `js/riverworker.js` (a module worker: fetch, parse, steps joined between confluences and smoothed) sends back; `window.riverLog` has each rebuild's time on the page (`ms`) and in the worker (`workerMs`). The hill shading (`addRelief`, source `dem`) is in `index.html`. |
-| `js/config.js` | What `init` sends (bands, alpha, time limit, the speed to hours table, canoe and hazard data folders) and the canoe model constants (K, paddling speed, upstream share and floor, transfer, carry factor, ice limit, `sea8`, `hazard`). |
+| `js/config.js` | What `init` sends (bands, alpha, time limit, the speed to hours table, canoe and hazard data folders), `roads` (fold the road bytes in) and the canoe model constants (K, paddling speed, upstream share and floor, transfer, carry factor, ice limit, `sea8`, `hazard`). |
 
-Messages, page to worker: `init {..., canoeBase, look, corridors}`, `run {lng, lat, mode}` (mode `walk` or
+Messages, page to worker: `init {..., bytes, roads, canoeBase, look, corridors}` (`bytes` and `roads` the L10 speeds and road bytes), `run {lng, lat, mode}` (mode `walk` or
 `canoe`), `view {west, east, north, south, zoom}`, `route {lng, lat, seq}`, `corridors {on}`.
 Worker to page: `ready {speeds}`, `none`, `error {message}`, `coarse {mode}`, `win {level}`,
 `clear {levels}`, `route {seq, mode, t, hz, survival, parts, lng, lat, kind}` (no `lng` when the
@@ -34,13 +34,13 @@ level's corridor time and line count, `window.lastRoute` the last route's figure
 
 | File | What | Time |
 |---|---|---|
-| `tools/build_grid.py` | MAP walking tif to the L10 world grid `data/grid.bin.gz` + `data/grid.json` (uint8 km/h x 40, 0 = water) | ~1.5 min |
-| `tools/build_tiles.py` | Same tif to L3 and L1 5-degree tiles in `data/tiles/` (gitignored) + `index.json` | ~3 min |
-| `tools/smallwater.py` | Finds the water patches under 5 km² (8-connected, strip by strip, merged across strip edges and the 180 degree seam); both builds make them land | ~45 s of each build |
+| `tools/build_tiles.py [workers]` | Our surface (`data/surface/`) and the roads' 1 km counts (`data/roads/l1/`) to the page's levels in `data/tiles_next/`: L1 and L3 5-degree tiles (`l1/`, `l3/` speeds, `r1/`, `r3/` road bytes, `index.json`), L10 `grid.bin.gz`, `grid_roads.bin.gz`, `grid.json`. The water rule, LC100's missing islands, bridges, the road byte (`road_byte`) and the coarse averaging (`coarse`). `swap <name>` serves the new build by renames, keeping the old in `data/<name>/` | ~2.5 min on 3 |
+| `tools/smallwater.py` | Finds the water patches under 5 km² (8-connected, strip by strip, merged across strip edges and the 180 degree seam), on any surface (`is_water`); the build makes them land, `tools/hazard/build.py` still runs it on MAP | ~35 s of a build |
 | `tools/inspect_tif.py` | Prints facts about the raw tif | |
 
-Our own walking surface (`docs/surface.md`), not yet read by the page: layers on MAP's 1 km
-grid in `data/surface/` (gitignored).
+Our own walking surface (`docs/surface.md`): layers on MAP's 1 km grid in `data/surface/`
+(gitignored), read by `tools/build_tiles.py`. MAP's own surface, which the page read until T-028,
+is in `data/tiles_map2020/` as the page's levels (to compare and roll back).
 
 | File | What | Time |
 |---|---|---|
@@ -54,7 +54,8 @@ Fine level (`docs/fine.md`), into `data/fine/` (gitignored):
 
 | File | What | Time |
 |---|---|---|
-| `tools/fine/build.py <region>` | 1 x 1 degree L0.1 tiles: LC100 class and the L1 terrain factor (`.land`), OSM road bits from the Geofabrik extracts in `data/raw/osm/` (`.roads`); `index` rewrites `index.json`. Regions in `REGIONS` | Cluj 3.5 min, New York ~12 min |
+| `tools/fine/select.py` | Which tiles get L0.1 (docs/fine.md "Where the fine level goes"), from the 1 km layers: town blocks with their tile's block mask, water country, mountains, into `data/fine/selection.json` | ~1 min |
+| `tools/fine/build.py world\|tiles\|region\|index` | 1 x 1 degree L0.1 tiles: LC100 class and the L1 terrain factor (`.land`), road bits (`.roads`). `world [--jobs N] [--resume]`: every tile of `selection.json` plus the test regions, absent town blocks zeroed, roads from `data/roads/bits/`; `tiles <name>...`: whole tiles from `bits/`; `region <name>`: a test region (`REGIONS`) with roads from its Geofabrik extracts in `data/raw/osm/`. Each ends by rewriting `index.json` (whole tiles, partial tiles with their masks, tiles with roads) | world ~15 min on 3; Cluj region 3.5 min, New York ~12 min |
 
 Roads (`docs/roads.md`), into `data/roads/` (gitignored): `tools/roads/regions.py` (the world's Geofabrik extracts, `regions.json`), `fetch.py` (download with md5 check), `build.py extract|reduce` (100 m road bits per tile, OR-merged across extracts; 1 km counts and kinds), `world.py` (the world pass: download, read and delete each extract in turn, two on disk at most, done.txt resume, stops under 6 GB free). ~5 min a GB of extract on one core.
 

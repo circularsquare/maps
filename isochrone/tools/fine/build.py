@@ -1,18 +1,25 @@
-"""Fine level (L0.1, 1/1200 degree) tiles for a region (docs/fine.md).
+"""Fine level (L0.1, 1/1200 degree) tiles (docs/fine.md).
 
-    python isochrone/tools/fine/build.py <region> [<region> ...]
+    python isochrone/tools/fine/build.py world [--jobs N] [--resume]
+        every tile of data/fine/selection.json (tools/fine/select.py) and the test regions,
+        roads from data/roads/bits/ (the T-053 world pass), then index.json
+    python isochrone/tools/fine/build.py tiles <name> [<name> ...]
+        whole tiles from data/roads/bits/, then index.json
+    python isochrone/tools/fine/build.py region <region> [<region> ...]
+        a test region with roads read from its Geofabrik extracts in data/raw/osm/, then index.json
     python isochrone/tools/fine/build.py index        (rewrite data/fine/index.json only)
 
 Per 1 x 1 degree tile, named by its south-west corner (n40w074), into data/fine/:
   <name>.land.bin.gz   1200 x 1200 LC100 class (nearest pixel to the cell centre), then
                        120 x 120 terrain factor of the L1 cells x 250 (data/surface/terrain_factor.tif)
-  <name>.roads.bin.gz  1200 x 1200 road bits (ROAD_* below) from the Geofabrik extracts in
-                       data/raw/osm/; a way marks every cell it passes through
-The worker turns these into speeds (js/tiles.js). One core; a state-sized extract ~2-4 min.
+  <name>.roads.bin.gz  1200 x 1200 road bits (ROAD_* below); a way marks every cell it passes through
+A town tile holds only its selected 0.25 degree blocks: every byte of the others is 0, and
+index.json gives the tile's block mask (docs/fine.md, "Town blocks"). The worker turns these into
+speeds (js/tiles.js). Each file is written to a temporary name and renamed, roads before land,
+and index.json last.
 """
 import gzip
 import json
-import math
 import os
 import sys
 import time
@@ -29,10 +36,14 @@ OUT = os.path.join(HERE, "data", "fine")
 LC100 = os.path.join(RAW, "lc100", "cgls-lc100-2019-cog.tif")
 TERRAIN = os.path.join(HERE, "data", "surface", "terrain_factor.tif")
 OSM = os.path.join(RAW, "osm")
+BITS = os.path.join(HERE, "data", "roads", "bits")
+SELECTION = os.path.join(OUT, "selection.json")
 
 N = 1200            # cells a tile side
 L1N = 120           # L1 cells a tile side
 TF_SCALE = 250      # terrain factor byte = factor x 250
+BLOCK = 300         # cells a town block side (0.25 degree)
+FULL = 0xFFFF       # block mask of a whole tile; bit 4 * i + j = block row i from the north, column j
 
 # regions: tile box (west, south, east, north, whole degrees) and the extracts covering it
 REGIONS = {
@@ -186,6 +197,104 @@ def write_gz(path, *arrays):
     os.replace(tmp, path)
 
 
+def tile_box(name):
+    lat = int(name[1:3]) * (1 if name[0] == "n" else -1)
+    lon = int(name[4:7]) * (1 if name[3] == "e" else -1)
+    return (lon, lat, lon + 1, lat + 1)
+
+
+def block_keep(mask):
+    """(N, N) bool, true in the blocks of mask."""
+    b = ((mask >> np.arange(16)) & 1).astype(bool).reshape(4, 4)
+    return np.repeat(np.repeat(b, BLOCK, 0), BLOCK, 1)
+
+
+def build_tile(job):
+    """One tile from LC100, the terrain factor and data/roads/bits; job = (name, mask).
+    Returns (name, mask, bytes written, has roads)."""
+    name, mask = job
+    box = tile_box(name)
+    cls = land_classes(box)
+    tf = terrain(box)
+    bits = os.path.join(BITS, name + ".bits.gz")
+    roads = np.frombuffer(gzip.open(bits).read(), np.uint8).reshape(N, N) if os.path.exists(bits) else None
+    if mask != FULL:
+        keep = block_keep(mask)
+        cls = np.where(keep, cls, 0).astype(np.uint8)
+        tf = np.where(keep[::10, ::10], tf, 0).astype(np.uint8)
+        if roads is not None:
+            roads = np.where(keep, roads, 0).astype(np.uint8)
+    rp = os.path.join(OUT, name + ".roads.bin.gz")
+    if roads is not None and roads.any():
+        write_gz(rp, roads)
+    else:
+        roads = None
+        if os.path.exists(rp):
+            os.remove(rp)
+    lp = os.path.join(OUT, name + ".land.bin.gz")
+    write_gz(lp, cls, tf)
+    size = os.path.getsize(lp) + (os.path.getsize(rp) if roads is not None else 0)
+    return name, mask, size, roads is not None
+
+
+def plan():
+    """{tile: block mask} of every tile to build: the selection's towns and water country, and
+    the test regions whole."""
+    sel = json.load(open(SELECTION))
+    tiles = {n: int(m) for n, m in sel["towns"].items()}
+    for n in sel["water"]:
+        tiles[n] = FULL
+    for box, _ in REGIONS.values():
+        west, south, east, north = box
+        for lat in range(south, north):
+            for lon in range(west, east):
+                tiles[tile_name(lat, lon)] = FULL
+    return tiles
+
+
+def build_tiles(jobs, workers):
+    """Build (name, mask) jobs on workers processes; stop if the terrain factor changes under us."""
+    tf_mtime = os.path.getmtime(TERRAIN)
+    os.makedirs(OUT, exist_ok=True)
+    t0 = time.time()
+    total = 0
+    done = 0
+    if workers > 1:
+        from multiprocessing import Pool
+        pool = Pool(workers)
+        it = pool.imap_unordered(build_tile, jobs, chunksize=4)
+    else:
+        pool = None
+        it = map(build_tile, jobs)
+    try:
+        for name, mask, size, has_roads in it:
+            done += 1
+            total += size
+            if done % 50 == 0 or done == len(jobs):
+                if os.path.getmtime(TERRAIN) != tf_mtime:
+                    raise SystemExit("terrain_factor.tif changed during the build; stopping")
+                el = time.time() - t0
+                print("%d/%d tiles, %.0f MB, %.0f s, ~%.0f s left" % (
+                    done, len(jobs), total / 1e6, el, el / done * (len(jobs) - done)), flush=True)
+    finally:
+        if pool:
+            pool.close()
+            pool.join()
+    if os.path.getmtime(TERRAIN) != tf_mtime:
+        raise SystemExit("terrain_factor.tif changed during the build; stopping")
+    print("built %d tiles, %.0f MB, %.0f s" % (done, total / 1e6, time.time() - t0), flush=True)
+
+
+def world(args):
+    workers = int(args[args.index("--jobs") + 1]) if "--jobs" in args else 1
+    tiles = plan()
+    jobs = sorted(tiles.items())
+    if "--resume" in args:
+        jobs = [j for j in jobs if not os.path.exists(os.path.join(OUT, j[0] + ".land.bin.gz"))]
+    print("world: %d tiles to build on %d workers" % (len(jobs), workers), flush=True)
+    build_tiles(jobs, workers)
+
+
 def build(region):
     box, extracts = REGIONS[region]
     west, south, east, north = box
@@ -212,17 +321,34 @@ def build(region):
 
 
 def index():
+    """index.json: tiles = whole tiles (all the page reads before it knows blocks), partial =
+    {tile: block mask} for town tiles holding only some blocks, roads = tiles with a .roads file.
+    A tile on disk that the plan does not hold is a whole tile (a region built by hand)."""
+    masks = plan() if os.path.exists(SELECTION) else {}
     names = sorted(f[:-12] for f in os.listdir(OUT) if f.endswith(".land.bin.gz"))
+    whole = [n for n in names if masks.get(n, FULL) == FULL]
+    partial = {n: masks[n] for n in names if masks.get(n, FULL) != FULL}
     roads = [n for n in names if os.path.exists(os.path.join(OUT, n + ".roads.bin.gz"))]
-    idx = {"tile": N, "terrain": L1N, "tfScale": TF_SCALE, "tiles": names, "roads": roads}
-    with open(os.path.join(OUT, "index.json"), "w") as f:
-        json.dump(idx, f)
-    print("index: %d tiles" % len(names))
+    idx = {"tile": N, "terrain": L1N, "tfScale": TF_SCALE, "block": BLOCK,
+           "tiles": whole, "partial": partial, "roads": roads}
+    path = os.path.join(OUT, "index.json")
+    with open(path + ".tmp", "w") as f:
+        json.dump(idx, f, separators=(",", ":"))
+    os.replace(path + ".tmp", path)
+    nb = 16 * len(whole) + sum(bin(m).count("1") for m in partial.values())
+    print("index: %d whole tiles, %d partial, %d with roads; %d blocks (%.0f tiles of area)" % (
+        len(whole), len(partial), len(roads), nb, nb / 16))
 
 
 if __name__ == "__main__":
     args = sys.argv[1:] or ["index"]
-    for a in args:
-        if a != "index":
+    if args[0] == "world":
+        world(args[1:])
+    elif args[0] == "tiles":
+        build_tiles([(n, FULL) for n in args[1:]], 1)
+    elif args[0] == "region":
+        for a in args[1:]:
             build(a)
+    elif args[0] != "index":
+        raise SystemExit(__doc__)
     index()

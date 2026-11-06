@@ -2,8 +2,9 @@
 
 Today's off-road walking speed, built by us at 1 km from primary layers with the Malaria Atlas
 Project's recipe (research/friction.md 1). It is the base later stages swap layers into: roads
-(T-010), 10,000 BC (T-012), 90 m terrain (T-011). The page does not use it yet (T-028); it
-still reads MAP's own surface. Agreement with MAP: notes/T-009.md.
+(T-010), 10,000 BC (T-012), 90 m terrain (T-011). The page's L1, L3 and L10 are built from
+`walk_today.tif` (`tools/build_tiles.py`, docs/resolution.md, which also has the water rule the
+page adds: LC100's missing islands and small water). Agreement with MAP: notes/T-009.md.
 
 ## Grid
 
@@ -63,8 +64,8 @@ A pixel is water when inland water and sea together cover half of it or more (`W
 `combine.py`). Where LC100 has no class (north of 80 N, and class 0 over Svalbard and some
 Arctic islands) land is where GMTED is above 0 m, walked as snow and ice (1.62 km/h).
 
-No roads in this surface: MAP puts every road pixel at 5 km/h, our roads come as their own
-layer (T-010).
+No roads in this surface: roads are a layer of their own (`docs/roads.md`), which the page folds
+in per cell.
 
 ## Outputs (`data/surface/`)
 
@@ -79,7 +80,8 @@ layer (T-010).
 | `walk_today.tif` | uint16 | off-road walking km/h x 1000; 0 = water or no land |
 
 uint16 rather than the page's uint8 x 40 because steep high ground goes well under 0.1 km/h,
-where steps of 0.025 km/h would be 25% errors.
+where steps of 0.025 km/h would be 25% errors. The page's levels take 0.025 km/h as the floor
+(under 0.01% of land is slower).
 
 ## Rebuild
 

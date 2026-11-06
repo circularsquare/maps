@@ -1,10 +1,10 @@
 # Roads at 1 km
 
-**Design for Anita's review (T-010).** Roads are their own layer, from OSM, on the 1 km grid of
-our surface (`docs/surface.md`), so "no roads" is a toggle and 10,000 BC has none. The road
-kinds are the 100 m level's (`docs/fine.md`, "Roads: OSM"), and both levels come from one pass
-over the extracts. Measurements: `notes/T-010.md`. Stage 1 (this design and a Cluj / New York
-test) is done; the world build is T-053, the page reading it T-028.
+Roads are their own layer, from OSM, on the 1 km grid of our surface (`docs/surface.md`), so "no
+roads" is a toggle and 10,000 BC has none. The road kinds are the 100 m level's (`docs/fine.md`,
+"Roads: OSM"), and both levels come from one pass over the extracts. The page reads it at L1, L3
+and L10 (T-028). Measurements: `notes/T-010.md` (the rule), `notes/T-053.md` (the world pass),
+`notes/T-028.md` (the page).
 
 ## How a road changes a cell
 
@@ -46,22 +46,28 @@ tile: `notes/T-010.md`.
 | `bits/<tile>.bits.gz` | 100 m cell, 1 x 1 degree tile of 1200 x 1200 | 1 | road bits as the fine level's `.roads`: 1 path, 2 local, 4 main, 8 not walkable, 16 walkable bridge |
 | `l1/<tile>.bin.gz` | 1 km cell, 120 x 120 | 2 | count of 100 m cells with a walkable way (0-100), then the OR of the cells' road bits |
 
-`roads_l1.tif`, the 1 km part as one GeoTIFF on the surface grid (43200 x 17400, two uint8
-bands), is made from `l1/` at the end of the world build. Sizes: 7-19 KB per road-dense tile
-for `l1/`, about 0.1 GB for the world (at most 0.35); `bits/` 0.13-0.33 MB per road-dense tile,
-an estimated 0.5-1 GB for the world (measured by T-053). Both are kept: `bits/` is where the fine level's `.roads` tiles are cut
-from (T-057), so any tile can later get 100 m without fetching OSM again.
+`l1/` covers 16,183 one-degree tiles, 85 MB; `bits/` is kept too: it is where the fine level's
+`.roads` tiles are cut from (T-057), so any tile can later get 100 m without fetching OSM again.
+The page build reads `l1/` tiles directly, so no GeoTIFF of it is made.
 
-**The page part**, made by T-028 from the count and `lc_speed.tif`: one byte per cell at every
-level, the cell's time with roads over its time without, x 250 (1-250; 0 = no road; 255 = a
-water cell with a walkable bridge). The worker multiplies the cell's time by it; "no roads" and
-10,000 BC read it as 1 and never fetch it.
+**The page part** (`tools/build_tiles.py`, with the levels; docs/resolution.md): one byte per
+cell at every level, beside the off-road speed, in `data/tiles/r1/`, `r3/` and
+`data/grid_roads.bin.gz`.
 
-- **L1**: the rule above, cell by cell.
-- **L3 and L10**: the land speed of a coarse cell is the mean time of its L1 cells
-  (`build_tiles.py`), so its road byte is the mean time with roads over the mean time without.
-  The coarse map with roads is then exactly the average of the L1 one; no second rule.
-- A bridge cell at L3 or L10 counts as land at 5 km/h in that mean.
+- **On land**: the cell's time with roads over its time without, x 250 (1-249; 0 = no road or
+  no change, as in towns, where land cover is 5 km/h already).
+- **On water**: a walkable bridge's speed over 5 km/h, x 250 (1-250), which makes the cell land.
+- **L1**: the rule above, cell by cell; a small-water cell blends with its 1 km/h, a cell LC100
+  leaves as sea with its 3 km/h (docs/resolution.md, "Water at L1").
+- **L3 and L10**: a coarse cell's speed is the mean time of its L1 cells, so its road byte is the
+  mean time with roads over the mean time without. Bridge cells join the mean with roads, at
+  their speed, and count toward the quarter-land rule: a coarse water cell they make land takes
+  the water byte. The coarse map with roads is then exactly the average of the L1 one.
+
+The worker folds the byte into the speed as it loads a level (`applyRoads`, `js/tiles.js`):
+speed x 250 / byte on land, byte x 0.8 (km/h x 40) on water. Everything downstream (search,
+hazard per km, canoe, paint) reads the folded speed. `cfg.roads` off, as "no roads" and 10,000 BC
+will be, skips the road files: they are never fetched.
 
 The byte depends on land cover, so it is rebuilt when the land cover table changes; it does not
 depend on terrain, so T-011's 90 m slopes leave it as it is. The OSM part depends on neither.
@@ -89,7 +95,8 @@ The planet file (~90 GB) does not fit on C: (shared with other projects). The pa
 4. **Resuming**: a finished extract goes in `data/roads/done.txt` and is skipped. A stop midway
    through an extract redoes that extract; tiles it half wrote are harmless, again because of OR.
    Each tile file is written to a temporary name and renamed.
-5. **At the end**: `build.py reduce` (1 km counts and kinds per tile), then `roads_l1.tif`.
+5. **At the end**: `build.py reduce` (1 km counts and kinds per tile), then the page levels
+   (`tools/build_tiles.py`).
 
 **Time**: reading is ~5 min per GB of extract on one core (Romania 333 MB in 93 s; four US
 states, 1.2 GB, in 6.4 min), so **~7-8 h** for the world on one core (`--jobs 1`); downloads
@@ -103,10 +110,10 @@ from `bits/` after the pass: no extra download or reading, a few minutes of writ
 
 OSM data is under the ODbL. The road bits, the 1 km counts and the page's road bytes are each a
 database derived from OSM, so like the 100 m `.roads` tiles (`docs/fine.md`, "Publishing")
-they are published under the ODbL with "© OpenStreetMap contributors", which the info panel
-already shows for the basemap. The road byte is also derived from LC100 (CC BY 4.0, credited
-with our surface). The painted map and the travel times are produced works, not bound by the
-ODbL. What the 1 km layer adds: a second ODbL database on R2 (the page's road bytes, ~0.1 GB),
+they are published under the ODbL with "© OpenStreetMap contributors"; the info panel credits
+OpenStreetMap (ODbL) for roads and paths. The road byte is also derived from LC100 (CC BY 4.0,
+credited beside it). The painted map and the travel times are produced works, not bound by the
+ODbL. What the 1 km layer adds: a second ODbL database on R2 (the page's road bytes, 68 MB),
 offered under the same terms as the 100 m tiles.
 
 ## Open

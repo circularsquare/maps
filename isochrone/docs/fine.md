@@ -1,11 +1,12 @@
 # Fine level (L0.1, 100 m)
 
 A fourth level under L10, L3 and L1 (`docs/resolution.md`), so the map keeps sharpening past
-zoom 9: streets, bridges, ponds, river banks and single hillsides. **Stage 1 is built (T-038)**
-for New York and Cluj: land cover, OSM roads and bridges, the 1 km terrain factor, walking
-starts. Stages 2-4 are design. Which tiles get 100 m worldwide is the rule in "Where the fine
-level goes" (Anita approved it 2026-11-05; built as T-057). Measurements: `notes/T-030.md`, `notes/T-038.md`,
-`notes/T-047.md`.
+zoom 9: streets, bridges, ponds, river banks and single hillsides. **Stage 1 is built**: land
+cover, OSM roads and bridges, the 1 km terrain factor, walking starts, for New York and Cluj
+(T-038) and for the towns and water country of "Where the fine level goes" worldwide (T-057;
+the page reads their town blocks once the change in `notes/T-057.md` is made). Mountain tiles
+wait for stage 2's elevation. Measurements: `notes/T-030.md`, `notes/T-038.md`, `notes/T-047.md`,
+`notes/T-057.md`.
 
 ## Grid
 
@@ -34,8 +35,17 @@ it). Tunnels are left out, `building_passage` kept. A way marks every cell it pa
 The worker turns these into speeds when it fetches a tile, so a toggle (roads off, an era, a
 different speed table) changes no data. Roads are a file of their own so "no roads" and
 10,000 BC never fetch them, and so the OSM part stays apart for its licence (see "Publishing").
-`data/fine/index.json` lists the tiles and which have roads. Stage 1 tiles are 0.19-0.54 MB
-(land 0.07-0.24, roads 0.12-0.31).
+**Town blocks.** A town tile holds only its selected 0.25 degree blocks (300 x 300 cells): every
+byte of the other blocks is 0 in both files (class, terrain factor and road bits alike), so they
+cost almost nothing gzipped and the files keep one layout. A tile's **block mask** is 16 bits, bit
+`4 i + j` for block row i from the north and column j from the west (0-3); 0xFFFF is a whole
+tile. Whole tiles are the test regions, water country and town tiles with all 16 blocks.
+
+`data/fine/index.json`: `tile` 1200, `terrain` 120, `tfScale` 250, `block` 300; `tiles` the
+whole tiles; `partial` {tile: mask} the town tiles with some blocks; `roads` the tiles with a
+`.roads` file (a tile with no OSM way has none). A page that reads only `tiles` treats partial
+tiles as missing, which keeps their zero blocks from reading as water. Whole tiles are
+0.05-0.6 MB (median 0.3), a town block 7-51 KB (median 23); index.json is 114 KB.
 
 ## Speeds
 
@@ -87,15 +97,21 @@ as at L1 (`docs/canoe.md`) with three changes:
 
 ## Making the tiles
 
-`python isochrone/tools/fine/build.py <region>` on this machine; a region is a box of whole
-degrees and the Geofabrik extracts covering it (`REGIONS` in the script; extracts go in
-`data/raw/osm/` and are deleted once the region is checked). It reads the LC100 window from
-the local COG and the terrain factor from `data/surface/`, then every highway way of each
-extract with pyosmium, keeping those that touch the box. One core: Cluj (Romania, 332 MB)
-3.5 min, New York (four state extracts, 1.2 GB) 13 min, nearly all of it reading the extracts.
+1. `python isochrone/tools/fine/select.py` (~1 min): the rule of "Where the fine level goes"
+   on the 1 km layers of `data/surface/`, into `data/fine/selection.json` (town tiles with
+   their block masks, water country tiles, mountain tiles for later).
+2. `python isochrone/tools/fine/build.py world --jobs 3` (~15 min): every town and water
+   country tile, and the test regions whole. Per tile: the LC100 window from the local COG,
+   the terrain factor from `data/surface/terrain_factor.tif` (the build stops if that file
+   changes under it), road bits from `data/roads/bits/` (the T-053 world pass, `docs/roads.md`),
+   absent blocks zeroed. Every file is written to a temporary name and renamed, roads before
+   land, and `index.json` is rewritten last, so the page never sees half a tile or a tile
+   before its files. `--resume` skips tiles whose land file exists.
 
-A whole-world build would be ~95 GB of planet file and 15-30 GB of tiles; "Where the fine level
-goes" keeps it to a few GB.
+`build.py tiles <name>...` makes whole tiles from `bits/`; `build.py region <name>` a test
+region with its roads read from Geofabrik extracts in `data/raw/osm/` (`REGIONS`; Cluj 3.5 min,
+New York 13 min, nearly all of it reading the extracts). The road bits of `bits/` match those
+read from the extracts on 98.9-99.99% of the test tiles' cells (OSM edits since).
 
 ## In the page
 
@@ -103,8 +119,10 @@ goes" keeps it to a few GB.
   **1.5 M cells**: from about **zoom 9.4 on a 1400 x 900 screen** and **10.2 on 2560 x 1440**
   (New York's latitude), where a 100 m cell is about 1 px. The window is the view plus a quarter
   on each side, the margin shrinking first to stay under the cap, with edges on multiples of
-  0.05 degree. Every tile of the window must exist; if one is missing the window is cut back to
-  the whole degrees round the view, and if a tile there is missing too the view stays at L1.
+  0.05 degree. Every tile of the window must be a whole tile of `index.json`; if one is not the
+  window is cut back to the whole degrees round the view, and if a tile there is not either the
+  view stays at L1. Partial town tiles are not read yet: the page change that reads them by block
+  and fills absent blocks from L1 speeds is written out in `notes/T-057.md`.
 - **Under it** the L1 window takes a margin of the view's full size on each side and the L3
   window twice that, so the L0.1 ring is seeded from well inside L1.
 - **In `js/windows.js`**: `fineWindowFor`, then `solveWindow` as for L1, seeded on its ring from
@@ -133,14 +151,16 @@ with roads (T-010, T-028), much cheaper than 100 m everywhere.
 
 | Tier | Test (from the 1 km layers) | Unit | Count | Size |
 |---|---|---|---|---|
-| towns | LC100 urban >= 2% of the block | 0.25 degree block | 21,644 blocks (1,350 tiles of area) | ~1.4 GB |
+| towns | LC100 urban >= 2% of the block's pixels | 0.25 degree block | 21,644 blocks in 4,671 tiles (1,353 tiles of area) | ~1.4 GB |
 | mountains | >= 70% of land sloping over 5 degrees (GMTED) | 1 degree tile | 822 | ~1.2 GB |
-| water country with people | >= 10% of pixels part water and urban >= 1% | 1 degree tile | ~160 | ~0.15 GB |
+| water country with people | >= 10% of pixels part water (2-98%) and urban >= 1% of land | 1 degree tile | 158 | ~0.15 GB |
 | everything else | stays at 1 km | | ~17,000 | |
 
 About **2.8 GB** with stage 2's elevation (towns ~1 MB a tile of area: class, roads, flat
 elevation; mountains ~1.5 MB: elevation is most of it). Quarter-degree blocks keep towns small: most of a 1 degree tile round a town is fields.
-Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
+Built at stage 1 (T-057): **0.52 GB**, towns 0.48 GB (4,507 tiles), water country 0.04 GB
+(157 tiles), test regions 3 MB; 0.36 MB a tile of area. Whole tiles round every town would
+have been twice that. Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
 view stays at L1, as now.
 
 Not picked, and measured as changing least: deserts without dunes, ice, taiga and rainforest,
@@ -167,8 +187,9 @@ to cell map is kept per grid geometry. A real hex grid would not pay:
 
 ## Publishing
 
-R2 holds 135 MB for the page now (T-016). The two test regions are 3 MB (stage 1); the proposed
-world selection ~2.8 GB (R2's free tier is 10 GB of storage).
+R2 holds 135 MB for the page now (T-016). Stage 1's towns, water country and test regions are
+0.52 GB in 4,672 tiles; the whole selection with elevation ~2.8 GB (R2's free tier is 10 GB of
+storage).
 - OSM's licence: the published `.roads` tiles are a database derived from OSM, so they are
   published under the ODbL with "© OpenStreetMap contributors" (the info panel credits OSM
   already, for the basemap). The other files and the painted map are not bound by it.
@@ -182,7 +203,7 @@ world selection ~2.8 GB (R2's free tier is 10 GB of storage).
 | 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor. The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
 | 2 | T-039 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
 | 3 | T-050 | The canoe at L0.1: kind, bridge cells, river steps. | Paddling under bridges |
-| 4 | T-057 | The tiles of "Where the fine level goes": towns and water country first, mountain tiles once stage 2 gives them elevation; roads from T-010's OSM pass. | 100 m round every town |
+| 4 | T-057, towns and water country built | The tiles of "Where the fine level goes": towns and water country (stage 1 content, roads from T-053's world pass), mountain tiles once stage 2 gives them elevation; the page reading town blocks (`notes/T-057.md`). | 100 m round every town |
 
 ## Open
 

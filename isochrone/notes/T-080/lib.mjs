@@ -30,6 +30,7 @@ T.setTiles(JSON.parse(readFileSync(ROOT + 'data/tiles/index.json', 'utf8')));
 
 const g10 = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 export const grid10 = new Uint8Array(g10.buffer, g10.byteOffset, g10.length);
+if (cfg.roads && meta.roads) T.applyRoads(grid10, gunzipSync(readFileSync(ROOT + 'data/' + meta.roads)));
 let world = null;
 // The L10 world level (wraps), with land hazard, and its canoe layer on demand.
 export async function world10(canoe) {

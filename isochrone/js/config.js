@@ -6,6 +6,7 @@ export const cfg = {
     inv: null,                   // hours per km for each stored value, -1 for water
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
     hazardBase: 'data/hazard/',  // land hazard band (docs/hazard.md 4), relative to worker.js
+    roads: true,                 // fold the road bytes into L10, L3 and L1 speeds (docs/roads.md); off, never fetched
     // the canoe model (docs/canoe.md 2, 3)
     K: 1000,                     // hours of weight per unit of hazard
     hazard: true,                // water and land hazard (docs/hazard.md); off, weight = time

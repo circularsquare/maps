@@ -2,14 +2,16 @@
 // worked out from cfg, so the panel follows the model.
 import { cfg } from './config.js';
 
-// MAP's off-road walking speeds by MODIS land cover, km/h (research/friction.md 1): baked into
-// the walking surface the page reads. Grouped as the panel shows them.
+// Off-road walking speeds by Copernicus LC100 land cover, km/h: MAP's survey values, the table
+// our surface is built from (docs/surface.md, tools/surface/common.py LC_SPEED). Grouped as the
+// panel shows them.
 const WALK = [
-    ['Roads, towns', [['every road', 5], ['towns', 5]]],
-    ['Grass, savanna', [['grassland', 4.86], ['savanna', 4.86], ['woody savanna', 4.86]]],
-    ['Shrubs, bare ground', [['open shrubland', 4.2], ['closed shrubland', 3], ['barren', 3]]],
-    ['Forest', [['broadleaf, leaf-shedding', 4], ['needleleaf', 3.24], ['mixed', 3.24], ['rainforest', 1.62]]],
-    ['Farmland', [['cropland mosaic', 3.24], ['cropland', 2.5]]],
+    ['Roads, towns', [['roads and paths', 5], ['towns', 5]]],
+    ['Grass, savanna', [['grassland', 4.86], ['savanna', 4.86], ['moss and lichen', 4.86]]],
+    ['Shrubs, bare ground', [['shrubs', 4.2], ['bare or sparse', 3]]],
+    ['Forest', [['broadleaf, leaf-shedding', 4], ['open needleleaf', 4], ['open evergreen', 3],
+        ['needleleaf', 3.24], ['mixed', 3.24], ['rainforest', 1.62]]],
+    ['Farmland', [['cropland', 2.5]]],
     ['Wetland', [['wetland', 2]]],
     ['Snow and ice', [['snow and ice', 1.62]]],
     ['Ponds under 5 km²', [['wading', 1]]],

@@ -2,7 +2,7 @@
 // or a new view. Posts every result to the page.
 import { cfg, setConfig } from './config.js';
 import { makeLevel, snap, setHazard } from './levels.js';
-import { setTiles, loadHazardWorld } from './tiles.js';
+import { setTiles, loadHazardWorld, applyRoads } from './tiles.js';
 import { solve, cellTimes } from './search.js';
 import { loadWorld } from './canoedata.js';
 import { buildCanoe } from './canoe.js';
@@ -28,6 +28,7 @@ export function init(msg) {
     const m = msg.meta;
     const cell = (m.north - m.south) / m.height;
     coarse = makeLevel(new Uint8Array(msg.bytes), m.width, m.height, m.west, m.north, cell, true);
+    if (cfg.roads && msg.roads) applyRoads(coarse.grid, new Uint8Array(msg.roads));
     setTiles(msg.tiles);
     hazardWorld().catch(() => { /* the click retries it and reports */ });
     self.postMessage({ type: 'ready', speeds: speeds() });

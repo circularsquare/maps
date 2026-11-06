@@ -1,5 +1,5 @@
-// L3 and L1 tiles (data/tiles/), L0.1 tiles (data/fine/) and the land hazard band
-// (data/hazard/): fetched on demand, kept in a cache, cut into a window's grid.
+// L3 and L1 tiles (data/tiles/: speeds and road bytes), L0.1 tiles (data/fine/) and the land
+// hazard band (data/hazard/): fetched on demand, kept in a cache, cut into a window's grid.
 // The fetch URL is relative to the worker entry, worker.js.
 import { cfg } from './config.js';
 
@@ -7,7 +7,26 @@ let tiles = null;                // data/tiles/index.json, with a Set of tiles p
 
 export function setTiles(index) {
     tiles = index;
-    for (const k in tiles.levels) tiles.levels[k].set = new Set(tiles.levels[k].tiles);
+    for (const k in tiles.levels) {
+        const lv = tiles.levels[k];
+        lv.set = new Set(lv.tiles);
+        if (lv.roads) lv.roads.set = new Set(lv.roads.tiles);
+    }
+}
+
+// Roads (docs/roads.md, "The page part") folded into a level's speeds, in place. The road byte b
+// of a land cell is its time with roads over its time without, x 250; of a water cell, a walkable
+// bridge's speed over 5 km/h, x 250, which makes the cell land; 0 no road. Speeds are km/h x 40.
+const BRIDGE_PER_B = 5 * 40 / 250;
+export function applyRoads(grid, roads) {
+    for (let i = 0, n = grid.length; i < n; i++) {
+        const b = roads[i];
+        if (!b) continue;
+        const s = grid[i];
+        const v = s ? Math.round(s * 250 / b) : Math.round(b * BRIDGE_PER_B);
+        grid[i] = v < 1 ? 1 : v > 255 ? 255 : v;
+    }
+    return grid;
 }
 
 // A gzipped file as bytes.
@@ -36,9 +55,9 @@ export function getCached(url, bytes) {
     return e.p;
 }
 
-function getTile(f, tr, tc) {
-    const lv = tiles.levels[f];
-    return getCached('data/tiles/' + lv.path + '/' + tr + '_' + tc + '.bin.gz', lv.tile * lv.tile);
+function getTile(f, path, tr, tc) {
+    const T = tiles.levels[f].tile;
+    return getCached('data/tiles/' + path + '/' + tr + '_' + tc + '.bin.gz', T * T);
 }
 
 // Each 5-degree tile overlapping window w at tile size T: calls fn(tr, tc, tcw) with tc
@@ -52,14 +71,16 @@ export function forTiles(w, T, TX, fn) {
 export async function loadWindow(w) {
     if (w.f === 0.1) return loadFineWindow(w);
     const lv = tiles.levels[w.f], T = lv.tile, TX = tiles.tilesX;
-    const grid = new Uint8Array(w.cols * w.rows);
+    const rd = cfg.roads && lv.roads;
+    const grid = new Uint8Array(w.cols * w.rows), roads = rd ? new Uint8Array(w.cols * w.rows) : null;
     const jobs = [];
     forTiles(w, T, TX, (tr, tc, tcw) => {
-        if (!lv.set.has(tr * TX + tcw)) return;
-        jobs.push(getTile(w.f, tr, tcw).then(t => cutInto(grid, w, t, 0, T, tr, tc)));
+        const id = tr * TX + tcw;
+        if (lv.set.has(id)) jobs.push(getTile(w.f, lv.path, tr, tcw).then(t => cutInto(grid, w, t, 0, T, tr, tc)));
+        if (rd && rd.set.has(id)) jobs.push(getTile(w.f, rd.path, tr, tcw).then(t => cutInto(roads, w, t, 0, T, tr, tc)));
     });
     await Promise.all(jobs);
-    return grid;
+    return roads ? applyRoads(grid, roads) : grid;
 }
 
 // ---- L0.1: 1 x 1 degree tiles of data/fine/ (docs/fine.md), turned into speeds here ----
