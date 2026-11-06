@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2632 Localization stage 1, ui/ A-L (2026-11-06, agent l10n-ui1, tree): the 19 files AccountPanel.tsx .. LinesTab.tsx (EditNote skipped) read their text through `t()`, 388 keys in en.json and context.json, i18n.mjs count 0 for them; English unchanged except "1 trains" -> "1 train" in a group's trains hover; new `i18n/calendar.ts` `weekdayLong`. Smoke passes, pseudo shots in artifacts/trainworld/l10n-ui1/.
 - T-2606 Cut a connected network where few trips cross (2026-11-06, agent cutnet, design only): closed as no cut (Anita: "yes, no cut"); one LA-Chicago line joins her NA network, a cut saves no work and would halve that line's riders. Her idea went on as T-2621 (long trips on a coarser graph). notes/T-2606.md.
 - T-2629 Network diagram polish (2026-11-06, agent borders, tree): the cut halves every 20 pitches (LA zone's empty north-east ~15% smaller each way, Japan's islands unchanged); zone borders fitted up to 24 pitches off, bends per 100 pitches 4.2 -> 1.3 (New York), 5.8 -> 1.4 (Japan), no station on the wrong side. notes/T-2629.md.
 - T-2610 Hudson and East River at the tip (2026-11-06, agent borders): closed, both drawn open on today's master (T-2599's land not reproduced); the East River between the bridges is 1-3 pitches of water under its 3.5-pitch band. notes/T-2629.md.
