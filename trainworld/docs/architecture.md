@@ -352,7 +352,7 @@ Web first, so it can be shared as a link.
   per zone (boundary, cells with population, jobs and attractor weights, the solved gravity, road
   speeds per period, fitted constants, sources; format in notes/T-004.md) and the regional market
   pack (sites, commute list, trip parameters, the `derived` block). Binary arrays with a small JSON
-  header. Locally they sit beside the page (`packs/<id>.json`, `.bin`, `packs/intercity.json`);
+  header. Locally they sit beside the page (`packs/<id>.json`, `.bin`);
   published, they are on R2 under a versioned prefix that `tools/deploy.py` writes into the page as
   a `tw-data` meta, never chosen by hostname (`game/dataBase.ts`, T-924; T-060, notes/T-026.md).
   The main thread fetches each once and hands each worker a copy. The real-rail layer's files are

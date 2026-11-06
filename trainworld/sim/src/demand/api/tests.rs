@@ -856,7 +856,7 @@ fn northeast_profile() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let nyc = pack::load_raw(&format!("{root}/data/packs/nyc.json")).unwrap();
     let phl = pack::load_raw(&format!("{root}/data/packs/phl.json")).unwrap();
-    let ic_header = std::fs::read_to_string(format!("{root}/data/packs/intercity.json")).unwrap();
+    let ic_header = std::fs::read_to_string(format!("{root}/data/work/intercity.json")).unwrap();
     let t0 = now_ms();
     let mut pops = [DemandApi::new(&nyc.0, &nyc.1).unwrap(), DemandApi::new(&phl.0, &phl.1).unwrap()];
     let mut ic = IntercityApi::new(&ic_header).unwrap();

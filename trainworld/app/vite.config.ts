@@ -96,9 +96,6 @@ function packs(): Plugin {
           else if (ext === ".market.json") this.warn(`market pack missing: ${src} (build it with pipeline/market_zones.py ${c})`);
           else this.warn(`city pack missing: ${src} (build it with pipeline/build_city.py ${c})`);
         }
-      const intercity = join(PACKS, REGISTRY.market.pack + ".json");
-      if (existsSync(intercity)) copyFileSync(intercity, join(out, REGISTRY.market.pack + ".json"));
-      else this.warn("intercity market missing: build pipeline/intercity.py");
       // T-1270: the zones' terrain classes; a zone without one prices its track on flat ground
       const terrain = join(out, "terrain");
       mkdirSync(terrain, { recursive: true });

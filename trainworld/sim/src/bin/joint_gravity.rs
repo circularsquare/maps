@@ -23,8 +23,8 @@
 //! far holding a pack fixed leaves it off its own margins (notes/T-928.md).
 //!
 //! Reads every zone pack of the registry (`app/src/game/registry.json`, cities with a market place)
-//! and the regional market's pack (`data/packs/intercity.json`, its sites written by
-//! pipeline/intercity.py), and solves the doubly constrained work gravity over all their 2 km zones
+//! and the regional market's pack (`data/work/intercity.json`, the Northeast's old
+//! single solve; no pipeline step writes it now), and solves the doubly constrained work gravity over all their 2 km zones
 //! at once: every zone's commuters (the pack's home weights, scaled so the union's homes equal its
 //! jobs) are shared over every job in reach, in their own pack or another.
 //!
@@ -667,7 +667,7 @@ fn main() {
     // market zones: in the Northeast, each pack cell's 600 m square's site in intercity.json, and
     // its zone; in a `--packs` group, the cell's 6 km square in its own pack's frame (the square
     // pipeline/market_zones.py's own sites fall in), listed in `group_zones`
-    let market_path = format!("{root}/data/packs/intercity.json");
+    let market_path = format!("{root}/data/work/intercity.json");
     let (site_zone, zone_site, site_keys, mv, mframe) = if only.is_none() {
         let market_text = std::fs::read_to_string(&market_path).unwrap();
         let (site_zone, zone_site, site_keys) = intercity::market_site_zones(&market_text).unwrap();

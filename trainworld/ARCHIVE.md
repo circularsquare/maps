@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-428 intercity.json out of the published data (2026-11-06, agent packmove): the file is now `data/work/intercity.json`; vite.config.ts, freeze.py, deploy.py and build_inputs.py no longer look for it, and joint_gravity.rs and the two ignored sim tests read the new path. Also took the move half of T-2380. notes/T-428.md.
 - T-2595 doc (Omaha) overlapping wod at Mills County IA (2026-11-06, agent omaha): not a stale plan; the US county cache gave Cass County NE the lost faces of Mills and Sarpy. `tiger_counties.unlap` cuts them out; doc rebuilt and re-solved, overlap 1,141 -> 0 km2. notes/T-2595.md.
 - T-2605 The city in view during a whole solve (2026-11-06, agent slcload, tree): it waited for the whole final (Salt Lake City on Anita's NA save: fine figures and bubbles 37-118 s after arriving, an edit 40 s); a one-worker aside now shows them in 6.6-7.0 s and 3.1-3.3 s, finals identical. Lines shown keep theirs: T-2624. notes/T-2605.md.
 - T-2623 Line diagram alike with and without related lines (2026-11-06, agent linelook, tree): the plain list's bar, dots and stretches are painted half a pixel off the grid (`--soft`) to match the related SVG's soft edges and ring weight; side lines and crossing bars 3 -> 2.5 px, gap 2 -> 2.5. Shots in artifacts/trainworld/linelook/.

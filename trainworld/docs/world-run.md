@@ -204,7 +204,7 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   restored; fix the fault and run again. The
   runner exits with code 2 and the report's `fault` says what happened.
 - **A scratch tree** (`--root data/work/<task>/trainworld`, with `data/raw` a junction to this
-  tree's, `sim/` a copy, a registry, the world plan, `borders.json`, `intercity.json`, the plan
+  tree's, `sim/` a copy, a registry, the world plan, `borders.json`, the plan
   extents and data/work's shared inputs: `world_field.*`, `outside.json`, `tiger_counties_simple.json`)
   takes every step's paths into data/packs, data/work, app/ and the plan instead; the browser check
   is off there. Remove the junction (`rmdir`) before deleting such a tree.

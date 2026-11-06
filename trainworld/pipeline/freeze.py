@@ -7,7 +7,7 @@
                                                                       the tree's app built on the freeze
 
 A freeze is `data/frozen/<stamp>/`: `packs/` holds hard links to every file a production build
-copies from data/packs (vite.config.ts: each registered zone's five files, the market pack,
+copies from data/packs (vite.config.ts: each registered zone's five files,
 outlines.json, realms.geojson, real/*.save, realgraph/*.rgr and its index.json), `game/` copies of the four data
 files the app bundles (registry.json, market-rows.json, zone-aliases.json, zone-names.json), and
 `manifest.json` each file's size and modified time. A hard link keeps a file as it was because every
@@ -53,7 +53,7 @@ def build_files(root):
     registered zones' files that are missing."""
     packs = Path(root) / "data/packs"
     reg = shared_lock.read_json(Path(root) / "app/src/game/registry.json")
-    want = [c["id"] + x for c in reg["cities"] for x in ZONE_FILES] + [reg["market"]["pack"] + ".json", "outlines.json"]
+    want = [c["id"] + x for c in reg["cities"] for x in ZONE_FILES] + ["outlines.json"]
     have = [f for f in want if (packs / f).is_file()]
     if (packs / "realms.geojson").is_file():  # T-975: optional, as the app shows every zone without it
         have.append("realms.geojson")

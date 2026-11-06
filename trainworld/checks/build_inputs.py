@@ -43,8 +43,6 @@ def main():
     for ext in EXTS:
         flag(f"packs without {ext}", [c for c in cities if not (PACKS / (c["id"] + ext)).exists()],
              "the runner's register step or build_city/places/market_zones")
-    if not (PACKS / (reg["market"]["pack"] + ".json")).exists():
-        flags.append("FLAG the intercity market pack is missing: pipeline/intercity.py")
     flag("zones without a terrain file", [c for c in cities if not (TERRAIN / f"{c['id']}.terrain").exists()],
          "pipeline/zone_terrain.py build (terrain_fine.py first where the intermediate has no blocks)")
     for f, fix in ((TERRAIN / "world.water", "pipeline/world_water.py build"), (PACKS / "outlines.json", "pipeline/zone_outlines.py"),

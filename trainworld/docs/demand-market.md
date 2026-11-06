@@ -125,8 +125,8 @@ app reads are in the market frame (the New York equirectangular one) whatever th
 **The market's distances are on the ground** (T-128). Each zone centre goes through its pack's
 frame to the unit sphere and zone pairs are measured by great circle (`zone_km`; the same as
 `track::frame::great_circle`); far places by their centres'. The decay and the drive time follow.
-An old single pack (`sites` with a market column: the Northeast's `data/packs/intercity.json`
-from before T-1014, kept for the ignored tests that open it, and the tests' fixtures) opens as a
+An old single pack (`sites` with a market column: the Northeast's `data/work/intercity.json`
+from before T-1014, never published, kept for the ignored tests that open it, and the tests' fixtures) opens as a
 closed world over its own zones with the ground curve alone.
 
 The Northeast recomputes every open city population and the separate regional market on service or

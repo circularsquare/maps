@@ -13,7 +13,7 @@
 //! nothing.
 //!
 //! A pack in the old single-pack form (`sites` with a market column: the Northeast's
-//! data/packs/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
+//! data/work/intercity.json, the joint commute gravity's input, and the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
     api::{check_fare_curve, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fares, check_fare_mul, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},

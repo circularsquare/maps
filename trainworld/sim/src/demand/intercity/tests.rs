@@ -1215,7 +1215,7 @@ fn intercity_real_network_outputs() {
 #[ignore]
 fn legacy_northeast_pack_opens() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let text = std::fs::read_to_string(format!("{root}/data/packs/intercity.json")).unwrap();
+    let text = std::fs::read_to_string(format!("{root}/data/work/intercity.json")).unwrap();
     let t = now_ms();
     let a = IntercityApi::new(&text).unwrap();
     let (zones, first, keys) = market_site_zones(&text).unwrap();

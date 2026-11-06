@@ -11,8 +11,8 @@ During a batch, publish a build on a freeze (T-928) rather than one that copied 
 `python -I trainworld/pipeline/freeze.py build` (the newest freeze, the .tw-snap tree's code) prints
 its dist, then `--dist <that dist>` here: the registry comes from the freeze (`frozen.json` names it).
 
-What goes where. The build's `packs/` folder (city packs, market packs, outlines, the intercity
-market, real saves, real-network graphs: about 1 GB in about 4,000 files) goes to
+What goes where. The build's `packs/` folder (city packs, market packs, outlines,
+real saves, real-network graphs: about 1 GB in about 4,000 files) goes to
 `r2:anitamaps/trainworld/<version>/`, read by the page from https://data.anita.garden/trainworld/<version>/.
 Everything else in dist (index.html, assets/ with the JS, workers and WASM, fonts/, the favicon:
 about 15 MB) goes to the website repo's `trainsworld/` (T-1707; its old `trainworld/` keeps only
@@ -139,7 +139,7 @@ def preflight(dist, allow_dirty, app=None):
                 problems.append(f"{c}.json reaches byte {end} of a {size}-byte {c}.bin")
         except (OSError, ValueError, KeyError):
             pass
-    for f in [reg["market"]["pack"] + ".json", "outlines.json", "realgraph/index.json"]:
+    for f in ["outlines.json", "realgraph/index.json"]:
         if not os.path.isfile(os.path.join(packs, f)):
             missing.append(f)
     try:
@@ -175,7 +175,7 @@ def summary(info):
           + (f", data from freeze {fz['stamp']} ({fz['label'] or 'no label'})" if fz else ", data from data/packs at build time") + "\n")
     groups = {}
     for r, s in info["data"]:
-        k = r.split("/")[0] + "/" if "/" in r else next((e for e in [".boundary.geojson", ".places.json", ".market.json", ".bin"] if r.endswith(e)), r if r in ("outlines.json", "realms.geojson", "intercity.json") else ".json")
+        k = r.split("/")[0] + "/" if "/" in r else next((e for e in [".boundary.geojson", ".places.json", ".market.json", ".bin"] if r.endswith(e)), r if r in ("outlines.json", "realms.geojson") else ".json")
         g = groups.setdefault(k, [0, 0, 0])
         g[0] += 1
         g[1] += s
