@@ -39,10 +39,11 @@ export interface SheetOptions {
   aWater: number;
   sWater: number;
   /** the cut, on a map 600 km across or more: the map's columns (rows) farther than cutKm across from every network
-   * station (one with cutN others within cutKm; 0: off) are drawn narrow, past cutKm the width halving every D drawn pitches at the floor's scale, to
-   * cutMin at least (T-2609) */
+   * station (one with cutN others within cutKm; 0: off) are drawn narrow, past cutKm the width halving every cutD drawn
+   * pitches at the floor's scale, to cutMin at least (T-2609, T-2629) */
   cutKm: number;
   cutN: number;
+  cutD: number;
   cutMin: number;
   /** on such a map, land farther than freeKm from every network station costs aWater to stretch unevenly (0: off) */
   freeKm: number;
@@ -109,7 +110,7 @@ export interface SheetOptions {
 export const SHEET: SheetOptions = {
   dial: 0.5, D: 40, maxStep: 1.6, gap: 4, core: 1.8, coreCountry: 2.1,
   aLine: 4, sLine: 1, sMax: 6, aLand: 2, sLand: 0.1, aWater: 0.1, sWater: 0.1,
-  cutKm: 10, cutN: 2, cutMin: 0.02, freeKm: 25,
+  cutKm: 10, cutN: 2, cutD: 20, cutMin: 0.02, freeKm: 25,
   wFold: 10, lo: 0.3, nearKm: 3, landShare: 0.4,
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
@@ -457,8 +458,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   const R0 = 1 << K0, NRX = Math.ceil(NCX / R0), NRY = Math.ceil(NCY / R0), GX = NRX * R0, GY = NRY * R0, GW = GX + 1, GH = GY + 1, GN = GW * GH;
   // the cut (T-2609): a column (row) of finest cells whose middle is farther than cutKm across from every network
   // station (one with cutN others within cutKm; a lonely stop on a long line is not one) has a rest width (height)
-  // under a cell's side, 1 / k growing linearly past cutKm so the width halves every D drawn pitches at the floor's
-  // scale (the field's own limit), at least cutMin. Empty bands across the whole map are drawn narrow; a cell's rest
+  // under a cell's side, 1 / k growing linearly past cutKm so the width halves every cutD drawn pitches at the floor's
+  // scale (twice the field's own rate, T-2629), at least cutMin. Empty bands across the whole map are drawn narrow; a cell's rest
   // shape is its columns' by its rows'. Only on a map 600 km across or more: a city map's margins are its context
   // (Long Island's east end)
   const cutM = E < 6e5 ? 0 : o.cutKm * 1000, kxF = new Float64Array(GX).fill(1), kyF = new Float64Array(GY).fill(1), xs: number[] = [], ys: number[] = [];
@@ -471,7 +472,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       for (let a = -1; a <= 1 && c < o.cutN; a++) for (let b = -1; b <= 1 && c < o.cutN; b++) for (const t of H.get(key(ci + a, cj + b)) ?? []) if (t !== s && Math.hypot(PX[t] - PX[s], PY[t] - PY[s]) < cutM && ++c >= o.cutN) break;
       if (c >= o.cutN) xs.push(PX[s]), ys.push(PY[s]);
     }
-    const rate = (sFloor * Math.LN2) / o.D;
+    const rate = (sFloor * Math.LN2) / o.cutD;
     const band = (v: number[], k: Float64Array, o0: number) => {
       if (!v.length) return;
       v.sort((a, b) => a - b);

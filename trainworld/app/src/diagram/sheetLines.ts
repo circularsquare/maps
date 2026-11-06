@@ -12,7 +12,7 @@
 import type { DiagramGraph } from "./graph";
 import { dialled, layoutDiagram, type DiagramLayout, type LastPlaces } from "./layout";
 import { massAt, massCoasts, sheetFinest, sheetWarp, type Sheet, type SheetRaster } from "./sheet";
-import { fitOcti, rounded, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
+import { fitOcti, rounded, segD, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramWater } from "./water";
 import { riverBands, smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type RiverBands, type ThinOptions, type ThinStats } from "./sheetThin";
@@ -43,11 +43,13 @@ export interface SheetLinesOptions {
   /** every zone's borders and, on a country map, all the water; otherwise only borders of zones a line passes through
    * and water nearest them (T-2609: in a cut band other zones are squeezed into slivers) */
   allZones: boolean;
+  /** how far a zone border's fit may stray from the traced border, pitches */
+  borderTol: number;
 }
 
 export const SHEET_LINES: SheetLinesOptions = {
   dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
-  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24,
 };
 
 /** the stations laid out on the sheet and the map carried with them */
@@ -539,6 +541,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   }
   const t3 = performance.now();
   const borderCmd: number[] = [], borderFits: Float64Array[] = [];
+  let bends = 0, wrongSide = 0;
   {
     const adj = new Map<number, number[]>(), V = (i: number, j: number) => j * VW + i;
     const zl = (i: number, j: number) => (i < 0 || j < 0 || i >= GW || j >= GH ? 0 : D[j * GW + i]);
@@ -549,11 +552,20 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     const coastal = (v: number) => { const i = v % VW, j = Math.floor(v / VW); return !isZ(zl(i - 1, j - 1)) || !isZ(zl(i, j - 1)) || !isZ(zl(i - 1, j)) || !isZ(zl(i, j)); };
     const isEnd = (v: number) => adj.get(v)!.length !== 2 || coastal(v);
     const used = new Set<number>(), NV = VW * (GH + 1), ek = (a: number, b: number) => (a < b ? a * NV + b : b * NV + a);
-    const tolAt = (v: number) => {
-      const vi = v % VW, vj = Math.floor(v / VW);
-      let clear = Infinity;
-      for (const [a, b] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) { const i = vi + a, j = vj + b; if (i < 0 || j < 0 || i >= GW || j >= GH) continue; clear = Math.min(clear, (dS[j * GW + i] / 3) * hd); }
-      return Math.max(0.2 * hd, Math.min(6, clear - 1));
+    // the stations by 16-pitch bucket, for the fit's checks
+    const BK = 16, bucket = new Map<number, number[]>(), bkey = (i: number, j: number) => i * 65536 + j;
+    for (let s = 0; s < n; s++) { const k = bkey(Math.floor(SX[s] / BK), Math.floor(SY[s] / BK)); let l = bucket.get(k); if (!l) bucket.set(k, (l = [])); l.push(s); }
+    const near = (x0: number, y0: number, x1: number, y1: number, fn: (s: number) => boolean) => {
+      for (let bj = Math.floor(y0 / BK); bj <= Math.floor(y1 / BK); bj++) for (let bi = Math.floor(x0 / BK); bi <= Math.floor(x1 / BK); bi++) for (const s of bucket.get(bkey(bi, bj)) ?? []) if (SX[s] >= x0 && SX[s] <= x1 && SY[s] >= y0 && SY[s] <= y1 && fn(s)) return true;
+      return false;
+    };
+    /** whether (x, y) is inside the polygon of points px, py from i to j (and the bend), even-odd */
+    const inside = (px: number[], py: number[], i: number, j: number, bx: number, by: number, x: number, y: number) => {
+      let c = false, ax = bx === bx ? bx : px[j], ay = bx === bx ? by : py[j];
+      const step = (qx: number, qy: number) => { if (qy > y !== ay > y && x < ((ax - qx) * (y - qy)) / (ay - qy) + qx) c = !c; (ax = qx), (ay = qy); };
+      for (let k = i; k <= j; k++) step(px[k], py[k]);
+      if (bx === bx) step(bx, by);
+      return c;
     };
     const walk = (s: number, nx: number) => {
       const ch = [s];
@@ -570,9 +582,55 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     const chains: number[][] = [];
     for (const [v, ns] of adj) if (isEnd(v)) for (const u of ns) if (!used.has(ek(v, u))) chains.push(walk(v, u));
     for (const [v, ns] of adj) for (const u of ns) if (!used.has(ek(v, u))) chains.push(walk(v, u));
+    // each chain fitted straying up to borderTol pitches (T-2629: one long zig and one long zag over many short
+    // steps), a way kept only where it leaves every station on its side, at least a pitch from it (or as far as the
+    // traced border was), and runs over the chain's own zones' land
+    const tol = Math.max(0.2 * hd, o.borderTol);
     for (const ch of chains) {
       if (ch.length < 3) continue;
-      const bf = scaled(fitOcti(ch.map(VX), ch.map(VY), ch.map(tolAt)));
+      const px = ch.map(VX), py = ch.map(VY), labs = new Set<number>();
+      for (let k = 0; k + 1 < ch.length; k++) {
+        const a = ch[k], b = ch[k + 1], ia = a % VW, ja = (a - ia) / VW, ib = b % VW, jb = (b - ib) / VW;
+        if (ja === jb) labs.add(zl(Math.min(ia, ib), ja - 1)), labs.add(zl(Math.min(ia, ib), ja));
+        else labs.add(zl(ia - 1, Math.min(ja, jb))), labs.add(zl(ia, Math.min(ja, jb)));
+      }
+      const keeps = (i: number, j: number, bx: number, by: number) => {
+        const bent = bx === bx, wx = bent ? [px[i], bx, px[j]] : [px[i], px[j]], wy = bent ? [py[i], by, py[j]] : [py[i], py[j]];
+        // on the chain's zones: samples along the way, half a cell apart, but a cell and a half from its ends
+        for (let k = 0; k + 1 < wx.length; k++) {
+          const L = Math.hypot(wx[k + 1] - wx[k], wy[k + 1] - wy[k]), m = Math.ceil(L / (0.5 * hd));
+          for (let t = 0; t <= m; t++) {
+            const x = wx[k] + ((wx[k + 1] - wx[k]) * t) / m, y = wy[k] + ((wy[k + 1] - wy[k]) * t) / m;
+            if (Math.hypot(x - px[i], y - py[i]) < 1.5 * hd || Math.hypot(x - px[j], y - py[j]) < 1.5 * hd) continue;
+            const c = cellOf(x, y);
+            if (c < 0 || !labs.has(D[c])) return false;
+          }
+        }
+        let x0 = bent ? bx : Infinity, y0 = bent ? by : Infinity, x1 = bent ? bx : -Infinity, y1 = bent ? by : -Infinity;
+        for (let k = i; k <= j; k++) (x0 = Math.min(x0, px[k])), (x1 = Math.max(x1, px[k])), (y0 = Math.min(y0, py[k])), (y1 = Math.max(y1, py[k]));
+        return !near(x0 - 1, y0 - 1, x1 + 1, y1 + 1, (s) => {
+          const x = SX[s], y = SY[s];
+          let dw = Infinity;
+          for (let k = 0; k + 1 < wx.length; k++) dw = Math.min(dw, segD(x, y, wx[k], wy[k], wx[k + 1], wy[k + 1]));
+          if (dw < 1) {
+            let dr = Infinity;
+            for (let k = i; k < j; k++) dr = Math.min(dr, segD(x, y, px[k], py[k], px[k + 1], py[k + 1]));
+            if (dw < Math.min(1, dr) - 1e-9) return true;
+          }
+          return inside(px, py, i, j, bx, by, x, y);
+        });
+      };
+      const fit = fitOcti(px, py, Array<number>(ch.length).fill(tol), keeps);
+      // stations between the traced chain and its fit, on the wrong side (none, by keeps; counted as a check)
+      if (detail) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (let k = 0; k < ch.length; k++) (x0 = Math.min(x0, px[k])), (x1 = Math.max(x1, px[k])), (y0 = Math.min(y0, py[k])), (y1 = Math.max(y1, py[k]));
+        const qx = [...px], qy = [...py];
+        for (let k = fit.length - 4; k >= 2; k -= 2) qx.push(fit[k]), qy.push(fit[k + 1]);
+        near(x0 - tol, y0 - tol, x1 + tol, y1 + tol, (s) => { if (inside(qx, qy, 0, qx.length - 1, NaN, NaN, SX[s], SY[s])) wrongSide++; return false; });
+      }
+      const bf = scaled(fit);
+      bends += Math.max(0, bf.length / 2 - 2);
       if (detail) borderFits.push(bf);
       rounded(bf, ch[0] === ch[ch.length - 1], 3 * K, borderCmd);
     }
@@ -594,7 +652,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     water,
     borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
     riverFits: detail ? rivers?.fits : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
   };

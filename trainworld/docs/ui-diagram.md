@@ -487,8 +487,8 @@ none of this runs.
   between far-apart networks (the Plains between Denver and Chicago) condenses to a band the lines cross. A network
   station is one with 2 others within 10 km (a lonely stop on a long line is not). Each column of the lattice whose
   middle is more than 10 km across from every network station has a rest width under its real width: past 10 km, 1 over
-  it grows linearly with the distance, so the width halves every 40 drawn pitches at the floor's scale (the field's own
-  limit), to 0.02 at least. Rows the same. Each cell's rest shape is its columns' width by its rows' height, and the
+  it grows linearly with the distance, so the width halves every 20 drawn pitches at the floor's scale (twice the
+  field's own rate; T-2629), to 0.02 at least. Rows the same. Each cell's rest shape is its columns' width by its rows' height, and the
   rounds below measure every cell's stretch and size against that shape, not the real square. Places, the lattice and
   the warp stay in real metres, so what follows the sheet is unchanged. On such a map, land farther than 25 km from
   every network station costs as little as water to stretch unevenly, even beside a lonely line or inside a zone with
@@ -554,9 +554,12 @@ none of this runs.
   zone, so **every station is on its own land and its own side of its zone's border**. The coast is traced and fitted
   with runs at 0, 45 and 90 degrees, straying landward up to 0.35 of the land's width behind (at most 10 pitches) and
   keeping clear of the pills, seaward up to 0.35 of the water's width ahead; either way at least 0.85 of a cell where
-  that is narrow enough, since a straight edge drawn on the grid steps a cell. The borders between zones likewise (up to
-  6 pitches, a pitch clear of any station), only where a line passes through at least one of the two zones (a station in
-  it, or a hop's track across it): other zones' borders are not drawn (T-2609; in a cut band they would be slivers).
+  that is narrow enough, since a straight edge drawn on the grid steps a cell. The borders between zones likewise, but
+  straying up to 24 pitches, so a staircase of short steps is drawn as one long straight run and one long diagonal
+  (T-2629); a run is kept only where every station stays on its own side, at least a pitch from the border (or as near
+  as the traced border was), and the run stays on the land of the zones that border meets. Borders are drawn only where a
+  line passes through at least one of the two zones (a station in it, or a hop's track across it): other zones' borders
+  are not drawn (T-2609; in a cut band they would be slivers).
   On a map 600 km across or more, water is drawn only where the nearest land is such a zone's; the rest of the water
   is left as plain background, its edge fitted like a coast. Corners rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
   degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
