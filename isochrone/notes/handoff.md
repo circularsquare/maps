@@ -17,16 +17,15 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## In flight
 - **T-011 stage 2, world terrain run** (90 m GLO-90 streamed, directed crossings per L1 cell),
-  started 2026-11-06 11:23; since 12:16 run through `tools/terrain/launch.py 3` (PID 15332), which
-  claims `iso-terrain` under its own pid and runs world.py with what is granted (1 at 12:16; the
-  ledger refills within a minute of anything freeing). Status: `python
+  started 2026-11-06 11:23; since 12:16 run through `tools/terrain/launch.py 3` (PID 38812), which
+  claims `iso-terrain` under its own pid and runs world.py with what is granted (3 at 12:16, so
+  isochrone holds its 4 with the stage 3 build's 1). Status: `python
   isochrone/tools/terrain/world.py status` (maps root); log data/terrain/world.log; stdout/err
   data/terrain/world.out/.err. 1,436 of 18,984 tiles at 12:16. Compute ~35 core-hours left, so
-  it wants 3 workers. Restart with more: stop the launcher's process tree only (check the command
-  line first), then start `python isochrone/tools/terrain/launch.py 3` detached from the maps root
-  (resumes from data/terrain/done.txt). A background watcher in this session
-  (scratchpad/orch/watch_terrain.py <launcher pid>) fires when the ledger has 3+ free or the run
-  exits.
+  runs ~12 h on 3 workers. Restart if needed: stop the launcher's process tree only (check the
+  command line first), then start `python isochrone/tools/terrain/launch.py 3` detached from the
+  maps root (resumes from data/terrain/done.txt). A background wait in this session
+  (scratchpad/orch/wait_pid.py 38812) fires when it exits.
 - **T-011 stage 3**, page side (build_tiles.py reads the planes, d1/e1 planes, directed search,
   L3/L10 by crossing, output to a new folder behind a `?tiles=t011` switch), Opus agent
   a3e69e0de8c33f136.
