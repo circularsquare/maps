@@ -571,11 +571,13 @@ none of this runs.
   that is narrow enough, since a straight edge drawn on the grid steps a cell. The borders between zones likewise, but
   straying up to 24 pitches, so a staircase of short steps is drawn as one long straight run and one long diagonal
   (T-2629); a run is kept only where every station stays on its own side, at least a pitch from the border (or as near
-  as the traced border was), and the run stays on the land of the zones that border meets. Borders are drawn only where a
-  line passes through at least one of the two zones (a station in it, or a hop's track across it): other zones' borders
-  are not drawn (T-2609; in a cut band they would be slivers).
-  On a map 600 km across or more, water is drawn only where the nearest land is such a zone's; the rest of the water
-  is left as plain background, its edge fitted like a coast. Corners rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
+  as the traced border was), and the run stays on the land of the zones that border meets. A border is drawn only where a
+  line passes through at least one of the two zones (a station in it, or a hop's track across it; T-2609: in a cut band
+  other zones' borders would be slivers), and only within 50 km (on the ground) of built track, so a zone is an open
+  outline that shows where lines cross it or come near (T-2639). Where that would draw more than 30% of the borders of a
+  zone a line passes through (coasts not counted), the zone's whole outline is drawn instead, so no small gap is left on
+  its far side. Any map, city or country. Corners
+  rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
   degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
   on; the borders always.
 - **City names** take the towns' places through the sheet.

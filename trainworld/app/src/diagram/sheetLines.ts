@@ -40,16 +40,20 @@ export interface SheetLinesOptions {
   cellsCountry: number;
   /** a station still off its own land has its land carried to it from at most this many pitches */
   bendMax: number;
-  /** every zone's borders and, on a country map, all the water; otherwise only borders of zones a line passes through
-   * and water nearest them (T-2609: in a cut band other zones are squeezed into slivers) */
+  /** every zone's borders, whole; otherwise only borders of zones a line passes through (T-2609: in a cut band other
+   * zones are squeezed into slivers), and those as trackKm says */
   allZones: boolean;
   /** how far a zone border's fit may stray from the traced border, pitches */
   borderTol: number;
+  /** a zone border is drawn only within trackKm (real) of built track, unless that is over wholeShare of a zone's
+   * borders, when the zone's whole outline is drawn (T-2639) */
+  trackKm: number;
+  wholeShare: number;
 }
 
 export const SHEET_LINES: SheetLinesOptions = {
   dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
-  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24, trackKm: 50, wholeShare: 0.3,
 };
 
 /** the stations laid out on the sheet and the map carried with them */
@@ -72,6 +76,10 @@ export interface Carry { gw: number; gh: number; x0: number; y0: number; h: numb
 export const riverCellM = (g: DiagramGraph) => (cityMap(g) ? 25 : 0);
 
 /** a map under 600 km across (its stations' box), as sheet.ts tells a city map from a country's */
+/** hop e's track on the ground, x, y pairs (its two stations where it has none) */
+const hopPts = (g: DiagramGraph, e: number): ArrayLike<number> =>
+  g.hop && g.hopAt && g.hopAt[e + 1] - g.hopAt[e] >= 2 ? g.hop.subarray(g.hopAt[e] * 2, g.hopAt[e + 1] * 2) : [g.x[g.ea[e]], g.y[g.ea[e]], g.x[g.eb[e]], g.y[g.eb[e]]];
+
 function cityMap(g: DiagramGraph): boolean {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let i = 0; i < g.key.length; i++) (x0 = Math.min(x0, g.x[i])), (x1 = Math.max(x1, g.x[i])), (y0 = Math.min(y0, g.y[i])), (y1 = Math.max(y1, g.y[i]));
@@ -266,7 +274,7 @@ function zoneSpans(R: SheetRaster, shapes: ZoneShape[]): ZoneSpans {
 /** the sheet's water and zone borders: the ground carried through the carried map onto a grid over the drawing, each
  * station's pill on its own land and zone, cleaned, and the coasts and borders fitted at 0, 45 and 90 degrees (round 3
  * of T-2577). The sea only with `withWater`. */
-export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[], withWater: boolean, o: SheetLinesOptions = SHEET_LINES, detail = false, real: RealWater | null = null, th: ThinOptions = THIN): { water: DiagramWater | null; borders: DiagramBorders; info: Record<string, number>; grid?: { d: Uint8Array | Uint16Array; w: number; h: number; x0: number; y0: number; cell: number }; borderFits?: Float64Array[]; riverFits?: RiverBands["fits"] } {
+export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[], withWater: boolean, o: SheetLinesOptions = SHEET_LINES, detail = false, real: RealWater | null = null, th: ThinOptions = THIN): { water: DiagramWater | null; borders: DiagramBorders; info: Record<string, number>; grid?: { d: Uint8Array | Uint16Array; w: number; h: number; x0: number; y0: number; cell: number }; borderFits?: Float64Array[]; riverFits?: RiverBands["fits"]; zoneShares?: [string, number][] } {
   const t0 = performance.now();
   const C = lines.carry, R = C.raster, K = lines.k, n = g.key.length, SX = C.sx, SY = C.sy, { gw, gh, h, x0, y0, rx: RXn, ry: RYn } = C;
   // labels: WATER, a zone (its index plus 1), NOZ land in no zone, OUT off the carried map
@@ -294,6 +302,22 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   const hd = Math.max(1, Math.sqrt(((qx1 - qx0) * (qy1 - qy0)) / (cityMap(g) ? o.cellsCity : o.cellsCountry)));
   const GW = Math.ceil((qx1 - qx0) / hd), GH = Math.ceil((qy1 - qy0) / hd), NC = GW * GH;
   const D = wide ? new Uint16Array(NC).fill(OUT) : new Uint8Array(NC).fill(OUT), DM = new Int32Array(NC).fill(-1);
+  // the real distance to built track (T-2639): the hops' tracks marked on a ground grid over the carried lattice,
+  // chamfer distances (within 8% of straight-line), and each drawn cell within trackKm of a track or not
+  const tc = Math.max(250, Math.sqrt(((gw - 1) * h * (gh - 1) * h) / 4e6)), TW = Math.ceil(((gw - 1) * h) / tc) + 1, TH = Math.ceil(((gh - 1) * h) / tc) + 1;
+  const onT = new Uint8Array(TW * TH), nearT = new Uint8Array(NC), tLim = Math.round(((o.trackKm * 1000) / tc) * 3);
+  for (let e = 0; e < g.ea.length; e++) {
+    const pts = hopPts(g, e);
+    for (let k = 0; k + 3 < pts.length; k += 2) {
+      const m = Math.max(1, Math.ceil(Math.hypot(pts[k + 2] - pts[k], pts[k + 3] - pts[k + 1]) / (0.5 * tc)));
+      for (let t = 0; t <= m; t++) {
+        const ti = Math.floor((pts[k] + ((pts[k + 2] - pts[k]) * t) / m - x0) / tc), tj = Math.floor((pts[k + 1] + ((pts[k + 3] - pts[k + 1]) * t) / m - y0) / tc);
+        if (ti >= 0 && tj >= 0 && ti < TW && tj < TH) onT[tj * TW + ti] = 1;
+      }
+    }
+  }
+  const dT = chamfer(onT, TW, TH, true, Math.min(65535, tLim + 1));
+  const nearAt = (x: number, y: number) => { const ti = Math.floor((x - x0) / tc), tj = Math.floor((y - y0) / tc); return ti >= 0 && tj >= 0 && ti < TW && tj < TH && dT[tj * TW + ti] <= tLim ? 1 : 0; };
   for (let j = 0; j + 1 < gh; j++) for (let i = 0; i + 1 < gw; i++) {
     const a = j * gw + i;
     for (let t = 0; t < 2; t++) {
@@ -311,6 +335,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
         const ux = l1 * pxr + l2 * qxr + l3 * sxr, uy = l1 * pyr + l2 * qyr + l3 * syr, c = gj * GW + gi;
         D[c] = labAt(ux, uy);
         DM[c] = massAt(R, ux, uy);
+        nearT[c] = nearAt(ux, uy);
       }
     }
   }
@@ -470,7 +495,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   const held = new Uint8Array(OUT + 1).fill(o.allZones ? 1 : 0);
   for (let s = 0; s < n; s++) if (zoneAll[s] >= 0) held[zoneAll[s] + 1] = 1;
   for (let e = 0; e < g.ea.length && !o.allZones; e++) {
-    const pts: ArrayLike<number> = g.hop && g.hopAt && g.hopAt[e + 1] - g.hopAt[e] >= 2 ? g.hop.subarray(g.hopAt[e] * 2, g.hopAt[e + 1] * 2) : [g.x[g.ea[e]], g.y[g.ea[e]], g.x[g.eb[e]], g.y[g.eb[e]]];
+    const pts = hopPts(g, e);
     for (let k = 0; k + 3 < pts.length; k += 2) {
       const m = Math.max(1, Math.ceil(Math.hypot(pts[k + 2] - pts[k], pts[k + 3] - pts[k + 1]) / R.rr));
       for (let t = 0; t <= m; t++) { const z = labAt(pts[k] + ((pts[k + 2] - pts[k]) * t) / m, pts[k + 1] + ((pts[k + 3] - pts[k + 1]) * t) / m); if (isZ(z)) held[z] = 1; }
@@ -480,18 +505,6 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   // ---- coasts and borders
   const wm = new Uint8Array(NC);
   for (let c = 0; c < NC; c++) wm[c] = +(D[c] === 0 || D[c] === OUT);
-  // on a country map, water only where its nearest land is a zone a line passes through; the rest is left plain, its
-  // edge fitted like a coast (T-2609)
-  if (!o.allZones && !cityMap(g)) {
-    const own = new Int8Array(NC).fill(-1), q = new Int32Array(NC);
-    let qn = 0;
-    for (let c = 0; c < NC; c++) if (!wm[c]) (own[c] = isZ(D[c]) && held[D[c]] ? 1 : 0), (q[qn++] = c);
-    for (let k = 0; k < qn; k++) {
-      const v = q[k], i = v % GW;
-      for (const u of [i > 0 ? v - 1 : -1, i < GW - 1 ? v + 1 : -1, v - GW, v + GW]) if (u >= 0 && u < NC && wm[u] && own[u] < 0) (own[u] = own[v]), (q[qn++] = u);
-    }
-    for (let c = 0; c < NC; c++) if (wm[c] && own[c] !== 1) wm[c] = 0;
-  }
   const stm = new Uint8Array(NC);
   for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0) stm[c] = 1; }
   const dS = chamfer(stm, GW, GH, true, 60000);
@@ -541,14 +554,28 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   }
   const t3 = performance.now();
   const borderCmd: number[] = [], borderFits: Float64Array[] = [];
-  let bends = 0, wrongSide = 0;
+  let bends = 0, wrongSide = 0, wholeZones = 0;
+  const zoneShares: [string, number][] = [];
   {
     const adj = new Map<number, number[]>(), V = (i: number, j: number) => j * VW + i;
     const zl = (i: number, j: number) => (i < 0 || j < 0 || i >= GW || j >= GH ? 0 : D[j * GW + i]);
     const link = (a: number, b: number) => { let l = adj.get(a); if (!l) adj.set(a, (l = [])); l.push(b); let k = adj.get(b); if (!k) adj.set(b, (k = [])); k.push(a); };
-    const edge = (p: number, q: number) => p !== q && isZ(p) && isZ(q) && (held[p] === 1 || held[q] === 1);
-    for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) if (edge(zl(i, j), zl(i + 1, j))) link(V(i + 1, j), V(i + 1, j + 1));
-    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) if (edge(zl(i, j), zl(i, j + 1))) link(V(i, j + 1), V(i + 1, j + 1));
+    // a border between cells c and d: between two zones, one a line passes through, and either cell within trackKm of
+    // track; or anywhere on a zone a line passes through more than wholeShare of whose borders that draws (T-2639)
+    const pair = (p: number, q: number) => p !== q && isZ(p) && isZ(q);
+    const nearE = (c: number, d: number) => { const p = D[c], q = D[d]; return pair(p, q) && (held[p] === 1 || held[q] === 1) && (o.allZones || nearT[c] === 1 || nearT[d] === 1); };
+    const whole = new Uint8Array(OUT + 1);
+    {
+      const tot = new Float64Array(OUT + 1), got = new Float64Array(OUT + 1);
+      const count = (c: number, d: number) => { const p = D[c], q = D[d]; if (!pair(p, q)) return; tot[p]++, tot[q]++; if (nearE(c, d)) got[p]++, got[q]++; };
+      for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) count(j * GW + i, j * GW + i + 1);
+      for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) count(j * GW + i, (j + 1) * GW + i);
+      for (let z = 1; z < OUT; z++) if (held[z] === 1 && tot[z] > 0 && got[z] > o.wholeShare * tot[z]) (whole[z] = 1), wholeZones++;
+      if (detail) for (let z = 1; z < OUT && z <= shapes.length; z++) if (got[z] > 0) zoneShares.push([shapes[z - 1].id, got[z] / tot[z]]);
+    }
+    const edge = (c: number, d: number) => nearE(c, d) || (pair(D[c], D[d]) && (whole[D[c]] === 1 || whole[D[d]] === 1));
+    for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) if (edge(j * GW + i, j * GW + i + 1)) link(V(i + 1, j), V(i + 1, j + 1));
+    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) if (edge(j * GW + i, (j + 1) * GW + i)) link(V(i, j + 1), V(i + 1, j + 1));
     const coastal = (v: number) => { const i = v % VW, j = Math.floor(v / VW); return !isZ(zl(i - 1, j - 1)) || !isZ(zl(i, j - 1)) || !isZ(zl(i - 1, j)) || !isZ(zl(i, j)); };
     const isEnd = (v: number) => adj.get(v)!.length !== 2 || coastal(v);
     const used = new Set<number>(), NV = VW * (GH + 1), ek = (a: number, b: number) => (a < b ? a * NV + b : b * NV + a);
@@ -652,9 +679,10 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     water,
     borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
     riverFits: detail ? rivers?.fits : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
+    zoneShares: detail ? zoneShares : undefined,
   };
 }
 
