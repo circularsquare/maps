@@ -1,7 +1,7 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-05 14:55
+Updated: 2026-11-05 21:30
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
@@ -26,9 +26,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   danger paragraph and credits).
 - T-077 landed (bd409831): corridors after windows, faster in windows (L10 not), hazard in
   reparent slack, a stale-node bug fixed, ktrips walking trips.
-- T-023 M1 doc tidy and sweep: agent (Sonnet, launched after bd409831). Owns SPEC.md, docs/,
-  TASKS.md, ARCHIVE.md, notes/ except handoff and for-anita. No code.
-- Roads pass at 18:02: 22.7 / 84.5 GB, 106 extracts done, ~8.6 h to go (log estimate).
+- T-023 M1 doc tidy landed (c306d1bc). No agents running.
+- Roads pass at 21:29: 313 of 513 extracts done, 55 GB free; at this rate it ends ~02:00.
   CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
 - T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
 - T-056 landed (e3730347): corridors re-chosen tree, counting 2-4x slower. T-077 (count after
@@ -58,5 +57,5 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - Corridor colour = speed along the stretch, width = trips, the red end not dark; hover a line
   for its mode and speed; smooth lines, no staircases.
 - Rivers faint; water paler than land; hovers instant; a globe; hex cells by default.
-- Open with her: carry x2 or x3.
+- Carry x2 (settled 2026-11-05).
 - Commits: the orchestrator commits isochrone/ paths as it goes; never push unasked.

@@ -16,8 +16,7 @@ in the background. Smoke passes 15/15.
 then our own surface with roads on the page (T-028, which fixes rural walking times 18-52% too
 short) and the 100 m tiles by T-047's rule (T-057, towns and water country first). Then 90 m
 terrain (T-011), then T-039 and the mountain tiles. 10,000 BC is for later. M1 and M2 each wait
-on a doc tidy (T-023 done; M2's is T-078). Open questions: `notes/for-anita.md`; carry x2 or x3
-is open with her.
+on a doc tidy (T-023 done; M2's is T-078). Open questions: `notes/for-anita.md`.
 
 Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
 you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC moved to later
@@ -37,7 +36,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Roads and 100 m
 
 - T-010 [P1] Roads as their own layer from OSM (DECISIONS 2026-10-26; research/friction.md 5, stage B), so "no roads" is a toggle and 10,000 BC has none. Stage 1 done 2026-11-05: tools/roads/, rule share3 (e = min(1, 3 x road share of the cell); 4% median off 100 m in the test tiles, MAP 22%), design in docs/roads.md for Anita's review (notes/T-010.md). Stage 2 is T-053.
-- T-053 [P2] Roads world build (T-010 stage 2): fetch, extract and delete the 513 Geofabrik extracts of `data/roads/regions.json` one by one (84.6 GB), then `reduce` and a world GeoTIFF of the 1 km layer (docs/roads.md "Fetching the world"). A small driver (fetch the next while one is read) is the only new code. ~8 h on one core, ~4 h on two; peak disk ~4 GB. Approved by Anita 2026-11-05; taking, 2026-11-05: `world.py --jobs 1` running since 14:52 (about 106 of 513 extracts at 18:00), log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
+- T-053 [P2] Roads world build (T-010 stage 2): fetch, extract and delete the 513 Geofabrik extracts of `data/roads/regions.json` one by one (84.6 GB), then `reduce` and a world GeoTIFF of the 1 km layer (docs/roads.md "Fetching the world"). A small driver (fetch the next while one is read) is the only new code. ~8 h on one core, ~4 h on two; peak disk ~4 GB. Approved by Anita 2026-11-05; taking, 2026-11-05: `world.py --jobs 1` running since 14:52 (313 of 513 extracts at 21:29), log `data/roads/world.log`, then `reduce` and the GeoTIFF (notes/T-053.md).
 - T-028 [P2] Feed the page from our own surface: build_grid.py and build_tiles.py read `data/surface/walk_today.tif` (uint16 km/h x 1000, 0 = water) plus the roads layer (T-010) instead of MAP's tif; decide the water rule from `lc_water.tif` shares with T-013's small-water rule; smoke passes. After T-010 (docs/surface.md).
 - T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. After T-010 stage 1.
 - T-011 [P2] 90 m terrain: stream Copernicus GLO-90 tile by tile, directed crossing costs per cell (research/friction.md 7, stage C); makes walking directed and mountains show (Anita, 2026-11-05: queue after roads). 100-130 GB streamed, never all on disk, run detached overnight. After T-053.
