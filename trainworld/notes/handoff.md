@@ -30,8 +30,11 @@ Agents report to maps-93. A new orchestrator taking over: their work is in the t
 - borders LANDED f71755b6 (records b1fdceb9): T-2629 done, T-2610 closed (rivers open on master); T-2637 filed.
   Anita's NA load: the card said ~6 min, real ~3 min: not slow, the estimate is off (T-2638, later).
 - **capview** (Opus, tree): T-2622 the 4x clock cap the same whatever the view. Told about T-2631 trap.
-- coarsemkt DONE (38f3e633, notes/T-2621.md): coarser far ends ~1.8x NA market pass, lines >10k within 1.5%;
-  Japan needs exact cheaper searches (stage 2). Two questions to Anita (stage 1 yes/no; stage 2 next?). No ids filed.
+- coarsemkt DONE (38f3e633, notes/T-2621.md). Anita said yes to both: **T-2641** (coarser far ends, Sonnet, Rust tree)
+  and **T-2642** (cheaper exact searches, Opus, design+measure first): not started, for the next orchestrator.
+- **dianames** (Sonnet, tree): T-2640 diagram zone names by how many zones are on screen.
+- Anita ~18:45: start a new orchestrator now; maps-93 keeps landing its agents' reports until done, per /handoff.
+  She said not to worry about a B-drive access she noticed (not any maps-93 agent).
 - **borders** resumed (tree .tw-trees/borders2): T-2639 water drop-out reversed, borders only within 50 km of track
   (whole outline when >30%).
 - **l10n-ui1 / l10n-ui2 / l10n-insp / l10n-core** (Sonnet, trees): T-2632..T-2635 localization stage 1 by folder
