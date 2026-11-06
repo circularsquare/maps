@@ -2,6 +2,7 @@
 
 import { demandAt, lineSeconds } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
+import { t } from "../i18n";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
 import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
@@ -27,7 +28,8 @@ import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { linesPending, pendingLabel, type PendingKind } from "../game/lineFigures";
 
-const STATUS: Record<string, string> = { running: "", planned: "Planned", broken: "Broken" };
+/** the word for a line that is not running; nothing for a running one */
+const statusText = (s: string) => (s === "planned" ? t("linesTab.planned") : s === "broken" ? t("linesTab.broken") : "");
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
 
@@ -35,7 +37,7 @@ const DRAG_PX = 6;
  * (alone where there is no figure yet). */
 function PendingRiders({ k, text }: { k: PendingKind; text: string }) {
   return (
-    <span class={"val w-riders pending" + (text ? " stacked" : " muted")} data-tip="Calculating riders after your change">
+    <span class={"val w-riders pending" + (text ? " stacked" : " muted")} data-tip={t("linesTab.pendingTip")}>
       {text ? <><span class="pending-label muted">{pendingLabel(k)}</span><span>{text}</span></> : pendingLabel(k)}
     </span>
   );
@@ -61,7 +63,7 @@ function RidersToday({ line }: { line: string }) {
   if (k) return <PendingRiders k={k} text={d ? count(d.riders) : ""} />;
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
-  return <span class="val w-riders" data-tip={d ? `${count(d.riders)} riders in past 24h` : undefined}>{text}</span>;
+  return <span class="val w-riders" data-tip={d ? t("linesTab.ridersTip", { count: count(d.riders) }) : undefined}>{text}</span>;
 }
 
 /** T-735, T-867, T-2475: a line's expected profit today: a whole day's fares of its kind of day now
@@ -87,33 +89,33 @@ function TrainsNow({ line, n, period, at, bus, ferry, v, lev, stops }: { line: s
   const d = today.value.get(line);
   const load = d && (v ? periodLoad(v, at, stops) ?? d.crowdLoad : d.crowdLoad);
   const cls = !bus && d && n > 0 ? crowdClass(load!) : "";
-  const tip = bus ? `${period}: ${ferry ? boatsText(n) : busesText(n)} on the line` : c?.tip;
+  const tip = bus ? t("linesTab.vehiclesTip", { period, vehicles: ferry ? boatsText(n) : busesText(n) }) : c?.tip;
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
 
 /** T-1791: a group's riders, money and trains, each line's added up; hovers list them by line. */
 function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView; trains: (id: string) => number; period: string }) {
-  const t = today.value;
+  const tod = today.value;
   const run = ls.filter((l) => w.lineStats[l.id]?.status === "running");
   if (!run.length) {
     const st = ls.some((l) => w.lineStats[l.id]?.status === "planned") ? "planned" : "broken";
-    return <span class="val muted">{STATUS[st]}</span>;
+    return <span class="val muted">{statusText(st)}</span>;
   }
   const by = (f: (l: LineInput) => string) => run.map((l) => `${l.name}: ${f(l)}`).join("\n");
   const pend = linesPending.value;
   // a line being constructed names the group's state over one only loading
   const pending = run.map((l) => pend.get(l.id)).filter((k): k is PendingKind => !!k).sort()[0];
-  const riders = run.reduce((n, l) => n + (t.get(l.id)?.riders ?? 0), 0);
-  const any = run.some((l) => t.has(l.id));
-  const anyProfit = run.some((l) => t.has(l.id) && profitKnown(l));
-  const net = run.reduce((n, l) => n + lineNet(t.get(l.id), l, w.lineStats[l.id]), 0);
+  const riders = run.reduce((n, l) => n + (tod.get(l.id)?.riders ?? 0), 0);
+  const any = run.some((l) => tod.has(l.id));
+  const anyProfit = run.some((l) => tod.has(l.id) && profitKnown(l));
+  const net = run.reduce((n, l) => n + lineNet(tod.get(l.id), l, w.lineStats[l.id]), 0);
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
       {pending ? <PendingRiders k={pending} text={any ? count(riders) : ""} />
-        : <span class="val w-riders" data-tip={any ? `${count(riders)} riders in past 24h in total\n${by((l) => count(t.get(l.id)?.riders ?? 0))}` : undefined}>{any ? count(riders) : ""}</span>}
-      {anyProfit ? <span class="val w-linemoney" data-tip={`Expected profit today in total: ${money(net)}\n${run.filter((l) => profitKnown(l)).map((l) => `${l.name}: ${money(lineNet(t.get(l.id), l, w.lineStats[l.id]))}`).join("\n")}`}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
-      <span class="val w-trains" data-tip={`${period}: ${n} trains\n${by((l) => String(trains(l.id)))}`}>{n}</span>
+        : <span class="val w-riders" data-tip={any ? t("linesTab.groupRidersTip", { count: count(riders), lines: by((l) => count(tod.get(l.id)?.riders ?? 0)) }) : undefined}>{any ? count(riders) : ""}</span>}
+      {anyProfit ? <span class="val w-linemoney" data-tip={t("linesTab.groupProfitTip", { money: money(net), lines: run.filter((l) => profitKnown(l)).map((l) => `${l.name}: ${money(lineNet(tod.get(l.id), l, w.lineStats[l.id]))}`).join("\n") })}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
+      <span class="val w-trains" data-tip={t("linesTab.groupTrainsTip", { period, count: n, lines: by((l) => String(trains(l.id))) })}>{n}</span>
     </>
   );
 }
@@ -123,11 +125,11 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
 interface Drag { id: string; x0: number; y0: number; x: number; y: number; on: boolean; over: string | null; part: "before" | "on" | "after" }
 
 function TotalToday() {
-  const t = today.value;
-  if (!t.size) return null;
+  const tod = today.value;
+  if (!tod.size) return null;
   let n = 0;
-  for (const d of t.values()) n += d.riders;
-  return <span class="muted">{count(n)} riders today</span>;
+  for (const d of tod.values()) n += d.riders;
+  return <span class="muted">{t("linesTab.ridersToday", { count: count(n) })}</span>;
 }
 
 export function LinesTab() {
@@ -161,7 +163,7 @@ export function LinesTab() {
   const sel = selection.value;
   // T-309: each line's demand level now in its own local time
   const levOf = (id: string) => DEMAND_INDEX[demandAt(lineSeconds(w.lineStats[id]))];
-  const t = today.peek();
+  const tod = today.peek();
   const newLine = async () => {
     if (creating) return;
     setCreating(true);
@@ -207,8 +209,8 @@ export function LinesTab() {
   // every line's item, the viewed place's or not, so a hand order made here keeps the others' places
   const allItems = itemsOf(w.save.lines);
   const sum = (ls: LineInput[], f: (l: LineInput) => number) => ls.reduce((n, l) => n + f(l), 0);
-  const riders = (ls: LineInput[]) => sum(ls, (l) => t.get(l.id)?.riders ?? 0);
-  const net = (ls: LineInput[]) => sum(ls, (l) => lineNet(t.get(l.id), l, w.lineStats[l.id]));
+  const riders = (ls: LineInput[]) => sum(ls, (l) => tod.get(l.id)?.riders ?? 0);
+  const net = (ls: LineInput[]) => sum(ls, (l) => lineNet(tod.get(l.id), l, w.lineStats[l.id]));
   const near = (ls: LineInput[]) => ls.reduce<number | undefined>((m, l) => { const d = sc.lineDist.get(l.id); return d === undefined ? m : m === undefined ? d : Math.min(m, d); }, undefined);
   const order = (a: Item, b: Item) =>
     (key === "city" ? natural(cityOf.get(a.ls[0].id) ?? "", cityOf.get(b.ls[0].id) ?? "") * dir
@@ -337,9 +339,9 @@ export function LinesTab() {
         data-drop={drop} onPointerDown={(e) => pointerDown(e, l.id)} onClick={() => pick(l.id)} onDblClick={() => locateLine(l.stops)}>
         <Chip line={l} />
         <span class="grow line-name">{l.name}</span>
-        {showCity && <span class="val muted w-city" data-tip={cityOf.get(l.id) ? `The first stop is in ${cityOf.get(l.id)}` : undefined}>{cityOf.get(l.id)}</span>}
+        {showCity && <span class="val muted w-city" data-tip={cityOf.get(l.id) ? t("linesTab.cityTip", { city: cityOf.get(l.id) }) : undefined}>{cityOf.get(l.id)}</span>}
         {st.status !== "running" ? (
-          <span class="val muted">{STATUS[st.status]}</span>
+          <span class="val muted">{statusText(st.status)}</span>
         ) : (
           <>
             <RidersToday line={l.id} />
@@ -359,11 +361,11 @@ export function LinesTab() {
       <>
         <li class={"group-row" + (on ? " on" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === drop ? " dragged" : "")} data-drop={drop} onPointerDown={(e) => pointerDown(e, drop)}
           onClick={() => { if (!dragged.current) selection.value = { kind: "group", group: it.g }; }} onDblClick={() => locateLine(it.ls.flatMap((l) => l.stops))}>
-          <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} data-tip={isOpen ? "Close the group" : "Show the group's lines"} aria-label={isOpen ? "Close the group" : "Show the group's lines"}
+          <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} data-tip={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")} aria-label={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")}
             aria-expanded={isOpen} onClick={(e) => { e.stopPropagation(); toggleGroup(it.g); }} onDblClick={(e) => e.stopPropagation()}><Icon.chevron /></button>
           <GroupPill ls={it.ls} tip={it.ls.map((l) => l.name).join("\n")} />
           {renaming === it.g ? (
-            <input class="name-edit grow" value={it.name} aria-label="Group name" ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
+            <input class="name-edit grow" value={it.name} aria-label={t("linesTab.groupName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
               onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
               onBlur={(e) => renameGroup(it, e.currentTarget.value)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenaming(null); }} />
           ) : (
@@ -388,21 +390,21 @@ export function LinesTab() {
     <>
       <div class="line-list-actions">
         <span style={{ display: "flex", gap: "6px" }}>
-          <button class="btn text" data-guide="line" data-tip="Make a new train line (N)" onClick={newLine} disabled={creating}><Icon.plus />New line<span class="key muted">N</span></button>
-          <button class="btn icon new-bus" data-tip="Draw a new bus line (U)" aria-label="New bus line" onClick={() => newBusLine()}><Icon.bus /></button>
-          <button class="btn icon new-ferry" data-tip="Draw a new ferry line (O)" aria-label="New ferry line" onClick={() => newFerryLine()}><Icon.ferry /></button>
+          <button class="btn text" data-guide="line" data-tip={t("linesTab.newLineTip", { key: "N" })} onClick={newLine} disabled={creating}><Icon.plus />{t("linesTab.newLine")}<span class="key muted">N</span></button>
+          <button class="btn icon new-bus" data-tip={t("linesTab.newBusTip", { key: "U" })} aria-label={t("linesTab.newBus")} onClick={() => newBusLine()}><Icon.bus /></button>
+          <button class="btn icon new-ferry" data-tip={t("linesTab.newFerryTip", { key: "O" })} aria-label={t("linesTab.newFerry")} onClick={() => newFerryLine()}><Icon.ferry /></button>
         </span>
         <ScopeToggle />
       </div>
-      {items.length === 0 && <p class="muted">{w.save.lines.length === 0 ? "No lines yet." : "No lines here."}</p>}
+      {items.length === 0 && <p class="muted">{w.save.lines.length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
       <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "")}>
       {w.save.lines.length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
-        { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        ...(showCity ? [{ key: "city" as const, label: "City", tip: "Sort by the city of the first stop", first: 1 as const, cls: "w-city", left: true }] : []),
-        { key: "riders", label: "Riders", tip: "Sort by riders in past 24h", first: -1, cls: "w-riders" },
-        { key: "money", label: "Money", tip: "Sort by expected profit today", first: -1, cls: "w-linemoney" },
-        { key: "trains", label: "Trains", tip: "Sort by trains needed", first: -1, cls: "w-trains" },
-        { key: "near", label: "Near", tip: "Sort by distance from the center of the screen, by the nearest stop", first: 1, cls: key === "near" ? "w-near" : "near-off" },
+        { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
+        ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
+        { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },
+        { key: "money", label: t("linesTab.colMoney"), tip: t("linesTab.sortMoney"), first: -1, cls: "w-linemoney" },
+        { key: "trains", label: t("linesTab.colTrains"), tip: t("linesTab.sortTrains"), first: -1, cls: "w-trains" },
+        { key: "near", label: t("linesTab.colNear"), tip: t("linesTab.sortNear"), first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class={"rows pick" + (drag?.on ? " dragging" : "")}>
         {items.map((it) => (it.g ? groupRows(it) : lineRow(it.ls[0], false)))}

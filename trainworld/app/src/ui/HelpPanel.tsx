@@ -3,6 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
+import { t } from "../i18n";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
@@ -11,53 +12,55 @@ const keyOf = (act: string) => Object.keys(ACTION_KEYS).find((k) => ACTION_KEYS[
 const toolKeys = Object.keys(TOOL_KEYS).join(", ");
 const tabKeys = Object.keys(TAB_KEYS).map((k) => k.toUpperCase()).join(", ");
 
-const SECTIONS: [string, [string, string][]][] = [
-  ["Map", [
-    ["Right drag, Ctrl drag", "Rotate the map"],
+function sections(): [string, [string, string][]][] {
+  return [
+  [t("help.mapHead"), [
+    [t("help.rightDragCtrl"), t("help.rotate")],
   ]],
-  ["Demand bubbles", [
-    ["Shift drag", "Draw a box to select bubbles"],
-    ["Hold, then drag", "Draw the box from a bubble"],
-    ["Shift click", "Add a bubble to the selection"],
-    ["Shift drag over far bubbles", "Explore trips to them"],
+  [t("help.bubblesHead"), [
+    [t("help.shiftDrag"), t("help.boxSelect")],
+    [t("help.holdDrag"), t("help.boxFromBubble")],
+    [t("help.shiftClick"), t("help.addBubble")],
+    [t("help.shiftDragFar"), t("help.exploreTrips")],
   ]],
-  ["Building", [
-    ["Shift click", "Place track and keep drawing"],
-    ["Double click, Enter", "Stop drawing track, or finish a bus line"],
-    ["Backspace, right click", "Undo the last piece of track or bus point"],
-    ["Right click or hold a bus point", "Delete"],
-    ["Drag a bus point", "Move"],
-    ["Click a bus route's end", "Draw from that end, or finish at the one in use"],
-    ["Caps Lock", "Turn keep placing on or off"],
-    ["Right drag", "Move the map in the blueprint tool"],
-    [SWITCH_PICK_KEY.toUpperCase(), "Enable or disable the picked blueprints"],
-    ["Delete", "Remove the picked blueprints"],
+  [t("help.buildingHead"), [
+    [t("help.shiftClick"), t("help.placeTrack")],
+    [t("help.doubleClickEnter"), t("help.stopDrawing")],
+    [t("help.backspaceRight"), t("help.undoPiece")],
+    [t("help.rightClickBus"), t("help.doDelete")],
+    [t("help.dragBusPoint"), t("help.doMove")],
+    [t("help.clickBusEnd"), t("help.drawFromEnd")],
+    [t("help.capsLock"), t("help.keepPlacing")],
+    [t("help.rightDrag"), t("help.moveMapBlueprint")],
+    [SWITCH_PICK_KEY.toUpperCase(), t("help.togglePicked")],
+    [t("help.keyDelete"), t("help.removePicked")],
   ]],
-  ["Keys", [
-    ["Shift 1 to 7", "Draw at level +3 down to −3"],
-    [tabKeys, "Build, Lines, Stations, Finances and Cities tabs"],
-    [toolKeys, "Track, stations, delete and select tools"],
-    [TRIP_KEY.toUpperCase(), "Explore a trip"],
-    [DEMAND_KEY.toUpperCase(), "Switch demand bubbles to none, homes, destinations or total in turn"],
-    [keyOf("newLine"), "Make a new line"],
-    [BUS_KEY.toUpperCase(), "Draw a new bus line"],
-    [keyOf("editStops"), "Edit the selected line's stops"],
-    [keyOf("addPassed"), "Add every station the selected line passes as a stop"],
-    [keyOf("construct"), "Construct blueprints"],
-    ["Space", "Pause or resume"],
-    ["Ctrl Z, Ctrl Y", "Undo or redo blueprint edits"],
-    ["Ctrl S", "Save the game now"],
-    ["/, Ctrl K, Ctrl F", "Find a place"],
-    [HIDE_UI_KEY, "Hide the interface, or bring it back (Esc too)"],
-    ["Esc", "Back out one step, then clear the selection"],
+  [t("help.keysHead"), [
+    [t("help.shift17"), t("help.levels")],
+    [tabKeys, t("help.tabs")],
+    [toolKeys, t("help.tools")],
+    [TRIP_KEY.toUpperCase(), t("help.exploreTrip")],
+    [DEMAND_KEY.toUpperCase(), t("help.cycleDemand")],
+    [keyOf("newLine"), t("help.newLine")],
+    [BUS_KEY.toUpperCase(), t("help.newBusLine")],
+    [keyOf("editStops"), t("help.editStops")],
+    [keyOf("addPassed"), t("help.addPassed")],
+    [keyOf("construct"), t("help.construct")],
+    [t("help.space"), t("help.pause")],
+    ["Ctrl Z, Ctrl Y", t("help.undoRedo")], // i18n-ignore
+    ["Ctrl S", t("help.saveNow")], // i18n-ignore
+    ["/, Ctrl K, Ctrl F", t("help.find")], // i18n-ignore
+    [HIDE_UI_KEY, t("help.hideUi")],
+    [t("help.esc"), t("help.back")],
   ]],
-  ["Panels", [
-    ["Double click a fare node", "Remove"],
-    ["Double click a name", "Rename"],
-    ["Double click a list row", "Find on the map"],
-    ["Shift or Ctrl click −, +", "Step trains by 5 or 20"],
+  [t("help.panelsHead"), [
+    [t("help.dblFare"), t("help.doRemove")],
+    [t("help.dblName"), t("help.doRename")],
+    [t("help.dblRow"), t("help.findOnMap")],
+    [t("help.stepTrains"), t("help.stepBy")],
   ]],
-];
+  ];
+}
 
 export function HelpPanel() {
   const open = helpOpen.value;
@@ -72,8 +75,8 @@ export function HelpPanel() {
       e.stopImmediatePropagation();
     };
     const press = (e: PointerEvent) => {
-      const t = e.target as Element;
-      if (!ref.current?.contains(t) && !t.closest?.(".help-open")) helpOpen.value = false;
+      const el = e.target as Element;
+      if (!ref.current?.contains(el) && !el.closest?.(".help-open")) helpOpen.value = false;
     };
     window.addEventListener("keydown", key, true);
     window.addEventListener("pointerdown", press, true);
@@ -84,8 +87,8 @@ export function HelpPanel() {
   }, [open]);
   if (!open) return null;
   return (
-    <div class="help-panel" ref={ref} role="dialog" aria-label="Controls">
-      {SECTIONS.map(([head, rows]) => (
+    <div class="help-panel" ref={ref} role="dialog" aria-label={t("help.title")}>
+      {sections().map(([head, rows]) => (
         <section key={head}>
           <h3>{head}</h3>
           <dl>

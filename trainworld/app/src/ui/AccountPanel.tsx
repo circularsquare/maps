@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
 import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
-import { plural } from "../game/format";
+import { t, tRich, tNumber } from "../i18n";
 import { Leaderboard } from "./Leaderboard";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -25,7 +25,7 @@ function loadGis(): Promise<void> {
     s.src = "https://accounts.google.com/gsi/client";
     s.async = true;
     s.onload = () => ok();
-    s.onerror = () => fail(new Error("Google sign-in could not load."));
+    s.onerror = () => fail(new Error(t("accountPanel.googleLoadFail")));
     document.head.appendChild(s);
   });
   gis.catch(() => { gis = null; });
@@ -61,34 +61,34 @@ function SignInForms() {
   const [form, setForm] = useState<"login" | "register" | "forgot">("login");
   const [msg, setMsg] = useState("");
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().catch((e) => setMsg(e.message)); };
-  if (!cfg?.signIn) return <p>Signing in is not available right now.</p>;
+  if (!cfg?.signIn) return <p>{t("accountPanel.unavailable")}</p>;
   return <>
     {cfg.googleClientId && <GoogleButton onMsg={setMsg} />}
     {cfg.dev && <form class="acct-row" onSubmit={(e) => { e.preventDefault(); const sub = val(e.currentTarget, "sub").trim(); if (sub) run(() => signIn("signin", { provider: "dev", sub })); }}>
-      <input name="sub" placeholder="Made-up id (dev server)" aria-label="Made-up id" />
-      <button class="btn text" type="submit">Sign in</button>
+      <input name="sub" placeholder={t("accountPanel.devPlaceholder")} aria-label={t("accountPanel.devLabel")} />
+      <button class="btn text" type="submit">{t("accountPanel.signIn")}</button>
     </form>}
     {cfg.password && (form === "forgot"
-      ? <form class="acct-form" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email"); run(async () => setMsg((await api<{ message?: string }>("POST", "noritetsu/forgot", { email }, { auth: false })).message ?? "Link sent.")); }}>
-        <input name="email" type="email" placeholder="Recovery email" aria-label="Recovery email" autocomplete="email" />
-        <div class="acct-btns"><button class="btn text acct-go" type="submit">Send reset link</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>Back</button></div>
+      ? <form class="acct-form" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email"); run(async () => setMsg((await api<{ message?: string }>("POST", "noritetsu/forgot", { email }, { auth: false })).message ?? t("accountPanel.linkSent"))); }}>
+        <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" />
+        <div class="acct-btns"><button class="btn text acct-go" type="submit">{t("accountPanel.sendReset")}</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>{t("accountPanel.back")}</button></div>
       </form>
       : <form class="acct-form" onSubmit={(e) => {
         e.preventDefault();
         const f = e.currentTarget, username = val(f, "username"), password = val(f, "password"), email = val(f, "email").trim();
         run(() => form === "register" ? signIn("register", { username, password, ...(email ? { email } : {}) }) : signIn("login", { username, password }));
       }}>
-        <input name="username" placeholder="Username" aria-label="Username" autocomplete="username" autocapitalize="none" spellcheck={false} />
-        <input name="password" type="password" placeholder="Password" aria-label="Password" autocomplete={form === "register" ? "new-password" : "current-password"} />
-        {form === "register" && <input name="email" type="email" placeholder="Recovery email (optional)" aria-label="Recovery email" autocomplete="email" />}
+        <input name="username" placeholder={t("accountPanel.username")} aria-label={t("accountPanel.username")} autocomplete="username" autocapitalize="none" spellcheck={false} />
+        <input name="password" type="password" placeholder={t("accountPanel.password")} aria-label={t("accountPanel.password")} autocomplete={form === "register" ? "new-password" : "current-password"} />
+        {form === "register" && <input name="email" type="email" placeholder={t("accountPanel.recoveryEmailOptional")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" />}
         <div class="acct-btns">
           {form === "register"
-            ? <><button class="btn text acct-go" type="submit">Create account</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>Sign in instead</button></>
-            : <><button class="btn text acct-go" type="submit">Sign in</button><button class="btn text" type="button" onClick={() => { setForm("register"); setMsg(""); }}>Create account</button><button class="btn text" type="button" onClick={() => { setForm("forgot"); setMsg(""); }}>Forgot password</button></>}
+            ? <><button class="btn text acct-go" type="submit">{t("accountPanel.createAccount")}</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>{t("accountPanel.signInInstead")}</button></>
+            : <><button class="btn text acct-go" type="submit">{t("accountPanel.signIn")}</button><button class="btn text" type="button" onClick={() => { setForm("register"); setMsg(""); }}>{t("accountPanel.createAccount")}</button><button class="btn text" type="button" onClick={() => { setForm("forgot"); setMsg(""); }}>{t("accountPanel.forgotPassword")}</button></>}
         </div>
       </form>)}
     {msg && <p class="acct-msg">{msg}</p>}
-    <p class="acct-legal small muted"><a href="privacy.html" target="_blank">Privacy</a> · <a href="terms.html" target="_blank">Terms</a></p>
+    <p class="acct-legal small muted"><a href="privacy.html" target="_blank">{t("accountPanel.privacy")}</a> · <a href="terms.html" target="_blank">{t("accountPanel.terms")}</a></p>
   </>;
 }
 
@@ -99,16 +99,16 @@ function SignedIn({ a }: { a: AccountView }) {
   const [msg, setMsg] = useState("");
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().catch((e) => setMsg(e.message)); };
   const password = a.logins.includes("password");
-  const who = a.username ? <>Signed in as <b>{a.username}</b></> : a.logins.includes("google") ? "Signed in with Google" : "Signed in";
+  const who = a.username ? tRich("accountPanel.signedInAs", { name: <b>{a.username}</b> }) : a.logins.includes("google") ? t("accountPanel.signedInGoogle") : t("accountPanel.signedIn");
   const setAccount = (account: AccountView) => { const s = session.peek(); if (s) storeSession({ token: s.token, account }); };
   if (panel === "password") return <form class="acct-form" onSubmit={(e) => {
     e.preventDefault();
     const f = e.currentTarget, o = val(f, "old"), n = val(f, "new");
-    run(async () => { storeSession(await api("PUT", "noritetsu/password", { old: o, new: n }, { keep401: true })); setPanel(""); setMsg("Password changed."); });
+    run(async () => { storeSession(await api("PUT", "noritetsu/password", { old: o, new: n }, { keep401: true })); setPanel(""); setMsg(t("accountPanel.passwordChanged")); });
   }}>
-    <input name="old" type="password" placeholder="Current password" aria-label="Current password" autocomplete="current-password" />
-    <input name="new" type="password" placeholder="New password" aria-label="New password" autocomplete="new-password" />
-    <div class="acct-btns"><button class="btn text acct-go" type="submit">Save</button><button class="btn text" type="button" onClick={() => { setPanel(""); setMsg(""); }}>Back</button></div>
+    <input name="old" type="password" placeholder={t("accountPanel.currentPassword")} aria-label={t("accountPanel.currentPassword")} autocomplete="current-password" />
+    <input name="new" type="password" placeholder={t("accountPanel.newPassword")} aria-label={t("accountPanel.newPassword")} autocomplete="new-password" />
+    <div class="acct-btns"><button class="btn text acct-go" type="submit">{t("accountPanel.save")}</button><button class="btn text" type="button" onClick={() => { setPanel(""); setMsg(""); }}>{t("accountPanel.back")}</button></div>
     {msg && <p class="acct-msg">{msg}</p>}
   </form>;
   return <>
@@ -116,34 +116,34 @@ function SignedIn({ a }: { a: AccountView }) {
     <AccountGames />
     <MergeQuestion />
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email").trim(); run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email })).account)); }}>
-      <input name="email" type="email" placeholder="Recovery email" aria-label="Recovery email" autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
-      {a.pendingEmail ? <p class="small muted">Confirm your email at {a.pendingEmail}.</p>
-        : !a.email && <p class="small acct-warn">No recovery email</p>}
+      <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
+      {a.pendingEmail ? <p class="small muted">{t("accountPanel.confirmEmail", { email: a.pendingEmail })}</p>
+        : !a.email && <p class="small acct-warn">{t("accountPanel.noRecoveryEmail")}</p>}
       <div class="acct-btns">
-        <button class="btn text" type="submit">Save email</button>
-        {(a.email || a.pendingEmail) && <button class="btn text" type="button" onClick={() => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email: "" })).account))}>Remove</button>}
-        <button class="btn text" type="button" onClick={() => { setPanel("password"); setMsg(""); }}>Change password</button>
+        <button class="btn text" type="submit">{t("accountPanel.saveEmail")}</button>
+        {(a.email || a.pendingEmail) && <button class="btn text" type="button" onClick={() => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email: "" })).account))}>{t("accountPanel.remove")}</button>}
+        <button class="btn text" type="button" onClick={() => { setPanel("password"); setMsg(""); }}>{t("accountPanel.changePassword")}</button>
       </div>
     </form>}
     <div class="acct-btns acct-sec">
-      <button class="btn text" data-tip="Signs out of trainsworld and noritetsu in this browser" onClick={() => {
+      <button class="btn text" data-tip={t("accountPanel.signOutTip")} onClick={() => {
         // T-1851: the games stay tied to the account and sync again at the next sign-in (the "remove
         // games" choice, `signOutRemoving` in game/accountGames.ts, is no longer offered)
         signOut();
         accountOpen.value = false;
-      }}>Sign out</button>
-      <button class="btn text danger" onClick={() => setPanel("delete")}>Delete account</button>
+      }}>{t("accountPanel.signOut")}</button>
+      <button class="btn text danger" onClick={() => setPanel("delete")}>{t("accountPanel.deleteAccount")}</button>
     </div>
     {panel === "delete" && <div class="callout bad">
-      <p>Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.</p>
-      <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>Delete account</button><button class="btn text" onClick={() => setPanel("")}>Keep it</button></div>
+      <p>{t("accountPanel.deleteQuestion")}</p>
+      <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>{t("accountPanel.deleteAccount")}</button><button class="btn text" onClick={() => setPanel("")}>{t("accountPanel.keepIt")}</button></div>
     </div>}
     {msg && <p class="acct-msg">{msg}</p>}
   </>;
 }
 
 /** "0.2 MB", "12 MB". */
-const mb = (bytes: number) => { const v = bytes / 1048576; return `${v >= 10 ? Math.round(v) : Math.max(v, bytes ? 0.1 : 0).toFixed(1).replace(/\.0$/, "")} MB`; };
+const mb = (bytes: number) => { const v = bytes / 1048576; return t("accountPanel.megabytes", { size: tNumber(v >= 10 ? Math.round(v) : Math.max(v, bytes ? 0.1 : 0), { maximumFractionDigits: 1 }) }); };
 
 /** T-988: how many games the account keeps and the room they take. */
 function AccountGames() {
@@ -152,9 +152,9 @@ function AccountGames() {
   useEffect(() => { if (open) void refreshAccountGames(); }, [open]);
   if (!gamesOn() || !list) return null;
   return <p class="small muted num acct-games">
-    <span data-tip={`Your account keeps up to ${list.maxGames} games`}>{plural(list.games.length, "game")} on your account</span>
+    <span data-tip={t("accountPanel.gamesTip", { max: list.maxGames })}>{t("accountPanel.gamesCount", { count: list.games.length })}</span>
     {" · "}
-    <span data-tip="Backups count too">{mb(list.used)} of {mb(list.limit)}</span>
+    <span data-tip={t("accountPanel.backupsTip")}>{t("accountPanel.storageUsed", { used: mb(list.used), limit: mb(list.limit) })}</span>
   </p>;
 }
 
@@ -166,18 +166,18 @@ function MergeQuestion() {
   const one = ask.length === 1;
   return <div class="callout acct-merge">
     {!sure ? <>
-      <p>{one ? `Add ${ask[0].name} to your account?` : `Add the ${ask.length} games in this browser to your account?`}</p>
-      <div class="acct-btns"><button class="btn text acct-go" onClick={() => void answerMergeAsk(true)}>Add</button><button class="btn text" onClick={() => setSure(true)}>Don't add</button></div>
+      <p>{one ? t("accountPanel.mergeOne", { name: ask[0].name }) : t("accountPanel.mergeMany", { count: tNumber(ask.length) })}</p>
+      <div class="acct-btns"><button class="btn text acct-go" onClick={() => void answerMergeAsk(true)}>{t("accountPanel.add")}</button><button class="btn text" onClick={() => setSure(true)}>{t("accountPanel.dontAdd")}</button></div>
     </> : <>
-      <p>Are you sure? Games kept only in this browser are lost if its storage is cleared.</p>
-      <div class="acct-btns"><button class="btn text" onClick={() => { setSure(false); void answerMergeAsk(false); }}>{one ? "Keep it here only" : "Keep them here only"}</button><button class="btn text acct-go" onClick={() => { setSure(false); void answerMergeAsk(true); }}>{one ? "Add it" : "Add them"}</button></div>
+      <p>{t("accountPanel.mergeSure")}</p>
+      <div class="acct-btns"><button class="btn text" onClick={() => { setSure(false); void answerMergeAsk(false); }}>{one ? t("accountPanel.keepHereOne") : t("accountPanel.keepHereMany")}</button><button class="btn text acct-go" onClick={() => { setSure(false); void answerMergeAsk(true); }}>{one ? t("accountPanel.addIt") : t("accountPanel.addThem")}</button></div>
     </>}
   </div>;
 }
 
 export function AccountPanel() {
   const s = session.value;
-  return <Modal open={accountOpen.value} onClose={() => (accountOpen.value = false)} title={s ? "Account" : "Sign in"} cls="acct-panel acct-account">
+  return <Modal open={accountOpen.value} onClose={() => (accountOpen.value = false)} title={s ? t("accountPanel.account") : t("accountPanel.signIn")} cls="acct-panel acct-account">
     {s ? <SignedIn a={s.account} /> : <SignInForms />}
   </Modal>;
 }
@@ -185,7 +185,7 @@ export function AccountPanel() {
 /** The person icon: the start menu's (`start`) or the top of Settings (`settings`); nothing until accounts are on. */
 export function AccountButton({ kind }: { kind: "start" | "settings" }) {
   if (accountState.value !== "on") return null;
-  const label = session.value ? "Account" : "Sign in";
+  const label = session.value ? t("accountPanel.account") : t("accountPanel.signIn");
   return <button class={kind === "settings" ? "btn icon" + (accountOpen.value ? " on" : "") : "btn icon acct-start"} data-tip={label} aria-label={label}
     onClick={() => (accountOpen.value = !accountOpen.peek())}><Icon.person /></button>;
 }
@@ -193,7 +193,7 @@ export function AccountButton({ kind }: { kind: "start" | "settings" }) {
 /** T-1728: who is logged in, for the text beside Settings' account icon and its Account row. */
 export function loginText(): string {
   const a = session.value?.account;
-  return !a ? "Not logged in" : a.username ? `Logged in as ${a.username}` : a.logins.includes("google") ? "Logged in with Google" : "Logged in";
+  return !a ? t("accountPanel.notLoggedIn") : a.username ? t("accountPanel.loggedInAs", { name: a.username }) : a.logins.includes("google") ? t("accountPanel.loggedInGoogle") : t("accountPanel.loggedIn");
 }
 
 /** T-1139: Settings' Account row, in words beside the icon at its top: who is signed in, and the button
@@ -203,10 +203,10 @@ export function AccountSection() {
   const a = session.value?.account;
   const who = loginText();
   return <>
-    <div class="h">Account</div>
+    <div class="h">{t("accountPanel.account")}</div>
     <div class="game-mode">
       <span>{who}</span>
-      <button class={"btn text" + (accountOpen.value ? " on" : "")} onClick={() => (accountOpen.value = !accountOpen.peek())}>{a ? "Account settings" : "Sign in"}</button>
+      <button class={"btn text" + (accountOpen.value ? " on" : "")} onClick={() => (accountOpen.value = !accountOpen.peek())}>{a ? t("accountPanel.accountSettings") : t("accountPanel.signIn")}</button>
     </div>
   </>;
 }

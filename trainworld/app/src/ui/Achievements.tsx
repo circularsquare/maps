@@ -12,6 +12,7 @@ import { accountOpen, accountState, boardsOpen } from "../game/account";
 import { choosing } from "../game/loading";
 import { moneyState } from "../game/money";
 import { ask, selection, tab } from "../game/ui";
+import { t } from "../i18n";
 import { gamesLoaded } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 import { LeaderboardButton } from "./Leaderboard";
@@ -35,7 +36,7 @@ export function AchievementsButton() {
     <div class="ach-head">
       <DiagramButton />
       <LeaderboardButton />
-      {!sandbox && <button class={"btn text ach-open" + (on ? " on" : "")} data-tip="Achievements" aria-label="Achievements" aria-pressed={on}
+      {!sandbox && <button class={"btn text ach-open" + (on ? " on" : "")} data-tip={t("achievements.title")} aria-label={t("achievements.title")} aria-pressed={on}
         onClick={() => (on ? (selection.value = null) : openAchievements())}>
         <Icon.medal /><span class="num">{earned.value}/{STEPS}</span>
       </button>}
@@ -71,10 +72,10 @@ let nextId = 1, lastIn = -Infinity;
 /** The toasts for steps just earned: the highest tier of each tiered achievement, and each first. */
 function toastsFor(keys: string[], got: Record<string, Achieved>): Toast[] {
   const out: Toast[] = [];
-  for (const t of TIERED) {
-    const top = t.tiers.filter((x) => keys.includes(`${t.id}:${x}`)).at(-1);
-    if (top !== undefined) out.push({ id: nextId++, title: t.name, line: tierText(t.id as TieredId, top, got[`${t.id}:${top}`], true),
-      medal: { metal: METALS[t.tiers.indexOf(top)], of: t.id } });
+  for (const a of TIERED) {
+    const top = a.tiers.filter((x) => keys.includes(`${a.id}:${x}`)).at(-1);
+    if (top !== undefined) out.push({ id: nextId++, title: a.name, line: tierText(a.id as TieredId, top, got[`${a.id}:${top}`], true),
+      medal: { metal: METALS[a.tiers.indexOf(top)], of: a.id } });
   }
   for (const f of FIRSTS) if (keys.includes(f.id)) out.push({ id: nextId++, title: f.name, line: f.text(got[f.id]), medal: { metal: "gold", of: "first" } });
   return out;
@@ -114,16 +115,16 @@ export function AchievementToasts() {
         const room = (PHONE.matches ? 1 : MAX_SHOWN) - out.filter((s) => !s.out).length;
         const q = waiting.peek();
         if (room > 0 && q.length && now - lastIn >= GAP_MS) {
-          let t: Toast;
+          let toast: Toast;
           if (q.length > MAX_SHOWN) {
-            t = { id: nextId++, title: `${q.length} more achievements` };
+            toast = { id: nextId++, title: t("achievements.more", { count: q.length }) };
             waiting.value = [];
           } else {
-            t = q[0];
+            toast = q[0];
             waiting.value = q.slice(1);
           }
           lastIn = now;
-          out = [...out, { ...t, held: 0, out: false }];
+          out = [...out, { ...toast, held: 0, out: false }];
         }
         return out;
       });

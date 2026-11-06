@@ -8,6 +8,7 @@ import { useEffect, useState } from "preact/hooks";
 import { CITIES } from "../game/cities";
 import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, session, setBoard, type BoardRow } from "../game/account";
 import { exact } from "../game/format";
+import { t } from "../i18n";
 import { moneyState } from "../game/money";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
@@ -18,11 +19,10 @@ const cityName = (id: string) => CITIES.find((c) => c.id === id)?.name ?? id;
 const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
 function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) {
-  const where = board === WORLD ? "in the world" : `in ${cityName(board.slice(WORLD.length + 1))}`;
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
-    <span class="lb-value num" data-tip={`${exact(r.value)} points ${where} in past 24h`}>{pointsShort(r.value)}</span>
+    <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : cityName(board.slice(WORLD.length + 1)) })}>{pointsShort(r.value)}</span>
   </li>;
 }
 
@@ -33,14 +33,14 @@ function Join() {
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().then(() => fetchBoards()).catch((e) => setMsg(e.message)); };
   useEffect(() => { if (b?.name) setName(b.name); }, [b?.name]);
   return <div class="lb-foot">
-    {moneyState.value?.mode === "sandbox" && <p class="small muted">Sandbox games are not listed</p>}
+    {moneyState.value?.mode === "sandbox" && <p class="small muted">{t("leaderboard.sandbox")}</p>}
     {!session.value
-      ? <button class="btn text" onClick={() => { boardsOpen.value = false; accountOpen.value = true; }}>Sign in to be listed</button>
+      ? <button class="btn text" onClick={() => { boardsOpen.value = false; accountOpen.value = true; }}>{t("leaderboard.signIn")}</button>
       : b?.on
-        ? <button class="btn text" onClick={() => run(() => setBoard(false))}>Leave the leaderboards</button>
+        ? <button class="btn text" onClick={() => run(() => setBoard(false))}>{t("leaderboard.leave")}</button>
         : <form class="acct-row" onSubmit={(e) => { e.preventDefault(); if (name.trim()) run(() => setBoard(true, name)); }}>
-          <input maxLength={24} placeholder="Name to show" aria-label="Name to show" value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-          <button class="btn text acct-go" type="submit">Join</button>
+          <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
+          <button class="btn text acct-go" type="submit">{t("leaderboard.join")}</button>
         </form>}
     {msg && <p class="acct-msg">{msg}</p>}
   </div>;
@@ -57,14 +57,14 @@ function Boards() {
   const opt = (id: string) => <option value={`${WORLD}_${id}`} selected={key === `${WORLD}_${id}`}>{cityName(id)}</option>;
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
-    <select class="lb-pick" aria-label="Leaderboard" onChange={(e) => void fetchBoards((e.target as HTMLSelectElement).value)}>
-      <option value={WORLD} selected={key === WORLD}>World</option>
-      {mine.length > 0 && <optgroup label="Cities in this game">{mine.map(opt)}</optgroup>}
-      {others.length > 0 && <optgroup label="Other cities">{others.map(opt)}</optgroup>}
+    <select class="lb-pick" aria-label={t("leaderboard.pick")} onChange={(e) => void fetchBoards((e.target as HTMLSelectElement).value)}>
+      <option value={WORLD} selected={key === WORLD}>{t("leaderboard.world")}</option>
+      {mine.length > 0 && <optgroup label={t("leaderboard.thisGame")}>{mine.map(opt)}</optgroup>}
+      {others.length > 0 && <optgroup label={t("leaderboard.otherCities")}>{others.map(opt)}</optgroup>}
     </select>
-    {!d ? <p class="small muted">{st.error || "Loading…"}</p>
+    {!d ? <p class="small muted">{st.error || t("leaderboard.loading")}</p>
       : <ol class="lb-rows">
-        {d.rows.length === 0 && <li class="muted">Nobody here yet.</li>}
+        {d.rows.length === 0 && <li class="muted">{t("leaderboard.nobody")}</li>}
         {d.rows.map((r) => <Row r={r} board={key} mine={!!meIn && r.rank === d.me!.rank && r.name === d.me!.name} />)}
         {d.me && !meIn && <><li class="lb-gap" /><Row r={d.me} board={key} mine /></>}
       </ol>}
@@ -75,7 +75,7 @@ function Boards() {
 
 export function Leaderboard() {
   const open = boardsOpen.value;
-  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title="Leaderboards" cls="acct-panel lb-panel">
+  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title={t("leaderboard.title")} cls="acct-panel lb-panel">
     {open && <Boards />}
   </Modal>;
 }
@@ -83,6 +83,6 @@ export function Leaderboard() {
 /** The trophy beside the achievements; nothing until accounts are on. */
 export function LeaderboardButton() {
   if (accountState.value !== "on") return null;
-  return <button class="btn icon mini lb-open" data-tip="Leaderboards" aria-label="Leaderboards"
+  return <button class="btn icon mini lb-open" data-tip={t("leaderboard.title")} aria-label={t("leaderboard.title")}
     onClick={(e) => { e.stopPropagation(); boardsOpen.value = true; }}><Icon.trophy /></button>;
 }

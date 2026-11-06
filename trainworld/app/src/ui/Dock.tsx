@@ -8,6 +8,7 @@
 import type { JSX } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { dockLayout, tab, uiScale, type Tab } from "../game/ui";
+import { t, type MessageKey } from "../i18n";
 import { live } from "../map/live";
 import { Inspector } from "./inspector/Inspector";
 import { BuildTab } from "./BuildTab";
@@ -25,12 +26,12 @@ import { Icon } from "./widgets";
 import { tabKeyName } from "./toolKeys";
 
 /** T-252: the tabs are icons, their names in the hover */
-const TABS: [Tab, string, () => JSX.Element][] = [
-  ["build", "Build", Icon.wrench],
-  ["lines", "Lines", Icon.route],
-  ["stations", "Stations", Icon.building],
-  ["money", "Finances", Icon.money],
-  ["cities", "Cities", Icon.cities],
+const TABS: [Tab, MessageKey, () => JSX.Element][] = [
+  ["build", "dock.build", Icon.wrench],
+  ["lines", "dock.lines", Icon.route],
+  ["stations", "dock.stations", Icon.building],
+  ["money", "dock.finances", Icon.money],
+  ["cities", "dock.cities", Icon.cities],
 ];
 
 const PANES: Record<Tab, () => JSX.Element | null> = {
@@ -38,7 +39,7 @@ const PANES: Record<Tab, () => JSX.Element | null> = {
   lines: LinesTab,
   stations: StationsTab,
   money: MoneyTab,
-  cities: () => <><AchievementsButton /><CitiesList empty={<p class="muted">No stations yet.</p>} /></>,
+  cities: () => <><AchievementsButton /><CitiesList empty={<p class="muted">{t("dock.noStations")}</p>} /></>,
   settings: SettingsTab,
 };
 
@@ -79,8 +80,8 @@ function startDrag(e: PointerEvent, f: (x: number, y: number) => void) {
 }
 
 export function Dock() {
-  const t = tab.value;
-  const Pane = PANES[t];
+  const cur = tab.value;
+  const Pane = PANES[cur];
   const lay = dockLayout.value;
   const ref = useRef<HTMLElement>(null);
   const [phone, setPhone] = useState(PHONE.matches);
@@ -107,9 +108,9 @@ export function Dock() {
     const scroller = (pane.querySelector(".build-options") as HTMLElement | null) ?? pane;
     restoring.current = true;
     pane.scrollTop = 0;
-    scroller.scrollTop = scrolls.current[t] ?? 0;
+    scroller.scrollTop = scrolls.current[cur] ?? 0;
     restoring.current = false;
-  }, [t]);
+  }, [cur]);
   const style: Record<string, string> = {};
   if (lay.dockW !== null) style["--dock-w"] = dockWidth(lay.dockW) + "px";
   if (lay.paneH !== null) style["--pane-h"] = paneHeight(lay.paneH) + "px";
@@ -135,24 +136,24 @@ export function Dock() {
     <aside id="dock" ref={ref} style={style}>
       <div class="dock-grab" onPointerDown={dragHeight} />
       <nav class="tabs">
-        {TABS.map(([id, label, Glyph]) => (
-          <button class={"tab" + (t === id ? " on" : "")} data-guide-tab={id} data-tip={`${label} (${tabKeyName(id)})`} aria-label={label} aria-pressed={t === id} onClick={() => (tab.value = id)}>
+        {TABS.map(([id, key, Glyph]) => (
+          <button class={"tab" + (cur === id ? " on" : "")} data-guide-tab={id} data-tip={t("dock.tabTip", { name: t(key), key: tabKeyName(id) })} aria-label={t(key)} aria-pressed={cur === id} onClick={() => (tab.value = id)}>
             <Glyph />
           </button>
         ))}
         {/* T-251: the saved games open in their own panel, not as a tab */}
-        <button class="tab gear save" data-tip="Saved games" aria-label="Saved games" onClick={() => (savesOpen.value = true)}>
+        <button class="tab gear save" data-tip={t("dock.saves")} aria-label={t("dock.saves")} onClick={() => (savesOpen.value = true)}>
           <Icon.save />
         </button>
-        <button class={"tab gear" + (t === "settings" ? " on" : "")} data-tip="Settings" aria-label="Settings" aria-pressed={t === "settings"} onClick={() => (tab.value = "settings")}>
+        <button class={"tab gear" + (cur === "settings" ? " on" : "")} data-tip={t("dock.settings")} aria-label={t("dock.settings")} aria-pressed={cur === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
         </button>
       </nav>
       <SavesPanel />
       <HelpPanel />
       <MareyPanel />
-      <section class={"pane" + (t === "build" ? " build-pane" : "")} ref={paneRef}
-        onScrollCapture={(e) => { if (!restoring.current) scrolls.current[t] = (e.target as HTMLElement).scrollTop; }}>
+      <section class={"pane" + (cur === "build" ? " build-pane" : "")} ref={paneRef}
+        onScrollCapture={(e) => { if (!restoring.current) scrolls.current[cur] = (e.target as HTMLElement).scrollTop; }}>
         <Pane />
       </section>
       <div class="pane-resize"onPointerDown={dragDivider} />

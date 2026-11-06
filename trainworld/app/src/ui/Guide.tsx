@@ -9,6 +9,7 @@ import { guideShown, guideSteps, guideTicks, startGuide, type GuideStep } from "
 import { moneyState } from "../game/money";
 import { ask } from "../game/ui";
 import { world } from "../game/world";
+import { t, tNumber } from "../i18n";
 import { saveGuide } from "../workers/clockClient";
 import { ripple, startRipple } from "./ripple";
 import { savesOpen } from "./SavesPanel";
@@ -19,7 +20,8 @@ import "./guide.css";
 const opened = signal(false);
 
 function counter(c: NonNullable<GuideStep["count"]>): string {
-  return c.unit === "km" ? `${c.have.toFixed(1)}/${c.goal.toFixed(1)} km` : c.unit === "%" ? `${c.have.toFixed(1)}/${c.goal}%` : `${c.have}/${c.goal}`;
+  const one = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
+  return c.unit === "km" ? t("guide.counterKm", { have: tNumber(c.have, one), goal: tNumber(c.goal, one) }) : c.unit === "%" ? t("guide.counterPercent", { have: tNumber(c.have, one), goal: tNumber(c.goal) }) : `${tNumber(c.have)}/${tNumber(c.goal)}`;
 }
 
 function Guide() {
@@ -28,12 +30,12 @@ function Guide() {
   const steps = guideSteps(w, g);
   const { done, now } = guideTicks(steps, g);
   const finished = now < 0;
-  const close = () => (ask.value = { text: "You can restart the tutorial in Settings.", yes: "Close tutorial", no: "Keep going", run: () => saveGuide({ ...g, hidden: true }) });
+  const close = () => (ask.value = { text: t("guide.closeQuestion"), yes: t("guide.closeYes"), no: t("guide.closeNo"), run: () => saveGuide({ ...g, hidden: true }) });
   return (
     <div class={"guide" + (opened.value ? " open" : "")} data-card={g.card ?? 1}>
       <div class="guide-head">
-        <button class="guide-title" aria-expanded={opened.value} onClick={() => (opened.value = !opened.peek())}>Tutorial</button>
-        <button class="btn icon guide-x" aria-label="Close the tutorial" onClick={close}>
+        <button class="guide-title" aria-expanded={opened.value} onClick={() => (opened.value = !opened.peek())}>{t("guide.title")}</button>
+        <button class="btn icon guide-x" aria-label={t("guide.close")} onClick={close}>
           <Icon.cross />
         </button>
       </div>
@@ -50,8 +52,8 @@ function Guide() {
       {finished && (
         <div class="guide-end">
           {g.card === 2
-            ? <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, closed: true })}>Done!</button>
-            : <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, card: 2 })}>Continue</button>}
+            ? <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, closed: true })}>{t("guide.done")}</button>
+            : <button class="btn text" data-guide="end" onClick={() => saveGuide({ ...g, card: 2 })}>{t("guide.continue")}</button>}
         </div>
       )}
     </div>

@@ -14,6 +14,7 @@ import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/
 import { unitMetres, unitShort } from "../game/format";
 import { canUndoFares, changeFares, undo } from "../game/fareUndo";
 import { playBuild } from "../map/buildSound";
+import { t, tNumber, tRich } from "../i18n";
 import { Icon, Stepper, TypedValue } from "./widgets";
 
 /** T-1277: the graph shows the curve as charged where the player is looking (times that country's
@@ -49,8 +50,8 @@ function niceDown(v: number): number {
 const snap = (v: number, step: number) => Math.round(v / step) * step;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const usd = (v: number) => "$" + v.toFixed(2);
-const distText = (u: number) => (u < 10 ? (Math.round(u * 10) / 10).toFixed(1) : Math.round(u).toLocaleString("en-US"));
+const usd = (v: number) => "$" + tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const distText = (u: number) => (u < 10 ? tNumber(Math.round(u * 10) / 10, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : tNumber(Math.round(u)));
 const maxSpan = (kpu: number) => MAX_KM / kpu;
 const clampSpan = (s: number, kpu: number) => clamp(s, MIN_SPAN, maxSpan(kpu));
 
@@ -78,14 +79,14 @@ export function FareButtons({ nodes }: { nodes: FareNode[] }) {
   const span = spanOf(nodes, kpu);
   return (
     <span class="fg-buttons">
-      <button class="btn icon" aria-label="Undo the fare change" data-tip="Undo the last fare change (Ctrl+Z)" disabled={!canUndoFares.value} onClick={() => void undo()}>
+      <button class="btn icon" aria-label={t("fareGraph.undoLabel")} data-tip={t("fareGraph.undoTip")} disabled={!canUndoFares.value} onClick={() => void undo()}>
         <Icon.undo />
       </button>
       <span class="group">
-        <button class="btn" aria-label="Zoom out" data-tip="Zoom out" disabled={span >= maxSpan(kpu)} onClick={() => { fareSpan.value = clampSpan(niceUp(span * 1.01), kpu); }}>
+        <button class="btn" aria-label={t("fareGraph.zoomOut")} data-tip={t("fareGraph.zoomOut")} disabled={span >= maxSpan(kpu)} onClick={() => { fareSpan.value = clampSpan(niceUp(span * 1.01), kpu); }}>
           <Icon.minus />
         </button>
-        <button class="btn" aria-label="Zoom in" data-tip="Zoom in" disabled={span <= MIN_SPAN} onClick={() => { fareSpan.value = clampSpan(niceDown(span), kpu); }}>
+        <button class="btn" aria-label={t("fareGraph.zoomIn")} data-tip={t("fareGraph.zoomIn")} disabled={span <= MIN_SPAN} onClick={() => { fareSpan.value = clampSpan(niceDown(span), kpu); }}>
           <Icon.plus />
         </button>
       </span>
@@ -107,7 +108,8 @@ const cents = (v: number) => Math.round(v * 100) / 100;
 // T-1277: a rate scaled from the curve is whole cents to within a hundredth of a cent
 const wholeCents = (r: number) => Math.abs(r * 100 - Math.round(r * 100)) < 0.01;
 /** a rate in whole cents reads as cents, a typed or dragged one to a tenth of a cent */
-const rateNum = (r: number) => r.toFixed(wholeCents(r) ? 2 : 3);
+const rateTyped = (r: number) => r.toFixed(wholeCents(r) ? 2 : 3);
+const rateNum = (r: number) => tNumber(r, { minimumFractionDigits: wholeCents(r) ? 2 : 3, maximumFractionDigits: wholeCents(r) ? 2 : 3 });
 const rateText = (r: number) => "$" + rateNum(r);
 
 /** The rate per km of the stretch ending at node `i` (from 1), US$. */
@@ -139,9 +141,9 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
   return (
     <ul class="rows fare-rows">
       <li>
-        <span class="fr-what">Base fare</span>
-        <Stepper value={usd(base)} wide label="base fare" onStep={(s) => setBase(cents(base + s * 0.25))}
-          type={{ text: base.toFixed(2), set: setBase, tip: "The fare for the shortest trip." }} />
+        <span class="fr-what">{t("fareGraph.baseFare")}</span>
+        <Stepper value={usd(base)} wide label={t("fareGraph.baseFareLabel")} onStep={(s) => setBase(cents(base + s * 0.25))}
+          type={{ text: base.toFixed(2), set: setBase, tip: t("fareGraph.baseFareTip") }} />
         <span />
       </li>
       {stretches.map(([km, rate], j) => {
@@ -165,17 +167,16 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
           }
           if (JSON.stringify(next) !== JSON.stringify(nodes)) void setFares(next);
         };
-        const span = last ? `past ${fromText} ${unit}` : `from ${fromText} to ${distText(u)} ${unit}`;
         return (
           <li>
             {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
             {last
-              ? <span class="fr-what">Past {fromText} {unit}</span>
-              : <span class="fr-what">{`${fromText} -`}<TypedValue label={`end of stretch ${i}`}
-                  type={{ text: distText(u), set: setU, tip: `Where this rate ends and the next begins, in ${unit}` }}>{distText(u)}</TypedValue>{unit}</span>}
-            <Stepper value={`+${rateText(rateU)}`} wide label={`rate of stretch ${i}`} onStep={stepRate}
-              type={{ text: rateNum(rateU), set: setRate, tip: `The fare rises ${rateText(rateU)} for each ${unit} ${span}.` }} />
-            <span>per {unit}</span>
+              ? <span class="fr-what">{t("fareGraph.past", { from: fromText, unit })}</span>
+              : <span class="fr-what">{tRich("fareGraph.stretchEnd", { from: fromText, unit, end: <TypedValue label={t("fareGraph.endLabel", { n: tNumber(i) })}
+                  type={{ text: distText(u), set: setU, tip: t("fareGraph.endTip", { unit }) }}>{distText(u)}</TypedValue> })}</span>}
+            <Stepper value={`+${rateText(rateU)}`} wide label={t("fareGraph.rateLabel", { n: tNumber(i) })} onStep={stepRate}
+              type={{ text: rateTyped(rateU), set: setRate, tip: t("fareGraph.rateTip", { last, rate: rateText(rateU), unit, from: fromText, to: distText(u) }) }} />
+            <span>{t("fareGraph.perUnit", { unit })}</span>
           </li>
         );
       })}
@@ -304,14 +305,14 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   };
 
   const hoverU = hoverX === null ? null : unitAt(hoverX);
-  const hoverTip = hoverU === null ? undefined : `${distText(hoverU)} ${unit}: ${usd(fareU(hoverU))}`;
+  const hoverTip = hoverU === null ? undefined : t("fareGraph.hoverTip", { distance: distText(hoverU), unit, fare: usd(fareU(hoverU)) });
   const xStep = niceUp(span / 5);
   const xTicks = Array.from({ length: Math.floor(span / xStep + 1e-9) }, (_, i) => (i + 1) * xStep);
   const fStep = niceUp(h / 4);
   const yTicks: number[] = [];
   for (let v = Math.floor(y0 / fStep + 1) * fStep; v <= y0 + h + 1e-9; v += fStep) yTicks.push(v);
-  const tickText = (v: number) => (xStep < 1 ? v.toFixed(xStep < 0.1 ? 2 : 1) : v.toLocaleString("en-US"));
-  const fareText = (v: number) => "$" + (fStep < 1 ? v.toFixed(2) : v.toLocaleString("en-US"));
+  const tickText = (v: number) => (xStep < 1 ? tNumber(v, { minimumFractionDigits: xStep < 0.1 ? 2 : 1, maximumFractionDigits: xStep < 0.1 ? 2 : 1 }) : tNumber(v));
+  const fareText = (v: number) => "$" + (fStep < 1 ? tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tNumber(v));
   const lastX = xTicks.length - 1;
 
   // the ways a hovered or dragged node moves, as small arrows around it
@@ -328,13 +329,13 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   return (
     <svg class={"fare-graph" + (d?.axis ? ` fg-drag-${d.axis}` : "")} ref={svg} viewBox={`0 0 ${W} ${H}`} onWheel={onWheel}>
       <defs><clipPath id="fare-clip"><rect x={L} y={T} width={R - L} height={B - T} /></clipPath></defs>
-      {xTicks.map((t) => <line class="fg-grid" x1={x(t)} x2={x(t)} y1={T} y2={B} />)}
+      {xTicks.map((tk) => <line class="fg-grid" x1={x(tk)} x2={x(tk)} y1={T} y2={B} />)}
       {yTicks.map((v) => <line class="fg-grid" x1={L} x2={R} y1={y(v)} y2={y(v)} />)}
       <line class="fg-axis" x1={L} x2={R} y1={B} y2={B} />
       <line class="fg-axis" x1={L} x2={L} y1={T} y2={B} />
       <text class="fg-label" x={L} y={B + 12} text-anchor="middle">0</text>
-      {xTicks.map((t, i) => (
-        <text class="fg-label" x={x(t)} y={B + 12} text-anchor={i === lastX && x(t) > R - 30 ? "end" : "middle"}>{tickText(t) + (i === lastX ? ` ${unit}` : "")}</text>
+      {xTicks.map((tk, i) => (
+        <text class="fg-label" x={x(tk)} y={B + 12} text-anchor={i === lastX && x(tk) > R - 30 ? "end" : "middle"}>{i === lastX ? t("fareGraph.tickUnit", { value: tickText(tk), unit }) : tickText(tk)}</text>
       ))}
       {/* a label the base fare's node would cover is left out */}
       {yTicks.filter((v) => Math.abs(y(v) - y(shown[0][1])) > 12).map((v) => <text class="fg-label" x={L + 3} y={y(v) - 2}>{fareText(v)}</text>)}
@@ -351,7 +352,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       )}
       {shown.map(([km, f], i) => {
         const cx = x(km / kpu), cy = y(f);
-        const tip = i === 0 ? `Base fare: ${usd(f)}\nDrag up or down to change it` : `${distText(km / kpu)} ${unit}: ${usd(f)}\nDrag sideways for the distance, up or down for the fare`;
+        const tip = i === 0 ? t("fareGraph.baseNodeTip", { fare: usd(f) }) : t("fareGraph.nodeTip", { distance: distText(km / kpu), unit, fare: usd(f) });
         if (cx <= R + 0.5 && cy >= T - 0.5) {
           return (
             <g class={"fg-node" + (i === 0 ? " ns" : "")} onPointerDown={onNode(i)} onPointerEnter={() => setHoverNode(i)} onPointerLeave={() => setHoverNode(null)} {...dragProps}>
@@ -366,7 +367,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
         const a = Math.atan2(cy - py, cx - px), c = Math.cos(a), s = Math.sin(a);
         const bx = px - 8 * c, by = py - 8 * s;
         return (
-          <g class="fg-off" data-tip={`${tip.split("\n")[0]}\nClick to zoom out to it`} onClick={() => { fareSpan.value = fitSpan([shown[0], [km, f]], kpu, span * 1.01); }}>
+          <g class="fg-off" data-tip={t("fareGraph.offTip", { first: tip.split("\n")[0] })} onClick={() => { fareSpan.value = fitSpan([shown[0], [km, f]], kpu, span * 1.01); }}>
             <circle class="fg-hit" cx={bx} cy={by} r={10} />
             <path class="fg-arrow" d={`M${px.toFixed(1)},${py.toFixed(1)}L${(bx - 4.5 * s).toFixed(1)},${(by + 4.5 * c).toFixed(1)}L${(bx + 4.5 * s).toFixed(1)},${(by - 4.5 * c).toFixed(1)}Z`} />
           </g>

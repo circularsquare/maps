@@ -4,6 +4,7 @@
 // typed, so the game gets one edit and not one per pointer move.
 
 import { useEffect, useRef, useState } from "preact/hooks";
+import { t } from "../i18n";
 
 type Hsv = [number, number, number];
 
@@ -117,17 +118,17 @@ export function ColourPicker({ value, presets = [], onPreview, onCommit }: {
   const [h, s, v] = hsv;
   return (
     <div class="cpick">
-      <div class="cpick-area" data-picker-area role="slider" tabIndex={0} aria-label="Saturation and brightness" aria-valuetext={hex}
+      <div class="cpick-area" data-picker-area role="slider" tabIndex={0} aria-label={t("colourPicker.area")} aria-valuetext={hex}
         style={{ "--hue": `hsl(${h}, 100%, 50%)` }} {...area} onKeyDown={(e) => step(e, false)}>
         <i class="cpick-dot" style={{ left: `${s * 100}%`, top: `${(1 - v) * 100}%` }} />
       </div>
-      <div class="cpick-hue" data-picker-hue role="slider" tabIndex={0} aria-label="Hue" aria-valuemin={0} aria-valuemax={360} aria-valuenow={Math.round(h)}
+      <div class="cpick-hue" data-picker-hue role="slider" tabIndex={0} aria-label={t("colourPicker.hue")} aria-valuemin={0} aria-valuemax={360} aria-valuenow={Math.round(h)}
         {...strip} onKeyDown={(e) => step(e, true)}>
         <i class="cpick-dot" style={{ left: `${(h / 360) * 100}%` }} />
       </div>
       <div class="cpick-row">
         <span class="cpick-now" style={{ background: hex }} />
-        <input class="cpick-hex" aria-label="Color as hex" spellcheck={false} maxLength={7} value={draft ?? hex}
+        <input class="cpick-hex" aria-label={t("colourPicker.hex")} spellcheck={false} maxLength={7} value={draft ?? hex}
           onInput={(e) => setDraft(e.currentTarget.value)}
           onBlur={(e) => { if (draft !== null) typed(e.currentTarget.value.trim()); }}
           onKeyDown={(e) => { if (e.key === "Enter") { typed(e.currentTarget.value.trim()); e.currentTarget.blur(); } }} />

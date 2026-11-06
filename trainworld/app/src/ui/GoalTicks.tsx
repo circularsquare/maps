@@ -9,19 +9,18 @@ import { shiftAt } from "../game/localTime";
 import { GOAL_SHARES, goalsReached, STAR_SHARE } from "../game/points";
 import { realShare } from "../game/realShare";
 import { shownDay, shownDayOn } from "../game/ui";
+import { t, tNumber } from "../i18n";
+import { weekdayLong } from "../i18n/calendar";
 import { Icon } from "./widgets";
-
-const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 /** "Monday, day 71, at 14:08" in the region's local time, as the top bar's clock names a day. */
 export function goalWhen(city: City, at: number): string {
-  const t = Math.floor((at + shiftAt(city.center[0], city.center[1])) / 60), d = dayOf(t);
-  return `${WEEKDAY_LONG[weekdayOf(d)]}, day ${d}, at ${clockTime(t)}`;
+  const min = Math.floor((at + shiftAt(city.center[0], city.center[1])) / 60), d = dayOf(min);
+  return t("goalTicks.when", { weekday: weekdayLong(weekdayOf(d)), day: tNumber(d), time: clockTime(min) });
 }
 
 export function goalTip(city: City, share: number, at: number | undefined): string {
-  const what = share === STAR_SHARE ? `Star at ${share}% train share` : `Goal: ${share}% train share`;
-  return at === undefined ? `${what} in ${city.name}` : `${what}, reached on ${goalWhen(city, at)}`;
+  return t("goalTicks.tip", { star: share === STAR_SHARE, reached: at !== undefined, share: tNumber(share), city: city.name, when: at === undefined ? "" : goalWhen(city, at) });
 }
 
 /** T-2145 (Anita: "the bars at 10%, 20%, etc are a bit much"): the goals drawn as ticks; the higher
@@ -31,7 +30,7 @@ const DRAWN = [STAR_SHARE, 20];
 export function GoalTicks({ city }: { city: City }) {
   const at = goalsReached(city.id);
   const real = realShare(city.id, shownDay.value);
-  const day = shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value;
+  const dayed = shownDay.value !== AVERAGE_DAY;
   return (
     <>
       {GOAL_SHARES.map((g, k) => DRAWN.includes(g) && (
@@ -40,7 +39,7 @@ export function GoalTicks({ city }: { city: City }) {
         </i>
       ))}
       {real !== null && (
-        <i class="real-mark" style={{ left: real + "%" }} data-tip={`Real world network: ${real.toFixed(1)}% train share in ${city.name}${day}`} />
+        <i class="real-mark" style={{ left: real + "%" }} data-tip={t("goalTicks.real", { share: tNumber(real, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), city: city.name, dayed, day: shownDayOn.value })} />
       )}
     </>
   );

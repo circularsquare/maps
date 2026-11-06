@@ -11,6 +11,7 @@ All in `app/src/i18n/`:
 | File | Holds |
 |---|---|
 | `index.ts` | `t`, `tRich`, the `language` signal, `setLanguage`, and the formatting helpers in the current language (`tNumber`, `tList`, `tDate`, `tCountry`) |
+| `calendar.ts` | `weekdayLong(i)`: the full weekday name in the current language for the game's weekday index (0 is Monday); use it rather than a list of English day names |
 | `intl.ts` | `LANGS`, and the same formatting with the language passed in; no signals or DOM, so workers and Node checks may import it |
 | `messages/en.json` | Every English message, the source. Bundled with the game |
 | `messages/<lang>.json` | The translations; a missing key shows the English. Fetched when the language is chosen |

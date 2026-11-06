@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { t, tNumber, type MessageKey } from "../i18n";
 import { describeIssues } from "../game/issues";
 import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
-import { distUnit, distance, levelLabel, levelName, money, moneyCash, perDistance, plural, unitShort, upkeepText } from "../game/format";
+import { distUnit, distance, levelLabel, levelName, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
@@ -22,26 +23,28 @@ import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terr
 
 // 6 T-1270's terrain, 7 T-1929's roads crossed at ground level, 8 and 9 T-1281's, 10 and 11 T-1464's
 // bus routes and buses
-const KINDS = ["Track", "Stations", "Junctions", "Flyovers", "Flat crossings", "Trains", "Terrain", "Road crossings", "Station upgrades", "Passages", "Bus routes", "Buses"];
+const KINDS: MessageKey[] = ["blueprint.kindTrack", "blueprint.kindStations", "blueprint.kindJunctions", "blueprint.kindFlyovers", "blueprint.kindFlatCrossings", "blueprint.kindTrains", "blueprint.kindTerrain", "blueprint.kindRoadCrossings", "blueprint.kindStationUpgrades", "blueprint.kindPassages", "blueprint.kindBusRoutes", "blueprint.kindBuses"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
 
-const NOUN = ["track", "station", "junction", "flyover", "flat crossing", "car", "ground", "road crossing", "station upgrade", "passage", "route", "bus", "port", "boat", "ferry route"];
+const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute"];
+/** "3 stations", "2 new cars": a counted noun by its id, the plural chosen in the message */
+const counted = (noun: string, count: number) => t("blueprint.count", { noun, count });
 const levelWords = (r: BlueprintItem) => `${levelName(r.level).toLowerCase()} (${levelLabel(r.level)})`;
 
 /** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
 function rowName(r: BlueprintItem) {
-  if (r.kind === 5) return plural(r.quantity, "new car");
+  if (r.kind === 5) return counted("newCar", r.quantity);
   if (r.kind === 10) return distance(r.quantity);
-  if (r.kind === 11) return plural(r.quantity, "new bus", "new buses");
+  if (r.kind === 11) return counted("newBus", r.quantity);
   // T-2193: ports, boats and a ferry route's metres (free)
-  if (r.kind === 12) return plural(r.quantity, "port");
-  if (r.kind === 13) return plural(r.quantity, "new boat");
-  if (r.kind === 14) return `${distance(r.quantity)} ferry route`;
-  if (r.kind === 9) return plural(r.quantity, "passage");
-  if (r.kind === 7) return plural(r.quantity, "road crossing");
-  if (r.kind === 0) return `${distance(r.quantity)} ${levelWords(r)}`;
-  return `${plural(r.quantity, NOUN[r.kind] || "item")}, ${levelWords(r)}`;
+  if (r.kind === 12) return counted("port", r.quantity);
+  if (r.kind === 13) return counted("newBoat", r.quantity);
+  if (r.kind === 14) return t("blueprint.ferryRoute", { distance: distance(r.quantity) });
+  if (r.kind === 9) return counted("passage", r.quantity);
+  if (r.kind === 7) return counted("roadCrossing", r.quantity);
+  if (r.kind === 0) return t("blueprint.lengthLevel", { distance: distance(r.quantity), level: levelWords(r) });
+  return t("blueprint.withLevel", { what: counted(NOUN[r.kind] || "item", r.quantity), level: levelWords(r) });
 }
 
 // A display copy of the price list (sim/src/track/params.rs and cost.rs own the real one), so a row's
@@ -53,65 +56,67 @@ const STATION_FIXED_M = 50;
 const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2, BUS_ROUTE_M_PER_KM = 1;
 /** the level a flying junction's flyover sits at (sim `junction_cost`) */
 const awayLevel = (l: Level): Level => (l === 3 ? 2 : l === -3 ? -2 : l >= 0 ? l + 1 : l - 1) as Level;
-const num = (v: number) => String(Number(v.toFixed(2)));
+const num = (v: number) => tNumber(v, { maximumFractionDigits: 2 });
 /** a price in US$M as the Build tab quotes it: "$90M", "$1.5M" */
-const mil = (v: number) => `$${Number(v.toFixed(1))}M`;
+const mil = (v: number) => t("blueprint.mil", { value: tNumber(v, { maximumFractionDigits: 1 }) });
+/** "3.7 km" */
+const withUnit = (value: number) => t("blueprint.amountUnit", { value: num(value), unit: unitShort() });
 
 /** T-1839: a row's hover is its price worked out: the base price, one line per factor that is not 1,
  * then the total, as in the trip inspector's "label × weight" lines. */
 function rowTip(r: BlueprintItem) {
   const level = r.level as Level, n = r.quantity;
   const factors: [string, string, number][] = []; // [name, shown amount, multiplier]
-  const lenKm = (km: number) => [`${num(km / perDistance(1))} ${unitShort()}`, km / perDistance(1)] as const;
+  const lenKm = (km: number) => [withUnit(km / perDistance(1)), km / perDistance(1)] as const;
   let base: string;
   const water = r.wet ? WATER : 1;
-  const wet = () => { if (r.wet) factors.push(["Over water", "", WATER]); };
+  const wet = () => { if (r.wet) factors.push([t("blueprint.overWater"), "", WATER]); };
   const lvl = (l: Level) => { if (MULT[l] !== 1) factors.push([levelName(l), "", MULT[l]]); };
   if (r.kind === 0) {
     const [shown] = lenKm(n / 1000);
-    base = `Base cost ${mil(perDistance(BASE_M_PER_KM))} per ${distUnit()}`;
-    factors.push(["Length", shown, 1]);
+    base = t("blueprint.baseCostDist", { price: mil(perDistance(BASE_M_PER_KM)), unit: distUnit() });
+    factors.push([t("blueprint.length"), shown, 1]);
     // T-1890: terrain and water add to the level's multiplier: "Ground level 0.5", "Mountains + 2.5",
     // "Cost factor × 3"
     const adds: [string, number][] = [];
-    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? "Rough ground", TERRAIN_SURCHARGES[r.ground] ?? 0]);
-    if (r.wet) adds.push(["Over water", WATER_SURCHARGE]);
+    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), TERRAIN_SURCHARGES[r.ground] ?? 0]);
+    if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE]);
     if (adds.length) {
       factors.push([levelName(level), "=", MULT[level]], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
-      factors.push(["Cost factor", "", adds.reduce((s, [, m]) => s + m, MULT[level])]);
+      factors.push([t("blueprint.costFactor"), "", adds.reduce((s, [, m]) => s + m, MULT[level])]);
     } else lvl(level);
-    if (r.tracks === 1) factors.push(["Single track", "", SINGLE_TRACK]);
-    if (r.tracks === HSR_ROW) factors.push(["High-speed track", "", HSR_TRACK]);
+    if (r.tracks === 1) factors.push([t("blueprint.singleTrack"), "", SINGLE_TRACK]);
+    if (r.tracks === HSR_ROW) factors.push([t("blueprint.hsrTrack"), "", HSR_TRACK]);
   } else if (r.kind === 1) {
     const b = STATION_FIXED_M + STATION_M[level];
-    base = `Base cost ${mil(b)} per station at ${levelName(level).toLowerCase()}`;
-    if (n !== 1) factors.push(["Stations", String(n), 1]);
+    base = t("blueprint.baseCostStation", { price: mil(b), level: levelName(level).toLowerCase() });
+    if (n !== 1) factors.push([t("blueprint.stationsFactor"), String(n), 1]);
     const fixed = n * b * (r.tracks === 1 ? SINGLE_STATION : 1) * water;
     const p = r.cost / 1e6 / fixed;
-    if (Math.abs(p - 1) > 0.005) factors.push(["Platform length", "", p]);
-    if (r.tracks === 1) factors.push(["Single track", "", SINGLE_STATION]);
+    if (Math.abs(p - 1) > 0.005) factors.push([t("blueprint.platformLength"), "", p]);
+    if (r.tracks === 1) factors.push([t("blueprint.singleTrack"), "", SINGLE_STATION]);
     wet();
   } else if (r.kind === 2 || r.kind === 3 || r.kind === 4) {
     const km = r.kind === 2 ? 0.25 : r.kind === 3 ? 0.6 : 0.1;
     const l = r.kind === 3 ? awayLevel(level) : level;
-    base = `Base cost ${mil(perDistance(BASE_M_PER_KM))} per ${distUnit()}`;
-    factors.push([r.kind === 2 ? "Junction track" : r.kind === 3 ? "Flyover track" : "Crossing track", `${num(n * km / perDistance(1))} ${unitShort()}`, 1]);
+    base = t("blueprint.baseCostDist", { price: mil(perDistance(BASE_M_PER_KM)), unit: distUnit() });
+    factors.push([r.kind === 2 ? t("blueprint.junctionTrack") : r.kind === 3 ? t("blueprint.flyoverTrack") : t("blueprint.crossingTrack"), withUnit(n * km / perDistance(1)), 1]);
     lvl(l);
     wet();
     const product = BASE_M_PER_KM * n * km * MULT[l] * water;
-    if (Math.abs(r.cost / 1e6 / product - 1) > 0.005) factors.push(["Crossover track", "", r.cost / 1e6 / product]);
+    if (Math.abs(r.cost / 1e6 / product - 1) > 0.005) factors.push([t("blueprint.crossoverTrack"), "", r.cost / 1e6 / product]);
   } else if (r.kind === 10) {
-    base = `Base cost ${mil(perDistance(BUS_ROUTE_M_PER_KM))} per ${distUnit()}`;
-    factors.push(["Length", `${num(n / 1000 / perDistance(1))} ${unitShort()}`, 1]);
+    base = t("blueprint.baseCostDist", { price: mil(perDistance(BUS_ROUTE_M_PER_KM)), unit: distUnit() });
+    factors.push([t("blueprint.length"), withUnit(n / 1000 / perDistance(1)), 1]);
   } else if (r.kind === 14) {
-    base = "Ferry routes are free";
+    base = t("blueprint.ferryFree");
   } else {
     // cars, buses, upgrades and passages: the average price of one, times how many
-    base = `Base cost ${money(r.cost / Math.max(1, n))} per ${NOUN[r.kind] || "item"}`;
-    if (n !== 1) factors.push([plural(n, NOUN[r.kind] || "item").replace(/^\S+ /, "").replace(/^./, (c) => c.toUpperCase()), String(n), 1]);
+    base = t("blueprint.baseCostPer", { price: money(r.cost / Math.max(1, n)), noun: NOUN[r.kind] || "item" });
+    if (n !== 1) factors.push([t("blueprint.factorName", { noun: NOUN[r.kind] || "item" }), String(n), 1]);
   }
-  const lines = [base, ...factors.map(([name, shown, m]) => (shown === "+" ? `${name} + ${num(m)}` : shown === "=" ? `${name} ${num(m)}` : shown && m === 1 ? `${name} × ${shown}` : `${name} × ${num(m)}`))];
-  lines.push(`= ${money(r.cost)}`);
+  const lines = [base, ...factors.map(([name, shown, m]) => (shown === "+" ? t("blueprint.factorAdd", { name, amount: num(m) }) : shown === "=" ? t("blueprint.factorSet", { name, amount: num(m) }) : shown && m === 1 ? t("blueprint.factorTimes", { name, amount: shown }) : t("blueprint.factorTimes", { name, amount: num(m) })))];
+  lines.push(t("blueprint.sum", { money: money(r.cost) }));
   return lines.join("\n");
 }
 
@@ -132,28 +137,28 @@ export function BlueprintControls() {
   return (
     <div class="blueprint-controls">
       <div class="blueprint-head">
-        <span class="b">Blueprint</span>
+        <span class="b">{t("blueprint.title")}</span>
         <span class="bp-total">
-          <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip="Total construction cost">{money(total)}</b>
+          <b class={"num" + (m?.mode !== "sandbox" && total > liveMoney.value.cash * 1e6 ? " bad" : "")} data-tip={t("blueprint.totalTip")}>{money(total)}</b>
           <OffCost items={items} />
         </span>
         <div class="group">
-          <button class="btn icon" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
-          <button class="btn icon" data-tip="Redo (Ctrl+Y)" aria-label="Redo" disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
+          <button class="btn icon" data-tip={t("blueprint.undoTip")} aria-label={t("blueprint.undo")} disabled={!w?.canUndo} onClick={() => void undo()}><Icon.undo /></button>
+          <button class="btn icon" data-tip={t("blueprint.redoTip")} aria-label={t("blueprint.redo")} disabled={!w?.canRedo} onClick={() => void redo()}><Icon.redo /></button>
         </div>
       </div>
       {m && upkeep > 0 && (
-        <p class="small money-neg blueprint-upkeep" data-tip={upkeepText(m, "Once constructed, upkeep")}>
-          {money(upkeep)} / day upkeep
+        <p class="small money-neg blueprint-upkeep" data-tip={upkeepText(m, t("blueprint.upkeepLead"))}>
+          {t("blueprint.upkeepDay", { money: money(upkeep) })}
         </p>
       )}
       <BlueprintBreakdown items={items} />
-      <button class="btn text blueprint-construct" data-guide="construct" data-tip="Construct every blueprint piece (C)" disabled={total <= 0} onClick={() => void constructBlueprints()}>Construct blueprints<span class="key muted">C</span></button>
+      <button class="btn text blueprint-construct" data-guide="construct" data-tip={t("blueprint.constructTip", { key: "C" })} disabled={total <= 0} onClick={() => void constructBlueprints()}>{t("blueprint.construct")}<span class="key muted">C</span></button>
     </div>
   );
 }
 
-const pieces = (e: number, st: number) => [e ? `${e} track` : "", st ? plural(st, "station") : ""].filter(Boolean).join(", ");
+const pieces = (e: number, st: number) => [e ? t("blueprint.trackPieces", { count: e }) : "", st ? counted("station", st) : ""].filter(Boolean).join(", ");
 
 /** T-1296: what the disabled blueprint would cost, beside the total: everything unbuilt
  * (`blueprintCost`, disabled pieces in it) less the quote's rows other than new cars. */
@@ -163,7 +168,7 @@ function OffCost({ items }: { items: BlueprintItem[] }) {
   const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 || r.kind === 13 ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
-  return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={`Disabled blueprint: ${pieces(off.edges, off.stations)}, ${moneyCash(cost)}, left out of the total\nDouble click to enable them all`}>{money(cost)} disabled</span>;
+  return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={t("blueprint.offTip", { pieces: pieces(off.edges, off.stations), cost: moneyCash(cost) })}>{t("blueprint.offCost", { money: money(cost) })}</span>;
 }
 
 /** How many blueprint pieces are switched off (T-333), whatever the tool, since Construct and the
@@ -174,7 +179,7 @@ export function BlueprintPick() {
   if (!offN) return null;
   return (
     <div class="blueprint-pick">
-      <p class="small muted" data-tip={`${pieces(off.edges, off.stations)} will not be constructed`}>{offN} disabled</p>
+      <p class="small muted" data-tip={t("blueprint.offPiecesTip", { pieces: pieces(off.edges, off.stations) })}>{t("blueprint.offCount", { count: tNumber(offN) })}</p>
     </div>
   );
 }
@@ -196,10 +201,9 @@ function PickDoubleUp() {
     return { price, why };
   } : null, [key, w?.version]);
   if (!pieces.length || !answer) return null;
-  const runs = pieces.length === 1 ? "" : ` on ${pieces.length} runs`;
-  const tip = answer.price > 0 ? `Double up to quad track${runs} for ${money(answer.price * 1e6)} (blueprint)\nEach run goes to the next junction or track end${answer.why ? `\nSome cannot: ${answer.why}` : ""}` : answer.why;
+  const tip = answer.price > 0 ? [t("blueprint.doubleUp", { runs: pieces.length, price: money(answer.price * 1e6) }), t("blueprint.doubleUpRuns"), ...(answer.why ? [t("blueprint.doubleUpSome", { why: answer.why })] : [])].join("\n") : answer.why;
   return (
-    <button class="btn icon" disabled={!(answer.price > 0)} data-tip={tip} aria-label="Double up" onClick={() => void doubleUpPicked(pieces)}>
+    <button class="btn icon" disabled={!(answer.price > 0)} data-tip={tip} aria-label={t("blueprint.doubleUpLabel")} onClick={() => void doubleUpPicked(pieces)}>
       <Icon.doubleUp />
     </button>
   );
@@ -216,38 +220,38 @@ export function BlueprintBar() {
   useEffect(() => { if (n === 0) setLevels(false); }, [n]);
   // T-2283: the plain select tool's pick is the blueprint track clicked (game/blueprintPick.ts)
   if ((tool.value !== "blueprint" && tool.value !== "select") || n === 0) return null;
-  const piece = (s.built ? "Built: " : "Blueprint: ") + pieces(s.edges, s.stations);
-  const levelTip = (l: Level) => `Put the selected track at ${levelName(l).toLowerCase()} (${levelLabel(l)})`;
+  const piece = t("blueprint.piece", { built: s.built, pieces: pieces(s.edges, s.stations) });
+  const levelTip = (l: Level) => t("blueprint.levelTip", { level: levelName(l).toLowerCase(), label: levelLabel(l) });
   const canLevel = !s.built && s.edges > 0;
   // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
   const keys = tool.value === "blueprint";
-  const switchKey = keys ? ` (${SWITCH_PICK_KEY.toUpperCase()})` : "";
+  const switchKey = SWITCH_PICK_KEY.toUpperCase();
   return (
     <>
-      <div class="blueprint-bar" role="group" aria-label="Selection">
-        <span class="count" data-tip={`Selected: ${piece}`}><span class="bp-ico"><Icon.marquee /></span>{n}<span class="bp-label"> selected</span></span>
-        {s.edges > 0 && <span class="num" data-tip="Length of the selected track">{distance(s.lengthM)}</span>}
+      <div class="blueprint-bar" role="group" aria-label={t("blueprint.selection")}>
+        <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span>{n}<span class="bp-label">{" "}{t("blueprint.selected")}</span></span>
+        {s.edges > 0 && <span class="num" data-tip={t("blueprint.lengthTip")}>{distance(s.lengthM)}</span>}
         {canLevel && <div class="bp-levels"><LevelButtons value={s.level} tip={levelTip} onPick={(l) => void levelPicked(l)} /></div>}
         {canLevel && (
           <button class={"btn bp-level" + (s.level === null ? "" : " lv on")} style={s.level === null ? undefined : { "--lc": LEVEL_COLOURS[s.level], "--lk": inkOn(LEVEL_COLOURS[s.level]) }}
-            data-tip={s.level === null ? "Level of the selected track: mixed" : levelName(s.level)} aria-label="Level" aria-expanded={levels}
+            data-tip={s.level === null ? t("blueprint.levelMixed") : levelName(s.level)} aria-label={t("blueprint.level")} aria-expanded={levels}
             onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
         )}
       {!s.built && s.hsr + s.regular > 0 && (
-        <div class="group" role="group" aria-label="Track type">
-          <button class={"btn" + (s.hsr === 0 ? " on" : "")} onClick={() => void hsrPicked(false)}>Regular</button>
-          <button class={"btn" + (s.regular === 0 ? " on" : "")} data-tip={`Costs ${HSR_TRACK}x as much as regular track`} onClick={() => void hsrPicked(true)}>High speed</button>
+        <div class="group" role="group" aria-label={t("blueprint.trackType")}>
+          <button class={"btn" + (s.hsr === 0 ? " on" : "")} onClick={() => void hsrPicked(false)}>{t("blueprint.regular")}</button>
+          <button class={"btn" + (s.regular === 0 ? " on" : "")} data-tip={t("blueprint.hsrTip", { factor: HSR_TRACK })} onClick={() => void hsrPicked(true)}>{t("blueprint.highSpeed")}</button>
         </div>
       )}
       {!s.built && (
         <div class="group">
-          <button class="btn text" data-tip={`Leave these out when constructing${s.off ? "" : switchKey}`} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">Disable</span></button>
-          <button class="btn text" data-tip={`Enable the selection${switchKey}`} disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">Enable</span></button>
+          <button class="btn text" data-tip={t("blueprint.disableTip", { keyed: keys && !s.off, key: switchKey })} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">{t("blueprint.disable")}</span></button>
+          <button class="btn text" data-tip={t("blueprint.enableTip", { keyed: keys, key: switchKey })} disabled={!s.off} onClick={() => void switchPicked(false)}><Icon.switchOn /><span class="bp-label">{t("blueprint.enable")}</span></button>
         </div>
       )}
       <PickDoubleUp />
-      <button class="btn text" data-tip={keys ? "Remove the selection (Delete)" : "Remove the selection"} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">Remove</span></button>
-      <button class="btn text" data-tip="Clear the selection (Esc)" onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">Clear</span></button>
+      <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: keys })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
+      <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
       </div>
       {canLevel && levels && (
         <div class="blueprint-levels touch-levels">
@@ -267,7 +271,7 @@ function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> 
         if (!rows.length) return null;
         return (
           <div class="blueprint-category">
-            <div class="small b">{kind}</div>
+            <div class="small b">{t(kind)}</div>
             <ul class="rows blueprint-items">
               {rows.map((r) => (
                 <li>
@@ -287,11 +291,11 @@ function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> 
 const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14]);
 
 const levelsText = (r: { levelMin: Level; levelMax: Level }) =>
-  r.levelMin === r.levelMax ? `${levelName(r.levelMin)} (${levelLabel(r.levelMin)})` : `Levels ${levelLabel(r.levelMin)} to ${levelLabel(r.levelMax)}`;
+  r.levelMin === r.levelMax ? `${levelName(r.levelMin)} (${levelLabel(r.levelMin)})` : t("blueprint.levels", { from: levelLabel(r.levelMin), to: levelLabel(r.levelMax) });
 
 /** A row's or a part's off switch, a checkbox ticked while any of its pieces is on. */
-function OffSwitch({ on, what, flip }: { on: boolean; what: string; flip: () => void }) {
-  const tip = `${on ? "Disable" : "Enable"} ${what}`;
+function OffSwitch({ on, what, flip }: { on: boolean; what: "joined" | "stretch" | "station"; flip: () => void }) {
+  const tip = t("blueprint.switchTip", { on, what });
   return (
     <span class="check bp-switch" onClick={(e) => e.stopPropagation()}>
       <input type="checkbox" checked={on} aria-label={tip} data-tip={tip} onChange={() => flip()} />
@@ -318,7 +322,7 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
   if (!items.length && !(w && w.money.blueprintCost > 0)) return null;
   return (
     <details class="blueprint-breakdown" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-      <summary>Cost breakdown</summary>
+      <summary>{t("blueprint.breakdown")}</summary>
       <div class="bp-breakdown-list">
         {parts.map((p) => {
           const k = partKey(p), many = p.rows.length > 1 || p.junctions > 0, isOpen = many && unfolded.has(k);
@@ -326,19 +330,19 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
           <div class="bp-part">
             <ul class="rows pick blueprint-items">
               <li class={"bp-part-head" + (p.on ? "" : " bp-off")} {...hover(p.edges)} onClick={() => locateNodes(p.nodes)}
-                data-tip={[p.stationCount ? plural(p.stationCount, "station") : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean).join(", ")}>
+                data-tip={[p.stationCount ? counted("station", p.stationCount) : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean).join(", ")}>
                 {many ? (
-                  <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} aria-label={isOpen ? "Fold" : "Unfold"} aria-expanded={isOpen}
+                  <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} aria-label={isOpen ? t("blueprint.fold") : t("blueprint.unfold")} aria-expanded={isOpen}
                     onClick={(e) => { e.stopPropagation(); fold(k); }}><Icon.chevron /></button>
                 ) : <span class="bp-fold-gap" />}
-                <OffSwitch on={p.on} what="all joined track" flip={() => void switchRow(p)} />
+                <OffSwitch on={p.on} what="joined" flip={() => void switchRow(p)} />
                 <span class="grow">{p.label}</span>
                 <span class="val">{money(p.on ? p.onCost : p.cost)}</span>
               </li>
               {isOpen && p.rows.map((r) => (
                 <li class={"bp-sub" + (r.on ? "" : " bp-off")} {...hover(r.edges)} onClick={() => locateNodes(r.nodes)}
-                  data-tip={r.kind === "stretch" ? [levelsText(r), r.crossings ? `${plural(r.crossings, "flat crossing")}, ${money(r.crossingCost)}` : ""].filter(Boolean).join("\n") : undefined}>
-                  <OffSwitch on={r.on} what={r.kind === "stretch" ? "this stretch" : "this station"} flip={() => void switchRow(r)} />
+                  data-tip={r.kind === "stretch" ? [levelsText(r), r.crossings ? t("blueprint.crossingsTip", { count: r.crossings, money: money(r.crossingCost) }) : ""].filter(Boolean).join("\n") : undefined}>
+                  <OffSwitch on={r.on} what={r.kind === "stretch" ? "stretch" : "station"} flip={() => void switchRow(r)} />
                   <span class="grow">{r.label}</span>
                   {r.kind === "stretch" && <span class="val muted">{distance(r.lengthM)}</span>}
                   <span class="val">{money(r.on ? r.onCost : r.cost)}</span>
@@ -346,7 +350,7 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
               ))}
               {isOpen && p.junctions > 0 && (
                 <li class={"bp-sub bp-fixed" + (p.junctionOnCost > 0 || !p.junctionCost ? "" : " bp-off")} {...hover(p.edges)}>
-                  <span class="grow">{plural(p.junctions, "junction")}</span>
+                  <span class="grow">{counted("junction", p.junctions)}</span>
                   <span class="val">{money(p.junctionOnCost > 0 ? p.junctionOnCost : p.junctionCost)}</span>
                 </li>
               )}
@@ -357,7 +361,7 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
         <KindRows items={items} only={NOT_TRACK} />
         {items.length > 0 && (
           <details class="bp-by-kind">
-            <summary>By kind</summary>
+            <summary>{t("blueprint.byKind")}</summary>
             <KindRows items={items} />
           </details>
         )}

@@ -6,11 +6,11 @@
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
 import { cityDemandViews, ridesOf, type DemandView } from "../game/demand";
-import { clockTime, count, dayOf, exact, money } from "../game/format";
-import { AVERAGE_DAY, weekdayOf } from "../game/days";
-import { shiftAt } from "../game/localTime";
+import { count, exact, money } from "../game/format";
+import { AVERAGE_DAY } from "../game/days";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
+import { t } from "../i18n";
 import { regionLedger } from "../game/regionMoney";
 import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, shownDayOn, tool } from "../game/ui";
@@ -20,6 +20,7 @@ import { builtCities, sumModes } from "../game/worldTotals";
 import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
+import { goalWhen } from "./GoalTicks";
 import { locateAllCities, playerMovedCamera } from "./locate";
 import { Icon, SortHead } from "./widgets";
 
@@ -34,7 +35,6 @@ export function goToCity(city: City) {
 
 /** Fares less running trains and upkeep (T-867): the figure of a row, so a build day does not swamp it. */
 export const net = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0);
-const WEEKDAY_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const collate = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" }).compare;
 
 /** A region's profit for the figure: yesterday's ledger once there is one, before that today so far. */
@@ -53,13 +53,13 @@ export function figures(zone: CityId, m: MoneyState): { d: DayLedger; yesterday:
 export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }): string {
   const { d } = f;
   const rows = [
-    `Profit ${f.yesterday ? "yesterday" : "today so far"} in ${name}: ${money(net(d) * 1e6)}/day`,
-    `Fares ${money(d.fares * 1e6)}`,
-    `Running trains ${money(-d.running * 1e6)}`,
-    `Upkeep ${money(-(d.upkeep ?? 0) * 1e6)}`,
+    t("cities.profitTip", { yesterday: f.yesterday, name, money: money(net(d) * 1e6) }),
+    t("cities.fares", { money: money(d.fares * 1e6) }),
+    t("cities.running", { money: money(-d.running * 1e6) }),
+    t("cities.upkeep", { money: money(-(d.upkeep ?? 0) * 1e6) }),
   ];
-  if (d.trains) rows.push(`New trains ${money(-d.trains * 1e6)}`);
-  if (d.build) rows.push(`Construction ${money(-d.build * 1e6)}`);
+  if (d.trains) rows.push(t("cities.newTrains", { money: money(-d.trains * 1e6) }));
+  if (d.build) rows.push(t("cities.construction", { money: money(-d.build * 1e6) }));
   return rows.join("\n");
 }
 
@@ -68,9 +68,9 @@ export function pointsTip(id: CityId, name: string): string {
   const past = pointsPast24h.value.get(id) ?? 0;
   const rate = pointsPerDay.value.get(id)?.[shownDay.value] ?? 0;
   return [
-    `${exact(past)} points in ${name} in past 24h`,
-    `${exact(rate)} points ${shownDayOn.value} with the riders now`,
-    `${POINTS_PER_TRIP} for each train trip that starts here, changes included, and ${POINTS_PER_KM} for each km ridden`,
+    t("cities.pointsPast", { points: exact(past), city: name }),
+    t("cities.pointsRate", { points: exact(rate), day: shownDayOn.value }),
+    t("cities.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM }),
   ].join("\n");
 }
 function PointsCell({ id, name }: { id: CityId; name: string }) {
@@ -80,8 +80,7 @@ function PointsCell({ id, name }: { id: CityId; name: string }) {
 /** T-685: the star beside a region that has reached the mark, with when (its local time, as the
  * top bar's clock hover names a day). */
 function Star({ city, at }: { city: City; at: number }) {
-  const t = Math.floor((at + shiftAt(city.center[0], city.center[1])) / 60), d = dayOf(t);
-  return <span class="city-star" data-tip={`Star earned on ${WEEKDAY_LONG[weekdayOf(d)]}, day ${d}, at ${clockTime(t)}, once the train share in ${city.name} reached ${STAR_SHARE}%`}><Icon.star /></span>;
+  return <span class="city-star" data-tip={t("cities.starTip", { when: goalWhen(city, at), city: city.name, share: STAR_SHARE })}><Icon.star /></span>;
 }
 
 interface CityRow {
@@ -95,7 +94,11 @@ interface CityRow {
 }
 
 /** The name of the sums over every region with a built station (T-2389: Anita, they are only the player's cities). */
-export const ALL_CITIES = "All cities";
+export const ALL_CITIES = "All cities"; // i18n-ignore: the English fallback; read the name through allCitiesName()
+export const allCitiesName = () => t("cities.all");
+
+/** The phrase after "Trips per day" in a split hover, with its leading space (`splitTip`'s `where`). */
+const whereIn = (city: string) => " " + t("cities.where", { dayed: shownDay.value !== AVERAGE_DAY, city, day: shownDayOn.value });
 
 /** T-857, T-2395: the sums over every region with a built station (the Cities tab's first row and the
  * all cities view): their stations, the mode split of all their trips, profit (`money` null before
@@ -121,32 +124,32 @@ export function allCitiesTotals() {
     pointsPast += past.get(id) ?? 0;
     pointsRate += rate.get(id)?.[shownDay.value] ?? 0;
   }
-  const where = ` in all cities${shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value}`;
+  const where = " " + t("cities.whereAll", { dayed: shownDay.value !== AVERAGE_DAY, day: shownDayOn.value });
   return {
     cities: built.size, stations, modes, where,
     money: counted ? { d: sum, yesterday } : null,
     pointsPast,
-    pointsTip: [`${exact(pointsPast)} points in all cities in past 24h`, `${exact(pointsRate)} points ${shownDayOn.value} with the riders now`].join("\n"),
+    pointsTip: [t("cities.pointsPastAll", { points: exact(pointsPast) }), t("cities.pointsRate", { points: exact(pointsRate), day: shownDayOn.value })].join("\n"),
   };
 }
 
 /** The hover of the all cities name: how many cities and stations it sums. */
-function allCitiesTip(t: { cities: number; stations: number }): string {
-  return `${ALL_CITIES}\n${t.cities} ${t.cities === 1 ? "city" : "cities"}, ${t.stations} ${t.stations === 1 ? "station" : "stations"}`;
+function allCitiesTip(sums: { cities: number; stations: number }): string {
+  return t("cities.allTip", { name: allCitiesName(), cities: sums.cities, stations: sums.stations });
 }
 
 /** T-857: the first row, the sums over every row below: rides, profit and points, and the mode split
  * of all their trips. A click opens the all cities view (T-2395), a double click zooms out to them. */
 function TotalRow({ on }: { on: boolean }) {
-  const t = allCitiesTotals();
-  const split = t.modes?.split ?? null, seen = !!t.modes, rides = t.modes?.rides.train ?? 0;
+  const tot = allCitiesTotals();
+  const split = tot.modes?.split ?? null, seen = !!tot.modes, rides = tot.modes?.rides.train ?? 0;
   const s = split ?? { train: 0, walk: 0, drive: 0 };
-  const f = t.money;
+  const f = tot.money;
   return (
     <li class={"total" + (on ? " on" : "")} onClick={() => (selection.value = { kind: "world" })}
       onDblClick={() => { locateAllCities(); selection.value = { kind: "world" }; }}>
-      <span class="grow" data-tip={allCitiesTip(t)}>{ALL_CITIES}</span>
-      <span class="city-bar" data-tip={splitTip(t.where, split, t.modes?.rides ?? null, "")}>
+      <span class="grow" data-tip={allCitiesTip(tot)}>{allCitiesName()}</span>
+      <span class="city-bar" data-tip={splitTip(tot.where, split, tot.modes?.rides ?? null, "")}>
         <span class="bar">
           <i class="seg seg-train" style={{ width: s.train + "%" }} />
           <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
@@ -154,9 +157,9 @@ function TotalRow({ on }: { on: boolean }) {
           <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
         </span>
       </span>
-      <span class="val w-riders c-cities" data-tip={seen ? `${count(rides)} train trips per day${t.where}` : undefined}>{seen ? count(rides) : "–"}</span>
-      <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip("all cities", f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
-      <span class="val w-points c-cities" data-tip={t.pointsTip}>{pointsShort(t.pointsPast)}</span>
+      <span class="val w-riders c-cities" data-tip={seen ? t("cities.tripsTip", { count: count(rides), where: tot.where.trim() }) : undefined}>{seen ? count(rides) : "–"}</span>
+      <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(t("cities.allLower"), f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
+      <span class="val w-points c-cities" data-tip={tot.pointsTip}>{pointsShort(tot.pointsPast)}</span>
     </li>
   );
 }
@@ -184,7 +187,6 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
     }
     return collate(a.name, b.name) * (key === "name" ? dir : 1);
   });
-  const day = (shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value);
   const here = viewedZone.value;
   // T-1438: a click opens the city view (as a station row opens the station's), and the selected
   // city's row is the one tinted; with none selected, the viewed region's
@@ -193,23 +195,23 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   return (
     <div class="cities-box">
       <SortHead sort={citySort} cols={[
-        { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "train", label: "Train", tip: "Sort by the train share of trips", first: -1, cls: "w-citybar c-cities" },
-        { key: "rides", label: "Trips", tip: "Sort by train trips per day", first: -1, cls: "w-riders c-cities" },
-        { key: "money", label: "Profit", tip: "Sort by profit per day", first: -1, cls: "w-money c-cities c-money" },
-        { key: "points", label: "Points", tip: "Sort by points in past 24h", first: -1, cls: "w-points c-cities" },
+        { key: "name", label: t("cities.colName"), tip: t("cities.sortName"), first: 1 },
+        { key: "train", label: t("cities.colTrain"), tip: t("cities.sortTrain"), first: -1, cls: "w-citybar c-cities" },
+        { key: "rides", label: t("cities.colTrips"), tip: t("cities.sortTrips"), first: -1, cls: "w-riders c-cities" },
+        { key: "money", label: t("cities.colProfit"), tip: t("cities.sortProfit"), first: -1, cls: "w-money c-cities c-money" },
+        { key: "points", label: t("cities.colPoints"), tip: t("cities.sortPoints"), first: -1, cls: "w-points c-cities" },
       ]} />
       <ul class="rows pick cities">
         <TotalRow on={all} />
         {rows.map((r) => {
-          const v = r.view, where = ` in ${r.name}${day}`;
+          const v = r.view, where = whereIn(r.name);
           const rides = v ? ridesOf(v) : null;
           const s = v?.split ?? { train: 0, walk: 0, drive: 0 };
           const f = r.money;
           return (
             <li class={(picked ?? here) === r.id ? "on" : ""} onClick={() => (selection.value = { kind: "city", city: r.id })}
               onDblClick={() => { goToCity(cityById(r.id)); selection.value = { kind: "city", city: r.id }; }}>
-              <span class="grow" data-tip={`${r.name}\n${r.stations} ${r.stations === 1 ? "station" : "stations"}`}>{r.name}</span>
+              <span class="grow" data-tip={t("cities.rowTip", { name: r.name, stations: r.stations })}>{r.name}</span>
               {m?.stars?.[r.id] !== undefined && <Star city={cityById(r.id)} at={m.stars[r.id]} />}
               <span class="city-bar" data-tip={splitTip(where, v?.split ?? null, rides, "")}>
                 <span class="bar">
@@ -219,7 +221,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
                   <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
                 </span>
               </span>
-              <span class="val w-riders c-cities" data-tip={v ? `${count(v.railTripsPerDay)} train trips per day${where}` : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
+              <span class="val w-riders c-cities" data-tip={v ? t("cities.tripsTip", { count: count(v.railTripsPerDay), where: where.trim() }) : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
               <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
               <PointsCell id={r.id} name={r.name} />
             </li>

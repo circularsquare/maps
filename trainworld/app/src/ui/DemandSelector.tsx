@@ -19,6 +19,7 @@ import { diagramShown } from "../diagram/view";
 import { DiagramTopLeft } from "./DiagramButton";
 import { live, mapBearing } from "../map/live";
 import { DEMAND_KEY } from "./toolKeys";
+import { t, tNumber, type MessageKey } from "../i18n";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
@@ -50,7 +51,7 @@ export function MapTopLeft() {
 function NorthButton() {
   const b = mapBearing.value;
   if (Math.abs(b) < 0.5) return null;
-  return <button type="button" class="btn icon map-north" aria-label="Turn map back to north" data-tip="Turn map back to north"
+  return <button type="button" class="btn icon map-north" aria-label={t("demandSelector.north")} data-tip={t("demandSelector.north")}
     onClick={() => live.map?.easeTo({ bearing: 0, duration: 300 })}>
     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style={{ transform: `rotate(${-b}deg)` }}>
       <path d="M7 0.5 L9.3 7 L4.7 7 Z" fill="var(--accent)" />
@@ -60,7 +61,7 @@ function NorthButton() {
 }
 
 const KEY = DEMAND_KEY.toUpperCase();
-const KEYED: Record<string, string> = { none: `Hide demand bubbles (${KEY})`, home: `Show homes (${KEY})`, work: `Show destinations (${KEY})`, both: `Show homes and destinations (${KEY})` };
+const KEYED: Record<string, MessageKey> = { none: "demandSelector.tipNone", home: "demandSelector.tipHomes", work: "demandSelector.tipDestinations", both: "demandSelector.tipTotal" };
 
 /** T-801: zoomed out the zones' bubbles need no zone in view */
 const demandReady = () => zoomedOut.value || (!!viewedZone.value && cityDemandViews.value.has(activeCity.value));
@@ -85,42 +86,42 @@ export function DemandSelector() {
   const ready = demandReady();
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
-  const pending = !viewedZone.value ? "Nothing modeled here" // T-318: dead space
-    : load?.cities.includes(activeCity.value) ? `Loading ${cityById(activeCity.value).name}, ${Math.floor(load.fraction * 100)}%` : "Calculating demand";
+  const pending = !viewedZone.value ? t("demandSelector.nothing") // T-318: dead space
+    : load?.cities.includes(activeCity.value) ? t("demandSelector.loading", { city: cityById(activeCity.value).name, percent: tNumber(Math.floor(load.fraction * 100)) }) : t("demandSelector.calculating");
   const selected = d.commuters ? d.commuterEnd : "none";
-  if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label="Demand on the map"><FoldCell row="bubbles" /></div>;
-  return <div class="demand-selector" role="group" aria-label="Demand on the map">
+  if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label={t("demandSelector.group")}><FoldCell row="bubbles" /></div>;
+  return <div class="demand-selector" role="group" aria-label={t("demandSelector.group")}>
     <FoldCell row="bubbles" />
-    {([ ["none", "None"], ["home", "Homes"], ["work", "Destinations"], ["both", "Total"] ] as const).map(([value, label]) =>
+    {([ ["none", "demandSelector.none"], ["home", "demandSelector.homes"], ["work", "demandSelector.destinations"], ["both", "demandSelector.total"] ] as const).map(([value, label]) =>
       <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value} data-guide={value === "home" ? "homes" : undefined}
-        aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : KEYED[value]}
+        aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : t(KEYED[value], { key: KEY })}
         onClick={() => {
           if (!ready && value !== "none") return;
           showEnd(value);
-        }}>{label}</button>)}
+        }}>{t(label)}</button>)}
     <PurposeSelect />
   </div>;
 }
 
 const TRACK_OPTIONS = [
-  ["line", "Line", "Show line colors"],
-  ["traffic", "Traffic", "Show line colors, thickness by traffic"],
-  ["height", "Level", "Show track level colors"],
-  ["speed", "Speed", "Show track speed"],
-  ["profit", "Profit", "Show track profit colors"],
+  ["line", "demandSelector.trackLine", "demandSelector.trackLineTip"],
+  ["traffic", "demandSelector.trackTraffic", "demandSelector.trackTrafficTip"],
+  ["height", "demandSelector.trackLevel", "demandSelector.trackLevelTip"],
+  ["speed", "demandSelector.trackSpeed", "demandSelector.trackSpeedTip"],
+  ["profit", "demandSelector.trackProfit", "demandSelector.trackProfitTip"],
 ] as const;
 
 /** The row's icon, a button folding the row down to it and opening it again (T-1448). */
-const FOLDS: Record<MapRow, { icon: () => JSX.Element; what: string }> = {
-  bubbles: { icon: Icon.bubble, what: "demand bubble" },
-  stations: { icon: Icon.stationDisplay, what: "station ridership" },
-  track: { icon: Icon.trackDisplay, what: "track color" },
+const FOLDS: Record<MapRow, { icon: () => JSX.Element; tip: MessageKey }> = {
+  bubbles: { icon: Icon.bubble, tip: "demandSelector.foldBubbles" },
+  stations: { icon: Icon.stationDisplay, tip: "demandSelector.foldStations" },
+  track: { icon: Icon.trackDisplay, tip: "demandSelector.foldTrack" },
 };
 /** T-2123: the tutorial's first card folds its rows the player has not opened since */
 const folded = (row: MapRow) => display.value.foldedRows.includes(row) || (guideFolding.value.includes(row) && !guideOpened.value.includes(row));
 function FoldCell({ row }: { row: MapRow }) {
   const shut = folded(row), f = FOLDS[row];
-  return <button type="button" class="hint-cell" data-fold={row} aria-expanded={!shut} data-tip={`${shut ? "Show" : "Hide"} ${f.what} choices`}
+  return <button type="button" class="hint-cell" data-fold={row} aria-expanded={!shut} data-tip={t(f.tip, { shut })}
     onClick={() => {
       const rows = display.peek().foldedRows;
       if (shut && guideFolding.peek().includes(row) && !guideOpened.peek().includes(row)) guideOpened.value = [...guideOpened.peek(), row];
@@ -129,21 +130,21 @@ function FoldCell({ row }: { row: MapRow }) {
 }
 
 const STATION_OPTIONS = [
-  ["none", "None", undefined],
-  ["origins", "Origins", "Show riders starting a trip at each station"],
-  ["transfers", "Transfers", "Show transfers at each station"],
-  ["total", "Total", "Show riders at each station"],
+  ["none", "demandSelector.none", undefined],
+  ["origins", "demandSelector.origins", "demandSelector.originsTip"],
+  ["transfers", "demandSelector.transfers", "demandSelector.transfersTip"],
+  ["total", "demandSelector.total", "demandSelector.totalTip"],
 ] as const;
 
 /** Station ridership (T-482, on the map since T-1448): circles by the riders a day boarding at each
  * station complex, starting a trip there, changing lines there, or both. */
 function StationRidership() {
   const mode = display.value.stationUse;
-  return <div class="demand-selector" role="group" aria-label="Station ridership">
+  return <div class="demand-selector" role="group" aria-label={t("demandSelector.stationGroup")}>
     <FoldCell row="stations" />
     {!folded("stations") && STATION_OPTIONS.map(([value, label, tip]) =>
-      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip}
-        onClick={() => setDisplay("stationUse", value)}>{label}</button>)}
+      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip && t(tip)}
+        onClick={() => setDisplay("stationUse", value)}>{t(label)}</button>)}
   </div>;
 }
 
@@ -151,11 +152,11 @@ function StationRidership() {
  * under the demand buttons. No key for the height, speed and profit colours (T-1499, T-2420): the track's hover says. */
 function TrackDisplay() {
   const mode = display.value.trackColour;
-  return <div class="demand-selector" role="group" aria-label="Track display">
+  return <div class="demand-selector" role="group" aria-label={t("demandSelector.trackGroup")}>
     <FoldCell row="track" />
     {!folded("track") && TRACK_OPTIONS.map(([value, label, tip]) =>
-      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={tip} data-guide={value === "traffic" ? "traffic" : undefined}
-        onClick={() => setDisplay("trackColour", value)}>{label}</button>)}
+      <button type="button" class={`btn${mode === value ? " on" : ""}`} aria-pressed={mode === value} data-tip={t(tip)} data-guide={value === "traffic" ? "traffic" : undefined}
+        onClick={() => setDisplay("trackColour", value)}>{t(label)}</button>)}
   </div>;
 }
 
@@ -167,10 +168,10 @@ export function PurposeSelect() {
   const [mouse, setMouse] = useState(false);
   return <label class={`purpose-filter${purpose !== "all" ? " on" : ""}${mouse ? " mouse" : ""}`}>
     {purpose !== "all" && <i class="sw" style={{ background: purposeColour(purpose) }} />}
-    <select aria-label="Trip purpose on the map" value={purpose}
+    <select aria-label={t("demandSelector.purpose")} value={purpose}
       onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
       onChange={(e) => { purposeFilter.value = asFilter((e.currentTarget as HTMLSelectElement).value); }}>
-      <option value="all">All purposes</option>
+      <option value="all">{t("demandSelector.allPurposes")}</option>
       {FILTER_PURPOSES.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
     </select>
   </label>;
