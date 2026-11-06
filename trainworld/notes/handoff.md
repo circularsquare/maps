@@ -6,20 +6,21 @@ Updated: 2026-11-06 14:10 (machine clock, Get-Date; maps-93's times below run ~4
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
-## In flight (maps-b9's agents, 2026-11-06 14:25)
-Agents report to maps-b9 (Agent tool, background). Nothing of maps-b9's lands until maps-93 says it is done.
-- **l10n-insp tree READY TO LAND** (l10n-insp2 done ~14:45, retired at 392k): ui/inspector/ at 0, 637 en keys,
-  typecheck clean. Smoke NOT complete (machine saturated; 16 checks passed, then stopped): run full tree smoke pinned
-  before landing. After the rebase (use maps-93's scratch mergejson.py for en.json/context.json): AllCitiesView.tsx:27
-  `{ALL_CITIES}` -> `{allCitiesName()}`; look at the "Part of [pill] group" row (.line-group CSS). Pseudo shots:
-  artifacts/trainworld/l10n-insp2/line-pseudo.png. Visible English changes to show Anita: "buss" -> "buses" (bus
-  ride hover), "1 other places" -> "1 other place". Then translate ui/inspector as unit 3.
+## In flight (maps-b9's agents, 2026-11-06 15:40)
+Agents report to maps-b9 (Agent tool, background). **maps-b9 holds the landing role** (maps-93 ~15:30: forwards its
+five trees upkeep, capview, borders2, dianames, l10n-core as they report, then winds down).
+- LANDED 15:35: translations 292cf26c, T-2656 + play count 5a71e6f6, l10n-insp 2c04f007 (T-2634), farends 75e04c44
+  (T-2641, main WASM rebuilt). Main typecheck clean. **Smoke on master NOT yet run** (machine 96%, ledger full):
+  Vite on 6190 (pid 11532) is up; run scratch smokedev.cmd after claiming 4, then rebuild 8800 (snapbuild.cmd
+  75e04c44 or later) and smoke it light+dark, then tell Anita to reload.
+- **marey** (Opus, tree .tw-trees/marey): T-2660 timetable chart interlining + flat junctions. Ids T-2662.
+- **westleft** (Sonnet, tree .tw-trees/westleft): T-2661 line strips west on the left; tells main its helper for marey.
+- Unit 3 translators (ui/inspector, 623 keys; scratch unit3.md): **tr-ja-3a/3b, tr-hans-3a/3b, tr-tw-3a/3b** (Opus).
+- l10n-insp landed; still to look at: the "Part of [pill] group" row (.line-group CSS) on the line panel.
 - **farends tree READY TO LAND** (T-2641 done ~15:20, records already in main tree: ARCHIVE, DECISIONS, notes/T-2641.md):
   NA market 1.94x (pairs 867k -> 422k a period), lines >100k worst 0.29-0.54%, >10k worst 1.88% (both "overstated" per
   the agent; its line-id join is weak, medians fine), LA-Chicago -0.48%; Japan 1.13-1.24x (searches are T-2642).
-  New WASM method set_far_chunks + `?perfOff=farChunks`: land, then `npm run wasm:demand` in the main tree (check
-  agent-tree land does it). Tree smoke passed only with a raised timeout (busy machine): run smoke again at landing.
-  T-2621 stays open for T-2642.
+  LANDED 75e04c44. T-2621 stays open for T-2642.
 - **searchcost** (Opus, scratch crate only, maps-b9 scratch\searchcost): T-2642 design and measure. Ids T-2652-53.
 - **maps-eb's play count** (distinct browsers; server half live, shonei-server c4634b7), uncommitted in the main tree,
   checked: app/src/game/playtime.ts, app/public/privacy.html, docs/architecture.md, DECISIONS.md's last line
