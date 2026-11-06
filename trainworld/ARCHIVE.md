@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2604 Quick profit estimate after a schedule change, design (2026-11-06, agent profitpeek): recommend a page estimate (exact running cost plus trips from the wait change via T-1300's `fareSense`) shown at once in the edit note; on 14 NYC edits mean error $1.35M against $4.0M for running cost alone. notes/T-2604.md.
 - T-2613 Terrain downloads (2026-11-06, agent terrainnet, tree): status tag "Downloading terrain…" (grids, masks, hillshade tiles, after 1.5 s) and "Terrain could not load" with retries; Construct refused while ground under the blueprint failed to download, closing the flat-price cheat. notes/T-2613.md.
 - T-2614 A failed cloud save (2026-11-06, agent terrainnet, tree): the browser copy was always kept; now resent every minute even paused, and after 2 min the yellow dot says "Not on your account yet!" with the reason, a click saving by hand. notes/T-2613.md.
 - T-2611, T-2612, T-2615, T-2616, T-2617 (2026-11-06, agent uitodo): save panel buttons on the versions line's row at the right; grey actual headway dropped; diagram button a folded map; achievements City circles, Transfers world (hover adds "Now 0.56 transfers per trip"), Trains city; String of pearls added, Longest road 5,000 km.

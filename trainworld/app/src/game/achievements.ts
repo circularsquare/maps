@@ -80,7 +80,7 @@ export const FIRSTS: First[] = [
   { id: "border", name: "Over the border", rule: () => "A line with stops in two countries", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
   { id: "continents", name: "Bicontinental", rule: () => "A line with stops on two continents", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
   { id: "long", name: "Longest road", rule: () => `A line ${bigDistance(LONG_M)} long`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long` },
-  { id: "pearls", name: "String of pearls", rule: () => `A line ${bigDistance(PEARLS_M)} long that makes a profit`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long and in profit` },
+  { id: "pearls", name: "String of pearls", rule: () => `A profitable line at least ${bigDistance(PEARLS_M)} long`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long and in profit` },
   { id: "money", name: "Money train", rule: () => `A line with ${money(MONEY_USD)} profit in a day`, text: (a) => `${a.of} made ${money(a.v ?? 0)} profit today` },
   { id: "bullet", name: "Bullet train", rule: () => `A train at ${speed(BULLET_KMH)}`, text: (a) => `${a.of} reaches ${speed(a.v ?? 0)}` },
   { id: "circle", name: "City circles", rule: () => `A circle line of ${CIRCLE_STOPS} stops`, text: (a) => `${a.of} is a circle of ${a.v} stops` },
