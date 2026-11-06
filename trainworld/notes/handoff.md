@@ -64,8 +64,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2610 (Hudson at the tip drawn as land since T-2599; after sheetwasm lands, carry/land cells).
 - Awaiting Anita: T-2606 cutnet recommends no cut (one line, LA-Chicago, joins the clusters; cutting saves no work);
   archive on her OK. Upkeep doubling waits on T-2618.
-- Before publishing (her word; release in English): omaha's join committed, T-428 (move data/packs/intercity.json to
-  data/work; touches the join's code, so after omaha), 8800 rebuilt and smoked. Localization: T-2583 core landed;
+- Before publishing (her word; release in English): omaha committed (3527e5bd), T-428 DONE 23538b19 (intercity.json in
+  data/work, out of build/freeze/deploy; the next real build proves vite.config.ts), 8800 build 1187 smoked. Nothing
+  left blocking but her word (and any landings she wants in first). Localization: T-2583 core landed;
   T-2584 stage 1 (~2,350 strings) held until after release, then T-2585 ja/zh-Hans/zh-TW (Taiwan), T-2586 place names
   where cheap, T-2587 es/de; research/localization.md.
 
