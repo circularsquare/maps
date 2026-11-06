@@ -463,12 +463,15 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 ## The rubber sheet
 
-**Off by default; `?sheet=1` in the page's address turns it on (T-2568).** On, the page sends the worker the zones near
-the network with each graph, and before laying it out the worker reads their water masks, finds the sea on the ground
-(as Water does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md, notes/T-2568.md):
-each station's place on a sheet of the ground stretched so the network has room where it is dense, land kept near its
-shape and water giving way. The worker posts it as a `sheet` message, which the page keeps as `window.twSheet` and does
-not draw yet: the layout and the drawing are as with the flag off. Off, the page sends no `sheet` and none of this runs.
+**Off by default; `?sheet=1` in the page's address turns it on (T-2568, T-2567).** On, the page sends the worker the
+zones near the network with each graph, and the worker reads their water masks, finds the sea on the ground (as Water
+does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md, notes/T-2568.md): each
+station's place on a sheet of the ground stretched so the network has room where it is dense, land kept near its shape
+and water giving way. The lines are then laid out on the sheet, and the water and the zone borders drawn from the ground
+carried with them (`diagram/sheetLines.ts`, notes/T-2567.md; below), in place of The layout's A and blocks' stage, the
+Zone borders above and the Water above (whose rivers are not drawn: narrow rivers as lines are T-2580). The sheet is
+posted as a `sheet` message too, which the page keeps as `window.twSheet` for checks. Off, the page sends no `sheet`
+and none of this runs.
 
 - **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
   with a floor, doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
@@ -478,3 +481,30 @@ not draw yet: the layout and the drawing are as with the flag off. Off, the page
   unevenly by its kind (land near lines, other land, water, small islands); a cell near folding is held. Solved by
   multigrid on the quadtree's levels, coarse to fine, then rounds with the holds frozen (a hold may only tighten) until
   the stations move under half a pitch, so no cell folds.
+- **The lines on the sheet**: the layout's octilinear stages (B, the snap, the routing, the separation, the order) run as a
+  rebuild from the stations' sheet places, on the graph with those places (a pitch the sheet's pitch): each hop's target
+  its length on the sheet (the dial at 0), no A and no blocks' stage, B holding each station to its sheet place at 2 (a
+  rebuild's 0.05), and the separation keeping near the sheet's places. None of the layout's own water terms; instead
+  **water-gap pairs**: each station with its 6 nearest stations within 40 pitches on the sheet that are on another land
+  mass (the sheet's raster: its real place's, or the nearest land within 1 km) with water on the straight way between
+  them on the ground keeps at least 0.8 of their sheet gap along the sheet's direction between them, in B (weight 3) and
+  as a term of the separation. So rivers and straits between land masses stay open (the East River at the Brooklyn
+  Bridge). About 86% of New York's hops and 88% of all Japan's are drawn as one straight run.
+- **The carry**: a field of moves on the sheet's finest lattice, smooth by least squares, links on land stiff (5) and on
+  water nearly free (0.004), met at each station (its place on its own land carried to its drawn place, weight 1). A
+  station whose drawn place does not lie on its own land in the carried map is met 8 times harder, and the field solved
+  again, until none is (up to 8 rounds on a city map, 12 on a country's). So water takes the difference between
+  neighbouring land masses' moves, and every station is on its own land. Solved by conjugate gradients with a multigrid
+  whose prolongation follows the matrix (black box multigrid), made once and again only where a solve does not settle.
+- **The map**: a grid over the drawing (at most 4 million cells on a city map, 12 million on a country's) takes, cell by
+  cell through the carried map's triangles, the ground under it: water, or the zone the land is in (the zones' outlines
+  the page sends). A land mass with no station on it and over 2,000 km2 counts as water (another country's coast at the
+  edge of the masks); smaller islands with no station stay. Each station's pill and 1.5 pitches round it (at least half a pitch more than a cell) are land of its
+  own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (a
+  3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped), and every station's zone
+  carried to it, a pill wide, along the shortest way over land where its cell lies in another zone, so **every station
+  is on its own land and its own side of its zone's border**. The coast is traced and fitted with runs at 0, 45 and 90
+  degrees, straying up to 0.35 of the water's or the land's width there (at most 10 pitches) and keeping clear of the
+  pills; the borders between zones likewise (up to 6 pitches, a pitch clear of any station). Corners rounded at 3
+  pitches. The sea is drawn only with the water button on; the borders always.
+- **City names** take the towns' places through the sheet.

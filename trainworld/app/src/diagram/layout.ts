@@ -42,6 +42,10 @@ export interface LayoutOptions {
   roundsB: number;
   /** LSQR iterations a round */
   iters: number;
+  /** T-2567: a layout of the rubber sheet's places (sheetLines.ts): no blocks' stage; a rebuild's B holds each station
+   * to its start with `wGeo`; `pairs` (a, b, ux, uy, gap) are the stations with water between them, kept their gap
+   * apart along (ux, uy) in B and in the separation */
+  sheet?: { pairs: Float64Array; wGeo: number };
 }
 
 /** round 2's mockups (artifacts/trainworld/t2146/r2-*.png), for comparison */
@@ -233,6 +237,8 @@ interface Prep {
   crossSides: Float64Array;
   /** stations with the sea between them kept apart (`seaTerms`): a, b, ux, uy (the real bearing), the length wanted */
   seaPairs: Float64Array;
+  /** T-2567: pairs (as seaPairs) the separation keeps apart too */
+  sepPairs?: Float64Array;
 }
 
 /** what the layout reads of the water on the ground (T-2541; waterReal.ts' `groundSea`) */
@@ -1512,6 +1518,14 @@ function separate(g: DiagramGraph, P: Prep, raw: number[][], r: Routed, bx: Floa
       emit(fixed, gapOf(u0, u1), false);
     }
   }
+  const SP = P.sepPairs;
+  if (SP) for (let k = 0; k < SP.length; k += 5) {
+    const a = SP[k], b = SP[k + 1];
+    if ((!lin[a].vars.length && !straightOf[a]) || (!lin[b].vars.length && !straightOf[b])) continue;
+    put(b, SP[k + 2], SP[k + 3], 1);
+    put(a, SP[k + 2], SP[k + 3], -1);
+    emit(fixed, SP[k + 4], false);
+  }
   const X = Float64Array.from(X0);
   // the spacing terms by key: a pair of stations (below n * n), or a station and another piece's leg.
   // A rebuild keeps a term once taken in, since its correction, dropped, would spring back.
@@ -1999,11 +2013,13 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const t0 = performance.now();
   const n = g.key.length;
   const P = prep(g, o, sea);
+  if (o.sheet) (P.seaPairs = o.sheet.pairs), (P.sepPairs = o.sheet.pairs);
   const hop = median(P.L);
   const blocks = findBlocks(g, P.city, P.cross);
   const tied = tiedBlocks(g, blocks, P.cross);
-  // with two blocks or more, A lays out each city as if alone, the hops between them left to the blocks' stage
-  const skip = blocks.active ? blockHops(g, blocks) : undefined;
+  // with two blocks or more, A lays out each city as if alone, the hops between them left to the blocks' stage (the
+  // sheet has placed the cities already)
+  const skip = blocks.active && !o.sheet ? blockHops(g, blocks) : undefined;
   let nA = n;
   if (skip) {
     const size = new Int32Array(blocks.list.length);
@@ -2066,7 +2082,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   }
   const t1b = performance.now();
   // a rebuild starts near where B ended: fewer rounds, held closer to the last layout
-  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(progA, PROGRESS_B));
+  const B = warm ? lsq(P, true, WARM_ROUNDS, start, 0.1, o.sheet ? o.sheet.wGeo : W_GEO_WARM, 3, o.iters) : lsq(P, true, o.roundsB, start, 0.1, 0.01, 3, o.iters, step(progA, PROGRESS_B));
   // B and the drawing widen blocks (their bundles' room): boxes B brought within 3/4 of the gap are moved apart
   // to the gap again, each block and the hops between blocks as B left them
   if (skip && crowded(blocks, B, 0.75 * BLOCK_GAP * P.pu, tied)) {

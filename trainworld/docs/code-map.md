@@ -254,7 +254,9 @@ rivers thinned to centre lines, their crossings with the hops' tracks),
 drawing's smoothed scale `scaleAt`, cut to its room, T-2528) and
 `waterSea.ts` (the sea decided in the drawing by the nearest stations' look to the sea on the ground, its coast
 fitted at 0, 45 and 90 degrees, T-2169), `sheet.ts` (the rubber sheet behind `?sheet=1`: a quadtree lattice
-stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568), `lsqr.ts`
+stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568), `sheetLines.ts` (with
+`?sheet=1`, the layout's octilinear stages run from the sheet, the map carried with the stations, and its sea and zone
+borders, `sheetLines` and `sheetMap`, T-2567), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted
 on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level
 in the layout worker, painted, and `nameAt`, T-2162), `cityNames.ts` (a name per city block far out, centred on its own

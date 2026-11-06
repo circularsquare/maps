@@ -1,0 +1,692 @@
+// The network diagram's lines on the rubber sheet (T-2567; docs/ui-diagram.md "The rubber sheet"; notes/T-2567.md).
+// The stations start at their places on the sheet (sheet.ts), and today's octilinear stages (layout.ts: B, the snap,
+// the routing, the separation) run as a rebuild from there: every hop's target its length on the sheet, no A and no
+// blocks' stage, B holding each station to its sheet place, and stations of two land masses with water between them
+// keeping most of their sheet gap. Then the carry: a field of moves over the sheet's finest lattice, stiff on land and
+// nearly free on water, met at each station's drawn place, so the water and the zones' borders follow the stations;
+// a station whose drawn place is not on its own land in the carried map is met harder until every one is. Last, the
+// ground carried through that map onto a grid over the drawing: the sea's coast and the zones' borders, fitted with
+// runs at 0, 45 and 90 degrees (as round 3 of T-2577; clean coasts are T-2580). Pure: no DOM, no fetch.
+
+import type { DiagramGraph } from "./graph";
+import { dialled, layoutDiagram, type DiagramLayout, type LastPlaces } from "./layout";
+import { massAt, sheetFinest, sheetWarp, type Sheet, type SheetRaster } from "./sheet";
+import { fitOcti, rounded, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
+import { chamfer } from "./waterReal";
+import type { DiagramWater } from "./water";
+
+export interface SheetLinesOptions {
+  /** the sheet's dial (sheet.ts SHEET.dial): sets the pitch, metres of a median target */
+  dial: number;
+  /** B's pull of each station to its sheet place (a rebuild's is 0.05) */
+  wGeo: number;
+  /** stations of two land masses within seaR pitches on the sheet, with water between them on the ground, keep at
+   * least seaKeep of their sheet gap (their 6 nearest such) */
+  seaKeep: number;
+  seaR: number;
+  /** the carry: links on land and on water, its rounds on a city map and a country map, and how much harder a station
+   * off its own land is met each round */
+  lamLand: number;
+  lamWater: number;
+  carryCity: number;
+  carryCountry: number;
+  wUp: number;
+  /** its solves' tolerance (residual over right side) */
+  carryTol: number;
+  /** the drawn grid's cells at most, on a city map and a country map */
+  cellsCity: number;
+  cellsCountry: number;
+  /** a station still off its own land has its land carried to it from at most this many pitches */
+  bendMax: number;
+}
+
+export const SHEET_LINES: SheetLinesOptions = {
+  dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8,
+};
+
+/** the stations laid out on the sheet and the map carried with them */
+export interface SheetLines {
+  /** the graph with the sheet's places (layout units, `k` a pitch) */
+  graph: DiagramGraph;
+  k: number;
+  layout: DiagramLayout;
+  carry: Carry;
+  info: { seaPairs: number; carryRounds: number[]; carryIters: number[]; offLand: number; ms: Record<string, number> };
+}
+
+/** the carried map: per node of the sheet's finest lattice ((gw by gh) from (x0, y0), h metres a cell) its drawn place,
+ * pitches; per station its land mass (0 none) and its place on it */
+export interface Carry { gw: number; gh: number; x0: number; y0: number; h: number; rx: Float64Array; ry: Float64Array; sx: Float64Array; sy: Float64Array; ownMass: Int32Array; landX: Float64Array; landY: Float64Array; raster: SheetRaster }
+
+/** a map under 600 km across (its stations' box), as sheet.ts tells a city map from a country's */
+function cityMap(g: DiagramGraph): boolean {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < g.key.length; i++) (x0 = Math.min(x0, g.x[i])), (x1 = Math.max(x1, g.x[i])), (y0 = Math.min(y0, g.y[i])), (y1 = Math.max(y1, g.y[i]));
+  return !(Math.hypot(x1 - x0, y1 - y0) >= 6e5);
+}
+
+const MG_STALE = 20, NO_STATION_KM2 = 2000;
+
+const quantile = (v: ArrayLike<number>, f: number) => { const s = Float64Array.from(v).sort(); return s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0; };
+
+/** Lays graph `g` out on `sheet` and carries the map with its stations. */
+export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions = SHEET_LINES): SheetLines {
+  const t0 = performance.now(), ms: Record<string, number> = {};
+  let tl = t0;
+  const tick = (k: string) => { const t = performance.now(); ms[k] = Math.round(t - tl); tl = t; };
+  const R = sheet.raster!, n = g.key.length, nE = g.ea.length, PX = g.x, PY = g.y, WX = sheet.x, WY = sheet.y;
+  // the pitch in metres of target, as the sheet's (its places are in these pitches)
+  const tg = new Float64Array(nE);
+  for (let e = 0; e < nE; e++) { const l = Math.max(50, Math.hypot(PX[g.eb[e]] - PX[g.ea[e]], PY[g.eb[e]] - PY[g.ea[e]])); tg[e] = 1000 * Math.pow(l / 1000, 1 - 0.7 * o.dial); }
+  const K = nE ? quantile(tg, 0.5) / 9 : 100;
+
+  // each station's land mass: its real place's, or the nearest land within 1 km (piers, the harbour's edge)
+  const ownMass = new Int32Array(n), landX = Float64Array.from(PX), landY = Float64Array.from(PY);
+  for (let s = 0; s < n; s++) {
+    let m = massAt(R, PX[s], PY[s]);
+    for (let r = R.rr; !m && r <= 1000; r += R.rr) for (let a = 0; a < 24; a++) {
+      const x = PX[s] + r * Math.cos((a * Math.PI) / 12), y = PY[s] + r * Math.sin((a * Math.PI) / 12), v = massAt(R, x, y);
+      if (v) { (m = v), (landX[s] = x), (landY[s] = y); break; }
+    }
+    ownMass[s] = m;
+  }
+
+  // ---- the octilinear stages from the sheet
+  const warp = sheetWarp(sheet);
+  let hop2 = g.hop;
+  if (g.hop) { hop2 = new Float32Array(g.hop.length); for (let k = 0; k < g.hop.length; k += 2) { const [x, y] = warp(g.hop[k], g.hop[k + 1]); (hop2[k] = x * K), (hop2[k + 1] = y * K); } }
+  const g2: DiagramGraph = { ...g, x: Float64Array.from(WX, (v) => v * K), y: Float64Array.from(WY, (v) => v * K), hop: hop2 };
+  const hl = new Float64Array(nE);
+  for (let e = 0; e < nE; e++) hl[e] = Math.max(1e-3, Math.hypot(WX[g.eb[e]] - WX[g.ea[e]], WY[g.eb[e]] - WY[g.ea[e]]));
+  const medH = nE ? quantile(hl, 0.5) : 1;
+  // water-gap pairs: stations of two land masses near each other on the sheet with water on the straight way between
+  // them on the ground
+  const sp: number[] = [];
+  {
+    const H = new Map<number, number[]>(), key = (x: number, y: number) => Math.floor(x / o.seaR) * 100003 + Math.floor(y / o.seaR);
+    for (let i = 0; i < n; i++) { const k = key(WX[i], WY[i]); let l = H.get(k); if (!l) H.set(k, (l = [])); l.push(i); }
+    const wet = (a: number, b: number) => {
+      const l = Math.hypot(PX[b] - PX[a], PY[b] - PY[a]), m = Math.ceil(l / R.rr);
+      for (let t = 1; t < m; t++) if (!massAt(R, PX[a] + ((PX[b] - PX[a]) * t) / m, PY[a] + ((PY[b] - PY[a]) * t) / m)) return true;
+      return false;
+    };
+    const cand: [number, number][] = [];
+    for (let a = 0; a < n; a++) {
+      if (!ownMass[a]) continue;
+      cand.length = 0;
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const b of H.get(key(WX[a] + i * o.seaR, WY[a] + j * o.seaR)) ?? []) {
+        if (b <= a || !ownMass[b] || ownMass[b] === ownMass[a]) continue;
+        const d = Math.hypot(WX[b] - WX[a], WY[b] - WY[a]);
+        if (d < o.seaR && d > 1e-6) cand.push([d, b]);
+      }
+      cand.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+      for (const [d, b] of cand.slice(0, 6)) if (wet(a, b)) sp.push(a, b, (WX[b] - WX[a]) / d, (WY[b] - WY[a]) / d, o.seaKeep * d * K);
+    }
+  }
+  tick("prep");
+  const last: LastPlaces = new Map();
+  for (let i = 0; i < n; i++) last.set(g.key[i], [WX[i] * K, WY[i] * K, WX[i] * K, WY[i] * K]);
+  const layout = layoutDiagram(g2, { ...dialled(0), puDiv: medH, sheet: { pairs: Float64Array.from(sp), wGeo: o.wGeo } }, last, undefined, null);
+  tick("layout");
+
+  // ---- the carry
+  const fin = sheetFinest(sheet), gw = fin.gw, gh = fin.gh, N = gw * gh, { h, x0, y0 } = sheet.mesh;
+  const SX = Float64Array.from(layout.x, (v) => v / K), SY = Float64Array.from(layout.y, (v) => v / K);
+  const rx = new Float64Array(N), ry = new Float64Array(N);
+  const bn = new Int32Array(3 * n), bw = new Float64Array(3 * n);
+  for (let s = 0; s < n; s++) {
+    let fi = (landX[s] - x0) / h, fj = (landY[s] - y0) / h;
+    const i = Math.min(gw - 2, Math.max(0, Math.floor(fi))), j = Math.min(gh - 2, Math.max(0, Math.floor(fj)));
+    (fi = Math.min(1, Math.max(0, fi - i))), (fj = Math.min(1, Math.max(0, fj - j)));
+    const a = j * gw + i, k = 3 * s;
+    if (fi >= fj) (bn[k] = a), (bn[k + 1] = a + 1), (bn[k + 2] = a + gw + 1), (bw[k] = 1 - fi), (bw[k + 1] = fi - fj), (bw[k + 2] = fj);
+    else (bn[k] = a), (bn[k + 1] = a + gw + 1), (bn[k + 2] = a + gw), (bw[k] = 1 - fj), (bw[k + 1] = fi), (bw[k + 2] = fj - fi);
+  }
+  const lamH = new Float64Array(N), lamV = new Float64Array(N);
+  for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) {
+    const v = j * gw + i, x = x0 + i * h, y = y0 + j * h;
+    if (i + 1 < gw) lamH[v] = massAt(R, x + h / 2, y) ? o.lamLand : o.lamWater;
+    if (j + 1 < gh) lamV[v] = massAt(R, x, y + h / 2) ? o.lamLand : o.lamWater;
+  }
+  // each station's move: its drawn place less where the sheet puts its place on its land
+  const dx = new Float64Array(n), dy = new Float64Array(n);
+  for (let s = 0, k = 0; s < n; s++, k += 3) {
+    const wx = bw[k] * fin.qx[bn[k]] + bw[k + 1] * fin.qx[bn[k + 1]] + bw[k + 2] * fin.qx[bn[k + 2]];
+    const wy = bw[k] * fin.qy[bn[k]] + bw[k + 1] * fin.qy[bn[k + 1]] + bw[k + 2] * fin.qy[bn[k + 2]];
+    (dx[s] = SX[s] - wx), (dy[s] = SY[s] - wy);
+  }
+  const ws = new Float64Array(n).fill(1), UX = new Float64Array(N), UY = new Float64Array(N);
+  const carry: Carry = { gw, gh, x0, y0, h, rx, ry, sx: SX, sy: SY, ownMass, landX, landY, raster: R };
+  const rounds = cityMap(g) ? o.carryCity : o.carryCountry;
+  const bads: number[] = [], its: number[] = [];
+  const tm = [0, 0, 0];
+  const A = carryMatrix(gw, gh, lamH, lamV, bn, bw, ws);
+  // the multigrid made once; a later round changes only a few stations' weights, and is made again only where its
+  // solve does not settle in MG_STALE iterations
+  let mg = multigrid(gw, gh, A), fresh = true;
+  tm[0] += performance.now() - tl;
+  for (let round = 0; round <= rounds; round++) {
+    let ta = performance.now();
+    for (const axis of [0, 1]) {
+      const rhs = new Float64Array(N), d = axis ? dy : dx, U = axis ? UY : UX;
+      for (let s = 0, k = 0; s < n; s++, k += 3) for (let c = 0; c < 3; c++) rhs[bn[k + c]] += ws[s] * bw[k + c] * d[s];
+      let it = pcg9(gw, gh, A, rhs, U, mg, o.carryTol, fresh ? 60 : MG_STALE);
+      if (!fresh && it >= MG_STALE) {
+        const tb = performance.now();
+        (mg = multigrid(gw, gh, A)), (fresh = true), (tm[0] += performance.now() - tb);
+        it += pcg9(gw, gh, A, rhs, U, mg, o.carryTol, 60);
+      }
+      its.push(it);
+    }
+    for (let v = 0; v < N; v++) (rx[v] = fin.qx[v] + UX[v]), (ry[v] = fin.qy[v] + UY[v]);
+    tm[1] += performance.now() - ta, (ta = performance.now());
+    let bad = 0;
+    for (let s = 0, k = 0; s < n; s++, k += 3) {
+      if (!ownMass[s] || drawnMass(carry, s, 12) === ownMass[s]) continue;
+      // its weight times wUp, in the matrix too
+      const dw = ws[s] * (o.wUp - 1);
+      ws[s] *= o.wUp;
+      for (let p = 0; p < 3; p++) for (let q = 0; q < 3; q++) {
+        const u = bn[k + p], w = bn[k + q], di = (w % gw) - (u % gw), dj = Math.floor(w / gw) - Math.floor(u / gw);
+        A[u * 9 + (dj + 1) * 3 + di + 1] += dw * bw[k + p] * bw[k + q];
+      }
+      bad++;
+    }
+    bads.push(bad);
+    fresh = false;
+    tm[2] += performance.now() - ta;
+    if (!bad) break;
+  }
+  tick("carry");
+  (ms.carryBuild = Math.round(tm[0])), (ms.carrySolve = Math.round(tm[1])), (ms.carryCheck = Math.round(tm[2]));
+  let offLand = 0;
+  for (let s = 0; s < n; s++) if (ownMass[s] && drawnMass(carry, s, 20) !== ownMass[s]) offLand++;
+  ms.total = Math.round(performance.now() - t0);
+  return { graph: g2, k: K, layout, carry, info: { seaPairs: sp.length / 5, carryRounds: bads, carryIters: its, offLand, ms } };
+}
+
+/** the zones' outlines as spans along the raster's rows (each row's middle): per row its spans [a, b) of x, and zone */
+interface ZoneSpans { at: Int32Array; a: Float64Array; b: Float64Array; z: Int32Array }
+function zoneSpans(R: SheetRaster, shapes: ZoneShape[]): ZoneSpans {
+  const hits: number[][] = Array.from({ length: R.h }, () => []);
+  shapes.forEach((sh, zi) => {
+    for (const r of sh.rings) for (let a = 0, m = r.length; a < m; a += 2) {
+      const b = (a + 2) % m, ya = r[a + 1], yb = r[b + 1];
+      if (ya === yb) continue;
+      const j0 = Math.max(0, Math.ceil((Math.min(ya, yb) - R.y0) / R.rr - 0.5)), j1 = Math.min(R.h - 1, Math.floor((Math.max(ya, yb) - R.y0) / R.rr - 0.5));
+      for (let j = j0; j <= j1; j++) { const y = R.y0 + (j + 0.5) * R.rr; if ((ya > y) !== (yb > y)) hits[j].push(zi, r[a] + ((y - ya) * (r[b] - r[a])) / (yb - ya)); }
+    }
+  });
+  const at = new Int32Array(R.h + 1), A: number[] = [], B: number[] = [], Z: number[] = [];
+  for (let j = 0; j < R.h; j++) {
+    const byZ = new Map<number, number[]>(), hh = hits[j];
+    for (let k = 0; k < hh.length; k += 2) { let l = byZ.get(hh[k]); if (!l) byZ.set(hh[k], (l = [])); l.push(hh[k + 1]); }
+    for (const [zi, xs] of [...byZ].sort((p, q) => p[0] - q[0])) {
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) A.push(xs[k]), B.push(xs[k + 1]), Z.push(zi);
+    }
+    at[j + 1] = A.length;
+  }
+  return { at, a: Float64Array.from(A), b: Float64Array.from(B), z: Int32Array.from(Z) };
+}
+
+/** the sheet's water and zone borders: the ground carried through the carried map onto a grid over the drawing, each
+ * station's pill on its own land and zone, cleaned, and the coasts and borders fitted at 0, 45 and 90 degrees (round 3
+ * of T-2577). The sea only with `withWater`. */
+export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[], withWater: boolean, o: SheetLinesOptions = SHEET_LINES, detail = false): { water: DiagramWater | null; borders: DiagramBorders; info: Record<string, number>; grid?: { d: Uint8Array | Uint16Array; w: number; h: number; x0: number; y0: number; cell: number } } {
+  const t0 = performance.now();
+  const C = lines.carry, R = C.raster, K = lines.k, n = g.key.length, SX = C.sx, SY = C.sy, { gw, gh, h, x0, y0, rx: RXn, ry: RYn } = C;
+  // labels: WATER, a zone (its index plus 1), NOZ land in no zone, OUT off the carried map
+  const wide = shapes.length > 250, OUT = wide ? 65534 : 254, NOZ = wide ? 65535 : 255;
+  const zs = zoneSpans(R, shapes);
+  // a land mass with no station on it and over NO_STATION_KM2 is drawn as sea: another country's coast at the edge of
+  // the masks (Korea, Sakhalin and China's coast round all Japan), which the network does not draw; islands under it
+  // with no station (Sado, Governors Island) stay
+  const area = new Float64Array(R.mass.length), has = new Uint8Array(R.mass.length);
+  for (let r = 0; r < R.mass.length; r++) area[R.mass[r]] += (R.runB[r] - R.runA[r]) * R.rr * R.rr;
+  for (let s = 0; s < n; s++) if (C.ownMass[s]) has[C.ownMass[s] - 1] = 1;
+  const labAt = (x: number, y: number) => {
+    const m = massAt(R, x, y);
+    if (!m || (!has[m - 1] && area[m - 1] > NO_STATION_KM2 * 1e6)) return 0;
+    const j = Math.floor((y - R.y0) / R.rr);
+    if (j < 0 || j >= R.h) return NOZ;
+    for (let k = zs.at[j]; k < zs.at[j + 1]; k++) if (x >= zs.a[k] && x < zs.b[k]) return zs.z[k] + 1;
+    return NOZ;
+  };
+  const zoneAll = stationZones(g, shapes), ownLab = new Int32Array(n);
+  for (let s = 0; s < n; s++) ownLab[s] = zoneAll[s] >= 0 ? zoneAll[s] + 1 : NOZ;
+  const isZ = (v: number) => v > 0 && v < OUT;
+
+  // ---- the drawn grid: the real raster carried through the carried map
+  let qx0 = Infinity, qy0 = Infinity, qx1 = -Infinity, qy1 = -Infinity;
+  for (let v = 0; v < RXn.length; v++) (qx0 = Math.min(qx0, RXn[v])), (qx1 = Math.max(qx1, RXn[v])), (qy0 = Math.min(qy0, RYn[v])), (qy1 = Math.max(qy1, RYn[v]));
+  const hd = Math.max(1, Math.sqrt(((qx1 - qx0) * (qy1 - qy0)) / (cityMap(g) ? o.cellsCity : o.cellsCountry)));
+  const GW = Math.ceil((qx1 - qx0) / hd), GH = Math.ceil((qy1 - qy0) / hd), NC = GW * GH;
+  const D = wide ? new Uint16Array(NC).fill(OUT) : new Uint8Array(NC).fill(OUT), DM = new Int32Array(NC).fill(-1);
+  for (let j = 0; j + 1 < gh; j++) for (let i = 0; i + 1 < gw; i++) {
+    const a = j * gw + i;
+    for (let t = 0; t < 2; t++) {
+      const p = a, q = t ? a + gw + 1 : a + 1, r = t ? a + gw : a + gw + 1;
+      const x1 = RXn[p], y1 = RYn[p], x2 = RXn[q], y2 = RYn[q], x3 = RXn[r], y3 = RYn[r];
+      const det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+      if (Math.abs(det) < 1e-12) continue;
+      const c0 = Math.max(0, Math.floor((Math.min(x1, x2, x3) - qx0) / hd)), c1 = Math.min(GW - 1, Math.ceil((Math.max(x1, x2, x3) - qx0) / hd));
+      const r0 = Math.max(0, Math.floor((Math.min(y1, y2, y3) - qy0) / hd)), r1 = Math.min(GH - 1, Math.ceil((Math.max(y1, y2, y3) - qy0) / hd));
+      const pxr = x0 + (p % gw) * h, pyr = y0 + Math.floor(p / gw) * h, qxr = x0 + (q % gw) * h, qyr = y0 + Math.floor(q / gw) * h, sxr = x0 + (r % gw) * h, syr = y0 + Math.floor(r / gw) * h;
+      for (let gj = r0; gj <= r1; gj++) for (let gi = c0; gi <= c1; gi++) {
+        const X = qx0 + (gi + 0.5) * hd, Y = qy0 + (gj + 0.5) * hd;
+        const l1 = ((y2 - y3) * (X - x3) + (x3 - x2) * (Y - y3)) / det, l2 = ((y3 - y1) * (X - x3) + (x1 - x3) * (Y - y3)) / det, l3 = 1 - l1 - l2;
+        if (l1 < -1e-9 || l2 < -1e-9 || l3 < -1e-9) continue;
+        const ux = l1 * pxr + l2 * qxr + l3 * sxr, uy = l1 * pyr + l2 * qyr + l3 * syr, c = gj * GW + gi;
+        D[c] = labAt(ux, uy);
+        DM[c] = massAt(R, ux, uy);
+      }
+    }
+  }
+  const t1 = performance.now();
+  const cellOf = (x: number, y: number) => { const i = Math.floor((x - qx0) / hd), j = Math.floor((y - qy0) / hd); return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
+  // stations whose drawn place is not on their own land in the carried map, and how far that land is
+  const offLand: { s: number; dist: number }[] = [];
+  for (let s = 0; s < n; s++) {
+    if (!C.ownMass[s] || drawnMass(C, s, 20) === C.ownMass[s]) continue;
+    let dist = -1;
+    const ci = Math.floor((SX[s] - qx0) / hd), cj = Math.floor((SY[s] - qy0) / hd);
+    for (let r = 1; r <= 80 && dist < 0; r++) for (let b = cj - r; b <= cj + r && dist < 0; b++) for (let a = ci - r; a <= ci + r; a++) {
+      if (Math.max(Math.abs(a - ci), Math.abs(b - cj)) !== r || a < 0 || b < 0 || a >= GW || b >= GH) continue;
+      if (DM[b * GW + a] === C.ownMass[s]) { dist = r * hd; break; }
+    }
+    offLand.push({ s, dist });
+  }
+  const pill = new Uint8Array(NC);
+  const disk = (s: number, rad: number, fn: (c: number) => void) => {
+    const ci = Math.floor((SX[s] - qx0) / hd), cj = Math.floor((SY[s] - qy0) / hd), rc = Math.ceil(rad / hd);
+    for (let b = cj - rc; b <= cj + rc; b++) for (let a = ci - rc; a <= ci + rc; a++) {
+      if (a < 0 || b < 0 || a >= GW || b >= GH) continue;
+      if (Math.hypot((a - ci) * hd, (b - cj) * hd) <= Math.max(rad, 0.5 * hd)) fn(b * GW + a);
+    }
+  };
+  // a station's pill and 1.5 pitches round it are land (at least half a pitch more than a drawn cell, so a coarse
+  // grid's coast cannot pass over the station), of its own zone where it was water
+  const PR = Math.max(1.5, 0.5 + hd);
+  for (let s = 0; s < n; s++) disk(s, PR, (c) => { pill[c] = 1; if (D[c] === 0 || D[c] === OUT) D[c] = ownLab[s]; });
+  // a station still off its own land has that land carried to it a pill wide from the nearest cell of it, within bendMax
+  let bent = 0;
+  for (const b of offLand) {
+    if (b.dist < 0 || b.dist > o.bendMax) continue;
+    const s = b.s, ci = Math.floor((SX[s] - qx0) / hd), cj = Math.floor((SY[s] - qy0) / hd);
+    let best = -1, bd = Infinity;
+    const r = Math.ceil(b.dist / hd) + 1;
+    for (let jj = cj - r; jj <= cj + r; jj++) for (let ii = ci - r; ii <= ci + r; ii++) {
+      if (ii < 0 || jj < 0 || ii >= GW || jj >= GH) continue;
+      const c = jj * GW + ii;
+      if (DM[c] === C.ownMass[s]) { const d = Math.hypot(ii - ci, jj - cj); if (d < bd) (bd = d), (best = c); }
+    }
+    if (best < 0) continue;
+    const bx = best % GW, by = (best - bx) / GW, m = Math.ceil(bd * 2) + 1, rad = Math.max(1, Math.ceil(PR / hd));
+    for (let t = 0; t <= m; t++) {
+      const i0 = Math.round(ci + ((bx - ci) * t) / m), j0 = Math.round(cj + ((by - cj) * t) / m);
+      for (let b2 = -rad; b2 <= rad; b2++) for (let a2 = -rad; a2 <= rad; a2++) {
+        const i = i0 + a2, j = j0 + b2;
+        if (i < 0 || j < 0 || i >= GW || j >= GH || Math.hypot(a2, b2) > rad) continue;
+        const c = j * GW + i;
+        (DM[c] = C.ownMass[s]), (pill[c] = 1), (D[c] = ownLab[s]);
+      }
+    }
+    bent++;
+  }
+  // cleaned: a 3 by 3 majority, then water under 40 square pitches and land with no station under 30 dropped
+  {
+    const old = D.slice();
+    const cnt = new Map<number, number>();
+    for (let j = 1; j + 1 < GH; j++) for (let i = 1; i + 1 < GW; i++) {
+      const c = j * GW + i;
+      if (old[c] === OUT || pill[c]) continue;
+      let w = 0;
+      cnt.clear();
+      for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const v = old[c + b * GW + a]; if (v === 0) w++; else if (v !== OUT) cnt.set(v, (cnt.get(v) ?? 0) + 1); }
+      if (old[c] === 0 && w <= 3 && cnt.size) { let bv = 0, bc = -1; for (const [v, k] of cnt) if (k > bc) (bc = k), (bv = v); D[c] = bv; }
+      else if (old[c] !== 0 && w >= 6) D[c] = 0;
+    }
+    const comp = new Int32Array(NC).fill(-1), area: number[] = [], hasSt: number[] = [], wetK: boolean[] = [], qq = new Int32Array(NC);
+    for (let s0 = 0; s0 < NC; s0++) {
+      if (comp[s0] >= 0 || D[s0] === OUT) continue;
+      const wet = D[s0] === 0, id = area.length;
+      let head = 0, tail = 0, st = 0;
+      (qq[tail++] = s0), (comp[s0] = id);
+      while (head < tail) {
+        const v = qq[head++], i = v % GW;
+        if (pill[v]) st = 1;
+        for (const u of [i > 0 ? v - 1 : -1, i < GW - 1 ? v + 1 : -1, v - GW, v + GW]) if (u >= 0 && u < NC && comp[u] < 0 && D[u] !== OUT && (D[u] === 0) === wet) (comp[u] = id), (qq[tail++] = u);
+      }
+      area.push(tail * hd * hd), hasSt.push(st), wetK.push(wet);
+    }
+    for (let c = 0; c < NC; c++) { const k = comp[c]; if (k < 0) continue; if (wetK[k] && area[k] < 40) D[c] = NOZ; else if (!wetK[k] && !hasSt[k] && area[k] < 30) D[c] = 0; }
+    for (let pass = 0; pass < 3; pass++) for (let c = 0; c < NC; c++) if (D[c] === NOZ) { const i = c % GW; for (const u of [i > 0 ? c - 1 : -1, i < GW - 1 ? c + 1 : -1, c - GW, c + GW]) if (u >= 0 && u < NC && isZ(D[u])) { D[c] = D[u]; break; } }
+  }
+  // every station on its own zone's side: where its pill is in another zone, its own zone is carried to it along the
+  // shortest way over land from the nearest of its own cells, a pill wide, and the pill painted its own
+  let zoneFixed = 0;
+  {
+    const seen = new Int32Array(NC).fill(-1), from = new Int32Array(NC);
+    for (let s = 0; s < n; s++) {
+      const c0 = cellOf(SX[s], SY[s]), z = ownLab[s];
+      if (c0 < 0 || !isZ(z) || D[c0] === z) continue;
+      zoneFixed++;
+      const qq = [c0];
+      (seen[c0] = s), (from[c0] = -1);
+      let hit = -1;
+      for (let k = 0; k < qq.length && hit < 0 && k < 200000; k++) {
+        const v = qq[k], i = v % GW;
+        for (const u of [i > 0 ? v - 1 : -1, i < GW - 1 ? v + 1 : -1, v - GW, v + GW]) {
+          if (u < 0 || u >= NC || seen[u] === s || D[u] === OUT || D[u] === 0) continue;
+          (seen[u] = s), (from[u] = v);
+          if (D[u] === z && !pill[u]) { hit = u; break; }
+          qq.push(u);
+        }
+      }
+      const rad = Math.max(1, Math.ceil(0.75 / hd));
+      if (hit >= 0) for (let v = from[hit]; v >= 0; v = from[v]) {
+        const i = v % GW, j = (v - i) / GW;
+        for (let b = -rad; b <= rad; b++) for (let a = -rad; a <= rad; a++) {
+          const u = (j + b) * GW + i + a;
+          if (i + a >= 0 && i + a < GW && j + b >= 0 && j + b < GH && D[u] !== 0 && D[u] !== OUT && !(pill[u] && D[u] !== z)) D[u] = z;
+        }
+      }
+      disk(s, 1.5, (c) => { if (D[c] !== 0 && D[c] !== OUT) D[c] = z; pill[c] = 1; });
+      D[c0] = z;
+    }
+    for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0 && isZ(ownLab[s])) (D[c] = ownLab[s]), (pill[c] = 1); }
+  }
+  const t2 = performance.now();
+
+  // ---- coasts and borders
+  const wm = new Uint8Array(NC);
+  for (let c = 0; c < NC; c++) wm[c] = +(D[c] === 0 || D[c] === OUT);
+  const stm = new Uint8Array(NC);
+  for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0) stm[c] = 1; }
+  const dS = chamfer(stm, GW, GH, true, 60000);
+  const VW = GW + 1, VX = (v: number) => qx0 + (v % VW) * hd, VY = (v: number) => qy0 + Math.floor(v / VW) * hd;
+  const seaCmd: number[] = [], scaled = (f: Float64Array) => Float64Array.from(f, (v) => v * K);
+  const seaRings: Float64Array[] = [];
+  if (withWater) {
+    // the coast's edges, water on the left, by vertex
+    const eA: number[] = [], eB: number[] = [], outs = new Map<number, number[]>();
+    const add = (a: number, b: number) => { let l = outs.get(a); if (!l) outs.set(a, (l = [])); l.push(eA.length); eA.push(a), eB.push(b); };
+    const V = (i: number, j: number) => j * VW + i, wet = (i: number, j: number) => i >= 0 && j >= 0 && i < GW && j < GH && wm[j * GW + i] === 1;
+    for (let j = 0; j < GH; j++) for (let i = -1; i < GW; i++) { const l = wet(i, j), r = wet(i + 1, j); if (l !== r) (l ? add(V(i + 1, j), V(i + 1, j + 1)) : add(V(i + 1, j + 1), V(i + 1, j))); }
+    for (let j = -1; j < GH; j++) for (let i = 0; i < GW; i++) { const d = wet(i, j), u = wet(i, j + 1); if (d !== u) (u ? add(V(i, j + 1), V(i + 1, j + 1)) : add(V(i + 1, j + 1), V(i, j + 1))); }
+    const used = new Uint8Array(eA.length);
+    const run = (x: number, y: number, ux: number, uy: number, wetW: boolean) => { let t = 0; for (;;) { if (t >= 40) break; const c = cellOf(x + ux * t, y + uy * t); if (!(c >= 0 && (wm[c] === 1) === wetW)) break; t += 0.5 * hd; } return t; };
+    for (let e0 = 0; e0 < eA.length; e0++) {
+      if (used[e0]) continue;
+      const ring = [eA[e0]];
+      let e = e0;
+      for (;;) {
+        used[e] = 1;
+        const a = eA[e], b = eB[e];
+        ring.push(b);
+        if (b === ring[0]) break;
+        const opts = (outs.get(b) ?? []).filter((f) => !used[f]);
+        if (!opts.length) break;
+        const ax = VX(b) - VX(a), ay = VY(b) - VY(a), turn = (f: number) => (VX(eB[f]) - VX(b)) * ay - (VY(eB[f]) - VY(b)) * ax;
+        opts.sort((p, q) => (turn(p) < turn(q) ? 1 : -1));
+        e = opts[0];
+      }
+      if (ring.length < 5) continue;
+      const px = ring.map(VX), py = ring.map(VY), m = ring.length - 1;
+      const tol = ring.map((v, k) => {
+        const a2 = ring[(k - 3 + m) % m], b2 = ring[(k + 3) % m], tx = VX(b2) - VX(a2), ty = VY(b2) - VY(a2), tln = Math.hypot(tx, ty) || 1, nx = -ty / tln, ny = tx / tln;
+        const x = VX(v), y = VY(v), ww = run(x + nx * 0.25 * hd, y + ny * 0.25 * hd, nx, ny, true), wl = run(x - nx * 0.25 * hd, y - ny * 0.25 * hd, -nx, -ny, false);
+        const i = v % VW, j = Math.floor(v / VW), c = Math.min(GH - 1, j) * GW + Math.min(GW - 1, i), clear = (dS[c] / 3) * hd;
+        return Math.max(Math.min(Math.max(0.2, clear - (PR - 0.3)), Math.max(0.25 * hd, Math.min(0.6 * hd, 0.45 * Math.min(ww, wl)))), Math.min(10, 0.35 * ww, 0.35 * wl, clear - PR));
+      });
+      const fit = scaled(fitOcti(px, py, tol));
+      rounded(fit, true, 3 * K, seaCmd);
+      seaRings.push(fit);
+    }
+  }
+  const t3 = performance.now();
+  const borderCmd: number[] = [];
+  {
+    const adj = new Map<number, number[]>(), V = (i: number, j: number) => j * VW + i;
+    const zl = (i: number, j: number) => (i < 0 || j < 0 || i >= GW || j >= GH ? 0 : D[j * GW + i]);
+    const link = (a: number, b: number) => { let l = adj.get(a); if (!l) adj.set(a, (l = [])); l.push(b); let k = adj.get(b); if (!k) adj.set(b, (k = [])); k.push(a); };
+    for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) { const p = zl(i, j), q = zl(i + 1, j); if (p !== q && isZ(p) && isZ(q)) link(V(i + 1, j), V(i + 1, j + 1)); }
+    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) { const p = zl(i, j), q = zl(i, j + 1); if (p !== q && isZ(p) && isZ(q)) link(V(i, j + 1), V(i + 1, j + 1)); }
+    const coastal = (v: number) => { const i = v % VW, j = Math.floor(v / VW); return !isZ(zl(i - 1, j - 1)) || !isZ(zl(i, j - 1)) || !isZ(zl(i - 1, j)) || !isZ(zl(i, j)); };
+    const isEnd = (v: number) => adj.get(v)!.length !== 2 || coastal(v);
+    const used = new Set<number>(), NV = VW * (GH + 1), ek = (a: number, b: number) => (a < b ? a * NV + b : b * NV + a);
+    const tolAt = (v: number) => {
+      const vi = v % VW, vj = Math.floor(v / VW);
+      let clear = Infinity;
+      for (const [a, b] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) { const i = vi + a, j = vj + b; if (i < 0 || j < 0 || i >= GW || j >= GH) continue; clear = Math.min(clear, (dS[j * GW + i] / 3) * hd); }
+      return Math.max(0.2 * hd, Math.min(6, clear - 1));
+    };
+    const walk = (s: number, nx: number) => {
+      const ch = [s];
+      let a = s, b = nx;
+      for (;;) {
+        used.add(ek(a, b)), ch.push(b);
+        if (isEnd(b) || b === s) break;
+        const c = adj.get(b)!.find((c2) => !used.has(ek(b, c2)));
+        if (c === undefined) break;
+        (a = b), (b = c);
+      }
+      return ch;
+    };
+    const chains: number[][] = [];
+    for (const [v, ns] of adj) if (isEnd(v)) for (const u of ns) if (!used.has(ek(v, u))) chains.push(walk(v, u));
+    for (const [v, ns] of adj) for (const u of ns) if (!used.has(ek(v, u))) chains.push(walk(v, u));
+    for (const ch of chains) {
+      if (ch.length < 3) continue;
+      rounded(scaled(fitOcti(ch.map(VX), ch.map(VY), ch.map(tolAt))), ch[0] === ch[ch.length - 1], 3 * K, borderCmd);
+    }
+  }
+  // the zones drawn, in the order their first station comes
+  const drawnOf = new Int32Array(shapes.length).fill(-1), zones: string[] = [];
+  for (let s = 0; s < n; s++) if (zoneAll[s] >= 0 && drawnOf[zoneAll[s]] < 0) (drawnOf[zoneAll[s]] = zones.length), zones.push(shapes[zoneAll[s]].id);
+  const zoneOf = Int32Array.from(zoneAll, (z) => (z < 0 ? -1 : drawnOf[z]));
+  let wrongZone = 0;
+  for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0 && isZ(ownLab[s]) && D[c] !== ownLab[s]) wrongZone++; }
+  const t4 = performance.now();
+  const zero = { arcs: 0, crossings: 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, falseCross: 0, rivers: 0, dropped: 0, uncrossed: 0, mouths: 0, dry: 0, open: 0, channels: 0, ms: Math.round(t3 - t0) };
+  return {
+    water: withWater ? { rivers: [], bands: [], sea: Float64Array.from(seaCmd), seaRings, stats: zero } : null,
+    borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
+    info: { cell: +hd.toFixed(2), cells: NC, offLand: offLand.length, bent, zoneFixed, wrongZone, rings: seaRings.length, msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
+  };
+}
+
+/** the land mass (number plus 1, 0 water) under station s's drawn place in the carried map: the place found in the
+ * carried triangles within `wn` cells of its place on its own land; its own mass if any triangle there gives it; -1 if
+ * none holds it */
+export function drawnMass(C: Carry, s: number, wn: number): number {
+  const { gw, gh, h, x0, y0, rx, ry } = C, X = C.sx[s], Y = C.sy[s];
+  const ci = Math.floor((C.landX[s] - x0) / h), cj = Math.floor((C.landY[s] - y0) / h);
+  let found = -1;
+  for (let j = Math.max(0, cj - wn); j < Math.min(gh - 1, cj + wn); j++) for (let i = Math.max(0, ci - wn); i < Math.min(gw - 1, ci + wn); i++) {
+    const a = j * gw + i;
+    for (let t = 0; t < 2; t++) {
+      const p = a, q = t ? a + gw + 1 : a + 1, r = t ? a + gw : a + gw + 1;
+      const x1 = rx[p], y1 = ry[p], x2 = rx[q], y2 = ry[q], x3 = rx[r], y3 = ry[r], det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+      if (Math.abs(det) < 1e-12) continue;
+      const l1 = ((y2 - y3) * (X - x3) + (x3 - x2) * (Y - y3)) / det, l2 = ((y3 - y1) * (X - x3) + (x1 - x3) * (Y - y3)) / det, l3 = 1 - l1 - l2;
+      if (l1 < -1e-9 || l2 < -1e-9 || l3 < -1e-9) continue;
+      const pi = p % gw, pj = (p - pi) / gw, qi = q % gw, qj = (q - qi) / gw, ri = r % gw, rj = (r - ri) / gw;
+      const m = massAt(C.raster, x0 + h * (l1 * pi + l2 * qi + l3 * ri), y0 + h * (l1 * pj + l2 * qj + l3 * rj));
+      if (m === C.ownMass[s]) return m;
+      found = m;
+    }
+  }
+  return found;
+}
+
+// ---- the carry's least squares: a 9-point matrix on the lattice (slot (dj + 1) * 3 + di + 1 per node), solved by
+// conjugate gradients with a multigrid V-cycle (bilinear prolongation, Galerkin coarse levels, Gauss-Seidel)
+function carryMatrix(gw: number, gh: number, lamH: Float64Array, lamV: Float64Array, bn: Int32Array, bw: Float64Array, ws: Float64Array): Float64Array {
+  const N = gw * gh, A = new Float64Array(N * 9);
+  for (let v = 0; v < N; v++) {
+    const a = lamH[v], b = lamV[v];
+    if (a) (A[v * 9 + 4] += a), (A[(v + 1) * 9 + 4] += a), (A[v * 9 + 5] -= a), (A[(v + 1) * 9 + 3] -= a);
+    if (b) (A[v * 9 + 4] += b), (A[(v + gw) * 9 + 4] += b), (A[v * 9 + 7] -= b), (A[(v + gw) * 9 + 1] -= b);
+  }
+  for (let s = 0, k = 0; s < ws.length; s++, k += 3) for (let p = 0; p < 3; p++) for (let q = 0; q < 3; q++) {
+    const u = bn[k + p], w = bn[k + q], di = (w % gw) - (u % gw), dj = Math.floor(w / gw) - Math.floor(u / gw);
+    A[u * 9 + (dj + 1) * 3 + di + 1] += ws[s] * bw[k + p] * bw[k + q];
+  }
+  return A;
+}
+function mul9(nx: number, ny: number, A: Float64Array, x: Float64Array, y: Float64Array) {
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const v = j * nx + i, b = v * 9;
+    let s = A[b + 4] * x[v];
+    if (i > 0) s += A[b + 3] * x[v - 1];
+    if (i + 1 < nx) s += A[b + 5] * x[v + 1];
+    if (j > 0) { s += A[b + 1] * x[v - nx]; if (i > 0) s += A[b] * x[v - nx - 1]; if (i + 1 < nx) s += A[b + 2] * x[v - nx + 1]; }
+    if (j + 1 < ny) { s += A[b + 7] * x[v + nx]; if (i > 0) s += A[b + 6] * x[v + nx - 1]; if (i + 1 < nx) s += A[b + 8] * x[v + nx + 1]; }
+    y[v] = s;
+  }
+}
+function gs9(nx: number, ny: number, A: Float64Array, x: Float64Array, r: Float64Array, fwd: boolean) {
+  for (let jj = 0; jj < ny; jj++) {
+    const j = fwd ? jj : ny - 1 - jj;
+    for (let ii = 0; ii < nx; ii++) {
+      const i = fwd ? ii : nx - 1 - ii, v = j * nx + i, b = v * 9;
+      let s = r[v];
+      if (i > 0) s -= A[b + 3] * x[v - 1];
+      if (i + 1 < nx) s -= A[b + 5] * x[v + 1];
+      if (j > 0) { s -= A[b + 1] * x[v - nx]; if (i > 0) s -= A[b] * x[v - nx - 1]; if (i + 1 < nx) s -= A[b + 2] * x[v - nx + 1]; }
+      if (j + 1 < ny) { s -= A[b + 7] * x[v + nx]; if (i > 0) s -= A[b + 6] * x[v + nx - 1]; if (i + 1 < nx) s -= A[b + 8] * x[v + nx + 1]; }
+      x[v] = A[b + 4] > 0 ? s / A[b + 4] : 0;
+    }
+  }
+}
+/** one V-cycle of the levels from (nx, ny, A) as a preconditioner: z from r */
+function multigrid(nx0: number, ny0: number, A0: Float64Array): (r: Float64Array, z: Float64Array) => void {
+  // per level its matrix, and (but the coarsest) each node's 4 coarse parents and weights (pc, pw; unused slots weight 0)
+  const lev: { nx: number; ny: number; A: Float64Array; x: Float64Array; b: Float64Array; r: Float64Array; pc: Int32Array; pw: Float64Array }[] = [];
+  let nx = nx0, ny = ny0, A = A0;
+  for (;;) {
+    const N = nx * ny, L = { nx, ny, A, x: new Float64Array(N), b: new Float64Array(N), r: new Float64Array(N), pc: new Int32Array(0), pw: new Float64Array(0) };
+    lev.push(L);
+    if (nx <= 5 && ny <= 5) break;
+    const cx = (nx >> 1) + 1, cy = (ny >> 1) + 1, C = new Float64Array(cx * cy * 9), pc = new Int32Array(4 * N), pw = new Float64Array(4 * N);
+    // the prolongation follows the matrix (black box multigrid, Dendy 1982): a node between two coarse ones takes them by
+    // its stencil's couplings toward each, collapsed across; a node between four, by its own stencil over its
+    // neighbours as they are taken. So a land mass coupled to its neighbours only through water is moved as one.
+    const at = (i: number, j: number, k: number) => A[(j * nx + i) * 9 + k];
+    const line = (i: number, j: number, horiz: boolean): [number, number] => {
+      // past the lattice's last node (an even count: the coarse level's last node has no fine one)
+      if (i >= nx || j >= ny) return [0, 0];
+      const c = horiz ? at(i, j, 1) + at(i, j, 4) + at(i, j, 7) : at(i, j, 3) + at(i, j, 4) + at(i, j, 5);
+      const lo = horiz ? at(i, j, 0) + at(i, j, 3) + at(i, j, 6) : at(i, j, 0) + at(i, j, 1) + at(i, j, 2);
+      const hi = horiz ? at(i, j, 2) + at(i, j, 5) + at(i, j, 8) : at(i, j, 6) + at(i, j, 7) + at(i, j, 8);
+      return c > 1e-300 ? [-lo / c, -hi / c] : [0.5, 0.5];
+    };
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const v = j * nx + i, b = 4 * v, I = i >> 1, J = j >> 1, oi = i & 1, oj = j & 1;
+      if (!oi && !oj) (pc[b] = J * cx + I), (pw[b] = 1);
+      else if (oi && !oj) { const [w0, w1] = line(i, j, true); (pc[b] = J * cx + I), (pw[b] = w0), (pc[b + 1] = J * cx + I + 1), (pw[b + 1] = w1); }
+      else if (!oi && oj) { const [w0, w1] = line(i, j, false); (pc[b] = J * cx + I), (pw[b] = w0), (pc[b + 1] = (J + 1) * cx + I), (pw[b + 1] = w1); }
+      else {
+        // corners SW, SE, NW, NE; the edge neighbours W, E (vertical lines), S, N (horizontal) by their own weights
+        const c = at(i, j, 4), [wS, wN] = line(i - 1, j, false), [eS, eN] = line(i + 1, j, false), [sW, sE] = line(i, j - 1, true), [nW, nE] = line(i, j + 1, true);
+        const aW = at(i, j, 3), aE = at(i, j, 5), aS = at(i, j, 1), aN = at(i, j, 7);
+        const k = c > 1e-300 ? -1 / c : 0;
+        (pc[b] = J * cx + I), (pw[b] = k * (at(i, j, 0) + aW * wS + aS * sW));
+        (pc[b + 1] = J * cx + I + 1), (pw[b + 1] = k * (at(i, j, 2) + aE * eS + aS * sE));
+        (pc[b + 2] = (J + 1) * cx + I), (pw[b + 2] = k * (at(i, j, 6) + aW * wN + aN * nW));
+        (pc[b + 3] = (J + 1) * cx + I + 1), (pw[b + 3] = k * (at(i, j, 8) + aE * eN + aN * nE));
+        if (c <= 1e-300) for (let q = 0; q < 4; q++) pw[b + q] = 0.25;
+      }
+    }
+    // C = P^T A P
+    for (let v = 0; v < N; v++) {
+      for (let k = 0; k < 9; k++) {
+        const a = A[v * 9 + k];
+        if (!a) continue;
+        const w = v + (Math.floor(k / 3) - 1) * nx + (k % 3) - 1;
+        for (let p = 0; p < 4; p++) {
+          const wu = pw[4 * v + p] * a;
+          if (!wu) continue;
+          const U = pc[4 * v + p], UI = U % cx, UJ = (U - UI) / cx;
+          for (let p2 = 0; p2 < 4; p2++) {
+            const ww = pw[4 * w + p2];
+            if (!ww) continue;
+            const U2 = pc[4 * w + p2], I2 = U2 % cx, J2 = (U2 - I2) / cx;
+            C[U * 9 + (J2 - UJ + 1) * 3 + (I2 - UI + 1)] += wu * ww;
+          }
+        }
+      }
+    }
+    (L.pc = pc), (L.pw = pw);
+    (nx = cx), (ny = cy), (A = C);
+  }
+  // the coarsest by a dense Cholesky factor
+  const L = lev[lev.length - 1], m = L.nx * L.ny, M = new Float64Array(m * m);
+  for (let v = 0; v < m; v++) for (let k = 0; k < 9; k++) {
+    const i2 = (v % L.nx) + (k % 3) - 1, j2 = Math.floor(v / L.nx) + Math.floor(k / 3) - 1;
+    if (i2 >= 0 && j2 >= 0 && i2 < L.nx && j2 < L.ny) M[v * m + j2 * L.nx + i2] += L.A[v * 9 + k];
+  }
+  let tr = 0;
+  for (let i = 0; i < m; i++) tr += M[i * m + i];
+  for (let i = 0; i < m; i++) M[i * m + i] += (1e-9 * tr) / m + 1e-300;
+  for (let i = 0; i < m; i++) for (let j = 0; j <= i; j++) {
+    let s = M[i * m + j];
+    for (let k = 0; k < j; k++) s -= M[i * m + k] * M[j * m + k];
+    M[i * m + j] = i === j ? Math.sqrt(Math.max(s, 1e-300)) : s / M[j * m + j];
+  }
+  const yv = new Float64Array(m);
+  const dense = (b: Float64Array, x: Float64Array) => {
+    for (let i = 0; i < m; i++) { let s = b[i]; for (let k = 0; k < i; k++) s -= M[i * m + k] * yv[k]; yv[i] = s / M[i * m + i]; }
+    for (let i = m - 1; i >= 0; i--) { let s = yv[i]; for (let k = i + 1; k < m; k++) s -= M[k * m + i] * x[k]; x[i] = s / M[i * m + i]; }
+  };
+  const cycle = (d: number) => {
+    const F = lev[d];
+    if (d === lev.length - 1) return dense(F.b, F.x);
+    F.x.fill(0);
+    gs9(F.nx, F.ny, F.A, F.x, F.b, true);
+    mul9(F.nx, F.ny, F.A, F.x, F.r);
+    for (let v = 0; v < F.r.length; v++) F.r[v] = F.b[v] - F.r[v];
+    const C = lev[d + 1];
+    C.b.fill(0);
+    const { pc, pw } = F, N = F.r.length;
+    for (let v = 0; v < N; v++) { const r = F.r[v]; if (r) for (let p = 4 * v; p < 4 * v + 4; p++) C.b[pc[p]] += pw[p] * r; }
+    cycle(d + 1);
+    for (let v = 0; v < N; v++) { let s = 0; for (let p = 4 * v; p < 4 * v + 4; p++) s += pw[p] * C.x[pc[p]]; F.x[v] += s; }
+    gs9(F.nx, F.ny, F.A, F.x, F.b, false);
+  };
+  return (r, z) => { lev[0].b.set(r); cycle(0); z.set(lev[0].x); };
+}
+/** conjugate gradients on A x = b from x, preconditioned by `prec`; its iterations */
+function pcg9(nx: number, ny: number, A: Float64Array, b: Float64Array, x: Float64Array, prec: (r: Float64Array, z: Float64Array) => void, tol: number, maxIt: number): number {
+  const m = x.length, r = new Float64Array(m), z = new Float64Array(m), p = new Float64Array(m), q = new Float64Array(m);
+  mul9(nx, ny, A, x, q);
+  let bn = 0;
+  for (let i = 0; i < m; i++) (r[i] = b[i] - q[i]), (bn += b[i] * b[i]);
+  bn = Math.sqrt(bn) || 1;
+  prec(r, z);
+  p.set(z);
+  let rz = 0;
+  for (let i = 0; i < m; i++) rz += r[i] * z[i];
+  let it = 0;
+  for (; it < maxIt; it++) {
+    mul9(nx, ny, A, p, q);
+    let pq = 0;
+    for (let i = 0; i < m; i++) pq += p[i] * q[i];
+    if (!(pq > 0)) break;
+    const al = rz / pq;
+    let rn = 0;
+    for (let i = 0; i < m; i++) (x[i] += al * p[i]), (r[i] -= al * q[i]), (rn += r[i] * r[i]);
+    if (Math.sqrt(rn) / bn < tol) { it++; break; }
+    prec(r, z);
+    let rz2 = 0;
+    for (let i = 0; i < m; i++) rz2 += r[i] * z[i];
+    const be = rz2 / rz;
+    rz = rz2;
+    for (let i = 0; i < m; i++) p[i] = z[i] + be * p[i];
+  }
+  return it;
+}

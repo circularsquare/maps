@@ -120,13 +120,45 @@ export interface Sheet {
   y: Float64Array;
   /** the lattice: its finest cell (metres) and origin; per vertex its real place (finest-cell units from the origin,
    * i + j (gx + 1)) and drawn place; per cell its corner (i, j, finest cells) and side, and its land share */
-  mesh: { h: number; x0: number; y0: number; gx: number; key: Int32Array; qx: Float64Array; qy: Float64Array; cell: Int32Array; land: Float32Array };
+  mesh: { h: number; x0: number; y0: number; gx: number; nx: number; ny: number; key: Int32Array; qx: Float64Array; qy: Float64Array; cell: Int32Array; land: Float32Array };
+  /** the ground as the sheet read it (T-2567; the worker keeps it and does not post it) */
+  raster?: SheetRaster;
   info: {
     stations: number; leaves: number; vertices: number; free: number; rounds: number;
     stages: string[]; folds: number; nearFold: number; islands: number; turnedDeg: number;
     cellKm: number; rasterM: number; floorPerKm: number; capKm: number; dispP90Km: number; overCap: number;
     ms: Record<string, number>;
   };
+}
+
+/** the ground's raster, `rr` metres a cell from (x0, y0), `w` by `h`: per row (rowStart) its land runs [runA, runB) of
+ * cells, each run's land mass (`mass`: the same number for runs joined side by side) */
+export interface SheetRaster { x0: number; y0: number; rr: number; w: number; h: number; rowStart: Int32Array; runA: Int32Array; runB: Int32Array; mass: Int32Array }
+
+/** the land mass at a real place, its number plus 1; 0 on water or off the raster */
+export function massAt(R: SheetRaster, x: number, y: number): number {
+  const i = Math.floor((x - R.x0) / R.rr), j = Math.floor((y - R.y0) / R.rr);
+  if (i < 0 || j < 0 || i >= R.w || j >= R.h) return 0;
+  let lo = R.rowStart[j], hi = R.rowStart[j + 1] - 1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (R.runB[m] <= i) lo = m + 1; else if (R.runA[m] > i) hi = m - 1; else return R.mass[m] + 1; }
+  return 0;
+}
+
+/** the sheet's drawn place at every node of its finest lattice inside the box ((nx + 1) by (ny + 1), from the mesh's
+ * origin), linear in each quadtree cell's two triangles */
+export function sheetFinest(s: Sheet): { gw: number; gh: number; qx: Float64Array; qy: Float64Array } {
+  const { gx, nx, ny, key, qx, qy, cell } = s.mesh, GW = gx + 1, nc = cell.length / 3, W = nx + 1, H = ny + 1;
+  const X = new Float64Array(W * H), Y = new Float64Array(W * H);
+  for (let c = 0; c < nc; c++) {
+    const i0 = cell[3 * c], j0 = cell[3 * c + 1], sz = cell[3 * c + 2];
+    const a = findKey(key, j0 * GW + i0), b = findKey(key, j0 * GW + i0 + sz), cc = findKey(key, (j0 + sz) * GW + i0 + sz), d = findKey(key, (j0 + sz) * GW + i0);
+    for (let j = j0; j <= Math.min(ny, j0 + sz); j++) for (let i = i0; i <= Math.min(nx, i0 + sz); i++) {
+      const fi = (i - i0) / sz, fj = (j - j0) / sz, v = j * W + i;
+      if (fi >= fj) (X[v] = (1 - fi) * qx[a] + (fi - fj) * qx[b] + fj * qx[cc]), (Y[v] = (1 - fi) * qy[a] + (fi - fj) * qy[b] + fj * qy[cc]);
+      else (X[v] = (1 - fj) * qx[a] + fi * qx[cc] + (fj - fi) * qx[d]), (Y[v] = (1 - fj) * qy[a] + fi * qy[cc] + (fj - fi) * qy[d]);
+    }
+  }
+  return { gw: W, gh: H, qx: X, qy: Y };
 }
 
 const RAD = Math.PI / 180, EARTH_R = 6371008.8;
@@ -1357,7 +1389,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   ms.total = Math.round(performance.now() - T0);
   return {
     x: SXa, y: SYa,
-    mesh: { h, x0: bx0, y0: by0, gx: GX, key: P.L.key, qx: P.QX, qy: P.QY, cell, land },
+    mesh: { h, x0: bx0, y0: by0, gx: GX, nx: NCX, ny: NCY, key: P.L.key, qx: P.QX, qy: P.QY, cell, land },
+    raster: { x0: bx0, y0: by0, rr, w: RW, h: RH, rowStart: rowStart.slice(), runA: runA.slice(0, nR), runB: runB.slice(0, nR), mass: par.slice(0, nR) },
     info: {
       stations: n, leaves: nLeaf, vertices: P.nV, free: P.nF, rounds, stages, folds, nearFold, islands: islands.length,
       turnedDeg: +((turned * 180) / Math.PI).toFixed(2), cellKm: +(h / 1000).toFixed(3), rasterM: Math.round(rr), floorPerKm: +(sFloor * 1000).toFixed(2),
