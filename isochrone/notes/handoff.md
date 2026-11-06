@@ -32,15 +32,14 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   it; brief T-081 fresh from notes/T-080.md and T-082.md. T-088 lake country filed.
 - T-088 landed (182f0a51): lake and sea units per coarse cell with access; lakes L1/L10 1.07 ->
   1.01; smoke 17/17; data/canoe_t082 backup deleted. Agent a53d87b2fa263c8db idle (~435k).
-- T-087 road factor: agent a5b92d38b9ad284d8 (Sonnet), measurement only; first report in
-  notes/T-087.md (factor 3 wrong on straight grids; straightness rule; 10-20% mosaic floor).
-  Resumed ~06:30 to prototype L1 by 100 m crossing time on its tiles + two prairie grids,
-  with a world cost estimate. If it wins, it and T-081 are one rule ("each level = crossing time
-  of the next finer"), to put to Anita together.
+- T-087 done: L1 by 100 m crossing time wins clearly (2.7% mean / 6.8% worst on 13 tiles vs
+  9.0 / 20.7 for factor 3), ~15-21 core-hours for the world. Filed T-089 (every level by
+  crossing time, T-081 folded in), asked of Anita. Agent a5b92d38b9ad284d8 idle.
+- No agents running on isochrone.
 - New "Roads, towns" hover string for Anita: "...slowed by height and by slope up to a 10% grade."
 
 ## Next
-1. Wait for Anita on T-081 and T-011 (both asked, both recommended).
+1. Wait for Anita on T-089 (with T-081) and T-011 (both asked, both recommended).
 2. T-011 90 m terrain (Anita queued it after roads): asked her whether to start the downloads
    (100-130 GB streamed); T-084 must land first (both touch the terrain side); Anita asked
    for a pause on big downloads once on 2026-11-05 (then said resume). Then T-039, T-057
