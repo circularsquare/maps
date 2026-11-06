@@ -26,9 +26,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   command line first), then start `python isochrone/tools/terrain/launch.py 3` detached from the
   maps root (resumes from data/terrain/done.txt). A background wait in this session
   (scratchpad/orch/wait_pid.py 38812) fires when it exits.
-- **T-011 stage 3**, page side (build_tiles.py reads the planes, d1/e1 planes, directed search,
-  L3/L10 by crossing, output to a new folder behind a `?tiles=t011` switch), Opus agent
-  a3e69e0de8c33f136.
+- T-011 stage 3 landed behind a switch: build_tiles.py two passes (L1 from planes, L3/L10 by
+  crossing), directed search, `localhost:8800/isochrone/?tiles=t011` reads data/tiles_t011 (built
+  from the run's planes to ~75N plus the pilot tiles and an Alps block). L1/L10 0.91 -> 1.01,
+  seams 1.04 -> 1.00; smoke 18/18 both ways, corridors 7/7. Agent a3e69e0de8c33f136 idle (~370k).
 - cross.mjs speed-up landed (234674ee): 1.4-1.8x, byte-identical; swapped into the live run at
   11:36 (node starts per tile, so no restart was needed). ~35 core-hours left at most.
 - Idle agents, retire: a0fa8e1aa1250534e (T-011 stage 1, ~465k), a615cd2144584c81f (T-090),
@@ -37,9 +38,12 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## Next
 1. When cores free up: restart the run with more workers.
-2. When the world run ends: stage 3 builds the full folder; swap it in (keep data/tiles as
-   t011's before), show Anita before/after (mountains get faster: 0.64-0.83 of today's), then
-   re-measure canoe cfg.access (notes/T-082.md), then T-039 and T-057 mountain tiles.
+2. When the world run ends: `python isochrone/tools/build_tiles.py --out tiles_t011` from the
+   run's planes only (~1 h, claim cores), `node isochrone/checks/levels.mjs` and smoke with
+   `?tiles=t011`, then `build_tiles.py swap <backup> --from tiles_t011` (today's data/tiles is the
+   backup), show Anita before/after (mountains faster: 0.64-0.83 of today's; fjord and river
+   country too fast at L3/L10, T-007). Then re-measure canoe cfg.access (notes/T-082.md), then
+   T-039 (L0.1 ~12-16% slower than the new L1) and T-057 mountain tiles. T-091 corridors.
 3. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075. T-016 publishing
    must weigh L1 growing ~3x (176 -> ~530 MB).
 

@@ -55,9 +55,14 @@ holes (`notes/T-028.md`).
   or a kind of infrastructure off removes its layer or its edges, so toggles do not multiply the
   data to prepare.
 - **Directed edges.** Water flows: paddling downstream is faster than upstream, so the graph is
-  directed. Walking is symmetric while slope comes in as MAP's undirected factor; once slopes
-  come from 90 m elevation (T-011) walking is directed too, downhill faster than uphill (directed
-  Tobler, research/friction.md 2).
+  directed. Walking is directed too (T-011): each cell has four speeds, going east, west, south and
+  north, from a 100 m walker on Copernicus GLO-90 heights and LC100 crossing it (directed Tobler,
+  research/friction.md 2), so downhill is faster than uphill and a path keeps to the valleys
+  inside a cell. A move weighs the east-west and north-south speeds of the cells it touches by its
+  share of each (`docs/resolution.md`, "Directions"); carrying is twice that. Hazard per km and
+  getting in or out use the cell's one speed, the geometric mean of the four. Until the world run is done the
+  directed build is read with `?tiles=t011`; elsewhere, and in the served map, a cell's four
+  speeds are equal.
 - **Roads.** A walkable OSM way is walked at 5 km/h times the height factor and the slope factor
   of at most a 10% grade, since roads wind up hills (T-084); a 1 km
   cell blends road and off-road time by three times its share of 100 m road cells, capped at all

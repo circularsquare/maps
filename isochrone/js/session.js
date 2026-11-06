@@ -1,7 +1,7 @@
 // The state of one map session: the solved start, the last windows, and what to do on a click
 // or a new view. Posts every result to the page.
 import { cfg, setConfig } from './config.js';
-import { makeLevel, snap, setHazard } from './levels.js';
+import { makeLevel, snap, setHazard, setDirs } from './levels.js';
 import { setTiles, loadHazardWorld, applyRoads } from './tiles.js';
 import { solve, cellTimes } from './search.js';
 import { loadWorld } from './canoedata.js';
@@ -29,7 +29,8 @@ export function init(msg) {
     const cell = (m.north - m.south) / m.height;
     coarse = makeLevel(new Uint8Array(msg.bytes), m.width, m.height, m.west, m.north, cell, true);
     if (cfg.roads && msg.roads) applyRoads(coarse.grid, new Uint8Array(msg.roads));
-    setTiles(msg.tiles);
+    setDirs(coarse, msg.dirs && new Uint8Array(msg.dirs), cfg.roads && msg.dirsRoads && new Uint8Array(msg.dirsRoads));
+    setTiles(msg.tiles, msg.tilesBase);
     hazardWorld().catch(() => { /* the click retries it and reports */ });
     self.postMessage({ type: 'ready', speeds: speeds() });
 }

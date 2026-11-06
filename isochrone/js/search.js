@@ -15,6 +15,8 @@ const E0C = new Int32Array(16), E0R = new Int32Array(16), E1C = new Int32Array(1
 const KA = new Int32Array(16), KB = new Int32Array(16), KC = new Int32Array(16), KD = new Int32Array(16);
 // transfer offset j = (dc + 1) + 3 (dr + 1) -> its plain move (-1 for the cell itself)
 const JK = new Int32Array(9);
+// which of a cell's four directed values (E W S N) a move's east-west and north-south parts use
+const DX = new Int32Array(16), DY = new Int32Array(16);
 export const plainMove = (dc, dr) => { for (let k = 0; k < 8; k++) if (MDC[k] === dc && MDR[k] === dr) return k; return -1; };
 (function buildMoves() {
     const plain = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -29,7 +31,23 @@ export const plainMove = (dc, dr) => { for (let k = 0; k < 8; k++) if (MDC[k] ==
         KC[k] = plainMove(MDC[k] - E0C[k], MDR[k] - E0R[k]); KD[k] = plainMove(MDC[k] - E1C[k], MDR[k] - E1R[k]);
     }
     for (let j = 0; j < 9; j++) JK[j] = plainMove(j % 3 - 1, ((j / 3) | 0) - 1);
+    for (let k = 0; k < 16; k++) { DX[k] = MDC[k] > 0 ? 0 : 1; DY[k] = MDR[k] > 0 ? 2 : 3; }
 })();
+
+// Directed walking (T-011, docs/resolution.md "Directions"): a level's L.sd holds each cell's hours
+// per km going east, west, south and north (js/levels.js setDirs), or is null. Move k uses the
+// east or west value by the sign of its column step (DX) and south or north by its row step (DY),
+// weighted by its share of east-west km, wx = |dx| / (|dx| + |dy|), per row and move (dirWeights).
+function dirWeights(H, dxKm, dyKm) {
+    const wx = new Float32Array(H * 16);
+    for (let r = 0; r < H; r++) for (let k = 0; k < 16; k++) {
+        const r2 = r + MDR[k];
+        if (r2 < 0 || r2 >= H) continue;
+        const dx = Math.abs(MDC[k]) * (dxKm[r] + dxKm[r2]) * 0.5, dy = Math.abs(MDR[k]) * dyKm;
+        wx[r * 16 + k] = dx / (dx + dy);
+    }
+    return wx;
+}
 
 // How each node was reached (Uint8), for tracing the route back (T-024). The predecessor cell is
 // the node's cell minus the move's offset; its layer is the node's own, except for a transfer.
@@ -59,6 +77,7 @@ async function solveWalk(L, seeds, alive) {
     const { grid, W, H, wrap, dxKm, dyKm } = L;
     const { inv, maxHours } = cfg;
     const N = W * H;
+    const sd = L.sd, wk = sd ? dirWeights(H, dxKm, dyKm) : null;
     const stepKm = new Float32Array(H * 16);
     for (let r = 0; r < H; r++) for (let k = 0; k < 16; k++) {
         const r2 = r + MDR[k];
@@ -123,15 +142,20 @@ async function solveWalk(L, seeds, alive) {
             if (pos[v] === -2) continue;
             const s = grid[v];
             if (!s) continue;
-            let mean;
-            if (k < 8) mean = (invU + inv[s]) * 0.5;
-            else {
+            let mean, i0 = 0, i1 = 0;
+            if (k >= 8) {
                 let c0 = c + E0C[k], c1 = c + E1C[k];
                 if (wrap) { c0 = (c0 + W) % W; c1 = (c1 + W) % W; }
-                const e0 = grid[(r + E0R[k]) * W + c0], e1 = grid[(r + E1R[k]) * W + c1];
-                if (!e0 || !e1) continue;
-                mean = (invU + inv[s] + inv[e0] + inv[e1]) * 0.25;
+                i0 = (r + E0R[k]) * W + c0; i1 = (r + E1R[k]) * W + c1;
+                if (!grid[i0] || !grid[i1]) continue;
             }
+            if (sd) {
+                const a = wk[sr + k], b = 1 - a, X = DX[k], Y = DY[k];
+                mean = a * (sd[4 * u + X] + sd[4 * v + X]) + b * (sd[4 * u + Y] + sd[4 * v + Y]);
+                if (k < 8) mean *= 0.5;
+                else mean = (mean + a * (sd[4 * i0 + X] + sd[4 * i1 + X]) + b * (sd[4 * i0 + Y] + sd[4 * i1 + Y])) * 0.25;
+            } else if (k < 8) mean = (invU + inv[s]) * 0.5;
+            else mean = (invU + inv[s] + inv[grid[i0]] + inv[grid[i1]]) * 0.25;
             const nd = du + stepKm[sr + k] * mean;
             if (nd < dist[v]) {
                 dist[v] = nd; pred[v] = P_GRID + k;
@@ -169,6 +193,7 @@ export async function solve(L, seeds, alive, canoe) {
         const len = Math.sqrt(dx * dx + dy * dy);
         stepKm[r * 16 + k] = len; ux[r * 16 + k] = dx / len; uy[r * 16 + k] = -dy / len;
     }
+    const sd = L.sd, wk = sd ? dirWeights(H, dxKm, dyKm) : null;
     // With cfg.hazard off weight is time: t is w and hz stays 0.
     const split = cfg.hazard;
     // past this weight no node can pass both stop rules
@@ -259,16 +284,22 @@ export async function solve(L, seeds, alive, canoe) {
                 if (pos[v] === -2) continue;
                 const s = grid[v];
                 if (!s) continue;
-                let mean, mq;
+                let mean, mq, i0 = 0, i1 = 0;
                 if (k < 8) { mean = (invU + inv[s]) * 0.5; mq = (hqU + hq[v]) * 0.5; }
                 else {
                     let c0 = c + E0C[k], c1 = c + E1C[k];
                     if (wrap) { c0 = (c0 + W) % W; c1 = (c1 + W) % W; }
-                    const i0 = (r + E0R[k]) * W + c0, i1 = (r + E1R[k]) * W + c1;
+                    i0 = (r + E0R[k]) * W + c0; i1 = (r + E1R[k]) * W + c1;
                     const e0 = grid[i0], e1 = grid[i1];
                     if (!e0 || !e1) continue;
                     mean = (invU + inv[s] + inv[e0] + inv[e1]) * 0.25;
                     mq = (hqU + hq[v] + hq[i0] + hq[i1]) * 0.25;
+                }
+                if (sd) {   // directed walking; hazard per km stays the cells' own (L.hq)
+                    const a = wk[sr + k], b = 1 - a, X = DX[k], Y = DY[k];
+                    mean = a * (sd[4 * u + X] + sd[4 * v + X]) + b * (sd[4 * u + Y] + sd[4 * v + Y]);
+                    if (k < 8) mean *= 0.5;
+                    else mean = (mean + a * (sd[4 * i0 + X] + sd[4 * i1 + X]) + b * (sd[4 * i0 + Y] + sd[4 * i1 + Y])) * 0.25;
                 }
                 const len = stepKm[sr + k] * f, dt = len * mean, dh = len * mq, nw = wu + dt + K * dh;
                 {   // relax, inlined

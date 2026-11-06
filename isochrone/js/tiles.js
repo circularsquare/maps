@@ -3,14 +3,17 @@
 // The fetch URL is relative to the worker entry, worker.js.
 import { cfg } from './config.js';
 
-let tiles = null;                // data/tiles/index.json, with a Set of tiles per level
+let tiles = null;                // data/tiles/index.json, with a Set of tiles per level and kind
+let tilesBase = 'data/tiles/';
 
-export function setTiles(index) {
+// base: the folder of index.json (the page's ?tiles= switch), relative to worker.js
+export function setTiles(index, base) {
     tiles = index;
+    if (base) tilesBase = base;
     for (const k in tiles.levels) {
         const lv = tiles.levels[k];
         lv.set = new Set(lv.tiles);
-        if (lv.roads) lv.roads.set = new Set(lv.roads.tiles);
+        for (const kind of ['roads', 'dirs', 'dirsRoads']) if (lv[kind]) lv[kind].set = new Set(lv[kind].tiles);
     }
 }
 
@@ -55,9 +58,9 @@ export function getCached(url, bytes) {
     return e.p;
 }
 
-function getTile(f, path, tr, tc) {
+function getTile(f, path, tr, tc, bands = 1) {
     const T = tiles.levels[f].tile;
-    return getCached('data/tiles/' + path + '/' + tr + '_' + tc + '.bin.gz', T * T);
+    return getCached(tilesBase + path + '/' + tr + '_' + tc + '.bin.gz', bands * T * T);
 }
 
 // Each 5-degree tile overlapping window w at tile size T: calls fn(tr, tc, tcw) with tc
@@ -68,18 +71,28 @@ export function forTiles(w, T, TX, fn) {
             fn(tr, tc, ((tc % TX) + TX) % TX);
 }
 
-export async function loadWindow(w) {
+// The window's speeds, roads folded in. With `dirs` (an object), also its direction planes where
+// the build has them (docs/resolution.md "Directions"): dirs.d without roads, dirs.e with roads
+// (only when roads are on), each 4 planes of the window's cells, or null where no tile has them.
+export async function loadWindow(w, dirs) {
     if (w.f === 0.1) return loadFineWindow(w);
-    const lv = tiles.levels[w.f], T = lv.tile, TX = tiles.tilesX;
+    const lv = tiles.levels[w.f], T = lv.tile, TX = tiles.tilesX, N = w.cols * w.rows;
     const rd = cfg.roads && lv.roads;
-    const grid = new Uint8Array(w.cols * w.rows), roads = rd ? new Uint8Array(w.cols * w.rows) : null;
+    const dl = dirs && lv.dirs, el = dirs && cfg.roads && lv.dirsRoads;
+    const grid = new Uint8Array(N), roads = rd ? new Uint8Array(N) : null;
+    const d = dl ? new Uint8Array(4 * N) : null, e = el ? new Uint8Array(4 * N) : null;
+    let nd = 0, ne = 0;
+    const bands = (dst, t, tr, tc) => { for (let j = 0; j < 4; j++) cutInto(dst.subarray(j * N, (j + 1) * N), w, t, j, T, tr, tc); };
     const jobs = [];
     forTiles(w, T, TX, (tr, tc, tcw) => {
         const id = tr * TX + tcw;
         if (lv.set.has(id)) jobs.push(getTile(w.f, lv.path, tr, tcw).then(t => cutInto(grid, w, t, 0, T, tr, tc)));
         if (rd && rd.set.has(id)) jobs.push(getTile(w.f, rd.path, tr, tcw).then(t => cutInto(roads, w, t, 0, T, tr, tc)));
+        if (dl && dl.set.has(id)) { nd++; jobs.push(getTile(w.f, dl.path, tr, tcw, 4).then(t => bands(d, t, tr, tc))); }
+        if (el && el.set.has(id)) { ne++; jobs.push(getTile(w.f, el.path, tr, tcw, 4).then(t => bands(e, t, tr, tc))); }
     });
     await Promise.all(jobs);
+    if (dirs) { dirs.d = nd ? d : null; dirs.e = ne ? e : null; }
     return roads ? applyRoads(grid, roads) : grid;
 }
 

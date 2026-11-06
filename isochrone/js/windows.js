@@ -1,7 +1,7 @@
 // View windows at L3, L1 and L0.1: which cells they cover, and the solve seeded from the next
 // coarser level, layer by layer. See docs/resolution.md and docs/canoe.md 5.
 import { cfg } from './config.js';
-import { makeLevel, snap, sampleNode, setHazard } from './levels.js';
+import { makeLevel, snap, sampleNode, setHazard, setDirs } from './levels.js';
 import { loadWindow, loadHazardWindow, fineIndex, fineShare } from './tiles.js';
 import { loadWindowWater } from './canoedata.js';
 import { buildCanoe, shoreAt, eachCanoeNode } from './canoe.js';
@@ -83,10 +83,12 @@ function windowSeeds(L, w, coarser, origin, canoe) {
 // canoe: the sea grid of the canoe world data, on a canoe start; null on a walking one.
 export async function solveWindow(w, coarser, origin, alive, canoe) {
     const t0 = performance.now();
-    const [grid, hzc] = await Promise.all([loadWindow(w), cfg.hazard ? loadHazardWindow(w) : null]);
+    const dirs = {};
+    const [grid, hzc] = await Promise.all([loadWindow(w, dirs), cfg.hazard ? loadHazardWindow(w) : null]);
     if (!alive()) return null;
     const L = makeLevel(grid, w.cols, w.rows, w.west, w.north, w.cell, false);
     L.win = w;
+    setDirs(L, dirs.d, dirs.e);
     if (hzc) setHazard(L, hzc);
     if (canoe) {
         const data = await loadWindowWater(w, grid, (lng, lat) => {

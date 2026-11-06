@@ -5,6 +5,15 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **Walking is directed, and every level is made by crossing time** (T-011 stage 3, folding in
+  T-089 and T-081; notes/T-011.md). L1 cells take four speeds (E, W, S, N) from the 100 m walker on
+  GLO-90, L3 and L10 cross the directed L1 as the page walks it, each with a 3-cell strip
+  correction; a move weighs a cell's east-west and north-south values by its share of each
+  (linear, not the ellipse: the same to 0.1-0.2 points on the pilot, no square root in the loop).
+  Kept as one speed byte (the geometric mean) plus int8 direction planes, so everything that wants
+  one speed (hazard per km, paint, getting in and out) is unchanged and a level without planes
+  searches exactly as before. Replaces MAP's symmetric slope factor and the mean-time-per-metre
+  coarse rule, which made mountains ~25% slow at L1 and L10 ~20% slow against L1.
 - **Coarse canoe water is split into units like the rivers, and water units on land cells pay
   access too** (T-088, notes/T-088.md): separate L1 sea or lake pieces in an L3 or L10 cell are
   separate canoe nodes, linked piece to piece. Splitting alone moved Jyvaskyla L1/L10 only 1.16 ->

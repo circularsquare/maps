@@ -1,5 +1,5 @@
 // Corridor tree check (T-090): the worker's modules in node over the real L10 data, from the maps root:
-//   node isochrone/checks/corridors.mjs        (~3 min: two canoe starts and a walking one)
+//   node isochrone/checks/corridors.mjs [--tiles=<name>]   (~3 min: two canoe starts and a walking one)
 // For each start, after corridors.count and lines:
 //   - every reached node's parent is reached within the time limit at no more weight (a parent read
 //     back from the codes that is not is outside the counted tree, and leaves the shared work
@@ -15,19 +15,22 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url)).replace(/\\/g, '/');
 globalThis.fetch = async (u) => new Response(readFileSync(String(u).replace(/^file:\/\//, '')));
 const imp = (m) => import(pathToFileURL(ROOT + 'js/' + m).href);
 const { cfg, setConfig } = await imp('config.js');
-const { makeLevel, snap, setHazard } = await imp('levels.js');
+const { makeLevel, snap, setHazard, setDirs } = await imp('levels.js');
 const { solve, P_NONE } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
 const { buildCanoe } = await imp('canoe.js');
 const { loadHazardWorld, applyRoads } = await imp('tiles.js');
 const corridors = await imp('corridors.js');
 
-const meta = JSON.parse(readFileSync(ROOT + 'data/grid.json', 'utf8'));
+// --tiles=<name>: the walking levels of data/tiles_<name>/ (the page's ?tiles= switch)
+const SUB = (process.argv.find((a) => a.startsWith('--tiles=')) ?? '').slice(8).replace(/[^a-z0-9_-]/gi, '');
+const BASE = ROOT + 'data/' + (SUB ? 'tiles_' + SUB + '/' : '');
+const meta = JSON.parse(readFileSync(BASE + 'grid.json', 'utf8'));
 setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
-const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
-const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north,
-    (meta.north - meta.south) / meta.height, true);
-if (cfg.roads && meta.roads) applyRoads(L.grid, gunzipSync(readFileSync(ROOT + 'data/' + meta.roads)));
+const gz = (f) => { const b = gunzipSync(readFileSync(BASE + f)); return new Uint8Array(b.buffer, b.byteOffset, b.length); };
+const L = makeLevel(gz('grid.bin.gz'), meta.width, meta.height, meta.west, meta.north, (meta.north - meta.south) / meta.height, true);
+if (cfg.roads && meta.roads) applyRoads(L.grid, gz(meta.roads));
+setDirs(L, meta.dirs ? gz(meta.dirs) : null, cfg.roads && meta.dirsRoads ? gz(meta.dirsRoads) : null);
 setHazard(L, await loadHazardWorld());
 const d = await loadWorld(L.W, L.H);
 buildCanoe(L, d, d.sea);

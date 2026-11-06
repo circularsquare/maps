@@ -17,6 +17,34 @@ export function setHazard(L, codes) {
     L.hq = hq;
 }
 
+// exp(-b / 32) for a direction byte b, read as int8 (tools/build_tiles.py DSCALE)
+const NEG = new Float32Array(256);
+for (let b = 0; b < 256; b++) NEG[b] = Math.exp(-((b << 24) >> 24) / 32);
+
+// L.sd: each land cell's hours per km going east, west, south and north (4 a cell, interleaved),
+// from its speed (roads folded in) and its direction planes: d (no roads) and e (with roads, on
+// top of d), each 4 planes of the level's cells one after another, either may be null
+// (docs/resolution.md "Directions"). Null when both are absent or all 0, so the search is the
+// symmetric one.
+export function setDirs(L, d, e) {
+    L.sd = null;
+    if (!d && !e) return;
+    const { grid } = L, inv = cfg.inv, n = grid.length;
+    const sd = new Float32Array(4 * n);
+    let any = false;
+    for (let j = 0; j < 4; j++) {
+        const dj = d ? d.subarray(j * n, (j + 1) * n) : null, ej = e ? e.subarray(j * n, (j + 1) * n) : null;
+        for (let i = 0; i < n; i++) {
+            const s = grid[i];
+            if (!s) continue;
+            const a = dj ? dj[i] : 0, b = ej ? ej[i] : 0;
+            if (a | b) any = true;
+            sd[4 * i + j] = inv[s] * NEG[a] * NEG[b];
+        }
+    }
+    if (any) L.sd = sd;
+}
+
 // A level: a block of cells cellDeg wide, its top-left corner at (west, north).
 export function makeLevel(grid, W, H, west, north, cellDeg, wrap) {
     const dxKm = new Float32Array(H);
@@ -25,7 +53,7 @@ export function makeLevel(grid, W, H, west, north, cellDeg, wrap) {
         dxKm[r] = cellDeg * KM_PER_DEG * Math.cos(lat * Math.PI / 180);
     }
     return { grid, W, H, west, north, south: north - H * cellDeg, east: west + W * cellDeg,
-             cellDeg, wrap, dxKm, dyKm: cellDeg * KM_PER_DEG, dist: null };
+             cellDeg, wrap, dxKm, dyKm: cellDeg * KM_PER_DEG, dist: null, sd: null };
 }
 
 // Nearest land cell to a point within R cells, or -1.

@@ -91,6 +91,7 @@ body.busy, body.busy .maplibregl-canvas { cursor: progress !important; }
 <div id="info" class="panel">
     <p>Click anywhere to set the start. <span class="walk-only">Each colour is how long it takes to walk there. A day is 8 hours of walking.</span><span class="canoe-only" hidden>Each colour is how long it takes to get there with a canoe. A day is 8 hours of paddling or carrying.</span></p>
     <p>Walking speeds follow the Malaria Atlas Project's recipe (Weiss et al., Nature Medicine 2020, CC BY 4.0): a pace for each kind of ground, slowed by height and slope. Ground is from Copernicus Global Land Cover 2019 (CC BY 4.0), height and slope from GMTED2010 (USGS), and roads and paths from OpenStreetMap (ODbL). The whole world is worked out on cells of about 10 km, and the area in view on cells of 3 km and then 1 km as you zoom in.</p>
+    <p id="terrainCredits" hidden>Slopes are walked on the Copernicus 90 m height model (GLO-90, © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA), slower uphill than down.</p>
     <p id="canoeCredits" hidden>The canoe goes 5 km/h on still water and is carried overland at half walking speed. Rivers come from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0). Falls, dams and weirs are from OpenStreetMap (ODbL), the coast from Natural Earth. Sea currents are from the NOAA Global Drifter Program, and summer waves and sea ice from ERA5 (Copernicus Climate Change Service, CC BY 4.0).</p>
     <p>Danger on land is thirst, cold, ice and height. Temperatures and rain are from CHELSA (Karger et al. 2017, 2021), and each place takes January or July, whichever is safer. Drinking water is rivers from RiverATLAS and lakes from HydroLAKES (HydroSHEDS, CC BY 4.0), and wells, springs and villages from OpenStreetMap (ODbL). Ice is from Copernicus Global Land Cover 2019 (CC BY 4.0), the Randolph Glacier Inventory 6.0 (CC BY 4.0) and Natural Earth, and height from GMTED2010 (USGS). Places with under 1% survival are left blank.</p>
     <p>Hill shading is from the <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank">Terrain Tiles on AWS</a>, built by Mapzen from SRTM, GMTED2010 and 3DEP (USGS), ETOPO1 (NOAA), EU-DEM (Copernicus) and national models, <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">credited in full here</a>. River lines are the ones the canoe uses, wider for more water and faint where it has to be carried.</p>
@@ -122,6 +123,9 @@ const params = new URLSearchParams(location.search);
 let mode = params.get('mode') === 'canoe' ? 'canoe' : 'walk';   // of the next start
 const CANOE_SUB = (params.get('canoedata') || '').replace(/[^a-z0-9_-]/gi, '');
 const CANOE_BASE = 'data/canoe/' + (CANOE_SUB ? CANOE_SUB + '/' : '');
+// ?tiles=<name> reads the walking levels from data/tiles_<name>/ (a build not yet served, T-011).
+const TILES_SUB = (params.get('tiles') || '').replace(/[^a-z0-9_-]/gi, '');
+const TILES_BASE = 'data/' + (TILES_SUB ? 'tiles_' + TILES_SUB + '/' : '');
 
 // Title, legend and info wording follow the mode of the start shown.
 function showMode(m) {
@@ -208,19 +212,25 @@ const workerReady = new Promise(res => {
 });
 
 async function loadGrid() {
-    meta = await (await fetch('data/grid.json')).json();
-    const tiles = await (await fetch('data/tiles/index.json')).json();
+    const B = TILES_BASE;
+    meta = await (await fetch(B + 'grid.json')).json();
+    document.getElementById('terrainCredits').hidden = !meta.dirs;
+    const tiles = await (await fetch(B + 'tiles/index.json')).json();
     const gunzip = async url => {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(url + ' ' + resp.status);
         return new Response(resp.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
     };
-    // L10 speeds, and its road bytes (docs/roads.md) when the build has them
-    const [bytes, roads] = await Promise.all([gunzip('data/grid.bin.gz'), meta.roads ? gunzip('data/' + meta.roads) : null]);
-    worker.postMessage({ type: 'init', meta, tiles, bytes, roads, bands: BANDS, alpha: OVERLAY_ALPHA,
+    // L10 speeds, and when the build has them its road bytes (docs/roads.md) and direction planes
+    // (docs/resolution.md, "Directions")
+    const opt = (f) => f ? gunzip(B + f) : null;
+    const [bytes, roads, dirs, dirsRoads] = await Promise.all([gunzip(B + 'grid.bin.gz'), opt(meta.roads),
+        opt(meta.dirs), meta.roads ? opt(meta.dirsRoads) : null]);
+    worker.postMessage({ type: 'init', meta, tiles, bytes, roads, dirs, dirsRoads, tilesBase: B + 'tiles/',
+                         bands: BANDS, alpha: OVERLAY_ALPHA,
                          maxHours: MAX_HOURS, canoeBase: CANOE_BASE, corridors: corrOn,
                          look: ['crisp', 'diag'].includes(params.get('look')) ? params.get('look') : 'hex' },
-                       roads ? [bytes, roads] : [bytes]);
+                       [bytes, roads, dirs, dirsRoads].filter(Boolean));
     await workerReady;
 }
 
