@@ -30,9 +30,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-082 landed: coarse canoe rivers = L1 network merged per cell, access cost cfg.access 0.5;
   Coari L1/L10 2.08 -> 0.90; smoke 17/17. Agent a754c1f8965d2be43 idle at ~630k tokens: retire
   it; brief T-081 fresh from notes/T-080.md and T-082.md. T-088 lake country filed.
-- T-088 lake pieces (+ T-075 small cases): agent a53d87b2fa263c8db (Opus, ~05:00). Owns
-  tools/canoe/, canoe data, js/canoe*.js, search.js and node resolution in route/corridors/
-  windows/levels, docs/canoe.md. Ledger iso-t088.
+- T-088 landed (182f0a51): lake and sea units per coarse cell with access; lakes L1/L10 1.07 ->
+  1.01; smoke 17/17; data/canoe_t082 backup deleted. Agent a53d87b2fa263c8db idle (~435k).
 - T-087 road factor on a farm grid: agent a5b92d38b9ad284d8 (Sonnet), measurement only;
   owns notes/T-087*. Ledger iso-t087.
 - New "Roads, towns" hover string for Anita: "...slowed by height and by slope up to a 10% grade."
