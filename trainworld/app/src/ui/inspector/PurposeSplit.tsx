@@ -9,6 +9,7 @@
 import { demandView, type DemandView } from "../../game/demand";
 import { PURPOSES, purposeColour, type PurposeKey } from "../../game/purposes";
 import { purposeFilter } from "../../game/ui";
+import { t } from "../../i18n";
 import { SegBar } from "../widgets";
 import { pctOf } from "./tripText";
 
@@ -42,10 +43,10 @@ export function PurposeSplit({ scope, unit }: { scope: SplitScope; unit: string 
   const shown = purposeFilter.value;
   // T-293: shares only; the panels count today's riders, not a whole day's forecast
   const words = (p: { key: PurposeKey; n: number }) =>
-    `${PURPOSES.find((q) => q.key === p.key)!.name}: ${pctOf(p.n, all)} of ${unit}`;
+    t("purposeSplit.words", { name: PURPOSES.find((q) => q.key === p.key)!.name, share: pctOf(p.n, all), unit });
   return (
     <li class="purpose-split">
-      <SegBar kind="split-bar" label={`By purpose: ${split.parts.map(words).join("; ")}`}
+      <SegBar kind="split-bar" label={t("purposeSplit.label", { parts: split.parts.map(words).join("; ") })}
         parts={split.parts.map((p) => ({ share: p.n / all, cls: p.key === shown ? "shown" : undefined, colour: purposeColour(p.key), tip: words(p) }))} />
     </li>
   );

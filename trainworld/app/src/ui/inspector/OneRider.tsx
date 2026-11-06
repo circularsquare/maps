@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { demandView, type LineDemand } from "../../game/demand";
 import { exact } from "../../game/format";
 import { PERIODS } from "../../game/periods";
+import { t } from "../../i18n";
 import { asFilter, purposeColour, purposeName, type PurposeKey } from "../../game/purposes";
 import { pickPurpose, pickStops, purposeWeights } from "../../game/riderSample";
 import { stationPoint, tripOpenedFrom, tripPeriod } from "../../game/trip";
@@ -16,7 +17,7 @@ import { stationNames, world } from "../../game/world";
 import { riderTrip, type RiderTrip } from "../../map/tripView";
 import { Icon } from "../widgets";
 import { alightShares } from "./TrainStops";
-import { minText, NO_ROAD } from "./tripText";
+import { minText, noRoad, pctWhole } from "./tripText";
 
 interface Rider {
   from: number;
@@ -27,7 +28,7 @@ interface Rider {
 /** Draws that found no answer for the pair before the block says so. */
 const TRIES = 6;
 
-const pct = (v: number | null) => (v === null ? "" : `${Math.round(100 * v)}%`);
+const pct = (v: number | null) => (v === null ? "" : pctWhole(v));
 
 export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineDemand; run: number; seg: number; p: number }) {
   const w = world.value;
@@ -75,18 +76,18 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   if (!r || !w) return null;
   const name = stationNames(w);
   const stops = run === 0 ? line.stops : [...line.stops].reverse();
-  const from = name.get(stops[r.from]) ?? "a station", to = name.get(stops[r.to]) ?? "a station";
+  const from = name.get(stops[r.from]) ?? t("oneRider.aStation"), to = name.get(stops[r.to]) ?? t("oneRider.aStation");
   const trip = read?.id === id ? read.trip : undefined;
   const total = weights.reduce((s, x) => s + x.w, 0);
   const purposeTip = total > 0
-    ? `Drawn from the ${exact(total)} riders on this interval in the ${PERIODS[p].name.toLowerCase()}:\n` + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
-    : "No split by purpose for this interval yet";
+    ? t("oneRider.drawnFrom", { count: exact(total), period: PERIODS[p].name.toLowerCase() }) + "\n" + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
+    : t("oneRider.noSplit");
   const better = trip && trip.train !== null && trip.car !== null ? (trip.train <= trip.car ? "train" : "car") : null;
   const chances = trip && trip.pTrain !== null && trip.pDrive !== null
-    ? `\nOf the people making this trip in the ${PERIODS[p].name.toLowerCase()}, ${pct(trip.pTrain)} take the train and ${pct(trip.pDrive)} drive`
+    ? "\n" + t("oneRider.chances", { period: PERIODS[p].name.toLowerCase(), train: pct(trip.pTrain), drive: pct(trip.pDrive) })
     : "";
   const minutes = (m: number | null | undefined, none: string) =>
-    m === undefined ? <span class="muted">…</span> : m === null ? <span class="muted" data-tip={none}>none</span> : minText(m);
+    m === undefined ? <span class="muted">…</span> : m === null ? <span class="muted" data-tip={none}>{t("oneRider.none")}</span> : minText(m);
   const another = () => {
     tries.current = 0;
     picked.current = null;
@@ -106,32 +107,32 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   return (
     <>
       <div class="h">
-        <span data-tip="One random rider on this train">Random rider</span>
+        <span data-tip={t("oneRider.tip")}>{t("oneRider.title")}</span>
         <span class="one-rider-acts">
-          <button class="btn icon mini" aria-label="Pick another rider" data-tip="Pick another rider" onClick={another}><Icon.cycle /></button>
-          <button class="btn icon mini" aria-label="Open this trip in the trip explorer" data-tip="Open this trip in the trip explorer" onClick={open}><Icon.route /></button>
+          <button class="btn icon mini" aria-label={t("oneRider.another")} data-tip={t("oneRider.another")} onClick={another}><Icon.cycle /></button>
+          <button class="btn icon mini" aria-label={t("oneRider.open")} data-tip={t("oneRider.open")} onClick={open}><Icon.route /></button>
         </span>
       </div>
       <ul class="rows one-rider">
-        <li data-tip={`Starts from the homes and places around ${from}`}>
-          <span class="grow">From</span>
+        <li data-tip={t("oneRider.fromTip", { name: from })}>
+          <span class="grow">{t("oneRider.from")}</span>
           <span class="val name">{from}</span>
         </li>
-        <li data-tip={`Gets off at ${to}, and the trip ends at the places around it`}>
-          <span class="grow">To</span>
+        <li data-tip={t("oneRider.toTip", { name: to })}>
+          <span class="grow">{t("oneRider.to")}</span>
           <span class="val name">{to}</span>
         </li>
         <li data-tip={purposeTip}>
-          <span class="grow">Purpose</span>
+          <span class="grow">{t("oneRider.purpose")}</span>
           <span class="val"><i class="mk" style={{ background: purposeColour(r.purpose) }} /> {purposeName(r.purpose)}</span>
         </li>
-        <li class={better === "train" ? "b" : ""} data-tip={`By train, in effective time: waits, rides, walks and the fare counted as minutes${chances}`}>
-          <span class="grow">By train</span>
-          <span class="val">{minutes(trip === undefined ? undefined : trip?.train ?? null, "No train route for this trip right now")}</span>
+        <li class={better === "train" ? "b" : ""} data-tip={t("oneRider.trainTip") + chances}>
+          <span class="grow">{t("oneRider.train")}</span>
+          <span class="val">{minutes(trip === undefined ? undefined : trip?.train ?? null, t("oneRider.noTrain"))}</span>
         </li>
-        <li class={better === "car" ? "b" : ""} data-tip={`By car, in effective time: the drive, parking and what the car costs counted as minutes${chances}`}>
-          <span class="grow">By car</span>
-          <span class="val">{minutes(trip === undefined ? undefined : trip?.car ?? null, trip?.apart ? NO_ROAD : "No answer for the car")}</span>
+        <li class={better === "car" ? "b" : ""} data-tip={t("oneRider.carTip") + chances}>
+          <span class="grow">{t("oneRider.car")}</span>
+          <span class="val">{minutes(trip === undefined ? undefined : trip?.car ?? null, trip?.apart ? noRoad() : t("oneRider.noCar"))}</span>
         </li>
       </ul>
     </>

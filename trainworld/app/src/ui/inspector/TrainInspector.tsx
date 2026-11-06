@@ -5,6 +5,7 @@ import { demandView, lineDemand } from "../../game/demand";
 import { loadFailure } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
 import { distanceOf, exact } from "../../game/format";
+import { t } from "../../i18n";
 import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
@@ -35,18 +36,18 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
     <>
       <div class="title">
         <Chip line={l} size="lg" />
-        <span class="name">{l.name} {vehicleOf(st)}</span>
+        <span class="name">{t("trainInspector.title", { name: l.name, vehicle: vehicleOf(st) })}</span>
       </div>
-      <div class="sub muted">Towards {name.get(stops[stops.length - 1])}</div>
+      <div class="sub muted">{t("trainInspector.towards", { name: name.get(stops[stops.length - 1]) ?? "" })}</div>
       {at ? (
         <ul class="rows">
-          <Row label="Next stop">{next >= 0 ? name.get(stops[next]) : "Terminus"}</Row>
-          <Row label="Along the line">
+          <Row label={t("trainInspector.nextStop")}>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</Row>
+          <Row label={t("trainInspector.along")}>
             {distanceOf(at.s, len)}
           </Row>
         </ul>
       ) : (
-        <p class="muted">This {vehicleOf(st)} finished its trip and left service.</p>
+        <p class="muted">{t("trainInspector.finished", { vehicle: vehicleOf(st) })}</p>
       )}
       {at && <OnBoard line={l} run={run} s={at.s} stopS={stopS} cars={vehicleCars(st)} what={vehicleOf(st)} profile={profile} dep={dep} />}
     </>
@@ -74,9 +75,9 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   if (!demandView.value || own === null || !loads || loads.length !== 2 * (n - 1) || trains <= 0)
     return (
       <ul class="rows">
-        <Row label="Riders on board">
+        <Row label={t("trainInspector.riders")}>
           {/* the train is drawn striped while the riders are being worked out */}
-          <span class="muted">{loadFailure.value ? "Not available" : "Calculating"}</span>
+          <span class="muted">{t(loadFailure.value ? "trainInspector.unavailable" : "trainInspector.calculating")}</span>
         </Row>
       </ul>
     );
@@ -96,19 +97,19 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   // T-2186: the bar runs to crush, with a mark at the seats and at the rated load (100%), and past
   // it a second band to crush
   const { seats, rated, crush } = capacity(cars);
-  const state = aboard <= 0.5 ? "Empty" : aboard <= seats ? "Seats free" : aboard < crush - 0.5 ? (aboard <= rated + 0.5 ? "Standing" : "Crowded") : "Full";
+  const state = t("trainInspector.state", { state: aboard <= 0.5 ? "empty" : aboard <= seats ? "seats" : aboard < crush - 0.5 ? (aboard <= rated + 0.5 ? "standing" : "crowded") : "full" });
   const pct = (x: number) => (Math.min(x, crush) / crush) * 100 + "%";
   return (
     <>
       <div class="h">
-        <span>On board</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip="First estimate for this new or changed line, refined when demand finishes updating">, estimate</span>}</span>
+        <span>{t("trainInspector.onBoard")}</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip={t("trainInspector.estimateTip")}>{t("trainInspector.estimate")}</span>}</span>
       </div>
       <ul class="rows">
-        <Row label="Riders on board" bold>{exact(aboard)}</Row>
-        <Row label={`Typical ${what} this hour`}>{exact(average)}</Row>
+        <Row label={t("trainInspector.riders")} bold>{exact(aboard)}</Row>
+        <Row label={t("trainInspector.typical", { vehicle: what })}>{exact(average)}</Row>
         <li>
           <span class="grow">
-            <span class="board-bar" data-tip={`${exact(aboard)}/${exact(crush)} riders on board`}>
+            <span class="board-bar" data-tip={t("trainInspector.barTip", { aboard: exact(aboard), crush: exact(crush) })}>
               <i class="fill" style={{ width: pct(Math.min(aboard, rated)) }} />
               {aboard > rated && <i class="fill over" style={{ left: pct(rated), width: `calc(${pct(aboard)} - ${pct(rated)})` }} />}
               <i class="seats" style={{ left: pct(seats) }} />
@@ -117,7 +118,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
           </span>
           <span class="val">{state}</span>
         </li>
-        <Row label="Full at">{exact(crush)}</Row>
+        <Row label={t("trainInspector.fullAt")}>{exact(crush)}</Row>
       </ul>
       {!atEnd && dm && <TrainStops line={line} dm={dm} board={b} trip={i} run={run} seg={seg} stopS={stopS} profile={profile} dep={dep} />}
       {!atEnd && dm && aboard > 0.5 && <OneRider key={`${profile}:${dep}`} line={line} dm={dm} run={run} seg={seg} p={p} />}

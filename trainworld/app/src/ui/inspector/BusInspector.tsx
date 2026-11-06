@@ -9,7 +9,8 @@ import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { count, distance, money, plural } from "../../game/format";
+import { count, distance, money } from "../../game/format";
+import { t } from "../../i18n";
 import { useToday } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../../game/types";
 import { ask, display, selection, tool } from "../../game/ui";
@@ -28,7 +29,7 @@ import { AverageSpeed, PastDay, Schedule, useLinePeriods } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 import { afterCopy } from "../../game/lineGroups";
 
-const minutesText = (s: number) => `${Math.round(s / 60)}m`;
+const minutesText = (s: number) => t("inspector.minShort", { n: Math.round(s / 60) });
 
 // ---------------------------------------------------------------- the stops
 
@@ -86,7 +87,7 @@ const endKey = (lng: number, lat: number) => `${lng.toFixed(4)},${lat.toFixed(4)
 async function nameEnd(lng: number, lat: number, taken: Set<string>): Promise<string> {
   const [listed, towns] = await Promise.all([placesNear(lng, lat).catch(() => []), townsNear(lng, lat).catch(() => [])]);
   const near = listed.filter((n) => !endsInStation(n.place.name, n.place.kind));
-  return placeName(hoodsNear(near), taken) ?? placeName(near, taken) ?? placeName(towns.filter((n) => !endsInStation(n.place.name, n.place.kind)), taken) ?? "End";
+  return placeName(hoodsNear(near), taken) ?? placeName(near, taken) ?? placeName(towns.filter((n) => !endsInStation(n.place.name, n.place.kind)), taken) ?? t("busInspector.end");
 }
 
 /** The names of a route's two ends, by stop index; empty until the places list has answered. */
@@ -124,7 +125,7 @@ function FerryPorts({ l, st, bus, colour, editable, time }: { l: LineInput; st: 
   const ports = bus.ferry?.ports ?? [];
   const n = ports.length;
   const names = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
-  const nameOf = (i: number) => names.get(ports[i]?.node ?? -1) ?? "Port";
+  const nameOf = (i: number) => names.get(ports[i]?.node ?? -1) ?? t("busInspector.port");
   const looks = display.value.trackColour === "traffic" && st.status === "running" && l.stops.length === n ? stretchLooks(l, ports.map((_, i) => nameOf(i)), []) : null;
   const canEdit = editable && !busy && n > 2;
   const apply = async (order: number[]) => {
@@ -175,7 +176,7 @@ function FerryPorts({ l, st, bus, colour, editable, time }: { l: LineInput; st: 
           onPointerDown={(e) => pointerDown(e, i)}>
           {looks && i > 0 && looks[i - 1] && <StretchHalf s={looks[i - 1]} down={false} />}
           {looks && i < n - 1 && looks[i] && <StretchHalf s={looks[i]} down />}
-          {canEdit && <span class="stop-hit" data-tip={`Click to remove the stop at ${nameOf(i)}`} onClick={() => remove(i)} />}
+          {canEdit && <span class="stop-hit" data-tip={t("busInspector.removeStop", { name: nameOf(i) })} onClick={() => remove(i)} />}
           <span class="grow">
             <span class="stop-name" onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: String(p.node) }; }}>{nameOf(i)}</span>
           </span>
@@ -217,8 +218,8 @@ function ChangingToTrains({ l, bus }: { l: LineInput; bus: ClockBus }) {
   const n = useChangesToTrains(l, bus);
   if (n === null) return null;
   return (
-    <li data-tip={`Riders per day who change between this ${bus.ferry ? "boat" : "bus"} and a train`}>
-      <span class="grow">Changing to trains</span>
+    <li data-tip={t("busInspector.changingTip", { vehicle: bus.ferry ? "boat" : "bus" })}>
+      <span class="grow">{t("busInspector.changing")}</span>
       <span class="val">{count(n)}</span>
     </li>
   );
@@ -248,7 +249,7 @@ export function BusInspector({ id }: { id: string }) {
 
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
-    if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its ${ferry ? "boats" : "buses"} start with the next departure.`);
+    if (a.ok) say(t("busInspector.constructed", { name: l.name, price: money(a.charge * 1e6), ferry }));
   };
   const removeNow = () => void edit({ op: "removeLine", line: l.num }).then((a) => {
     if (!a.ok) return;
@@ -258,7 +259,7 @@ export function BusInspector({ id }: { id: string }) {
   const remove = () => {
     // T-2194: a ferry line leaves its ports and its boats go to the depot, so it goes at once (undoable)
     if (ferry || stopCount(bus) === 0) return removeNow();
-    ask.value = { text: bus.built ? `Delete ${l.name}? Nothing is refunded for the route.` : `Delete ${l.name}?`, yes: "Delete line", no: "Keep line", run: () => {
+    ask.value = { text: t("busInspector.deleteQuestion", { name: l.name, built: bus.built }), yes: t("busInspector.deleteYes"), no: t("busInspector.deleteNo"), run: () => {
       ask.value = null;
       void edit({ op: "removeLine", line: l.num }).then((a) => {
         if (!a.ok) return;
@@ -278,35 +279,35 @@ export function BusInspector({ id }: { id: string }) {
   };
 
   const shown = title.shown;
-  const stopName = (r: StopRow & { kind: "end" | "station" }) => (r.kind === "end" ? endName.get(r.i) ?? "End" : names.get(r.station) ?? "Station");
+  const stopName = (r: StopRow & { kind: "end" | "station" }) => (r.kind === "end" ? endName.get(r.i) ?? t("busInspector.end") : names.get(r.station) ?? t("busInspector.station"));
   const stopTime = (i: number) => times[i] !== undefined && (
-    <span class="n num muted" data-tip={i === 0 ? "The first stop" : `Reached ${Math.round(times[i] / 60)} min after the first stop`}>{minutesText(times[i])}</span>
+    <span class="n num muted" data-tip={i === 0 ? t("busInspector.firstStop") : t("busInspector.reached", { n: Math.round(times[i] / 60) })}>{minutesText(times[i])}</span>
   );
   const between = (r: StopRow & { kind: "street" }) => {
     const from = rows.filter((x) => x.kind !== "street")[r.from] as StopRow & { kind: "end" | "station" } | undefined;
     const to = rows.filter((x) => x.kind !== "street")[r.from + 1] as StopRow & { kind: "end" | "station" } | undefined;
-    return from && to ? `${plural(r.n, "street stop")} between ${stopName(from)} and ${stopName(to)}` : plural(r.n, "street stop");
+    return from && to ? t("busInspector.streetBetween", { count: r.n, from: stopName(from), to: stopName(to) }) : t("busInspector.streetStops", { count: r.n });
   };
 
   return (
     <>
       <LineTitle l={l} t={title} />
       <div class="sub muted">
-        {plural(stopCount(bus), ferry ? "port" : "stop")}, {distance(bus.roadM)}
+        {t("busInspector.sub", { count: stopCount(bus), ferry, distance: distance(bus.roadM) })}
       </div>
       {st.status === "planned" && (
         <div class="callout">
-          <p>Planned</p>
+          <p>{t("busInspector.planned")}</p>
           {ferry
-            ? <ConstructButton num={l.num} build={build} what="Ports" vehicles="boats" runs="Boats run" />
-            : <ConstructButton num={l.num} build={build} what="Route" vehicles="buses" runs="Buses run" />}
+            ? <ConstructButton num={l.num} build={build} kind="boat" />
+            : <ConstructButton num={l.num} build={build} kind="bus" />}
         </div>
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? "Save the route (Enter)" : bus.built && !ferry ? "Change the route. The old route is not refunded" : "Change the route"} onClick={() => (ferry ? editFerryRoute(l) : editBusRoute(l))}><Icon.pencil />{drawing ? "Save route" : "Edit route"}</button>
-        <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
-        <button class="btn text danger" onClick={remove}>Delete line</button>
+        <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? t("busInspector.saveTip") : bus.built && !ferry ? t("busInspector.changeTipBuilt") : t("busInspector.changeTip")} onClick={() => (ferry ? editFerryRoute(l) : editBusRoute(l))}><Icon.pencil />{drawing ? t("busInspector.save") : t("busInspector.edit")}</button>
+        <button class="btn text" onClick={() => void copy()} disabled={copying}>{t("busInspector.copy")}</button>
+        <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
       <Schedule l={l} st={st} now={now} />
@@ -314,12 +315,12 @@ export function BusInspector({ id }: { id: string }) {
         <AverageSpeed st={st} lev={lev} />
       </ul>
 
-      <div class="h divided">{ferry ? "Ports" : "Stops"}</div>
+      <div class="h divided">{ferry ? t("busInspector.ports") : t("busInspector.stops")}</div>
       {ferry ? <FerryPorts l={l} st={st} bus={bus} colour={shown} editable={!drawing} time={stopTime} /> : <ul class="bus-stops" style={{ "--c": shown }}>
         {rows.map((r) => r.kind === "street" ? (
           <li class="street" data-tip={between(r)}>
             <i class="bs-mk" />
-            <span class="grow muted">{plural(r.n, "street stop")}</span>
+            <span class="grow muted">{t("busInspector.streetStops", { count: r.n })}</span>
           </li>
         ) : (
           <li class={r.kind}>
@@ -327,7 +328,7 @@ export function BusInspector({ id }: { id: string }) {
             <span class="grow">
               {r.kind === "station"
                 ? <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: r.station })}>{stopName(r)}</span>
-                : <span data-tip="An end of the route">{stopName(r)}</span>}
+                : <span data-tip={t("busInspector.endTip")}>{stopName(r)}</span>}
             </span>
             {r.kind === "station" && <StopTransfers l={l} i={r.i} />}
             {stopTime(r.i)}

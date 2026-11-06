@@ -9,6 +9,7 @@ import { decodeRelated, type RelatedGroup } from "../../game/relatedLines";
 import { BAR, LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight, relatedLayout } from "../../game/relatedLayout";
 import type { LineInput } from "../../game/types";
 import { selection } from "../../game/ui";
+import { t } from "../../i18n";
 import { linesByNum, stationNames, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
 
@@ -108,7 +109,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
     const add = addAt(r.ref.line, r.ref.stop), here = stopName(r.ref.line, r.ref.stop);
     rows.push(
       <li class="side" data-r>
-        {add !== null && onAdd && <span class="stop-hit add" data-tip={`Click to add a stop at ${here}`} onClick={() => onAdd(add)} />}
+        {add !== null && onAdd && <span class="stop-hit add" data-tip={t("relatedStops.add", { name: here })} onClick={() => onAdd(add)} />}
         <span class="grow">
           <span class="stop-name muted" onClick={() => { const s = byNum.get(r.ref.line)?.stops[r.ref.stop]; if (s) selection.value = { kind: "station", station: s }; }}>
             {here}

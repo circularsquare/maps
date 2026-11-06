@@ -8,6 +8,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { clockTime } from "../../game/format";
+import { t as tr } from "../../i18n";
 import { drawnReversed } from "../../game/northUp";
 import { selection } from "../../game/ui";
 import { linesById, stationNames, stationsById, world } from "../../game/world";
@@ -132,7 +133,7 @@ function MareyBody({ l, st }: { l: LineInput; st: LineStats }) {
       const endY = yOf(toRun0(st.stopS, pr.run, pr.pts[pr.pts.length - 1] ?? 0));
       return {
         ...t, x: (t.dep - answer.base) * k, stand: t.end > t.dep + tripS + 1 ? [(t.dep + tripS - answer.base) * k, (t.end - answer.base) * k, endY] : null,
-        tip: `Leaves ${names.get(first) ?? ""} ${local(t.dep)}\nReaches ${names.get(last) ?? ""} ${local(arrive)}`,
+        tip: tr("mareyChart.tip", { from: names.get(first) ?? "", leave: local(t.dep), to: names.get(last) ?? "", arrive: local(arrive) }),
       };
     });
     (window as unknown as { __mareyMs?: number }).__mareyMs = performance.now() - t0;
@@ -217,11 +218,11 @@ export function MareyPanel() {
   }, [open]);
   if (!l || !st || st.bus || l.stops.length < 2) return null;
   return (
-    <div class="marey" role="dialog" aria-label={`${l.name} timetable chart`}>
+    <div class="marey" role="dialog" aria-label={tr("mareyChart.label", { line: l.name })}>
       <div class="marey-head">
         <Chip line={l} plain />
         <span class="marey-name">{l.name}</span>
-        <button type="button" class="btn icon mini marey-close" data-tip="Close" aria-label="Close timetable chart" onClick={() => (mareyOpen.value = false)}><Icon.cross /></button>
+        <button type="button" class="btn icon mini marey-close" data-tip={tr("mareyChart.close")} aria-label={tr("mareyChart.closeLabel")} onClick={() => (mareyOpen.value = false)}><Icon.cross /></button>
       </div>
       <MareyBody l={l} st={st} />
     </div>
@@ -233,7 +234,7 @@ export function MareyButton({ st }: { st: LineStats }) {
   if (st.status !== "running" || st.bus) return null;
   const open = mareyOpen.value;
   return (
-    <button class={"btn icon mini marey-open" + (open ? " on" : "")} aria-label={open ? "Hide timetable chart" : "Show timetable chart"} aria-pressed={open}
-      data-tip={open ? "Hide timetable chart" : "Show timetable chart"} onClick={() => (mareyOpen.value = !open)}><Icon.marey /></button>
+    <button class={"btn icon mini marey-open" + (open ? " on" : "")} aria-label={tr(open ? "mareyChart.hide" : "mareyChart.show")} aria-pressed={open}
+      data-tip={tr(open ? "mareyChart.hide" : "mareyChart.show")} onClick={() => (mareyOpen.value = !open)}><Icon.marey /></button>
   );
 }

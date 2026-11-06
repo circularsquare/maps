@@ -307,7 +307,7 @@ body.resizing, body.resizing * { user-select: none; }
 .group-diagram .group-cell.edit:hover .ghost { opacity: 0.7; }
 .group-diagram .group-cell.edit:hover .pill.pass { stroke-opacity: 1; }
 /* T-1818: "Part of [pill] group"; the top margin keeps the pill clear of the sticky title's 6 px of padding */
-.line-group { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 6px; }
+.line-group { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 6px; color: var(--muted); white-space: nowrap; }
 .line-group > .muted { flex: none; }
 .line-group .group-pill { flex: 0 1 auto; }
 .line-group > .btn { margin-left: auto; }

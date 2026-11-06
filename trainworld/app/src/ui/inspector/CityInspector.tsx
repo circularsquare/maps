@@ -8,6 +8,7 @@ import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
+import { t } from "../../i18n";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
 import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
@@ -23,19 +24,18 @@ import { TripGraph } from "./TripGraph";
 
 /** `note`: a second line for the part's hover */
 type Part = { name: string; n: number; cls: string; note?: string };
-/** T-2215: why a trip has no route (the trips between two land parts no road joins, not by rail) */
-const NO_ROAD = "No road joins their two ends";
-
-/** A figure with its mode bar: train blue, walking green, car red, No route grey, as the map's bubbles. */
-function TripsBar({ label, tip, what, parts, goals }: { label: string; tip?: string; what: string; parts: Part[]; goals?: City }) {
+/** A figure with its mode bar: train blue, walking green, car red, No route grey, as the map's bubbles.
+ * `kind`: whether the trips are within the city or to and from other places. */
+function TripsBar({ label, tip, kind, city, parts, goals }: { label: string; tip?: string; kind: "within" | "inter"; city: string; parts: Part[]; goals?: City }) {
   const all = parts.reduce((s, p) => s + p.n, 0);
+  const phrase = shownDayPhrase.value;
   const bar = <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
-    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: `${p.name}: ${exact(p.n)} ${what} ${shownDayPhrase.value}, ${pctOf(p.n, all)}${p.note ? `\n${p.note}` : ""}` }))} />;
+    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: t("cityInspector.partTip", { name: p.name, count: exact(p.n), kind, city, phrase, share: pctOf(p.n, all) }) + (p.note ? `\n${p.note}` : "") }))} />;
   return (
     <li class={"zone-trips" + (goals ? " with-goals" : "")}>
       <div class="line">
         <span class="grow" data-tip={tip}>{label}</span>
-        <span class="val" data-tip={`${exact(all)} ${what} ${shownDayPhrase.value}`}>{count(all)}</span>
+        <span class="val" data-tip={t("cityInspector.totalTip", { count: exact(all), kind, city, phrase })}>{count(all)}</span>
       </div>
       {/* T-1437: the goals over the city's own split (T-1551: only here, not on the top bar) */}
       {goals ? <div class="goal-bar">{bar}<GoalTicks city={goals} /></div> : bar}
@@ -85,66 +85,68 @@ export function CityInspector({ id }: { id: string }) {
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{city.name}</span>
         <HomeButton place={city.id} />
-        <button class="btn icon" data-tip={`Go to ${city.name}`} aria-label={`Go to ${city.name}`} onClick={() => goTo({ kind: "city", name: city.name, city })}>
+        <button class="btn icon" data-tip={t("cityInspector.goTo", { city: city.name })} aria-label={t("cityInspector.goTo", { city: city.name })} onClick={() => goTo({ kind: "city", name: city.name, city })}>
           <Icon.locate />
         </button>
       </div>
       <CityFigures city={city} built={built} />
       {!market && !lm ? (
-        <p class="muted">Calculating demand</p>
+        <p class="muted">{t("cityInspector.calculating")}</p>
       ) : (
         <>
           <ul class="rows">
             {lm ? (
               <TripsBar
-                label={`Trips within ${city.name}`}
-                what={`trips within ${city.name}`}
+                label={t("cityInspector.tripsWithin", { city: city.name })}
+                kind="within"
+                city={city.name}
                 parts={[
-                  { name: "Train", n: lm.train, cls: "seg-train" },
-                  { name: "Walk", n: lm.walk, cls: "seg-walk" },
-                  { name: "Car", n: lm.drive, cls: "seg-drive" },
-                  ...(lm.none > 0 ? [{ name: "No route", n: lm.none, cls: "seg-none", note: NO_ROAD }] : []),
+                  { name: t("cityInspector.train"), n: lm.train, cls: "seg-train" },
+                  { name: t("cityInspector.walk"), n: lm.walk, cls: "seg-walk" },
+                  { name: t("cityInspector.car"), n: lm.drive, cls: "seg-drive" },
+                  ...(lm.none > 0 ? [{ name: t("cityInspector.noRoute"), n: lm.none, cls: "seg-none", note: t("inspector.noRoadEnds") }] : []),
                 ]}
                 goals={city}
               />
             ) : localAll > 0 ? (
               <li class="zone-trips">
                 <div class="line">
-                  <span class="grow">Trips within {city.name}</span>
-                  <span class="val" data-tip={`${exact(localAll)} trips ${shownDayPhrase.value} within ${city.name}`}>{count(localAll)}</span>
+                  <span class="grow">{t("cityInspector.tripsWithin", { city: city.name })}</span>
+                  <span class="val" data-tip={t("cityInspector.totalTip", { count: exact(localAll), kind: "within", city: city.name, phrase: shownDayPhrase.value })}>{count(localAll)}</span>
                 </div>
               </li>
             ) : null}
             {market && (
               <TripsBar
-                label="To other places"
-                tip="Visits, shopping and business, not commutes. Both directions are counted."
-                what={`inter-city trips to and from ${city.name}`}
+                label={t("cityInspector.toOther")}
+                tip={t("cityInspector.toOtherTip")}
+                kind="inter"
+                city={city.name}
                 parts={[
-                  { name: "Train", n: interRail, cls: "seg-train" },
-                  { name: "Car", n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
-                  ...(interAir > 0 ? [{ name: "Plane", n: interAir, cls: "seg-other" }] : []),
+                  { name: t("cityInspector.train"), n: interRail, cls: "seg-train" },
+                  { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
+                  ...(interAir > 0 ? [{ name: t("cityInspector.plane"), n: interAir, cls: "seg-other" }] : []),
                 ]}
               />
             )}
           </ul>
           {/* T-2500: a zone still loading whose own figures are in (a load's round of its cluster) shows them
               and its graph; its trips to other places wait */}
-          {!market && <p class="muted">Calculating demand</p>}
+          {!market && <p class="muted">{t("cityInspector.calculating")}</p>}
           {lm && <TripGraph city={city} />}
           {market && top.length > 0 && (
             <ul class="rows">
-              <li class="muted small">Top destinations</li>
+              <li class="muted small">{t("cityInspector.topDestinations")}</li>
               {top.map(([place, p]) => (
                 <li key={place}>
                   <span class="grow">{INTERCITY_PLACES[place]}</span>
-                  <span class="val" data-tip={`${exact(p.all)} trips ${shownDayPhrase.value} between ${city.name} and ${INTERCITY_PLACES[place]}`}>{count(p.all)}</span>
+                  <span class="val" data-tip={t("cityInspector.destinationTip", { count: exact(p.all), phrase: shownDayPhrase.value, city: city.name, place: INTERCITY_PLACES[place] })}>{count(p.all)}</span>
                 </li>
               ))}
             </ul>
           )}
-          {market && !places.length && elsewhere <= 0 && <p class="muted small">No inter-city trips are modeled here yet.</p>}
-          {!drawn && <p class="muted small">Not drawn under this purpose filter.</p>}
+          {market && !places.length && elsewhere <= 0 && <p class="muted small">{t("cityInspector.noInter")}</p>}
+          {!drawn && <p class="muted small">{t("cityInspector.notDrawn")}</p>}
         </>
       )}
       {built && <CityNetwork city={city} />}

@@ -7,10 +7,12 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { City } from "../../game/cities";
 import { demandAskTurn, demandView, intercityDemand } from "../../game/demand";
 import { count } from "../../game/format";
+import { t, tNumber, type MessageKey } from "../../i18n";
 import { axisSpan, bandAt, binSums, LAYERS, layerCurves, lengthLayers, type Layer, type LengthLayers } from "../../game/tripLengths";
 import { shownDay } from "../../game/ui";
 import { farTrips, lengthsOf, wantLengths } from "../../game/zoneLengths";
 import { tipBullet, tipGrid } from "../tip";
+import { pct1 } from "./tripText";
 
 const W = 300, L = 1, R = 299, T = 4, B = 86;
 /** the share strip under the plot, and the labels under it */
@@ -21,13 +23,13 @@ const N = 150;
 const EDGE_MIN = 0.6;
 /** the labelled lengths, most wanted first: powers of ten, then fives, then twos */
 const TICKS = [1, 10, 100, 1000, 0.5, 5, 50, 500, 2, 20, 200];
-const NAMES: Record<Layer, string> = { train: "Train", walk: "Walking", drive: "Driving", none: "No route", plane: "Plane" };
+const NAME_KEYS = { train: "tripGraph.train", walk: "tripGraph.walking", drive: "tripGraph.driving", none: "tripGraph.noRoute", plane: "tripGraph.plane" } as const satisfies Record<Layer, MessageKey>;
 const COLOUR_KEY: Record<Layer, "train" | "walk" | "drive" | "none" | "other"> = { train: "train", walk: "walk", drive: "drive", none: "none", plane: "other" };
-const fmt = (v: number) => v.toLocaleString("en-US");
+const fmt = (v: number) => tNumber(v);
 
 /** The trips of the band `lo`-`hi` km as the hover's title. */
 const bandTitle = (lo: number, hi: number) =>
-  lo === 0 ? `Trips under ${fmt(hi)} km per day` : hi === Infinity ? `Trips over ${fmt(lo)} km per day` : `Trips of ${fmt(lo)}-${fmt(hi)} km per day`;
+  lo === 0 ? t("tripGraph.under", { km: fmt(hi) }) : hi === Infinity ? t("tripGraph.over", { km: fmt(lo) }) : t("tripGraph.between", { from: fmt(lo), to: fmt(hi) });
 
 /** The band's hover: each mode's share and trips, all of them, and those to other places. */
 function bandTip(Ls: LengthLayers, km: number): string {
@@ -35,10 +37,10 @@ function bandTip(Ls: LengthLayers, km: number): string {
   const s = binSums(Ls, b.from, b.to);
   // train, walking and driving always; planes where the band has some, No route where it shows as 0.1% or more
   const rows: string[][] = LAYERS.filter((l) => (l === "none" ? s.none >= 5e-4 * s.all : l !== "plane" || s.plane > 0)).map((l) => [
-    `${tipBullet("", `var(--mode-${COLOUR_KEY[l]})`)}${NAMES[l]}`, s.all > 0 ? `${((100 * s[l]) / s.all).toFixed(1)}%` : "–", count(s[l]),
+    `${tipBullet("", `var(--mode-${COLOUR_KEY[l]})`)}${t(NAME_KEYS[l])}`, s.all > 0 ? pct1(s[l] / s.all) : "–", count(s[l]),
   ]);
-  rows.push([""], ["All", "", count(s.all)]);
-  if (s.far > 0) rows.push(["To other places", "", count(s.far)]);
+  rows.push([""], [t("tripGraph.all"), "", count(s.all)]);
+  if (s.far > 0) rows.push([t("tripGraph.toOther"), "", count(s.far)]);
   return `${bandTitle(b.lo, b.hi)}\n${tipGrid(rows)}`;
 }
 
@@ -89,8 +91,9 @@ function drawGraph(local: NonNullable<ReturnType<typeof lengthsOf>>, market: Ret
   const ticks = TICKS.filter((t) => Math.log10(t) >= u0 && Math.log10(t) <= u1);
   const lastTick = Math.max(...ticks);
   const labels: { t: number; x: number; text: string; end: boolean; l: number; r: number }[] = [];
+  const kmSuffix = t("tripGraph.kmSuffix");
   for (const t of ticks) {
-    const text = fmt(t) + (t === lastTick ? " km" : ""), w = 6 * text.length, tx = x(Math.log10(t));
+    const text = fmt(t) + (t === lastTick ? kmSuffix : ""), w = 6 * text.length, tx = x(Math.log10(t));
     const end = tx + w / 2 > R, l = end ? tx - w : tx - w / 2, r = end ? tx : tx + w / 2;
     if (labels.some((o) => l < o.r + 5 && r > o.l - 5)) continue;
     labels.push({ t, x: tx, text, end, l, r });
@@ -150,7 +153,7 @@ export function TripGraph({ city }: { city: City }) {
 
   return (
     <>
-      <div class="h">By trip length</div>
+      <div class="h">{t("tripGraph.title")}</div>
       <svg class="trip-graph" viewBox={`0 0 ${W} ${H}`}>
         {drawn}
         {hb && <rect class="tg-band" x={hx(hb.lo)} y={T} width={Math.max(1, hx(hb.hi) - hx(hb.lo))} height={S1 - T} />}

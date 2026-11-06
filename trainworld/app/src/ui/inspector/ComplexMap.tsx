@@ -20,6 +20,7 @@ import type { LineInput, StationInput } from "../../game/types";
 import { world } from "../../game/world";
 import type { ComplexNow } from "../../game/complexLive";
 import { live } from "../../map/live";
+import { t as tr } from "../../i18n";
 import { anchor, EARTH_C } from "../../map/geo";
 import { stationIndexOf } from "../../map/network";
 import { STATION_BOX_ZOOM } from "../../map/stationGeometry";
@@ -54,6 +55,7 @@ function textWidth(t: string): number {
   if (measureCtx === undefined) {
     measureCtx = document.createElement("canvas").getContext("2d");
   }
+  // i18n-ignore
   if (measureCtx) measureCtx.font = '12px "Nunito", "Zen Maru Gothic", sans-serif';
   return measureCtx ? measureCtx.measureText(t).width : t.length * 6.6;
 }
@@ -170,7 +172,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     if (a.id === b.id && la.id === lb.id) continue; // back the way they came on the same line
     for (const [s, l, os, ol] of [[a, la, b, lb], [b, lb, a, la]] as const) {
       const k = strokeKey(s.id, l.id), m = partners.get(k) ?? new Map<string, number>();
-      const name = ol.name + (os.id === s.id ? "" : ` at ${shortName(os.name)}`);
+      const name = os.id === s.id ? ol.name : tr("complexMap.lineAt", { line: ol.name, station: shortName(os.name) });
       m.set(name, (m.get(name) ?? 0) + p.riders);
       partners.set(k, m);
     }
@@ -178,22 +180,20 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
 
   // one platform's part of a hover: its lines, the riders waiting now (T-246) and the changes
   const platTip = (s: StationInput) => {
-    let text = s.name + (s.built ? "" : " (blueprint)");
+    let text = s.built ? s.name : tr("inspector.blueprint", { name: s.name });
     const rows = at.get(s.id) ?? [];
-    if (!rows.length) return `${text}\nNo line stops here`;
+    if (!rows.length) return `${text}\n${tr("complexMap.noLines")}`;
     for (const r of rows) {
-      text += `\n${r.line.name}` + (r.known ? `\n${count(r.boardings)} boardings per day\n${count(r.riders)} riders on its trains here per day` : "");
+      text += `\n${r.line.name}` + (r.known ? `\n${tr("complexMap.boardings", { count: count(r.boardings) })}\n${tr("complexMap.riders", { count: count(r.riders) })}` : "");
       const m = partners.get(strokeKey(s.id, r.line.id));
       if (m) {
         const top = [...m].sort((x, y) => y[1] - x[1]);
-        text += `\n${count(top.reduce((a, [, v]) => a + v, 0))} change lines, most to ` +
-          top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ");
+        text += "\n" + tr("complexMap.changes", { count: count(top.reduce((a, [, v]) => a + v, 0)), list: top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ") });
       }
     }
     const p = now?.platforms.get(s.id);
     if (now && p) {
-      text += `\n${count(p.side[0] + p.side[1])} waiting on the platform now`;
-      text += p.oneSide ? `, room for ${count(p.room)}` : `, room for ${count(p.room)} on each side`;
+      text += "\n" + tr("complexMap.waiting", { count: count(p.side[0] + p.side[1]), room: count(p.room), oneSide: p.oneSide });
     }
     return text;
   };
@@ -256,7 +256,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   const links = (world.value?.save.links ?? []).filter(([a, b]) => inside.has(a) && inside.has(b) && plat.has(a) && plat.has(b)).map(([a, b]) => {
     const sa = stations.get(a)!, sb = stations.get(b)!, pa = plat.get(a)!, pb = plat.get(b)!;
     const [x1, y1] = px([(pa.a[0] + pa.b[0]) / 2, (pa.a[1] + pa.b[1]) / 2]), [x2, y2] = px([(pb.a[0] + pb.b[0]) / 2, (pb.a[1] + pb.b[1]) / 2]);
-    return { x1, y1, x2, y2, title: `You linked ${sa.name} with ${sb.name} ${length(Math.hypot(sa.x - sb.x, sa.y - sb.y))} away` };
+    return { x1, y1, x2, y2, title: tr("complexMap.linked", { a: sa.name, b: sb.name, length: length(Math.hypot(sa.x - sb.x, sa.y - sb.y)) }) };
   });
 
   // the selected station's platform last, so its hover wins where platforms cross
@@ -264,7 +264,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
   return (
     <div class="complex-map" ref={box} style={{ position: "relative" }}>
       <canvas ref={cv} style={{ position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", pointerEvents: "none", background: "var(--map-land)" }} />
-      <svg width={W} height={H} style={{ width: W + "px", height: H + "px", position: "relative" }} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Map of the complex's platforms">
+      <svg width={W} height={H} style={{ width: W + "px", height: H + "px", position: "relative" }} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tr("complexMap.label")}>
         <rect x="0.5" y="0.5" width={W - 1} height={H - 1} fill="none" stroke="var(--rule)" />
         {ok && links.map((l) => (
           <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="#fff" stroke-opacity="0" stroke-width="8" class="complex-map-link" data-tip={l.title} />

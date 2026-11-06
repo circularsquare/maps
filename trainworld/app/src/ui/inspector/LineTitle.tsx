@@ -7,6 +7,7 @@ import { LINE_PALETTE } from "../../game/palette";
 import type { LineInput } from "../../game/types";
 import { renameLinePrompt } from "../../game/ui";
 import { edit, renameLine } from "../../game/world";
+import { t as tr } from "../../i18n";
 import { ColourPicker } from "../ColourPicker";
 import { locateLine } from "../locate";
 import { scrollerOf } from "../scroller";
@@ -112,18 +113,18 @@ export function LineTitle({ l, t }: { l: LineInput; t: LineTitleState }) {
   return (
     <>
       <div class="title" data-line-edit ref={t.titleEl}>
-        <button class={"badge-edit" + (t.editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
+        <button class={"badge-edit" + (t.editing ? " on" : "")} data-tip={tr("lineTitle.edit")} aria-label={tr("lineTitle.edit")}
           onClick={() => t.setEditing(true)} onDblClick={() => t.setEditing(true)}><Chip line={{ ...l, colour: t.shown }} size="lg" plain /></button>
         <NameEdit key={l.id} name={l.name} onRename={(n) => renameLine(l.id, n)} prompt={renameLinePrompt.value === t.id} onPrompted={() => { renameLinePrompt.value = null; }}
           control={{ open: t.editing, set: t.setEditing }}>
-          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(l.stops)}>
+          <button class="btn icon" data-tip={tr("lineTitle.show")} aria-label={tr("lineTitle.show")} onClick={() => locateLine(l.stops)}>
             <Icon.locate />
           </button>
         </NameEdit>
       </div>
       {t.editing && (
         <div class="line-identity" data-line-edit>
-          <label>Symbol <input aria-label="Line symbol" {...t.symbolBox} /></label>
+          <label>{tr("lineTitle.symbol")} <input aria-label={tr("lineTitle.symbolLabel")} {...t.symbolBox} /></label>
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={t.dragColour} onCommit={t.commitColour} />
         </div>
       )}

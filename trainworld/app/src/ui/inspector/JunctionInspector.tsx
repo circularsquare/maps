@@ -1,12 +1,14 @@
 // The junction inspector (SPEC 8): the routes through a junction, its flyover and what it saves.
 
 import { clock } from "../../game/clock";
+import { t } from "../../i18n";
 import { duration, levelLabel, money } from "../../game/format";
 import { compass, stationTowards } from "../../game/places";
 import { DEMAND_INDEX } from "../../game/types";
 import { edit, linesByNum, say, world } from "../../game/world";
 import { Actions, Built, Chip, Row } from "../widgets";
 import { useClockQuery } from "../useClockQuery";
+import { pctWhole } from "./tripText";
 
 interface JPort {
   edge: number;
@@ -102,12 +104,13 @@ export function JunctionInspector({ node }: { node: number }) {
   const atCrossover = w.edges.some((e) => e.crossover && (e.a === node || e.b === node));
   const setFlying = async (flying: boolean) => {
     const a = await edit({ op: "flying", node, flying });
-    if (a.ok && flying) say(a.charge > 0 ? `Flyover constructed for ${money(a.charge * 1e6)}.` : "Flyover added to the blueprint.");
+    if (a.ok && flying) say(a.charge > 0 ? t("junctionInspector.built", { price: money(a.charge * 1e6) }) : t("junctionInspector.planned"));
   };
   const lineOf = linesByNum(w);
   const colourOf = (id: number) => lineOf.get(id)?.colour ?? "#888888";
   const moves = info?.moves ?? [];
-  const label = (m: JMove) => `${info!.ports[m.from].name} to ${info!.ports[m.to].name}`;
+  const label = (m: JMove) => t("junctionInspector.route", { from: info!.ports[m.from].name, to: info!.ports[m.to].name });
+  const demandWord = t("inspector.demand", { demand });
   const worst = moves.reduce((a, m) => Math.max(a, m.rho[lev]), 0);
   const crossing = moves.some((m) => m.crosses.length);
   // The waiting a flyover saves: a flying junction has no crossing paths, so all the waiting at
@@ -118,34 +121,34 @@ export function JunctionInspector({ node }: { node: number }) {
   return (
     <>
       <div class="title">
-        <span class="name">Junction</span>
+        <span class="name">{t("junctionInspector.title")}</span>
       </div>
       <div class="sub muted">
-        Level {levelLabel(n.level)}, {n.ports} tracks meet{n.flying ? ", with a flyover" : ""}
+        {t("junctionInspector.sub", { level: levelLabel(n.level), ports: n.ports, flying: !!n.flying })}
       </div>
       {n.flying ? (!built && (
         <Actions>
           <span />
           <button class="btn text" onClick={() => setFlying(false)}>
-            Remove the flyover
+            {t("junctionInspector.remove")}
           </button>
         </Actions>
       )) : !atCrossover && (
         <Actions>
-          <span class="muted small">{built ? "Paid at once" : "Added to the blueprint"}</span>
-          <button class="btn text" data-tip="Take one track over the other, so trains never wait to cross" onClick={() => setFlying(true)}>
-            {built ? "Construct a flyover" : "Add a flyover"}
+          <span class="muted small">{built ? t("junctionInspector.paidAtOnce") : t("junctionInspector.addedToBlueprint")}</span>
+          <button class="btn text" data-tip={t("junctionInspector.flyoverTip")} onClick={() => setFlying(true)}>
+            {built ? t("junctionInspector.construct") : t("junctionInspector.add")}
           </button>
         </Actions>
       )}
       <Built built={built} />
       {!n.flying && (
         <>
-          <p class="note muted">{crossing ? "Trains wait to cross each other here" : "No trains cross here now."}</p>
+          <p class="note muted">{crossing ? t("junctionInspector.wait") : t("junctionInspector.noCross")}</p>
           {!atCrossover && (
             <ul class="rows">
-              <Row label="Flyover price">{price === null ? "" : money(price * 1e6)}</Row>
-              <Row label="Waiting it saves">{perTrain >= 1 ? `${duration(perTrain)} a train at ${demand} demand` : "none now"}</Row>
+              <Row label={t("junctionInspector.price")}>{price === null ? "" : money(price * 1e6)}</Row>
+              <Row label={t("junctionInspector.saves")}>{perTrain >= 1 ? t("junctionInspector.savesFigure", { time: duration(perTrain), demand: demandWord }) : t("junctionInspector.none")}</Row>
             </ul>
           )}
         </>
@@ -153,9 +156,9 @@ export function JunctionInspector({ node }: { node: number }) {
       {info && moves.length > 0 && (
         <>
           <JunctionMap ports={info.ports} moves={moves} colourOf={colourOf}
-            tip={(m) => `${label(m)}: ${Math.round(m.tph[lev])} trains an hour at ${demand} demand${m.crosses.length ? "\nIt crosses another route on the level, so it is drawn thicker" : ""}`} />
+            tip={(m) => t("junctionInspector.moveTip", { route: label(m), count: Math.round(m.tph[lev]), demand: demandWord, crosses: m.crosses.length > 0 })} />
           <div class="h">
-            Routes through it<span class="right muted small">trains an hour, wait per train</span>
+            {t("junctionInspector.routes")}<span class="right muted small">{t("junctionInspector.routesCols")}</span>
           </div>
           <ul class="rows moves">
             {moves.map((m) => (
@@ -164,7 +167,7 @@ export function JunctionInspector({ node }: { node: number }) {
                   <span>
                     <span class="bullets">{m.lines.map((id) => lineOf.get(id) && <Chip line={lineOf.get(id)!} size="sm" />)}</span> {label(m)}
                   </span>
-                  {m.crosses.length > 0 && <span class="muted small">Crosses {m.crosses.map((k) => label(moves[k])).join(", ")}</span>}
+                  {m.crosses.length > 0 && <span class="muted small">{t("junctionInspector.crosses", { list: m.crosses.map((k) => label(moves[k])).join(", ") })}</span>}
                 </span>
                 <span class="val num">{Math.round(m.tph[lev])}</span>
                 <span class="val num w-num">{m.delay[lev] > 0 ? "+" + duration(m.delay[lev]) : ""}</span>
@@ -173,12 +176,12 @@ export function JunctionInspector({ node }: { node: number }) {
           </ul>
           {crossing && (
             <ul class="rows">
-              <Row label="Busiest crossing">{Math.round(worst * 100)}% of capacity</Row>
+              <Row label={t("junctionInspector.busiest")}>{t("junctionInspector.capacity", { pct: pctWhole(worst) })}</Row>
             </ul>
           )}
         </>
       )}
-      {info && moves.length === 0 && <p class="note muted">No running line goes through it.</p>}
+      {info && moves.length === 0 && <p class="note muted">{t("junctionInspector.noLine")}</p>}
     </>
   );
 }

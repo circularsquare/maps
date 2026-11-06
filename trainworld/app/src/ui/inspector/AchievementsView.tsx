@@ -5,6 +5,7 @@
 
 import { demandFigures, FIRSTS, networkFigures, short, TIERED, tierKey, tierText, when, type Tiered } from "../../game/achievements";
 import { dayOf } from "../../game/format";
+import { t as tr } from "../../i18n";
 import { moneyState } from "../../game/money";
 import type { Achieved } from "../../workers/saveFile";
 import { Medal, METALS } from "../Achievements";
@@ -44,7 +45,7 @@ function TierRow({ t, got }: { t: Tiered; got: Record<string, Achieved> }) {
           {t.tiers.map((x, k) => {
             const a = got[tierKey(t.id, x)];
             return a
-              ? <span class="ach-slot" data-tip={`${tierText(t.id, x, a)}, reached on ${when(a.at)}`}><Medal metal={METALS[k]} of={t.id} /></span>
+              ? <span class="ach-slot" data-tip={tr("achievementsView.tierReached", { text: tierText(t.id, x, a), when: when(a.at) })}><Medal metal={METALS[k]} of={t.id} /></span>
               : <span class="ach-slot empty" data-tip={tierText(t.id, x)} />;
           })}
         </span>
@@ -66,7 +67,7 @@ export function AchievementsView() {
     <>
       <div class="title">
         <span class="ach-mark"><Icon.medal /></span>
-        <span class="name">Achievements</span>
+        <span class="name">{tr("achievementsView.title")}</span>
       </div>
       <ul class="rows ach-tiers">
         {TIERED.map((t) => <TierRow t={t} got={got} />)}
@@ -75,10 +76,10 @@ export function AchievementsView() {
         {[...FIRSTS.filter((f) => got[f.id]), ...FIRSTS.filter((f) => !got[f.id])].map((f) => {
           const a = got[f.id];
           return (
-            <li class={a ? "" : "muted"} data-tip={a ? `${f.text(a)}\nReached on ${when(a.at)}` : [f.rule(), f.now?.()].filter(Boolean).join("\n")}>
+            <li class={a ? "" : "muted"} data-tip={a ? tr("achievementsView.firstReached", { text: f.text(a), when: when(a.at) }) : [f.rule(), f.now?.()].filter(Boolean).join("\n")}>
               <span class={"ach-slot" + (a ? "" : " empty")}>{a && <Medal metal="gold" of="first" />}</span>
               <span class="grow">{f.name}</span>
-              {a && <span class="val">day {dayOf(Math.floor(a.at / 60))}</span>}
+              {a && <span class="val">{tr("achievementsView.day", { day: dayOf(Math.floor(a.at / 60)) })}</span>}
             </li>
           );
         })}

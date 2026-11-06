@@ -4,6 +4,7 @@
 import { groupBullet, groupName, lineGroups } from "../../game/lineGroups";
 import type { LineInput } from "../../game/types";
 import { edit, world } from "../../game/world";
+import { tRich, t } from "../../i18n";
 import { selection } from "../../game/ui";
 import { Icon } from "../widgets";
 import { GroupPill } from "../GroupPill";
@@ -17,10 +18,8 @@ export function LineGroup({ l }: { l: LineInput }) {
   const name = groupName(ls), same = groupBullet(ls, () => 0).text.toLowerCase() === name.toLowerCase();
   return (
     <div class="line-group">
-      <span class="muted">Part of</span>
-      <GroupPill ls={ls} tip={same ? "Open the group" : `${name}\nOpen the group`} onClick={open} />
-      <span class="muted">group</span>
-      <button class="btn icon" data-tip="Leave group" aria-label="Leave group" onClick={() => void edit({ op: "lineGroup", lines: [l.num], group: 0 })}>
+      {tRich("lineGroup.partOf", { group: <GroupPill ls={ls} tip={same ? t("lineGroup.open") : t("lineGroup.openNamed", { name })} onClick={open} /> })}
+      <button class="btn icon" data-tip={t("lineGroup.leave")} aria-label={t("lineGroup.leave")} onClick={() => void edit({ op: "lineGroup", lines: [l.num], group: 0 })}>
         <Icon.leaveGroup />
       </button>
     </div>

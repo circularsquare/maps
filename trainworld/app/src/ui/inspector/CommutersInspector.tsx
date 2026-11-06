@@ -5,10 +5,12 @@ import { capitalise, count } from "../../game/format";
 import { shownDayPhrase } from "../../game/ui";
 import { BUBBLE_ALPHA, modeMix, towardNone } from "../../game/palette";
 import { purposeWords } from "../../game/purposes";
+import { t } from "../../i18n";
 import { commuterPick } from "../../map/commuterView";
 import { Row } from "../widgets";
 import { ClosestStations } from "./ClosestStations";
 import { PurposeBreakdown } from "./PurposeBreakdown";
+import { pctWhole } from "./tripText";
 
 const swatch = (t: number, w: number, d: number) => {
   const c = modeMix(t, w, d);
@@ -23,21 +25,21 @@ function TitleMark({ totals }: { totals: [number, number, number, number] }) {
 
 function Modes({ totals }: { totals: [number, number, number, number] }) {
   const all = totals[0] + totals[1] + totals[2] + totals[3];
-  const pct = (v: number) => (all > 0 ? Math.round((100 * v) / all) + "%" : "");
+  const pct = (v: number) => (all > 0 ? pctWhole(v / all) : "");
   const rows: [string, number, [number, number, number] | null][] = [
-    ["Train", totals[0], [1, 0, 0]],
-    ["Walking", totals[1], [0, 1, 0]],
-    ["Driving", totals[2], [0, 0, 1]],
+    [t("commutersInspector.train"), totals[0], [1, 0, 0]],
+    [t("commutersInspector.walking"), totals[1], [0, 1, 0]],
+    [t("commutersInspector.driving"), totals[2], [0, 0, 1]],
     // T-2215: trips between two land parts no road joins, not by rail
-    ...(totals[3] > 0 ? [["No route", totals[3], null] as [string, number, null]] : []),
+    ...(totals[3] > 0 ? [[t("commutersInspector.noRoute"), totals[3], null] as [string, number, null]] : []),
   ];
   return (
     <ul class="rows">
-      <Row label={`Local trip legs ${shownDayPhrase.value}`} bold>
+      <Row label={t("commutersInspector.legs", { phrase: shownDayPhrase.value })} bold>
         {count(all)}
       </Row>
       {rows.map(([name, v, m]) => (
-        <li data-tip={m ? undefined : "No road joins their two ends"}>
+        <li data-tip={m ? undefined : t("inspector.noRoadEnds")}>
           {m ? swatch(...m) : <i class="mk" style={{ background: "var(--mode-none)" }} />}
           <span class="grow">{name}</span>
           <span class="val">{count(v)}</span>
@@ -56,13 +58,13 @@ export function CommutersInspector() {
     <>
       <div class="title">
         <TitleMark totals={p.totals} />
-        <span class="name">{end === "home" ? "Trips from homes here" : end === "work" ? "Trips to destinations here" : "Trips to and from here"}</span>
+        <span class="name">{t("commutersInspector.title", { end })}</span>
       </div>
-      <div class="sub muted" data-tip="Outward and return legs included.">{p.sel.areas === 1 ? "One area" : `${p.sel.areas} areas`}</div>
+      <div class="sub muted" data-tip={t("commutersInspector.legsTip")}>{t("commutersInspector.areas", { count: p.sel.areas })}</div>
       <Modes totals={p.totals} />
       {p.at && p.sel.areas === 1 && <ClosestStations lng={p.at[0]} lat={p.at[1]} />}
       {p.purpose && p.purpose !== "all" && <p class="muted small">
-        {`${capitalise(purposeWords(p.purpose))} trips only.`}
+        {t("commutersInspector.only", { purpose: capitalise(purposeWords(p.purpose)) })}
       </p>}
       <PurposeBreakdown purposes={p.purposes} />
     </>

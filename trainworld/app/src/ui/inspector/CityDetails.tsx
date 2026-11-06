@@ -4,6 +4,7 @@
 // stations count boardings at the city's stations in the past 24 hours, as the Stations tab does.
 
 import { type City, type CityId } from "../../game/cities";
+import { t as tr } from "../../i18n";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
 import { cityDemandViews, demandView, ridesOf } from "../../game/demand";
@@ -23,6 +24,7 @@ import { figures, moneyTip, net, pointsTip } from "../Cities";
 import { goalTip } from "../GoalTicks";
 import { Chip, Icon } from "../widgets";
 import { PurposeSplit, purposeSplit, type SplitScope } from "./PurposeSplit";
+import { pct1, pctWhole } from "./tripText";
 
 /** How many lines and stations the city view lists. */
 const TOP = 5;
@@ -53,37 +55,37 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
     <>
     <ul class="rows">
       <li>
-        <span class="grow">Train share</span>
-        <span class="val" data-tip={splitTable(` in ${city.name}${day}`, v?.split ?? null, rides, lengthsOf(city.id), "")}>{v ? v.split.train.toFixed(1) + "%" : "–"}</span>
+        <span class="grow">{tr("cityDetails.trainShare")}</span>
+        <span class="val" data-tip={splitTable(tr("cityDetails.where", { city: city.name, day }), v?.split ?? null, rides, lengthsOf(city.id), "")}>{v ? pct1(v.split.train / 100) : "–"}</span>
       </li>
       {built && (
         <>
           <li>
-            <span class="grow">Stations</span>
+            <span class="grow">{tr("cityDetails.stations")}</span>
             <span class="val">{exact(stations)}</span>
           </li>
           <li>
-            <span class="grow">Lines</span>
+            <span class="grow">{tr("cityDetails.lines")}</span>
             <span class="val">{exact(lines)}</span>
           </li>
           <li>
-            <span class="grow">Train trips</span>
-            <span class="val" data-tip={v ? `${exact(v.railTripsPerDay)} train trips ${shownDayPhrase.value} in ${city.name}` : undefined}>{v ? `${count(v.railTripsPerDay)}/day` : "–"}</span>
+            <span class="grow">{tr("cityDetails.trainTrips")}</span>
+            <span class="val" data-tip={v ? tr("cityDetails.tripsTip", { count: exact(v.railTripsPerDay), phrase: shownDayPhrase.value, city: city.name }) : undefined}>{v ? tr("inspector.perDay", { value: count(v.railTripsPerDay) }) : "–"}</span>
           </li>
           <li>
-            <span class="grow">Points</span>
+            <span class="grow">{tr("cityDetails.points")}</span>
             <span class="val" data-tip={pointsTip(city.id, city.name)}>{pointsShort(pointsPast24h.value.get(city.id) ?? 0)}</span>
           </li>
           <li>
-            <span class="grow">Profit</span>
-            <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? `${money(net(f.d) * 1e6)}/day` : "–"}</span>
+            <span class="grow">{tr("cityDetails.profit")}</span>
+            <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? tr("inspector.perDay", { value: money(net(f.d) * 1e6) }) : "–"}</span>
           </li>
           <li>
-            <span class="grow">Goals reached</span>
+            <span class="grow">{tr("cityDetails.goalsReached")}</span>
             <span class="val goals-reached">
               {reached.length ? reached.map(({ g, t }) => (
-                <span class="goal-mark" data-tip={goalTip(city, g, t)}>{g === STAR_SHARE && <Icon.star />}{g}%</span>
-              )) : "None"}
+                <span class="goal-mark" data-tip={goalTip(city, g, t)}>{g === STAR_SHARE && <Icon.star />}{pctWhole(g / 100)}</span>
+              )) : tr("cityDetails.none")}
             </span>
           </li>
         </>
@@ -130,28 +132,28 @@ export function CityNetwork({ city }: { city: City }) {
     <>
       {purposes && purposes.parts.some((p) => p.n > 0) && (
         <>
-          <div class="h">By purpose</div>
+          <div class="h">{tr("cityDetails.byPurpose")}</div>
           <ul class="rows">
-            <PurposeSplit scope={purposeScope} unit={`boardings in ${city.name}`} />
+            <PurposeSplit scope={purposeScope} unit={tr("cityDetails.boardingsIn", { city: city.name })} />
           </ul>
         </>
       )}
-      <div class="h">Top lines<span class="right muted small">boardings today</span></div>
+      <div class="h">{tr("cityDetails.topLines")}<span class="right muted small">{tr("cityDetails.boardingsToday")}</span></div>
       <ul class="rows pick">
         {lineRows.map(({ line, n }) => (
           <li onClick={() => (selection.value = { kind: "line", line: line.id })}>
             <Chip line={line} />
             <span class="grow">{line.name}</span>
-            <span class="val" data-tip={known ? `${count(n)} boardings on ${line.name} in ${city.name} in past 24h` : undefined}>{known ? count(n) : ""}</span>
+            <span class="val" data-tip={known ? tr("cityDetails.lineBoardings", { count: count(n), line: line.name, city: city.name }) : undefined}>{known ? count(n) : ""}</span>
           </li>
         ))}
       </ul>
-      <div class="h">Top stations<span class="right muted small">boardings today</span></div>
+      <div class="h">{tr("cityDetails.topStations")}<span class="right muted small">{tr("cityDetails.boardingsToday")}</span></div>
       <ul class="rows pick">
         {stationRows.slice(0, TOP).map(({ lead, n }) => (
           <li onClick={() => (selection.value = { kind: "station", station: lead.id })}>
             <span class="grow">{lead.name}</span>
-            <span class="val" data-tip={known ? `${count(n)} boardings at ${lead.name} in past 24h` : undefined}>{known ? count(n) : ""}</span>
+            <span class="val" data-tip={known ? tr("cityDetails.stationBoardings", { count: count(n), station: lead.name }) : undefined}>{known ? count(n) : ""}</span>
           </li>
         ))}
       </ul>

@@ -6,6 +6,7 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { touchInput } from "../../map/touch";
+import { t } from "../../i18n";
 import { Icon } from "../widgets";
 
 export function NameEdit({ name, onRename, prompt = false, onPrompted, control, children }: {
@@ -63,7 +64,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
           class="name-edit"
           value={draft ?? name}
           ref={input}
-          aria-label="Name"
+          aria-label={t("nameEdit.name")}
           onInput={(e) => setDraft(e.currentTarget.value)}
           onBlur={() => commit(!control)}
           onKeyDown={(e) => {
@@ -81,11 +82,11 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
       )}
       {children}
       {control && editing ? (
-        <button class="btn icon on" data-tip="Done" aria-label="Done" onClick={() => setEditing(false)}>
+        <button class="btn icon on" data-tip={t("nameEdit.done")} aria-label={t("nameEdit.done")} onClick={() => setEditing(false)}>
           <Icon.check />
         </button>
       ) : (
-        <button class="btn icon" data-tip="Rename, or double click the name" aria-label="Rename" onClick={() => setEditing(true)}>
+        <button class="btn icon" data-tip={t("nameEdit.renameTip")} aria-label={t("nameEdit.rename")} onClick={() => setEditing(true)}>
           <Icon.pencil />
         </button>
       )}

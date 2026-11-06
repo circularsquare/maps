@@ -3,6 +3,7 @@
 
 import type { JSX } from "preact";
 import { MODE_COLOURS } from "../../game/palette";
+import { t, tNumber, tRich } from "../../i18n";
 import { PERIODS } from "../../game/periods";
 import { tripPeriod, type TripLeg, type TripRoute } from "../../game/trip";
 import type { LineInput } from "../../game/types";
@@ -17,11 +18,11 @@ import { minText, pctShare } from "./tripText";
 export function routeRow(r: TripRoute, st: ReadonlyMap<string, string>, ln: ReadonlyMap<string, LineInput>) {
   const rides = r.legs.filter((l) => l.kind === "ride");
   const from = rides[0] ? st.get(rides[0].from) : "", to = r.legs.length ? st.get(r.legs[r.legs.length - 1].to) : "";
-  const names = rides.map((l) => ln.get(l.line)?.name ?? "a line").join(" then ");
+  const names = rides.map((l) => ln.get(l.line)?.name ?? t("routeParts.aLine")).join(t("routeParts.then"));
   const label = (
     <>
       <span class="bullets">{rides.map((l) => { const line = ln.get(l.line); return line && <Chip line={line} size="sm" />; })}</span>
-      <span class="grow">{names} to {to}</span>
+      <span class="grow">{t("routeParts.namesTo", { names, to: to ?? "" })}</span>
     </>
   );
   return { names, from, to, label };
@@ -48,8 +49,8 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
   return r.legs.map((l, i) => {
     if (l.kind === "walk") {
       return (
-        <li data-tip={`${l.min.toFixed(1)} min on foot`}>
-          <span class="grow">Change: walk to <StationLink id={l.to} name={name(l.to)} /></span>
+        <li data-tip={t("routeParts.onFoot", { min: tNumber(l.min, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}>
+          <span class="grow">{tRich("routeParts.walkTo", { station: <StationLink id={l.to} name={name(l.to)} /> })}</span>
           <span class="val">{minText(l.min)}</span>
         </li>
       );
@@ -60,7 +61,7 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
     return (
       <li data-tip={rideTip(l)}>
         {line && <Chip line={line} size="sm" />}
-        <span class="grow">{i > 0 && r.legs[i - 1].kind === "ride" ? "Change to " : ""}{line?.name ?? "A line"}{bus ? " bus" : ""} to <StationLink id={l.to} name={name(l.to)} /></span>
+        <span class="grow">{tRich("routeParts.rideTo", { change: i > 0 && r.legs[i - 1].kind === "ride", line: line?.name ?? t("routeParts.aLineCap"), bus, station: <StationLink id={l.to} name={name(l.to)} /> })}</span>
         <span class="val">{minText(l.waitMin + l.min)}</span>
       </li>
     );
@@ -73,7 +74,7 @@ export function PeriodRows({ train, tip }: { train: (period: number) => number |
   const q = shownPeriod.value;
   return (
     <>
-      <div class="h">Train by period<span class="right muted small">click to show</span></div>
+      <div class="h">{t("routeParts.byPeriod")}<span class="right muted small">{t("routeParts.clickToShow")}</span></div>
       <ul class="rows pick">
         {PERIODS.map((p, i) => {
           const v = train(i);

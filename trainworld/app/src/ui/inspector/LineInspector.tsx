@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { Money } from "../MoneyText";
-import { andList, count, distance, duration, forecast, headway, length, money, plural, speed, trainCostLine, trainKind } from "../../game/format";
+import { count, distance, duration, forecast, headway, length, money, speed, trainCostLine, trainKind } from "../../game/format";
+import { t as tr, tList, tNumber } from "../../i18n";
 import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
@@ -34,7 +35,7 @@ import { drawnReversed } from "../../game/northUp";
 import { MareyButton } from "./MareyChart";
 import type { EditOp } from "../../workers/protocol";
 import { UPGRADE } from "../../game/upgrades";
-import { AverageSpeed, carsBought, carsText, DEMAND_LABEL, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
+import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
@@ -59,16 +60,10 @@ function spotsFrom(d: Float64Array): Spots {
     const ahead = kind === 11 && node >= 0 ? lines.get(node)?.name : undefined;
     const text =
       kind === 11
-        ? ahead ? `Behind ${ahead} trains` : "Behind slower trains"
+        ? ahead ? tr("lineInspector.behindLine", { line: ahead }) : tr("lineInspector.behindSlower")
         : (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
-          ? `At ${at}`
-          : kind === 4
-            ? `At the junction${near ? " near " + near : ""}`
-            : kind === 5
-              ? `At the crossing${near ? " near " + near : ""}`
-              : kind === 12
-                ? `At the merge${near ? " near " + near : ""}`
-                : `On the track${near ? " near " + near : ""}`;
+          ? tr("lineInspector.spotAt", { name: at })
+          : tr("lineInspector.spotPlace", { kind: kind === 4 ? "junction" : kind === 5 ? "crossing" : kind === 12 ? "merge" : "track", hasNear: !!near, near: near ?? "" });
     const out = kind === 11 ? following : busy;
     const same = out.find((o) => o.text === text); // both directions, or two stretches by one station
     if (same) same.s += s;
@@ -91,7 +86,7 @@ function waitSpotsFrom(d: Float64Array): Spot[] {
     x.s += d[i + 2];
     by.set(d[i], x);
   }
-  return [...by].map(([node, x]) => ({ text: `At ${st.get(node)?.name ?? ""}${x.faster.length ? `, for ${andList(x.faster)} trains` : ""}`, s: x.s }));
+  return [...by].map(([node, x]) => ({ text: tr("lineInspector.waitSpot", { name: st.get(node)?.name ?? "", faster: x.faster.length > 0, list: tList(x.faster) }), s: x.s }));
 }
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
@@ -129,7 +124,7 @@ function marksFrom(d: Float64Array): RouteMark[] {
   const out: RouteMark[] = [];
   for (let i = 0; i + 5 < d.length; ) {
     const n = d[i + 5];
-    const others = Array.from(d.subarray(i + 6, i + 6 + n), (o) => lines.get(o)?.name ?? `Line ${o}`);
+    const others = Array.from(d.subarray(i + 6, i + 6 + n), (o) => lines.get(o)?.name ?? tr("lineInspector.lineNum", { num: o }));
     out.push({ crossing: d[i] === 5, gap: d[i + 1], near: nearestStation(d[i + 3], d[i + 4])?.name ?? "", others });
     i += 6 + n;
   }
@@ -148,9 +143,7 @@ function RouteMarks({ marks }: { marks: RouteMark[] }) {
 }
 
 function markTip(m: RouteMark): string {
-  const where = m.near ? ` near ${m.near}` : "";
-  if (m.crossing) return `Flat crossing${where}\n${m.others.length ? "Crosses " + m.others.join(", ") : "Crosses track no line uses"}`;
-  return `Flat junction${where}\n${m.others.length ? "Also used by " + m.others.join(", ") : "No other line uses it"}`;
+  return tr(m.crossing ? "lineInspector.flatCrossing" : "lineInspector.flatJunction", { hasNear: !!m.near, near: m.near, hasOthers: m.others.length > 0, list: m.others.join(", ") });
 }
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
@@ -189,17 +182,17 @@ function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: 
   return (
     <>
       <ul class="rows">
-        <Row label={st.loop ? "Lap" : "Round trip"} bold>
+        <Row label={tr(st.loop ? "lineInspector.lap" : "lineInspector.roundTrip")} bold>
           {duration(total)}
         </Row>
-        <Row label="Running">{duration(running)}</Row>
-        <Row label="Dwell at stops">{duration(dwell)}</Row>
-        {turn > 0 && <Row label={st.loop ? "Turning at the end" : "Turning at the ends"}>{duration(turn)}</Row>}
-        {reversing > 0 && <Row label="Reversing partway">{duration(reversing)}</Row>}
+        <Row label={tr("lineInspector.running")}>{duration(running)}</Row>
+        <Row label={tr("lineInspector.dwell")}>{duration(dwell)}</Row>
+        {turn > 0 && <Row label={tr(st.loop ? "lineInspector.turnEnd" : "lineInspector.turnEnds")}>{duration(turn)}</Row>}
+        {reversing > 0 && <Row label={tr("lineInspector.reversing")}>{duration(reversing)}</Row>}
       </ul>
-      {delayRow("Waiting at busy track", waiting, busy)}
-      {delayRow("Behind slower trains", behind, behindSpots)}
-      {delayRow("Waiting for faster trains", forFaster, waitSpots)}
+      {delayRow(tr("lineInspector.busyTrack"), waiting, busy)}
+      {delayRow(tr("lineInspector.behindSlower"), behind, behindSpots)}
+      {delayRow(tr("lineInspector.fasterTrains"), forFaster, waitSpots)}
     </>
   );
 }
@@ -301,7 +294,7 @@ export function stretchLooks(l: LineInput, names: string[], crowded: (CrowdedStr
   return day.map((v, k) => {
     const c = crowded[k] ?? null;
     const full = c ? FULL_FLOOR + (1 - FULL_FLOOR) * Math.min(1, Math.max(0, (c.load - CROWD_LOAD_FROM) / (CROWD_LOAD_STRONG - CROWD_LOAD_FROM))) : 0;
-    const tip = `${names[k]} to ${names[k + 1]}\n${v < 0.5 ? "0" : forecast(v)} riders ${per}` + (purpose === "all" ? "" : `, ${purposeName(purpose)} trips only`)
+    const tip = tr("lineInspector.stretch", { from: names[k], to: names[k + 1], count: v < 0.5 ? "0" : forecast(v), phrase: per, filtered: purpose !== "all", purpose: purpose === "all" ? "" : purposeName(purpose) })
       + (c ? `\n${peakLoadText(c)}` : "");
     return { w: STRETCH_MIN_PX + (STRETCH_MAX_PX - STRETCH_MIN_PX) * (most > 0 ? v / most : 0), full, tip };
   });
@@ -319,7 +312,7 @@ const PANEL_MARK_FLOOR = 0.5;
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
 function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
-  return <span class="n num" data-tip={d ? `${count(d.stops[i] ?? 0)} boardings in past 24h` : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
+  return <span class="n num" data-tip={d ? tr("stationInspector.boardings24", { count: count(d.stops[i] ?? 0) }) : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
 
 /** The plain stops strip; a loop's bar goes on past its ends and curves round (T-1391). */
@@ -345,10 +338,10 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
   const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
-  const capText = `The ${length(short.length)} platform at ${short.name} fits ${carsText(cap)}`;
+  const capText = tr("lineInspector.fits", { length: length(short.length), name: short.name, cars: carsText(cap) });
   // T-1893: the number between the buttons carries the hover; the buttons have none
   const m = moneyState.value;
-  const tip = `${carsText(cars)} can carry ${(cars * RATED_PER_CAR).toLocaleString("en-US")} riders, ${(cars * CRUSH_PER_CAR).toLocaleString("en-US")} at most` + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
+  const tip = tr("lineInspector.carry", { cars: carsText(cars), rated: tNumber(cars * RATED_PER_CAR), crush: tNumber(cars * CRUSH_PER_CAR) }) + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) : "");
   // T-751: a + at the cap offers to lengthen the platforms that stop it
   const step = (d: number) => {
     const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
@@ -366,8 +359,8 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <ul class="rows">
       <li>
-        <span class="grow" data-tip={capText}>Train length</span>
-        <Stepper value={carsText(cars)} wide label="train length" onStep={step} tipValue={tip} type={{ text: String(cars), set: typed, tip }} />
+        <span class="grow" data-tip={capText}>{tr("lineInspector.trainLength")}</span>
+        <Stepper value={carsText(cars)} wide label={tr("lineInspector.trainLengthLabel")} onStep={step} tipValue={tip} type={{ text: String(cars), set: typed, tip }} />
       </li>
       {offer > 0 && <LongerPlatforms l={l} st={st} stations={plats} cars={cars} to={offer} onDone={() => setWant(null)} />}
     </ul>
@@ -391,11 +384,12 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   if (!short.length) return null;
   const n = short.length;
   const price = cost === null ? null : cost;
-  const names = short.length > 4 ? short.slice(0, 3).map((s) => s.name).join(", ") + ` and ${short.length - 3} more` : andList(short.map((s) => s.name));
+  const names = short.length > 4 ? tr("lineInspector.andMore", { list: short.slice(0, 3).map((s) => s.name).join(", "), count: short.length - 3 }) : tList(short.map((s) => s.name));
   const go = async () => {
     if (busy.current) return;
     const have = liveMoney.value.cash, need = (price ?? 0) + carsPrice;
     if (m && m.mode !== "sandbox" && need > 1e-9 && need > have + 1e-6) {
+      // i18n-ignore
       say(describeIssues([`Money:${need.toFixed(1)}:${have.toFixed(1)}`]), true);
       shakeEl(btn.current);
       return;
@@ -414,13 +408,14 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
       busy.current = false;
     }
   };
-  const label = price === null ? "Expand all" : price > 1e-9 ? `${n === 1 ? "Expand it" : "Expand all"} for ${money(price * 1e6)}` : n === 1 ? "Expand it" : "Expand all";
-  const tip = `Platform${n === 1 ? "" : "s"} at ${names} to ${length(metres)}, then trains to ${carsText(to)}`
-    + (price !== null && price <= 1e-9 ? "\nFree while still in the blueprint" : "")
-    + (carsPrice > 0 ? `\nExtra cars cost ${money(carsPrice * 1e6)}` : "");
+  // i18n-ignore: a yes/no for the message
+  const label = tr("lineInspector.expand", { one: n === 1, priced: price !== null && price > 1e-9, price: price === null ? "" : money(price * 1e6) });
+  const tip = tr("lineInspector.expandTip", { count: n, names, length: length(metres), cars: carsText(to) })
+    + (price !== null && price <= 1e-9 ? "\n" + tr("lineInspector.free") : "")
+    + (carsPrice > 0 ? "\n" + tr("lineInspector.extraCars", { price: money(carsPrice * 1e6) }) : "");
   return (
     <li class="offer">
-      <span class="grow">{n === 1 ? "1 station is" : `${n} stations are`} too short for {to}-car trains.</span>
+      <span class="grow">{tr("lineInspector.tooShort", { count: n, to })}</span>
       <button ref={btn} class="btn text" data-tip={tip} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>{label}</button>
     </li>
   );
@@ -442,8 +437,8 @@ function PassingTracks({ l, version }: { l: LineInput; version: number }) {
   if (!at.length) return null;
   const built = at.filter((x) => x.s.built);
   const price = built.reduce((a, x) => a + x.price, 0);
-  const n = plural(at.length, "station");
-  const names = at.length > 8 ? at.slice(0, 7).map((x) => x.s.name).join(", ") + ` and ${at.length - 7} more` : andList(at.map((x) => x.s.name));
+  const n = tr("inspector.stations", { count: at.length });
+  const names = at.length > 8 ? tr("lineInspector.andMore", { list: at.slice(0, 7).map((x) => x.s.name).join(", "), count: at.length - 7 }) : tList(at.map((x) => x.s.name));
   const go = async () => {
     if (busy.current) return;
     busy.current = true;
@@ -453,16 +448,16 @@ function PassingTracks({ l, version }: { l: LineInput; version: number }) {
       // the edit also buys the trains a slower line now needs for its headway
       const trains = a.charge - price;
       say(price > 1e-9
-        ? `Passing tracks built at ${plural(built.length, "station")} for ${money(price * 1e6)}.` + (trains > 0.05 ? ` New trains cost ${money(trains * 1e6)}.` : "")
-        : `Passing tracks added to the blueprint at ${n}.`);
+        ? tr("lineInspector.passingBuilt", { stations: tr("inspector.stations", { count: built.length }), price: money(price * 1e6), extra: trains > 0.05, trains: money(trains * 1e6) })
+        : tr("lineInspector.passingAdded", { stations: n }));
     } finally {
       busy.current = false;
     }
   };
   return (
     <div class="line-stop-actions">
-      <button ref={btn} class="btn text" data-tip={`At ${names}`} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
-        Add passing tracks at {n}{price > 1e-9 ? ` for ${money(price * 1e6)}` : ""}
+      <button ref={btn} class="btn text" data-tip={tr("lineInspector.passingTip", { names })} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
+        {tr("lineInspector.passingButton", { stations: n, priced: price > 1e-9, price: money(price * 1e6) })}
       </button>
     </div>
   );
@@ -475,7 +470,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
   const m = moneyState.value;
   const tip = (fast: boolean) => {
     const k = m && trainKind(m, fast);
-    let t = fast ? "High speed trains run up to 320 km/h on high speed track or 160 km/h on normal track" : "Normal trains run up to 160 km/h";
+    let t = tr(fast ? "lineInspector.fastTip" : "lineInspector.normalTip");
     const need = Math.max(...st.trainsNeeded) * st.cars;
     if (k && fast !== st.fast && st.status === "running" && need > 0) t += "\n" + carsBought(k, need);
     return t;
@@ -483,11 +478,11 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
   return (
     <ul class="rows">
       <li>
-        <span class="grow">Trains</span>
+        <span class="grow">{tr("lineInspector.trains")}</span>
         <Segmented<boolean>
           options={[
-            [false, <span data-tip={tip(false)}>Normal</span>],
-            [true, <span data-tip={tip(true)}>High speed</span>],
+            [false, <span data-tip={tip(false)}>{tr("lineInspector.normal")}</span>],
+            [true, <span data-tip={tip(true)}>{tr("lineInspector.highSpeed")}</span>],
           ]}
           value={st.fast}
           onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
@@ -502,20 +497,21 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
 function stretchTip(s: { reached: number; limit: number; why: number } | undefined): string | undefined {
   if (!s) return undefined;
   const lim = speed(s.limit);
-  const why = s.why === 0 ? `The trains' top speed is ${lim}` : s.why === 1 ? `Normal track holds trains to ${lim}` : s.why === 2 ? `Curves hold trains to ${lim} here` : `A crossover holds trains to ${lim} here`;
-  return `Trains reach ${speed(s.reached)}\n${why}` + (s.reached < s.limit - 1 ? "\nThe stops are too close together to reach it" : "");
+  // i18n-ignore: select option names
+  const why = tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? "track" : s.why === 2 ? "curve" : "crossover", speed: lim });
+  return tr("lineInspector.reach", { speed: speed(s.reached) }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
 /** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts). */
 function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
   const c = scheduleCopy.value;
   const fit = carsCap(l);
-  const cut = c && fit && c.cars > fit.cap ? `\nThe platform at ${fit.name} is too short for ${carsText(c.cars)}. Trains here stay at ${carsText(fit.cap)}.` : "";
+  const cut = c && fit && c.cars > fit.cap ? "\n" + tr("lineInspector.pasteCut", { name: fit.name, cars: carsText(c.cars), cap: carsText(fit.cap) }) : "";
   return (
     <span class="sched-copy">
-      <button class="btn icon mini" aria-label="Copy the schedule" data-tip={`Copy the schedule: ${scheduleText(scheduleOf(l, st))}`}
+      <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st)) })}
         onClick={() => copySchedule(l, st)}><Icon.copy /></button>
-      <button class="btn icon mini" aria-label="Paste the schedule" disabled={!c} data-tip={c ? `Paste the schedule copied from ${c.from}: ${scheduleText(c)}${cut}` : "Paste a schedule copied from a line"}
+      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c) }) + cut : tr("lineInspector.pasteNone")}
         onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
       <MareyButton st={st} />
     </span>
@@ -562,7 +558,7 @@ function RailLineInspector({ id }: { id: string }) {
 
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
-    if (a.ok) say(`${l.name} constructed for ${money(a.charge * 1e6)}. Its trains start with the next departure.`);
+    if (a.ok) say(tr("lineInspector.constructed", { name: l.name, price: money(a.charge * 1e6) }));
   };
   const passed = editingStops ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
@@ -580,7 +576,7 @@ function RailLineInspector({ id }: { id: string }) {
     return setStops(stops);
   };
   const addPassed = () => addGaps(pending ?? []);
-  const stationsText = (n: number) => plural(n, "station");
+  const stationsText = (n: number) => tr("inspector.stations", { count: n });
   const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
   const stopEdit = async (op: EditOp) => {
     if (stopEditing) return;
@@ -603,7 +599,7 @@ function RailLineInspector({ id }: { id: string }) {
   const remove = () => {
     // T-2535: a line with no stops has nothing to lose, so it goes at once
     if (l.stops.length === 0) return removeNow();
-    ask.value = { text: `Delete ${l.name}? Track and stations stay.`, yes: "Delete line", no: "Keep line", run: removeNow };
+    ask.value = { text: tr("lineInspector.deleteQuestion", { name: l.name }), yes: tr("busInspector.deleteYes"), no: tr("busInspector.deleteNo"), run: removeNow };
   };
   const copy = async () => {
     if (copying) return;
@@ -629,7 +625,7 @@ function RailLineInspector({ id }: { id: string }) {
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
     return {
-      tip: `Click to remove the stop at ${here}` + (end || loop || nStops < 3 ? "" : "\nShift-click to end the line here"),
+      tip: tr("busInspector.removeStop", { name: here }) + (end || loop || nStops < 3 ? "" : "\n" + tr("lineInspector.shiftEnd")),
       click: (e) => void stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i }),
     };
   };
@@ -660,7 +656,7 @@ function RailLineInspector({ id }: { id: string }) {
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above])}>{duration(t)}</span>}
           {st.reversals?.includes(i) && (
-            <span class="rev-stop" data-tip={`Trains reverse here and stand ${duration(st.turnaroundS)}\nAt most 12 trains an hour reverse on each side`}>
+            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS) })}>
               <Icon.uturn />
             </span>
           )}
@@ -669,7 +665,7 @@ function RailLineInspector({ id }: { id: string }) {
         <StopToday line={l.id} i={i} />
         <RouteMarks marks={flip ? marks.filter((m) => m.gap === i - 1).reverse() : marks.filter((m) => m.gap === i)} />
         {editingStops && (
-          <button class="btn icon mini danger" data-tip={st.loop && i > 0 && i === l.stops.length - 1 ? "Open the loop" : "Take this stop out of the line"} aria-label={`Remove stop ${name.get(s)}`} onClick={() => removeStop(i)}>
+          <button class="btn icon mini danger" data-tip={tr(st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => removeStop(i)}>
             <Icon.cross />
           </button>
         )}
@@ -692,8 +688,8 @@ function RailLineInspector({ id }: { id: string }) {
     return pending?.includes(i)
       ? <>
         <li class="passed confirm">
-          <button class="btn text mini grow" onClick={() => void addPassed()}>Add {stationsText(here.length)}</button>
-          <button class="btn text mini" onClick={() => setPending(null)}>Cancel</button>
+          <button class="btn text mini grow" onClick={() => void addPassed()}>{tr("lineInspector.add", { stations: stationsText(here.length) })}</button>
+          <button class="btn text mini" onClick={() => setPending(null)}>{tr("lineInspector.cancel")}</button>
         </li>
         {here.map((p) => (
           <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
@@ -701,8 +697,8 @@ function RailLineInspector({ id }: { id: string }) {
       </>
       : !pending && (
         <li class="passed">
-          <button class="btn text mini" data-tip={`Add ${andList(here.map((p) => name.get(String(p.node)) ?? ""))}\nDouble-click to add them at once`} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
-            <Icon.plus />{stationsText(here.length)} passed
+          <button class="btn text mini" data-tip={tr("lineInspector.addTip", { names: tList(here.map((p) => name.get(String(p.node)) ?? "")) })} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
+            <Icon.plus />{tr("lineInspector.passed", { stations: stationsText(here.length) })}
           </button>
         </li>
       );
@@ -712,14 +708,14 @@ function RailLineInspector({ id }: { id: string }) {
   const stopsBlock = (
     <>
       <div class="h divided">
-        Stops
+        {tr("lineInspector.stops")}
         {l.stops.length >= 2 && (
-          <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={related ? "Hide related lines" : "Show related lines"}
-            aria-label={related ? "Hide related lines" : "Show related lines"} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
+          <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
+            aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
           </button>
         )}
-        <span class="right muted small">boardings today</span>
+        <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
       {related ? (
         <div onDblClick={onListDblClick}>
@@ -741,22 +737,22 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <LineTitle l={l} t={title} />
       <div class="sub muted flush">
-        {st.fast && "High-speed, "}{plural(l.stops.length - (st.loop ? 1 : 0), "stop")}, {distance(st.km * 1000)}
+        {tr("lineInspector.sub", { fast: !!st.fast, count: l.stops.length - (st.loop ? 1 : 0), distance: distance(st.km * 1000) })}
       </div>
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
-          <p>Planned</p>
-          <ConstructButton num={l.num} build={build} what="Track and stations" vehicles="trains" runs="Trains run" />
+          <p>{tr("busInspector.planned")}</p>
+          <ConstructButton num={l.num} build={build} kind="line" />
         </div>
       )}
       {st.status === "broken" && (
-        <ul class="alerts"><Alert>Track this line ran on is gone</Alert></ul>
+        <ul class="alerts"><Alert>{tr("lineInspector.broken")}</Alert></ul>
       )}
 
       <div class="line-stop-actions">
-        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={editingStops ? "Finish editing stops (S)" : "Click stations on the map to add stops to the line (S)"} onClick={() => toggleEditStops(l)}><Icon.pencil /><SwapLabel on={editingStops} off="Edit stops" onText="Stop editing" /></button>
-        <button class="btn text" onClick={() => void copy()} disabled={copying}>Copy line</button>
-        <button class="btn text danger" onClick={remove}>Delete line</button>
+        <button class={"btn text" + (editingStops ? " on" : "")} data-guide={editingStops ? undefined : "stops"} data-tip={tr(editingStops ? "lineInspector.finishTip" : "lineInspector.editTip")} onClick={() => toggleEditStops(l)}><Icon.pencil /><SwapLabel on={editingStops} off={tr("lineInspector.editStops")} onText={tr("lineInspector.stopEditing")} /></button>
+        <button class="btn text" onClick={() => void copy()} disabled={copying}>{tr("busInspector.copy")}</button>
+        <button class="btn text danger" onClick={remove}>{tr("busInspector.deleteYes")}</button>
       </div>
       {editingStops && stopsBlock}
 
@@ -770,14 +766,14 @@ function RailLineInspector({ id }: { id: string }) {
             return (
               <Alert tip={h0.tip}>
                 {h0.head}{h0.at ? <span class="place-link" onClick={() => { locateStation(h0.at!.lng, h0.at!.lat); selection.value = { kind: "station", station: h0.at!.id }; }}>{h0.name}</span> : h0.name}{h0.tail}
-                {hs.map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{DEMAND_LABEL[h.d]} demand: {heldText(h.wait)}</div>)}
+                {hs.map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait) })}</div>)}
               </Alert>
             );
           })}
         </ul>
       )}
 
-      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit="riders" />} />}
+      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit={tr("lineInspector.ridersUnit")} />} />}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}

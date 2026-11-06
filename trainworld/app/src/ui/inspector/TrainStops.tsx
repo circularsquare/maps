@@ -7,6 +7,7 @@
 import type { BoardHour } from "../../game/boarding";
 import { tripLoad } from "../../game/boarding";
 import { clock } from "../../game/clock";
+import { t as tr } from "../../i18n";
 import { duration, exact as count } from "../../game/format";
 import { periodAt, PERIODS } from "../../game/periods";
 import type { LineDemand } from "../../game/demand";
@@ -97,22 +98,22 @@ export function TrainStops({ line, dm, board, trip, run, seg, stopS, profile, de
     const end = k === n - 1;
     const off = end ? arriving : arriving * (shares[p]?.[k] ?? 0);
     const on = end ? 0 : Math.max(0, load(k) - (arriving - off));
-    rows.push({ name: names.get(stops[k]) ?? "a station", inS, off, on, arriving, last: end, lines: transfers(stops[k]) });
+    rows.push({ name: names.get(stops[k]) ?? tr("trainStops.aStation"), inS, off, on, arriving, last: end, lines: transfers(stops[k]) });
   }
   if (!rows.length) return null;
   return (
     <>
-      <div class="h">Next stops<span class="right muted small">getting off</span></div>
+      <div class="h">{tr("trainStops.title")}<span class="right muted small">{tr("trainStops.gettingOff")}</span></div>
       <ul class="rows train-stops">
         {rows.map((r) => (
           <li data-tip={r.last
-            ? `Everyone on board gets off at ${r.name}, the end of the line`
-            : `${count(r.off)} of the ${count(r.arriving)} riders on board get off at ${r.name}, and ${count(r.on)} get on`}>
+            ? tr("trainStops.lastTip", { name: r.name })
+            : tr("trainStops.stopTip", { off: count(r.off), riders: count(r.arriving), name: r.name, on: count(r.on) })}>
             <span class="grow stop-name"><span class="name">{r.name}</span>{r.lines.length > 0 && <span class="bullets">{r.lines.map((l) => <Chip line={l} size="sm" />)}</span>}</span>
             {Number.isFinite(r.inS) && (
-              <span class="muted small" data-tip={`Arrives in ${duration(r.inS)}`}>{r.inS < 60 ? "<1 min" : `${Math.round(r.inS / 60)} min`}</span>
+              <span class="muted small" data-tip={tr("trainStops.arrives", { time: duration(r.inS) })}>{r.inS < 60 ? tr("trainStops.underMin") : tr("inspector.min", { n: Math.round(r.inS / 60) })}</span>
             )}
-            <span class="val w-num" data-tip={`${count(r.off)} ${Math.round(r.off) === 1 ? "rider gets" : "riders get"} off at ${r.name}`}>{count(r.off)}</span>
+            <span class="val w-num" data-tip={tr("trainStops.offTip", { count: count(r.off), n: Math.round(r.off), name: r.name })}>{count(r.off)}</span>
           </li>
         ))}
       </ul>

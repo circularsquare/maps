@@ -29,7 +29,7 @@ import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { TwoRows } from "./LineInspector";
-import { DEMAND_LABEL } from "./schedule";
+import { t } from "../../i18n";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
@@ -104,7 +104,7 @@ export function GroupInspector({ group }: { group: number }) {
     document.addEventListener("scroll", on, { capture: true, passive: true });
     return () => document.removeEventListener("scroll", on, { capture: true });
   }, []);
-  if (!w || !ls || !byNum) return <p class="muted">No such group.</p>;
+  if (!w || !ls || !byNum) return <p class="muted">{t("groupInspector.none")}</p>;
   const names = stationNames(w);
   const nm = (s: string) => names.get(s) ?? "";
   const name = groupName(byNum);
@@ -150,7 +150,7 @@ export function GroupInspector({ group }: { group: number }) {
     const cells = lay.rows[r].cells.map((c, k) => (c ? { k, c } : null)).filter((v) => v !== null);
     const st = [...new Set(cells.map((v) => nm(v.c.station)))].join(" / ");
     const stop = cells.filter((v) => v.c.stop).map((v) => ls[v.k].name), pass = cells.filter((v) => !v.c.stop).map((v) => ls[v.k].name);
-    return [st, stop.length ? `Stops: ${stop.join(", ")}` : "", pass.length ? `Passes: ${pass.join(", ")}` : ""].filter(Boolean).join("\n");
+    return [st, stop.length ? t("groupInspector.stops", { list: stop.join(", ") }) : "", pass.length ? t("groupInspector.passes", { list: pass.join(", ") }) : ""].filter(Boolean).join("\n");
   };
   // stops side by side at one place in a row: one mark over their bars
   const runs = (r: number) => {
@@ -190,35 +190,35 @@ export function GroupInspector({ group }: { group: number }) {
   return (
     <>
       <div class="title" data-group-edit ref={titleEl}>
-        <button class={"badge-edit" + (editing ? " on" : "")} data-tip="Edit name, color, or symbol" aria-label="Edit name, color, or symbol"
+        <button class={"badge-edit" + (editing ? " on" : "")} data-tip={t("lineTitle.edit")} aria-label={t("lineTitle.edit")}
           onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
         <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>
-          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateLine(ls.flatMap((l) => l.stops))}>
+          <button class="btn icon" data-tip={t("lineTitle.show")} aria-label={t("lineTitle.show")} onClick={() => locateLine(ls.flatMap((l) => l.stops))}>
             <Icon.locate />
           </button>
         </NameEdit>
       </div>
       {editing && (
         <div class="line-identity" data-group-edit>
-          <label>Bullet <input aria-label="Group bullet" value={symbol ?? look.symbol} placeholder={groupLabel(name)}
+          <label>{t("groupInspector.bullet")} <input aria-label={t("groupInspector.bulletLabel")} value={symbol ?? look.symbol} placeholder={groupLabel(name)}
             onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (e.key === "Enter") commitSymbol(); }} />
-            {look.colour && <button class="btn icon mini" data-tip="Back to the lines' color" aria-label="Back to the lines' color" onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
+            {look.colour && <button class="btn icon mini" data-tip={t("groupInspector.backToColour")} aria-label={t("groupInspector.backToColour")} onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
           </label>
           <ColourPicker value={preview ?? groupBullet(byNum, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
         </div>
       )}
       <div class="h divided">
-        Stops
-        <button class={"btn icon mini related-toggle" + (all ? " on" : "")} data-tip={all ? "Show fewer stops" : "Show all stops"} aria-label={all ? "Show fewer stops" : "Show all stops"} aria-pressed={all} onClick={() => (groupAllStops.value = !all)}>
+        {t("groupInspector.stopsHeading")}
+        <button class={"btn icon mini related-toggle" + (all ? " on" : "")} data-tip={t(all ? "groupInspector.fewer" : "groupInspector.all")} aria-label={t(all ? "groupInspector.fewer" : "groupInspector.all")} aria-pressed={all} onClick={() => (groupAllStops.value = !all)}>
           <Icon.allStops />
         </button>
-        <button class={"btn icon mini related-toggle" + (copying ? " on" : "")} data-tip="Copy line" aria-label="Copy line" aria-pressed={copying} onClick={() => setCopying(!copying)}>
+        <button class={"btn icon mini related-toggle" + (copying ? " on" : "")} data-tip={t("groupInspector.copy")} aria-label={t("groupInspector.copy")} aria-pressed={copying} onClick={() => setCopying(!copying)}>
           <Icon.copy />
         </button>
       </div>
       {copying && (
         <div class="group-copy">
-          {ls.map((l) => <Chip line={l} pick={(x) => void copy(x)} tip={`Copy ${l.name}`} />)}
+          {ls.map((l) => <Chip line={l} pick={(x) => void copy(x)} tip={t("groupInspector.copyLine", { name: l.name })} />)}
         </div>
       )}
       <div class="group-diagram">
@@ -234,7 +234,7 @@ export function GroupInspector({ group }: { group: number }) {
               const x0 = Math.max(1, Math.min(...at) - CROSS_STUB), x1 = Math.min(W - 1, Math.max(...at) + CROSS_STUB);
               return bars.map((o, i) => (
                 <line class="group-cross" x1={x0} x2={x1} y1={row.y + barOffset(i, bars.length)} y2={row.y + barOffset(i, bars.length)} stroke={o.colour} stroke-width={LINE - 1}
-                  data-tip={`${o.name} stops at ${rowTip(r).split("\n")[0]}`} onClick={() => (selection.value = { kind: "line", line: o.id })} />
+                  data-tip={t("groupInspector.stopsAt", { line: o.name, station: rowTip(r).split("\n")[0] })} onClick={() => (selection.value = { kind: "line", line: o.id })} />
               ));
             })}
             {ls.map((l, k) => (
@@ -262,7 +262,7 @@ export function GroupInspector({ group }: { group: number }) {
                   const [x0, x1] = hitOf(k, r), x = lay.xs[k][r];
                   const hit = <rect class="hit" x={x0} y={row.y - row.h / 2} width={x1 - x0} height={row.h} />;
                   if (!c.stop) {
-                    const tip = rail ? `Click to add ${B} stop at ${nm(c.station)}` : `${B} passes ${nm(c.station)}`;
+                    const tip = rail ? t("groupInspector.addStop", { line: B, station: nm(c.station) }) : t("groupInspector.passesStation", { line: B, station: nm(c.station) });
                     return (
                       <g class={"group-cell" + (rail ? " edit" : "")} data-tip={tip} onClick={rail ? () => void change({ op: "stopPassed", line: l.num, station: Number(c.station) }) : undefined}>
                         {hit}
@@ -280,8 +280,8 @@ export function GroupInspector({ group }: { group: number }) {
                   const here = nm(c.station);
                   const end = c.index === 0 || c.index === n - 1;
                   const tip = keep
-                    ? (turns ? `${B} turns back at ${here}` : `${B} stops at ${here}`)
-                    : `Click to remove ${B} stop at ${here}` + (end || loop || n < 3 ? "" : `\nShift-click to end ${B} here`);
+                    ? (turns ? t("groupInspector.turnsBack", { line: B, station: here }) : t("groupInspector.stopsAt", { line: B, station: here }))
+                    : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }));
                   const click = (e: MouseEvent) => {
                     if (e.shiftKey && !end && !loop) void change({ op: "endLineAt", line: l.num, index: c.index });
                     else void change({ op: "dropStop", line: l.num, index: c.index });
@@ -302,7 +302,7 @@ export function GroupInspector({ group }: { group: number }) {
             const l = ls[b.col];
             return (
               <span class={"group-bullet" + (now[b.col].n ? "" : " idle")} style={{ left: b.x - chipW[b.col] / 2 + "px", top: b.y - 8 + "px" }} onPointerEnter={() => (groupHover.value = l.num)}>
-                <Chip line={l} size="sm" tip={now[b.col].n ? l.name : `${l.name}\nNo trains at ${DEMAND_LABEL[now[b.col].lev].toLowerCase()} demand`} />
+                <Chip line={l} size="sm" tip={now[b.col].n ? l.name : t("groupInspector.noTrains", { line: l.name, demand: t("inspector.demand", { demand: now[b.col].lev }) })} />
               </span>
             );
           })}

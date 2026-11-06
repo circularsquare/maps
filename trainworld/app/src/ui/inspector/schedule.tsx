@@ -5,7 +5,9 @@
 
 import type { ComponentChildren } from "preact";
 import { lineMoneyTip, Money } from "../MoneyText";
-import { capitalise, count, duration, headway, money, plural, speed, trainKind } from "../../game/format";
+import { count, duration, headway, money, speed, trainKind } from "../../game/format";
+import { t, tNumber } from "../../i18n";
+import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, profitKnown, runningToday, today } from "../../game/today";
@@ -22,34 +24,38 @@ import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadwa
 import { Row, Segmented, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
-export const DEMAND_LABEL: Record<Demand, string> = { high: "High", medium: "Medium", low: "Low" };
+/** A demand level's name, capitalised: "High". */
+export const demandLabel = (d: Demand): string => t("schedule.demandName", { demand: d });
 
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts), every
  * kind of day alike (T-2335): "High demand period: 06:00-20:00". */
 export function levelTimes(d: Demand): string {
-  return `${DEMAND_LABEL[d]} demand period: ${levelHours(d).map(([a, b]) => hourSpan(a, b)).join(", ")}`;
+  return t("schedule.levelTimes", { demand: d, hours: levelHours(d).map(([a, b]) => hourSpan(a, b)).join(", ") });
 }
 
 // ---------------------------------------------------------------- the vehicle
 
 export type Vehicle = "train" | "bus" | "boat";
-const MANY: Record<Vehicle, string> = { train: "trains", bus: "buses", boat: "boats" };
+/** The vehicle's plural noun: "trains". */
+export const manyOf = (v: Vehicle): string => t("schedule.many", { vehicle: v });
+/** As `manyOf`, capitalised: "Trains". */
+const manyCap = (v: Vehicle): string => t("schedule.manyCap", { vehicle: v });
 
 export const vehicleOf = (st: LineStats): Vehicle => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
 /** "1 bus", "3 buses" */
-export const vehiclesText = (v: Vehicle, n: number) => plural(n, v, MANY[v]);
+export const vehiclesText = (v: Vehicle, n: number) => t("schedule.vehicles", { vehicle: v, count: n });
 /** A vehicle's size in train cars, for its seats, rated load and crush (`capacity`). */
 export const vehicleCars = (st: LineStats): number => {
   const v = vehicleOf(st);
   return v === "boat" ? BOAT_CARS : v === "bus" ? BUS_CARS : st.cars;
 };
 
-export const carsText = (n: number) => plural(n, "car");
+export const carsText = (n: number) => t("inspector.cars", { count: n });
 
 /** What buying `n` of a stock costs, or that the depot's spare ones cover it. */
 const buys = (unit: (n: number) => string, n: number, price: number, spare: number): string => {
   const bought = Math.max(0, n - spare);
-  return bought > 0 ? `Buys ${unit(bought)} for ${money(bought * price * 1e6)}` : `Uses ${unit(n)} from the depot`;
+  return bought > 0 ? t("schedule.buys", { unit: unit(bought), price: money(bought * price * 1e6) }) : t("schedule.uses", { unit: unit(n) });
 };
 export const carsBought = (k: { carPrice: number; spare: number }, cars: number): string => buys(carsText, cars, k.carPrice, k.spare);
 
@@ -77,7 +83,7 @@ function changeTip(counts: [number, number, number], lev: number, to: number, st
   next[lev] = to;
   const more = (Math.max(...next) - Math.max(...counts)) * k.per;
   if (more > 0) return head + "\n" + buys(k.unit, more, k.price, k.spare);
-  return more < 0 ? head + `\nFrees ${k.unit(-more)}` : head;
+  return more < 0 ? head + "\n" + t("schedule.frees", { unit: k.unit(-more) }) : head;
 }
 
 // ---------------------------------------------------------------- the schedule table
@@ -88,9 +94,9 @@ export interface Limit { s: number; what: string }
 export const NO_LIMITS: (Limit | null)[] = [null, null, null];
 
 /** "Terminus at West takes one train every 4m00s at most", or with no room left "... is full" */
-export const limitText = (lim: Limit) => (Number.isFinite(lim.s) ? `${lim.what} takes one train every ${duration(lim.s)} at most` : `${lim.what} is full`);
+export const limitText = (lim: Limit) => t("schedule.limit", { full: !Number.isFinite(lim.s), what: lim.what, time: Number.isFinite(lim.s) ? duration(lim.s) : "" });
 
-const headwayText = (s: number) => (s > 0 ? `${+(s / 60).toFixed(2)} min` : "none");
+const headwayText = (s: number) => (s > 0 ? t("inspector.min", { n: tNumber(s / 60, { maximumFractionDigits: 2 }) }) : t("schedule.noHeadway"));
 
 /** How long a refused edit's control shakes, ms (T-625; style.css `.shake`) */
 const SHAKE_MS = 300;
@@ -128,10 +134,10 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
     return (
       <>
         <td>
-          {wrap(<Stepper value={n} label={`${MANY[v]} on the line`} jump onStep={(s) => stepTrainCount(l.id, d, s)}
+          {wrap(<Stepper value={n} label={t("schedule.stepperLabel", { vehicle: v })} jump onStep={(s) => stepTrainCount(l.id, d, s)}
             tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
         </td>
-        <td>{over ? <span class="bad" data-tip={`${limitText(limit)}, so the trains past that wait at the ends`}>{headway(tph)}</span> : headway(tph)}</td>
+        <td>{over ? <span class="bad" data-tip={t("schedule.limitWait", { text: limitText(limit) })}>{headway(tph)}</span> : headway(tph)}</td>
       </>
     );
   }
@@ -140,14 +146,14 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
     <>
       <td>
         <span class={"num" + (broke ? " bad" : "")} data-tip={loop
-          ? `${vehiclesText(v, counts[lev])} on the line, ${counts[lev] / 2} each way, keep the headway over its lap of ${duration(trip / 2)}`
-          : `${vehiclesText(v, counts[lev])} on the line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
+          ? t("schedule.lapTip", { vehicles: vehiclesText(v, counts[lev]), half: counts[lev] / 2, lap: duration(trip / 2) })
+          : t("schedule.roundTip", { vehicles: vehiclesText(v, counts[lev]), trip: duration(trip) })}>{counts[lev]}</span>
       </td>
       <td>
-        {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
+        {wrap(<Stepper wide jump jumpUnit={t("schedule.minUnit")} label={t("schedule.headwayLabel")} value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
           tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
           tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? `${limitText(limit)}, so the trains past that wait at the ends` : undefined }} />)}
+          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? t("schedule.limitWait", { text: limitText(limit) }) : undefined }} />)}
       </td>
     </>
   );
@@ -162,8 +168,8 @@ function LevelName({ v, d, stops, pending }: { v: Float64Array | null; d: Demand
   return (
     <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
       {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
-        : pending && <Spinner class="row-dot" tip="Waiting for demand to load" />}
-      {DEMAND_LABEL[d]}
+        : pending && <Spinner class="row-dot" tip={t("schedule.waitingDemand")} />}
+      {demandLabel(d)}
     </span>
   );
 }
@@ -179,14 +185,14 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
   return (
     <>
       <div class="h">
-        Schedule
+        {t("schedule.title")}
         {canAuto && copy}
         {canAuto && (
           <span class="right">
             <Segmented<boolean>
               options={[
-                [false, capitalise(MANY[v])],
-                [true, "Headway"],
+                [false, manyCap(v)],
+                [true, t("schedule.headway")],
               ]}
               value={auto !== null}
               onChange={(on) => setAutoTrains(l.id, on)}
@@ -196,9 +202,9 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
       </div>
       <table class="sched">
         <tr>
-          <th>Demand</th>
-          <th>{capitalise(MANY[v])}</th>
-          <th>Headway</th>
+          <th>{t("schedule.demand")}</th>
+          <th>{manyCap(v)}</th>
+          <th>{t("schedule.headway")}</th>
         </tr>
         {DEMANDS.map((d) => {
           // T-1783: no dot on a level with no vehicles
@@ -227,7 +233,7 @@ export function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
   const kmh = km / (s / 3600);
   return (
     <li>
-      <span class="grow">Average speed</span>
+      <span class="grow">{t("schedule.averageSpeed")}</span>
       <span class="val">{speed(kmh)}</span>
     </li>
   );
@@ -274,7 +280,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
     return (
       <>
         <div class="h divided" />
-        <ul class="rows"><Row label="Riders"><span class="muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span></Row></ul>
+        <ul class="rows"><Row label={t("schedule.riders")}><span class="muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span></Row></ul>
       </>
     );
   }
@@ -284,26 +290,26 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
   // T-2392: while the riders are worked out again the old figures stay, the label above them
   return (
     <>
-      <div class="h divided">{pending && <span class="pending-note muted" data-tip="Calculating riders after your change">{pendingLabel(pending)}</span>}</div>
+      <div class="h divided">{pending && <span class="pending-note muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</div>
       <ul class="rows">
-        <Row label="Riders">{count(d.riders)}</Row>
+        <Row label={t("schedule.riders")}>{count(d.riders)}</Row>
         {!pending && extra}
         {profitKnown(l) ? (
           <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
-            <span class="grow">Profit</span>
+            <span class="grow">{t("schedule.profit")}</span>
             <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
           </li>
-        ) : hasTrains(l) && <Row label="Profit"><span class="muted">calculating...</span></Row>}
+        ) : hasTrains(l) && <Row label={t("schedule.profit")}><span class="muted">{t("schedule.calculating")}</span></Row>}
         {load !== null && (
-          <li data-tip={`Average ${DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "")} load over the entire line`}>
-            <span class="grow">Average load</span>
-            <span class="val">{Math.round(load * 100)}%</span>
+          <li data-tip={t("schedule.loadTip", { day: DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "") })}>
+            <span class="grow">{t("schedule.averageLoad")}</span>
+            <span class="val">{pctWhole(load)}</span>
           </li>
         )}
-        {d.fullTrains > 0 && <Row label={`${capitalise(MANY[v])} leaving full`}><span data-tip={`${count(d.fullTrains)}/${count(d.trains)} ${MANY[v]} departed full.`}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
+        {d.fullTrains > 0 && <Row label={t("schedule.leavingFull", { vehicle: v })}><span data-tip={t("schedule.departedFull", { full: count(d.fullTrains), all: count(d.trains), vehicle: v })}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
         {v === "train" && (
-          <li data-tip={`${count(d.leftBehind)}/${count(d.riders + d.leftBehind)} riders were left behind.`}>
-            <span class="grow">Riders left at platform</span>
+          <li data-tip={t("schedule.leftBehindTip", { left: count(d.leftBehind), all: count(d.riders + d.leftBehind) })}>
+            <span class="grow">{t("schedule.leftBehind")}</span>
             <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
           </li>
         )}

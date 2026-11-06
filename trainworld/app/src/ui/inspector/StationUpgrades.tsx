@@ -10,6 +10,7 @@ import { buildingDraft, buildingMembersById, buildingOf } from "../../game/build
 import { complexOf } from "../../game/complexView";
 import { groundScale } from "../../game/coords";
 import { tool } from "../../game/ui";
+import { t } from "../../i18n";
 import { live } from "../../map/live";
 import { cancelLink, linking, linksAmong, startLink } from "../../game/links";
 import type { StationInput } from "../../game/types";
@@ -28,8 +29,8 @@ const ICONS: Record<number, () => preact.JSX.Element> = {
 };
 // two platforms and the walkway between them
 const PassageIcon = () => <svg viewBox="0 0 16 16"><path class="solid" d="M1.5 3.5h3v9h-3zM11.5 3.5h3v9h-3z" /><path d="M4.5 8h7" /></svg>;
-const HOUSED = "The station building already counts as a waiting room.";
 /** Whether any of `ids` (`every`: each of them) is a station building's member. */
+const housedText = () => t("stationUpgrades.housed");
 function inBuilding(ids: readonly string[], every = false): boolean {
   const housed = new Set([...buildingMembersById.value.values()].flat());
   return every ? ids.every((id) => housed.has(id)) : ids.some((id) => housed.has(id));
@@ -44,11 +45,11 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   const toggle = async (bit: number, name: string, on: boolean) => {
     const a = await edit({ op: "stationUpgrade", nodes: [s.num], bit, on });
     if (!a.ok) return;
-    if (on) say(a.charge > 0 ? `${name} built at ${s.name} for ${money(a.charge * 1e6)}.` : `${name} added to the blueprint.`);
-    else if (s.built) say(`${name} removed from ${s.name}. Nothing is refunded.`);
+    if (on) say(a.charge > 0 ? t("stationUpgrades.built", { name, station: s.name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name }));
+    else if (s.built) say(t("stationUpgrades.removed", { name, station: s.name }));
   };
   if (members) return (
-    <div class="upgrades" role="group" aria-label="Complex upgrades">
+    <div class="upgrades" role="group" aria-label={t("stationUpgrades.complexGroup")}>
       {UPGRADE_TEXT.filter((u) => u.doesAll).map((u) => <ComplexUpgrade u={u} members={members} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />)}
       <PassageButton s={s} />
       <BuildingButton s={s} />
@@ -59,23 +60,23 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   // T-2308: a station building is its members' waiting room (T-2276), so one bought there adds nothing
   const housed = inBuilding([s.id]);
   return (
-    <div class="upgrades" role="group" aria-label="Station upgrades">
+    <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {UPGRADE_TEXT.filter((u) => u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit)).map((u) => {
         const on = hasUpgrade(s.upgrades, u.bit);
         const price = prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0;
         const state = !on ? "" : s.built ? " on" : " planned";
         const act = on
-          ? s.built ? "Built. Click to remove it; nothing is refunded" : "In the blueprint. Click to take it out"
-          : s.built ? "Click to build" : "Click to add it to the blueprint";
+          ? t(s.built ? "stationUpgrades.actBuilt" : "stationUpgrades.actPlanned")
+          : t(s.built ? "stationUpgrades.actBuild" : "stationUpgrades.actAdd");
         const Ic = ICONS[u.bit];
         if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
-          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does}\n${HOUSED}`}>
+          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does}\n${housedText()}`}>
             <Ic />
           </button>
         );
         return (
           <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-            data-tip={`${u.name}\n${u.does}\nCosts ${money(price * 1e6)}\n${act}`}
+            data-tip={`${u.name}\n${u.does}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
             onClick={() => void toggle(u.bit, u.name, !on)}>
             <Ic />
           </button>
@@ -95,8 +96,7 @@ function BuildingButton({ s }: { s: StationInput }) {
   const d = buildingDraft.value;
   const drawing = tool.value === "building" && !!d && (b ? d.id === b.id : d.id === null);
   const state = drawing || b ? " on" : "";
-  const tip = `Station building\nJoins every station it touches into one complex so that people can transfer.\nChanging trains inside it feels 1 minute shorter.\nWaiting in it for a train feels 20% shorter.\nCosts ${perArea(BUILDING_PER_M2 * 1e6)}\n`
-    + (drawing ? "Click to stop" : b ? "Built. Click to change its outline" : "Click, then change its outline on the map");
+  const tip = t("stationUpgrades.buildingTip", { price: perArea(BUILDING_PER_M2 * 1e6), act: drawing ? "stop" : b ? "built" : "new" });
   const click = () => {
     if (drawing) return live.tools?.exit();
     const w = world.peek();
@@ -107,7 +107,7 @@ function BuildingButton({ s }: { s: StationInput }) {
     live.tools.building.begin(rect, null, s.id);
   };
   return (
-    <button class={"btn icon upgrade" + state} aria-label="Station building" aria-pressed={drawing} data-tip={tip} onClick={click}>
+    <button class={"btn icon upgrade" + state} aria-label={t("stationUpgrades.building")} aria-pressed={drawing} data-tip={tip} onClick={click}>
       <BuildingIcon />
     </button>
   );
@@ -125,24 +125,23 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";
   const Ic = ICONS[u.bit];
   if (u.bit === UPGRADE.waitingRoom && !all && st.length && inBuilding(st.map((x) => x.id), true)) return (
-    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.doesAll}\n${HOUSED}`}>
+    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.doesAll}\n${housedText()}`}>
       <Ic />
     </button>
   );
   const cost = (all ? st.length : missing.length) * price;
   const act = all
-    ? built ? `Built. Click to remove it from all ${st.length} stations; nothing is refunded` : "In the blueprint. Click to take it out"
-    : (have.length ? `${have.length} of ${st.length} stations have one. Click to build it at the other ${missing.length}` : `Click to build it for all ${st.length} stations`)
-      + (built ? "" : " in the blueprint");
+    ? built ? t("stationUpgrades.allBuilt", { count: st.length }) : t("stationUpgrades.actPlanned")
+    : t("stationUpgrades.someAct", { some: have.length > 0, have: have.length, count: st.length, missing: missing.length, blueprint: !built });
   const click = async () => {
     const a = await edit({ op: "stationUpgrade", nodes: (all ? st : missing).map((x) => x.num), bit: u.bit, on: !all });
     if (!a.ok) return;
-    if (!all) say(a.charge > 0 ? `${u.name} built at ${name} for ${money(a.charge * 1e6)}.` : `${u.name} added to the blueprint.`);
-    else if (built) say(`${u.name} removed from ${name}. Nothing is refunded.`);
+    if (!all) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
+    else if (built) say(t("stationUpgrades.removed", { name: u.name, station: name }));
   };
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
-      data-tip={`${u.name}\n${u.doesAll}\nCosts ${money(cost * 1e6)}\n${act}`} onClick={() => void click()}>
+      data-tip={`${u.name}\n${u.doesAll}\n${t("stationUpgrades.costs", { price: money(cost * 1e6) })}\n${act}`} onClick={() => void click()}>
       <Ic />
     </button>
   );
@@ -155,10 +154,9 @@ function PassageButton({ s }: { s: StationInput }) {
   const pairs = linksAmong([s.id]);
   const built = pairs.some(([a, b]) => byId.get(a)?.built && byId.get(b)?.built);
   const state = picking ? " on" : built ? " on" : pairs.length ? " planned" : "";
-  const tip = `Passage\nJoins two stations up to ${roughDistance(LINK_MAX_M)} apart into one complex so that people can transfer.\nCosts $${PASSAGE_BASE}-${Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)}M depending on length\n`
-    + (picking ? "Click another station on the map, or here to stop." : "Click, then click the other station on the map.");
+  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: `$${PASSAGE_BASE}-${Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)}M`, picking });
   return (
-    <button class={"btn icon upgrade" + state} aria-label="Passage" aria-pressed={picking} data-tip={tip}
+    <button class={"btn icon upgrade" + state} aria-label={t("stationUpgrades.passage")} aria-pressed={picking} data-tip={tip}
       onClick={() => (picking ? cancelLink() : startLink(s.id))}>
       <PassageIcon />
     </button>

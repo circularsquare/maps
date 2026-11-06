@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
+import { t as tr, tList, tNumber } from "../../i18n";
 import { lineDemand } from "../../game/demand";
 import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist, groundScale } from "../../game/coords";
@@ -89,16 +90,16 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => stopNames?.get(s) ?? byId.get(s)?.name ?? ""))];
     rows.push({
       name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
-      tip: `${name} at ${names.join(" and ")}` + (ends.length ? `\nTo ${ends.join(", ")}` : ""),
-      waitTip: waiting === null ? "No train stops here this hour."
-        : `${count(waiting)} riders waiting for ${name}` + (full ? "\nSome were left behind by the last train." : ""),
+      tip: tr("stationInspector.rowTip", { name, stations: tList(names) }) + (ends.length ? "\n" + tr("stationInspector.rowTo", { ends: ends.join(", ") }) : ""),
+      waitTip: waiting === null ? tr("stationInspector.noTrain")
+        : tr("stationInspector.waitingFor", { count: count(waiting), name }) + (full ? "\n" + tr("stationInspector.leftBehind") : ""),
     });
   }
   rows.sort((a, b) => b.boardings - a.boardings || a.name.localeCompare(b.name));
   for (const m of members) {
     if (lines.some((l) => l.stops.includes(m))) continue;
     const s = byId.get(m);
-    if (s) rows.push({ name: s.name, line: null, stations: [m], open: m, built: s.built, waiting: null, full: false, boardings: 0, today: null, tip: `${s.name}\nNo line stops here`, waitTip: "" });
+    if (s) rows.push({ name: s.name, line: null, stations: [m], open: m, built: s.built, waiting: null, full: false, boardings: 0, today: null, tip: `${s.name}\n${tr("complexMap.noLines")}`, waitTip: "" });
   }
   return rows;
 }
@@ -156,16 +157,16 @@ function ComplexLines({ id, members, lines, byId, now }: { id: string; members: 
   return (
     <ul class="rows pick complex-stations">
       <li class="cols muted small">
-        <span class="grow">Lines</span>
-        <span class="val">Waiting</span>
-        <span class="val">Today</span>
+        <span class="grow">{tr("stationInspector.lines")}</span>
+        <span class="val">{tr("stationInspector.waiting")}</span>
+        <span class="val">{tr("stationInspector.today")}</span>
       </li>
       {rows.map((r) => (
         <li class={r.stations.includes(id) ? "on" : ""} onClick={() => openStation(r.open)} data-tip={r.tip}>
           {r.line && <Chip line={r.line} size="sm" />}
           <span class={"grow" + (r.built ? "" : " muted")}>{r.name}</span>
           <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip}>{r.waiting !== null ? count(r.waiting) : ""}</span>
-          <span class="val" data-tip={r.today !== null ? `${count(r.today)} boardings in past 24h` : undefined}>{r.today !== null ? count(r.today) : ""}</span>
+          <span class="val" data-tip={r.today !== null ? tr("stationInspector.boardings24", { count: count(r.today) }) : undefined}>{r.today !== null ? count(r.today) : ""}</span>
         </li>
       ))}
     </ul>
@@ -180,10 +181,10 @@ function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) 
   const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
   return (
       <ul class="rows pick">
-        <Row label="Boardings today" bold>
+        <Row label={tr("stationInspector.boardingsToday")} bold>
           {known ? count(total) : ""}
         </Row>
-        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: at(l) }))} unit="boardings" />
+        <PurposeSplit scope={lines.map((l) => ({ line: l.id, at: at(l) }))} unit={tr("stationInspector.boardingsUnit")} />
       </ul>
   );
 }
@@ -210,14 +211,14 @@ export function StationInspector({ id }: { id: string }) {
       const now = w && stationsById(w).get(id);
       if (!now) return;
       if (next) void edit({ op: "stationProps", node: now.num, platform: now.length, name: next });
-      else say("No other name is suggested here.");
+      else say(tr("stationInspector.noName"));
     } finally {
       setCycling(false);
     }
   };
   const construct = async () => {
     const a = await edit({ op: "construct", edges: [], stations: [s.num] });
-    if (a.ok) say(`${s.name} constructed for ${money(a.charge * 1e6)}.`);
+    if (a.ok) say(tr("stationInspector.constructed", { name: s.name, price: money(a.charge * 1e6) }));
   };
   // constructed: asks first above the bottom bar (T-096)
   const remove = () => void removeThing({ kind: "station", node: s.num });
@@ -226,10 +227,10 @@ export function StationInspector({ id }: { id: string }) {
       <div class="title">
         <span class="st-glyph" />
         <NameEdit key={id} name={s.name} onRename={(n) => props(s.length, n)}>
-          <button class="btn icon" data-tip="Next suggested name" aria-label="Next suggested name" onClick={() => void cycle()}>
+          <button class="btn icon" data-tip={tr("stationInspector.nextName")} aria-label={tr("stationInspector.nextName")} onClick={() => void cycle()}>
             <Icon.cycle />
           </button>
-          <button class="btn icon" data-tip="Show on the map" aria-label="Show on the map" onClick={() => locateStation(s.lng, s.lat)}>
+          <button class="btn icon" data-tip={tr("lineTitle.show")} aria-label={tr("lineTitle.show")} onClick={() => locateStation(s.lng, s.lat)}>
             <Icon.locate />
           </button>
         </NameEdit>
@@ -238,21 +239,21 @@ export function StationInspector({ id }: { id: string }) {
           complex's list goes back to it from here */}
       {!asComplex && (
         <div class="sub muted">
-          {s.port ? "Port" : `Level ${levelLabel(s.level)}`}
+          {s.port ? tr("stationInspector.port") : tr("trackInspector.level", { level: levelLabel(s.level) })}
           {members.length > 1 && (
             <>
               {" · "}
-              <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip="Show the whole complex">
-                Complex of {members.length} stations
+              <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip={tr("stationInspector.wholeComplex")}>
+                {tr("stationInspector.complexOf", { count: members.length })}
               </button>
             </>
           )}
         </div>
       )}
-      {linking.value === id && <p class="muted">Click another station up to {roughDistance(LINK_MAX_M)} away for the passage. Esc stops.</p>}
-      {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{s.port ? "Construct port" : "Construct station"}</button></Actions>}
+      {linking.value === id && <p class="muted">{tr("stationInspector.linking", { distance: roughDistance(LINK_MAX_M) })}</p>}
+      {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{tr(s.port ? "stationInspector.constructPort" : "stationInspector.constructStation")}</button></Actions>}
       {/* T-2194: a port has no platform to upgrade */}
-      {!s.port && <div class="h">Station upgrades</div>}
+      {!s.port && <div class="h">{tr("stationUpgrades.group")}</div>}
       {!s.port && <StationUpgrades s={s} members={asComplex ? members : undefined} />}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
@@ -262,7 +263,7 @@ export function StationInspector({ id }: { id: string }) {
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
       {!s.port && <StationBuilding id={id} members={members} />}
-      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{s.port ? "Remove port" : "Remove station"}</button></Actions>}
+      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{tr(s.port ? "stationInspector.removePort" : "stationInspector.removeStation")}</button></Actions>}
     </>
   );
 }
@@ -287,16 +288,16 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
   };
   return (
     <>
-      {pairs.length > 0 && <div class="h">Passages</div>}
+      {pairs.length > 0 && <div class="h">{tr("stationInspector.passages")}</div>}
       {pairs.length > 0 && (
         <ul class="rows">
           {pairs.map(([a, b]) => {
             const m = length(a, b), built = byId.get(a)?.built && byId.get(b)?.built;
             return (
               <li>
-                <span class="grow chip-line">{members.length > 1 ? <>{end(a)}<span>and</span>{end(b)}</> : end(a === id ? b : a)}</span>
-                <span class="val muted" data-tip={`${distance(m)} in a straight line, ${money(passagePrice(m) * 1e6)}${built ? "" : " once both stations are built"}`}>{distance(m)}</span>
-                <button class="btn text" data-tip={built ? "Nothing is refunded" : undefined} onClick={() => void unlink(a, b)}>Remove</button>
+                <span class="grow chip-line">{members.length > 1 ? <>{end(a)}<span>{tr("stationInspector.and")}</span>{end(b)}</> : end(a === id ? b : a)}</span>
+                <span class="val muted" data-tip={tr("stationInspector.linkTip", { distance: distance(m), price: money(passagePrice(m) * 1e6), built: !!built })}>{distance(m)}</span>
+                <button class="btn text" data-tip={built ? tr("stationInspector.noRefund") : undefined} onClick={() => void unlink(a, b)}>{tr("stationInspector.removeLink")}</button>
               </li>
             );
           })}
@@ -318,18 +319,18 @@ function StationBuilding({ id, members }: { id: string; members: string[] }) {
   const w = world.value, byId = w ? stationsById(w) : new Map<string, StationInput>(), inside = buildingMembersById.value.get(b.id) ?? [];
   const room = roomOf(b.corners, k, inside.map((m) => byId.get(m)).filter((s): s is StationInput => !!s));
   const waiting = hallWaiting.value.get(b.id) ?? 0;
-  const whole = (n: number) => Math.round(n).toLocaleString("en-US");
+  const whole = (n: number) => tNumber(Math.round(n));
   return (
     <>
-      <div class="h">Station building</div>
+      <div class="h">{tr("stationUpgrades.building")}</div>
       <ul class="rows">
         <li class="building-name"><NameEdit key={b.id} name={b.name} onRename={(name) => void edit({ op: "renameBuilding", id: b.id, name })} /></li>
-        <li><span class="grow">Area</span><span class="val">{area(m2)}</span></li>
-        {inside.length > 0 && <li><span class="grow">Room</span><span class="val" data-tip="Riders who can wait in the hall once the platforms are full">{waiting >= 1 ? `${whole(waiting)}/${whole(room)}` : whole(room)} riders</span></li>}
+        <li><span class="grow">{tr("stationInspector.area")}</span><span class="val">{area(m2)}</span></li>
+        {inside.length > 0 && <li><span class="grow">{tr("stationInspector.room")}</span><span class="val" data-tip={tr("stationInspector.roomTip")}>{tr("stationInspector.roomFigure", { figure: waiting >= 1 ? `${whole(waiting)}/${whole(room)}` : whole(room) })}</span></li>}
       </ul>
       <Actions>
-        <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>Edit outline</button>
-        <button class="btn text danger" onClick={() => void removeThing({ kind: "building", id: b.id })}>Remove building</button>
+        <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>{tr("stationInspector.editOutline")}</button>
+        <button class="btn text danger" onClick={() => void removeThing({ kind: "building", id: b.id })}>{tr("stationInspector.removeBuilding")}</button>
       </Actions>
     </>
   );
@@ -365,28 +366,28 @@ function StationDetails({ s, lines, props }: {
       <Built built={s.built} />
       <ul class="rows">
         {!s.port && <li>
-          <span class="grow">Platforms</span>
-          <Stepper value={length(s.length)} wide label="platform length" onStep={(d) => {
+          <span class="grow">{tr("stationInspector.platforms")}</span>
+          <Stepper value={length(s.length)} wide label={tr("stationInspector.platformLength")} onStep={(d) => {
             const to = stepPlatform(s.length, d);
             if (to === s.length) return false;
             return props(to);
           }} />
         </li>}
         {s.built && m && (
-          <Row label="Upkeep">
+          <Row label={tr("trackInspector.upkeep")}>
             {s.port
-              ? <span class="money-neg" data-tip={`Port upkeep is ${money(m.upkeepPort * m.economy)} per day.`}>{money(m.upkeepPort * m.economy)}/day</span>
-              : <span class="money-neg" data-tip={`Station upkeep is ${money(stationUpkeep(m))} per day.`}>{money(stationUpkeep(m))}/day</span>}
+              ? <span class="money-neg" data-tip={tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })}>{tr("inspector.perDay", { value: money(m.upkeepPort * m.economy) })}</span>
+              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { price: money(stationUpkeep(m)) })}>{tr("inspector.perDay", { value: money(stationUpkeep(m)) })}</span>}
           </Row>
         )}
       </ul>
-      {lines.length > 0 && <div class="h">Lines<span class="right muted small">boardings today</span></div>}
+      {lines.length > 0 && <div class="h">{tr("stationInspector.lines")}<span class="right muted small">{tr("cityDetails.boardingsToday")}</span></div>}
       <ul class="rows pick">
         {here.map(([l, b]) => (
           <li onClick={() => (selection.value = { kind: "line", line: l.id })}>
             <Chip line={l} />
             <span class="grow">{l.name}</span>
-            <span class="val" data-tip={t.has(l.id) ? `${count(b)} boardings on ${l.name} in past 24h` : undefined}>{t.has(l.id) ? count(b) : ""}</span>
+            <span class="val" data-tip={t.has(l.id) ? tr("stationInspector.lineBoardings", { count: count(b), name: l.name }) : undefined}>{t.has(l.id) ? count(b) : ""}</span>
           </li>
         ))}
       </ul>
@@ -421,7 +422,7 @@ function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
   return (
     <>
       <div class="h">
-        Waiting now
+        {tr("stationInspector.waitingNow")}
       </div>
       <ul class="rows waiting">
         {rows.map((p) => {
@@ -431,11 +432,11 @@ function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
             <li>
               <Chip line={l} />
               <span class="grow what">
-                <span>To {to}</span>
+                <span>{tr("stationInspector.to", { name: to ?? "" })}</span>
                 {p.leftBehind >= 1 ? (
-                  <span class="bad small">{count(p.leftBehind)} left behind, longest wait {duration(p.longestWait)}</span>
+                  <span class="bad small">{tr("stationInspector.behind", { count: count(p.leftBehind), time: duration(p.longestWait) })}</span>
                 ) : (
-                  <span class="muted small">{p.arriving >= 1 ? `${count(p.arriving)} arriving, longest wait ${duration(p.longestWait)}` : "Nobody arriving"}</span>
+                  <span class="muted small">{p.arriving >= 1 ? tr("stationInspector.arriving", { count: count(p.arriving), time: duration(p.longestWait) }) : tr("stationInspector.nobody")}</span>
                 )}
               </span>
               <span class="val num">{count(p.waiting)}</span>
