@@ -1,5 +1,8 @@
 # Archive
 
+- T-079 [P1] Desert wadis paddled. Done 2026-11-05: WaterGAP invents both mean and driest-month flow in dry catchments (Wadi ad-Dawasir 292 m³/s), so the driest-month test failed; inside the hot desert mask (shared, `tools/hotdesert.py`) a reach carries only flow from upstream outside the desert, scaled by WaterGAP's losses minus 3 cm/day over its width, and is a river while that stays Q >= 1 and driest month >= 0.1. 188,100 km dropped, Nile, Niger, Euphrates, Indus, Colorado, Amu Darya kept; canoe rivers and the hazard band rebuilt; smoke 16/16. notes/T-079.md.
+- T-080 [P2] Level bias. Done 2026-11-05: zooming in makes walks faster, L1/L10 0.81 (0.56-0.98), from speed contrast (the mean of time per metre misses the fast pixels a path keeps to); L0.1 is 1.21 of L1 from the MAP vs LC100+OSM source gap. Fix proposed as T-081, canoe at L10 filed as T-082. notes/T-080.md.
+
 - T-023 [P2] M1 doc tidy and sweep. Done 2026-11-05: SPEC, docs and code-map brought to the day's changes (hex look, globe, corridor colour and hover, upstream speeds, carry x2, survival from 0.5%); measurements moved to notes/ (solve times to T-002, the 100 m table to T-047); TASKS top rewritten.
 - T-077 [P1] Corridors after the windows. Done 2026-11-05: counted once every level is painted, coarse first; slack pays K x hazard; a stale-state bug fixed; windows 1.5-2x faster than T-056, L10 not (target missed); ktrips walks. notes/T-077.md.
 - T-042 [P2] Land hazard band. Done 2026-11-05 in three stages: design approved by Anita (docs/hazard.md), world band (T-066), page (T-067); thirst by distance to water, ice, altitude, cold. notes/T-042.md.

@@ -57,8 +57,10 @@ without water.
 **Drinkable water** is any of:
 - a river reach of RiverATLAS with mean discharge of at least 0.1 m³/s (a stream of 100 l/s),
   except in a **hot desert**;
-- in a hot desert, only a perennial river: mean discharge at least 1 m³/s and at least 0.1 m³/s
-  in its driest month (RiverATLAS `dis_m3_pmn`), such as the Nile, Niger or Euphrates;
+- in a hot desert, only a desert river by the canoe's rule (`docs/canoe.md` 2, `tools/hotdesert.py`):
+  water carried in from outside the desert, at least 1 m³/s mean and 0.1 m³/s in its driest month
+  (RiverATLAS `dis_m3_pmn`) after the losses along the way, such as the Nile, Niger or Euphrates
+  (T-079; a reach's own discharge there is not used, as WaterGAP gives wadis hundreds of m³/s);
 - a HydroLAKES lake outside hot deserts (salt lakes are not told apart elsewhere: a known
   error, in a few endorheic basins);
 - **today only**: an OSM well, spring or settlement (`man_made=water_well`, `natural=spring`,
@@ -88,7 +90,7 @@ extra: the build makes both months anyway.
 | Input | Source | Licence |
 |---|---|---|
 | Night low and day high, January and July; annual rain | CHELSA V2.1 1981-2010 monthly `tasmin`, `tasmax` and `bio12`, 30" (data/raw/chelsa/, 990 MB) | CC0 1.0; citation asked |
-| Rivers | RiverATLAS v1.0 reach lines with `dis_m3_pyr`, and `dis_m3_pmn` for Q >= 1 (data/raw/rivers_work/all_lines.npz and reaches.npz, kept from the canoe build) | CC BY 4.0 |
+| Rivers | RiverATLAS v1.0 reach lines with `dis_m3_pyr`, and `dis_m3_pmn` for Q >= 1 (data/raw/rivers_work/all_lines.npz, reaches.npz and desert.npz, from the canoe build) | CC BY 4.0 |
 | Lakes | HydroLAKES (rivers_work/lakes_l1.npy) | CC BY 4.0 |
 | Wells, springs, settlements | OSM from QLever's planet endpoint (data/raw/osm_water/, 4.7 M points) | ODbL |
 | Ice | LC100 2019 class 70 (data/surface/lc_class.tif); where LC100 has no class, RGI 6.0 regions 03, 05, 07, 09 (OGGM's open mirror) and Natural Earth 10 m glaciated areas (data/raw/ice/) | as LC100; NE public domain; RGI CC BY 4.0 |
@@ -167,6 +169,8 @@ Plain `python` from the maps root, one core:
 
     python isochrone/tools/hazard/fetch.py           # CHELSA, OSM water points, ice outlines -> data/raw/  (~6 min)
     python isochrone/tools/hazard/build.py ice       # ice outlines north of 60 N to the L1 grid             (~15 s)
+    python isochrone/tools/hazard/build.py hot       # hot desert mask, 2 km grid (tools/hotdesert.py)        (~1 min)
+    python isochrone/tools/canoe/rivers.py desert    # desert rivers, shared with the canoe                   (~15 s)
     python isochrone/tools/hazard/build.py dist      # distance to drinkable water, 2 km grid                 (~3 min, 5.7 GB)
     python isochrone/tools/hazard/build.py tiles     # rates per L1 pixel -> data/hazard/                     (~7 min, 5.2 GB)
     python isochrone/tools/hazard/build.py plot      # maps/artifacts/isochrone/t066_world.png
@@ -177,7 +181,7 @@ tiles' land (MAP's, small water as land), and a coarse cell keeps its rate only 
 level has land (a quarter of its pixels). `data/hazard/index.json` has the grid, the tiles that
 exist per level and the coding, as `data/tiles/index.json` does. The distance grid covers the
 same land (small water included), so every land pixel has a distance. Work files:
-`data/raw/hazard_work/` (`ice_l1.npy`, `dist_g2.npy`, ~0.5 GB), kept for a rebuild.
+`data/raw/hazard_work/` (`ice_l1.npy`, `hot_g2.npy`, `dist_g2.npy`, ~0.7 GB), kept for a rebuild.
 
 ## 7. Known approximations
 

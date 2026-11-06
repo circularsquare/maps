@@ -1,13 +1,15 @@
 """The land hazard band (docs/hazard.md): a uint8 log-coded rate per walking hour, today's world.
 
     python isochrone/tools/hazard/build.py ice     # ice outlines north of 60 N -> work/ice_l1.npy         (~1 min)
+    python isochrone/tools/hazard/build.py hot     # hot desert mask -> work/hot_g2.npy (tools/hotdesert.py, ~1 min)
     python isochrone/tools/hazard/build.py dist    # distance to drinkable water, 2 km grid -> work/dist_g2.npy  (~5 min, ~4 GB)
     python isochrone/tools/hazard/build.py tiles   # rates per L1 pixel -> data/hazard/ l10, l3, l1, index.json  (~25 min, ~3 GB)
     python isochrone/tools/hazard/build.py plot    # the built L1 band -> maps/artifacts/isochrone/t066_world.png
 
 Inputs (tools/hazard/fetch.py): CHELSA V2.1 in data/raw/chelsa/, OSM water points in data/raw/osm_water/,
 ice outlines in data/raw/ice/ (RGI 6.0 Arctic regions where present, Natural Earth 10 m glaciated areas);
-RiverATLAS vertices and HydroLAKES from the canoe build (data/raw/rivers_work/); MAP's walking surface
+RiverATLAS vertices, HydroLAKES and the hot desert rivers (desert.npz) from the canoe build
+(data/raw/rivers_work/; tools/hotdesert.py is the rule, `hot` here makes its mask); MAP's walking surface
 (time weights, land, as the speed tiles); data/surface/lc_class.tif and elev.tif. Work files in
 data/raw/hazard_work/.
 """
@@ -27,6 +29,7 @@ from rasterio.windows import Window
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(HERE, "tools"))
 from smallwater import SmallWater, STRIP   # noqa: E402  (the speed tiles' land: small water is land)
+import hotdesert                           # noqa: E402
 
 RAW = os.path.join(HERE, "data", "raw")
 WORK = os.path.join(RAW, "hazard_work")
@@ -50,8 +53,7 @@ TILE = {1: 600, 3: 200}
 
 # ---- the rule (docs/hazard.md 2) ----
 Q_DRINK = 0.1                  # m3/s mean discharge: a stream you can drink from
-Q_PERENNIAL = 0.1              # m3/s in the driest month (Q >= 1 reaches): water even in a hot desert
-HOT_DESERT_MM, HOT_DESERT_C = 250.0, 25.0
+# the hot desert mask and its perennial-river rule are tools/hotdesert.py (shared with the canoe)
 V_DAY = 25.0                   # km walked a day, turning survival days into distance
 # FM 21-76 (1957) fig. 196: days survived walking at night with 10 US quarts, by max shade temperature
 S10_T = np.array([10.0, 15.6, 21.1, 26.7, 32.2, 37.8, 43.3, 48.9], np.float32)
@@ -146,6 +148,11 @@ def stage_ice():
     np.save(os.path.join(WORK, "ice_l1.npy"), out.astype(bool))
 
 
+# ---------------------------------------------------------------- hot desert
+def stage_hot():
+    hotdesert.build(chelsa_reader(), STRIP, log)
+
+
 # ---------------------------------------------------------------- distance
 def unit(lon, lat):
     lo, la = np.radians(lon), np.radians(lat)
@@ -159,8 +166,7 @@ def stage_dist():
     land = np.zeros((GH, GW), bool)
     ice = np.zeros((GH, GW), bool)
     lake = np.zeros((GH, GW), bool)
-    hot = np.zeros((GH, GW), bool)     # hot desert: streams there are dry most of the time
-    read = chelsa_reader()
+    hot = np.asarray(hotdesert.load())     # hot desert: streams there are dry most of the time
     with rasterio.open(MAPF) as fds, rasterio.open(LC) as lds:
         sw = SmallWater(fds, log=lambda *a: None)     # the tiles' land: every land pixel needs a distance
         for r0 in range(0, L1H, STRIP):
@@ -174,22 +180,19 @@ def stage_dist():
             ice[g0:g0 + gn] = blk(ice_mask(lc, ice_rows(poly, r0, n))).sum(axis=(1, 3)) >= 2
             del lc
             lake[g0:g0 + gn] = blk(np.asarray(lk[r0:r0 + n]) > 0).any(axis=(1, 3))
-            pr = np.nan_to_num(read("bio12", None, r0, n), nan=1000.0)
-            tx = np.nan_to_num(np.fmax(read("tasmax", "01", r0, n), read("tasmax", "07", r0, n)), nan=0.0)
-            hot[g0:g0 + gn] = blk((pr < HOT_DESERT_MM) & (tx >= HOT_DESERT_C)).sum(axis=(1, 3)) >= 2
-            del pr, tx
     del poly
     log("land cells", int(land.sum()), "ice", int(ice.sum()), "hot desert", int((hot & land).sum()))
     a = np.load(os.path.join(RIVERS, "all_lines.npz"))
     co, off, q = a["co"], a["off"], a["q"]
     r = np.load(os.path.join(RIVERS, "reaches.npz"))
-    perennial = np.zeros(len(q), bool)
-    perennial[r["all_index"][r["qmin"] >= Q_PERENNIAL]] = True
+    dz = np.load(os.path.join(RIVERS, "desert.npz"))      # the canoe's desert rivers (rivers.py desert)
+    perennial = np.zeros(len(q), bool)                     # water in hot desert too
+    perennial[r["all_index"][dz["ok"]]] = True
     cnt = np.diff(off)
     keep = np.repeat((q >= Q_DRINK) | perennial, cnt)
     pv = np.repeat(perennial, cnt)[keep]
     sel = co[keep]
-    del co, keep, a, r
+    del co, keep, a, r, dz
     gc = np.clip(((sel[:, 0] + 180.0) * 60).astype(np.int64), 0, GW - 1)
     gr = ((NORTH - sel[:, 1]) * 60).astype(np.int64)
     del sel
@@ -326,8 +329,9 @@ def stage_tiles():
              "world": {"file": "l10.bin.gz", "width": L1W // 10, "height": L1H // 10},
              "levels": {str(lv): {"factor": lv, "width": L1W // lv, "height": L1H // lv, "tile": TILE[lv],
                                   "path": "l%d" % lv, "tiles": found[lv]} for lv in TILE}}
-    with open(os.path.join(OUT, "index.json"), "w") as fh:
+    with open(os.path.join(OUT, "index.json.tmp"), "w") as fh:
         json.dump(index, fh, separators=(",", ":"))
+    os.replace(os.path.join(OUT, "index.json.tmp"), os.path.join(OUT, "index.json"))
     log("L10 %.2f MB; L3 %d tiles %.1f MB; L1 %d tiles %.1f MB; %.0f s" %
         (n10 / 1e6, len(found[3]), nbytes[3] / 1e6, len(found[1]), nbytes[1] / 1e6, time.time() - t0))
 
@@ -364,7 +368,7 @@ def stage_plot():
 
 
 if __name__ == "__main__":
-    {"ice": stage_ice, "dist": stage_dist, "tiles": stage_tiles, "plot": stage_plot}[sys.argv[1]]()
+    {"ice": stage_ice, "hot": stage_hot, "dist": stage_dist, "tiles": stage_tiles, "plot": stage_plot}[sys.argv[1]]()
     try:
         import psutil
         mi = psutil.Process().memory_info()

@@ -27,8 +27,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-077 landed (bd409831): corridors after windows, faster in windows (L10 not), hazard in
   reparent slack, a stale-node bug fixed, ktrips walking trips.
 - T-023 M1 doc tidy landed (c306d1bc).
-- T-079 desert wadis (Opus agent a75105d4c451ffaf1, 21:40): owns tools/canoe/, tools/hazard/ (shared mask),
-  the canoe river data, docs/canoe.md, notes/T-079.md. Rebuilds river data; ledger iso-t079.
+- T-079 landed: desert wadis no longer paddle (tools/hotdesert.py shared by canoe and hazard);
+  river data and hazard band rebuilt, smoke 16/16. Agent a75105d4c451ffaf1 idle. T-083 filed.
 - T-080 done (agent a754c1f8965d2be43 idle, resume for T-081): zooming in makes walks ~19%
   faster L10->L1, not slower; L0.1 is 21% slower than L1 from the MAP vs LC100+OSM gap. Fix
   T-081 (crossing-time rule) asked of Anita; T-082 canoe at L10 filed.

@@ -59,6 +59,16 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
   D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s.
+- **Hot desert** (T-079; the land hazard's mask, `docs/hazard.md` 2.1, one rule in
+  `tools/hotdesert.py`): a reach with half its length or more in hot desert does not use its own
+  WaterGAP discharge, which gives dry wadis hundreds of m³/s (Wadi ad-Dawasir 292, 98 in its driest
+  month). Its Q is the flow carried in from upstream reaches outside the desert, mean and driest
+  month, scaled down wherever WaterGAP's mean flow falls along the way and losing 3 cm a day over
+  the wetted width W (evaporation and seepage) on every km. It is a river while that is at least
+  1 m³/s mean and 0.1 m³/s in the driest month, and its speed v comes from that Q. So the Nile,
+  Niger, Euphrates, Tigris, Indus, Amu and Syr Darya, Colorado, Orange and Helmand run; wadis fed
+  only by desert rain, and small mountain streams that sink within a few hundred km, are left out.
+  Outside hot desert every reach of Q >= 1 runs, seasonal ones too: the paddler picks the season.
 - **Upstream** the canoe keeps to the bank, eddies and inside bends, where the current is slower
   than the section mean v: it meets 0.4 v. Where that leaves under 2.5 km/h (v over 6.25 km/h,
   Q over about 68,000 m³/s: only the Amazon from about Manaus down) it lines or poles along the
@@ -138,8 +148,8 @@ risk") to 10,000, costs nothing extra.
 | `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.1 MB, 1130 tiles |
 | `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 15.0 MB, 1141 tiles |
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
-| `data/canoe/rivers.bin.gz` | L10, whole world | 1.04 M river steps | 4.2 MB |
-| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 3.7 M and 11.3 M river steps | 15.4 MB, 941 tiles; 39.2 MB, 945 tiles |
+| `data/canoe/rivers.bin.gz` | L10, whole world | 1.02 M river steps | 4.1 MB |
+| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 3.6 M and 11.1 M river steps | 15.1 MB, 906 tiles; 38.4 MB, 913 tiles |
 
 - Tiles share the speed tiles' grid and names (`docs/resolution.md`); `data/canoe/index.json`
   lists them, and the sea grid, and under `rivers` the river tiles (`{"1": {"tile", "path":
@@ -182,7 +192,7 @@ risk") to 10,000, costs nothing extra.
   classes it closes, so a toggle (dams, era) needs no new data; an opened dam, weir or reservoir
   step runs as flat. Length and v, not time, are stored, so p stays a worker constant (a heavy
   dugout or a big crew later).
-- **Rasterising.** Each reach with Q >= 1 is cut into pieces of at most 0.002° and each piece
+- **Rasterising.** Each reach with Q >= 1 (in hot desert, each one that is a river by section 2) is cut into pieces of at most 0.002° and each piece
   goes to the cell of its midpoint, per level; the reach's `LENGTH_KM` is spread over its pieces.
   A step holds the length of its upstream cell's run. A run back into a cell already on the reach
   folds the loop into that cell; a cell clipped only at a corner (under 0.3 of a cell's length)
@@ -206,7 +216,8 @@ risk") to 10,000, costs nothing extra.
   0.5 km (falls, rapids), 0.3 km (dams, weirs; many are on ponds beside rivers) or 1 km (pour
   points); the piece of the reach nearest the point takes it.
 - **Sources** (stage 1): RiverATLAS v1.0 (HydroRIVERS reaches with discharge, reach gradient
-  `sgr_dk_rav`, and monthly minimum discharge for later; CC BY 4.0), HydroLAKES (local;
+  `sgr_dk_rav`, and driest-month discharge `dis_m3_pmn` for hot desert rivers; CC BY 4.0), CHELSA
+  V2.1 for the hot desert mask (as the land hazard), HydroLAKES (local;
   `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir|rapids`
   and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 north of 60N, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
   climatology, ARCO-ERA5 sampled to a local-summer mean of wave height and sea temperature and a

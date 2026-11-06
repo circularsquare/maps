@@ -5,6 +5,12 @@ reasoning and what it replaced.
 
 ## 2026-11-05
 
+- **Desert rivers run on water carried in from outside the desert** (T-079, notes/T-079.md), for
+  the canoe and the land hazard's drinking water alike (`tools/hotdesert.py`). T-042's test (a
+  reach's own driest month >= 0.1 m³/s) kept Wadi ad-Dawasir, which WaterGAP gives 292 m³/s and 98
+  in its driest month. Outside hot desert seasonal rivers stay (the paddler picks the season), so
+  Cooper Creek and the Diamantina, fed from Queensland, still paddle; a source on flow permanence
+  (Messager et al. 2021) would be the way to drop them.
 - **Small corridor nodes keep the search's parent** (T-077, notes/T-077.md): a node with fewer
   spread trips than 2% of the drawing threshold neither spreads nor re-chooses, which skips the
   share work for 82% of nodes in an L3 desert window; lines change by a few per level. Slack is in

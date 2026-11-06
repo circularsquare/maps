@@ -3,13 +3,15 @@
     python tools/canoe/rivers.py reaches   # RiverATLAS gdb -> work/reaches.npz (Q >= 1) + work/all_lines.npz   ~3.5 min
     python tools/canoe/rivers.py lakes     # HydroLAKES -> work/lakes_l1.npy (0, 1 lake, 2 reservoir) + reservoir pour points   ~4 min
     python tools/canoe/rivers.py snap      # OSM falls/dams/weirs/rapids + reservoir pour points -> work/barriers.npz   ~1 min
+    python tools/canoe/rivers.py desert    # hot desert rivers (tools/hotdesert.py) -> work/desert.npz   ~1 min
     python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~4 min, ~8 GB
     python tools/canoe/rivers.py index     # put the rivers key back into data/canoe/index.json
 
 Work files go in data/raw/rivers_work/. Inputs: data/raw/riveratlas/RiverATLAS_v10.gdb (or the zip,
 https://ndownloader.figshare.com/files/20087321; only `reaches` reads it), maps/data/HydroLAKES_polys_v10_shp,
 data/raw/osm_barriers/*.tsv (rivers_osm.py), data/surface/elev.tif (GMTED), the speed grid and tiles
-(water mask per level).
+(water mask per level), the hot desert mask (`python tools/hazard/build.py hot`; `desert` reads it, and
+the hazard's `dist` stage reads work/desert.npz, so both layers share one rule).
 """
 import glob
 import gzip
@@ -24,6 +26,9 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 import numpy as np
 
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(HERE, "tools"))
+import hotdesert                           # noqa: E402
+
 RAW = os.path.join(HERE, "data", "raw")
 WORK = os.path.join(RAW, "rivers_work")
 OUT = os.path.join(HERE, "data", "canoe")
@@ -192,6 +197,28 @@ def stage_snap():
              lon=lon[pi], lat=lat[pi], dkm=dkm)
     for s, name in enumerate(["falls", "dams", "weirs", "reservoir dams", "rapids"]):
         log("%s on a paddleable river: %d of %d" % (name, (src[pi] == s).sum(), (src == s).sum()))
+
+
+# ---------------------------------------------------------------- desert
+
+def reach_down(r):
+    idpos = {int(i): k for k, i in enumerate(r["id"])}
+    return np.array([idpos.get(int(d), -1) for d in r["next_down"]], np.int64)
+
+
+def stage_desert():
+    """Which reaches are rivers in hot desert, and the flow they carry there (tools/hotdesert.py)."""
+    r = np.load(os.path.join(WORK, "reaches.npz"))
+    share = hotdesert.reach_share(hotdesert.load(), r["co"], r["off"])
+    down = reach_down(r)
+    order = np.argsort(r["dist_up"], kind="stable")
+    in_hot, qe, qme, ok = hotdesert.desert_rivers(share, r["q"], r["qmin"], r["length_km"], down, order)
+    tmp = os.path.join(WORK, "desert.tmp.npz")
+    np.savez(tmp, share=share.astype(np.float32), in_hot=in_hot, q_in=qe, qmin_in=qme, ok=ok)
+    os.replace(tmp, os.path.join(WORK, "desert.npz"))
+    L = r["length_km"]
+    log("reaches in hot desert %d, %.0f km; rivers there %.0f km; dropped %d, %.0f km" %
+        (in_hot.sum(), L[in_hot].sum(), L[in_hot & ok].sum(), (~ok).sum(), L[~ok].sum()))
 
 
 # ---------------------------------------------------------------- build
@@ -480,17 +507,36 @@ def merge_index():
     log("rivers entry written to", ip)
 
 
+def keep_reaches(r, keep):
+    """The reaches.npz arrays for the reaches `keep` (a bool mask), with their vertices."""
+    k = np.nonzero(keep)[0]
+    co, off = r["co"], r["off"]
+    cnt = np.diff(off)[k]
+    off2 = np.zeros(len(k) + 1, np.int64)
+    np.cumsum(cnt, out=off2[1:])
+    sel = np.arange(off2[-1]) + np.repeat(off[k] - off2[:-1], cnt)
+    out = {n: a[k] for n, a in r.items() if n not in ("co", "off")}
+    out["co"], out["off"] = co[sel], off2
+    return out
+
+
 def stage_build(levels=(10, 3, 1)):
     r = dict(np.load(os.path.join(WORK, "reaches.npz")))
+    R0 = len(r["q"])
+    # hot desert: only the rivers carrying water in from outside it, at the flow they carry (tools/hotdesert.py)
+    dz = np.load(os.path.join(WORK, "desert.npz"))
+    if len(dz["ok"]) != R0:
+        raise SystemExit("work/desert.npz is older than reaches.npz: run the desert stage")
+    r["q"] = np.where(dz["in_hot"], dz["q_in"], r["q"])
+    pos = np.cumsum(dz["ok"]) - 1
+    r = keep_reaches(r, dz["ok"])
     R = len(r["q"])
-    log("reaches", R)
+    log("reaches", R, "(%d dry in hot desert left out)" % (R0 - R))
     mx, my, sub_km, sub_reach, sub_deg, first = densify(r)
     log("sub-segments", len(mx))
     q = r["q"]
     sub_v = (0.51 * q ** 0.11)[sub_reach].astype(np.float32)
-    idpos = {int(i): k for k, i in enumerate(r["id"])}
-    down = np.array([idpos.get(int(d), -1) for d in r["next_down"]], np.int64)
-    del idpos
+    down = reach_down(r)
     order = np.argsort(r["dist_up"], kind="stable")
     grad = r["sgr"] / 10.0                                   # dm/km -> m/km
     gn = north_gradient(r, down, order)
@@ -504,12 +550,13 @@ def stage_build(levels=(10, 3, 1)):
     sub_lake = np.asarray(lakes[lr, lc])
     del lc, lr
     b = np.load(os.path.join(WORK, "barriers.npz"))
+    on = dz["ok"][b["reach"]]
+    breach, along, src = pos[b["reach"][on]], b["along"][on], b["src"][on]
     gcum = np.cumsum(sub_deg)
     start_cum = gcum[first] - sub_deg[first]
     last = np.append(first[1:], len(mx)) - 1
-    bi = np.searchsorted(gcum, start_cum[b["reach"]] + b["along"])
-    bi = np.clip(bi, first[b["reach"]], last[b["reach"]])
-    src = b["src"]
+    bi = np.searchsorted(gcum, start_cum[breach] + along)
+    bi = np.clip(bi, first[breach], last[breach])
     sub_nat[bi[src == 0]] = FALL
     sub_hum[bi[src == 2]] = np.maximum(sub_hum[bi[src == 2]], 1)
     sub_hum[bi[(src == 1) | (src == 3)]] = 2
@@ -568,6 +615,8 @@ def main():
         stage_lakes()
     elif stage == "snap":
         stage_snap()
+    elif stage == "desert":
+        stage_desert()
     elif stage == "build":
         lv = tuple(int(x) for x in sys.argv[2:]) or (10, 3, 1)
         stage_build(lv)
