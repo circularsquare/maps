@@ -64,6 +64,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2610 (Hudson at the tip drawn as land since T-2599; after sheetwasm lands, carry/land cells).
 - Awaiting Anita: T-2606 cutnet recommends no cut (one line, LA-Chicago, joins the clusters; cutting saves no work);
   archive on her OK. Upkeep doubling waits on T-2618.
+- **Release plan (Anita ~18:00):** not today; in first: upkeep (T-2619 + T-2620 offset), profit estimate (T-2626),
+  diagram polish (T-2629/T-2610). Then ja/zh-Hans/zh-TW "in next few days": **l10n-ui1, l10n-ui2, l10n-insp,
+  l10n-core** (Sonnet, trees, T-2632..T-2635 stage 1 strings by folder; rules in scratch l10n-brief.md) and
+  **l10n-lead** (Opus, tree, T-2636: Language setting in SettingsTab, fonts, glossary, translate+review runbook, time
+  estimate). Land the four as they finish (en.json/context.json merges); then start translator agents per the runbook.
+  hillwater LANDED 87d99345 (T-2628; Anita OK'd). T-2631 filed (refused market pack must fail smoke).
 - Before publishing (her word; release in English): omaha committed (3527e5bd), T-428 DONE 23538b19 (intercity.json in
   data/work, out of build/freeze/deploy; the next real build proves vite.config.ts), 8800 build 1187 smoked. Nothing
   left blocking but her word (and any landings she wants in first). Localization: T-2583 core landed;
