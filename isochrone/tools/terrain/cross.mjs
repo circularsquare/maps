@@ -101,15 +101,20 @@ const DOWN = 2, UP = 3;   // (0, 1) and (0, -1) in block terms
 const FWDA = Int32Array.from(FWD), BWDA = Int32Array.from(BWD);
 const QA = Int32Array.from(BMV.map((x) => x[0])), QB = Int32Array.from(BMV.map((x) => x[1]));
 
+// Pull form of the same Gauss-Seidel sweeps: per node, the best of the 7 moves that come from the rows
+// already done in this sweep, then one compare and store. D is padded by 2 rows and 2 columns of
+// Infinity, so no range checks. The two across passes (DOWN, UP) run per row as before.
 function crossJob(C, s, cells, along, m, maxSweeps) {
   const n = cells.length / 2;
   const A = along * K + 2 * m, Bw = K + 2 * m, lead = -Math.floor((along - 1) / 2) * K - m;
+  const W = Bw + 4;
   const out = {};
-  const D = new Float32Array(A * Bw);
+  const D = new Float32Array((A + 4) * W);
   let most = 0;
+  const kDown = new Int32Array(1), kUp = new Int32Array(1);
   for (const dir of DIRS) {
     const res = new Float32Array(n);
-    const kq = new Int32Array(16), dq = new Int32Array(16);
+    const kq = new Int32Array(16);
     let sA, sB;
     if (dir === 'E') { sA = 1; sB = P; } else if (dir === 'W') { sA = -1; sB = P; }
     else if (dir === 'S') { sA = P; sB = 1; } else { sA = -P; sB = 1; }
@@ -117,11 +122,20 @@ function crossJob(C, s, cells, along, m, maxSweeps) {
       const [dc, dr] = gridMove(dir, BMV[q][0], BMV[q][1]);
       kq[q] = moveIndex(dc, dr);
     }
+    // per move of the forward and backward sets: D offset to the source node and C offset from the
+    // destination node's own C base (16 * node) to the source's slot
+    const fd = new Int32Array(7), fc = new Int32Array(7), bd = new Int32Array(7), bc = new Int32Array(7);
+    for (let i = 0; i < 7; i++) {
+      let q = FWDA[i];
+      fd[i] = -(QA[q] * W + QB[q]); fc[i] = kq[q] - 16 * (QA[q] * sA + QB[q] * sB);
+      q = BWDA[i];
+      bd[i] = -(QA[q] * W + QB[q]); bc[i] = kq[q] - 16 * (QA[q] * sA + QB[q] * sB);
+    }
+    const kD = kq[DOWN], kU = kq[UP], sB16 = 16 * sB;
     for (let ci = 0; ci < n; ci++) {
       const I = cells[2 * ci], J = cells[2 * ci + 1];
-      // grid position of block (0, 0)
       let origin;
-      const rowTop = halo + K * I - m, colLeft = halo + K * J - m;     // across origin
+      const rowTop = halo + K * I - m, colLeft = halo + K * J - m;
       const alongStartE = halo + K * J + lead, alongStartS = halo + K * I + lead;
       if (dir === 'E') origin = rowTop * P + alongStartE;
       else if (dir === 'W') origin = rowTop * P + (alongStartE + A - 1);
@@ -130,42 +144,41 @@ function crossJob(C, s, cells, along, m, maxSweeps) {
       D.fill(Infinity);
       for (let b = m; b < m + K; b++) {
         const g = origin + (m - 1) * sA + b * sB;
-        if (s[g] < Infinity) D[(m - 1) * Bw + b] = 0;
+        if (s[g] < Infinity) D[(m - 1 + 2) * W + b + 2] = 0;
       }
       let sweeps = 0;
       for (; sweeps < maxSweeps; sweeps++) {
         const fwd = (sweeps & 1) === 0;
         let changed = false;
-        const qs = fwd ? FWDA : BWDA, nq = qs.length;
+        const o = fwd ? fd : bd, oc = fwd ? fc : bc;
+        const d0 = o[0], d1 = o[1], d2 = o[2], d3 = o[3], d4 = o[4], d5 = o[5], d6 = o[6];
+        const c0 = oc[0], c1 = oc[1], c2 = oc[2], c3 = oc[3], c4 = oc[4], c5 = oc[5], c6 = oc[6];
         for (let t = 0; t < A; t++) {
           const a = fwd ? t : A - 1 - t;
-          for (let qi = 0; qi < nq; qi++) {
-            const q = qs[qi], da = QA[q], db = QB[q];
-            const sa = a - da;
-            if (sa < 0 || sa >= A) continue;
-            const b0 = db > 0 ? db : 0, b1 = db < 0 ? Bw + db : Bw;
-            const dBase = a * Bw, sBase = sa * Bw - db;
-            const cBase = kq[q] + 16 * (origin + sa * sA - db * sB), cStep = 16 * sB;
-            for (let b = b0; b < b1; b++) {
-              const ds = D[sBase + b];
-              if (ds === Infinity) continue;
-              const v = ds + C[cBase + b * cStep];
-              const di = dBase + b;
-              if (v < D[di]) { if (v < D[di] * (1 - 1e-4)) changed = true; D[di] = v; }
-            }
+          const row = (a + 2) * W + 2;
+          let u16 = 16 * (origin + a * sA);
+          for (let b = 0; b < Bw; b++, u16 += sB16) {
+            const di = row + b;
+            let v = D[di + d0] + C[u16 + c0];
+            let x = D[di + d1] + C[u16 + c1]; if (x < v) v = x;
+            x = D[di + d2] + C[u16 + c2]; if (x < v) v = x;
+            x = D[di + d3] + C[u16 + c3]; if (x < v) v = x;
+            x = D[di + d4] + C[u16 + c4]; if (x < v) v = x;
+            x = D[di + d5] + C[u16 + c5]; if (x < v) v = x;
+            x = D[di + d6] + C[u16 + c6]; if (x < v) v = x;
+            const dv = D[di];
+            if (v < dv) { if (v < dv * (1 - 1e-4)) changed = true; D[di] = v; }
           }
-          const rowA = origin + a * sA;
+          const rowA16 = 16 * (origin + a * sA);
           for (let b = 1; b < Bw; b++) {
-            const ds = D[a * Bw + b - 1];
-            if (ds === Infinity) continue;
-            const v = ds + C[kq[DOWN] + 16 * (rowA + (b - 1) * sB)];
-            if (v < D[a * Bw + b]) { if (v < D[a * Bw + b] * (1 - 1e-4)) changed = true; D[a * Bw + b] = v; }
+            const v = D[row + b - 1] + C[kD + rowA16 + (b - 1) * sB16];
+            const dv = D[row + b];
+            if (v < dv) { if (v < dv * (1 - 1e-4)) changed = true; D[row + b] = v; }
           }
           for (let b = Bw - 2; b >= 0; b--) {
-            const ds = D[a * Bw + b + 1];
-            if (ds === Infinity) continue;
-            const v = ds + C[kq[UP] + 16 * (rowA + (b + 1) * sB)];
-            if (v < D[a * Bw + b]) { if (v < D[a * Bw + b] * (1 - 1e-4)) changed = true; D[a * Bw + b] = v; }
+            const v = D[row + b + 1] + C[kU + rowA16 + (b + 1) * sB16];
+            const dv = D[row + b];
+            if (v < dv) { if (v < dv * (1 - 1e-4)) changed = true; D[row + b] = v; }
           }
         }
         if (sweeps > 0 && !changed) { sweeps++; break; }
@@ -173,7 +186,7 @@ function crossJob(C, s, cells, along, m, maxSweeps) {
       if (sweeps > most) most = sweeps;
       let far = Infinity;
       const af = m + along * K - 1;
-      for (let b = m; b < m + K; b++) if (D[af * Bw + b] < far) far = D[af * Bw + b];
+      for (let b = m; b < m + K; b++) if (D[(af + 2) * W + b + 2] < far) far = D[(af + 2) * W + b + 2];
       const lat = north - (halo + K * I + K / 2) / N;
       const span = along * K * KM_DEG / N * (dir === 'E' || dir === 'W' ? Math.cos(lat * Math.PI / 180) : 1);
       res[ci] = far / span;
