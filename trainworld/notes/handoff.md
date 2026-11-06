@@ -35,6 +35,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   (notes/T-2604.md; page-only estimate in the edit note, sign wrong 3/14 near break-even: question to Anita).
 - slcload (T-2605): refineAside measured, SLC figures 6.7 s / bubbles 7.3 s arriving mid-solve (were 37-118 s), edit
   in SLC 1.8/2.1 s, finals identical; T-2624 filed (trains-only edit's traffic waits). Finishing rerun + smoke.
+- omaha DONE, committed 3527e5bd (T-2595: cause was the simplified county file giving Mills/Sarpy to Cass NE;
+  unlap() in tiger_counties.py; doc rebuilt, west-north-central re-solved, freeze 20261106-123304); backups deleted;
+  pack lock free. T-2627 filed (join market step 1800 s limit).
+- slcload LANDED 780c9e79 (T-2605 refineAside; T-2624 filed). linelook LANDED fed16a6e (T-2623).
+- 8800 rebuild at 3527e5bd started ~16:00; then smoke light/dark, ping. Then T-428 (pack lock free now).
 - headway LANDED 4815d83b (records 4d24f8cb): T-2607 the headway set is the headway run (terminal stands); real
   save unchanged (no headway lines). Main WASM rebuilt.
 - **sheetscale** (Opus, tree, resumed ~15:00): T-2609 cut bands done (NA empty middle 19% -> 6% of width); held for
