@@ -128,10 +128,23 @@ for (const term of terms) {
   for (const k of term.except ?? []) if (!(k in en)) fault(`glossary: ${term.en} excepts ${k}, not in en.json`);
 }
 const formRe = (term) => new RegExp(`(^|[^A-Za-z-])(${term.forms.map((f) => f.replace(/[-]/g, "\\-")).join("|")})(?![A-Za-z-])`, "i");
+/** `text` with every longer term's forms that contain one of `term`'s blanked: "track" inside "passing track", "trip"
+ * inside "round trip", is the longer term's word, not this one's. */
+const outsideLonger = (text, term) => {
+  const mine = term.forms.map((f) => f.toLowerCase());
+  for (const o of terms) {
+    if (o === term) continue;
+    for (const f of o.forms) {
+      const lf = f.toLowerCase();
+      if (mine.some((g) => lf.length > g.length && lf.includes(g))) text = text.replace(new RegExp(f.replace(/[-]/g, "\\-"), "gi"), " ");
+    }
+  }
+  return text;
+};
 const enTerms = new Map();   // key -> the checked terms its English uses
 for (const [k, { ast }] of enAst) {
   const text = literalText(ast);
-  enTerms.set(k, terms.filter((term) => term.check && !(term.except ?? []).includes(k) && formRe(term).test(text)));
+  enTerms.set(k, terms.filter((term) => term.check && !(term.except ?? []).includes(k) && formRe(term).test(outsideLonger(text, term))));
 }
 
 // --- each language ---------------------------------------------------------------------------

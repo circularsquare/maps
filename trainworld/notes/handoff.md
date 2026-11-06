@@ -15,7 +15,17 @@ five trees upkeep, capview, borders2, dianames, l10n-core as they report, then w
   75e04c44 or later) and smoke it light+dark, then tell Anita to reload.
 - **marey** (Opus, tree .tw-trees/marey): T-2660 timetable chart interlining + flat junctions. Ids T-2662.
 - **westleft** (Sonnet, tree .tw-trees/westleft): T-2661 line strips west on the left; tells main its helper for marey.
-- Unit 3 translators (ui/inspector, 623 keys; scratch unit3.md): **tr-ja-3a/3b, tr-hans-3a/3b, tr-tw-3a/3b** (Opus).
+- Unit 3 (ui/inspector, 623 keys + inspector.* 8 in 3a; scratch unit3.md, back-brief.md, review-brief.md +
+  review3.md): all six halves translated and merged. Reviewing: **rev-ja-3a, rev-tw-3a, rev-hans-3b, rev-tw-3b**;
+  back-translating: **back-hans-3a, back-ja-3b** (then rev-hans-3a, rev-ja-3b). OWED: zh-TW opencc passes for 3a
+  (after rev-hans-3a) and maybe 3b. Glossary also: ja transfer accepts 乗継; line except marketTrip.everydayTip.
+  Glossary (uncommitted): new "round trip" term; i18n.mjs ignores a term inside a longer term (passing track, round
+  trip); excepts boardings/marketTrip.atAirportsTip, trip/trainInspector.finished, running costs/marketTrip.running.
+  stopnote removed demandStopped.{memory,stopped,tip,unknown}: dropped from the translations (scratch dropkeys.mjs).
+- LANDED stopnote 838c46e7 (T-2657). Shots: artifacts/trainworld/stopnote/notice-light.png.
+- **attract** (Opus, read-only): T-2663 attractions worldwide, measure and answer. Ids T-2666-67.
+- **riderspace** (Sonnet, tree): T-2664 line panel riders block tighter.
+- marey also has T-2665 (dense charts: default span by density, wheel zoom up to a day).
 - l10n-insp landed; still to look at: the "Part of [pill] group" row (.line-group CSS) on the line panel.
 - **farends tree READY TO LAND** (T-2641 done ~15:20, records already in main tree: ARCHIVE, DECISIONS, notes/T-2641.md):
   NA market 1.94x (pairs 867k -> 422k a period), lines >100k worst 0.29-0.54%, >10k worst 1.88% (both "overstated" per
@@ -73,7 +83,7 @@ five trees upkeep, capview, borders2, dianames, l10n-core as they report, then w
 - **T-2660** timetable chart shows interlining lines + flat junctions (Anita ~15:20): start an agent (Opus, design
   calls) in a fresh tree once l10n-insp has landed. Asked maps-93 (~15:20) whether I may land l10n-insp and farends
   between its landings.
-- Id ranges: maps-93's agents T-2643..T-2649, maps-b9 from T-2650 (next unassigned **T-2661**).
+- Id ranges: maps-93's agents T-2643..T-2649, maps-b9 from T-2650 (next unassigned **T-2668**).
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad
   (helpers copied from maps-93's; snapbuild-frozen.cmd path fixed; common-brief-tree.md rewritten for maps-b9).
 
