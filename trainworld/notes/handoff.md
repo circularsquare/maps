@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
-Updated: 2026-11-06 08:40
+Updated: 2026-11-06 12:30
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -17,119 +17,41 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   Next country: Brazil T-2437 (no prep; brazil.py hook done). Disk 50 GB free.
 - maps-17 (now named maps-03) handed over fully at 21:37: no agents of its own left.
 
-## In flight (maps-93's agents)
-- brazil DONE, committed 983f5c3d (T-2437 Brazil 177 rows, T-2594 21 US terrain grids, reused-cache guard,
-  land.py clears caches); backups deleted. 8800 rebuild at 983f5c3d started ~10:20; then omaha (T-2595, ~35-45 min,
-  pack lock, main tree). History of the Brazil run below.
-- (history) **brazil** (Opus, main tree, **pack lock** from ~22:05, ports 6197/6363, scratch\brazil): T-2437. Dry counts ~23:00:
-  177 rows (19 metros + 158 zones, 194M GHSL), reach rule without join_km, 23 zones under 0.5M, dead space 62 units
-  1.86M (roadless Amazon), sao kept as hand-built (OD 2017 coverage). maps-93 said go ~23:00; run ~2.5-3 h, 5 regions
-  (tests T-2070's read ahead). Messages at the first gate and the last gate's end. Run 1 (20261105-230654) faulted
-  after 37 min on a 2-point OSM ring in the sudeste admin read; fix on_invalid="ignore" in osm_units.admin_areas, restart
-  with --rows on all 177 (~23:45). Run 2 batch 20261105-234843; gates from 00:00 (hold app/WASM landings). Disk 21.4 GB
-  at 00:15: the drop was Brazil's extracts and caches (one-off); ~16 MB a row now; expects 10-13 GB at the end, plus
-  ~5.5 GB once it deletes the pbfs and caches before the join (it will). Its watcher stops the run at 10 GB.
-  02:40: 177/177 gated (168 + 9 relaxed in rerun 20261106-023246). Join (BR) next: nothing writes data/packs or
-  data/terrain until it reports; app/WASM landings fine. Join 1 faulted: the joint group (sao + 175 rows) had 934k
-  gravity zones over MAX_GROUP_ZONES 400k; rows parked and unregistered (only bav joined). Fix: SOLVE_REGIONS["BRA"] by
-  IBGE macro-regions (as China/India/US), sao in sudeste. Then setbuilt, a gate-only rerun (~1 h, browser gates: hold
-  app/WASM), join again. No app/WASM landings
-  while its gates run. Notes/PIDs/restart in notes/T-2437.md.
-  07:15: all 177 shipped (run 4; join 218 min in five regions; stale 0). Then it found 36 sudeste rows built on
-  stale caches left by older rows of the same id (osm_jobs/education from European places, terrain from 10-30/11-03):
-  run 1 parked them before any build and build_row clears caches only for `planned`. Fix: clear for `parked` too;
-  rerun --rows of the 36 with the sudeste join (~1.5-2 h; its gate holds app/WASM). maps-93 also asked it to look for
-  the same fault in other countries (report only) and add a gate guard if cheap.
-  ~08:15: the 36 rebuilt and shipped (batch 20261106-073027; sudeste re-solved 46 min). Guard `reused_caches` in
-  world_run.py; tools/aws/land.py clears a landed id's caches. Now: terrain grids for the 36 + T-2594's 21 US zones
-  (all 21 differ), then after-steps, smoke, report. Then commit, 8800 rebuild, then **T-2595 (Omaha doc/wod
-  overlap; Anita: "yea lets do omaha", before release)** with a fresh agent (brazil is past 500k).
-- sheetspeed LANDED 2af717b9: T-2589 stage 1, same picture bit for bit, all Japan 49 -> 38 s, NY 10.9 -> 9.3 s;
-  T-2589/T-2592 stay open (left: carry in WASM+SIMD, est. 3-4x, Rust tree; layout tolerance is a look call);
-  T-2597 filed. Not on 8800 yet.
-- **sheetwasm** (Opus, tree, launched ~10:00, Rust go-ahead): T-2589 stage 2: carry in Rust/WASM+SIMD bit-identical
-  only (stage B, layout.ts, dropped ~10:40: smoothlines owns layout.ts).
-- **omaha** (Opus, main tree, pack lock from ~10:35 "go packs"): T-2595 doc rebuild + west-north-central join,
-  ~35-45 min. Messages at its gate's start/end (hold app/WASM landings). notes/T-2595.md.
-- **smoothlines** (Opus, tree, ~10:45): T-2599 diagram zigzags/sharp turns (Anita on Kyushu: "lots of sharp 60
-  degree turns"); owns layout.ts, draw.ts.
-- **linepanel** (Opus, tree, ~10:45): T-2600 build controls text, T-2601 "Stop editing", T-2602 faded passed
-  stations, T-2603 Marey diagram. Strings to show Anita.
-- **profitpeek** (Opus, main tree read-only, ~10:45): T-2604 quick profit estimate, design note only.
-- **slcload** (Opus, tree, ~11:00): T-2605 city in view's demand load (Anita: "how long do we expect , say, loading
-  salt lake city"); narrowed: zone in view waits behind a whole solve mid-game; her current save is
-  Downloads\trainsworld-north-america-day-383.save (has SLC lines). Owns the demand workers.
-- **cutnet** (Opus, main tree read-only + scratch crate, ~11:30): T-2606 measure and design an east/west cut for NA
-  (T-1650 dropped geographic cuts on Japan/China data); recommendation goes to Anita before any build.
-- smoothlines found sheet.ts makeProb swaps two barycentric weights (stations mirrored in their cell; 29% of
-  straight triples turn > 60 deg on the sheet); fixing in its tree, pictures for the fix alone.
-- **8800 = build 1135 (983f5c3d)** (Brazil, sheet default, NJ fix, DC label, sheetspeed, workerbal); smoke light
-  and dark PASSED 25/25 ~10:50, 12,515,594.
-- Anita asked (TODO.md): cross-border fares, "charge people based on where they get on": answered, already so
-  (each trip pays its origin country's scale; region income by boarding stop).
-- workerbal LANDED 858098e0: T-2532 (edit's bubbles 95 -> 25 s), T-2596 (bubble sums only for zones on screen
-  before the last round, ~8-11 s off a solve), T-2553 closed with no change. Not on 8800 yet.
-- cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
-  13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
-  Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
-- marketsearch LANDED 5e7b5b4d (records 10552501): T-1647, native Japan pass 17.6% less CPU, exact; open levers in
-  notes/T-1647.md. Not on 8800 yet (perf only; fold into the next rebuild).
-- sheet2 DONE (retired, 492k): T-2577 round 2 in notes/T-2566.md "Round 2"; Japan reads as Japan (Honshu kept 0.92
-  vs 0.76), 88-91% hops one straight run, Harlem shown (cause: waterReal.ts FINE_M 40 m x 3 cells = 120 m minimum),
-  0 stations on the wrong side. Fails: Tokyo core cramped (needs T-2568's fine lattice), stray 5.7 pitches, Hudson
-  pinched at Midtown. Anita ~22:40: "japan looks great!" but Manhattan's shape is messed up, stations on water or off
-  Manhattan, downtown's tip wrong. sheet3 DONE (retired, 465k): round 3 in notes/T-2566.md "Round 3"; Manhattan 0.82/1.14
-  (= Long Island), 0 stations off their land (NY and Japan), East River open at the tip, Manhattan ~25% bigger. Japan
-  still on round 2's unsettled solver (a settled one shrinks Kyushu): T-2568 grows. Shown to Anita ~00:45 with 2
-  questions (review/sheet3-*.png). Anita ~00:55 approved ("lets put it in"; round 3's Manhattan size; light line
-  edges fine; coasts and rivers wiggly, minor: T-2580; her screenshot artifacts/trainworld/sheet3/anita-wiggly-peninsula.png).
-- Landed ~02:30 in Brazil's gap: livefix 5c46a2c1, tokyocache 4ce63913, i18ncore affb0221 (npm install run in main),
-  sheetgame 4eb03074; records a0015ee4. 8800 not rebuilt since 6f9d765a: rebuild after Brazil's join (with marketsearch).
-- sheetwater LANDED b992833f (records 1c5235fb): T-2580, **the sheet is the diagram's default** (?sheet=0 = old), clean
-  octilinear water, Harlem shown. NY 11 s, Japan 50 s. Filed T-2590 (delete old layout), T-2591 (false sea in NW New
-  Jersey, P1), T-2592 (map step speed). njwater LANDED 7dac5b9b (records bc69b2c6): T-2591 fixed (cut rule, wider
-  mask load); T-2593 filed. Review: artifacts/trainworld/njwater/cmp-nyc-whole.png.
-  Review for Anita: artifacts/trainworld/sheetwater/cmp-tip.png.
-- (was) sheetlines LANDED bb7cca4b (records b2b468bb). sheetwater (Opus, tree .tw-trees/sheetwater from b2b468bb, port
-  6174): T-2580 part 1 clean octilinear coasts/rivers/borders on the sheet, part 2 sheet as default (?sheet=0 fallback).
-  Brazil's join running since 03:37 (five solve regions); gate done, so app landings are free.
-- (landed) sheetlines (tree .tw-trees/sheetlines: diagram/sheetLines.ts new,
-  layout.ts, sheet.ts, diagram.worker.ts, docs; records in main): T-2567 lines drawn on the sheet behind ?sheet=1, round
-  3's measures within ~10%, 0 stations off land; New York 9 s, Japan 47 s (flag off today: 14 s, 94 s). T-2589 left
-  open (the carry is the cost now). Picture artifacts/trainworld/sheetlines/g3-nyc-tip.png. Next: T-2580 (stage 3,
-  clean octilinear coasts and borders, narrow rivers, then the sheet default) by a fresh Opus agent after landing.
-- Localization stage 1 (T-2584) held until after release: it rewrites ~2,350 strings across every panel, too much churn
-  right before publishing. Tell Anita.
-- (landed) sheetgame (tree .tw-trees/sheetgame: diagram/sheet.ts new,
-  diagram.worker.ts, view.ts, docs ui-diagram/code-map; records in main): T-2568 behind `?sheet=1`, not drawn; speed
-  1.2-3 s (missed the 1 s aim; maps-93 accepted, today's layout ~3 s; T-2589 filed). Land livefix BEFORE sheetgame
-  (both touch diagram.worker.ts). Then a fresh Opus agent for T-2567 (stage 2) from master, with T-2589's per-network
-  reuse if cheap.
-- livefix DONE, **to land after Brazil's last gate** (tree .tw-trees/livefix; records already in main TASKS/ARCHIVE/
-  DECISIONS): T-2581 names centred on the block's own city stations, 15-30 px; T-941 R2 first for regions.json with
-  the tw-data meta. Edits diagram/cityNames.ts and one line of diagram.worker.ts (sheetgame's area: land livefix first).
-  Review: review/dc-name-before.png, dc-name-after.png.
-- tokyocache DONE, **to land after Brazil's last gate** (tree .tw-trees/tokyocache: demandClient.ts, perfFlags.ts,
-  docs demand-runtime/architecture; main-tree records done): T-2579, the last game's camera zone opened during a load
-  got solved into the import's figures; `closeStrays` closes it, cache keyed by the zones the solve was sent with.
-  T-2588 filed (NA save's read-ahead key differs each load).
-- **locale** (Opus, read-only, writes research/localization.md): Anita ~01:05 asked about Chinese and Japanese for
-  release ("what are usual workflows for this? commercial software? is there anything cheap and good"): string counts,
-  place-name sources, tools and prices, staged plan, her questions. Anita ~01:15: no human reviewer ("maybe you could
-  review? goal here is mostly correctness of meaning"; human-sounding still wanted); Simplified and Traditional Chinese
-  and Japanese first, Spanish and German second. locale DONE: research/localization.md (~2,000 strings, 9,400 words;
-  no paid tool; Claude translates plus independent review passes; Traditional translated directly, OpenCC only as a
-  diff). Stages T-2583..T-2587. i18ncore DONE, **to land after Brazil's last gate** (tree .tw-trees/i18ncore; records
-  in main tree already): T-2583 app/src/i18n/, checks/i18n.mjs (in smoke), remove.ts as the example, docs/localization.md;
-  adds intl-messageformat: **after landing run `npm install --prefix trainworld/app` in the main tree** (the tree's
-  node_modules junction became a real folder; .tw-snap junctions to main's). Worklist 2,357 strings (ui 906, inspector
-  703, game 371, map 280, workers 81). Its stage-1 advice is in its report: keep en.json/context.json sorted by key.
-  Stage 1 (T-2584) wants little other UI work at once. Anita ~01:40 answered: release in English, languages later;
-  Traditional = Taiwan; place names in the player's language where data has them and it is cheap (basemap labels and
-  Japan/China/Taiwan/HK place aliases yes; anything needing a world rebuild of place lists waits).
-- Before publishing (Anita asked ~00:55 what to finish first): Brazil (T-2437), T-2581, T-941, T-2579; T-428 after
-  Brazil's join (moves intercity.json out of packs; touches the join's code). marketsearch on 8800 with the next
-  rebuild. Then publish on her word.
+## In flight (maps-93's agents, 2026-11-06 ~12:30)
+- **omaha** (Opus, main tree, **pack lock**): T-2595 doc rebuild (Mills County out of Douglas County); gate passed;
+  west-north-central join running. notes/T-2595.md. After it: commit its files, rerun smoke (linepanel saw "far new game
+  final" fail mid-join: the Kansas dead-space point got 0.012 riders; may need moving), 8800 rebuild.
+- **sheetwasm** (Opus, tree): T-2589 stage 2, the carry in Rust/WASM+SIMD bit-identical (stage B dropped).
+- **slcload** (Opus, tree, owns demand workers): T-2605. Measured on day-383: SLC's fine figures/bubbles wait 114 of
+  118 s behind the whole solve (own work 2-3 s). Fix written: `refineAside`, a one-worker focus pool refines the zone
+  in view at fine level while the whole solve runs (`?perfOff=refineAside`). Asked: cost to the whole solve, small
+  devices, rough bubbles for a coarse zone.
+- **sheetscale** (Opus, tree, owns sheet.ts): T-2609 condense empty land at continent scale (her NA save).
+- **uitodo** (Sonnet, tree): T-2611 save panel buttons, T-2612 drop grey headway, T-2615 folding-map icon, T-2616
+  achievement renames + transfers metric hover, T-2617 String of pearls + Longest road 5000 km. Strings to show.
+- **terrainnet** (Opus, tree): T-2613 downloading-terrain tag and the build-before-terrain question, T-2614 failed
+  cloud save. Strings to show.
+- **costfr** (Opus, read-only): T-2618 French upkeep research -> research/upkeep-france.md; Anita decides adoption.
+- **profitpeek** (Opus, read-only): T-2604 quick profit estimate, design note.
+- Queued: T-2607 (headway line with few trains runs at its round trip; sim service; free to start, cores permitting),
+  T-2610 (Hudson at the tip drawn as land since T-2599; after sheetwasm lands, carry/land cells).
+- Awaiting Anita: T-2606 cutnet recommends no cut (one line, LA-Chicago, joins the clusters; cutting saves no work);
+  archive on her OK. Upkeep doubling waits on T-2618.
+- Before publishing (her word; release in English): omaha's join committed, T-428 (move data/packs/intercity.json to
+  data/work; touches the join's code, so after omaha), 8800 rebuilt and smoked. Localization: T-2583 core landed;
+  T-2584 stage 1 (~2,350 strings) held until after release, then T-2585 ja/zh-Hans/zh-TW (Taiwan), T-2586 place names
+  where cheap, T-2587 es/de; research/localization.md.
+
+## Landed today (2026-11-06), all after 8800 build 1135 unless said
+- In build 1135 (983f5c3d, smoked 25/25 light+dark ~10:50, 12,515,594): Brazil T-2437 + T-2594, sheet default, NJ
+  fix, DC label, sheetspeed (T-2589 st.1), workerbal (T-2532, T-2596; T-2553 closed).
+- Since: smoothlines 90c69417 (T-2599: sheet.ts weights bug + routing; Japan sharp turns 1723 -> 67), linepanel
+  fd70463c (T-2600..T-2603 timetable chart, new WASM `line_trips`; main WASM rebuilt), T-2608 55a565fd (no key M,
+  hover "Show network diagram (work in progress)", "Show map").
+- Shown to Anita: diagram hover (OK'd). To show: kyushu-lines-3way.png, nyc-tip-3way.png, timetable-chart.png,
+  buildbar-after.png in artifacts/trainworld/review; strings "Stop editing", "Show timetable chart" / "Hide
+  timetable chart", "Close", "Leaves Ash 08:12" / "Reaches Gum 08:28".
+- Older history of this session: git log and ARCHIVE.md.
 
 ## Landed this session (maps-93)
 - uismall5 3d0939bc (T-2569..T-2572, Anita's evening TODO; also the map credits button, invisible since T-1435, now
