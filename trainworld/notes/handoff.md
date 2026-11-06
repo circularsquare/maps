@@ -39,6 +39,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **fartable** (Sonnet, tree): T-2653 far-zone table by zone (intercity/pass.rs, api.rs; spreading 3x+, bit-exact).
   Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
 - 7e8d913e: huninn.css moved to main.ts: since 2c10069e demand workers did not start on any dev Vite (trees attract2, searchleaf, fartable, namespread told to apply it; l10nfix had it).
+- upkeep (T-2619, from maps-93) mid-landing: rebase stopped on format.ts / StationInspector.tsx / trackPrice.ts (strings moved to messages since); **upkeepland** (Sonnet) resolving in the tree, then `agent-tree.mjs land upkeep` again (Rust: WASM rebuild). Strings to show Anita (maps-93 listed them). T-2620 (keep old rates on track >5 km from stations) is maps-93's question to Anita.
 - **namespread** (Sonnet, tree): T-2675 borders 30 km / 50% (Anita) and T-2674 diagram names spread across the map (Anita via maps-93: "lets spread themy es").
 - **l10nfix** (Opus, tree): T-2655 code that pieces English (list on its TASKS line); its changed keys need a short
   review pass in the three languages after landing.
