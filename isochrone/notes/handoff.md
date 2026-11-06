@@ -32,8 +32,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   it; brief T-081 fresh from notes/T-080.md and T-082.md. T-088 lake country filed.
 - T-088 landed (182f0a51): lake and sea units per coarse cell with access; lakes L1/L10 1.07 ->
   1.01; smoke 17/17; data/canoe_t082 backup deleted. Agent a53d87b2fa263c8db idle (~435k).
-- T-087 road factor on a farm grid: agent a5b92d38b9ad284d8 (Sonnet), measurement only;
-  owns notes/T-087*. Ledger iso-t087.
+- T-087 road factor: agent a5b92d38b9ad284d8 (Sonnet), measurement only; first report in
+  notes/T-087.md (factor 3 wrong on straight grids; straightness rule; 10-20% mosaic floor).
+  Resumed ~06:30 to prototype L1 by 100 m crossing time on its tiles + two prairie grids,
+  with a world cost estimate. If it wins, it and T-081 are one rule ("each level = crossing time
+  of the next finer"), to put to Anita together.
 - New "Roads, towns" hover string for Anita: "...slowed by height and by slope up to a 10% grade."
 
 ## Next

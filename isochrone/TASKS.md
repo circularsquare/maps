@@ -24,7 +24,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md). Taking, 2026-11-06 (agent, Sonnet): measurement only.
+- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md). Measured 2026-11-06 (notes/T-087.md): factor 3 fits dense and winding nets (2.5-3.3) but leaves straight grids 11-18% too slow (Iowa wants 5-6); a straightness rule fits all ten usable tiles to 3.9% mean; a 1 km mean of land cover is also 10-20% slower than a 100 m walker even without roads. Now prototyping L1 by 100 m crossing time (T-080's rule one level down), which would cover all three, with two prairie tiles. Agent, Sonnet.
 - T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only `coarse()` in build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs later. If it lands, re-measure the canoe's `cfg.access` (0.4-0.6, notes/T-082.md).
 
 ## M1: canoe, today
