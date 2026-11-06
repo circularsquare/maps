@@ -61,6 +61,7 @@
     { "id": "us-west", "name": "US west", "units": { "US": ["WA", "OR", "CA", "NV", "ID", "MT", "WY", "UT", "CO", "AZ", "NM", "AK", "HI"] } },
     { "id": "puerto-rico", "name": "Puerto Rico", "countries": ["PR"] },
     { "id": "canada", "name": "Canada", "countries": ["CA"] },
+    { "id": "mexico", "name": "Mexico", "countries": ["MX"] },
     { "id": "brazil", "name": "Brazil", "countries": ["BR"] },
     { "id": "in-north", "name": "North India", "units": { "IN": [
       "Jammu and Kashmir", "Ladakh", "Himachal Pradesh", "Punjab", "Chandigarh", "Haryana", "Delhi", "Rajasthan"] } },

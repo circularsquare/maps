@@ -25002,6 +25002,454 @@
       {
         "name": "Karlovačka županija",
         "regionName": "Karlovačka županija region"
+      },
+      {
+        "name": "Guadalajara",
+        "regionName": "Guadalajara region"
+      },
+      {
+        "name": "Monterrey",
+        "regionName": "Monterrey region"
+      },
+      {
+        "name": "Puebla",
+        "regionName": "Puebla region"
+      },
+      {
+        "name": "Toluca",
+        "regionName": "Toluca region"
+      },
+      {
+        "name": "Tijuana",
+        "regionName": "Tijuana region"
+      },
+      {
+        "name": "Torreón",
+        "regionName": "Torreón region"
+      },
+      {
+        "name": "León",
+        "regionName": "León region"
+      },
+      {
+        "name": "Ciudad Juárez",
+        "regionName": "Ciudad Juárez region"
+      },
+      {
+        "name": "San Luis Potosí",
+        "regionName": "San Luis Potosí region"
+      },
+      {
+        "name": "Mérida",
+        "regionName": "Mérida region"
+      },
+      {
+        "name": "Tepic",
+        "regionName": "Tepic region"
+      },
+      {
+        "name": "Oaxaca de Juárez",
+        "regionName": "Oaxaca de Juárez region"
+      },
+      {
+        "name": "Morelia",
+        "regionName": "Morelia region"
+      },
+      {
+        "name": "Zacatecas",
+        "regionName": "Zacatecas region"
+      },
+      {
+        "name": "Xalapa",
+        "regionName": "Xalapa region"
+      },
+      {
+        "name": "Acapulco de Juárez",
+        "regionName": "Acapulco de Juárez region"
+      },
+      {
+        "name": "Aguascalientes",
+        "regionName": "Aguascalientes region"
+      },
+      {
+        "name": "Silao de la Victoria",
+        "regionName": "Silao de la Victoria region"
+      },
+      {
+        "name": "Tuxtla Gutiérrez",
+        "regionName": "Tuxtla Gutiérrez region"
+      },
+      {
+        "name": "Centro",
+        "regionName": "Centro region"
+      },
+      {
+        "name": "Mexico City",
+        "regionName": "Mexico City region"
+      },
+      {
+        "name": "Querétaro",
+        "regionName": "Querétaro region"
+      },
+      {
+        "name": "Mexicali",
+        "regionName": "Mexicali region"
+      },
+      {
+        "name": "Córdoba",
+        "regionName": "Córdoba region"
+      },
+      {
+        "name": "Celaya",
+        "regionName": "Celaya region"
+      },
+      {
+        "name": "Chihuahua",
+        "regionName": "Chihuahua region"
+      },
+      {
+        "name": "Ciudad Valles",
+        "regionName": "Ciudad Valles region"
+      },
+      {
+        "name": "Villaflores",
+        "regionName": "Villaflores region"
+      },
+      {
+        "name": "Uruapan",
+        "regionName": "Uruapan region"
+      },
+      {
+        "name": "Cajeme",
+        "regionName": "Cajeme region"
+      },
+      {
+        "name": "Ocosingo",
+        "regionName": "Ocosingo region"
+      },
+      {
+        "name": "Benito Juárez",
+        "regionName": "Benito Juárez region"
+      },
+      {
+        "name": "Cuernavaca",
+        "regionName": "Cuernavaca region"
+      },
+      {
+        "name": "Durango",
+        "regionName": "Durango region"
+      },
+      {
+        "name": "Tula de Allende",
+        "regionName": "Tula de Allende region"
+      },
+      {
+        "name": "Los Cabos",
+        "regionName": "Los Cabos region"
+      },
+      {
+        "name": "Irapuato",
+        "regionName": "Irapuato region"
+      },
+      {
+        "name": "San Cristóbal de las Casas",
+        "regionName": "San Cristóbal de las Casas region"
+      },
+      {
+        "name": "Saltillo",
+        "regionName": "Saltillo region"
+      },
+      {
+        "name": "Culiacán",
+        "regionName": "Culiacán region"
+      },
+      {
+        "name": "Chilapa de Álvarez",
+        "regionName": "Chilapa de Álvarez region"
+      },
+      {
+        "name": "Tampico",
+        "regionName": "Tampico region"
+      },
+      {
+        "name": "Tehuacán",
+        "regionName": "Tehuacán region"
+      },
+      {
+        "name": "Minatitlán",
+        "regionName": "Minatitlán region"
+      },
+      {
+        "name": "Nuevo Laredo",
+        "regionName": "Nuevo Laredo region"
+      },
+      {
+        "name": "Cuauhtémoc",
+        "regionName": "Cuauhtémoc region"
+      },
+      {
+        "name": "Veracruz",
+        "regionName": "Veracruz region"
+      },
+      {
+        "name": "Huejutla de Reyes",
+        "regionName": "Huejutla de Reyes region"
+      },
+      {
+        "name": "Reynosa",
+        "regionName": "Reynosa region"
+      },
+      {
+        "name": "Pachuca de Soto",
+        "regionName": "Pachuca de Soto region"
+      },
+      {
+        "name": "Cuautla",
+        "regionName": "Cuautla region"
+      },
+      {
+        "name": "Lázaro Cárdenas",
+        "regionName": "Lázaro Cárdenas region"
+      },
+      {
+        "name": "Santiago Pinotepa Nacional",
+        "regionName": "Santiago Pinotepa Nacional region"
+      },
+      {
+        "name": "Hermosillo",
+        "regionName": "Hermosillo region"
+      },
+      {
+        "name": "San Juan del Río",
+        "regionName": "San Juan del Río region"
+      },
+      {
+        "name": "Nogales",
+        "regionName": "Nogales region"
+      },
+      {
+        "name": "Tuxpan",
+        "regionName": "Tuxpan region"
+      },
+      {
+        "name": "Victoria",
+        "regionName": "Victoria region"
+      },
+      {
+        "name": "Huauchinango",
+        "regionName": "Huauchinango region"
+      },
+      {
+        "name": "Puerto Vallarta",
+        "regionName": "Puerto Vallarta region"
+      },
+      {
+        "name": "Zamora",
+        "regionName": "Zamora region"
+      },
+      {
+        "name": "Teziutlán",
+        "regionName": "Teziutlán region"
+      },
+      {
+        "name": "Iguala de la Independencia",
+        "regionName": "Iguala de la Independencia region"
+      },
+      {
+        "name": "Manzanillo",
+        "regionName": "Manzanillo region"
+      },
+      {
+        "name": "Pénjamo",
+        "regionName": "Pénjamo region"
+      },
+      {
+        "name": "San Juan Bautista Tuxtepec",
+        "regionName": "San Juan Bautista Tuxtepec region"
+      },
+      {
+        "name": "Othón P. Blanco",
+        "regionName": "Othón P. Blanco region"
+      },
+      {
+        "name": "Zitácuaro",
+        "regionName": "Zitácuaro region"
+      },
+      {
+        "name": "Ixtlahuaca",
+        "regionName": "Ixtlahuaca region"
+      },
+      {
+        "name": "San Felipe del Progreso",
+        "regionName": "San Felipe del Progreso region"
+      },
+      {
+        "name": "Tapachula",
+        "regionName": "Tapachula region"
+      },
+      {
+        "name": "Fresnillo",
+        "regionName": "Fresnillo region"
+      },
+      {
+        "name": "San Andrés Tuxtla",
+        "regionName": "San Andrés Tuxtla region"
+      },
+      {
+        "name": "Matamoros",
+        "regionName": "Matamoros region"
+      },
+      {
+        "name": "Orizaba",
+        "regionName": "Orizaba region"
+      },
+      {
+        "name": "Cárdenas",
+        "regionName": "Cárdenas region"
+      },
+      {
+        "name": "Poza Rica de Hidalgo",
+        "regionName": "Poza Rica de Hidalgo region"
+      },
+      {
+        "name": "Guasave",
+        "regionName": "Guasave region"
+      },
+      {
+        "name": "Mazatlán",
+        "regionName": "Mazatlán region"
+      },
+      {
+        "name": "San Martín Texmelucan",
+        "regionName": "San Martín Texmelucan region"
+      },
+      {
+        "name": "Salina Cruz",
+        "regionName": "Salina Cruz region"
+      },
+      {
+        "name": "Heroica Ciudad de Huajuapan de León",
+        "regionName": "Heroica Ciudad de Huajuapan de León region"
+      },
+      {
+        "name": "Piedras Negras",
+        "regionName": "Piedras Negras region"
+      },
+      {
+        "name": "Comitán de Domínguez",
+        "regionName": "Comitán de Domínguez region"
+      },
+      {
+        "name": "Ahome",
+        "regionName": "Ahome region"
+      },
+      {
+        "name": "Ensenada",
+        "regionName": "Ensenada region"
+      },
+      {
+        "name": "Atlixco",
+        "regionName": "Atlixco region"
+      },
+      {
+        "name": "Tulancingo de Bravo",
+        "regionName": "Tulancingo de Bravo region"
+      },
+      {
+        "name": "Campeche",
+        "regionName": "Campeche region"
+      },
+      {
+        "name": "Huamantla",
+        "regionName": "Huamantla region"
+      },
+      {
+        "name": "Tepatitlán de Morelos",
+        "regionName": "Tepatitlán de Morelos region"
+      },
+      {
+        "name": "Coatzacoalcos",
+        "regionName": "Coatzacoalcos region"
+      },
+      {
+        "name": "Chilpancingo de los Bravo",
+        "regionName": "Chilpancingo de los Bravo region"
+      },
+      {
+        "name": "Comalcalco",
+        "regionName": "Comalcalco region"
+      },
+      {
+        "name": "Felipe Carrillo Puerto",
+        "regionName": "Felipe Carrillo Puerto region"
+      },
+      {
+        "name": "Pátzcuaro",
+        "regionName": "Pátzcuaro region"
+      },
+      {
+        "name": "Ocotlán",
+        "regionName": "Ocotlán region"
+      },
+      {
+        "name": "Valle de Santiago",
+        "regionName": "Valle de Santiago region"
+      },
+      {
+        "name": "Lagos de Moreno",
+        "regionName": "Lagos de Moreno region"
+      },
+      {
+        "name": "Monclova",
+        "regionName": "Monclova region"
+      },
+      {
+        "name": "Tenancingo",
+        "regionName": "Tenancingo region"
+      },
+      {
+        "name": "Zapotlán el Grande",
+        "regionName": "Zapotlán el Grande region"
+      },
+      {
+        "name": "Autlán de Navarro",
+        "regionName": "Autlán de Navarro region"
+      },
+      {
+        "name": "García",
+        "regionName": "García region"
+      },
+      {
+        "name": "Kanasín",
+        "regionName": "Kanasín region"
+      },
+      {
+        "name": "Los Cabos",
+        "regionName": "Los Cabos region"
+      },
+      {
+        "name": "San Cristóbal de las Casas",
+        "regionName": "San Cristóbal de las Casas region"
+      },
+      {
+        "name": "Nogales",
+        "regionName": "Nogales region"
+      },
+      {
+        "name": "San Felipe del Progreso",
+        "regionName": "San Felipe del Progreso region"
+      },
+      {
+        "name": "Ensenada",
+        "regionName": "Ensenada region"
+      },
+      {
+        "name": "Chilpancingo de los Bravo",
+        "regionName": "Chilpancingo de los Bravo region"
+      },
+      {
+        "name": "Monclova",
+        "regionName": "Monclova region"
       }
     ],
     "rule": {
@@ -109494,6 +109942,2726 @@
       "country": "HR",
       "localTrips": 295864.0,
       "realm": "balkans"
+    },
+    {
+      "id": "gud",
+      "name": "Guadalajara",
+      "origin": {
+        "lon": -103.2783,
+        "lat": 20.6292
+      },
+      "center": [
+        -103.2783,
+        20.6292
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.868,
+        20.014,
+        -102.6,
+        21.177
+      ],
+      "place": 6246,
+      "country": "MX",
+      "localTrips": 17018238.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mot",
+      "name": "Monterrey",
+      "origin": {
+        "lon": -100.291,
+        "lat": 25.6319
+      },
+      "center": [
+        -100.291,
+        25.6319
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.75,
+        24.862,
+        -99.349,
+        26.134
+      ],
+      "place": 6247,
+      "country": "MX",
+      "localTrips": 15134805.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "pue",
+      "name": "Puebla",
+      "origin": {
+        "lon": -98.2422,
+        "lat": 18.9901
+      },
+      "center": [
+        -98.2422,
+        18.9901
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.601,
+        18.591,
+        -97.656,
+        19.623
+      ],
+      "place": 6248,
+      "country": "MX",
+      "localTrips": 11038134.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tol",
+      "name": "Toluca",
+      "origin": {
+        "lon": -99.5937,
+        "lat": 19.2628
+      },
+      "center": [
+        -99.5937,
+        19.2628
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.26,
+        18.785,
+        -99.259,
+        19.601
+      ],
+      "place": 6249,
+      "country": "MX",
+      "localTrips": 7564592.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tij",
+      "name": "Tijuana",
+      "origin": {
+        "lon": -116.8604,
+        "lat": 32.5038
+      },
+      "center": [
+        -116.8604,
+        32.5038
+      ],
+      "zoom": 11.2,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -117.284,
+        32.071,
+        -116.502,
+        32.59
+      ],
+      "place": 6250,
+      "country": "MX",
+      "localTrips": 6384204.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "toe",
+      "name": "Torreón",
+      "origin": {
+        "lon": -103.4104,
+        "lat": 25.4973
+      },
+      "center": [
+        -103.4104,
+        25.4973
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.632,
+        24.383,
+        -102.426,
+        26.861
+      ],
+      "place": 6251,
+      "country": "MX",
+      "localTrips": 4542846.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "leo",
+      "name": "León",
+      "origin": {
+        "lon": -101.6361,
+        "lat": 21.0774
+      },
+      "center": [
+        -101.6361,
+        21.0774
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.222,
+        20.846,
+        -101.352,
+        21.349
+      ],
+      "place": 6252,
+      "country": "MX",
+      "localTrips": 5266060.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ciu",
+      "name": "Ciudad Juárez",
+      "origin": {
+        "lon": -106.3939,
+        "lat": 31.6511
+      },
+      "center": [
+        -106.3939,
+        31.6511
+      ],
+      "zoom": 11.2,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -108.23,
+        29.648,
+        -104.845,
+        31.802
+      ],
+      "place": 6253,
+      "country": "MX",
+      "localTrips": 4871419.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "snl",
+      "name": "San Luis Potosí",
+      "origin": {
+        "lon": -100.9386,
+        "lat": 22.1169
+      },
+      "center": [
+        -100.9386,
+        22.1169
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.843,
+        21.654,
+        -100.429,
+        22.916
+      ],
+      "place": 6254,
+      "country": "MX",
+      "localTrips": 4680756.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mia",
+      "name": "Mérida",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.5824,
+        "lat": 20.9529
+      },
+      "center": [
+        -89.5824,
+        20.9529
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -90.427,
+        20.071,
+        -87.842,
+        21.643
+      ],
+      "place": 6255,
+      "country": "MX",
+      "localTrips": 4874316.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tei",
+      "name": "Tepic",
+      "kind": "zone",
+      "origin": {
+        "lon": -104.8738,
+        "lat": 21.4762
+      },
+      "center": [
+        -104.8738,
+        21.4762
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -106.681,
+        20.585,
+        -103.701,
+        23.103
+      ],
+      "place": 6256,
+      "country": "MX",
+      "localTrips": 3351782.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "oax",
+      "name": "Oaxaca de Juárez",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.7041,
+        "lat": 17.0854
+      },
+      "center": [
+        -96.7041,
+        17.0854
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.67,
+        16.257,
+        -95.536,
+        17.934
+      ],
+      "place": 6257,
+      "country": "MX",
+      "localTrips": 4105407.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mox",
+      "name": "Morelia",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.2171,
+        "lat": 19.7178
+      },
+      "center": [
+        -101.2171,
+        19.7178
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.02,
+        19.151,
+        -100.572,
+        20.351
+      ],
+      "place": 6258,
+      "country": "MX",
+      "localTrips": 4168590.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "zac",
+      "name": "Zacatecas",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.5435,
+        "lat": 22.767
+      },
+      "center": [
+        -102.5435,
+        22.767
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.394,
+        21.023,
+        -100.426,
+        24.51
+      ],
+      "place": 6259,
+      "country": "MX",
+      "localTrips": 3357202.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "xal",
+      "name": "Xalapa",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.9149,
+        "lat": 19.5688
+      },
+      "center": [
+        -96.9149,
+        19.5688
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.4,
+        19.17,
+        -96.352,
+        20.316
+      ],
+      "place": 6260,
+      "country": "MX",
+      "localTrips": 3538054.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "acp",
+      "name": "Acapulco de Juárez",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.8353,
+        "lat": 16.9044
+      },
+      "center": [
+        -99.8353,
+        16.9044
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.102,
+        16.476,
+        -98.538,
+        17.715
+      ],
+      "place": 6261,
+      "country": "MX",
+      "localTrips": 3389703.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "agu",
+      "name": "Aguascalientes",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.254,
+        "lat": 21.9004
+      },
+      "center": [
+        -102.254,
+        21.9004
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.894,
+        21.604,
+        -101.815,
+        22.478
+      ],
+      "place": 6262,
+      "country": "MX",
+      "localTrips": 4317375.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sie",
+      "name": "Silao de la Victoria",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.424,
+        "lat": 20.9446
+      },
+      "center": [
+        -101.424,
+        20.9446
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.602,
+        20.624,
+        -99.651,
+        21.71
+      ],
+      "place": 6263,
+      "country": "MX",
+      "localTrips": 3138276.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tul",
+      "name": "Tuxtla Gutiérrez",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.1123,
+        "lat": 16.7811
+      },
+      "center": [
+        -93.1123,
+        16.7811
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.158,
+        16.274,
+        -92.783,
+        17.428
+      ],
+      "place": 6264,
+      "country": "MX",
+      "localTrips": 3601031.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cen",
+      "name": "Centro",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.9638,
+        "lat": 17.9749
+      },
+      "center": [
+        -92.9638,
+        17.9749
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -93.574,
+        17.249,
+        -91.752,
+        18.492
+      ],
+      "place": 6265,
+      "country": "MX",
+      "localTrips": 3270042.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mex",
+      "name": "Mexico City",
+      "origin": {
+        "lon": -99.2132,
+        "lat": 19.3786
+      },
+      "center": [
+        -99.2132,
+        19.3786
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.761,
+        19.005,
+        -98.359,
+        20.072
+      ],
+      "place": 6266,
+      "country": "MX",
+      "localTrips": 65585857.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "qur",
+      "name": "Querétaro",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.4509,
+        "lat": 20.6292
+      },
+      "center": [
+        -100.4509,
+        20.6292
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.616,
+        20.267,
+        -99.908,
+        20.99
+      ],
+      "place": 6267,
+      "country": "MX",
+      "localTrips": 5389258.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mxc",
+      "name": "Mexicali",
+      "kind": "zone",
+      "origin": {
+        "lon": -115.4768,
+        "lat": 32.5901
+      },
+      "center": [
+        -115.4768,
+        32.5901
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -116.724,
+        30.847,
+        -113.521,
+        32.738
+      ],
+      "place": 6268,
+      "country": "MX",
+      "localTrips": 4139697.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cox",
+      "name": "Córdoba",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.9288,
+        "lat": 18.8992
+      },
+      "center": [
+        -96.9288,
+        18.8992
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.454,
+        18.346,
+        -95.846,
+        19.664
+      ],
+      "place": 6269,
+      "country": "MX",
+      "localTrips": 2945941.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cel",
+      "name": "Celaya",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.8465,
+        "lat": 20.5546
+      },
+      "center": [
+        -100.8465,
+        20.5546
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.132,
+        19.894,
+        -100.304,
+        20.737
+      ],
+      "place": 6270,
+      "country": "MX",
+      "localTrips": 3196553.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "chi",
+      "name": "Chihuahua",
+      "kind": "zone",
+      "origin": {
+        "lon": -106.1248,
+        "lat": 28.7271
+      },
+      "center": [
+        -106.1248,
+        28.7271
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -106.643,
+        27.331,
+        -103.286,
+        30.527
+      ],
+      "place": 6271,
+      "country": "MX",
+      "localTrips": 4116435.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cid",
+      "name": "Ciudad Valles",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.0015,
+        "lat": 21.992
+      },
+      "center": [
+        -99.0015,
+        21.992
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.956,
+        21.141,
+        -98.306,
+        23.329
+      ],
+      "place": 6272,
+      "country": "MX",
+      "localTrips": 2615289.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "vif",
+      "name": "Villaflores",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.2759,
+        "lat": 16.2304
+      },
+      "center": [
+        -93.2759,
+        16.2304
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.129,
+        14.933,
+        -91.895,
+        16.604
+      ],
+      "place": 6273,
+      "country": "MX",
+      "localTrips": 2456005.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ura",
+      "name": "Uruapan",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.0261,
+        "lat": 19.4034
+      },
+      "center": [
+        -102.0261,
+        19.4034
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.065,
+        18.302,
+        -101.41,
+        19.919
+      ],
+      "place": 6274,
+      "country": "MX",
+      "localTrips": 2902109.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cae",
+      "name": "Cajeme",
+      "kind": "zone",
+      "origin": {
+        "lon": -109.9283,
+        "lat": 27.4631
+      },
+      "center": [
+        -109.9283,
+        27.4631
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -111.41,
+        26.284,
+        -108.403,
+        28.65
+      ],
+      "place": 6275,
+      "country": "MX",
+      "localTrips": 3003479.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "oco",
+      "name": "Ocosingo",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.0937,
+        "lat": 16.9044
+      },
+      "center": [
+        -92.0937,
+        16.9044
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.755,
+        16.055,
+        -90.352,
+        18.19
+      ],
+      "place": 6276,
+      "country": "MX",
+      "localTrips": 2315430.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "bej",
+      "name": "Benito Juárez",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.8618,
+        "lat": 21.1438
+      },
+      "center": [
+        -86.8618,
+        21.1438
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -88.015,
+        19.759,
+        -86.691,
+        21.624
+      ],
+      "place": 6277,
+      "country": "MX",
+      "localTrips": 4578104.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cue",
+      "name": "Cuernavaca",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.1785,
+        "lat": 18.924
+      },
+      "center": [
+        -99.1785,
+        18.924
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.484,
+        18.314,
+        -98.884,
+        19.15
+      ],
+      "place": 6278,
+      "country": "MX",
+      "localTrips": 3526151.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "dra",
+      "name": "Durango",
+      "kind": "zone",
+      "origin": {
+        "lon": -104.679,
+        "lat": 24.0038
+      },
+      "center": [
+        -104.679,
+        24.0038
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -107.231,
+        22.327,
+        -103.156,
+        26.864
+      ],
+      "place": 6279,
+      "country": "MX",
+      "localTrips": 3318142.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tud",
+      "name": "Tula de Allende",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.3466,
+        "lat": 20.049
+      },
+      "center": [
+        -99.3466,
+        20.049
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.879,
+        19.753,
+        -98.873,
+        21.166
+      ],
+      "place": 6280,
+      "country": "MX",
+      "localTrips": 2488896.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ira",
+      "name": "Irapuato",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.3689,
+        "lat": 20.6624
+      },
+      "center": [
+        -101.3689,
+        20.6624
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.768,
+        20.418,
+        -100.832,
+        20.963
+      ],
+      "place": 6282,
+      "country": "MX",
+      "localTrips": 2815295.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sti",
+      "name": "Saltillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.0222,
+        "lat": 25.4636
+      },
+      "center": [
+        -101.0222,
+        25.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.256,
+        24.524,
+        -100.209,
+        26.667
+      ],
+      "place": 6284,
+      "country": "MX",
+      "localTrips": 3723867.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cul",
+      "name": "Culiacán",
+      "kind": "zone",
+      "origin": {
+        "lon": -107.4182,
+        "lat": 24.7581
+      },
+      "center": [
+        -107.4182,
+        24.7581
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -108.092,
+        24.033,
+        -106.851,
+        25.295
+      ],
+      "place": 6285,
+      "country": "MX",
+      "localTrips": 3431090.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "chp",
+      "name": "Chilapa de Álvarez",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.1728,
+        "lat": 17.5959
+      },
+      "center": [
+        -99.1728,
+        17.5959
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.583,
+        16.298,
+        -97.988,
+        18.084
+      ],
+      "place": 6286,
+      "country": "MX",
+      "localTrips": 1997800.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tmp",
+      "name": "Tampico",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.8828,
+        "lat": 22.2834
+      },
+      "center": [
+        -97.8828,
+        22.2834
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.379,
+        22.188,
+        -97.741,
+        23.389
+      ],
+      "place": 6287,
+      "country": "MX",
+      "localTrips": 2747507.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tec",
+      "name": "Tehuacán",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.4058,
+        "lat": 18.4698
+      },
+      "center": [
+        -97.4058,
+        18.4698
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.29,
+        18.007,
+        -96.705,
+        19.104
+      ],
+      "place": 6288,
+      "country": "MX",
+      "localTrips": 2935487.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mix",
+      "name": "Minatitlán",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.585,
+        "lat": 17.9914
+      },
+      "center": [
+        -94.585,
+        17.9914
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.922,
+        17.131,
+        -93.904,
+        18.567
+      ],
+      "place": 6289,
+      "country": "MX",
+      "localTrips": 2257318.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "nue",
+      "name": "Nuevo Laredo",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.559,
+        "lat": 27.48
+      },
+      "center": [
+        -99.559,
+        27.48
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.855,
+        25.022,
+        -98.401,
+        27.818
+      ],
+      "place": 6290,
+      "country": "MX",
+      "localTrips": 2493812.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cao",
+      "name": "Cuauhtémoc",
+      "kind": "zone",
+      "origin": {
+        "lon": -106.8245,
+        "lat": 28.4297
+      },
+      "center": [
+        -106.8245,
+        28.4297
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -109.096,
+        25.54,
+        -103.678,
+        31.352
+      ],
+      "place": 6291,
+      "country": "MX",
+      "localTrips": 2241728.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "vec",
+      "name": "Veracruz",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.1917,
+        "lat": 19.205
+      },
+      "center": [
+        -96.1917,
+        19.205
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.814,
+        18.821,
+        -96.002,
+        19.746
+      ],
+      "place": 6292,
+      "country": "MX",
+      "localTrips": 3022855.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "huj",
+      "name": "Huejutla de Reyes",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.4246,
+        "lat": 21.1438
+      },
+      "center": [
+        -98.4246,
+        21.1438
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.286,
+        20.313,
+        -97.816,
+        21.417
+      ],
+      "place": 6293,
+      "country": "MX",
+      "localTrips": 1664135.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "rey",
+      "name": "Reynosa",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.2475,
+        "lat": 26.0023
+      },
+      "center": [
+        -98.2475,
+        26.0023
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.791,
+        24.282,
+        -97.511,
+        27.313
+      ],
+      "place": 6294,
+      "country": "MX",
+      "localTrips": 2885605.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "pau",
+      "name": "Pachuca de Soto",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.7262,
+        "lat": 20.107
+      },
+      "center": [
+        -98.7262,
+        20.107
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.187,
+        19.795,
+        -98.338,
+        20.47
+      ],
+      "place": 6295,
+      "country": "MX",
+      "localTrips": 2553245.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cta",
+      "name": "Cuautla",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.9447,
+        "lat": 18.8496
+      },
+      "center": [
+        -98.9447,
+        18.8496
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.168,
+        18.421,
+        -98.6,
+        19.202
+      ],
+      "place": 6296,
+      "country": "MX",
+      "localTrips": 2101476.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "lar",
+      "name": "Lázaro Cárdenas",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.2228,
+        "lat": 17.9667
+      },
+      "center": [
+        -102.2228,
+        17.9667
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.759,
+        17.309,
+        -100.036,
+        19.054
+      ],
+      "place": 6297,
+      "country": "MX",
+      "localTrips": 1919884.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sno",
+      "name": "Santiago Pinotepa Nacional",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.0564,
+        "lat": 16.3372
+      },
+      "center": [
+        -98.0564,
+        16.3372
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.572,
+        15.638,
+        -95.494,
+        16.937
+      ],
+      "place": 6298,
+      "country": "MX",
+      "localTrips": 2142553.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "hem",
+      "name": "Hermosillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -110.9323,
+        "lat": 29.0079
+      },
+      "center": [
+        -110.9323,
+        29.0079
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -112.262,
+        28.163,
+        -108.458,
+        30.05
+      ],
+      "place": 6299,
+      "country": "MX",
+      "localTrips": 3118058.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sju",
+      "name": "San Juan del Río",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.9657,
+        "lat": 20.3804
+      },
+      "center": [
+        -99.9657,
+        20.3804
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.329,
+        19.996,
+        -99.023,
+        21.689
+      ],
+      "place": 6300,
+      "country": "MX",
+      "localTrips": 1819795.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tup",
+      "name": "Tuxpan",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.4027,
+        "lat": 20.9612
+      },
+      "center": [
+        -97.4027,
+        20.9612
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.701,
+        20.597,
+        -97.161,
+        22.49
+      ],
+      "place": 6302,
+      "country": "MX",
+      "localTrips": 1642687.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "vir",
+      "name": "Victoria",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.1111,
+        "lat": 23.7443
+      },
+      "center": [
+        -99.1111,
+        23.7443
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.848,
+        22.57,
+        -97.659,
+        25.274
+      ],
+      "place": 6303,
+      "country": "MX",
+      "localTrips": 1958236.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "huh",
+      "name": "Huauchinango",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.0466,
+        "lat": 20.1733
+      },
+      "center": [
+        -98.0466,
+        20.1733
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.304,
+        19.849,
+        -97.103,
+        20.858
+      ],
+      "place": 6304,
+      "country": "MX",
+      "localTrips": 1652697.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "puv",
+      "name": "Puerto Vallarta",
+      "kind": "zone",
+      "origin": {
+        "lon": -105.212,
+        "lat": 20.6541
+      },
+      "center": [
+        -105.212,
+        20.6541
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -105.715,
+        19.624,
+        -103.167,
+        21.463
+      ],
+      "place": 6305,
+      "country": "MX",
+      "localTrips": 2094183.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "zao",
+      "name": "Zamora",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.2893,
+        "lat": 19.991
+      },
+      "center": [
+        -102.2893,
+        19.991
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.071,
+        19.581,
+        -101.881,
+        20.377
+      ],
+      "place": 6306,
+      "country": "MX",
+      "localTrips": 1992849.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tez",
+      "name": "Teziutlán",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.3675,
+        "lat": 19.8088
+      },
+      "center": [
+        -97.3675,
+        19.8088
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.335,
+        19.208,
+        -97.282,
+        20.111
+      ],
+      "place": 6307,
+      "country": "MX",
+      "localTrips": 1852711.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "igu",
+      "name": "Iguala de la Independencia",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.5367,
+        "lat": 18.3461
+      },
+      "center": [
+        -99.5367,
+        18.3461
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.633,
+        17.811,
+        -98.833,
+        19.178
+      ],
+      "place": 6308,
+      "country": "MX",
+      "localTrips": 1826703.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mza",
+      "name": "Manzanillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -104.3495,
+        "lat": 19.1306
+      },
+      "center": [
+        -104.3495,
+        19.1306
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.71,
+        18.666,
+        -103.467,
+        19.531
+      ],
+      "place": 6309,
+      "country": "MX",
+      "localTrips": 2178850.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "pej",
+      "name": "Pénjamo",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.7237,
+        "lat": 20.4385
+      },
+      "center": [
+        -101.7237,
+        20.4385
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.2,
+        19.946,
+        -101.347,
+        21.129
+      ],
+      "place": 6310,
+      "country": "MX",
+      "localTrips": 1773595.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "snb",
+      "name": "San Juan Bautista Tuxtepec",
+      "kind": "zone",
+      "origin": {
+        "lon": -96.121,
+        "lat": 18.0904
+      },
+      "center": [
+        -96.121,
+        18.0904
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.265,
+        17.241,
+        -95.551,
+        18.688
+      ],
+      "place": 6311,
+      "country": "MX",
+      "localTrips": 1504668.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "oth",
+      "name": "Othón P. Blanco",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.3006,
+        "lat": 18.5276
+      },
+      "center": [
+        -88.3006,
+        18.5276
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -92.489,
+        17.794,
+        -87.529,
+        19.25
+      ],
+      "place": 6312,
+      "country": "MX",
+      "localTrips": 1842868.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "zit",
+      "name": "Zitácuaro",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.3628,
+        "lat": 19.4365
+      },
+      "center": [
+        -100.3628,
+        19.4365
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.152,
+        18.987,
+        -100.043,
+        20.317
+      ],
+      "place": 6313,
+      "country": "MX",
+      "localTrips": 1512963.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ixt",
+      "name": "Ixtlahuaca",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.7814,
+        "lat": 19.5937
+      },
+      "center": [
+        -99.7814,
+        19.5937
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.097,
+        19.45,
+        -99.401,
+        20.304
+      ],
+      "place": 6314,
+      "country": "MX",
+      "localTrips": 1596878.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tau",
+      "name": "Tapachula",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.2577,
+        "lat": 14.885
+      },
+      "center": [
+        -92.2577,
+        14.885
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.695,
+        14.512,
+        -92.04,
+        15.254
+      ],
+      "place": 6316,
+      "country": "MX",
+      "localTrips": 1593664.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "fri",
+      "name": "Fresnillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.862,
+        "lat": 23.176
+      },
+      "center": [
+        -102.862,
+        23.176
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -104.194,
+        22.817,
+        -100.722,
+        25.144
+      ],
+      "place": 6317,
+      "country": "MX",
+      "localTrips": 1521785.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sdr",
+      "name": "San Andrés Tuxtla",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.2146,
+        "lat": 18.4533
+      },
+      "center": [
+        -95.2146,
+        18.4533
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -96.648,
+        18.062,
+        -94.844,
+        18.761
+      ],
+      "place": 6318,
+      "country": "MX",
+      "localTrips": 1465194.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mts",
+      "name": "Matamoros",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.4875,
+        "lat": 25.8507
+      },
+      "center": [
+        -97.4875,
+        25.8507
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.0,
+        25.024,
+        -97.124,
+        26.089
+      ],
+      "place": 6319,
+      "country": "MX",
+      "localTrips": 1821521.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ori",
+      "name": "Orizaba",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.1101,
+        "lat": 18.8579
+      },
+      "center": [
+        -97.1101,
+        18.8579
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.375,
+        18.436,
+        -96.814,
+        18.999
+      ],
+      "place": 6320,
+      "country": "MX",
+      "localTrips": 1598746.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cre",
+      "name": "Cárdenas",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.3705,
+        "lat": 17.9914
+      },
+      "center": [
+        -93.3705,
+        17.9914
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.149,
+        17.294,
+        -93.004,
+        18.427
+      ],
+      "place": 6321,
+      "country": "MX",
+      "localTrips": 1365339.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "poc",
+      "name": "Poza Rica de Hidalgo",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.4348,
+        "lat": 20.5463
+      },
+      "center": [
+        -97.4348,
+        20.5463
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -97.94,
+        20.129,
+        -96.765,
+        21.218
+      ],
+      "place": 6322,
+      "country": "MX",
+      "localTrips": 1725751.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "guv",
+      "name": "Guasave",
+      "kind": "zone",
+      "origin": {
+        "lon": -108.4871,
+        "lat": 25.5646
+      },
+      "center": [
+        -108.4871,
+        25.5646
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -108.891,
+        24.897,
+        -106.945,
+        26.472
+      ],
+      "place": 6323,
+      "country": "MX",
+      "localTrips": 1404564.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "mzt",
+      "name": "Mazatlán",
+      "kind": "zone",
+      "origin": {
+        "lon": -106.4014,
+        "lat": 23.2344
+      },
+      "center": [
+        -106.4014,
+        23.2344
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -107.185,
+        22.792,
+        -105.372,
+        24.845
+      ],
+      "place": 6324,
+      "country": "MX",
+      "localTrips": 1990319.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "snm",
+      "name": "San Martín Texmelucan",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.4345,
+        "lat": 19.2876
+      },
+      "center": [
+        -98.4345,
+        19.2876
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.728,
+        19.002,
+        -97.849,
+        19.747
+      ],
+      "place": 6325,
+      "country": "MX",
+      "localTrips": 1596607.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "slz",
+      "name": "Salina Cruz",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.2052,
+        "lat": 16.1811
+      },
+      "center": [
+        -95.2052,
+        16.1811
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.861,
+        15.945,
+        -93.848,
+        17.759
+      ],
+      "place": 6326,
+      "country": "MX",
+      "localTrips": 1504936.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "hec",
+      "name": "Heroica Ciudad de Huajuapan de León",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.7752,
+        "lat": 17.8101
+      },
+      "center": [
+        -97.7752,
+        17.8101
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.516,
+        16.546,
+        -97.033,
+        18.312
+      ],
+      "place": 6327,
+      "country": "MX",
+      "localTrips": 1218293.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "pie",
+      "name": "Piedras Negras",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.5689,
+        "lat": 28.6846
+      },
+      "center": [
+        -100.5689,
+        28.6846
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.928,
+        27.003,
+        -99.822,
+        29.899
+      ],
+      "place": 6328,
+      "country": "MX",
+      "localTrips": 1840911.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cou",
+      "name": "Comitán de Domínguez",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.1371,
+        "lat": 16.2551
+      },
+      "center": [
+        -92.1371,
+        16.2551
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -92.578,
+        15.733,
+        -91.097,
+        16.693
+      ],
+      "place": 6329,
+      "country": "MX",
+      "localTrips": 1209073.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "aho",
+      "name": "Ahome",
+      "kind": "zone",
+      "origin": {
+        "lon": -108.9727,
+        "lat": 25.7834
+      },
+      "center": [
+        -108.9727,
+        25.7834
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -109.462,
+        25.434,
+        -107.935,
+        27.061
+      ],
+      "place": 6330,
+      "country": "MX",
+      "localTrips": 1643391.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ati",
+      "name": "Atlixco",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.4216,
+        "lat": 18.9157
+      },
+      "center": [
+        -98.4216,
+        18.9157
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.09,
+        17.842,
+        -97.678,
+        19.047
+      ],
+      "place": 6332,
+      "country": "MX",
+      "localTrips": 1323011.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tue",
+      "name": "Tulancingo de Bravo",
+      "kind": "zone",
+      "origin": {
+        "lon": -98.3638,
+        "lat": 20.0821
+      },
+      "center": [
+        -98.3638,
+        20.0821
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.58,
+        19.584,
+        -97.965,
+        20.696
+      ],
+      "place": 6333,
+      "country": "MX",
+      "localTrips": 1164712.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cme",
+      "name": "Campeche",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.4994,
+        "lat": 19.842
+      },
+      "center": [
+        -90.4994,
+        19.842
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.205,
+        18.554,
+        -89.116,
+        20.867
+      ],
+      "place": 6334,
+      "country": "MX",
+      "localTrips": 1480934.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "hum",
+      "name": "Huamantla",
+      "kind": "zone",
+      "origin": {
+        "lon": -97.9194,
+        "lat": 19.3207
+      },
+      "center": [
+        -97.9194,
+        19.3207
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -98.059,
+        18.792,
+        -96.966,
+        19.517
+      ],
+      "place": 6335,
+      "country": "MX",
+      "localTrips": 1139256.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tet",
+      "name": "Tepatitlán de Morelos",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.7659,
+        "lat": 20.8201
+      },
+      "center": [
+        -102.7659,
+        20.8201
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.202,
+        20.573,
+        -101.867,
+        21.786
+      ],
+      "place": 6336,
+      "country": "MX",
+      "localTrips": 1198301.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "coz",
+      "name": "Coatzacoalcos",
+      "kind": "zone",
+      "origin": {
+        "lon": -94.4669,
+        "lat": 18.1316
+      },
+      "center": [
+        -94.4669,
+        18.1316
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -94.659,
+        17.118,
+        -93.588,
+        18.231
+      ],
+      "place": 6337,
+      "country": "MX",
+      "localTrips": 1299399.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "cml",
+      "name": "Comalcalco",
+      "kind": "zone",
+      "origin": {
+        "lon": -93.2207,
+        "lat": 18.2553
+      },
+      "center": [
+        -93.2207,
+        18.2553
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -93.548,
+        18.038,
+        -92.195,
+        18.669
+      ],
+      "place": 6339,
+      "country": "MX",
+      "localTrips": 1274407.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "fel",
+      "name": "Felipe Carrillo Puerto",
+      "kind": "zone",
+      "origin": {
+        "lon": -88.0465,
+        "lat": 19.5771
+      },
+      "center": [
+        -88.0465,
+        19.5771
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -89.607,
+        19.033,
+        -87.39,
+        21.59
+      ],
+      "place": 6340,
+      "country": "MX",
+      "localTrips": 1391628.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "pao",
+      "name": "Pátzcuaro",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.6022,
+        "lat": 19.5109
+      },
+      "center": [
+        -101.6022,
+        19.5109
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.004,
+        18.327,
+        -100.503,
+        19.721
+      ],
+      "place": 6341,
+      "country": "MX",
+      "localTrips": 994800.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "oct",
+      "name": "Ocotlán",
+      "kind": "zone",
+      "origin": {
+        "lon": -102.7732,
+        "lat": 20.339
+      },
+      "center": [
+        -102.7732,
+        20.339
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.901,
+        20.191,
+        -101.931,
+        20.93
+      ],
+      "place": 6342,
+      "country": "MX",
+      "localTrips": 1094330.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "vat",
+      "name": "Valle de Santiago",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.2015,
+        "lat": 20.3804
+      },
+      "center": [
+        -101.2015,
+        20.3804
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.48,
+        19.989,
+        -100.958,
+        20.566
+      ],
+      "place": 6343,
+      "country": "MX",
+      "localTrips": 914980.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "las",
+      "name": "Lagos de Moreno",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.9339,
+        "lat": 21.3599
+      },
+      "center": [
+        -101.9339,
+        21.3599
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.457,
+        21.118,
+        -100.814,
+        22.05
+      ],
+      "place": 6344,
+      "country": "MX",
+      "localTrips": 951521.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "tex",
+      "name": "Tenancingo",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.5964,
+        "lat": 18.9653
+      },
+      "center": [
+        -99.5964,
+        18.9653
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -99.969,
+        18.57,
+        -99.257,
+        19.144
+      ],
+      "place": 6346,
+      "country": "MX",
+      "localTrips": 855569.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "zap",
+      "name": "Zapotlán el Grande",
+      "kind": "zone",
+      "origin": {
+        "lon": -103.458,
+        "lat": 19.7012
+      },
+      "center": [
+        -103.458,
+        19.7012
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.727,
+        18.907,
+        -102.523,
+        20.152
+      ],
+      "place": 6347,
+      "country": "MX",
+      "localTrips": 979348.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "aut",
+      "name": "Autlán de Navarro",
+      "kind": "zone",
+      "origin": {
+        "lon": -104.3754,
+        "lat": 19.7675
+      },
+      "center": [
+        -104.3754,
+        19.7675
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -105.24,
+        19.132,
+        -103.51,
+        20.32
+      ],
+      "place": 6348,
+      "country": "MX",
+      "localTrips": 775729.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "grc",
+      "name": "García",
+      "kind": "zone",
+      "origin": {
+        "lon": -100.6027,
+        "lat": 25.8002
+      },
+      "center": [
+        -100.6027,
+        25.8002
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -101.227,
+        25.608,
+        -100.395,
+        26.754
+      ],
+      "place": 6349,
+      "country": "MX",
+      "localTrips": 855774.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "kax",
+      "name": "Kanasín",
+      "kind": "zone",
+      "origin": {
+        "lon": -89.5554,
+        "lat": 20.9363
+      },
+      "center": [
+        -89.5554,
+        20.9363
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -89.922,
+        19.902,
+        -89.276,
+        21.001
+      ],
+      "place": 6350,
+      "country": "MX",
+      "localTrips": 538705.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "loc",
+      "name": "Los Cabos",
+      "kind": "zone",
+      "origin": {
+        "lon": -109.9392,
+        "lat": 22.8921
+      },
+      "center": [
+        -109.9392,
+        22.8921
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -115.24,
+        22.853,
+        -109.393,
+        28.019
+      ],
+      "place": 6351,
+      "country": "MX",
+      "localTrips": 2530785.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "sab",
+      "name": "San Cristóbal de las Casas",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.6285,
+        "lat": 16.74
+      },
+      "center": [
+        -92.6285,
+        16.74
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -93.014,
+        16.104,
+        -92.0,
+        17.367
+      ],
+      "place": 6352,
+      "country": "MX",
+      "localTrips": 2537265.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "noa",
+      "name": "Nogales",
+      "kind": "zone",
+      "origin": {
+        "lon": -110.9625,
+        "lat": 31.2988
+      },
+      "center": [
+        -110.9625,
+        31.2988
+      ],
+      "zoom": 10.5,
+      "utcOffset": -7,
+      "market": -1,
+      "box": [
+        -114.02,
+        29.249,
+        -108.513,
+        32.134
+      ],
+      "place": 6353,
+      "country": "MX",
+      "localTrips": 2128529.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "saf",
+      "name": "San Felipe del Progreso",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.9048,
+        "lat": 19.6185
+      },
+      "center": [
+        -99.9048,
+        19.6185
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.398,
+        19.06,
+        -99.833,
+        20.074
+      ],
+      "place": 6354,
+      "country": "MX",
+      "localTrips": 1313310.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "ens",
+      "name": "Ensenada",
+      "kind": "zone",
+      "origin": {
+        "lon": -116.571,
+        "lat": 31.8919
+      },
+      "center": [
+        -116.571,
+        31.8919
+      ],
+      "zoom": 10.5,
+      "utcOffset": -8,
+      "market": -1,
+      "box": [
+        -118.387,
+        27.981,
+        -112.743,
+        32.405
+      ],
+      "place": 6355,
+      "country": "MX",
+      "localTrips": 1633012.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "chr",
+      "name": "Chilpancingo de los Bravo",
+      "kind": "zone",
+      "origin": {
+        "lon": -99.4979,
+        "lat": 17.5547
+      },
+      "center": [
+        -99.4979,
+        17.5547
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -100.233,
+        17.14,
+        -99.236,
+        18.06
+      ],
+      "place": 6356,
+      "country": "MX",
+      "localTrips": 1264976.0,
+      "realm": "mexico"
+    },
+    {
+      "id": "moo",
+      "name": "Monclova",
+      "kind": "zone",
+      "origin": {
+        "lon": -101.4391,
+        "lat": 26.8712
+      },
+      "center": [
+        -101.4391,
+        26.8712
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -103.981,
+        26.033,
+        -100.513,
+        29.259
+      ],
+      "place": 6357,
+      "country": "MX",
+      "localTrips": 1252756.0,
+      "realm": "mexico"
     }
   ]
 }

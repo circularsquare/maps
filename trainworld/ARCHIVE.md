@@ -2,6 +2,9 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2436 Mexico, the whole country (2026-11-05, agent mexico): 10 metro rows and 95 zones of municipios, no density floor; all 105 shipped on the census and DENUE hook (7 relaxed), one joint group; load checks on mex, mot, gud, oax pass. notes/T-2436.md.
+- T-2080 Mexico's 2020 census population hook (2026-11-05, agents mexprep and mexico): `mexico.plan_population`, wired as archetype C module mexico; in every Mexican row. notes/T-2080.md.
+- T-2081 Mexico's jobs from DENUE (2026-11-05, agents mexprep and mexico): `mexico.plan_jobs`, 38.3M workers plus the gap share; in every Mexican row. notes/T-2080.md.
 - T-2576 `toWorld` per edit (2026-11-05, agent toworld, tree): `edgesOf` keeps each edge's view per worker row and the edge-to-lines map while line paths are the same; a train-count edit's `toWorld` 5.9 -> 2.4 ms at 6x on the real save (0.40), states deep-equal to before; edits that change lines cost about what they did. notes/T-2576.md.
 
 - T-1358 followTrack's cost (2026-11-05, agent followtrack, tree): edges settled by their box, the rest in one batched walk; own work 99 -> 54 ms at 6x (0.55, accepted by maps-93 against the 0.5 target: exact, zones identical); `toWorld` split to T-2576. notes/T-1358.md.

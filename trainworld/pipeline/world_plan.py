@@ -199,7 +199,13 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
               "AUS": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
-                      "reach": (150.0, 100_000), "join_km": 150.0, "module": "australia", "task": "T-1857"}}
+                      "reach": (150.0, 100_000), "join_km": 150.0, "module": "australia", "task": "T-1857"},
+              # Mexico's municipios (geoBoundaries ADM2), which its metro rows were planned on; people from the 2020
+              # census by urban AGEB and rural locality, jobs from DENUE (`mexico`, T-2080, T-2081); no density floor:
+              # the north's municipios are huge, each round one town, and at the default 20 a km2 556 of 2,453 were
+              # dead space with 6.9M people (Ciudad Acuna, Caborca, Ramos Arizpe beside Saltillo, Puerto Penasco);
+              # `fua_whole` 0.3M: at 0.5M Zacatecas and Guadalupe, one town, were two zones
+              "MEX": {"min_density": 0.0, "plan_units": True, "fua_whole": 300_000, "module": "mexico", "task": "T-2436"}}
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -271,7 +277,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
              "NZL": ("C", "admin_totals"),
-             "TUR": ("C", "admin_totals")}
+             "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)

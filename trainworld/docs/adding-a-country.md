@@ -76,6 +76,7 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 | plan units finer than counties (zones of 100+ units, zones named after a village) | `group_level` as Korea |
 | islands | `contiguous` (10 km of water at most between units) |
 | most land settled, but river or coast towns of 50,000+ dead under the 20 a km2 floor | `min_density` 10, as Indonesia's Kalimantan and Papua |
+| huge desert or mountain units, each round one town of 50,000-130,000, dead under the floor (Mexico's north: 6.9M people) | `min_density` 0, as `MEX` |
 | a thin country of coast and valley towns, units finer than districts (New Zealand's wards) | `min_density` 0, `group_level` 1, `join_km` long enough to keep the big towns' zones apart (250 km), as `NZL` |
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
@@ -85,7 +86,8 @@ Rule keys a new country may need (T-2294, T-2295):
   makes the planner read units afresh, and a country in NUTS 2024 but planned on geoBoundaries (Turkey) then gets NUTS-3
   provinces, which its metro rows' unit ids are not.
 - **`fua_whole`** (people) when the dry run cuts a city of 0.5-1M between zones (Turkey 0.5M: Diyarbakir, Kayseri,
-  Sanliurfa, Kocaeli); `FUA_WHOLE`'s 1M default only joins bigger ones.
+  Sanliurfa, Kocaeli; Mexico 0.3M: Zacatecas and Guadalupe); `FUA_WHOLE`'s 1M default only joins bigger ones. Look for
+  two zones whose origins lie a few km apart.
 - **`beyond_europe`** for a European country reaching past `EUROPE_BOX` (Russia east of 45 E), else those units are
   left out of the zones ("outside Europe, left out" in the log).
 - Metro rows planned before the country had an `ARCHETYPE` entry keep archetype D and no module: give them the
