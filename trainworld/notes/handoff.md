@@ -6,11 +6,10 @@ Updated: 2026-11-06 17:42 (Get-Date). maps-b9 is past 600k tokens: ready to be r
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **51d5e03f**. 8800 = **build 1187 (ff7cb27f)**, old: nothing since 11-06 morning is on it. **Main-tree smoke
-  not run** since those landings (machine full). Anita (~15:45): wait for the agents to finish before the rebuild.
-  Then: claim 4, a Vite on 6190 (`node trainworld/checks/dev-nowatch.mjs 6190`), scratch smokedev.cmd, snapbuild.cmd
-  <hash>, smoke8800.cmd (light + dark), tell Anita to reload. l10nfix's tree smoke had 64 console errors "Nn" on a
-  1-core run (not reproduced by its probe): watch for them in the master smoke.
+- master **72d62101** = 8800 **build 1265** (18:40; dev smoke and 8800 light + dark all 25/25, no "Nn" errors: those
+  were starved 1-2 core tree runs). Next rebuild: after fares (tree fares, waiting on Anita) and attract2 land.
+  Rebuild: claim 4, `node trainworld/checks/dev-nowatch.mjs 6191`, scratch `smokedev.cmd 6191`, stop that Vite by PID,
+  snapbuild.cmd <hash>, smoke8800.cmd, tell Anita to reload.
 - LIVE = 821. Publish only on Anita's word (English first; ja/zh "in next few days"; languages switch on via OFFERED in
   i18n/intl.ts). maps-eb's play count ships with the next release build.
 - Cores cap 12, 4 free while Anita is on; check real CPU with Get-Counter. iso-terrain (isochrone) holds 3.
