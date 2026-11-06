@@ -2,92 +2,64 @@
 
 Orchestrator: session b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21, name maps-b9, since 2026-11-06 14:10
 Previous: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, handed over 2026-11-06 14:10, finishing in-flight work
-Updated: 2026-11-06 15:55 (machine clock, Get-Date). maps-b9 passed 500k tokens at ~15:50: ready to cycle.
+Updated: 2026-11-06 16:20 (Get-Date). maps-b9 is past 600k tokens: ready to be replaced any time.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **4a329a95**. 8800 = **build 1187 (ff7cb27f)**, old: everything since (translations, l10n stage 1 everywhere,
-  T-2641 far ends, T-2656 drives fix, T-2657 notice, maps-eb's play count) is NOT on 8800. **Main-tree smoke not run**
-  since these landings (machine at ~97% CPU, ledger over cap). Anita (~15:45): "we can wait for them to finish"
-  (agents) before the rebuild. Then: claim 4, scratch smokedev.cmd (needs a Vite on 6190: `node
-  trainworld/checks/dev-nowatch.mjs 6190`, the earlier one pid 11532 may be gone), snapbuild.cmd <hash>, smoke 8800
-  light + dark (smoke8800.cmd), tell Anita to reload.
-- LIVE = 821. Publish only on Anita's word (English first; ja/zh "in next few days"; release gate OFFERED in
-  i18n/intl.ts). maps-eb's play count goes with the next release build (Anita: "yeah we can send it with next build").
-- Cores cap 12, 4 free while Anita is on. Check real CPU with Get-Counter. Disk ~23 GB free at 14:20.
-- **maps-b9 holds the landing role.** maps-93 forwards its remaining trees as they report: upkeep (T-2619/T-2620),
-  capview (T-2622), borders2 (T-2639), dianames (T-2640). Its own Previous line goes when it has no agents left.
-- Uncommitted in the main tree (all fine to commit by path at the next records commit): unit 4 translations in
-  messages/sources ja/zh-Hans/zh-TW + glossary.json (flat junction term, excepts), TASKS.md, ARCHIVE.md, DECISIONS.md
-  (agents' lines), docs/data-register.md (attract), notes T-2620 (upkeep's), T-2639 (borders'), T-2642/ (searchcost),
-  T-2660 (marey), T-2663 (attract). TODO.md is Anita's: never commit or edit.
+- master **db980d4f**. 8800 = **build 1187 (ff7cb27f)**, old: nothing since 11-06 morning is on it (translations, l10n
+  stage 1 everywhere, T-2641 far ends, T-2656 drives fix, T-2657 notice, T-2640 diagram names, maps-eb's play count).
+  **Main-tree smoke not run** since those landings (machine ~97% CPU). Anita (~15:45): wait for the agents to finish
+  before the rebuild. Then: claim 4, a Vite on 6190 (`node trainworld/checks/dev-nowatch.mjs 6190`), scratch
+  smokedev.cmd, snapbuild.cmd <hash>, smoke8800.cmd (light + dark), tell Anita to reload.
+- LIVE = 821. Publish only on Anita's word (English first; ja/zh "in next few days"; languages switch on via OFFERED in
+  i18n/intl.ts). maps-eb's play count ships with the next release build.
+- Cores cap 12, 4 free while Anita is on; check real CPU with Get-Counter. Disk 99 GB free (16:00).
+- **maps-b9 holds the landing role.** maps-93 forwards its last trees as they report: upkeep (T-2619/T-2620), capview
+  (T-2622), borders2 (T-2639). dianames landed (093d7b82). maps-93's Previous line goes when it has no agents left.
+- Uncommitted: little (TODO.md is Anita's: never commit or edit it; notes/T-2620.md upkeep's, T-2639.md borders',
+  T-2660.md marey's, commit with their landings).
 
 ## Landed this session (maps-b9)
-- translations units 1-2 292cf26c; T-2656 drives fix + maps-eb play count 5a71e6f6; l10n-insp 2c04f007 (T-2634);
-  farends 75e04c44 (T-2641: NA market 1.94x, lines >10k within 1.9%, WASM set_far_chunks); stopnote 838c46e7 (T-2657);
-  glossary/check ef51da93; l10n-core 2c10069e (T-2635, from maps-93: en.json merged with scratch merge3json.py, a true
-  3-way; TripInspector switched to CostTerm.id); unit 3 translations 4a329a95.
-- From maps-93 before the role passed: l10n-ui1 (T-2632), l10n-ui2 (T-2633), l10n-lead (T-2636), profitest (T-2626).
-- "Running costs" -> "Ongoing costs" in the Money history hover (Anita agreed).
+- translations units 1-4 (292cf26c, 4a329a95, 70bd30cb: all 2124 messages in ja, zh-Hans, zh-TW, reviewed); T-2656
+  drives fix + play count 5a71e6f6; l10n-insp 2c04f007 (T-2634); farends 75e04c44 (T-2641); stopnote 838c46e7 (T-2657);
+  l10n-core 2c10069e (T-2635; en.json merged by scratch merge3json.py; TripInspector -> CostTerm.id); dianames 093d7b82
+  (T-2640). From maps-93 earlier: l10n-ui1/ui2/lead, profitest (T-2626).
 
-## In flight (maps-b9's agents; ids are Agent-tool ids, SendMessage by id)
-Trees (land each: typecheck, smoke in the tree pinned, `agent-tree.mjs land`, remove; show Anita strings):
-- **ridersnow** (Opus, .tw-trees/ridersnow): T-2658 riders shown as a settled 0 / "0 gain" while solving. ~275k tokens.
-- **marey** (Opus, .tw-trees/marey): T-2660 timetable chart: other lines' trains on shared track (toggle, default on),
-  flat junctions marked; plus T-2665 dense charts (default span by density, wheel zoom to a day). Use westleft's helper
-  (game/northUp.ts `lineReversed`/`leftToRightReversed`) for a horizontal axis once landed.
-- **westleft** (Sonnet, .tw-trees/westleft): T-2661 every left-to-right line drawing puts the west end on the left
-  (north for N-S lines, ~22 deg). Helper game/northUp.ts.
-- **riderspace** (Sonnet, .tw-trees/riderspace): T-2664 line panel riders block tighter (CSS).
-- **attract2** (Sonnet, .tw-trees/attract2): T-2666 attraction classes (waterfall, cave, hot spring, opera, Ferris
-  wheel, casino) + 2 km reach; Wikidata refetch.
-Read-only / design:
-- searchcost DONE (notes/T-2642.md): Japan pass ~1.45x exact from two stages. Building: **searchleaf** (Opus, tree
-  .tw-trees/searchleaf, kernel/search.rs, T-2652) and **fartable** (Sonnet, tree .tw-trees/fartable,
-  intercity/pass.rs + api.rs, T-2653). Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
-- Unit 4: rev-tw-4b DONE (no meaning errors, 10 rewrites; opencc owed); rev-hans-4b DONE (2 small meaning fixes, 26
-  rewrites). rev-ja-4b DONE (Traffic toggle 本数 -> 乗客数 fixed, 16 fixes). rev-tw-4a DONE (2 small meaning fixes: kindHoliday was "public
-  holiday", issues.crossing). rev-hans-4a DONE (3 meaning fixes), rev-ja-4a DONE (2). maps-b9
-  fixed scheduleCopy.withTrains in ja/zh-TW (they read it as per hour; it is trains on the line) and its context
-  note. **occ-tw-4** running; then occ-tw-4 for both halves, then commit.
-- **farescale** (Opus): T-2668 fares by country: evidence vs ^0.7, Tijuana breakdown, value-of-time exponent too
-  (Anita: "lower the money/time ratio scaling with income too"); proposal to Anita, no changes. Ids T-2669-70.
-Translation unit 4 (game = 4a ~407 keys; map + workers + ui leftovers + clockWorker = 4b ~314; scratch unit4.md,
-back-brief.md, review-brief.md + review4.md): all translated and merged. Reviewing: **rev-hans-4a, rev-hans-4b,
-rev-tw-4a, rev-tw-4b**; back-translating **back-ja-4a, back-ja-4b** -> then rev-ja-4a, rev-ja-4b (review4.md; rev-ja-4b
-also fixes unit 1's ja demandSelector.trackTraffic 本数 / trackTrafficTip, a meaning error: thickness = riders; fix
-guide.traffic with it). achievements.* and guide.* are 4b reviewers' only. Then zh-TW opencc pass for unit 4 (one
-agent, like occ-tw-3), commit, and pass 5 screenshots for all units (checks/l10n-shots.mjs). After that: the swept
-files (EditNote, editNote/profitEstimate, lineFigures/editCap after capview, diagram/ after borders2+dianames; T-2643
-leftovers) need stage 1 then translation; T-2655 code faults (list on its TASKS line) need a code agent.
+## In flight (maps-b9's agents; SendMessage by Agent id; trees under .tw-trees/)
+- **ridersnow** (Opus, tree): T-2658 riders as settled 0 / "0 gain" while solving. Cause found: lineFigures clears
+  pending labels on demandUpdating=false for one tick before flush sends the held edit; fix = results carry the network
+  world version, settle only from a later result. Touches game/lineFigures.ts (capview holds it: merge at landing),
+  editNote.ts, demandClient.ts, demand.ts, today.ts, schedule.tsx, LinesTab.tsx. ~310k tokens: retire after landing.
+- **marey** (Opus, tree): T-2660 timetable chart other lines + flat junctions; T-2665 dense charts span + wheel zoom.
+- **westleft** (Sonnet, tree): T-2661 west end left (helper game/northUp.ts); marey uses it after landing.
+- **riderspace** (Sonnet, tree): T-2664 riders block tighter + T-2673 build menu "Regular/High speed" 1px.
+- **attract2** (Sonnet, tree): T-2666 attraction classes + 2 km reach (Wikidata refetch).
+- **searchleaf** (Opus, tree): T-2652 leaf stations in kernel/search.rs (Japan searches 1.4x+, exact).
+- **fartable** (Sonnet, tree): T-2653 far-zone table by zone (intercity/pass.rs, api.rs; spreading 3x+, bit-exact).
+  Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
+- **l10nfix** (Opus, tree): T-2655 code that pieces English (list on its TASKS line); its changed keys need a short
+  review pass in the three languages after landing.
 
-## Translation status (16:30)
-- **All 2124 English messages translated and reviewed in ja, zh-Hans, zh-TW** (units 1-4, last commit 70bd30cb).
-- **l10nfix** (Opus, tree .tw-trees/l10nfix): T-2655 code that pieces English (list on its TASKS line). Its changed
-  keys need a quick review pass after landing. Still to do: pass 5 screenshots (checks/l10n-shots.mjs) per language;
-  T-2643 swept files (EditNote/editNote/profitEstimate after ridersnow; lineFigures/editCap after capview+ridersnow;
-  diagram/ after borders2+dianames), then their translation; then OFFERED in i18n/intl.ts on Anita's release word.
-
-## Waiting on Anita
-- Fares by country (T-2668/T-2669/T-2670): Anita ~16:45 disagrees in principle with ^0.7 fares; wants simple costs,
-  no construction scaling; asked "perhaps we could use a 0.5x scale throughout? for fares, costs, and upkeep, and
-  value of time? or maybe even weaker for costs and upkeep?" and upkeep shown as multiples ("1.50x upkeep") not
-  $/km/day. farescale resumed to measure her options + answer "is upkeep mostly labor?" (notes/T-2668.md section 6).
-- Diagram names: she likes the West Coast view (keep busiest-first). T-2673 build menu text 1px high -> riderspace.
-- T-2667: fill thin countries with OSM tourism places (changes demand). attract recommended yes. notes/T-2663.md.
-- T-2668 proposal when farescale reports.
-- Strings shown, no answer yet = fine: the demand-stopped notice ("Demand stopped, so the game is paused. Reload the
-  page to start it again." / "Reload page"), held trains "1,234 trains held out of service", plurals (1 station,
-  1 line, 1 car, 1 other place, buses).
+## Waiting on Anita (asked ~16:20)
+- Fares by country (notes/T-2668.md, "For Anita" round 2): option **N** = fares, value of time and train running costs
+  all at income^0.5; upkeep, construction, trains at world prices (busy Tijuana -$10.3M -> +$7.1M a game day; every
+  city breaks even at 4.6 riders a car; riders inside cities and NY unchanged; regional market's long trips shift some
+  rail -> air/car in poor countries: measure before landing). Or O (running costs 0.3). Upkeep shown as multiples:
+  base ground track 1x or the construction chip's base (maps-b9 leans to the chip's base). T-2669 (costs, money only),
+  T-2670 (fares + value of time, demand change) are written for N.
+- T-2667: OSM tourism places for thin countries (changes demand); recommended yes (notes/T-2663.md).
+- Strings shown, no answer = fine: demand-stopped notice, held trains "1,234 trains held out of service", plurals.
 
 ## Next
-1. Land trees as they report (mine and maps-93's four). Commit records and translations by path.
-2. When the agents have finished (Anita's word), smoke master, rebuild 8800, smoke light/dark, tell her to reload.
-3. Finish unit 4 (ja reviews, zh-TW opencc), then screenshots pass, then swept files + T-2655.
-4. Relay farescale's proposal; start T-2642 build stages from searchcost's design.
+1. Land trees as they report; commit records by path; show Anita strings and pictures (copy to artifacts/trainworld/review/).
+2. When the agents have finished, smoke master, rebuild 8800, smoke light/dark, tell Anita to reload.
+3. Localization left: l10nfix landing + review of its keys; pass 5 screenshots (checks/l10n-shots.mjs) per language;
+   T-2643 swept files (EditNote/editNote/profitEstimate after ridersnow; lineFigures/editCap after capview+ridersnow;
+   diagram/ after borders2) then their translation; OFFERED on Anita's release word.
+4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free).
+   (Brazil, pack lock free). Next unassigned id **T-2674**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
