@@ -71,10 +71,33 @@ language with its job.
 
 ## Choosing a language
 
-The game shows English. `setLanguage(lang)` fetches that language's messages, then sets `language` and
-`<html lang>`. The URL switch `?lang=<code>` does the same at startup, and `?lang=pseudo` shows every message
-in ⟦ ⟧ over the English, so text still inline stands out on screen. A Language row in Settings and the first
-visit's pick from the browser come with the first translations (stage 2).
+`setLanguage(lang)` fetches that language's messages, then sets `language` and `<html lang>` (`en`, `ja`,
+`zh-Hans`, `zh-TW`), and asks canvas text to be measured again (`tw-fontchange`). At startup the language is,
+in order: `?lang=<code>` in the address (not remembered), the player's pick on this device (localStorage
+`trainworld-lang`), the first of `navigator.languages` that is offered (`zh-TW`, `zh-HK`, `zh-MO` and any
+`zh-Hant` give zh-TW, other `zh` zh-Hans; English ranked first keeps English), else English. `?lang=pseudo`
+shows every message in ⟦ ⟧ over the English, so text still inline stands out on screen.
+
+**Offered languages** are `OFFERED` in `i18n/intl.ts`: English alone until a translation is released
+(below). Settings shows the Language row (`ui/SettingsTab.tsx`, under the icon buttons) once `OFFERED` has
+two languages, or whenever the address has `?lang=`, which lists all of `PICKER` (English, 日本語, 简体中文,
+繁體中文 (台灣)) so translations can be seen before release. Each language is listed by its own name
+(`LANG_NAMES`, never translated); the globe icon's hover names the row and says that languages other than
+English are translated by AI. A pick is remembered on this device.
+
+## Fonts
+
+`--font` (`ui/style.css`) follows `<html lang>`: Nunito first everywhere, so Latin letters and digits, and so
+tabular figures, are the same in every language; then the language's own face. Japanese: Zen Maru Gothic
+(`ui/zenmaru.css`). Traditional Chinese: Huninn (jf open-huninn, rounded like Zen Maru, SIL OFL; Google Fonts'
+111 woff2 slices self-hosted in `public/fonts/Huninn-400-*.woff2`, 2.5 MB in all, `i18n/huninn.css`; a page
+loads only the slices its text uses), then PingFang TC, Microsoft JhengHei, Noto Sans TC. Simplified Chinese:
+the system's face (PingFang SC, Microsoft YaHei, Noto Sans SC), since no rounded Simplified face is free to
+host. Chinese never falls into Zen Maru, which lacks a third of common Simplified hanzi and draws Japanese
+glyph shapes. In Japanese and Chinese the page sets `text-autospace` (the small gap between hanzi or kana
+and Latin letters or digits, so messages carry no space for it); Japanese lines break between phrases
+(`word-break: auto-phrase`). The line height is the page's fixed 1.45 in every language. MapLibre's own CJK
+labels (`localIdeographFontFamily`) are not yet set per language (T-2586).
 
 ## The check
 
@@ -89,5 +112,80 @@ count reaching zero, `i18n-ignore` aside, is stage 1 done.
 
 ## Translating
 
-A translation agent writes `messages/<lang>.json` and, for each key, the English it translated into
-`sources/<lang>.json`, following `glossary.json`; the review passes are in `research/localization.md` 5.
+Claude translates and reviews; nobody else reads the result, so each unit of work goes through passes by
+different agents (the reasons: `research/localization.md` 5). The tools are `checks/l10n.mjs` (its header lists
+the commands), `checks/i18n.mjs` (faults) and `checks/l10n-shots.mjs` (screenshots).
+
+**Units.** One language and one scope: `--folder <dir under app/src>` (the keys of that folder's files, `.` for the
+root), or `--keys <prefix,...>` to split a big folder or take the keys no file is named after (`common.`).
+`l10n.mjs status` lists keys, words and progress per folder; a unit of 150-400 keys suits one translator. Each
+language's files are shared: `merge` takes a lock and writes through a temp file, so translators of one language
+work at once on different scopes. zh-TW is translated from the English like the others, never converted from
+zh-Hans. Every agent works in its own scratch folder and never edits `messages/` or `sources/` by hand.
+
+**Pass 1, translate** (an Opus agent per unit; a wrong meaning here is quiet):
+1. `node trainworld/checks/l10n.mjs batch <lang> <scope> --out <scratch>/batch.json`: each key still to do (new,
+   or `was` and `wasFrom` when the English has changed since) with its English, note and glossary terms.
+2. Write `<scratch>/tr.json`, `{ "key": "translation" }`, following the style below, one panel's keys together
+   so they agree. A string you doubt goes in `<scratch>/doubts.md` with why, for the review.
+3. `node trainworld/checks/l10n.mjs merge <lang> <scratch>/tr.json`; fix every fault it prints and merge again.
+4. `node trainworld/checks/l10n.mjs lint <lang> <scope>` (Chinese also `--opencc <dir>`); fix each warning or
+   leave it with a reason in doubts.md.
+
+**Pass 2, back-translate** (a fresh agent, Sonnet is enough): `l10n.mjs back <lang> <scope> --out
+<scratch>/back-in.json` gives each key and its translation only. Prompt: "Translate each `text` into plain
+English as literally as the meaning allows, keeping `{placeholders}` and ICU syntax as they are; the key names
+where it shows. Do not open en.json, context.json, glossary.json or any batch file. Write `{ key: English }` to
+<scratch>/back.json."
+
+**Pass 3, review** (a fresh Opus agent that did not translate): `l10n.mjs compare <lang> <scratch>/back.json
+<scope> --out <scratch>/compare.json` gives each key's English, note, translation and back-translation. Prompt:
+"For each key, compare the back-translation with the English and list every change of meaning: a lost or added
+not, a number or unit changed, per day read as a day ago, the wrong subject or object, a cost read as a profit,
+a select option or plural branch that says something else, a glossary term rendered otherwise. Then read each
+panel's translations together, as a native player of a rail game would, and rewrite whatever is stiff,
+machine-made or inconsistent between neighbouring keys, following the style rules in docs/localization.md. Write
+fixes as `{ key: translation }` to <scratch>/fix.json, merge them (`l10n.mjs merge`), run lint, and report each
+meaning error found and each rewrite with a few words why." Meaning errors go back into the review's report for
+the orchestrator; a unit with more than a few is translated again by a fresh Pass 1 agent.
+
+**Pass 4, cross-checks** (the reviewer, at the end): `l10n.mjs lint` clean or explained; for zh-TW once the
+same scope's zh-Hans is reviewed, `l10n.mjs opencc <scope> --opencc <dir>` and a look at each difference (most are
+Taiwan words, 月台 against 站台; the rest is a slip in one of the two).
+
+**Pass 5, screenshots** (the reviewer, on its own Vite after claiming cores): `node trainworld/checks/l10n-shots.mjs
+http://localhost:<port>/ <artifacts>/trainworld/<agent>/ --langs en,<lang> --tabs <the scope's tabs>`, then a
+look for clipped or wrapped labels, English left, mixed fonts and boxes for missing glyphs. It prints rows
+taller than English's and buttons whose text is clipped. Fixes to wording go through merge; layout fixes are
+the orchestrator's to hand out.
+
+OpenCC for `--opencc`: `npm install --prefix <scratch>/opencc opencc-js`, then pass
+`<scratch>/opencc/node_modules/opencc-js`.
+
+**Style.** The English's voice in every language: plain, short, a little cute, never a pitch.
+- Glossary first: the first rendering of each term, unless the term's notes say otherwise; trips and rides stay
+  apart. A rendering that reads wrong in one message is a doubt for the review, not a quiet change.
+- Keep every `{placeholder}`, select option and plural; Japanese and Chinese have only `other` (`{count,
+  plural, other {#駅}}`). Placeholder values are already formatted (numbers, money, distances) and names come
+  from the data in their own language: write around them.
+- No space between hanzi or kana and Latin letters, digits or a placeholder (the page adds the gap). Full-width
+  punctuation in Japanese and Chinese (、。，！？：；（）); ASCII digits. Periods only on full sentences, as in
+  the English; labels and hovers that are phrases end bare.
+- Japanese: labels and buttons as plain nouns or short verb phrases (撤去, 線路を削除); full sentences in
+  です・ます; katakana only where Japanese players use it; never 〜することができます.
+- Chinese: short and plain; 你 or no pronoun, never 您; no 赋能, 无缝, 沉浸式. zh-Hans is mainland usage, zh-TW
+  Taiwan's (捷運, 公車, 月台, 轉乘, 預設, 載入, 背景執行).
+- Narrow places (the note says button, segmented, short or narrow): no longer than the English looks; lint
+  flags them.
+
+**Splitting the whole UI.** About 2,400 keys and 10,000 English words, in five scopes of 300-600 keys: `ui`
+A-L and L-Z (`--keys` lists), `ui/inspector`, `game`, `map` with `workers`, `diagram` and the root, and
+`common`. That is 15 units for three languages. Agents of one language translate different scopes at once;
+reviewers start on a unit once its translation is merged. Back-translation, review and screenshots of a unit
+can run while its language's next unit is being translated.
+
+**Releasing a language**: once `l10n.mjs status <lang>` shows every key done and none stale, and every unit's
+review is in, add the language to `OFFERED` (`i18n/intl.ts`). Every English string added or changed after that
+shows as stale (`checks/i18n.mjs --stale`) and shows in English until a batch (`batch` picks the stale keys,
+with their old translation and old English) goes through passes 1 to 3 again; the orchestrator runs one before
+each deploy.

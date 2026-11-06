@@ -558,7 +558,10 @@ dismissed, and the map and tools are blocked meanwhile.
 `ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
-"Logged in as alice" or "Not logged in" [T-1728]; Demand bubbles, first the Day choice (Average, Weekday, Sat, Sun;
+"Logged in as alice" or "Not logged in" [T-1728]; then, once a language besides English is offered (or with `?lang=` in
+the address), the Language row: a globe icon (hover "Language" over "Languages other than English are translated by AI")
+and a select of the languages each in its own name, remembered on this device ([localization.md](localization.md)
+"Choosing a language") [T-2636]; Demand bubbles, first the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], under this heading since it sets the day of every demand figure [T-2345], then the Purpose
 choice (the map's purpose filter, the same list as the one on the map's demand row, which phones do not show; T-2548), then three sliders: Size
 (0.25-2x, [T-099, T-2271]; the radius is the slider times `BUBBLE_BASE`, 0.75, so 1x is the old 0.75x, T-1852), Opacity (20-100% of the built alpha, default 70%, [T-470, T-1726]; for the

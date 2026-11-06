@@ -7,6 +7,33 @@ export const LANGS = ["en", "ja", "zh-Hans", "zh-TW", "es", "de"] as const;
 export type Lang = (typeof LANGS)[number];
 export const isLang = (s: string): s is Lang => (LANGS as readonly string[]).includes(s);
 
+/** The languages a player is offered: the Language row's list, and what a first visit may pick from the
+ * browser. A language joins once its translation is complete and reviewed (docs/localization.md
+ * "Releasing a language"); `?lang=<code>` opens any language and lists all of `PICKER` (T-2636). */
+export const OFFERED: readonly Lang[] = ["en"];
+/** The Language row's list when previewing, in this order. */
+export const PICKER: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW"];
+
+/** Each language's name in itself, as the Language row lists it; never translated. */
+export const LANG_NAMES: Record<Lang, string> = { en: "English", ja: "日本語", "zh-Hans": "简体中文", "zh-TW": "繁體中文 (台灣)", es: "Español", de: "Deutsch" };
+
+/** The game's language for a BCP 47 tag from the browser ("zh-HK" -> zh-TW, "zh-CN" -> zh-Hans), or null. */
+export function langOfTag(tag: string): Lang | null {
+  const [base, ...rest] = tag.toLowerCase().split(/[-_]/);
+  if (base === "zh") return rest.some((s) => s === "hant" || s === "tw" || s === "hk" || s === "mo") ? "zh-TW" : "zh-Hans";
+  return base && isLang(base) ? base : null;
+}
+
+/** The first of the browser's languages that is offered, else English. An offered English ahead of
+ * another language wins, as the player ranked it. */
+export function langOfBrowser(tags: readonly string[], offered: readonly Lang[] = OFFERED): Lang {
+  for (const tag of tags) {
+    const l = langOfTag(tag);
+    if (l && offered.includes(l)) return l;
+  }
+  return "en";
+}
+
 /** The Intl locale for a language. English numbers are en-US's, as the game always wrote them; English
  * lists are en-GB's, "a, b and c" with no comma before the "and". */
 function locale(lang: Lang, purpose: "number" | "list" | "date"): string {
@@ -50,10 +77,4 @@ export function countryName(lang: Lang, code: string): string {
   } catch {
     return code;
   }
-}
-
-/** A language's own name for itself ("日本語", "简体中文"), for the language picker. */
-export function languageName(lang: Lang): string {
-  const f = cached(`g|${lang}`, () => new Intl.DisplayNames([lang], { type: "language" }));
-  return f.of(lang) ?? lang;
 }

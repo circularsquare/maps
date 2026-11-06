@@ -6,16 +6,18 @@ import { signal } from "@preact/signals";
 import type { ComponentChild, ComponentChildren } from "preact";
 import IntlMessageFormat from "intl-messageformat";
 import en from "./messages/en.json";
-import { countryName, formatDate, formatList, formatNumber, isLang, type Lang } from "./intl";
+import { countryName, formatDate, formatList, formatNumber, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
+// each language's font faces; a face downloads only once text in its language needs it (T-2636)
+import "./huninn.css";
 
-export { LANGS, isLang, languageName, type Lang } from "./intl";
+export { LANGS, LANG_NAMES, isLang, type Lang } from "./intl";
 
 export type MessageKey = keyof typeof en;
 type Primitive = string | number | boolean | null | undefined;
 export type Values = Record<string, Primitive>;
 export type RichValues = Record<string, Primitive | ComponentChild>;
 
-/** The language shown. English until the player picks another (stage 2), or `?lang=` for checks. */
+/** The language shown: `?lang=`, else the player's pick on this device, else the browser's if offered. */
 export const language = signal<Lang>("en");
 /** `?lang=pseudo`: every message in ⟦ ⟧ over English, so text still written inline shows on screen. */
 const pseudo = signal(false);
@@ -32,7 +34,11 @@ export async function setLanguage(lang: Lang): Promise<void> {
     catalogs.set(lang, await load());
   }
   language.value = lang;
-  if (typeof document !== "undefined") document.documentElement.lang = lang;
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = lang;
+    // the page font follows <html lang> (style.css), so canvas text measured in the old one is measured again
+    void document.fonts?.ready.then(() => document.dispatchEvent(new Event("tw-fontchange")));
+  }
 }
 
 // a message with no argument and no quote is its own output, so most never reach the parser
@@ -86,8 +92,35 @@ export const tList = (items: string[], type?: "and" | "or") => formatList(langua
 export const tDate = (d: Date | number, opts?: Intl.DateTimeFormatOptions) => formatDate(language.value, d, opts);
 export const tCountry = (code: string) => countryName(language.value, code);
 
+const STORE = "trainworld-lang";
+
+/** The Language row's choices: the offered languages, or every one being translated while `?lang=` is in
+ * the address (a preview, so translations can be looked at before they are offered). */
+export const pickable: readonly Lang[] = typeof location !== "undefined" && new URLSearchParams(location.search).has("lang") ? PICKER : OFFERED;
+
+/** The player's pick in the Language row, remembered on this device. */
+export function chooseLanguage(lang: Lang): Promise<void> {
+  try {
+    localStorage.setItem(STORE, lang);
+  } catch {
+    // storage refused (private mode): the pick lasts until the page closes
+  }
+  return setLanguage(lang);
+}
+
 if (typeof location !== "undefined") {
   const q = new URLSearchParams(location.search).get("lang");
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(STORE);
+  } catch {
+    // no storage: the browser's language decides
+  }
   if (q === "pseudo") pseudo.value = true;
   else if (q && isLang(q)) void setLanguage(q);
+  else if (saved && isLang(saved)) void setLanguage(saved);
+  else {
+    const lang = langOfBrowser(typeof navigator !== "undefined" ? (navigator.languages ?? [navigator.language]) : []);
+    if (lang !== "en") void setLanguage(lang);
+  }
 }

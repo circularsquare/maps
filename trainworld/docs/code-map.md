@@ -364,6 +364,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - `i18n.mjs [--no-scan] [--list <folder>] [--stale]`: the message files' check, then the count of player text
   still inline in `app/src` per folder (T-2583, docs/localization.md "The check"); about 2 s, no browser, in
   smoke. Exit 1 only on a fault in the message files.
+- `l10n.mjs status|batch|merge|back|compare|lint|opencc`: the translation workflow's steps (T-2636,
+  docs/localization.md "Translating"); `merge` is the only way translations are written. No browser.
+- `l10n-shots.mjs <url> <out> [--langs] [--tabs] [--ask <key>]`: dock tabs (and a confirm dialog) in each
+  language, with rows taller than English's and clipped buttons listed (T-2636).
 - `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
   in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
   profile from `tempProfile`, deleted by its `close()` and, if the check never gets there, at process

@@ -247,7 +247,14 @@ function scan({ parseAst }) {
       row.sites++;
       if (listDir && file.startsWith(listDir)) listed.push(`${file}:${ln} ${text.replace(/\s+/g, " ").slice(0, 140)}`);
     };
-    const attrOf = (anc) => { for (let i = anc.length - 1; i >= Math.max(0, anc.length - 6); i--) if (anc[i].type === "JSXAttribute") return anc[i].name?.name?.name ?? anc[i].name?.name; return null; };
+    // a literal inside a handler (onClick={() => ask({ text: "..." })}) is the function's, not the attribute's
+    const attrOf = (anc) => {
+      for (let i = anc.length - 1; i >= Math.max(0, anc.length - 6); i--) {
+        if (/Function/.test(anc[i].type)) return null;
+        if (anc[i].type === "JSXAttribute") return anc[i].name?.name?.name ?? anc[i].name?.name;
+      }
+      return null;
+    };
     const visit = (node, parent, key, anc) => {
       if (!node || typeof node.type !== "string") return;
       const codeCtx = () => {
