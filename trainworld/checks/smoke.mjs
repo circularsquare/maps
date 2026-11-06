@@ -261,7 +261,7 @@ try {
   // T-1213: Chrome profiles an older check left in the temp folder (23.9 GB once filled the disk)
   const stale = await staleTempProfiles();
   if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
-  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types']]) {
+  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types']]) {
     const [file, ...flags] = [f].flat();
     const r = await runNode(file, flags);
     report(file.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));

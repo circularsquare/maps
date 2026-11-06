@@ -1,0 +1,16 @@
+{
+  "remove.question": "The question before removing something constructed or something that changes a line (game/remove.ts). what: a remove.* phrase such as \"the built station Canal St\" or \"1.2 km of track\"; built: true when constructed.",
+  "remove.questionBig": "The question before deleting a lot of track at once. what: \"48.0 km of track\" (remove.track); built: true when constructed.",
+  "remove.yes": "Button in the remove question.",
+  "remove.no": "Button in the remove question that cancels.",
+  "remove.yesBig": "Button in the big delete question.",
+  "remove.noBig": "Button in the big delete question that cancels.",
+  "remove.crossover": "A noun phrase for remove.question and remove.done. built: true when constructed.",
+  "remove.track": "A noun phrase for remove.question and remove.done. length: \"1.2 km\" or \"0.75 mi\"; built: true when constructed.",
+  "remove.building": "A noun phrase for remove.question and remove.done. name: the station building's name, \"Canal St\".",
+  "remove.station": "A noun phrase for remove.question and remove.done. name: the station's name, \"Canal St\"; built: true when constructed.",
+  "remove.flyover": "A noun phrase for remove.question and remove.done. built: true when constructed.",
+  "remove.someStation": "Stands in for a station with no name in remove.lineEffect's list.",
+  "remove.lineEffect": "A row under the remove question, one per line affected. effect: lose (loses stops), stop (its route breaks) or both; line: the line's name, \"Line 4\"; count: how many stops it loses; stations: their names as a list, \"Canal St and Spring St\".",
+  "remove.done": "The notice after a removal. what: a remove.* phrase such as \"the flyover\"."
+}

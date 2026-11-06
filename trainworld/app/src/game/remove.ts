@@ -7,7 +7,8 @@
 
 import { queryClock } from "../workers/clockClient";
 import type { EditOp } from "../workers/protocol";
-import { andList, bigDistance, distance } from "./format";
+import { t, tList } from "../i18n";
+import { bigDistance, distance } from "./format";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
@@ -42,8 +43,8 @@ export function isBigDelete(lengthM: number): boolean {
 
 /** The question for a delete: a big one says how much goes. */
 export function removeQuestion(what: string, built: boolean, big: boolean): { text: string; yes: string; no: string } {
-  if (!big) return { text: `Remove ${what}?${built ? " Nothing is refunded." : ""}`, yes: "Remove", no: "Keep" };
-  return { text: `Delete ${what}?${built ? " Nothing is refunded." : ""}`, yes: "Delete track", no: "Keep it" };
+  if (!big) return { text: t("remove.question", { what, built }), yes: t("remove.yes"), no: t("remove.no") };
+  return { text: t("remove.questionBig", { what, built }), yes: t("remove.yesBig"), no: t("remove.noBig") };
 }
 
 /** What would go, in words ("1.2 km of track", "W 42nd St station", "the flyover"), and whether
@@ -54,9 +55,9 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   if (r.kind === "track") {
     const e = w.edges.find((x) => x.id === r.edge);
     // a crossover goes as a whole, both diagonals (T-338)
-    if (e?.crossover) return { what: e.built ? "the built crossover" : "the crossover", built: e.built };
+    if (e?.crossover) return { what: t("remove.crossover", { built: e.built }), built: e.built };
     const [ka, kb] = stationTrim(r.edge);
-    return e ? { what: `${distance(e.lengthM - ka - kb)} of ${e.built ? "built " : ""}track`, built: e.built } : null;
+    return e ? { what: t("remove.track", { length: distance(e.lengthM - ka - kb), built: e.built }), built: e.built } : null;
   }
   if (r.kind === "bus") {
     const l = linesByNum(w).get(r.line), b = l ? w.lineStats[l.id]?.bus : undefined;
@@ -65,15 +66,15 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   }
   if (r.kind === "building") {
     const b = w.save.buildings?.find((x) => x.id === r.id);
-    return b ? { what: `the ${b.name} station building`, built: true } : null;
+    return b ? { what: t("remove.building", { name: b.name }), built: true } : null;
   }
   if (r.kind === "station") {
     const s = stationsByNum(w).get(r.node);
-    return s ? { what: `${s.built ? "the built station " : ""}${s.name}${s.built ? "" : " station"}`, built: s.built } : null;
+    return s ? { what: t("remove.station", { name: s.name, built: s.built }), built: s.built } : null;
   }
   const n = w.nodes.get(r.node);
   const built = (n?.builtPorts ?? 0) >= 3;
-  return n?.flying ? { what: built ? "the built flyover" : "the flyover", built } : null;
+  return n?.flying ? { what: t("remove.flyover", { built }), built } : null;
 }
 
 /** What removing these does to lines (T-859), from the track model's trial of it: a row per line
@@ -88,10 +89,11 @@ export async function lineEffects(edges: number[], stations: number[]): Promise<
   for (let k = 0; k + 2 < d.length; k += 3) {
     const l = lineOf.get(d[k]);
     if (!l) continue;
-    const lost = [...new Set(l.stops.map(Number).filter((s) => gone.has(s)))].map((s) => byNum.get(s)?.name ?? "a station");
-    const loses = d[k + 1] && lost.length ? `lose its ${lost.length === 1 ? "stop" : "stops"} at ${andList(lost)}` : "";
-    const stops = d[k + 2] ? "stop running until you fix its route" : "";
-    out.push({ line: l.num, text: `${l.name} will ${[loses, stops].filter(Boolean).join(" and ")}.` });
+    const lost = [...new Set(l.stops.map(Number).filter((s) => gone.has(s)))].map((s) => byNum.get(s)?.name ?? t("remove.someStation"));
+    const loses = !!d[k + 1] && lost.length > 0, breaks = !!d[k + 2];
+    if (!loses && !breaks) continue;
+    const effect = loses && breaks ? "both" : loses ? "lose" : "stop";
+    out.push({ line: l.num, text: t("remove.lineEffect", { effect, line: l.name, count: lost.length, stations: tList(lost) }) });
   }
   return out;
 }
@@ -123,12 +125,12 @@ export async function removeThing(r: Removable) {
     const a = await edit(opOf(r));
     if (!a.ok) return;
     if (wasSelected) selection.value = null;
-    say(`Removed ${d.what}.`);
+    say(t("remove.done", { what: d.what }));
   };
   const lines = r.kind === "flyover" || r.kind === "bus" || r.kind === "building" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
   const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);
   if (!d.built && !lines.length && !big) return go();
-  ask.value = { ...removeQuestion(big ? `${bigDistance(e!.lengthM - ka - kb)} of ${d.built ? "built " : ""}track` : d.what, d.built, big), run: () => void go(), lines };
+  ask.value = { ...removeQuestion(big ? t("remove.track", { length: bigDistance(e!.lengthM - ka - kb), built: d.built }) : d.what, d.built, big), run: () => void go(), lines };
 }

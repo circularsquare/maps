@@ -144,6 +144,14 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Smaller modules: `capacityKinds.ts` (the words for each kind of capacity limit, for the map's dots, the Trouble list and the line panel's alert), `carryLoads.ts` (a line's riders per stretch carried onto an edited stop list, T-1419), `fareDefault.ts` (a country's default fares in round numbers, T-1662), `fonts.ts` (loads the Nunito faces; Zen Maru Gothic's slices are `ui/zenmaru.css`), `lineLetter.ts` (the chip text of a line with no symbol), `lineRunning.ts` (which lines have no trains at the level now, T-1792), `listScope.ts` (what the Lines and Stations tabs list: the viewed place or the world, and the sort by distance from the screen's centre, T-332), `playtime.ts` (the anonymous plays and playtime ping; `?track` and `?notrack`, T-1771), `splitTip.ts` (the hover of a mode split bar and the city view's split table), `today.ts` (the past 24 hours' riders, boardings and fares for the line and station panels, and the crowd grades, T-446, T-2236), `upgrades.ts` (the station upgrade bits, their texts and a passage's price, T-1281), `worldTotals.ts` (the world as one place: the cities' sums for the Cities tab's first row and the top bar when zoomed far out, T-1110).
 - The `WorldView` is built from the clock worker's states in `workers/clockClient.ts`.
 
+### src/i18n/: text by language (T-2583, docs/localization.md)
+
+`index.ts` (`t` and `tRich` over the ICU messages, the `language` signal, `setLanguage`, the `tNumber`,
+`tList`, `tDate`, `tCountry` helpers), `intl.ts` (`LANGS` and the cached `Intl` formatters by language,
+worker-safe), `messages/` (`en.json` bundled, the other languages fetched), `context.json` (a note per key),
+`glossary.json`, `sources/` (the English each translation was made from). `game/remove.ts` is the worked
+example.
+
 ### src/map/: the map and what is drawn on it
 
 - `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
@@ -306,7 +314,7 @@ hidden; checks that visit zones in every realm), `?patch=check|shiftcheck|0` (pa
 `?diagram=r2` (the diagram's round 2 layout options), `?rawdem=1` (the hillshade as it comes), `?logo=0` (no start menu logo),
 `?quietMs=N` (how long the loading card may hear nothing before the failure screen), `?keepMs=N` (the hour after which the keep dot appears), `?track` / `?notrack` (plays and playtime
 pings on or off, `game/playtime.ts`), and the start menu's `?city=<zone id>` and `?mode=sandbox` (with `?new=1`), `?slot=<key>` and
-`?load=file|restore|new`; `?perfOff=...` (CPU A/B switches, `src/perfFlags.ts`, which lists them; notes/T-045.md).
+`?load=file|restore|new`; `?lang=<code>|pseudo` (a language, or every message in ⟦ ⟧, `i18n/index.ts`, T-2583); `?perfOff=...` (CPU A/B switches, `src/perfFlags.ts`, which lists them; notes/T-045.md).
 
 ### Build
 
@@ -344,6 +352,9 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   `--since`) ARCHIVE or DECISIONS entries, empty TASKS headings, "Update:" paragraphs, over-long doc sections,
   dead names and key letters in the docs, `notes/` links that resolve nowhere (`--all-links` adds the docs and
   code comments). It is what keeps a fact from standing in two files.
+- `i18n.mjs [--no-scan] [--list <folder>] [--stale]`: the message files' check, then the count of player text
+  still inline in `app/src` per folder (T-2583, docs/localization.md "The check"); about 2 s, no browser, in
+  smoke. Exit 1 only on a fault in the message files.
 - `lib.mjs`: what the checks share, imported by every check that drives a browser or the worker
   in Node: `playwright()` (finds Playwright), `launchChrome` (headless Chrome on a throwaway
   profile from `tempProfile`, deleted by its `close()` and, if the check never gets there, at process

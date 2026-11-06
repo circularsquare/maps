@@ -1,0 +1,16 @@
+{
+  "remove.question": "{built, select, true {Remove {what}? Nothing is refunded.} other {Remove {what}?}}",
+  "remove.questionBig": "{built, select, true {Delete {what}? Nothing is refunded.} other {Delete {what}?}}",
+  "remove.yes": "Remove",
+  "remove.no": "Keep",
+  "remove.yesBig": "Delete track",
+  "remove.noBig": "Keep it",
+  "remove.crossover": "{built, select, true {the built crossover} other {the crossover}}",
+  "remove.track": "{built, select, true {{length} of built track} other {{length} of track}}",
+  "remove.building": "the {name} station building",
+  "remove.station": "{built, select, true {the built station {name}} other {{name} station}}",
+  "remove.flyover": "{built, select, true {the built flyover} other {the flyover}}",
+  "remove.someStation": "a station",
+  "remove.lineEffect": "{effect, select, lose {{line} will lose its {count, plural, one {stop} other {stops}} at {stations}.} stop {{line} will stop running until you fix its route.} other {{line} will lose its {count, plural, one {stop} other {stops}} at {stations} and stop running until you fix its route.}}",
+  "remove.done": "Removed {what}."
+}
