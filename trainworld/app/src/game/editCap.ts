@@ -11,6 +11,10 @@ import { DEMAND_INDEX, type LineInput, type LineStats, type WorldView } from "./
 
 /** Edits since demand last settled, all quiet: the update they start does not cap the clock */
 export const quietEdits = signal(false);
+/** T-2622: a loud edit changed something no line's riders follow (fares, a station link or building, a
+ * line removed or stopped running, an undo): it caps until a whole solve's final covers it (`wideCovered`), not when any
+ * update ends, since one the camera started (a rough solve) can end before the edit's own begins */
+export const wideEdits = signal(false);
 /** bumped by every edit noted (lineFigures forgets a stale state after a wait) */
 export const editStamp = signal(0);
 
@@ -23,6 +27,16 @@ export function resetEdits() {
   loud = false;
   baseline.clear();
   quietEdits.value = false;
+}
+
+/** Every edit has a final again, or nothing came of the edits. */
+export function wideCovered() {
+  wideEdits.value = false;
+}
+
+/** A running line stopped running or went (its trains all set to 0, its track broken): no label follows it. */
+export function lineStopped() {
+  wideEdits.value = true;
 }
 
 /** A change under half of the old value; from 0 or to 0 it is never small. */
@@ -75,6 +89,9 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
 
 /** Ops that change nothing demand reads. */
 const NEUTRAL = new Set(["lineLook", "lineGroup", "groupName", "groupLook", "borrow", "repay"]);
+/** T-2622: ops whose demand change shows on no running line's stops, trains, cars or times, so no line
+ * reads "loading..." for it (lineFigures.ts `linesPending`); every other op's does */
+const WIDE = new Set(["fares", "fareScale", "fareHsr", "fareFerry", "fareTransfer", "removeLine", "link", "addBuilding", "reshapeBuilding", "removeBuilding", "undo", "redo"]);
 
 /** The last edit noted, read when `editStamp` moves (game/editNote.ts, T-2125). */
 export let lastEdit: EditOp | null = null;
@@ -83,7 +100,10 @@ export let lastEdit: EditOp | null = null;
 export function noteEdit(op: EditOp, w: WorldView | null) {
   if (NEUTRAL.has(op.op)) return;
   lastEdit = op;
-  if (!w || !isQuiet(op, w)) loud = true;
+  if (!w || !isQuiet(op, w)) {
+    loud = true;
+    if (WIDE.has(op.op)) wideEdits.value = true;
+  }
   quietEdits.value = !loud;
   editStamp.value++;
 }

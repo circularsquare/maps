@@ -121,8 +121,8 @@ purpose filter the purpose drawn is ringed in the bar.
   gives the real figure.
   **A line whose riders are being worked out again after an edit** keeps its old riders figure
   with a small label above it [T-2392]: "constructing..." for a line that has just started running
-  (its blueprint constructed, or new), "loading..." for one already running whose stops or service
-  changed (a train count, say). With no old figure the label stands alone. A group's row takes the
+  (its blueprint constructed, or new), "loading..." for one already running whose stops, service or
+  times changed (a train count, say, or track moved under it [T-2622]). With no old figure the label stands alone. A group's row takes the
   label of its lines, "constructing..." first. The line inspector's counts block keeps its old
   figures too, the label at the right of its heading and the purpose split hidden. The label stays
   until the riders that count the change land: its cluster's local result after the

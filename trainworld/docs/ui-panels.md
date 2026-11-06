@@ -185,8 +185,10 @@ wide so a longer date moves nothing [T-1868].
   since that takes much longer on a big game than the zone in view alone [T-1904], except while a
   game's load solves the zone in view on its own first, which says "Trips here being recomputed…"
   [T-2045]; it goes once the zone in view's figures are final, though other zones still solve
-  [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The clock cap (below) follows the same rule, so the cap lifts at that
-  moment too. While capped, the tag's hover says "Time capped at 4x while updating demand".
+  [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The tag
+  shows all the while the clock is capped (below): when the zone in view is final and the cap still
+  holds for an edit, it says **"Calculating trips after your change…"** [T-2622]. While capped, the
+  tag's hover says "Time capped at 4x while updating demand".
   **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
   day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while
   some figures in play still miss it: a line reading "constructing..." or "loading...", or the zone
@@ -267,20 +269,27 @@ wide so a longer date moves nothing [T-1868].
   speeds (1x, 4x, 16x; hovers "Normal speed", "4x speed", "16x speed" [T-1800]). **Double-click the 16x button** for a slider of 0.5x to 100x [T-1664]
   (18 round stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye); the speed picked shows
   as text on that button and stays until another speed button is pressed (not saved with the game).
-  **While demand is being worked out** (a solve running, a load going, the zone in view shown rough)
-  the clock runs no faster than 4x [T-1665, `game/lineFigures.ts`]: the chosen speed's button is dimmed,
+  **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
+  `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders
+  again (each reads "loading..." or "constructing..." meanwhile: its cluster's local result, or the
+  solve's end), and after an edit no line's riders follow (fares, a station link or building, a line
+  removed or stopped running, an undo), until the whole solve's final; and while a load the network waits on is going
+  (a game's, a zone a station has just reached). The rule is the same wherever the camera is
+  [T-2622]: nothing the view alone starts caps (a pack opened on a pan, the zone in view refined from
+  rough, the zone in view solved first), and nor does a whole solve with no edit in it (a load's after
+  the clock starts, a cached result's network solved again). The chosen speed's button is dimmed,
   its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
-  the cap lifts by itself when demand is final; the status tag shows all the while it holds [T-1790].
+  the cap lifts by itself; the status tag shows all the while it holds [T-1790].
   A new line with no riders yet ("constructing...", running trains that cost and earn nothing) holds
-  the cap wherever it is, in view or not, until its riders land [T-2409]. The cap is never lower
+  the cap until its riders land, after quiet edits too [T-2409]. The cap is never lower
   than 4x (Anita, 2026-11-04).
   Demand that stopped (its notice) caps nothing. **A quiet edit does not cap** [T-1803,
   `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
   less than half of what it was (counted from before the edits since demand last settled, in trains
   for a count and trains an hour for a headway; from or to 0 is never small), or a stop edit on a line
   with no trains at any level. The status still shows "Trips here being recomputed…" (or the cities form) meanwhile, its hover without
-  the clock line. One edit that would cap holds the clock until demand settles; every other edit
-  (track, stations, new lines, train length or type, fares, undo) caps as before. **Space** pauses and resumes at the speed that was running, even with a button focused.
+  the clock line. One edit that would cap among quiet ones caps for them all; every other edit
+  (track, stations, new lines, train length or type, fares, undo) caps as above. **Space** pauses and resumes at the speed that was running, even with a button focused.
   **A new game starts paused** [T-2142, `pauseNewGame` in `main.ts`], a sandbox and a real network's
   too (from the start menu or the saves panel; a `?new=1` page runs as before); a saved game opens running.
   While the tab is hidden the clock stops, unless "Run in background" is on (Settings), when it runs
@@ -1110,8 +1119,8 @@ registry centre and zoom, or over New York with none [T-310].
   same network, packs and build) holds the clock only until that network is in, the result shown
   and the zone in view with figures [T-2560]: its figures are that network's final, so the game
   plays on them while the workers solve the same network again. The status tag then says "Trips in 81 cities being recomputed…"
-  and the clock is capped, until the zone in view's cluster has its fresh final (the tag's own rule
-  in "Status and busy tags"). Zones still solving then show their own loading bar and grey ("A zone still loading
+  until the zone in view's cluster has its fresh final (the tag's own rule in "Status and busy
+  tags"); the clock is not capped for it [T-2622]. Zones still solving then show their own loading bar and grey ("A zone still loading
   is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
   greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
   middle of the map names the stage in hand over a filling bar [T-1194]: "Loading" (the game itself,

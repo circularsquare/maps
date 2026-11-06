@@ -470,7 +470,7 @@ time, however big the save (holding the main pool's workers meanwhile settled th
 sooner and put the load's final much later, notes/T-2045.md). Each round shows as the zone's figures and its lines' (`onlyLines`):
 alone while nothing else is shown, else put in the shown result as a cluster solved ahead is, and
 the load's own estimates keep them wherever the focus solve is as far on or done (`withFocus`). Its
-last round counts as final for the status tag and the clock cap (`focusZones`), not for the card or
+last round counts as final for the status tag (`focusZones`), not for the card or
 the held clock, which wait for the zone in view's own final (its cluster's, or the whole solve's),
 except where the city view's zone's cluster went ahead of it (T-2459, above). A zone newly in view during the load supersedes the
 solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.

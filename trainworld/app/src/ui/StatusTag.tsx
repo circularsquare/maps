@@ -119,7 +119,9 @@ export function StatusTag() {
     // T-1851: every case where the trips in view are rough, early, from before an edit or on their way
     // say one thing; once the zone in view is final, other zones still solving show nothing
     // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
-    : viewRecomputing.value ? recomputing() : null;
+    : viewRecomputing.value ? recomputing()
+    // T-2622: the clock capped for an edit whose figures elsewhere are not in, the zone in view final
+    : clock.capped.value ? "Calculating trips after your change…" : null;
   if (!busy) return null;
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
   const base = onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")

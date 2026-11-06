@@ -249,7 +249,7 @@ export const viewFinal = computed(() => {
 });
 
 /** T-1851: the trips shown for the zone in view are being recomputed (rough, early, from before an
- * edit, or its detailed solve on the way). It drives the status tag and the clock's cap together, and
+ * edit, or its detailed solve on the way). It drives the status tag (never the clock's cap, T-2622), and
  * is false once the zone in view is final while other zones still solve. */
 export const viewRecomputing = computed(() => !!refiningZone.value || !viewFinal.value || viewUpdating.value);
 
