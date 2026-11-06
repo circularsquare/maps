@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2613 Terrain downloads (2026-11-06, agent terrainnet, tree): status tag "Downloading terrain…" (grids, masks, hillshade tiles, after 1.5 s) and "Terrain could not load" with retries; Construct refused while ground under the blueprint failed to download, closing the flat-price cheat. notes/T-2613.md.
+- T-2614 A failed cloud save (2026-11-06, agent terrainnet, tree): the browser copy was always kept; now resent every minute even paused, and after 2 min the yellow dot says "Not on your account yet!" with the reason, a click saving by hand. notes/T-2613.md.
 - T-2611, T-2612, T-2615, T-2616, T-2617 (2026-11-06, agent uitodo): save panel buttons on the versions line's row at the right; grey actual headway dropped; diagram button a folded map; achievements City circles, Transfers world (hover adds "Now 0.56 transfers per trip"), Trains city; String of pearls added, Longest road 5,000 km.
 - T-2618 Upkeep against French rail, research (2026-11-06, agent costfr): game ground track is ~1/4 of French maintenance plus renewal (by T-867's design), stations ~1/2, tunnels ~1/7 of Paris RER; Sets A (realistic) and B (tunnels only) proposed, Anita decides. research/upkeep-france.md.
 - T-2608 Network diagram key M removed for release (2026-11-06, maps-93, Anita: "lets maybe remove the schematic map hotkey (m) for release and say like (work in progress) on the tooltip"): hover "Show network diagram (work in progress)", "Show map" back; the button and Esc remain.
