@@ -19,6 +19,10 @@ import { START_CASH } from "../workers/saveFile";
 import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { MoneyHistory } from "./MoneyHistory";
 import { ScopeToggle } from "./listParts";
+import { t, tCountry, tNumber } from "../i18n";
+
+/** two decimals, in the language's digits */
+const fix2 = (v: number) => tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.loan ?? 0) - d.trains - d.build;
 
@@ -30,7 +34,7 @@ function upkeepTip(m: MoneyState): string {
 /** The New trains row's hover once the network has buses or boats (T-1464, T-2194). */
 function vehiclesTip(m: MoneyState): string | undefined {
   const bus = m.fleetBus > 0 || m.busesNeeded > 0, boat = m.fleetFerry > 0 || m.boatsNeeded > 0;
-  return bus && boat ? "Cars, buses and boats bought" : bus ? "Cars and buses bought" : boat ? "Cars and boats bought" : undefined;
+  return bus && boat ? t("moneyTab.boughtAll") : bus ? t("moneyTab.boughtBuses") : boat ? t("moneyTab.boughtBoats") : undefined;
 }
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
@@ -45,7 +49,7 @@ function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | nu
 }
 
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
-const REGION_SPLIT = "A line's fares count where its riders board and travel, its running costs where its trains run. Construction and upkeep count where the track and stations are.";
+const regionSplit = () => t("moneyTab.regionSplit");
 
 /** T-1690: the country of the built station nearest the view's centre, null with none built. */
 function nearestBuilt(w: NonNullable<typeof world.value>): string | null {
@@ -80,31 +84,22 @@ function fareCountry(): string {
   return c ?? cityById(HOME_CITY).country ?? FARE_BASELINE;
 }
 
-let regionNames: Intl.DisplayNames | null = null;
-function countryName(iso: string): string {
-  try {
-    regionNames ??= new Intl.DisplayNames(["en"], { type: "region" });
-    return regionNames.of(iso) ?? iso;
-  } catch {
-    return iso;
-  }
-}
 
 /** T-1277: the fare scale where the panel looks, as a multiple of the country's default (T-1906:
  * 1.00x until set): a stepper by 0.05, typed on a click, and a button back to the default once the
  * player has set one. */
 function FareScaleRow({ country, scale, own, scales }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined }) {
   const set = (v: number) => void setFareScale(country, storedScale(v, country, scales));
-  const name = countryName(country);
+  const name = tCountry(country);
   const shown = shownScale(scale, country, scales);
-  const text = (v: number) => `${v.toFixed(2)}x`;
+  const text = (v: number) => `${fix2(v)}x`;
   return (
     <li>
-      <span class="fr-what">{`${name} fares`}</span>
-      <Stepper value={text(shown)} wide label="fare scale" onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: `Fares in ${name} as a multiple of the default fares.` }} />
+      <span class="fr-what">{t("moneyTab.countryFares", { name })}</span>
+      <Stepper value={text(shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
+        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name }) }} />
       {own
-        ? <button class="btn icon" aria-label="Back to the default fares" data-tip={`Back to ${text(1)}`} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
+        ? <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: text(1) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
         : <span />}
     </li>
   );
@@ -114,14 +109,14 @@ function FareScaleRow({ country, scale, own, scales }: { country: string; scale:
  * button back to the default once the player has set another. */
 function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   const set = (v: number) => void setFareHsr(tidyHsr(v));
-  const text = (v: number) => `${v.toFixed(2)}x`;
+  const text = (v: number) => `${fix2(v)}x`;
   return (
     <li>
-      <span class="fr-what" data-tip="Fare multiple for rides on high speed lines.">High speed</span>
-      <Stepper value={text(mul)} wide label="high-speed fare" onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
-        type={{ text: mul.toFixed(2), set, tip: "Fare multiple for rides on high speed lines." }} />
+      <span class="fr-what" data-tip={t("moneyTab.hsrTip")}>{t("moneyTab.hsr")}</span>
+      <Stepper value={text(mul)} wide label={t("moneyTab.hsrFare")} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip: t("moneyTab.hsrTip") }} />
       {own
-        ? <button class="btn icon" aria-label="Back to the usual multiple" data-tip={`Back to ${text(HSR_FARE)}`} onClick={() => set(HSR_FARE)}><Icon.undo /></button>
+        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(HSR_FARE) })} onClick={() => set(HSR_FARE)}><Icon.undo /></button>
         : <span />}
     </li>
   );
@@ -130,14 +125,14 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
 /** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7). */
 function FerryFareRow({ mul }: { mul: number }) {
   const set = (v: number) => void setFareFerry(tidyHsr(v));
-  const text = (v: number) => `${v.toFixed(2)}x`;
+  const text = (v: number) => `${fix2(v)}x`;
   return (
     <li>
-      <span class="fr-what" data-tip="Fare multiple for rides on ferries.">Ferry</span>
-      <Stepper value={text(mul)} wide label="ferry fare" onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
-        type={{ text: mul.toFixed(2), set, tip: "Fare multiple for rides on ferries." }} />
+      <span class="fr-what" data-tip={t("moneyTab.ferryTip")}>{t("moneyTab.ferry")}</span>
+      <Stepper value={text(mul)} wide label={t("moneyTab.ferryFare")} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip: t("moneyTab.ferryTip") }} />
       {mul !== FERRY_FARE
-        ? <button class="btn icon" aria-label="Back to the usual multiple" data-tip={`Back to ${text(FERRY_FARE)}`} onClick={() => set(FERRY_FARE)}><Icon.undo /></button>
+        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(FERRY_FARE) })} onClick={() => set(FERRY_FARE)}><Icon.undo /></button>
         : <span />}
     </li>
   );
@@ -150,9 +145,9 @@ function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
   const set = (v: number) => void setFareTransfer(tidyTransfer(Math.max(0, v) / scale));
   return (
     <li>
-      <span class="fr-what">Transfer fare</span>
-      <Stepper value={`$${shown.toFixed(2)}`} wide label="transfer fare" onStep={(d) => set(Math.round(shown * 100) / 100 + d * 0.25)}
-        type={{ text: shown.toFixed(2), set, tip: "Paid each time a trip changes lines." }} />
+      <span class="fr-what">{t("moneyTab.transferFare")}</span>
+      <Stepper value={`$${fix2(shown)}`} wide label={t("moneyTab.transferFareLabel")} onStep={(d) => set(Math.round(shown * 100) / 100 + d * 0.25)}
+        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.transferTip") }} />
       <span />
     </li>
   );
@@ -167,11 +162,11 @@ function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: num
   const pct = Math.round(100 * dr);
   return (
     <ul class="rows">
-      <Row label="Riders per day">
-        <span data-tip="Estimated impact of fare change">{pct > 0 ? "+" : pct < 0 ? "−" : ""}{Math.abs(pct)}%</span>
+      <Row label={t("moneyTab.ridersPerDay")}>
+        <span data-tip={t("moneyTab.fareImpact")}>{pct > 0 ? "+" : pct < 0 ? "−" : ""}{tNumber(Math.abs(pct))}%</span>
       </Row>
-      <Row label="Fares per day">
-        <span data-tip="Estimated impact of fare change">{df > 0 ? "+" : ""}<Money dollars={df} /></span>
+      <Row label={t("moneyTab.faresPerDay")}>
+        <span data-tip={t("moneyTab.fareImpact")}>{df > 0 ? "+" : ""}<Money dollars={df} /></span>
       </Row>
     </ul>
   );
@@ -203,54 +198,54 @@ export function MoneyTab() {
       <ul class="rows">
         {m.mode === "sandbox"
           // T-728: a sandbox's cash is not shown; its money since the start is
-          ? <Row label={<span data-tip="Fares minus running costs, upkeep, trains and construction">Since day 1</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
-          : <Row label="Cash" bold><LiveCash /></Row>}
+          ? <Row label={<span data-tip={t("moneyTab.sinceDay1Tip")}>{t("moneyTab.sinceDay1")}</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
+          : <Row label={t("moneyTab.cash")} bold><LiveCash /></Row>}
       </ul>
       <table class="ledger">
         <tr>
-          <th style={{ textAlign: "left" }}><ScopeToggle tip={REGION_SPLIT} /></th>
-          <th>Yesterday</th>
-          <th>Today</th>
+          <th style={{ textAlign: "left" }}><ScopeToggle tip={regionSplit()} /></th>
+          <th>{t("moneyTab.yesterday")}</th>
+          <th>{t("moneyTab.today")}</th>
         </tr>
         <tr>
-          <td>Fares</td>
+          <td>{t("moneyTab.fares")}</td>
           {cell(prev, (d) => d.fares)}
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? `\nBuses cost ${busRunRule(m)}` : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? `\nBoats cost ${boatRunRule(m)}` : "")}>Running trains</td>
+          <td data-tip={runCostLine(m) + (m.fleetBus > 0 || m.busesNeeded > 0 ? "\n" + t("moneyTab.busesCost", { rule: busRunRule(m) }) : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? "\n" + t("moneyTab.boatsCost", { rule: boatRunRule(m) }) : "")}>{t("moneyTab.runningTrains")}</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
         <tr>
-          <td data-tip={upkeepTip(m)}>Upkeep</td>
+          <td data-tip={upkeepTip(m)}>{t("moneyTab.upkeep")}</td>
           {cell(prev, (d) => -(d.upkeep ?? 0))}
           <TodayCell zone={zone} v={(d) => -(d.upkeep ?? 0)} />
         </tr>
         {zone === null && (m.loan || (prev?.loan ?? 0) > 0) && (
           <tr>
-            <td data-tip={`Paid back over ${LOAN_TERM} game days in equal payments`}>Loan</td>
+            <td data-tip={t("moneyTab.loanTerm", { days: LOAN_TERM })}>{t("moneyTab.ledgerLoan")}</td>
             {cell(prev, (d) => -(d.loan ?? 0))}
             <TodayCell zone={zone} v={(d) => -(d.loan ?? 0)} />
           </tr>
         )}
         <tr>
-          <td data-tip={vehiclesTip(m)}>New trains</td>
+          <td data-tip={vehiclesTip(m)}>{t("moneyTab.newTrains")}</td>
           {cell(prev, (d) => -d.trains)}
           <TodayCell zone={zone} v={(d) => -d.trains} />
         </tr>
         <tr>
-          <td>Construction</td>
+          <td>{t("moneyTab.construction")}</td>
           {cell(prev, (d) => -d.build)}
           <TodayCell zone={zone} v={(d) => -d.build} />
         </tr>
         <tr class="b">
-          <td>Net</td>
+          <td>{t("moneyTab.net")}</td>
           {cell(prev, ledgerNet)}
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
-      <div class="h">Fare<span class="right"><FareButtons nodes={f} /></span></div>
+      <div class="h">{t("moneyTab.fare")}<span class="right"><FareButtons nodes={f} /></span></div>
       <FareGraph nodes={shown} scale={scale} />
       <FareNodeRows nodes={f} scale={scale}
         last={<>
@@ -261,56 +256,56 @@ export function MoneyTab() {
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />
-      <div class="h">Trains</div>
+      <div class="h">{t("moneyTab.trains")}</div>
       <ul class="rows">
-        <Row label={<span data-tip={`A car costs ${money(m.carPrice * 1e6)}. Running costs ${runCostRule(m)}.`}>Cars owned</span>}>
-          <span data-tip={`${m.fleet.toLocaleString("en-US")} cars bought at ${money(m.carPrice * 1e6)} each, ${money(m.fleet * m.carPrice * 1e6)} in all`}>{m.fleet}</span>
+        <Row label={<span data-tip={t("moneyTab.carTip", { price: money(m.carPrice * 1e6), rule: runCostRule(m) })}>{t("moneyTab.carsOwned")}</span>}>
+          <span data-tip={t("moneyTab.carsBought", { count: m.fleet, price: money(m.carPrice * 1e6), total: money(m.fleet * m.carPrice * 1e6) })}>{m.fleet}</span>
         </Row>
-        <Row label="Cars the lines need">
+        <Row label={t("moneyTab.carsNeeded")}>
           {m.carsNeeded}
         </Row>
-        <Row label="Spare cars">
+        <Row label={t("moneyTab.carsSpare")}>
           {Math.max(0, m.fleet - m.carsNeeded)}
         </Row>
         {(m.fleetFast > 0 || m.carsNeededFast > 0) && (
           <>
-            <Row label={<span data-tip={`A high-speed car costs ${money(m.hsCarPrice * 1e6)}. Running costs ${runCostRule({ runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm })}. Lines with high-speed trains use only these.`}>High-speed cars owned</span>}>
-              <span data-tip={`${m.carsNeededFast.toLocaleString("en-US")} on the running lines`}>{m.fleetFast}</span>
+            <Row label={<span data-tip={t("moneyTab.hsCarTip", { price: money(m.hsCarPrice * 1e6), rule: runCostRule({ runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm }) })}>{t("moneyTab.hsCarsOwned")}</span>}>
+              <span data-tip={t("moneyTab.hsCarsRunning", { count: tNumber(m.carsNeededFast) })}>{m.fleetFast}</span>
             </Row>
-            <Row label="Spare high-speed cars">
+            <Row label={t("moneyTab.hsCarsSpare")}>
               {Math.max(0, m.fleetFast - m.carsNeededFast)}
             </Row>
           </>
         )}
         {(m.fleetBus > 0 || m.busesNeeded > 0) && (
           <>
-            <Row label={<span data-tip={`A bus costs ${money(m.busPrice * 1e6)}. Running costs ${busRunRule(m)}. A route costs ${busRouteRule(m)} to construct.`}>Buses owned</span>}>
-              <span data-tip={`${busesText(m.fleetBus)} bought at ${money(m.busPrice * 1e6)} each, ${money(m.fleetBus * m.busPrice * 1e6)} in all`}>{m.fleetBus}</span>
+            <Row label={<span data-tip={t("moneyTab.busTip", { price: money(m.busPrice * 1e6), rule: busRunRule(m), route: busRouteRule(m) })}>{t("moneyTab.busesOwned")}</span>}>
+              <span data-tip={t("moneyTab.busesBought", { buses: busesText(m.fleetBus), price: money(m.busPrice * 1e6), total: money(m.fleetBus * m.busPrice * 1e6) })}>{m.fleetBus}</span>
             </Row>
-            <Row label="Buses the lines need">
+            <Row label={t("moneyTab.busesNeeded")}>
               {m.busesNeeded}
             </Row>
-            <Row label="Spare buses">
+            <Row label={t("moneyTab.busesSpare")}>
               {Math.max(0, m.fleetBus - m.busesNeeded)}
             </Row>
           </>
         )}
         {(m.fleetFerry > 0 || m.boatsNeeded > 0) && (
           <>
-            <Row label={<span data-tip={`A boat costs ${money(m.boatPrice * 1e6)}. Running costs ${boatRunRule(m)}. A port costs ${money(m.portPrice * 1e6)} to construct.`}>Boats owned</span>}>
-              <span data-tip={`${boatsText(m.fleetFerry)} bought at ${money(m.boatPrice * 1e6)} each, ${money(m.fleetFerry * m.boatPrice * 1e6)} in all`}>{m.fleetFerry}</span>
+            <Row label={<span data-tip={t("moneyTab.boatTip", { price: money(m.boatPrice * 1e6), rule: boatRunRule(m), port: money(m.portPrice * 1e6) })}>{t("moneyTab.boatsOwned")}</span>}>
+              <span data-tip={t("moneyTab.boatsBought", { boats: boatsText(m.fleetFerry), price: money(m.boatPrice * 1e6), total: money(m.fleetFerry * m.boatPrice * 1e6) })}>{m.fleetFerry}</span>
             </Row>
-            <Row label="Boats the lines need">
+            <Row label={t("moneyTab.boatsNeeded")}>
               {m.boatsNeeded}
             </Row>
-            <Row label="Spare boats">
+            <Row label={t("moneyTab.boatsSpare")}>
               {Math.max(0, m.fleetFerry - m.boatsNeeded)}
             </Row>
           </>
         )}
       </ul>
       <ul class="rows">
-        <Row label="Track and stations built"><Money dollars={w.money.builtValue} /></Row>
+        <Row label={t("moneyTab.built")}><Money dollars={w.money.builtValue} /></Row>
       </ul>
       {m.mode !== "sandbox" && <LoanRows loan={m.loan} ledger={m.ledger} />}
     </>
@@ -320,9 +315,8 @@ export function MoneyTab() {
 /** T-1906: why a loan of `amount` US$M is refused, null if it is not. */
 function loanRefusal(amount: number, profit: ReturnType<typeof loanProfit>): string | null {
   if (loanAllowed(amount, profit)) return null;
-  if (!profit) return `Until there is a full day of fares, the most you can borrow is $${LOAN_AMOUNTS[0] / 1000}B.`;
-  const over = profit.days === 1 ? "Profit yesterday was" : `Average profit over the past ${profit.days} days was`;
-  return `Payments would be ${money(loanPayment(amount) * 1e6)} per day. ${over} ${money(profit.perDay * 1e6)} per day.`;
+  if (!profit) return t("moneyTab.loanFirst", { amount: tNumber(LOAN_AMOUNTS[0] / 1000) });
+  return t("moneyTab.loanRefused", { payment: money(loanPayment(amount) * 1e6), yesterday: profit.days === 1, days: profit.days, profit: money(profit.perDay * 1e6) });
 }
 
 /** T-1661: the loan at the bottom of the tab: three sizes to borrow while none is out, each refused
@@ -332,13 +326,13 @@ function LoanRows({ loan, ledger }: { loan: Loan | null; ledger: DayLedger[] }) 
     const profit = loanProfit(ledger, liveMoney.value.today?.day ?? ledger[ledger.length - 1]?.day ?? 0);
     return (
       <>
-        <div class="h">Loan</div>
+        <div class="h">{t("moneyTab.loan")}</div>
         <ul class="rows">
-          <Row label="Borrow">
+          <Row label={t("moneyTab.borrow")}>
             <span class="group">
               {LOAN_AMOUNTS.map((a) => {
                 const no = loanRefusal(a, profit);
-                return <button class="btn text" disabled={no !== null} data-tip={no ?? `Borrow ${money(a * 1e6)} and pay back ${money(loanPayment(a) * 1e6)} per day for ${LOAN_TERM} days`} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
+                return <button class="btn text" disabled={no !== null} data-tip={no ?? t("moneyTab.borrowTip", { amount: money(a * 1e6), payment: money(loanPayment(a) * 1e6), days: LOAN_TERM })} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
               })}
             </span>
           </Row>
@@ -350,12 +344,12 @@ function LoanRows({ loan, ledger }: { loan: Loan | null; ledger: DayLedger[] }) 
   const canPay = liveMoney.value.cash >= left;
   return (
     <>
-      <div class="h">Loan</div>
+      <div class="h">{t("moneyTab.loan")}</div>
       <ul class="rows">
-        <Row label="Borrowed"><Money dollars={loan.amount * 1e6} /></Row>
-        <Row label="Payment per day"><span data-tip={`Interest is ${LOAN_RATE * 100}% per day of what is left`}><Money dollars={loan.pay * 1e6} /></span></Row>
-        <Row label="Days left">{Math.ceil(loan.days)}</Row>
-        <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? `Pay back the ${money(left * 1e6)} left from the cash` : `Needs ${money(left * 1e6)} in cash`} onClick={() => void repay()}>Repay</button>} />
+        <Row label={t("moneyTab.borrowed")}><Money dollars={loan.amount * 1e6} /></Row>
+        <Row label={t("moneyTab.paymentPerDay")}><span data-tip={t("moneyTab.interest", { rate: tNumber(LOAN_RATE * 100) })}><Money dollars={loan.pay * 1e6} /></span></Row>
+        <Row label={t("moneyTab.daysLeft")}>{Math.ceil(loan.days)}</Row>
+        <Row label={<button class="btn text" disabled={!canPay} data-tip={canPay ? t("moneyTab.repayTip", { amount: money(left * 1e6) }) : t("moneyTab.repayNeeds", { amount: money(left * 1e6) })} onClick={() => void repay()}>{t("moneyTab.repay")}</button>} />
       </ul>
     </>
   );

@@ -21,6 +21,7 @@ import { Icon } from "./widgets";
 import { cloudContext } from "../game/account";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { removeSlot, sendDeletes } from "../workers/cloud";
+import { t } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
 /** The build's commit count (vite.config.ts), "dev" on a dev server. */
@@ -98,7 +99,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     const g = key.startsWith("account:") ? accountList.peek()?.games.find((x) => "account:" + x.id === key) : null;
     if (g) {
       const k = await downloadAccountGame(g);
-      if (!k) { setRefused("This game could not be downloaded."); return; }
+      if (!k) { setRefused(t("startMenu.downloadFailed")); return; }
       key = k;
     }
     const why = await saveRefusal({ key });
@@ -111,12 +112,12 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     setRemoving(null);
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
     if (s.key.startsWith("account:")) {
-      if (!await deleteAccountGame(s.key.slice("account:".length))) setRefused("This game could not be deleted.");
+      if (!await deleteAccountGame(s.key.slice("account:".length))) setRefused(t("startMenu.deleteFailed"));
       return;
     }
     const lease = await leaseSlot(s.key);
-    if (!lease) { setRefused("That game is open in another tab. Close it before deleting it."); return; }
-    try { await removeSlot(s.key); } catch { setRefused("This game could not be deleted."); } finally { lease.release(); }
+    if (!lease) { setRefused(t("startMenu.openElsewhere")); return; }
+    try { await removeSlot(s.key); } catch { setRefused(t("startMenu.deleteFailed")); } finally { lease.release(); }
     const ctx = cloudContext();
     if (ctx?.on) void sendDeletes(ctx).catch(() => {});
     setRefused(null);
@@ -142,7 +143,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
       await wait();
       if (v.kind === "backup") return chose(await backupChoice(v.backup.key, v.slot.key));
       const file = await accountBackupFile(v.game.id, g.top.kind === "slot" ? g.top.slot.name : g.top.game.name, v.backup);
-      return file ? chose(await fileChoice(file, { origin: g.origin, edit: v.backup.savedAt * 1000 })) : "This backup could not be downloaded.";
+      return file ? chose(await fileChoice(file, { origin: g.origin, edit: v.backup.savedAt * 1000 })) : t("startMenu.backupDownloadFailed");
     },
     remove: async (v) => {
       if (v.kind === "slot" || v.kind === "account") await remove(v.kind === "slot" ? v.slot : cardOf(v.game));
@@ -158,20 +159,20 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}
-    <p class="start-version muted small">build {VERSION}</p>
+    <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}</p>
     {sheet ? <div class="start-box new-game-box">
-      <h1 id="start-title" class="big">New game</h1>
+      <h1 id="start-title" class="big">{t("startMenu.newGame")}</h1>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
     </div> : <div class="start-box">
       <AccountButton kind="start" />
-      {!LOGO && <h1 id="start-title" class="big">Welcome to trainsworld!</h1>}
+      {!LOGO && <h1 id="start-title" class="big">{t("startMenu.welcome")}</h1>}
       <div class="save-files">
-        <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>New game</button>
-        {returning && <button class="btn start-file" onClick={load}>Load from file</button>}
+        <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>{t("startMenu.newGame")}</button>
+        {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
       </div>
       {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
       {groups.length > 0 && <>
-        <h2 class="start-head">Saved games</h2>
+        <h2 class="start-head">{t("startMenu.savedGames")}</h2>
         <ul class="start-saves">
           {groups.map((g) => {
             const s = g.top.kind === "slot" ? g.top.slot : cardOf(g.top.game);
@@ -181,12 +182,12 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
                   <SlotThumb slot={s} />
                   <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
                 </button>
-                <button class="btn icon start-delete" data-tip="Delete" aria-label={`Delete ${s.name}`} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
+                <button class="btn icon start-delete" data-tip={t("startMenu.delete")} aria-label={t("startMenu.deleteGame", { name: s.name })} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
               </div>
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
                 <p>{deleteGroupQuestion(g)}</p>
-                <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void removeGroup(g)}>Delete save</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+                <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void removeGroup(g)}>{t("startMenu.deleteSave")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("startMenu.keepIt")}</button></div>
               </div>}
             </li>;
           })}

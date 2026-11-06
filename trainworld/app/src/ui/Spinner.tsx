@@ -7,13 +7,14 @@ import type { ComponentChildren } from "preact";
 import { computed } from "@preact/signals";
 import { demandView, viewFinal, viewUpdating } from "../game/demand";
 import { demandIdle, loadFailure } from "../game/loading";
+import { t } from "../i18n";
 
 /** The zone in view has no final figures yet or a solve is still changing them; never over a view
  * that has nothing to load, or after a failure. */
 export const demandPending = computed(() => !loadFailure.value && !demandIdle.value && (!demandView.value || !viewFinal.value || viewUpdating.value));
 
 export function Spinner({ tip, class: cls }: { tip?: string; class?: string }) {
-  return <i class={"spin" + (cls ? " " + cls : "")} data-tip={tip} role="progressbar" aria-label="Loading" />;
+  return <i class={"spin" + (cls ? " " + cls : "")} data-tip={tip} role="progressbar" aria-label={t("spinner.loading")} />;
 }
 
 const INK = "#5b4a45", WHITE = "#fffdfb";
@@ -62,7 +63,7 @@ const Window = ({ x, children }: { x: number; children?: ComponentChildren }) =>
  * one a step behind); the track runs by under it. `small`: the status tag's size. */
 export function BunnyTrain({ small, tip }: { small?: boolean; tip?: string }) {
   return <svg class={"bunny-train" + (small ? " small" : "")} viewBox="0 -5 100 69" data-tip={tip}
-    role={small ? "progressbar" : undefined} aria-label={small ? "Loading" : undefined} aria-hidden={small ? undefined : "true"}>
+    role={small ? "progressbar" : undefined} aria-label={small ? t("spinner.loading") : undefined} aria-hidden={small ? undefined : "true"}>
     <line x1="0" y1="56" x2="100" y2="56" class="bt-rail" stroke-width="2" />
     <line x1="-12" y1="60" x2="112" y2="60" class="bt-ties" stroke-width="3" stroke-dasharray="4 8" />
     <g class="bt-train">

@@ -16,6 +16,7 @@ import { Chip, SortHead } from "./widgets";
 import { locateStation } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
+import { t } from "../i18n";
 
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
@@ -37,9 +38,7 @@ function stationRiders(ids: string[], mode: StationUseMode): number | null {
   return n;
 }
 function stationRidersTip(n: number, mode: StationUseMode): string {
-  return mode === "origins" ? `${count(n)} riders start a rail trip here ${shownDayPhrase.value}`
-    : mode === "transfers" ? `${count(n)} riders change lines here ${shownDayPhrase.value}`
-    : `${count(n)} boardings in past 24h`;
+  return t("stationsTab.ridersTip", { mode, count: count(n), when: shownDayPhrase.value });
 }
 function StationToday({ ids }: { ids: string[] }) {
   const mode = display.value.stationUse, n = stationRiders(ids, mode);
@@ -115,7 +114,7 @@ function MoreRows({ more }: { more: () => void }) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) call.current(); }, { rootMargin: "400px 0px" });
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) call.current(); }, { rootMargin: "400px 0px" }); // i18n-ignore (CSS)
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -232,16 +231,15 @@ export function StationsTab() {
   const mark = (r: StationRow) => (drag?.on && drag.over === r.members[0] && drag.id !== drag.over ? (drag.after ? " drop-after" : " drop-before") : "")
     + (drag?.on && drag.id === r.members[0] ? " dragged" : "");
   const ghost = drag?.on ? st.find((r) => r.members[0] === drag.id) : undefined;
-  const ridersWhat = d.stationUse === "origins" ? `riders starting a rail trip ${shownDayPhrase.value}`
-    : d.stationUse === "transfers" ? `riders changing lines ${shownDayPhrase.value}` : "boardings in past 24h";
+  const ridersWhat = t("stationsTab.ridersWhat", { mode: d.stationUse, when: shownDayPhrase.value });
   return (
     <>
       <div class="line-list-actions"><ScopeToggle /></div>
-      {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? "No stations yet." : "No stations here."}</p>}
+      {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : t("stationsTab.noneHere")}</p>}
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
-        { key: "name", label: "Name", tip: "Sort by name", first: 1 },
-        { key: "riders", label: "Riders", tip: `Sort by ${ridersWhat}`, first: -1, cls: "w-num" },
-        { key: "near", label: "Near", tip: "Sort by distance from the center of the screen", first: 1, cls: key === "near" ? "w-near" : "near-off" },
+        { key: "name", label: t("stationsTab.name"), tip: t("stationsTab.sortName"), first: 1 },
+        { key: "riders", label: t("stationsTab.riders"), tip: t("stationsTab.sortRiders", { what: ridersWhat }), first: -1, cls: "w-num" },
+        { key: "near", label: t("stationsTab.near"), tip: t("stationsTab.sortNear"), first: 1, cls: key === "near" ? "w-near" : "near-off" },
       ]} />}
       <ul class={"rows pick stations" + (drag?.on ? " dragging" : "")}>
         {st.slice(0, limit).map((r) => (
@@ -249,7 +247,7 @@ export function StationsTab() {
             onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: r.lead.id }; }} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
             <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
             <Chips lines={r.lines} name={r.lead.name} />
-            {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">Plan</span>}
+            {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">{t("stationsTab.plan")}</span>}
             {key === "near" && <Near m={r.dist} />}
           </li>
         ))}
@@ -261,7 +259,7 @@ export function StationsTab() {
       )}
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{sc.zone ? `${st.length} of ${complexes.value.members.length}` : st.length} stations, {ridersWhat}</span>
+          <span class="muted">{t("stationsTab.footer", { scoped: !!sc.zone, shown: st.length, count: st.length, total: complexes.value.members.length, what: ridersWhat })}</span>
         </div>
       )}
     </>

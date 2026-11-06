@@ -5,14 +5,25 @@ import { LEVELS, type Level } from "../game/types";
 import { tool, type Tab, type Tool } from "../game/ui";
 import { live } from "../map/live";
 import { Icon } from "./widgets";
+import { t, type MessageKey } from "../i18n";
+
+type ToolEntry = [Tool, string, () => JSX.Element, string, string];
+/** A tool's entry whose label (index 1) and hover (index 4) are read through `t` each time they are
+ * used, so a list kept at module level still follows the language. */
+function toolEntry(id: Tool, icon: () => JSX.Element, key: string, label: MessageKey, tip: MessageKey): ToolEntry {
+  const e: ToolEntry = [id, "", icon, key, ""];
+  Object.defineProperty(e, 1, { get: () => t(label), enumerable: true });
+  Object.defineProperty(e, 4, { get: () => t(tip), enumerable: true });
+  return e;
+}
 
 /** The build tools: label, icon, number key and hover (Esc goes back to Select from anywhere, main.ts).
  * T-1834: back on 1 to 4 (T-1819 had moved them to letters; Anita wants 1234 for track). */
-export const TOOLS: [Tool, string, () => JSX.Element, string, string][] = [
-  ["track", "Track", Icon.track, "1", "Draw track"],
-  ["station", "Station", Icon.station, "2", "Place stations"],
-  ["delete", "Delete", Icon.bin, "3", "Delete track, stations and flyovers"],
-  ["blueprint", "Select", Icon.marquee, "4", "Drag to select track and stations.\nDouble click track to select out to the nearest junctions.\nShift+click to add to selection."],
+export const TOOLS: ToolEntry[] = [
+  toolEntry("track", Icon.track, "1", "toolKeys.track", "toolKeys.trackTip"),
+  toolEntry("station", Icon.station, "2", "toolKeys.station", "toolKeys.stationTip"),
+  toolEntry("delete", Icon.bin, "3", "toolKeys.delete", "toolKeys.deleteTip"),
+  toolEntry("blueprint", Icon.marquee, "4", "toolKeys.select", "toolKeys.selectTip"),
 ];
 
 /** The tool each number key picks (T-096). */
@@ -45,11 +56,11 @@ export const tabKeyName = (t: Tab) => Object.keys(TAB_KEYS).find((k) => TAB_KEYS
  * turns the numpad into cursor keys. */
 export const levelOfKeyCode = (code: string): Level | null => /^Digit[1-7]$/.test(code) ? LEVELS[Number(code[5]) - 1] : null;
 /** the key shown in an elevation button's hover */
-export const levelKeyName = (l: Level) => `Shift+${LEVELS.indexOf(l) + 1}`;
+export const levelKeyName = (l: Level) => `Shift+${LEVELS.indexOf(l) + 1}`; // i18n-ignore (key name)
 
 /** Pick a build tool; the one in use again, or Select, goes back to selecting. */
 export function pickTool(v: Tool) {
-  const t = tool.peek();
+  const cur = tool.peek();
   live.tools?.exit();
-  if (t !== v && v !== "select") tool.value = v;
+  if (cur !== v && v !== "select") tool.value = v;
 }

@@ -63,6 +63,7 @@ function faceLoaded(e: Event) {
   if (!faces) return forget();
   const ranges: [number, number][] = [];
   for (const f of faces) {
+    // i18n-ignore (CSS)
     for (const part of (f.unicodeRange || "U+0-10FFFF").split(",")) {
       const m = /U\+([0-9A-F?]+)(?:-([0-9A-F]+))?/i.exec(part.trim());
       if (!m) continue;
@@ -99,6 +100,7 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   const key = `${family}|${size}|${scale}|${text}`;
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
+  // i18n-ignore (CSS)
   const font = `700 ${MEASURE_PX}px ${family}`;
   ctx.font = font;
   ctx.textBaseline = "alphabetic";
@@ -133,6 +135,7 @@ export function inkBox(text: string, fontPx: number): { up: number; down: number
   ctx ??= document.createElement("canvas").getContext("2d");
   if (!ctx) return null;
   family ||= getComputedStyle(document.body).fontFamily;
+  // i18n-ignore (CSS)
   ctx.font = `700 ${MEASURE_PX}px ${family}`;
   ctx.textBaseline = "alphabetic";
   const k = fontPx / MEASURE_PX;

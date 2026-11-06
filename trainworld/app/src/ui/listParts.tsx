@@ -4,6 +4,7 @@ import { shortDistance } from "../game/format";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopeEmpty } from "../game/listScope";
 import { Icon } from "./widgets";
+import { t } from "../i18n";
 
 /** Line names in natural order ("2" before "10"). One collator for every comparison: localeCompare
  * with options builds a new one each call, which made sorting 109 lines take 15-400 ms (T-348). */
@@ -18,11 +19,11 @@ export function ScopeToggle({ tip }: { tip?: string }) {
   const here = listScope.value === "here" && !!zone && !empty;
   return (
     <div class="group scope">
-      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? (empty ? `No lines in ${name} yet, so the whole world is shown` : `Only ${name}` + (tip ? "\n" + tip : "")) : "Nothing modeled here"}
+      <button class={"btn" + (here ? " on" : "")} disabled={!zone} data-tip={name ? (empty ? t("listParts.noLines", { name }) : t("listParts.only", { name }) + (tip ? "\n" + tip : "")) : t("listParts.nothingHere")}
         onClick={() => (listScope.value = "here")}>
         <Icon.pin />{name}
       </button>
-      <button class={"btn" + (here ? "" : " on")} data-tip="The whole world" aria-label="The whole world" onClick={() => (listScope.value = "world")}>
+      <button class={"btn" + (here ? "" : " on")} data-tip={t("listParts.world")} aria-label={t("listParts.world")} onClick={() => (listScope.value = "world")}>
         <Icon.globe />
       </button>
     </div>
@@ -31,7 +32,7 @@ export function ScopeToggle({ tip }: { tip?: string }) {
 
 /** T-332: a row's distance from the center of the screen. */
 export function Near({ m }: { m: number | undefined }) {
-  return <span class="val muted w-near" data-tip={m !== undefined ? `${shortDistance(m)} from the center of the screen` : undefined}>{m !== undefined ? shortDistance(m) : ""}</span>;
+  return <span class="val muted w-near" data-tip={m !== undefined ? t("listParts.near", { distance: shortDistance(m) }) : undefined}>{m !== undefined ? shortDistance(m) : ""}</span>;
 }
 
 /** Rows with no distance (a line with no stops) sort last whichever way the column runs. */

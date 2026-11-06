@@ -16,6 +16,7 @@ const BUTTONS = new Set(["button", "submit", "reset", "image"]);
 /** Input types that take no typing: they keep only their own keys. */
 const CONTROLS = new Set(["checkbox", "radio", "range", "color", "file"]);
 /** The keys a non-text control works with. */
+// i18n-ignore (KeyboardEvent.key values)
 const CONTROL_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown", "Enter", " "]);
 
 /** Is `t` a field the player types in? */

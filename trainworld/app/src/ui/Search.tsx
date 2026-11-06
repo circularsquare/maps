@@ -22,6 +22,7 @@ import { keyIsTheirs } from "./keys";
 import { locateLine, locateStation, playerMovedCamera } from "./locate";
 import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
+import { t } from "../i18n";
 
 /** T-400: a search showing fewer results than this asks for more zones' place lists. */
 const WANT = 5;
@@ -30,10 +31,10 @@ const WANT = 5;
 const PLACE_ZOOM: Record<string, number> = {
   city: 12, town: 12.5, borough: 12, suburb: 13, quarter: 14, village: 13.5, neighbourhood: 14.5, hamlet: 14,
 };
-/** The words a place's row uses for its OSM kind. */
+/** The word a place's row uses for its OSM kind (search.placeKind picks the wording). */
 const PLACE_KIND: Record<string, string> = {
-  city: "City", town: "Town", borough: "Borough", suburb: "Neighborhood", quarter: "Neighborhood",
-  village: "Village", neighbourhood: "Neighborhood", hamlet: "Village",
+  city: "city", town: "town", borough: "borough", suburb: "neighborhood", quarter: "neighborhood",
+  village: "village", neighbourhood: "neighborhood", hamlet: "village",
 };
 
 /** Move the camera to a result and select it. */
@@ -151,7 +152,7 @@ export function Search() {
   if (!expanded)
     return (
       <div class="map-search closed">
-        <button class="btn icon search-open" data-guide="zoom" aria-label="Find a place" data-tip="Find a place (/ or Ctrl+F)"
+        <button class="btn icon search-open" data-guide="zoom" aria-label={t("search.find")} data-tip={t("search.findTip")}
           onClick={expand}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <circle cx="5.75" cy="5.75" r="4.25" />
@@ -162,7 +163,7 @@ export function Search() {
     );
   return (
     <div class="map-search">
-      <input ref={input} type="text" value={query} placeholder="Find a place" aria-label="Find a place"
+      <input ref={input} type="text" value={query} placeholder={t("search.find")} aria-label={t("search.find")}
         autocomplete="off" spellcheck={false} role="combobox" aria-expanded={open && !!query.trim()}
         aria-controls="map-search-results" aria-activedescendant={hits.length ? `map-search-${cur}` : undefined}
         onInput={(e) => { setQuery(e.currentTarget.value); setOpen(true); setAt(0); }}
@@ -171,7 +172,7 @@ export function Search() {
         onKeyDown={onKey} />
       {open && query.trim() && (
         <ul class="map-search-results" id="map-search-results" role="listbox">
-          {hits.length === 0 && <li class="muted none">Nothing found</li>}
+          {hits.length === 0 && <li class="muted none">{t("search.none")}</li>}
           {hits.map((hit, i) => (
             <li id={`map-search-${i}`} role="option" aria-selected={i === cur} class={i === cur ? "on" : ""}
               onMouseDown={(e) => e.preventDefault()} onMouseMove={() => i !== cur && setAt(i)} onClick={() => pick(hit)}>
@@ -189,25 +190,25 @@ function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => vo
     return <>
       <Chip line={hit.line} size="sm" plain />
       <span class="grow">{hit.name}</span>
-      <span class="muted small">Line</span>
+      <span class="muted small">{t("search.line")}</span>
     </>;
   if (hit.kind === "city")
     return <>
       <i class="search-mark city" />
-      <span class="grow">{hit.name}{hit.matched && <><br /><span class="muted small">matched {hit.matched}</span></>}</span>
-      <span class="muted small">City</span>
+      <span class="grow">{hit.name}{hit.matched && <><br /><span class="muted small">{t("search.matched", { name: hit.matched })}</span></>}</span>
+      <span class="muted small">{t("search.city")}</span>
     </>;
   if (hit.kind === "place")
     return <>
       <i class="search-mark place" />
       <span class="grow">{hit.name}{hit.tag && <><br /><span class="muted small">{hit.tag}</span></>}</span>
-      <span class="muted small">{PLACE_KIND[hit.place.kind] ?? "Place"}</span>
+      <span class="muted small">{t("search.placeKind", { kind: PLACE_KIND[hit.place.kind] ?? "other" })}</span>
     </>;
   return <>
     <i class="search-mark" />
     {/* a same-named result's tag goes on a line of its own, so a long name's ellipsis never hides it */}
     <span class={"grow" + (hit.built ? "" : " muted")}>{hit.name}{hit.tag && <><br /><span class="muted small">{hit.tag}</span></>}</span>
-    {hit.lines.length ? <span class="bullets">{chips(hit.lines).map((l) => <Chip line={l} size="sm" pick={pickLine} />)}</span> : <span class="muted small">Station</span>}
+    {hit.lines.length ? <span class="bullets">{chips(hit.lines).map((l) => <Chip line={l} size="sm" pick={pickLine} />)}</span> : <span class="muted small">{t("search.station")}</span>}
   </>;
 }
 

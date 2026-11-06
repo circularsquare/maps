@@ -14,6 +14,7 @@ import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
+import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
@@ -23,8 +24,8 @@ function LoadingScreen() {
     <div class="loading-box">
       <p class="big">{text}</p>
       <div class="loading-actions">
-        <button class="btn" onClick={() => location.reload()}>Try again</button>
-        {!game && <button class="btn" onClick={continueWithoutDemand}>Play without demand</button>}
+        <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
+        {!game && <button class="btn" onClick={continueWithoutDemand}>{t("loadingScreen.playWithoutDemand")}</button>}
       </div>
     </div>
   </div>;
@@ -40,7 +41,7 @@ export function loadingCardShown(): boolean {
 export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step: string; thin?: boolean; tip?: string }) {
   const pct = Math.floor(fraction * 100);
   return <span class={"load-bar" + (thin ? " thin" : "")} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}
-    data-tip={tip ?? `${pct}% loaded\n${step}`}>
+    data-tip={tip ?? t("loadingScreen.loaded", { pct: tNumber(pct), step })}>
     <i class="load-fill" style={{ width: `${fraction * 100}%` }} />
   </span>;
 }
@@ -90,12 +91,12 @@ function startWatchdog() {
     lastCheck = now;
     const limit = quietMs(!!loadProgress.peek());
     if (now - Math.max(from, lastAlive()) < limit) return;
-    const m = Math.round(limit / 60_000), mins = m >= 1 ? `${m} minute${m === 1 ? "" : "s"}` : `${Math.round(limit / 1000)} seconds`;
+    const m = Math.round(limit / 60_000), mins = m >= 1 ? t("loadingScreen.minutes", { count: m }) : t("loadingScreen.seconds", { count: Math.round(limit / 1000) });
     const started = !!world.peek();
-    loadCannotFinish(started ? `Demand figures did not load after ${mins}.` : `The train simulation did not answer after ${mins}.`, !started);
+    loadCannotFinish(t(started ? "loadingScreen.demandTimeout" : "loadingScreen.simTimeout", { time: mins }), !started);
   }, WATCH_MS);
   window.addEventListener("error", (e) => {
-    if (!setupFinished) loadCannotFinish(`The page stopped while starting (${e.error instanceof Error ? e.error.message : e.message}).`, true);
+    if (!setupFinished) loadCannotFinish(t("loadingScreen.pageStopped", { reason: e.error instanceof Error ? e.error.message : e.message }), true);
   });
 }
 

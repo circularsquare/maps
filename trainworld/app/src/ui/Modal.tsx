@@ -4,6 +4,7 @@
 import type { ComponentChildren, RefObject } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { Icon } from "./widgets";
+import { t } from "../i18n";
 
 /** Shows the dialog modally while `open` and gives focus back to what had it when it closes.
  * `again` changing closes and opens it afresh. */
@@ -35,7 +36,7 @@ export function Modal({ open, onClose, title, cls = "", head, children }: { open
       <div class="saves-head">
         <h2>{title}</h2>
         {head}
-        <button class="btn icon" autofocus aria-label="Close" data-tip="Close (Esc)" onClick={onClose}><Icon.cross /></button>
+        <button class="btn icon" autofocus aria-label={t("modal.close")} data-tip={t("modal.closeTip")} onClick={onClose}><Icon.cross /></button>
       </div>
       {children}
     </div>

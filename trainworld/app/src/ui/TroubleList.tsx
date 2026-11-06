@@ -22,9 +22,10 @@ import { reversalsOf } from "../map/reversalMarks";
 import { queryClock } from "../workers/clockClient";
 import { locateLine, locateStation } from "./locate";
 import { Chip, Icon } from "./widgets";
+import { t, tNumber } from "../i18n";
 
 const STORE = "anitabuilder-trouble-open";
-const DEMAND_WORD = ["high", "medium", "low"];
+const DEMAND_WORD = ["high", "medium", "low"];   // i18n-ignore (codes for troubleList.waits)
 /** capacity kinds tied to one station (`CAPACITY_KINDS`): platform, terminus, turning, reversing, sidings */
 const AT_STATION = new Set([2, 3, 6, 8, 9, 10]);
 /** a line is listed for crowding past these: riders left at the platform as a share of those who
@@ -54,14 +55,14 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
   for (const l of w.save.lines) {
     if (!l.stops.length) {
       out.push({ key: "n" + l.id, tier: 6, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="trouble-fig"><Icon.alert /></span>, tip: "No stations", go: goLine(l) });
+        value: <span class="trouble-fig"><Icon.alert /></span>, tip: t("troubleList.noStations"), go: goLine(l) });
       continue;
     }
     const st = w.lineStats[l.id];
     if (!st) continue;
     if (st.status === "broken") {
       out.push({ key: "b" + l.id, tier: 0, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="crowd-bad"><Icon.alert /></span>, tip: "Track this line ran on is gone", go: goLine(l) });
+        value: <span class="crowd-bad"><Icon.alert /></span>, tip: t("troubleList.broken"), go: goLine(l) });
       continue;
     }
     const d = st.status === "running" ? day.get(l.id) : undefined;
@@ -70,12 +71,12 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     if (d.leftBehind >= LEFT_MIN && d.leftBehind >= LEFT_SHARE * wanted) {
       out.push({ key: "l" + l.id, tier: 3, size: d.leftBehind, lead: <Chip line={l} size="sm" plain />, label: l.name,
         value: <span class="trouble-fig"><Icon.person />{count(d.leftBehind)}</span>,
-        tip: `${count(d.leftBehind)} of the ${count(wanted)} riders who wanted a train were left at the platform by a full one in past 24h\n${count(d.fullTrains)}/${count(d.trains)} trains left full`,
+        tip: t("troubleList.leftBehind", { left: count(d.leftBehind), wanted: count(wanted), full: count(d.fullTrains), trains: count(d.trains) }),
         go: goLine(l) });
     } else if (d.trains > 0 && d.fullTrains >= FULL_SHARE * d.trains) {
       out.push({ key: "f" + l.id, tier: 5, size: d.fullTrains / d.trains, lead: <Chip line={l} size="sm" plain />, label: l.name,
         value: <span class="trouble-fig"><Icon.train />{count(d.fullTrains)}/{count(d.trains)}</span>,
-        tip: `${count(d.fullTrains)}/${count(d.trains)} trains left full in past 24h`, go: goLine(l) });
+        tip: t("troubleList.full", { full: count(d.fullTrains), trains: count(d.trains) }), go: goLine(l) });
     }
   }
   const lines = new Map(w.save.lines.map((l) => [l.id, l]));
@@ -83,7 +84,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const ls = r.lines.map((x) => lines.get(x.id)).filter((x): x is LineInput => !!x);
     out.push({ key: "r" + r.station, tier: 1, size: ls.length, lead: <i class="trouble-rev"><Icon.uturn /></i>, label: r.name,
       value: <span class="trouble-chips">{ls.slice(0, 3).map((l) => <Chip line={l} size="sm" plain />)}</span>,
-      tip: r.lines.map((x) => `${x.name} reverses here`).join("\n"),
+      tip: r.lines.map((x) => t("troubleList.reverses", { name: x.name })).join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
   // the orange and red tags only (90% and up); a kind's tags by one station are one row, the worst
@@ -99,11 +100,11 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const key = `c${m.kind},${place || m.x + "," + m.y}`;
     if (spots.has(key)) continue;
     const cls = over ? "over" : "near";
-    const tip = [`${k.name} at ${Math.round(m.rho * 100)}% of capacity`];
-    if (m.held) tip.push("Some trains wait at the ends of the line because the track is full.");
-    if (d >= 2) tip.push(`Each train waits ${duration(d)} here at ${DEMAND_WORD[level] ?? "this"} demand`);
+    const tip = [t("troubleList.capacity", { name: k.name, pct: tNumber(Math.round(m.rho * 100)) })];
+    if (m.held) tip.push(t("troubleList.held"));
+    if (d >= 2) tip.push(t("troubleList.waits", { time: duration(d), level: DEMAND_WORD[level] ?? "other" }));
     spots.set(key, { key, tier: over ? 2 : 4, size: d + m.rho, lead: <i class={"trouble-mark " + cls}><Icon.alert /></i>,
-      label: place ? `${k.name} ${k.prep} ${place}` : k.name,
+      label: place ? t("troubleList.spot", { name: k.name, prep: k.prep, place }) : k.name,
       value: <span class={"trouble-tag " + cls}>{d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`}</span>,
       tip: tip.join("\n"),
       go: () => {
@@ -157,8 +158,8 @@ function Trouble({ w }: { w: WorldView }) {
           ))}
         </ul>
       )}
-      <button class={"btn trouble-btn" + (open ? " on" : "")} aria-expanded={open} aria-label="Network trouble"
-        data-tip={open ? "Hide the trouble list" : "Show the trouble list"} onClick={toggle}>
+      <button class={"btn trouble-btn" + (open ? " on" : "")} aria-expanded={open} aria-label={t("troubleList.label")}
+        data-tip={open ? t("troubleList.hide") : t("troubleList.show")} onClick={toggle}>
         <Icon.alert />{count(items.length)}
       </button>
     </div>

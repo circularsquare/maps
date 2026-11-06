@@ -58,7 +58,7 @@ function gridCells(d: HTMLElement, text: string) {
     return m ? { span: Number(m[1]), text: c.slice(m[0].length) } : { span: 1, text: c };
   }));
   const cols = Math.max(1, ...rows.map((r) => r.reduce((s, c) => s + c.span, 0)));
-  d.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+  d.style.gridTemplateColumns = `repeat(${cols}, auto)`; // i18n-ignore (CSS)
   for (const r of rows) {
     if (r.length === 1 && !r[0].text) {
       const gap = document.createElement("div");
@@ -82,7 +82,7 @@ function lineEl(line: string): HTMLElement {
   const d = document.createElement("div");
   const strip = STRIP.exec(line);
   if (strip) {
-    d.className = strip[1] ? "tip-strip stops" : "tip-strip";
+    d.className = strip[1] ? "tip-strip stops" : "tip-strip"; // i18n-ignore (CSS)
     stripCells(d, strip[2].split(";"), !!strip[1]);
     return d;
   }
@@ -98,7 +98,7 @@ function lineEl(line: string): HTMLElement {
     if (i + 2 >= parts.length) break;
     const s = document.createElement(parts[i + 1] ? "span" : "i");
     if (parts[i + 1]) {
-      s.className = "chip sm tip-chip";
+      s.className = "chip sm tip-chip"; // i18n-ignore (CSS)
       s.style.setProperty("--c", parts[i + 2]);
       s.style.setProperty("--ct", inkOn(parts[i + 2]));
       s.textContent = parts[i + 1];
@@ -174,14 +174,14 @@ export function startTips() {
     const w = tag.offsetWidth, h = tag.offsetHeight;
     if (lifted) {
       const x = Math.max(4, Math.min(innerWidth - 4 - w, px - w / 2)), y = Math.max(4, py - 36 - h);
-      tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; // i18n-ignore (CSS)
       return;
     }
     // below right of the pointer; flipped where it would leave the window
     let x = px + 14, y = py + 16;
     if (x + w > innerWidth - 4) x = Math.max(4, px - 10 - w);
     if (y + h > innerHeight - 4) y = Math.max(4, py - 10 - h);
-    tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; // i18n-ignore (CSS)
   };
   const fill = () => {
     const t = el?.getAttribute("data-tip") ?? "";

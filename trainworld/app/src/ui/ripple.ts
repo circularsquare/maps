@@ -48,7 +48,7 @@ let idleStep: Target | null = null, idleCount = 0;
 function selectors(step: Target): string[] {
   const own = `[data-guide="${step}"]`;
   switch (step) {
-    case "zoom": return [own, ".map-search input"];
+    case "zoom": return [own, ".map-search input"]; // i18n-ignore (selector)
     case "split": return [GUIDE_SPLIT];
     case "track": case "stations": case "construct": return [own, '[data-guide-tab="build"]'];
     case "line": return [own, '[data-guide-tab="lines"]'];
@@ -58,7 +58,7 @@ function selectors(step: Target): string[] {
     // on the map itself, nothing to point at
     case "bubble": case "trip": case "star": return [];
     // the line panel's controls need a line picked: the Lines tab's first row, or the tab itself
-    default: return tab.peek() === "lines" ? [own, "#dock .pane .rows li"] : [own, '[data-guide-tab="lines"]'];
+    default: return tab.peek() === "lines" ? [own, "#dock .pane .rows li"] : [own, '[data-guide-tab="lines"]']; // i18n-ignore (selector)
   }
 }
 

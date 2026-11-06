@@ -4,6 +4,7 @@
 import { live } from "../map/live";
 import { helpOpen } from "./HelpPanel";
 import { HIDE_UI_KEY } from "./toolKeys";
+import { t } from "../i18n";
 
 const CLASS = "ui-hidden";
 
@@ -27,9 +28,9 @@ function showHint() {
   if (!hint) {
     hint = document.createElement("div");
     hint.className = "ui-hint";
-    hint.textContent = `Press ${HIDE_UI_KEY} to show the UI`;
     document.body.appendChild(hint);
   }
+  hint.textContent = t("hideUi.hint", { key: HIDE_UI_KEY });
   hint.classList.add("on");
   clearTimeout(hintTimer);
   hintTimer = window.setTimeout(() => hint?.classList.remove("on"), HINT_MS);

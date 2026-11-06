@@ -8,7 +8,7 @@ import { signal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { cityById, isCity } from "../game/cities";
-import { money, plural } from "../game/format";
+import { money } from "../game/format";
 import { SHADES } from "../game/shades";
 import { shade } from "../game/ui";
 import { useThumbIn } from "./thumbShade";
@@ -25,33 +25,34 @@ import { viewStart } from "./locate";
 import { Modal } from "./Modal";
 import { Money } from "./MoneyText";
 import { NewGameSheet } from "./NewGame";
+import { t, tDate, tList } from "../i18n";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
 
-/** "Saved just now", "Saved 4 min ago", "Saved today at 14:05", "Saved Oct 12 at 14:05". */
-function savedWhen(at: number, now: number): string {
+/** "Saved just now", "Saved 4 min ago", "Saved today at 14:05", "Saved Oct 12 at 14:05"; "Autosaved" for the game being played. */
+function savedWhen(at: number, now: number, auto = false): string {
   const min = Math.floor((now - at) / 60000);
-  if (min < 1) return "Saved just now";
-  if (min < 60) return `Saved ${min} min ago`;
-  const d = new Date(at), time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (d.toDateString() === new Date(now).toDateString()) return `Saved today at ${time}`;
-  return `Saved ${d.toLocaleDateString([], { month: "short", day: "numeric" })} at ${time}`;
+  if (min < 1) return t("savesPanel.savedNow", { auto });
+  if (min < 60) return t("savesPanel.savedMinutes", { auto, count: min });
+  const d = new Date(at), time = tDate(d, { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === new Date(now).toDateString()) return t("savesPanel.savedToday", { auto, time });
+  return t("savesPanel.savedOn", { auto, date: tDate(d, { month: "short", day: "numeric" }), time });
 }
 
 /** "New York", "New York and Newark", "New York, Philadelphia and 2 more". */
 function cityList(ids: string[]): string {
   const names = ids.filter(isCity).map((id) => cityById(id).name);
-  if (names.length <= 2) return names.join(" and ");
-  if (names.length === 3) return `${names[0]}, ${names[1]} and ${names[2]}`;
-  return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
+  if (names.length <= 3) return tList(names);
+  return t("savesPanel.citiesMore", { first: names[0], second: names[1], count: names.length - 2 });
 }
 
-const fullDate = (at: number) => new Date(at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-const clockTime = (at: number) => new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const stationsText = (n: number) => t("savesPanel.stations", { count: n });
+const fullDate = (at: number) => tDate(at, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const clockTime = (at: number) => tDate(at, { hour: "numeric", minute: "2-digit" });
 const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
 /** "3:31 PM" today, "Oct 24 at 3:31 PM" before. */
-const atTime = (at: number, now: number) => sameDay(at, now) ? clockTime(at) : `${new Date(at).toLocaleDateString([], { month: "short", day: "numeric" })} at ${clockTime(at)}`;
+const atTime = (at: number, now: number) => sameDay(at, now) ? clockTime(at) : t("savesPanel.dateAt", { date: tDate(at, { month: "short", day: "numeric" }), time: clockTime(at) });
 
 /** A saved game's picture of its network (T-241): one panel per city it has built in, the most
  * stations first, each named, with its stations when there is more than one (T-894); built in more
@@ -61,14 +62,14 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
   // T-1852: drawn in the theme now set, whichever it was saved in
   const now = shade.value;
   const src = useThumbIn(slot.thumb ?? "", slot.shade ?? "light", now);
-  if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.loading ? "Loading..." : slot.lines !== undefined ? "Nothing built" : "No picture yet"}</div>;
+  if (!slot.thumb) return <div class="save-thumb empty muted small">{slot.loading ? t("savesPanel.loading") : slot.lines !== undefined ? t("savesPanel.nothingBuilt") : t("savesPanel.noPicture")}</div>;
   const panels = (slot.panels ?? []).filter((p) => p.city === WHOLE_PANEL || isCity(p.city));
   const sh = SHADES[now];
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
-    {src && <img src={src} alt="" data-tip={`The network in "${slot.name}" when it was last saved`} />}
+    {src && <img src={src} alt="" data-tip={t("savesPanel.thumbTip", { name: slot.name })} />}
     {panels.map((p) => {
-      const name = p.city === WHOLE_PANEL ? "Whole network" : cityById(p.city).name, stations = plural(p.stations, "station");
-      return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={`${name}: ${stations}`}>
+      const name = p.city === WHOLE_PANEL ? t("savesPanel.wholeNetwork") : cityById(p.city).name, stations = stationsText(p.stations);
+      return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={t("savesPanel.panelTip", { name, stations })}>
         <div class="thumb-city">{name}</div>
         {panels.length > 1 && <div class="thumb-figure num">{stations}</div>}
       </div>;
@@ -79,21 +80,21 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
 /** When a saved game was saved (with `mark` after it), its day and cities, its lines, stations and
  * cash; also the start menu's (T-677). */
 export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren }) {
-  const when = savedWhen(slot.at, now);
+  const when = savedWhen(slot.at, now, !!autosaved);
   const cities = cityList(slot.cities ?? []);
   return <>
-    <div class="small muted save-when"><span data-tip={`Last saved ${fullDate(slot.at)}`}>{autosaved ? when.replace("Saved", "Autosaved") : when}</span>{mark}</div>
+    <div class="small muted save-when"><span data-tip={t("savesPanel.lastSaved", { date: fullDate(slot.at) })}>{when}</span>{mark}</div>
     <div class="small muted num">
-      <span data-tip={`Game day ${slot.day}`}>Day {slot.day}</span>
+      <span data-tip={t("savesPanel.gameDay", { day: slot.day })}>{t("savesPanel.day", { day: slot.day })}</span>
       {cities ? <> · {cities}</> : null}
     </div>
     {slot.lines !== undefined && <div class="small muted num">
-      <span data-tip={`${slot.lines} lines`}>{plural(slot.lines!, "line")}</span>
+      <span data-tip={t("savesPanel.lines", { count: slot.lines })}>{t("savesPanel.lines", { count: slot.lines })}</span>
       {" · "}
-      <span data-tip={`${slot.stations} stations`}>{plural(slot.stations!, "station")}</span>
+      <span data-tip={stationsText(slot.stations!)}>{stationsText(slot.stations!)}</span>
       {slot.mode !== "sandbox" && <>
         {" · "}
-        <span data-tip={`Cash when saved: ${money(slot.cash! * 1e6)}`}><Money dollars={slot.cash! * 1e6} /></span>
+        <span data-tip={t("savesPanel.cash", { amount: money(slot.cash! * 1e6) })}><Money dollars={slot.cash! * 1e6} /></span>
       </>}
     </div>}
   </>;
@@ -103,7 +104,7 @@ export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now:
  * account keeps games (T-988), a cloud marks a game only on the account and a crossed cloud one only
  * in this browser. `panel`: the saves panel's, where that crossed cloud adds the game to the account. */
 export function SlotTitle({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
-  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip="Infinite money">Sandbox</span>}<CloudMark slot={slot} panel={panel} /></strong>;
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip={t("savesPanel.sandboxTip")}>{t("savesPanel.sandbox")}</span>}<CloudMark slot={slot} panel={panel} /></strong>;
 }
 
 /** T-988: the account's games are in use here (signed in, a server that keeps them); read as signals. */
@@ -116,20 +117,20 @@ function useGamesOn(): CloudContext | null {
 function CloudMark({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
   const ctx = useGamesOn();
   if (!ctx) return null;
-  if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip={panel ? "Only saved online. Opening will download locally." : "On your account"}><Icon.cloud /></span>;
+  if (slot.key.startsWith("account:")) return <span class="save-cloud" data-tip={panel ? t("savesPanel.onlineOnly") : t("savesPanel.onAccount")}><Icon.cloud /></span>;
   const noAccount = !slot.cloud?.acct;
   if (tiedTo(slot.cloud, ctx)) return null;
-  if (panel && noAccount) return <button class="save-cloud save-add" data-tip="Only in this browser. Click to add it to your account." aria-label={`Add ${slot.name} to your account`}
+  if (panel && noAccount) return <button class="save-cloud save-add" data-tip={t("savesPanel.addTip")} aria-label={t("savesPanel.addLabel", { name: slot.name })}
     onClick={(e) => { e.stopPropagation(); void addToAccount([slot]); }}><Icon.cloudOff /></button>;
-  return <span class="save-cloud" data-tip="Only in this browser"><Icon.cloudOff /></span>;
+  return <span class="save-cloud" data-tip={t("savesPanel.browserOnly")}><Icon.cloudOff /></span>;
 }
 
 /** T-988: after the playing game's "Autosaved", whether its last save reached the account. */
 function AccountMark({ slot, now }: { slot: SaveSlot; now: number }) {
   const ctx = useGamesOn(), c = slot.cloud;
   if (!ctx || !tiedTo(c, ctx) || c.gaveWay) return null;
-  if (c.error || !c.okAt) return <span class="save-cloud save-account warn" data-tip={c.error ? `Not on your account yet. ${c.error.replace(/([^.])$/, "$1.")}` : "Not on your account yet"}><Icon.cloudOff /></span>;
-  return <span class="save-cloud save-account" data-tip={`On your account, saved ${atTime(c.okAt, now)}`}><Icon.cloud /></span>;
+  if (c.error || !c.okAt) return <span class="save-cloud save-account warn" data-tip={c.error ? t("savesPanel.notSyncedWhy", { why: c.error.replace(/([^.])$/, "$1.") }) : t("savesPanel.notSynced")}><Icon.cloudOff /></span>;
+  return <span class="save-cloud save-account" data-tip={t("savesPanel.syncedAt", { time: atTime(c.okAt, now) })}><Icon.cloud /></span>;
 }
 
 /** T-988: another device opened or saved this game in the last ten minutes. */
@@ -137,7 +138,7 @@ function Elsewhere({ slot }: { slot: SaveSlot }) {
   const ctx = useGamesOn();
   void accountList.value;
   const at = ctx ? elsewhereAt(slot) : 0;
-  return at ? <div class="small muted save-elsewhere" data-tip={`Opened or saved on another device ${fullDate(at)}`}>Open on another device</div> : null;
+  return at ? <div class="small muted save-elsewhere" data-tip={t("savesPanel.elsewhereTip", { date: fullDate(at) })}>{t("savesPanel.elsewhere")}</div> : null;
 }
 
 /** T-1247: a save's name typed over in place; Enter or leaving the box renames, Escape cancels. */
@@ -159,7 +160,7 @@ function NameField({ slot, onDone }: { slot: SaveSlot; onDone: () => void }) {
     if (keep && name && name !== slot.name) manageSaveSlot("rename", slot.key, name);
     onDone();
   };
-  return <input ref={field} type="text" class="save-name-field" aria-label="Save slot name" maxLength={80}
+  return <input ref={field} type="text" class="save-name-field" aria-label={t("savesPanel.nameLabel")} maxLength={80}
     onKeyDown={(e) => {
       if (e.key === "Enter") { e.preventDefault(); finish(true); }
       else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); finish(false); }
@@ -167,26 +168,26 @@ function NameField({ slot, onDone }: { slot: SaveSlot; onDone: () => void }) {
     onBlur={() => finish(true)} />;
 }
 
-const OPEN_TIP = "Play this game. The game you are playing is saved first.";
+const openTip = () => t("savesPanel.openTip");
 
 /** A saved game's buttons, the foot of its card at the right (in line with its other versions). */
 function SlotActions({ slot, playing, writable, copying, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; writable: boolean; copying: boolean; onCopy: () => void; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
   const newer = saveSlotsState.value.newer;
-  const saveTip = writable ? "Save this game now (Ctrl+S)" : newer ? "This game was saved on a newer game version. Reload the page to update." : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
+  const saveTip = writable ? t("savesPanel.saveTip") : newer ? t("savesPanel.saveNewer") : /another device/.test(saveSlotsState.value.reason ?? "") ? t("savesPanel.saveOtherDevice") : t("savesPanel.saveOtherTab");
   return (
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
       {playing ? <>
-        <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
-        <button class="btn icon save-download" data-tip={newer ? "Download as a file, as saved on the newer game version" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
-        <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-        <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
+        <button class="btn icon save-copy" data-tip={t("savesPanel.copyTip")} aria-label={t("savesPanel.copy")} disabled={copying} onClick={onCopy}><Icon.copy /></button>
+        <button class="btn icon save-download" data-tip={newer ? t("savesPanel.downloadNewer") : t("savesPanel.download")} aria-label={t("savesPanel.download")} onClick={exportGame}><Icon.download /></button>
+        <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
+        <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>{t("savesPanel.save")}</button>
       </> : <>
-        <button class="btn icon save-download" data-tip="Download as a file" aria-label="Download as a file"
-          onClick={async () => { setMsg(""); if (!await exportSlot(slot)) setMsg("This game could not be read."); }}><Icon.download /></button>
-        <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-        <button class="btn text save-open" data-tip={OPEN_TIP} onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>
+        <button class="btn icon save-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")}
+          onClick={async () => { setMsg(""); if (!await exportSlot(slot)) setMsg(t("savesPanel.readFailed")); }}><Icon.download /></button>
+        <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
+        <button class="btn text save-open" data-tip={openTip()} onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>{t("savesPanel.open")}</button>
       </>}
     </div>
   );
@@ -203,8 +204,8 @@ function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed 
         <div class="save-slot-title">
           {renaming
             ? <NameField slot={slot} onDone={onRenamed} />
-            : <span class="save-name" onDblClick={onRename}><SlotTitle slot={slot} panel />{playing && <button class="save-pen" data-tip="Rename" aria-label="Rename" onClick={onRename}><Icon.pencil /></button>}</span>}
-          {playing && <span class="save-playing small">Playing</span>}
+            : <span class="save-name" onDblClick={onRename}><SlotTitle slot={slot} panel />{playing && <button class="save-pen" data-tip={t("savesPanel.rename")} aria-label={t("savesPanel.rename")} onClick={onRename}><Icon.pencil /></button>}</span>}
+          {playing && <span class="save-playing small">{t("savesPanel.playing")}</span>}
         </div>
         <SlotFacts slot={slot} now={now} autosaved={autosaved} mark={playing ? <AccountMark slot={slot} now={now} /> : null} />
         {!playing && <Elsewhere slot={slot} />}
@@ -234,15 +235,15 @@ export function useBackups(keys: string[], stamp: number): Record<string, SlotBa
 function versionFacts(v: Version): { day?: number; stations?: number; tip?: string; cloud?: string } {
   switch (v.kind) {
     case "slot": return { day: v.slot.day, stations: v.slot.stations };
-    case "account": return { day: v.game.facts?.day, stations: v.game.facts?.stations, cloud: "On your account. Open downloads it here." };
-    case "backup": return { day: v.backup.day, stations: v.backup.stations, tip: v.backup.pull ? "This browser's copy before your account's replaced it" : "A backup in this browser" };
-    case "accountBackup": return { tip: "A backup on your account", cloud: "A backup on your account" };
+    case "account": return { day: v.game.facts?.day, stations: v.game.facts?.stations, cloud: t("savesPanel.accountCopy") };
+    case "backup": return { day: v.backup.day, stations: v.backup.stations, tip: v.backup.pull ? t("savesPanel.backupPulled") : t("savesPanel.backupHere") };
+    case "accountBackup": return { tip: t("savesPanel.backupAccount"), cloud: t("savesPanel.backupAccount") };
   }
 }
-const versionId = (v: Version) => v.kind === "slot" ? v.slot.key : v.kind === "account" ? "account:" + v.game.id : v.kind === "backup" ? v.backup.key : `account-backup:${v.game.id}:${v.backup.rev}`;
+const versionId = (v: Version) => v.kind === "slot" ? v.slot.key : v.kind === "account" ? "account:" + v.game.id : v.kind === "backup" ? v.backup.key : `account-backup:${v.game.id}:${v.backup.rev}`; // i18n-ignore (id)
 
 /** "1 other version", "11 other versions". */
-export const otherVersions = (n: number) => n === 1 ? "1 other version" : `${n} other versions`;
+export const otherVersions = (n: number) => t("savesPanel.otherVersions", { count: n });
 
 /** What opening and deleting a version does where the card is (the saves panel, the start menu);
  * each answers a reason to show, or "" when done. */
@@ -270,19 +271,19 @@ export function VersionsLine({ group, now, act, children }: { group: GameGroup; 
     {open && <ul class="save-version-list">
       {group.others.map((v) => {
         const id = versionId(v), f = versionFacts(v), deletable = v.kind === "slot" || v.kind === "account";
-        const where = v.kind === "account" ? "your account" : v.kind === "slot" && onAccount(v.slot) ? "this browser and your account" : "this browser";
+        const where = v.kind === "account" ? "account" : v.kind === "slot" && onAccount(v.slot) ? "both" : "browser";
         return <li key={id} data-version={id} data-kind={v.kind}>
           <div class="save-version">
             <span class="small muted num" data-tip={f.tip}>
-              {savedWhen(v.at, now)}{f.day !== undefined && <> · Day {f.day}</>}{f.stations !== undefined && <> · {plural(f.stations, "station")}</>}
+              {savedWhen(v.at, now)}{f.day !== undefined && <> · {t("savesPanel.day", { day: f.day })}</>}{f.stations !== undefined && <> · {stationsText(f.stations)}</>}
               {f.cloud && <span class="save-cloud" data-tip={f.cloud}><Icon.cloud /></span>}
             </span>
-            {deletable && <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete this version" onClick={() => setAsking(id)}><Icon.bin /></button>}
-            <button class="btn text save-version-open" onClick={() => void run(act.open(v))}>Open</button>
+            {deletable && <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.deleteVersionLabel")} onClick={() => setAsking(id)}><Icon.bin /></button>}
+            <button class="btn text save-version-open" onClick={() => void run(act.open(v))}>{t("savesPanel.open")}</button>
           </div>
           {asking === id && <div class="callout bad">
-            <p>Delete this version from {where}?</p>
-            <div class="pane-foot"><button class="btn text" onClick={() => { setAsking(null); void run(act.remove(v)); }}>Delete version</button><button class="btn text" onClick={() => setAsking(null)}>Keep it</button></div>
+            <p>{t("savesPanel.deleteVersionQuestion", { where })}</p>
+            <div class="pane-foot"><button class="btn text" onClick={() => { setAsking(null); void run(act.remove(v)); }}>{t("savesPanel.deleteVersion")}</button><button class="btn text" onClick={() => setAsking(null)}>{t("savesPanel.keepIt")}</button></div>
           </div>}
         </li>;
       })}
@@ -296,9 +297,9 @@ export function deleteGroupQuestion(group: GameGroup, playing = false): string {
   const name = group.top.kind === "slot" ? group.top.slot.name : group.top.game.name;
   const heads = groupHeads(group);
   const browser = heads.some((v) => v.kind === "slot"), account = heads.some((v) => v.kind === "account" || onAccount(v.slot));
-  const where = browser && account ? "this browser and your account" : account ? "your account" : "this browser";
-  const what = group.others.length ? `"${name}" and its ${otherVersions(group.others.length)}` : `"${name}"`;
-  return playing ? `Delete ${what} from ${where}? The game ends and you go back to the start menu.` : `Delete ${what} from ${where}?`;
+  const where = browser && account ? "both" : account ? "account" : "browser";
+  const what = group.others.length ? t("savesPanel.deleteWhatMore", { name, versions: otherVersions(group.others.length) }) : t("savesPanel.deleteWhat", { name });
+  return t("savesPanel.deleteGameQuestion", { playing, what, where });
 }
 
 /** The head's icon: signed out a crossed cloud that opens Sign in, signed in a cloud that opens the
@@ -307,10 +308,10 @@ function HeadMark() {
   const s = session.value;
   if (accountState.value === "on") {
     const a = s?.account;
-    const tip = !a ? "Kept in this browser only. Sign in to keep your games on your account." : a.username ? `Signed in as ${a.username}` : a.logins.includes("google") ? "Signed in with Google" : "Signed in";
-    return <button class="btn icon save-head-mark" data-tip={tip} aria-label={a ? "Account" : "Sign in"} onClick={() => (accountOpen.value = true)}>{a ? <Icon.cloud /> : <Icon.cloudOff />}</button>;
+    const tip = !a ? t("savesPanel.signedOutTip") : a.username ? t("savesPanel.signedInAs", { name: a.username }) : a.logins.includes("google") ? t("savesPanel.signedInGoogle") : t("savesPanel.signedIn");
+    return <button class="btn icon save-head-mark" data-tip={tip} aria-label={a ? t("savesPanel.account") : t("savesPanel.signIn")} onClick={() => (accountOpen.value = true)}>{a ? <Icon.cloud /> : <Icon.cloudOff />}</button>;
   }
-  if (storageKept.value === false) return <span class="save-head-mark" data-tip="These saves can be lost if the disk fills up."><Icon.cloudOff /></span>;
+  if (storageKept.value === false) return <span class="save-head-mark" data-tip={t("savesPanel.mayBeLost")}><Icon.cloudOff /></span>;
   return null;
 }
 
@@ -324,7 +325,7 @@ export function pickSaveFile(onFile: (file: File) => void) {
 }
 
 /** "New York copy" for the game being played; "" when it has no slot (a test page). */
-const copyName = (name: string | undefined) => (name ? `${name} copy`.slice(0, 80) : "");
+const copyName = (name: string | undefined) => (name ? t("savesPanel.copyName", { name }).slice(0, 80) : "");
 
 function Saves({ onNewGame }: { onNewGame: () => void }) {
   const [rename, setRename] = useState<string | null>(null);
@@ -351,7 +352,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
     setCopyFrom(saves.active);
     manageSaveSlot("create", undefined, copyName(saves.slots.find((s) => s.key === saves.active)?.name));
   };
-  const t = Math.max(now, at);
+  const shownNow = Math.max(now, at);
   // T-2037: one card per game
   const backups = useBackups(saves.slots.map((s) => s.key), Math.floor(Math.max(0, ...saves.slots.map((s) => s.at)) / 60_000));
   const groups = groupVersions(saves.slots, ctx ? accountOnly(saves.slots) : [], backups, saves.active, ctx ? accountList.value?.games ?? [] : []);
@@ -362,16 +363,16 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
       if (v.kind === "backup") { manageSaveSlot("restore", v.backup.key); return shut(); }
       if (v.kind === "account") {
         const key = await downloadAccountGame(v.game);
-        if (!key) return "This game could not be downloaded.";
+        if (!key) return t("savesPanel.downloadFailed");
         manageSaveSlot("open", key);
         return shut();
       }
       const name = g.top.kind === "slot" ? g.top.slot.name : g.top.game.name;
-      return await restoreAccountBackup(v.game.id, name, g.origin, v.backup) ? shut() : "This backup could not be downloaded.";
+      return await restoreAccountBackup(v.game.id, name, g.origin, v.backup) ? shut() : t("savesPanel.backupDownloadFailed");
     },
     remove: async (v) => {
       if (v.kind === "slot") manageSaveSlot("delete", v.slot.key);
-      else if (v.kind === "account" && !await deleteAccountGame(v.game.id)) return "This game could not be deleted.";
+      else if (v.kind === "account" && !await deleteAccountGame(v.game.id)) return t("savesPanel.deleteFailed");
       return "";
     },
   });
@@ -388,27 +389,27 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
       {!saves.writable && saves.reason && <p class="callout bad">{saves.reason}</p>}
       {saves.error && <p class="callout bad">{saves.error}</p>}
       <div class="save-files">
-        <button class="btn text save-new" onClick={onNewGame}>New game</button>
-        <button class="btn text" data-tip="Open a .save file as a new saved game" onClick={pick}>Open a file</button>
+        <button class="btn text save-new" onClick={onNewGame}>{t("savesPanel.newGame")}</button>
+        <button class="btn text" data-tip={t("savesPanel.openFileTip")} onClick={pick}>{t("savesPanel.openFile")}</button>
         {/* a test page's game has no card to copy it from */}
-        {!saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip="Make a copy" aria-label="Make a copy" disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
+        {!saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip={t("savesPanel.copy")} aria-label={t("savesPanel.copy")} disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
       </div>
       <ul class="save-slots">
         {groups.map((g) => {
           const top = g.top, slot = top.kind === "slot" ? top.slot : cardOf(top.game), playing = slot.key === saves.active;
           return <li key={g.origin} data-origin={g.origin} {...(top.kind === "slot" ? { "data-slot": slot.key } : { "data-account": top.game.id })} class={playing ? "on" : ""}>
             {top.kind === "slot"
-              ? <SlotCard slot={slot} playing={playing} now={t} writable={saves.writable} renaming={rename === slot.key}
+              ? <SlotCard slot={slot} playing={playing} now={shownNow} writable={saves.writable} renaming={rename === slot.key}
                 onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} />
-              : <AccountCard slot={slot} now={t} />}
-            <VersionsLine group={g} now={t} act={actions(g)}>
+              : <AccountCard slot={slot} now={shownNow} />}
+            <VersionsLine group={g} now={shownNow} act={actions(g)}>
               {top.kind === "slot"
                 ? <SlotActions slot={slot} playing={playing} writable={saves.writable} copying={copyFrom !== null} onCopy={copy} onDelete={() => setRemoving(g.origin)} />
                 : <AccountActions slot={slot} onDelete={() => setRemoving(g.origin)} />}
             </VersionsLine>
             {removing === g.origin && <div class="callout bad">
               <p>{deleteGroupQuestion(g, playing)}</p>
-              <div class="pane-foot"><button class="btn text" onClick={() => { removeGroup(g); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
+              <div class="pane-foot"><button class="btn text" onClick={() => { removeGroup(g); setRemoving(null); }}>{t("savesPanel.deleteGame")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("savesPanel.keepIt")}</button></div>
             </div>}
           </li>;
         })}
@@ -436,15 +437,15 @@ function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => vo
   return (
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
-      <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-      <button class="btn text save-open" data-tip={OPEN_TIP} onClick={async () => {
+      <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
+      <button class="btn text save-open" data-tip={openTip()} onClick={async () => {
         if (!g) return;
         setMsg("");
         const key = await downloadAccountGame(g);
-        if (!key) { setMsg("This game could not be downloaded."); return; }
+        if (!key) { setMsg(t("savesPanel.downloadFailed")); return; }
         manageSaveSlot("open", key);
         savesOpen.value = false;
-      }}>Open</button>
+      }}>{t("savesPanel.open")}</button>
     </div>
   );
 }
@@ -463,7 +464,7 @@ export function SavesPanel() {
   useEffect(() => { if (!open) setSheet(false); }, [open]);
   useEffect(() => { if (open) { manageSaveSlot("refresh"); void refreshAccountGames(); } }, [open]);
   return (
-    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? "New game" : "Saved games"} head={sheet ? null : <HeadMark />}>
+    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <HeadMark />}>
       {sheet
         ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start); savesOpen.value = false; }} />
         : <Saves onNewGame={() => setSheet(true)} />}

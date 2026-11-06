@@ -15,6 +15,7 @@ import { cityById, isCity } from "../game/cities";
 import { calendarAt } from "../game/holidays";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
+import { t, tNumber, tRich } from "../i18n";
 
 type Span = "1d" | "30d" | "all";
 /** The span shown, kept while the game is open. */
@@ -39,7 +40,7 @@ const oneOff = (e: Entry) => e.trains + e.build;
 const run = (e: Entry) => e.running + (e.upkeep ?? 0) + (e.loan ?? 0);
 const usd = (v: number) => money(v * 1e6);
 const rides = (e: Entry) => e.rides ?? 0;
-const exact = (v: number) => Math.round(v).toLocaleString("en-US");
+const exact = (v: number) => tNumber(Math.round(v));
 
 /** "Mon Apr 14" or "Mon Apr 14, 04:00" in hovers; without the weekday under the charts. An hour is
  * the clock's, written `sh` hours ahead in the ledger days' local time. */
@@ -115,8 +116,8 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const last = list.length - 1;
   const bw = Math.max(1, col - GAP);
   /** a binned column's figures are per day */
-  const per = binned ? "/day" : "";
-  const name = (e: Entry, i: number) => (binned ? dateRange(e.from!, e.to!) : when(e, hours, sh)) + (i === last ? " so far" : "");
+  const per = binned ? t("moneyHistory.perDay") : "";
+  const name = (e: Entry, i: number) => { const w = binned ? dateRange(e.from!, e.to!) : when(e, hours, sh); return i === last ? t("moneyHistory.soFar", { when: w }) : w; };
 
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
@@ -134,14 +135,14 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   };
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
-    `Fares ${usd(e.fares)}${per}`,
-    `Running costs ${usd(-(e.running + (e.upkeep ?? 0)))}${per}`,
-    `Running trains ${usd(-e.running)}${per}`,
-    `Upkeep ${usd(-(e.upkeep ?? 0))}${per}`,
-    ...((e.loan ?? 0) > 0 ? [`Loan ${usd(-(e.loan ?? 0))}${per}`] : []),
-    ...(oneOff(e) > 0 ? [`One-off costs ${usd(-oneOff(e))}${per}`] : []),
-    ...(e.trains > 0 ? [`New trains ${usd(-e.trains)}${per}`] : []),
-    ...(e.build > 0 ? [`Construction ${usd(-e.build)}${per}`] : []),
+    t("moneyHistory.fares", { amount: usd(e.fares) + per }),
+    t("moneyHistory.running", { amount: usd(-(e.running + (e.upkeep ?? 0))) + per }),
+    t("moneyHistory.runningTrains", { amount: usd(-e.running) + per }),
+    t("moneyHistory.upkeep", { amount: usd(-(e.upkeep ?? 0)) + per }),
+    ...((e.loan ?? 0) > 0 ? [t("moneyHistory.loan", { amount: usd(-(e.loan ?? 0)) + per })] : []),
+    ...(oneOff(e) > 0 ? [t("moneyHistory.oneOff", { amount: usd(-oneOff(e)) + per })] : []),
+    ...(e.trains > 0 ? [t("moneyHistory.newTrains", { amount: usd(-e.trains) + per })] : []),
+    ...(e.build > 0 ? [t("moneyHistory.construction", { amount: usd(-e.build) + per })] : []),
   ].join("\n");
 
   // train rides (T-565): bars up from zero
@@ -154,24 +155,24 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
 
   const first = list[0];
   // T-2487: the titles say which scope they are, being a scroll below the switch that sets it
-  const where = zone ? cityById(zone).name : "all cities";
+  const where = zone ? cityById(zone).name : t("moneyHistory.allCities");
   return (
     <>
       <div class="h">
-        History
+        {t("moneyHistory.history")}
         <span class="right hist-switches">
           <Segmented<Span>
             options={[
-              ["1d", "1d"],
-              ["30d", "30d"],
-              ["all", "All time"],
+              ["1d", t("moneyHistory.span1d")],
+              ["30d", t("moneyHistory.span30d")],
+              ["all", t("moneyHistory.spanAll")],
             ]}
             value={span.value}
             onChange={(v) => { span.value = v; }}
           />
         </span>
       </div>
-      <div class="hist-title small"><span><span class="hist-fares">Revenue</span> and <span class="hist-costs">expenses</span> in {where}</span><span class="right muted">{usd(top)}{per}</span></div>
+      <div class="hist-title small"><span>{tRich("moneyHistory.title", { revenue: <span class="hist-fares">{t("moneyHistory.revenue")}</span>, expenses: <span class="hist-costs">{t("moneyHistory.expenses")}</span>, where })}</span><span class="right muted">{usd(top)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
@@ -186,14 +187,14 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         })}
         {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
       </svg>
-      <div class="hist-title small"><span>Train rides in {where}</span><span class="right muted">{count(rideTop)}{per}</span></div>
+      <div class="hist-title small"><span>{t("moneyHistory.ridesTitle", { where })}</span><span class="right muted">{count(rideTop)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
         {list.map((e, i) => {
           const y = y3(rides(e));
           return <rect class={"hist-rides" + (i === last ? " now" : "")} x={cx(i) - bw / 2} y={y} width={bw} height={Math.max(0.5, H - PAD - y)} />;
         })}
-        {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\nTrain rides ${exact(rides(e))}${per}`} />)}
+        {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={`${name(e, i)}\n${t("moneyHistory.rides", { count: exact(rides(e)) + per })}`} />)}
       </svg>
       {marks.some((m) => m.lines.length) && (
         <svg class="hist-hols" viewBox={`0 0 ${W} 4`} preserveAspectRatio="none">

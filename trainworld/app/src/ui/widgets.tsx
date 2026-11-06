@@ -11,6 +11,7 @@ import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import { knock } from "../game/world";
 import type { Signal } from "@preact/signals";
+import { t } from "../i18n";
 
 export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
@@ -186,8 +187,7 @@ export function shakeEl(el: HTMLElement | null) {
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
 export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
-  const u = p.jumpUnit ? " " + p.jumpUnit : "";
-  const jump = p.jump ? `Shift-click for 5${u}, Ctrl-click for 20${u}` : undefined;
+  const jump = p.jump ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
   const box = useRef<HTMLSpanElement>(null);
   // T-1844: a step that returns false was refused (a limit, or no money): the stepper shakes and the
@@ -202,11 +202,11 @@ export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => bo
   };
   return (
     <span ref={box} class={"stepper" + (p.wide ? " wide" : "")} onAnimationEnd={() => box.current?.classList.remove("shake")}>
-      <button class="btn" aria-label={"Less " + p.label} data-tip={tip(p.tipDown)} onClick={(e) => step(-by(e))}>
+      <button class="btn" aria-label={t("widgets.less", { label: p.label })} data-tip={tip(p.tipDown)} onClick={(e) => step(-by(e))}>
         <Icon.minus />
       </button>
       {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v" data-tip={p.tipValue}>{p.value}</span>}
-      <button class="btn" aria-label={"More " + p.label} data-tip={tip(p.tipUp)} onClick={(e) => step(by(e))}>
+      <button class="btn" aria-label={t("widgets.more", { label: p.label })} data-tip={tip(p.tipUp)} onClick={(e) => step(by(e))}>
         <Icon.plus />
       </button>
     </span>
@@ -233,7 +233,7 @@ export function TypedValue(p: { label: string; type: { text: string; set: (v: nu
     if (Number.isFinite(v)) p.type.set(v);
   };
   if (draft === null) {
-    return <button class="v typed" data-tip={p.type.tip} aria-label={"Type " + p.label} onClick={() => { done.current = false; fresh.current = true; setDraft(p.type.text); }}>{p.children}</button>;
+    return <button class="v typed" data-tip={p.type.tip} aria-label={t("widgets.type", { label: p.label })} onClick={() => { done.current = false; fresh.current = true; setDraft(p.type.text); }}>{p.children}</button>;
   }
   return (
     <input class="v typing" ref={open} value={draft} inputMode="decimal" aria-label={p.label}
@@ -334,7 +334,7 @@ export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPi
     <div class="group levels">
       {LEVELS.map((l) => (
         <button class={"btn lv" + (l === value ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
-          data-tip={tip(l)} aria-label={`Level ${levelLabel(l)}`} aria-pressed={l === value} onClick={() => onPick(l)}>
+          data-tip={tip(l)} aria-label={t("widgets.level", { level: levelLabel(l) })} aria-pressed={l === value} onClick={() => onPick(l)}>
           {levelLabel(l)}
         </button>
       ))}
@@ -355,7 +355,7 @@ export function SwapLabel({ on, off, onText }: { on: boolean; off: string; onTex
 
 /** A "Blueprint" note under an inspector's header until what it shows is constructed. */
 export function Built({ built }: { built: boolean }) {
-  return built ? null : <p class="muted">Blueprint</p>;
+  return built ? null : <p class="muted">{t("widgets.blueprint")}</p>;
 }
 
 /** Construct (while a blueprint) on the left and Remove on the right of one row. */

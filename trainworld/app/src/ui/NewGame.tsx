@@ -10,6 +10,7 @@ import type { GameMode, NewGameSpec } from "../workers/saveFile";
 import { dataUrl } from "../game/dataBase";
 import { display } from "../game/ui";
 import { setStartAt } from "./locate";
+import { t, tCountry } from "../i18n";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
  * network. A fixed list, so easy, medium and hard starts can take its place later. */
@@ -19,16 +20,9 @@ const START_CITIES = ["nyc", "lon", "par", "tyo", "tor"];
 const REAL_NETWORKS = new Set(["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]);
 const MAX_HITS = 8;
 
-let regionNames: Intl.DisplayNames | null = null;
 function countryOf(c: City): string {
   const code = c.country;
-  if (!code) return "";
-  try {
-    regionNames ??= new Intl.DisplayNames(["en"], { type: "region" });
-    return regionNames.of(code) ?? code;
-  } catch {
-    return code;
-  }
+  return code ? tCountry(code) : "";
 }
 
 /** Registry cities and zones with a word of their name or of an alias starting with the text,
@@ -130,7 +124,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         spec.real = await realNetwork(startId!);
       } catch {
         setBusy(false);
-        setError(`${city!.name}'s real network could not be downloaded.`);
+        setError(t("newGame.downloadFailed", { city: city!.name }));
         return;
       }
     }
@@ -144,23 +138,23 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   );
   return (
     <div class="new-game">
-      {heading && <h2 class="new-game-title">New game</h2>}
+      {heading && <h2 class="new-game-title">{t("newGame.title")}</h2>}
       <div class="group new-game-mode">
-        {modeBtn("normal", "Normal", undefined, first)}
-        {modeBtn("sandbox", "Sandbox", "Unlimited money")}
+        {modeBtn("normal", t("newGame.normal"), undefined, first)}
+        {modeBtn("sandbox", t("newGame.sandbox"), t("newGame.sandboxTip"))}
       </div>
       <div class="new-game-where">
-        <span class="start-head">Start in</span>
+        <span class="start-head">{t("newGame.startIn")}</span>
         <div class="new-game-cities">
           {START_CITIES.map((id) => (
             <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(id)}>{cityById(id).name}</button>
           ))}
           {CAN_LOCATE && <button class={"btn text new-game-here" + (located ? " on" : "") + (here === "failed" ? " muted" : "")} aria-pressed={!!located} data-state={located ? "located" : here} disabled={here === "asking"} onClick={locate}>
-            {here === "asking" ? "Locating" : here === "failed" ? "Location unavailable" : "Current location"}
+            {here === "asking" ? t("newGame.locating") : here === "failed" ? t("newGame.locationUnavailable") : t("newGame.currentLocation")}
           </button>}
         </div>
-        <span class="new-game-or muted small">or</span>
-        <input type="text" class="new-game-find" aria-label="Find a city" placeholder="Find a city" value={text} maxLength={60}
+        <span class="new-game-or muted small">{t("newGame.or")}</span>
+        <input type="text" class="new-game-find" aria-label={t("newGame.findCity")} placeholder={t("newGame.findCity")} value={text} maxLength={60}
           onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); setLocated(null); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }
@@ -171,21 +165,21 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         {hits.length > 0 && <ul class="new-game-hits" role="listbox">
           {hits.map(({ city: c, matched }, i) => (
             <li role="option" aria-selected={i === cursor} class={i === cursor ? "on" : ""} data-city={c.id} onMouseDown={(e) => { e.preventDefault(); pick(c.id); }}>
-              <span>{c.name}{matched && <span class="muted small">, matched {matched}</span>}</span><span class="muted small">{countryOf(c)}</span>
+              <span>{c.name}{matched && <span class="muted small">{t("newGame.matched", { alias: matched })}</span>}</span><span class="muted small">{countryOf(c)}</span>
             </li>
           ))}
         </ul>}
-        <span class="new-game-or muted small">or</span>
-        <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>Choose on map</button>
+        <span class="new-game-or muted small">{t("newGame.or")}</span>
+        <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>{t("newGame.chooseOnMap")}</button>
       </div>
-      {realOffered && <label class="check new-game-real" data-tip={`Start with ${city!.name}'s real rail lines already built.`}>
+      {realOffered && <label class="check new-game-real" data-tip={t("newGame.realTip", { city: city!.name })}>
         <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />
-        <span>Real world network</span>
+        <span>{t("newGame.realNetwork")}</span>
       </label>}
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
-        <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? `Start in ${city.name}` : "Start"}</button>
-        <button class="btn text" onClick={onBack}>Back</button>
+        <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: city.name }) : t("newGame.start")}</button>
+        <button class="btn text" onClick={onBack}>{t("newGame.back")}</button>
       </div>
     </div>
   );
