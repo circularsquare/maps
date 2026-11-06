@@ -5,7 +5,7 @@ import type { MultiPolygon } from "geojson";
 import { dataUrl } from "../game/dataBase";
 import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
 import { M_PER_DEG } from "../game/frame";
-import { atZero, cellSays, distanceTo, type Footprint } from "../workers/cityReach";
+import { atZero, cellSays, cellsSayInside, distanceTo, type Footprint } from "../workers/cityReach";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
@@ -190,4 +190,10 @@ export function inOutline(id: string, g: MultiPolygon, lon: number, lat: number)
     if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;
+}
+
+/** True when `inOutline` is surely true at every place in the box [w, s, e, n]: the box lies in
+ * cells of the outline's grid wholly inside it (false says nothing). */
+export function inOutlineBox(id: string, g: MultiPolygon, w: number, s: number, e: number, n: number): boolean {
+  return cellsSayInside(cellFootprint(id, g), w, s, e, n);
 }

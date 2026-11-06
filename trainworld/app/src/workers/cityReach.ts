@@ -314,6 +314,24 @@ export function cellSays(f: Footprint, lon: number, lat: number): boolean | null
   return z.status[c] === IN ? true : z.status[c] === OUT ? false : null;
 }
 
+/** Whether `cellSays` is true for every place in the box [w, s, e, n] (T-1358): each such place is in
+ * one of the cells the box's corners are in or between, since a place's cell only grows with it. */
+export function cellsSayInside(f: Footprint, w: number, s: number, e: number, n: number): boolean {
+  const [fw, fs, fe, fn] = f.bbox;
+  if (!(w >= fw && e <= fe && s >= fs && n <= fn)) return false;
+  const z = zeroGrid(f);
+  if (!z) return false;
+  const col = (x: number) => Math.min(z.nx - 1, Math.max(0, Math.floor((x - fw) / z.cw)));
+  const row = (y: number) => Math.min(z.ny - 1, Math.max(0, Math.floor((y - fs) / z.ch)));
+  for (let y = row(s), y1 = row(n), x0 = col(w), x1 = col(e); y <= y1; y++) {
+    for (let c = y * z.nx + x0, end = y * z.nx + x1; c <= end; c++) {
+      if (z.status[c] === UNKNOWN) fillRow(f, z, y);
+      if (z.status[c] !== IN) return false;
+    }
+  }
+  return true;
+}
+
 /** `atZero` by the same arithmetic as `distanceTo` but measuring no distance: only an edge whose box
  * holds the place can be at 0 from it. */
 function atZeroExact(f: Footprint, lon: number, lat: number): boolean {
