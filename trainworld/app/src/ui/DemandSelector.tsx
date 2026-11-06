@@ -7,7 +7,6 @@ import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay, type MapRow } from "../game/ui";
 import { guideFolding, guideOpened } from "../game/guide";
 import type { JSX } from "preact";
-import { DemandStopped } from "./DemandStopped";
 import { StatusTag } from "./StatusTag";
 import { BusyTag } from "./BusyTag";
 import { Icon } from "./widgets";
@@ -23,7 +22,7 @@ import { t, tNumber, type MessageKey } from "../i18n";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
- * "Saved only in this browser" dot beside it), the demand alert, what the last edit did (T-2125)
+ * "Saved only in this browser" dot beside it), what the last edit did (T-2125)
  * and a passing note (T-2166). */
 export function MapTopLeft() {
   // T-2161: the map's rows say nothing about the network diagram; its own take their place
@@ -41,7 +40,6 @@ export function MapTopLeft() {
       <NorthButton />
       <KeepDot />
     </div>
-    <DemandStopped />
     <EditNote />
     <PassingNote />
   </div>;

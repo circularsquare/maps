@@ -75,6 +75,7 @@ import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
+import { DemandStopped } from "./ui/DemandStopped";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { diagramShown, startDiagramView } from "./diagram/view";
@@ -156,6 +157,10 @@ startRealmOverlay(map); // T-975: the realms not shown, dark with a button each
 const demandSelectorRoot = document.createElement("div");
 map.getContainer().appendChild(demandSelectorRoot);
 render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the stations full alert (T-231)
+// T-2657: demand stopped for good: the notice at the top centre; Reload writes the autosave first
+const demandStoppedRoot = document.createElement("div");
+map.getContainer().appendChild(demandStoppedRoot);
+render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre
@@ -715,6 +720,7 @@ if (DEBUG) {
   };
 
   (window as any).tw = {
+    failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
     map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },

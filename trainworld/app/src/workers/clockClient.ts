@@ -700,6 +700,16 @@ export class ClockClient {
     addEventListener("pagehide", () => this.post({ kind: "flush" }));
   }
 
+  /** T-2657: write the autosave and wait for its mark (or 1.5 s) before the page reloads */
+  saveBeforeReload(): Promise<void> {
+    const from = saveSlotsState.peek().at;
+    this.post({ kind: "flush" });
+    return new Promise((done) => {
+      const stop = effect(() => { if (saveSlotsState.value.at !== from) { stop(); done(); } });
+      setTimeout(() => { stop(); done(); }, 1500);
+    });
+  }
+
   private cityId: string;
   /** the world before the last state, for the edit that state answers (T-531) */
   private worldBefore: WorldView | null = null;

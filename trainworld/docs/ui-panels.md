@@ -176,7 +176,7 @@ wide so a longer date moves nothing [T-1868].
   text is its hover. On a map column under 520 px the tag (and the busy tag after it) goes under the
   day and night picture at the top right, right-aligned and as wide as its text (`MapSky`), taking no
   row of its own [T-1704, T-2202]; the demand row stops short of the day and night picture
-  at the top right [T-1868], and the demand stopped alert and the selection bar are under the rows
+  at the top right [T-1868], and the selection bar is under the rows
   (the find button's row included). **"Trips here being recomputed…"** shows whenever the trips of the zone in view are rough,
   early, from before an edit or from the last session's cache, or while its detailed solve is on the
   way [T-1851, T-1223, T-328, T-421]; when the solve doing it is a whole one over several zones (a
@@ -274,7 +274,7 @@ wide so a longer date moves nothing [T-1868].
   A new line with no riders yet ("constructing...", running trains that cost and earn nothing) holds
   the cap wherever it is, in view or not, until its riders land [T-2409]. The cap is never lower
   than 4x (Anita, 2026-11-04).
-  Demand that stopped (its red alert) caps nothing. **A quiet edit does not cap** [T-1803,
+  Demand that stopped (its notice) caps nothing. **A quiet edit does not cap** [T-1803,
   `game/editCap.ts`]: a train count or headway change at a level not in force on that line now, or by
   less than half of what it was (counted from before the edits since demand last settled, in trains
   for a count and trains an hour for a headway; from or to 0 is never small), or a stop edit on a line
@@ -1240,9 +1240,13 @@ registry centre and zoom, or over New York with none [T-310].
   bytes, no game or network from the clock worker) for 3 minutes, or 10 with a bar up, gives way
   to that screen ("No demand figures arrived in 3 minutes"); a hidden or frozen page counts no
   quiet [T-950].
-- If demand stops later (a worker out of memory on a very big network, or an error) [T-757], a red
-  alert under the demand buttons says "Demand ran out of memory" or "Demand stopped", its hover
-  the cause and that a reload starts it again; the status tag goes, the figures shown stay.
+- If demand stops later (a worker out of memory on a very big network, or an error) [T-757, T-2657],
+  the clock is paused once (the player may run it again) and a notice with a red border sits at the
+  top centre of the map: "Demand stopped, so the game is paused. Reload the page to start it again."
+  ("Demand ran out of memory" for memory), with a Reload page button that writes the autosave and
+  waits for it (at most 1.5 s) before reloading. An error's text is the small line under it (its
+  hover the whole text). The status tag goes, the figures shown stay. `failDemand()` on `window.tw`
+  (`?debug=1`) forces it.
 - A game whose view is over dead space and whose stations reach no zone loads nothing: no card, no
   status, the clock not held, the split "–" [T-318]; a change to its stations or lines is still
   solved, with no pack, so its lines get their figures (nobody aboard) [T-845].

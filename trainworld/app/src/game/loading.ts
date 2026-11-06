@@ -138,7 +138,7 @@ export function loadComplete() {
 }
 
 /** T-757: demand stopped after startup (a worker failed mid-game: out of memory, an error), as the
- * player is told it under the demand buttons (ui/DemandStopped.tsx); the figures shown stay. */
+ * player is told it in the notice at the top centre (ui/DemandStopped.tsx); the figures shown stay. */
 export const demandStopped = signal<"memory" | "error" | null>(null);
 
 /** T-2545: iOS may reload a page that ran out of memory without a word. A flag in sessionStorage is set
@@ -166,7 +166,10 @@ export function loadFailed(why: string) {
   // after startup; at a failed startup the player's choice releases it (every worker may report)
   else if (startup.peek() === "ready") {
     clock?.setHeld(false);
-    if (!demandStopped.peek()) demandStopped.value = isMemoryFailure(why) ? "memory" : "error";
+    if (!demandStopped.peek()) {
+      demandStopped.value = isMemoryFailure(why) ? "memory" : "error";
+      clock?.setRunning(false); // T-2657: paused once; the player may run it again
+    }
   }
 }
 

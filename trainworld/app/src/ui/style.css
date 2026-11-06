@@ -834,8 +834,17 @@ rect.now { fill-opacity: .45; }
 .map-top-row { max-width: calc(100cqw / var(--ui, 1) - var(--sky-w) - 30px); }
 .map-find { display: flex; align-items: center; gap: 6px; max-width: 100%; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
-.demand-stopped { font-size: 12px; padding: 4px 8px; color: var(--bad); border-color: var(--bad); background: var(--bg); }
-.demand-stopped, .demand-stopped:hover { cursor: default; background: var(--bg); }
+/* T-2657: demand stopped for good, top centre above the other bars; the error is the small line under it */
+.demand-stopped-note { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 6; zoom: var(--ui, 1);
+  width: max-content; max-width: calc(100% - 20px); padding: 8px 10px; background: var(--bg); border: 1px solid var(--bad);
+  color: var(--text); font-size: 13px; }
+@container map-column (max-width: 1350px) { .demand-stopped-note { top: 46px; } }
+@container map-column (max-width: 1000px) { .demand-stopped-note { top: 80px; } }
+@container map-column (max-width: 680px) { .demand-stopped-note { top: 148px; } }
+.dsn-row { display: flex; align-items: center; gap: 10px; }
+.dsn-row span { min-width: 0; }
+.dsn-row .btn { flex: none; border-color: var(--bad); color: var(--bad); }
+.dsn-detail { margin-top: 4px; max-width: 460px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demand-selector .btn { font-size: 12px; padding: 4px 8px; }
 .demand-selector .btn + .btn, .demand-selector .hint-cell + .btn { margin-left: -1px; }
 /* T-1137: a hint of what each row is for, an icon cell before its buttons: a selected demand bubble
