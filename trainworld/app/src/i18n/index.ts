@@ -7,8 +7,6 @@ import type { ComponentChild, ComponentChildren } from "preact";
 import IntlMessageFormat from "intl-messageformat";
 import en from "./messages/en.json";
 import { countryName, formatDate, formatList, formatNumber, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
-// each language's font faces; a face downloads only once text in its language needs it (T-2636)
-import "./huninn.css";
 
 export { LANGS, LANG_NAMES, isLang, type Lang } from "./intl";
 
