@@ -56,6 +56,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **linepanel** (Opus, tree, ~10:45): T-2600 build controls text, T-2601 "Stop editing", T-2602 faded passed
   stations, T-2603 Marey diagram. Strings to show Anita.
 - **profitpeek** (Opus, main tree read-only, ~10:45): T-2604 quick profit estimate, design note only.
+- **slcload** (Opus, tree, ~11:00): T-2605 city in view's demand load (Anita: "how long do we expect , say, loading
+  salt lake city"); stage 1 numbers by message first, then cut the biggest share. Owns the demand workers.
 - **8800 = build 1135 (983f5c3d)** (Brazil, sheet default, NJ fix, DC label, sheetspeed, workerbal); smoke light
   and dark PASSED 25/25 ~10:50, 12,515,594.
 - Anita asked (TODO.md): cross-border fares, "charge people based on where they get on": answered, already so
