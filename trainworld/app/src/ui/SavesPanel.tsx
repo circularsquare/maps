@@ -169,12 +169,33 @@ function NameField({ slot, onDone }: { slot: SaveSlot; onDone: () => void }) {
 
 const OPEN_TIP = "Play this game. The game you are playing is saved first.";
 
-/** One saved game in this browser. */
-function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, onRenamed, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; renaming: boolean; copying: boolean; onRename: () => void; onRenamed: () => void; onCopy: () => void; onDelete: () => void }) {
+/** A saved game's buttons, the foot of its card at the right (in line with its other versions). */
+function SlotActions({ slot, playing, writable, copying, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; writable: boolean; copying: boolean; onCopy: () => void; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
-  const byHand = savedByHand.value, newer = saveSlotsState.value.newer;
-  const autosaved = playing && writable && !(byHand && Math.abs(byHand - slot.at) < 2000);
+  const newer = saveSlotsState.value.newer;
   const saveTip = writable ? "Save this game now (Ctrl+S)" : newer ? "This game was saved on a newer game version. Reload the page to update." : /another device/.test(saveSlotsState.value.reason ?? "") ? "Save this game now (Ctrl+S). Autosave stops on the other device." : "Save this game now (Ctrl+S). Autosave stops in the other tab that has it open.";
+  return (
+    <div class="save-actions">
+      {msg && <span class="small bad">{msg}</span>}
+      {playing ? <>
+        <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
+        <button class="btn icon save-download" data-tip={newer ? "Download as a file, as saved on the newer game version" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
+        <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
+        <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
+      </> : <>
+        <button class="btn icon save-download" data-tip="Download as a file" aria-label="Download as a file"
+          onClick={async () => { setMsg(""); if (!await exportSlot(slot)) setMsg("This game could not be read."); }}><Icon.download /></button>
+        <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
+        <button class="btn text save-open" data-tip={OPEN_TIP} onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>
+      </>}
+    </div>
+  );
+}
+
+/** One saved game in this browser. */
+function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed }: { slot: SaveSlot; playing: boolean; now: number; writable: boolean; renaming: boolean; onRename: () => void; onRenamed: () => void }) {
+  const byHand = savedByHand.value;
+  const autosaved = playing && writable && !(byHand && Math.abs(byHand - slot.at) < 2000);
   return (
     <div class="save-card">
       <SlotThumb slot={slot} />
@@ -187,20 +208,6 @@ function SlotCard({ slot, playing, now, writable, renaming, copying, onRename, o
         </div>
         <SlotFacts slot={slot} now={now} autosaved={autosaved} mark={playing ? <AccountMark slot={slot} now={now} /> : null} />
         {!playing && <Elsewhere slot={slot} />}
-        {msg && <div class="small bad">{msg}</div>}
-        <div class="save-actions">
-          {playing ? <>
-            <button class="btn icon save-copy" data-tip="Make a copy of this save" aria-label="Make a copy" disabled={copying} onClick={onCopy}><Icon.copy /></button>
-            <button class="btn icon save-download" data-tip={newer ? "Download as a file, as saved on the newer game version" : "Download as a file"} aria-label="Download as a file" onClick={exportGame}><Icon.download /></button>
-            <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-            <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>Save</button>
-          </> : <>
-            <button class="btn icon save-download" data-tip="Download as a file" aria-label="Download as a file"
-              onClick={async () => { setMsg(""); if (!await exportSlot(slot)) setMsg("This game could not be read."); }}><Icon.download /></button>
-            <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-            <button class="btn text save-open" data-tip={OPEN_TIP} onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>Open</button>
-          </>}
-        </div>
       </div>
     </div>
   );
@@ -243,11 +250,11 @@ export interface VersionActions { open: (v: Version) => Promise<string>; remove:
 
 /** The line at the bottom of a game's card, "11 other versions", and under it, opened, each other
  * version: when it was saved, its day and stations, Open, and for a slot or account game a delete. */
-export function VersionsLine({ group, now, act }: { group: GameGroup; now: number; act: VersionActions }) {
+export function VersionsLine({ group, now, act, children }: { group: GameGroup; now: number; act: VersionActions; children?: ComponentChildren }) {
   const [asking, setAsking] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const n = group.others.length;
-  if (!n) return null;
+  if (!n && !children) return null;
   const open = versionsShown.value.has(group.origin);
   const toggle = () => {
     const s = new Set(versionsShown.peek());
@@ -256,7 +263,10 @@ export function VersionsLine({ group, now, act }: { group: GameGroup; now: numbe
   };
   const run = async (p: Promise<string>) => { setMsg(""); const why = await p; if (why) setMsg(why); };
   return <div class="save-versions">
-    <button class={"save-versions-line small" + (open ? " open" : "")} aria-expanded={open} onClick={toggle}><Icon.chevron />{otherVersions(n)}</button>
+    <div class="save-foot">
+      {n > 0 && <button class={"save-versions-line small" + (open ? " open" : "")} aria-expanded={open} onClick={toggle}><Icon.chevron />{otherVersions(n)}</button>}
+      {children}
+    </div>
     {open && <ul class="save-version-list">
       {group.others.map((v) => {
         const id = versionId(v), f = versionFacts(v), deletable = v.kind === "slot" || v.kind === "account";
@@ -388,10 +398,14 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
           const top = g.top, slot = top.kind === "slot" ? top.slot : cardOf(top.game), playing = slot.key === saves.active;
           return <li key={g.origin} data-origin={g.origin} {...(top.kind === "slot" ? { "data-slot": slot.key } : { "data-account": top.game.id })} class={playing ? "on" : ""}>
             {top.kind === "slot"
-              ? <SlotCard slot={slot} playing={playing} now={t} writable={saves.writable} renaming={rename === slot.key} copying={copyFrom !== null}
-                onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} onCopy={copy} onDelete={() => setRemoving(g.origin)} />
-              : <AccountCard slot={slot} now={t} onDelete={() => setRemoving(g.origin)} />}
-            <VersionsLine group={g} now={t} act={actions(g)} />
+              ? <SlotCard slot={slot} playing={playing} now={t} writable={saves.writable} renaming={rename === slot.key}
+                onRename={() => setRename(slot.key)} onRenamed={() => setRename(null)} />
+              : <AccountCard slot={slot} now={t} />}
+            <VersionsLine group={g} now={t} act={actions(g)}>
+              {top.kind === "slot"
+                ? <SlotActions slot={slot} playing={playing} writable={saves.writable} copying={copyFrom !== null} onCopy={copy} onDelete={() => setRemoving(g.origin)} />
+                : <AccountActions slot={slot} onDelete={() => setRemoving(g.origin)} />}
+            </VersionsLine>
             {removing === g.origin && <div class="callout bad">
               <p>{deleteGroupQuestion(g, playing)}</p>
               <div class="pane-foot"><button class="btn text" onClick={() => { removeGroup(g); setRemoving(null); }}>Delete saved game</button><button class="btn text" onClick={() => setRemoving(null)}>Keep it</button></div>
@@ -404,28 +418,33 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
 }
 
 /** T-988: a game on the account and not in this browser; Open downloads it into a new slot. */
-function AccountCard({ slot, now, onDelete }: { slot: SaveSlot; now: number; onDelete: () => void }) {
-  const [msg, setMsg] = useState("");
-  const g = accountList.value?.games.find((x) => "account:" + x.id === slot.key);
+function AccountCard({ slot, now }: { slot: SaveSlot; now: number }) {
   return (
     <div class="save-card">
       <SlotThumb slot={slot} />
       <div class="save-info">
         <div class="save-slot-title"><span class="save-name"><SlotTitle slot={slot} panel /></span></div>
         <SlotFacts slot={slot} now={now} />
-        {msg && <div class="small bad">{msg}</div>}
-        <div class="save-actions">
-          <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
-          <button class="btn text save-open" data-tip={OPEN_TIP} onClick={async () => {
-            if (!g) return;
-            setMsg("");
-            const key = await downloadAccountGame(g);
-            if (!key) { setMsg("This game could not be downloaded."); return; }
-            manageSaveSlot("open", key);
-            savesOpen.value = false;
-          }}>Open</button>
-        </div>
       </div>
+    </div>
+  );
+}
+
+function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => void }) {
+  const [msg, setMsg] = useState("");
+  const g = accountList.value?.games.find((x) => "account:" + x.id === slot.key);
+  return (
+    <div class="save-actions">
+      {msg && <span class="small bad">{msg}</span>}
+      <button class="btn icon save-delete" data-tip="Delete" aria-label="Delete" onClick={onDelete}><Icon.bin /></button>
+      <button class="btn text save-open" data-tip={OPEN_TIP} onClick={async () => {
+        if (!g) return;
+        setMsg("");
+        const key = await downloadAccountGame(g);
+        if (!key) { setMsg("This game could not be downloaded."); return; }
+        manageSaveSlot("open", key);
+        savesOpen.value = false;
+      }}>Open</button>
     </div>
   );
 }

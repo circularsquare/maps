@@ -772,10 +772,12 @@ keeps what it had and earns no more.
 - **Firsts**, in this order: **Over the border** (a line with stops in two countries, each stop's zone's
   country), **Bicontinental** (two continents, `game/continents.ts`: UN M49, the Americas split at
   Panama, Russia at 60°E, Kazakhstan at 51.5°E, Egypt at Suez, Turkey at the Bosporus and Dardanelles),
-  **Longest road** (a line 1,000 km long), **Money train** (a line's profit over the past 24 hours, the
-  Lines tab's Money figure, of $200M), **Bullet train** (a train reaching 300 km/h), **Round and round**
-  (a circle line of 10 stops), **Change here** (changes of trains per trip at least 1, over at least
-  100k trips a day), **Train town** (a region whose trips within it are 20% by train: its 20% goal),
+  **Longest road** (a line 5,000 km long), **String of pearls** (a line 3,000 km long whose profit over the
+  past 24 hours, as for Money train, is above zero), **Money train** (a line's profit over the past 24 hours, the
+  Lines tab's Money figure, of $200M), **Bullet train** (a train reaching 300 km/h), **City circles**
+  (a circle line of 10 stops), **Transfers world** (transfers per trip at least 1, over at least
+  100k trips a day; its hover while unearned adds the figure now, "Now 0.56 transfers per trip"),
+  **Trains city** (a region whose trips within it are 20% by train: its 20% goal),
   **Grounded** (a region whose trips to and from other places, both ways as the city view's "To other
   places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
   hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
@@ -854,7 +856,7 @@ keeps what it had and earns no more.
   "Saved ..." for the others (exact time on hover), the game day, the cities its stations are in,
   lines, stations and cash. A slot with no stored picture shows "No picture yet" until it is next
   saved. A card of an account game whose picture is still being fetched shows "Loading..." in its place
-  (a game with nothing built ends on "Nothing built"). Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395]:
+  (a game with nothing built ends on "Nothing built"). Buttons sit at the card's bottom right, icons first, each icon with its hover [T-1395, T-2611]: under the picture and facts, on the row of the "3 other versions" line, at its right (on a row of their own when the game has one version):
   - **The Playing card**: a pencil after the name (hover "Rename"), the Playing mark, then copy
     (hover "Make a copy"), download (hover "Download as a file", `trainsworld-nyc-day-12.save`),
     bin (hover "Delete", asked first: `Delete "Tokyo" from this browser? The game ends and you go

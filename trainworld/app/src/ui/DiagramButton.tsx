@@ -11,10 +11,8 @@ export function DiagramButton() {
   return <button type="button" class={"btn icon map-diagram" + (on ? " on" : "")} data-tip={tip} aria-label={tip} aria-pressed={on}
     onClick={() => (diagramShown.value = !on)}>
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 4h5l4 4h3" />
-      <path d="M2 12h3l4-4" />
-      <circle cx="7" cy="4" r="1.4" fill="var(--bg)" />
-      <circle cx="11" cy="8" r="1.4" fill="var(--bg)" />
+      <path d="M1.5 3.5l4-1.5 5 2 4-1.5v9.5l-4 1.5-5-2-4 1.5z" />
+      <path d="M5.5 2v9.5M10.5 4v9.5" />
     </svg>
   </button>;
 }

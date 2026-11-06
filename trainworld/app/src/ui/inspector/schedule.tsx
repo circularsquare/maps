@@ -136,9 +136,6 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
     );
   }
   const short = limit !== null && auto[lev] > 0 && auto[lev] * AUTO_SLACK < limit.s;
-  const real = l.tph[d] > 0 ? 3600 / l.tph[d] : 0;
-  // the world's running headway belongs to the headway it last took, so it waits for the edit
-  const clamped = !autoPending![lev] && !short && limit !== null && auto[lev] > 0 && real > auto[lev] * AUTO_SLACK + 0.5;
   return (
     <>
       <td>
@@ -147,7 +144,6 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
           : `${vehiclesText(v, counts[lev])} on the line keep the headway over its round trip of ${duration(trip)}`}>{counts[lev]}</span>
       </td>
       <td>
-        {clamped && <span class="hw-real" data-tip={`${limitText(limit)}, so ${counts[lev]} ${counts[lev] === 1 ? "train runs" : "trains run"} every ${duration(real)}`}>{headwayText(real)}</span>}
         {wrap(<Stepper wide jump jumpUnit="min" label="headway" value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
           tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
           tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}

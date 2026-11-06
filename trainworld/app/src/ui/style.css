@@ -472,9 +472,8 @@ table.sched th, table.sched td { white-space: nowrap; }
 table.sched th:not(:first-child), table.sched td:not(:first-child) { padding-left: 10px; }
 table.sched td:first-child { width: 100%; max-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* T-625, T-679: a count refused for cash, a headway shorter than the track allows; the headway a
-   line runs at when its track holds it just over the one set; a refused edit's control shakes once */
+   line runs at when its track holds it just over the one set (no readout of it); a refused edit's control shakes once */
 table.sched .bad { color: var(--bad); }
-table.sched .hw-real { color: var(--muted); margin-right: 6px; }
 .shake { display: inline-block; animation: shake 300ms linear !important; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
 .stepper.shake { display: inline-flex; }
@@ -1418,6 +1417,9 @@ button.save-add:hover { color: var(--text); }
 .save-versions { margin-top: 6px; }
 .save-versions-line { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; border: 0; background: none;
   color: var(--muted); font-family: inherit; cursor: pointer; }
+/* the saves panel's card foot: the versions line at the left, the card's buttons at the right on the same row */
+.save-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.save-foot .save-actions { margin: 0 0 0 auto; padding: 0; }
 .save-versions-line:hover, .save-versions-line:focus-visible { color: var(--text); }
 .save-versions-line svg { width: 12px; height: 12px; }
 .save-versions-line.open svg { transform: rotate(90deg); }

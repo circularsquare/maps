@@ -54,10 +54,13 @@ export function tierText(id: TieredId, tier: number, a?: Achieved | Detail, toas
 }
 
 /** The firsts in the panel's order (Sea crossing comes with T-2150). */
-export type FirstId = "border" | "continents" | "long" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper";
-export interface First { id: FirstId; name: string; rule: () => string; text: (a: Achieved | Detail) => string }
+export type FirstId = "border" | "continents" | "long" | "pearls" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper";
+export interface First { id: FirstId; name: string; rule: () => string; text: (a: Achieved | Detail) => string;
+  /** the figure now, for the hover of a step not yet earned; "" while unknown */
+  now?: () => string }
 
-export const LONG_M = 1_000_000;
+export const LONG_M = 5_000_000;
+export const PEARLS_M = 3_000_000;
 export const MONEY_USD = 200e6;
 export const BULLET_KMH = 300;
 export const CIRCLE_STOPS = 10;
@@ -77,11 +80,13 @@ export const FIRSTS: First[] = [
   { id: "border", name: "Over the border", rule: () => "A line with stops in two countries", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
   { id: "continents", name: "Bicontinental", rule: () => "A line with stops on two continents", text: (a) => `${a.of} stops in ${andList(a.in ?? [])}` },
   { id: "long", name: "Longest road", rule: () => `A line ${bigDistance(LONG_M)} long`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long` },
+  { id: "pearls", name: "String of pearls", rule: () => `A line ${bigDistance(PEARLS_M)} long that makes a profit`, text: (a) => `${a.of} is ${bigDistance(a.v ?? 0)} long and in profit` },
   { id: "money", name: "Money train", rule: () => `A line with ${money(MONEY_USD)} profit in a day`, text: (a) => `${a.of} made ${money(a.v ?? 0)} profit today` },
   { id: "bullet", name: "Bullet train", rule: () => `A train at ${speed(BULLET_KMH)}`, text: (a) => `${a.of} reaches ${speed(a.v ?? 0)}` },
-  { id: "circle", name: "Round and round", rule: () => `A circle line of ${CIRCLE_STOPS} stops`, text: (a) => `${a.of} is a circle of ${a.v} stops` },
-  { id: "change", name: "Change here", rule: () => `One change of trains per trip on average, with ${short(CHANGE_MIN_TRIPS)} trips/day`, text: (a) => `${(a.v ?? 0).toFixed(2)} changes per trip` },
-  { id: "city", name: "Train town", rule: () => `A city with ${CITY_SHARE}% of its trips by train`, text: (a) => `${pct(a.v ?? 0)} of trips within ${a.of} go by train` },
+  { id: "circle", name: "City circles", rule: () => `A circle line of ${CIRCLE_STOPS} stops`, text: (a) => `${a.of} is a circle of ${a.v} stops` },
+  { id: "change", name: "Transfers world", rule: () => `One transfer per trip on average, with ${short(CHANGE_MIN_TRIPS)} trips/day`, text: (a) => `${(a.v ?? 0).toFixed(2)} transfers per trip`,
+    now: () => { const v = demandFigures.value?.transfersPerTrip; return v === undefined ? "" : `Now ${v.toFixed(2)} transfers per trip`; } },
+  { id: "city", name: "Trains city", rule: () => `A city with ${CITY_SHARE}% of its trips by train`, text: (a) => `${pct(a.v ?? 0)} of trips within ${a.of} go by train` },
   { id: "intercity", name: "Grounded", rule: () => `A city with ${INTERCITY_SHARE}% of its trips to other places by train`, text: (a) => `${pct(a.v ?? 0)} of trips between ${a.of} and other places go by train` },
   { id: "sleeper", name: "Sleeper", rule: () => `A rider on one train for ${SLEEPER_S / 3600} hours`, text: (a) => `Riders spend ${(a.v ?? 0).toFixed(1)} hours on ${a.of}` },
 ];
@@ -263,18 +268,21 @@ export const demandFigures = computed(() => {
   }
   if (city) firsts.set("city", city);
   if (inter) firsts.set("intercity", inter);
-  return { trips, station, line, firsts, covered };
+  const transfersPerTrip = v.railTripsPerDay > 0 ? transfers / v.railTripsPerDay : undefined;
+  return { trips, station, line, firsts, covered, transfersPerTrip };
 });
 
 /** The best line's profit over the past 24 hours (the Lines tab's Money figure), asked of the clock
  * worker as each game hour turns and with each new demand result; undefined until the first answer. */
 export const bestProfit = signal<Detail | null | undefined>(undefined);
+/** the longest line (m) of at least PEARLS_M that is in profit over the same 24 hours */
+export const longProfitable = signal<Detail | null>(null);
 /** the average day's view the last answer was asked after */
 let profitView: unknown = null;
 let profitHour = NaN, profitGame = -1, profitAsked: unknown = null;
 effect(() => {
   const m = moneyState.value, g = gamesLoaded.value, dv = demandByDay.value[AVERAGE_DAY]?.view ?? null;
-  if (g !== profitGame) { profitGame = g; profitHour = NaN; profitAsked = profitView = null; bestProfit.value = undefined; }
+  if (g !== profitGame) { profitGame = g; profitHour = NaN; profitAsked = profitView = null; bestProfit.value = undefined; longProfitable.value = null; }
   const hour = m?.hours.at(-1)?.hour;
   if (!m || m.mode === "sandbox" || hour === undefined || (hour === profitHour && dv === profitAsked)) return;
   profitHour = hour;
@@ -283,14 +291,17 @@ effect(() => {
     const w = world.peek();
     if (!raw || !w || gamesLoaded.peek() !== g) return;
     const t = readToday(raw);
-    let best: Detail | null = null;
+    let best: Detail | null = null, pearl: Detail | null = null;
     for (const { l, st } of runningLines(w)) {
       const d = t.get(l.id);
       if (!d) continue;
       const net = d.fares - runningToday(l, st) - st.upkeep;
       if (!best || net > best.v!) best = { of: l.name, v: net };
+      const m = st.km * 1000;
+      if (net > 0 && m >= PEARLS_M && (!pearl || m > pearl.v!)) pearl = { of: l.name, v: m };
     }
     profitView = dv;
+    longProfitable.value = pearl;
     bestProfit.value = best;
   });
 });
@@ -318,6 +329,7 @@ export const metNow = computed(() => {
     for (const [k, d] of df.firsts) out[k] = d;
   }
   if (bp && bp.v! >= MONEY_USD) out.money = bp;
+  if (longProfitable.value) out.pearls = longProfitable.value;
   // an older save's quiet working-out waits for the loaded game's own world, this network's own final
   // (a cached result shown ahead of it is solved again, `demandUpdating`) and the profit asked after it
   const settled = !!df?.covered && bp !== undefined && profitView === demandByDay.value[AVERAGE_DAY]?.view;

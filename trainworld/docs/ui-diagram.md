@@ -12,7 +12,7 @@ and Water below, which describe the layout before it, kept behind `?sheet=0` in 
 A button at the top left of the Cities tab, on the row with the leaderboards' trophy and the
 achievements' medal at its right (`ui/DiagramButton.tsx`, placed by `AchievementsButton`; Anita,
 2026-11-03) swaps the map for the diagram, and back; no key does while the diagram is a work in progress
-(Anita, 2026-11-06, T-2608). Hover: "Show network diagram (work in progress)", and while the diagram is up
+(Anita, 2026-11-06, T-2608). Its icon is a map folded in three panels (T-2615). Hover: "Show network diagram (work in progress)", and while the diagram is up
 "Show map". **Esc** goes back to the map too, once
 nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to

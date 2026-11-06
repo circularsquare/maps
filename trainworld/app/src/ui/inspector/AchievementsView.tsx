@@ -75,7 +75,7 @@ export function AchievementsView() {
         {[...FIRSTS.filter((f) => got[f.id]), ...FIRSTS.filter((f) => !got[f.id])].map((f) => {
           const a = got[f.id];
           return (
-            <li class={a ? "" : "muted"} data-tip={a ? `${f.text(a)}\nReached on ${when(a.at)}` : f.rule()}>
+            <li class={a ? "" : "muted"} data-tip={a ? `${f.text(a)}\nReached on ${when(a.at)}` : [f.rule(), f.now?.()].filter(Boolean).join("\n")}>
               <span class={"ach-slot" + (a ? "" : " empty")}>{a && <Medal metal="gold" of="first" />}</span>
               <span class="grow">{f.name}</span>
               {a && <span class="val">day {dayOf(Math.floor(a.at / 60))}</span>}
