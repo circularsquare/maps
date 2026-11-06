@@ -456,6 +456,7 @@
   "colourPicker.area": "Saturation and brightness",
   "colourPicker.hue": "Hue",
   "colourPicker.hex": "Color as hex",
+  "common.aboutGame": "About this game",
   "commutersInspector.areas": "{count, plural, one {One area} other {# areas}}",
   "commutersInspector.driving": "Driving",
   "commutersInspector.legs": "Local trip legs {phrase}",

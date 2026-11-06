@@ -15,6 +15,7 @@ import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { StartLogo } from "./StartLogo";
+import { AboutLink } from "./Credits";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { deleteGroupQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
@@ -159,7 +160,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}
-    <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}</p>
+    <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}<AboutLink class="start-about" /></p>
     {sheet ? <div class="start-box new-game-box">
       <h1 id="start-title" class="big">{t("startMenu.newGame")}</h1>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />

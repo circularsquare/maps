@@ -456,6 +456,7 @@
   "colourPicker.area": "飽和度與亮度",
   "colourPicker.hex": "十六進位色碼",
   "colourPicker.hue": "色相",
+  "common.aboutGame": "關於本遊戲",
   "commuterView.bubble": "{end, select, home {{when}有{count}{words}從這裡出發} work {{when}有{count}{words}前往這裡} other {{when}有{count}{words}進出這裡}}",
   "commuterView.exploreTrip": "按一下查看這趟旅次",
   "commuterView.exploreWith": "按一下查看與{name}之間的旅次",

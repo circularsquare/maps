@@ -62,7 +62,8 @@ is plain text.
 - Station, line, zone and place names from the data (they are the data's, in their own language).
 - Logs, `console.*`, thrown errors that only a developer sees, the `?debug` readouts, checks' output.
 - Message keys, CSS classes, `data-*` values other than `data-tip`, URLs.
-- The privacy and terms pages and the Credits licence notices (the English is the binding text).
+- The privacy and terms pages (the English is the binding text). The licence notices are on the about page
+  (anita.garden), outside the game.
 
 Text that looks like player text but is not, and stays inline, gets an `// i18n-ignore` comment on its line or
 the line above, so the scan stops counting it.

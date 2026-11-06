@@ -456,6 +456,7 @@
   "colourPicker.area": "彩度と明度",
   "colourPicker.hex": "カラーコード",
   "colourPicker.hue": "色相",
+  "common.aboutGame": "このゲームについて",
   "commuterView.bubble": "{end, select, home {ここから出発する{words}：{when}{count}回} work {ここに到着する{words}：{when}{count}回} other {ここを発着する{words}：{when}{count}回}}",
   "commuterView.exploreTrip": "クリックでこの移動を調べる",
   "commuterView.exploreWith": "クリックで{name}との移動を調べる",

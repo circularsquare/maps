@@ -456,6 +456,7 @@
   "colourPicker.area": "Saturation and brightness",
   "colourPicker.hex": "Color as hex",
   "colourPicker.hue": "Hue",
+  "common.aboutGame": "About this game",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} from here} work {{count} {words} {when} to here} other {{count} {words} {when} to and from here}}",
   "commuterView.exploreTrip": "Click to explore this trip",
   "commuterView.exploreWith": "Click to explore trips with {name}",
