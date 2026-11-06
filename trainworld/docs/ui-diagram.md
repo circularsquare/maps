@@ -483,9 +483,19 @@ none of this runs.
 
 - **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
   with a floor, doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
+- **The cut** (a map 600 km across or more; T-2609): empty bands across the whole map are drawn narrow, so the land
+  between far-apart networks (the Plains between Denver and Chicago) condenses to a band the lines cross. A network
+  station is one with 2 others within 10 km (a lonely stop on a long line is not). Each column of the lattice whose
+  middle is more than 10 km across from every network station has a rest width under its real width: past 10 km, 1 over
+  it grows linearly with the distance, so the width halves every 40 drawn pitches at the floor's scale (the field's own
+  limit), to 0.02 at least. Rows the same. Each cell's rest shape is its columns' width by its rows' height, and the
+  rounds below measure every cell's stretch and size against that shape, not the real square. Places, the lattice and
+  the warp stay in real metres, so what follows the sheet is unchanged. On such a map, land farther than 25 km from
+  every network station costs as little as water to stretch unevenly, even beside a lonely line or inside a zone with
+  stations elsewhere (the Los Angeles zone's empty east), so the networks get the room they ask for.
 - **The lattice**: a quadtree of square cells, fine where the field is high or changes fast and near coasts with lines,
   coarse elsewhere (512 finest cells along a city map's longer side, 1024 on a map 600 km across or more).
-- **The rounds**: each cell's map is pulled toward its planned size at its current turn, with a cost to stretch it
+- **The rounds**: each cell's map (from its rest shape) is pulled toward its planned size at its current turn, with a cost to stretch it
   unevenly by its kind (land near lines, other land, water, small islands); a cell near folding is held. Solved by
   multigrid on the quadtree's levels, coarse to fine, then rounds with the holds frozen (a hold may only tighten) until
   the stations move under half a pitch, so no cell folds.
@@ -545,7 +555,10 @@ none of this runs.
   with runs at 0, 45 and 90 degrees, straying landward up to 0.35 of the land's width behind (at most 10 pitches) and
   keeping clear of the pills, seaward up to 0.35 of the water's width ahead; either way at least 0.85 of a cell where
   that is narrow enough, since a straight edge drawn on the grid steps a cell. The borders between zones likewise (up to
-  6 pitches, a pitch clear of any station). Corners rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
+  6 pitches, a pitch clear of any station), only where a line passes through at least one of the two zones (a station in
+  it, or a hop's track across it): other zones' borders are not drawn (T-2609; in a cut band they would be slivers).
+  On a map 600 km across or more, water is drawn only where the nearest land is such a zone's; the rest of the water
+  is left as plain background, its edge fitted like a coast. Corners rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
   degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
   on; the borders always.
 - **City names** take the towns' places through the sheet.

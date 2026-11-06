@@ -40,11 +40,14 @@ export interface SheetLinesOptions {
   cellsCountry: number;
   /** a station still off its own land has its land carried to it from at most this many pitches */
   bendMax: number;
+  /** every zone's borders and, on a country map, all the water; otherwise only borders of zones a line passes through
+   * and water nearest them (T-2609: in a cut band other zones are squeezed into slivers) */
+  allZones: boolean;
 }
 
 export const SHEET_LINES: SheetLinesOptions = {
   dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
-  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false,
 };
 
 /** the stations laid out on the sheet and the map carried with them */
@@ -461,9 +464,32 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   }
   const t2 = performance.now();
 
+  // ---- the zones a line passes through: a station's, or one a hop's track crosses (T-2609)
+  const held = new Uint8Array(OUT + 1).fill(o.allZones ? 1 : 0);
+  for (let s = 0; s < n; s++) if (zoneAll[s] >= 0) held[zoneAll[s] + 1] = 1;
+  for (let e = 0; e < g.ea.length && !o.allZones; e++) {
+    const pts: ArrayLike<number> = g.hop && g.hopAt && g.hopAt[e + 1] - g.hopAt[e] >= 2 ? g.hop.subarray(g.hopAt[e] * 2, g.hopAt[e + 1] * 2) : [g.x[g.ea[e]], g.y[g.ea[e]], g.x[g.eb[e]], g.y[g.eb[e]]];
+    for (let k = 0; k + 3 < pts.length; k += 2) {
+      const m = Math.max(1, Math.ceil(Math.hypot(pts[k + 2] - pts[k], pts[k + 3] - pts[k + 1]) / R.rr));
+      for (let t = 0; t <= m; t++) { const z = labAt(pts[k] + ((pts[k + 2] - pts[k]) * t) / m, pts[k + 1] + ((pts[k + 3] - pts[k + 1]) * t) / m); if (isZ(z)) held[z] = 1; }
+    }
+  }
+
   // ---- coasts and borders
   const wm = new Uint8Array(NC);
   for (let c = 0; c < NC; c++) wm[c] = +(D[c] === 0 || D[c] === OUT);
+  // on a country map, water only where its nearest land is a zone a line passes through; the rest is left plain, its
+  // edge fitted like a coast (T-2609)
+  if (!o.allZones && !cityMap(g)) {
+    const own = new Int8Array(NC).fill(-1), q = new Int32Array(NC);
+    let qn = 0;
+    for (let c = 0; c < NC; c++) if (!wm[c]) (own[c] = isZ(D[c]) && held[D[c]] ? 1 : 0), (q[qn++] = c);
+    for (let k = 0; k < qn; k++) {
+      const v = q[k], i = v % GW;
+      for (const u of [i > 0 ? v - 1 : -1, i < GW - 1 ? v + 1 : -1, v - GW, v + GW]) if (u >= 0 && u < NC && wm[u] && own[u] < 0) (own[u] = own[v]), (q[qn++] = u);
+    }
+    for (let c = 0; c < NC; c++) if (wm[c] && own[c] !== 1) wm[c] = 0;
+  }
   const stm = new Uint8Array(NC);
   for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0) stm[c] = 1; }
   const dS = chamfer(stm, GW, GH, true, 60000);
@@ -517,8 +543,9 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     const adj = new Map<number, number[]>(), V = (i: number, j: number) => j * VW + i;
     const zl = (i: number, j: number) => (i < 0 || j < 0 || i >= GW || j >= GH ? 0 : D[j * GW + i]);
     const link = (a: number, b: number) => { let l = adj.get(a); if (!l) adj.set(a, (l = [])); l.push(b); let k = adj.get(b); if (!k) adj.set(b, (k = [])); k.push(a); };
-    for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) { const p = zl(i, j), q = zl(i + 1, j); if (p !== q && isZ(p) && isZ(q)) link(V(i + 1, j), V(i + 1, j + 1)); }
-    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) { const p = zl(i, j), q = zl(i, j + 1); if (p !== q && isZ(p) && isZ(q)) link(V(i, j + 1), V(i + 1, j + 1)); }
+    const edge = (p: number, q: number) => p !== q && isZ(p) && isZ(q) && (held[p] === 1 || held[q] === 1);
+    for (let j = 0; j < GH; j++) for (let i = 0; i + 1 < GW; i++) if (edge(zl(i, j), zl(i + 1, j))) link(V(i + 1, j), V(i + 1, j + 1));
+    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i < GW; i++) if (edge(zl(i, j), zl(i, j + 1))) link(V(i, j + 1), V(i + 1, j + 1));
     const coastal = (v: number) => { const i = v % VW, j = Math.floor(v / VW); return !isZ(zl(i - 1, j - 1)) || !isZ(zl(i, j - 1)) || !isZ(zl(i - 1, j)) || !isZ(zl(i, j)); };
     const isEnd = (v: number) => adj.get(v)!.length !== 2 || coastal(v);
     const used = new Set<number>(), NV = VW * (GH + 1), ek = (a: number, b: number) => (a < b ? a * NV + b : b * NV + a);

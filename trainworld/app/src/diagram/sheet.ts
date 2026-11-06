@@ -3,7 +3,8 @@
 // stations' box, each cell two triangles mapped linearly, solved by least squares: a cell's uneven stretch costs most
 // on land near lines, less on land without lines, little on water, and its size is pulled to a field of the scale its
 // stations ask for (their room and the distortion dial), bounded so it at most doubles every D drawn pitches. The
-// rules are T-2566's rounds 2 and 3 (notes/T-2566.md); the solver is T-2568's (notes/T-2568.md).
+// rules are T-2566's rounds 2 and 3 (notes/T-2566.md); the solver is T-2568's (notes/T-2568.md). On a country map a
+// cell's rest shape is narrower than its real square where its columns or rows are empty of networks (the cut, T-2609).
 //
 // The lattice is a quadtree: cells as fine as the finest lattice where the field changes, along coasts near lines and
 // on small islands, up to `coarse` finest cells a side elsewhere. A coarse cell's weights are its finest cells' means,
@@ -37,6 +38,14 @@ export interface SheetOptions {
   sLand: number;
   aWater: number;
   sWater: number;
+  /** the cut, on a map 600 km across or more: the map's columns (rows) farther than cutKm across from every network
+   * station (one with cutN others within cutKm; 0: off) are drawn narrow, past cutKm the width halving every D drawn pitches at the floor's scale, to
+   * cutMin at least (T-2609) */
+  cutKm: number;
+  cutN: number;
+  cutMin: number;
+  /** on such a map, land farther than freeKm from every network station costs aWater to stretch unevenly (0: off) */
+  freeKm: number;
   /** a cell near folding, or under `lo` of its planned size, is held with up to this weight */
   wFold: number;
   lo: number;
@@ -100,6 +109,7 @@ export interface SheetOptions {
 export const SHEET: SheetOptions = {
   dial: 0.5, D: 40, maxStep: 1.6, gap: 4, core: 1.8, coreCountry: 2.1,
   aLine: 4, sLine: 1, sMax: 6, aLand: 2, sLand: 0.1, aWater: 0.1, sWater: 0.1,
+  cutKm: 10, cutN: 2, cutMin: 0.02, freeKm: 25,
   wFold: 10, lo: 0.3, nearKm: 3, landShare: 0.4,
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
@@ -334,8 +344,29 @@ const ROWS = [0, 1].map((tri) => {
   add(3, p0, 1, 0.5), add(3, p1, 1, -0.5), add(3, q0, 0, -0.5), add(3, q1, 0, 0.5);
   return r;
 });
+/** ROWS split into their parts along the cell's rows (the p pair) and its columns (the q pair), so a cell whose rest
+ * shape is a rectangle kx by ky of its side (the cut, T-2609) has rows RP / kx + RQ / ky */
+const [RP, RQ] = [0, 1].map((part) => [0, 1].map((tri) => {
+  const [p0, p1, q0, q1] = tri === 0 ? [1, 0, 2, 1] : [1, 2, 2, 0];
+  const r = Array.from({ length: 4 }, () => new Float64Array(6));
+  const add = (row: number, corner: number, xy: number, v: number, along: number) => { if (along === part) r[row][corner * 2 + xy] += v; };
+  add(0, p0, 0, 1, 0), add(0, p1, 0, -1, 0), add(0, q0, 1, -1, 1), add(0, q1, 1, 1, 1);
+  add(1, q0, 0, 1, 1), add(1, q1, 0, -1, 1), add(1, p0, 1, 1, 0), add(1, p1, 1, -1, 0);
+  add(2, p0, 0, 0.5, 0), add(2, p1, 0, -0.5, 0), add(2, q0, 1, 0.5, 1), add(2, q1, 1, -0.5, 1);
+  add(3, p0, 1, 0.5, 0), add(3, p1, 1, -0.5, 0), add(3, q0, 0, -0.5, 1), add(3, q1, 0, 0.5, 1);
+  return r;
+}));
 const gram = (tri: number, rows: number[]) => { const M = new Float64Array(36); for (const k of rows) for (let p = 0; p < 6; p++) for (let q = 0; q < 6; q++) M[p * 6 + q] += ROWS[tri][k][p] * ROWS[tri][k][q]; return M; };
 const GA = [gram(0, [0, 1]), gram(1, [0, 1])], GS = [gram(0, [2, 3]), gram(1, [2, 3])];
+/** a triangle's rows for rest shape (kx, ky) into `R` (4 rows of 6), and its Gram matrices of rows 0-1 and 2-3 */
+function restRows(tri: number, kx: number, ky: number, R: Float64Array[], Ga: Float64Array, Gs: Float64Array) {
+  const ix = 1 / kx, iy = 1 / ky;
+  for (let k = 0; k < 4; k++) for (let p = 0; p < 6; p++) R[k][p] = RP[tri][k][p] * ix + RQ[tri][k][p] * iy;
+  for (let p = 0; p < 6; p++) for (let q = 0; q < 6; q++) {
+    Ga[p * 6 + q] = R[0][p] * R[0][q] + R[1][p] * R[1][q];
+    Gs[p * 6 + q] = R[2][p] * R[2][q] + R[3][p] * R[3][q];
+  }
+}
 
 /** The sheet of graph `g` on the ground `ground`, with options `o`. */
 export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOptions = SHEET): Sheet {
@@ -424,6 +455,39 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   const hRef = o.refN > 1 ? Math.max(bx1 - bx0, by1 - by0) / (o.refN - 1) : 0;
   const NCX = Math.ceil((bx1 - bx0) / h), NCY = Math.ceil((by1 - by0) / h);
   const R0 = 1 << K0, NRX = Math.ceil(NCX / R0), NRY = Math.ceil(NCY / R0), GX = NRX * R0, GY = NRY * R0, GW = GX + 1, GH = GY + 1, GN = GW * GH;
+  // the cut (T-2609): a column (row) of finest cells whose middle is farther than cutKm across from every network
+  // station (one with cutN others within cutKm; a lonely stop on a long line is not one) has a rest width (height)
+  // under a cell's side, 1 / k growing linearly past cutKm so the width halves every D drawn pitches at the floor's
+  // scale (the field's own limit), at least cutMin. Empty bands across the whole map are drawn narrow; a cell's rest
+  // shape is its columns' by its rows'. Only on a map 600 km across or more: a city map's margins are its context
+  // (Long Island's east end)
+  const cutM = E < 6e5 ? 0 : o.cutKm * 1000, kxF = new Float64Array(GX).fill(1), kyF = new Float64Array(GY).fill(1), xs: number[] = [], ys: number[] = [];
+  if (cutM > 0) {
+    const H = new Map<number, number[]>(), key = (i: number, j: number) => i * 100003 + j;
+    for (let s = 0; s < n; s++) { const k = key(Math.floor(PX[s] / cutM), Math.floor(PY[s] / cutM)); let l = H.get(k); if (!l) H.set(k, (l = [])); l.push(s); }
+    for (let s = 0; s < n; s++) {
+      let c = 0;
+      const ci = Math.floor(PX[s] / cutM), cj = Math.floor(PY[s] / cutM);
+      for (let a = -1; a <= 1 && c < o.cutN; a++) for (let b = -1; b <= 1 && c < o.cutN; b++) for (const t of H.get(key(ci + a, cj + b)) ?? []) if (t !== s && Math.hypot(PX[t] - PX[s], PY[t] - PY[s]) < cutM && ++c >= o.cutN) break;
+      if (c >= o.cutN) xs.push(PX[s]), ys.push(PY[s]);
+    }
+    const rate = (sFloor * Math.LN2) / o.D;
+    const band = (v: number[], k: Float64Array, o0: number) => {
+      if (!v.length) return;
+      v.sort((a, b) => a - b);
+      for (let i = 0, p = 0; i < k.length; i++) {
+        const c = o0 + (i + 0.5) * h;
+        while (p + 1 < v.length && v[p + 1] <= c) p++;
+        const d = Math.min(Math.abs(c - v[p]), p + 1 < v.length ? Math.abs(v[p + 1] - c) : Infinity);
+        k[i] = d <= cutM ? 1 : Math.max(o.cutMin, 1 / (1 + (d - cutM) * rate));
+      }
+    };
+    band(xs.slice(), kxF, bx0), band(ys.slice(), kyF, by0);
+  }
+  /** prefix sums of the columns' and rows' rest sizes, so a cell's is its finest cells' mean */
+  const kxS = new Float64Array(GX + 1), kyS = new Float64Array(GY + 1);
+  for (let i = 0; i < GX; i++) kxS[i + 1] = kxS[i] + kxF[i];
+  for (let j = 0; j < GY; j++) kyS[j + 1] = kyS[j] + kyF[j];
   const Lf = new Float64Array(GN);
   {
     const Lw = new Float64Array(GN), Ws = new Float64Array(GN), gx = new Float64Array(GW), gy = new Float64Array(GH);
@@ -672,6 +736,35 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       if (o.aIsland && ilC[c] && landC[c] >= o.landShare && ilC[c] >= 0.5 * landC[c] * (colAt[ci + 1] - colAt[ci]) * (rowAt[cj + 1] - rowAt[cj])) islC[c] = 1;
     }
   }
+  // on a country map, land farther than freeKm from every network station (the cut's) is as free to stretch unevenly as
+  // water, even near a lonely line or inside a zone with stations elsewhere (T-2609: the Los Angeles zone's empty east)
+  const free = new Uint8Array(NFC), freeM = o.freeKm * 1000;
+  if (cutM > 0 && freeM > 0) {
+    const dd = new Float32Array(NFC).fill(Infinity), hd2 = h * Math.SQRT2;
+    for (let k = 0; k < xs.length; k++) {
+      const i = Math.floor((xs[k] - bx0) / h), j = Math.floor((ys[k] - by0) / h);
+      if (i >= 0 && j >= 0 && i < GX && j < GY) dd[j * GX + i] = 0;
+    }
+    for (let pass = 0; pass < 2; pass++) {
+      const s = pass ? -1 : 1;
+      for (let jj = 0; jj < GY; jj++) {
+        const j = s > 0 ? jj : GY - 1 - jj;
+        for (let ii = 0; ii < GX; ii++) {
+          const i = s > 0 ? ii : GX - 1 - ii, v = j * GX + i;
+          let d = dd[v];
+          if (i - s >= 0 && i - s < GX) d = Math.min(d, dd[v - s] + h);
+          if (j - s >= 0 && j - s < GY) {
+            const u = v - s * GX;
+            d = Math.min(d, dd[u] + h);
+            if (i - s >= 0 && i - s < GX) d = Math.min(d, dd[u - s] + hd2);
+            if (i + s >= 0 && i + s < GX) d = Math.min(d, dd[u + s] + hd2);
+          }
+          dd[v] = d;
+        }
+      }
+    }
+    for (let c = 0; c < NFC; c++) free[c] = +(dd[c] > freeM);
+  }
   const aC = new Float32Array(NFC), sC = new Float32Array(NFC);
   {
     const nz: number[] = [];
@@ -679,7 +772,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
     const cm = nz.length ? median(nz) : 1, AW = [o.aLine, o.aLand, o.aWater], SW = [o.sLine, o.sLand, o.sWater];
     for (let c = 0; c < NFC; c++) {
       const k = kindC[c];
-      (aC[c] = islC[c] ? o.aIsland : AW[k]), (sC[c] = k === 0 ? o.sLine * Math.min(o.sMax, Math.max(0.3, cntC[c] / cm)) : SW[k]);
+      (aC[c] = islC[c] ? o.aIsland : free[c] && k !== 2 ? o.aWater : AW[k]), (sC[c] =k === 0 ? o.sLine * Math.min(o.sMax, Math.max(0.3, cntC[c] / cm)) : SW[k]);
     }
   }
   // islands keep one size: the nodes on each, and the ring a cell round it raised to it
@@ -941,7 +1034,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   // ---- a problem on one level: its triangles, matrix and multigrid hierarchy, the places of its vertices
   interface Prob {
     d: number; L: Level; nV: number; nF: number; NL: number; NT: number;
-    tv: Int32Array; tside: Float64Array; cellA: Float64Array; cellS: Float64Array; cellK0: Float64Array; sizeT: Float64Array;
+    tv: Int32Array; tside: Float64Array; cellA: Float64Array; cellS: Float64Array; cellK0: Float64Array; sizeT: Float64Array; kx: Float64Array; ky: Float64Array;
     eS: Int32Array; eC: Int32Array; eF: Int32Array; eW: Float64Array; sS: Int32Array; sSlot: Int32Array; A: Bsr; AL: Bsr[]; bufs: { x: Float64Array; b: Float64Array; r: Float64Array }[];
     dense: (b: Float64Array, x: Float64Array) => void; QX: Float64Array; QY: Float64Array; XY: Float64Array; rhs: Float64Array;
     guard: Float64Array; stTri: Int32Array; stW: Float64Array; pin: number; built: boolean;
@@ -951,11 +1044,12 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
     const tp0 = performance.now();
     const L = LV[d], NL = L.ci.length, NT = 2 * NL, nV = L.key.length, nF = L.nF;
     for (let v = 0; v < nV; v++) stamp[L.key[v]] = v;
-    const tv = new Int32Array(NT * 3), tside = new Float64Array(NT), cellA = new Float64Array(NL), cellS = new Float64Array(NL), cellK0 = new Float64Array(NL), sizeT = new Float64Array(NL);
+    const tv = new Int32Array(NT * 3), tside = new Float64Array(NT), cellA = new Float64Array(NL), cellS = new Float64Array(NL), cellK0 = new Float64Array(NL), sizeT = new Float64Array(NL), kx = new Float64Array(NL), ky = new Float64Array(NL);
     for (let c = 0; c < NL; c++) {
       const i0 = L.ci[c], j0 = L.cj[c], s = L.cs[c], a = j0 * GW + i0, b = a + s, cc = a + s * GW + s, dd = a + s * GW, m = s * s;
       (tv[6 * c] = stamp[a]), (tv[6 * c + 1] = stamp[b]), (tv[6 * c + 2] = stamp[cc]), (tv[6 * c + 3] = stamp[a]), (tv[6 * c + 4] = stamp[cc]), (tv[6 * c + 5] = stamp[dd]);
       (tside[2 * c] = s), (tside[2 * c + 1] = s);
+      (kx[c] = (kxS[Math.min(GX, i0 + s)] - kxS[i0]) / s), (ky[c] = (kyS[Math.min(GY, j0 + s)] - kyS[j0]) / s);
       (cellA[c] = rect(SA, i0, j0, s) / m), (cellS[c] = rect(SS, i0, j0, s) / m), (cellK0[c] = rect(SK, i0, j0, s) / m);
     }
     for (let v = 0; v < nV; v++) stamp[L.key[v]] = -1;
@@ -1053,7 +1147,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       if (dd < bd) (bd = dd), (pin = v);
     }
     const P: Prob = {
-      d, L, nV, nF, NL, NT, tv, tside, cellA, cellS, cellK0, sizeT, eS, eC, eF, eW, sS, sSlot, A, AL,
+      d, L, nV, nF, NL, NT, tv, tside, cellA, cellS, cellK0, sizeT, kx, ky, eS, eC, eF, eW, sS, sSlot, A, AL,
       bufs: AL.map((C) => ({ x: new Float64Array(C.n * 2), b: new Float64Array(C.n * 2), r: new Float64Array(C.n * 2) })),
       dense: () => {}, QX: new Float64Array(nV), QY: new Float64Array(nV), XY: new Float64Array(nF * 2), rhs: new Float64Array(nF * 2),
       guard: new Float64Array(NT), stTri, stW, pin, built: false,
@@ -1175,7 +1269,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       (X[s] = W[k] * QX[T[k]] + W[k + 1] * QX[T[k + 1]] + W[k + 2] * QX[T[k + 2]]), (Y[s] = W[k] * QY[T[k]] + W[k + 1] * QY[T[k + 1]] + W[k + 2] * QY[T[k + 2]]);
     }
   };
-  const loc = new Float64Array(36), lb = new Float64Array(6);
+  const loc = new Float64Array(36), lb = new Float64Array(6), rR = Array.from({ length: 4 }, () => new Float64Array(6)), rGa = new Float64Array(36), rGs = new Float64Array(36);
   let nearFold = 0;
   /** with the holds frozen, a hold may still tighten (never loosen), where a cell has come nearer folding than its
    * hold allows; whether any did */
@@ -1187,6 +1281,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       let ja: number, jb: number, jc: number, jd: number;
       if (t & 1) (ja = (QX[b] - QX[cc]) / s), (jb = (QX[cc] - QX[a]) / s), (jc = (QY[b] - QY[cc]) / s), (jd = (QY[cc] - QY[a]) / s);
       else (ja = (QX[b] - QX[a]) / s), (jb = (QX[cc] - QX[b]) / s), (jc = (QY[b] - QY[a]) / s), (jd = (QY[cc] - QY[b]) / s);
+      { const kx = P.kx[t >> 1], ky = P.ky[t >> 1]; (ja /= kx), (jc /= kx), (jb /= ky), (jd /= ky); }
       const Ee = (ja + jd) / 2, He = (jc - jb) / 2, ce = Math.sqrt(Ee * Ee + He * He), ua = (ja - jd) / 2, ub = (jb + jc) / 2, un = Math.sqrt(ua * ua + ub * ub);
       const g1 = Math.min(1, Math.max(0, (un / Math.max(ce, 1e-12) - 0.4) / 0.5)), g2 = Math.min(1, Math.max(0, (o.lo * sz - ce) / (o.lo * sz))), gm = Math.max(g1, g2), w = o.wFold * gm * gm;
       if (w > 1.1 * guard[t] + 0.01 * o.wFold && (un >= o.tightFrom * ce || ce < o.lo * sz)) (guard[t] = w), (any = true);
@@ -1206,6 +1301,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       let ja: number, jb: number, jc: number, jd: number;
       if (tri) (ja = (QX[b] - QX[cc]) / s), (jb = (QX[cc] - QX[a]) / s), (jc = (QY[b] - QY[cc]) / s), (jd = (QY[cc] - QY[a]) / s);
       else (ja = (QX[b] - QX[a]) / s), (jb = (QX[cc] - QX[b]) / s), (jc = (QY[b] - QY[a]) / s), (jd = (QY[cc] - QY[b]) / s);
+      const kx = P.kx[c], ky = P.ky[c], rest = kx !== 1 || ky !== 1;
+      if (rest) (ja /= kx), (jc /= kx), (jb /= ky), (jd /= ky);
       const Ee = (ja + jd) / 2, He = (jc - jb) / 2, ce = Math.sqrt(Ee * Ee + He * He);
       if (keep !== null) {
         const ua = (ja - jd) / 2, ub = (jb + jc) / 2, un = Math.sqrt(ua * ua + ub * ub);
@@ -1214,11 +1311,12 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       }
       const gd = guard[t];
       if (gd > 0.1 * o.wFold) nearFold++;
-      const ws = (P.cellS[c] + gd) / (h * h), R2 = ROWS[tri][2], R3 = ROWS[tri][3];
+      if (rest) restRows(tri, kx, ky, rR, rGa, rGs);
+      const ws = (P.cellS[c] + gd) / (h * h), R2 = rest ? rR[2] : ROWS[tri][2], R3 = rest ? rR[3] : ROWS[tri][3];
       const ct = ce > 1e-12 ? Ee / ce : 1, st = ce > 1e-12 ? He / ce : 0, side = P.tside[t] * h, f2 = ws * side * sz * ct, f3 = ws * side * sz * st;
       for (let k = 0; k < 6; k++) lb[k] = f2 * R2[k] + f3 * R3[k];
       if (matrix) {
-        const wa = (P.cellA[c] + gd) / (h * h), Ga = GA[tri], Gs = GS[tri];
+        const wa = (P.cellA[c] + gd) / (h * h), Ga = rest ? rGa : GA[tri], Gs = rest ? rGs : GS[tri];
         for (let k = 0; k < 36; k++) loc[k] = wa * Ga[k] + ws * Gs[k];
       }
       // each corner's share to its free vertices, each pair's block to its slot
@@ -1369,7 +1467,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       for (let tri = 0; tri < 2; tri++) {
         const t = 2 * c + tri, s = L.cs[c] * h, a = tv[3 * t], b = tv[3 * t + 1], cc = tv[3 * t + 2];
         const J = tri ? [(QX[b] - QX[cc]) / s, (QX[cc] - QX[a]) / s, (QY[b] - QY[cc]) / s, (QY[cc] - QY[a]) / s] : [(QX[b] - QX[a]) / s, (QX[cc] - QX[b]) / s, (QY[b] - QY[a]) / s, (QY[cc] - QY[b]) / s];
-        ar += (J[0] * J[3] - J[1] * J[2]) / 2;
+        ar += (J[0] * J[3] - J[1] * J[2]) / (2 * P.kx[c] * P.ky[c]);
       }
       const lsz = Math.log(Math.sqrt(Math.max(1e-30, ar)));
       for (const v of [tv[6 * c], tv[6 * c + 1], tv[6 * c + 2], tv[6 * c + 5]]) (lr[v] += lsz), cnt[v]++;
@@ -1409,8 +1507,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       // only along the rows and columns that hold a vertex
       const rowUsed = new Uint8Array(GH), colUsed = new Uint8Array(GW), IX = new Float64Array(GN), IY = new Float64Array(GN);
       for (let v = 0; v < P.nV; v++) { const k = P.L.key[v], i = k % GW; (colUsed[i] = 1), (rowUsed[(k - i) / GW] = 1); }
-      for (let j = 0; j <= GY; j++) if (rowUsed[j]) for (let i = 1; i <= GX; i++) IX[j * GW + i] = IX[j * GW + i - 1] + Math.exp(Lf[j * GW + i]) * h;
-      for (let i = 0; i <= GX; i++) if (colUsed[i]) for (let j = 1; j <= GY; j++) IY[j * GW + i] = IY[(j - 1) * GW + i] + Math.exp(Lf[j * GW + i]) * h;
+      for (let j = 0; j <= GY; j++) if (rowUsed[j]) for (let i = 1; i <= GX; i++) IX[j * GW + i] = IX[j * GW + i - 1] + Math.exp(Lf[j * GW + i]) * h * kxF[i - 1];
+      for (let i = 0; i <= GX; i++) if (colUsed[i]) for (let j = 1; j <= GY; j++) IY[j * GW + i] = IY[(j - 1) * GW + i] + Math.exp(Lf[j * GW + i]) * h * kyF[j - 1];
       for (let v = 0; v < P.nV; v++) (P.QX[v] = IX[P.L.key[v]]), (P.QY[v] = IY[P.L.key[v]]);
       toXY(P);
     }
