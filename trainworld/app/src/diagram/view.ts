@@ -19,6 +19,7 @@ import type { DiagramNames, FromDiagram, ToDiagram, ZoneFrame, ZoneOutlines } fr
 import type { MultiPolygon } from "geojson";
 import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
+import { sheetZoneBox } from "./sheet";
 import { placesOfZone } from "../game/placeList";
 import { EARTH_C, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
@@ -296,8 +297,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const zf = zoneFrame(g);
     // the zones whose water masks the water is drawn from (T-2169)
     const water = zf && diagramWater.peek() ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
-    // the rubber sheet (T-2568, T-2580), from the same zones' water masks; `?sheet=0` the layout before it
-    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } } : {};
+    // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591); `?sheet=0` the layout
+    // before it
+    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id) } } : {};
     worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water, ...sheet } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network

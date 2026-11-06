@@ -11,7 +11,7 @@
 
 import type { DiagramGraph } from "./graph";
 import { dialled, layoutDiagram, type DiagramLayout, type LastPlaces } from "./layout";
-import { massAt, sheetFinest, sheetWarp, type Sheet, type SheetRaster } from "./sheet";
+import { massAt, massCoasts, sheetFinest, sheetWarp, type Sheet, type SheetRaster } from "./sheet";
 import { fitOcti, rounded, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramWater } from "./water";
@@ -73,7 +73,9 @@ function cityMap(g: DiagramGraph): boolean {
   return !(Math.hypot(x1 - x0, y1 - y0) >= 6e5);
 }
 
-const MG_STALE = 20, NO_STATION_KM2 = 2000;
+/** a land mass with no station is drawn as water when the masks' edge cuts it for at least CUT_WIDTH of its width
+ * (the square root of its area): only part of it is known (T-2591) */
+const MG_STALE = 20, CUT_WIDTH = 0.5;
 
 const quantile = (v: ArrayLike<number>, f: number) => { const s = Float64Array.from(v).sort(); return s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0; };
 
@@ -249,15 +251,13 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   // labels: WATER, a zone (its index plus 1), NOZ land in no zone, OUT off the carried map
   const wide = shapes.length > 250, OUT = wide ? 65534 : 254, NOZ = wide ? 65535 : 255;
   const zs = zoneSpans(R, shapes);
-  // a land mass with no station on it and over NO_STATION_KM2 is drawn as sea: another country's coast at the edge of
-  // the masks (Korea, Sakhalin and China's coast round all Japan), which the network does not draw; islands under it
-  // with no station (Sado, Governors Island) stay
-  const area = new Float64Array(R.mass.length), has = new Uint8Array(R.mass.length);
-  for (let r = 0; r < R.mass.length; r++) area[R.mass[r]] += (R.runB[r] - R.runA[r]) * R.rr * R.rr;
-  for (let s = 0; s < n; s++) if (C.ownMass[s]) has[C.ownMass[s] - 1] = 1;
+  // a land mass with no station that the masks' edge cuts across is drawn as sea: another country's coast at the edge
+  // of the masks (Korea and China's coast round all Japan) would show as land ending in the masks' straight edges. Land
+  // the masks hold whole stays, stations or not (Pennsylvania past the Delaware, Sado, Governors Island)
+  const { cut: dropped, km2: cutKm2 } = cutLand(C);
   const labAt = (x: number, y: number) => {
     const m = massAt(R, x, y);
-    if (!m || (!has[m - 1] && area[m - 1] > NO_STATION_KM2 * 1e6)) return 0;
+    if (!m || dropped[m - 1]) return 0;
     const j = Math.floor((y - R.y0) / R.rr);
     if (j < 0 || j >= R.h) return NOZ;
     for (let k = zs.at[j]; k < zs.at[j + 1]; k++) if (x >= zs.a[k] && x < zs.b[k]) return zs.z[k] + 1;
@@ -530,10 +530,21 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     water,
     borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
     riverFits: detail ? rivers?.fits : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, offLand: offLand.length, bent, zoneFixed, wrongZone, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
   };
+}
+
+/** the land masses (per `mass` number, 1) drawn as sea: no station on them and the masks' edge cutting them for at
+ * least CUT_WIDTH of their width; and their area, km2 */
+export function cutLand(C: Carry): { cut: Uint8Array; km2: number } {
+  const R = C.raster, N = R.mass.length, area = new Float64Array(N), has = new Uint8Array(N), out = new Uint8Array(N), { cut } = massCoasts(R);
+  for (let r = 0; r < N; r++) area[R.mass[r]] += (R.runB[r] - R.runA[r]) * R.rr * R.rr;
+  for (let s = 0; s < C.ownMass.length; s++) if (C.ownMass[s]) has[C.ownMass[s] - 1] = 1;
+  let km2 = 0;
+  for (let m = 0; m < N; m++) if (area[m] && !has[m] && cut[m] * R.rr >= CUT_WIDTH * Math.sqrt(area[m])) (out[m] = 1), (km2 += area[m] / 1e6);
+  return { cut: out, km2 };
 }
 
 /** the carried map at a place on the ground (graph metres), in pitches, through its lattice's triangles */

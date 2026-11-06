@@ -132,8 +132,60 @@ export interface Sheet {
 }
 
 /** the ground's raster, `rr` metres a cell from (x0, y0), `w` by `h`: per row (rowStart) its land runs [runA, runB) of
- * cells, each run's land mass (`mass`: the same number for runs joined side by side) */
-export interface SheetRaster { x0: number; y0: number; rr: number; w: number; h: number; rowStart: Int32Array; runA: Int32Array; runB: Int32Array; mass: Int32Array }
+ * cells, each run's land mass (`mass`: the same number for runs joined side by side); per row (covStart) the spans
+ * [covA, covB) a mask covers (elsewhere the ground's sea, a guess past the masks, decided water) */
+export interface SheetRaster { x0: number; y0: number; rr: number; w: number; h: number; rowStart: Int32Array; runA: Int32Array; runB: Int32Array; mass: Int32Array; covStart: Int32Array; covA: Int32Array; covB: Int32Array }
+
+/** per land mass (`mass` numbers, which are run numbers), its coast in raster cell sides, and how much of that coast is cut: a masked land
+ * cell beside an unmasked water cell, the mask's edge with the ground's guessed sea past it (T-2591) */
+export function massCoasts(R: SheetRaster): { coast: Float64Array; cut: Float64Array } {
+  const nM = R.mass.length, coast = new Float64Array(nM), cut = new Float64Array(nM);
+  /** cells of [p, q) row j's masks cover */
+  const covered = (j: number, p: number, q: number) => {
+    let s = 0;
+    for (let t = R.covStart[j]; t < R.covStart[j + 1]; t++) s += Math.max(0, Math.min(q, R.covB[t]) - Math.max(p, R.covA[t]));
+    return s;
+  };
+  const isCov = (j: number, i: number) => covered(j, i, i + 1) > 0;
+  for (let j = 0; j < R.h; j++) for (let r = R.rowStart[j]; r < R.rowStart[j + 1]; r++) {
+    const a = R.runA[r], b = R.runB[r], m = R.mass[r];
+    if (a > 0) { coast[m]++; if (isCov(j, a) && !isCov(j, a - 1)) cut[m]++; }
+    if (b < R.w) { coast[m]++; if (isCov(j, b - 1) && !isCov(j, b)) cut[m]++; }
+    for (const jj of [j - 1, j + 1]) {
+      if (jj < 0 || jj >= R.h) continue;
+      // the water of row jj under [a, b): the gaps between its land runs
+      let p = a;
+      const wet = (q: number) => {
+        if (q <= p) return;
+        coast[m] += q - p;
+        // masked here, unmasked there: covered(j) minus covered by both
+        for (let t = R.covStart[j]; t < R.covStart[j + 1]; t++) {
+          const u = Math.max(p, R.covA[t]), v = Math.min(q, R.covB[t]);
+          if (v > u) cut[m] += v - u - covered(jj, u, v);
+        }
+      };
+      for (let s = R.rowStart[jj]; s < R.rowStart[jj + 1] && p < b; s++) {
+        if (R.runB[s] <= p) continue;
+        if (R.runA[s] >= b) break;
+        wet(Math.min(b, R.runA[s]));
+        p = Math.max(p, R.runB[s]);
+      }
+      wet(b);
+    }
+  }
+  return { coast, cut };
+}
+
+/** the sheet's box reaches this far past its stations' box `diagM` metres across, metres */
+export const sheetPadM = (diagM: number) => Math.max(8000, 0.08 * diagM);
+
+/** the stations' box [w, s, e, n] (degrees) widened to the sheet's box, and a quarter more for the frame's scale: the
+ * box whose zones' water masks the sheet reads, so no ground it reads is a guess where a zone has a mask (T-2591) */
+export function sheetZoneBox([w, s, e, n]: [number, number, number, number]): [number, number, number, number] {
+  const M = 111320, c = Math.cos((Math.min(80, Math.max(Math.abs(s), Math.abs(n))) * Math.PI) / 180);
+  const pad = 1.25 * sheetPadM(Math.hypot((e - w) * M * Math.cos((((s + n) / 2) * Math.PI) / 180), (n - s) * M));
+  return [w - pad / (M * c), s - pad / M, e + pad / (M * c), n + pad / M];
+}
 
 /** the land mass at a real place, its number plus 1; 0 on water or off the raster */
 export function massAt(R: SheetRaster, x: number, y: number): number {
@@ -296,7 +348,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
   for (let i = 0; i < n; i++) (bx0 = Math.min(bx0, PX[i])), (bx1 = Math.max(bx1, PX[i])), (by0 = Math.min(by0, PY[i])), (by1 = Math.max(by1, PY[i]));
   if (!(n > 1)) (bx0 = by0 = -1000), (bx1 = by1 = 1000);
-  const E = Math.hypot(bx1 - bx0, by1 - by0), pad = Math.max(8000, 0.08 * E);
+  const E = Math.hypot(bx1 - bx0, by1 - by0), pad = sheetPadM(E);
   (bx0 -= pad), (by0 -= pad), (bx1 += pad), (by1 += pad);
   const capM = 2000 * Math.pow(E / 4.5e6, 0.62) * 1000;
 
@@ -489,7 +541,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   const fineCol = (i: number) => Math.min(NCX - 1, Math.floor(((i + 0.5) * rr) / h));
   const NFC = GX * GY, landC = new Float32Array(NFC), ilC = new Float32Array(NFC);
   let runA = new Int32Array(1 << 16), runB = new Int32Array(1 << 16), par = new Int32Array(1 << 16), nR = 0;
-  const rowStart = new Int32Array(RH + 1);
+  let covA = new Int32Array(1024), covB = new Int32Array(1024), nCov = 0;
+  const rowStart = new Int32Array(RH + 1), covStart = new Int32Array(RH + 1);
   {
     const BS = Math.max(1, Math.round(2000 / rr)), BWr = Math.floor(RW / BS) + 1, blk = new Int8Array(BWr * (Math.floor(RH / BS) + 1)).fill(-1);
     const find = (v: number) => { while (par[v] !== v) (par[v] = par[par[v]]), (v = par[v]); return v; };
@@ -497,6 +550,12 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       const y = by0 + (j + 0.5) * rr, cj = Math.min(NCY - 1, Math.floor(((j + 0.5) * rr) / h)), bj = Math.floor(j / BS) * BWr, yb = by0 + (Math.floor(j / BS) + 0.5) * BS * rr, base = cj * GX;
       maskRow(y);
       nC = merge(cK, nC);
+      covStart[j] = nCov;
+      if (nCov + nC > covA.length) {
+        const g2 = (v: Int32Array) => { const w = new Int32Array(Math.max(v.length * 2, nCov + nC)); w.set(v); return w; };
+        (covA = g2(covA)), (covB = g2(covB));
+      }
+      for (let t = 0; t < nC; t++) { const s = Math.floor(cK[t] / 65536); (covA[nCov] = s), (covB[nCov++] = cK[t] - s * 65536); }
       // where no mask covers: the ground's answer, a block at a time
       const open = (a: number, b: number) => {
         for (let bi = Math.floor(a / BS); bi * BS < b; bi++) {
@@ -531,7 +590,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
         if (e > prev) prev = e;
       }
     }
-    rowStart[RH] = nR;
+    (rowStart[RH] = nR), (covStart[RH] = nCov);
     for (let r = 0; r < nR; r++) par[r] = find(r);
     for (let cj = 0; cj < NCY; cj++) for (let ci = 0; ci < NCX; ci++) {
       const all = (colAt[ci + 1] - colAt[ci]) * (rowAt[cj + 1] - rowAt[cj]);
@@ -1390,7 +1449,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   return {
     x: SXa, y: SYa,
     mesh: { h, x0: bx0, y0: by0, gx: GX, nx: NCX, ny: NCY, key: P.L.key, qx: P.QX, qy: P.QY, cell, land },
-    raster: { x0: bx0, y0: by0, rr, w: RW, h: RH, rowStart: rowStart.slice(), runA: runA.slice(0, nR), runB: runB.slice(0, nR), mass: par.slice(0, nR) },
+    raster: { x0: bx0, y0: by0, rr, w: RW, h: RH, rowStart: rowStart.slice(), runA: runA.slice(0, nR), runB: runB.slice(0, nR), mass: par.slice(0, nR), covStart, covA: covA.slice(0, nCov), covB: covB.slice(0, nCov) },
     info: {
       stations: n, leaves: nLeaf, vertices: P.nV, free: P.nF, rounds, stages, folds, nearFold, islands: islands.length,
       turnedDeg: +((turned * 180) / Math.PI).toFixed(2), cellKm: +(h / 1000).toFixed(3), rasterM: Math.round(rr), floorPerKm: +(sFloor * 1000).toFixed(2),

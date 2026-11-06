@@ -466,7 +466,9 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 ## The rubber sheet
 
 **The diagram's layout (T-2568, T-2567, T-2580); `?sheet=0` in the page's address lays out as before it.** The page
-sends the worker the zones near the network with each graph, and the worker reads their water masks, finds the sea on
+sends the worker, with each graph, the zones whose boxes meet the sheet's box (the stations' box and the sheet's margin,
+the larger of 8 km and 8% of its diagonal, a quarter more for the scale; `sheetZoneBox`, T-2591), so the ground the sheet
+reads is a mask's wherever a zone has one, and the worker reads their water masks, finds the sea on
 the ground (as Water does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md,
 notes/T-2568.md): each station's place on a sheet of the ground stretched so the network has room where it is dense,
 land kept near its shape and water giving way. The lines are then laid out on the sheet, and the water and the zone
@@ -501,8 +503,11 @@ none of this runs.
   whose prolongation follows the matrix (black box multigrid), made once and again only where a solve does not settle.
 - **The map**: a grid over the drawing (at most 4 million cells on a city map, 12 million on a country's) takes, cell by
   cell through the carried map's triangles, the ground under it: water, or the zone the land is in (the zones' outlines
-  the page sends). A land mass with no station on it and over 2,000 km2 counts as water (another country's coast at the
-  edge of the masks); smaller islands with no station stay. Each station's pill and 1.5 pitches round it (at least half a pitch more than a cell) are land of its
+  the page sends). A land mass with no station on it that the masks' edge cuts across counts as water: its masked cells
+  beside unmasked ones the ground's sea calls water run at least half its width (the square root of its area). That is
+  another country's coast where its masks stop (Korea and China round all Japan), which would show as land ending in
+  straight lines; land the masks hold whole stays, of any size and with or without a station (Pennsylvania past the
+  Delaware, Sado, Kunashir, Governors Island). Each station's pill and 1.5 pitches round it (at least half a pitch more than a cell) are land of its
   own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (a
   3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped, before the bands below and
   again after them).
