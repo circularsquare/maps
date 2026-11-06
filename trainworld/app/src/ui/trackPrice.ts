@@ -21,12 +21,12 @@ export const multText = (l: Level, t: TrackType) => tNumber(trackMult(l, t), { m
 /** The price in US$M per shown distance unit, to a tenth. */
 export const unitPrice = (l: Level, t: TrackType) => Math.round(perDistance(BASE_M_PER_KM * trackMult(l, t)) * 10) / 10;
 
-/** "Upkeep $20k per km per day", or "" before the money has come. */
+/** "Upkeep $35k per km per day", or "" before the money has come. */
 export function upkeepAt(l: Level, t: TrackType, m: MoneyState | null): string {
   return m ? levelUpkeepLine(edgeUpkeep({ built: true, tracks: 2, hsr: t === "hsr", lengthM: 1000, levelMin: l, levelMax: l }, m)) : "";
 }
 
-/** A level button's hover: "Viaduct (Shift+3)", "1.0x cost, $75M per km", "Upkeep $20k per km per day". */
+/** A level button's hover: "Viaduct (Shift+3)", "1.0x cost, $75M per km", "Upkeep $35k per km per day". */
 export function levelTip(l: Level, tt: TrackType, m: MoneyState | null): string {
   return [`${levelName(l)} (${levelKeyName(l)})`, t("trackPrice.cost", { mult: multText(l, tt), price: tNumber(unitPrice(l, tt)), unit: distUnit() }), upkeepAt(l, tt, m)].filter(Boolean).join("\n");
 }

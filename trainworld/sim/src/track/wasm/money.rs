@@ -64,7 +64,7 @@ impl TrackApi {
     }
     /// [price of a car US$M, running cost per car-km US$, economy scale, running cost per train-km
     /// US$, then a high-speed car's price, its car-km and train-km costs, upkeep a day per km of
-    /// double track and per station US$, and single and high-speed track's upkeep over double
+    /// double track and per station at grade or above US$, and single and high-speed track's upkeep over double
     /// track's (T-867)] (params.rs). The real running costs; the game counts them, and fares,
     /// `ECONOMY` times (T-081).
     pub fn money_params(&self) -> Vec<f64> {
@@ -80,6 +80,8 @@ impl TrackApi {
             // T-2193: a boat's price US$M, running cost per boat-km US$, a port's upkeep a day US$
             // and its price US$M
             BOAT_PRICE, RUN_COST_BOAT_KM, UPKEEP_PORT, PORT_COST,
+            // T-2619: an underground station's upkeep a day US$ (index 8 is any other station's)
+            UPKEEP_STATION_UNDER,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
@@ -117,8 +119,9 @@ impl TrackApi {
                 track += u;
             }
         }
-        let count = (0..n.node_alive.len()).filter(|&i| upkept_station(n, i)).count() as f64;
-        let stations = count * station_upkeep();
+        let upkept: Vec<usize> = (0..n.node_alive.len()).filter(|&i| upkept_station(n, i)).collect();
+        let count = upkept.len() as f64;
+        let stations: f64 = upkept.iter().map(|&i| station_upkeep(n, i)).sum();
         let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
         let buses = bus_km * UPKEEP_BUS_KM * ECONOMY / 1e6;
         let port_count = (0..n.node_alive.len()).filter(|&i| upkept_port(n, i)).count() as f64;
@@ -161,7 +164,7 @@ impl TrackApi {
             }
         }
         for i in 0..n.node_alive.len() {
-            let u = if upkept_station(n, i) { station_upkeep() } else if upkept_port(n, i) { port_upkeep() } else { continue };
+            let u = if upkept_station(n, i) { station_upkeep(n, i) } else if upkept_port(n, i) { port_upkeep() } else { continue };
             match stopping.get(&(i as u32)) {
                 Some((total, lines)) => for &l in lines { share[l as usize] += u * weight(l) / total },
                 None => rest += u,

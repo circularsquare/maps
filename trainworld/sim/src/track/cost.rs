@@ -437,6 +437,11 @@ pub fn track_upkeep_km(lo: i32, hi: i32) -> f64 {
     if lo <= -2 { UPKEEP_BORED_KM } else if lo == -1 { UPKEEP_CUT_KM } else if hi > 0 { UPKEEP_VIADUCT_KM } else { UPKEEP_GROUND_KM }
 }
 
+/// Upkeep rate of a station at a level, real US$ a day (T-2619): underground (-1 to -3) or not.
+pub fn station_upkeep(level: i8) -> f64 {
+    if level < 0 { UPKEEP_STATION_UNDER } else { UPKEEP_STATION }
+}
+
 /// Level of a height, rounded.
 pub fn level_of(z: f64) -> i8 {
     (z / LEVEL_H).round() as i8

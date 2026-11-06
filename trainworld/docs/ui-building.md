@@ -85,7 +85,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
 - **The track bar**, two rows. First "Level" (muted), the seven level buttons, the size they had in
   the Build tab, tinted in their Level colours, the chosen one solid with a dark outline, a light one
   in the dark theme [T-478, T-692]; hover "Ground level (Shift+4)" and so on, then "0.5x cost, $37.5M
-  per km", that level's multiplier and price as the price gives them [T-2271], then "Upkeep $20k per
+  per km", that level's multiplier and price as the price gives them [T-2271], then "Upkeep $35k per
   km per day", that level's upkeep for one km of the picked track type, `edgeUpkeep` [T-2006] (the
   three lines are `levelTip` in `ui/trackPrice.ts`). Shift+1 to Shift+7 pick the drawing level from
   any tab, by key code, 4 being 0 [T-1701, T-1834], except that while the selection bar shows a blueprint pick

@@ -624,7 +624,7 @@ T-728); then, in this order, yesterday and today, the fare controls, History, tr
 [T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, "Loan" (the loan's payments,
 hover "Paid back over 60 game days in equal payments")
 while a loan is out or was paid yesterday (the network's only, never a region's) [T-2022], new trains,
-construction, net (Upkeep's hover is three lines: $30k per km of track per day, $50k per station per day, High speed rail 1.5x; Running trains' hover reads "Trains cost $4 per km, plus $2 per train car"; T-867, T-1838), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
+construction, net (Upkeep's hover is seven lines: $35k per km of ground track per day, $50k on a viaduct, $100k in cut and cover, $130k in a bored tunnel, $50k per station per day, $200k underground, High speed rail 1.5x [T-1931, T-2619]; Running trains' hover reads "Trains cost $4 per km, plus $2 per train car"; T-867, T-1838), headed by the Lines and Stations tabs' place-or-world toggle (T-332, one setting
 for all three): with the place on, these figures and History are that region's (T-531; the
 place's hover adds how a region's money is counted), with the globe the network's. A region with
 nothing in it shows $0. Money figures

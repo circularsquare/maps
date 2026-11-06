@@ -144,7 +144,7 @@ fn roads_charge_ground_track_and_stay_through_splits_and_loads() {
 
 #[test]
 fn upkeep_is_cheaper_for_track_that_stays_on_the_ground() {
-    // T-1931: US$20k a km a game day on the ground, 25k on a viaduct, 35k in cut and cover, 40k bored
+    // T-1931, T-2619: US$35k a km a game day on the ground, 50k on a viaduct, 100k in cut and cover, 130k bored
     let mut up = vec![];
     for level in [0.0, 1.0, 3.0, -1.0, -2.0, -3.0] {
         let mut a = api();
@@ -154,20 +154,23 @@ fn upkeep_is_cheaper_for_track_that_stays_on_the_ground() {
         assert_eq!(a.construct_all(), 0, "{}", a.issues());
         up.push(a.upkeep()[1]);
     }
-    for (got, want) in up.iter().zip([0.2, 0.25, 0.25, 0.35, 0.4, 0.4]) {
+    for (got, want) in up.iter().zip([0.35, 0.5, 0.5, 1.0, 1.3, 1.3]) {
         assert!((got - want).abs() < 1e-3, "{up:?}");
     }
     let params = api().money_params();
-    assert_eq!((params[7], params[15], params[16], params[17]), (200.0, 250.0, 350.0, 400.0));
+    assert_eq!((params[7], params[15], params[16], params[17]), (350.0, 500.0, 1000.0, 1300.0));
     // an edge pays the dearest structure it touches
     use crate::track::cost::track_upkeep_km as rate;
-    assert_eq!((rate(0, 0), rate(0, 2), rate(-1, 3), rate(-3, 1), rate(-2, -1), rate(-1, 0)), (200.0, 250.0, 350.0, 400.0, 400.0, 350.0));
+    assert_eq!((rate(0, 0), rate(0, 2), rate(-1, 3), rate(-3, 1), rate(-2, -1), rate(-1, 0)), (350.0, 500.0, 1000.0, 1300.0, 1300.0, 1000.0));
+    // a station below ground pays 200k, any other 50k (T-2619)
+    use crate::track::cost::station_upkeep as st;
+    assert_eq!((st(-3), st(-1), st(0), st(2), params[8], params[22]), (2000.0, 2000.0, 500.0, 500.0, 500.0, 2000.0));
 }
 
 #[test]
 fn upkeep_of_a_ten_km_line_and_its_shares() {
-    // T-867: 10 km of double track at -1 with a station every km: $35k a km (T-1931: cut and
-    // cover) and $50k a station a day
+    // T-867: 10 km of double track at -1 with a station every km: $100k a km (T-1931: cut and
+    // cover) and $200k an underground station a day (T-2619)
     let mut a = api();
     a.set_cash(1e6);
     let mut st = vec![];
@@ -189,24 +192,24 @@ fn upkeep_of_a_ten_km_line_and_its_shares() {
     assert_eq!(a.set_line_cars(l1, 6), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let up = a.upkeep();
-    assert!((up[0] - 0.9).abs() < 1e-3 && (up[3] - 10.0).abs() < 1e-3 && up[4] == 11.0, "{up:?}");
+    assert!((up[0] - 3.2).abs() < 1e-3 && (up[3] - 10.0).abs() < 1e-3 && up[4] == 11.0, "{up:?}");
     let hours = [8.0, 10.0, 6.0];
     let day: f64 = (0..3).map(|l| hours[l] * a.running_cost(l)).sum();
     let len = a.lines_info()[9] / 1000.0;
     assert!((day - 2000.0 * len / 10.0 * (4.0 + 2.0 * 6.0) * ECONOMY / 1e6).abs() < 1e-6, "{day} for {len} km");
     let s = a.line_upkeep(&hours);
-    assert!(s.len() == 4 && s[0] == l1 as f64 && (s[1] - 0.9).abs() < 1e-3 && s[3].abs() < 1e-9, "{s:?}");
+    assert!(s.len() == 4 && s[0] == l1 as f64 && (s[1] - 3.2).abs() < 1e-3 && s[3].abs() < 1e-9, "{s:?}");
     // a second line as busy over the first half shares that half's track and stations
     let l2 = a.new_line_id();
     assert_eq!(a.set_line(l2, &st[..6], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0x2d7dd2, "L2".into()), 0, "{}", a.issues());
     let s = a.line_upkeep(&hours);
     let share = |l: u32| s.chunks(2).find(|c| c[0] == l as f64).map_or(0.0, |c| c[1]);
-    assert!((share(l1) - 0.6625).abs() < 1e-3 && (share(l2) - 0.2375).abs() < 1e-3, "{s:?}");
+    assert!((share(l1) - 2.35).abs() < 1e-3 && (share(l2) - 0.85).abs() < 1e-3, "{s:?}");
     // without trains the first line carries nothing; its own half goes to the rest
     assert_eq!(a.set_schedule(l1, 0.0, 0.0, 0.0), 0, "{}", a.issues());
     let s = a.line_upkeep(&hours);
     assert!(!s.chunks(2).any(|c| c[0] == l1 as f64), "{s:?}");
-    assert!((s[s.len() - 1] - 0.425).abs() < 1e-3 && (s.chunks(2).map(|c| c[1]).sum::<f64>() - 0.9).abs() < 1e-3, "{s:?}");
+    assert!((s[s.len() - 1] - 1.5).abs() < 1e-3 && (s.chunks(2).map(|c| c[1]).sum::<f64>() - 3.2).abs() < 1e-3, "{s:?}");
 }
 
 #[test]
@@ -813,13 +816,13 @@ fn blueprint_construct_run() {
     let cars = a.lines_info()[21];
     let train_km = 30.0 * 2.0 * len_km;
     assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
-    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 200.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0, 250.0, 350.0, 400.0, 8.0, 40.0, 100.0, 10.0]);
+    assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 350.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, 1.0, 500.0, 1000.0, 1300.0, 8.0, 40.0, 100.0, 10.0, 2000.0]);
     assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
-    // Upkeep (T-867, T-1931): $20k a km of double track on the ground and $50k a station a game
-    // day, all on the one line; built track no line uses goes to the rest.
+    // Upkeep (T-867, T-1931, T-2619): $35k a km of double track on the ground and $50k a station at
+    // grade a game day, all on the one line; built track no line uses goes to the rest.
     let up = a.upkeep();
     assert!((up[3] - 3.0).abs() < 0.01 && up[4] == 3.0, "{up:?}");
-    assert!((up[1] - 0.02 * up[3]).abs() < 1e-9 && (up[2] - 0.15).abs() < 1e-9);
+    assert!((up[1] - 0.035 * up[3]).abs() < 1e-9 && (up[2] - 0.15).abs() < 1e-9);
     let shares = a.line_upkeep(&[8.0, 10.0, 6.0]);
     assert_eq!(shares.len(), 4, "{shares:?}");
     assert_eq!(shares[0], id as f64);

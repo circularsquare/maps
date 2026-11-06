@@ -308,6 +308,8 @@ export interface MoneyState {
   upkeepCutKm: number;
   upkeepBoredKm: number;
   upkeepStation: number;
+  /** T-2619: an underground station's (-1 to -3); `upkeepStation` is any other's */
+  upkeepStationUnder: number;
   upkeepSingle: number;
   upkeepHsr: number;
   /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations

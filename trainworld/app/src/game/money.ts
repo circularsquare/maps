@@ -89,12 +89,12 @@ export interface Income {
 
 /** What the money, points and region figures read of `moneyState`: the same object while these are
  * the same, so a state or an hour's money that leaves them alone redoes no sums (T-1209). */
-export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm" | "upkeepPort">;
+export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepStationUnder" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm" | "upkeepPort">;
 let termsKey = "", terms: MoneyTerms | null = null;
 export const moneyTerms = computed<MoneyTerms | null>(() => {
   const m = moneyState.value;
   if (!m) return (termsKey = "", terms = null);
-  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm, upkeepPort: m.upkeepPort };
+  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepStationUnder: m.upkeepStationUnder, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm, upkeepPort: m.upkeepPort };
   const key = JSON.stringify(t);
   if (key !== termsKey || !terms) { termsKey = key; terms = t; }
   return terms;

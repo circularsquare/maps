@@ -377,7 +377,7 @@ function StationDetails({ s, lines, props }: {
           <Row label={tr("trackInspector.upkeep")}>
             {s.port
               ? <span class="money-neg" data-tip={tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })}>{tr("inspector.perDay", { value: money(m.upkeepPort * m.economy) })}</span>
-              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { price: money(stationUpkeep(m)) })}>{tr("inspector.perDay", { value: money(stationUpkeep(m)) })}</span>}
+              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) })}>{tr("inspector.perDay", { value: money(stationUpkeep(m, s.level)) })}</span>}
           </Row>
         )}
       </ul>

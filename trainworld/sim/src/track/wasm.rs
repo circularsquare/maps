@@ -213,8 +213,8 @@ fn port_upkeep() -> f64 {
 fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
     n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| n.bus_road_m(l) / 1000.0 * UPKEEP_BUS_KM * ECONOMY / 1e6)
 }
-fn station_upkeep() -> f64 {
-    UPKEEP_STATION * ECONOMY / 1e6
+fn station_upkeep(n: &Network, i: usize) -> f64 {
+    super::cost::station_upkeep(n.node_level[i]) * ECONOMY / 1e6
 }
 
 fn pis_from(flat: &[f64]) -> Vec<Pi> {

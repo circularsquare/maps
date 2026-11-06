@@ -122,8 +122,10 @@ function busKmByRegion(w: WorldView, line: string): Map<string, number> {
   }
   return out;
 }
-/** T-867: a constructed station's upkeep a game day, US$. */
-export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "economy">) => m.upkeepStation * m.economy;
+/** T-867: a constructed station's upkeep a game day, US$; T-2619: dearer below ground, as the
+ * track model counts it (`cost::station_upkeep`). */
+export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, level: number) =>
+  (level < 0 ? m.upkeepStationUnder : m.upkeepStation) * m.economy;
 
 /** Each edge midpoint's zone, kept while the edge's ends and the zone boundaries stay (T-1209). */
 const midZones = new Map<number, { lng: number; lat: number; zone: string }>();
@@ -151,7 +153,7 @@ export const upkeepShares = computed<Shares>(() => {
     const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
     if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
-  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeep(m));
+  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeep(m, s.level));
   for (const l of w.save.lines) {
     if (!w.lineStats[l.id]?.bus?.built || w.lineStats[l.id]?.bus?.ferry) continue; // T-2194: a ferry route has no upkeep
     for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * (m.upkeepBusKm ?? 0) * m.economy);

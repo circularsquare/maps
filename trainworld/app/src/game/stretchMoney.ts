@@ -193,7 +193,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     if (!s.built) continue;
     const on = stopping.get(s.id);
     if (!on) continue;
-    const u = s.port ? (t.upkeepPort ?? 0) * E : stationUpkeep(t);
+    const u = s.port ? (t.upkeepPort ?? 0) * E : stationUpkeep(t, s.level);
     let total = 0;
     for (const { l } of on) total += weight.get(l.id)!;
     for (const { l, k } of on) {

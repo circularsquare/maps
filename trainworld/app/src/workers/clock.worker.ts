@@ -674,6 +674,7 @@ function pricesOf(p: ArrayLike<number>) {
     carPrice: p[0], runCostCarKm: p[1], economy: p[2], runCostTrainKm: p[3], hsCarPrice: p[4], hsRunCostCarKm: p[5], hsRunCostTrainKm: p[6],
     upkeepTrackKm: p[7], upkeepStation: p[8], upkeepSingle: p[9], upkeepHsr: p[10], busPrice: p[11], runCostBusKm: p[12], upkeepBusKm: p[13],
     busRouteKm: p[14], upkeepViaductKm: p[15], upkeepCutKm: p[16], upkeepBoredKm: p[17], boatPrice: p[18], runCostBoatKm: p[19], upkeepPort: p[20], portPrice: p[21],
+    upkeepStationUnder: p[22],
   };
 }
 let prices = pricesOf([2.5, 2, 100, 9]);

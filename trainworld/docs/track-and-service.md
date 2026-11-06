@@ -1105,16 +1105,19 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   `RUN_COST_TRAIN_KM` and `RUN_COST_CAR_KM`; high-speed trains US$5 a train-km plus US$3 a car-km,
   `HS_RUN_COST_*`, T-817, T-867).
 - **Upkeep** (T-867, notes/T-867.md): constructed track and stations cost money every game day
-  whether trains run or not, draining evenly through the day: a route-km of double track US$20k
-  on the ground, US$25k on a viaduct (+1 to +3), US$35k in cut and cover (-1) and US$40k in a bored
-  tunnel (-2, -3) (T-1931; Anita 2026-11-02), so a tunnel's gains are mountains and long water, a
+  whether trains run or not, draining evenly through the day: a route-km of double track US$35k
+  on the ground, US$50k on a viaduct (+1 to +3), US$100k in cut and cover (-1) and US$130k in a
+  bored tunnel (-2, -3) (T-1931; figures Anita's, T-2619, 2026-11-06, after research/upkeep-france.md),
+  so a tunnel's gains are mountains and long water, a
   viaduct's cheaper upkeep. An edge pays the dearest structure between its lowest and highest level
   (a ramp into a tunnel makes the whole edge a tunnel's rate; a -1 to -2 edge pays bored). Times
   its price factor (`track_factor`: high-speed 1.5x, single 0.6x; quad is two double-track edges,
-  so twice), US$50k a constructed station at any elevation; crossovers, junctions and flyovers
+  so twice). A constructed station pays US$200k underground (its level -1 to -3, where its price takes
+  the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619); crossovers, junctions and flyovers
   nothing on top; blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_VIADUCT_KM`, `UPKEEP_CUT_KM`,
-  `UPKEEP_BORED_KM`, `UPKEEP_STATION`, real US$200, 250, 350, 400 and 500 times `ECONOMY`;
-  `cost::track_upkeep_km`, `TrackApi::upkeep`; the app reads the two levels from `edges_info`). A line's share (`TrackApi::line_upkeep`): each edge's
+  `UPKEEP_BORED_KM`, `UPKEEP_STATION`, `UPKEEP_STATION_UNDER`, real US$350, 500, 1,000, 1,300, 500 and
+  2,000 times `ECONOMY`; `cost::track_upkeep_km`, `cost::station_upkeep`, `TrackApi::upkeep`; the app
+  reads the two levels from `edges_info` and a station's from its own level). A line's share (`TrackApi::line_upkeep`): each edge's
   upkeep split between the running lines on it by their trains a weekday, each station's between
   the running lines stopping there; what no running line uses counts only for the network. Its
   profit (line panel, Lines tab) is fares less its running cost and that share. By region, each
@@ -1296,7 +1299,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
   day earns and spends what a hundred real days would. The fare the player sets and the US$4 a
   train-km plus US$2 a car-km shown (Money tab, line panel and train length hovers) are the figures
-  before that scaling; upkeep is shown as the game day's figure (US$20k on the ground, real US$200); construction
+  before that scaling; upkeep is shown as the game day's figure (US$35k on the ground, real US$350); construction
   and train prices are not scaled.
 
 ### 6.5 Edits
