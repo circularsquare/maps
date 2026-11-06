@@ -2,6 +2,7 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2591 False sea on the network diagram's sheet (2026-11-06, agent njwater, tree): stationless land is sea only where the masks' edge cuts it (Korea, China), not over 2,000 km2; the sheet loads the masks of every zone its box meets. Pennsylvania and eastern Connecticut drawn as land; t2580 land/sea check. notes/T-2591.md.
 - T-2580 Network diagram sheet in the game, stage 3 (2026-11-06, agent sheetwater, tree): thin water and land drawn as bands, coasts two-sided and nib-free (NY coast stair runs 82 to 2.9 per 1000 pitches), Harlem and narrow rivers as bands on city maps; the sheet is now the default, `?sheet=0` the old layout. notes/T-2580.md.
 - T-2567 Network diagram sheet in the game, stage 2 (2026-11-06, agent sheetlines, tree): with `?sheet=1` the lines laid out on the sheet, the map carried with them, sea and real zone borders drawn (diagram/sheetLines.ts); round 3's measures met, flag off unchanged. notes/T-2567.md.
 - T-2568 Network diagram sheet in the game, stage 1 (2026-11-06, agent sheetgame, tree): diagram/sheet.ts in the layout worker behind `?sheet=1` (not drawn yet), quadtree lattice, multigrid CG, settled schedule; Japan retuned (Kyushu 92% of round 3), New York as round 3, 0 folds; 1.2-3 s a solve, accepted by maps-93 (today's layout takes ~3 s), speed in T-2589. notes/T-2568.md.
