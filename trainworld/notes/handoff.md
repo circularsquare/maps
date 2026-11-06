@@ -44,8 +44,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - sheetspeed LANDED 2af717b9: T-2589 stage 1, same picture bit for bit, all Japan 49 -> 38 s, NY 10.9 -> 9.3 s;
   T-2589/T-2592 stay open (left: carry in WASM+SIMD, est. 3-4x, Rust tree; layout tolerance is a look call);
   T-2597 filed. Not on 8800 yet.
-- **workerbal** (Opus, tree, launched ~08:35): T-2553 then T-2532, demand worker balance and bubbles after an edit;
-  figures must match (12,515,594).
+- workerbal LANDED 858098e0: T-2532 (edit's bubbles 95 -> 25 s), T-2596 (bubble sums only for zones on screen
+  before the last round, ~8-11 s off a solve), T-2553 closed with no change. Not on 8800 yet.
 - cachehit LANDED 22c4bbc2 (records 6f9d765a): T-2574 bar ends full on a cache hit; T-2533 zone in view answers
   13-16 s after the card (was 31-91 s); T-2579 filed (Tokyo save's re-solve after a cache hit ends off the cache).
   Note: Mexico's join rewrote North American market packs, so Anita's NA save misses the cache once.
