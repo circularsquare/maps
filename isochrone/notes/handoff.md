@@ -22,16 +22,15 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-028 and T-057 landed (7e807cd7): page on our surface with roads; 4,672 fine tiles (0.52 GB),
   partial town tiles need T-086 to show. MAP's tiles kept in data/tiles_map2020/ until Anita
   has compared. Eight new speeds-panel and info strings to show her (notes/T-028.md).
-- T-084 road grade cap + hazard band on our mask: T-028's agent a9b36a2c84531c427 (resumed
-  ~02:45). Owns tools/build_tiles.py, data/tiles, tools/hazard/, data/hazard, js/speeds.js,
-  docs/roads.md, hazard.md.
+- T-084 (grade cap 10%, hazard on our land) and T-086 (partial town tiles) landed (cb7ac49b);
+  smoke 17/17. Backups kept: data/tiles_map2020, data/hazard_map2020. Agents idle:
+  a9b36a2c84531c427 (~430k tokens, retire), a2e305ad8c2b66a43.
 - T-085 canoe water + river steps on our mask: T-079's agent a75105d4c451ffaf1. Owns
-  tools/canoe/, canoe data, docs/canoe.md.
-- T-086 100 m in partial town tiles (page): T-057's agent a2e305ad8c2b66a43. Owns js/tiles.js
-  fine functions, js/windows.js, checks/smoke.mjs, docs/fine.md.
+  tools/canoe/, canoe data, docs/canoe.md (uncommitted edits there are its own).
+- New "Roads, towns" hover string for Anita: "...slowed by height and by slope up to a 10% grade."
 
 ## Next
-1. Land T-084, T-085, T-086.
+1. Land T-085; then T-082 (canoe at L10 in river country), which waits for it.
 2. T-011 90 m terrain (Anita queued it after roads): asked her whether to start the downloads
    (100-130 GB streamed); T-084 must land first (both touch the terrain side); Anita asked
    for a pause on big downloads once on 2026-11-05 (then said resume). Then T-039, T-057
