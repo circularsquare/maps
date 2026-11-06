@@ -16,7 +16,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   i18n/intl.ts). maps-eb's play count ships with the next release build.
 - Cores cap 12, 4 free while Anita is on; check real CPU with Get-Counter. Disk 99 GB free (16:00).
 - **maps-b9 holds the landing role.** maps-93 forwards its last trees as they report: upkeep (T-2619/T-2620), capview
-  (T-2622), borders2 (T-2639). dianames landed (093d7b82). maps-93's Previous line goes when it has no agents left.
+  (T-2622). dianames landed 093d7b82, borders2 landed e67d966d (smoke not run in the tree: machine full). maps-93's Previous line goes when it has no agents left.
 - Uncommitted: little (TODO.md is Anita's: never commit or edit it; notes/T-2620.md upkeep's, T-2639.md borders',
   T-2660.md marey's, commit with their landings).
 
@@ -38,6 +38,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **searchleaf** (Opus, tree): T-2652 leaf stations in kernel/search.rs (Japan searches 1.4x+, exact).
 - **fartable** (Sonnet, tree): T-2653 far-zone table by zone (intercity/pass.rs, api.rs; spreading 3x+, bit-exact).
   Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
+- **namespread** (Sonnet, tree): T-2674 diagram names spread across the map (Anita via maps-93: "lets spread themy es").
 - **l10nfix** (Opus, tree): T-2655 code that pieces English (list on its TASKS line); its changed keys need a short
   review pass in the three languages after landing.
 
@@ -49,6 +50,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   base ground track 1x or the construction chip's base (maps-b9 leans to the chip's base). T-2669 (costs, money only),
   T-2670 (fares + value of time, demand change) are written for N.
 - T-2667: OSM tourism places for thin countries (changes demand); recommended yes (notes/T-2663.md).
+- Answered via maps-93: profit estimate wording stays ("lets keep as is, no tilde"); "A, B and C" stays.
 - Strings shown, no answer = fine: demand-stopped notice, held trains "1,234 trains held out of service", plurals.
 
 ## Next
@@ -59,7 +61,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    diagram/ after borders2) then their translation; OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2674**.
+   (Brazil, pack lock free). Next unassigned id **T-2675**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
