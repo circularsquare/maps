@@ -1,0 +1,450 @@
+[
+ {
+  "id": "A",
+  "name": "today",
+  "ef": 0.7,
+  "ev": 0.7,
+  "ec": 0,
+  "eu": 0,
+  "k": 1,
+  "fareMult": 1,
+  "costFactor": 1,
+  "upkeepFactor": 1,
+  "light": {
+   "riders": 111314,
+   "income": 105065,
+   "cost": 88143,
+   "profit": 16923
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 112153,
+   "cost": 215631,
+   "profit": -103478
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.68,
+    "baseMin": 11,
+    "breakEvenPerCar": 17,
+    "riders": 1,
+    "income": 1
+   },
+   "Mumbai": {
+    "base": 0.21,
+    "baseMin": 11,
+    "breakEvenPerCar": 53.3,
+    "riders": 1,
+    "income": 1
+   },
+   "Tokyo": {
+    "base": 1.31,
+    "baseMin": 11,
+    "breakEvenPerCar": 8.7,
+    "riders": 1,
+    "income": 1
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "D",
+  "name": "fares + value of time 0.5, costs world",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0,
+  "eu": 0,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 1,
+  "upkeepFactor": 1,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 88143,
+   "profit": 64544
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 215631,
+   "profit": -52645
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 11.7,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 26.5,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 7.3,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "K",
+  "name": "(a) everything 0.5",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0.5,
+  "eu": 0.5,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 0.393,
+  "upkeepFactor": 0.393,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 34621,
+   "profit": 118066
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 84695,
+   "profit": 78291
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "L",
+  "name": "(b) 0.5, running + upkeep 0.3",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0.3,
+  "eu": 0.3,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 0.571,
+  "upkeepFactor": 0.571,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 50313,
+   "profit": 102374
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 123084,
+   "profit": 39903
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 6.7,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 9.2,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 5.5,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "M",
+  "name": "(b) 0.5, running + upkeep 0.25",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0.25,
+  "eu": 0.25,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 0.627,
+  "upkeepFactor": 0.627,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 55241,
+   "profit": 97445
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 135140,
+   "profit": 27846
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 7.3,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 11,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 5.8,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "N",
+  "name": "(c) 0.5, running 0.5, upkeep world",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0.5,
+  "eu": 0,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 0.393,
+  "upkeepFactor": 1,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 41695,
+   "profit": 110992
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 91770,
+   "profit": 71217
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "O",
+  "name": "(c) 0.5, running 0.3, upkeep world",
+  "ef": 0.5,
+  "ev": 0.5,
+  "ec": 0.3,
+  "eu": 0,
+  "k": 1,
+  "fareMult": 1.453,
+  "costFactor": 0.571,
+  "upkeepFactor": 1,
+  "light": {
+   "riders": 111314,
+   "income": 152686,
+   "cost": 55313,
+   "profit": 97374
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 162986,
+   "cost": 128084,
+   "profit": 34902
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.98,
+    "baseMin": 11,
+    "breakEvenPerCar": 6.7,
+    "riders": 1,
+    "income": 1.45
+   },
+   "Mumbai": {
+    "base": 0.43,
+    "baseMin": 11,
+    "breakEvenPerCar": 9.2,
+    "riders": 1,
+    "income": 2.02
+   },
+   "Tokyo": {
+    "base": 1.58,
+    "baseMin": 11,
+    "breakEvenPerCar": 5.5,
+    "riders": 1,
+    "income": 1.2
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ },
+ {
+  "id": "P",
+  "name": "0.6, running 0.3, upkeep world",
+  "ef": 0.6,
+  "ev": 0.6,
+  "ec": 0.3,
+  "eu": 0,
+  "k": 1,
+  "fareMult": 1.206,
+  "costFactor": 0.571,
+  "upkeepFactor": 1,
+  "light": {
+   "riders": 111314,
+   "income": 126657,
+   "cost": 55313,
+   "profit": 71345
+  },
+  "heavy": {
+   "riders": 119812,
+   "income": 135201,
+   "cost": 128084,
+   "profit": 7118
+  },
+  "tijMaxMult": 2.79,
+  "tijDefaultShare": 0.78,
+  "cities": {
+   "Tijuana": {
+    "base": 0.81,
+    "baseMin": 11,
+    "breakEvenPerCar": 8,
+    "riders": 1,
+    "income": 1.21
+   },
+   "Mumbai": {
+    "base": 0.31,
+    "baseMin": 11,
+    "breakEvenPerCar": 13.1,
+    "riders": 1,
+    "income": 1.42
+   },
+   "Tokyo": {
+    "base": 1.44,
+    "baseMin": 11,
+    "breakEvenPerCar": 6,
+    "riders": 1,
+    "income": 1.1
+   },
+   "New York": {
+    "base": 2.5,
+    "baseMin": 11,
+    "breakEvenPerCar": 4.6,
+    "riders": 1,
+    "income": 1
+   }
+  }
+ }
+]

@@ -70,9 +70,11 @@ leftovers) need stage 1 then translation; T-2655 code faults (list on its TASKS 
   diagram/ after borders2+dianames), then their translation; then OFFERED in i18n/intl.ts on Anita's release word.
 
 ## Waiting on Anita
-- **T-2669** running costs and upkeep at each country's fare scale (construction, trains stay world prices): money
-  only. **T-2670** value of time 0.7 -> 0.6 (demand change). farescale's note notes/T-2668.md (fares' ^0.7 is
-  supported: fitted 0.66; Tijuana's loss is costs not scaling).
+- Fares by country (T-2668/T-2669/T-2670): Anita ~16:45 disagrees in principle with ^0.7 fares; wants simple costs,
+  no construction scaling; asked "perhaps we could use a 0.5x scale throughout? for fares, costs, and upkeep, and
+  value of time? or maybe even weaker for costs and upkeep?" and upkeep shown as multiples ("1.50x upkeep") not
+  $/km/day. farescale resumed to measure her options + answer "is upkeep mostly labor?" (notes/T-2668.md section 6).
+- Diagram names: she likes the West Coast view (keep busiest-first). T-2673 build menu text 1px high -> riderspace.
 - T-2667: fill thin countries with OSM tourism places (changes demand). attract recommended yes. notes/T-2663.md.
 - T-2668 proposal when farescale reports.
 - Strings shown, no answer yet = fine: the demand-stopped notice ("Demand stopped, so the game is paused. Reload the
