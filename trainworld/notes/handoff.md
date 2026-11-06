@@ -1,12 +1,85 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, since 2026-11-05 17:55
-Updated: 2026-11-06 18:15
+Orchestrator: session b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21, name maps-b9, since 2026-11-06 14:10
+Previous: session aa768402-8365-45e0-85b8-0c27fe256637, name maps-93, handed over 2026-11-06 14:10, finishing in-flight work
+Updated: 2026-11-06 14:10 (machine clock, Get-Date; maps-93's times below run ~4 h ahead of it: its "18:15" = git's 14:03)
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
+## In flight (maps-b9's agents, 2026-11-06 14:25)
+Agents report to maps-b9 (Agent tool, background). Nothing of maps-b9's lands until maps-93 says it is done.
+- **l10n-insp tree READY TO LAND** (l10n-insp2 done ~14:45, retired at 392k): ui/inspector/ at 0, 637 en keys,
+  typecheck clean. Smoke NOT complete (machine saturated; 16 checks passed, then stopped): run full tree smoke pinned
+  before landing. After the rebase (use maps-93's scratch mergejson.py for en.json/context.json): AllCitiesView.tsx:27
+  `{ALL_CITIES}` -> `{allCitiesName()}`; look at the "Part of [pill] group" row (.line-group CSS). Pseudo shots:
+  artifacts/trainworld/l10n-insp2/line-pseudo.png. Visible English changes to show Anita: "buss" -> "buses" (bus
+  ride hover), "1 other places" -> "1 other place". Then translate ui/inspector as unit 3.
+- **farends tree READY TO LAND** (T-2641 done ~15:20, records already in main tree: ARCHIVE, DECISIONS, notes/T-2641.md):
+  NA market 1.94x (pairs 867k -> 422k a period), lines >100k worst 0.29-0.54%, >10k worst 1.88% (both "overstated" per
+  the agent; its line-id join is weak, medians fine), LA-Chicago -0.48%; Japan 1.13-1.24x (searches are T-2642).
+  New WASM method set_far_chunks + `?perfOff=farChunks`: land, then `npm run wasm:demand` in the main tree (check
+  agent-tree land does it). Tree smoke passed only with a raised timeout (busy machine): run smoke again at landing.
+  T-2621 stays open for T-2642.
+- **searchcost** (Opus, scratch crate only, maps-b9 scratch\searchcost): T-2642 design and measure. Ids T-2652-53.
+- **maps-eb's play count** (distinct browsers; server half live, shonei-server c4634b7), uncommitted in the main tree,
+  checked: app/src/game/playtime.ts, app/public/privacy.html, docs/architecture.md, DECISIONS.md's last line
+  ("counting distinct ppl"; commit only that hunk, keep_hunks.py). Commit with the next commit. Deploy: with the next
+  release build (Anita ~14:30: "yeah we can send it with next build"); no one-off.
+- **Translators, pass 1** (Opus, main tree, write only through `l10n.mjs merge`): tr-ja-1, tr-hans-1, tr-tw-1, each
+  `--folder ui` (404 keys landed so far) plus the 61 no-file keys. Brief: scratch translate-brief.md. When each
+  reports: a Sonnet back-translator then a fresh Opus reviewer per docs/localization.md "Translating". Later units:
+  ui L-Z (after l10n-ui2), ui/inspector (after l10n-insp2), game/map/workers/diagram/root (after l10n-core); every
+  stage-1 folder re-runs `i18n.mjs --list` (l10n-lead's scanner fix found more). Release gate: OFFERED in
+  i18n/intl.ts. Follow-ups l10n-lead named: widgets.tsx Stepper "Less "+label (l10n-ui2's), English flash before a
+  message file loads, MapLibre localIdeographFontFamily (T-2586). l10n-lead landed ca03a19a / d17706bb.
+- Unit 1 (ui + `help.`, 388 keys) merged in all three (doubts in scratch tr-ja-1, tr-hans-1, tr-tw-1 \doubts.md:
+  21, 12, 16). Back-translating: **back-ja-1, back-hans-1, back-tw-1** (Sonnet) -> scratch back-<x>-1\back.json; then
+  a fresh Opus reviewer each (rev-hans-1 DONE 14:50: no meaning errors, 22 rewrites; rev-ja-1 DONE ~14:55: none, 17 rewrites;
+  rev-tw-1 DONE ~15:10: 3 meaning errors fixed, 37 rewrites; unit 1 reviewed in all three).
+  Code faults from reviews on T-2655 (+ Blueprint.tsx:232 count+已選 pieced; ui.ts:324 superholiday `on ${name}`).
+  zh-TW click words added to docs/localization.md Style (maps-b9). Open small call: settingsTab.day label. ja "line" now accepts 航路 for ferry lines (glossary, maps-b9): rev-ja-2 should turn unit 1's
+  船の路線 keys into 航路 too. Unit 2 (ui L-Z,
+  374 keys, landed 711df0ad): all three translated (374 merged each, doubts in scratch tr-<x>-2\doubts.md); back-tw-2 done, **rev-tw-2**
+  reviewing; back-hans-2 done, **rev-hans-2** reviewing; **rev-ja-2** reviewing (also turns unit 1's 船の路線 into 航路).
+  rev-tw-2 DONE: 1 meaning error (moneyHistory.running), 36 rewrites. English fault found: moneyHistory.running
+  "Running costs {amount}" is the total of running trains + upkeep (MoneyHistory.tsx:139), while "running costs"
+  means trains alone elsewhere. Proposed to Anita: "Ongoing costs {amount}" (pairs with "One-off costs" below it).
+  Apply in en.json once rev-hans-2 and rev-ja-2 have reported (then a stale batch re-translates the key).
+  rev-hans-2 DONE: same meaning error, 12 keys changed. zh-TW unit 2's opencc pass DONE (7 fixes). **Units 1-2
+  (853 keys: ui + help + game's 14) fully translated and reviewed in ja, zh-Hans, zh-TW** (15:05). rev-ja-2: same
+  moneyHistory.running error, 13 rewrites, ja.json has no 船の路線 left. context.json's stationsTab.ridersTip/ridersWhat
+  notes fixed by maps-b9 ("per weekday", not "on a weekday"); game/'s translator must render the day phrases
+  (DEMAND_DAY_PHRASE) as adverbs (ja 平日1日あたり). Next units when stage 1 lands: ui/inspector (l10n-insp tree),
+  game/map/workers/diagram/root (l10n-core). (only their tr.json's keys); then review as unit 1.
+  Reviewers of unit 2: check moneyHistory.running (English "Running costs" totals running + upkeep, glossary's term
+  is running alone: if the English label is wrong, tell the orchestrator); zh-Hans used 换线 for changing lines to
+  pass the line check (換乘 is the glossary-free usual word: decide), brief scratch review-brief.md (passes 3-4; zh-TW's opencc after zh-Hans's review).
+  Glossary widened by maps-b9 (uncommitted, app/src/i18n/glossary.json): track's single/double/quad words, fare
+  票款/票箱, ferry 航路. Pass 5 screenshots for all units together later.
+  Code faults translators find go on T-2655's line.
+- **T-2656** demand-stopped bug on Anita's save (shared drives buffer detached by a replacement's reopen): fixed by
+  maps-b9 in app/src/game/marketRule.ts (fetchMarketDrives returns a copy per caller), typechecked, uncommitted; commit
+  with the next records and rebuild 8800.
+- **stopnote** (Sonnet, tree .tw-trees/stopnote from b9690900): T-2657 unrecoverable demand error pauses the game,
+  top-centre notice with Reload. Strings to show Anita.
+- maps-93 landed profitest (T-2626) 42f9a877 / c942ee14; still has upkeep, capview, borders2, dianames, l10n-core.
+  Swept-file l10n queue now free: ui/EditNote.tsx, game/editNote.ts, game/profitEstimate.ts (then lineFigures/editCap
+  after capview, diagram/ after borders2/dianames).
+- **ridersnow** (Opus, tree .tw-trees/ridersnow from c942ee14): T-2658 riders shown as a settled 0 (and "0 gain")
+  while the solve is still running (Anita ~15:10). Ids T-2659.
+- moneyHistory.running renamed "Running costs" -> "Ongoing costs" (Anita ~15:10: "we can rename to ongoing costs"),
+  en.json + the three translations re-merged against it (meaning unchanged), uncommitted.
+- **T-2660** timetable chart shows interlining lines + flat junctions (Anita ~15:20): start an agent (Opus, design
+  calls) in a fresh tree once l10n-insp has landed. Asked maps-93 (~15:20) whether I may land l10n-insp and farends
+  between its landings.
+- Id ranges: maps-93's agents T-2643..T-2649, maps-b9 from T-2650 (next unassigned **T-2661**).
+- Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad
+  (helpers copied from maps-93's; snapbuild-frozen.cmd path fixed; common-brief-tree.md rewritten for maps-b9).
+
 ## State
-- master **d5b02108** (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
+- master **b21c0c66** at 14:25 (l10n-ui1 landed by maps-93 at 7d0a32a8). Disk **23 GB free** (not 50).
+  CPU at takeover: 92% real, ledger 13 of cap 12 (maps-93's agents and isochrone's 3).
+- (older) master d5b02108 (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
 - **8800 = build 1187 (ff7cb27f)**, everything landed through sheetscale (T-2609); smoke light and dark PASSED 25/25
   ~17:00 on 11-06, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
   and Brazil before release).
