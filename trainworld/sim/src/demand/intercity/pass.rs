@@ -252,12 +252,16 @@ impl IntercityApi {
         let mut st = vec![0f32; pat.col.len()];
         // per station, where its row was last looked up, for starts and for ends
         let mut cur = vec![0u32; 2 * s];
+        let at = |cur: &mut [u32], x: usize, c: usize| pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize]);
         // (a window's far-zone table is never read: its loads are what it is for)
-        let mut put = |st: &mut [f32], x: usize, c: usize, v: f32| {
+        let put = |st: &mut [f32], cur: &mut [u32], x: usize, c: usize, v: f32| {
             if !windowed {
-                st[pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize])] += v;
+                st[at(cur, x, c)] += v;
             }
         };
+        // a longer trip's entries in that table, its start stations' in the run of its station pairs
+        // from one and its end stations' by place in its access list, each looked up once a pair
+        let mut ends: Vec<usize> = vec![];
         let mut terms: Vec<(u32, u32, f64)> = vec![];
         let mut fares: Vec<f32> = vec![];
         let pc = commute_params();
@@ -433,6 +437,9 @@ impl IntercityApi {
                         }
                     }
                     if sum > 0. && r_all > 0. {
+                        ends.clear();
+                        ends.resize(b.len(), usize::MAX);
+                        let (mut last_sa, mut ia, mut jb) = (u32::MAX, 0, 0);
                         for &(sa, sb, v) in &terms {
                             let rr = (r_all * v / sum) as f32;
                             if swap {
@@ -445,14 +452,27 @@ impl IntercityApi {
                                 }
                                 continue;
                             }
+                            if !windowed {
+                                if sa != last_sa {
+                                    (last_sa, ia) = (sa, at(&mut cur, sa as usize, cb));
+                                }
+                                while b[jb].0 != sb as usize {
+                                    jb = (jb + 1) % b.len();
+                                }
+                                if ends[jb] == usize::MAX {
+                                    ends[jb] = at(&mut cur, sb as usize, ca);
+                                }
+                            }
                             let (sa, sb) = (sa as usize, sb as usize);
                             let k = ws[sb] as usize;
                             odc[k][sa] += rr;
                             if ln != 0. {
                                 odrc[k][sa] += rr * ln;
                             }
-                            put(&mut st, sa, cb, rr);
-                            put(&mut st, sb, ca, rr);
+                            if !windowed {
+                                st[ia] += rr;
+                                st[ends[jb]] += rr;
+                            }
                         }
                     }
                     rail += r_all;
@@ -512,10 +532,10 @@ impl IntercityApi {
                                 cc[ws[sa] as usize][sb] += bk;
                             }
                         }
-                        put(&mut st, sa, wc, a);
-                        put(&mut st, sb, nz + hc, a);
-                        put(&mut st, sb, hc, bk);
-                        put(&mut st, sa, nz + wc, bk);
+                        put(&mut st, &mut cur, sa, wc, a);
+                        put(&mut st, &mut cur, sb, nz + hc, a);
+                        put(&mut st, &mut cur, sb, hc, bk);
+                        put(&mut st, &mut cur, sa, nz + wc, bk);
                     }
                 }
             }
@@ -575,10 +595,10 @@ impl IntercityApi {
                                 ec[k][ws[sa] as usize][sb] += bk;
                             }
                         }
-                        put(&mut st, sa, ac, a);
-                        put(&mut st, sb, nz + hc, a);
-                        put(&mut st, sb, hc, bk);
-                        put(&mut st, sa, nz + ac, bk);
+                        put(&mut st, &mut cur, sa, ac, a);
+                        put(&mut st, &mut cur, sb, nz + hc, a);
+                        put(&mut st, &mut cur, sb, hc, bk);
+                        put(&mut st, &mut cur, sa, nz + ac, bk);
                     }
                 }
             }

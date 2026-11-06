@@ -218,9 +218,8 @@ levels:
    boarding route node for the departures accepted there (their trains an hour are the graph's),
    and each change node's station and a bit per boarding edge of that station for the departures
    it accepts: about 4 bytes a node and 16 a change node (T-398, T-581; sizes in
-   notes/T-581.md). The search's queue holds each
-   node at most once (a lower cost moves it up) and pops by cost, then id, as a queue of copies
-   would (T-581).
+   notes/T-581.md). The search's queue pops by cost, then id; a lower cost for a node already
+   queued adds a copy, and the stale copy is skipped when it pops (T-1647).
 
 #### Mode choice per subzone pair
 

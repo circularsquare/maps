@@ -2028,6 +2028,22 @@ fn compact_columns_give_back_the_numbers_they_were_given() {
     assert!(matches!(wide, Ix::U32(_)) && wide.at(1) == 70_000 && wide.len() == 2);
     assert!(matches!(Ix::of(vec![1, 65_535]), Ix::U16(_)));
 }
+/// This thread's CPU milliseconds so far (T-1647: a bench's own time on a shared machine), 0 off Windows.
+fn thread_cpu_ms() -> f64 {
+    #[cfg(windows)]
+    {
+        extern "system" {
+            fn GetCurrentThread() -> isize;
+            fn GetThreadTimes(h: isize, created: *mut u64, ended: *mut u64, kernel: *mut u64, user: *mut u64) -> i32;
+        }
+        let (mut c, mut e, mut k, mut u) = (0u64, 0u64, 0u64, 0u64);
+        // SAFETY: four FILETIMEs written by the call; the pseudo-handle needs no closing
+        unsafe { GetThreadTimes(GetCurrentThread(), &mut c, &mut e, &mut k, &mut u) };
+        (k + u) as f64 / 1e4
+    }
+    #[cfg(not(windows))]
+    0.
+}
 /// T-1545: a captured network's market solved for period `TW_T1545_Q` (1) at free flow, its figures
 /// written to `TW_T1545_OUT` as JSON, to compare the pass before and after a change.
 /// `TW_T780_NET=<plain net> TW_T1545_OUT=<out.json> cargo test --release --features demand t1545_dump -- --ignored --nocapture`
@@ -2043,8 +2059,10 @@ fn t1545_dump() {
     if let Ok(mb) = std::env::var("TW_T1545_CAP") {
         WINDOW_STRATEGY_BYTES.with(|c| c.set(mb.parse::<usize>().unwrap() << 20));
     }
+    let cpu = thread_cpu_ms();
     assert!(a.solve(q));
     let t_solve = now_ms() - t;
+    let cpu_solve = thread_cpu_ms() - cpu;
     let [reads, trips, kept, searches, again] = WINDOW_STATS.with(|w| w.get());
     eprintln!("window: {reads} stations read at once, {trips} touched, {:.0} MB of strategies kept, {searches} searches and {again} again, of {} stations wanted", kept as f64 / 1048576., a.want.iter().filter(|&&w| w).count());
     let per = a.per(q).unwrap();
@@ -2070,7 +2088,7 @@ fn t1545_dump() {
         "corridors": a.corridor_summary(q), "pair_rail": f(&per.pair_rail), "c_frac": f(&per.c_frac), "st": f(&per.st), "xfer": f(&per.xfer),
     });
     std::fs::write(std::env::var("TW_T1545_OUT").unwrap(), j.to_string()).unwrap();
-    eprintln!("set up {t_net:.0} ms, solve {t_solve:.0} ms, rail {:.1}, commutes {:.1}", per.rail, per.c_rail);
+    eprintln!("set up {t_net:.0} ms, solve {t_solve:.0} ms ({cpu_solve:.0} ms of CPU), rail {:.1}, commutes {:.1}", per.rail, per.c_rail);
 }
 /// T-1520: one logsum at the groups' mean moved by a group's fare factor and scale lands near that
 /// group's own logsum, and on it at the mean.

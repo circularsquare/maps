@@ -834,67 +834,75 @@ impl<'a> DestSearch<'a> {
     }
 }
 
-/// The strategy search's queue (T-581): a 4-ary min-heap of (cost bits, id), each id in it at
-/// most once. A lower cost for an id already queued moves it up instead of adding a copy, so it
-/// pops the ids in the order a heap of copies did (by cost, then id; costs are never negative, so
-/// their bits sort as they do), with no stale copies to pop and skip.
+/// The strategy search's queue: a 4-ary min-heap of (cost bits, id), popped by cost, then id
+/// (costs are never negative, so their bits sort as they do). A lower cost for an id already
+/// queued adds a copy; the stale copy pops after it and is skipped, the node or change node being
+/// settled by then (a boarding's turn is queued once). Cheaper than keeping each id's place to
+/// move it up (T-1647).
 pub(super) struct IdHeap {
     pub(super) h: Vec<u64>,
-    /// Each id's place in `h`, `NONE` when not queued.
-    pub(super) pos: Vec<u32>,
 }
 
 impl IdHeap {
     pub(super) fn new(ids: usize) -> IdHeap {
-        IdHeap { h: Vec::with_capacity(ids), pos: vec![NONE; ids] }
+        IdHeap { h: Vec::with_capacity(ids) }
     }
     #[inline(always)]
     pub(super) fn push(&mut self, cost: f32, id: u32) {
         let x = (cost.to_bits() as u64) << 32 | id as u64;
-        let mut i = match self.pos[id as usize] {
-            NONE => {
-                self.h.push(x);
-                self.h.len() - 1
-            }
-            i if x < self.h[i as usize] => i as usize,
-            _ => return,
-        };
+        let h = &mut self.h;
+        let mut i = h.len();
+        h.push(x);
         while i > 0 {
             let up = (i - 1) / 4;
-            let y = self.h[up];
+            let y = h[up];
             if y <= x { break; }
-            self.h[i] = y;
-            self.pos[y as u32 as usize] = i as u32;
+            h[i] = y;
             i = up;
         }
-        self.h[i] = x;
-        self.pos[id as usize] = i as u32;
+        h[i] = x;
     }
     #[inline(always)]
     pub(super) fn pop(&mut self) -> Option<usize> {
-        let top = *self.h.first()?;
-        self.pos[top as u32 as usize] = NONE;
-        let x = self.h.pop().unwrap();
-        let len = self.h.len();
+        let h = &mut self.h;
+        let top = *h.first()?;
+        let x = h.pop().unwrap();
+        let len = h.len();
         if len > 0 {
+            // the hole goes down to a leaf by the least child, then the last entry rises from it
             let mut i = 0;
             loop {
                 let c = 4 * i + 1;
-                if c >= len { break; }
-                let (mut m, mut y) = (c, self.h[c]);
-                for k in c + 1..(c + 4).min(len) {
-                    if self.h[k] < y {
-                        m = k;
-                        y = self.h[k];
+                if c + 3 < len {
+                    let (a, b, e, f) = (h[c], h[c + 1], h[c + 2], h[c + 3]);
+                    let (i1, v1) = if b < a { (c + 1, b) } else { (c, a) };
+                    let (i2, v2) = if f < e { (c + 3, f) } else { (c + 2, e) };
+                    let (m, y) = if v2 < v1 { (i2, v2) } else { (i1, v1) };
+                    h[i] = y;
+                    i = m;
+                } else {
+                    if c < len {
+                        let (mut m, mut y) = (c, h[c]);
+                        for k in c + 1..len {
+                            if h[k] < y {
+                                m = k;
+                                y = h[k];
+                            }
+                        }
+                        h[i] = y;
+                        i = m;
                     }
+                    break;
                 }
-                if y >= x { break; }
-                self.h[i] = y;
-                self.pos[y as u32 as usize] = i as u32;
-                i = m;
             }
-            self.h[i] = x;
-            self.pos[x as u32 as usize] = i as u32;
+            while i > 0 {
+                let up = (i - 1) / 4;
+                let y = h[up];
+                if y <= x { break; }
+                h[i] = y;
+                i = up;
+            }
+            h[i] = x;
         }
         Some(top as u32 as usize)
     }
@@ -963,11 +971,41 @@ pub(super) struct Search<'a> {
     pub(super) pool: Vec<(f32, f32, f32)>,
     /// Each station's cost as an inter-city trip's start (`entry_costs`).
     pub(super) entry: Vec<f32>,
+    /// Each incoming edge's cost (`Graph::rev_edge`'s), read in edge order.
+    pub(super) rev_cost: Vec<f32>,
+    /// Per route node, what settling it reads, in one place (T-1647).
+    pub(super) rn: Vec<RnStep>,
+    /// Per route node, a range of `banned`: the departures with trains of its line from its station
+    /// that `ban_of` bars an arrival off it from; and whether they are all the line's there.
+    pub(super) banned_off: Vec<u32>,
+    pub(super) banned: Vec<u32>,
+    pub(super) banned_all: Vec<bool>,
+}
+
+/// A route node's edges in as `Search::run` reads them: whether riders board it from its station
+/// (a boarding edge and trains), its `Graph::rn_left`, and the route node riding into it, `NONE`
+/// for none, with that ride's cost, its `rn_left` and whether riders board there.
+#[derive(Clone, Copy)]
+pub(super) struct RnStep {
+    pub(super) prev: u32,
+    pub(super) prev_cost: f32,
+    pub(super) left: f32,
+    pub(super) prev_left: f32,
+    pub(super) boards: bool,
+    pub(super) prev_boards: bool,
 }
 
 pub(super) const MANY: u32 = NONE - 1;
 /// A change node's `ban` barring every departure of its line.
 pub(super) const WHOLE: [u32; 2] = [MANY, MANY];
+
+/// The stops a rider alighting off route node `a` may not ride on towards on its line: the one
+/// they came from and the one their train goes on to (`Search::ban`).
+#[inline(always)]
+pub(super) fn ban_of(pst: &[u32], nst: &[u32], a: usize) -> [u32; 2] {
+    let (x, y) = (pst[a], nst[a]);
+    [x.min(y), x.max(y)]
+}
 
 /// Whether a change node off `line` with `ban` bars route node `r`: every departure of the line
 /// for `WHOLE`, else those whose next stop is in `ban` (T-1268).
@@ -1011,6 +1049,39 @@ impl Search<'_> {
                 }
             }
         }
+        // per route node, its line's departures with trains from its station that an arrival off
+        // it may not take, and whether those are all of them
+        let (mut banned_off, mut banned, mut banned_all) = (vec![0u32; nr + 1], vec![], vec![true; nr]);
+        for a in 0..nr {
+            let (v, line, ban) = (g.rn_station[a] as usize, g.rn_line[a], ban_of(&pst, &nst, a));
+            for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+                let r = g.adj_to[e] as usize - s;
+                if g.rn_line[r] != line || g.rn_tph[r] == 0.0 { continue; }
+                if ban.contains(&nst[r]) {
+                    banned.push(r as u32);
+                } else {
+                    banned_all[a] = false;
+                }
+            }
+            banned_off[a + 1] = banned.len() as u32;
+        }
+        let rev_cost: Vec<f32> = g.rev_edge.iter().map(|&e| g.adj_cost[e as usize]).collect();
+        let boards = |r: usize| edge_ix[r] != NONE && g.rn_tph[r] > 0.0;
+        let rn = (0..nr)
+            .map(|r| {
+                let v = s + r;
+                let mut x = RnStep { prev: NONE, prev_cost: 0.0, left: g.rn_left[r], prev_left: 0.0, boards: boards(r), prev_boards: false };
+                for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
+                    let from = g.rev_from[j] as usize;
+                    if from >= s {
+                        debug_assert!(x.prev == NONE, "a route node ridden into from two");
+                        let p = from - s;
+                        (x.prev, x.prev_cost, x.prev_left, x.prev_boards) = (p as u32, rev_cost[j], g.rn_left[p], boards(p));
+                    }
+                }
+                x
+            })
+            .collect();
         Search {
             g,
             p,
@@ -1042,6 +1113,11 @@ impl Search<'_> {
             edge_ix,
             pool: vec![],
             entry: vec![],
+            rn,
+            rev_cost,
+            banned_off,
+            banned,
+            banned_all,
         }
     }
 
@@ -1117,40 +1193,35 @@ impl Search<'_> {
                 self.settle_station(v);
                 continue;
             }
-            let on = (self.next[v] as usize) >= s && (self.next[v] as usize) < n;
-            for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
-                let from = g.rev_from[j] as usize;
-                if from < s {
-                    let f = g.rn_tph[v - s];
-                    if f == 0.0 { continue; }
-                    // Lines join a station's strategy in order of their cost from boarding, which
-                    // for a line leaving riders behind includes the extra wait (T-188): it waits
-                    // its turn, or a full train would join ahead of better lines and stay (T-552).
-                    // A boarding rides on, so where leaving the train is cheaper than staying on,
-                    // it waits for the ride's cost; unknown yet, it is queued when that comes.
-                    let left = g.rn_left[v - s];
-                    if !on {
-                        if self.ride[v - s].is_finite() {
-                            self.heap.push(self.ride[v - s] + left, (n + v - s) as u32);
-                        }
-                    } else if left > 0.0 {
-                        self.heap.push(d + left, (n + v - s) as u32);
-                    } else {
-                        self.offer_line(v - s, d);
+            let x = self.rn[v - s];
+            if x.boards {
+                // Lines join a station's strategy in order of their cost from boarding, which
+                // for a line leaving riders behind includes the extra wait (T-188): it waits
+                // its turn, or a full train would join ahead of better lines and stay (T-552).
+                // A boarding rides on, so where leaving the train is cheaper than staying on,
+                // it waits for the ride's cost; unknown yet, it is queued when that comes.
+                let on = (self.next[v] as usize) >= s && (self.next[v] as usize) < n;
+                if !on {
+                    if self.ride[v - s].is_finite() {
+                        self.heap.push(self.ride[v - s] + x.left, (n + v - s) as u32);
                     }
-                    continue;
+                } else if x.left > 0.0 {
+                    self.heap.push(d + x.left, (n + v - s) as u32);
+                } else {
+                    self.offer_line(v - s, d);
                 }
-                // the only edge into a route node from another is the ride
-                let rd = d + g.adj_cost[g.rev_edge[j] as usize];
-                let r = from - s;
+            }
+            if x.prev != NONE {
+                let r = x.prev as usize;
+                let rd = d + x.prev_cost;
                 self.ride[r] = rd;
-                if self.done[from] {
-                    if self.edge_ix[r] != NONE && g.rn_tph[r] > 0.0 {
-                        self.heap.push(rd + g.rn_left[r], (n + r) as u32);
+                if self.done[s + r] {
+                    if x.prev_boards {
+                        self.heap.push(rd + x.prev_left, (n + r) as u32);
                     }
-                    continue;
+                } else {
+                    self.relax(s + r, rd, v as u32);
                 }
-                self.relax(from, rd, v as u32);
             }
         }
     }
@@ -1204,19 +1275,14 @@ impl Search<'_> {
         let line = g.rn_line[a];
         if !self.lines.contains(&line) { return None; }
         if g.rn_station[a] as usize != v { return Some((line, WHOLE)); }
-        let (x, y) = (self.pst[a], self.nst[a]);
-        let ban = [x.min(y), x.max(y)];
-        let (mut boarded, mut all) = (false, true);
-        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
-            let r = g.adj_to[e] as usize - self.s;
-            if g.rn_line[r] != line || g.rn_tph[r] == 0.0 { continue; }
-            if ban.contains(&self.nst[r]) {
-                boarded |= self.board[r >> 6] >> (r & 63) & 1 == 1;
-            } else {
-                all = false;
-            }
+        let boarded = self.banned[self.banned_off[a] as usize..self.banned_off[a + 1] as usize].iter().any(|&r| self.board[r as usize >> 6] >> (r & 63) & 1 == 1);
+        if !boarded {
+            None
+        } else if self.banned_all[a] {
+            Some((line, WHOLE))
+        } else {
+            Some((line, ban_of(&self.pst, &self.nst, a)))
         }
-        if !boarded { None } else if all { Some((line, WHOLE)) } else { Some((line, ban)) }
     }
 
     /// Station `v` is settled with its strategy. Riders reach it as they would start there unless
@@ -1224,6 +1290,13 @@ impl Search<'_> {
     /// from the departures offered so far less the barred ones.
     pub(super) fn settle_station(&mut self, v: usize) {
         let (g, s) = (self.g, self.s);
+        let (j0, j1) = (g.rev_off[v] as usize, g.rev_off[v + 1] as usize);
+        // most arrivals are settled first, riding on being cheaper than changing here
+        if g.rev_from[j0..j1].iter().all(|&from| self.done[from as usize]) {
+            let k = self.cn.len() as u32;
+            self.cn_of[v] = (k, k);
+            return;
+        }
         let d = self.dist[v];
         let (e0, e1) = (g.adj_off[v] as usize, g.adj_off[v + 1] as usize);
         self.lines.clear();
@@ -1243,13 +1316,16 @@ impl Search<'_> {
                 }
             }
         }
-        // one pass over the arrivals: those free to take the strategy go on, the others wait
+        // one pass over the arrivals: those free to take the strategy go on, the others wait,
+        // but for those barred their only line here whole, which have nothing to change to
+        let lone = self.lone[v];
         self.feed.clear();
         self.keys.clear();
-        for j in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
+        for j in j0..j1 {
             let from = g.rev_from[j] as usize;
             if self.done[from] { continue; }
             match self.ban(from - s, v) {
+                Some((line, WHOLE)) if line == lone => {}
                 Some(key) => {
                     let k = self.keys.iter().position(|&x| x == key).unwrap_or_else(|| {
                         self.keys.push(key);
@@ -1259,17 +1335,14 @@ impl Search<'_> {
                 }
                 None => {
                     let walk = if spread { platform_walk(g, self.p, &self.pool, from, v) } else { 0.0 };
-                    self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize] + walk, v as u32)
+                    self.relax(from, d + self.rev_cost[j] + walk, v as u32)
                 }
             }
         }
         let first = self.cn.len() as u32;
-        // a station with no other line has no change node barring that line whole
-        let lone = self.lone[v];
         if !self.feed.is_empty() && lone != NONE {
             for ki in 0..self.keys.len() {
                 let (line, ban) = self.keys[ki];
-                if lone == line && ban == WHOLE { continue; }
                 let f0 = self.cn_feed.len();
                 self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == ki as u32).map(|f| f.1));
                 if self.cn_feed.len() == f0 { continue; }
@@ -1328,7 +1401,7 @@ impl Search<'_> {
             let from = g.rev_from[j] as usize;
             if self.done[from] { continue; }
             let walk = if spread { platform_walk(g, self.p, &self.pool, from, v) } else { 0.0 };
-            self.relax(from, d + g.adj_cost[g.rev_edge[j] as usize] + walk, id);
+            self.relax(from, d + self.rev_cost[j] + walk, id);
         }
     }
 
