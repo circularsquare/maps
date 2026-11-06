@@ -18,6 +18,7 @@ import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { lineReversed } from "../game/northUp";
 import { kindIn, lineCountry } from "../game/holidays";
 import { DAY_KINDS } from "../game/days";
 import { demandView, lineFiguresIn } from "../game/demand";
@@ -84,8 +85,8 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
 /** T-472, T-1677, T-1684, T-2236: a line's trains now, coloured by its load past the rated load in
  * the period now, graded over its stretches (T-2279) from `v`, its own kind of day's numbers, and
  * hovered with that day's figures for the level now as the line panel's dot is (`crowdLevel`). */
-function TrainsNow({ line, n, period, at, bus, ferry, v, lev, stops }: { line: string; n: number; period: string; at: number; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number }) {
-  const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops) : null;
+function TrainsNow({ line, n, period, at, bus, ferry, v, lev, stops, flip }: { line: string; n: number; period: string; at: number; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number; flip: boolean }) {
+  const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops, flip) : null;
   const d = today.value.get(line);
   const load = d && (v ? periodLoad(v, at, stops) ?? d.crowdLoad : d.crowdLoad);
   const cls = !bus && d && n > 0 ? crowdClass(load!) : "";
@@ -346,7 +347,7 @@ export function LinesTab() {
           <>
             <RidersToday line={l.id} />
             <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} />
+            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} />
           </>
         )}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}

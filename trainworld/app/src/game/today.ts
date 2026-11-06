@@ -103,8 +103,9 @@ export function periodLoad(v: ArrayLike<number>, p: number, stops: number): numb
  * each stretch over the level's periods, as a share of the rated load, graded over the stretches by
  * `stretchLoad` (`load`, the dot's fill) and at the fullest (`peak`, its ring), and the hover: the
  * peak, a bar of the stretches between their stations, and each period's load where the level has
- * several. Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { load: number; peak: number; tip: string } | null {
+ * several. T-2661: `flip` (`lineReversed`) draws the bar last stretch first, so it reads west to east.
+ * Null when the level runs no trains. */
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false): { load: number; peak: number; tip: string } | null {
   const at = peaksAt(v, stops), s = stops - 1;
   if (at < 0) return null;
   let trains = 0, peak = 0;
@@ -127,7 +128,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number): { lo
   const over = per.filter((x) => x >= CROWD_GRADES[0]).length;
   // T-2263: the tutorial warns where only a short stretch is full
   const short = guideVerbose.value && over > 0 && over * 2 <= s;
-  const tip = `${t("today.peak", { load: loadText(peak) })}\n${tipStrip(per.map(crowdColour), true)}`
+  const tip = `${t("today.peak", { load: loadText(peak) })}\n${tipStrip((flip ? per.slice().reverse() : per).map(crowdColour), true)}`
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "")
     + (short ? "\n" + t("today.shortStretch") : "");
   return { load: stretchLoad(per), peak, tip };

@@ -140,7 +140,7 @@ purpose filter the purpose drawn is ringed in the bar.
   Grades (`CROWD_GRADES`, the colour scale's steps): past 100% from 100.5%, orange from 130%, red from 140%;
   orange and red colour the count (`crowdClass`). The hover is the line panel's dot hover for the same level on
   the line's own kind of day without the level's hours [T-1672, T-1677, T-2334]: "Peak load 132%", the bar of
-  intervals, then one line per period of the level; one function (`crowdLevel` in `game/today.ts`) builds both,
+  intervals (west to east, as the dot's), then one line per period of the level; one function (`crowdLevel` in `game/today.ts`) builds both,
   from the `line_periods` numbers the tab asks for every running train line in one clock query per kind of day
   (`linesPeriods`, each line's numbers after their count). A bus line's hover is its bus count.
 - **Scope and Near** [T-332; `game/listScope.ts`, `ScopeToggle` in `ui/listParts.tsx`]: beside New line
@@ -312,8 +312,10 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   "Peak load 132%", a bar of the line's intervals (the run between two stops, the fuller way) in the crowding
   colour of each one's load over the level's periods, all green when nothing is crowded, with a station dot
   at each stop between them and at both ends; where the dots would leave an interval under 6 px, only the end
-  dots stay and the intervals are thinner pills (`tipStrip` with stops in `ui/tip.ts`, `STOP_CELL_PX`)
-  [T-1926, T-1901, T-2334], then, for a level of more than one period with trains, a line for each in time
+  dots stay and the intervals are thinner pills (`tipStrip` with stops in `ui/tip.ts`, `STOP_CELL_PX`);
+  the bar reads **west to east** (`lineReversed` in `game/northUp.ts`: the line's west end on the left, a line within
+  about 22 degrees of north-south its north end, a loop as built; the bar has no hover of its own to flip)
+  [T-1926, T-1901, T-2334, T-2661], then, for a level of more than one period with trains, a line for each in time
   order: "10:00-16:00 load: 118%" [T-1523, T-1672, T-1797, T-2271, T-2334]; in the tutorial, where at most half
   the intervals are past 100%, "Only a short stretch is crowded. More trains would run mostly empty, and may
   cost more than they earn." last [T-2263]; the dot's hover reaches 6 px round it (5 px on the
@@ -368,7 +370,7 @@ Today for a running line:
 #### Stops
 
 The stops (above Schedule while being edited [T-670]),
-  **north up** [T-1894, `game/northUp.ts`]: the end farther north on top, or for a line within about
+  **north up** [T-1894, `game/northUp.ts`; anything drawn left to right reads west first instead, T-2661]: the end farther north on top, or for a line within about
   22 degrees of east-west (north-south distance under 0.4 of east-west) the west end; a loop as
   built; each with its time from the stop on top (its hover: "Trains reach 320 km/h" from the stop before, then what limits them there:
   the trains' top speed, normal track, curves or a crossover, and when the stops are too close
