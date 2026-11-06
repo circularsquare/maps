@@ -41,19 +41,33 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   still on round 2's unsettled solver (a settled one shrinks Kyushu): T-2568 grows. Shown to Anita ~00:45 with 2
   questions (review/sheet3-*.png). Anita ~00:55 approved ("lets put it in"; round 3's Manhattan size; light line
   edges fine; coasts and rivers wiggly, minor: T-2580; her screenshot artifacts/trainworld/sheet3/anita-wiggly-peninsula.png).
-- **sheetgame** (Opus, tree .tw-trees/sheetgame from 53c1c698, port 6178): T-2568 [P1] sheet solver in the layout
-  worker behind an off-by-default flag, Japan retuned on the settled solver, <1 s. Then T-2567 and T-2580 by new briefs.
+- sheetgame DONE, **to land after Brazil's last gate** (tree .tw-trees/sheetgame: diagram/sheet.ts new,
+  diagram.worker.ts, view.ts, docs ui-diagram/code-map; records in main): T-2568 behind `?sheet=1`, not drawn; speed
+  1.2-3 s (missed the 1 s aim; maps-93 accepted, today's layout ~3 s; T-2589 filed). Land livefix BEFORE sheetgame
+  (both touch diagram.worker.ts). Then a fresh Opus agent for T-2567 (stage 2) from master, with T-2589's per-network
+  reuse if cheap.
 - livefix DONE, **to land after Brazil's last gate** (tree .tw-trees/livefix; records already in main TASKS/ARCHIVE/
   DECISIONS): T-2581 names centred on the block's own city stations, 15-30 px; T-941 R2 first for regions.json with
   the tw-data meta. Edits diagram/cityNames.ts and one line of diagram.worker.ts (sheetgame's area: land livefix first).
   Review: review/dc-name-before.png, dc-name-after.png.
-- **tokyocache** (Opus, tree .tw-trees/tokyocache, port 6177): T-2579 Tokyo save's re-solve after a cache hit ends off
-  the cache.
+- tokyocache DONE, **to land after Brazil's last gate** (tree .tw-trees/tokyocache: demandClient.ts, perfFlags.ts,
+  docs demand-runtime/architecture; main-tree records done): T-2579, the last game's camera zone opened during a load
+  got solved into the import's figures; `closeStrays` closes it, cache keyed by the zones the solve was sent with.
+  T-2588 filed (NA save's read-ahead key differs each load).
 - **locale** (Opus, read-only, writes research/localization.md): Anita ~01:05 asked about Chinese and Japanese for
   release ("what are usual workflows for this? commercial software? is there anything cheap and good"): string counts,
   place-name sources, tools and prices, staged plan, her questions. Anita ~01:15: no human reviewer ("maybe you could
   review? goal here is mostly correctness of meaning"; human-sounding still wanted); Simplified and Traditional Chinese
-  and Japanese first, Spanish and German second. Next: an implementation agent from locale's plan.
+  and Japanese first, Spanish and German second. locale DONE: research/localization.md (~2,000 strings, 9,400 words;
+  no paid tool; Claude translates plus independent review passes; Traditional translated directly, OpenCC only as a
+  diff). Stages T-2583..T-2587. i18ncore DONE, **to land after Brazil's last gate** (tree .tw-trees/i18ncore; records
+  in main tree already): T-2583 app/src/i18n/, checks/i18n.mjs (in smoke), remove.ts as the example, docs/localization.md;
+  adds intl-messageformat: **after landing run `npm install --prefix trainworld/app` in the main tree** (the tree's
+  node_modules junction became a real folder; .tw-snap junctions to main's). Worklist 2,357 strings (ui 906, inspector
+  703, game 371, map 280, workers 81). Its stage-1 advice is in its report: keep en.json/context.json sorted by key.
+  Stage 1 (T-2584) wants little other UI work at once. Anita ~01:40 answered: release in English, languages later;
+  Traditional = Taiwan; place names in the player's language where data has them and it is cheap (basemap labels and
+  Japan/China/Taiwan/HK place aliases yes; anything needing a world rebuild of place lists waits).
 - Before publishing (Anita asked ~00:55 what to finish first): Brazil (T-2437), T-2581, T-941, T-2579; T-428 after
   Brazil's join (moves intercity.json out of packs; touches the join's code). marketsearch on 8800 with the next
   rebuild. Then publish on her word.
@@ -116,6 +130,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   having their right shape". Distortion default 0.5 (her pick).
 
 ## Lessons from this run
+- Agents' scratch folders can hold tens of GB (marketsearch: 37 x 1 GB dumps, found at 10 GB free during Brazil's run,
+  2026-11-06 01:50). When disk drops, measure the session scratch folders first; the common brief now says to clean up.
 - A UI landing can silently break every pipeline gate: T-2365 made the top bar hover a grid and
   checks/city-browser.mjs's text wait timed out on every zone from 13:42 (fixed cf102c0a). Before the next
   country gate after a landing that touches the top bar or its hovers (profit2's T-2443 does), run
