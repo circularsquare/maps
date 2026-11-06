@@ -25450,6 +25450,1598 @@
       {
         "name": "Monclova",
         "regionName": "Monclova region"
+      },
+      {
+        "name": "Rio de Janeiro",
+        "regionName": "Rio de Janeiro region"
+      },
+      {
+        "name": "Belo Horizonte",
+        "regionName": "Belo Horizonte region"
+      },
+      {
+        "name": "Recife",
+        "regionName": "Recife region"
+      },
+      {
+        "name": "Fortaleza",
+        "regionName": "Fortaleza region"
+      },
+      {
+        "name": "Brasilia",
+        "regionName": "Brasilia region"
+      },
+      {
+        "name": "Salvador",
+        "regionName": "Salvador region"
+      },
+      {
+        "name": "Curitiba",
+        "regionName": "Curitiba region"
+      },
+      {
+        "name": "Porto Alegre",
+        "regionName": "Porto Alegre region"
+      },
+      {
+        "name": "Goiânia",
+        "regionName": "Goiânia region"
+      },
+      {
+        "name": "Belém",
+        "regionName": "Belém region"
+      },
+      {
+        "name": "Campinas",
+        "regionName": "Campinas region"
+      },
+      {
+        "name": "Manaus",
+        "regionName": "Manaus region"
+      },
+      {
+        "name": "Niterói",
+        "regionName": "Niterói region"
+      },
+      {
+        "name": "Vitória",
+        "regionName": "Vitória region"
+      },
+      {
+        "name": "Natal",
+        "regionName": "Natal region"
+      },
+      {
+        "name": "Santos",
+        "regionName": "Santos region"
+      },
+      {
+        "name": "Maceió",
+        "regionName": "Maceió region"
+      },
+      {
+        "name": "Londrina",
+        "regionName": "Londrina region"
+      },
+      {
+        "name": "Cascavel",
+        "regionName": "Cascavel region"
+      },
+      {
+        "name": "São José do Rio Preto",
+        "regionName": "São José do Rio Preto region"
+      },
+      {
+        "name": "Caruaru",
+        "regionName": "Caruaru region"
+      },
+      {
+        "name": "Juazeiro do Norte",
+        "regionName": "Juazeiro do Norte region"
+      },
+      {
+        "name": "Criciúma",
+        "regionName": "Criciúma region"
+      },
+      {
+        "name": "Cabo de Santo Agostinho",
+        "regionName": "Cabo de Santo Agostinho region"
+      },
+      {
+        "name": "Teresina",
+        "regionName": "Teresina region"
+      },
+      {
+        "name": "São Luís",
+        "regionName": "São Luís region"
+      },
+      {
+        "name": "João Pessoa",
+        "regionName": "João Pessoa region"
+      },
+      {
+        "name": "Picos",
+        "regionName": "Picos region"
+      },
+      {
+        "name": "Blumenau",
+        "regionName": "Blumenau region"
+      },
+      {
+        "name": "Araçatuba",
+        "regionName": "Araçatuba region"
+      },
+      {
+        "name": "Divinópolis",
+        "regionName": "Divinópolis region"
+      },
+      {
+        "name": "Aracaju",
+        "regionName": "Aracaju region"
+      },
+      {
+        "name": "Passo Fundo",
+        "regionName": "Passo Fundo region"
+      },
+      {
+        "name": "Codó",
+        "regionName": "Codó region"
+      },
+      {
+        "name": "Sorocaba",
+        "regionName": "Sorocaba region"
+      },
+      {
+        "name": "Imperatriz",
+        "regionName": "Imperatriz region"
+      },
+      {
+        "name": "Caxias do Sul",
+        "regionName": "Caxias do Sul region"
+      },
+      {
+        "name": "São José dos Campos",
+        "regionName": "São José dos Campos region"
+      },
+      {
+        "name": "Águas Lindas de Goiás",
+        "regionName": "Águas Lindas de Goiás region"
+      },
+      {
+        "name": "Campo Grande",
+        "regionName": "Campo Grande region"
+      },
+      {
+        "name": "Montes Claros",
+        "regionName": "Montes Claros region"
+      },
+      {
+        "name": "Joinville",
+        "regionName": "Joinville region"
+      },
+      {
+        "name": "Maringá",
+        "regionName": "Maringá region"
+      },
+      {
+        "name": "Mossoró",
+        "regionName": "Mossoró region"
+      },
+      {
+        "name": "Feira de Santana",
+        "regionName": "Feira de Santana region"
+      },
+      {
+        "name": "Arapiraca",
+        "regionName": "Arapiraca region"
+      },
+      {
+        "name": "Uberlândia",
+        "regionName": "Uberlândia region"
+      },
+      {
+        "name": "Timon",
+        "regionName": "Timon region"
+      },
+      {
+        "name": "Juazeiro",
+        "regionName": "Juazeiro region"
+      },
+      {
+        "name": "Santa Maria",
+        "regionName": "Santa Maria region"
+      },
+      {
+        "name": "Barreiras",
+        "regionName": "Barreiras region"
+      },
+      {
+        "name": "Linhares",
+        "regionName": "Linhares region"
+      },
+      {
+        "name": "Marabá",
+        "regionName": "Marabá region"
+      },
+      {
+        "name": "Guanambi",
+        "regionName": "Guanambi region"
+      },
+      {
+        "name": "Vitória de Santo Antão",
+        "regionName": "Vitória de Santo Antão region"
+      },
+      {
+        "name": "Abaetetuba",
+        "regionName": "Abaetetuba region"
+      },
+      {
+        "name": "Piracicaba",
+        "regionName": "Piracicaba region"
+      },
+      {
+        "name": "Juiz de Fora",
+        "regionName": "Juiz de Fora region"
+      },
+      {
+        "name": "Campina Grande",
+        "regionName": "Campina Grande region"
+      },
+      {
+        "name": "Florianópolis",
+        "regionName": "Florianópolis region"
+      },
+      {
+        "name": "Ipatinga",
+        "regionName": "Ipatinga region"
+      },
+      {
+        "name": "Petrolina",
+        "regionName": "Petrolina region"
+      },
+      {
+        "name": "Santarém",
+        "regionName": "Santarém region"
+      },
+      {
+        "name": "Cuiabá",
+        "regionName": "Cuiabá region"
+      },
+      {
+        "name": "Teófilo Otoni",
+        "regionName": "Teófilo Otoni region"
+      },
+      {
+        "name": "Dourados",
+        "regionName": "Dourados region"
+      },
+      {
+        "name": "Palmas",
+        "regionName": "Palmas region"
+      },
+      {
+        "name": "Jundiaí",
+        "regionName": "Jundiaí region"
+      },
+      {
+        "name": "Rio Verde",
+        "regionName": "Rio Verde region"
+      },
+      {
+        "name": "Campos dos Goytacazes",
+        "regionName": "Campos dos Goytacazes region"
+      },
+      {
+        "name": "Vitória da Conquista",
+        "regionName": "Vitória da Conquista region"
+      },
+      {
+        "name": "Alagoinhas",
+        "regionName": "Alagoinhas region"
+      },
+      {
+        "name": "Presidente Prudente",
+        "regionName": "Presidente Prudente region"
+      },
+      {
+        "name": "Uruguaiana",
+        "regionName": "Uruguaiana region"
+      },
+      {
+        "name": "Ourinhos",
+        "regionName": "Ourinhos region"
+      },
+      {
+        "name": "Varginha",
+        "regionName": "Varginha region"
+      },
+      {
+        "name": "Uberaba",
+        "regionName": "Uberaba region"
+      },
+      {
+        "name": "Cachoeiro de Itapemirim",
+        "regionName": "Cachoeiro de Itapemirim region"
+      },
+      {
+        "name": "Itabuna",
+        "regionName": "Itabuna region"
+      },
+      {
+        "name": "Bauru",
+        "regionName": "Bauru region"
+      },
+      {
+        "name": "Ubá",
+        "regionName": "Ubá region"
+      },
+      {
+        "name": "Caçador",
+        "regionName": "Caçador region"
+      },
+      {
+        "name": "Porto Velho",
+        "regionName": "Porto Velho region"
+      },
+      {
+        "name": "Teixeira de Freitas",
+        "regionName": "Teixeira de Freitas region"
+      },
+      {
+        "name": "Ribeirão Preto",
+        "regionName": "Ribeirão Preto region"
+      },
+      {
+        "name": "Pinheiro",
+        "regionName": "Pinheiro region"
+      },
+      {
+        "name": "Janaúba",
+        "regionName": "Janaúba region"
+      },
+      {
+        "name": "Umuarama",
+        "regionName": "Umuarama region"
+      },
+      {
+        "name": "Iguatu",
+        "regionName": "Iguatu region"
+      },
+      {
+        "name": "Tianguá",
+        "regionName": "Tianguá region"
+      },
+      {
+        "name": "Santo Antônio de Jesus",
+        "regionName": "Santo Antônio de Jesus region"
+      },
+      {
+        "name": "Pelotas",
+        "regionName": "Pelotas region"
+      },
+      {
+        "name": "Chapecó",
+        "regionName": "Chapecó region"
+      },
+      {
+        "name": "Macapá",
+        "regionName": "Macapá region"
+      },
+      {
+        "name": "Chapadinha",
+        "regionName": "Chapadinha region"
+      },
+      {
+        "name": "Patos",
+        "regionName": "Patos region"
+      },
+      {
+        "name": "Marília",
+        "regionName": "Marília region"
+      },
+      {
+        "name": "Franca",
+        "regionName": "Franca region"
+      },
+      {
+        "name": "Francisco Beltrão",
+        "regionName": "Francisco Beltrão region"
+      },
+      {
+        "name": "Parauapebas",
+        "regionName": "Parauapebas region"
+      },
+      {
+        "name": "Sobral",
+        "regionName": "Sobral region"
+      },
+      {
+        "name": "Bento Gonçalves",
+        "regionName": "Bento Gonçalves region"
+      },
+      {
+        "name": "Parnaíba",
+        "regionName": "Parnaíba region"
+      },
+      {
+        "name": "Caratinga",
+        "regionName": "Caratinga region"
+      },
+      {
+        "name": "Sete Lagoas",
+        "regionName": "Sete Lagoas region"
+      },
+      {
+        "name": "Jequié",
+        "regionName": "Jequié region"
+      },
+      {
+        "name": "Itajaí",
+        "regionName": "Itajaí region"
+      },
+      {
+        "name": "Santa Inês",
+        "regionName": "Santa Inês region"
+      },
+      {
+        "name": "Rio Branco",
+        "regionName": "Rio Branco region"
+      },
+      {
+        "name": "Rondonópolis",
+        "regionName": "Rondonópolis region"
+      },
+      {
+        "name": "Nova Friburgo",
+        "regionName": "Nova Friburgo region"
+      },
+      {
+        "name": "Sousa",
+        "regionName": "Sousa region"
+      },
+      {
+        "name": "Itabaiana",
+        "regionName": "Itabaiana region"
+      },
+      {
+        "name": "Tangará da Serra",
+        "regionName": "Tangará da Serra region"
+      },
+      {
+        "name": "Volta Redonda",
+        "regionName": "Volta Redonda region"
+      },
+      {
+        "name": "Itapetininga",
+        "regionName": "Itapetininga region"
+      },
+      {
+        "name": "Russas",
+        "regionName": "Russas region"
+      },
+      {
+        "name": "Itu",
+        "regionName": "Itu region"
+      },
+      {
+        "name": "Barbacena",
+        "regionName": "Barbacena region"
+      },
+      {
+        "name": "Santa Cruz do Sul",
+        "regionName": "Santa Cruz do Sul region"
+      },
+      {
+        "name": "Patos de Minas",
+        "regionName": "Patos de Minas region"
+      },
+      {
+        "name": "São Carlos",
+        "regionName": "São Carlos region"
+      },
+      {
+        "name": "Pouso Alegre",
+        "regionName": "Pouso Alegre region"
+      },
+      {
+        "name": "Paulo Afonso",
+        "regionName": "Paulo Afonso region"
+      },
+      {
+        "name": "Paranaguá",
+        "regionName": "Paranaguá region"
+      },
+      {
+        "name": "Pindamonhangaba",
+        "regionName": "Pindamonhangaba region"
+      },
+      {
+        "name": "Guarabira",
+        "regionName": "Guarabira region"
+      },
+      {
+        "name": "Cabo Frio",
+        "regionName": "Cabo Frio region"
+      },
+      {
+        "name": "Paragominas",
+        "regionName": "Paragominas region"
+      },
+      {
+        "name": "Taubaté",
+        "regionName": "Taubaté region"
+      },
+      {
+        "name": "Garanhuns",
+        "regionName": "Garanhuns region"
+      },
+      {
+        "name": "Itajubá",
+        "regionName": "Itajubá region"
+      },
+      {
+        "name": "Governador Valadares",
+        "regionName": "Governador Valadares region"
+      },
+      {
+        "name": "Passos",
+        "regionName": "Passos region"
+      },
+      {
+        "name": "Araguaína",
+        "regionName": "Araguaína region"
+      },
+      {
+        "name": "Serra Talhada",
+        "regionName": "Serra Talhada region"
+      },
+      {
+        "name": "Camaçari",
+        "regionName": "Camaçari region"
+      },
+      {
+        "name": "Catanduva",
+        "regionName": "Catanduva region"
+      },
+      {
+        "name": "Bebedouro",
+        "regionName": "Bebedouro region"
+      },
+      {
+        "name": "Anápolis",
+        "regionName": "Anápolis region"
+      },
+      {
+        "name": "São José de Mipibu",
+        "regionName": "São José de Mipibu region"
+      },
+      {
+        "name": "Lagarto",
+        "regionName": "Lagarto region"
+      },
+      {
+        "name": "Macaé",
+        "regionName": "Macaé region"
+      },
+      {
+        "name": "Araraquara",
+        "regionName": "Araraquara region"
+      },
+      {
+        "name": "Itapipoca",
+        "regionName": "Itapipoca region"
+      },
+      {
+        "name": "Bragança",
+        "regionName": "Bragança region"
+      },
+      {
+        "name": "Poços de Caldas",
+        "regionName": "Poços de Caldas region"
+      },
+      {
+        "name": "Ponta Grossa",
+        "regionName": "Ponta Grossa region"
+      },
+      {
+        "name": "Rio Claro",
+        "regionName": "Rio Claro region"
+      },
+      {
+        "name": "Campo Largo",
+        "regionName": "Campo Largo region"
+      },
+      {
+        "name": "Sinop",
+        "regionName": "Sinop region"
+      },
+      {
+        "name": "Guarapuava",
+        "regionName": "Guarapuava region"
+      },
+      {
+        "name": "Macaúbas",
+        "regionName": "Macaúbas region"
+      },
+      {
+        "name": "Luziânia",
+        "regionName": "Luziânia region"
+      },
+      {
+        "name": "Limeira",
+        "regionName": "Limeira region"
+      },
+      {
+        "name": "Ji-Paraná",
+        "regionName": "Ji-Paraná region"
+      },
+      {
+        "name": "Castanhal",
+        "regionName": "Castanhal region"
+      },
+      {
+        "name": "Boa Vista",
+        "regionName": "Boa Vista region"
+      },
+      {
+        "name": "Canindé",
+        "regionName": "Canindé region"
+      },
+      {
+        "name": "Catalão",
+        "regionName": "Catalão region"
+      },
+      {
+        "name": "Breves",
+        "regionName": "Breves region"
+      },
+      {
+        "name": "Delmiro Gouveia",
+        "regionName": "Delmiro Gouveia region"
+      },
+      {
+        "name": "Alta Floresta",
+        "regionName": "Alta Floresta region"
+      },
+      {
+        "name": "Mogi Guaçu",
+        "regionName": "Mogi Guaçu region"
+      },
+      {
+        "name": "Corumbá",
+        "regionName": "Corumbá region"
+      },
+      {
+        "name": "Cruzeiro do Sul",
+        "regionName": "Cruzeiro do Sul region"
+      },
+      {
+        "name": "Itumbiara",
+        "regionName": "Itumbiara region"
+      },
+      {
+        "name": "Bragança Paulista",
+        "regionName": "Bragança Paulista region"
+      },
+      {
+        "name": "Formosa",
+        "regionName": "Formosa region"
+      },
+      {
+        "name": "Indaiatuba",
+        "regionName": "Indaiatuba region"
+      },
+      {
+        "name": "Angra dos Reis",
+        "regionName": "Angra dos Reis region"
+      },
+      {
+        "name": "São Félix do Xingu",
+        "regionName": "São Félix do Xingu region"
+      },
+      {
+        "name": "Sertãozinho",
+        "regionName": "Sertãozinho region"
+      },
+      {
+        "name": "Tabatinga",
+        "regionName": "Tabatinga region"
+      },
+      {
+        "name": "São Sebastião",
+        "regionName": "São Sebastião region"
+      },
+      {
+        "name": "Borba",
+        "regionName": "Borba region"
+      },
+      {
+        "name": "Manacapuru",
+        "regionName": "Manacapuru region"
+      },
+      {
+        "name": "Brasilia",
+        "regionName": "Brasilia region"
+      },
+      {
+        "name": "Varginha",
+        "regionName": "Varginha region"
+      },
+      {
+        "name": "São Sebastião",
+        "regionName": "São Sebastião region"
+      },
+      {
+        "name": "Breves",
+        "regionName": "Breves region"
+      },
+      {
+        "name": "Manacapuru",
+        "regionName": "Manacapuru region"
+      },
+      {
+        "name": "Cruzeiro do Sul",
+        "regionName": "Cruzeiro do Sul region"
+      },
+      {
+        "name": "São Félix do Xingu",
+        "regionName": "São Félix do Xingu region"
+      },
+      {
+        "name": "Tabatinga",
+        "regionName": "Tabatinga region"
+      },
+      {
+        "name": "Borba",
+        "regionName": "Borba region"
+      },
+      {
+        "name": "Rio de Janeiro",
+        "regionName": "Rio de Janeiro region"
+      },
+      {
+        "name": "Belo Horizonte",
+        "regionName": "Belo Horizonte region"
+      },
+      {
+        "name": "Recife",
+        "regionName": "Recife region"
+      },
+      {
+        "name": "Fortaleza",
+        "regionName": "Fortaleza region"
+      },
+      {
+        "name": "Brasilia",
+        "regionName": "Brasilia region"
+      },
+      {
+        "name": "Salvador",
+        "regionName": "Salvador region"
+      },
+      {
+        "name": "Curitiba",
+        "regionName": "Curitiba region"
+      },
+      {
+        "name": "Porto Alegre",
+        "regionName": "Porto Alegre region"
+      },
+      {
+        "name": "Goiânia",
+        "regionName": "Goiânia region"
+      },
+      {
+        "name": "Campinas",
+        "regionName": "Campinas region"
+      },
+      {
+        "name": "Manaus",
+        "regionName": "Manaus region"
+      },
+      {
+        "name": "Belém",
+        "regionName": "Belém region"
+      },
+      {
+        "name": "Niterói",
+        "regionName": "Niterói region"
+      },
+      {
+        "name": "Vitória",
+        "regionName": "Vitória region"
+      },
+      {
+        "name": "Natal",
+        "regionName": "Natal region"
+      },
+      {
+        "name": "Santos",
+        "regionName": "Santos region"
+      },
+      {
+        "name": "São Luís",
+        "regionName": "São Luís region"
+      },
+      {
+        "name": "João Pessoa",
+        "regionName": "João Pessoa region"
+      },
+      {
+        "name": "Maceió",
+        "regionName": "Maceió region"
+      },
+      {
+        "name": "Londrina",
+        "regionName": "Londrina region"
+      },
+      {
+        "name": "Cascavel",
+        "regionName": "Cascavel region"
+      },
+      {
+        "name": "São José do Rio Preto",
+        "regionName": "São José do Rio Preto region"
+      },
+      {
+        "name": "Picos",
+        "regionName": "Picos region"
+      },
+      {
+        "name": "Caruaru",
+        "regionName": "Caruaru region"
+      },
+      {
+        "name": "Juazeiro do Norte",
+        "regionName": "Juazeiro do Norte region"
+      },
+      {
+        "name": "Criciúma",
+        "regionName": "Criciúma region"
+      },
+      {
+        "name": "Cabo de Santo Agostinho",
+        "regionName": "Cabo de Santo Agostinho region"
+      },
+      {
+        "name": "Teresina",
+        "regionName": "Teresina region"
+      },
+      {
+        "name": "Blumenau",
+        "regionName": "Blumenau region"
+      },
+      {
+        "name": "Araçatuba",
+        "regionName": "Araçatuba region"
+      },
+      {
+        "name": "Divinópolis",
+        "regionName": "Divinópolis region"
+      },
+      {
+        "name": "Imperatriz",
+        "regionName": "Imperatriz region"
+      },
+      {
+        "name": "Aracaju",
+        "regionName": "Aracaju region"
+      },
+      {
+        "name": "Passo Fundo",
+        "regionName": "Passo Fundo region"
+      },
+      {
+        "name": "Codó",
+        "regionName": "Codó region"
+      },
+      {
+        "name": "Sorocaba",
+        "regionName": "Sorocaba region"
+      },
+      {
+        "name": "Caxias do Sul",
+        "regionName": "Caxias do Sul region"
+      },
+      {
+        "name": "São José dos Campos",
+        "regionName": "São José dos Campos region"
+      },
+      {
+        "name": "Águas Lindas de Goiás",
+        "regionName": "Águas Lindas de Goiás region"
+      },
+      {
+        "name": "Campo Grande",
+        "regionName": "Campo Grande region"
+      },
+      {
+        "name": "Montes Claros",
+        "regionName": "Montes Claros region"
+      },
+      {
+        "name": "Uberlândia",
+        "regionName": "Uberlândia region"
+      },
+      {
+        "name": "Timon",
+        "regionName": "Timon region"
+      },
+      {
+        "name": "Joinville",
+        "regionName": "Joinville region"
+      },
+      {
+        "name": "Maringá",
+        "regionName": "Maringá region"
+      },
+      {
+        "name": "Mossoró",
+        "regionName": "Mossoró region"
+      },
+      {
+        "name": "Feira de Santana",
+        "regionName": "Feira de Santana region"
+      },
+      {
+        "name": "Juazeiro",
+        "regionName": "Juazeiro region"
+      },
+      {
+        "name": "Arapiraca",
+        "regionName": "Arapiraca region"
+      },
+      {
+        "name": "Santa Maria",
+        "regionName": "Santa Maria region"
+      },
+      {
+        "name": "Barreiras",
+        "regionName": "Barreiras region"
+      },
+      {
+        "name": "Linhares",
+        "regionName": "Linhares region"
+      },
+      {
+        "name": "Ipatinga",
+        "regionName": "Ipatinga region"
+      },
+      {
+        "name": "Petrolina",
+        "regionName": "Petrolina region"
+      },
+      {
+        "name": "Marabá",
+        "regionName": "Marabá region"
+      },
+      {
+        "name": "Guanambi",
+        "regionName": "Guanambi region"
+      },
+      {
+        "name": "Vitória de Santo Antão",
+        "regionName": "Vitória de Santo Antão region"
+      },
+      {
+        "name": "Santarém",
+        "regionName": "Santarém region"
+      },
+      {
+        "name": "Abaetetuba",
+        "regionName": "Abaetetuba region"
+      },
+      {
+        "name": "Piracicaba",
+        "regionName": "Piracicaba region"
+      },
+      {
+        "name": "Juiz de Fora",
+        "regionName": "Juiz de Fora region"
+      },
+      {
+        "name": "Campina Grande",
+        "regionName": "Campina Grande region"
+      },
+      {
+        "name": "Florianópolis",
+        "regionName": "Florianópolis region"
+      },
+      {
+        "name": "Cuiabá",
+        "regionName": "Cuiabá region"
+      },
+      {
+        "name": "Teófilo Otoni",
+        "regionName": "Teófilo Otoni region"
+      },
+      {
+        "name": "Dourados",
+        "regionName": "Dourados region"
+      },
+      {
+        "name": "Bauru",
+        "regionName": "Bauru region"
+      },
+      {
+        "name": "Ubá",
+        "regionName": "Ubá region"
+      },
+      {
+        "name": "Palmas",
+        "regionName": "Palmas region"
+      },
+      {
+        "name": "Jundiaí",
+        "regionName": "Jundiaí region"
+      },
+      {
+        "name": "Rio Verde",
+        "regionName": "Rio Verde region"
+      },
+      {
+        "name": "Campos dos Goytacazes",
+        "regionName": "Campos dos Goytacazes region"
+      },
+      {
+        "name": "Vitória da Conquista",
+        "regionName": "Vitória da Conquista region"
+      },
+      {
+        "name": "Alagoinhas",
+        "regionName": "Alagoinhas region"
+      },
+      {
+        "name": "Presidente Prudente",
+        "regionName": "Presidente Prudente region"
+      },
+      {
+        "name": "Uruguaiana",
+        "regionName": "Uruguaiana region"
+      },
+      {
+        "name": "Ourinhos",
+        "regionName": "Ourinhos region"
+      },
+      {
+        "name": "Varginha",
+        "regionName": "Varginha region"
+      },
+      {
+        "name": "Uberaba",
+        "regionName": "Uberaba region"
+      },
+      {
+        "name": "Cachoeiro de Itapemirim",
+        "regionName": "Cachoeiro de Itapemirim region"
+      },
+      {
+        "name": "Itabuna",
+        "regionName": "Itabuna region"
+      },
+      {
+        "name": "Caçador",
+        "regionName": "Caçador region"
+      },
+      {
+        "name": "Porto Velho",
+        "regionName": "Porto Velho region"
+      },
+      {
+        "name": "Teixeira de Freitas",
+        "regionName": "Teixeira de Freitas region"
+      },
+      {
+        "name": "Ribeirão Preto",
+        "regionName": "Ribeirão Preto region"
+      },
+      {
+        "name": "Barbacena",
+        "regionName": "Barbacena region"
+      },
+      {
+        "name": "Ji-Paraná",
+        "regionName": "Ji-Paraná region"
+      },
+      {
+        "name": "Pinheiro",
+        "regionName": "Pinheiro region"
+      },
+      {
+        "name": "Janaúba",
+        "regionName": "Janaúba region"
+      },
+      {
+        "name": "Umuarama",
+        "regionName": "Umuarama region"
+      },
+      {
+        "name": "Iguatu",
+        "regionName": "Iguatu region"
+      },
+      {
+        "name": "Tianguá",
+        "regionName": "Tianguá region"
+      },
+      {
+        "name": "Santo Antônio de Jesus",
+        "regionName": "Santo Antônio de Jesus region"
+      },
+      {
+        "name": "Pelotas",
+        "regionName": "Pelotas region"
+      },
+      {
+        "name": "Chapecó",
+        "regionName": "Chapecó region"
+      },
+      {
+        "name": "Macapá",
+        "regionName": "Macapá region"
+      },
+      {
+        "name": "Chapadinha",
+        "regionName": "Chapadinha region"
+      },
+      {
+        "name": "Patos",
+        "regionName": "Patos region"
+      },
+      {
+        "name": "Marília",
+        "regionName": "Marília region"
+      },
+      {
+        "name": "Franca",
+        "regionName": "Franca region"
+      },
+      {
+        "name": "Francisco Beltrão",
+        "regionName": "Francisco Beltrão region"
+      },
+      {
+        "name": "Parauapebas",
+        "regionName": "Parauapebas region"
+      },
+      {
+        "name": "Sobral",
+        "regionName": "Sobral region"
+      },
+      {
+        "name": "Bento Gonçalves",
+        "regionName": "Bento Gonçalves region"
+      },
+      {
+        "name": "Parnaíba",
+        "regionName": "Parnaíba region"
+      },
+      {
+        "name": "Caratinga",
+        "regionName": "Caratinga region"
+      },
+      {
+        "name": "Sete Lagoas",
+        "regionName": "Sete Lagoas region"
+      },
+      {
+        "name": "Jequié",
+        "regionName": "Jequié region"
+      },
+      {
+        "name": "Itajaí",
+        "regionName": "Itajaí region"
+      },
+      {
+        "name": "Santa Inês",
+        "regionName": "Santa Inês region"
+      },
+      {
+        "name": "Rio Branco",
+        "regionName": "Rio Branco region"
+      },
+      {
+        "name": "Rondonópolis",
+        "regionName": "Rondonópolis region"
+      },
+      {
+        "name": "Nova Friburgo",
+        "regionName": "Nova Friburgo region"
+      },
+      {
+        "name": "Sousa",
+        "regionName": "Sousa region"
+      },
+      {
+        "name": "Itabaiana",
+        "regionName": "Itabaiana region"
+      },
+      {
+        "name": "Tangará da Serra",
+        "regionName": "Tangará da Serra region"
+      },
+      {
+        "name": "Volta Redonda",
+        "regionName": "Volta Redonda region"
+      },
+      {
+        "name": "Itapetininga",
+        "regionName": "Itapetininga region"
+      },
+      {
+        "name": "Russas",
+        "regionName": "Russas region"
+      },
+      {
+        "name": "Itu",
+        "regionName": "Itu region"
+      },
+      {
+        "name": "Santa Cruz do Sul",
+        "regionName": "Santa Cruz do Sul region"
+      },
+      {
+        "name": "Patos de Minas",
+        "regionName": "Patos de Minas region"
+      },
+      {
+        "name": "São Carlos",
+        "regionName": "São Carlos region"
+      },
+      {
+        "name": "Pouso Alegre",
+        "regionName": "Pouso Alegre region"
+      },
+      {
+        "name": "Castanhal",
+        "regionName": "Castanhal region"
+      },
+      {
+        "name": "Paulo Afonso",
+        "regionName": "Paulo Afonso region"
+      },
+      {
+        "name": "Paranaguá",
+        "regionName": "Paranaguá region"
+      },
+      {
+        "name": "Pindamonhangaba",
+        "regionName": "Pindamonhangaba region"
+      },
+      {
+        "name": "Guarabira",
+        "regionName": "Guarabira region"
+      },
+      {
+        "name": "Cabo Frio",
+        "regionName": "Cabo Frio region"
+      },
+      {
+        "name": "Paragominas",
+        "regionName": "Paragominas region"
+      },
+      {
+        "name": "Taubaté",
+        "regionName": "Taubaté region"
+      },
+      {
+        "name": "Garanhuns",
+        "regionName": "Garanhuns region"
+      },
+      {
+        "name": "Itajubá",
+        "regionName": "Itajubá region"
+      },
+      {
+        "name": "Governador Valadares",
+        "regionName": "Governador Valadares region"
+      },
+      {
+        "name": "Passos",
+        "regionName": "Passos region"
+      },
+      {
+        "name": "Araguaína",
+        "regionName": "Araguaína region"
+      },
+      {
+        "name": "Serra Talhada",
+        "regionName": "Serra Talhada region"
+      },
+      {
+        "name": "Camaçari",
+        "regionName": "Camaçari region"
+      },
+      {
+        "name": "Catanduva",
+        "regionName": "Catanduva region"
+      },
+      {
+        "name": "Bebedouro",
+        "regionName": "Bebedouro region"
+      },
+      {
+        "name": "Anápolis",
+        "regionName": "Anápolis region"
+      },
+      {
+        "name": "São José de Mipibu",
+        "regionName": "São José de Mipibu region"
+      },
+      {
+        "name": "Lagarto",
+        "regionName": "Lagarto region"
+      },
+      {
+        "name": "Macaé",
+        "regionName": "Macaé region"
+      },
+      {
+        "name": "Araraquara",
+        "regionName": "Araraquara region"
+      },
+      {
+        "name": "Itapipoca",
+        "regionName": "Itapipoca region"
+      },
+      {
+        "name": "Bragança",
+        "regionName": "Bragança region"
+      },
+      {
+        "name": "Poços de Caldas",
+        "regionName": "Poços de Caldas region"
+      },
+      {
+        "name": "Ponta Grossa",
+        "regionName": "Ponta Grossa region"
+      },
+      {
+        "name": "Rio Claro",
+        "regionName": "Rio Claro region"
+      },
+      {
+        "name": "Campo Largo",
+        "regionName": "Campo Largo region"
+      },
+      {
+        "name": "Sinop",
+        "regionName": "Sinop region"
+      },
+      {
+        "name": "Guarapuava",
+        "regionName": "Guarapuava region"
+      },
+      {
+        "name": "Macaúbas",
+        "regionName": "Macaúbas region"
+      },
+      {
+        "name": "Luziânia",
+        "regionName": "Luziânia region"
+      },
+      {
+        "name": "Limeira",
+        "regionName": "Limeira region"
+      },
+      {
+        "name": "Canindé",
+        "regionName": "Canindé region"
+      },
+      {
+        "name": "Catalão",
+        "regionName": "Catalão region"
+      },
+      {
+        "name": "Breves",
+        "regionName": "Breves region"
+      },
+      {
+        "name": "Delmiro Gouveia",
+        "regionName": "Delmiro Gouveia region"
+      },
+      {
+        "name": "Manacapuru",
+        "regionName": "Manacapuru region"
+      },
+      {
+        "name": "Alta Floresta",
+        "regionName": "Alta Floresta region"
+      },
+      {
+        "name": "Mogi Guaçu",
+        "regionName": "Mogi Guaçu region"
+      },
+      {
+        "name": "Corumbá",
+        "regionName": "Corumbá region"
+      },
+      {
+        "name": "Cruzeiro do Sul",
+        "regionName": "Cruzeiro do Sul region"
+      },
+      {
+        "name": "Itumbiara",
+        "regionName": "Itumbiara region"
+      },
+      {
+        "name": "Bragança Paulista",
+        "regionName": "Bragança Paulista region"
+      },
+      {
+        "name": "Formosa",
+        "regionName": "Formosa region"
+      },
+      {
+        "name": "Indaiatuba",
+        "regionName": "Indaiatuba region"
+      },
+      {
+        "name": "Angra dos Reis",
+        "regionName": "Angra dos Reis region"
+      },
+      {
+        "name": "São Félix do Xingu",
+        "regionName": "São Félix do Xingu region"
+      },
+      {
+        "name": "Sertãozinho",
+        "regionName": "Sertãozinho region"
+      },
+      {
+        "name": "Tabatinga",
+        "regionName": "Tabatinga region"
+      },
+      {
+        "name": "São Sebastião",
+        "regionName": "São Sebastião region"
+      },
+      {
+        "name": "Borba",
+        "regionName": "Borba region"
+      },
+      {
+        "name": "São José do Rio Preto",
+        "regionName": "São José do Rio Preto region"
+      },
+      {
+        "name": "Sorocaba",
+        "regionName": "Sorocaba region"
+      },
+      {
+        "name": "São José dos Campos",
+        "regionName": "São José dos Campos region"
+      },
+      {
+        "name": "Montes Claros",
+        "regionName": "Montes Claros region"
+      },
+      {
+        "name": "Piracicaba",
+        "regionName": "Piracicaba region"
+      },
+      {
+        "name": "Bauru",
+        "regionName": "Bauru region"
+      },
+      {
+        "name": "Jundiaí",
+        "regionName": "Jundiaí region"
+      },
+      {
+        "name": "Campos dos Goytacazes",
+        "regionName": "Campos dos Goytacazes region"
+      },
+      {
+        "name": "Presidente Prudente",
+        "regionName": "Presidente Prudente region"
+      },
+      {
+        "name": "Franca",
+        "regionName": "Franca region"
+      },
+      {
+        "name": "Araçatuba",
+        "regionName": "Araçatuba region"
+      },
+      {
+        "name": "Linhares",
+        "regionName": "Linhares region"
+      },
+      {
+        "name": "Ourinhos",
+        "regionName": "Ourinhos region"
+      },
+      {
+        "name": "Varginha",
+        "regionName": "Varginha region"
+      },
+      {
+        "name": "Cachoeiro de Itapemirim",
+        "regionName": "Cachoeiro de Itapemirim region"
+      },
+      {
+        "name": "Barbacena",
+        "regionName": "Barbacena region"
+      },
+      {
+        "name": "Janaúba",
+        "regionName": "Janaúba region"
+      },
+      {
+        "name": "Sete Lagoas",
+        "regionName": "Sete Lagoas region"
+      },
+      {
+        "name": "Nova Friburgo",
+        "regionName": "Nova Friburgo region"
+      },
+      {
+        "name": "São Carlos",
+        "regionName": "São Carlos region"
+      },
+      {
+        "name": "Pouso Alegre",
+        "regionName": "Pouso Alegre region"
+      },
+      {
+        "name": "Pindamonhangaba",
+        "regionName": "Pindamonhangaba region"
+      },
+      {
+        "name": "Taubaté",
+        "regionName": "Taubaté region"
+      },
+      {
+        "name": "Governador Valadares",
+        "regionName": "Governador Valadares region"
+      },
+      {
+        "name": "Passos",
+        "regionName": "Passos region"
+      },
+      {
+        "name": "Bebedouro",
+        "regionName": "Bebedouro region"
+      },
+      {
+        "name": "Macaé",
+        "regionName": "Macaé region"
+      },
+      {
+        "name": "Poços de Caldas",
+        "regionName": "Poços de Caldas region"
+      },
+      {
+        "name": "Rio Claro",
+        "regionName": "Rio Claro region"
+      },
+      {
+        "name": "Limeira",
+        "regionName": "Limeira region"
+      },
+      {
+        "name": "Mogi Guaçu",
+        "regionName": "Mogi Guaçu region"
+      },
+      {
+        "name": "Bragança Paulista",
+        "regionName": "Bragança Paulista region"
+      },
+      {
+        "name": "Indaiatuba",
+        "regionName": "Indaiatuba region"
+      },
+      {
+        "name": "Angra dos Reis",
+        "regionName": "Angra dos Reis region"
+      },
+      {
+        "name": "Sertãozinho",
+        "regionName": "Sertãozinho region"
+      },
+      {
+        "name": "São Sebastião",
+        "regionName": "São Sebastião region"
       }
     ],
     "rule": {
@@ -26078,7 +27670,7 @@
         -23.165
       ],
       "place": 28,
-      "localTrips": 32706487.0,
+      "localTrips": 32299653.0,
       "country": "BR",
       "realm": "brazil"
     },
@@ -112662,6 +114254,4589 @@
       "country": "MX",
       "localTrips": 1252756.0,
       "realm": "mexico"
+    },
+    {
+      "id": "bav",
+      "name": "Boa Vista",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.7354,
+        "lat": 2.8271
+      },
+      "center": [
+        -60.7354,
+        2.8271
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.101,
+        1.689,
+        -59.496,
+        5.288
+      ],
+      "place": 6515,
+      "country": "BR",
+      "localTrips": 847247.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rio",
+      "name": "Rio de Janeiro",
+      "origin": {
+        "lon": -43.332,
+        "lat": -22.9756
+      },
+      "center": [
+        -43.332,
+        -22.9756
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.106,
+        -23.095,
+        -42.724,
+        -21.984
+      ],
+      "place": 6544,
+      "country": "BR",
+      "localTrips": 17288647.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "beo",
+      "name": "Belo Horizonte",
+      "origin": {
+        "lon": -44.0014,
+        "lat": -19.9496
+      },
+      "center": [
+        -44.0014,
+        -19.9496
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.594,
+        -20.53,
+        -43.459,
+        -19.213
+      ],
+      "place": 6545,
+      "country": "BR",
+      "localTrips": 8538930.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rec",
+      "name": "Recife",
+      "origin": {
+        "lon": -34.9088,
+        "lat": -8.0209
+      },
+      "center": [
+        -34.9088,
+        -8.0209
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -35.276,
+        -8.261,
+        -34.788,
+        -7.443
+      ],
+      "place": 6546,
+      "country": "BR",
+      "localTrips": 5993191.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "for",
+      "name": "Fortaleza",
+      "origin": {
+        "lon": -38.5591,
+        "lat": -3.7092
+      },
+      "center": [
+        -38.5591,
+        -3.7092
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -39.455,
+        -4.417,
+        -38.205,
+        -3.53
+      ],
+      "place": 6547,
+      "country": "BR",
+      "localTrips": 6325238.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bra",
+      "name": "Brasilia",
+      "origin": {
+        "lon": -48.0142,
+        "lat": -15.8363
+      },
+      "center": [
+        -48.0142,
+        -15.8363
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.638,
+        -17.375,
+        -46.869,
+        -14.998
+      ],
+      "place": 6548,
+      "country": "BR",
+      "localTrips": 5166448.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sal",
+      "name": "Salvador",
+      "origin": {
+        "lon": -38.4961,
+        "lat": -12.9298
+      },
+      "center": [
+        -38.4961,
+        -12.9298
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.817,
+        -13.151,
+        -38.256,
+        -12.57
+      ],
+      "place": 6549,
+      "country": "BR",
+      "localTrips": 4858755.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cur",
+      "name": "Curitiba",
+      "origin": {
+        "lon": -49.2872,
+        "lat": -25.4468
+      },
+      "center": [
+        -49.2872,
+        -25.4468
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.635,
+        -26.05,
+        -48.189,
+        -24.633
+      ],
+      "place": 6550,
+      "country": "BR",
+      "localTrips": 5540782.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "poo",
+      "name": "Porto Alegre",
+      "origin": {
+        "lon": -51.103,
+        "lat": -30.0226
+      },
+      "center": [
+        -51.103,
+        -30.0226
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.871,
+        -30.459,
+        -50.335,
+        -29.523
+      ],
+      "place": 6551,
+      "country": "BR",
+      "localTrips": 6160206.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "goi",
+      "name": "Goiânia",
+      "origin": {
+        "lon": -49.2643,
+        "lat": -16.7153
+      },
+      "center": [
+        -49.2643,
+        -16.7153
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.901,
+        -17.325,
+        -48.618,
+        -16.164
+      ],
+      "place": 6552,
+      "country": "BR",
+      "localTrips": 4418950.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cam",
+      "name": "Campinas",
+      "origin": {
+        "lon": -47.0559,
+        "lat": -22.9088
+      },
+      "center": [
+        -47.0559,
+        -22.9088
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.643,
+        -23.187,
+        -46.659,
+        -22.554
+      ],
+      "place": 6553,
+      "country": "BR",
+      "localTrips": 4506523.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mau",
+      "name": "Manaus",
+      "origin": {
+        "lon": -60.0556,
+        "lat": -3.1022
+      },
+      "center": [
+        -60.0556,
+        -3.1022
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.01,
+        -3.568,
+        -59.137,
+        -1.894
+      ],
+      "place": 6554,
+      "country": "BR",
+      "localTrips": 3736106.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bee",
+      "name": "Belém",
+      "origin": {
+        "lon": -48.4568,
+        "lat": -1.4599
+      },
+      "center": [
+        -48.4568,
+        -1.4599
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.227,
+        -1.851,
+        -47.838,
+        -0.396
+      ],
+      "place": 6555,
+      "country": "BR",
+      "localTrips": 3566712.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "nit",
+      "name": "Niterói",
+      "origin": {
+        "lon": -43.1088,
+        "lat": -22.9088
+      },
+      "center": [
+        -43.1088,
+        -22.9088
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.159,
+        -23.043,
+        -42.422,
+        -22.6
+      ],
+      "place": 6556,
+      "country": "BR",
+      "localTrips": 2856979.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "vit",
+      "name": "Vitória",
+      "origin": {
+        "lon": -40.2664,
+        "lat": -20.2561
+      },
+      "center": [
+        -40.2664,
+        -20.2561
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.157,
+        -20.554,
+        -40.135,
+        -19.832
+      ],
+      "place": 6557,
+      "country": "BR",
+      "localTrips": 3080304.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "naa",
+      "name": "Natal",
+      "origin": {
+        "lon": -35.2494,
+        "lat": -5.831
+      },
+      "center": [
+        -35.2494,
+        -5.831
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -35.76,
+        -6.241,
+        -35.078,
+        -5.439
+      ],
+      "place": 6558,
+      "country": "BR",
+      "localTrips": 2372524.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sax",
+      "name": "Santos",
+      "origin": {
+        "lon": -46.3202,
+        "lat": -23.9703
+      },
+      "center": [
+        -46.3202,
+        -23.9703
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.004,
+        -24.271,
+        -46.157,
+        -23.717
+      ],
+      "place": 6559,
+      "country": "BR",
+      "localTrips": 2245481.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sau",
+      "name": "São Luís",
+      "origin": {
+        "lon": -44.283,
+        "lat": -2.5277
+      },
+      "center": [
+        -44.283,
+        -2.5277
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.516,
+        -3.203,
+        -44.005,
+        -2.443
+      ],
+      "place": 6560,
+      "country": "BR",
+      "localTrips": 2261025.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "joa",
+      "name": "João Pessoa",
+      "origin": {
+        "lon": -34.8854,
+        "lat": -7.1526
+      },
+      "center": [
+        -34.8854,
+        -7.1526
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -35.307,
+        -7.408,
+        -34.774,
+        -6.829
+      ],
+      "place": 6561,
+      "country": "BR",
+      "localTrips": 2078078.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mao",
+      "name": "Maceió",
+      "origin": {
+        "lon": -35.7181,
+        "lat": -9.6377
+      },
+      "center": [
+        -35.7181,
+        -9.6377
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.246,
+        -9.831,
+        -35.454,
+        -9.12
+      ],
+      "place": 6562,
+      "country": "BR",
+      "localTrips": 2181072.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "loa",
+      "name": "Londrina",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.1626,
+        "lat": -23.318
+      },
+      "center": [
+        -51.1626,
+        -23.318
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.984,
+        -24.176,
+        -50.417,
+        -22.634
+      ],
+      "place": 6563,
+      "country": "BR",
+      "localTrips": 2307480.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cav",
+      "name": "Cascavel",
+      "kind": "zone",
+      "origin": {
+        "lon": -53.4367,
+        "lat": -24.9175
+      },
+      "center": [
+        -53.4367,
+        -24.9175
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.64,
+        -25.716,
+        -52.394,
+        -23.962
+      ],
+      "place": 6564,
+      "country": "BR",
+      "localTrips": 2446650.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pic",
+      "name": "Picos",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.4684,
+        "lat": -7.0796
+      },
+      "center": [
+        -41.4684,
+        -7.0796
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.047,
+        -10.947,
+        -40.352,
+        -5.279
+      ],
+      "place": 6566,
+      "country": "BR",
+      "localTrips": 2001686.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cru",
+      "name": "Caruaru",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.9682,
+        "lat": -8.2969
+      },
+      "center": [
+        -35.9682,
+        -8.2969
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.947,
+        -8.75,
+        -35.355,
+        -7.746
+      ],
+      "place": 6567,
+      "country": "BR",
+      "localTrips": 2056461.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jue",
+      "name": "Juazeiro do Norte",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.3103,
+        "lat": -7.2175
+      },
+      "center": [
+        -39.3103,
+        -7.2175
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.755,
+        -7.877,
+        -38.429,
+        -6.06
+      ],
+      "place": 6568,
+      "country": "BR",
+      "localTrips": 1896745.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cra",
+      "name": "Criciúma",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.3674,
+        "lat": -28.6846
+      },
+      "center": [
+        -49.3674,
+        -28.6846
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.259,
+        -31.523,
+        -48.609,
+        -27.715
+      ],
+      "place": 6569,
+      "country": "BR",
+      "localTrips": 2370879.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cbo",
+      "name": "Cabo de Santo Agostinho",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.0342,
+        "lat": -8.2969
+      },
+      "center": [
+        -35.0342,
+        -8.2969
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.22,
+        -9.408,
+        -34.905,
+        -8.166
+      ],
+      "place": 6570,
+      "country": "BR",
+      "localTrips": 1750628.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ter",
+      "name": "Teresina",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.7866,
+        "lat": -5.1505
+      },
+      "center": [
+        -42.7866,
+        -5.1505
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.119,
+        -6.196,
+        -40.855,
+        -4.335
+      ],
+      "place": 6571,
+      "country": "BR",
+      "localTrips": 1911231.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "buu",
+      "name": "Blumenau",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.0929,
+        "lat": -26.905
+      },
+      "center": [
+        -49.0929,
+        -26.905
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.478,
+        -28.645,
+        -48.771,
+        -26.594
+      ],
+      "place": 6572,
+      "country": "BR",
+      "localTrips": 2152582.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "div",
+      "name": "Divinópolis",
+      "kind": "zone",
+      "origin": {
+        "lon": -44.8956,
+        "lat": -20.1401
+      },
+      "center": [
+        -44.8956,
+        -20.1401
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.95,
+        -20.922,
+        -44.28,
+        -18.195
+      ],
+      "place": 6574,
+      "country": "BR",
+      "localTrips": 2101416.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "imp",
+      "name": "Imperatriz",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.4764,
+        "lat": -5.5393
+      },
+      "center": [
+        -47.4764,
+        -5.5393
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.776,
+        -9.433,
+        -44.666,
+        -3.586
+      ],
+      "place": 6575,
+      "country": "BR",
+      "localTrips": 1849554.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "arj",
+      "name": "Aracaju",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.0977,
+        "lat": -10.8991
+      },
+      "center": [
+        -37.0977,
+        -10.8991
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -37.522,
+        -11.308,
+        -36.654,
+        -10.377
+      ],
+      "place": 6576,
+      "country": "BR",
+      "localTrips": 1820676.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "psf",
+      "name": "Passo Fundo",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.4067,
+        "lat": -28.2599
+      },
+      "center": [
+        -52.4067,
+        -28.2599
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.481,
+        -29.239,
+        -50.968,
+        -27.185
+      ],
+      "place": 6577,
+      "country": "BR",
+      "localTrips": 2130303.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cdx",
+      "name": "Codó",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.8795,
+        "lat": -4.4621
+      },
+      "center": [
+        -43.8795,
+        -4.4621
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.941,
+        -5.073,
+        -43.349,
+        -3.008
+      ],
+      "place": 6578,
+      "country": "BR",
+      "localTrips": 1728627.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cxi",
+      "name": "Caxias do Sul",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.1932,
+        "lat": -29.1696
+      },
+      "center": [
+        -51.1932,
+        -29.1696
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.712,
+        -29.863,
+        -49.67,
+        -27.922
+      ],
+      "place": 6580,
+      "country": "BR",
+      "localTrips": 2002506.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "agl",
+      "name": "Águas Lindas de Goiás",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.2937,
+        "lat": -15.7214
+      },
+      "center": [
+        -48.2937,
+        -15.7214
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.43,
+        -16.491,
+        -47.095,
+        -12.379
+      ],
+      "place": 6582,
+      "country": "BR",
+      "localTrips": 1826136.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cmd",
+      "name": "Campo Grande",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.6479,
+        "lat": -20.5214
+      },
+      "center": [
+        -54.6479,
+        -20.5214
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -55.485,
+        -21.651,
+        -52.334,
+        -17.21
+      ],
+      "place": 6583,
+      "country": "BR",
+      "localTrips": 1951041.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ube",
+      "name": "Uberlândia",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.2258,
+        "lat": -18.9653
+      },
+      "center": [
+        -48.2258,
+        -18.9653
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.065,
+        -20.104,
+        -47.557,
+        -18.287
+      ],
+      "place": 6585,
+      "country": "BR",
+      "localTrips": 1975772.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "tim",
+      "name": "Timon",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.8439,
+        "lat": -5.0857
+      },
+      "center": [
+        -42.8439,
+        -5.0857
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.967,
+        -7.502,
+        -42.78,
+        -4.204
+      ],
+      "place": 6586,
+      "country": "BR",
+      "localTrips": 1549079.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "joi",
+      "name": "Joinville",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.7988,
+        "lat": -26.2804
+      },
+      "center": [
+        -48.7988,
+        -26.2804
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.782,
+        -26.959,
+        -48.461,
+        -25.962
+      ],
+      "place": 6587,
+      "country": "BR",
+      "localTrips": 1996362.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mrn",
+      "name": "Maringá",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.9422,
+        "lat": -23.4099
+      },
+      "center": [
+        -51.9422,
+        -23.4099
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.735,
+        -24.122,
+        -51.375,
+        -22.497
+      ],
+      "place": 6588,
+      "country": "BR",
+      "localTrips": 2033781.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mss",
+      "name": "Mossoró",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.336,
+        "lat": -5.1748
+      },
+      "center": [
+        -37.336,
+        -5.1748
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.509,
+        -6.641,
+        -35.235,
+        -4.862
+      ],
+      "place": 6589,
+      "country": "BR",
+      "localTrips": 1696492.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "fei",
+      "name": "Feira de Santana",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.9798,
+        "lat": -12.2523
+      },
+      "center": [
+        -38.9798,
+        -12.2523
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.376,
+        -12.754,
+        -38.514,
+        -11.459
+      ],
+      "place": 6590,
+      "country": "BR",
+      "localTrips": 1823281.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jui",
+      "name": "Juazeiro",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.5033,
+        "lat": -9.4182
+      },
+      "center": [
+        -40.5033,
+        -9.4182
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.682,
+        -12.144,
+        -38.451,
+        -8.513
+      ],
+      "place": 6591,
+      "country": "BR",
+      "localTrips": 1852699.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "arp",
+      "name": "Arapiraca",
+      "kind": "zone",
+      "origin": {
+        "lon": -36.6613,
+        "lat": -9.7434
+      },
+      "center": [
+        -36.6613,
+        -9.7434
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -37.329,
+        -10.451,
+        -35.837,
+        -9.154
+      ],
+      "place": 6592,
+      "country": "BR",
+      "localTrips": 1716973.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "smi",
+      "name": "Santa Maria",
+      "kind": "zone",
+      "origin": {
+        "lon": -53.8167,
+        "lat": -29.6896
+      },
+      "center": [
+        -53.8167,
+        -29.6896
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.689,
+        -32.12,
+        -52.728,
+        -28.63
+      ],
+      "place": 6593,
+      "country": "BR",
+      "localTrips": 1853281.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bax",
+      "name": "Barreiras",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.0082,
+        "lat": -12.1217
+      },
+      "center": [
+        -45.0082,
+        -12.1217
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.592,
+        -13.484,
+        -40.648,
+        -8.685
+      ],
+      "place": 6594,
+      "country": "BR",
+      "localTrips": 1797692.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ipa",
+      "name": "Ipatinga",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.5512,
+        "lat": -19.453
+      },
+      "center": [
+        -42.5512,
+        -19.453
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.889,
+        -20.237,
+        -42.009,
+        -18.594
+      ],
+      "place": 6596,
+      "country": "BR",
+      "localTrips": 1739017.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pet",
+      "name": "Petrolina",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.5513,
+        "lat": -9.3857
+      },
+      "center": [
+        -40.5513,
+        -9.3857
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.377,
+        -9.502,
+        -37.766,
+        -7.3
+      ],
+      "place": 6597,
+      "country": "BR",
+      "localTrips": 1614124.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mab",
+      "name": "Marabá",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.0969,
+        "lat": -5.3287
+      },
+      "center": [
+        -49.0969,
+        -5.3287
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.828,
+        -6.237,
+        -47.008,
+        -2.726
+      ],
+      "place": 6598,
+      "country": "BR",
+      "localTrips": 1854880.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "gni",
+      "name": "Guanambi",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.7859,
+        "lat": -14.2216
+      },
+      "center": [
+        -42.7859,
+        -14.2216
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.301,
+        -15.283,
+        -40.636,
+        -12.213
+      ],
+      "place": 6599,
+      "country": "BR",
+      "localTrips": 1794388.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "vii",
+      "name": "Vitória de Santo Antão",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.2859,
+        "lat": -8.1264
+      },
+      "center": [
+        -35.2859,
+        -8.1264
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.09,
+        -8.326,
+        -34.784,
+        -7.159
+      ],
+      "place": 6600,
+      "country": "BR",
+      "localTrips": 1592342.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "srm",
+      "name": "Santarém",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.6938,
+        "lat": -2.4387
+      },
+      "center": [
+        -54.6938,
+        -2.4387
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -59.539,
+        -5.697,
+        -52.255,
+        0.391
+      ],
+      "place": 6601,
+      "country": "BR",
+      "localTrips": 1823928.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "abt",
+      "name": "Abaetetuba",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.8797,
+        "lat": -1.7187
+      },
+      "center": [
+        -48.8797,
+        -1.7187
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -50.454,
+        -3.692,
+        -48.023,
+        -0.318
+      ],
+      "place": 6602,
+      "country": "BR",
+      "localTrips": 1693124.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jud",
+      "name": "Juiz de Fora",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.3503,
+        "lat": -21.7673
+      },
+      "center": [
+        -43.3503,
+        -21.7673
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.786,
+        -22.573,
+        -42.827,
+        -21.039
+      ],
+      "place": 6604,
+      "country": "BR",
+      "localTrips": 1635750.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cpi",
+      "name": "Campina Grande",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.8715,
+        "lat": -7.2256
+      },
+      "center": [
+        -35.8715,
+        -7.2256
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -37.376,
+        -8.321,
+        -35.386,
+        -6.566
+      ],
+      "place": 6605,
+      "country": "BR",
+      "localTrips": 1593987.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "flr",
+      "name": "Florianópolis",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.6036,
+        "lat": -27.5901
+      },
+      "center": [
+        -48.6036,
+        -27.5901
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.531,
+        -28.127,
+        -48.338,
+        -27.115
+      ],
+      "place": 6606,
+      "country": "BR",
+      "localTrips": 2130369.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cbx",
+      "name": "Cuiabá",
+      "kind": "zone",
+      "origin": {
+        "lon": -56.0115,
+        "lat": -15.6311
+      },
+      "center": [
+        -56.0115,
+        -15.6311
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -57.713,
+        -17.923,
+        -54.306,
+        -14.26
+      ],
+      "place": 6607,
+      "country": "BR",
+      "localTrips": 1879806.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "tef",
+      "name": "Teófilo Otoni",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.5114,
+        "lat": -17.8513
+      },
+      "center": [
+        -41.5114,
+        -17.8513
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.242,
+        -19.185,
+        -40.154,
+        -16.462
+      ],
+      "place": 6608,
+      "country": "BR",
+      "localTrips": 1537728.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "doa",
+      "name": "Dourados",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.8066,
+        "lat": -22.2418
+      },
+      "center": [
+        -54.8066,
+        -22.2418
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -57.536,
+        -24.087,
+        -52.028,
+        -20.667
+      ],
+      "place": 6609,
+      "country": "BR",
+      "localTrips": 1594316.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "uba",
+      "name": "Ubá",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.9484,
+        "lat": -21.1106
+      },
+      "center": [
+        -42.9484,
+        -21.1106
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.582,
+        -22.008,
+        -42.099,
+        -19.968
+      ],
+      "place": 6611,
+      "country": "BR",
+      "localTrips": 1504627.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pam",
+      "name": "Palmas",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.3382,
+        "lat": -10.1665
+      },
+      "center": [
+        -48.3382,
+        -10.1665
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.34,
+        -13.485,
+        -46.684,
+        -8.874
+      ],
+      "place": 6612,
+      "country": "BR",
+      "localTrips": 1459591.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rie",
+      "name": "Rio Verde",
+      "kind": "zone",
+      "origin": {
+        "lon": -50.9296,
+        "lat": -17.8266
+      },
+      "center": [
+        -50.9296,
+        -17.8266
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.268,
+        -18.714,
+        -49.69,
+        -14.982
+      ],
+      "place": 6614,
+      "country": "BR",
+      "localTrips": 1434590.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "vin",
+      "name": "Vitória da Conquista",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.8328,
+        "lat": -14.844
+      },
+      "center": [
+        -40.8328,
+        -14.844
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.643,
+        -16.024,
+        -39.507,
+        -13.888
+      ],
+      "place": 6616,
+      "country": "BR",
+      "localTrips": 1545916.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "alo",
+      "name": "Alagoinhas",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.4426,
+        "lat": -12.1299
+      },
+      "center": [
+        -38.4426,
+        -12.1299
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -39.894,
+        -12.517,
+        -37.332,
+        -10.901
+      ],
+      "place": 6617,
+      "country": "BR",
+      "localTrips": 1437023.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "urg",
+      "name": "Uruguaiana",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.0662,
+        "lat": -29.7664
+      },
+      "center": [
+        -57.0662,
+        -29.7664
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -57.67,
+        -30.324,
+        -52.923,
+        -27.064
+      ],
+      "place": 6619,
+      "country": "BR",
+      "localTrips": 1550505.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ubr",
+      "name": "Uberaba",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.9274,
+        "lat": -19.7675
+      },
+      "center": [
+        -47.9274,
+        -19.7675
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.772,
+        -20.46,
+        -46.246,
+        -17.906
+      ],
+      "place": 6622,
+      "country": "BR",
+      "localTrips": 1491362.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itb",
+      "name": "Itabuna",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.2702,
+        "lat": -14.8112
+      },
+      "center": [
+        -39.2702,
+        -14.8112
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.123,
+        -15.868,
+        -38.909,
+        -13.837
+      ],
+      "place": 6624,
+      "country": "BR",
+      "localTrips": 1405967.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cca",
+      "name": "Caçador",
+      "kind": "zone",
+      "origin": {
+        "lon": -50.9901,
+        "lat": -26.7951
+      },
+      "center": [
+        -50.9901,
+        -26.7951
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -52.566,
+        -27.652,
+        -49.582,
+        -25.983
+      ],
+      "place": 6625,
+      "country": "BR",
+      "localTrips": 1329406.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "poe",
+      "name": "Porto Velho",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.8789,
+        "lat": -8.8005
+      },
+      "center": [
+        -63.8789,
+        -8.8005
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.829,
+        -12.236,
+        -61.449,
+        -5.897
+      ],
+      "place": 6626,
+      "country": "BR",
+      "localTrips": 1320093.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ted",
+      "name": "Teixeira de Freitas",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.7518,
+        "lat": -17.5465
+      },
+      "center": [
+        -39.7518,
+        -17.5465
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.643,
+        -18.367,
+        -38.672,
+        -15.356
+      ],
+      "place": 6627,
+      "country": "BR",
+      "localTrips": 1419563.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rib",
+      "name": "Ribeirão Preto",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.824,
+        "lat": -21.1688
+      },
+      "center": [
+        -47.824,
+        -21.1688
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.008,
+        -21.481,
+        -47.161,
+        -20.79
+      ],
+      "place": 6628,
+      "country": "BR",
+      "localTrips": 1370769.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jip",
+      "name": "Ji-Paraná",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.9183,
+        "lat": -10.8828
+      },
+      "center": [
+        -61.9183,
+        -10.8828
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.105,
+        -13.711,
+        -59.755,
+        -9.665
+      ],
+      "place": 6630,
+      "country": "BR",
+      "localTrips": 1299799.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "phe",
+      "name": "Pinheiro",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.0817,
+        "lat": -2.5277
+      },
+      "center": [
+        -45.0817,
+        -2.5277
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.058,
+        -4.106,
+        -44.339,
+        -1.031
+      ],
+      "place": 6631,
+      "country": "BR",
+      "localTrips": 1204582.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "umu",
+      "name": "Umuarama",
+      "kind": "zone",
+      "origin": {
+        "lon": -53.3269,
+        "lat": -23.7694
+      },
+      "center": [
+        -53.3269,
+        -23.7694
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.189,
+        -25.072,
+        -50.951,
+        -23.167
+      ],
+      "place": 6633,
+      "country": "BR",
+      "localTrips": 1409805.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "igt",
+      "name": "Iguatu",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.3075,
+        "lat": -6.366
+      },
+      "center": [
+        -39.3075,
+        -6.366
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.929,
+        -6.809,
+        -38.501,
+        -4.592
+      ],
+      "place": 6634,
+      "country": "BR",
+      "localTrips": 1232934.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "txx",
+      "name": "Tianguá",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.9873,
+        "lat": -3.7254
+      },
+      "center": [
+        -40.9873,
+        -3.7254
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.39,
+        -5.789,
+        -39.667,
+        -3.269
+      ],
+      "place": 6635,
+      "country": "BR",
+      "localTrips": 1287375.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "stt",
+      "name": "Santo Antônio de Jesus",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.2502,
+        "lat": -12.9707
+      },
+      "center": [
+        -39.2502,
+        -12.9707
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.458,
+        -13.386,
+        -38.701,
+        -11.958
+      ],
+      "place": 6636,
+      "country": "BR",
+      "localTrips": 1295461.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pel",
+      "name": "Pelotas",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.3269,
+        "lat": -31.7715
+      },
+      "center": [
+        -52.3269,
+        -31.7715
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.766,
+        -33.77,
+        -51.164,
+        -30.864
+      ],
+      "place": 6637,
+      "country": "BR",
+      "localTrips": 1337188.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "chx",
+      "name": "Chapecó",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.6839,
+        "lat": -27.0993
+      },
+      "center": [
+        -52.6839,
+        -27.0993
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.858,
+        -27.359,
+        -52.006,
+        -26.223
+      ],
+      "place": 6638,
+      "country": "BR",
+      "localTrips": 1346244.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mcp",
+      "name": "Macapá",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.0513,
+        "lat": 0.0526
+      },
+      "center": [
+        -51.0513,
+        0.0526
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -52.773,
+        -1.255,
+        -49.861,
+        2.199
+      ],
+      "place": 6639,
+      "country": "BR",
+      "localTrips": 1062274.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cpd",
+      "name": "Chapadinha",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.3656,
+        "lat": -3.7416
+      },
+      "center": [
+        -43.3656,
+        -3.7416
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.177,
+        -4.465,
+        -41.777,
+        -2.233
+      ],
+      "place": 6640,
+      "country": "BR",
+      "localTrips": 1071213.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pts",
+      "name": "Patos",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.2856,
+        "lat": -7.0309
+      },
+      "center": [
+        -37.2856,
+        -7.0309
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.045,
+        -7.554,
+        -36.205,
+        -5.812
+      ],
+      "place": 6641,
+      "country": "BR",
+      "localTrips": 1148715.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mrl",
+      "name": "Marília",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.9416,
+        "lat": -22.2501
+      },
+      "center": [
+        -49.9416,
+        -22.2501
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.002,
+        -22.981,
+        -49.084,
+        -21.586
+      ],
+      "place": 6642,
+      "country": "BR",
+      "localTrips": 1218675.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "fro",
+      "name": "Francisco Beltrão",
+      "kind": "zone",
+      "origin": {
+        "lon": -53.0731,
+        "lat": -26.0697
+      },
+      "center": [
+        -53.0731,
+        -26.0697
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.013,
+        -26.618,
+        -51.491,
+        -24.684
+      ],
+      "place": 6644,
+      "country": "BR",
+      "localTrips": 1308448.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "prx",
+      "name": "Parauapebas",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.8877,
+        "lat": -6.0823
+      },
+      "center": [
+        -49.8877,
+        -6.0823
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.942,
+        -9.86,
+        -48.356,
+        -5.767
+      ],
+      "place": 6645,
+      "country": "BR",
+      "localTrips": 1231118.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sox",
+      "name": "Sobral",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.3567,
+        "lat": -3.6849
+      },
+      "center": [
+        -40.3567,
+        -3.6849
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.442,
+        -4.161,
+        -39.688,
+        -2.766
+      ],
+      "place": 6646,
+      "country": "BR",
+      "localTrips": 1184072.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bev",
+      "name": "Bento Gonçalves",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.5161,
+        "lat": -29.1611
+      },
+      "center": [
+        -51.5161,
+        -29.1611
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -52.921,
+        -29.784,
+        -51.121,
+        -28.467
+      ],
+      "place": 6647,
+      "country": "BR",
+      "localTrips": 1295804.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pnb",
+      "name": "Parnaíba",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.7554,
+        "lat": -2.9161
+      },
+      "center": [
+        -41.7554,
+        -2.9161
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.006,
+        -4.903,
+        -41.072,
+        -2.742
+      ],
+      "place": 6648,
+      "country": "BR",
+      "localTrips": 1135577.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cbd",
+      "name": "Caratinga",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.151,
+        "lat": -19.7923
+      },
+      "center": [
+        -42.151,
+        -19.7923
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.785,
+        -21.019,
+        -41.254,
+        -19.327
+      ],
+      "place": 6649,
+      "country": "BR",
+      "localTrips": 1165550.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jeq",
+      "name": "Jequié",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.0913,
+        "lat": -13.8534
+      },
+      "center": [
+        -40.0913,
+        -13.8534
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.969,
+        -14.329,
+        -38.745,
+        -12.898
+      ],
+      "place": 6651,
+      "country": "BR",
+      "localTrips": 1129055.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itj",
+      "name": "Itajaí",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.6966,
+        "lat": -26.905
+      },
+      "center": [
+        -48.6966,
+        -26.905
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.247,
+        -27.521,
+        -48.487,
+        -26.721
+      ],
+      "place": 6652,
+      "country": "BR",
+      "localTrips": 1327593.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "saw",
+      "name": "Santa Inês",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.3914,
+        "lat": -3.6687
+      },
+      "center": [
+        -45.3914,
+        -3.6687
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.107,
+        -4.872,
+        -44.843,
+        -2.602
+      ],
+      "place": 6653,
+      "country": "BR",
+      "localTrips": 877685.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rix",
+      "name": "Rio Branco",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.8305,
+        "lat": -9.9793
+      },
+      "center": [
+        -67.8305,
+        -9.9793
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.636,
+        -11.166,
+        -66.605,
+        -8.027
+      ],
+      "place": 6654,
+      "country": "BR",
+      "localTrips": 1033230.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rod",
+      "name": "Rondonópolis",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.6347,
+        "lat": -16.4276
+      },
+      "center": [
+        -54.6347,
+        -16.4276
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -55.622,
+        -18.06,
+        -50.479,
+        -11.74
+      ],
+      "place": 6655,
+      "country": "BR",
+      "localTrips": 1167521.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sou",
+      "name": "Sousa",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.235,
+        "lat": -6.7714
+      },
+      "center": [
+        -38.235,
+        -6.7714
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.784,
+        -8.01,
+        -36.96,
+        -6.385
+      ],
+      "place": 6657,
+      "country": "BR",
+      "localTrips": 1043846.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "iti",
+      "name": "Itabaiana",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.4346,
+        "lat": -10.6874
+      },
+      "center": [
+        -37.4346,
+        -10.6874
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.081,
+        -10.9,
+        -36.275,
+        -9.496
+      ],
+      "place": 6658,
+      "country": "BR",
+      "localTrips": 946580.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "tns",
+      "name": "Tangará da Serra",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.494,
+        "lat": -14.6064
+      },
+      "center": [
+        -57.494,
+        -14.6064
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -60.735,
+        -17.646,
+        -54.79,
+        -11.899
+      ],
+      "place": 6659,
+      "country": "BR",
+      "localTrips": 1038274.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "voa",
+      "name": "Volta Redonda",
+      "kind": "zone",
+      "origin": {
+        "lon": -44.0753,
+        "lat": -22.4918
+      },
+      "center": [
+        -44.0753,
+        -22.4918
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.829,
+        -22.951,
+        -43.853,
+        -22.22
+      ],
+      "place": 6660,
+      "country": "BR",
+      "localTrips": 1098825.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itp",
+      "name": "Itapetininga",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.0379,
+        "lat": -23.5938
+      },
+      "center": [
+        -48.0379,
+        -23.5938
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.546,
+        -24.745,
+        -47.549,
+        -23.239
+      ],
+      "place": 6661,
+      "country": "BR",
+      "localTrips": 1013012.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "rus",
+      "name": "Russas",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.9777,
+        "lat": -4.9399
+      },
+      "center": [
+        -37.9777,
+        -4.9399
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -39.201,
+        -6.323,
+        -37.202,
+        -4.37
+      ],
+      "place": 6662,
+      "country": "BR",
+      "localTrips": 900040.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itu",
+      "name": "Itu",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.2743,
+        "lat": -23.2845
+      },
+      "center": [
+        -47.2743,
+        -23.2845
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.281,
+        -23.507,
+        -46.939,
+        -22.858
+      ],
+      "place": 6663,
+      "country": "BR",
+      "localTrips": 977417.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "snz",
+      "name": "Santa Cruz do Sul",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.437,
+        "lat": -29.7323
+      },
+      "center": [
+        -52.437,
+        -29.7323
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.372,
+        -31.307,
+        -51.074,
+        -29.285
+      ],
+      "place": 6664,
+      "country": "BR",
+      "localTrips": 968919.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ptd",
+      "name": "Patos de Minas",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.4864,
+        "lat": -18.5771
+      },
+      "center": [
+        -46.4864,
+        -18.5771
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.561,
+        -19.226,
+        -44.711,
+        -14.685
+      ],
+      "place": 6665,
+      "country": "BR",
+      "localTrips": 1068725.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cst",
+      "name": "Castanhal",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.9157,
+        "lat": -1.2819
+      },
+      "center": [
+        -47.9157,
+        -1.2819
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.025,
+        -1.611,
+        -47.206,
+        -0.196
+      ],
+      "place": 6668,
+      "country": "BR",
+      "localTrips": 893956.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pul",
+      "name": "Paulo Afonso",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.2182,
+        "lat": -9.4019
+      },
+      "center": [
+        -38.2182,
+        -9.4019
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -39.29,
+        -11.51,
+        -37.67,
+        -8.938
+      ],
+      "place": 6669,
+      "country": "BR",
+      "localTrips": 945459.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pgu",
+      "name": "Paranaguá",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.5388,
+        "lat": -25.5141
+      },
+      "center": [
+        -48.5388,
+        -25.5141
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.013,
+        -26.003,
+        -46.877,
+        -23.975
+      ],
+      "place": 6670,
+      "country": "BR",
+      "localTrips": 1042731.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "gri",
+      "name": "Guarabira",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.4829,
+        "lat": -6.8525
+      },
+      "center": [
+        -35.4829,
+        -6.8525
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.578,
+        -7.275,
+        -34.88,
+        -6.263
+      ],
+      "place": 6672,
+      "country": "BR",
+      "localTrips": 880496.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cbf",
+      "name": "Cabo Frio",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.0453,
+        "lat": -22.8921
+      },
+      "center": [
+        -42.0453,
+        -22.8921
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.7,
+        -23.016,
+        -41.869,
+        -22.383
+      ],
+      "place": 6673,
+      "country": "BR",
+      "localTrips": 1030851.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pgo",
+      "name": "Paragominas",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.3498,
+        "lat": -3.0051
+      },
+      "center": [
+        -47.3498,
+        -3.0051
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.049,
+        -3.856,
+        -46.399,
+        -1.413
+      ],
+      "place": 6674,
+      "country": "BR",
+      "localTrips": 809712.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "gns",
+      "name": "Garanhuns",
+      "kind": "zone",
+      "origin": {
+        "lon": -36.496,
+        "lat": -8.898
+      },
+      "center": [
+        -36.496,
+        -8.898
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -37.217,
+        -9.426,
+        -35.933,
+        -8.528
+      ],
+      "place": 6676,
+      "country": "BR",
+      "localTrips": 840761.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itx",
+      "name": "Itajubá",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.4675,
+        "lat": -22.4334
+      },
+      "center": [
+        -45.4675,
+        -22.4334
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.992,
+        -22.895,
+        -44.3,
+        -21.387
+      ],
+      "place": 6677,
+      "country": "BR",
+      "localTrips": 912852.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "arg",
+      "name": "Araguaína",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.2026,
+        "lat": -7.1931
+      },
+      "center": [
+        -48.2026,
+        -7.1931
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.87,
+        -9.471,
+        -46.447,
+        -5.731
+      ],
+      "place": 6680,
+      "country": "BR",
+      "localTrips": 786319.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "srt",
+      "name": "Serra Talhada",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.2899,
+        "lat": -7.9884
+      },
+      "center": [
+        -38.2899,
+        -7.9884
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.646,
+        -9.348,
+        -36.729,
+        -7.659
+      ],
+      "place": 6681,
+      "country": "BR",
+      "localTrips": 896613.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ccr",
+      "name": "Camaçari",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.3334,
+        "lat": -12.7093
+      },
+      "center": [
+        -38.3334,
+        -12.7093
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.672,
+        -12.899,
+        -37.873,
+        -12.116
+      ],
+      "place": 6682,
+      "country": "BR",
+      "localTrips": 833650.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ctv",
+      "name": "Catanduva",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.9441,
+        "lat": -21.1438
+      },
+      "center": [
+        -48.9441,
+        -21.1438
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.567,
+        -21.879,
+        -48.126,
+        -20.105
+      ],
+      "place": 6683,
+      "country": "BR",
+      "localTrips": 876555.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "aap",
+      "name": "Anápolis",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.9681,
+        "lat": -16.329
+      },
+      "center": [
+        -48.9681,
+        -16.329
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.475,
+        -17.148,
+        -48.17,
+        -15.895
+      ],
+      "place": 6685,
+      "country": "BR",
+      "localTrips": 882120.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sje",
+      "name": "São José de Mipibu",
+      "kind": "zone",
+      "origin": {
+        "lon": -35.239,
+        "lat": -6.0742
+      },
+      "center": [
+        -35.239,
+        -6.0742
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -36.321,
+        -6.644,
+        -34.947,
+        -5.698
+      ],
+      "place": 6686,
+      "country": "BR",
+      "localTrips": 758796.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "lat",
+      "name": "Lagarto",
+      "kind": "zone",
+      "origin": {
+        "lon": -37.6641,
+        "lat": -10.9154
+      },
+      "center": [
+        -37.6641,
+        -10.9154
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.264,
+        -11.587,
+        -37.241,
+        -10.515
+      ],
+      "place": 6687,
+      "country": "BR",
+      "localTrips": 788371.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "arq",
+      "name": "Araraquara",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.1582,
+        "lat": -21.7839
+      },
+      "center": [
+        -48.1582,
+        -21.7839
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.106,
+        -22.096,
+        -47.889,
+        -21.352
+      ],
+      "place": 6689,
+      "country": "BR",
+      "localTrips": 852373.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ito",
+      "name": "Itapipoca",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.5924,
+        "lat": -3.4988
+      },
+      "center": [
+        -39.5924,
+        -3.4988
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -40.089,
+        -4.194,
+        -38.788,
+        -2.978
+      ],
+      "place": 6690,
+      "country": "BR",
+      "localTrips": 789145.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "brg",
+      "name": "Bragança",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.7658,
+        "lat": -1.0636
+      },
+      "center": [
+        -46.7658,
+        -1.0636
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.517,
+        -2.432,
+        -46.053,
+        -0.611
+      ],
+      "place": 6691,
+      "country": "BR",
+      "localTrips": 714552.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ptg",
+      "name": "Ponta Grossa",
+      "kind": "zone",
+      "origin": {
+        "lon": -50.2062,
+        "lat": -25.0939
+      },
+      "center": [
+        -50.2062,
+        -25.0939
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -50.477,
+        -25.405,
+        -48.48,
+        -24.221
+      ],
+      "place": 6693,
+      "country": "BR",
+      "localTrips": 841321.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cpo",
+      "name": "Campo Largo",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.5253,
+        "lat": -25.4636
+      },
+      "center": [
+        -49.5253,
+        -25.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.166,
+        -26.256,
+        -49.212,
+        -24.779
+      ],
+      "place": 6695,
+      "country": "BR",
+      "localTrips": 760291.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sbn",
+      "name": "Sinop",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.5145,
+        "lat": -11.8363
+      },
+      "center": [
+        -55.5145,
+        -11.8363
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -57.753,
+        -14.275,
+        -53.079,
+        -10.414
+      ],
+      "place": 6696,
+      "country": "BR",
+      "localTrips": 946877.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "gpu",
+      "name": "Guarapuava",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.4866,
+        "lat": -25.4048
+      },
+      "center": [
+        -51.4866,
+        -25.4048
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -52.432,
+        -26.739,
+        -50.578,
+        -24.734
+      ],
+      "place": 6697,
+      "country": "BR",
+      "localTrips": 742293.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mcb",
+      "name": "Macaúbas",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.6923,
+        "lat": -13.0197
+      },
+      "center": [
+        -42.6923,
+        -13.0197
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.19,
+        -13.497,
+        -40.854,
+        -11.33
+      ],
+      "place": 6698,
+      "country": "BR",
+      "localTrips": 738912.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "lzi",
+      "name": "Luziânia",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.9583,
+        "lat": -16.1483
+      },
+      "center": [
+        -47.9583,
+        -16.1483
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.421,
+        -17.025,
+        -47.621,
+        -16.027
+      ],
+      "place": 6699,
+      "country": "BR",
+      "localTrips": 759473.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cni",
+      "name": "Canindé",
+      "kind": "zone",
+      "origin": {
+        "lon": -39.3177,
+        "lat": -4.3568
+      },
+      "center": [
+        -39.3177,
+        -4.3568
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -39.809,
+        -4.768,
+        -37.798,
+        -3.988
+      ],
+      "place": 6701,
+      "country": "BR",
+      "localTrips": 664312.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cla",
+      "name": "Catalão",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.9301,
+        "lat": -18.1563
+      },
+      "center": [
+        -47.9301,
+        -18.1563
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.944,
+        -18.519,
+        -47.245,
+        -16.713
+      ],
+      "place": 6702,
+      "country": "BR",
+      "localTrips": 759157.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "brs",
+      "name": "Breves",
+      "kind": "zone",
+      "origin": {
+        "lon": -50.4859,
+        "lat": -1.6783
+      },
+      "center": [
+        -50.4859,
+        -1.6783
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.403,
+        -5.17,
+        -48.851,
+        0.715
+      ],
+      "place": 6703,
+      "country": "BR",
+      "localTrips": 897684.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "dem",
+      "name": "Delmiro Gouveia",
+      "kind": "zone",
+      "origin": {
+        "lon": -38.0053,
+        "lat": -9.3775
+      },
+      "center": [
+        -38.0053,
+        -9.3775
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -38.257,
+        -9.85,
+        -36.807,
+        -8.828
+      ],
+      "place": 6704,
+      "country": "BR",
+      "localTrips": 616807.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mnc",
+      "name": "Manacapuru",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.6217,
+        "lat": -3.2883
+      },
+      "center": [
+        -60.6217,
+        -3.2883
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.047,
+        -5.824,
+        -59.651,
+        -1.383
+      ],
+      "place": 6705,
+      "country": "BR",
+      "localTrips": 595486.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "alt",
+      "name": "Alta Floresta",
+      "kind": "zone",
+      "origin": {
+        "lon": -56.0718,
+        "lat": -9.841
+      },
+      "center": [
+        -56.0718,
+        -9.841
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.621,
+        -13.289,
+        -53.568,
+        -8.78
+      ],
+      "place": 6706,
+      "country": "BR",
+      "localTrips": 582822.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cmb",
+      "name": "Corumbá",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.6347,
+        "lat": -19.0149
+      },
+      "center": [
+        -57.6347,
+        -19.0149
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -58.189,
+        -22.2,
+        -55.045,
+        -17.148
+      ],
+      "place": 6708,
+      "country": "BR",
+      "localTrips": 524522.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "crz",
+      "name": "Cruzeiro do Sul",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6609,
+        "lat": -7.6232
+      },
+      "center": [
+        -72.6609,
+        -7.6232
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.002,
+        -10.084,
+        -69.302,
+        -6.32
+      ],
+      "place": 6709,
+      "country": "BR",
+      "localTrips": 509219.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "itm",
+      "name": "Itumbiara",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.2313,
+        "lat": -18.4121
+      },
+      "center": [
+        -49.2313,
+        -18.4121
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -52.521,
+        -19.517,
+        -48.78,
+        -17.558
+      ],
+      "place": 6710,
+      "country": "BR",
+      "localTrips": 535306.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "fom",
+      "name": "Formosa",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.3371,
+        "lat": -15.5327
+      },
+      "center": [
+        -47.3371,
+        -15.5327
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.117,
+        -16.056,
+        -45.888,
+        -12.987
+      ],
+      "place": 6712,
+      "country": "BR",
+      "localTrips": 408395.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sfl",
+      "name": "São Félix do Xingu",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.9847,
+        "lat": -6.6335
+      },
+      "center": [
+        -51.9847,
+        -6.6335
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.489,
+        -9.792,
+        -50.489,
+        -5.131
+      ],
+      "place": 6715,
+      "country": "BR",
+      "localTrips": 216115.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "tbt",
+      "name": "Tabatinga",
+      "kind": "zone",
+      "origin": {
+        "lon": -69.9365,
+        "lat": -4.2192
+      },
+      "center": [
+        -69.9365,
+        -4.2192
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -71.333,
+        -6.747,
+        -67.728,
+        -2.369
+      ],
+      "place": 6717,
+      "country": "BR",
+      "localTrips": 292343.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bbx",
+      "name": "Borba",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.5904,
+        "lat": -4.3892
+      },
+      "center": [
+        -59.5904,
+        -4.3892
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.311,
+        -6.887,
+        -58.086,
+        -3.22
+      ],
+      "place": 6719,
+      "country": "BR",
+      "localTrips": 154258.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "soo",
+      "name": "São José do Rio Preto",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.3972,
+        "lat": -20.762
+      },
+      "center": [
+        -49.3972,
+        -20.762
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.129,
+        -21.383,
+        -48.766,
+        -19.764
+      ],
+      "place": 6720,
+      "country": "BR",
+      "localTrips": 2278430.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "soc",
+      "name": "Sorocaba",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.4709,
+        "lat": -23.46
+      },
+      "center": [
+        -47.4709,
+        -23.46
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.928,
+        -24.153,
+        -46.964,
+        -23.173
+      ],
+      "place": 6721,
+      "country": "BR",
+      "localTrips": 2170188.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "soa",
+      "name": "São José dos Campos",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.8876,
+        "lat": -23.1927
+      },
+      "center": [
+        -45.8876,
+        -23.1927
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.504,
+        -23.676,
+        -45.379,
+        -22.555
+      ],
+      "place": 6722,
+      "country": "BR",
+      "localTrips": 1958121.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mnt",
+      "name": "Montes Claros",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.8698,
+        "lat": -16.7564
+      },
+      "center": [
+        -43.8698,
+        -16.7564
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.035,
+        -18.014,
+        -42.71,
+        -14.213
+      ],
+      "place": 6723,
+      "country": "BR",
+      "localTrips": 1888113.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pia",
+      "name": "Piracicaba",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.6619,
+        "lat": -22.7503
+      },
+      "center": [
+        -47.6619,
+        -22.7503
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.785,
+        -23.949,
+        -47.47,
+        -22.342
+      ],
+      "place": 6724,
+      "country": "BR",
+      "localTrips": 1776691.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bab",
+      "name": "Bauru",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.1065,
+        "lat": -22.3084
+      },
+      "center": [
+        -49.1065,
+        -22.3084
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -49.793,
+        -22.871,
+        -48.023,
+        -21.732
+      ],
+      "place": 6725,
+      "country": "BR",
+      "localTrips": 1567331.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jux",
+      "name": "Jundiaí",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.872,
+        "lat": -23.176
+      },
+      "center": [
+        -46.872,
+        -23.176
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.049,
+        -23.345,
+        -46.192,
+        -22.903
+      ],
+      "place": 6726,
+      "country": "BR",
+      "localTrips": 1629618.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "caz",
+      "name": "Campos dos Goytacazes",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.3285,
+        "lat": -21.734
+      },
+      "center": [
+        -41.3285,
+        -21.734
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.455,
+        -22.123,
+        -40.937,
+        -20.745
+      ],
+      "place": 6727,
+      "country": "BR",
+      "localTrips": 1505594.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "prt",
+      "name": "Presidente Prudente",
+      "kind": "zone",
+      "origin": {
+        "lon": -51.3824,
+        "lat": -22.1419
+      },
+      "center": [
+        -51.3824,
+        -22.1419
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.129,
+        -22.811,
+        -50.465,
+        -21.032
+      ],
+      "place": 6728,
+      "country": "BR",
+      "localTrips": 1478690.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "frc",
+      "name": "Franca",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.4219,
+        "lat": -20.4965
+      },
+      "center": [
+        -47.4219,
+        -20.4965
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.475,
+        -21.06,
+        -47.076,
+        -19.96
+      ],
+      "place": 6729,
+      "country": "BR",
+      "localTrips": 1214386.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ara",
+      "name": "Araçatuba",
+      "kind": "zone",
+      "origin": {
+        "lon": -50.4061,
+        "lat": -21.2103
+      },
+      "center": [
+        -50.4061,
+        -21.2103
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.412,
+        -21.958,
+        -49.264,
+        -17.89
+      ],
+      "place": 6730,
+      "country": "BR",
+      "localTrips": 2042333.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "lih",
+      "name": "Linhares",
+      "kind": "zone",
+      "origin": {
+        "lon": -40.0501,
+        "lat": -19.4034
+      },
+      "center": [
+        -40.0501,
+        -19.4034
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.436,
+        -20.306,
+        -39.644,
+        -17.873
+      ],
+      "place": 6731,
+      "country": "BR",
+      "localTrips": 1733889.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "our",
+      "name": "Ourinhos",
+      "kind": "zone",
+      "origin": {
+        "lon": -49.8597,
+        "lat": -22.9589
+      },
+      "center": [
+        -49.8597,
+        -22.9589
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -51.395,
+        -25.027,
+        -48.963,
+        -22.482
+      ],
+      "place": 6732,
+      "country": "BR",
+      "localTrips": 1479580.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "vax",
+      "name": "Varginha",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.4211,
+        "lat": -21.5677
+      },
+      "center": [
+        -45.4211,
+        -21.5677
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.379,
+        -22.04,
+        -44.422,
+        -20.632
+      ],
+      "place": 6733,
+      "country": "BR",
+      "localTrips": 1459512.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "cco",
+      "name": "Cachoeiro de Itapemirim",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.1116,
+        "lat": -20.8449
+      },
+      "center": [
+        -41.1116,
+        -20.8449
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -41.9,
+        -21.336,
+        -40.355,
+        -20.179
+      ],
+      "place": 6734,
+      "country": "BR",
+      "localTrips": 1364820.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bac",
+      "name": "Barbacena",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.7686,
+        "lat": -21.2103
+      },
+      "center": [
+        -43.7686,
+        -21.2103
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.841,
+        -21.662,
+        -43.032,
+        -20.103
+      ],
+      "place": 6735,
+      "country": "BR",
+      "localTrips": 1342906.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "jna",
+      "name": "Janaúba",
+      "kind": "zone",
+      "origin": {
+        "lon": -43.308,
+        "lat": -15.7952
+      },
+      "center": [
+        -43.308,
+        -15.7952
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.929,
+        -17.385,
+        -39.837,
+        -14.63
+      ],
+      "place": 6736,
+      "country": "BR",
+      "localTrips": 1270481.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "see",
+      "name": "Sete Lagoas",
+      "kind": "zone",
+      "origin": {
+        "lon": -44.2232,
+        "lat": -19.4282
+      },
+      "center": [
+        -44.2232,
+        -19.4282
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.266,
+        -20.103,
+        -43.694,
+        -17.409
+      ],
+      "place": 6737,
+      "country": "BR",
+      "localTrips": 1101744.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "nof",
+      "name": "Nova Friburgo",
+      "kind": "zone",
+      "origin": {
+        "lon": -42.5286,
+        "lat": -22.2918
+      },
+      "center": [
+        -42.5286,
+        -22.2918
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -43.279,
+        -22.75,
+        -42.147,
+        -21.679
+      ],
+      "place": 6738,
+      "country": "BR",
+      "localTrips": 1050352.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "scr",
+      "name": "São Carlos",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.8881,
+        "lat": -22.0419
+      },
+      "center": [
+        -47.8881,
+        -22.0419
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.348,
+        -22.525,
+        -46.934,
+        -21.376
+      ],
+      "place": 6739,
+      "country": "BR",
+      "localTrips": 1007679.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pou",
+      "name": "Pouso Alegre",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.9383,
+        "lat": -22.2251
+      },
+      "center": [
+        -45.9383,
+        -22.2251
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.778,
+        -22.941,
+        -45.304,
+        -21.839
+      ],
+      "place": 6740,
+      "country": "BR",
+      "localTrips": 997224.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pig",
+      "name": "Pindamonhangaba",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.5004,
+        "lat": -22.9505
+      },
+      "center": [
+        -45.5004,
+        -22.9505
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.69,
+        -23.089,
+        -44.141,
+        -22.385
+      ],
+      "place": 6741,
+      "country": "BR",
+      "localTrips": 989960.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "tat",
+      "name": "Taubaté",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.5652,
+        "lat": -23.009
+      },
+      "center": [
+        -45.5652,
+        -23.009
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -45.745,
+        -23.779,
+        -44.603,
+        -22.77
+      ],
+      "place": 6742,
+      "country": "BR",
+      "localTrips": 1035494.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "goa",
+      "name": "Governador Valadares",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.9479,
+        "lat": -18.8414
+      },
+      "center": [
+        -41.9479,
+        -18.8414
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.599,
+        -19.962,
+        -40.888,
+        -18.199
+      ],
+      "place": 6743,
+      "country": "BR",
+      "localTrips": 869134.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pox",
+      "name": "Passos",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.6004,
+        "lat": -20.7122
+      },
+      "center": [
+        -46.6004,
+        -20.7122
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.328,
+        -21.652,
+        -46.109,
+        -20.151
+      ],
+      "place": 6744,
+      "country": "BR",
+      "localTrips": 806482.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "bed",
+      "name": "Bebedouro",
+      "kind": "zone",
+      "origin": {
+        "lon": -48.4714,
+        "lat": -20.9695
+      },
+      "center": [
+        -48.4714,
+        -20.9695
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.798,
+        -21.731,
+        -47.36,
+        -20.677
+      ],
+      "place": 6745,
+      "country": "BR",
+      "localTrips": 838115.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "mce",
+      "name": "Macaé",
+      "kind": "zone",
+      "origin": {
+        "lon": -41.7768,
+        "lat": -22.3584
+      },
+      "center": [
+        -41.7768,
+        -22.3584
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -42.324,
+        -22.618,
+        -41.113,
+        -21.785
+      ],
+      "place": 6746,
+      "country": "BR",
+      "localTrips": 863174.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "pod",
+      "name": "Poços de Caldas",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.5513,
+        "lat": -21.7922
+      },
+      "center": [
+        -46.5513,
+        -21.7922
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.254,
+        -22.166,
+        -46.06,
+        -21.341
+      ],
+      "place": 6747,
+      "country": "BR",
+      "localTrips": 818989.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ril",
+      "name": "Rio Claro",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.5835,
+        "lat": -22.4334
+      },
+      "center": [
+        -47.5835,
+        -22.4334
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.851,
+        -22.625,
+        -47.155,
+        -22.045
+      ],
+      "place": 6748,
+      "country": "BR",
+      "localTrips": 787751.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "lir",
+      "name": "Limeira",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.4112,
+        "lat": -22.6085
+      },
+      "center": [
+        -47.4112,
+        -22.6085
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.601,
+        -22.757,
+        -46.996,
+        -22.265
+      ],
+      "place": 6749,
+      "country": "BR",
+      "localTrips": 669904.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "muc",
+      "name": "Mogi Guaçu",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.9236,
+        "lat": -22.3334
+      },
+      "center": [
+        -46.9236,
+        -22.3334
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.263,
+        -22.701,
+        -46.578,
+        -22.045
+      ],
+      "place": 6750,
+      "country": "BR",
+      "localTrips": 642001.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "brn",
+      "name": "Bragança Paulista",
+      "kind": "zone",
+      "origin": {
+        "lon": -46.5486,
+        "lat": -22.9422
+      },
+      "center": [
+        -46.5486,
+        -22.9422
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.952,
+        -23.07,
+        -46.325,
+        -22.45
+      ],
+      "place": 6751,
+      "country": "BR",
+      "localTrips": 551174.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "ini",
+      "name": "Indaiatuba",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.2395,
+        "lat": -23.1259
+      },
+      "center": [
+        -47.2395,
+        -23.1259
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -47.326,
+        -23.261,
+        -46.975,
+        -22.979
+      ],
+      "place": 6752,
+      "country": "BR",
+      "localTrips": 467143.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "and",
+      "name": "Angra dos Reis",
+      "kind": "zone",
+      "origin": {
+        "lon": -44.2998,
+        "lat": -22.9839
+      },
+      "center": [
+        -44.2998,
+        -22.9839
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -44.909,
+        -23.388,
+        -43.773,
+        -22.819
+      ],
+      "place": 6753,
+      "country": "BR",
+      "localTrips": 410704.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sro",
+      "name": "Sertãozinho",
+      "kind": "zone",
+      "origin": {
+        "lon": -47.9824,
+        "lat": -21.1272
+      },
+      "center": [
+        -47.9824,
+        -21.1272
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -48.207,
+        -21.237,
+        -47.651,
+        -20.857
+      ],
+      "place": 6754,
+      "country": "BR",
+      "localTrips": 311617.0,
+      "realm": "brazil"
+    },
+    {
+      "id": "sot",
+      "name": "São Sebastião",
+      "kind": "zone",
+      "origin": {
+        "lon": -45.4204,
+        "lat": -23.8113
+      },
+      "center": [
+        -45.4204,
+        -23.8113
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -46.263,
+        -24.132,
+        -44.987,
+        -23.625
+      ],
+      "place": 6755,
+      "country": "BR",
+      "localTrips": 264540.0,
+      "realm": "brazil"
     }
   ]
 }

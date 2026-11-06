@@ -77,6 +77,7 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 | islands | `contiguous` (10 km of water at most between units) |
 | most land settled, but river or coast towns of 50,000+ dead under the 20 a km2 floor | `min_density` 10, as Indonesia's Kalimantan and Papua |
 | huge desert or mountain units, each round one town of 50,000-130,000, dead under the floor (Mexico's north: 6.9M people) | `min_density` 0, as `MEX` |
+| settled land at 10-20 a km2 round a roadless interior (Brazil: the default left 30.6M dead; no floor made 29 Amazon zones over 100,000 km2; `join_km` 150 left 72 interior zones under 0.5M) | `reach` without `join_km`, as `BRA` |
 | a thin country of coast and valley towns, units finer than districts (New Zealand's wards) | `min_density` 0, `group_level` 1, `join_km` long enough to keep the big towns' zones apart (250 km), as `NZL` |
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
@@ -226,7 +227,10 @@ Done when: every row is gated, dead space, or parked with a filed task.
 ## 7. Join (once)
 
 Only while no other run, join or terrain job writes `data/packs` or `data/terrain`. Claim at least 6
-cores (a join on 2 timed out). `<tc>\backup.py T### prejoin XX,<neighbours>`, then a `join.cmd` as the
+cores (a join on 2 timed out). A country whose built packs sum over 400,000 gravity zones (each pack's `zones` in
+`data/packs/<id>.json`; Brazil's 177 rows held 934,191) is refused by the solve and every row parks: before the join,
+give it `world_plan.SOLVE_REGIONS` (first-level units to regions of at most about 300,000, twin cities inside one),
+a hand-built pack its entry in `intercity.SOLVE_REGION_PACKS`, and each row its `solve_region` under the plan lock. `<tc>\backup.py T### prejoin XX,<neighbours>`, then a `join.cmd` as the
 .cmd in 5:
 
     <tw>\pipeline\world_run.py join --countries XX[,YY] --jobs N > artifacts\trainworld\t###-join.log 2>&1

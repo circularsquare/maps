@@ -1095,7 +1095,9 @@ class Run:
         if self.stop_asked():
             return
         print(f"  {cid} {r['name']}: building", flush=True)
-        if r["status"] == "planned":
+        # a parked row is built afresh too: one parked before its build (an extract that failed to read) kept an
+        # earlier row's caches of its id, and Brazil's sudeste rows shipped with European jobs and terrain (T-2437)
+        if r["status"] in ("planned", "parked"):
             self.clear_row_caches(cid)
         self.set_row(cid, run_batch=self.batch, reason=None, steps=None, gate=None, parked=None)
         L = self.logs / cid
@@ -1121,6 +1123,11 @@ class Run:
                 self.set_row(cid, steps=steps)
                 self.park(cid, f"{s} failed: {str(tail)[-400:]}")
                 return
+        old = self.reused_caches(cid, t0)
+        if old:
+            self.set_row(cid, steps=steps)
+            self.park(cid, f"built on caches older than its build, an earlier row's of its id: {', '.join(old)[:300]}")
+            return
         self.set_row(cid, "built", steps=steps, built=datetime.datetime.now().isoformat(timespec="seconds"))
         with self.lock:
             self.streak = (None, 0)
@@ -1130,8 +1137,9 @@ class Run:
 
     # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern; the
     # terrain grid too, which zone_terrain.py makes only where none is (T-1986: Australia's lnc)
-    ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz")),
-                  ("data/raw/ca", ("osm_jobs_{}.csv.gz",)), ("data/raw", ("osm_places_{}.json",)),
+    ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz", "lsoa2021_bgc_{}.json")),
+                  ("data/raw/ca", ("osm_jobs_{}.csv.gz",)),
+                  ("data/raw", ("osm_places_{}.json", "{0}/{0}_plan_setores.gpkg")),  # brazil's tracts (T-2437)
                   ("data/raw/t142b", ("osm_*_{}.json", "osm_*_{}.json.gz")),
                   ("data/raw/t196", ("osm_*_{}.json", "osm_*_{}.json.gz")),
                   ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")),
@@ -1150,6 +1158,23 @@ class Run:
                     gone.append(p.name)
         if gone:
             print(f"  {cid}: cleared {len(gone)} old caches ({', '.join(gone)[:200]})", flush=True)
+
+    # T-2437: besides ROW_CACHES, any file named for the id in the per-city cache folders, so a cache kind added later
+    # and not listed there is caught too
+    ID_FILES = (("data/raw/tier0", "*_{}.*"), ("data/raw/ca", "*_{}.*"), ("data/raw/t142b", "*_{}.*"),
+                ("data/raw/t196", "*_{}.*"), ("data/raw", "{}/*"))
+
+    def reused_caches(self, cid, t0):
+        """The id's cache files older than this build's start: an earlier row's, which the build read back
+        (T-2437: rows parked before their build skipped clear_row_caches and shipped with European OSM jobs)."""
+        old = set()
+        pats = [(d, p) for d, ps in self.ROW_CACHES for p in ps] + list(self.ID_FILES)
+        for d, pat in pats:
+            base = (self.root if d in ("data/work", "data/terrain") else REAL) / d
+            for p in base.glob(pat.format(cid)):
+                if p.is_file() and p.stat().st_mtime < t0 - 60:
+                    old.add(p.name)
+        return sorted(old)
 
     # T-2554: a build's hand-offs to its own later steps (build_city to the gravity, routes to the pack);
     # nothing reads them once the row ships, and every build writes them again

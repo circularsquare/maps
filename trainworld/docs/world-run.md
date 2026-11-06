@@ -104,9 +104,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   one deep (T-1980): each runs in its own thread holding its extracts' locks; region k+1 downloads
   and reads once region k's builds have started (never two reads ahead: each GDAL read commits about
   6 GB, T-1080), and builds once region k's builds are done, while k's last gate chunk runs.
-- **Per row**: a `planned` row (new, or its units changed) first loses the per-city caches named
-  after its id, which an earlier row of that id or its old outline left (T-1743, T-891):
-  `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `osm_*_<id>.json.gz` (older ones `.json`) in
+- **Per row**: a `planned` or `parked` row (new, its units changed, or parked before or after a build) first loses the
+  per-city caches named after its id, which an earlier row of that id or its old outline left (T-1743, T-891, T-2437):
+  `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `lsoa2021_bgc_<id>.json`, `data/raw/<id>/<id>_plan_setores.gpkg`, `osm_*_<id>.json.gz` (older ones `.json`) in
   `data/raw/t142b` and `t196`, `osm_places_<id>.json`, `data/work/<id>`'s outline, units and tier 0 signals, and
   `data/terrain/<id>.terrain` (`zone_terrain.py` makes a grid only where none is, T-1986). Then
   `build_city`, `pack_gate stations` (the gate's station file, `docs/adding-a-city-by-hand.md` 8), `places`,
@@ -117,7 +117,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it; a region's gate gets at least 30 s a row, and its
   browser check prints each row's result as it lands, T-1308) dumps
   every thread's stack into its log, again after each further 20 silent minutes, and the runner
-  prints a line saying so. Status `built`.
+  prints a line saying so. A build that leaves any file of its id's caches older than its own start (those above, any
+  `*_<id>.*` in the per-city cache folders, `data/raw/<id>/`) parks, naming the files: it read an earlier row's
+  (`reused_caches`, T-2437). Status `built`. An AWS landing (`tools/aws/land.py`) clears the same caches first.
 - **Gate**: the rates test the gate runs (`every_pack_everyday`) is built once at
   the run's start from the sim the gate reads (`TW_SIM_DIR`, else the tree's sim/) and copied to
   `data/work/world_run/everyday-<batch>.exe`, so a change to sim/ mid-run recompiles nothing
@@ -300,7 +302,7 @@ sources. Each field comes from the row or a rule:
   | france | outline (départements from their communes), population by commune, INSEE jobs by commune of work, work from home 0.12 | NUTS-3 units to départements by name |
   | germany | outline (Kreise, VG250), Zensus 100 m population scaled to Gemeinden, Pendlerrechnung jobs, work from home 0.10 | NUTS-3 units to Kreise by VG250's `NUTS` |
   | usa | outline (TIGER/Line counties drawn, the cartographic ones as footprint), people by 2020 block less institutions, LODES WAC jobs and sectors (newest year back to 2016), ACS work from home over the row's counties, the US curve and state factor 0.23 with each cell's state as its region; per-state caches in `data/work/usa/` (`usa.py state <fips>` ahead of a run, `usa.py check <id>` for figures by county) | US rows (unit set USA, county GEOIDs); Puerto Rico rows (PRI) take the outline, people and work from home only |
-  | brazil | population by 2022 census tract | the states of the plan's municipalities |
+  | brazil | population by 2022 census tract (the states' GeoPackages in `data/raw/tier0/brazil/`, 1.5 GB) | every Brazilian row, zones too (T-2437) |
   | canada | everyday destinations by census tract of work | any province |
   | australia | population by 2021 census SA1 (ABS ArcGIS layer, no account) | every Australian row, zones too (T-1857) |
   | china, india, korea, nigeria | none | |

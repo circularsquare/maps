@@ -5,6 +5,14 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+- 2026-11-06 (agent's call, T-2437): Brazil's joint commutes are solved by IBGE's five macro-regions
+  (`SOLVE_REGIONS["BRA"]`; one group held 934,191 gravity zones, the guard is 400,000); twin cities across state lines
+  fall inside one region, while commutes across macro-region lines (Minas-Bahia, Goias-Minas) are solved with the
+  neighbour held fixed, as China's provinces are. notes/T-2437.md.
+- 2026-11-06 (agent's call, T-2437, T-2594): a world-run build parks its row when any of its id's caches is older than
+  the build's start (`world_run.reused_caches`), and parked rows clear their caches as planned ones do; AWS landings
+  clear them too. 36 Brazilian rows had shipped on European rows' caches of the same ids, past every gate check.
+  notes/T-2437.md.
 - 2026-11-05 (agent's call, T-2437): Brazil is zoned on Canada's reach rule without `join_km` (`ZONE_RULES["BRA"]`):
   the default 20 a km2 left 30.6M people dead, no floor made 29 roadless Amazon zones over 100,000 km2, and `join_km` 150
   kept 72 interior zones under 0.5M. 62 Amazon municipios (1.86M people, Altamira and Itaituba among them) are dead space,

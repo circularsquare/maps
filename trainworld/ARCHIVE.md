@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2437 Brazil, the whole country (2026-11-06, agent brazil): 19 metros and 158 zones on the 2022 census by tract (rule `BRA`: reach without `join_km`; 62 Amazon municipios dead), all 177 shipped in five solve regions by macro-region; sao kept. Runner fixes: parked rows clear their id's caches, a guard on reused caches. notes/T-2437.md.
+- T-2594 21 US zones' stale terrain grids (2026-11-06, agent brazil): all 21 differed from their zones (an earlier row's grids under AWS-landed rows) and were rebuilt; `tools/aws/land.py` clears a landed id's caches. notes/T-2437.md.
 - T-2596 Bubble sums of the zones on screen only before a load's last round (2026-11-06, agent workerbal, tree): each worker spent 4-6 s a round pushing all 82 zones' on Anita's NA save; whole solve 120-127 s, was 131-137 s (busy machine), same figures. `?perfOff=allSums`. notes/T-2553.md.
 - T-2532 An edit's bubbles with its local result (2026-11-06, agent workerbal, tree): the local solve keeps and pushes the touched zones' bubble sums; Anita's NA save, bubbles 23-31 s after the edit, were 95 s (the final). notes/T-2553.md.
 - T-2553 Balance the periods between solving workers (2026-11-06, agent workerbal, tree): closed, no change. Each period is ~60% market; the best move keeping figures exact (one market to worker 1) measured ~3 s of 104 s, inside noise. notes/T-2553.md.

@@ -205,7 +205,10 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # the north's municipios are huge, each round one town, and at the default 20 a km2 556 of 2,453 were
               # dead space with 6.9M people (Ciudad Acuna, Caborca, Ramos Arizpe beside Saltillo, Puerto Penasco);
               # `fua_whole` 0.3M: at 0.5M Zacatecas and Guadalupe, one town, were two zones
-              "MEX": {"min_density": 0.0, "plan_units": True, "fua_whole": 300_000, "module": "mexico", "task": "T-2436"}}
+              "MEX": {"min_density": 0.0, "plan_units": True, "fua_whole": 300_000, "module": "mexico", "task": "T-2436"},
+              "BRA": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
+                      "reach": (150.0, 100_000), "fua_whole": 500_000, "plan_units": True, "module": "brazil",
+                      "task": "T-2437"}}
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -267,7 +270,16 @@ SOLVE_REGIONS = {"CHN": {"Beijing Municipality": "jingjinji", "Tianjin Municipal
                              "Iowa", "Kansas", "Minnesota", "Missouri", "Nebraska", "North Dakota", "South Dakota")},
                          **{s: "mountain" for s in (
                              "Arizona", "Colorado", "Idaho", "Montana", "Nevada", "New Mexico", "Utah", "Wyoming")},
-                         **{s: "pacific" for s in ("Alaska", "California", "Hawaii", "Oregon", "Washington")}}}
+                         **{s: "pacific" for s in ("Alaska", "California", "Hawaii", "Oregon", "Washington")}},
+                 # Brazil by IBGE's macro-regions (T-2437: one group held 934,191 gravity zones; the largest region,
+                 # the Nordeste, 277,000); geoBoundaries' spellings, "Jeneiro" and "Granda" included
+                 "BRA": {**{s: "sudeste" for s in ("Sao Paulo", "Rio de Jeneiro", "Minas Gerais", "Espirito Santo")},
+                         **{s: "sul" for s in ("Parana", "Santa Catarina", "Rio Grande do Sul")},
+                         **{s: "nordeste" for s in ("Bahia", "Sergipe", "Alagoas", "Pernambuco", "Paraiba",
+                                                    "Rio Granda do Norte", "Ceara", "Piaui", "Maranhao")},
+                         **{s: "norte" for s in ("Para", "Amazonas", "Acre", "Rondonia", "Roraima", "Amapa", "Tocantins")},
+                         **{s: "centro-oeste" for s in ("Goias", "Distrito Federal", "Mato Grosso",
+                                                        "Mato Grosso do Sul")}}}
 
 # What a city in each country can have (docs/data-register.md "Countries and their procedure");
 # every other country is archetype D. England's module covers England's ITL3 units only.

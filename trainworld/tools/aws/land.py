@@ -28,8 +28,23 @@ import awslib as A
 TW = A.TW
 sys.path.insert(0, str(TW / "pipeline"))
 import shared_lock  # noqa: E402
+from world_run import Run  # noqa: E402
 
 PACK = (".json", ".bin", ".boundary.geojson", ".places.json")
+
+
+def clear_caches(cid, dry):
+    """The id's per-row caches here, as world_run's build_row clears them (T-2594): an earlier row's terrain grid
+    stayed under 21 landed US zones, since zone_terrain makes a grid only where none is. The landing's own files
+    are placed after."""
+    gone = []
+    for d, pats in Run.ROW_CACHES:
+        for pat in pats:
+            for p in (TW / d).glob(pat.format(cid)):
+                gone.append(p.name)
+                if not dry:
+                    p.unlink()
+    return gone
 
 
 def busy(ids):
@@ -117,6 +132,7 @@ def main(argv):
             if why:
                 skipped.append((name, cid, why))
                 continue
+            cleared = clear_caches(cid, dry)
             kept = []
             for f in files:
                 dst = A.MAPS / f
@@ -130,7 +146,8 @@ def main(argv):
             rec["landed"] = {"run": run, "name": name, "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
             records[cid] = rec
             landed.append(cid)
-            print(f"  {name} {cid}: {len(files)} files{'; state caches kept as here (differ): ' + ' '.join(kept) if kept else ''}")
+            print(f"  {name} {cid}: {len(files)} files{'; state caches kept as here (differ): ' + ' '.join(kept) if kept else ''}"
+                  f"{'; old caches cleared: ' + ' '.join(cleared) if cleared else ''}")
         for f in man["files"]:
             if f.startswith("artifacts/") and not dry:
                 dst = A.MAPS / f

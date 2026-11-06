@@ -66,8 +66,10 @@ def admin_areas(extract):
     out = admin_path(extract)
     if not os.path.exists(out):
         pbf = routes.download(extract)
+        # a broken relation (a 2-point ring, Brazil's sudeste 2026-11-05, T-2437) comes back as no geometry
         df = pyogrio.read_dataframe(pbf, layer="multipolygons", columns=["osm_id", "name", "admin_level", "other_tags"],
-                                    where="boundary = 'administrative' AND admin_level IN ('3','4','5','6','7','8','9','10','11')")
+                                    where="boundary = 'administrative' AND admin_level IN ('3','4','5','6','7','8','9','10','11')",
+                                    on_invalid="ignore")
         df["name_en"] = [routes.tag(t, "name:en") for t in df.other_tags]
         df = df.drop(columns=["other_tags"])
         df = df[df.geometry.notna()]
