@@ -27,12 +27,14 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   a9b36a2c84531c427 (~430k tokens, retire), a2e305ad8c2b66a43.
 - T-085 landed (e1769f3e): canoe water and river steps on our mask, 0 mismatches; agent
   a75105d4c451ffaf1 idle (~420k tokens, retire).
-- T-082 canoe at L10 in river country: T-080's agent a754c1f8965d2be43 (resumed ~04:00). Owns
-  tools/canoe/, canoe data, js/canoe.js, docs/canoe.md, notes/T-082.md. Ledger iso-t082.
+- T-082 landed: coarse canoe rivers = L1 network merged per cell, access cost cfg.access 0.5;
+  Coari L1/L10 2.08 -> 0.90; smoke 17/17. Agent a754c1f8965d2be43 idle at ~630k tokens: retire
+  it; brief T-081 fresh from notes/T-080.md and T-082.md. T-088 lake country filed.
+- No agents running on isochrone.
 - New "Roads, towns" hover string for Anita: "...slowed by height and by slope up to a 10% grade."
 
 ## Next
-1. Land T-082.
+1. Wait for Anita on T-081 and T-011 (both asked, both recommended).
 2. T-011 90 m terrain (Anita queued it after roads): asked her whether to start the downloads
    (100-130 GB streamed); T-084 must land first (both touch the terrain side); Anita asked
    for a pause on big downloads once on 2026-11-05 (then said resume). Then T-039, T-057

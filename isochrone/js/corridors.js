@@ -5,6 +5,7 @@
 // polylines with a strength, log of the count.
 import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_GRID, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
+import { eachCanoeNode, canoeFrom } from './canoe.js';
 
 export const STEPS = 8;      // strength steps; a polyline is a run of one step
 // Speed classes (km/h) a line's colour stands for: below the first edge is class 0, at or above the
@@ -171,6 +172,7 @@ function links(L, canoe, par, cnt, dtl, nr, roots) {
     const { t, w, pred } = L.res;
     const maxH = cfg.maxHours;
     const canoeOf = canoe ? L.cn.canoeOf : null, cellOf = canoe ? L.cn.cellOf : null;
+    const extraN = canoe ? L.cn.extraN : null;
     const off = offsets(W);
     let total = 0;
     for (let i = 0; i < nr; i++) {
@@ -187,7 +189,7 @@ function links(L, canoe, par, cnt, dtl, nr, roots) {
             let pc = cell - r * W - DC[code];
             if (pc < 0 || pc >= W) pc = wrap ? (pc + W) % W : pc;
             const pcell = (r - DR[code]) * W + pc;
-            p = (FLIP[code] ? gv !== 0 : gv === 0) ? canoeOf[pcell] : pcell;
+            p = (FLIP[code] ? gv !== 0 : gv === 0) ? (extraN && extraN[pcell] ? canoeFrom(L, L.res, v, code, pcell) : canoeOf[pcell]) : pcell;
         }
         par[v] = p;
         if (p < 0) { dtl[v] = 0; continue; }
@@ -360,7 +362,7 @@ function edgeFlux(L, canoe, coarser, cnt, par, org) {
     const { t, pred } = L.res;
     const canoeOf = canoe ? L.cn.canoeOf : null;
     const cc = C.corr, ct = C.res.t, CW = C.W, CN = C.W * C.H;
-    const ccanoeOf = canoe ? C.cn.canoeOf : null, ccellOf = canoe ? C.cn.cellOf : null;
+    const ccellOf = canoe ? C.cn.cellOf : null;
     const maxH = cfg.maxHours;
     const R = Math.ceil(C.cellDeg / L.cellDeg) + 1 + EDGE;
     const lngIn = (cell) => L.west + ((lngOf(C, cell) - L.west) % 360 + 360) % 360;
@@ -427,18 +429,18 @@ function edgeFlux(L, canoe, coarser, cnt, par, org) {
             const cell = r * CW + c;
             if (inside(cell)) continue;
             if (C.grid[cell] && ct[cell] <= maxH) visit(cell, cell);
-            if (canoe) { const m = ccanoeOf[cell]; if (m >= 0 && ct[m] <= maxH) visit(m, cell); }
+            if (canoe) eachCanoeNode(C.cn, cell, (m) => { if (ct[m] <= maxH) visit(m, cell); });
         }
     }
     return added;
 }
 
-// The river length of the step from cell pc to cell `cell` reached by `code` in time d (two
-// rivers can share a cell pair; the one whose time matches is the one taken).
-function riverKm(cn, pc, cell, code, d) {
+// The river length of the step from node p to node n reached by `code` in time d (river edges are
+// by node, js/canoe.js; the one whose time matches is the one taken).
+function riverKm(cn, p, n, code, d) {
     let best = -1, bd = Infinity;
-    for (let e = cn.rOff[pc], e1 = cn.rOff[pc + 1]; e < e1; e++) {
-        if (cn.rTo[e] !== cell || cn.rCode[e] !== code) continue;
+    for (let e = cn.rOff[p], e1 = cn.rOff[p + 1]; e < e1; e++) {
+        if (cn.rTo[e] !== n || cn.rCode[e] !== code) continue;
         const x = Math.abs(cn.rDt[e] - d);
         if (x < bd) { bd = x; best = e; }
     }
@@ -472,11 +474,7 @@ function edgeSpeeds(L, canoe, nk, kept, mode) {
         if (!(d > 0) || (FLIP[code] && DC[code] === 0 && DR[code] === 0)) continue;
         const cell = n < N ? n : cn.cellOf[n - N], r = (cell / W) | 0;
         let len = -1;
-        if (code >= P_DOWN) {
-            let pc = cell - r * W - DC[code];
-            if (pc < 0 || pc >= W) pc = (pc + W) % W;
-            len = riverKm(cn, (r - DR[code]) * W + pc, cell, code, d);
-        }
+        if (code >= P_DOWN && p >= 0) len = riverKm(cn, p, n, code, d);
         if (len < 0) {
             // a land move's offset from the cells, as its parent may not be the search's (reparent)
             let dc = DC[code], dr = DR[code];
@@ -609,14 +607,12 @@ export function lines(L, canoe, world, coarser) {
 function coarserLines(L, canoe, D, step, xy, off, s, vs) {
     const { W, H, grid } = L;
     const org = L.corr.org, t = L.res.t, maxH = cfg.maxHours;
-    const canoeOf = canoe ? L.cn.canoeOf : null;
     const covered = (x, y) => {
         const c = Math.floor((((x - L.west) % 360) + 360) % 360 / L.cellDeg), r = Math.floor((L.north - y) / L.cellDeg);
         if (r < 0 || r >= H || c >= W) return null;     // outside: drawn by the coarser level itself
         const cell = r * W + c;
         if (grid[cell] && t[cell] <= maxH && org[cell] === 1) return true;
-        const m = canoe ? canoeOf[cell] : -1;
-        return m >= 0 && t[m] <= maxH && org[m] === 1;
+        return canoe && eachCanoeNode(L.cn, cell, (m) => t[m] <= maxH && org[m] === 1);
     };
     for (let i = 0; i + 1 < D.off.length; i++) {
         let run = null;

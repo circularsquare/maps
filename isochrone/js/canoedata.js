@@ -25,7 +25,9 @@ const index = () => indexP || (indexP = fetch(url('index.json')).then(r => {
     return ix;
 }));
 
-// River steps: uint32 n, then cell uint32[n], len uint16[n] (10 m), dir, v (0.01 m/s), cls uint8[n].
+// River steps: uint32 n, then cell uint32[n], len uint16[n] (10 m), dir, v (0.01 m/s), cls uint8[n];
+// at L3 and L10 then slotA, slotB, accA, accB uint8[n] (T-082: which canoe node of its cell each end
+// is on, and that river piece's access, 0.1 km). Without them every end is slot 0, access 0.
 function parseRivers(b) {
     const n = new DataView(b.buffer, b.byteOffset, 4).getUint32(0, true);
     let o = 4;
@@ -33,14 +35,19 @@ function parseRivers(b) {
     const len = new Uint16Array(b.slice(o, o + 2 * n).buffer); o += 2 * n;
     const dir = b.subarray(o, o + n); o += n;
     const v = b.subarray(o, o + n); o += n;
-    const cls = b.subarray(o, o + n);
-    return { n, cell, len, dir, v, cls };
+    const cls = b.subarray(o, o + n); o += n;
+    const more = b.length >= o + 4 * n;
+    const col = () => { const c = b.subarray(o, o + n); o += n; return c; };
+    const [slotA, slotB, accA, accB] = more ? [col(), col(), col(), col()] : [null, null, null, null];
+    return { n, cell, len, dir, v, cls, slotA, slotB, accA, accB };
 }
 
-// Steps as window cells, both ends inside: { a, b (cell indices), dir, km, v (m/s), cls }.
+// Steps as window cells, both ends inside: { a, b (cell indices), dir, km, v (m/s), cls, sa, sb
+// (slots), aa, ab (access, km) }.
 function stepsOut(cap) {
     return { n: 0, a: new Int32Array(cap), b: new Int32Array(cap), dir: new Uint8Array(cap),
-             km: new Float32Array(cap), v: new Float32Array(cap), cls: new Uint8Array(cap) };
+             km: new Float32Array(cap), v: new Float32Array(cap), cls: new Uint8Array(cap),
+             sa: new Uint8Array(cap), sb: new Uint8Array(cap), aa: new Float32Array(cap), ab: new Float32Array(cap) };
 }
 function addSteps(out, rv, toCell) {
     for (let i = 0; i < rv.n; i++) {
@@ -51,6 +58,10 @@ function addSteps(out, rv, toCell) {
         const k = out.n++;
         out.a[k] = ab[0]; out.b[k] = ab[1]; out.dir[k] = rv.dir[i];
         out.km[k] = rv.len[i] * 0.01; out.v[k] = rv.v[i] * 0.01; out.cls[k] = rv.cls[i];
+        if (rv.slotA) {
+            out.sa[k] = rv.slotA[i]; out.sb[k] = rv.slotB[i];
+            out.aa[k] = rv.accA[i] * 0.1; out.ab[k] = rv.accB[i] * 0.1;
+        }
     }
 }
 

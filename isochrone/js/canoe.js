@@ -2,7 +2,7 @@
 // word the search reads (water kind, links, flags), the river steps as out-edges, and the current.
 import { cfg } from './config.js';
 import { FILE_DIRS, CLOSED, CLS } from './canoedata.js';
-import { plainMove, MDC, MDR, P_GRID, P_DOWN, P_UP, NEAR_LAND, NEAR_CANOE, FAR, ON_RIVER } from './search.js';
+import { plainMove, MDC, MDR, P_GRID, P_XFER, P_DOWN, P_UP, NEAR_LAND, NEAR_CANOE, FAR, ON_RIVER } from './search.js';
 
 // file direction -> plain move, and link bits from file order to plain move order
 const DIR_MOVE = FILE_DIRS.map(([dc, dr]) => plainMove(dc, dr));
@@ -61,8 +61,10 @@ function dilate3(a, W, H, wrap) {
 export const PAINT_WATER = 1 << 20;
 
 // data: { kind, shore, links, steps } from canoedata.js; sea: the 0.25 degree sea grid.
-// Sets and returns L.cn = { E, canoeOf, cellOf, info, curr, curKmh, shore, hzr, rOff, rTo, rDt,
-// rCode, rHz, rKm (the step's river length, km) }.
+// Sets and returns L.cn = { E (canoe nodes beyond the cells), E1 (of them, the cells' own; then the
+// further river nodes, extra0[cell] .. + extraN[cell] - 1, T-082), canoeOf, cellOf, acc (km, by node
+// - N, or null), info, curr, curKmh, shore, hzr, rOff (by node), rTo (node), rDt, rCode, rHz, rKm
+// (the step's river length, km) }.
 export function buildCanoe(L, data, sea) {
     const { grid, W, H } = L;
     const N = W * H;
@@ -75,14 +77,18 @@ export function buildCanoe(L, data, sea) {
         const x = Math.floor((L.west + (c + 0.5) * L.cellDeg - sea.west) / sea.deg);
         seaCol[c] = ((x % sea.W) + sea.W) % sea.W;
     }
-    // open river steps
+    // open river steps; a cell's own canoe node carries its slot-0 river piece, and pieces on other
+    // slots (L3, L10: rivers that share the cell without joining, T-082) get nodes of their own
     const open = new Uint8Array(steps.n);
-    const onRiver = new Uint8Array(N);
-    let nOpen = 0;
+    const onRiver = new Uint8Array(N), extraN = new Uint8Array(N);
+    let nOpen = 0, anyAcc = false;
     for (let s = 0; s < steps.n; s++) {
         if (CLOSED[steps.cls[s]] || DIR_MOVE[steps.dir[s]] < 0) continue;
         open[s] = 1; nOpen++;
-        onRiver[steps.a[s]] = 1; onRiver[steps.b[s]] = 1;
+        const a = steps.a[s], b = steps.b[s], sa = steps.sa[s], sb = steps.sb[s];
+        if (steps.aa[s] > 0 || steps.ab[s] > 0) anyAcc = true;
+        if (sa) { if (sa > extraN[a]) extraN[a] = sa; } else onRiver[a] = 1;
+        if (sb) { if (sb > extraN[b]) extraN[b] = sb; } else onRiver[b] = 1;
     }
     // nodes, water kind and current
     const info = new Int32Array(N), curr = new Int32Array(N), canoeOf = new Int32Array(N).fill(-1);
@@ -112,7 +118,7 @@ export function buildCanoe(L, data, sea) {
             if (land) isLand[i] = 1;
             if (ok || onRiver[i]) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
             info[i] = (ok ? k : 0) | (LINK_LUT[data.links[i]] << 8) | (shore[i] >= 20 ? FAR : 0) |
-                      (onRiver[i] ? ON_RIVER : 0) | (!land || kind[i] !== 0 ? PAINT_WATER : 0);
+                      (onRiver[i] || extraN[i] ? ON_RIVER : 0) | (!land || kind[i] !== 0 ? PAINT_WATER : 0);
         }
     }
     // River water no open river step crosses (T-036): the line runs in the next cell, the river's
@@ -156,18 +162,46 @@ export function buildCanoe(L, data, sea) {
         for (let k = 0; k < 8; k++) { const i = nbr(j, k); if (i >= 0 && into(i, j)) { nInto++; info[i] |= ON_RIVER; } }
     }
     for (const j of dead) { canoeOf[j] = j; hasNode[j] = 1; info[j] = (shore[j] >= 20 ? FAR : 0) | (info[j] & ON_RIVER) | PAINT_WATER; }
+    // a cell's further river nodes: extra0[cell] .. extra0[cell] + extraN[cell] - 1 (slots 1, 2, ...)
+    let extra0 = null;
+    const E1 = E;
+    for (let i = 0; i < N; i++) {
+        if (!extraN[i]) continue;
+        if (!extra0) extra0 = new Int32Array(N).fill(-1);
+        extra0[i] = N + E; E += extraN[i]; hasNode[i] = 1;
+    }
     const nearLand = dilate3(isLand, W, H, L.wrap), nearCanoe = dilate3(hasNode, W, H, L.wrap);
     for (let i = 0; i < N; i++) info[i] |= (nearLand[i] ? NEAR_LAND : 0) | (nearCanoe[i] ? NEAR_CANOE : 0);
     const cellOf = new Int32Array(E);
-    for (let i = 0; i < N; i++) if (canoeOf[i] >= N) cellOf[canoeOf[i] - N] = i;
-    // river edges, by source cell: down a -> b, up b -> a; then the edges into dead-end cells
-    const rOff = new Int32Array(N + 1);
-    for (let s = 0; s < steps.n; s++) if (open[s]) { rOff[steps.a[s] + 1]++; rOff[steps.b[s] + 1]++; }
-    for (const j of dead) {
-        for (let k = 0; k < 8; k++) { const i = nbr(j, k); if (i >= 0 && into(i, j)) rOff[i + 1]++; }
+    for (let i = 0; i < N; i++) {
+        if (canoeOf[i] >= N) cellOf[canoeOf[i] - N] = i;
+        for (let q = 0; q < extraN[i]; q++) cellOf[extra0[i] + q - N] = i;
     }
-    for (let i = 0; i < N; i++) rOff[i + 1] += rOff[i];
-    const fill = rOff.slice(0, N);
+    const nodeAt = (cell, slot) => slot ? extra0[cell] + slot - 1 : canoeOf[cell];
+    // access (km) of the river piece on each canoe node of a land cell (T-082): getting in or out
+    // within the cell carries it
+    let acc = null;
+    if (anyAcc) {
+        acc = new Float32Array(E);
+        for (let s = 0; s < steps.n; s++) {
+            if (!open[s]) continue;
+            const na = nodeAt(steps.a[s], steps.sa[s]), nb = nodeAt(steps.b[s], steps.sb[s]);
+            if (na >= N) acc[na - N] = steps.aa[s];
+            if (nb >= N) acc[nb - N] = steps.ab[s];
+        }
+    }
+    // river edges, by source node: down a -> b, up b -> a; then the edges into dead-end cells
+    const M = N + E;
+    const rOff = new Int32Array(M + 1);
+    for (let s = 0; s < steps.n; s++) {
+        if (!open[s]) continue;
+        rOff[nodeAt(steps.a[s], steps.sa[s]) + 1]++; rOff[nodeAt(steps.b[s], steps.sb[s]) + 1]++;
+    }
+    for (const j of dead) {
+        for (let k = 0; k < 8; k++) { const i = nbr(j, k); if (i >= 0 && into(i, j)) rOff[canoeOf[i] + 1]++; }
+    }
+    for (let i = 0; i < M; i++) rOff[i + 1] += rOff[i];
+    const fill = rOff.slice(0, M);
     const nE = 2 * nOpen + nInto;
     const rTo = new Int32Array(nE), rDt = new Float32Array(nE), rCode = new Uint8Array(nE);
     const rHz = new Float32Array(nE), rKm = new Float32Array(nE);
@@ -178,13 +212,13 @@ export function buildCanoe(L, data, sea) {
             const i = nbr(j, k);
             if (i < 0 || !into(i, j)) continue;
             const dx = MDC[k] * (L.dxKm[r] + L.dxKm[r + MDR[k]]) * 0.5, dy = MDR[k] * L.dyKm;
-            const km = Math.sqrt(dx * dx + dy * dy), e = fill[i]++;
+            const km = Math.sqrt(dx * dx + dy * dy), e = fill[canoeOf[i]]++;
             rTo[e] = j; rDt[e] = km / p; rCode[e] = P_GRID + OPP[k]; rHz[e] = rDt[e] * cfg.hz.river; rKm[e] = km;
         }
     }
     for (let s = 0; s < steps.n; s++) {
         if (!open[s]) continue;
-        const a = steps.a[s], b = steps.b[s], m = DIR_MOVE[steps.dir[s]];
+        const a = nodeAt(steps.a[s], steps.sa[s]), b = nodeAt(steps.b[s], steps.sb[s]), m = DIR_MOVE[steps.dir[s]];
         const v = steps.v[s] * 3.6, km = steps.km[s];
         const rate = steps.cls[s] === CLS.rapids ? cfg.hz.rapids : cfg.hz.river;
         let e = fill[a]++;
@@ -192,8 +226,47 @@ export function buildCanoe(L, data, sea) {
         e = fill[b]++;
         rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate; rKm[e] = km;
     }
-    L.cn = { E, canoeOf, cellOf, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr, rOff, rTo, rDt, rCode, rHz, rKm };
+    L.cn = { E, E1, canoeOf, cellOf, extra0, extraN, acc, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr,
+             rOff, rTo, rDt, rCode, rHz, rKm };
     return L.cn;
+}
+
+// The canoe nodes of a cell: its own (canoeOf, -1 if none) and its further river nodes (T-082).
+// fn(node) for each; stops early when fn returns true. Returns whether it stopped.
+export function eachCanoeNode(cn, cell, fn) {
+    const n0 = cn.canoeOf[cell];
+    if (n0 >= 0 && fn(n0)) return true;
+    const k = cn.extraN[cell];
+    for (let q = 0; q < k; q++) if (fn(cn.extra0[cell] + q)) return true;
+    return false;
+}
+
+// The canoe node of cell `pcell` that node n was reached from, by predecessor code `code` (a river
+// step, a transfer from the canoe layer, or a canoe grid move): with several canoe nodes in the cell,
+// the one the search took (least weight plus the edge's, or least weight for a transfer, whose cost
+// is the same from each); else the cell's own.
+export function canoeFrom(L, res, n, code, pcell) {
+    const cn = L.cn, N = L.W * L.H;
+    if (!cn.extraN[pcell] || code < P_XFER) return cn.canoeOf[pcell];   // grid moves leave the cell's own node only
+    const river = code >= P_DOWN;
+    // getting out within the cell carries the node's access (search.js)
+    const out = code === P_XFER + 4 && cn.acc && L.grid[pcell] ? cfg.carry * cfg.access * cfg.inv[L.grid[pcell]] : 0;
+    let best = -1, bw = Infinity;
+    eachCanoeNode(cn, pcell, (m) => {
+        if (!(res.w[m] < Infinity)) return false;
+        if (!river) {
+            const x = res.w[m] + (out && m >= N ? out * cn.acc[m - N] : 0);
+            if (x < bw) { bw = x; best = m; }
+            return false;
+        }
+        for (let e = cn.rOff[m], e1 = cn.rOff[m + 1]; e < e1; e++) {
+            if (cn.rTo[e] !== n || cn.rCode[e] !== code) continue;
+            const x = res.w[m] + cn.rDt[e] + cfg.K * (cfg.hazard ? cn.rHz[e] : 0);
+            if (x < bw) { bw = x; best = m; }
+        }
+        return false;
+    });
+    return best >= 0 ? best : cn.canoeOf[pcell];
 }
 
 // The shore code at a point of a level with a canoe layer, or undefined outside it.

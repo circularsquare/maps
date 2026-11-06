@@ -223,6 +223,9 @@ export async function solve(L, seeds, alive, canoe) {
     const canoeOf = cn && cn.canoeOf, cellOf = cn && cn.cellOf, info = cn && cn.info, curr = cn && cn.curr;
     const rOff = cn && cn.rOff, rTo = cn && cn.rTo, rDt = cn && cn.rDt, rCode = cn && cn.rCode;
     const hzr = cn && cn.hzr, rHz = cn && cn.rHz;
+    // further river nodes of a cell and the access of river nodes on land (js/canoe.js, T-082)
+    const extra0 = cn && cn.extra0, extraN = cn && cn.extraN, acc = cn && cn.acc, accF = f * cfg.access;
+    const firstExtra = cn ? N + cn.E1 : N;
     const cur = cn ? cn.curKmh * 0.5 : 0;
     const p = cfg.paddle, p2 = p * p, invP = 1 / p, xfer = cfg.transfer, sea8 = cfg.sea8;
 
@@ -283,16 +286,20 @@ export async function solve(L, seeds, alive, canoe) {
                 if (r2 < 0 || r2 >= H) continue;
                 let c2 = c + j % 3 - 1;
                 if (c2 < 0 || c2 >= W) { if (!wrap) continue; c2 = (c2 + W) % W; }
-                const cell2 = r2 * W + c2, v = canoeOf[cell2];
+                const cell2 = r2 * W + c2, nx = extraN ? extraN[cell2] : 0;
+                // the cell's own canoe node, then its further river nodes
+                for (let q = 0, v = canoeOf[cell2]; q <= nx; v = extra0 && q < nx ? extra0[cell2] + q : -1, q++) {
                 if (v < 0 || pos[v] === -2) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
                 // a canoe node on a land cell (a river, a strait) is reached overland the whole step:
                 // half a step paddled would let a path hop from river cell to river cell (T-006)
                 const s2 = grid[cell2];
-                const dt = xfer + 0.5 * len * (s2 ? f * (invU + inv[s2]) : f * invU + invP);
+                // within the cell, a coarse river node is reached over its piece's access (T-082)
+                const ac = j === 4 && acc && s2 && v >= N ? accF * acc[v - N] * invU : 0;
+                const dt = xfer + 0.5 * len * (s2 ? f * (invU + inv[s2]) : f * invU + invP) + ac;
                 // getting in pays the land cell's rate (hq / inv) for its hours, plus the land
                 // part of the step as a move (hq is 0 on a water cell)
-                const dh = xfer * hqU / invU + 0.5 * len * f * (hqU + hq[cell2]);
+                const dh = (xfer + ac) * hqU / invU + 0.5 * len * f * (hqU + hq[cell2]);
                 { const nw = wu + dt + K * dh;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
@@ -300,6 +307,7 @@ export async function solve(L, seeds, alive, canoe) {
                     const pv = pos[v];
                     up(pv === -1 ? size++ : pv, v, w[v]);
                   } }
+                }
             }
             continue;
         }
@@ -316,8 +324,9 @@ export async function solve(L, seeds, alive, canoe) {
                 const v = r2 * W + c2, s = grid[v];
                 if (!s || pos[v] === -2) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
-                const dt = xfer + 0.5 * len * (f * inv[s] + fInvU);
-                const hqV = hq[v], dh = xfer * hqV / inv[s] + 0.5 * len * f * (hqV + hqC);
+                const ac = j === 4 && acc && su && u >= N ? accF * acc[u - N] * inv[su] : 0;
+                const dt = xfer + 0.5 * len * (f * inv[s] + fInvU) + ac;
+                const hqV = hq[v], dh = (xfer + ac) * hqV / inv[s] + 0.5 * len * f * (hqV + hqC);
                 { const nw = wu + dt + K * dh;   // relax, inlined
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
@@ -327,8 +336,8 @@ export async function solve(L, seeds, alive, canoe) {
                   } }
             }
         }
-        // paddle on open water
-        const k0 = iu & 0xFF;
+        // paddle on open water (a cell's further river nodes do not: they are its rivers alone)
+        const k0 = u < firstExtra ? iu & 0xFF : 0;
         if (k0) {
             const lk = iu >> 8;     // link bits (and flags above them, never tested here)
             const cu = curr[cell], ucx = (cu << 16) >> 16, ucy = cu >> 16, hzu = hzr[cell];
@@ -379,8 +388,8 @@ export async function solve(L, seeds, alive, canoe) {
             }
         }
         if (!(iu & ON_RIVER)) continue;
-        for (let e = rOff[cell], e1 = rOff[cell + 1]; e < e1; e++) {
-            const v = canoeOf[rTo[e]];
+        for (let e = rOff[u], e1 = rOff[u + 1]; e < e1; e++) {
+            const v = rTo[e];
             if (pos[v] === -2) continue;
             const dt = rDt[e], dh = split ? rHz[e] : 0;
             { const nw = wu + dt + K * dh;   // relax, inlined

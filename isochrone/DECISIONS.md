@@ -5,6 +5,12 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **Coarse canoe rivers are the L1 river network merged per coarse cell** (T-082,
+  notes/T-082.md): each separate river piece in an L3 or L10 cell is its own canoe node, and
+  getting in or out pays half the piece's mean distance from the cell's land, carried
+  (`cfg.access` 0.5, the value that left the least bias; re-measure if T-081 lands). Coari
+  L1/L10 2.08 -> 0.90, L3 unchanged.
+
 - **An L0.1 window needs 5% of the view in fine blocks; the rest of it is filled from L1 speeds**
   (T-086, notes/T-086.md), replacing "every tile of the window exists". A window costs the same
   whatever its share (0.1 s at zoom 12, ~1 s at the cap); a one-block town centred at zoom 10 is

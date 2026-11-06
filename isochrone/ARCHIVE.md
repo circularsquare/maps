@@ -1,5 +1,7 @@
 # Archive
 
+- T-082 [P2] Canoe at L10 in river country too fast. Done 2026-11-06: L3 and L10 river steps are the L1 network merged per coarse cell, one canoe node per river piece, getting in or out pays half the piece's access distance carried; Coari L1/L10 2.08 -> 0.90, Khulna 1.47 -> 0.97, L3 unchanged; old data gives old times exactly; smoke 17/17. Lake country left as T-088. notes/T-082.md.
+
 - T-085 [P2] Canoe water on our mask. Done 2026-11-06: water.py and the river steps rebuilt on the LC100 mask, canoe kind now matches the speed levels cell for cell (1.7 M L1 mismatches each way -> 0); a river step is dropped in a lake only when both cells are sea or lake; ktrips changes all from shore distances (Bergen-Reykjavik loses Sule Skerry, 414 -> 361 h). notes/T-085.md.
 
 - T-086 [P2] 100 m in partial town tiles. Done 2026-11-06: block masks in fineIndex, absent blocks filled from L1 with roads, a window from 5% of the view in 100 m blocks; Lagos and Sao Paulo at zoom 12, seam step 0.6 min; smoke 17/17 with a Lagos check. notes/T-086.md.

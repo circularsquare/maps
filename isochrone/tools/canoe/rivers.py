@@ -5,6 +5,7 @@
     python tools/canoe/rivers.py snap      # OSM falls/dams/weirs/rapids + reservoir pour points -> work/barriers.npz   ~1 min
     python tools/canoe/rivers.py desert    # hot desert rivers (tools/hotdesert.py) -> work/desert.npz   ~1 min
     python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~4 min, ~8 GB
+                                           #    (L1 from the reaches, L3 and L10 as L1 contracted: contract_level)
     python tools/canoe/rivers.py index     # put the rivers key back into data/canoe/index.json
 
 Work files go in data/raw/rivers_work/. Inputs: data/raw/riveratlas/RiverATLAS_v10.gdb (or the zip,
@@ -313,6 +314,7 @@ def densify(r):
 
 TILES_DIR = os.path.join(HERE, "data", "tiles")     # the speed levels whose water the steps follow
 GRID_FILE = os.path.join(HERE, "data", "grid.bin.gz")
+KIND_DIR = None                                      # canoe water to read `kind` from; None: OUT
 
 
 def load_water(level):
@@ -332,16 +334,17 @@ def load_water(level):
 def load_kind(level):
     """The canoe water `kind` of a level (tools/canoe/water.py, built first): 0 land, 1 sea, 2 river
     water, 3+ lake; a tile the index does not list is open sea."""
-    with open(os.path.join(OUT, "index.json")) as fh:
+    src = KIND_DIR or OUT
+    with open(os.path.join(src, "index.json")) as fh:
         lv = json.load(fh)["levels"][str(level)]
     W, H = L1W // level, L1H // level
     if level == 10:
-        return np.frombuffer(gzip.open(os.path.join(OUT, lv["file"])).read(), np.uint8)[:W * H].reshape(H, W)
+        return np.frombuffer(gzip.open(os.path.join(src, lv["file"])).read(), np.uint8)[:W * H].reshape(H, W)
     size = lv["tile"]
     kind = np.ones((H, W), np.uint8)
     for t in lv["tiles"]:
         tr, tc = divmod(t, 72)
-        b = np.frombuffer(gzip.open(os.path.join(OUT, lv["path"], "%d_%d.bin.gz" % (tr, tc))).read(), np.uint8)
+        b = np.frombuffer(gzip.open(os.path.join(src, lv["path"], "%d_%d.bin.gz" % (tr, tc))).read(), np.uint8)
         kind[tr * size:(tr + 1) * size, tc * size:(tc + 1) * size] = b[:size * size].reshape(size, size)
     return kind
 
@@ -504,11 +507,142 @@ def steps_for_level(level, sub, reach_info):
                 cls=cls[k], stats=stats, W=W)
 
 
-def pack(cell, length, dirs, v, cls):
+ACC_KM = 0.1                # km per unit of the access byte
+CONTRACT_CHUNK = 400000     # L1 river pixels at a time in the access sums
+
+
+def contract_level(level, s1, water1, kind1):
+    """The river steps of L3 or L10 as the L1 ones contracted (T-082, docs/canoe.md 4).
+
+    A piece is a run of L1 river pixels inside one coarse cell joined by open L1 steps. Each piece is
+    a canoe node of its own in the worker, numbered per cell (its slot): pieces touching L1 sea or
+    lake water share the cell's sea or lake node (slot 0); of the rest, the longest is the cell's own
+    river node (slot 0) unless the cell has a sea or lake node, and the others get slots 1, 2, ...
+    A coarse step is an L1 step between two cells, from piece to piece; its length is half of each
+    piece's own river length plus the step's, so a river's steps still add up to its length. The
+    access of a piece is the mean straight distance from the cell's L1 land pixels to the piece
+    (0 on a sea or lake node): what getting from the cell's land to that river costs in the worker.
+    """
+    import scipy.sparse
+    from scipy.sparse.csgraph import connected_components
+    k = level
+    Wc, Hc = L1W // k, L1H // k
+    mv = np.array(MOVES, np.int64)
+    d = s1["dir"].astype(np.int64)
+    ra, ca = s1["row"].astype(np.int64), s1["col"].astype(np.int64)
+    rb, cb = ra + mv[d, 1], (ca + mv[d, 0]) % L1W
+    n = len(ra)
+    xa, xb = (ra // k) * Wc + ca // k, (rb // k) * Wc + cb // k
+    cls = s1["cls"]
+    opn = cls <= RAPIDS
+    km = s1["length"].astype(np.float64) * 0.01
+    v = s1["v"].astype(np.float64) * 0.01
+    nodes, inv = np.unique(np.concatenate([ra * L1W + ca, rb * L1W + cb]), return_inverse=True)
+    ia, ib = inv[:n], inv[n:]
+    del inv
+    m = len(nodes)
+    inner = opn & (xa == xb)
+    g = scipy.sparse.coo_matrix((np.ones(int(inner.sum()), np.int8), (ia[inner], ib[inner])), shape=(m, m)).tocsr()
+    npc, lab = connected_components(g, directed=False)
+    del g
+    pa, pb = lab[ia], lab[ib]
+    plen = np.bincount(pa[inner], km[inner], minlength=npc)
+    pvl = np.bincount(pa[inner], km[inner] * v[inner], minlength=npc)
+    nr, nc = nodes // L1W, nodes % L1W
+    pcell = np.zeros(npc, np.int64)
+    pcell[lab] = (nr // k) * Wc + nc // k
+    kn = kind1[nr, nc]
+    wet = np.zeros(npc, bool)
+    wet[lab[(kn == 1) | (kn >= 3)]] = True
+    kc = load_kind(level).ravel()[pcell]
+    copen = (kc == 1) | (kc >= 3)
+    # only pieces an open step touches need a node; the rest (between closed steps) stay on slot 0
+    live = np.zeros(npc, bool)
+    live[pa[opn]] = True
+    live[pb[opn]] = True
+    # slots: by cell, live wet pieces first, then live dry ones by length, then the rest
+    o = np.lexsort((-plen, ~wet, ~live, pcell))
+    cs = pcell[o]
+    first = np.ones(npc, bool)
+    first[1:] = cs[1:] != cs[:-1]
+    gid = np.cumsum(first) - 1
+    rank = np.arange(npc) - np.nonzero(first)[0][gid]
+    lw = (live & wet)[o]
+    nwet = np.bincount(gid, lw.astype(np.int64))
+    dry_from = np.where((nwet[gid] > 0) | copen[o], 1, 0)
+    slot = np.empty(npc, np.int64)
+    slot[o] = np.where(lw | ~live[o], 0, rank - nwet[gid] + dry_from)
+    multi = int((np.bincount(gid, live[o].astype(np.int64)) > 1).sum())
+    if slot.max() > 255:
+        log("L%d: %d pieces over slot 255 put on slot 255" % (level, int((slot > 255).sum())))
+        slot = np.minimum(slot, 255)
+    # access of the dry pieces, chunk by chunk of their pixels (sorted by piece)
+    acc = np.zeros(npc, np.float64)
+    dn = np.nonzero(~wet[lab] & live[lab])[0]
+    dn = dn[np.argsort(lab[dn], kind="stable")]
+    bi, bj = np.divmod(np.arange(k * k), k)
+    cell_km = 111.195 / 120
+    s0 = 0
+    while s0 < len(dn):
+        s1_ = min(len(dn), s0 + CONTRACT_CHUNK)
+        while s1_ < len(dn) and lab[dn[s1_]] == lab[dn[s1_ - 1]]:
+            s1_ += 1                                  # whole pieces in a chunk
+        sel = dn[s0:s1_]
+        pl = lab[sel]
+        st = np.nonzero(np.r_[True, pl[1:] != pl[:-1]])[0]
+        ps = pl[st]
+        r_, c_ = nr[sel], nc[sel]
+        lat = NORTH - ((r_ // k) * k + k / 2) / 120.0
+        dx = (np.cos(np.radians(lat)) * cell_km).astype(np.float32)
+        D = np.hypot(((c_ % k)[:, None] - bj[None, :]) * dx[:, None],
+                     ((r_ % k)[:, None] - bi[None, :]) * np.float32(cell_km)).astype(np.float32)
+        dmin = np.minimum.reduceat(D, st, axis=0)
+        del D
+        R, C = pcell[ps] // Wc, pcell[ps] % Wc
+        landb = ~water1[R[:, None] * k + bi[None, :], C[:, None] * k + bj[None, :]]
+        cnt = landb.sum(1)
+        acc[ps] = np.where(cnt > 0, (dmin * landb).sum(1) / np.maximum(cnt, 1), 0)
+        s0 = s1_
+    # coarse steps: the L1 steps between cells, piece to piece
+    bnd = np.nonzero(xa != xb)[0]
+    a, b = xa[bnd], xb[bnd]
+    qa, qb = pa[bnd], pb[bnd]
+    ln = plen[qa] / 2 + km[bnd] + plen[qb] / 2
+    vv = np.where(ln > 0, (pvl[qa] / 2 + km[bnd] * v[bnd] + pvl[qb] / 2) / np.where(ln > 0, ln, 1), 0)
+    dr = b // Wc - a // Wc
+    dc = (b % Wc - a % Wc + Wc // 2) % Wc - Wc // 2
+    dirs = np.full(len(a), 255, np.int64)
+    for q, (mc, mr) in enumerate(MOVES):
+        dirs[(dc == mc) & (dr == mr)] = q
+    sa, sb = slot[qa], slot[qb]
+    c2 = cls[bnd]
+    # one record per (cell, direction, slot pair): an open one first, then a dam/weir/reservoir,
+    # then a closed one; among those the shortest
+    rank_c = np.select([c2 <= RAPIDS, (c2 == RESERVOIR) | (c2 == DAM) | (c2 == WEIR)], [0, 1], 2)
+    key = ((a * 8 + dirs) * 256 + sa) * 256 + sb
+    o = np.lexsort((ln, rank_c, key))
+    keep = np.ones(len(o), bool)
+    keep[1:] = key[o][1:] != key[o][:-1]
+    kk = o[keep & (dirs[o] < 8)]
+    kk.sort()
+    acc_b = lambda q: np.clip(np.rint(acc[q] / ACC_KM), 0, 255).astype(np.uint8)
+    stats = {"steps": int(len(kk)), "pieces": int(npc), "cells_with_pieces": int(gid[-1] + 1) if npc else 0,
+             "cells_with_several": multi, "pieces_off_slot_0": int((slot > 0).sum()), "km": float(ln[kk].sum()),
+             "access_km_median": float(np.median(acc[~wet])) if (~wet).any() else 0.0}
+    return dict(cell=a[kk], row=a[kk] // Wc, col=a[kk] % Wc, dir=dirs[kk].astype(np.uint8),
+                length=np.clip(np.rint(ln[kk] * 100), 1, 65535).astype(np.uint16),
+                v=np.clip(np.rint(vv[kk] * 100), 0, 255).astype(np.uint8), cls=c2[kk].astype(np.uint8),
+                slot_a=sa[kk].astype(np.uint8), slot_b=sb[kk].astype(np.uint8),
+                acc_a=acc_b(qa[kk]), acc_b=acc_b(qb[kk]), stats=stats, W=Wc)
+
+
+def pack(cell, length, dirs, v, cls, extra=()):
+    """extra: more uint8 columns after cls (slots and access at L3 and L10, T-082)."""
     o = np.lexsort((dirs, cell))
     n = np.array([len(cell)], "<u4")
     return gzip.compress(n.tobytes() + cell[o].astype("<u4").tobytes() + length[o].astype("<u2").tobytes()
-                         + dirs[o].tobytes() + v[o].tobytes() + cls[o].tobytes(), compresslevel=9)
+                         + dirs[o].tobytes() + v[o].tobytes() + cls[o].tobytes()
+                         + b"".join(np.asarray(x, np.uint8)[o].tobytes() for x in extra), compresslevel=9)
 
 
 def write(path, data):
@@ -596,12 +730,23 @@ def stage_build(levels=(10, 3, 1)):
     sub = (mx, my, sub_km, sub_reach, sub_v, sub_nat, sub_hum, sub_lake)
     summary = {"q_min": QMIN, "reaches": int(R), "km": float(r["length_km"].sum()), "levels": {}}
     index = {}
-    for level in levels:
+    # L1 from the reaches; L3 and L10 as L1 contracted (contract_level, T-082)
+    t0 = time.time()
+    s1 = steps_for_level(1, sub, (q, down, order))
+    log("L1: %d steps (%.0f s)" % (len(s1["cell"]), time.time() - t0))
+    water1 = kind1 = None
+    for level in sorted(levels):
         t0 = time.time()
-        s = steps_for_level(level, sub, (q, down, order))
+        if level == 1:
+            s = s1
+        else:
+            if water1 is None:
+                water1, kind1 = load_water(1), load_kind(1)
+            s = contract_level(level, s1, water1, kind1)
         st = s["stats"]
+        extra = () if level == 1 else (s["slot_a"], s["slot_b"], s["acc_a"], s["acc_b"])
         if level == 10:
-            st["bytes"] = write(os.path.join(OUT, "rivers.bin.gz"), pack(s["cell"], s["length"], s["dir"], s["v"], s["cls"]))
+            st["bytes"] = write(os.path.join(OUT, "rivers.bin.gz"), pack(s["cell"], s["length"], s["dir"], s["v"], s["cls"], extra))
             st["files"] = 1
         else:
             size = TILE[level]
@@ -615,7 +760,7 @@ def stage_build(levels=(10, 3, 1)):
             for t, a0, a1 in zip(tids.tolist(), starts.tolist(), ends.tolist()):
                 k = o[a0:a1]
                 nbytes += write(os.path.join(OUT, "rivers", "l%d" % level, "%d_%d.bin.gz" % (t // 72, t % 72)),
-                                pack(local[k], s["length"][k], s["dir"][k], s["v"][k], s["cls"][k]))
+                                pack(local[k], s["length"][k], s["dir"][k], s["v"][k], s["cls"][k], [x[k] for x in extra]))
             st["bytes"] = nbytes
             st["files"] = len(tids)
             index[str(level)] = {"tile": size, "path": "rivers/l%d" % level, "tiles": tids.tolist()}
@@ -644,17 +789,20 @@ def main():
     elif stage == "desert":
         stage_desert()
     elif stage == "build":
-        # --tiles DIR --grid FILE --out DIR: a test set from other speed levels (T-085)
-        global TILES_DIR, GRID_FILE, OUT
+        # --tiles DIR --grid FILE --out DIR: a test set from other speed levels (T-085);
+        # --kind DIR: the canoe water to read `kind` from, when not --out (T-082)
+        global TILES_DIR, GRID_FILE, OUT, KIND_DIR
         args, lv = sys.argv[2:], []
         while args:
             a = args.pop(0)
-            if a in ("--tiles", "--grid", "--out"):
+            if a in ("--tiles", "--grid", "--out", "--kind"):
                 v = args.pop(0)
                 if a == "--tiles":
                     TILES_DIR = v
                 elif a == "--grid":
                     GRID_FILE = v
+                elif a == "--kind":
+                    KIND_DIR = v
                 else:
                     OUT = v
             else:

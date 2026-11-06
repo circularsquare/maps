@@ -74,7 +74,14 @@ export function sampleNode(L, lng, lat, canoe, out) {
             let c = c0 + i;
             if (wrap) c = (c + W) % W; else c = Math.min(W - 1, Math.max(0, c));
             const cell = r * W + c;
-            const n = canoe ? canoeOf[cell] : (grid[cell] ? cell : -1);
+            let n = canoe ? canoeOf[cell] : (grid[cell] ? cell : -1);
+            if (canoe && L.cn.extraN[cell]) {
+                // several river nodes in the cell (T-082): the reached one of least weight
+                for (let q = 0; q < L.cn.extraN[cell]; q++) {
+                    const m = L.cn.extra0[cell] + q;
+                    if (nw[m] < (n >= 0 ? nw[n] : Infinity)) n = m;
+                }
+            }
             if (n < 0 || nt[n] === Infinity) continue;
             const w = wy * (i ? fx : 1 - fx) + 1e-6;
             sw += nw[n] * w; st += nt[n] * w; sh += nh[n] * w; wsum += w;

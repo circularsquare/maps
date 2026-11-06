@@ -17,11 +17,12 @@ const { cfg, setConfig } = await imp('config.js');
 const { makeLevel, snap, setHazard } = await imp('levels.js');
 const { solve, cellTimes, MDC, MDR, P_GRID, P_XFER, P_DOWN, P_UP } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
-const { buildCanoe } = await imp('canoe.js');
+const { buildCanoe, eachCanoeNode, canoeFrom } = await imp('canoe.js');
 const { loadHazardWorld, applyRoads } = await imp('tiles.js');
 
 const meta = JSON.parse(readFileSync(ROOT + 'data/grid.json', 'utf8'));
-setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
+// CANOE=<folder>/ reads another canoe data set (an A/B before a swap)
+setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: process.env.CANOE || ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
 const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 const cell = (meta.north - meta.south) / meta.height;
 const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north, cell, true);
@@ -60,7 +61,7 @@ function trace(res, n) {
         const pc = (r - dr) * W + ((col - dc + W) % W);
         const canoeHere = n >= N || !L.grid[n];
         const canoePrev = other ? !canoeHere : canoeHere;
-        n = canoePrev ? (L.grid[pc] ? L.cn.canoeOf[pc] : pc) : pc;
+        n = canoePrev ? canoeFrom(L, res, n, p, pc) : pc;
     }
     return path.reverse();
 }
@@ -71,7 +72,9 @@ function dest(res, lat, lng) {
     let best = -1, bt = Infinity;
     for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
         const c = (r0 + dr) * W + ((c0 + dc + W) % W);
-        for (const n of [L.grid[c] ? c : -1, L.cn.canoeOf[c]]) if (n >= 0 && res.t[n] < bt) { bt = res.t[n]; best = n; }
+        const ns = [L.grid[c] ? c : -1];
+        eachCanoeNode(L.cn, c, (m) => { ns.push(m); });
+        for (const n of ns) if (n >= 0 && res.t[n] < bt) { bt = res.t[n]; best = n; }
     }
     return best;
 }

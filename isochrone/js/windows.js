@@ -4,7 +4,7 @@ import { cfg } from './config.js';
 import { makeLevel, snap, sampleNode, setHazard } from './levels.js';
 import { loadWindow, loadHazardWindow, fineIndex, fineShare } from './tiles.js';
 import { loadWindowWater } from './canoedata.js';
-import { buildCanoe, shoreAt } from './canoe.js';
+import { buildCanoe, shoreAt, eachCanoeNode } from './canoe.js';
 import { solve, cellTimes, P_SEED } from './search.js';
 
 export const Z3 = 5, Z1 = 7;            // zoom from which L3, L1 windows are solved
@@ -71,7 +71,7 @@ function windowSeeds(L, w, coarser, origin, canoe) {
         const i = r * W + c;
         const lng = w.west + (c + 0.5) * w.cell, lat = w.north - (r + 0.5) * w.cell;
         if (grid[i]) add(i, lng, lat, false);
-        if (canoe) { const n = L.cn.canoeOf[i]; if (n >= 0) add(n, lng, lat, true); }
+        if (canoe) eachCanoeNode(L.cn, i, (n) => { add(n, lng, lat, true); });
     };
     for (let c = 0; c < W; c++) { addSeed(0, c); addSeed(H - 1, c); }
     for (let r = 1; r < H - 1; r++) { addSeed(r, 0); addSeed(r, W - 1); }

@@ -3,6 +3,7 @@
 // window's path came in by. Also the time split by layer (walked, carried or paddled).
 import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
+import { eachCanoeNode, canoeFrom } from './canoe.js';
 
 // Kinds of step, also the index into parts.
 export const WALK = 0, CARRY = 1, PADDLE = 2;
@@ -16,9 +17,15 @@ function cellAt(L, lng, lat) {
     return r * L.W + c;
 }
 
-// The node of a cell in one layer, or -1.
+// The node of a cell in one layer, or -1; on the canoe layer of a cell with several canoe nodes
+// (T-082), the reached one of least weight.
 function nodeOf(L, cell, canoe, onCanoe) {
-    if (canoe && onCanoe) return L.cn.canoeOf[cell];
+    if (canoe && onCanoe) {
+        if (!L.cn.extraN[cell] || !L.res) return L.cn.canoeOf[cell];
+        let best = L.cn.canoeOf[cell];
+        eachCanoeNode(L.cn, cell, (m) => { if (best < 0 || L.res.w[m] < L.res.w[best]) best = m; });
+        return best;
+    }
     return L.grid[cell] ? cell : -1;
 }
 
@@ -93,7 +100,8 @@ export function trace(levels, canoe, lng, lat, origin) {
         else { const k = code < P_UP ? code - P_DOWN : code - P_UP; dc = MDC[k]; dr = MDR[k]; }
         let pc = c - dc;
         if (L.wrap) pc = (pc + W) % W;
-        const p = nodeOf(L, (r - dr) * W + pc, canoe, flip ? !onCanoe : onCanoe);
+        const pcell = (r - dr) * W + pc, prevCanoe = canoe && (flip ? !onCanoe : onCanoe);
+        const p = prevCanoe ? canoeFrom(L, L.res, n, code, pcell) : nodeOf(L, pcell, canoe, false);
         if (p < 0) break;
         // a transfer counts as carrying: getting in and out happens on the bank
         pending = flip ? CARRY : layer;
