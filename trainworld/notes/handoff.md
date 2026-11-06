@@ -9,7 +9,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master **d5b02108** (Mexico committed). **Real save smokes 12,515,594** since farebase (T-2559).
 - **8800 = build 1088 (6f9d765a)**, Mexico and cachehit; smoke light and dark PASSED ~22:20, 12,515,594. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico
   and Brazil before release).
-- **Cores cap 12**; Anita ~21:45: "keep 4 cores free": real use, not just claims. Check with
+- **Cores cap 15 overnight** (Anita ~01:00 on 11-06: "usual 15"); back to 12 with 4 free when she is up (~21:45 on
+  11-05: "keep 4 cores free": real use, not just claims). Check with
   `Get-Counter '\Processor(_Total)\% Processor Time'` (75% = 4 free), not summed per-process CPU deltas (maps-93's 5 s
   sample over-counted cachehit's Chrome, which pins itself to its granted cores).
 - **Pack lock free.** Mexico T-2436 done (105 zones, 3,200 -> 3,305 shipped, freeze 20261105-200211; backups deleted).
@@ -42,11 +43,17 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   edges fine; coasts and rivers wiggly, minor: T-2580; her screenshot artifacts/trainworld/sheet3/anita-wiggly-peninsula.png).
 - **sheetgame** (Opus, tree .tw-trees/sheetgame from 53c1c698, port 6178): T-2568 [P1] sheet solver in the layout
   worker behind an off-by-default flag, Japan retuned on the settled solver, <1 s. Then T-2567 and T-2580 by new briefs.
-- **livefix** (Opus, tree .tw-trees/livefix, port 6179): T-2581 [P1] diagram "Washington, DC" placed near Atlanta and
-  names too big zoomed out (fix generally); then T-941 live page's 404s. Touches diagram label code: order its landing
-  against sheetgame's.
+- livefix DONE, **to land after Brazil's last gate** (tree .tw-trees/livefix; records already in main TASKS/ARCHIVE/
+  DECISIONS): T-2581 names centred on the block's own city stations, 15-30 px; T-941 R2 first for regions.json with
+  the tw-data meta. Edits diagram/cityNames.ts and one line of diagram.worker.ts (sheetgame's area: land livefix first).
+  Review: review/dc-name-before.png, dc-name-after.png.
 - **tokyocache** (Opus, tree .tw-trees/tokyocache, port 6177): T-2579 Tokyo save's re-solve after a cache hit ends off
   the cache.
+- **locale** (Opus, read-only, writes research/localization.md): Anita ~01:05 asked about Chinese and Japanese for
+  release ("what are usual workflows for this? commercial software? is there anything cheap and good"): string counts,
+  place-name sources, tools and prices, staged plan, her questions. Anita ~01:15: no human reviewer ("maybe you could
+  review? goal here is mostly correctness of meaning"; human-sounding still wanted); Simplified and Traditional Chinese
+  and Japanese first, Spanish and German second. Next: an implementation agent from locale's plan.
 - Before publishing (Anita asked ~00:55 what to finish first): Brazil (T-2437), T-2581, T-941, T-2579; T-428 after
   Brazil's join (moves intercity.json out of packs; touches the join's code). marketsearch on 8800 with the next
   rebuild. Then publish on her word.

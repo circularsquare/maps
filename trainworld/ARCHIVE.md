@@ -2,6 +2,8 @@
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
 
+- T-2581 Diagram city names on their own city, near one size (2026-11-06, agent livefix, tree): centred on the block's city stations in its named zone (Washington's block held the line to Atlanta), 15 to 30 px, a third smaller when zoomed out 15 times. checks/t2438-city-names.mjs; docs/ui-diagram.md.
+- T-941 The published page's expected 404s (2026-11-06, agent livefix, tree): with the tw-data meta the real-rail layer asks R2 first; smoke's glyph filter already matched the live page's syllabics 404s (checked there). docs/architecture.md.
 - T-2577 Network diagram sheet, prototype rounds 2 and 3 (2026-11-05/06, agents sheet2, sheet3): land keeps its shape and water takes the stretch, Japan reads as Japan, Manhattan as Long Island (0.82/1.14), 0 stations off their land, Harlem shown; Anita: "lets put it in" (T-2568, T-2567, T-2580). notes/T-2566.md.
 - T-2566 Network diagram on one continuous rubber-sheet warp, design and round 1 prototype (2026-11-05, agent sheet): summary, design, New York and Japan pictures; continued as T-2577. notes/T-2566.md.
 - T-2561 Network diagram layout's scale as a smooth field (2026-11-05): superseded by the sheet (T-2566); findings in notes/T-2561.md.
