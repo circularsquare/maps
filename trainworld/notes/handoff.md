@@ -44,13 +44,15 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - linesPending was cleared when any demand update ends (T-1733), incl. a camera-started rough solve (ridersnow's T-2658
   rule replaces that blanket clear: check after it lands whether this is gone).
 
-## Waiting on Anita (asked ~16:20)
-- Fares by country (notes/T-2668.md, "For Anita" round 2): option **N** = fares, value of time and train running costs
-  all at income^0.5; upkeep, construction, trains at world prices. Or O (running costs 0.3). Upkeep shown as multiples:
-  base ground track 1x or the construction chip's base (maps-b9 leans to the chip's base). T-2669, T-2670 are written for N.
-- T-2667: OSM tourism places for thin countries (changes demand); recommended yes (notes/T-2663.md).
+## Waiting on Anita
+- Answered 17:50: fares option **N**. BUILT in tree .tw-trees/fares (agent farescale, 610k: retire after landing; smoke
+  25/25 in the tree; T-2669, T-2670, T-2676 viaduct = 1.0x upkeep; notes/T-2668.md section 7). NOT landed: asked Anita
+  (~18:30) whether the regional market's rail share halving on 100-250 km in India/Mexico (Mumbai-Pune 14->4%, Delhi-Agra
+  42->22%; the car's fuel weighs half the minutes) and Mexico's in-city rail -2% (5-cent rounding) are fine. On landing:
+  translate format.levelUpkeepLine, format.upkeepLines, format.upkeepRule + 2 new running-cost keys (removed from ja/zh);
+  filed T-2677 (parking power 0.3 -> 0.5, a demand change). T-2667 yes but after release work (P2, open);
+  her jekyll stays running (~3 cores outside the ledger: size claims for it).
 - T-2620 (keep old rates on track >5 km from stations): maps-93's question.
-- Whether the jekyll (Ruby) server using ~3 cores is hers.
 - Strings shown, no answer = fine.
 
 ## Next
@@ -63,7 +65,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2676**.
+   (Brazil, pack lock free). Next unassigned id **T-2678**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
