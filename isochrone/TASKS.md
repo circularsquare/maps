@@ -26,7 +26,8 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 - T-053 (below): the world roads pass, running detached.
 - T-079 [P1] Desert wadis paddled: a canoe start at Riyadh paddles across Arabia at 8.2 km/h (Anita, 2026-11-05). WaterGAP gives dry catchments phantom mean flow (notes/T-042.md); apply the hazard build's hot desert rule (driest month >= 0.1 m³/s) to canoe reaches, keep the Nile, Niger, Euphrates and the like, rebuild the river data. Taking, 2026-11-05 (agent, Opus).
-- T-080 [P2] Level bias: zooming in seems to make trips strictly slower (Anita, 2026-11-05: "is there a way we could like predict the rough scale of this bias"). Measure L10/L3/L1/L0.1 times on the same trips, separate the causes, propose a fix that makes a coarse level an unbiased guess of the finer one (effective speed per coarse cell, a factor, or T-007's portals). Measurement and proposal only. Taking, 2026-11-05 (agent, Opus).
+- T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only build_grid.py and build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs in T-028.
+- T-082 [P2] Canoe at L10 in river country too fast: L1/L10 1.92 at Coari, 1.45 at Khulna; L10 paddles nearly end to end since a 10 km cell almost always holds some river and the walk to it disappears. L3 and L1 agree (notes/T-080.md).
 
 ## M1: canoe, today
 

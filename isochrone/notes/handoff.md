@@ -29,8 +29,9 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-023 M1 doc tidy landed (c306d1bc).
 - T-079 desert wadis (Opus agent a75105d4c451ffaf1, 21:40): owns tools/canoe/, tools/hazard/ (shared mask),
   the canoe river data, docs/canoe.md, notes/T-079.md. Rebuilds river data; ledger iso-t079.
-- T-080 level bias (Opus agent a754c1f8965d2be43, 21:40): measurement + proposal, no page code;
-  owns notes/T-080.md, a new checks script, scratch t080. Ledger iso-t080.
+- T-080 done (agent a754c1f8965d2be43 idle, resume for T-081): zooming in makes walks ~19%
+  faster L10->L1, not slower; L0.1 is 21% slower than L1 from the MAP vs LC100+OSM gap. Fix
+  T-081 (crossing-time rule) asked of Anita; T-082 canoe at L10 filed.
 - Roads pass at 21:29: 313 of 513 extracts done, 55 GB free; at this rate it ends ~02:00.
   CHELSA and OSM water stay in data/raw/; data/raw/t042/ (1.5 GB) goes once T-066 has run.
 - T-076 landed (8ada9b62). Page agent a188a1156511192ef idle at ~240k tokens.
