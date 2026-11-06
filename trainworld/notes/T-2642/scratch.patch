@@ -1,0 +1,921 @@
+--- a/sim/src/demand/kernel/search.rs
++++ b/sim/src/demand/kernel/search.rs
+@@ -782,6 +782,10 @@
+     pub fn new(g: &'a Graph, p: &'a Params) -> DestSearch<'a> {
+         DestSearch { q: Search::new(g, p), km: vec![], kmw: vec![], dep: vec![] }
+     }
++    /// T-2642 (scratch): leaf stations and the route nodes at them.
++    pub fn counts(&self) -> (usize, usize) {
++        (self.q.leaf.iter().filter(|&&x| x).count(), self.q.chain.iter().filter(|&&x| x).count())
++    }
+     /// Search towards `dst`: its strategy, and its column of route costs written into `r` (S x S,
+     /// `Skims::r`'s layout) when given.
+     pub fn run(&mut self, dst: usize, r: Option<&mut [f32]>) -> DestStrategy {
+@@ -800,10 +804,21 @@
+     pub(super) fn run_by(&mut self, dst: usize, put: Option<impl FnMut(usize, f32)>) -> DestStrategy {
+         let q = &mut self.q;
+         let (s, n) = (q.s, q.n);
++        let probe = q.sc & SC_PROBE != 0;
++        let t0 = if probe { tsc() } else { 0 };
+         q.run(dst);
++        let t1 = if probe { tsc() } else { 0 };
+         let ids = n + q.cn.len();
+         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]) };
++        q.st[9] += q.cn.len() as u64;
++        q.st[12] += q.order.len() as u64;
++        if probe {
++            let t2 = tsc();
++            q.st[16] += t1 - t0;
++            q.st[20] += t2 - t1;
++        }
+         if let Some(mut put) = put {
++            let t2 = if probe { tsc() } else { 0 };
+             let curve = &q.g.fare_curve;
+             let bent = !curve.is_line();
+             let weighed = bent && !q.g.rn_kmw.is_empty();
+@@ -813,7 +828,13 @@
+             if weighed {
+                 trip_km_on(q.g, d.view(), dst, &q.g.rn_kmw, &mut self.kmw, &mut self.dep);
+             }
++            let t3 = if probe { tsc() } else { 0 };
+             q.entry_costs(dst);
++            let t4 = if probe { tsc() } else { 0 };
++            if probe {
++                q.st[21] += t3 - t2;
++                q.st[22] += t4 - t3;
++            }
+             let mut entry = vec![];
+             for src in 0..s {
+                 if src == dst {
+@@ -829,8 +850,51 @@
+                 }
+             }
+             d.entry = entry.into_boxed_slice();
++            if probe {
++                q.st[23] += tsc() - t4;
++            }
+         }
+         d
++    }
++}
++
++// T-2642 (scratch): switches and counters
++/// `SC_MODE` bits: the chain step and leaf stations in the queue (exact); the same with the leaf
++/// stations put after the search (order changes); rdtsc probes.
++pub const SC_CHAIN: u32 = 1;
++pub const SC_LEAF_AFTER: u32 = 2;
++pub const SC_PROBE: u32 = 4;
++/// pass.rs: the longer trips' spreading by end station (exact), and two ablations (not exact)
++pub const SC_SPREAD: u32 = 8;
++pub const SC_NO_OD: u32 = 16;
++pub const SC_NO_ST: u32 = 32;
++/// pass.rs: the far-zone table's start half kept by zone while it is filled (exact)
++pub const SC_ST_BY_ZONE: u32 = 64;
++/// with the chain step: a run's first node settled from the node it rides into, not queued
++pub const SC_STEP_X: u32 = 128;
++thread_local! {
++    pub static SC_MODE: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
++    /// 0 searches, 1 pops, 2 stale pops, 3 station settles (searched), 4 leaf station settles,
++    /// 5 route node settles popped, 6 route nodes stepped, 7 boarding turns, 8 change node settles,
++    /// 9 change nodes made, 10 leaf joins, 11 settle_station quick returns, 12 nodes in order;
++    /// ticks: 16 run, 17 settle_station, 18 settle_change, 19 offer_line from turns and pops,
++    /// 20 strategy copies, 21 trip_km, 22 entry_costs, 23 put loop, 24 resets, 25 leaf joins
++    pub static SC_STATS: std::cell::Cell<[u64; 32]> = const { std::cell::Cell::new([0; 32]) };
++}
++#[inline(always)]
++pub fn tsc() -> u64 {
++    // SAFETY: rdtsc reads the time stamp counter
++    unsafe { core::arch::x86_64::_rdtsc() }
++}
++impl Drop for Search<'_> {
++    fn drop(&mut self) {
++        SC_STATS.with(|c| {
++            let mut v = c.get();
++            for (a, b) in v.iter_mut().zip(self.st.iter()) {
++                *a += b;
++            }
++            c.set(v);
++        });
+     }
+ }
+ 
+@@ -864,6 +928,11 @@
+     }
+     #[inline(always)]
+     pub(super) fn pop(&mut self) -> Option<usize> {
++        self.pop_key().map(|k| k as u32 as usize)
++    }
++    /// T-2642 (scratch): `pop` with the key, (cost bits, id).
++    #[inline(always)]
++    pub(super) fn pop_key(&mut self) -> Option<u64> {
+         let h = &mut self.h;
+         let top = *h.first()?;
+         let x = h.pop().unwrap();
+@@ -904,7 +973,7 @@
+             }
+             h[i] = x;
+         }
+-        Some(top as u32 as usize)
++        Some(top)
+     }
+ }
+ 
+@@ -980,6 +1049,18 @@
+     pub(super) banned_off: Vec<u32>,
+     pub(super) banned: Vec<u32>,
+     pub(super) banned_all: Vec<bool>,
++    // T-2642 (scratch): `SC_MODE`, counters; leaf stations (one line, no walk in or out, every
++    // arrival barred the line whole: nothing but their own route nodes' offers reach them, and
++    // they lead nowhere), their boarding route nodes (`lf_off`, `lf_rn`), and the route nodes at
++    // them (`chain`: reached only by riding on); `dst`'s own taken out during its search
++    pub(super) sc: u32,
++    pub st: [u64; 32],
++    pub(super) leaf: Vec<bool>,
++    pub(super) chain: Vec<bool>,
++    pub(super) lf_off: Vec<u32>,
++    pub(super) lf_rn: Vec<u32>,
++    pub(super) lf_cand: Vec<(u64, u32)>,
++    pub(super) unleafed: Vec<u32>,
+ }
+ 
+ /// A route node's edges in as `Search::run` reads them: whether riders board it from its station
+@@ -1082,7 +1163,56 @@
+                 x
+             })
+             .collect();
++        let sc = SC_MODE.with(|c| c.get());
++        let mut leaf = vec![false; s];
++        let mut lf_off = vec![0u32; s + 1];
++        let mut lf_rn = vec![];
++        for u in 0..s {
++            let l = lone[u];
++            let mut ok = l != NONE && l != MANY && g.rev_off[u + 1] > g.rev_off[u];
++            if ok {
++                for j in g.rev_off[u] as usize..g.rev_off[u + 1] as usize {
++                    let from = g.rev_from[j] as usize;
++                    if from < s || g.rn_station[from - s] as usize != u {
++                        ok = false;
++                        break;
++                    }
++                    let a = from - s;
++                    for e in g.adj_off[from] as usize..g.adj_off[from + 1] as usize {
++                        let to = g.adj_to[e];
++                        if to as usize != u && to != g.rn_next[a] {
++                            ok = false;
++                        }
++                    }
++                    if !(banned_all[a] && banned_off[a + 1] > banned_off[a]) {
++                        ok = false;
++                    }
++                    if !ok {
++                        break;
++                    }
++                }
++            }
++            leaf[u] = ok;
++            if ok {
++                for e in g.adj_off[u] as usize..g.adj_off[u + 1] as usize {
++                    let r = g.adj_to[e] as usize - s;
++                    if boards(r) {
++                        lf_rn.push(r as u32);
++                    }
++                }
++            }
++            lf_off[u + 1] = lf_rn.len() as u32;
++        }
++        let chain: Vec<bool> = (0..nr).map(|r| leaf[g.rn_station[r] as usize]).collect();
+         Search {
++            sc,
++            st: [0; 32],
++            leaf,
++            chain,
++            lf_off,
++            lf_rn,
++            lf_cand: vec![],
++            unleafed: vec![],
+             g,
+             p,
+             s,
+@@ -1170,27 +1300,74 @@
+         self.cn_of.fill((0, 0));
+         self.cn_bits.clear();
+         self.cn_feed.clear();
++        let probe = self.sc & SC_PROBE != 0;
++        let chained = self.sc & (SC_CHAIN | SC_LEAF_AFTER) != 0;
++        let after = self.sc & SC_LEAF_AFTER != 0;
++        let step_x = chained && self.sc & SC_STEP_X != 0;
++        // the destination is no leaf in its own search: its route nodes are reached by alighting
++        if chained && self.leaf[dst] {
++            self.leaf[dst] = false;
++            for j in g.rev_off[dst] as usize..g.rev_off[dst + 1] as usize {
++                let a = g.rev_from[j] as usize - s;
++                self.chain[a] = false;
++                self.unleafed.push(a as u32);
++            }
++        }
++        self.st[0] += 1;
+         self.dist[dst] = 0.0;
+         self.heap.push(0.0, dst as u32);
+-        while let Some(id) = self.heap.pop() {
++        while let Some(key) = self.heap.pop_key() {
++            let id = key as u32 as usize;
++            self.st[1] += 1;
+             if id >= n + nr {
++                let t = if probe { tsc() } else { 0 };
+                 self.settle_change(id - n - nr);
++                if probe {
++                    self.st[18] += tsc() - t;
++                }
+                 continue;
+             }
+             if id >= n {
+                 // a boarding at its turn: onto a line that leaves riders behind (T-552), or at a
+                 // route node whose riders already on board do better to leave there (T-1055)
++                self.st[7] += 1;
++                let t = if probe { tsc() } else { 0 };
+                 let r = id - n;
+                 self.offer_line(r, self.ride[r] + g.rn_left[r]);
++                if probe {
++                    self.st[19] += tsc() - t;
++                }
+                 continue;
+             }
+             let v = id;
+-            if self.done[v] { continue; }
++            if self.done[v] {
++                self.st[2] += 1;
++                continue;
++            }
++            if v < s && chained && self.leaf[v] && self.dist[v].to_bits() != (key >> 32) as u32 {
++                // T-2642: a leaf's cost recomputed upwards when an offer came early
++                self.st[2] += 1;
++                continue;
++            }
+             self.done[v] = true;
+             self.order.push(v as u32);
+             let d = self.dist[v];
+             if v < s {
++                if chained && self.leaf[v] {
++                    self.st[4] += 1;
++                    continue;
++                }
++                self.st[3] += 1;
++                let t = if probe { tsc() } else { 0 };
+                 self.settle_station(v);
++                if probe {
++                    self.st[17] += tsc() - t;
++                }
++                continue;
++            }
++            self.st[5] += 1;
++            if chained && self.chain[v - s] {
++                self.chain_step(v - s, d, after);
+                 continue;
+             }
+             let x = self.rn[v - s];
+@@ -1208,7 +1385,11 @@
+                 } else if x.left > 0.0 {
+                     self.heap.push(d + x.left, (n + v - s) as u32);
+                 } else {
++                    let t = if probe { tsc() } else { 0 };
+                     self.offer_line(v - s, d);
++                    if probe {
++                        self.st[19] += tsc() - t;
++                    }
+                 }
+             }
+             if x.prev != NONE {
+@@ -1219,9 +1400,126 @@
+                     if x.prev_boards {
+                         self.heap.push(rd + x.prev_left, (n + r) as u32);
+                     }
++                } else if step_x && self.chain[r] && self.rn[r].prev != NONE && self.chain[self.rn[r].prev as usize] {
++                    // T-2642: a run's first node settled here too (its place in the settle order moves)
++                    self.dist[s + r] = rd;
++                    self.next[s + r] = v as u32;
++                    self.done[s + r] = true;
++                    self.order.push((s + r) as u32);
++                    self.st[6] += 1;
++                    self.chain_step(r, rd, after);
+                 } else {
+                     self.relax(s + r, rd, v as u32);
+                 }
++            }
++        }
++        if after {
++            // T-2642: the leaf stations after the search, in station order
++            let t = if probe { tsc() } else { 0 };
++            for u in 0..s {
++                if self.leaf[u] && self.lf_off[u + 1] > self.lf_off[u] {
++                    self.leaf_join(u, false);
++                    if self.dist[u].is_finite() {
++                        self.done[u] = true;
++                        self.order.push(u as u32);
++                        self.st[4] += 1;
++                    }
++                }
++            }
++            if probe {
++                self.st[25] += tsc() - t;
++            }
++        }
++        for &a in &self.unleafed {
++            self.chain[a as usize] = true;
++        }
++        if !self.unleafed.is_empty() {
++            self.leaf[dst] = true;
++            self.unleafed.clear();
++        }
++    }
++
++    /// T-2642 (scratch): route node `r` at a leaf station settled at `d`: its offer to its station,
++    /// and the route nodes riding into it settled here while they too are at leaf stations with
++    /// a route node at a leaf riding into them (a run's last goes through the queue, so the node
++    /// it rides in from hears of it in turn).
++    pub(super) fn chain_step(&mut self, r: usize, d: f32, after: bool) {
++        let (g, s, n) = (self.g, self.s, self.n);
++        let (mut r, mut d) = (r, d);
++        loop {
++            let x = self.rn[r];
++            if x.boards {
++                self.offer[r] = if x.left > 0.0 { d + x.left } else { d };
++                let u = g.rn_station[r] as usize;
++                if !after && !self.done[u] {
++                    self.leaf_join(u, true);
++                }
++            }
++            if x.prev == NONE {
++                return;
++            }
++            let p = x.prev as usize;
++            let pd = d + x.prev_cost;
++            self.ride[p] = pd;
++            let pp = self.rn[p].prev;
++            if self.chain[p] && (pp == NONE || self.chain[pp as usize]) && !self.done[s + p] {
++                self.dist[s + p] = pd;
++                self.next[s + p] = (s + r) as u32;
++                self.done[s + p] = true;
++                self.order.push((s + p) as u32);
++                self.st[6] += 1;
++                r = p;
++                d = pd;
++                continue;
++            }
++            if self.done[s + p] {
++                if x.prev_boards {
++                    self.heap.push(pd + x.prev_left, (n + p) as u32);
++                }
++            } else {
++                self.relax(s + p, pd, (s + r) as u32);
++            }
++            return;
++        }
++    }
++
++    /// T-2642 (scratch): leaf station `u`'s strategy from the offers so far, joined in the order
++    /// the queue would have brought them, up to the first that would come after the station
++    /// itself; queued again (`push`) when its cost changed.
++    pub(super) fn leaf_join(&mut self, u: usize, push: bool) {
++        let (g, s, n) = (self.g, self.s, self.n);
++        self.st[10] += 1;
++        self.lf_cand.clear();
++        for i in self.lf_off[u] as usize..self.lf_off[u + 1] as usize {
++            let r = self.lf_rn[i] as usize;
++            let o = self.offer[r];
++            self.board[r >> 6] &= !(1 << (r & 63));
++            if o.is_finite() {
++                let id = if g.rn_left[r] > 0.0 { n + r } else { s + r };
++                self.lf_cand.push(((o.to_bits() as u64) << 32 | id as u64, r as u32));
++            }
++        }
++        if self.lf_cand.len() > 1 {
++            self.lf_cand.sort_unstable();
++        }
++        let (mut f, mut w, mut cur, mut nx) = (0f32, 0f32, f32::INFINITY, NONE);
++        for i in 0..self.lf_cand.len() {
++            let (k, r) = self.lf_cand[i];
++            if ((cur.to_bits() as u64) << 32 | u as u64) < k {
++                break;
++            }
++            let r = r as usize;
++            if let Some(c) = join_line(&mut f, &mut w, cur, g.rn_tph[r], self.offer[r], g.st_wait[u], g.change_f(u), self.p) {
++                self.board[r >> 6] |= 1 << (r & 63);
++                cur = c;
++                nx = (s + r) as u32;
++            }
++        }
++        if cur.to_bits() != self.dist[u].to_bits() {
++            self.dist[u] = cur;
++            self.next[u] = nx;
++            if push && cur.is_finite() {
++                self.heap.push(cur, u as u32);
+             }
+         }
+     }
+--- a/sim/src/demand/intercity/pass.rs
++++ b/sim/src/demand/intercity/pass.rs
+@@ -30,7 +30,6 @@
+             span_in: vec![],
+             bus_in: (vec![], vec![]),
+             chunk: 0.,
+-            far_chunks: true,
+             served_comp: vec![],
+             st_pat: StPattern::default(),
+             win: vec![],
+@@ -254,15 +253,62 @@
+         // per station, where its row was last looked up, for starts and for ends
+         let mut cur = vec![0u32; 2 * s];
+         let at = |cur: &mut [u32], x: usize, c: usize| pat.at(x, c, &mut cur[2 * x + (c >= nz) as usize]);
++        // T-2642 (scratch): with `SC_ST_BY_ZONE` the table's start half is kept by zone (column) while
++        // the pass fills it, after the row-major entries: a zone's longer trips then add into one
++        // short column, not one row per start station; each entry gets the same adds in the same
++        // order, and is copied to its row-major place at the end
++        let by_zone = !windowed && crate::demand::kernel::SC_MODE.with(|c| c.get()) & crate::demand::kernel::SC_ST_BY_ZONE != 0;
++        let ne = pat.col.len();
++        let t_bz = crate::demand::kernel::tsc();
++        let (mut zc_off, mut zc_st, mut zc_ix): (Vec<usize>, Vec<u32>, Vec<u32>) = (vec![], vec![], vec![]);
++        if by_zone {
++            zc_off = vec![0; nz + 1];
++            for i in 0..ne {
++                let c = pat.col.get(i);
++                if c < nz {
++                    zc_off[c + 1] += 1;
++                }
++            }
++            for c in 0..nz {
++                zc_off[c + 1] += zc_off[c];
++            }
++            let mut fill = zc_off.clone();
++            zc_st = vec![0; zc_off[nz]];
++            zc_ix = vec![0; zc_off[nz]];
++            for x in 0..pat.off.len() - 1 {
++                for i in pat.row(x) {
++                    let c = pat.col.get(i);
++                    if c < nz {
++                        zc_st[fill[c]] = x as u32;
++                        zc_ix[fill[c]] = i as u32;
++                        fill[c] += 1;
++                    }
++                }
++            }
++            st.resize(ne + zc_off[nz], 0.);
++        }
++        let mut zmap = vec![0u32; if by_zone { s } else { 0 }];
++        let zat = |x: usize, c: usize| -> usize {
++            let (a, b) = (zc_off[c], zc_off[c + 1]);
++            ne + a + zc_st[a..b].binary_search(&(x as u32)).unwrap()
++        };
++        let t_bz = crate::demand::kernel::tsc() - t_bz;
+         // (a window's far-zone table is never read: its loads are what it is for)
+-        let put = |st: &mut [f32], cur: &mut [u32], x: usize, c: usize, v: f32| {
++        let put = |st: &mut [f32], cur: &mut [u32], zm: &[u32], cz: usize, x: usize, c: usize, v: f32| {
+             if !windowed {
+-                st[at(cur, x, c)] += v;
++                if by_zone && c == cz {
++                    st[zm[x] as usize] += v;
++                } else if by_zone && c < nz {
++                    st[zat(x, c)] += v;
++                } else {
++                    st[at(cur, x, c)] += v;
++                }
+             }
+         };
+         // a longer trip's entries in that table, its start stations' in the run of its station pairs
+         // from one and its end stations' by place in its access list, each looked up once a pair
+         let mut ends: Vec<usize> = vec![];
++        let mut lane: Vec<(u32, u32, f32)> = vec![];
+         let mut terms: Vec<(u32, u32, f64)> = vec![];
+         let mut fares: Vec<f32> = vec![];
+         let pc = commute_params();
+@@ -295,6 +341,12 @@
+         let mut xfer = vec![0.0; ix.len];
+         let zero = vec![0f32; s];
+         let mut ecol = vec![0f32; if kinds.is_empty() { 0 } else { s }];
++        // T-2642 (scratch)
++        use crate::demand::kernel::{tsc, SC_MODE, SC_NO_OD, SC_NO_ST, SC_SPREAD};
++        let scm = SC_MODE.with(|c| c.get());
++        let (no_od, no_st) = (scm & SC_NO_OD != 0, scm & SC_NO_ST != 0);
++        let mut pt = [0u64; 16];
++        let t_pass = tsc();
+ 
+         for (u, &z) in zones.iter().enumerate() {
+             touched(z, &mut tl);
+@@ -348,8 +400,11 @@
+                 rs[x] = k as u32;
+                 live_r += 1;
+                 stats[0] = stats[0].max(live_r);
++                let t = tsc();
+                 let h = src.fill(x, &mut rc[k], &mut rec[k], &mut has_re[k]);
++                pt[1] += tsc() - t;
+                 stats[3] += 1;
++                let t = tsc();
+                 if km_on[x] {
+                     match &h {
+                         Some(h) => {
+@@ -359,6 +414,7 @@
+                         None => kmc[k].fill(0.),
+                     }
+                 }
++                pt[2] += tsc() - t;
+                 // kept for the assignment while the strategies wanted sooner leave room
+                 let Some(h) = h else { continue };
+                 let b = h.bytes();
+@@ -393,6 +449,14 @@
+             };
+ 
+             // the longer trips ending in z (T-1735, a window's swapped ones: starting there)
++            let t_l = tsc();
++            // (z's own column of the table's start half, by station)
++            let cz = if by_zone && (zcol[z] as usize) < nz { zcol[z] as usize } else { usize::MAX };
++            if cz != usize::MAX {
++                for k in zc_off[cz]..zc_off[cz + 1] {
++                    zmap[zc_st[k] as usize] = (ne + k) as u32;
++                }
++            }
+             if !ls(z).is_empty() {
+                 let (mut bc, mut hc) = (None, None);
+                 for &pi in ls(z) {
+@@ -417,11 +481,15 @@
+                     let alt_m = rule.alt(pair.car, split, from.w() * fm, &m.mp);
+                     let (th, d) = (p.soften(th0, alt_m.car), self.fare_d(za, fm));
+                     // (swapped: priced on the route costs the other way, from its far stations to its home ones)
++                    let t_m = tsc();
+                     let mix = if swap {
+                         rail_mix_cols(hc.get_or_insert_with(|| cols(a, true)), p.fare_min, b, a, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
+                     } else {
+                         rail_mix_cols(bc.get_or_insert_with(|| cols(b, true)), p.fare_min, a, b, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
+                     };
++                    pt[4] += tsc() - t_m;
++                    pt[10] += terms.len() as u64;
++                    pt[11] += 1;
+                     let sum = mix.sum;
+                     for &(share, f) in gs {
+                         let trips = pair.trips * SHARES[q] as f64 * share as f64;
+@@ -437,7 +505,10 @@
+                             add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, zb));
+                         }
+                     }
+-                    if sum > 0. && r_all > 0. {
++                    let t_d = tsc();
++                    if sum > 0. && r_all > 0. && scm & SC_SPREAD != 0 && !swap && !windowed && ln == 0. {
++                        spread_pair(&terms, b, r_all, sum, &mut ends, &mut lane, &ws, &mut odc, &mut st, &mut cur, pat, ca, cb, nz);
++                    } else if sum > 0. && r_all > 0. {
+                         ends.clear();
+                         ends.resize(b.len(), usize::MAX);
+                         let (mut last_sa, mut ia, mut jb) = (u32::MAX, 0, 0);
+@@ -453,9 +524,9 @@
+                                 }
+                                 continue;
+                             }
+-                            if !windowed {
++                            if !windowed && !no_st {
+                                 if sa != last_sa {
+-                                    (last_sa, ia) = (sa, at(&mut cur, sa as usize, cb));
++                                    (last_sa, ia) = (sa, if by_zone { zmap[sa as usize] as usize } else { at(&mut cur, sa as usize, cb) });
+                                 }
+                                 while b[jb].0 != sb as usize {
+                                     jb = (jb + 1) % b.len();
+@@ -465,22 +536,27 @@
+                                 }
+                             }
+                             let (sa, sb) = (sa as usize, sb as usize);
+-                            let k = ws[sb] as usize;
+-                            odc[k][sa] += rr;
+-                            if ln != 0. {
+-                                odrc[k][sa] += rr * ln;
++                            if !no_od {
++                                let k = ws[sb] as usize;
++                                odc[k][sa] += rr;
++                                if ln != 0. {
++                                    odrc[k][sa] += rr * ln;
++                                }
+                             }
+-                            if !windowed {
++                            if !windowed && !no_st {
+                                 st[ia] += rr;
+                                 st[ends[jb]] += rr;
+                             }
+                         }
+                     }
++                    pt[5] += tsc() - t_d;
+                     rail += r_all;
+                     cor[pair.corridor as usize] += r_all;
+                     pair_rail[pi] = r_all as f32;
+                 }
+             }
++            let t_c = tsc();
++            pt[3] += t_c - t_l;
+             // T-276: the commutes working in z, chosen as the local layer chooses: once per
+             // commuter on this period's service from home to work, the trip home on the same
+             // station pair reversed
+@@ -533,13 +609,15 @@
+                                 cc[ws[sa] as usize][sb] += bk;
+                             }
+                         }
+-                        put(&mut st, &mut cur, sa, wc, a);
+-                        put(&mut st, &mut cur, sb, nz + hc, a);
+-                        put(&mut st, &mut cur, sb, hc, bk);
+-                        put(&mut st, &mut cur, sa, nz + wc, bk);
+-                    }
+-                }
+-            }
++                        put(&mut st, &mut cur, &zmap, cz, sa, wc, a);
++                        put(&mut st, &mut cur, &zmap, cz, sb, nz + hc, a);
++                        put(&mut st, &mut cur, &zmap, cz, sb, hc, bk);
++                        put(&mut st, &mut cur, &zmap, cz, sa, nz + wc, bk);
++                    }
++                }
++            }
++            let t_e = tsc();
++            pt[6] += t_e - t_c;
+             // T-1175: the everyday outings to z across a zone line, chosen as the everyday layer
+             // chooses: the pair's walkers with no rail first (their weight against the car from
+             // that share), rail and the car splitting the rest on their cost ratio, rail taking
+@@ -596,14 +674,15 @@
+                                 ec[k][ws[sa] as usize][sb] += bk;
+                             }
+                         }
+-                        put(&mut st, &mut cur, sa, ac, a);
+-                        put(&mut st, &mut cur, sb, nz + hc, a);
+-                        put(&mut st, &mut cur, sb, hc, bk);
+-                        put(&mut st, &mut cur, sa, nz + ac, bk);
+-                    }
+-                }
+-            }
+-
++                        put(&mut st, &mut cur, &zmap, cz, sa, ac, a);
++                        put(&mut st, &mut cur, &zmap, cz, sb, nz + hc, a);
++                        put(&mut st, &mut cur, &zmap, cz, sb, hc, bk);
++                        put(&mut st, &mut cur, &zmap, cz, sa, nz + ac, bk);
++                    }
++                }
++            }
++            let t_a = tsc();
++            pt[7] += t_a - t_e;
+             // the stations whose last read z is: their read slots freed
+             for &x in &rl {
+                 if last_read[x] as usize == u && rs[x] != u32::MAX {
+@@ -674,7 +753,10 @@
+                     Some(h) => h,
+                     None => {
+                         stats[4] += 1;
+-                        match src.strategy(dst) {
++                        let t = tsc();
++                        let h = src.strategy(dst);
++                        pt[9] += tsc() - t;
++                        match h {
+                             Some(h) => h,
+                             None => continue,
+                         }
+@@ -702,7 +784,25 @@
+                     }
+                 }
+             }
+-        }
++            pt[8] += tsc() - t_a;
++        }
++        if by_zone {
++            let t = tsc();
++            for (k, &i) in zc_ix.iter().enumerate() {
++                st[i as usize] = st[ne + k];
++            }
++            st.truncate(ne);
++            pt[13] += tsc() - t;
++        }
++        pt[12] += t_bz;
++        pt[0] += tsc() - t_pass + t_bz;
++        PT.with(|c| {
++            let mut v = c.get();
++            for (a, b) in v.iter_mut().zip(pt.iter()) {
++                *a += b;
++            }
++            c.set(v);
++        });
+         // T-1735: the window's legs turned round
+         if let Some(l) = &mall {
+             mirror_into(g, &l.l, &mut all.l);
+@@ -732,3 +832,58 @@
+         Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d }
+     }
+ }
++
++thread_local! {
++    /// T-2642 (scratch): pass ticks: 0 pass, 1 searches with costs, 2 fare km, 3 longer trips,
++    /// 4 their logsums, 5 their spreading, 6 commutes, 7 everyday, 8 assignment (with 9), 9 searches
++    /// again; counts: 10 terms, 11 longer pairs
++    pub(crate) static PT: std::cell::Cell<[u64; 16]> = const { std::cell::Cell::new([0; 16]) };
++}
++
++/// T-2642 (scratch): a longer pair's trips spread by end station, each entry's adds in the order
++/// the spread by start station makes them, so the same to the bit.
++#[allow(clippy::too_many_arguments)]
++pub(super) fn spread_pair(terms: &[(u32, u32, f64)], b: &[(usize, f32)], r_all: f64, sum: f64, _ends: &mut Vec<usize>, lane: &mut Vec<(u32, u32, f32)>, ws: &[u32], odc: &mut [Box<[f32]>], st: &mut [f32], cur: &mut [u32], pat: &StPattern, ca: usize, cb: usize, nz: usize) {
++    let nb = b.len();
++    assert!(nb <= ACCESS_MAX && terms.len() <= ACCESS_MAX * ACCESS_MAX);
++    let mut jj = [0u8; ACCESS_MAX * ACCESS_MAX];
++    let mut off = [0usize; ACCESS_MAX + 1];
++    let mut jb = 0;
++    for (t, &(_, sb, _)) in terms.iter().enumerate() {
++        while b[jb].0 != sb as usize {
++            jb = (jb + 1) % nb;
++        }
++        jj[t] = jb as u8;
++        off[jb + 1] += 1;
++    }
++    for j in 0..nb {
++        off[j + 1] += off[j];
++    }
++    let mut fill = off;
++    lane.clear();
++    lane.resize(terms.len(), (0, 0, 0.));
++    let (mut last_sa, mut ia) = (u32::MAX, 0usize);
++    for (t, &(sa, _, v)) in terms.iter().enumerate() {
++        if sa != last_sa {
++            last_sa = sa;
++            let x = sa as usize;
++            ia = pat.at(x, cb, &mut cur[2 * x + (cb >= nz) as usize]);
++        }
++        let j = jj[t] as usize;
++        lane[fill[j]] = (sa, ia as u32, (r_all * v / sum) as f32);
++        fill[j] += 1;
++    }
++    for j in 0..nb {
++        if off[j] == off[j + 1] {
++            continue;
++        }
++        let sb = b[j].0;
++        let e = pat.at(sb, ca, &mut cur[2 * sb + (ca >= nz) as usize]);
++        let col = &mut odc[ws[sb] as usize];
++        for &(sa, ia, rr) in &lane[off[j]..off[j + 1]] {
++            col[sa as usize] += rr;
++            st[ia as usize] += rr;
++            st[e] += rr;
++        }
++    }
++}
+--- a/sim/src/demand/intercity/tests.rs
++++ b/sim/src/demand/intercity/tests.rs
+@@ -1607,7 +1607,8 @@
+ }
+ /// `t780_net` with `before` done before the network is set (T-1735: a window).
+ pub(crate) fn t780_net_with(path: &str, chunk: f64, before: impl FnOnce(&mut IntercityApi)) -> IntercityApi {
+-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
++    // T-2642 (scratch copy): the main tree's registry, rows and packs, read only
++    let root = "C:/Users/anita/projects/maps/trainworld";
+     let j: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+     let f = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
+     let ids: Vec<String> = j["markets"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+@@ -1637,9 +1638,8 @@
+         }
+     }
+ }
+-/// T-780: sampled pairs (T-2641: with the chunk at every distance, `far` off) keep each zone's trips
+-/// with each place after it, always solve a pair of at least a chunk, carry whole chunks or a big
+-/// pair's own trips, and are the same every time.
++/// T-780: sampled pairs keep each zone's trips with each place after it, always solve a pair of at
++/// least a chunk, carry whole chunks or a big pair's own trips, and are the same every time.
+ #[test]
+ fn sampled_pairs_keep_each_zones_trips_with_each_place() {
+     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+@@ -1647,10 +1647,10 @@
+     let m = &api.m;
+     let served: Vec<usize> = (0..m.zones.len()).collect();
+     let joined = |_: usize, _: usize| true;
+-    let (any0, each0) = solved_pairs(m, &served, &joined, 0., false);
++    let (any0, each0) = solved_pairs(m, &served, &joined, 0.);
+     let chunk = 1.;
+-    let (any, each) = solved_pairs(m, &served, &joined, chunk, false);
+-    assert_eq!((&any, &each), (&solved_pairs(m, &served, &joined, chunk, false).0, &solved_pairs(m, &served, &joined, chunk, false).1));
++    let (any, each) = solved_pairs(m, &served, &joined, chunk);
++    assert_eq!((&any, &each), (&solved_pairs(m, &served, &joined, chunk).0, &solved_pairs(m, &served, &joined, chunk).1));
+     assert!(each.len() * 10 < each0.len() * 8, "{} sampled pairs of {}", each.len(), each0.len());
+     // per zone and later place: (exact trips, sampled trips)
+     let n = served.len();
+@@ -1677,107 +1677,7 @@
+     for ((i, p), (t0, t1)) in by {
+         assert!((t0 - t1).abs() <= 1e-9 * t0.max(1.), "zone {i} with place {p}: {t0} trips, {t1} sampled");
+     }
+-}/// T-2641: with far chunks the pairs under `FAR_DEAL_KM` apart keep each zone's trips with each place
+-/// as before, and each place pair at least that far apart keeps its trips to within 5% (each origin
+-/// zone's run is off by up to a chunk, one way or the other, so a small place pair by more) of its pairs' own; the pairs are fewer, never a pair that is
+-/// not one, the same every time, and each carries a whole number of its chunk.
+-#[test]
+-fn far_chunk_pairs_keep_each_place_pairs_trips() {
+-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+-    let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm", "osa"]))).unwrap();
+-    let m = &api.m;
+-    let served: Vec<usize> = (0..m.zones.len()).collect();
+-    let joined = |_: usize, _: usize| true;
+-    let (any0, each0) = solved_pairs(m, &served, &joined, 0., false);
+-    let (anyc, eachc) = solved_pairs(m, &served, &joined, MARKET_CHUNK, false);
+-    let (any, each) = solved_pairs(m, &served, &joined, MARKET_CHUNK, true);
+-    let again = solved_pairs(m, &served, &joined, MARKET_CHUNK, true);
+-    assert_eq!((&any, &each), (&again.0, &again.1));
+-    assert!(each.len() < eachc.len(), "{} far-chunk pairs of {} chunked", each.len(), eachc.len());
+-    let n = served.len();
+-    // per zone and later place, and per place pair: exact trips, chunked, far-chunked
+-    let mut zp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
+-    let mut pp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
+-    let (mut bit, mut k0, mut kc, mut k1) = (0, 0, 0, 0);
+-    let mut far_seen = 0;
+-    let mut kind: HashMap<(usize, usize), bool> = HashMap::new();
+-    for i in 0..n {
+-        for k in i + 1..n {
+-            let (on0, onc, on1) = (any0[bit / 64] >> (bit % 64) & 1 == 1, anyc[bit / 64] >> (bit % 64) & 1 == 1, any[bit / 64] >> (bit % 64) & 1 == 1);
+-            bit += 1;
+-            let (za, zb) = (&m.zones[i], &m.zones[k]);
+-            let t0 = if on0 { k0 += 1; each0[k0 - 1] } else { 0. };
+-            if onc {
+-                kc += 1;
+-            }
+-            let t1 = if on1 { k1 += 1; each[k1 - 1] } else { 0. };
+-            assert!(!on1 || on0, "a far-chunk pair that is not a pair");
+-            if !on0 {
+-                continue;
+-            }
+-            // as dealt: by the distance to the place's first zone of a pair with this zone
+-            let far = *kind.entry((i, zb.place)).or_insert(!m.pr(za.place, zb.place).near && m.zone_km(za, zb) >= FAR_DEAL_KM);
+-            if far {
+-                far_seen += 1;
+-                let e = pp.entry((za.place, zb.place)).or_default();
+-                e.0 += t0;
+-                e.1 += t1;
+-                if on1 {
+-                    let w = t1 / MARKET_CHUNK;
+-                    assert!((w - w.round()).abs() < 1e-6 || t1 >= MARKET_CHUNK, "{t1} trips is not whole chunks");
+-                }
+-            } else {
+-                let e = zp.entry((i, zb.place)).or_default();
+-                e.0 += t0;
+-                e.1 += t1;
+-            }
+-        }
+-    }
+-    assert!(far_seen > 0, "no far pairs in the test packs");
+-    for ((i, p), (t0, t1)) in zp {
+-        // a place under the distance but its first zone over it can differ from the pair test: allow a chunk
+-        assert!((t0 - t1).abs() <= FAR_CHUNK_MAX * MARKET_CHUNK + 1e-9 * t0.max(1.), "zone {i} with place {p}: {t0} trips, {t1} far-chunked");
+-    }
+-    for ((a, b), (t0, t1)) in pp {
+-        assert!((t0 - t1).abs() <= 0.05 * t0 + 2. * FAR_CHUNK_MAX * MARKET_CHUNK, "places {a}, {b}: {t0} trips, {t1} far-chunked");
+-    }
+-}
+-/// T-2641: the market at free flow on a captured net with far chunks off and on, back to back in
+-/// this process (`TW_FAR` = e.g. `0,1,0,1`), every period in `TW_Q`: pairs, solve time, and every
+-/// line's boardings (all riders), for `checks`' comparison.
+-/// `TW_T780_NET=<net> TW_T2641_OUT=<out.json> TW_Q=0,1 TW_FAR=0,1,0,1
+-///   cargo test --release --features demand t2641_dump -- --ignored --nocapture`
+-#[test]
+-#[ignore]
+-fn t2641_dump() {
+-    let qs: Vec<usize> = std::env::var("TW_Q").unwrap_or("0,1".into()).split(',').map(|v| v.parse().unwrap()).collect();
+-    let fars: Vec<bool> = std::env::var("TW_FAR").unwrap_or("0,1".into()).split(',').map(|v| v == "1").collect();
+-    let net_path = std::env::var("TW_T780_NET").unwrap();
+-    let mut out = vec![];
+-    for &far in &fars {
+-        let t = now_ms();
+-        let mut a = t780_net_with(&net_path, MARKET_CHUNK, |a| a.set_far_chunks(far));
+-        let set_up = now_ms() - t;
+-        let mut periods = vec![];
+-        for &q in &qs {
+-            let t = now_ms();
+-            assert!(a.solve(q));
+-            let solve = now_ms() - t;
+-            let per = a.per(q).unwrap();
+-            let g = &per.g;
+-            let nl = g.rn_line.iter().copied().max().map_or(0, |l| l as usize + 1);
+-            let mut all = vec![0f64; nl];
+-            for (r, &x) in per.avg.rn_board.iter().enumerate() {
+-                all[g.rn_line[r] as usize] += x as f64;
+-            }
+-            eprintln!("far {far} q{q}: {} pairs, solve {solve:.0} ms (set up {set_up:.0}), rail {:.1}", a.pairs.len() / 2, per.rail);
+-            periods.push(serde_json::json!({"q": q, "solve_ms": solve, "rail": per.rail, "c_rail": per.c_rail, "e_rail": per.e_rail, "line_all": all}));
+-        }
+-        out.push(serde_json::json!({"far": far, "pairs": a.pairs.len() / 2, "set_up_ms": set_up, "periods": periods}));
+-    }
+-    std::fs::write(std::env::var("TW_T2641_OUT").unwrap(), serde_json::json!({"net": net_path, "runs": out}).to_string()).unwrap();
+-}
+-/// T-780: with sampled pairs no far zone of a selection shows more rail than trips, and its rail by
++}/// T-780: with sampled pairs no far zone of a selection shows more rail than trips, and its rail by
+ /// place is the zones' added up.
+ #[test]
+ fn sampled_selection_rail_stays_within_trips() {
+@@ -2267,4 +2167,5 @@
+     let ((car, x), (_, y)) = (way(a, b), way(b, a));
+     let air = 0.5 * (x + y);
+     [air, if car { 1. - air } else { 0. }]
+-}+}
++include!("t2642.rs");
+--- a/sim/Cargo.toml
++++ b/sim/Cargo.toml
+@@ -87,7 +87,9 @@
+ 
+ [profile.release]
+ opt-level = 3
+-lto = true
++lto = false
++codegen-units = 1
++incremental = false
+ 
+ # T-051: the app's two wasm modules (app/package.json). One codegen unit: 2-5% smaller.
+ [profile.wasm]
