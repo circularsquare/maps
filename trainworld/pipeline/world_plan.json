@@ -225268,31 +225268,30 @@
    },
    "solve_region": "west-north-central",
    "run": {
-    "run_batch": "20261104-092731",
-    "steps": {
-     "build": 26.6,
-     "stations": 0.4,
-     "places": 1.2,
-     "coarse": 1.8,
-     "routes": 69.9,
-     "merge": 1.0,
-     "nocar": 1.6,
-     "everyday": 0.4
-    },
-    "built": "2026-11-04T09:40:25",
+    "run_batch": "20261106-104411",
+    "built": "2026-11-06T11:02:40",
     "landed": {
      "run": "t2301-us-3",
      "name": "l2",
      "at": "2026-11-04T06:25:33"
     },
+    "gated": "2026-11-04T07:26:31",
+    "shipped": "2026-11-06T12:01:38",
+    "steps": {
+     "build": 118.8,
+     "stations": 1.4,
+     "places": 3.3,
+     "routes": 271.2,
+     "merge": 12.9,
+     "nocar": 3.6,
+     "everyday": 1.1
+    },
     "gate": {
      "warn": [
-      "area_km2 65013.20270679851",
+      "area_km2 63870.716528143486",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T07:26:31",
-    "shipped": "2026-11-04T09:00:59"
+    }
    }
   },
   {

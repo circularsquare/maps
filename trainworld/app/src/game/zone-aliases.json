@@ -2422,7 +2422,6 @@
 "gry": ["Springfield", "Joplin", "Nixa"],
 "frl": ["Jefferson City", "Cape Girardeau"],
 "bcc": ["Saint Joseph"],
-"doc": ["Omaha", "Bellevue", "Fremont", "Papillion", "Norfolk"],
 "lns": ["Lincoln", "Grand Island", "Kearney", "Hastings", "North Platte"],
 "vah": ["Evansville", "Bloomington", "Terre Haute"],
 "alu": ["Fort Wayne", "Muncie", "Richmond", "Marion"],
@@ -3022,5 +3021,6 @@
 "ini": ["Itupeva"],
 "and": ["Paraty", "Parati", "Mangaratiba"],
 "sro": ["Jardinópolis", "Pontal"],
-"sot": ["Estância Balneária de São Sebastião", "Bertioga", "Ilhabela", "Estância Balneária de Ilhabela"]
+"sot": ["Estância Balneária de São Sebastião", "Bertioga", "Ilhabela", "Estância Balneária de Ilhabela"],
+"doc": ["Omaha", "Bellevue", "Fremont", "Papillion", "Norfolk"]
 }

@@ -27042,6 +27042,10 @@
       {
         "name": "São Sebastião",
         "regionName": "São Sebastião region"
+      },
+      {
+        "name": "Douglas County",
+        "regionName": "Douglas County region"
       }
     ],
     "rule": {
@@ -36836,7 +36840,7 @@
       ],
       "place": 2380,
       "country": "US",
-      "localTrips": 8065768.0,
+      "localTrips": 8065772.0,
       "realm": "us-midwest"
     },
     {
@@ -36886,7 +36890,7 @@
       ],
       "place": 2382,
       "country": "US",
-      "localTrips": 6749245.0,
+      "localTrips": 6749235.0,
       "realm": "us-midwest"
     },
     {
@@ -37114,7 +37118,7 @@
       ],
       "place": 2460,
       "country": "US",
-      "localTrips": 2632158.0,
+      "localTrips": 2631596.0,
       "realm": "us-midwest"
     },
     {
@@ -37140,7 +37144,7 @@
       ],
       "place": 2464,
       "country": "US",
-      "localTrips": 2384651.0,
+      "localTrips": 2384746.0,
       "realm": "us-midwest"
     },
     {
@@ -37165,7 +37169,7 @@
       ],
       "place": 2469,
       "country": "US",
-      "localTrips": 11490971.0,
+      "localTrips": 11490973.0,
       "realm": "us-midwest"
     },
     {
@@ -101397,7 +101401,7 @@
       ],
       "place": 5825,
       "country": "US",
-      "localTrips": 4280282.0,
+      "localTrips": 4280267.0,
       "realm": "us-midwest"
     },
     {
@@ -101423,7 +101427,7 @@
       ],
       "place": 5826,
       "country": "US",
-      "localTrips": 3826739.0,
+      "localTrips": 3826721.0,
       "realm": "us-midwest"
     },
     {
@@ -101449,7 +101453,7 @@
       ],
       "place": 5827,
       "country": "US",
-      "localTrips": 1417269.0,
+      "localTrips": 1417321.0,
       "realm": "us-midwest"
     },
     {
@@ -101475,7 +101479,7 @@
       ],
       "place": 5836,
       "country": "US",
-      "localTrips": 3480425.0,
+      "localTrips": 3480433.0,
       "realm": "us-midwest"
     },
     {
@@ -101501,7 +101505,7 @@
       ],
       "place": 5837,
       "country": "US",
-      "localTrips": 2784142.0,
+      "localTrips": 2784115.0,
       "realm": "us-midwest"
     },
     {
@@ -101995,7 +101999,7 @@
       ],
       "place": 5867,
       "country": "US",
-      "localTrips": 3032428.0,
+      "localTrips": 3032423.0,
       "realm": "us-midwest"
     },
     {
@@ -102073,7 +102077,7 @@
       ],
       "place": 5870,
       "country": "US",
-      "localTrips": 2185604.0,
+      "localTrips": 2185606.0,
       "realm": "us-midwest"
     },
     {
@@ -102931,7 +102935,7 @@
       ],
       "place": 5905,
       "country": "US",
-      "localTrips": 3080610.0,
+      "localTrips": 3080605.0,
       "realm": "us-midwest"
     },
     {
@@ -102957,7 +102961,7 @@
       ],
       "place": 5906,
       "country": "US",
-      "localTrips": 2812188.0,
+      "localTrips": 2812187.0,
       "realm": "us-midwest"
     },
     {
@@ -102983,33 +102987,7 @@
       ],
       "place": 5908,
       "country": "US",
-      "localTrips": 1012625.0,
-      "realm": "us-midwest"
-    },
-    {
-      "id": "doc",
-      "name": "Douglas County",
-      "kind": "zone",
-      "origin": {
-        "lon": -95.9561,
-        "lat": 41.2488
-      },
-      "center": [
-        -95.9561,
-        41.2488
-      ],
-      "zoom": 10.5,
-      "utcOffset": -6,
-      "market": -1,
-      "box": [
-        -102.11,
-        40.765,
-        -95.384,
-        43.018
-      ],
-      "place": 5909,
-      "country": "US",
-      "localTrips": 3368317.0,
+      "localTrips": 1012615.0,
       "realm": "us-midwest"
     },
     {
@@ -103035,7 +103013,7 @@
       ],
       "place": 5910,
       "country": "US",
-      "localTrips": 2559047.0,
+      "localTrips": 2559753.0,
       "realm": "us-midwest"
     },
     {
@@ -103607,7 +103585,7 @@
       ],
       "place": 5934,
       "country": "US",
-      "localTrips": 1309639.0,
+      "localTrips": 1309640.0,
       "realm": "us-midwest"
     },
     {
@@ -118837,6 +118815,32 @@
       "country": "BR",
       "localTrips": 264540.0,
       "realm": "brazil"
+    },
+    {
+      "id": "doc",
+      "name": "Douglas County",
+      "kind": "zone",
+      "origin": {
+        "lon": -95.9561,
+        "lat": 41.2488
+      },
+      "center": [
+        -95.9561,
+        41.2488
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -102.11,
+        40.765,
+        -95.785,
+        43.018
+      ],
+      "place": 6756,
+      "country": "US",
+      "realm": "us-midwest",
+      "localTrips": 3381104.0
     }
   ]
 }

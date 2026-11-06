@@ -15,7 +15,8 @@ packs' boundaries stay disjoint. The result is cached in data/work/tiger_countie
 
 Three counties (19129, 31153, 51127) lose their face to the noding (a simplified line crosses a
 neighbour's) and are simplified on their own, so their borders may differ from a neighbour's by up
-to the tolerance; no pack holds them. Alaska, Hawaii and Puerto Rico, which border no other state,
+to the tolerance. The face that did not close goes to a neighbour whole (Cass County NE took Mills
+and Sarpy, T-2595), so each such county is taken back out of every other. Alaska, Hawaii and Puerto Rico, which border no other state,
 are simplified the same way one state at a time (`counties(fetch, state)`, T-1016), each cached
 beside the main file, so the contiguous US cache is left as it was.
 """
@@ -83,6 +84,22 @@ def _build(fetch, keep=_contiguous):
     # on its own: its border with a neighbour may then differ by up to the tolerance
     for cid in lost:
         out[cid] = shapely.simplify(polys[ids.index(cid)], TOLERANCE_DEG, preserve_topology=True)
+    return unlap(out, lost)
+
+
+def unlap(out, lost):
+    """Each county simplified on its own taken out of the county holding most of it (its face went
+    there whole), in place; a neighbour that only meets it within the tolerance is left alone. The
+    slivers the cut leaves along the lost county's border (its own simplification against the
+    noded lines) go too."""
+    for cid in lost:
+        rim = out[cid].buffer(2 * TOLERANCE_DEG)
+        for k, g in out.items():
+            if k in lost or not g.intersects(out[cid]) or g.intersection(out[cid]).area < 0.5 * out[cid].area:
+                continue
+            cut = g.difference(out[cid])
+            out[k] = shapely.union_all([p for p in getattr(cut, "geoms", [cut])
+                                        if p.geom_type == "Polygon" and not p.within(rim)])
     return out
 
 
