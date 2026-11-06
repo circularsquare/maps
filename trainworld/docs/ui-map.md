@@ -45,9 +45,12 @@ under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fet
 stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
 sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
 white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
-them with the rest. A terrain tile is held back until the basemap's vector tile over the same ground has loaded (a
-`twdem://` protocol in `basemap.ts`; 3 s at most), so the shade and the water and land appear
-together [T-1552]. **Flat ground is drawn flat** [T-1881]: the Terrain Tiles are a surface model in
+them with the rest. **The shade never shows on water** [T-1552, T-2628]: a terrain tile is held back (a
+`twdem://` protocol in `basemap.ts`) until every basemap vector tile over its ground in view, at the zoom
+the basemap draws now, has loaded, so the shade comes with the water and land however slow they are.
+There is no time limit; it gives up only when the basemap has stopped loading (a vector tile that failed
+leaves bare ground, water or not). So the sea floor, lake beds and river channels in the tiles never
+show: by the time a tile is drawn, `water_over_shade` covers them. Pricing never reads the shade. **Flat ground is drawn flat** [T-1881]: the Terrain Tiles are a surface model in
 much of the world (SRTM in Asia: towers, raised roads and radar speckle read as hills in dense
 centres), so from tile zoom 10 (`FLAT_MIN_Z`) a tile that meets loaded class grids goes to a worker
 (`map/demFlat.ts`, `workers/demFlat.worker.ts`) and comes back with its heights over flat-class ground

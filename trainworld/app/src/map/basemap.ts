@@ -62,13 +62,13 @@ const DEM = "terrain-dem";
 const HILLSHADE = "hillshade";
 const WATER_OVER_SHADE = "water_over_shade";
 const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
-/** T-1552: the style names the terrain tiles through this protocol, which holds each tile back until
- * the basemap's vector tile for the same ground has loaded, so the shade never shows over bare land
- * where the water is still coming. */
+/** T-1552, T-2628: the style names the terrain tiles through this protocol, which holds each tile back
+ * until the basemap's vector tiles over the same ground have loaded, so the shade never shows where the
+ * water is still coming. */
 const DEM_PROTOCOL = "twdem";
 const VECTOR_SOURCE = "openmaptiles";
-/** Longest a terrain tile waits for the basemap's (ms), for a vector tile that never loads (a 404 fires no event). */
-const DEM_WAIT_MS = 3000;
+/** how often a held terrain tile asks whether the basemap has stopped loading (ms): its last tile failing fires no tile event */
+const DEM_POLL_MS = 500;
 const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles</a>';
 
 /** Positron's place layers that name a settlement, each with a black dot icon. */
@@ -135,35 +135,63 @@ let basemapSymbols: string[] = [];
 /** The first symbol layer's id: layers added before it draw under the basemap's labels. */
 export const firstSymbolId = (map: maplibregl.Map) => map.getStyle().layers.find((l) => l.type === "symbol")?.id;
 
-// T-1552: the highest zoom of a loaded basemap vector tile at or under each "z/x/y" tile (so a loaded
-// tile marks itself and every ancestor), and the zoom the basemap is loading at now. A terrain tile
-// (256 px, so its zoom runs 1-2 above the 512 px vector tiles') is ready to show once a vector tile at
-// the current zoom is in over the same ground.
-const vectorTop = new Map<string, number>();
-let vectorZ = 0;
+// T-1552, T-2628: the basemap vector tiles loaded ("z/x/y"; one starting to load again is taken out). A
+// terrain tile (256 px, so its zoom runs 1-2 above the 512 px vector tiles') is ready to show once every
+// vector tile at the zoom the basemap draws now over its ground in view is in, or once the basemap has
+// stopped loading (a vector tile that failed leaves bare ground, water or not, so the shade waits for
+// nothing more). No time limit: on a slow connection the shade comes with the water, however late.
+const vectorIn = new Set<string>();
+const VECTOR_KEPT = 20_000;
 const demWaiting: { z: number; x: number; y: number; done: () => void }[] = [];
+let demPoll = 0;
 
-function vectorReady(z: number, x: number, y: number) {
-  const k = Math.min(vectorZ, z);
-  return (vectorTop.get(`${k}/${x >> (z - k)}/${y >> (z - k)}`) ?? -1) >= vectorZ;
+/** the zoom of the basemap's vector tiles drawn now (512 px tiles, to the source's maxzoom) */
+function vectorZoom(map: maplibregl.Map) {
+  const max = (map.getSource(VECTOR_SOURCE) as { maxzoom?: number } | undefined)?.maxzoom ?? 14;
+  return Math.max(0, Math.min(max, Math.floor(map.getZoom())));
 }
 
-function vectorLoaded(z: number, x: number, y: number) {
-  for (let k = 0; k <= z; k++) {
-    const key = `${k}/${x >> (z - k)}/${y >> (z - k)}`;
-    if ((vectorTop.get(key) ?? -1) < z) vectorTop.set(key, z);
-  }
-  for (const w of demWaiting.slice()) if (vectorReady(w.z, w.x, w.y)) w.done();
+function vectorReady(map: maplibregl.Map, z: number, x: number, y: number) {
+  const v = vectorZoom(map);
+  if (z >= v) return vectorIn.has(`${v}/${x >> (z - v)}/${y >> (z - v)}`);
+  // a terrain tile wider than a vector tile (past its zoom 12): those of them in view
+  const d = v - z, n = 2 ** v, b = map.getBounds();
+  const tx = (lng: number) => Math.floor(((lng + 180) / 360) * n);
+  const ty = (lat: number) => Math.floor(((1 - Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * Math.PI) / 360)) / Math.PI) / 2) * n);
+  const [x0, x1, y0, y1] = [tx(b.getWest()), tx(b.getEast()), Math.max(0, ty(b.getNorth())), Math.min(n - 1, ty(b.getSouth()))];
+  for (let j = Math.max(y0, y << d); j <= Math.min(y1, ((y + 1) << d) - 1); j++)
+    for (let i = x << d; i < (x + 1) << d; i++) {
+      // the view's columns may run past the antimeridian
+      const seen = [i - n, i, i + n].some((c) => c >= x0 && c <= x1);
+      if (seen && !vectorIn.has(`${v}/${i}/${j}`)) return false;
+    }
+  return true;
 }
 
-function vectorWait(z: number, x: number, y: number, signal: AbortSignal): Promise<void> {
-  // a macrotask on, so the basemap's own tile requests of the same pass have set `vectorZ`
+const vectorSettled = (map: maplibregl.Map) => styleUp(map) && !!map.getSource(VECTOR_SOURCE) && map.isSourceLoaded(VECTOR_SOURCE);
+
+function releaseDem(map: maplibregl.Map) {
+  if (!demWaiting.length) return;
+  const all = vectorSettled(map);
+  for (const w of demWaiting.slice()) if (all || vectorReady(map, w.z, w.x, w.y)) w.done();
+}
+
+function vectorWait(map: maplibregl.Map, z: number, x: number, y: number, signal: AbortSignal): Promise<void> {
+  // a macrotask on, so the basemap's own tile requests of the same pass have started
   return new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
-    if (vectorReady(z, x, y) || signal.aborted) return;
+    if (signal.aborted || vectorReady(map, z, x, y) || vectorSettled(map)) return;
     return new Promise<void>((resolve) => {
-      const w = { z, x, y, done: () => { clearTimeout(timer); signal.removeEventListener("abort", w.done); demWaiting.splice(demWaiting.indexOf(w), 1); resolve(); } };
-      const timer = setTimeout(w.done, DEM_WAIT_MS);
+      const w = {
+        z, x, y,
+        done: () => {
+          signal.removeEventListener("abort", w.done);
+          demWaiting.splice(demWaiting.indexOf(w), 1);
+          if (!demWaiting.length) window.clearInterval(demPoll);
+          resolve();
+        },
+      };
       signal.addEventListener("abort", w.done);
+      if (!demWaiting.length) demPoll = window.setInterval(() => releaseDem(map), DEM_POLL_MS);
       demWaiting.push(w);
     });
   });
@@ -187,7 +215,7 @@ function addDemProtocol() {
     if (!m) throw new Error(`bad terrain tile url ${params.url}`);
     const [z, x, y] = [Number(m[1]), Number(m[2]), Number(m[3])];
     const bytes = demBytes(terrainUrl, z, x, y).then((b) => { if (!b) throw new Error("terrain tile missing"); return b; });
-    await Promise.all([bytes, vectorWait(z, x, y, abort.signal)]);
+    await Promise.all([bytes, demMap && vectorWait(demMap, z, x, y, abort.signal)]);
     // T-1881: relief over ground priced flat taken out (towers and raised roads in the surface model)
     return { data: await flattenDem(terrainUrl, z, x, y, await bytes, abort.signal, viewLoadsGrids()) };
   });
@@ -198,10 +226,17 @@ export function loadBasemap(map: maplibregl.Map) {
   demMap = map;
   addDemProtocol();
   onRedraw((tiles) => { if (styleUp(map) && map.getSource(DEM)) map.refreshTiles(DEM, tiles); });
-  map.on("sourcedataloading", (e) => { if (e.sourceId === VECTOR_SOURCE && e.coord) vectorZ = e.coord.canonical.z; });
+  const key = (c: { z: number; x: number; y: number }) => `${c.z}/${c.x}/${c.y}`;
+  map.on("sourcedataloading", (e) => { if (e.sourceId === VECTOR_SOURCE && e.coord) vectorIn.delete(key(e.coord.canonical)); });
   map.on("sourcedata", (e) => {
-    const c = e.sourceId === VECTOR_SOURCE && e.tile?.state === "loaded" ? e.coord?.canonical : null;
-    if (c) vectorLoaded(c.z, c.x, c.y);
+    if (e.sourceId !== VECTOR_SOURCE) return;
+    const c = e.tile?.state === "loaded" ? e.coord?.canonical : null;
+    if (c) {
+      vectorIn.delete(key(c));
+      vectorIn.add(key(c));
+      if (vectorIn.size > VECTOR_KEPT) vectorIn.delete(vectorIn.values().next().value!);
+    }
+    releaseDem(map);
   });
   // Arabic and Hebrew names (world view) are drawn unjoined and reversed without it. Lazy: fetched
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).
