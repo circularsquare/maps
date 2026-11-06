@@ -32,6 +32,11 @@ Agents report to maps-93. A new orchestrator taking over: their work is in the t
 - **capview** (Opus, tree): T-2622 the 4x clock cap the same whatever the view. Told about T-2631 trap.
 - coarsemkt DONE (38f3e633, notes/T-2621.md). Anita said yes to both: **T-2641** (coarser far ends, Sonnet, Rust tree)
   and **T-2642** (cheaper exact searches, Opus, design+measure first): not started, for the next orchestrator.
+- l10n-insp STOPPED at ~359k (tree .tw-trees/l10n-insp, not landed): 30 of 32 inspector files moved (706 -> 236
+  strings; TripInspector.tsx and MarketTrip.tsx left, need a restructure; T-2634 line says what's left). Its smoke
+  and pseudo shots NOT run (cores full): run tree smoke pinned, then land. Visible English changes to show Anita:
+  complex-view tooltip "A and B and C" -> "A, B and C" (3+ stations; maps-93 would accept), "1 stations" -> "1
+  station", thousands separators on two counts. Check style.css .line-group row ("Part of [pill] group").
 - **dianames** (Sonnet, tree): T-2640 diagram zone names by how many zones are on screen.
 - Anita ~18:45: start a new orchestrator now; maps-93 keeps landing its agents' reports until done, per /handoff.
   She said not to worry about a B-drive access she noticed (not any maps-93 agent).
