@@ -410,7 +410,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   it came in, or within 45 degrees of it (a U-turn or a hairpin). Each step below avoids it where it can.
 - **Segments** between key nodes (a branch, a line's end, the lines changing), split at the station
   farthest off whenever its stations fit neither a straight run within 11 degrees nor one bend, within
-  0.5 of the median hop.
+  the median hop.
 - **The snap**: four rounds of one solve on every node: a piece within 11 degrees of a 45 degree
   direction after B, or in the last round, is made exact with its stations on it (weight 30), the way
   the real line runs; every hop keeps its length along its direction (its snapped piece's, else B's, or
@@ -422,7 +422,9 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 - **Routing**: a piece within 5 degrees is drawn straight (the separation makes it exact), unless that
   folds a line against a straight neighbour; any other as an orthogonal leg and a diagonal leg or the
   reverse, whichever folds fewer lines (4 times its length a fold), leaves its ends by ways no other
-  piece takes (its length each) and passes nearer its stations, chosen in order and then again against
+  piece takes (its length each), turns the lines running on into the next pieces least (3 times its length
+  for each 45 degrees a line turns there past its real turn and half a step) and passes nearer its stations,
+  chosen in order and then again against
   all the others; each station goes where it projects onto the drawing, in order, at least half an even
   share of the piece from the next.
 - **The separation** (3 passes, each drawn again as above): the drawing in terms that keep it

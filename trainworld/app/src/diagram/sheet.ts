@@ -1042,7 +1042,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       const k = 3 * s, t = fi >= fj ? 6 * c : 6 * c + 3;
       (stTri[k] = tv[t]), (stTri[k + 1] = tv[t + 1]), (stTri[k + 2] = tv[t + 2]);
       if (fi >= fj) (stW[k] = 1 - fi), (stW[k + 1] = fi - fj), (stW[k + 2] = fj);
-      else (stW[k] = 1 - fj), (stW[k + 1] = fj - fi), (stW[k + 2] = fi);
+      else (stW[k] = 1 - fj), (stW[k + 1] = fi), (stW[k + 2] = fj - fi);
     }
     // the vertex nearest the prototype lattice's middle pins the drawing's place
     let pin = 0, bd = Infinity;
