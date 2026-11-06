@@ -9,7 +9,7 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
+import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
 import { blockKeysOutside } from "./keys";
@@ -50,8 +50,10 @@ export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step:
  * T-677: the bunny's train on top. T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
-  if (!loadingCardShown()) return null;
-  const load = loadProgress.value;
+  // (T-2574: a load ended at a cached result shows its bar full a moment first)
+  const up = loadingCardShown(), ending = cardEnding.value;
+  if (!up && (!ending || loadFailure.value)) return null;
+  const load = up ? loadProgress.value : ending;
   const step = load?.step ?? STAGE_TEXT.game;
   const fraction = load?.fraction ?? 0;
   const left = load?.leftMs;

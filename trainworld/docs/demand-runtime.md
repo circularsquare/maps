@@ -447,8 +447,8 @@ one solving worker (`FOCUS_WORKERS`, `?focusWorkers=n` for more, never more than
 each worker is about 0.1 GB during a load, and a second showed the zone's first figures no sooner,
 T-2495), holding every period, and no aux worker of its own (`?perfOff=focusAux` gives it one): the
 questions an aux worker answers go to its first solving worker, between its populations. It opens the zone in view's
-pack (a copy of the one the main pool is sent, or downloaded again for a zone newly in view) and,
-once the network is in, solves that zone as a rough solve does (no market, the free-flow round from
+pack (downloaded for it; T-2533: as soon as the save's stations are known to reach the zone, before the network
+is in) and, once the network is in, solves that zone as a rough solve does (no market, the free-flow round from
 one period in parts and estimates), but through every round and the capacity fit, kept as solved
 (`solve.keep`). The main pool goes on solving and opening meanwhile, so the zone takes about its own
 time, however big the save (holding the main pool's workers meanwhile settled the zone little
@@ -461,8 +461,14 @@ except where the city view's zone's cluster went ahead of it (T-2459, above). A 
 solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.
 Questions about a zone shown from it go to its workers (`ask`, `target`, `cellModes`; the cells too
 while the main pool has not opened the zone). It ends (its workers terminated, questions waiting on them
-answered empty) when the whole solve's final lands, a cached result shows, the network changes
-or a worker of it fails; the main pool makes no rough solve while it runs. **It ends sooner**
+answered empty) when the whole solve's final lands, the network changes or a worker of it fails; the
+main pool makes no rough solve while it runs. **With a cached result shown** (T-2533, `?perfOff=cacheFocus`
+ends the pool there) it shows nothing (the cache's figures are final) and only answers: its solve stops at round 0 (no further `go`, so
+the main pool has the cores), and the zone in view's questions go to that round (`focusAsked`; a question asked
+before the focus solve is sent waits for it). It ends once the main pool's solve of the same network is sent and
+the focus round 0 has answered what was asked of it (1.5 s after its last answer), or at once if that solve has a
+round of the zone (`retireFocus`): the pool beside the main pool's solve held 1.0-1.3 GB more on Anita's North
+America save. A question after that waits for the main pool's round, as before. **It ends sooner**
 (T-2495, `retireFocus`, `?perfOff=focusEnd` off) once the main pool's own estimates are the view and,
 for every zone it solves or shows, it has shown a round of a zone those estimates cover and is no
 further on than they are, or has shown the zone's last round: on the real save at the main pool's

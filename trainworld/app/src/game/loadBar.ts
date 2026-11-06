@@ -15,6 +15,9 @@ export type StageMs = Record<Stage, number>;
 export const GUESS_SHARES: StageMs = { game: 0.06, data: 0.24, demand: 0.7 };
 export const GAME_MS = 4000;
 
+/** T-2574: a cached result's showing once its network and packs are in (its packs' digests, its figures unpacked) */
+export const CACHE_SHOW_MS = 1500;
+
 /** a stage running late creeps toward this share of itself, never done until it is */
 export const STEP_CAP = 0.98;
 /** a share of `expected` ms gone since `since`: in step to 90%, then slowing toward STEP_CAP */

@@ -66,8 +66,8 @@ import {
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
-import { choosing, demandIdle, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, onLoadStop, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
-import { type BarPlace, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
+import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, onLoadStop, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
 import { PERIODS, periodsMatch } from "../game/periods";
@@ -721,8 +721,10 @@ class DemandClient {
    * again when a game's network arrives (`modelled`), unless a remembered load set them; `netAt` and
    * `dataAt`, when the game stage and the data stage ended; T-1479: `modelSolve`, the solve model's
    * time for the network (before this browser's pace), `solveRounds` the solve's first and later rounds
-   * as last seen, `left` the time left shown and when */
-  private job: { items: string[]; cities: CityId[]; startup: boolean; version?: number; best: number; anchor?: { shown: number; frac: number }; since: number; wait: number | null; shares?: StageMs; modelled?: boolean; netAt?: number; dataAt?: number; pace?: Pace; modelData?: number; modelSolve?: number; solveRounds?: { first: number; rest: number; measured: boolean }; firstLand?: number[]; left?: { ms: number; at: number } } | null = null;
+   * as last seen, `left` the time left shown and when; T-2574: `viaCache`, the cache read expected to end the load
+   * (`expectCache`), `cacheNet` whether its shares were set with the network in, `cacheReadyAt` when its packs and
+   * network were in */
+  private job: { items: string[]; cities: CityId[]; startup: boolean; version?: number; best: number; anchor?: { shown: number; frac: number }; since: number; wait: number | null; shares?: StageMs; modelled?: boolean; netAt?: number; dataAt?: number; pace?: Pace; modelData?: number; modelSolve?: number; solveRounds?: { first: number; rest: number; measured: boolean }; firstLand?: number[]; left?: { ms: number; at: number }; viaCache?: object; cacheNet?: boolean; cacheReadyAt?: number } | null = null;
   private progressTimer = 0;
   /** T-243: while a load runs the bar also moves with time, so progress is recomputed this often */
   private progressTick = 0;
@@ -888,6 +890,7 @@ class DemandClient {
         this.fetchMarket(id);
       }
       for (const id of zones) fetchZone(id);
+      this.focusSoon(); // (T-2533: the focus pool's pack too)
       this.progress();
     });
   }
@@ -2109,7 +2112,14 @@ class DemandClient {
     // stage in hand moves by what has landed or its time against its expectation, never past its share.
     // (the model's data time scaled by how this browser's last load compared with it, T-1195)
     const dataMs = dlMs + openMs;
-    if (!job.shares || (!job.modelled && netIn)) {
+    // T-2574: a cached result expected to end the load: the game stage, the packs' download (their digests are the
+    // cache's key) and the result's showing; nothing is opened or solved before the card goes
+    const viaCache = job.viaCache !== undefined, gameExp = was?.game ?? GAME_MS * job.pace.game;
+    if (viaCache && netIn && downloaded) job.cacheReadyAt ??= now;
+    if (viaCache) {
+      if (job.cacheNet !== netIn || !job.shares) job.shares = sharesOf({ game: netIn ? (job.netAt ?? job.since) - job.since : gameExp, data: dlMs, demand: CACHE_SHOW_MS });
+      job.cacheNet = netIn;
+    } else if (!job.shares || (!job.modelled && netIn)) {
       if (netIn) job.modelData = job.items.every(loaded) ? 0 : dataMs;
       const ms: StageMs | null = was ?? (netIn ? { game: (job.netAt ?? job.since) - job.since, data: job.modelData! * job.pace.data, demand: needsSolve ? prior : 0 } : null);
       job.shares = ms ? sharesOf(ms) : GUESS_SHARES;
@@ -2118,19 +2128,24 @@ class DemandClient {
     // the data stage by its bytes and the packs open in every worker, or by its time against its expectation
     const openReal = openMs > 0 ? openDone / openMs : 1;
     const dataPart = !netIn && !job.items.length ? 0 : dataMs > 0 ? (dlMs * dl + openMs * openReal) / dataMs : 1;
+    const shown = viaCache && this.cacheShown(), ready = job.cacheReadyAt;
     const parts: StageMs = {
-      game: netIn ? 1 : within(job.since, was?.game ?? GAME_MS * job.pace.game),
-      data: job.dataAt !== undefined ? 1 : Math.min(STEP_CAP, Math.max(dataPart, netIn ? within(job.netAt, was?.data ?? dataMs * job.pace.data) : 0)),
-      demand: !needsSolve ? 1 : solve,
+      game: netIn ? 1 : within(job.since, gameExp),
+      data: viaCache ? (downloaded ? 1 : Math.min(STEP_CAP, dl)) : job.dataAt !== undefined ? 1 : Math.min(STEP_CAP, Math.max(dataPart, netIn ? within(job.netAt, was?.data ?? dataMs * job.pace.data) : 0)),
+      demand: viaCache ? (shown ? 1 : within(ready, CACHE_SHOW_MS)) : !needsSolve ? 1 : solve,
     };
-    const fraction = Math.min(0.99, stagedFraction(job.shares, parts));
+    const shares = job.shares!;
+    const fraction = Math.min(0.99, stagedFraction(shares, parts));
     keepPlace(job, fraction);
     // T-1479: the time left, each stage's expected time less its time so far; a stage running late is
     // guessed to go on a share of its time so far. Unknown on a first load until its network is in.
     // T-1654: always a figure; a late round is estimated from the periods landed (`solveStage`).
     let target: number | null = null;
-    if (netIn || was) {
-      const sinceGame = now - job.since, gameExp = was?.game ?? GAME_MS * job.pace.game;
+    if (viaCache) {
+      const sinceGame = now - job.since, sinceReady = ready === undefined ? 0 : now - ready;
+      target = (netIn ? 0 : Math.max(gameExp - sinceGame, 0.2 * sinceGame)) + (downloaded ? 0 : Math.max(300, dlMs - dlElapsed)) + (shown ? 0 : Math.max(CACHE_SHOW_MS - sinceReady, 0.2 * sinceReady));
+    } else if (netIn || was) {
+      const sinceGame = now - job.since;
       const gameLeft = netIn ? 0 : Math.max(gameExp - sinceGame, 0.2 * sinceGame);
       const dataExp = was?.data ?? dataMs * job.pace.data;
       const sinceData = job.netAt !== undefined ? now - job.netAt : 0;
@@ -2139,7 +2154,7 @@ class DemandClient {
     }
     if (target !== null) job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
-    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(job.shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
+    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
     loadProgress.value = { cities, fraction: job.best, step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
   }
@@ -2169,7 +2184,24 @@ class DemandClient {
     const ids = [...markets.map(marketItem), ...cities];
     const hashes = await Promise.all(ids.map((id) => this.packHashOf(id).p));
     const c = new Set<string>(coarse);
-    return { format: CACHE_FORMAT, build: BUILD, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "", packs: Object.fromEntries(ids.map((id, i) => [id, c.has(id) ? `${hashes[i]}:coarse` : hashes[i]])) };
+    return { ...this.keyBase(), packs: Object.fromEntries(ids.map((id, i) => [id, c.has(id) ? `${hashes[i]}:coarse` : hashes[i]])) };
+  }
+  private keyBase(): Omit<CacheKey, "packs"> {
+    return { format: CACHE_FORMAT, build: BUILD, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "" };
+  }
+
+  /** T-2574: a game load's cached result is expected (`log` found it, its packs still to check): the card's bar
+   * counts to its showing (`jobProgress`), the card going with it (`cacheDone`). Not with the old card. `on` false:
+   * that read (any, for null) is no longer expected to show. */
+  private expectCache(log: object | null, on: boolean) {
+    const job = this.job;
+    if (!job || job.wait === null) return;
+    if (on) { if (!perfOff("cacheCard")) job.viaCache = log!; }
+    else if (job.viaCache && (!log || job.viaCache === log)) {
+      // (the full load's shares again, from where the bar stands)
+      job.viaCache = job.cacheNet = job.cacheReadyAt = undefined;
+      job.modelled = false;
+    }
   }
 
   /** A whole game's network arrived: show its cached final result if there is one for exactly this
@@ -2193,6 +2225,10 @@ class DemandClient {
       const markets = this.wantsMarket(svc);
       const had = Object.keys(stored.packs ?? {}).filter(isMarket).map(marketZone);
       if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
+      // (T-2574: what can be checked before the packs are in)
+      const pre = sameKey(stored, { ...this.keyBase(), packs: stored.packs ?? {} });
+      if (pre) return void (log.miss = pre);
+      if (!late()) this.expectCache(log, true);
       // (T-1223: the levels the solve will have; before the fine set is made, the save's list's)
       const saved = !this.lodZones && this.lod === "auto" ? this.savedFine : null;
       const coarse = cities.filter((id) => (saved ? !saved.includes(id) : this.levelFor(id) === LOD_COARSE));
@@ -2205,6 +2241,8 @@ class DemandClient {
       log.shownAt = performance.now();
     } catch (err) {
       log.miss = "error: " + String(err);
+    } finally {
+      if (log.miss) this.expectCache(log, false);
     }
   }
 
@@ -2222,7 +2260,9 @@ class DemandClient {
     this.cachedModes = stored.modes ?? null;
     this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
-    this.endFocus(); // T-2045: every zone has its final figures
+    // T-2045: every zone has its final figures; T-2533: the focus pool stays for the zone in view's questions
+    if (perfOff("cacheFocus")) this.endFocus();
+    else this.hideFocus();
     // T-1533: a rough solve under way gives way, so the packs it holds back open at once (a rough
     // solve of no zone, without the barrier, ends the worker's at its next look)
     if (this.cur?.rough) {
@@ -2367,6 +2407,7 @@ class DemandClient {
         // the load ends with the card, unremembered: its time says nothing of a load without the cache
         this.cacheSolve = cached;
         this.endJob();
+        if (clock?.held.peek()) endCardFull(loadProgress.peek()); // (T-2574)
         loadProgress.value = null;
         this.zoneProgress();
       } else if (s && s.published < ROUNDS) {
@@ -2406,6 +2447,7 @@ class DemandClient {
     if (c !== this.focusCity && ((this.fetching.has(c) && !this.opened.has(c)) || (this.fetchingBare.has(c) && !this.bareOpen.has(c)))) for (const w of this.workers) w.postMessage({ kind: "first", id: c } satisfies ToDemand);
     this.focusCity = c;
     this.focusEpoch++;
+    this.wakeFocusAsks();
     this.cellsP = null;
     this.modesP = null;
     this.purposeP.clear();
@@ -2685,6 +2727,8 @@ class DemandClient {
     if (--w.left === 0) {
       this.pendingQueries.delete(msg.id);
       w.done(w.replies);
+      // (T-2533: a moment for the questions that follow from this one, a far end's spread after its sums)
+      if (w.focus && this.cacheShown()) { clearTimeout(this.retireTimer); this.retireTimer = window.setTimeout(() => this.retireFocus(), 1500); }
     }
     return true;
   }
@@ -2705,13 +2749,15 @@ class DemandClient {
   private ffetching = new Set<CityId>();
   /** ?debug=1: when each focus solve was sent, its zone, and each round shown */
   flog: { version: number; zone: CityId; sentAt: number; openAt?: number; roundAt: number[] }[] = [];
+  /** ?debug=1: each pack the focus pool downloaded, when asked and when in */
+  fdlog: { id: CityId; at: number; got: number }[] = [];
   /** ?debug=1: when each zone opened in the focus pool */
   fopened: Map<CityId, number> | null = null;
 
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
     // (none on a small device: its workers would be a second copy of the zone in the tab's memory, T-2122)
-    if (this.fpool || perfOff("focus") || smallDevice() || this.failed || this.cacheShown()) return;
+    if (this.fpool || perfOff("focus") || smallDevice() || this.failed || (this.cacheShown() && perfOff("cacheFocus"))) return;
     // (at most FOCUS_WORKERS solving workers: each worker is memory of its own, T-2045's follow-up)
     const n = Math.max(1, Math.min(this.computeN, Number(new URLSearchParams(location.search).get("focusWorkers")) || FOCUS_WORKERS));
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
@@ -2730,6 +2776,32 @@ class DemandClient {
     focusZones.value = new Map();
   }
 
+  /** T-2533: a cached result is shown: no zone's figures come from the focus pool, which answers the zone in view's
+   * questions until the same network's solve can (`focusAsked`, `retireFocus`) */
+  private hideFocus() {
+    this.fshown.clear();
+    if (focusZones.peek().size) focusZones.value = new Map();
+  }
+
+  /** T-2533: with a cached result shown, the zone in view waits for its focus solve: none sent yet, the pool alive and
+   * the workers' solve with no round of it; `fsent` is woken when a focus solve is sent or the pool ends */
+  private focusComing(): boolean {
+    const id = activeCity.peek(), svc = this.latest(), s = this.cur;
+    if (!this.fpool?.alive || !this.cacheShown() || perfOff("cacheFocus") || this.focusAsked(id) || !svc || !this.solveNeed(svc)?.has(id)) return false;
+    const a = s?.ahead?.cities.includes(id) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : -1;
+    return !(s && s.svc === svc && Math.max(s.published, a) >= 0);
+  }
+  private fsent: (() => void)[] = [];
+  private wakeFocusAsks() {
+    for (const r of this.fsent.splice(0)) r();
+  }
+
+  /** T-2533: the focus solve asked about `zone` while a cached result of its network is shown */
+  private focusAsked(zone: CityId): Solve | null {
+    const f = this.fsolve;
+    return f && this.fpool?.alive && f.cities[0] === zone && this.cacheShown() && f.svc === this.log.find((s) => s.version === CACHE_VERSION)?.svc ? f : null;
+  }
+
   /** The pool's workers go (their WASM memory with them); questions still waiting on them get no answer. */
   private stopFocusPool() {
     this.fpool?.end();
@@ -2737,6 +2809,7 @@ class DemandClient {
     this.fpushed.clear();
     this.ffetching.clear();
     for (const [id, q] of this.pendingQueries) if (q.focus) { this.pendingQueries.delete(id); q.done([]); }
+    this.wakeFocusAsks();
   }
 
   /**
@@ -2748,15 +2821,28 @@ class DemandClient {
    */
   private retireFocus() {
     const p = this.fpool, s = this.cur, dv = demandView.peek();
-    if (!p?.alive || perfOff("focusEnd") || !s || s.rough || !s.showEstimates || s.published < 0 || s.published >= ROUNDS || dv?.version !== s.version) return;
+    if (!p?.alive || perfOff("focusEnd") || !s || s.rough) return;
+    // T-2533: with a cached result shown, once the same network's solve is sent (the pool and that solve together held
+    // 1.0-1.3 GB more on Anita's North America save) and the focus solve's round 0 has answered what was asked of it;
+    // at once if that solve already has a round of the zone in view
+    const f = this.fsolve;
+    if (dv?.version === CACHE_VERSION) {
+      if (s.svc !== this.log.find((x) => x.version === CACHE_VERSION)?.svc) return;
+      const id = f?.cities[0] ?? activeCity.peek(), a = s.ahead?.cities.includes(id) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : -1;
+      const asked = f && f.svc === s.svc && (f.published < 0 || [...this.pendingQueries.values()].some((q) => q.focus));
+      if (asked && Math.max(s.published, a) < 0) return;
+      this.fretiredAt = performance.now();
+      return this.stopFocusPool();
+    }
+    if (!s.showEstimates || s.published < 0 || s.published >= ROUNDS || dv?.version !== s.version) return;
     // (a zone the main pool's estimates do not cover, or a solve that has shown nothing yet, keeps it)
     const done = (id: CityId, f: { s: Solve; round: number }) => f.s.svc !== s.svc || (f.round >= 0 && s.cities.includes(id) && (f.round >= ROUNDS || f.round <= s.published));
-    const f = this.fsolve;
     if (f && !done(f.cities[0], { s: f, round: f.published })) return;
     for (const [id, v] of this.fshown) if (!done(id, v)) return;
     this.fretiredAt = performance.now();
     this.stopFocusPool();
   }
+  private retireTimer = 0;
   /** ?debug=1: when the pool ended ahead of the load's final (`retireFocus`) */
   fretiredAt: number | null = null;
 
@@ -2769,21 +2855,26 @@ class DemandClient {
   private focusSoon() {
     const p = this.fpool, id = activeCity.peek();
     if (!p?.alive || !viewedZone.peek() || !zonesLoadForView.peek()) return;
-    const svc = this.latest();
-    if (!svc || !this.solveNeed(svc)?.has(id)) return;
+    // T-2533: before the loading game's network, its pack opens there already if the save's stations reach the zone
+    const a = this.ahead, early = gameLoadArmed() && !!a && !a.arrived;
+    const svc = early ? null : this.latest();
+    if (!(svc ? this.solveNeed(svc) : early ? this.reachedSet(a!.svc) : null)?.has(id)) return;
     if (focusZones.peek().get(id) || (this.fsolve?.cities[0] === id && this.fsolve.svc === svc)) return;
     if (!p.holds(id)) {
       if (this.ffetching.has(id)) return;
       this.ffetching.add(id);
+      const fl = { id, at: performance.now(), got: 0 };
+      this.fdlog.push(fl);
       void this.downloadPack(id).then(([header, bin]) => {
         this.ffetching.delete(id);
+        fl.got = performance.now();
         if (this.fpool !== p) return;
         const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
         p.post({ id, header: new TextDecoder().decode(header), bin: own, level: this.levelFor(id) });
       }, () => this.ffetching.delete(id));
       return;
     }
-    if (!p.open.includes(id)) return; // its `opened` comes back here
+    if (!svc || !p.open.includes(id)) return; // its `opened` (or the network's arrival) comes back here
     const { net, layout, ids } = packService(svc);
     const version = ++this.version;
     const now = performance.now();
@@ -2794,6 +2885,7 @@ class DemandClient {
     if (this.log.length > 50) this.log.shift();
     this.flog.push({ version, zone: id, sentAt: now, openAt: this.fopened?.get(id), roundAt: [] });
     p.solve({ kind: "solve", version, net, rounds: ROUNDS, barrier: true, first: id, only: [id], keep: true, ids, ...(perfOff("estimate") ? { exact0: true } : {}) });
+    this.wakeFocusAsks();
     this.lengthsAhead(); // T-2476: the city view's graph of the zone, of round 0
   }
 
@@ -2831,7 +2923,9 @@ class DemandClient {
       if (!s.byRound[r].every(Boolean)) break;
       s.results = s.byRound[r];
       s.published = r;
-      if (r < ROUNDS) this.fpool?.go(s.version, r + 1);
+      // (T-2533: with a cached result shown its round 0 answers the zone's questions; the rounds after would only take
+      // the cores from the main pool's solve)
+      if (r < ROUNDS && !(this.cacheShown() && !perfOff("cacheFocus"))) this.fpool?.go(s.version, r + 1);
       this.publishFocus(s, r);
       if (r > 0) s.byRound[r - 1] = [];
     }
@@ -2844,6 +2938,12 @@ class DemandClient {
     const lines = s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout;
     this.inOrder(async () => {
       const w = this.cur;
+      // T-2533: with a cached result shown its rounds answer questions only (`focusAsked`)
+      if (this.cacheShown() && !perfOff("cacheFocus")) {
+        const l = this.flog.find((x) => x.version === s.version);
+        if (l) l.roundAt[round] = performance.now();
+        return void this.retireFocus();
+      }
       // (the load's own solve further on than a round before the last, or landed)
       if (!this.fpool || (!final && w && !w.rough && w.svc === s.svc && w.published > round) || (w && this.cityVersion.get(id) === w.version)) return void this.retireFocus();
       const ests = await this.daysOf(s, lines, round, false, res, true);
@@ -3083,6 +3183,7 @@ class DemandClient {
       if (round < ROUNDS && s.ahead?.key === key) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: 0 } satisfies ToDemand);
       if (round >= ROUNDS) e.at = performance.now();
       this.publishCluster(s, res as Result[], msg.cluster, round);
+      if (this.cacheShown()) this.retireFocus(); // (T-2533)
       this.progress();
       this.checkHold(); // T-421
       return;
@@ -3173,7 +3274,7 @@ class DemandClient {
     // the last one's bar is up starts the bar over (T-884: not the pick's own wait, which goes on)
     if (gameLoad && this.job) {
       const same = this.job.wait === gameWait().seq;
-      this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since, shares: this.job.shares } : {}) };
+      this.job = { ...this.newJob(startup.peek() === "loading"), ...(same ? { best: this.job.best, anchor: this.job.anchor, since: this.job.since, shares: this.job.shares, viaCache: this.job.viaCache, cacheReadyAt: this.job.cacheReadyAt } : {}) };
     }
     this.send(svc, performance.now());
     this.focusSoon();
@@ -3218,7 +3319,9 @@ class DemandClient {
   private dropEarly(svc: Service) {
     const i = this.log.findIndex((s) => s.version === CACHE_VERSION && s.svc === svc);
     if (i >= 0) this.log.splice(i, 1);
+    this.expectCache(null, false);
     if (!this.cacheShown()) return;
+    queueMicrotask(() => this.wakeFocusAsks());
     this.cachedCities = new Set();
     this.cachedHash = this.cachedAhead = null;
     this.cachedModes = null;
@@ -3260,6 +3363,7 @@ class DemandClient {
     this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets: [...this.opened].filter(isMarket).map(marketZone), coarse: this.coarseOf(cities), showEstimates, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
+    if (this.cacheShown()) this.retireFocus(); // (T-2533)
     demandUpdating.value = true;
     // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
     // whole one (`plan` says whether there is a local one), not rounds
@@ -3334,6 +3438,10 @@ class DemandClient {
       const view = dv?.version ?? f.s.version;
       return f.round >= ROUNDS ? { version: f.s.version, round: ROUNDS, view, wait: false, solve: f.s } : { version: f.s.version, round: f.round + 1, view, wait: true, solve: f.s, shown: f.round };
     }
+    // T-2533: with a cached result shown, the zone in view solved alone in the focus pool, which holds its round 0
+    // (or the round it was in when the cache showed: no further `go`)
+    const fa = this.focusAsked(zone);
+    if (fa) return { version: fa.version, round: Math.max(0, fa.published), view: dv?.version ?? CACHE_VERSION, wait: true, solve: fa, shown: fa.published };
     const s = this.cur;
     // T-402: the zone in view's cluster solved ahead counts its own rounds (the workers tell which
     // rounds a question means by its zone)
@@ -3363,7 +3471,7 @@ class DemandClient {
   /** The answer asked for at `t` still goes with what is shown. */
   private still(t: Target): boolean {
     const v = demandView.peek()?.version;
-    if (this.fversions.has(t.version)) return this.fshown.get(activeCity.peek())?.s.version === t.version;
+    if (this.fversions.has(t.version)) return (this.fshown.get(activeCity.peek())?.s ?? this.focusAsked(activeCity.peek()))?.version === t.version;
     return t.wait ? this.cur?.version === t.version && (v === undefined || v === t.view || v === t.version) : v === t.view;
   }
 
@@ -3375,6 +3483,8 @@ class DemandClient {
    * asked about answers nothing; the question then goes to the newer round.
    */
   private viaRound<T>(key: string, run: (t: Target) => Promise<T | null>, tries = 2): Promise<T | null> {
+    // T-2533: the zone in view of a cached result, which the focus pool is about to solve: asked of that solve
+    if (this.focusComing()) return new Promise<void>((r) => this.fsent.push(r)).then(() => this.viaRound(key, run, tries));
     const t = this.target();
     if (!t) return Promise.resolve(null);
     if (!t.wait) return run(t);
@@ -4119,6 +4229,7 @@ class DemandClient {
       // T-324: lines new or changed since the shown result have no figures; theirs come from the
       // first estimate at once, every other figure waits for the final round as above
       if (round === 0 && s === this.cur) this.publishNewLines(s, res);
+      if (this.cacheShown()) this.retireFocus(); // (T-2533: a cached result's network solved again)
       return;
     }
     this.inOrder(async () => {

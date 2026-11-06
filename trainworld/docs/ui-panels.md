@@ -1151,7 +1151,12 @@ registry centre and zoom, or over New York with none [T-310].
   ratio times the first, from the second on at their own mean; a round running late stretches the
   rounds after it too. The bar never goes back: when the model's share falls (the network arrives and the
   guess gives way to the model, or an estimate grows) it keeps its place and the rest is spread over the rest
-  of it, moving again with the next work done [T-2552]. It is never full before the card goes. The pick and the game it
+  of it, moving again with the next work done [T-2552]. It is never full before the card goes, except after a
+  cached result [T-2574]: once the load's network is found in the cache (its zones, build, workers and flags match,
+  its packs' digests still to come), the stages are the game, the packs' download and the result's showing (1.5 s
+  once the network and packs are in), with nothing opened or solved; the bar keeps its place and runs from there, the
+  time left drops to seconds, and when the result shows the card stays 0.4 s with the bar full and no time left
+  before it goes. A read that then misses goes back to the full load's stages from where the bar stands. The pick and the game it
   opens are one wait. A game loaded in place while the last one's bar is still up (a check's direct
   load; the player's loads reload the page) starts the bar over from empty [T-840].
 - **Under the bar, the share done and the time left** [T-1479, T-1654]: "42%" at its left, "About 2 min

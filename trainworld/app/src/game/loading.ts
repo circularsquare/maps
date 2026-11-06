@@ -31,6 +31,16 @@ export interface LoadProgress {
 
 /** What the demand pool is loading now; null when nothing is. */
 export const loadProgress = signal<LoadProgress | null>(null);
+/** T-2574: a card whose load ended at a cached result, shown full for END_BEAT_MS after the clock runs, so its bar
+ * reaches the end before it goes (ui/LoadingScreen.tsx) */
+export const cardEnding = signal<LoadProgress | null>(null);
+const END_BEAT_MS = 400;
+let endingTimer: ReturnType<typeof setTimeout> | undefined;
+export function endCardFull(p: LoadProgress | null) {
+  clearTimeout(endingTimer);
+  cardEnding.value = p && { ...p, fraction: 1, leftMs: null };
+  if (p) endingTimer = setTimeout(() => (cardEnding.value = null), END_BEAT_MS);
+}
 /** T-343: each zone being loaded whose figures have not arrived yet, with its share done (0-1).
  * A zone of the load above has that load's share; a zone opened for its bubbles only, its own. */
 export const zoneLoads = signal<ReadonlyMap<CityId, number>>(new Map());
@@ -91,6 +101,7 @@ export function startGameWait(key: string) {
 /** A whole game was loaded or started (workers/clockClient.ts): hold the clock until its demand is done. */
 export function holdForGameLoad(key?: string) {
   if (loadFailure.peek()) return; // no demand to wait for
+  endCardFull(null);
   gameReady.value = false;
   if (!holdArmed) { viewFigures.value = false; gameLoadSeq.value++; }
   wait = holdArmed ? { ...wait, key: key ?? wait.key } : { seq: wait.seq + 1, since: performance.now(), key: key ?? "last" };
