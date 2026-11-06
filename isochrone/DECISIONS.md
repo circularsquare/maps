@@ -5,6 +5,18 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **An L0.1 window needs 5% of the view in fine blocks; the rest of it is filled from L1 speeds**
+  (T-086, notes/T-086.md), replacing "every tile of the window exists". A window costs the same
+  whatever its share (0.1 s at zoom 12, ~1 s at the cap); a one-block town centred at zoom 10 is
+  ~11% of the view, so 5% keeps every town and drops only slivers at the view's edge.
+- **Roads climb at most a 10% grade at 1 km** (T-084, notes/T-084.md): the road part of a cell takes
+  the height factor and the slope factor of min(cell slope, 10%), off-road ground the full slope.
+  10% is the 100 m street cap and about the steepest pass road; the winding detour is not counted,
+  so not lower. Alps L10 cells 14% faster (1.38x MAP's, was 1.64x); flat land unchanged. The 100 m
+  level does not have the cap yet.
+- **The land hazard band takes its land from the page's L1 speed tiles** (T-084), so the band and
+  the speeds can never disagree on land again; MAP-land band kept in `data/hazard_map2020/`.
+
 - **Town blocks stored inside whole 1 degree tile files, absent blocks zeroed, a 16-bit block
   mask per tile in index.json** (T-057, notes/T-057.md). Whole tiles round every town were twice
   the size (1.2 against 0.6 GB at stage 1, ~3.5 against ~1.4 GB with elevation); block files would

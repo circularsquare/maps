@@ -3,7 +3,7 @@
     python isochrone/tools/build_tiles.py [workers]       # into data/tiles_next/, ~6 min on 3
     python isochrone/tools/build_tiles.py swap <backup>    # serve it; what was served moves to data/<backup>/
 
-Inputs: data/surface/walk_today.tif, lc_speed.tif, lc_water.tif, elev.tif, terrain_factor.tif
+Inputs: data/surface/walk_today.tif, lc_water.tif, elev.tif, slope.tif, terrain_factor.tif
 (docs/surface.md) and data/roads/l1/<tile>.bin.gz (docs/roads.md). Rules: docs/resolution.md
 (levels, water, coarse cells) and docs/roads.md ("The page part").
 
@@ -31,6 +31,9 @@ from rasterio.windows import Window
 
 from smallwater import SmallWater, STRIP
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "surface"))
+import common as SC                 # noqa: E402  MAP's height and slope factors (docs/surface.md)
+
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(HERE, "data")
 SURF = os.path.join(DATA, "surface")
@@ -44,11 +47,12 @@ SIZE = {1: 600, 3: 200}             # cells per tile side
 SCALE = 40                          # speed byte = km/h x 40
 MIN_LAND = 0.25                     # a coarse cell is land when a quarter of its L1 cells are
 SMALL_KMH = 1.0                     # water patches under 5 km2 are waded (T-013)
-SNOW_KMH = 1.62                     # land cover of land LC100 has no class for (docs/surface.md)
 GAP_KMH = 3.0                       # land LC100 leaves as sea: bare or sparse, a middle guess
 GAP_SEA = 0.98                      # ... a pixel LC100 has as all sea
 GAP_ELEV = 2                        # ... where GMTED is above this many metres
-ROAD_KMH = 5.0                      # road speed before the terrain factor, as at 100 m
+ROAD_KMH = 5.0                      # road speed before the height and slope factors
+ROAD_GRADE = 0.10                   # roads climb a steeper cell at this grade (T-084, docs/roads.md)
+ROAD_CAP_DEG = float(np.degrees(np.arctan(ROAD_GRADE)))
 ROAD_E = 3                          # effective road share e = min(1, 3 x share) (docs/roads.md)
 RB = 250                            # road byte scale
 WALK_BITS, BRIDGE = 7, 16           # road bits: path, local, main; a walkable bridge
@@ -118,32 +122,31 @@ def do_strip(args):
     win = Window(0, r0, W, STRIP)
     rd = lambda name, band=1: rasterio.open(os.path.join(SURF, name + ".tif")).read(band, window=win)
     walk = rd("walk_today")
-    lc = rd("lc_speed").astype(np.float32) / 1000
     tf = rd("terrain_factor").astype(np.float32) / 10000
     sea = rd("lc_water", 2)
     elev = rd("elev")
+    slope = rd("slope").astype(np.float32) / 100
     small = np.unpackbits(small_bits, count=STRIP * W).reshape(STRIP, W).astype(bool)
     count, bits = roads_strip(i, have)
 
     land = walk > 0
     gap = ~land & ~small & (sea >= GAP_SEA * 250) & (elev > GAP_ELEV)
-    del sea, elev
+    del sea
     n0 = land | small | gap
     kmh0 = np.where(land, walk / np.float32(1000), np.float32(SMALL_KMH))
     kmh0[gap] = GAP_KMH * tf[gap]
     np.maximum(kmh0, np.float32(1 / SCALE), out=kmh0)   # the slowest a speed byte says; coarse means agree with L1
-    del walk
-    # land cover speed the roads blend with: off-road speed before the terrain factor
-    lce = np.where(lc > 0, lc, np.float32(SNOW_KMH))
-    lce[small] = SMALL_KMH
-    lce[gap] = GAP_KMH
-    del lc
+    del walk, tf
+    # road speed: 5 km/h x the height factor x the slope factor of the grade a road takes, at most ROAD_GRADE
+    road_kmh = (ROAD_KMH * SC.elev_factor(np.where(elev == -32768, 0, elev).astype(np.float32))
+                * SC.slope_factor(np.minimum(slope, ROAD_CAP_DEG))).astype(np.float32)
+    del elev, slope
     e = np.minimum(np.float32(1), ROAD_E * count.astype(np.float32) / 100)
-    ratio = np.where(n0, 1 - e + e * np.minimum(lce, ROAD_KMH) / ROAD_KMH, np.float32(1))
-    del e, lce, count
+    ratio = np.where(n0, 1 - e + e * np.minimum(np.float32(1), kmh0 / road_kmh), np.float32(1))
+    del e, count
     bridge = ~n0 & (bits & BRIDGE > 0)
-    kmh_b = np.maximum(ROAD_KMH * tf, np.float32(0.05))
-    del bits, tf
+    kmh_b = np.maximum(road_kmh, np.float32(0.05))
+    del bits, road_kmh
     hpk0 = np.where(n0, 1 / np.where(n0, kmh0, 1), 0).astype(np.float32)
     hpk1 = np.where(n0, hpk0 * ratio, np.where(bridge, 1 / kmh_b, 0)).astype(np.float32)
     n1 = n0 | bridge

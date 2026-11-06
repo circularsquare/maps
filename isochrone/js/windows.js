@@ -2,7 +2,7 @@
 // coarser level, layer by layer. See docs/resolution.md and docs/canoe.md 5.
 import { cfg } from './config.js';
 import { makeLevel, snap, sampleNode, setHazard } from './levels.js';
-import { loadWindow, loadHazardWindow, fineIndex, fineCovers } from './tiles.js';
+import { loadWindow, loadHazardWindow, fineIndex, fineShare } from './tiles.js';
 import { loadWindowWater } from './canoedata.js';
 import { buildCanoe, shoreAt } from './canoe.js';
 import { solve, cellTimes, P_SEED } from './search.js';
@@ -16,6 +16,10 @@ export const MARGIN = 0.25;             // window = view plus this share of its 
 export const MARGIN_L3_UNDER_L1 = 1.0;  // the L3 window under an L1 one is wider, to seed it well
 // window edges sit on multiples of this many degrees: whole cells at every coarser level
 const ALIGN_OF = { 3: 0.25, 1: 0.25, 0.1: 0.05 };
+// least share of the view in fine blocks for an L0.1 window: a window costs the same whatever
+// its share (0.1 s at zoom 12, ~1 s at the cap), and a one-block town centred at zoom 10 is ~11%
+// of the view (notes/T-086.md)
+const FINE_MIN_SHARE = 0.05;
 
 export function windowFor(f, v, margin, canoe) {
     const cell = f / 120, cap = (canoe ? CAP_CANOE : CAP)[f], ALIGN = ALIGN_OF[f];
@@ -33,30 +37,16 @@ export function windowFor(f, v, margin, canoe) {
              row0: Math.round((85 - north) / cell), rows: Math.round((north - south) / cell) };
 }
 
-// The L0.1 window for a view, or null: walking starts only, the view within the cap, and every
-// tile of the window there. A window reaching past the tiles is first cut back to the whole
-// degrees round the view.
+// The L0.1 window for a view, or null: walking starts only, the view within the cap, and enough
+// of the view in fine blocks (docs/fine.md "In the page"); blocks without 100 m data are filled
+// from L1 when the window loads.
 export async function fineWindowFor(v) {
     const cell = 1 / 1200;
     if ((v.east - v.west) / cell * ((v.north - v.south) / cell) > CAP[0.1]) return null;
     const ix = await fineIndex();
     if (!ix) return null;
-    let w = windowFor(0.1, v, MARGIN, false);
-    if (w && !fineCovers(ix, w)) {
-        w = clip(w, Math.floor(v.west), Math.ceil(v.east), Math.ceil(v.north), Math.floor(v.south));
-        if (w && !fineCovers(ix, w)) w = null;
-    }
-    return w;
-}
-
-function clip(w, west, east, north, south) {
-    west = Math.max(w.west, west); east = Math.min(w.east, east);
-    north = Math.min(w.north, north); south = Math.max(w.south, south);
-    if (east <= west || north <= south) return null;
-    const cell = w.cell;
-    return Object.assign({}, w, { west, east, north, south,
-        col0: Math.round((west + 180) / cell), cols: Math.round((east - west) / cell),
-        row0: Math.round((85 - north) / cell), rows: Math.round((north - south) / cell) });
+    if (fineShare(ix, v) < FINE_MIN_SHARE) return null;
+    return windowFor(0.1, v, MARGIN, false);
 }
 
 export const contains =(a, b) => a && a.west <= b.west && a.east >= b.east && a.north >= b.north && a.south <= b.south;

@@ -113,18 +113,18 @@ whole 128-day limit they add under 0.1%. 241-255 are unused.
 | File | Level | Size (gzip) |
 |---|---|---|
 | `data/hazard/l10.bin.gz` | L10 world, 4320 x 1740, row-major from the north-west | 1.1 MB |
-| `data/hazard/l3/<r>_<c>.bin.gz` | L3, 5° tiles of 200 x 200 | 9.3 MB, 1,128 tiles |
-| `data/hazard/l1/<r>_<c>.bin.gz` | L1, 5° tiles of 600 x 600 | 29.3 MB, 1,140 tiles |
+| `data/hazard/l3/<r>_<c>.bin.gz` | L3, 5° tiles of 200 x 200 | 9.0 MB, 1,115 tiles |
+| `data/hazard/l1/<r>_<c>.bin.gz` | L1, 5° tiles of 600 x 600 | 28.5 MB, 1,135 tiles |
 | `data/hazard/index.json` | grid, coding, the tiles per level (`levels["1"].tiles`, ids r x 72 + c), as `data/tiles/index.json` | |
 
-39.7 MB in all, against 135 MB of speed tiles. Each file is gzip of one uint8 band, as the speed
+38.6 MB in all, against 173 MB of speed tiles. Each file is gzip of one uint8 band, as the speed
 tiles. L0.1 windows read the L1 pixel under each cell. A separate band, not a byte inside the
 speed files: an era (T-012) or a season switch swaps the hazard files and leaves the speeds
 alone. A tile with no hazard anywhere is not written (all 0): the reader treats a missing tile
 as 0.
 
 **Coarse levels**: an L3 or L10 cell's rate is the time-weighted mean of its L1 land pixels'
-rates, weights the pixels' time per metre (the same weights as the cell's speed, so a coarse
+rates, weights the pixels' off-road time per metre (the same weights as the cell's speed, so a coarse
 straight crossing pays the same hazard as the fine one). A coarse cell with an avoidable bad
 corner therefore reads a little worse than the best line through it, as its speed does; the finer
 windows correct it.
@@ -171,17 +171,20 @@ Plain `python` from the maps root, one core:
     python isochrone/tools/hazard/build.py ice       # ice outlines north of 60 N to the L1 grid             (~15 s)
     python isochrone/tools/hazard/build.py hot       # hot desert mask, 2 km grid (tools/hotdesert.py)        (~1 min)
     python isochrone/tools/canoe/rivers.py desert    # desert rivers, shared with the canoe                   (~15 s)
-    python isochrone/tools/hazard/build.py dist      # distance to drinkable water, 2 km grid                 (~3 min, 5.7 GB)
-    python isochrone/tools/hazard/build.py tiles     # rates per L1 pixel -> data/hazard/                     (~7 min, 5.2 GB)
+    python isochrone/tools/hazard/build.py dist      # distance to drinkable water, 2 km grid                 (~1.5 min, 3 GB)
+    python isochrone/tools/hazard/build.py tiles     # rates per L1 pixel -> data/hazard/                     (~5 min, 5.1 GB)
     python isochrone/tools/hazard/build.py plot      # maps/artifacts/isochrone/t066_world.png
 
 `tiles` works one row of 5° tiles (600 L1 rows) at a time: the rate per L1 pixel, coded into the
-L1 tiles, and the time-weighted L3 tiles and L10 rows from the same strip. Land is the speed
-tiles' land (MAP's, small water as land), and a coarse cell keeps its rate only where the speed
-level has land (a quarter of its pixels). `data/hazard/index.json` has the grid, the tiles that
-exist per level and the coding, as `data/tiles/index.json` does. The distance grid covers the
-same land (small water included), so every land pixel has a distance. Work files:
-`data/raw/hazard_work/` (`ice_l1.npy`, `hot_g2.npy`, `dist_g2.npy`, ~0.7 GB), kept for a rebuild.
+L1 tiles, and the time-weighted L3 tiles and L10 rows from the same strip. Land, and the time
+weights, are read from the page's L1 speed tiles (`data/tiles/l1/`: our surface, small water and
+LC100's missing islands as land; docs/resolution.md), so `tiles` and `dist` run after
+`tools/build_tiles.py`; a coarse cell keeps its rate only where the speed level has land (a quarter
+of its pixels). Bridge cells, land only with roads, have no rate. `data/hazard/index.json` has
+the grid, the tiles that exist per level and the coding, as `data/tiles/index.json` does. The
+distance grid covers the same land, so every land pixel has a distance. `HAZARD_OUT=<folder>`
+writes the band to `data/<folder>/` to swap in by renames. Work files: `data/raw/hazard_work/`
+(`ice_l1.npy`, `hot_g2.npy`, `dist_g2.npy`, ~0.7 GB), kept for a rebuild.
 
 ## 7. Known approximations
 

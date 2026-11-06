@@ -22,14 +22,16 @@ The rule:
   together and keeps to them, so a cell's roads serve about three times their own area; a cell
   a third covered by roads is walked as all road.
 - The cell's crossing time blends road and off-road time by e:
-  `time with roads = e x road time + (1 - e) x off-road time`, road time at 5 km/h times the
-  cell's terrain factor, as at 100 m. Since off-road speed is the land cover speed times the
-  same terrain factor, the ratio does not depend on terrain:
-  `time with roads / time without = 1 - e + e x lc / 5`, lc the cell's land cover speed
-  (`lc_speed.tif`, at most 5).
-- **Bridges**: a water cell (no land speed) that a walkable bridge crosses is walked at 5 km/h
-  times its terrain factor, as at 100 m. Ways that are not walkable (motorways, `foot=no`)
-  change nothing; tunnels are left out.
+  `time with roads = e x road time + (1 - e) x off-road time`, so
+  `time with roads / time without = 1 - e + e x min(1, off-road speed / road speed)`.
+- **Road speed** is 5 km/h times the cell's height factor and the slope factor of
+  min(cell slope, 10% grade) (MAP's factors, `docs/surface.md`). Roads and paths climb a steep
+  cell by winding, so on a slope above 5.7 degrees they are walked as on a 10% grade (x0.71),
+  where off-road ground takes the full slope (T-084). 10% is the street cap of the 100 m level
+  (`docs/fine.md`) and about the steepest grade of mountain pass roads; the detour a road makes
+  by winding is not counted, which is why the cap is not set lower.
+- **Bridges**: a water cell (no land speed) that a walkable bridge crosses is walked at the road
+  speed. Ways that are not walkable (motorways, `foot=no`) change nothing; tunnels are left out.
 
 Checked on eight test tiles (Cluj and New York, four each) the rule sits within a few percent of
 100 m, against 2-50% for MAP's L1. Towns stay right: urban land is 5 km/h either way. What is
@@ -69,8 +71,8 @@ speed x 250 / byte on land, byte x 0.8 (km/h x 40) on water. Everything downstre
 hazard per km, canoe, paint) reads the folded speed. `cfg.roads` off, as "no roads" and 10,000 BC
 will be, skips the road files: they are never fetched.
 
-The byte depends on land cover, so it is rebuilt when the land cover table changes; it does not
-depend on terrain, so T-011's 90 m slopes leave it as it is. The OSM part depends on neither.
+The byte depends on land cover and terrain (the grade cap), so it is rebuilt with the levels when
+either changes. The OSM part depends on neither.
 
 ## Fetching the world
 
@@ -118,11 +120,9 @@ offered under the same terms as the 100 m tiles.
 
 ## Open
 
-- **Roads on hillsides** are walked at the hillside's terrain factor, as at 100 m: in Cluj's
-  hills that is 0.68-0.85 of 5 km/h on road cells, and it is most of why MAP's L1 is so fast
-  there (MAP keeps every road pixel at 5 km/h). Roads are graded and wind, so the truth is
-  between the two. Proposed: keep it, so the levels agree, and revisit with the street grade
-  cap of fine stage 2 (T-039).
+- **The 100 m level's roads** still take the full 1 km terrain factor (`fineSpeed`), so on
+  hillsides L0.1 walks roads slower than L1 does since the grade cap (T-084). The same cap there
+  needs the height and slope factors apart in the fine tiles, or T-039's per-move slope.
 - **The factor 3** is measured on eight tiles in two countries (farm and hill villages in
   Transylvania, the New York region). Proposed: keep it for the world build and check it on a
   few T-057 tiles elsewhere (a desert town, a rice delta, a forest track network) when they

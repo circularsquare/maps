@@ -2,7 +2,7 @@
 
 A connected patch of water pixels with an area under MAX_KM2 counts as land at 1 km/h
 (docs/resolution.md, "Small water"). build_tiles.py runs it on our surface (water: walk_today 0);
-tools/hazard/build.py still runs it on the MAP surface (water: exactly 0.06), the default.
+the default `is_water` is the MAP surface's (exactly 0.06).
 
 Patches are 8-connected, so a diagonal channel stays one body of water. They are found strip by
 strip (STRIP rows, the strips the builds read): each strip is labelled on its own, and

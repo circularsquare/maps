@@ -238,7 +238,7 @@ function drawSpeeds(s) {
     for (const w of s.walk) {
         const v = w.min === w.max ? kmh(w.min) : kmh(w.min) + '-' + kmh(w.max);
         const hint = w.label.startsWith('Ponds') ? 'Water patches under 5 km² are waded at 1 km/h, MAP’s rate for crossing a wetland or swimming.'
-            : w.label.startsWith('Roads') ? 'Roads and paths are walked at 5 km/h, slowed by height and slope like other ground. Towns were not in the survey and are set to 5 km/h too.'
+            : w.label.startsWith('Roads') ? 'Roads and paths are walked at 5 km/h, slowed by height and by slope up to a 10% grade. Towns were not in the survey and are set to 5 km/h too.'
             : w.parts.map(([n, k]) => `${n} ${kmh(k)}`).join(', ');
         row([w.label, v, ''], hint);
     }

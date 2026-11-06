@@ -24,9 +24,8 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## In progress
 
-- T-084 [P1] Road grade cap at 1 km: since T-028 hillside roads are walked at 5 km/h times the cell's terrain factor, so the Alps went 1.64x slower at L10 (MAP walked every road pixel at 5 km/h on any slope). Roads take the altitude factor but slope capped at a road grade (~10%, as docs/fine.md's street cap); build only. Then rebuild the hazard band on our land/water mask (`land` from our L1 in tools/hazard/build.py, ~7 min). Taking, 2026-11-06 (T-028's agent).
+- T-087 [P3] Road share factor on a farm grid: Iowa walks 1.34-1.47x slower than MAP, since share3 blends a 1.6 km road grid with 2.5 km/h cropland to ~3-3.5 km/h where a walker on the grid would make ~3.9 (notes/T-084.md). Add a farm-grid tile to the factor-3 check (docs/roads.md).
 - T-085 [P2] Canoe water on our mask: canoe water and river steps still use MAP's land/water (1.69 M L1 cells our water/canoe land, 3.2 M the other way; the search copes, notes/T-028.md). Rebuild `water.py` (~11 min, 6 GB) then the river steps on our mask; check ktrips and holes. Taking, 2026-11-06 (T-079's agent).
-- T-086 [P2] 100 m in partial town tiles (T-057's page part): fineIndex masks, absent blocks filled from L1 with roads, `fineWindowFor` by present blocks with a minimum fine share, a Lagos smoke check (notes/T-057.md). Taking, 2026-11-06 (T-057's agent).
 - T-081 [P2] Coarse levels by crossing time (T-080's proposal): each L10 and L3 cell's speed is the best 1 km crossing of it, east-west and north-south, geometric mean; land/water rule and format unchanged, only `coarse()` in build_tiles.py. L1/L10 goes 0.81 -> 1.01, window seams go away; zoomed-out walks reach ~20% farther. Waits for Anita's yes (notes/T-080.md). Same rule for L1 from 100 m inputs in T-028.
 - T-082 [P2] Canoe at L10 in river country too fast: L1/L10 1.92 at Coari, 1.45 at Khulna; L10 paddles nearly end to end since a 10 km cell almost always holds some river and the walk to it disappears. L3 and L1 agree (notes/T-080.md).
 
@@ -52,7 +51,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Later
 
 - T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
-- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap, a bucket queue in the search for every level, times in a real browser (docs/fine.md).
+- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap (until then 100 m walks hill roads slower than L1, which has the 10% cap since T-084), a bucket queue in the search for every level, times in a real browser (docs/fine.md).
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).

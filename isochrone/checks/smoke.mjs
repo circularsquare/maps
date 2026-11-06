@@ -197,6 +197,26 @@ try {
     }
   }
 
+  // 4c. L0.1 in a partial town tile (Lagos, n06e003: its southern row of blocks has no 100 m data
+  // and is filled from L1): a walking start at zoom 12 gives an L0.1 window
+  let lagosOn = false;
+  if (up) {
+    try { lagosOn = await page.evaluate(async () => { const r = await fetch('data/fine/index.json'); return r.ok && 'n06e003' in ((await r.json()).partial ?? {}); }); } catch { /* no fine tiles */ }
+  }
+  if (lagosOn) {
+    try {
+      const LAGOS = [3.38, 6.50];
+      await page.evaluate((c) => map.jumpTo({ center: c, zoom: 12 }), LAGOS);
+      const n = await logLen();
+      const xy = await page.evaluate((c) => { const p = map.project(c); return [p.x, p.y]; }, LAGOS);
+      await page.mouse.click(xy[0], xy[1]);
+      const e = await entry(0.1, n, 60000);
+      report('zoom 12 in Lagos (a partial tile) gives an L0.1 window', true, `(${e.cols} x ${e.rows}, fetch ${e.fetchMs} ms, solve ${e.solveMs} ms)`);
+    } catch (e) {
+      report('zoom 12 in Lagos (a partial tile) gives an L0.1 window', false, first(e));
+    }
+  }
+
   // 5. canoe: a start on the Black Sea coast solves, the sea is painted, a hover at sea shows a time
   let canoeOn = !!CANOE_SUB;
   if (!canoeOn) {

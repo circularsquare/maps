@@ -1,5 +1,8 @@
 # Archive
 
+- T-086 [P2] 100 m in partial town tiles. Done 2026-11-06: block masks in fineIndex, absent blocks filled from L1 with roads, a window from 5% of the view in 100 m blocks; Lagos and Sao Paulo at zoom 12, seam step 0.6 min; smoke 17/17 with a Lagos check. notes/T-086.md.
+- T-084 [P1] Road grade cap at 1 km. Done 2026-11-06: roads take the height factor and slope up to a 10% grade; Alps L10 vs MAP 1.64 -> 1.38, flat land unchanged; hazard band rebuilt on our land (both `dist` and `tiles`), MAP's kept in data/hazard_map2020. notes/T-084.md.
+
 - T-028 [P2] Page on our own surface with roads. Done 2026-11-06: `tools/build_tiles.py` builds L1, L3, L10 from walk_today.tif plus a road byte per cell (time with roads over without, x 250; bridges over water), folded in by the worker so "no roads" costs no data; water = LC100 half water, islands LC100 calls sea (GMTED > 2 m) land at 3 km/h; MAP's tiles kept in data/tiles_map2020/. L0.1/L1 1.21 -> 0.99; rural walks 1.1-1.3x longer; the Alps 1.64x slower at L10 (T-084). build_grid.py deleted. notes/T-028.md.
 - T-053 [P2] Roads world build (T-010 stage 2). Done 2026-11-06 01:47: 513 extracts read (chugoku rerun after three download timeouts), one pause at Anita's ask; `reduce` gave 16,183 tiles in data/roads/l1, data/roads 0.7 GB. notes/T-053.md.
 - T-010 [P1] Roads as their own layer from OSM. Done 2026-11-06: rule share3 (stage 1, docs/roads.md), world build T-053, on the page T-028. notes/T-010.md.

@@ -9,9 +9,10 @@
 Inputs (tools/hazard/fetch.py): CHELSA V2.1 in data/raw/chelsa/, OSM water points in data/raw/osm_water/,
 ice outlines in data/raw/ice/ (RGI 6.0 Arctic regions where present, Natural Earth 10 m glaciated areas);
 RiverATLAS vertices, HydroLAKES and the hot desert rivers (desert.npz) from the canoe build
-(data/raw/rivers_work/; tools/hotdesert.py is the rule, `hot` here makes its mask); MAP's walking surface
-(time weights, land, as the speed tiles); data/surface/lc_class.tif and elev.tif. Work files in
-data/raw/hazard_work/.
+(data/raw/rivers_work/; tools/hotdesert.py is the rule, `hot` here makes its mask); the page's L1 speed
+tiles, data/tiles/l1 (land, and time weights for the coarse levels; tools/build_tiles.py); data/surface/
+lc_class.tif and elev.tif. Work files in data/raw/hazard_work/. HAZARD_OUT=<folder> writes the band to
+data/<folder>/ instead of data/hazard/, to swap in once built.
 """
 import glob
 import gzip
@@ -28,14 +29,14 @@ from rasterio.windows import Window
 
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(HERE, "tools"))
-from smallwater import SmallWater, STRIP   # noqa: E402  (the speed tiles' land: small water is land)
+from smallwater import STRIP               # noqa: E402  (600 rows: one row of 5 degree tiles)
 import hotdesert                           # noqa: E402
 
 RAW = os.path.join(HERE, "data", "raw")
 WORK = os.path.join(RAW, "hazard_work")
 RIVERS = os.path.join(RAW, "rivers_work")
-OUT = os.path.join(HERE, "data", "hazard")
-MAPF = os.path.join(RAW, "unzipped", "2020_walking_only_friction_surface.geotiff")
+OUT = os.path.join(HERE, "data", os.environ.get("HAZARD_OUT", "hazard"))   # HAZARD_OUT: build beside the served band
+TILES = os.path.join(HERE, "data", "tiles")
 LC = os.path.join(HERE, "data", "surface", "lc_class.tif")
 ELEV = os.path.join(HERE, "data", "surface", "elev.tif")
 CH = os.path.join(RAW, "chelsa", "CHELSA_%s_%s_1981-2010_V.2.1.tif")
@@ -47,7 +48,6 @@ G = 2                          # L1 pixels per distance cell (1/60 degree, ~2 km
 GW, GH = L1W // G, L1H // G
 ICE_ROWS = 3000                # the ice outlines are read north of 60 N
 R_EARTH = 6371.0
-WATER = np.float32(0.06)
 MIN_LAND = 0.25                # as the speed grid and tiles
 TILE = {1: 600, 3: 200}
 
@@ -91,6 +91,24 @@ def code(r):
 
 def decode(c):
     return np.where(c > 0, np.power(10.0, (c.astype(np.float32) - 240.0) / 40.0), 0.0).astype(np.float32)
+
+
+_tiles = None
+
+
+def speed_strip(tr):
+    """The page's L1 off-road speeds (uint8, 0 water) of tile row tr, 600 rows: the land the hazard
+    band covers is the speed tiles' land (tools/build_tiles.py: LC100 water, small water, missing islands)."""
+    global _tiles
+    if _tiles is None:
+        with open(os.path.join(TILES, "index.json")) as fh:
+            _tiles = set(json.load(fh)["levels"]["1"]["tiles"])
+    out = np.zeros((STRIP, L1W), np.uint8)
+    for tc in range(L1W // STRIP):
+        if tr * (L1W // STRIP) + tc in _tiles:
+            with gzip.open(os.path.join(TILES, "l1", "%d_%d.bin.gz" % (tr, tc))) as fh:
+                out[:, tc * STRIP:(tc + 1) * STRIP] = np.frombuffer(fh.read(), np.uint8).reshape(STRIP, STRIP)
+    return out
 
 
 def ice_mask(lc, poly):
@@ -167,15 +185,12 @@ def stage_dist():
     ice = np.zeros((GH, GW), bool)
     lake = np.zeros((GH, GW), bool)
     hot = np.asarray(hotdesert.load())     # hot desert: streams there are dry most of the time
-    with rasterio.open(MAPF) as fds, rasterio.open(LC) as lds:
-        sw = SmallWater(fds, log=lambda *a: None)     # the tiles' land: every land pixel needs a distance
+    with rasterio.open(LC) as lds:
         for r0 in range(0, L1H, STRIP):
             n = min(STRIP, L1H - r0)
             g0, gn = r0 // G, n // G
             blk = lambda m: m.reshape(gn, G, GW, G)
-            f = fds.read(1, window=Window(0, r0, L1W, n))
-            land[g0:g0 + gn] = blk(((f != WATER) & (f > 0)) | sw.mask(r0 // STRIP, f)).any(axis=(1, 3))
-            del f
+            land[g0:g0 + gn] = blk(speed_strip(r0 // STRIP) > 0).any(axis=(1, 3))   # every land pixel needs a distance
             lc = lds.read(1, window=Window(0, r0, L1W, n))
             ice[g0:g0 + gn] = blk(ice_mask(lc, ice_rows(poly, r0, n))).sum(axis=(1, 3)) >= 2
             del lc
@@ -261,14 +276,13 @@ def stage_tiles():
     found = {lv: [] for lv in TILE}
     nbytes = {lv: 0 for lv in TILE}
     tx_n = L1W // STRIP
-    with rasterio.open(MAPF) as fds, rasterio.open(LC) as lds, rasterio.open(ELEV) as eds:
-        sw = SmallWater(fds, log=lambda *a: None)
+    with rasterio.open(LC) as lds, rasterio.open(ELEV) as eds:
         for tr in range(L1H // STRIP):
             r0, n = tr * STRIP, STRIP
-            f = fds.read(1, window=Window(0, r0, L1W, n))
-            land = ((f != WATER) & (f > 0)) | sw.mask(tr, f)
-            fw = np.where(land, f, 0).astype(np.float32)     # time per metre: the coarse levels' weights
-            del f
+            s = speed_strip(tr)
+            land = s > 0
+            fw = np.where(land, np.float32(1) / np.maximum(s, 1), 0).astype(np.float32)   # time per km: the coarse levels' weights
+            del s
             g0 = r0 // G
             d = np.repeat(np.repeat(np.asarray(dist[g0:g0 + n // G], np.float32), G, 0), G, 1)
             nod = int((land & (d == 65535)).sum())

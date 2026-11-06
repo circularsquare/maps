@@ -32,9 +32,10 @@ the route to the pointer. Cells are drawn as hexagons by default (`?look=crisp` 
 `?look=diag` cut corners); the look is paint only, the search runs on square cells.
 
 Every level stores the off-road speed and, beside it, a road byte per cell that the worker folds
-in as it loads the level, so turning roads off later needs no other data. The canoe water and the
-land hazard band are still cut to MAP's land and water; where ours differs (about 2% of 1 km land
-cells) the search handles it without holes (`notes/T-028.md`).
+in as it loads the level, so turning roads off later needs no other data. The land hazard band is
+cut to the same land (T-084). The canoe water is still cut to MAP's land and water until its
+rebuild (T-079); where ours differs (about 2% of 1 km land cells) the search handles it without
+holes (`notes/T-028.md`).
 
 ## 3. Travel model
 
@@ -57,7 +58,8 @@ cells) the search handles it without holes (`notes/T-028.md`).
   directed. Walking is symmetric while slope comes in as MAP's undirected factor; once slopes
   come from 90 m elevation (T-011) walking is directed too, downhill faster than uphill (directed
   Tobler, research/friction.md 2).
-- **Roads.** A walkable OSM way is walked at 5 km/h times the terrain factor, as any ground; a 1 km
+- **Roads.** A walkable OSM way is walked at 5 km/h times the height factor and the slope factor
+  of at most a 10% grade, since roads wind up hills (T-084); a 1 km
   cell blends road and off-road time by three times its share of 100 m road cells, capped at all
   road (`docs/roads.md`). Walkable bridges carry walks over water; tunnels are left out.
 - **Water.** A 1 km cell is water when LC100 has it half water or more; islands LC100 leaves out

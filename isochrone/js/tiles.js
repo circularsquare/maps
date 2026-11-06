@@ -94,13 +94,48 @@ const ROAD_WALK = 7, ROAD_BRIDGE = 16;   // path, local, main; a walkable bridge
 const ROAD_KMH = 5;                      // MAP's road speed, any class
 const SCALE = 40;                        // stored speed = km/h x 40, as every level
 
-let fine;                                // data/fine/index.json with a Set, or null when there is none
+// data/fine/index.json with mask (tile name -> block mask), or null when there is none. A town
+// tile holds only some 0.25 degree blocks: bit 4 i + j for block row i from the north, column j
+// from the west; the other blocks are all 0 (docs/fine.md, "Town blocks").
+const FULL = 0xFFFF;
+let fine;
 export function fineIndex() {
     if (fine === undefined) fine = fetch('data/fine/index.json')
         .then(r => r.ok ? r.json() : null)
-        .then(ix => { if (ix) { ix.set = new Set(ix.tiles); ix.roadSet = new Set(ix.roads); } return ix; })
+        .then(ix => {
+            if (!ix) return null;
+            ix.mask = new Map(ix.tiles.map(n => [n, FULL]));
+            for (const n in ix.partial || {}) ix.mask.set(n, ix.partial[n]);
+            ix.block = ix.block || ix.tile;
+            ix.roadSet = new Set(ix.roads);
+            return ix;
+        })
         .catch(() => null);
     return fine;
+}
+
+// Calls fn(r0, r1, c0, c1, present) for each block overlapping rows [row0, row1) and columns
+// [col0, col1) of the L0.1 world grid (row 0 at 85 N, column 0 at 180 W), clipped to them.
+function forBlocks(ix, row0, row1, col0, col1, fn) {
+    const T = ix.tile, B = ix.block, nb = T / B;
+    for (let br = Math.floor(row0 / B); br * B < row1; br++)
+        for (let bc = Math.floor(col0 / B); bc * B < col1; bc++) {
+            const tr = Math.floor(br / nb), tc = Math.floor(bc / nb);
+            const m = ix.mask.get(fineName(tr, ((tc % 360) + 360) % 360)) || 0;
+            const bit = (br - tr * nb) * nb + (bc - tc * nb);
+            fn(Math.max(row0, br * B), Math.min(row1, (br + 1) * B),
+               Math.max(col0, bc * B), Math.min(col1, (bc + 1) * B), (m >> bit) & 1);
+        }
+}
+
+// Share of the box (west, east, north, south, degrees) in fine blocks, by cell count.
+export function fineShare(ix, b) {
+    const k = ix.tile;
+    const row0 = Math.floor((85 - b.north) * k), row1 = Math.ceil((85 - b.south) * k);
+    const col0 = Math.floor((b.west + 180) * k), col1 = Math.ceil((b.east + 180) * k);
+    let n = 0;
+    forBlocks(ix, row0, row1, col0, col1, (r0, r1, c0, c1, on) => { if (on) n += (r1 - r0) * (c1 - c0); });
+    return n / Math.max(1, (row1 - row0) * (col1 - col0));
 }
 
 // tile row tr (0 at 85N), column tcw (0 at 180W) -> its name, as n40w074 (south-west corner)
@@ -108,13 +143,6 @@ export function fineName(tr, tcw) {
     const lat = 84 - tr, lon = tcw - 180;
     return (lat >= 0 ? 'n' : 's') + String(Math.abs(lat)).padStart(2, '0') +
            (lon >= 0 ? 'e' : 'w') + String(Math.abs(lon)).padStart(3, '0');
-}
-
-// Every tile of window w exists.
-export function fineCovers(ix, w) {
-    let ok = true;
-    forTiles(w, ix.tile, 360, (tr, tc, tcw) => { if (!ix.set.has(fineName(tr, tcw))) ok = false; });
-    return ok;
 }
 
 // Decoded speed tiles, name -> Promise<Uint8Array>, oldest first, ~100 MB.
@@ -151,16 +179,36 @@ function fineSpeed(land, roads, T, TF, tfScale) {
     return out;
 }
 
+// The window's speeds: fine blocks from their tiles; every other block (absent from a partial
+// tile, or no tile) takes the speed of the L1 cell it lies in, roads folded in as at L1, so the
+// window needs only some fine blocks.
 async function loadFineWindow(w) {
     const ix = await fineIndex(), T = ix.tile;
     const grid = new Uint8Array(w.cols * w.rows);
     const jobs = [];
     forTiles(w, T, 360, (tr, tc, tcw) => {
         const name = fineName(tr, tcw);
-        if (!ix.set.has(name)) return;
+        if (!ix.mask.has(name)) return;
         jobs.push(fineTile(ix, name).then(t => cutInto(grid, w, t, 0, T, tr, tc)));
     });
+    const gaps = [];
+    forBlocks(ix, w.row0, w.row0 + w.rows, w.col0, w.col0 + w.cols, (r0, r1, c0, c1, on) => {
+        if (!on) gaps.push([r0 - w.row0, r1 - w.row0, c0 - w.col0, c1 - w.col0]);
+    });
+    let l1 = null, w1 = null;
+    if (gaps.length) {
+        const k = 10;   // L0.1 cells per L1 cell
+        const col0 = Math.floor(w.col0 / k), row0 = Math.floor(w.row0 / k);
+        w1 = { f: 1, cell: 1 / 120, col0, row0, cols: Math.floor((w.col0 + w.cols - 1) / k) - col0 + 1,
+               rows: Math.floor((w.row0 + w.rows - 1) / k) - row0 + 1 };
+        jobs.push(loadWindow(w1).then(g => { l1 = g; }));
+    }
     await Promise.all(jobs);
+    for (const [r0, r1, c0, c1] of gaps)
+        for (let r = r0; r < r1; r++) {
+            const src = (Math.floor((w.row0 + r) / 10) - w1.row0) * w1.cols - w1.col0;
+            for (let c = c0, i = r * w.cols + c0; c < c1; c++, i++) grid[i] = l1[src + Math.floor((w.col0 + c) / 10)];
+        }
     return grid;
 }
 
