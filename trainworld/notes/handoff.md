@@ -43,7 +43,14 @@ Trees (land each: typecheck, smoke in the tree pinned, `agent-tree.mjs land`, re
 - **attract2** (Sonnet, .tw-trees/attract2): T-2666 attraction classes (waterfall, cave, hot spring, opera, Ferris
   wheel, casino) + 2 km reach; Wikidata refetch.
 Read-only / design:
-- **searchcost** (Opus, scratch crate): T-2642 cheaper exact route searches, design + measure (notes/T-2642/ exists).
+- searchcost DONE (notes/T-2642.md): Japan pass ~1.45x exact from two stages. Building: **searchleaf** (Opus, tree
+  .tw-trees/searchleaf, kernel/search.rs, T-2652) and **fartable** (Sonnet, tree .tw-trees/fartable,
+  intercity/pass.rs + api.rs, T-2653). Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
+- Unit 4: rev-tw-4b DONE (no meaning errors, 10 rewrites; opencc owed); rev-hans-4b DONE (2 small meaning fixes, 26
+  rewrites). rev-ja-4b DONE (Traffic toggle 本数 -> 乗客数 fixed, 16 fixes). rev-tw-4a DONE (2 small meaning fixes: kindHoliday was "public
+  holiday", issues.crossing). rev-hans-4a DONE (3 meaning fixes), rev-ja-4a DONE (2). maps-b9
+  fixed scheduleCopy.withTrains in ja/zh-TW (they read it as per hour; it is trains on the line) and its context
+  note. **occ-tw-4** running; then occ-tw-4 for both halves, then commit.
 - **farescale** (Opus): T-2668 fares by country: evidence vs ^0.7, Tijuana breakdown, value-of-time exponent too
   (Anita: "lower the money/time ratio scaling with income too"); proposal to Anita, no changes. Ids T-2669-70.
 Translation unit 4 (game = 4a ~407 keys; map + workers + ui leftovers + clockWorker = 4b ~314; scratch unit4.md,

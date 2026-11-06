@@ -1488,7 +1488,7 @@
   "scheduleCopy.copied": "Notice after copying a line's schedule. line: the line's name, \"Line 4\".",
   "scheduleCopy.minutes": "A time between trains. n: 5 or 2.5.",
   "scheduleCopy.withHeadways": "Hover on the paste-schedule button for a copied schedule given as gaps between trains. list: the gaps at high, medium and low demand, \"3 min, 5 min and 10 min\"; cars: 6; fast: true for high-speed trains.",
-  "scheduleCopy.withTrains": "Hover on the paste-schedule button for a copied schedule given as trains an hour. list: the counts at high, medium and low demand, \"6, 4 and 2\"; cars: 6; fast: true for high-speed trains.",
+  "scheduleCopy.withTrains": "Hover on the paste-schedule button for a copied schedule given as train counts (the trains on the whole line, not an hourly rate). list: the counts at high, medium and low demand, \"6, 4 and 2\"; cars: 6; fast: true for high-speed trains.",
   "scheduleCopy.tooShort": "Notice after pasting a schedule onto a line whose shortest platform is too short. station: \"Canal St\"; wanted: 8; line: \"Line 4\"; kept: 6.",
   "search.city": "Grey word at the right of a city in the search results.",
   "search.find": "Placeholder and screen reader name of the map search box, and the screen reader name of the magnifying glass button that opens it.",

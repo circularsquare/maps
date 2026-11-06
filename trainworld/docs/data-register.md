@@ -302,7 +302,9 @@ U Wikipedia page views (Wikimedia's monthly pageview dump, September 2026, CC0; 
 country's editions; the per-article APIs allow a client naming no contact 10 requests a minute) and
 U the World Bank's international arrivals (ST.INT.ARVL) and population, 2019 (CC BY 4.0; Taiwan's
 from UNWTO and its Ministry of the Interior), T-1766, cached in `data/work/t1766/`; N national
-tourism boards' visitor tables, never looked for. ? Overture Places as a second place source where c is under 0.3
+tourism boards' visitor tables, never looked for. ? OSM `tourism=*` as a second attraction source where
+Wikidata holds few (China, India, Southeast Asia, Brazil, Nigeria: 484 OSM places in Shenzhen against 1 in the
+file), T-2667; UN Tourism's domestic trips by country, not used (the budget takes one a resident). ? Overture Places as a second place source where c is under 0.3
 (Brazil, China, India, Nigeria), T-508. Tier 0 alone covers any input marked tier 0 above; its rules are in
 demand-worldwide.md "Tier 0".
 
