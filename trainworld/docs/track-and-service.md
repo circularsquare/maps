@@ -1007,7 +1007,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   `cost::ClassGrid`, two bits a cell in memory, at most about 23 MB). The clock worker fetches a zone's
   file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it
   lands is priced on flat ground and priced again when it lands, the blueprint quote following;
-  Construct waits for the files under the blueprint, so nothing is paid on a guess. Each edge keeps
+  Construct waits for the files, water masks and world water under the blueprint, and is refused
+  ("The terrain here did not load. Try again.") while one of them could not be fetched, so nothing is
+  paid on a guess (T-2613; a 404 counts as no file, flat). A download gives up after 60 s; a failed one
+  still needed by the view or the blueprint is fetched again 2 s later, doubling to 30 s (the status tag
+  says so, ui-panels.md). Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
@@ -1030,8 +1034,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   tile landing adds its own to the edges near it (found in the 1 km edge grid) and changes nothing
   else; a split, a reshape or a load works them out from the tiles in hand, nothing is saved.
   No preview waits for tiles: one priced before they land is asked again when they do, and
-  Construct waits for the tiles under the blueprint, so nothing is paid on a guess (a tile that
-  cannot be fetched counts no roads). The blueprint quote has one "Road crossings" row, kind 7,
+  Construct waits for the tiles under the blueprint and is refused ("The roads here did not load.
+  Try again.") while one cannot be fetched, so nothing is paid on a guess (T-2613; a 404 or 204 tile
+  has no roads). The blueprint quote has one "Road crossings" row, kind 7,
   the weighted count and price.
 - The Build tab shows only the multiplier and price of the level currently selected, not the
   whole table.

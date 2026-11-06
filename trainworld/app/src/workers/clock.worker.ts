@@ -485,7 +485,7 @@ async function upNow(key: string, force: boolean) {
   if (key === activeSlot && !force && cloudClaimed !== key) { await openOnAccount(ctx); await publishSlots(); return; }
   const [s, rec] = await Promise.all([readStored(key), readSync(key)]);
   // T-2030: the clock's own saves go up with the next player change, a save by hand or a rename
-  if (!force && (!s || !rec || !editedHere(s, rec))) return;
+  if (!force && (!s || !rec || !editedHere(s, rec))) { if (key === activeSlot) upFailed(false); return; }
   const there = async () => s && tiedTo(rec, ctx) ? (await listGames(ctx))?.games.find((g) => g.id === rec.id) : undefined;
   let r: Awaited<ReturnType<typeof upload>>;
   const g = force ? await there() : undefined;
@@ -499,7 +499,16 @@ async function upNow(key: string, force: boolean) {
   }
   if (key === activeSlot && r === "ok") { cloudClaimed = key; if (cloudTaken === key) cloudTaken = ""; }
   if (key === activeSlot && r === "elsewhere") await giveWay(key);
+  if (key === activeSlot) upFailed(r === "failed");
   await publishSlots();
+}
+
+/** T-2614: when the game in hand, whose change did not reach the account, is sent again (0: nothing
+ * owed). Autosave sends it too while the game runs; this covers a paused game. */
+let cloudRetryAt = 0;
+const CLOUD_RETRY_MS = 60_000;
+function upFailed(failed: boolean) {
+  cloudRetryAt = failed ? Date.now() + CLOUD_RETRY_MS : 0;
 }
 
 async function giveWay(key: string) {
@@ -540,7 +549,7 @@ async function openOnAccount(ctx: CloudContext) {
   const changed = () => editedHere(stored!, rec!) || (dirty && editAt > syncedEditOf(rec!));
   if (!list) {
     // unreachable: the game plays on, "Not on your account yet" while it has changed here
-    if (activeSlot === key && editedHere(stored, rec)) { await writeSync(key, { ...rec, error: lastListFailure() }); await publishSlots(); }
+    if (activeSlot === key && editedHere(stored, rec)) { upFailed(true); await writeSync(key, { ...rec, error: lastListFailure() }); await publishSlots(); }
     return;
   }
   if (activeSlot !== key) return;
@@ -553,17 +562,19 @@ async function openOnAccount(ctx: CloudContext) {
       rec = { ...rec, id: newGameId(), rev: 0, syncedAt: 0, edit: undefined };
       await writeSync(key, rec);
     }
-    if (await upload(ctx, key) === "ok") cloudClaimed = key;
+    const r = await upload(ctx, key);
+    if (r === "ok") cloudClaimed = key;
+    upFailed(r === "failed");
     return;
   }
   if (g.rev < rec.rev) { rec = { ...rec, rev: g.rev }; await writeSync(key, rec); }
   if (g.rev === rec.rev) {
     const c = await claim(ctx, rec);
-    if (c !== "ok") return; // tried again at the next save
+    if (c !== "ok") { if (c === "failed" && editedHere(stored, rec)) upFailed(true); return; } // tried again at the next save
     cloudClaimed = key;
     rec = (await readSync(key)) ?? rec;
     if (rec.gaveWay) await writeSync(key, rec = { ...rec, gaveWay: undefined });
-    if (editedHere((await readStored(key)) ?? stored, rec)) await upload(ctx, key);
+    if (editedHere((await readStored(key)) ?? stored, rec)) upFailed(await upload(ctx, key) === "failed");
     return;
   }
   if (changed()) {
@@ -572,6 +583,7 @@ async function openOnAccount(ctx: CloudContext) {
     if (dirty) await autosave();
     const r = editedThere(g, rec) ? await splitOff(ctx, key) : await upload(ctx, key, true);
     if (r === "ok" && activeSlot === key) cloudClaimed = key;
+    if (activeSlot === key) upFailed(r === "failed");
     return;
   }
   const got = await fetchGame(ctx, g);
@@ -828,7 +840,9 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
   if (!p) {
     const url = new URL(id, packBase).href;
     p = (async () => {
-      const head = await (await fetch(url + ".json")).json();
+      const res = await fetch(url + ".json", { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
+      if (res.status === 404) return null;
+      const head = await res.json();
       const row = head.arrays.find((a: any) => a.name === "water_row");
       const xs = head.arrays.find((a: any) => a.name === "water_x");
       if (!head.water || !row || !xs) return null;
@@ -842,7 +856,8 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
       };
     })();
     waterFetches.set(id, p);
-    // a failed fetch is tried again by the next edit or view that needs it
+    watchGround("w:" + id, p);
+    // a failed fetch is tried again by the next edit or view that needs it, or by `retryGround`
     p.catch((err) => {
       if (waterFetches.get(id) === p) waterFetches.delete(id);
       send({ kind: "error", message: `water mask for ${id} not loaded: ${err}` });
@@ -875,7 +890,8 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
 // A zone's terrain grid (`terrain/<id>.terrain` among the packs, pipeline/zone_terrain.py) is
 // fetched with its water mask. It only prices track, so no preview or edit waits for it: track drawn
 // before it lands is priced on flat ground and priced again when it does. Construct waits for the
-// grids under what it builds, so nothing is paid on a guess.
+// grids under what it builds, and is refused while one of them could not be had (T-2613), so nothing
+// is paid on a guess.
 
 const terrainFetches = new Map<string, Promise<ArrayBuffer | null>>();
 /** zones whose terrain is in the track model (or that have none) */
@@ -885,7 +901,7 @@ function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
   let p = terrainFetches.get(id);
   if (!p) {
     p = (async () => {
-      const res = await fetch(new URL(`terrain/${id}.terrain`, packBase).href);
+      const res = await fetch(new URL(`terrain/${id}.terrain`, packBase).href, { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`${res.status}`);
       const b = await res.arrayBuffer();
@@ -895,12 +911,64 @@ function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
       return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
     })();
     terrainFetches.set(id, p);
-    // a failed fetch is tried again by the next view or edit that needs it
+    watchGround("t:" + id, p);
+    // a failed fetch is tried again by the next view or edit that needs it, or by `retryGround`
     p.catch(() => {
       if (terrainFetches.get(id) === p) terrainFetches.delete(id);
     });
   }
   return p;
+}
+
+// ---------------------------------------------------------------- ground downloads (T-2613)
+//
+// The terrain grids, the zones' water masks and the world's water price track and say where it may
+// go. The page is told how many are on their way and how many failed (the status tag), and a failed
+// one still needed by the view or the blueprint is fetched again, 2 s after the failure doubling to 30 s.
+
+/** a download given up after this long (a stalled connection would hold Construct for minutes) */
+const GROUND_TIMEOUT_MS = 60_000;
+const GROUND_RETRY_MS = [2_000, 30_000];
+/** keys ("t:<zone>", "w:<zone>", "world") on their way, and those whose last fetch failed */
+const groundPending = new Set<string>(), groundFailed = new Set<string>();
+let groundSent = "";
+let groundTimer: ReturnType<typeof setTimeout> | 0 = 0;
+let groundWait = 0;
+
+function watchGround(key: string, p: Promise<unknown>) {
+  groundPending.add(key);
+  sendGround();
+  void p.then(() => { groundFailed.delete(key); }, () => { groundFailed.add(key); }).then(() => {
+    groundPending.delete(key);
+    if (groundFailed.size) retryGroundLater();
+    else groundWait = 0;
+    sendGround();
+  });
+}
+
+function sendGround() {
+  const k = `${groundPending.size} ${groundFailed.size}`;
+  if (k === groundSent) return;
+  groundSent = k;
+  send({ kind: "ground", pending: groundPending.size, failed: groundFailed.size });
+}
+
+function retryGroundLater() {
+  if (groundTimer) return;
+  groundWait = Math.min(GROUND_RETRY_MS[1], groundWait ? groundWait * 2 : GROUND_RETRY_MS[0]);
+  groundTimer = setTimeout(() => { groundTimer = 0; retryGround(); }, groundWait);
+}
+
+/** Fetch again what failed and is still needed; the rest is forgotten until something needs it. */
+function retryGround() {
+  if (!api) return;
+  const wanted = new Set([...viewZones, ...zonesOfPoints(blueprintPolylines().flat())]);
+  for (const k of [...groundFailed]) if (k !== "world" && !wanted.has(k.slice(2))) groundFailed.delete(k);
+  sendGround();
+  if (!groundFailed.size) { groundWait = 0; return; }
+  if (groundFailed.has("world")) void worldWaterIntoModel();
+  const zones = [...new Set([...groundFailed].filter((k) => k !== "world").map((k) => k.slice(2)))];
+  void ensureMasks(zones);
 }
 
 /** Install the terrain of `ids` (fetching those not fetched); resolves once each is in or failed. A
@@ -1001,13 +1069,15 @@ function worldWaterIntoModel(): Promise<void> {
   if (worldWaterIn) return Promise.resolve();
   if (!worldWaterFetch) {
     const p = (async () => {
-      const res = await fetch(new URL("world.water", packBase).href);
+      const res = await fetch(new URL("world.water", packBase).href, { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`${res.status}`);
       return await res.arrayBuffer();
     })();
     worldWaterFetch = p;
-    // a failed fetch is tried again by the next edit; the sea outside the zones is land until then
+    watchGround("world", p);
+    // a failed fetch is tried again by the next edit or `retryGround`; the sea outside the zones is
+    // land until then (Construct waits for it)
     p.catch((err) => {
       if (worldWaterFetch === p) worldWaterFetch = null;
       send({ kind: "error", message: `world water mask not loaded: ${err}` });
@@ -1036,11 +1106,16 @@ function blueprintPolylines(): number[][] {
   return out;
 }
 
-/** Before Construct: the terrain and the roads (T-1929) under every blueprint piece. */
-async function groundForBlueprint() {
+/** Before Construct: the terrain, water and roads (T-1929) under every blueprint piece; the issue that
+ * refuses it when one of them could not be had (T-2613), or null. */
+async function groundForBlueprint(): Promise<string | null> {
   const lines = blueprintPolylines();
-  const need = zonesOfPoints(lines.flat()).filter((id) => !terrainIn.has(id));
-  await Promise.all([need.length ? ensureTerrain(need) : null, roadsUnder(...lines)]);
+  const zones = zonesOfPoints(lines.flat());
+  const need = zones.filter((id) => !terrainIn.has(id) || !masksIn.has(id));
+  const roads = roadKeys(lines);
+  await Promise.all([worldWaterIntoModel(), need.length ? ensureMasks(need) : null, need.length ? ensureTerrain(need) : null, roadFeed.ensure(roads)]);
+  if (!worldWaterIn || zones.some((id) => !terrainIn.has(id) || !masksIn.has(id))) return "TerrainMissing";
+  return roadFeed.missing(roads) ? "RoadsMissing" : null;
 }
 
 // ---------------------------------------------------------------- road crossings (T-1929)
@@ -1064,13 +1139,18 @@ const roadFeed = new RoadFeed(() => {
 
 /** Fetch the road tiles under these polylines of world x, y (not waited for by previews). */
 function roadsUnder(...lines: ArrayLike<number>[]): Promise<void> {
+  const keys = roadKeys(lines);
+  return keys.length ? roadFeed.ensure(keys) : Promise.resolve();
+}
+/** the road tiles under these polylines, by key */
+function roadKeys(lines: ArrayLike<number>[]): number[] {
   const keys = new Set<number>();
   for (const xy of lines) {
     const ll: number[] = [];
     for (let k = 0; k + 1 < xy.length; k += 2) ll.push(...frame.toLonLat(xy[k], xy[k + 1]));
     for (const key of RoadFeed.tilesOf(ll)) keys.add(key);
   }
-  return keys.size ? roadFeed.ensure([...keys]) : Promise.resolve();
+  return [...keys];
 }
 
 /** The zones within TRACK_MARGIN_M of any of these world-metre points (x, y every `stride`). */
@@ -3516,7 +3596,7 @@ async function processMessage(msg: ToClock) {
     })().catch((err) => send({ kind: "failed", error: String(err) }));
     // T-988: the game in hand claimed on the account, the other slots settled
     void ready.then(() => { initDone = true; void cloudKick(); });
-    addEventListener("online", () => void cloudKick());
+    addEventListener("online", () => { void cloudKick(); if (cloudRetryAt) void cloudUp(activeSlot); });
     setInterval(tick, 1000);
     setInterval(liveMoney, LIVE_MONEY_MS);
     return;
@@ -3579,6 +3659,7 @@ function failAnswer(msg: ToClock) {
 function tick() {
   if (!api || modelDown) return;
   if (dirty && Date.now() - savedAt >= AUTOSAVE_MS) void autosave();
+  else if (cloudRetryAt && Date.now() >= cloudRetryAt) { cloudRetryAt = Date.now() + CLOUD_RETRY_MS; void cloudUp(activeSlot); }
   noteUnsaved();
 }
 
@@ -3701,7 +3782,10 @@ async function handle(msg: ToClock) {
     }
     await worldWaterIntoModel();
     await masksFor(msg.op);
-    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") await groundForBlueprint();
+    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") {
+      const missing = await groundForBlueprint();
+      if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
+    }
     const tA = performance.now();
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";

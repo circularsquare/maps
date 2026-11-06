@@ -8,7 +8,7 @@
 import type { DemFlatIn, DemFlatOut } from "../workers/demFlat.worker";
 import { zonesTouching } from "../game/cities";
 import { zoneShown } from "../game/realms";
-import { terrainGrids, terrainVersion, classAt, type ClassGrid } from "../game/terrain";
+import { terrainGrids, terrainVersion, classAt, shadeDownloads, type ClassGrid } from "../game/terrain";
 
 /** below this tile zoom (pixels 150 m and more) a tower block is a pixel or two and the classes are not
  * loaded for the whole view */
@@ -41,7 +41,8 @@ export function demBytes(url: (z: number, x: number, y: number) => string, z: nu
     if (!r.ok) throw new Error(`terrain tile ${r.status}`);
     return r.arrayBuffer();
   });
-  p.catch(() => tileBytes.delete(key));
+  shadeDownloads.value++; // T-2613: the status tag's "Downloading terrain…"
+  p.catch(() => tileBytes.delete(key)).finally(() => shadeDownloads.value--);
   tileBytes.set(key, p);
   if (tileBytes.size > TILE_CACHE) tileBytes.delete(tileBytes.keys().next().value!);
   return p;

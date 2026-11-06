@@ -16,6 +16,7 @@ import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { BunnyTrain } from "./Spinner";
 import { bubblesWaiting, farWaiting } from "../map/commuterView";
+import { groundNet, shadeDownloads } from "../game/terrain";
 
 /** T-2409: whole game days since the oldest edit no final covers, while figures in play still miss it
  * (a line with no riders or old ones, or the zone in view recomputing); 0 otherwise. A computed, so
@@ -66,6 +67,21 @@ function waitTip(zone: CityId): string {
   const left = z ?? (focusZones.value.get(zone) === false ? undefined : solveLeft.value ?? undefined);
   return loadLines(left ? { leftMs: left.leftMs, at: left.at } : undefined).join("\n");
 }
+/** T-2613: terrain has been downloading for TERRAIN_SLOW_MS (grids and masks for the clock worker, or
+ * the hillshade's tiles), so a quick download on a pan never flashes the tag */
+const TERRAIN_SLOW_MS = 1500;
+const terrainSlow = signal(false);
+let slowTimer = 0;
+effect(() => {
+  const on = groundNet.value.pending > 0 || shadeDownloads.value > 0;
+  if (!on) { clearTimeout(slowTimer); slowTimer = 0; terrainSlow.value = false; }
+  else if (!slowTimer && !terrainSlow.peek()) slowTimer = window.setTimeout(() => { slowTimer = 0; terrainSlow.value = true; }, TERRAIN_SLOW_MS);
+});
+const TERRAIN_FAIL_TIP = "Check your internet connection. It is tried again within 30 s.";
+function terrainText(): string | null {
+  return terrainSlow.value ? "Downloading terrain…" : groundNet.value.failed ? "Terrain could not load" : null;
+}
+
 /** a second's tick while a click waits, so its hover counts down */
 const second = signal(0);
 let ticking = 0;
@@ -81,15 +97,19 @@ export function StatusTag() {
   const load = loadProgress.value;
   // T-484, T-492: the zone in view could not load (the others carry on); its text says whether it is tried again
   const zoneFailure = viewedZone.value ? zoneFailures.value.get(activeCity.value) : undefined;
-  // T-757: after startup the alert under the demand buttons says it instead
-  if (demandStopped.value) return null;
-  const busy = loadFailure.value ? "Demand could not load"
+  // T-2613: terrain on its way or failed, said after a load's own news
+  const terrain = terrainText();
+  // T-757: after startup the alert under the demand buttons says it instead (terrain still shows)
+  const stopped = demandStopped.value;
+  const busy = stopped ? (loadingCardShown() ? null : terrain)
+    : loadFailure.value ? "Demand could not load"
     : zoneFailure ? `${cityById(activeCity.value).name} could not load`
     // T-180: while the clock waits, the card in the middle of the map says it instead
     : loadingCardShown() ? null
     // T-212: "Loading data", not the cities' names (those are in the hover)
     // T-243: a thin bar after it, not a percentage
     : load ? "Loading data"
+    : terrain ? terrain
     : !demandView.value ? (demandIdle.value ? null : "Loading data…") // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? "Loading data…"
@@ -101,15 +121,18 @@ export function StatusTag() {
     // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
     : viewRecomputing.value ? recomputing() : null;
   if (!busy) return null;
-  const base = (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
+  const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
+  const base = onTerrain ? (terrainFailed ? TERRAIN_FAIL_TIP : "")
+    : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? `Loading ${cityNames(load.cities)}, ${Math.floor(load.fraction * 100)}%. ${load.step}`
     : !demandView.value ? busy
     : bubblesWaiting.value ? `Loading the bubbles for ${cityById(activeCity.value).name}`
     : clickWait.value ? waitTip(clickWait.value)
     : "");
-  const tip = [base, clock.capped.value ? `Time capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
+  const tip = [base, !onTerrain && clock.capped.value ? `Time capped at ${DEMAND_CAP}x while updating demand` : ""].filter(Boolean).join("\n") || undefined;
+  const failed = onTerrain ? terrainFailed : !!loadFailure.value || !!zoneFailure;
   return <div class="status-tag" role="status" data-tip={tip}>
-    {!loadFailure.value && !zoneFailure && <BunnyTrain small />}
+    {!failed && <BunnyTrain small />}
     <span class="demand-busy">{busy}</span>
-    {load && !loadFailure.value && !zoneFailure && <LoadBar fraction={load.fraction} step={load.step} thin />}
+    {load && !onTerrain && !loadFailure.value && !zoneFailure && <LoadBar fraction={load.fraction} step={load.step} thin />}
   </div>;
 }

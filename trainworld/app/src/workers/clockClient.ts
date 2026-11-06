@@ -35,7 +35,7 @@ import { markDownloaded } from "../game/keepState";
 import { saveRefusal } from "../game/memoryCheck";
 import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
-import { addTerrainGrid } from "../game/terrain";
+import { addTerrainGrid, groundNet } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
 export const saveSlotsState = signal<Omit<Extract<FromClock, { kind: "saveSlots" }>, "kind">>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
@@ -957,6 +957,9 @@ export class ClockClient {
         break;
       case "terrain":
         addTerrainGrid(msg.id, msg.bytes);
+        break;
+      case "ground":
+        groundNet.value = { pending: msg.pending, failed: msg.failed };
         break;
       case "roads":
         for (const f of roadsListeners) f();

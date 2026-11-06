@@ -663,6 +663,8 @@ export type FromClock =
   | { kind: "netAhead"; key: string }
   /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
   | { kind: "terrain"; id: string; bytes: ArrayBuffer }
+  /** T-2613: terrain grids and water masks on their way, and those whose last fetch failed */
+  | { kind: "ground"; pending: number; failed: number }
   /** T-1929: road tiles just put in the track model: a preview asked before them is out of date */
   | { kind: "roads" }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from

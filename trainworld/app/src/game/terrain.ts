@@ -25,6 +25,12 @@ export const terrainGrids = new Map<string, ClassGrid>();
 /** Bumped whenever a grid arrives. */
 export const terrainVersion = signal(0);
 
+/** T-2613: the clock worker's terrain grids and water masks on their way, and those whose last fetch
+ * failed (tried again while still needed) */
+export const groundNet = signal({ pending: 0, failed: 0 });
+/** T-2613: the hillshade's tiles being downloaded now (`map/demFlat.ts`) */
+export const shadeDownloads = signal(0);
+
 export function addTerrainGrid(id: string, bytes: ArrayBuffer) {
   if (terrainGrids.has(id)) return;
   const g = decodeClassGrid(new Uint8Array(bytes));

@@ -461,6 +461,15 @@ click downloads the game, as the saved games panel's Download does.
 - **Goes away**: when the game is on the account, or after any download of it (the saved games
   panel's Download or the file in Settings; `markDownloaded` in `downloadSave`). Never otherwise:
   there is no way to close it, and it is back after a reload while neither has happened.
+- **Not on your account yet** [T-2614, notes/T-2613.md]: the same dot, ahead of the case above, when the
+  playing game (a slot this tab writes, tied to the signed-in account, not given way to another device)
+  has had its latest change fail to reach the account for 2 minutes (the slot's record holds the
+  reason; `?keepMs` shortens the 2 minutes too). Hover: "Not on your account yet", then the reason
+  with a full stop ("The server could not be reached.", "Offline.", "Your account is full. Delete a game
+  to make room.", "This game is too big to keep on your account."), "This game is saved in this
+  browser." and, for the first two, "Click to try again." A click saves by hand (as Ctrl+S), which
+  sends it at once. Gone within 5 s of a send going through. The clock worker sends a failed one again
+  every minute, paused or not, and at the browser's `online` event.
 - **Out of the way**: hidden with F2 and while the start menu is up.
 - **Check**: `checks/t1832-keep.mjs` (own server, `?keepMs=3000`); screenshots in
   `artifacts/trainworld/t1832/`.
@@ -1188,6 +1197,14 @@ registry centre and zoom, or over New York with none [T-310].
   status says "Loading data" with a thin bar after it, its hover naming the cities and step
   ("Loading Boston, 37%. Loading city data"); in a narrow bar the thin bar goes first, then the
   text ends in an ellipsis.
+- **Terrain on its way** [T-2613, notes/T-2613.md]: after a city's "Loading data" and before every
+  case below, the status says "Downloading terrain…" with the spinner once a terrain download has
+  been on its way 1.5 s (the clock worker's terrain classes, water masks or world water, or the hill
+  shading's tiles while Terrain is on), and "Terrain could not load" with no spinner while one of the
+  clock worker's failed, hover "Check your internet connection. It is tried again within 30 s."
+  (it is: 2 s after the failure, doubling to 30 s, while the view or the blueprint still needs it). Both
+  show also after demand stopped, and neither while the loading card is up. Construct waits for the
+  ground under the blueprint and is refused while it could not load (track-and-service.md 6.4).
 - **Bubbles on their way** [T-1493]: with Homes, Destinations or Total on, a zone in view that has its
   figures but whose own bubbles are not drawn yet (being asked for, waiting behind a solve, built)
   has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with

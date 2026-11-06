@@ -4,9 +4,9 @@
 // ui/KeepDot.tsx draws it. Only real play counts: the game running, the tab visible, a saved slot
 // this tab writes (a `?new=1` page has none). The count and downloads are kept per slot in this
 // browser (game/keepState.ts).
-// `?keepMs=<ms>` shortens the hour for a check.
+// `?keepMs=<ms>` shortens the hour for a check (and the two minutes of `cloudBehind`).
 
-import { computed } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import { tiedTo } from "../workers/cloud";
 import { saveSlotsState } from "../workers/clockClient";
 import { cloudContext } from "./account";
@@ -32,10 +32,29 @@ export const keepDue = computed(() => {
   return !!k && k.e.ms >= goalMs() && !k.e.downloaded && onlyHere();
 });
 
+/** T-2614: why the playing game's latest change has not reached the account, once that has lasted
+ * BEHIND_MS (a slip the next try mends shows nothing); null while it is on the account. */
+export const cloudBehind = signal<string | null>(null);
+const BEHIND_MS = 120_000;
+let behindSince = 0;
+const behindMs = () => Math.min(BEHIND_MS, goalMs());
+
+function noteBehind() {
+  const { slots, active, writable } = saveSlotsState.peek();
+  const slot = writable && active ? slots.find((s) => s.key === active) : undefined;
+  const ctx = cloudContext(), c = slot?.cloud;
+  const why = slot && ctx?.on && tiedTo(c, ctx) && !c.gaveWay && c.error ? c.error : null;
+  if (!why) behindSince = 0;
+  else if (!behindSince) behindSince = Date.now();
+  const due = why && Date.now() - behindSince >= behindMs() ? why : null;
+  if (cloudBehind.peek() !== due) cloudBehind.value = due;
+}
+
 /** Count play time, five seconds at a time. */
 export function startKeep() {
   let last = performance.now();
   const tick = () => {
+    noteBehind();
     const now = performance.now(), dt = Math.min(now - last, TICK_MS * 2);
     last = now;
     const { slots, active, writable } = saveSlotsState.peek();

@@ -87,6 +87,11 @@ export class RoadFeed {
     return Promise.all(waits).then(() => {});
   }
 
+  /** How many of `keys` are not in the model (none before the template comes: there is nothing to price on). */
+  missing(keys: number[]): number {
+    return this.template ? keys.filter((k) => !this.inModel.has(k)).length : 0;
+  }
+
   private slot(): Promise<void> {
     if (this.active < PARALLEL) {
       this.active++;
