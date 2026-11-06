@@ -1,0 +1,727 @@
+--- a/sim/src/demand/kernel/search.rs
++++ b/sim/src/demand/kernel/search.rs
+@@ -797,6 +797,42 @@
+     pub fn run_col(&mut self, dst: usize, col: &mut [f32]) -> DestStrategy {
+         self.run_by(dst, Some(|src: usize, v: f32| col[src] = v))
+     }
++    /// T-2621 (scratch): `run_col` stopped once every station of `need` is settled and the queue
++    /// is `slack` perceived minutes past the last; the others' costs infinite.
++    pub fn run_col_bounded(&mut self, dst: usize, col: &mut [f32], need: &[u32], slack: f32) -> DestStrategy {
++        self.set_bound(dst, need, slack);
++        let d = self.run_by(dst, Some(|src: usize, v: f32| col[src] = v));
++        self.q.bounded = false;
++        d
++    }
++    /// `run` (the strategy alone) with the same bound.
++    pub fn run_bounded(&mut self, dst: usize, need: &[u32], slack: f32) -> DestStrategy {
++        self.set_bound(dst, need, slack);
++        let d = self.run_by(dst, None::<fn(usize, f32)>);
++        self.q.bounded = false;
++        d
++    }
++    fn set_bound(&mut self, dst: usize, need: &[u32], slack: f32) {
++        let q = &mut self.q;
++        q.need_gen = q.need_gen.wrapping_add(1);
++        if q.need_gen == u32::MAX {
++            q.need.fill(u32::MAX);
++            q.need_gen = 0;
++        }
++        q.need_left = 0;
++        for &x in need {
++            let x = x as usize;
++            if x != dst && q.need[x] != q.need_gen {
++                q.need[x] = q.need_gen;
++                q.need_left += 1;
++            }
++        }
++        q.bounded = true;
++        q.slack = slack;
++    }
++    pub fn pops(&self) -> u64 {
++        self.q.pops
++    }
+     pub(super) fn run_by(&mut self, dst: usize, put: Option<impl FnMut(usize, f32)>) -> DestStrategy {
+         let q = &mut self.q;
+         let (s, n) = (q.s, q.n);
+@@ -818,6 +854,10 @@
+             for src in 0..s {
+                 if src == dst {
+                     put(src, 0.0);
++                    continue;
++                }
++                if q.bounded && !q.done[src] {
++                    put(src, f32::INFINITY);
+                     continue;
+                 }
+                 // The first boarding is not a transfer; the trip's base fare is added later.
+@@ -980,6 +1020,14 @@
+     pub(super) banned_off: Vec<u32>,
+     pub(super) banned: Vec<u32>,
+     pub(super) banned_all: Vec<bool>,
++    // T-2621 (scratch): the bound
++    pub(super) bounded: bool,
++    pub(super) need: Vec<u32>,
++    pub(super) need_gen: u32,
++    pub(super) need_left: usize,
++    pub(super) slack: f32,
++    pub(super) stop_at: f32,
++    pub pops: u64,
+ }
+ 
+ /// A route node's edges in as `Search::run` reads them: whether riders board it from its station
+@@ -1118,6 +1166,13 @@
+             banned_off,
+             banned,
+             banned_all,
++            bounded: false,
++            need: vec![u32::MAX; s],
++            need_gen: 0,
++            need_left: 0,
++            slack: 0.0,
++            stop_at: f32::INFINITY,
++            pops: 0,
+         }
+     }
+ 
+@@ -1131,7 +1186,7 @@
+         self.entry.clear();
+         self.entry.resize(s, f32::INFINITY);
+         for v in 0..s {
+-            if v == dst || !self.dist[v].is_finite() {
++            if v == dst || !self.dist[v].is_finite() || (self.bounded && !self.done[v]) {
+                 continue;
+             }
+             self.cand.clear();
+@@ -1171,8 +1226,18 @@
+         self.cn_bits.clear();
+         self.cn_feed.clear();
+         self.dist[dst] = 0.0;
++        self.heap.h.clear();
+         self.heap.push(0.0, dst as u32);
+-        while let Some(id) = self.heap.pop() {
++        // T-2621 (scratch): a bounded search stops once every needed start is settled and the
++        // queue is `slack` past the last of them
++        self.stop_at = if self.bounded && self.need_left == 0 { self.slack } else { f32::INFINITY };
++        loop {
++            let Some(&top) = self.heap.h.first() else { break };
++            if f32::from_bits((top >> 32) as u32) > self.stop_at {
++                break;
++            }
++            let id = self.heap.pop().unwrap();
++            self.pops += 1;
+             if id >= n + nr {
+                 self.settle_change(id - n - nr);
+                 continue;
+@@ -1190,6 +1255,12 @@
+             self.order.push(v as u32);
+             let d = self.dist[v];
+             if v < s {
++                if self.bounded && self.need[v] == self.need_gen {
++                    self.need_left -= 1;
++                    if self.need_left == 0 {
++                        self.stop_at = d + self.slack;
++                    }
++                }
+                 self.settle_station(v);
+                 continue;
+             }
+--- a/sim/src/demand/intercity/api.rs
++++ b/sim/src/demand/intercity/api.rs
+@@ -343,6 +343,60 @@
+         some[m.zones[z].place] = true;
+     }
+     let mut run: Vec<(usize, f64)> = vec![];
++    let mut deal: HashMap<(u32, u32), f64> = HashMap::new();
++    // T-2621 (scratch): with `REP_PEOPLE`, the far place pairs (`PLACE_DEAL_KM`) solved between
++    // representative zones alone: each place's served zones sampled by people and jobs, one for
++    // about every `REP_PEOPLE` (1 to 16), each standing for its share; a pair's trips are the places'
++    // trips times both shares
++    let (per, pd) = (REP_PEOPLE.with(|c| c.get()), PLACE_DEAL_KM.with(|c| c.get()));
++    let mut repw = vec![0f64; m.zones.len()];
++    let mut ptot: HashMap<(u32, u32), f64> = HashMap::new();
++    if per > 0. && pd > 0. {
++        let mut by: Vec<Vec<usize>> = vec![vec![]; m.places.len()];
++        for &z in served {
++            by[m.zones[z].place].push(z);
++        }
++        for zs in by.iter_mut() {
++            zs.sort_unstable();
++            let w: Vec<f64> = zs.iter().map(|&z| (m.zones[z].pop + m.zones[z].jobs).max(1.) as f64).collect();
++            let sum: f64 = w.iter().sum();
++            if zs.is_empty() {
++                continue;
++            }
++            let k = (sum / per).round().clamp(1., 16.);
++            let step = sum / k;
++            let (mut lo, mut j) = (0., 0.5);
++            for (&z, &wz) in zs.iter().zip(&w) {
++                let hi = lo + wz;
++                while j * step < hi && j < k + 0.5 {
++                    repw[z] += 1. / k;
++                    j += 1.;
++                }
++                lo = hi;
++            }
++        }
++        for &a in served {
++            let za = &m.zones[a];
++            let mut b = a + 1;
++            while b < m.zones.len() {
++                let place = m.zones[b].place;
++                let near = m.pr(za.place, place).near;
++                if !some[place] || !m.pr(za.place, place).has_alt() || near || m.zone_km(za, &m.zones[b]) < pd {
++                    while b < m.zones.len() && m.zones[b].place == place {
++                        b += 1;
++                    }
++                    continue;
++                }
++                let fixed = m.curves(za, &m.zones[b]);
++                let mut t = 0.;
++                while b < m.zones.len() && m.zones[b].place == place {
++                    t += m.eachway_with(za, &m.zones[b], fixed);
++                    b += 1;
++                }
++                *ptot.entry((za.place as u32, place as u32)).or_insert(0.) += t;
++            }
++        }
++    }
+     for (i, &a) in served.iter().enumerate() {
+         let za = &m.zones[a];
+         let mut b = a + 1;
+@@ -358,6 +412,9 @@
+             }
+             // far places' zones are all at the places' distance
+             let fixed = (!m.pr(za.place, place).near).then(|| m.curves(za, &m.zones[b]));
++            // T-2621 (scratch): a longer chunk with distance, `chunk` x d / d0, from 1 to `cap` times
++            let (d0, cap) = CHUNK_BY_KM.with(|c| c.get());
++            let chunk = if d0 > 0. { chunk * (m.zone_km(za, &m.zones[b]) / d0).clamp(1., cap) } else { chunk };
+             while b < m.zones.len() && m.zones[b].place == place {
+                 let zb = &m.zones[b];
+                 let t = m.eachway_with(za, zb, fixed.unwrap_or_else(|| m.curves(za, zb)));
+@@ -375,6 +432,38 @@
+                     keep(&mut any, i, k as usize, trips);
+                 }
+             };
++            // T-2621 (scratch): far place pairs dealt as one run over both places' zones (the origin
++            // zones in order, each one's run of the far place's zones), from a start fixed by the places
++            if per > 0. && pd > 0. && fixed.is_some() && m.zone_km(za, &m.zones[first]) >= pd {
++                if repw[a] > 0. {
++                    let tp = ptot.get(&(za.place as u32, place as u32)).copied().unwrap_or(0.);
++                    let mut zb = first;
++                    while zb < m.zones.len() && m.zones[zb].place == place {
++                        let t = tp * repw[a] * repw[zb];
++                        if repw[zb] > 0. && t >= min {
++                            solve(zb, t);
++                        }
++                        zb += 1;
++                    }
++                }
++                continue;
++            }
++            if pd > 0. && fixed.is_some() && m.zone_km(za, &m.zones[first]) >= pd {
++                let e = deal.entry((za.place as u32, place as u32)).or_insert(0.);
++                let (lo0, u) = (*e, unit_hash(za.place as u32, place as u32));
++                *e += total;
++                let before = |x: f64| (x / chunk - u).ceil().max(0.);
++                let mut lo = lo0;
++                for &(zb, t) in &run {
++                    let hi = lo + t;
++                    let got = before(hi) - before(lo);
++                    lo = hi;
++                    if got > 0. {
++                        solve(zb, got * chunk);
++                    }
++                }
++                continue;
++            }
+             if draws >= run.len() as f64 {
+                 for &(zb, t) in &run {
+                     solve(zb, t);
+@@ -398,6 +487,13 @@
+     }
+     (any, each)
+ }
++thread_local! {
++    /// T-2621 (scratch): (d0 km, cap) of `solved_pairs`' chunk by distance; d0 0: off
++    pub(super) static CHUNK_BY_KM: std::cell::Cell<(f64, f64)> = const { std::cell::Cell::new((0., 1.)) };
++    /// T-2621 (scratch): far place pairs from this many km dealt over both places' zones; 0: off
++    pub(super) static PLACE_DEAL_KM: std::cell::Cell<f64> = const { std::cell::Cell::new(0.) };
++    pub(super) static REP_PEOPLE: std::cell::Cell<f64> = const { std::cell::Cell::new(0.) };
++}
+ /// A number in [0, 1) fixed by two ids (splitmix64).
+ pub(crate) fn unit_hash(a: u32, b: u32) -> f64 {
+     let mut z = ((a as u64) << 32 | b as u64).wrapping_add(0x9e37_79b9_7f4a_7c15);
+--- a/sim/src/demand/intercity/logsum.rs
++++ b/sim/src/demand/intercity/logsum.rs
+@@ -270,6 +270,24 @@
+             Columns::Search(q) => {
+                 let mut d = q.run_col(dst, r);
+                 put(r, re, has_re, &std::mem::take(&mut d.entry));
++                Some(Held::Own(d))
++            }
++        }
++    }
++    /// T-2621 (scratch): `fill` with the search bounded to the starts `need`.
++    pub(super) fn fill_bounded(&mut self, dst: usize, r: &mut [f32], re: &mut [f32], has_re: &mut bool, need: &[u32], slack: f32) -> Option<Held<'a>> {
++        match self {
++            Columns::Skims(_) => self.fill(dst, r, re, has_re),
++            Columns::Search(q) => {
++                let mut d = q.run_col_bounded(dst, r, need, slack);
++                let entry = std::mem::take(&mut d.entry);
++                *has_re = !entry.is_empty();
++                if *has_re {
++                    re.copy_from_slice(r);
++                    for &(src, c) in entry.iter() {
++                        re[src as usize] = c;
++                    }
++                }
+                 Some(Held::Own(d))
+             }
+         }
+--- a/sim/src/demand/intercity/pass.rs
++++ b/sim/src/demand/intercity/pass.rs
+@@ -41,9 +41,14 @@
+             return self.pass_searched(g, p, q, ix);
+         }
+         let todo = self.want.iter().filter(|&&w| w).count();
+-        if todo * strategy_bytes(g) <= MARKET_STRATEGY_BYTES || skims_cached(g, p) {
++        let forced = COARSE.with(|c| c.borrow().on) || std::env::var("TW_T2621_SEARCHED").is_ok();
++        if !forced && (todo * strategy_bytes(g) <= MARKET_STRATEGY_BYTES || skims_cached(g, p)) {
+             // the strategies are shared with the local populations on the same service (T-119)
+-            return with_skims(g, p, &self.want, |sk| self.pass_on(g, p, q, sk, ix));
++            let t0 = std::time::Instant::now();
++            return with_skims(g, p, &self.want, |sk| {
++                tadd(0, t0);
++                self.pass_on(g, p, q, sk, ix)
++            });
+         }
+         self.pass_searched(g, p, q, ix)
+     }
+@@ -82,6 +87,13 @@
+         // leg ending outside taken as the leg the other way turned round (`mirror_into`)
+         let windowed = !win.is_empty();
+         let inw = |z: usize| !windowed || win[z];
++        // T-2621 (scratch)
++        let t_pass = std::time::Instant::now();
++        let cz = COARSE.with(|c| c.borrow().clone());
++        let coarse = cz.on && !windowed;
++        let far_pair: Vec<bool> = if coarse { self.pairs.iter().map(|p| m.zone_km(&m.zones[p.a as usize], &m.zones[p.b as usize]) > cz.far_km).collect() } else { vec![] };
++        let is_far = |pi: usize| coarse && far_pair[pi];
++        let hub: &[u32] = &cz.hub;
+         let c_ends = |ci: usize| {
+             let c = &m.commutes[self.cpairs[ci].c as usize];
+             (c.0 as usize, m.comp_of_gid[c.1 as usize] as usize)
+@@ -112,16 +124,20 @@
+         // pair ending there (a swapped pair's home list)
+         let reads = |z: usize, out: &mut Vec<usize>| {
+             out.clear();
+-            let (mut far, mut near) = (false, false);
++            let (mut far, mut near, mut hubbed) = (false, false, false);
+             for &pi in ls(z) {
+                 if l_swapped(pi as usize) {
+                     near = true;
+                 } else {
+                     far = true;
++                    hubbed |= is_far(pi as usize);
+                 }
+             }
+             if far {
+                 out.extend(self.access_work[z].iter().map(|e| e.0));
++            }
++            if hubbed {
++                out.extend(self.access_work[z].iter().map(|e| hub[e.0] as usize));
+             }
+             if near {
+                 out.extend(self.access[z].iter().map(|e| e.0));
+@@ -205,10 +221,89 @@
+                     let list = if l_swapped(pi as usize) { &self.access[z] } else { &self.access_work[z] };
+                     for &(x, _) in list {
+                         km_on[x] = true;
+-                    }
+-                }
+-            }
+-        }
++                        if coarse {
++                            km_on[hub[x] as usize] = true;
++                        }
++                    }
++                }
++            }
++        }
++        // T-2621 (scratch): per station, the starts whose route costs to it are read
++        let t_need = std::time::Instant::now();
++        let mut need: Vec<Vec<u32>> = vec![];
++        if coarse && cz.bound {
++            need = vec![vec![]; s];
++            let mut stamp = vec![u32::MAX; s];
++            let mut orig: Vec<u32> = vec![];
++            let mut gen = 0u32;
++            let mut union = |orig: &mut Vec<u32>, stamp: &mut Vec<u32>, gen: u32, list: &[(usize, f32)]| {
++                for &(x, _) in list {
++                    if stamp[x] != gen {
++                        stamp[x] = gen;
++                        orig.push(x as u32);
++                    }
++                }
++            };
++            for &z in &zones {
++                // the longer trips near enough to be solved exactly, ending in z
++                gen += 1;
++                orig.clear();
++                let mut hubbed = false;
++                for &pi in ls(z) {
++                    let pi = pi as usize;
++                    if is_far(pi) {
++                        hubbed = true;
++                    } else {
++                        union(&mut orig, &mut stamp, gen, &self.access[self.pairs[pi].a as usize]);
++                    }
++                }
++                if !orig.is_empty() {
++                    for &(x, _) in &self.access_work[z] {
++                        need[x].extend_from_slice(&orig);
++                    }
++                }
++                if hubbed {
++                    for &(x, _) in &self.access_work[z] {
++                        need[x].push(hub[x]);
++                    }
++                }
++                // the commutes working in z, out and home
++                gen += 1;
++                orig.clear();
++                for &ci in cs(z) {
++                    let (_, home) = c_home(ci as usize);
++                    union(&mut orig, &mut stamp, gen, home);
++                    for &(x, _) in home {
++                        need[x].extend(self.access_cw[z].iter().map(|e| e.0 as u32));
++                    }
++                }
++                if !orig.is_empty() {
++                    for &(x, _) in &self.access_cw[z] {
++                        need[x].extend_from_slice(&orig);
++                    }
++                }
++                // the everyday outings to z, out and home
++                gen += 1;
++                orig.clear();
++                for &ei in es(z) {
++                    let (_, home) = e_home(ei as usize);
++                    union(&mut orig, &mut stamp, gen, home);
++                    for &(x, _) in home {
++                        need[x].extend(self.access_ew[z].iter().map(|e| e.0 as u32));
++                    }
++                }
++                if !orig.is_empty() {
++                    for &(x, _) in &self.access_ew[z] {
++                        need[x].extend_from_slice(&orig);
++                    }
++                }
++            }
++            for v in need.iter_mut() {
++                v.sort_unstable();
++                v.dedup();
++            }
++        }
++        tadd(8, t_need);
+         let has_c = !self.cpairs.is_empty();
+         let mut kinds = vec![false; if self.epairs.is_empty() { 0 } else { KIND_COUNT }];
+         for ep in &self.epairs {
+@@ -224,7 +319,7 @@
+         let (mut mo, mut mr, mut mcc): (Vec<Box<[f32]>>, Vec<Box<[f32]>>, Vec<Box<[f32]>>) = (vec![], vec![], vec![]);
+         let mut mec: Vec<Vec<Box<[f32]>>> = kinds.iter().map(|_| vec![]).collect();
+         let mut held: Vec<Option<Held<'a>>> = vec![];
+-        let cap = if matches!(src, Columns::Skims(_)) { usize::MAX } else { WINDOW_STRATEGY_BYTES.with(|c| c.get()) };
++        let cap = if matches!(src, Columns::Skims(_)) || coarse { usize::MAX } else { WINDOW_STRATEGY_BYTES.with(|c| c.get()) };
+         let mut kept: std::collections::BinaryHeap<(u32, u32)> = Default::default();
+         let mut held_bytes = 0usize;
+         let (mut kcol, mut kwcol, mut dep) = (vec![], vec![], vec![]);
+@@ -347,8 +442,17 @@
+                 rs[x] = k as u32;
+                 live_r += 1;
+                 stats[0] = stats[0].max(live_r);
+-                let h = src.fill(x, &mut rc[k], &mut rec[k], &mut has_re[k]);
++                let t_s = std::time::Instant::now();
++                let h = if !need.is_empty() && hub[x] as usize != x {
++                    cadd(11, 1.);
++                    src.fill_bounded(x, &mut rc[k], &mut rec[k], &mut has_re[k], &need[x], cz.slack)
++                } else {
++                    cadd(10, 1.);
++                    src.fill(x, &mut rc[k], &mut rec[k], &mut has_re[k])
++                };
++                tadd(1, t_s);
+                 stats[3] += 1;
++                let t_k = std::time::Instant::now();
+                 if km_on[x] {
+                     match &h {
+                         Some(h) => {
+@@ -358,6 +462,7 @@
+                         None => kmc[k].fill(0.),
+                     }
+                 }
++                tadd(2, t_k);
+                 // kept for the assignment while the strategies wanted sooner leave room
+                 let Some(h) = h else { continue };
+                 let b = h.bytes();
+@@ -392,11 +497,19 @@
+             };
+ 
+             // the longer trips ending in z (T-1735, a window's swapped ones: starting there)
++            let t_l = std::time::Instant::now();
+             if !ls(z).is_empty() {
+                 let (mut bc, mut hc) = (None, None);
++                // T-2621 (scratch): z's hubs (station, weight) and its stations under them (hub, station,
++                // route cost from the hub, egress weight); their columns; each station's weight at a
++                // pair's scale; each hub's trips
++                let mut hz: Option<(Vec<(usize, f32)>, Vec<(usize, usize, f32, f32)>)> = None;
++                let mut hcols = None;
++                let (mut hw, mut into): (Vec<f64>, Vec<f64>) = (vec![], vec![]);
+                 for &pi in ls(z) {
+                     let pi = pi as usize;
+                     let pair = &self.pairs[pi];
++                    let t_p = std::time::Instant::now();
+                     let (za, zb) = (pair.a as usize, pair.b as usize);
+                     let swap = l_swapped(pi);
+                     let (pa, pb) = (m.zones[za].place, m.zones[zb].place);
+@@ -416,12 +529,61 @@
+                     let alt_m = rule.alt(pair.car, split, from.w() * fm, &m.mp);
+                     let (th, d) = (p.soften(th0, alt_m.car), self.fare_d(za, fm));
+                     // (swapped: priced on the route costs the other way, from its far stations to its home ones)
+-                    let mix = if swap {
++                    let coarse_this = is_far(pi) && !swap;
++                    cadd(if coarse_this { 13 } else { 14 }, 1.);
++                    tadd(16, t_p);
++                    let t_m = std::time::Instant::now();
++                    let mix = if coarse_this {
++                        let (hb, hm) = hz.get_or_insert_with(|| {
++                            let (mut hb, mut hm): (Vec<(usize, f32)>, Vec<(usize, usize, f32, f32)>) = (vec![], vec![]);
++                            for &(sb, wb) in b.iter() {
++                                if wb <= 0. {
++                                    continue;
++                                }
++                                let h = hub[sb] as usize;
++                                let r = if h == sb { 0. } else { rc[rs[sb] as usize][h] };
++                                if !r.is_finite() {
++                                    continue;
++                                }
++                                let j = match hb.iter().position(|e| e.0 == h) {
++                                    Some(j) => j,
++                                    None => {
++                                        hb.push((h, 0.));
++                                        hb.len() - 1
++                                    }
++                                };
++                                hm.push((j, sb, r, wb));
++                            }
++                            (hb, hm)
++                        });
++                        let k = (th / p.beta) as f64;
++                        hw.clear();
++                        hw.extend(hm.iter().map(|&(_, _, r, wb)| k * (wb as f64).ln() - (th * r) as f64));
++                        for (j, e) in hb.iter_mut().enumerate() {
++                            let mut top = f64::NEG_INFINITY;
++                            for (i, h) in hm.iter().enumerate() {
++                                if h.0 == j {
++                                    top = top.max(hw[i]);
++                                }
++                            }
++                            let mut sum = 0.;
++                            for (i, h) in hm.iter().enumerate() {
++                                if h.0 == j {
++                                    sum += (hw[i] - top).exp();
++                                }
++                            }
++                            e.1 = (((p.beta / th) as f64) * (top + sum.ln())).exp() as f32;
++                        }
++                        let hb: &Vec<(usize, f32)> = hb;
++                        rail_mix_cols(hcols.get_or_insert_with(|| cols(hb, true)), p.fare_min, a, hb, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
++                    } else if swap {
+                         rail_mix_cols(hc.get_or_insert_with(|| cols(a, true)), p.fare_min, b, a, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
+                     } else {
+                         rail_mix_cols(bc.get_or_insert_with(|| cols(b, true)), p.fare_min, a, b, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
+                     };
+                     let sum = mix.sum;
++                    tadd(17, t_m);
++                    let t_g = std::time::Instant::now();
+                     for &(share, f) in gs {
+                         let trips = pair.trips * SHARES[q] as f64 * share as f64;
+                         let alt = if gs.len() == 1 { alt_m } else { rule.alt(pair.car, split, from.w() * f, &m.mp) };
+@@ -436,7 +598,56 @@
+                             add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, zb));
+                         }
+                     }
+-                    if sum > 0. && r_all > 0. {
++                    cadd(15, terms.len() as f64);
++                    tadd(18, t_g);
++                    let t_d = std::time::Instant::now();
++                    if sum > 0. && r_all > 0. && coarse_this {
++                        // T-2621 (scratch): to the hubs, then on to the stations under them
++                        let (hb, hm) = hz.as_ref().unwrap();
++                        into.clear();
++                        into.resize(hb.len(), 0.);
++                        for &(sa, h, v) in &terms {
++                            let rr = (r_all * v / sum) as f32;
++                            let (sa, h) = (sa as usize, h as usize);
++                            let k = ws[h] as usize;
++                            odc[k][sa] += rr;
++                            if ln != 0. {
++                                odrc[k][sa] += rr * ln;
++                            }
++                            let j = hb.iter().position(|e| e.0 == h).unwrap();
++                            into[j] += rr as f64;
++                        }
++                        if cz.cont {
++                            for (j, &(h, _)) in hb.iter().enumerate() {
++                                if into[j] == 0. {
++                                    continue;
++                                }
++                                let mut top = f64::NEG_INFINITY;
++                                for (i, x) in hm.iter().enumerate() {
++                                    if x.0 == j {
++                                        top = top.max(hw[i]);
++                                    }
++                                }
++                                let mut tot = 0.;
++                                for (i, x) in hm.iter().enumerate() {
++                                    if x.0 == j {
++                                        tot += (hw[i] - top).exp();
++                                    }
++                                }
++                                for (i, x) in hm.iter().enumerate() {
++                                    if x.0 != j || x.1 == h {
++                                        continue;
++                                    }
++                                    let v = (into[j] * (hw[i] - top).exp() / tot) as f32;
++                                    let k = ws[x.1] as usize;
++                                    odc[k][h] += v;
++                                    if ln != 0. {
++                                        odrc[k][h] += v * ln;
++                                    }
++                                }
++                            }
++                        }
++                    } else if sum > 0. && r_all > 0. {
+                         ends.clear();
+                         ends.resize(b.len(), usize::MAX);
+                         let (mut last_sa, mut ia, mut jb) = (u32::MAX, 0, 0);
+@@ -475,11 +686,14 @@
+                             }
+                         }
+                     }
++                    tadd(19, t_d);
+                     rail += r_all;
+                     cor[pair.corridor as usize] += r_all;
+                     pair_rail[pi] = r_all as f32;
+                 }
+             }
++            tadd(3, t_l);
++            let t_c = std::time::Instant::now();
+             // T-276: the commutes working in z, chosen as the local layer chooses: once per
+             // commuter on this period's service from home to work, the trip home on the same
+             // station pair reversed
+@@ -539,6 +753,8 @@
+                     }
+                 }
+             }
++            tadd(4, t_c);
++            let t_e = std::time::Instant::now();
+             // T-1175: the everyday outings to z across a zone line, chosen as the everyday layer
+             // chooses: the pair's walkers with no rail first (their weight against the car from
+             // that share), rail and the car splitting the rest on their cost ratio, rail taking
+@@ -603,6 +819,8 @@
+                 }
+             }
+ 
++            tadd(5, t_e);
++            let t_a = std::time::Instant::now();
+             // the stations whose last read z is: their read slots freed
+             for &x in &rl {
+                 if last_read[x] as usize == u && rs[x] != u32::MAX {
+@@ -673,7 +891,10 @@
+                     Some(h) => h,
+                     None => {
+                         stats[4] += 1;
+-                        match src.strategy(dst) {
++                        let t_r = std::time::Instant::now();
++                        let h = src.strategy(dst);
++                        tadd(7, t_r);
++                        match h {
+                             Some(h) => h,
+                             None => continue,
+                         }
+@@ -701,6 +922,7 @@
+                     }
+                 }
+             }
++            tadd(6, t_a);
+         }
+         // T-1735: the window's legs turned round
+         if let Some(l) = &mall {
+@@ -728,6 +950,50 @@
+             w.set(v);
+         });
+         let e_loads = ev.into_iter().zip(e_used).map(|(a, u)| a.filter(|_| u).map(|a| a.l)).collect();
++        tadd(9, t_pass);
++        if let Columns::Search(q) = &src {
++            T2621.with(|c| {
++                let mut v = c.get();
++                v[12] += q.pops() as f64;
++                c.set(v);
++            });
++        }
+         Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d }
+     }
+ }
++
++/// T-2621 (scratch): the coarse market's switches. `far_km`: longer trips between zones farther
++/// apart end at their destination stations' hubs (`hub`, per station; a hub is its own), and with
++/// `cont` go on from there to the stations by those stations' own strategies; `bound`: every other
++/// station is searched only until the starts that read it are settled, `slack` minutes on.
++#[derive(Clone, Default)]
++pub(super) struct Coarse {
++    pub(super) on: bool,
++    pub(super) far_km: f64,
++    pub(super) cont: bool,
++    pub(super) bound: bool,
++    pub(super) slack: f32,
++    pub(super) hub: Rc<Vec<u32>>,
++}
++thread_local! {
++    pub(super) static COARSE: RefCell<Coarse> = RefCell::new(Coarse::default());
++    /// ms: 0 skims, 1 searches with costs, 2 fare km, 3 longer trips, 4 commutes, 5 everyday,
++    /// 6 assignment, 7 searches again, 8 needs, 9 whole pass; counts: 10 full searches, 11 bounded,
++    /// 12 pops, 13 longer pairs far, 14 longer pairs near, 15 terms
++    pub(super) static T2621: std::cell::Cell<[f64; 24]> = const { std::cell::Cell::new([0.; 24]) };
++}
++pub(super) fn tadd(i: usize, t: std::time::Instant) {
++    let d = t.elapsed().as_secs_f64() * 1e3;
++    T2621.with(|c| {
++        let mut v = c.get();
++        v[i] += d;
++        c.set(v);
++    });
++}
++pub(super) fn cadd(i: usize, n: f64) {
++    T2621.with(|c| {
++        let mut v = c.get();
++        v[i] += n;
++        c.set(v);
++    });
++}
+--- a/sim/src/demand/intercity/tests.rs
++++ b/sim/src/demand/intercity/tests.rs
+@@ -1215,7 +1215,7 @@
+ #[ignore]
+ fn legacy_northeast_pack_opens() {
+     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+-    let text = std::fs::read_to_string(format!("{root}/data/work/intercity.json")).unwrap();
++    let text = std::fs::read_to_string(format!("{root}/data/packs/intercity.json")).unwrap();
+     let t = now_ms();
+     let a = IntercityApi::new(&text).unwrap();
+     let (zones, first, keys) = market_site_zones(&text).unwrap();
+@@ -2166,4 +2166,5 @@
+     let ((car, x), (_, y)) = (way(a, b), way(b, a));
+     let air = 0.5 * (x + y);
+     [air, if car { 1. - air } else { 0. }]
+-}+}
++include!("C:/Users/anita/projects/maps/trainworld/notes/T-2621/t2621.rs");
