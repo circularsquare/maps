@@ -773,7 +773,7 @@ function RailLineInspector({ id }: { id: string }) {
         </ul>
       )}
 
-      {st.status === "running" && <PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit={tr("lineInspector.ridersUnit")} />} />}
+      {st.status === "running" && <div class="line-day"><PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit={tr("lineInspector.ridersUnit")} />} /></div>}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}

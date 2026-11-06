@@ -1031,6 +1031,8 @@ button.save-add:hover { color: var(--text); }
 .tool-bar .tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .tool-bar .tb-speed { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
 .tool-bar .price { margin: 0; }
+/* T-2664: Regular / High speed sat about 1 px high in their buttons (descenders count in the centring); the level digits are fine */
+.tool-bar .group .btn:not(.lv) { padding-top: 2px; }
 .tool-bar .stepper.wide .v { min-width: 72px; }
 .tool-bar .btn.icon svg { width: 19px; height: 19px; }
 .tool-bar .tb-narrow, .tool-bar-pop { display: none; }
@@ -1484,6 +1486,10 @@ button.save-add:hover { color: var(--text); }
 .rows > li.zone-trips { display: block; padding: 6px 0 6px; }
 .zone-trips .line { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .split-bar { width: 100%; max-width: none; height: 8px; }
+/* T-2664: the line panel's riders block sits tighter: less above Riders, less between it and the bar, a thinner bar */
+.line-day > .h.divided { padding-top: 5px; }
+.line-day .rows > li.purpose-split { padding: 1px 0 4px; }
+.line-day .split-bar { height: 5px; }
 .split-bar .seg.shown { outline: 2px solid var(--text); outline-offset: 0; position: relative; z-index: 1; }
 .split-key { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; column-gap: 12px; font-size: 12px; }
 .split-key li { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
