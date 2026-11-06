@@ -3,7 +3,7 @@
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
 camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' borders (T-2464;
-notes/T-2464.md) and city names far out (T-2438); water is T-2169. The diagram is laid out on the **rubber sheet**
+notes/T-2464.md) and city and zone names (T-2438, T-2640); water is T-2169. The diagram is laid out on the **rubber sheet**
 (T-2566 to T-2580; its section at the end): the sheet's stages replace The layout's A and blocks' stage, Zone borders
 and Water below, which describe the layout before it, kept behind `?sheet=0` in the page's address.
 
@@ -260,12 +260,21 @@ pill, so they clear its own line); east, west, north and south
 
 ## City names
 
-`diagram/cityNames.ts` (T-2438, T-2521, T-2581). Below a pitch of 1.47 px no station names are drawn; each city block
-(The layout, Blocks) has its name instead: bigger than station names, in the grey of the map's place names
+`diagram/cityNames.ts` (T-2438, T-2521, T-2581, T-2640). Below a pitch of 1.47 px no station names are drawn. Each city
+block (The layout, Blocks) has a name, and so does each zone that holds stations whose name no block shows (a town
+too small for a block, the stations between cities, a prefecture the blocks are named past): bigger than station names, in the grey of the map's place names
 (`placeNameInk` in `map/basemap.ts`, each theme's own; T-2492) at half opacity, in the station names' font, and painted
 under the lines (a callback `paint` runs after the water and borders, before the line casings), so lines and stations
-cross it and it has no halo. Made in the layout worker after the borders (names and anchors), sized and placed on
-every paint.
+cross it and it has no halo. They are drawn at every zoom, with the station names over them from 1.47 px up. Made in the
+layout worker after the borders (names and anchors), chosen, sized and placed on every paint.
+
+- **How many**: the screen sets a count, one name per 150,000 CSS px squared of the canvas, at least 4 and at most 40
+  (about 9 on a 1400 by 1000 canvas). Of the names with a place in view, the busiest (most stations) come first until
+  the count is reached, so a whole continent shows its few biggest cities and a view with only a few zones in it shows
+  most of them. Where at least 3 names have a place in view, 3 are shown even if the clear places run out (they then
+  lie over pills).
+- **In view**: a name whose middle is off screen moves to the middle of the part of its stations' box that is on
+  screen, so a city cut by the edge keeps its name.
 
 - **Where**: centred on its own stations as drawn: the block's city stations (its core, not the branches and pieces
   taken in) in the zone it is named for, else the city stations, else all the block's stations; the middle of their
@@ -274,9 +283,14 @@ every paint.
 - **Size**: near one screen size: 1.5 times the station names' size where its stations span 64 px on screen, times
   that span's ratio to the power 0.15, within 1.25 to 2.5 times (15 to 30 px). Zooming out 15 times shrinks a name
   by about a third, so a view far out is not covered by names.
-- **Overlaps**: biggest block (by stations) first. A name that would meet one already placed (with 6 px to spare)
-  shrinks by a tenth at a time toward 1.5 times the station names' size; if it still meets one it is left out. A
-  name off the screen blocks none.
+- **Overlaps**: busiest first. A name that would meet one already placed (with 6 px to spare) shrinks by a tenth at a
+  time toward 1.25 times the station names' size; if it still meets one it is left out. A name off the screen blocks
+  none. From 1.47 px up (station names drawn) a name also keeps clear of the station names (a 3 px halo each) and of
+  the pills: its middle is tried at steps of its half size round the anchor (2 across, 3 up and down), nearest first,
+  within the stations' box, and the first place clear of both is taken.
+- **A zone's own name** (a zone with stations whose name no block shows, as Niigata and Iwate in Japan):
+  its shown name at the middle of its stations, with a tenth left out at each side as for a block; its stations are its
+  rank. Where it meets a bigger name it shrinks or goes.
 
 - **The name**: the zone (the borders' zone of each station) holding most of the block's stations, ties to a city
   zone, then to more local trips; its shown name, as the map's (`game/zoneNames.ts`). The page
@@ -287,7 +301,7 @@ every paint.
   such a block exists, after the first drawing, and the worker names again when it arrives; until then (or with
   no list or no place left) the block has no name.
 - The saved picture, too big for station names at any level, is the lines alone at the largest scale that fits, with
-  the city names under them where the pitch is below 1.47 px.
+  the city names under them (the count by the picture's size, at most 40).
 
 ## The graph
 

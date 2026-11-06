@@ -487,8 +487,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     }
     const f = focusNow();
     const cn = shown.names.cities, d = shown.d;
-    // the city names under the lines, far out (T-2438, T-2521)
-    paint(ctx, d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f, cn && ((c) => paintCityNames(c, cn, d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, font: t.font })));
+    // the city and zone names under the lines (T-2438, T-2521, T-2640)
+    paint(ctx, d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f, cn && ((c) => paintCityNames(c, cn, d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, font: t.font }, { d, plan: shown!.names })));
     // the map's station names: its ink with a halo of the background
     const st = f?.stations;
     paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
@@ -698,7 +698,7 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
   if (!ctx) return null;
   const mx = (box[0] + box[2]) / 2, my = (box[1] + box[3]) / 2;
   const cn = s.names.cities;
-  paint(ctx, d, W, H, mx, my, sc, t, undefined, cn && ((c) => paintCityNames(c, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.place, font: t.font })));
+  paint(ctx, d, W, H, mx, my, sc, t, undefined, cn && ((c) => paintCityNames(c, cn, d.pitch, W, H, mx, my, sc, 1, { ink: t.place, font: t.font }, { d, plan: s.names })));
   paintNames(ctx, s.names, d, W, H, mx, my, sc, 1, { ink: t.text, halo: t.bg, font: t.font });
   return { canvas: out, pitchPx: sc * d.pitch };
 }

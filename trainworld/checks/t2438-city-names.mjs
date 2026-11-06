@@ -60,7 +60,8 @@ for (const city of which) {
   // T-2447: the first placing is as the page does it before any place list has arrived; the zones that asked
   // (cn0.want) then get theirs, from data/packs/<id>.places.json as the page loads them, and it is placed again
   const cn0 = L.placeCityNames(g, lay, lay.blocks, b.zoneOf, zones, FONT, b.zones);
-  const before = cn0.text.filter(Boolean).length;
+  // T-2640: the entries after the blocks' are zones with stations and no named block; "names as before" is of the blocks
+  const nbk = lay.blocks.list.length, before = cn0.text.slice(0, nbk).filter(Boolean).length;
   for (const id of cn0.want) {
     const zi = b.zones.indexOf(id), f = new URL(`data/packs/${id}.places.json`, TW);
     if (!existsSync(f)) { zones[zi].towns = []; continue; }
@@ -77,17 +78,19 @@ for (const city of which) {
   r.ms = Math.round(performance.now() - t0);
   r.named = new Set(cn.text.filter(Boolean)).size;
   r.namedBefore = before;
-  r.unnamed = cn.text.filter((t) => !t).length;
+  r.unnamed = cn.text.slice(0, nbk).filter((t) => !t).length;
+  r.zoneNames = cn.text.length - nbk;
   r.repeats = cn.text.filter((t, i) => t && cn.text.indexOf(t) !== i);
-  r.given = cn.text.map((t, i) => [t, cn0.text[i]]).filter(([t, o]) => t && !o).map(([t]) => t);
+  r.given = cn.text.slice(0, nbk).map((t, i) => [t, cn0.text[i]]).filter(([t, o]) => t && !o).map(([t]) => t);
   out[city] = r;
-  console.log(`     ${city}: ${r.blocks} blocks, ${before} named before, ${r.named} names after`);
+  console.log(`     ${city}: ${r.blocks} blocks, ${before} named before, ${r.named} names after, ${r.zoneNames} of them zones without a block`);
+  console.log(`     by stations: ${[...cn.order].slice(0, 40).map((q) => `${cn.text[q]} ${cn.rank[q]}${q >= nbk ? 'z' : ''} (${Math.round(cn.mx[q] / d.pitch)},${Math.round(cn.my[q] / d.pitch)} pitches)`).join('; ')}`);
   console.log(`     given to blocks that had none: ${r.given.join(', ') || '-'}`);
   say(r.unnamed === 0, `${city}: every block has a name`, `${r.unnamed} without`);
   say(!r.repeats.length, `${city}: no name twice`, r.repeats.join(', '));
   if (city !== 'jpn') say(r.given.length === 0 && before === r.blocks, `${city}: names as before (one per block, none given)`);
-  if (city === 'nyc') say(cn.order.length === 1 && cn.text[cn.order[0]] === 'New York', 'nyc: "New York" alone', [...cn.order].map((x) => cn.text[x]).join(', '));
-  if (city === 'ne') say([...cn.order].map((x) => cn.text[x]).sort().join() === 'New York,Philadelphia', 'ne: New York and Philadelphia', [...cn.order].map((x) => cn.text[x]).join(', '));
+  if (city === 'nyc') say(cn.text[cn.order[0]] === 'New York' && cn.order.filter((x) => x < nbk).length === 1, 'nyc: "New York" the one block name, first', [...cn.order].map((x) => cn.text[x]).join(', '));
+  if (city === 'ne') say(['New York', 'Philadelphia'].every((n) => [...cn.order].some((x) => x < nbk && cn.text[x] === n)) && cn.order.filter((x) => x < nbk).length === 2, 'ne: New York and Philadelphia the block names', [...cn.order].map((x) => cn.text[x]).join(', '));
   // T-2521: painted into a recording canvas at several pitches, each name is centred on its block's box, at least
   // BIG_MIN station-name sizes, and no two names meet
   const box = d.box, W = 1600, H = 1000;
@@ -98,9 +101,17 @@ for (const city of which) {
       const cx = box[0] + (box[2] - box[0]) * where, cy = box[1] + (box[3] - box[1]) * where;
       L.paintCityNames(rec, cn, d.pitch, W, H, cx, cy, scale, 1, { ink: '#777', font: 'sans' });
       let bad = '';
+      // T-2640: at most the screen's count, and at least FEW_NAMES where that many have their middle in view
+      const cap = Math.min(L.MAX_NAMES, Math.max(L.MIN_NAMES, Math.round((W * H) / L.NAME_AREA_PX)));
+      const inView = [...cn.order].filter((q) => { const ax = W / 2 + (cn.mx[q] - cx) * scale, ay = H / 2 - (cn.my[q] - cy) * scale; return ax >= 0 && ax <= W && ay >= 0 && ay <= H; }).length;
+      if (calls.length > cap) bad ||= `${calls.length} names over the cap ${cap}`;
+      if (calls.length < Math.min(L.FEW_NAMES, inView)) bad ||= `${calls.length} names where ${inView} are in view`;
       for (const c of calls) {
         const b = [...cn.order].find((q) => cn.text[q] === c.t);
-        if (Math.abs(c.x - (W / 2 + (cn.mx[b] - cx) * scale)) > 1e-6 || Math.abs(c.y - (H / 2 - (cn.my[b] - cy) * scale)) > 1e-6) bad ||= `${c.t} off centre`;
+        const ax = W / 2 + (cn.mx[b] - cx) * scale, ay = H / 2 - (cn.my[b] - cy) * scale;
+        // a name whose middle is off screen moves into view
+        if (ax >= 0 && ax <= W && ay >= 0 && ay <= H && (Math.abs(c.x - ax) > 1e-6 || Math.abs(c.y - ay) > 1e-6)) bad ||= `${c.t} off centre`;
+        if (!(c.x >= 0 && c.x <= W && c.y >= 0 && c.y <= H)) bad ||= `${c.t} off screen`;
         if (c.f < 1.25 * FONT - 1e-6 || c.f > 2.5 * FONT + 1e-6) bad ||= `${c.t} at ${c.f.toFixed(1)} px`;
       }
       for (let i = 0; i < calls.length; i++) for (let j = 0; j < i; j++) {
@@ -121,8 +132,8 @@ for (const city of which) {
   say(!off, `${city}: every name on its own city's stations`, off);
   const below = L.CITY_SWITCH * 0.99, above = L.CITY_SWITCH * 1.01;
   const nCalls = (p) => { let n = 0; L.paintCityNames({ save() {}, setTransform() {}, fillText: () => n++ }, cn, d.pitch, W, H, (box[0] + box[2]) / 2, (box[1] + box[3]) / 2, p / d.pitch, 1, { ink: '', font: '' }); return n; };
-  say(L.levelAt(plan, below) < 0 && nCalls(above) === 0 && nCalls(below) >= 0 && L.levelAt(plan, above) >= 0,
-    `${city}: city names below ${L.CITY_SWITCH.toFixed(2)} px a pitch, station names from it up`);
+  say(L.levelAt(plan, below) < 0 && nCalls(above) >= 0 && L.levelAt(plan, above) >= 0,
+    `${city}: no station names below ${L.CITY_SWITCH.toFixed(2)} px a pitch, station names from it up (the city names at both)`);
 }
 mkdirSync(`${ARTIFACTS}t2438`, { recursive: true });
 writeFileSync(`${ARTIFACTS}t2438/figures.json`, JSON.stringify(out, null, 1));
