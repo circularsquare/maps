@@ -38,7 +38,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **searchleaf** (Opus, tree): T-2652 leaf stations in kernel/search.rs (Japan searches 1.4x+, exact).
 - **fartable** (Sonnet, tree): T-2653 far-zone table by zone (intercity/pass.rs, api.rs; spreading 3x+, bit-exact).
   Land both (sim -> WASM rebuild), then close T-2642 and T-2621.
-- **namespread** (Sonnet, tree): T-2674 diagram names spread across the map (Anita via maps-93: "lets spread themy es").
+- 7e8d913e: huninn.css moved to main.ts: since 2c10069e demand workers did not start on any dev Vite (trees attract2, searchleaf, fartable, namespread told to apply it; l10nfix had it).
+- **namespread** (Sonnet, tree): T-2675 borders 30 km / 50% (Anita) and T-2674 diagram names spread across the map (Anita via maps-93: "lets spread themy es").
 - **l10nfix** (Opus, tree): T-2655 code that pieces English (list on its TASKS line); its changed keys need a short
   review pass in the three languages after landing.
 
@@ -61,7 +62,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    diagram/ after borders2) then their translation; OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2675**.
+   (Brazil, pack lock free). Next unassigned id **T-2676**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
