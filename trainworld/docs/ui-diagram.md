@@ -3,7 +3,9 @@
 The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md). Built so far: the
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
 camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' borders (T-2464;
-notes/T-2464.md) and city names far out (T-2438); water is T-2169.
+notes/T-2464.md) and city names far out (T-2438); water is T-2169. The diagram is laid out on the **rubber sheet**
+(T-2566 to T-2580; its section at the end): the sheet's stages replace The layout's A and blocks' stage, Zone borders
+and Water below, which describe the layout before it, kept behind `?sheet=0` in the page's address.
 
 ## The button and key M
 
@@ -463,15 +465,16 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 ## The rubber sheet
 
-**Off by default; `?sheet=1` in the page's address turns it on (T-2568, T-2567).** On, the page sends the worker the
-zones near the network with each graph, and the worker reads their water masks, finds the sea on the ground (as Water
-does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md, notes/T-2568.md): each
-station's place on a sheet of the ground stretched so the network has room where it is dense, land kept near its shape
-and water giving way. The lines are then laid out on the sheet, and the water and the zone borders drawn from the ground
-carried with them (`diagram/sheetLines.ts`, notes/T-2567.md; below), in place of The layout's A and blocks' stage, the
-Zone borders above and the Water above (whose rivers are not drawn: narrow rivers as lines are T-2580). The sheet is
-posted as a `sheet` message too, which the page keeps as `window.twSheet` for checks. Off, the page sends no `sheet`
-and none of this runs.
+**The diagram's layout (T-2568, T-2567, T-2580); `?sheet=0` in the page's address lays out as before it.** The page
+sends the worker the zones near the network with each graph, and the worker reads their water masks, finds the sea on
+the ground (as Water does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md,
+notes/T-2568.md): each station's place on a sheet of the ground stretched so the network has room where it is dense,
+land kept near its shape and water giving way. The lines are then laid out on the sheet, and the water and the zone
+borders drawn from the ground carried with them (`diagram/sheetLines.ts`, `diagram/sheetThin.ts`, notes/T-2567.md,
+notes/T-2580.md; below), in place of The layout's A and blocks' stage, the Zone borders above and the Water above. The
+sheet is posted as a `sheet` message too, which the page keeps as `window.twSheet` for checks. The loading bar follows
+the sheet (a tenth), the lines and the carry (seven tenths) and the map. With `?sheet=0` the page sends no `sheet` and
+none of this runs.
 
 - **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
   with a floor, doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
@@ -501,10 +504,37 @@ and none of this runs.
   the page sends). A land mass with no station on it and over 2,000 km2 counts as water (another country's coast at the
   edge of the masks); smaller islands with no station stay. Each station's pill and 1.5 pitches round it (at least half a pitch more than a cell) are land of its
   own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (a
-  3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped), and every station's zone
-  carried to it, a pill wide, along the shortest way over land where its cell lies in another zone, so **every station
-  is on its own land and its own side of its zone's border**. The coast is traced and fitted with runs at 0, 45 and 90
-  degrees, straying up to 0.35 of the water's or the land's width there (at most 10 pitches) and keeping clear of the
-  pills; the borders between zones likewise (up to 6 pitches, a pitch clear of any station). Corners rounded at 3
-  pitches. The sea is drawn only with the water button on; the borders always.
+  3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped, before the bands below and
+  again after them).
+- **Narrow rivers** (with the water button on, on a city map; a map 600 km across or more draws only water wide enough
+  to show as area): every arc of a river some hop crosses, from the river finder of Water above run with a 25 m cell (so
+  the Harlem River is found whole), its middle carried through the map and moved so each crossing lies on its drawn hop
+  at the hop's share (the river within 3 km of a crossing moving with it), is a band 3.5 pitches wide where the grid's
+  water there is narrower. A band is pushed off stations nearer than half its width and a pill, narrowed (to 1.5 pitches
+  at least) where they leave no room, and stops either side of a station it still cannot pass, as at a bridge; its middle
+  is fitted with runs at 0, 45 and 90 degrees, straying up to 6 pitches but at least 1.5, less near a station, and split
+  round any station the fitted band would cover. A stub under twice its width crossing none of its hops is not drawn.
+  The grid's own water within a band's reach (and its river's carried middle's) that is narrower than the band becomes
+  land, so the band's are the only edges there. Bands are stroked one width each, round at their ends, corners rounded
+  at 2.5 pitches.
+- **Thin water and thin land as bands** (`sheetThin.ts`): water or land that a disc 8 pitches across (four cells on a
+  coarse grid) does not fit is a thin piece (a strait, a creek, a spit, a pier, Bayonne's two peninsulas). Each piece is
+  thinned to its middle lines (Zhang and Suen), spurs shorter than twice its width dropped, and each line drawn again as
+  a band: its median width (at least 1.5 pitches, or a cell and a half), its middle fitted with runs at 0, 45 and 90
+  degrees, straying up to 0.4 of the way to the next piece of its kind (at most 6 pitches, at least 0.85 of a cell), and
+  on water clear of the pills. A band is never drawn within 1.7 cells of another piece of its kind outside its own
+  piece, so **no strait closes, no island joins another and no isthmus is cut**. Where a band meets the water or land it
+  leaves from, the piece is kept as it was. A piece with a station on it, one at the map's edge and one under 3 pitches
+  every way stay as they are. Two shores fitted apart could only follow a thin piece's own wiggles (Anita, 2026-11-06:
+  "these peninsulas are very wiggly"); a band's edges are straight.
+- **Nibs and notches**: land and then water opened by a 3 by 3 square, a cell going only where its eight neighbours hold
+  one run of each kind (so no shape is cut or joined), never a pill's or a band's cell.
+- Every station's zone carried to it, a pill wide, along the shortest way over land where its cell lies in another
+  zone, so **every station is on its own land and its own side of its zone's border**. The coast is traced and fitted
+  with runs at 0, 45 and 90 degrees, straying landward up to 0.35 of the land's width behind (at most 10 pitches) and
+  keeping clear of the pills, seaward up to 0.35 of the water's width ahead; either way at least 0.85 of a cell where
+  that is narrow enough, since a straight edge drawn on the grid steps a cell. The borders between zones likewise (up to
+  6 pitches, a pitch clear of any station). Corners rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
+  degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
+  on; the borders always.
 - **City names** take the towns' places through the sheet.

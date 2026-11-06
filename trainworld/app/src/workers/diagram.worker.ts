@@ -7,9 +7,9 @@
 // page sends, each zone once; outlines arriving after a layout redo that layout's borders and city names alone. The
 // water (diagram/waterReal.ts, diagram/water.ts, T-2169) comes last, from the water masks of the zones the page names,
 // fetched here from the packs, and is posted on its own; its sea part is found before a first layout, which keeps the
-// sea open (T-2541). With the page's `sheet` (`?sheet=1`, T-2568, T-2567) the rubber sheet (diagram/sheet.ts) is made
-// first, from the same masks, and posted; the lines are laid out on it and the map carried with them
-// (diagram/sheetLines.ts), whose water (with the page's `water`) and zone borders replace the ones above.
+// sea open (T-2541). With the page's `sheet` (its default; `?sheet=0` sends none; T-2568, T-2567, T-2580) the rubber
+// sheet (diagram/sheet.ts) is made first, from the same masks, and posted; the lines are laid out on it and the map
+// carried with them (diagram/sheetLines.ts), whose water (with the page's `water`) and zone borders replace the ones above.
 
 import type { DiagramGraph } from "../diagram/graph";
 import { dialled, LAYOUT, LAYOUT_R2, lastPlaces, layoutDiagram, type DiagramLayout, type LastPlaces } from "../diagram/layout";
@@ -20,7 +20,7 @@ import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityN
 import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import { diagramWater, type DiagramWater } from "../diagram/water";
 import { rubberSheet, sheetWarp, type Sheet } from "../diagram/sheet";
-import { sheetLines, sheetMap, type SheetLines } from "../diagram/sheetLines";
+import { riverCellM, SHEET_LINES, sheetLines, sheetMap, type SheetLines } from "../diagram/sheetLines";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
 export type DiagramNames = { text: string[]; width: Float32Array; width2: Float32Array; fontPx: number };
@@ -39,7 +39,7 @@ export type FromDiagram =
   | { kind: "borders"; seq: number; borders: DiagramBorders; cities?: CityNames }
   | { kind: "water"; seq: number; water: DiagramWater; ms: { masks: number; ground: number; drawn: number } }
   | { kind: "progress"; seq: number; share: number }
-  | { kind: "sheet"; seq: number; sheet: Sheet; ms: { masks: number; ground: number; sheet: number; lines: number; map: number }; lines: SheetLines["info"] & { map: Record<string, number> } };
+  | { kind: "sheet"; seq: number; sheet: Sheet; ms: { masks: number; ground: number; sheet: number; lines: number; rivers: number; map: number }; lines: SheetLines["info"] & { map: Record<string, number> } };
 
 /** the layout's share of a first build's time; the drawing and names take the rest */
 const LAYOUT_SHARE = 0.85;
@@ -51,7 +51,7 @@ const outlines = new Map<string, Float64Array[]>(), labels = new Map<string, Zon
 const towns = new Map<string, ZoneTowns>();
 /** a layout on the sheet (T-2567): its lines and carried map, the graph with real places, whether the sea is drawn,
  * and the map from real places to the sheet's graph */
-type OnSheet = { lines: SheetLines; real: DiagramGraph; water: boolean; toSheet: (x: number, y: number) => [number, number] };
+type OnSheet = { lines: SheetLines; real: DiagramGraph; water: boolean; rivers: RealWater | null; toSheet: (x: number, y: number) => [number, number] };
 let shown: { seq: number; graph: DiagramGraph; layout: DiagramLayout; d: Drawing; fontPx: number; frame?: ZoneFrame; sheet?: OnSheet } | null = null;
 
 /** the zones the page has sent, in the graph's frame */
@@ -69,7 +69,7 @@ function shapesOf(frame: ZoneFrame): ZoneShape[] {
 function borders(graph: DiagramGraph, layout: DiagramLayout, d: Drawing, frame?: ZoneFrame, sheet?: OnSheet): DiagramBorders | undefined {
   if (!frame || !outlines.size) return undefined;
   if (sheet) {
-    const m = sheetMap(sheet.lines, sheet.real, shapesOf(frame), sheet.water);
+    const m = sheetMap(sheet.lines, sheet.real, shapesOf(frame), sheet.water, SHEET_LINES, false, sheet.rivers);
     if (m.water) d.water = m.water;
     return m.borders;
   }
@@ -134,29 +134,47 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   if (m.water && m.frame) void water(m.seq, m.water.packs, m.water.zones, m.frame);
 };
 
-/** `?sheet=1` (T-2567): the layout on the rubber sheet, its borders and (with the page's `water`) its sea from the map
- * carried with the stations, posted with the layout */
+/** The layout on the rubber sheet (T-2567, T-2580; the page's default, `?sheet=0` the layout above), its borders and
+ * (with the page's `water`) its sea and narrow rivers from the map carried with the stations, posted with the layout; how
+ * far it has got posted for the loading bar, in shares of the time (the lines and the carry most of it) */
 async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: string; zones: string[] }, frame: ZoneFrame) {
   const t0 = performance.now();
+  let sent = -1;
+  const progress = (share: number) => {
+    if (share - sent < 0.01) return;
+    sent = share;
+    (self as unknown as Worker).postMessage({ kind: "progress", seq: m.seq, share } satisfies FromDiagram);
+  };
+  progress(0);
   const got = await masksFor(at.packs, at.zones);
   const t1 = performance.now(), key = groundKey(m.graph, frame, got.length);
   if (seaKnown?.key !== key) seaKnown = { key, sea: groundSea(m.graph, got, frame) };
   const t2 = performance.now();
   const sheet = rubberSheet(m.graph, { masks: got, frame, sea: seaKnown.sea });
   const t3 = performance.now();
-  const lines = sheetLines(m.graph, sheet), g = lines.graph, layout = lines.layout, K = lines.k, warp = sheetWarp(sheet);
+  progress(0.1);
+  const lines = sheetLines(m.graph, sheet, SHEET_LINES, (s) => progress(0.1 + 0.7 * s)), g = lines.graph, layout = lines.layout, K = lines.k, warp = sheetWarp(sheet);
   const t4 = performance.now();
   const d = drawing(g, layout);
   const names = placeNames(g, layout, d, m.names.text, m.names.width, m.names.width2, m.names.fontPx);
   const t5 = performance.now();
-  const on: OnSheet = { lines, real: m.graph, water: !!m.water, toSheet: (x, y) => { const [a, b] = warp(x, y); return [a * K, b * K]; } };
-  const map = sheetMap(lines, m.graph, shapesOf(frame), on.water);
+  // the narrow rivers on the ground, with the water on (kept while the stations and tracks are the same)
+  let rivers: RealWater | null = null;
+  const cellM = riverCellM(m.graph);
+  if (m.water && cellM) {
+    if (sheetRivers?.key !== key) sheetRivers = { key, real: realWater(m.graph, got, frame, seaKnown.sea, cellM) };
+    rivers = sheetRivers.real;
+  }
+  const t5r = performance.now();
+  progress(0.9);
+  const on: OnSheet = { lines, real: m.graph, water: !!m.water, rivers, toSheet: (x, y) => { const [a, b] = warp(x, y); return [a * K, b * K]; } };
+  const map = sheetMap(lines, m.graph, shapesOf(frame), on.water, SHEET_LINES, false, rivers);
   if (map.water) d.water = map.water;
   if (outlines.size) (d.borders = map.borders), (names.cities = cities(g, layout, d, map.borders, m.names.fontPx, frame, on));
   const t6 = performance.now();
   shown = { seq: m.seq, graph: g, layout, d, fontPx: m.names.fontPx, frame, sheet: on };
   const { raster: _, ...posted } = sheet;
-  (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3, map: t6 - t5 }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
+  (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3, rivers: t5r - t5, map: t6 - t5r }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms: { drawing: t5 - t4, names: 0, borders: t6 - t5, cities: 0 } } satisfies FromDiagram);
 }
 
@@ -190,6 +208,8 @@ function maskOf(packs: string, id: string): Promise<WaterMask | null> {
  * the layout reads first (T-2541) */
 let ground: { key: string; real: RealWater } | null = null;
 let seaKnown: { key: string; sea: GroundSea } | null = null;
+/** on the sheet, the narrow rivers on the ground (a finer river finder than the water's, T-2580) */
+let sheetRivers: { key: string; real: RealWater } | null = null;
 const masksFor = async (packs: string, zones: string[]) => (await Promise.all(zones.map((id) => maskOf(packs, id).catch(() => null)))).filter((w): w is WaterMask => !!w);
 function groundKey(g: DiagramGraph, frame: ZoneFrame, masks: number): string {
   let sum = 0;

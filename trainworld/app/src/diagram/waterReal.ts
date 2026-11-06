@@ -502,8 +502,9 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
 }
 
 /** The water near the network of `g` (laid out or not: only its places on the ground are read), from `masks`; `sea` its
- * sea part where already found (`groundSea`). */
-export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame, sea: GroundSea = groundSea(g, masks, frame)): RealWater {
+ * sea part where already found (`groundSea`); `fineM` the fine grid's cell (the rubber sheet's 25 m follows narrower
+ * rivers, the Harlem River whole, T-2580). */
+export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame, sea: GroundSea = groundSea(g, masks, frame), fineM = FINE_M): RealWater {
   const t1 = performance.now();
   const n = g.key.length, rowOf = maskRows(masks, frame), inMasks = maskCover(masks, frame);
   const hop = g.hop ?? new Float32Array(0), hopAt = g.hopAt ?? new Int32Array(g.ea.length + 1);
@@ -514,7 +515,7 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame,
   // The tiles near the track are made first; a river is followed on into tiles out to RIVER_FAR_M from a station, made
   // as its flood reaches them (T-2516: so it is found whole, to the sea), and where it runs on past those or out of
   // the masks its end is open.
-  const h = FINE_M, ftiles = new Map<number, Uint8Array | null>(), want = new Set<number>(), allowed = new Set<number>();
+  const h = fineM, ftiles = new Map<number, Uint8Array | null>(), want = new Set<number>(), allowed = new Set<number>();
   const HF = 2, FW = FT + 2 * HF, buf = new Uint8Array(FW * FW), ero = new Uint8Array(FW * FW);
   const fineTile = (key: number): Uint8Array | null => {
     const ti = Math.floor(key / 65536) - 32768, tj = (key % 65536) - 32768, W = FW;
@@ -599,7 +600,8 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame,
           (i0 = Math.min(i0, ni)), (i1 = Math.max(i1, ni)), (j0 = Math.min(j0, nj)), (j1 = Math.max(j1, nj));
         }
       }
-      if (ci.length * h * h < RIVER_M_AREA) continue;
+      // water of a river RIVER_MIN_M long and three cells across at least, before thinning
+      if (ci.length * h * h < RIVER_MIN_M * 3 * h) continue;
       traceRiver(ci, cj, i0 - 2, j0 - 2, i1 - i0 + 5, j1 - j0 + 5);
     }
   }
@@ -952,9 +954,6 @@ export function realWater(g: DiagramGraph, masks: WaterMask[], frame: MercFrame,
     rivers++;
   }
 }
-
-/** water at least this many square metres in all, before thinning, can be a river */
-const RIVER_M_AREA = RIVER_MIN_M * 3 * FINE_M;
 
 /** Zhang and Suen's thinning of a 0/1 raster (its edge cells 0), in place */
 function thin(img: Uint8Array, w: number, h: number) {

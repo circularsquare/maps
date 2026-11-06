@@ -77,7 +77,8 @@ async function capture(base, city) {
     });
     collectErrors(page, errors, NOISE);
     const sep = base.includes('?') ? '&' : '?';
-    await page.goto(`${base}${sep}debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
+    // the layout before the rubber sheet (`sheet=0`, T-2580), which the diagram checks lay out themselves
+    await page.goto(`${base}${sep}debug=1&new=1&paused=1&demandWorkers=1&sheet=0&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
     await importSave(page, await readFile(FILES[city]));
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 180000 });
