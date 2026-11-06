@@ -188,7 +188,9 @@ export function fetchMarketDrives(): Promise<Uint8Array | null> {
   const p = (drivesLoading ??= once(0).catch((err) => { drivesLoading = null; throw err; }));
   // T-2485: the bytes (12 MB) are not kept here once in: a caller after that downloads them again
   void p.then(() => { if (drivesLoading === p) drivesLoading = null; }, () => {});
-  return p;
+  // each caller its own copy: callers in flight together share `p`, and one transferring the bytes to
+  // a worker detached them for the rest (two replacement workers reopening at once, 2026-11-06)
+  return p.then((b) => b && b.slice());
 }
 /** Fetch the rows once (the same file the demand pool sends its workers), with the drives. */
 export function loadMarketRows(): Promise<boolean> {
