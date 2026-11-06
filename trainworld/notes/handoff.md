@@ -11,11 +11,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## State
 - master **79d0c5ee**. **Real save smokes 12,515,594** since farebase (T-2559) landed.
 - 8800 = build 1074 (163d9725), smoke light and dark PASSED. LIVE = 821. Publish only on Anita's word (release "later this week"; Mexico and Brazil before release).
-- **Cores cap 15**: Anita away ~18:10-21:10 ("feel free to use all cores"); back to 12 when she returns.
+- **Cores cap 12** (Anita home ~21:05; was 15 while she was out).
 - **Pack lock: mexico's** (T-2436; batch 20261105-182304, python 27744, log artifacts/trainworld/t2436-run.log). Then
   Brazil T-2437. Mexico gates come every 10 built rows (~3 min each; gate 1 18:57-19:00, 10 gated, 0 parked);
   All 105 rows gated (98 + 7 relaxed: Los Cabos pop, three mountain towns jobs share, three desert zones water).
-  **Join (MX, 6 cores) writing data/packs ~1 h from ~19:50**: app/WASM landings fine; nothing writes packs/terrain.
+  Join done 21:22: all 105 shipped (3,200 -> 3,305), freeze 20261105-200211. After-steps running (terrain_fine,
+  zone_terrain write data/terrain; market_drives), then mexico's load checks and smoke. **Then: commit Mexico's game
+  files (registry.json, market-rows.json, zone-names.json, realms.json, world_plan.*), rebuild 8800, smoke, ping.**
 - maps-17 (maps-03) relays mexico's and sheet's reports; landing is maps-93's since 18:15 (maps-17's word). Mexico's
   run starts after maps-93's landings; **no app/WASM landing into the main tree while mexico's browser gate runs**
   (it messages maps-17 before a gate; maps-17 asks maps-93).
@@ -27,8 +29,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   the calib solve; 3.2% over T-1059 net of other tasks' 5.9% (its reckoning, in DECISIONS). Main WASM rebuilt during
   Mexico's join. **8800 not rebuilt since 163d9725: rebuild after Mexico's join ends** (mixed packs otherwise).
 - followtrack LANDED 665dd025 (records 97530112): T-1358, own work 99 -> 54 ms at 6x (0.55, accepted), exact.
-- **toworld** (Sonnet, tree .tw-trees/toworld from 97530112, port 6180): T-2576 toWorld per edit halved (T-1380's
-  pattern for edges).
+- toworld LANDED 3d0d0097 (records 5a4dd65a): T-2576, train-count edit's toWorld 5.9 -> 2.4 ms at 6x.
 - **marketsearch** (Opus, tree .tw-trees/marketsearch from 55ab534f, port 6181): T-1647 native Japan pass 15% faster,
   exact.
 - **followtrack** (Opus, tree .tw-trees/followtrack from c306d1bc, port 6184): T-1358 followTrack at least halved,
@@ -140,7 +141,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   --version <v>`. Afterwards prune publish/ and data/frozen/.
 
 ## Open questions to Anita (asked, unanswered)
-- T-2566 sheet (to ask when she is back ~21:10; pictures review/sheet-nyc-core.png, review/sheet-japan.png; notes/T-2566.md):
+- ANSWERED ~21:30 (verbatim in notes/T-2566.md "Anita's review"): land keeps its shape, water distorts; cores halfway
+  back; more octilinear; line rivers with higher min width, Harlem River; stations on their side of zone borders; no
+  demand sizing. **sheet2** (Opus, read-only, scratch\sheet2) prototypes round 2 as T-2577; T-2567/68 wait on it.
+- (was) T-2566 sheet (to ask when she is back ~21:10; pictures review/sheet-nyc-core.png, review/sheet-japan.png; notes/T-2566.md):
   1 core size against countryside (agent: halfway back to today's); 2 scale at most double per 40 pitches, right?;
   3 busy places bigger by demand (left out: map would change size with ridership); 4 narrow rivers at real width too
   thin: keep today's thin band only where a line crosses?; 5 real state borders back, a station may sit a few pitches
