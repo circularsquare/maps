@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
-import { t as tr, tList, tNumber } from "../../i18n";
+import { t as tr, tList, tNumber, tSeries } from "../../i18n";
 import { lineDemand } from "../../game/demand";
 import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist, groundScale } from "../../game/coords";
@@ -90,7 +90,7 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     const ends = [...new Set(ls.flatMap((l) => [l.stops[0], l.stops[l.stops.length - 1]]).filter((s) => !inside.has(s)).map((s) => stopNames?.get(s) ?? byId.get(s)?.name ?? ""))];
     rows.push({
       name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
-      tip: tr("stationInspector.rowTip", { name, stations: tList(names) }) + (ends.length ? "\n" + tr("stationInspector.rowTo", { ends: ends.join(", ") }) : ""),
+      tip: tr("stationInspector.rowTip", { name, stations: tList(names) }) + (ends.length ? "\n" + tr("stationInspector.rowTo", { ends: tSeries(ends) }) : ""),
       waitTip: waiting === null ? tr("stationInspector.noTrain")
         : tr("stationInspector.waitingFor", { count: count(waiting), name }) + (full ? "\n" + tr("stationInspector.leftBehind") : ""),
     });

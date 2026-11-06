@@ -4,7 +4,7 @@
 // stations count boardings at the city's stations in the past 24 hours, as the Stations tab does.
 
 import { type City, type CityId } from "../../game/cities";
-import { t as tr } from "../../i18n";
+import { t as tr, tSpaced } from "../../i18n";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
 import { cityDemandViews, demandView, ridesOf } from "../../game/demand";
@@ -41,7 +41,7 @@ function cityScope(id: CityId, stations: Map<string, StationInput>, lines: reado
 
 export function CityFigures({ city, built }: { city: City; built: boolean }) {
   const v = cityDemandViews.value.get(city.id);
-  const day = shownDay.value === AVERAGE_DAY ? "" : " " + shownDayOn.value;
+  const day = shownDay.value === AVERAGE_DAY ? "" : tSpaced(shownDayOn.value);
   const rides = v ? ridesOf(v) : null;
   const m = moneyState.value;
   const f = built && m ? figures(city.id, m) : null;

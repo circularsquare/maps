@@ -62,7 +62,7 @@ export function capacityTip(kind: number, rho: number, tph: number, waitS: numbe
   const k = CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
   const tip = [t("capacityMarkers.use", { kind: k.short, load: rho > 1.005 ? ">100%" : `${tNumber(Math.round(rho * 100))}%` })];
   if (rho > 0) tip.push(t("capacityMarkers.tph", { now: tNumber(Math.round(tph)), max: tNumber(Math.round(tph / rho)) }));
-  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: DEMAND[level], wait: duration(waitS) }) : t("capacityMarkers.slowsThis", { wait: duration(waitS) }));
+  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: t("inspector.demand", { demand: DEMAND[level] }), wait: duration(waitS) }) : t("capacityMarkers.slowsThis", { wait: duration(waitS) }));
   return tip;
 }
 

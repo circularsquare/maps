@@ -13,7 +13,7 @@ import { WALK_KMH } from "../../game/walks";
 import { CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
-import { t as tr, tRich } from "../../i18n";
+import { t as tr, tRich, tSeries } from "../../i18n";
 import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
 import { MarketTrip } from "./MarketTrip";
@@ -102,7 +102,7 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   const modeOf = (m: Mode, share: string) => tr("tripText.modeOf", { mode: modeName(m), share, of });
   return (
     <div class="trip-modes">
-      <SegBar kind="trip-bar" label={parts.map(([m, v]) => tr("tripText.modeShare", { mode: modeName(m), share: pctShare(v) })).join(", ")}
+      <SegBar kind="trip-bar" label={tSeries(parts.map(([m, v]) => tr("tripText.modeShare", { mode: modeName(m), share: pctShare(v) })))}
         parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: modeOf(m, pctShare(v)) + extra(m) + stands(m) }))} />
       <ul class="rows">
         {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => shown(m, v)).map(([[m, v], i]) => (
@@ -137,7 +137,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       )}
       {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
-        return rideTip(l, !!w.lineStats[l.line]?.bus, l.fullWaitMin, l.waitPerceived - l.waitMin);
+        return rideTip(l, w.lineStats[l.line]?.bus, l.fullWaitMin, l.waitPerceived - l.waitMin);
       })}
       {pair && last && (
         <li data-tip={walkTip(pair.egressM, pair.egressMin)}>

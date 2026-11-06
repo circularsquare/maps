@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import type { PurposeTrips } from "../../game/demand";
 import { capitalise, count } from "../../game/format";
-import { t, tList } from "../../i18n";
+import { t, tList, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { hourSpan, PERIODS } from "../../game/periods";
 import { shownDayPhrase } from "../../game/ui";
@@ -19,7 +19,7 @@ function PurposePie({ rows, total, rail }: { rows: Row[]; total: number; rail: b
   // T-194: every slice and key entry gives its count, not only its share
   const words = (p: Row) => t("purposeBreakdown.words", { name: p.name, count: count(p.total), rail, phrase: shownDayPhrase.value, share: pct(p.total) });
   return <div class="purpose-summary">
-    <svg class="purpose-pie" viewBox="0 0 100 100" role="img" aria-label={total > 0 ? t("purposeBreakdown.shares", { parts: rows.map(p => `${p.name} ${pct(p.total)}`).join(", ") }) : t("purposeBreakdown.noTrips")}>
+    <svg class="purpose-pie" viewBox="0 0 100 100" role="img" aria-label={total > 0 ? t("purposeBreakdown.shares", { parts: tSeries(rows.map(p => `${p.name} ${pct(p.total)}`)) }) : t("purposeBreakdown.noTrips")}>
       {total <= 0 ? <circle cx="50" cy="50" r="48" fill="var(--shade)" /> : rows.filter(p => p.total > 0).map(p => {
         const start = angle, sweep = 2*Math.PI*p.total/total;
         angle += sweep;

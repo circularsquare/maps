@@ -6,7 +6,7 @@
 import type { ComponentChildren } from "preact";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { count, duration, headway, money, speed, trainKind } from "../../game/format";
-import { t, tNumber } from "../../i18n";
+import { t, tNumber, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
@@ -31,7 +31,7 @@ export const demandLabel = (d: Demand): string => t("schedule.demandName", { dem
 /** When a demand level runs, in the line's local time (the hour spans of game/periods.ts), every
  * kind of day alike (T-2335): "High demand period: 06:00-20:00". */
 export function levelTimes(d: Demand): string {
-  return t("schedule.levelTimes", { demand: d, hours: levelHours(d).map(([a, b]) => hourSpan(a, b)).join(", ") });
+  return t("schedule.levelTimes", { demand: d, hours: tSeries(levelHours(d).map(([a, b]) => hourSpan(a, b))) });
 }
 
 // ---------------------------------------------------------------- the vehicle

@@ -13,8 +13,8 @@ const percent = (v: number) => tNumber(v, { minimumFractionDigits: 1, maximumFra
 export type SplitRides = ModeSplit & { all: number };
 
 /** "Trips per day in New York on a weekday: Train 18.5% (8.81M), Walking ..., Driving ..., all 47.6M
- * trips". `where` is the phrase after "Trips per day" (" in New York on a weekday"), `note` what
- * follows (" (an early estimate)"). With no split yet every share is "–". */
+ * trips". `where` is the phrase after "Trips per day" and `note` what follows, each through `tSpaced`
+ * (" in New York on a weekday", " (an early estimate)" in English). With no split yet every share is "–". */
 export function splitTip(where: string, split: ModeSplit | null, rides: SplitRides | null, note: string): string {
   const s = split ?? { train: 0, walk: 0, drive: 0 };
   const pct = (v: number) => (split ? percent(v) : "–");

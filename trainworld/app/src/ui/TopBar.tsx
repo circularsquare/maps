@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTable, splitTip } from "../game/splitTip";
 import { lengthsOf, wantLengths } from "../game/zoneLengths";
-import { t, tList, tNumber } from "../i18n";
+import { t, tList, tNumber, tSpaced } from "../i18n";
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { pointsPast24h, pointsPerDay, pointsShort } from "../game/points";
@@ -246,7 +246,8 @@ function Speed() {
 /** The world's bar hover: the train trips/day in the cities (T-1440), the share of the world's
  * fixed trips a day and how that is reached (T-1301), then the cities' own split. */
 function worldShareTip(tot: ReturnType<typeof worldTotals>, day: string, note: string): string {
-  const world = t("topBar.worldTrips", { rides: tNumber(WORLD_RIDES / 1e9), people: tNumber(WORLD_PEOPLE / 1e9), each: tNumber(RIDES_PER_PERSON) });
+  const big = (n: number) => tNumber(n, { notation: "compact", compactDisplay: "long" });
+  const world = t("topBar.worldTrips", { rides: big(WORLD_RIDES), people: big(WORLD_PEOPLE), each: tNumber(RIDES_PER_PERSON) });
   if (!tot.split || !tot.rides) return t("topBar.trainShare", { world, note });
   const cities = t("topBar.cities", { count: tot.cities });
   return [
@@ -256,8 +257,8 @@ function worldShareTip(tot: ReturnType<typeof worldTotals>, day: string, note: s
   ].join("\n");
 }
 
-/** The phrase after "Trips per day" in the split's hovers (game/splitTip.ts takes it with a space in front, or empty). */
-const joinWhere = (place: string, day: string) => { const s = [place, day].filter(Boolean).join(" "); return s ? " " + s : ""; };
+/** The phrase after "Trips per day" in the split's hovers, or empty. */
+const joinWhere = (place: string, day: string) => tSpaced(place && day ? t("topBar.placeDay", { place, day }) : place || day);
 
 function SaveNotice() {
   const state = saveSlotsState.value;
@@ -291,7 +292,7 @@ export function TopBar() {
   const where = joinWhere(far ? t("topBar.inWorld") : city ? t("topBar.inCity", { name: city.name }) : "", dayPhrase);
   // T-1223: the zone in view shown rough while it is worked out in detail
   // T-1851: one note for every case where the trips are being recomputed
-  const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? " " + t("topBar.recomputing") : "";
+  const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? tSpaced(t("topBar.recomputing")) : "";
   const worldTip = total ? t("topBar.worldTip", { cities: total.cities, stations: total.stations }) : undefined;
   return (
     <><header id="topbar">

@@ -1636,7 +1636,7 @@ button.save-add:hover { color: var(--text); }
    screen and scrolls sideways only below about 360 px; the count has the tool's icon, the elevation is
    one button that opens the seven above the bar (as the touch bar's does), the actions are icons
    (names in the hovers); the tool notes sit right above it */
-.blueprint-bar .bp-level, .blueprint-bar .bp-ico, .blueprint-levels { display: none; }
+.blueprint-bar .bp-level, .blueprint-bar .bp-ico, .blueprint-bar .bp-short, .blueprint-levels { display: none; }
 @media (max-width: 600px) and (min-height: 560px) {
   /* T-2284: 10 px in from the map's edges, clear of the mode aura */
   .blueprint-bar, .tool-bar { top: auto; bottom: 10px; left: 10px; right: 10px; transform: none; z-index: 2; width: auto; max-width: none;
@@ -1664,6 +1664,7 @@ button.save-add:hover { color: var(--text); }
   #main:has(.tool-bar-pop, .blueprint-levels) #tools { visibility: hidden; }
   .blueprint-bar > * { flex: none; }
   .blueprint-bar .bp-label { display: none; }
+  .blueprint-bar .bp-short { display: inline; }
   .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
   .blueprint-bar .bp-ico { display: inline-flex; }
   .blueprint-bar .bp-levels { display: none; }

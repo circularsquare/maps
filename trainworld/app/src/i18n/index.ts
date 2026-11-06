@@ -6,7 +6,7 @@ import { signal } from "@preact/signals";
 import type { ComponentChild, ComponentChildren } from "preact";
 import IntlMessageFormat from "intl-messageformat";
 import en from "./messages/en.json";
-import { countryName, formatDate, formatList, formatNumber, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
+import { countryName, formatDate, formatList, formatNumber, formatSeries, formatSpaced, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
 
 export { LANGS, LANG_NAMES, isLang, type Lang } from "./intl";
 
@@ -87,6 +87,8 @@ export function tRich(key: MessageKey, values: RichValues): ComponentChildren {
 // The formatting helpers in the current language (./intl.ts takes the language as its first argument).
 export const tNumber = (n: number, opts?: Intl.NumberFormatOptions) => formatNumber(language.value, n, opts);
 export const tList = (items: string[], type?: "and" | "or") => formatList(language.value, items, type);
+export const tSeries = (items: string[]) => formatSeries(language.value, items);
+export const tSpaced = (phrase: string) => formatSpaced(language.value, phrase);
 export const tDate = (d: Date | number, opts?: Intl.DateTimeFormatOptions) => formatDate(language.value, d, opts);
 export const tCountry = (code: string) => countryName(language.value, code);
 

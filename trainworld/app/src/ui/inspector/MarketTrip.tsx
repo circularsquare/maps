@@ -18,7 +18,7 @@ import { eachCorridor, intercityDemand, intercityPlaceName } from "../../game/de
 import { peopleOf, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
-import { t as tr, tRich } from "../../i18n";
+import { t as tr, tRich, tSeries } from "../../i18n";
 import { shownPeriod } from "../../map/tripView";
 import { SegBar } from "../widgets";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
@@ -154,7 +154,7 @@ function ModeRows({ parts, of }: { parts: [ModeId, number, string][]; of: string
   const modeOf = (m: ModeId, v: number) => tr("tripText.modeOf", { mode: modeName(m), share: pctShare(v), of });
   return (
     <div class="trip-modes">
-      <SegBar kind="trip-bar" label={parts.map(([m, v]) => tr("tripText.modeShare", { mode: modeName(m), share: pctShare(v) })).join(", ")} parts={parts.map(([m, v, c]) => ({ share: v, colour: c, tip: modeOf(m, v) }))} />
+      <SegBar kind="trip-bar" label={tSeries(parts.map(([m, v]) => tr("tripText.modeShare", { mode: modeName(m), share: pctShare(v) })))} parts={parts.map(([m, v, c]) => ({ share: v, colour: c, tip: modeOf(m, v) }))} />
       <ul class="rows">
         {parts.map(([m, v, c]) => (
           <li data-tip={modeOf(m, v)}>
@@ -279,7 +279,7 @@ function Legs({ t, r }: { t: MarketPeriod; r: TripRoute }) {
           <span class="val muted">{minText(pair.accessPerceived)}</span>
         </li>
       )}
-      {legRows(r, name, ln, (l) => rideTip(l, !!w.lineStats[l.line]?.bus))}
+      {legRows(r, name, ln, (l) => rideTip(l, w.lineStats[l.line]?.bus))}
       {pair && last && (
         <li data-tip={tr("marketTrip.egressTip", { min: minNum1(pair.egressPerceived) })}>
           <span class="grow">{tRich("marketTrip.from", { station: <StationLink id={last.to} name={name(last.to)} /> })}</span>
@@ -386,7 +386,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const longerTip = tr("marketTrip.longerTip", { amount: all >= 0.5 ? exact(all) : num1(all), day, where });
   const totalTip = tr("marketTrip.totalTip", {
     amount: exact(total), day, where,
-    parts: ([["inter", all], ["commute", cLegs], ["everyday", eLegs]] as [string, number][]).filter(([, v]) => v >= 0.5).map(([k, v]) => tr("marketTrip.kindCount", { kind: k, amount: count(v) })).join(", "),
+    parts: tSeries(([["inter", all], ["commute", cLegs], ["everyday", eLegs]] as [string, number][]).filter(([, v]) => v >= 0.5).map(([k, v]) => tr("marketTrip.kindCount", { kind: k, amount: count(v) }))),
   });
   const commuters = m.near ? tr("marketTrip.bothWays") : m.end === "work" ? tr("marketTrip.whoWork", { far }) : tr("marketTrip.whoHome", { far });
   const of = tr("marketTrip.of", { counted: all >= 0.5, amount: count(all), day });
@@ -423,7 +423,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       )}
       {shares.length > 0 && (
         <div class="trip-modes">
-          <SegBar kind="trip-bar" label={shares.map(([n, v]) => tr("tripText.modeShare", { mode: modeName(n), share: pctShare(v) })).join(", ")}
+          <SegBar kind="trip-bar" label={tSeries(shares.map(([n, v]) => tr("tripText.modeShare", { mode: modeName(n), share: pctShare(v) })))}
             parts={shares.map(([n, v, c]) => ({ share: v, colour: c, tip: tr("tripText.modeOf", { mode: modeName(n), share: pctShare(v), of }) }))} />
           <ul class="rows">
             {shares.filter(([n, v]) => n !== "plane" || v > 0).map(([n, v, c, e]) => (

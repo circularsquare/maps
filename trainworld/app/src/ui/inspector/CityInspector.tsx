@@ -8,7 +8,7 @@ import { cityById, type CityId } from "../../game/cities";
 import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
-import { t } from "../../i18n";
+import { t, tSeries } from "../../i18n";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
 import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
@@ -29,7 +29,7 @@ type Part = { name: string; n: number; cls: string; note?: string };
 function TripsBar({ label, tip, kind, city, parts, goals }: { label: string; tip?: string; kind: "within" | "inter"; city: string; parts: Part[]; goals?: City }) {
   const all = parts.reduce((s, p) => s + p.n, 0);
   const phrase = shownDayPhrase.value;
-  const bar = <SegBar kind="split-bar" label={parts.map((p) => `${p.name} ${pctOf(p.n, all)}`).join(", ")}
+  const bar = <SegBar kind="split-bar" label={tSeries(parts.map((p) => `${p.name} ${pctOf(p.n, all)}`))}
     parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: t("cityInspector.partTip", { name: p.name, count: exact(p.n), kind, city, phrase, share: pctOf(p.n, all) }) + (p.note ? `\n${p.note}` : "") }))} />;
   return (
     <li class={"zone-trips" + (goals ? " with-goals" : "")}>

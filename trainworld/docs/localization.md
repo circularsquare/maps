@@ -10,7 +10,7 @@ All in `app/src/i18n/`:
 
 | File | Holds |
 |---|---|
-| `index.ts` | `t`, `tRich`, the `language` signal, `setLanguage`, and the formatting helpers in the current language (`tNumber`, `tList`, `tDate`, `tCountry`) |
+| `index.ts` | `t`, `tRich`, the `language` signal, `setLanguage`, and the formatting helpers in the current language (`tNumber`, `tList`, `tSeries`, `tSpaced`, `tDate`, `tCountry`) |
 | `calendar.ts` | `weekdayLong(i)`: the full weekday name in the current language for the game's weekday index (0 is Monday); use it rather than a list of English day names |
 | `intl.ts` | `LANGS`, and the same formatting with the language passed in; no signals or DOM, so workers and Node checks may import it |
 | `messages/en.json` | Every English message, the source. Bundled with the game |
@@ -42,10 +42,14 @@ is plain text.
   written in the language's digits. Never `n === 1 ? "stop" : "stops"` or `plural()` in new code. Japanese and
   Chinese have only `other`; German and Spanish `one` and `other` as English (Spanish also `many`, which falls
   back to `other`).
-- **Lists** are made in code with `tList(names)` ("a, b and c", "a、b、c") and passed as one value.
+- **Lists** are made in code with `tList(names)` ("a, b and c", "a、b、c") and passed as one value; items in a row
+  with no "and" ("5 track, 2 stations", "5 track、2 stations") with `tSeries`, never `.join(", ")`.
+- **A phrase a message puts straight after a word** ("Trips per day{where}") is passed through `tSpaced(phrase)`:
+  a space in front in English, none in Japanese and Chinese. Never `" " + phrase`.
 - **Formatting happens in code**, never in the message: numbers, money, distances, durations and dates are
   formatted first (`tNumber`, `tDate`, `game/format.ts`) and passed as text. The only number a message formats
-  is a plural's `#`. `{n, number}` and `{d, date}` are refused by the check.
+  is a plural's `#`. `{n, number}` and `{d, date}` are refused by the check. English numbers are en-US's; English
+  dates and times follow the browser's first English locale (en-GB's "6 Nov, 14:05"), else en-US's.
 - **Pieces that are nodes** (a chip, a coloured figure): `tRich("trackHover.fareCover", { share: <Chip .../> })`
   returns children for JSX. `t` returns a string and takes only text, numbers and booleans.
 - **Apostrophes**: a lone `'` is text ("don't"). `''` is one apostrophe; `'{'` is a literal brace.

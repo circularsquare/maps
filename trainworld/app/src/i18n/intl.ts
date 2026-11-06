@@ -34,12 +34,34 @@ export function langOfBrowser(tags: readonly string[], offered: readonly Lang[] 
   return "en";
 }
 
+/** English dates and times as the browser's first English locale writes them (en-GB "6 Nov, 14:05"),
+ * else en-US's (T-2655). */
+const EN_DATES = (() => {
+  const tags = typeof navigator !== "undefined" ? (navigator.languages ?? [navigator.language]) : [];
+  try {
+    return Intl.DateTimeFormat.supportedLocalesOf(tags.filter((t) => /^en(-|$)/i.test(t)))[0] ?? "en-US";
+  } catch {
+    return "en-US";
+  }
+})();
+
 /** The Intl locale for a language. English numbers are en-US's, as the game always wrote them; English
  * lists are en-GB's, "a, b and c" with no comma before the "and". */
 function locale(lang: Lang, purpose: "number" | "list" | "date"): string {
-  if (lang === "en") return purpose === "list" ? "en-GB" : "en-US";
+  if (lang === "en") return purpose === "list" ? "en-GB" : purpose === "date" ? EN_DATES : "en-US";
   return lang;
 }
+
+/** Whether a language puts spaces between words. Japanese and Chinese do not: the page adds the small
+ * gap beside Latin letters and digits (docs/localization.md "Fonts"). */
+const SPACED: Record<Lang, boolean> = { en: true, ja: false, "zh-Hans": false, "zh-TW": false, es: true, de: true };
+
+/** A phrase a message puts straight after a word ("Trips per day{where}"): " in Osaka" in English,
+ * "大阪" in Japanese; empty stays empty. */
+export const formatSpaced = (lang: Lang, phrase: string): string => (phrase && SPACED[lang] ? " " + phrase : phrase);
+
+/** Items in a row with no "and" before the last: "5 track, 2 stations", "線路5区間、2駅". */
+export const formatSeries = (lang: Lang, items: string[]): string => items.join(SPACED[lang] ? ", " : "、");
 
 // one formatter per language and options: making one costs 5-10 µs (T-1165)
 const cache = new Map<string, Intl.NumberFormat | Intl.ListFormat | Intl.DateTimeFormat | Intl.DisplayNames>();

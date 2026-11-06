@@ -20,7 +20,7 @@ import type { LineInput, StationInput } from "../../game/types";
 import { world } from "../../game/world";
 import type { ComplexNow } from "../../game/complexLive";
 import { live } from "../../map/live";
-import { t as tr } from "../../i18n";
+import { t as tr, tSeries } from "../../i18n";
 import { anchor, EARTH_C } from "../../map/geo";
 import { stationIndexOf } from "../../map/network";
 import { STATION_BOX_ZOOM } from "../../map/stationGeometry";
@@ -188,7 +188,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
       const m = partners.get(strokeKey(s.id, r.line.id));
       if (m) {
         const top = [...m].sort((x, y) => y[1] - x[1]);
-        text += "\n" + tr("complexMap.changes", { count: count(top.reduce((a, [, v]) => a + v, 0)), list: top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`).join(", ") });
+        text += "\n" + tr("complexMap.changes", { count: count(top.reduce((a, [, v]) => a + v, 0)), list: tSeries(top.slice(0, 3).map(([n, v]) => `${n} (${count(v)})`)) });
       }
     }
     const p = now?.platforms.get(s.id);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { t, tNumber, type MessageKey } from "../i18n";
+import { t, tNumber, tSeries, type MessageKey } from "../i18n";
 import { describeIssues } from "../game/issues";
 import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
@@ -158,7 +158,7 @@ export function BlueprintControls() {
   );
 }
 
-const pieces = (e: number, st: number) => [e ? t("blueprint.trackPieces", { count: e }) : "", st ? counted("station", st) : ""].filter(Boolean).join(", ");
+const pieces = (e: number, st: number) => tSeries([e ? t("blueprint.trackPieces", { count: e }) : "", st ? counted("station", st) : ""].filter(Boolean));
 
 /** T-1296: what the disabled blueprint would cost, beside the total: everything unbuilt
  * (`blueprintCost`, disabled pieces in it) less the quote's rows other than new cars. */
@@ -229,7 +229,7 @@ export function BlueprintBar() {
   return (
     <>
       <div class="blueprint-bar" role="group" aria-label={t("blueprint.selection")}>
-        <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span>{n}<span class="bp-label">{" "}{t("blueprint.selected")}</span></span>
+        <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span><span class="bp-short">{tNumber(n)}</span><span class="bp-label">{t("blueprint.selected", { count: tNumber(n) })}</span></span>
         {s.edges > 0 && <span class="num" data-tip={t("blueprint.lengthTip")}>{distance(s.lengthM)}</span>}
         {canLevel && <div class="bp-levels"><LevelButtons value={s.level} tip={levelTip} onPick={(l) => void levelPicked(l)} /></div>}
         {canLevel && (
@@ -330,7 +330,7 @@ function BlueprintBreakdown({ items }: { items: BlueprintItem[] }) {
           <div class="bp-part">
             <ul class="rows pick blueprint-items">
               <li class={"bp-part-head" + (p.on ? "" : " bp-off")} {...hover(p.edges)} onClick={() => locateNodes(p.nodes)}
-                data-tip={[p.stationCount ? counted("station", p.stationCount) : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean).join(", ")}>
+                data-tip={tSeries([p.stationCount ? counted("station", p.stationCount) : "", p.lengthM ? distance(p.lengthM) : ""].filter(Boolean))}>
                 {many ? (
                   <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} aria-label={isOpen ? t("blueprint.fold") : t("blueprint.unfold")} aria-expanded={isOpen}
                     onClick={(e) => { e.stopPropagation(); fold(k); }}><Icon.chevron /></button>

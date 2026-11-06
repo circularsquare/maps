@@ -1,7 +1,7 @@
 // The junction inspector (SPEC 8): the routes through a junction, its flyover and what it saves.
 
 import { clock } from "../../game/clock";
-import { t } from "../../i18n";
+import { t, tSeries } from "../../i18n";
 import { duration, levelLabel, money } from "../../game/format";
 import { compass, stationTowards } from "../../game/places";
 import { DEMAND_INDEX } from "../../game/types";
@@ -167,7 +167,7 @@ export function JunctionInspector({ node }: { node: number }) {
                   <span>
                     <span class="bullets">{m.lines.map((id) => lineOf.get(id) && <Chip line={lineOf.get(id)!} size="sm" />)}</span> {label(m)}
                   </span>
-                  {m.crosses.length > 0 && <span class="muted small">{t("junctionInspector.crosses", { list: m.crosses.map((k) => label(moves[k])).join(", ") })}</span>}
+                  {m.crosses.length > 0 && <span class="muted small">{t("junctionInspector.crosses", { list: tSeries(m.crosses.map((k) => label(moves[k]))) })}</span>}
                 </span>
                 <span class="val num">{Math.round(m.tph[lev])}</span>
                 <span class="val num w-num">{m.delay[lev] > 0 ? "+" + duration(m.delay[lev]) : ""}</span>

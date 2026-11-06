@@ -29,7 +29,7 @@ import { hiddenRealmTip } from "./realmOverlay";
 import { setPointerNet, type Hot } from "./hovered";
 import { TAG_OFFSET_PX, tagLines } from "./labelLayout";
 import { complexOf, stopKey } from "../game/complexView";
-import { clockTime, forecast, money, moneyNegative } from "../game/format";
+import { clockTime, distUnit, forecast, money, moneyNegative, perDistance } from "../game/format";
 import { stretchMoney, type StretchFigures } from "../game/stretchMoney";
 import type { CrowdedStretch } from "../game/boarding";
 import { loadText } from "../game/today";
@@ -98,7 +98,7 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
   const lev = DEMAND_INDEX[clock.demand.peek()];
   if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
-    out.push(Object.assign(document.createElement("div"), { textContent: t("trackHover.atCapacity", { demand: clock.demand.peek() }), style: "color: var(--bad)" }));
+    out.push(Object.assign(document.createElement("div"), { textContent: t("trackHover.atCapacity", { demand: t("inspector.demand", { demand: clock.demand.peek() }) }), style: "color: var(--bad)" }));
   }
   // T-2236: the crowding mark's load (the boarding account's busiest hour), on its crowding colour
   // as the line panel's dots
@@ -264,7 +264,7 @@ function stretchMoneyRows(s: StretchFigures, vehicles: string): TipLine[] {
   const row = moneyRow;
   if (s.noFigures) return [t("trackHover.calculating")];
   const profit = s.fares - s.running - s.upkeep, perKm = s.km > 0 ? profit / s.km : 0, costs = s.running + s.upkeep;
-  const rows = [row("trackHover.profit", profit, { when: shownDayPhrase.peek() }), row("trackHover.perKm", perKm), row("trackHover.fares", s.fares), row("trackHover.running", -s.running, { vehicles }), row("trackHover.upkeep", -s.upkeep)];
+  const rows = [row("trackHover.profit", profit, { when: shownDayPhrase.peek() }), row("trackHover.perKm", perDistance(perKm), { unit: distUnit() }), row("trackHover.fares", s.fares), row("trackHover.running", -s.running, { vehicles }), row("trackHover.upkeep", -s.upkeep)];
   if (!(costs > 0)) return rows;
   const ratio = s.fares / costs, top = document.createElement("div");
   top.append(...kids(tRich("trackHover.faresCover", { share: chip(`${tNumber(Math.round(100 * ratio))}%`, profitColour(ratio)) as unknown as ComponentChild })));

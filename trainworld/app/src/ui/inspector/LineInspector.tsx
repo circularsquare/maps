@@ -7,7 +7,7 @@ import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { Money } from "../MoneyText";
 import { count, distance, duration, forecast, headway, length, money, speed, trainCostLine, trainKind } from "../../game/format";
-import { t as tr, tList, tNumber } from "../../i18n";
+import { t as tr, tList, tNumber, tSeries } from "../../i18n";
 import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
@@ -143,7 +143,7 @@ function RouteMarks({ marks }: { marks: RouteMark[] }) {
 }
 
 function markTip(m: RouteMark): string {
-  return tr(m.crossing ? "lineInspector.flatCrossing" : "lineInspector.flatJunction", { hasNear: !!m.near, near: m.near, hasOthers: m.others.length > 0, list: m.others.join(", ") });
+  return tr(m.crossing ? "lineInspector.flatCrossing" : "lineInspector.flatJunction", { hasNear: !!m.near, near: m.near, hasOthers: m.others.length > 0, list: tSeries(m.others) });
 }
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
@@ -384,7 +384,7 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   if (!short.length) return null;
   const n = short.length;
   const price = cost === null ? null : cost;
-  const names = short.length > 4 ? tr("lineInspector.andMore", { list: short.slice(0, 3).map((s) => s.name).join(", "), count: short.length - 3 }) : tList(short.map((s) => s.name));
+  const names = short.length > 4 ? tr("lineInspector.andMore", { list: tSeries(short.slice(0, 3).map((s) => s.name)), count: short.length - 3 }) : tList(short.map((s) => s.name));
   const go = async () => {
     if (busy.current) return;
     const have = liveMoney.value.cash, need = (price ?? 0) + carsPrice;
@@ -438,7 +438,7 @@ function PassingTracks({ l, version }: { l: LineInput; version: number }) {
   const built = at.filter((x) => x.s.built);
   const price = built.reduce((a, x) => a + x.price, 0);
   const n = tr("inspector.stations", { count: at.length });
-  const names = at.length > 8 ? tr("lineInspector.andMore", { list: at.slice(0, 7).map((x) => x.s.name).join(", "), count: at.length - 7 }) : tList(at.map((x) => x.s.name));
+  const names = at.length > 8 ? tr("lineInspector.andMore", { list: tSeries(at.slice(0, 7).map((x) => x.s.name)), count: at.length - 7 }) : tList(at.map((x) => x.s.name));
   const go = async () => {
     if (busy.current) return;
     busy.current = true;

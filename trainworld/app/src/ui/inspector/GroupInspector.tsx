@@ -29,7 +29,7 @@ import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { TwoRows } from "./LineInspector";
-import { t } from "../../i18n";
+import { t, tSeries } from "../../i18n";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
@@ -150,7 +150,7 @@ export function GroupInspector({ group }: { group: number }) {
     const cells = lay.rows[r].cells.map((c, k) => (c ? { k, c } : null)).filter((v) => v !== null);
     const st = [...new Set(cells.map((v) => nm(v.c.station)))].join(" / ");
     const stop = cells.filter((v) => v.c.stop).map((v) => ls[v.k].name), pass = cells.filter((v) => !v.c.stop).map((v) => ls[v.k].name);
-    return [st, stop.length ? t("groupInspector.stops", { list: stop.join(", ") }) : "", pass.length ? t("groupInspector.passes", { list: pass.join(", ") }) : ""].filter(Boolean).join("\n");
+    return [st, stop.length ? t("groupInspector.stops", { list: tSeries(stop) }) : "", pass.length ? t("groupInspector.passes", { list: tSeries(pass) }) : ""].filter(Boolean).join("\n");
   };
   // stops side by side at one place in a row: one mark over their bars
   const runs = (r: number) => {

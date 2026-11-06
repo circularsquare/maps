@@ -10,7 +10,7 @@ import { count, exact, money } from "../game/format";
 import { AVERAGE_DAY } from "../game/days";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
-import { t } from "../i18n";
+import { t, tSpaced } from "../i18n";
 import { regionLedger } from "../game/regionMoney";
 import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, shownDayOn, tool } from "../game/ui";
@@ -97,8 +97,8 @@ interface CityRow {
 export const ALL_CITIES = "All cities"; // i18n-ignore: the English fallback; read the name through allCitiesName()
 export const allCitiesName = () => t("cities.all");
 
-/** The phrase after "Trips per day" in a split hover, with its leading space (`splitTip`'s `where`). */
-const whereIn = (city: string) => " " + t("cities.where", { dayed: shownDay.value !== AVERAGE_DAY, city, day: shownDayOn.value });
+/** The phrase after "Trips per day" in a split hover (`splitTip`'s `where`). */
+const whereIn = (city: string) => tSpaced(t("cities.where", { dayed: shownDay.value !== AVERAGE_DAY, city, day: shownDayOn.value }));
 
 /** T-857, T-2395: the sums over every region with a built station (the Cities tab's first row and the
  * all cities view): their stations, the mode split of all their trips, profit (`money` null before
@@ -124,7 +124,7 @@ export function allCitiesTotals() {
     pointsPast += past.get(id) ?? 0;
     pointsRate += rate.get(id)?.[shownDay.value] ?? 0;
   }
-  const where = " " + t("cities.whereAll", { dayed: shownDay.value !== AVERAGE_DAY, day: shownDayOn.value });
+  const where = tSpaced(t("cities.whereAll", { dayed: shownDay.value !== AVERAGE_DAY, day: shownDayOn.value }));
   return {
     cities: built.size, stations, modes, where,
     money: counted ? { d: sum, yesterday } : null,

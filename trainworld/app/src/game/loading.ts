@@ -9,7 +9,7 @@
 // the player can look around and build while demand loads. Only a failed load puts up a screen
 // (ui/LoadingScreen.tsx).
 
-import { t } from "../i18n";
+import { t, tList } from "../i18n";
 import { computed, effect, signal } from "@preact/signals";
 import { isMemoryFailure } from "./loadText";
 import { leftText } from "./loadBar";
@@ -232,5 +232,5 @@ export function continueWithoutDemand() {
 /** "New York", "New York and Philadelphia", "New York, Philadelphia and Boston". */
 export function cityNames(ids: CityId[]): string {
   const names = ids.map((id) => cityById(id).name);
-  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  return tList(names);
 }

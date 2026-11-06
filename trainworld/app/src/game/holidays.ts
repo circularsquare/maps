@@ -172,13 +172,13 @@ const watchAway = () => effect(() => {
     if (next !== null) {
       if (rush === null) {
         rush = r.name;
-        outWhen = r.out < r.away ? `${r.name}, ${dateRange(r.out, r.away)}` : null;
-        backWhen = r.back < r.end ? `${r.name}, ${dateRange(r.back, r.end)}` : null;
+        outWhen = r.out < r.away ? t("holidays.nameDates", { name: r.name, dates: dateRange(r.out, r.away) }) : null;
+        backWhen = r.back < r.end ? t("holidays.nameDates", { name: r.name, dates: dateRange(r.back, r.end) }) : null;
       }
       if (next <= today + 8) rushing = true;
     }
     if (r.back <= today || r.away >= r.back) continue;
-    if (near === null) { near = r.name; nearWhen = `${r.name}, ${dateRange(r.away, r.back)}`; }
+    if (near === null) { near = r.name; nearWhen = t("holidays.nameDates", { name: r.name, dates: dateRange(r.away, r.back) }); }
     if (r.away <= today + 8) soon = true;
   }
   batch(() => {

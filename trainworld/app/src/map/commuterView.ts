@@ -22,7 +22,8 @@ import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours, setBubbleShade } from 
 import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
-import { purposeWords, type PurposeFilter } from "../game/purposes";
+import type { PurposeFilter } from "../game/purposes";
+import { tripWords } from "../ui/inspector/tripText";
 import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
 import { display, purposeFilter, selection, shade, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
@@ -67,12 +68,6 @@ const RETRY_MS = 1000, RETRY_MAX_MS = 8000;
 /** T-2271: a bubble hover's mode bar is a quarter of the tag wide at 10 trips or fewer, the whole
  * tag at 100,000 or more, log scaled between */
 const BAR_FLOOR = 0.25, BAR_LO = 10, BAR_HI = 100_000;
-
-/** "trips", or the purpose filter's trips (T-158), for the hover tags. */
-const tripWords = () => {
-  const p = purposeFilter.peek();
-  return p === "all" ? "trips" : `${purposeWords(p)} trips`;
-};
 
 const STUB_ALPHA = 0.8;
 /** Total's legs per cell, summed once per result (T-1903) */
@@ -550,7 +545,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // ---- hover ----
   // T-2271: the bar's width says the count's size too, on a log scale, never under a quarter
   const bubbleTag = (end: BubbleEnd, tr: number, w: number, d: number, u: number, ...rest: string[]) =>
-    [t("commuterView.bubble", { end, count: count(tr + w + d + u), words: tripWords(), when: shownDayPhrase.peek() }), modeBar(tr, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(tr + w + d + u, BAR_LO, BAR_HI)), ...rest];
+    [t("commuterView.bubble", { end, count: count(tr + w + d + u), words: tripWords(purposeFilter.peek()), when: shownDayPhrase.peek() }), modeBar(tr, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(tr + w + d + u, BAR_LO, BAR_HI)), ...rest];
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
