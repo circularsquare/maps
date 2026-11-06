@@ -35,6 +35,13 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   (notes/T-2604.md; page-only estimate in the edit note, sign wrong 3/14 near break-even: question to Anita).
 - slcload (T-2605): refineAside measured, SLC figures 6.7 s / bubbles 7.3 s arriving mid-solve (were 37-118 s), edit
   in SLC 1.8/2.1 s, finals identical; T-2624 filed (trains-only edit's traffic waits). Finishing rerun + smoke.
+- headway LANDED 4815d83b (records 4d24f8cb): T-2607 the headway set is the headway run (terminal stands); real
+  save unchanged (no headway lines). Main WASM rebuilt.
+- **sheetscale** (Opus, tree, resumed ~15:00): T-2609 cut bands done (NA empty middle 19% -> 6% of width); held for
+  Anita's asks: borders only of zones a line passes, water only touching station zones (octilinear edge to plain),
+  big zones with few stops squeeze (LA's NE). T-2625 filed (2D condensation).
+- **profitest** (Sonnet, tree, ~15:05): T-2626 profit estimate in the edit note ("Estimated −$5.3M profit/day").
+- upkeep re-aimed (Anita): long lines' profitability should stay as today after T-2619; propose the smallest offset.
 - **capview** (Opus, tree, ~14:20): T-2622 4x cap not by view (briefed on slcload's signal changes).
 - **linelook** (Sonnet, tree, ~14:20): T-2623 line diagram look with/without related lines.
 - **coarsemkt** (Opus, read-only + scratch crate, ~14:20): T-2621 market on a coarser graph, measure + prototype.
