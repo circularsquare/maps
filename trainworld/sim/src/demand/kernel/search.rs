@@ -776,11 +776,71 @@ pub struct DestSearch<'a> {
     pub(super) km: Vec<f32>,
     pub(super) kmw: Vec<f32>,
     pub(super) dep: Vec<(u32, f32)>,
+    /// T-2652: with `TW_T2652_CHECK` set, every search is made again with no leaf stations and
+    /// the two compared (`check_plain`).
+    #[cfg(test)]
+    pub(super) plain: Option<Box<Search<'a>>>,
 }
 
 impl<'a> DestSearch<'a> {
     pub fn new(g: &'a Graph, p: &'a Params) -> DestSearch<'a> {
-        DestSearch { q: Search::new(g, p), km: vec![], kmw: vec![], dep: vec![] }
+        DestSearch {
+            q: Search::new(g, p),
+            km: vec![],
+            kmw: vec![],
+            dep: vec![],
+            #[cfg(test)]
+            plain: None,
+        }
+    }
+    /// T-2652: queue pops so far, leaf stations and the route nodes at them.
+    #[cfg(test)]
+    pub fn counts(&self) -> (u64, usize, usize) {
+        (self.q.pops, self.q.leaves.len(), self.q.lf_rn.len())
+    }
+    /// T-2652: the search just made towards `dst` against the same search with no leaf stations:
+    /// costs, next nodes, accepted departures, offers and change nodes to the bit, the settle order
+    /// the same nodes with every node after its next.
+    #[cfg(test)]
+    fn check_plain(&mut self, dst: usize) {
+        if self.q.leaves.is_empty() || !(CHECK_PLAIN.with(|c| c.get()) || std::env::var_os("TW_T2652_CHECK").is_some()) {
+            return;
+        }
+        let (g, p) = (self.q.g, self.q.p);
+        let leaves = self.q.leaves.len();
+        let b = self.plain.get_or_insert_with(|| {
+            eprintln!("T-2652 check: {} stations, {leaves} leaves", g.n_st);
+            let was = PLAIN_SEARCH.with(|c| c.replace(true));
+            let b = Box::new(Search::new(g, p));
+            PLAIN_SEARCH.with(|c| c.set(was));
+            b
+        });
+        b.run(dst);
+        let a = &self.q;
+        let bits = |x: &[f32]| x.iter().map(|v| v.to_bits()).collect::<Vec<u32>>();
+        let sorted = |x: &[u32]| {
+            let mut v = x.to_vec();
+            v.sort_unstable();
+            v
+        };
+        assert_eq!(bits(&a.dist), bits(&b.dist), "T-2652: costs towards {dst}");
+        assert_eq!(a.next, b.next, "T-2652: next nodes towards {dst}");
+        assert_eq!(a.board, b.board, "T-2652: accepted departures towards {dst}");
+        assert_eq!(bits(&a.offer), bits(&b.offer), "T-2652: offers towards {dst}");
+        assert_eq!(sorted(&a.order), sorted(&b.order), "T-2652: settled nodes towards {dst}");
+        let cn = |q: &Search| q.cn.iter().map(|c| (c.st, c.line, c.ban, c.frequency.to_bits(), c.weighted.to_bits(), c.dist.to_bits(), c.done, c.feed, c.bits)).collect::<Vec<_>>();
+        assert_eq!(cn(a), cn(b), "T-2652: change nodes towards {dst}");
+        assert_eq!((&a.cn_bits, &a.cn_feed), (&b.cn_bits, &b.cn_feed), "T-2652: change nodes' departures towards {dst}");
+        let mut at = vec![usize::MAX; a.n + a.cn.len()];
+        for (k, &v) in a.order.iter().enumerate() {
+            at[v as usize] = k;
+        }
+        for &v in &a.order[1..] {
+            let v = v as usize;
+            if v < a.n {
+                assert!(at[a.next[v] as usize] < at[v], "T-2652: node {v} settled before its next towards {dst}");
+            }
+        }
     }
     /// Search towards `dst`: its strategy, and its column of route costs written into `r` (S x S,
     /// `Skims::r`'s layout) when given.
@@ -798,9 +858,11 @@ impl<'a> DestSearch<'a> {
         self.run_by(dst, Some(|src: usize, v: f32| col[src] = v))
     }
     pub(super) fn run_by(&mut self, dst: usize, put: Option<impl FnMut(usize, f32)>) -> DestStrategy {
+        self.q.run(dst);
+        #[cfg(test)]
+        self.check_plain(dst);
         let q = &mut self.q;
         let (s, n) = (q.s, q.n);
-        q.run(dst);
         let ids = n + q.cn.len();
         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]) };
         if let Some(mut put) = put {
@@ -980,6 +1042,39 @@ pub(super) struct Search<'a> {
     pub(super) banned_off: Vec<u32>,
     pub(super) banned: Vec<u32>,
     pub(super) banned_all: Vec<bool>,
+    /// T-2652: the leaf stations (`leaves`; per station its place there, `NONE` if none): one
+    /// line's departures, no walk in or out, every arrival barred that line whole. Only their own
+    /// route nodes' offers reach them and nothing is reached from them, so their strategies are
+    /// joined after the queue empties (`leaf_join`). Their route nodes (`lf_rn`, a range per leaf
+    /// from `lf_off`; `chain`) are reached only by riding on, so they are settled along the line
+    /// (`chain_step`). The destination is no leaf in its own search.
+    pub(super) leaf_ix: Vec<u32>,
+    pub(super) leaves: Vec<u32>,
+    pub(super) lf_off: Vec<u32>,
+    pub(super) lf_rn: Vec<u32>,
+    pub(super) chain: Vec<bool>,
+    pub(super) lf_cand: Vec<(u64, u32)>,
+    /// Queue pops so far, for the benchmarks (T-2652).
+    #[cfg(test)]
+    pub(super) pops: u64,
+}
+
+#[cfg(test)]
+thread_local! {
+    /// T-2652: this thread's searches are checked against the plain search (`check_plain`).
+    pub(super) static CHECK_PLAIN: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+thread_local! {
+    /// T-2652: searches made on this thread from now on find no leaf stations, so they run every
+    /// node through the queue as before (for A/B runs; `set_plain_search`).
+    static PLAIN_SEARCH: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// T-2652: whether the strategy searches made on this thread from now on leave the leaf stations
+/// in the queue (the same strategies, slower); off by default.
+pub fn set_plain_search(on: bool) {
+    PLAIN_SEARCH.with(|c| c.set(on));
 }
 
 /// A route node's edges in as `Search::run` reads them: whether riders board it from its station
@@ -1082,7 +1177,41 @@ impl Search<'_> {
                 x
             })
             .collect();
+        // T-2652: a station is a leaf when every arrival is off one of its own route nodes, barred
+        // its line's every departure here (its one line), and none of them walks anywhere
+        let (mut leaf_ix, mut leaves, mut lf_off, mut lf_rn) = (vec![NONE; s], vec![], vec![0u32], vec![]);
+        if !PLAIN_SEARCH.with(|c| c.get()) {
+            for u in 0..s {
+                let (j0, j1) = (g.rev_off[u] as usize, g.rev_off[u + 1] as usize);
+                if lone[u] == NONE || lone[u] == MANY || j0 == j1 {
+                    continue;
+                }
+                let leaf = g.rev_from[j0..j1].iter().all(|&from| {
+                    let from = from as usize;
+                    from >= s && g.rn_station[from - s] as usize == u && {
+                        let a = from - s;
+                        banned_all[a] && banned_off[a + 1] > banned_off[a] && g.adj_to[g.adj_off[from] as usize..g.adj_off[from + 1] as usize].iter().all(|&to| to as usize == u || to == g.rn_next[a])
+                    }
+                });
+                if leaf {
+                    // every route node has its edge to its station (`build_graph`)
+                    leaf_ix[u] = leaves.len() as u32;
+                    leaves.push(u as u32);
+                    lf_rn.extend(g.rev_from[j0..j1].iter().map(|&from| from - s as u32));
+                    lf_off.push(lf_rn.len() as u32);
+                }
+            }
+        }
+        let chain = (0..nr).map(|r| leaf_ix[g.rn_station[r] as usize] != NONE).collect();
         Search {
+            leaf_ix,
+            leaves,
+            lf_off,
+            lf_rn,
+            chain,
+            lf_cand: vec![],
+            #[cfg(test)]
+            pops: 0,
             g,
             p,
             s,
@@ -1170,9 +1299,20 @@ impl Search<'_> {
         self.cn_of.fill((0, 0));
         self.cn_bits.clear();
         self.cn_feed.clear();
+        // the destination's route nodes are reached by alighting there
+        let dl = self.leaf_ix[dst] as usize;
+        if dl != NONE as usize {
+            for i in self.lf_off[dl] as usize..self.lf_off[dl + 1] as usize {
+                self.chain[self.lf_rn[i] as usize] = false;
+            }
+        }
         self.dist[dst] = 0.0;
         self.heap.push(0.0, dst as u32);
         while let Some(id) = self.heap.pop() {
+            #[cfg(test)]
+            {
+                self.pops += 1;
+            }
             if id >= n + nr {
                 self.settle_change(id - n - nr);
                 continue;
@@ -1191,6 +1331,10 @@ impl Search<'_> {
             let d = self.dist[v];
             if v < s {
                 self.settle_station(v);
+                continue;
+            }
+            if self.chain[v - s] {
+                self.chain_step(v - s, d);
                 continue;
             }
             let x = self.rn[v - s];
@@ -1224,6 +1368,96 @@ impl Search<'_> {
                 }
             }
         }
+        for i in 0..self.leaves.len() {
+            if i != dl {
+                self.leaf_join(i);
+            }
+        }
+        if dl != NONE as usize {
+            for i in self.lf_off[dl] as usize..self.lf_off[dl + 1] as usize {
+                self.chain[self.lf_rn[i] as usize] = true;
+            }
+        }
+    }
+
+    /// T-2652: route node `r` at a leaf station, settled at `d`: its offer to its station noted for
+    /// `leaf_join`, and the route nodes riding into it settled here in turn while they too are at a
+    /// leaf station and so is the one riding into them. A run's last such node goes through the
+    /// queue, so the node riding into it is reached when the queue would reach it.
+    pub(super) fn chain_step(&mut self, r: usize, d: f32) {
+        let (s, n) = (self.s, self.n);
+        let (mut r, mut d) = (r, d);
+        loop {
+            let x = self.rn[r];
+            if x.boards {
+                // what `offer_line` would be given at this node's turn
+                self.offer[r] = if x.left > 0.0 { d + x.left } else { d };
+            }
+            if x.prev == NONE {
+                return;
+            }
+            let p = x.prev as usize;
+            let pd = d + x.prev_cost;
+            self.ride[p] = pd;
+            let pp = self.rn[p].prev;
+            if self.chain[p] && (pp == NONE || self.chain[pp as usize]) && !self.done[s + p] {
+                self.dist[s + p] = pd;
+                self.next[s + p] = (s + r) as u32;
+                self.done[s + p] = true;
+                self.order.push((s + p) as u32);
+                (r, d) = (p, pd);
+                continue;
+            }
+            if self.done[s + p] {
+                if x.prev_boards {
+                    self.heap.push(pd + x.prev_left, (n + p) as u32);
+                }
+            } else {
+                self.relax(s + p, pd, (s + r) as u32);
+            }
+            return;
+        }
+    }
+
+    /// T-2652: leaf station `leaves[i]`'s strategy, after the queue: its route nodes' offers joined
+    /// in the order the queue would have brought them (by its key: cost, then the id of the node,
+    /// or of the boarding's turn for a line with a wait of its own), up to the first that would
+    /// have come after the station itself was settled. Settled last if reached.
+    pub(super) fn leaf_join(&mut self, i: usize) {
+        let (g, s, n) = (self.g, self.s, self.n);
+        let u = self.leaves[i] as usize;
+        self.lf_cand.clear();
+        for k in self.lf_off[i] as usize..self.lf_off[i + 1] as usize {
+            let r = self.lf_rn[k] as usize;
+            let o = self.offer[r];
+            if self.rn[r].boards && o.is_finite() {
+                let id = if g.rn_left[r] > 0.0 { n + r } else { s + r };
+                self.lf_cand.push(((o.to_bits() as u64) << 32 | id as u64, r as u32));
+            }
+        }
+        if self.lf_cand.is_empty() {
+            return;
+        }
+        if self.lf_cand.len() > 1 {
+            self.lf_cand.sort_unstable();
+        }
+        let (mut f, mut w, mut cur, mut nx) = (0f32, 0f32, f32::INFINITY, NONE);
+        for k in 0..self.lf_cand.len() {
+            let (key, r) = self.lf_cand[k];
+            if ((cur.to_bits() as u64) << 32 | u as u64) < key {
+                break;
+            }
+            let r = r as usize;
+            if let Some(c) = join_line(&mut f, &mut w, cur, g.rn_tph[r], self.offer[r], g.st_wait[u], g.change_f(u), self.p) {
+                self.board[r >> 6] |= 1 << (r & 63);
+                cur = c;
+                nx = (s + r) as u32;
+            }
+        }
+        self.dist[u] = cur;
+        self.next[u] = nx;
+        self.done[u] = true;
+        self.order.push(u as u32);
     }
 
     #[inline(always)]

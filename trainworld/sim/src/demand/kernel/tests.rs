@@ -1449,3 +1449,47 @@ fn fast_ln_is_close() {
         x *= 1.0137;
     }
 }
+
+/// T-2652: with leaf stations out of the queue every strategy is the plain search's to the bit
+/// (`DestSearch::check_plain`, every destination) and the loads too: on the synthetic city's
+/// network with its walks, on a circle (all but one station leaves) with and without its wrap, and
+/// on two lines with a branch; each again with waits of their own at some boardings (`rn_left`), so
+/// a leaf's offers come at their boardings' turns.
+#[test]
+fn leaf_stations_leave_every_strategy_as_it_was() {
+    let p = Params::default();
+    let ring = |wrap: bool| {
+        let st: Vec<(f32, f32)> = (0..6).map(|i| { let a = i as f32 * std::f32::consts::PI / 3.0; (3000.0 * a.cos(), 3000.0 * a.sin()) }).collect();
+        Network {
+            st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
+            line_name: vec![String::new()], line_off: vec![0, 7], line_stops: vec![0, 1, 2, 3, 4, 5, 0],
+            hop_min: (0..7).map(|k| if k < 6 { 2.0 } else if wrap { 0.5 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
+            line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![],
+        }
+    };
+    let nets = [network::synth_network(), ring(true), ring(false), common_test_net(&[&[0, 1, 2, 3], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 3.0])];
+    super::search::CHECK_PLAIN.with(|c| c.set(true));
+    for (i, net) in nets.iter().enumerate() {
+        let p = if i == 0 { p.clone() } else { common_test_params() };
+        for waits in [false, true] {
+            let mut g = build_graph(net, &p);
+            if waits {
+                for r in (0..g.rn_left.len()).step_by(3) {
+                    g.rn_left[r] += 1.5;
+                }
+            }
+            let s = g.n_st;
+            let (_, leaves, _) = DestSearch::new(&g, &p).counts();
+            assert!(leaves > 0, "network {i}: no leaf stations");
+            let od: Vec<f32> = (0..s * s).map(|k| if k / s == k % s { 0.0 } else { 1.0 + (k % 7) as f32 }).collect();
+            let a = assign(&g, &skims(&g, &p), &od);
+            set_plain_search(true);
+            let b = assign(&g, &skims(&g, &p), &od);
+            set_plain_search(false);
+            let bits = |l: &Loads| [&l.seg, &l.board, &l.alight, &l.rn_board, &l.rn_alight, &l.entry, &l.exit].map(|v| v.iter().map(|x| x.to_bits()).collect::<Vec<u32>>());
+            assert_eq!(bits(&a), bits(&b), "network {i} (waits {waits}): loads");
+        }
+    }
+    super::search::CHECK_PLAIN.with(|c| c.set(false));
+}

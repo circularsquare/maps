@@ -220,6 +220,20 @@ levels:
    it accepts: about 4 bytes a node and 16 a change node (T-398, T-581; sizes in
    notes/T-581.md). The search's queue pops by cost, then id; a lower cost for a node already
    queued adds a copy, and the stale copy is skipped when it pops (T-1647).
+   **Leaf stations stay out of the queue** (T-2652, design notes/T-2642.md). A station is a leaf
+   when its departures are all one line's, no walk comes in or goes out, and every arrival there
+   is barred that line's every departure there (a stop in the middle or at the end of one line
+   alone; 81% of Japan's stations, 77% of North America's). In a search only its own route nodes'
+   offers reach it and nothing is reached from it, and its route nodes are reached only by riding
+   on. So the route nodes at leaves are settled along the line as the stop after them is, a run of
+   them going through the queue only at its two ends (its first, reached from a station that is no
+   leaf, and its last, so the node riding into the run is reached when the queue would reach it);
+   and once the queue is empty each leaf's strategy is joined from its departures' offers in the
+   order the queue would have brought them (by cost, then the id that would have popped), stopping
+   where the queue would have settled the station. The destination is no leaf in its own search.
+   Every strategy is the same to the bit as through the queue, so every figure is; the settle
+   order holds the same nodes, every node after its next. `kernel::set_plain_search` (native
+   only) turns it off for a thread's searches.
 
 #### Mode choice per subzone pair
 
