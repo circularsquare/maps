@@ -10,7 +10,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   rebuilt), the load-failure work (reason on screen, WASM start retries), bunny back on the loading card, 13 px ring.
 - Anita's NA save failed to load once on 1303 then loaded fine twice; cause not found (loadfail's report: likely a
   dropped .wasm fetch, now retried, or a load during the 8800 swap). Next failure names itself (`.load-why`).
-- **worldnext waits for maps-b9's GO** (stage 1 done; three detached runs, --no-join, then one join, 6-7 h, 12 cores).
+- **GO given ~23:55, cap 14** (Anita going to bed). worldnext runs detached; state in notes/T-2695.md
+  (`world_run.py status`). If maps-b9 has been taken over, it keeps relaying worldnext's reports (in-flight) and
+  forwards them; a new orchestrator checks notes/T-2695.md and the runs directly.
+- (was:) **worldnext waits for maps-b9's GO** (stage 1 done; three detached runs, --no-join, then one join, 6-7 h, 12 cores).
   Go when Anita heads to bed: `python cores.py cap 14`, SendMessage worldnext "go" (it refreshes its sim copy from
   HEAD first). While its gates run: NO app/ or WASM landings; before its join it messages: hold pack writers.
 - Uncommitted, worldnext's: app/src/game/realms.json, zone-names.json, pipeline/world_plan.json, world_plan.py,
