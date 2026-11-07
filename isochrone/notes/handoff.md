@@ -1,47 +1,38 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-06 22:30 (terrain run done 22:22, all 18,984 tiles; tiles_t011 build running; C: 130 GB free)
+Updated: 2026-11-06 23:30 (T-011 served; T-092 and T-039 agents running)
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## State
-- All landed work is committed; smoke 18/18 since T-090 (df18aa48). 8800 serves this folder live
-  (`localhost:8800/isochrone/`), no build step.
-- On the page since 2026-11-06: our own surface with OSM roads (T-028, T-084), 100 m town and
+- All landed work is committed; smoke 18/18 and corridors 7/7 on the served map after T-011's
+  swap. 8800 serves this folder live (`localhost:8800/isochrone/`), no build step.
+- **T-011 is served** (2026-11-06 ~23:15): walking directed from 90 m GLO-90, L3/L10 by crossing
+  L1. Rollback: data/tiles_pre_t011/ (`build_tiles.py swap` the other way). Older backups:
+  data/tiles_map2020, data/hazard_map2020. Numbers and shots: notes/T-011.md "Stage 2 run and the
+  world build". data/tiles is 735 MB now (T-016).
+- Also on the page since 2026-11-06: our own surface with OSM roads (T-028, T-084), 100 m town and
   water-country tiles (T-057, T-086), canoe on our mask (T-085), coarse canoe rivers and lake
-  pieces (T-082, T-088), corridor count fix (T-090). Backups kept: data/tiles_map2020,
-  data/hazard_map2020.
-- C: ~43 GB free at 11:23 (it swings; other sessions). Anita: keep ~20 GB free; the terrain
-  downloader waits under 22 GB.
+  pieces (T-082, T-088), corridor count fix (T-090).
+- C: ~130 GB free at 22:22 after Anita's cleanup; her floor is ~40 GB.
 
 ## In flight
-- **T-011 stage 2, world terrain run: done** 2026-11-06 22:22, 18,984 of 18,984 tiles, world.err
-  empty. Planes in data/terrain/l1/, GLO-90 for the fine tiles in data/terrain/elev/; data/terrain/work/
-  can go once the swap is checked.
-- **tiles_t011 build from the world planes**, started 22:30: scratchpad/orch/build_launch.py 3
-  claims `iso-tiles` under its own pid, runs `tools/build_tiles.py 3 --out tiles_t011`, log
-  data/tiles_t011_build.log (ends "exit 0"), ~1 h. Background task in this session fires on exit.
-  Restart: the same command line, detached, from anywhere (it overwrites data/tiles_t011).
-- T-011 stage 3 landed behind a switch: build_tiles.py two passes (L1 from planes, L3/L10 by
-  crossing), directed search, `localhost:8800/isochrone/?tiles=t011` reads data/tiles_t011 (built
-  from the run's planes to ~75N plus the pilot tiles and an Alps block). L1/L10 0.91 -> 1.01,
-  seams 1.04 -> 1.00; smoke 18/18 both ways, corridors 7/7. Agent a3e69e0de8c33f136 idle (~370k).
-- cross.mjs speed-up landed (234674ee): 1.4-1.8x, byte-identical; swapped into the live run at
-  11:36 (node starts per tile, so no restart was needed). ~35 core-hours left at most.
-- Idle agents, retire: a0fa8e1aa1250534e (T-011 stage 1, ~465k), a615cd2144584c81f (T-090),
-  a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43, a754c1f8965d2be43, a9b36a2c84531c427,
-  a75105d4c451ffaf1.
+- **T-092** canoe cfg.access re-measure on the new tiles: agent a2346921baa4d118d (Opus), started
+  ~23:20. Files: canoe code/data, notes/T-092.md.
+- **T-039** first part (GLO-90 heights in the 100 m tiles, directed slope at L0.1; bucket queue
+  filed as T-093, not built): agent a98f3d32b23d45d3b (Opus), started ~23:25, claims 2 cores as
+  `iso-t039`. Files: tools/fine/, fine js, docs/fine.md, notes/T-039.md.
+- Idle agents, retire: a3e69e0de8c33f136 (T-011 stage 3), a0fa8e1aa1250534e (T-011 stage 1),
+  a615cd2144584c81f (T-090), a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43,
+  a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
 
 ## Next
-1. (Terrain run done 22:22.)
-2. When the tiles_t011 build ends: `node isochrone/checks/levels.mjs` and smoke with
-   `?tiles=t011`, then `build_tiles.py swap <backup> --from tiles_t011` (today's data/tiles is the
-   backup), show Anita before/after (mountains faster: 0.64-0.83 of today's; fjord and river
-   country too fast at L3/L10, T-007). Then re-measure canoe cfg.access (notes/T-082.md), then
-   T-039 (L0.1 ~12-16% slower than the new L1) and T-057 mountain tiles. T-091 corridors.
-3. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075. T-016 publishing
-   must weigh L1 growing ~3x (176 -> ~530 MB).
+1. When T-092 and T-039 report: review, smoke, commit. Then T-057's mountain tiles (they waited
+   on T-039's heights), T-091 corridors by directed cost, T-093 bucket queue.
+2. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075, T-007 (fjord and
+   river country too fast at L3/L10: Sogndal, Coari 1.3-1.4).
+3. Anita has not yet seen T-011 served; shots in the State line's notes.
 
 ## Anita's standing asks
 - 2026-11-06 14:15: trainworld is the higher priority; keep ~40 GB free on C:. The terrain run

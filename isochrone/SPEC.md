@@ -18,9 +18,9 @@ The motivating question (Anita): "if you just have a canoe in 10,000 BC, how far
 ## 2. Now built
 
 Walking only, on our own 1 km surface: the Malaria Atlas Project's recipe (Weiss et al. 2020)
-rebuilt from Copernicus LC100 2019 land cover and GMTED2010 height and slope (`docs/surface.md`),
-with OSM roads and paths as a layer of their own (`docs/roads.md`), averaged onto a global grid of
-~10 km cells (4320 x 1740). One search from the clicked cell to everywhere (Dijkstra, 16
+rebuilt from Copernicus LC100 2019 land cover (`docs/surface.md`), its slopes from a 100 m walker
+on Copernicus GLO-90 heights (T-011, section 3), with OSM roads and paths as a layer of their own
+(`docs/roads.md`); the 3 km and ~10 km levels (4320 x 1740) are made by crossing the 1 km one. One search from the clicked cell to everywhere (Dijkstra, 16
 neighbours, wraps at 180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a
 worker with land hazard. Bands from 1 hour to 128 days, a day being 8 hours of walking. Water is
 crossed only on bridges. The default start is Cluj-Napoca.
@@ -60,9 +60,8 @@ holes (`notes/T-028.md`).
   research/friction.md 2), so downhill is faster than uphill and a path keeps to the valleys
   inside a cell. A move weighs the east-west and north-south speeds of the cells it touches by its
   share of each (`docs/resolution.md`, "Directions"); carrying is twice that. Hazard per km and
-  getting in or out use the cell's one speed, the geometric mean of the four. Until the world run is done the
-  directed build is read with `?tiles=t011`; elsewhere, and in the served map, a cell's four
-  speeds are equal.
+  getting in or out use the cell's one speed, the geometric mean of the four. The 100 m level
+  is not directed yet (T-039).
 - **Roads.** A walkable OSM way is walked at 5 km/h times the height factor and the slope factor
   of at most a 10% grade, since roads wind up hills (T-084); a 1 km
   cell blends road and off-road time by three times its share of 100 m road cells, capped at all
@@ -91,7 +90,7 @@ the view is re-solved at 3 km cells, and from zoom 7 also at 1 km, each seeded a
 the next coarser answer and drawn over it. Hover reads the finest level shown. Full design,
 measured times and the thin-ridge question: `docs/resolution.md`.
 
-On walking starts, where 100 m tiles are built (New York and Cluj so far), a 100 m window is
+On walking starts, where 100 m tiles are built (towns and water country, T-057), a 100 m window is
 solved once the view fits in 1.5 M cells (from about zoom 9.4): LC100 land cover, OSM roads and
 bridges, the 1 km terrain factor (`docs/fine.md`). Which tiles get 100 m worldwide: open
 (T-047, `docs/fine.md`, "Where the fine level goes").

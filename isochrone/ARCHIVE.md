@@ -1,5 +1,7 @@
 # Archive
 
+- T-011 [P2] 90 m terrain. Done 2026-11-06: GLO-90 streamed for 18,984 tiles, directed crossing speeds per L1 cell from a 100 m walker, L3/L10 by crossing; served. L1/L10 0.91 -> 1.02, mountains 0.78 -> 1.02; smoke 18/18. notes/T-011.md.
+
 - T-089 [P2] Every level by crossing time, and T-081 [P2] coarse levels by crossing time. Folded into T-011 2026-11-06: one world rebuild with 90 m terrain and directed walking (build_tiles.py two passes, notes/T-011.md stage 3).
 
 - T-090 [P1] Canoe corridors from Semnan drawn in pieces. Done 2026-11-06: `canoeFrom` left out the hazard on getting out, so a parent could be read back past the limit; that left `nch` dirty for every later count, breaking trunks over a session. Fixed, guarded; `checks/corridors.mjs`, smoke 18/18. notes/T-090.md.
