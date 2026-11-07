@@ -39,9 +39,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   big-river stream-power rule (Livingstone Falls portaged), GIRES dries hot-desert reaches
   (Cooper, Diamantina). Backups deleted.
 - T-073 done and committed (6ce2a9be): upstream through rapids 2.5 km/h on every river.
-- **T-100 + T-101 MERIT Hydro** (small-river lengths, canopy read as rapids): agent
-  aea544d0d6ddc9082 (Opus), 1-2 cores as `iso-rivers`; downloads MERIT tiles, keeps C: over
-  40 GB. Files: tools/canoe/, data/canoe, docs/canoe.md, notes/T-100.md.
+- T-100 + T-101 done and committed (f2406ef1): small rivers lengthened, tropical-forest gradients
+  from Hydrography90m (CC BY-NC; licence asked of Anita in for-anita.md), coarse river steps count
+  the main river only. Backup deleted.
+- **T-102 canoe level agreement re-measure** after T-100's main-river change: agent
+  ac3f39873fe117fcb (Sonnet), 1 core. Files: notes/T-102.md, notes/T-102/ (T-092's harness kept).
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
