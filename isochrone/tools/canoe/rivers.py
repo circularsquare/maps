@@ -5,6 +5,7 @@
     python tools/canoe/rivers.py snap      # OSM falls/dams/weirs/rapids + reservoir pour points -> work/barriers.npz   ~1 min
     python tools/canoe/rivers.py gires     # GIRES no-flow probabilities per reach -> work/gires.npz   ~2 min
     python tools/canoe/rivers.py desert    # hot desert rivers (tools/hotdesert.py) -> work/desert.npz   ~1 min
+    python tools/canoe/h90.py fetch, reaches  # MERIT Hydro in tropical forest tiles -> work/merit.npz (T-100, T-101)
     python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~7 min, ~8 GB
                                            #    (L1 from the reaches, L3 and L10 as L1 contracted: contract_level),
                                            #    and the water pieces of L3 and L10 (T-088): pieces.bin.gz, pieces/l3,
@@ -268,6 +269,62 @@ def closing_gradient(q):
     return np.where(q >= Q_BIG, big, 5.0)
 
 
+# T-100: RiverATLAS's 15 arc-second lines lose small rivers' meanders. A reach's length is
+# LENGTH_KM x A x C. A: MERIT Hydro's flow length over RiverATLAS's (Hydrography90m, 34 sample
+# boxes), by Q and by the reach's GMTED gradient (< 0.5, 0.5-2, >= 2 m/km), larger north of 60N
+# where RiverATLAS comes from HYDRO1k. C: what MERIT's 90 m still misses, published river miles over
+# MERIT's (Itasca, Jefferson; ~0.96 on big rivers, MERIT's own D8 steps). Interpolated in log Q
+# between the knots, flat beyond them (notes/T-100.md).
+LEN_Q = np.log10([3.16, 31.6, 316, 3160])
+LEN_A = np.array([[1.23, 1.29, 1.18, 1.05],      # gradient < 0.5 m/km
+                  [1.20, 1.22, 1.10, 1.05],      # 0.5-2
+                  [1.12, 1.10, 1.07, 1.05]])     # >= 2
+LEN_NORTH = np.array([1.17, 1.28, 1.0, 1.0])    # x A north of 60N
+LEN_CQ = np.log10([4, 40, 300])
+LEN_C = np.array([1.26, 1.09, 0.96])
+MERIT_RATIO = (0.8, 2.5)                         # a reach's own MERIT / RiverATLAS ratio outside this is a mis-snap
+
+
+def sub90(q):
+    return np.interp(np.log10(np.maximum(q, 1e-3)), LEN_CQ, LEN_C)
+
+
+def length_factor(q, g, lat):
+    """T-100: real river length over RiverATLAS LENGTH_KM from discharge, GMTED gradient (m/km) and latitude."""
+    lq = np.log10(np.maximum(q, 1e-3))
+    g = np.where(np.isfinite(g), g, 0)
+    gi = np.where(g < 0.5, 0, np.where(g < 2, 1, 2))
+    a = np.empty(len(q))
+    for i in range(3):
+        m = gi == i
+        a[m] = np.interp(lq[m], LEN_Q, LEN_A[i])
+    north = np.where(lat >= 60, np.interp(lq, LEN_Q, LEN_NORTH), 1.0)
+    return a * north * sub90(q)
+
+
+def merit_reaches(q, grad, lat):
+    """T-100 and T-101 together: per reach, the length factor and the gradient (m/km of real channel).
+    Where h90.py found a MERIT window (tropical forest tiles), the length is MERIT's flow length x C and
+    the gradient MERIT's drop over it; elsewhere the factor table and GMTED's drop over the real length."""
+    f = length_factor(q, grad, lat)
+    g = grad / f
+    mp = os.path.join(WORK, "merit.npz")
+    if not os.path.exists(mp):
+        log("no work/merit.npz (h90.py reaches): GMTED gradient everywhere")
+        return f, g, np.zeros(len(q), bool)
+    m = np.load(mp)
+    if len(m["ra_km"]) != len(q):
+        raise SystemExit("work/merit.npz is from other reaches: run h90.py reaches")
+    ra, mk, drop = m["ra_km"].astype(np.float64), m["merit_km"].astype(np.float64), m["drop"].astype(np.float64)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        ratio = mk / ra
+    use = np.isfinite(ratio) & (ratio >= MERIT_RATIO[0]) & (ratio <= MERIT_RATIO[1])
+    c = sub90(q)
+    f = np.where(use, ratio * c, f)
+    g = np.where(use, drop / np.where(use, mk * c, 1), g)
+    return f, g, use
+
+
 def natural_class(q, g):
     """g in m/km."""
     g = np.where(np.isfinite(g) & (g > 0), g, 0)
@@ -403,7 +460,8 @@ def _merge(e, e2):
 def walk_reach(r, k0, nk, C, L, V, N, Hm, LK, RS, W, corner_km, carry, downl, ql,
                out_a, out_b, out_len, out_vlen, out_nat, out_hum, out_lake, out_res, folded, cornered):
     """One reach's runs of cells to steps. An entry is [cell, km, v*km, natural, human, lake km, reservoir km];
-    step i leaves entry i and holds its length. The last entry goes on to the downstream reach."""
+    step i leaves entry i and holds its length. The last entry goes on to the downstream reach.
+    corner_km is in the reach's real km (the cell's clip x the reach's length factor)."""
     path = []
     where = {}
     for k in range(k0, k0 + nk):
@@ -479,8 +537,9 @@ def steps_for_level(level, sub, reach_info):
     del col, row, ok, idx, cell, rch, brk, km, lk
     water = load_water(level).ravel()
 
-    q, down, order = reach_info
+    q, down, order, lenf = reach_info
     R = len(q)
+    lenfl = lenf.tolist()
     rstart_all = np.searchsorted(run_reach, np.arange(R))
     rcount_all = np.searchsorted(run_reach, np.arange(R), side="right") - rstart_all
     downl = down.tolist()
@@ -501,7 +560,7 @@ def steps_for_level(level, sub, reach_info):
                                   run_nat[ix].tolist(), run_hum[ix].tolist(), run_lake[ix].tolist(),
                                   run_res[ix].tolist())
         for r, k0, nk in zip(oc.tolist(), loc0.tolist(), cnt.tolist()):
-            folded, cornered = walk_reach(r, k0, nk, C, L, V, N, Hm, LK, RS, W, corner_km, carry, downl, ql,
+            folded, cornered = walk_reach(r, k0, nk, C, L, V, N, Hm, LK, RS, W, corner_km * lenfl[r], carry, downl, ql,
                                           out_a, out_b, out_len, out_vlen, out_nat, out_hum, out_lake, out_res,
                                           folded, cornered)
     a = np.frombuffer(out_a, np.int64)
@@ -564,7 +623,7 @@ def contract_level(level, s1, water1, kind1, shore1=None):
     lake water share the cell's sea or lake node (slot 0); of the rest, the longest is the cell's own
     river node (slot 0) unless the cell has a sea or lake node, and the others get slots 1, 2, ...
     A coarse step is an L1 step between two cells, from piece to piece; its length is half of each
-    piece's own river length plus the step's, so a river's steps still add up to its length. The
+    piece's main river plus the step's, so a river's steps still add up to its length. The
     access of a piece is the mean straight distance from the cell's L1 land pixels to the piece
     (0 on a sea or lake node): what getting from the cell's land to that river costs in the worker.
     """
@@ -592,7 +651,14 @@ def contract_level(level, s1, water1, kind1, shore1=None):
     del g
     pa, pb = lab[ia], lab[ib]
     plen = np.bincount(pa[inner], km[inner], minlength=npc)
-    pvl = np.bincount(pa[inner], km[inner] * v[inner], minlength=npc)
+    # a step's share of a piece is the piece's main river: its L1 steps of at least 0.9 x the piece's
+    # fastest v (Q >= ~0.4 x its largest), so twigs of small tributaries inside the cell are not
+    # counted along a big river (T-100)
+    vmax = np.zeros(npc)
+    np.maximum.at(vmax, pa[inner], v[inner])
+    main = inner & (v >= 0.9 * vmax[pa])
+    plen_m = np.bincount(pa[main], km[main], minlength=npc)
+    pvl = np.bincount(pa[main], km[main] * v[main], minlength=npc)
     nr, nc = nodes // L1W, nodes % L1W
     pcell = np.zeros(npc, np.int64)
     pcell[lab] = (nr // k) * Wc + nc // k
@@ -659,7 +725,7 @@ def contract_level(level, s1, water1, kind1, shore1=None):
     bnd = np.nonzero(xa != xb)[0]
     a, b = xa[bnd], xb[bnd]
     qa, qb = pa[bnd], pb[bnd]
-    ln = plen[qa] / 2 + km[bnd] + plen[qb] / 2
+    ln = plen_m[qa] / 2 + km[bnd] + plen_m[qb] / 2
     vv = np.where(ln > 0, (pvl[qa] / 2 + km[bnd] * v[bnd] + pvl[qb] / 2) / np.where(ln > 0, ln, 1), 0)
     dr = b // Wc - a // Wc
     dc = (b % Wc - a % Wc + Wc // 2) % Wc - Wc // 2
@@ -860,14 +926,22 @@ def stage_build(levels=(10, 3, 1)):
     r = keep_reaches(r, dz["ok"])
     R = len(r["q"])
     log("reaches", R, "(%d dry in hot desert left out)" % (R0 - R))
-    mx, my, sub_km, sub_reach, sub_deg, first = densify(r)
-    log("sub-segments", len(mx))
     q = r["q"]
-    sub_v = (0.51 * q ** 0.11)[sub_reach].astype(np.float32)
     down = reach_down(r)
     order = np.argsort(r["dist_up"], kind="stable")
-    grad = dem_gradient(r, down, order)
+    grad_gmted = dem_gradient(r, down, order)
+    np.save(os.path.join(WORK, "gradient_gmted.npy"), grad_gmted)
+    # T-100, T-101: real lengths, and the gradient over them (MERIT in tropical forest tiles)
+    lenf, grad, use = merit_reaches(q, grad_gmted, r["co"][r["off"][:-1], 1])
     np.save(os.path.join(WORK, "gradient.npy"), grad)
+    np.save(os.path.join(WORK, "length_factor.npy"), lenf.astype(np.float32))
+    L0 = r["length_km"]
+    r["length_km"] = L0 * lenf
+    log("lengths x %.3f (%.2f -> %.2f M km); MERIT windows on %d reaches, %.0f km" %
+        (r["length_km"].sum() / L0.sum(), L0.sum() / 1e6, r["length_km"].sum() / 1e6, use.sum(), L0[use].sum()))
+    mx, my, sub_km, sub_reach, sub_deg, first = densify(r)
+    log("sub-segments", len(mx))
+    sub_v = (0.51 * q ** 0.11)[sub_reach].astype(np.float32)
     sub_nat = natural_class(q, grad)[sub_reach]
     sub_hum = np.zeros(len(mx), np.uint8)
     lakes = np.load(os.path.join(WORK, "lakes_l1.npy"), mmap_mode="r")
@@ -897,7 +971,7 @@ def stage_build(levels=(10, 3, 1)):
     summary = {"q_min": QMIN, "reaches": int(R), "km": float(r["length_km"].sum()), "levels": {}}
     # L1 from the reaches; L3 and L10 as L1 contracted (contract_level, T-082)
     t0 = time.time()
-    s1 = steps_for_level(1, sub, (q, down, order))
+    s1 = steps_for_level(1, sub, (q, down, order, lenf))
     log("L1: %d steps (%.0f s)" % (len(s1["cell"]), time.time() - t0))
     write_levels(s1, levels, summary)
 

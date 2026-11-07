@@ -1,5 +1,9 @@
 # Archive
 
+- T-101 [P3] Canopy read as rapids. Done 2026-11-07: in 132 tropical forest tiles the river drop is MERIT Hydro's (via Hydrography90m, CC BY-NC); Amazon lowland Q 1-10 rapids 61% -> 33%. notes/T-100.md.
+
+- T-100 [P3] Small-river lengths. Done 2026-11-07: lengths x MERIT/RiverATLAS by Q, gradient and north of 60N, x what 90 m misses (Q 1-10 ~1.5x, big ~1.03x); gradients over real length; coarse steps no longer count tributary twigs. notes/T-100.md.
+
 - T-073 [P3] Small rivers too fast both ways. Done 2026-11-07: up rapids is 2.5 km/h on any river (records 1.2-3 against ~4.3); no depth limit, downstream kept. Found RiverATLAS small-river lengths 1.27-1.47x short, not fixed. notes/T-073.md.
 
 - T-031 [P2] River gradient south of 60N. Done 2026-11-07: GMTED drop over 10 km everywhere (RiverATLAS's summed to 14.7 km down the Grand Canyon); big rivers close at 2.5 x sqrt(1000/Q) m/km, so the Livingstone Falls portage; ~23% still closed. notes/T-031.md.

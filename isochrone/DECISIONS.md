@@ -5,6 +5,26 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **A coarse river step counts only its pieces' main river, not every twig in the cell** (T-100,
+  notes/T-100.md). T-082 gave a coarse step half of each piece's whole river length, so every
+  small tributary inside an L10 cell was paddled along a big river: Kisangani to Kinshasa took 242
+  h paddled at L10 against ~162 h at p + v over its ~1,730 km. Main river: L1 steps with v >= 0.9
+  x the piece's fastest. Found when T-100's longer small rivers made big-river trips 11-17% slower.
+- **River lengths are RiverATLAS's x a factor by Q, gradient and north of 60N, and gradients are
+  over the real length** (T-100, notes/T-100.md). MERIT Hydro's 90 m flow lines in 34 sample boxes
+  (22k reach windows) give 1.05-1.30 x RiverATLAS by Q and gradient, 1.2-1.6 x north of 60N
+  (HYDRO1k there); published river miles add what 90 m misses on small rivers (1.26 at Itasca,
+  1.09 on the Jefferson). Rejected: one factor by Q (lowland rivers meander more than mountain ones
+  of the same Q: 1.23 against 1.12 at Q 1-10), per-box regions (no world map of them), and MERIT
+  lengths world-wide (~18 h of range reads). Rapids and closing thresholds are channel slopes
+  (research/canoe.md 1), so the gradient is drop over the real length too.
+- **In tropical forest the river drop is MERIT Hydro's, read from Hydrography90m (CC BY-NC 4.0)**
+  (T-101, notes/T-100.md). GMTED reads canopy as drop: on Q 10-100 rivers round Manaus it gives
+  0.75 m/km against MERIT's 0.20; outside tropical forest the two agree (Ganges, Sahel, Siberia,
+  US, Poland medians within 0.05). Only the 132 forest tiles are fetched. MERIT Hydro's own
+  download (dual CC BY-NC or ODbL) needs a registration form, so the open route is Hydrography90m,
+  which is CC BY-NC only: the river data now carries NC until Anita registers for MERIT Hydro
+  (ODbL), when `h90.py` can read `elv` the same way.
 - **Up rapids is 2.5 km/h on any river; no depth limit either way** (T-073, notes/T-073.md).
   Small-river upstream records are 1.2-3 km/h against the model's ~4.3, and the accounts put it in
   the riffles (Lewis and Clark dragging up the Beaverhead, Mackenzie poling, Allagash Stream

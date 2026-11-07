@@ -94,7 +94,18 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   shallow and swift to paddle against are what made small rivers slow upstream, while their still
   meadow reaches were paddled (T-073, research/canoe.md 4). Downstream, rapids run at p + v.
 - **River length** is the reach's real length spread over its cell steps, so meanders cost their
-  length.
+  length. RiverATLAS's `LENGTH_KM` is traced on a 15 arc-second network (HYDRO1k's 1 km north of
+  60N) and loses meanders smaller than that, so each reach's length is `LENGTH_KM` x A x C (T-100,
+  `rivers.py length_factor`). A is MERIT Hydro's 90 m flow length over RiverATLAS's, by Q and the
+  reach's GMTED gradient: at Q = 3, 30, 300 and 3,000 m³/s, 1.23, 1.29, 1.18, 1.05 under 0.5 m/km,
+  1.20, 1.22, 1.10, 1.05 at 0.5-2 m/km, 1.12, 1.10, 1.07, 1.05 from 2 m/km, times 1.17 and 1.28 at
+  Q = 3 and 30 north of 60N (1 from Q = 300). C is what 90 m still misses, published river miles
+  over MERIT's: 1.26 at Q = 4, 1.09 at 40, 0.96 from 300 (MERIT's own D8 steps on big rivers).
+  Both are interpolated in log Q between those points and flat beyond. In the tropical forest
+  tiles (section 4, gradient) a reach with a MERIT window takes its own MERIT length over that
+  window x C instead of A x C. World-wide this makes Q 1-10 rivers ~1.5 x longer, 10-100 ~1.4 x,
+  100-1000 ~1.15 x and bigger ones ~1.03 x. Hot desert water loss (above) still counts
+  `LENGTH_KM`.
 - **Sea current** c is the mean of the edge's two cells from the drifter climatology, x0.5 within
   5 km of shore. Along the edge direction d: s = c·d + sqrt(p² - (c×d)²); no edge when the
   cross-current exceeds p or s <= 0.
@@ -170,8 +181,8 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
 | `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.5 MB, 1122 tiles |
 | `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 13.7 MB, 1140 tiles |
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea and lake temperature (int8, °C) | 0.7 MB |
-| `data/canoe/rivers.bin.gz` | L10, whole world | 1.24 M river steps, with slots and access | 6.6 MB |
-| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 20.7 MB, 904 tiles; 37.9 MB, 911 tiles |
+| `data/canoe/rivers.bin.gz` | L10, whole world | 1.25 M river steps, with slots and access | 6.8 MB |
+| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 21.1 MB, 904 tiles; 40.2 MB, 911 tiles |
 | `data/canoe/pieces.bin.gz` | L10, whole world | 222k water units, 65k water links (T-088) | 0.7 MB |
 | `data/canoe/pieces/l3/` | L3, 5° tiles | 723k water units, 52k water links | 2.0 MB, 1058 tiles |
 
@@ -243,8 +254,10 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
   node (slot 0); of the rest, the longest is the cell's own river node (slot 0) unless the cell has
   a sea or lake node, and the others get slots 1, 2, ... A coarse step is an L1 step between two
   coarse cells, from piece to piece, its class the L1 step's; its length is half of each piece's
-  own river length plus the step's (so a river's steps still add up to its length, less half a
-  piece at its source and mouth) and its v the length-weighted mean. One record per (cell,
+  main river plus the step's (so a river's steps still add up to its length, less half a piece
+  at its source and mouth) and its v the length-weighted mean over the same. A piece's main river
+  is its L1 steps with v at least 0.9 x the piece's fastest (Q from ~0.4 x its largest), so the
+  twigs of small tributaries joining a big river inside the cell are not paddled along it (T-100). One record per (cell,
   direction, slot pair), chosen as at L1. A piece's **access** is the mean straight distance from
   the coarse cell's L1 land pixels to the piece (0 on a sea or lake node). Getting in or out of a
   coarse river node within its own cell carries half that distance at the cell's walking speed
@@ -274,10 +287,18 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
   at least 0.3 (a roughly constant stream power, about 100 W/m² over the width W: 2 m/km up to
   Q = 1560, 1 at 6,250, 0.4 at 39,000, the Congo below Kinshasa, and 0.3 from 69,000, the Amazon).
   A fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller rivers' OSM rapids
-  are class rapids). The gradient of a reach is its drop over at least 10 km downstream of its
-  start in GMTED (`data/surface/elev.tif`), from the lowest of the 3 x 3 pixels round each reach
-  end, made never to rise downstream (`rivers.py dem_gradient`), everywhere (T-031): RiverATLAS
-  `sgr_dk_rav` reads canyons as cliffs and short lowland reaches' 1 m steps as rapids.
+  are class rapids). The gradient is the channel's: a drop over the reach's real length (river
+  length, section 2), so a meandering river is gentler than its valley. The drop is GMTED's
+  (`data/surface/elev.tif`) over at least 10 km of RiverATLAS downstream of the reach's start,
+  from the lowest of the 3 x 3 pixels round each reach end, made never to rise downstream
+  (`rivers.py dem_gradient`, T-031: RiverATLAS `sgr_dk_rav` reads canyons as cliffs and short
+  lowland reaches' 1 m steps as rapids). **In tropical forest** GMTED reads the canopy as drop, so
+  in the 5-degree tiles with at least 20% of their land in LC100 closed evergreen broadleaf forest
+  (132 tiles: Amazonia, the Congo basin, West Africa's forest, South-east Asia, New Guinea) the
+  drop is MERIT Hydro's hydrologically adjusted elevation instead (T-101, `tools/canoe/h90.py`):
+  from the reach's midpoint to the midpoint of the first downstream reach at least 10 km on, each
+  snapped to the highest-accumulation MERIT cell within 360 m, kept when both are in one basin
+  and Q over upstream area is within 4 x of the tile's median, else GMTED's.
 - **Snapping** OSM points and reservoir pour points: to the nearest HydroRIVERS reach of any
   size, kept only if that reach has Q >= 1 and lies within half its width (W = 7.2 Q^0.5 m) plus
   0.5 km (falls, rapids), 0.3 km (dams, weirs; many are on ponds beside rivers) or 1 km (pour
@@ -287,7 +308,9 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
   flow 30 days a year, hot desert reaches only; CC BY 4.0), CHELSA
   V2.1 for the hot desert mask (as the land hazard), HydroLAKES (local;
   `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir|rapids`
-  and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 for the reach gradient, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
+  and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 for the reach gradient,
+  MERIT Hydro through Hydrography90m (Amatulli et al. 2022, CC BY-NC 4.0) for the length factor
+  and the gradient in tropical forest, LC100 for those tiles, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
   climatology, ARCO-ERA5 sampled to a local-summer mean of wave height, sea temperature and lake
   mix-layer temperature and a least-ice-month mean of ice,
   NSIDC median ice edges as a check. SWORD's obstruction flags are a later check (1.6 GB).
@@ -376,14 +399,13 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
 - WaterGAP has no glacier melt, so glacier-fed rivers in hot desert carry too little in from the
   mountains and sink: the lower Tarim, the Hotan and the Keriya are dry. Today the lower Tarim is
   dry below its reservoirs, but in 10,000 BC these run (T-012).
-- The gradient is a 1 km surface model's (GMTED) over 10 km: a cataract shorter than that is
-  averaged with the water round it, and under forest the canopy adds a few metres where a stream
-  leaves it (about 60% of the length of small Amazon streams reads 1-2 m/km, rapids, so is poled
-  upstream; 60% of Q 1-10 rivers worldwide are rapids, 37% at 10-100, 16% at 100-1000).
-- RiverATLAS measures a river on its 15 arc-second network, so meanders smaller than a few hundred
-  metres are lost: small rivers are short, both ways. Against published river miles, Q 1-70
-  stretches are 1.27-1.47 x longer than RiverATLAS says, rivers from 100 m³/s 0.96-1.00 x
-  (notes/T-073.md).
+- The gradient is over 10 km: a cataract shorter than that is averaged with the water round it.
+  Outside the tropical forest tiles it is GMTED's, a surface model; in boreal and temperate forest
+  GMTED and MERIT agree (notes/T-100.md), but scattered tropical forest outside those tiles keeps
+  some canopy drop.
+- The length factor is a world average by Q and gradient; places differ round it: US and European
+  rivers of Q 100-1000 are ~1.05 x RiverATLAS, tropical and West Siberian lowland ones 1.2-1.7 x.
+  What 90 m still misses (C) rests on three US stretches (notes/T-100.md).
 - A coarse canoe node on a land cell stands at the cell's centre for a transfer to or from a
   neighbouring cell, wherever its water lies in the cell, so L10 still finds chains of lakes and
   rivers a little cheaper than L1 does: ~10-15% fast round Jyvaskyla, New York and Utrecht
