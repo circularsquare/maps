@@ -649,9 +649,10 @@ export function lines(L, canoe, world, coarser) {
         vs.push(v10);
     }
     for (let i = 0; i < nk; i++) { const n = stack[i]; nch[par[n]] = 0; flag[par[n]] = 0; }
-    const np = s.length;    // lines from np on are the coarser level's pieces
-    if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s, vs);
-    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s), v: new Uint8Array(vs), np };
+    const np = s.length;    // lines from np on are the coarser level's pieces, src their line there
+    const src = [];
+    if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s, vs, src);
+    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s), v: new Uint8Array(vs), np, src: new Uint32Array(src) };
     L.drawn = { xy: out.xy.slice(), off: out.off.slice(), s: out.s.slice(), v: out.v.slice() };
     return out;
 }
@@ -659,7 +660,7 @@ export function lines(L, canoe, world, coarser) {
 // The coarser level's lines inside a window where the window's own routes do not go back to the
 // start (seeded from its border, or not reached): cut in pieces about a coarse cell long, each
 // kept when the window cell under its middle has no node routed from the start.
-function coarserLines(L, canoe, D, step, xy, off, s, vs) {
+function coarserLines(L, canoe, D, step, xy, off, s, vs, src) {
     const { W, H, grid } = L;
     const org = L.corr.org, t = L.res.t, maxH = cfg.maxHours;
     const covered = (x, y) => {
@@ -671,7 +672,7 @@ function coarserLines(L, canoe, D, step, xy, off, s, vs) {
     };
     for (let i = 0; i + 1 < D.off.length; i++) {
         let run = null;
-        const end = () => { if (run && run.length >= 4) { for (const v of run) xy.push(v); off.push(xy.length / 2); s.push(D.s[i]); vs.push(D.v[i]); } run = null; };
+        const end = () => { if (run && run.length >= 4) { for (const v of run) xy.push(v); off.push(xy.length / 2); s.push(D.s[i]); vs.push(D.v[i]); src.push(i); } run = null; };
         for (let j = D.off[i]; j + 1 < D.off[i + 1]; j++) {
             const x0 = D.xy[2 * j], y0 = D.xy[2 * j + 1], x1 = D.xy[2 * j + 2], y1 = D.xy[2 * j + 3];
             const k = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / step));

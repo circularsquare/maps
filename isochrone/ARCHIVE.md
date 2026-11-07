@@ -1,5 +1,6 @@
 # Archive
 
+- T-105 [P3] Corridor pieces cut from the smoothed line. Done 2026-11-07: the worker sends each piece's source line (`src`) and the page cuts the piece from the coarser level's smoothed line, so the double line and S-kink at the cut are gone at zoom 10+. notes/T-104.md.
 - T-104 (first part) [P3] Corridor jog at window corners. Done 2026-11-07: a finer window's lines started up to 5 cells inside the edge, beside the coarser line's cut end or raw piece; the page now moves each such end onto the coarser end and tapers the shift along the line (6 px jog gone at Cluj L1 z8, Cluj L3 z6, Brig L0.1 z11). notes/T-104.md.
 - T-014 [P3] Window edges. Done 2026-11-07: finer windows fade into the coarser level over 3 of its cells, per-texel alpha against the texels as MapLibre draws them; the edge line (up to 22% brighter, 1-6 px) is gone, under 2% left. notes/T-014.md.
 

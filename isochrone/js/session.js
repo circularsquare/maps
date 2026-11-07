@@ -75,9 +75,9 @@ function postCorridors(L, level) {
     const coarser = level === 10 ? null : [last[1], last[3], coarse].filter(C => C && C.corr && C.cellDeg > L.cellDeg);
     corridors.count(L, canoe, coarser);
     const t1 = performance.now();
-    const { xy, off, s, v, np } = corridors.lines(L, canoe, coarse.corr.total, coarser);
+    const { xy, off, s, v, np, src } = corridors.lines(L, canoe, coarse.corr.total, coarser);
     L.corrSent = originId;
-    self.postMessage({ type: 'corridors', originId, level, xy, off, s, v, np, ms: Math.round(performance.now() - t0),
+    self.postMessage({ type: 'corridors', originId, level, xy, off, s, v, np, src, ms: Math.round(performance.now() - t0),
         countMs: Math.round(t1 - t0) }, [xy.buffer, off.buffer, s.buffer, v.buffer]);
 }
 

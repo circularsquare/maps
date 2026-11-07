@@ -805,6 +805,30 @@ function leanEnd(c, p, cell) {   // c ends where p is to be reached; returns the
     // the points before the taper stay; it ends on a point of the line, or part way along a segment
     return round4(c.slice(0, part ? i + 1 : i).concat(lean.reverse()));
 }
+// A piece of a coarser line (T-105): the part of the coarser level's smoothed line between the points
+// nearest the piece's ends, so the piece lies on the line the coarser level draws. null when an end
+// is more than `tol` degrees from that line (the pairing is not the one assumed).
+function carve(par, a, b, tol) {
+    const kx = Math.cos(a[1] * Math.PI / 180);
+    const near = (p) => {
+        let best = null;
+        for (let i = 0; i + 1 < par.length; i++) {
+            const x0 = par[i][0] * kx, y0 = par[i][1], dx = par[i + 1][0] * kx - x0, dy = par[i + 1][1] - y0, l2 = dx * dx + dy * dy;
+            const t = l2 > 0 ? Math.max(0, Math.min(1, ((p[0] * kx - x0) * dx + (p[1] - y0) * dy) / l2)) : 0;
+            const d = Math.hypot(p[0] * kx - x0 - t * dx, p[1] - y0 - t * dy);
+            if (!best || d < best.d) best = { d, u: i + t, pt: [par[i][0] + t * (par[i + 1][0] - par[i][0]), y0 + t * dy] };
+        }
+        return best;
+    };
+    if (par.length < 2) return null;
+    const A = near(a), B = near(b);
+    if (A.d > tol || B.d > tol || A.u === B.u) return null;
+    const lo = A.u < B.u ? A : B, hi = lo === A ? B : A;
+    const mid = par.slice(Math.floor(lo.u) + 1, Math.floor(hi.u) + 1);
+    const out = [lo.pt, ...mid, hi.pt];
+    return round4(lo === A ? out : out.reverse());
+}
+
 // Moves the ends of `set` onto the targets within `max` degrees, nearest pair first; returns the
 // targets used.
 function pairUp(set, targets, max, cell) {
@@ -843,6 +867,7 @@ function drawCorridors() {
     // levels with lines for this start; each is cut where the next finer one shows
     const has = LEVELS.filter(k => layers[k].shown && corr[k] && corr[k].originId === originId);
     const features = [];
+    const base = {};   // level -> each line's smoothed points before joins, pieces cut from the level above's
     let cuts = [];   // where the level above was cut at this level's window edge
     for (const [i0, k] of has.entries()) {
         const c = corr[k];
@@ -855,8 +880,15 @@ function drawCorridors() {
                 for (let j = c.off[i]; j < c.off[i + 1]; j++) raw.push([c.xy[2 * j], c.xy[2 * j + 1]]);
                 c.sm[i] = smoothLine(raw, CORR_CELL[k]);
             }
-            lines.push({ i, sm: c.sm[i], piece: i >= c.np });
+            let sm = c.sm[i];
+            const piece = i >= c.np, pk = i0 ? has[i0 - 1] : 0;
+            if (piece && c.src && base[pk] && c.src[i - c.np] < base[pk].length) {
+                const j0 = c.off[i], j1 = c.off[i + 1] - 1;
+                sm = carve(base[pk][c.src[i - c.np]], [c.xy[2 * j0], c.xy[2 * j0 + 1]], [c.xy[2 * j1], c.xy[2 * j1 + 1]], CORR_CELL[pk]) || sm;
+            }
+            lines.push({ i, sm, piece });
         }
+        base[k] = lines.map(ln => ln.sm);
         joinCuts(lines, cuts, CORR_CELL[k], i0 ? CORR_CELL[has[i0 - 1]] : 0);
         cuts = [];
         for (const { i, sm } of lines) {

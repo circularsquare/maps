@@ -81,8 +81,11 @@ The page keeps each level's lines and cuts a level's where the next finer level 
 
 **Where the lines meet at a window edge** (T-104). A window's own lines start at the node that took
 the flux, up to a coarse cell from where the coarser line was cut, and its coarser-line pieces
-(the worker sends `np`, the number of lines before the pieces) follow the raw route, which lies up
-to 0.7 coarse cell from the smoothed line. So the page joins them after smoothing, in `joinCuts`:
+(the worker sends `np`, the number of lines before the pieces, and `src`, each piece's line in the
+coarser level) come from the raw route, which lies up to 0.7 coarse cell from the smoothed line.
+So the page cuts each piece from the coarser level's smoothed line, between the points nearest the
+piece's two ends (`carve`; the raw piece is kept if an end is over a coarse cell from that line),
+and joins the rest after smoothing, in `joinCuts`:
 
 - each piece end within one coarse cell of a cut end moves onto it;
 - then each of the level's own line ends within the larger of 5 of its cells and 1.5 coarse cells
