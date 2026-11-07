@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **`cfg.access` stays 0.5 on directed walking** (T-092, notes/T-092.md): canoe L1/L10 moved 0.95
+  -> 1.04, all of it walking's own shift; the canoe's part over walking is 1.00 at 0.5 to 1.0
+  alike. A full access (1.0) gives 1.02 by offsetting walking's +2%, closer in lakes, further off
+  on the Amazon (Coari 0.86 -> 0.79).
 - **Walking is directed, and every level is made by crossing time** (T-011 stage 3, folding in
   T-089 and T-081; notes/T-011.md). L1 cells take four speeds (E, W, S, N) from the 100 m walker on
   GLO-90, L3 and L10 cross the directed L1 as the page walks it, each with a 3-cell strip

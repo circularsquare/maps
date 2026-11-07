@@ -230,7 +230,7 @@ risk") to 10,000, costs nothing extra.
   the coarse cell's L1 land pixels to the piece (0 on a sea or lake node). Getting in or out of a
   coarse river node within its own cell carries half that distance at the cell's walking speed
   (`cfg.access`, 0.5): the land node stands for the whole cell, the river for a line through it.
-  Measurements and why half: notes/T-082.md.
+  Measurements and why half: notes/T-082.md, and on T-011's directed walking notes/T-092.md.
 - **Water units** (T-088, `tools/canoe/pieces.py` and `water_units` in `rivers.py`). A water
   piece is an 8-connected run of L1 sea or lake pixels inside one coarse cell. A cell is *split*
   when it holds two or more, or any while it is river water (kind 2). In a split cell a unit is a
@@ -351,9 +351,10 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
   the annual mean (no low season).
 - A coarse canoe node on a land cell stands at the cell's centre for a transfer to or from a
   neighbouring cell, wherever its water lies in the cell, so L10 still finds chains of lakes and
-  rivers a little cheaper than L1 does: ~10% fast round Jyvaskyla and New York, ~5% at Utrecht
-  (notes/T-088.md). Where coarse walking is slow (mountains, forest: T-080, T-081) the access
-  hours are too, so L10 runs 10-20% slow in fjord country (Sogndal) and on the Amazon (Coari).
+  rivers a little cheaper than L1 does: ~10-15% fast round Jyvaskyla, New York and Utrecht
+  (notes/T-088.md, T-092.md). On the Amazon (Coari) L10 runs ~15% slow, the floodplain start
+  cell paying its mean water access; in fjord country (Sogndal) coarse walking crosses the fjord
+  (T-007), which makes the canoe ~5% fast there where it would be ~13% slow.
 - A window's ring seeds every canoe node of a cell from the coarse cell's best one, so at the
   ring a river or lake can take a neighbouring one's time.
 - Window seams as for walking (`docs/resolution.md`), per layer.

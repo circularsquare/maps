@@ -37,7 +37,8 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Roads and 100 m
 
 - T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; mountain tiles wait for T-039.
-- T-092 [P2] Re-measure the canoe's `cfg.access` (notes/T-082.md) on the T-011 tiles: coarse walking is faster at L10 now, so carrying to a coarse river piece is cheaper; check Coari, Khulna and the lake starts against L1 and retune if they moved. taking, 2026-11-06
+
+- T-094 [P2] `checks/ktrips.mjs` builds L10 without `setDirs`, so its walking and carrying trips run on the symmetric speed bytes, not the page's directed walking (found in T-092); read the direction planes as the page does (notes/T-092/lib.mjs does) and re-record the trips.
 
 ## M2: survival
 
