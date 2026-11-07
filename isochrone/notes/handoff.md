@@ -24,8 +24,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   slope rule; seam round the start 1.23 -> 1.04; data/fine is 1.48 GB; old fine tiles deleted.
 - T-057 done and committed (fa86aa62): 796 mountain tiles, data/fine 2.15 GB in 5,350 tiles;
   backup deleted. Agent a98f3d32b23d45d3b idle (~400k), retire.
-- **T-091 corridors by directed cost**: agent ad3f561e9b5eeefc6 (Opus), 1 core. Files:
-  js/corridors.js, notes/T-091.md.
+- T-091 done and committed (677e6c58). Open with Anita: L0.1 lines are straighter now (Kathmandu
+  27% of km in straight runs, was 20%); if too spoky, loosen NEAR/SPREAD per level (DECISIONS).
+- **T-007 stage 1, design only** (fjords and rivers too fast at L3/L10): agent a3da9fe09ce9819fc
+  (Opus), 1 core. Files: notes/T-007.md, notes/T-007/. Design goes to Anita before building.
 - **T-093 bucket queue**: agent a1b45d0a8f0b37ef0 (Opus), 1 core. Files: js/search.js, notes/T-093.md.
 - Idle agents, retire: a3e69e0de8c33f136 (T-011 stage 3), a0fa8e1aa1250534e (T-011 stage 1),
   a615cd2144584c81f (T-090), a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43,
