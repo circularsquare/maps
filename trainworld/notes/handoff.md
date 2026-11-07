@@ -44,6 +44,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **loadui** a332d55d0d8aac401 (Sonnet, main tree, 0x80): T-2693 ring-chasing pill + progress bars, T-2694 bar size.
 - uitweaks DONE (T-2687, T-2688; Anita: "halo looks nice, also dots"), uncommitted in the main tree with keepnames' and
   yearsdest's work, plus maps-b9's "Drawing diagram" wording: commit all together after a 4-core smoke.
+- **Cap 6 from ~21:45** (Anita: "it feelslike we're using more cores"; she is gaming, ~11 cores): placelag told to pause
+  browser measurements (its Chrome used 3 on a 2 claim), others 1 core each. Raise again when she says.
 - Cap back to 12 at ~21:20 (Anita: "jekyll is done, feel free to use those cores").
 - parking LANDED a07d6006 (T-2677; WASM rebuilt).
 - namespread LANDED 75c606e5 (T-2674, T-2675). T-2691 filed: "Nn" console errors under load.
