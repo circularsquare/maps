@@ -22,8 +22,8 @@ const { buildCanoe, eachCanoeNode, canoeFrom } = await imp('canoe.js');
 const { loadHazardWorld, applyRoads } = await imp('tiles.js');
 
 const meta = JSON.parse(readFileSync(ROOT + 'data/grid.json', 'utf8'));
-// CANOE=<folder>/ reads another canoe data set (an A/B before a swap)
-setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: process.env.CANOE || ROOT + 'data/canoe/', hazardBase: ROOT + 'data/hazard/' });
+// CANOE=<folder>/ and HAZARD=<folder>/ read another canoe or land hazard data set (an A/B before a swap)
+setConfig({ bands: [], alpha: 190, maxHours: 1024, meta, canoeBase: process.env.CANOE || ROOT + 'data/canoe/', hazardBase: process.env.HAZARD || ROOT + 'data/hazard/' });
 const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 const cell = (meta.north - meta.south) / meta.height;
 const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north, cell, true);

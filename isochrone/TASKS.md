@@ -13,8 +13,8 @@ drawn by trips and hoverable. M1 and M2 (survival) are closed, their doc tidies 
 T-078). Smoke passes 18/18.
 
 **Next up**: the known coarse-level errors, T-007 stage 2 (fjords and rivers too fast at L3 and
-L10, waiting on Anita's go) and T-075 (islands); small ones: T-098 (hazard band on T-011's L1),
-T-097 (page text), T-095 (re-time on a quiet machine). 10,000 BC is for later. Open questions:
+L10, waiting on Anita's go) and T-075 (islands); a small one: T-095 (re-time on a quiet
+machine). 10,000 BC is for later. Open questions:
 `notes/for-anita.md`.
 
 Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
@@ -41,9 +41,6 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 - T-095 [P3] Re-time the solves on a quiet machine (smoke.mjs and notes/T-093/chrome.mjs, when the core ledger is near empty) and restate SPEC.md 2's 0.3-0.7 s L10 click and ~0.8 s canoe click and docs/canoe.md's canoe times; T-093's bucket queue made them 1.1-1.4x faster but was measured under full load.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.
-- T-097 [P3] Page text behind the model: the info panel says the view is worked out "on cells of 3 km and then 1 km" (no 100 m), and the speeds panel's "On foot" hover gives MAP's one-way slope factor ("x0.xx on a 5° slope", `js/speeds.js`) though walking is directed Tobler on 90 m heights, faster downhill (docs/fine.md "Terrain"). Reword both in `index.html` and `js/speeds.js`.
-- T-098 [P3] Rebuild the land hazard band on T-011's L1: `data/hazard/` (2026-11-06 02:39) predates the T-011 tiles (22:43), so its L3 and L10 rates are weighted by the old L1 speeds (docs/hazard.md 4); the L1 rates are per pixel and do not change. `HAZARD_OUT=hazard_next python isochrone/tools/hazard/build.py tiles` (~5-7 min, one core), compare `checks/ktrips.mjs trips 1000`, swap.
-- T-099 [P3] Drop the stage 1 fine reader: `fineSpeedTf` in `js/tiles.js` reads the 100 m layout without heights for `data/fine_pre_t039/`, which no longer exists (its comment says "kept to compare"); remove it and the `ix.elev` branch, or say why it stays.
 - T-016 [P3] Publishing: data/tiles is ~750 MB since T-011 (l1 151, d1 314, e1 144, r1 66 MB); goes to R2 with the page. Try a tighter encoding (row deltas, brotli) before publishing.
 
 ## Someday

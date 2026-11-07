@@ -167,10 +167,10 @@ function fineTile(ix, name) {
     const key = name + (cfg.roads ? '' : '-');
     let p = fineCache.get(key);
     if (p) { fineCache.delete(key); fineCache.set(key, p); return p; }
-    const T = ix.tile, base = cfg.fineBase, per = ix.elev ? 4 * T * T : T * T;
+    const T = ix.tile, base = cfg.fineBase, per = 4 * T * T;
     p = Promise.all([fetchGz(base + name + '.land.bin.gz'),
                      cfg.roads && ix.roadSet.has(name) ? fetchGz(base + name + '.roads.bin.gz') : null])
-        .then(([land, roads]) => ix.elev ? fineDecode(land, roads, T) : { s: fineSpeedTf(land, roads, T, ix.terrain, ix.tfScale) });
+        .then(([land, roads]) => fineDecode(land, roads, T));
     p.catch(() => { if (fineCache.get(key) === p) { fineCache.delete(key); fineBytes -= per; } });
     fineCache.set(key, p);
     fineBytes += per;
@@ -186,7 +186,7 @@ function cellKmh(cls, rd) {
     return rd & ROAD_WALK && kmh < ROAD_KMH ? ROAD_KMH : kmh;
 }
 
-// A tile of stage 2's layout: speeds (cellKmh, no terrain: the search walks the slope, js/search.js),
+// A tile: speeds (cellKmh, no terrain: the search walks the slope, js/search.js),
 // heights in metres from the plane deltas (tools/fine/build.py plane_deltas), and the cells whose
 // moves take the street grade cap: urban land, and with roads a walkable way or bridge.
 function fineDecode(land, roads, T) {
@@ -211,38 +211,23 @@ function fineDecode(land, roads, T) {
     return { s, z, g };
 }
 
-// A tile of stage 1's layout (data/fine_pre_t039/, kept to compare): speeds times the L1 terrain
-// factor of the cell's L1 cell; no heights.
-function fineSpeedTf(land, roads, T, TF, tfScale) {
-    const out = new Uint8Array(T * T), k = T / TF, tf = land.subarray(T * T);
-    for (let r = 0; r < T; r++) {
-        const tfRow = ((r / k) | 0) * TF;
-        for (let c = 0, i = r * T; c < T; c++, i++) {
-            const kmh = cellKmh(land[i], roads ? roads[i] : 0);
-            if (!kmh) continue;
-            const v = Math.round(kmh * tf[tfRow + ((c / k) | 0)] / tfScale * SCALE);
-            out[i] = v < 1 ? 1 : v > 255 ? 255 : v;
-        }
-    }
-    return out;
-}
-
 // The window's speeds: fine blocks from their tiles; every other block (absent from a partial
 // tile, or no tile) takes the speed of the L1 cell it lies in, roads folded in as at L1, so the
-// window needs only some fine blocks. With stage 2 tiles, dirs gets the window's heights (z,
-// NO_HEIGHT outside fine blocks), graded flags (g) and the slope rule (slope) for levels.setSlope.
+// window needs only some fine blocks. dirs gets the window's heights (z, NO_HEIGHT outside fine
+// blocks), graded flags (g) and the slope rule (slope) for levels.setSlope.
 async function loadFineWindow(w, dirs) {
     const ix = await fineIndex(), T = ix.tile;
     const grid = new Uint8Array(w.cols * w.rows);
-    const z = ix.elev ? new Int16Array(w.cols * w.rows).fill(NO_HEIGHT) : null;
-    const g = ix.elev ? new Uint8Array(w.cols * w.rows) : null;
+    const z = new Int16Array(w.cols * w.rows).fill(NO_HEIGHT);
+    const g = new Uint8Array(w.cols * w.rows);
     const jobs = [];
     forTiles(w, T, 360, (tr, tc, tcw) => {
         const name = fineName(tr, tcw);
         if (!ix.mask.has(name)) return;
         jobs.push(fineTile(ix, name).then(t => {
             cutInto(grid, w, t.s, 0, T, tr, tc);
-            if (z) { cutInto(z, w, t.z, 0, T, tr, tc); cutInto(g, w, t.g, 0, T, tr, tc); }
+            cutInto(z, w, t.z, 0, T, tr, tc);
+            cutInto(g, w, t.g, 0, T, tr, tc);
         }));
     });
     const gaps = [];
@@ -262,9 +247,10 @@ async function loadFineWindow(w, dirs) {
         for (let r = r0; r < r1; r++) {
             const src = (Math.floor((w.row0 + r) / 10) - w1.row0) * w1.cols - w1.col0;
             for (let c = c0, i = r * w.cols + c0; c < c1; c++, i++) grid[i] = l1[src + Math.floor((w.col0 + c) / 10)];
-            if (z) { z.fill(NO_HEIGHT, r * w.cols + c0, r * w.cols + c1); g.fill(0, r * w.cols + c0, r * w.cols + c1); }
+            z.fill(NO_HEIGHT, r * w.cols + c0, r * w.cols + c1);
+            g.fill(0, r * w.cols + c0, r * w.cols + c1);
         }
-    if (dirs && z) { dirs.z = z; dirs.g = g; dirs.slope = ix.slope; }
+    if (dirs) { dirs.z = z; dirs.g = g; dirs.slope = ix.slope; }
     return grid;
 }
 

@@ -16,9 +16,10 @@ const WALK = [
     ['Snow and ice', [['snow and ice', 1.62]]],
     ['Ponds under 5 km²', [['wading', 1]]],
 ];
-// MAP's slowing for height and slope (research/friction.md 1), as factors on the speeds above
+// The walker's slowing for height (MAP's, research/friction.md 1) and slope (directed Tobler on a
+// move's grade g, positive uphill), as factors on the speeds above: tools/terrain/walk.py SLOPE_RULE
 const elevFactor = m => 1.016 * Math.exp(-0.0001072 * m);
-const slopeFactor = deg => Math.min(6 * Math.exp(-3.5 * Math.abs(Math.tan(deg * Math.PI / 180) + 0.05)), 5) / 5;
+const tobler = g => Math.exp(-3.5 * (Math.abs(g + 0.05) - 0.05));
 
 // River flow speed v = 0.51 Q^0.11 m/s (tools/canoe/rivers.py, docs/canoe.md 2)
 const riverV = q => 0.51 * Math.pow(q, 0.11);
@@ -31,7 +32,7 @@ export function speeds() {
         walk: WALK.map(([label, parts]) => ({ label, parts,
             min: Math.min(...parts.map(x => x[1])), max: Math.max(...parts.map(x => x[1])) })),
         elev: [1000, 3000, 5000].map(m => [m, elevFactor(m)]),
-        slope: [5, 10, 20].map(d => [d, slopeFactor(d)]),
+        slope: [10, 30].map(p => [p, tobler(p / 100), tobler(-p / 100)]),
         carry: cfg.carry, paddle: p, transfer: cfg.transfer, upMin: cfg.upMin, upShare: cfg.upShare,
         rivers: RIVERS.map(([label, q]) => {
             const v = riverV(q) * 3.6;

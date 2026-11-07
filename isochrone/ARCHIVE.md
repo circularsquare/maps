@@ -1,5 +1,11 @@
 # Archive
 
+- T-098 [P3] Land hazard band on T-011's L1. Done 2026-11-07: `build.py tiles` rerun and swapped; L1 identical, 16% of L10 cells move, nearly all by one code (6%); walking trips unchanged but Leh-Manali 98.5 -> 98.4%; smoke 18/18. notes/T-098.md.
+
+- T-097 [P3] Page text behind the model. Done 2026-11-07: the info panel names the 100 m level (walking starts), the "On foot" hover gives directed Tobler up and down a 10% and 30% grade in place of MAP's one-way slope factor; smoke 18/18.
+
+- T-099 [P3] Stage 1 fine reader dropped. Done 2026-11-07: `fineSpeedTf` and the `ix.elev` branches gone from `js/tiles.js` (nothing else called them; every fine build since T-039 has heights); smoke 18/18.
+
 - T-078 [P2] M2 doc tidy. Done 2026-11-07: SPEC, resolution, roads, fine, hazard, canoe, surface and code-map brought to T-011/T-039/T-085/T-093 (roads from the 100 m walker, canoe water on our mask, sizes, T-007's design); T-006 and T-051 closed; done tasks' one-off scripts deleted; T-097-T-099 filed; smoke 18/18.
 
 - T-051 [P2] Rural seams at L0.1 window edges. Done 2026-11-07 (closed by T-078): MAP's road model is gone (T-028), L1 is the 100 m walker's crossings (T-011) and L0.1 walks the same rule (T-039); `checks/fine.mjs` round Cluj, Genoa and Pittsburgh gives L0.1/L1 25 km out 1.003 (1.00-1.01), ring step 1.004. notes/T-039.md.

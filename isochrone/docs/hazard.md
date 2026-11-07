@@ -180,7 +180,8 @@ Plain `python` from the maps root, one core:
 L1 tiles, and the time-weighted L3 tiles and L10 rows from the same strip. Land, and the time
 weights, are read from the page's L1 speed tiles (`data/tiles/l1/`: our surface, small water and
 LC100's missing islands as land; docs/resolution.md), so `tiles` and `dist` run after
-`tools/build_tiles.py`; a coarse cell keeps its rate only where the speed level has land (a quarter
+`tools/build_tiles.py`, and `tiles` again after every rebuild of the speed levels (`dist` too if
+the land changed: `tiles` logs land pixels with no distance); a coarse cell keeps its rate only where the speed level has land (a quarter
 of its pixels). Bridge cells, land only with roads, have no rate. `data/hazard/index.json` has
 the grid, the tiles that exist per level and the coding, as `data/tiles/index.json` does. The
 distance grid covers the same land, so every land pixel has a distance. `HAZARD_OUT=<folder>`
