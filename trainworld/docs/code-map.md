@@ -379,7 +379,10 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
   wait for a demand final), `buildLine` and `acrossLine` (a built test line), `startVite`, and for
   Node `loadApp` (an app module bundled by Vite), `bundleDemandWorker` with `startWorker` (the real
   demand worker), `workerPack`, `marketPacks` and `network` (two test lines in the New York frame).
-  A new check imports from it rather than copying a block.
+  A new check imports from it rather than copying a block. `cores.mjs` (T-2630) is what `launchChrome`
+  uses to keep Chrome to its own cores: `TW_CORES` or a ledger claim released at exit, an affinity mask
+  from the top cores down (`TW_CORE_MASK`, `TW_NOPIN`), set through PowerShell on the browser and its
+  children, and `?demandWorkers` added by an init script; it logs the affinity at launch and at close.
 - `dev-nowatch.mjs <port>`: the app's Vite with watching and HMR off, for an agent's own loop.
 - `agent-tree.mjs new|list|land|remove`: agent worktrees in `maps/.tw-trees/<name>` on branch
   `tw/<name>` (CLAUDE.md "Agent worktrees"); `land` squashes a tree's trainworld/ changes onto master.

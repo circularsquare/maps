@@ -103,7 +103,9 @@ Briefs carry only the task; these hold for every agent.
   shared ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
   A browser load counts its demand workers too (about a core each, plus the page): a headless load
   of a big save took 5 cores on a 4-core claim and starved Anita's game (2026-10-27); cap the
-  page's solving workers to fit the claim.
+  page's solving workers to fit the claim. Playwright checks do this themselves (`checks/cores.mjs`, through
+  `launchChrome`, T-2630): `TW_CORES=n` or a ledger claim, Chrome pinned to the top n cores, `?demandWorkers=n-1`;
+  `TW_CORE_MASK` picks the cores, `TW_NOPIN=1` turns it off.
 - **While a join runs, nothing else writes `data/packs` or `data/terrain`, any country's included**: each unit's
   re-gate compares every registered pack against its snapshot and parks the unit on any change (a walk
   rerun parked China's Henan, 2026-10-24).

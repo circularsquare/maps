@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { corePlan, chromeAffinity, workersInit } from './cores.mjs';
 
 export const HERE = fileURLToPath(new URL('.', import.meta.url));
 export const MAPS = fileURLToPath(new URL('../../', import.meta.url));
@@ -90,7 +91,19 @@ export async function launchChrome({ prefix = 'tw-check-', profile, fresh = true
   else if (fresh) await rm(profile, { recursive: true, force: true });
   try {
     const ctx = await chromium.launchPersistentContext(profile, { executablePath: CHROME, headless: true, viewport: { width: size[0], height: size[1] }, args, ...options });
-    return { ctx, profile, close: async () => { try { await ctx.close(); } finally { await temp?.remove().catch(() => {}); } } };
+    // T-2630: Chrome keeps to this check's cores, and the page to a matching worker count
+    const plan = corePlan();
+    if (plan) {
+      await ctx.addInitScript(workersInit(plan.workers));
+      const a = chromeAffinity({ profile, mask: plan.mask });
+      console.log(`      chrome pinned: ${a.count} processes, affinity ${a.masks.join(' ')}`);
+    }
+    return { ctx, profile, close: async () => {
+      try {
+        if (plan) { const a = chromeAffinity({ profile }); console.log(`      chrome at close: ${a.count} processes, affinity ${a.masks.join(' ')}`); }
+        await ctx.close();
+      } finally { await temp?.remove().catch(() => {}); }
+    } };
   } catch (e) {
     await temp?.remove().catch(() => {});
     throw e;
