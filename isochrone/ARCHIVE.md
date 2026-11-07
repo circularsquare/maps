@@ -1,5 +1,9 @@
 # Archive
 
+- T-031 [P2] River gradient south of 60N. Done 2026-11-07: GMTED drop over 10 km everywhere (RiverATLAS's summed to 14.7 km down the Grand Canyon); big rivers close at 2.5 x sqrt(1000/Q) m/km, so the Livingstone Falls portage; ~23% still closed. notes/T-031.md.
+
+- T-083 [P3] Desert river permanence. Done 2026-11-07: GIRES no flow 30 days a year (p >= 0.6, averaged 25 km along) dries hot desert reaches: Cooper, Diamantina, Finke gone, the Nile, Niger and Senegal kept; hazard rebuilt to match. notes/T-031.md.
+
 - T-098 [P3] Land hazard band on T-011's L1. Done 2026-11-07: `build.py tiles` rerun and swapped; L1 identical, 16% of L10 cells move, nearly all by one code (6%); walking trips unchanged but Leh-Manali 98.5 -> 98.4%; smoke 18/18. notes/T-098.md.
 
 - T-097 [P3] Page text behind the model. Done 2026-11-07: the info panel names the 100 m level (walking starts), the "On foot" hover gives directed Tobler up and down a 10% and 30% grade in place of MAP's one-way slope factor; smoke 18/18.

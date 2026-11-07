@@ -5,6 +5,24 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **River gradient from GMTED's drop over 10 km everywhere, not RiverATLAS `sgr_dk_rav`** (T-031,
+  notes/T-031.md): summed down main stems, `sgr_dk_rav` gives Lees Ferry to Lake Mead 14.7 km of
+  drop (real ~0.6), Skardu to Tarbela 5.5 km (~1.75), the Glomma 1.0 km (~0.19), Manaus to the sea
+  140 m (~20); GMTED's window gives 750 m, 1.85 km, 186 m and 4 m, and within 10% on the Congo,
+  Mississippi and Danube. GLO-90 (the 100 m tiles' heights, 9 basins) agrees with GMTED within a few
+  points of class share, so the 100+ GB world GLO-90 stream it would need is not worth it. One rule
+  for the world also removes the 60N seam.
+- **On big rivers the closing gradient falls with Q** (T-031): 2.5 x sqrt(1000/Q) m/km from Q =
+  1000, between 0.3 and 2, about a constant stream power over the width. The Livingstone Falls
+  average 0.8 m/km, flat by gradient alone, yet are a portage; this closes Kinshasa to Manyanga
+  and Isangila to Matadi and leaves the Manyanga-Isangila reach open, as it was navigated in the
+  1880s, and closes Celilo, the Cascades, Khone and Cahora Bassa. The 0.3 floor keeps 1-2 m DEM
+  steps from closing the Amazon.
+- **In hot desert, GIRES's 30-day no-flow probability of 0.6 or more makes a reach dry** (T-083):
+  WaterGAP keeps Cooper Creek, the Diamantina and the Finke running all year. 0.5 (GIRES's own
+  class) also cut the lower Senegal below Podor (0.48-0.55); a ±25 km mean along the river stops
+  three Niger reaches at 0.51 near Timbuktu cutting the Niger. Dry reaches pass no flow on.
+
 - **Lakes read ERA5's SST where it has one, FLake's `lmlt` elsewhere, for every lake** (T-043,
   notes/T-043.md): ERA5's SST already covers its inland water points (FLake's value on most
   lakes), so only lakes without a water point read a far-off value; `lmlt` everywhere would have

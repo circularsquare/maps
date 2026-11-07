@@ -13,6 +13,8 @@ A river in hot desert carries only the water that comes in from upstream outside
 the mean and driest-month flow of its reaches outside the desert, scaled down where WaterGAP's mean flow
 falls, and losing LOSS_M_DAY over its wetted width on every km. It is a river while that is at least
 Q_RIVER mean and Q_PERENNIAL in the driest month: the Nile, Niger, Euphrates, Indus, Amu Darya.
+A reach that GIRES (Messager et al. 2021) predicts stops flowing for a month or more a year is dry
+there too, and passes no flow on (T-083): Cooper Creek, the Diamantina, the Finke.
 """
 import os
 
@@ -27,6 +29,8 @@ Q_PERENNIAL = 0.1              # m3/s in the driest month (RiverATLAS dis_m3_pmn
 LOSS_M_DAY = 0.03              # water lost over a desert river's wetted bed, m a day (evaporation and seepage)
 W_COEF = 7.2                   # wetted width W = 7.2 Q^0.5 m (Moody and Troutman 2002, docs/canoe.md 2)
 HOT_SHARE = 0.5                # a reach is in hot desert when this share of its length is
+NO_FLOW_P = 0.6                # GIRES predprob30 at or over this: the reach stops 30 days a year or more (T-083)
+NO_FLOW_HALF_KM = 25.0         # predprob30 averaged over this far up and down the river (along_mean)
 
 NORTH, L1W, L1H = 85.0, 43200, 17400
 G = 2                          # L1 pixels per cell
@@ -71,12 +75,40 @@ def reach_share(hot, co, off):
     return np.where(tot > 0, inh / np.where(tot > 0, tot, 1), first.astype(np.float64))
 
 
-def desert_rivers(share, q, qmin, length_km, down, order):
+def along_mean(v, length_km, down, q, half_km=NO_FLOW_HALF_KM, only=None):
+    """Length-weighted mean of v over each reach and half_km up and down its river (upstream along
+    the biggest inflow), for the reaches in `only` (others keep v): one odd reach does not cut a
+    big river (three Niger reaches near Timbuktu read 0.51-0.52 among 0.2s)."""
+    R = len(v)
+    vl, ll, dl, ql = v.tolist(), length_km.tolist(), down.tolist(), q.tolist()
+    main = [-1] * R
+    for k in range(R):
+        d = dl[k]
+        if d >= 0 and (main[d] < 0 or ql[k] > ql[main[d]]):
+            main[d] = k
+    out = np.asarray(v, np.float64).copy()
+    for k0 in (np.nonzero(only)[0].tolist() if only is not None else range(R)):
+        s, w = vl[k0] * ll[k0], ll[k0]
+        for step in (dl, main):
+            k, dist = step[k0], 0.0
+            while k >= 0 and dist < half_km:
+                s += vl[k] * ll[k]
+                w += ll[k]
+                dist += ll[k]
+                k = step[k]
+        out[k0] = s / w if w > 0 else vl[k0]
+    return out
+
+
+def desert_rivers(share, q, qmin, length_km, down, order, no_flow=None):
     """Per reach (the Q >= 1 network, down = index of the next reach or -1, order = upstream first):
     in_hot, the mean and driest-month flow carried in from outside the hot desert (q and qmin outside
-    it), and ok = a river (always, outside hot desert)."""
+    it), and ok = a river (always, outside hot desert). no_flow (T-083): reaches GIRES predicts stop
+    flowing 30 days a year or more (predprob30 >= NO_FLOW_P); in hot desert they are dry and carry
+    nothing on."""
     R = len(q)
     hot = (share >= HOT_SHARE).tolist()
+    dry = (np.asarray(no_flow, bool) & (share >= HOT_SHARE)).tolist() if no_flow is not None else [False] * R
     half_a = LOSS_M_DAY / 86400.0 * W_COEF * 1000.0 / 2      # d sqrt(Q) per km, from dQ = -LOSS x W per m
     ql, qml, ll, dl = q.tolist(), qmin.tolist(), length_km.tolist(), down.tolist()
     uq, ue, um = [0.0] * R, [0.0] * R, [0.0] * R
@@ -89,6 +121,8 @@ def desert_rivers(share, q, qmin, length_km, down, order):
             drop = half_a * ll[k]
             a = max(0.0, (ue[k] * f) ** 0.5 - drop) ** 2
             b = min(a, max(0.0, (um[k] * f) ** 0.5 - drop) ** 2)
+            if dry[k]:
+                a = b = 0.0
         qe[k], qme[k] = a, b
         d = dl[k]
         if d >= 0:

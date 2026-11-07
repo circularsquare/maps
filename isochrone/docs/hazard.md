@@ -60,7 +60,8 @@ without water.
 - in a hot desert, only a desert river by the canoe's rule (`docs/canoe.md` 2, `tools/hotdesert.py`):
   water carried in from outside the desert, at least 1 m³/s mean and 0.1 m³/s in its driest month
   (RiverATLAS `dis_m3_pmn`) after the losses along the way, such as the Nile, Niger or Euphrates
-  (T-079; a reach's own discharge there is not used, as WaterGAP gives wadis hundreds of m³/s);
+  (T-079; a reach's own discharge there is not used, as WaterGAP gives wadis hundreds of m³/s),
+  and not one GIRES says stops flowing a month a year (T-083: Cooper Creek, the Diamantina);
 - a HydroLAKES lake outside hot deserts (salt lakes are not told apart elsewhere: a known
   error, in a few endorheic basins);
 - **today only**: an OSM well, spring or settlement (`man_made=water_well`, `natural=spring`,
@@ -90,7 +91,7 @@ extra: the build makes both months anyway.
 | Input | Source | Licence |
 |---|---|---|
 | Night low and day high, January and July; annual rain | CHELSA V2.1 1981-2010 monthly `tasmin`, `tasmax` and `bio12`, 30" (data/raw/chelsa/, 990 MB) | CC0 1.0; citation asked |
-| Rivers | RiverATLAS v1.0 reach lines with `dis_m3_pyr`, and `dis_m3_pmn` for Q >= 1 (data/raw/rivers_work/all_lines.npz, reaches.npz and desert.npz, from the canoe build) | CC BY 4.0 |
+| Rivers | RiverATLAS v1.0 reach lines with `dis_m3_pyr`, and `dis_m3_pmn` for Q >= 1 (data/raw/rivers_work/all_lines.npz, reaches.npz and desert.npz, from the canoe build); GIRES v1.0 `predprob30` in hot desert (rivers_work/gires.npz) | CC BY 4.0 |
 | Lakes | HydroLAKES (rivers_work/lakes_l1.npy) | CC BY 4.0 |
 | Wells, springs, settlements | OSM from QLever's planet endpoint (data/raw/osm_water/, 4.7 M points) | ODbL |
 | Ice | LC100 2019 class 70 (data/surface/lc_class.tif); where LC100 has no class, RGI 6.0 regions 03, 05, 07, 09 (OGGM's open mirror) and Natural Earth 10 m glaciated areas (data/raw/ice/) | as LC100; NE public domain; RGI CC BY 4.0 |
@@ -171,7 +172,7 @@ Plain `python` from the maps root, one core:
     python isochrone/tools/hazard/fetch.py           # CHELSA, OSM water points, ice outlines -> data/raw/  (~6 min)
     python isochrone/tools/hazard/build.py ice       # ice outlines north of 60 N to the L1 grid             (~15 s)
     python isochrone/tools/hazard/build.py hot       # hot desert mask, 2 km grid (tools/hotdesert.py)        (~1 min)
-    python isochrone/tools/canoe/rivers.py desert    # desert rivers, shared with the canoe                   (~15 s)
+    python isochrone/tools/canoe/rivers.py desert    # desert rivers, shared with the canoe (after `gires`)   (~15 s)
     python isochrone/tools/hazard/build.py dist      # distance to drinkable water, 2 km grid                 (~1.5 min, 3 GB)
     python isochrone/tools/hazard/build.py tiles     # rates per L1 pixel -> data/hazard/                     (~5 min, 5.1 GB)
     python isochrone/tools/hazard/build.py plot      # maps/artifacts/isochrone/t066_world.png

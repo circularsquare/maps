@@ -4,6 +4,7 @@
 //   node isochrone/checks/ktrips.mjs time [K]              -> canoe solve times, hazard off and on
 //   ONLY=cyprus ...                                        -> Constanta to Cyprus and Izmir, by edge kind
 //   ONLY=lakes ...                                         -> lake crossings (T-043), by edge kind
+//   ONLY=rivers ...                                        -> river trips (T-031, T-083), by edge kind
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -125,7 +126,26 @@ const LAKE_TRIPS = [
     ['Karakul east-west (Karakul)', [39.01, 73.55], [39.05, 73.33]],
     ['Divnogorsk-Krasnoturansk (Krasnoyarsk Reservoir)', [55.96, 92.38], [54.32, 91.56]],
 ];
-const TRIPS = process.env.ONLY === 'lakes' ? LAKE_TRIPS : process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.63], [35.34, 33.32]], ['Constanta-Izmir', [44.17, 28.63], [38.42, 27.14]]] : [
+// ONLY=rivers: river trips for the gradient and desert rivers (notes/T-031.md)
+const RIVER_TRIPS = [
+    ['Belem-Manaus', [-1.45, -48.50], [-3.13, -60.02]],
+    ['Manaus-Belem', [-3.13, -60.02], [-1.45, -48.50]],
+    ['Kisangani-Kinshasa', [0.52, 25.19], [-4.32, 15.31]],
+    ['Kinshasa-Banana', [-4.32, 15.31], [-6.01, 12.40]],
+    ['Matadi-Kinshasa', [-5.82, 13.45], [-4.32, 15.31]],
+    ['St Louis-New Orleans', [38.63, -90.19], [29.95, -90.07]],
+    ['New Orleans-St Louis', [29.95, -90.07], [38.63, -90.19]],
+    ['Vienna-Sulina', [48.21, 16.37], [45.16, 29.73]],
+    ['Lees Ferry-Pearce Ferry', [36.87, -111.60], [36.11, -113.99]],
+    ['Skardu-Tarbela', [35.30, 75.63], [34.09, 72.70]],
+    ['Elverum-Fredrikstad', [60.88, 11.56], [59.21, 10.94]],
+    ['Longreach-Windorah', [-23.44, 144.25], [-25.42, 142.65]],
+    ['Windorah-Lake Eyre', [-25.42, 142.65], [-28.37, 137.37]],
+    ['Bourke-Wentworth', [-30.09, 145.94], [-34.11, 141.92]],
+    ['Mopti-Gao', [14.49, -4.20], [16.27, -0.04]],
+    ['Khartoum-Aswan', [15.60, 32.53], [24.09, 32.90]],
+];
+const TRIPS = process.env.ONLY === 'lakes' ? LAKE_TRIPS : process.env.ONLY === 'rivers' ? RIVER_TRIPS : process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.63], [35.34, 33.32]], ['Constanta-Izmir', [44.17, 28.63], [38.42, 27.14]]] : [
     ['Brest-A Coruna', [48.39, -4.49], [43.37, -8.40]],
     ['Dover-Calais', [51.12, 1.31], [50.95, 1.85]],
     ['Tarifa-Tangier', [36.01, -5.60], [35.78, -5.81]],

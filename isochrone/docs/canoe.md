@@ -71,10 +71,16 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   month). Its Q is the flow carried in from upstream reaches outside the desert, mean and driest
   month, scaled down wherever WaterGAP's mean flow falls along the way and losing 3 cm a day over
   the wetted width W (evaporation and seepage) on every km. It is a river while that is at least
-  1 m³/s mean and 0.1 m³/s in the driest month, and its speed v comes from that Q. So the Nile,
-  Niger, Euphrates, Tigris, Indus, Amu and Syr Darya, Colorado, Orange and Helmand run; wadis fed
-  only by desert rain, and small mountain streams that sink within a few hundred km, are left out.
-  Outside hot desert every reach of Q >= 1 runs, seasonal ones too: the paddler picks the season.
+  1 m³/s mean and 0.1 m³/s in the driest month, and its speed v comes from that Q. WaterGAP also
+  keeps rivers fed from wetter country running all year where they stop for months (it says the
+  Thomson never runs dry), so a hot desert reach is dry, and carries nothing on, where GIRES
+  (Messager et al. 2021) gives a probability of 0.6 or more that it stops flowing 30 days a year
+  (`predprob30`, averaged over the reach and 25 km up and down its river, so one odd reach does
+  not cut a big river; T-083, `tools/hotdesert.py`). So the Nile, Niger, Senegal, Euphrates,
+  Tigris, Indus, Amu and Syr Darya, Colorado, Orange and Helmand run; wadis fed only by desert
+  rain, small mountain streams that sink within a few hundred km, and the Channel Country's
+  Cooper Creek, Diamantina and Georgina, the Finke and the Draa are left out. Outside hot desert
+  every reach of Q >= 1 runs, seasonal ones too: the paddler picks the season.
 - **Upstream** the canoe keeps to the bank, eddies and inside bends, where the current is slower
   than the section mean v: it meets 0.4 v. Where that leaves under 2.5 km/h (v over 6.25 km/h,
   Q over about 68,000 m³/s: only the Amazon from about Manaus down) it lines or poles along the
@@ -97,12 +103,13 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   are not joined, and neither are two lakes in one cell that an isthmus parts at L1. Knight
   moves at sea use the cells' own nodes only.
 - **Portage has no edges of its own.** Unrunnable river steps are dropped: a fall, a dam, a weir,
-  a reach steeper than 5 m/km (2 m/km where Q >= 1000), or OSM-mapped rapids where Q >= 1000. The search gets off (0.25 h), carries
+  a reach steeper than its closing gradient (section 4), or OSM-mapped rapids where Q >= 1000. The search gets off (0.25 h), carries
   along the bank at walking x 2 and gets back on (0.25 h), about the research's "1 h plus the
   carry" for a fall. Watersheds between rivers are crossed the same way. Upstream on a big
   meandering river, carrying on a straighter line over open land or roads (2.4-2.5 km/h) can beat
   paddling the bends at 3 km/h; the search takes the quicker.
-- **Rapids** of 1-5 m/km are run at the same speeds, with their own hazard class.
+- **Rapids** from 1 m/km up to the closing gradient are run at the same speeds, with their own
+  hazard class.
 
 ## 3. Time and danger
 
@@ -157,8 +164,8 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
 | `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.5 MB, 1122 tiles |
 | `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 13.7 MB, 1140 tiles |
 | `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea and lake temperature (int8, °C) | 0.7 MB |
-| `data/canoe/rivers.bin.gz` | L10, whole world | 1.24 M river steps, with slots and access | 6.7 MB |
-| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 20.8 MB, 906 tiles; 38.1 MB, 913 tiles |
+| `data/canoe/rivers.bin.gz` | L10, whole world | 1.24 M river steps, with slots and access | 6.6 MB |
+| `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 20.7 MB, 904 tiles; 37.9 MB, 911 tiles |
 | `data/canoe/pieces.bin.gz` | L10, whole world | 222k water units, 65k water links (T-088) | 0.7 MB |
 | `data/canoe/pieces/l3/` | L3, 5° tiles | 723k water units, 52k water links | 2.0 MB, 1058 tiles |
 
@@ -256,21 +263,25 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
   stored with the tile of its first cell. A unit's kind is sea when it has at least as many sea as
   lake pixels, else its largest lake code; its shore the least over its pixels. Without the key
   the worker builds T-082's graph.
-- **Gradient classes**: flat under 1 m/km, rapids 1-5, unrunnable above 5 (above 2 where Q >=
-  1000 m³/s); a fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller
-  rivers' OSM rapids are class rapids). Gradient is RiverATLAS `sgr_dk_rav`; north of 60N, where
-  HydroSHEDS comes from HYDRO1k and that field is noise, it is the drop over at least 10 km
-  downstream of the reach start in GMTED (`data/surface/elev.tif`), from the lowest of the 3 x 3
-  pixels round each reach end, made never to rise downstream.
+- **Gradient classes**: flat under 1 m/km, rapids from 1 m/km, unrunnable above the closing
+  gradient: 5 m/km below Q = 1000 m³/s; from 1000 m³/s, 2.5 x sqrt(1000 / Q) m/km, at most 2 and
+  at least 0.3 (a roughly constant stream power, about 100 W/m² over the width W: 2 m/km up to
+  Q = 1560, 1 at 6,250, 0.4 at 39,000, the Congo below Kinshasa, and 0.3 from 69,000, the Amazon).
+  A fall or an OSM rapids on a river of Q >= 1000 also closes the step (smaller rivers' OSM rapids
+  are class rapids). The gradient of a reach is its drop over at least 10 km downstream of its
+  start in GMTED (`data/surface/elev.tif`), from the lowest of the 3 x 3 pixels round each reach
+  end, made never to rise downstream (`rivers.py dem_gradient`), everywhere (T-031): RiverATLAS
+  `sgr_dk_rav` reads canyons as cliffs and short lowland reaches' 1 m steps as rapids.
 - **Snapping** OSM points and reservoir pour points: to the nearest HydroRIVERS reach of any
   size, kept only if that reach has Q >= 1 and lies within half its width (W = 7.2 Q^0.5 m) plus
   0.5 km (falls, rapids), 0.3 km (dams, weirs; many are on ponds beside rivers) or 1 km (pour
   points); the piece of the reach nearest the point takes it.
-- **Sources** (stage 1): RiverATLAS v1.0 (HydroRIVERS reaches with discharge, reach gradient
-  `sgr_dk_rav`, and driest-month discharge `dis_m3_pmn` for hot desert rivers; CC BY 4.0), CHELSA
+- **Sources** (stage 1): RiverATLAS v1.0 (HydroRIVERS reaches with discharge, and driest-month
+  discharge `dis_m3_pmn` for hot desert rivers; CC BY 4.0), GIRES v1.0 (Messager et al. 2021, no
+  flow 30 days a year, hot desert reaches only; CC BY 4.0), CHELSA
   V2.1 for the hot desert mask (as the land hazard), HydroLAKES (local;
   `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir|rapids`
-  and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 north of 60N, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
+  and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 for the reach gradient, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
   climatology, ARCO-ERA5 sampled to a local-summer mean of wave height, sea temperature and lake
   mix-layer temperature and a least-ice-month mean of ice,
   NSIDC median ice edges as a check. SWORD's obstruction flags are a later check (1.6 GB).
@@ -356,6 +367,12 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
 
 - Distributaries and braids are missing (one channel per delta); tides are ignored; river flow is
   the annual mean (no low season).
+- WaterGAP has no glacier melt, so glacier-fed rivers in hot desert carry too little in from the
+  mountains and sink: the lower Tarim, the Hotan and the Keriya are dry. Today the lower Tarim is
+  dry below its reservoirs, but in 10,000 BC these run (T-012).
+- The gradient is a 1 km surface model's (GMTED) over 10 km: a cataract shorter than that is
+  averaged with the water round it, and under forest the canopy adds a few metres where a stream
+  leaves it (about half the length of small Amazon streams reads 1-2 m/km, rapids).
 - A coarse canoe node on a land cell stands at the cell's centre for a transfer to or from a
   neighbouring cell, wherever its water lies in the cell, so L10 still finds chains of lakes and
   rivers a little cheaper than L1 does: ~10-15% fast round Jyvaskyla, New York and Utrecht

@@ -3,6 +3,7 @@
     python tools/canoe/rivers.py reaches   # RiverATLAS gdb -> work/reaches.npz (Q >= 1) + work/all_lines.npz   ~3.5 min
     python tools/canoe/rivers.py lakes     # HydroLAKES -> work/lakes_l1.npy (0, 1 lake, 2 reservoir) + reservoir pour points   ~4 min
     python tools/canoe/rivers.py snap      # OSM falls/dams/weirs/rapids + reservoir pour points -> work/barriers.npz   ~1 min
+    python tools/canoe/rivers.py gires     # GIRES no-flow probabilities per reach -> work/gires.npz   ~2 min
     python tools/canoe/rivers.py desert    # hot desert rivers (tools/hotdesert.py) -> work/desert.npz   ~1 min
     python tools/canoe/rivers.py build     # -> data/canoe/rivers.bin.gz, data/canoe/rivers/l3, l1, index.json   ~7 min, ~8 GB
                                            #    (L1 from the reaches, L3 and L10 as L1 contracted: contract_level),
@@ -13,7 +14,8 @@
 
 Work files go in data/raw/rivers_work/. Inputs: data/raw/riveratlas/RiverATLAS_v10.gdb (or the zip,
 https://ndownloader.figshare.com/files/20087321; only `reaches` reads it), maps/data/HydroLAKES_polys_v10_shp,
-data/raw/osm_barriers/*.tsv (rivers_osm.py), data/surface/elev.tif (GMTED), the speed grid and tiles
+data/raw/osm_barriers/*.tsv (rivers_osm.py), data/raw/gires/GIRES_v10_gdb.zip (figshare file 28280484;
+only `gires` reads it), data/surface/elev.tif (GMTED), the speed grid and tiles
 (water mask per level), the hot desert mask (`python tools/hazard/build.py hot`; `desert` reads it, and
 the hazard's `dist` stage reads work/desert.npz, so both layers share one rule).
 """
@@ -49,9 +51,9 @@ SNAP_DAM_KM = 0.3           # dams and weirs: tighter, as many OSM dams are on p
 # step classes (docs/canoe.md 4), as js/canoedata.js reads them
 FLAT, RAPIDS, UNRUNNABLE, FALL, DAM, WEIR, RESERVOIR = 0, 1, 2, 3, 4, 5, 6
 H_DAM, H_WEIR, O_RAPIDS = 1, 2, 4     # OSM kinds before snapping
-NORTH_LAT = 60.0            # HydroSHEDS v1 north of here is HYDRO1k: gradient from GMTED (north_gradient)
-NORTH_WIN_KM = 10.0
-Q_BIG = 1000.0             # m3/s: on rivers this big, 2 m/km is too steep and OSM rapids are a portage
+WIN_KM = 10.0               # reach gradient: GMTED drop over at least this far downstream (dem_gradient)
+Q_BIG = 1000.0             # m3/s: from here the closing gradient falls with Q, and OSM rapids are a portage
+BIG_MIN = 0.3              # m/km: the closing gradient on the biggest rivers (Amazon, Congo) never goes under
 # the 8 neighbour moves in js/search.js order: (dc, dr), dr > 0 is south
 MOVES = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
 
@@ -205,6 +207,31 @@ def stage_snap():
 
 # ---------------------------------------------------------------- desert
 
+GIRES_ZIP = os.path.join(RAW, "gires", "GIRES_v10_gdb.zip")
+
+
+def stage_gires():
+    """GIRES (Messager et al. 2021): each reach's predicted probability of no flow for at least one
+    day (predprob1) and thirty days (predprob30) a year, by HYRIV_ID -> work/gires.npz (T-083)."""
+    import pyogrio
+    path = "/vsizip/" + GIRES_ZIP.replace("\\", "/") + "/GIRES_v10.gdb"
+    meta, _, _, fields = pyogrio.raw.read(path, layer="GIRES_v10_rivers", read_geometry=False,
+                                          columns=["HYRIV_ID", "predprob1", "predprob30"])
+    f = dict(zip(meta["fields"], fields))
+    gid = np.asarray(f["HYRIV_ID"], np.int64)
+    r = np.load(os.path.join(WORK, "reaches.npz"))
+    rid = np.asarray(r["id"], np.int64)
+    o = np.argsort(gid)
+    j = np.clip(np.searchsorted(gid[o], rid), 0, len(gid) - 1)
+    hit = gid[o][j] == rid
+    p1 = np.full(len(rid), np.nan, np.float32)
+    p30 = np.full(len(rid), np.nan, np.float32)
+    p1[hit] = np.asarray(f["predprob1"], np.float32)[o][j[hit]]
+    p30[hit] = np.asarray(f["predprob30"], np.float32)[o][j[hit]]
+    np.savez(os.path.join(WORK, "gires.npz"), p1=p1, p30=p30)
+    log("GIRES reaches %d; of our %d, %d found" % (len(gid), len(rid), hit.sum()))
+
+
 def reach_down(r):
     idpos = {int(i): k for k, i in enumerate(r["id"])}
     return np.array([idpos.get(int(d), -1) for d in r["next_down"]], np.int64)
@@ -216,9 +243,15 @@ def stage_desert():
     share = hotdesert.reach_share(hotdesert.load(), r["co"], r["off"])
     down = reach_down(r)
     order = np.argsort(r["dist_up"], kind="stable")
-    in_hot, qe, qme, ok = hotdesert.desert_rivers(share, r["q"], r["qmin"], r["length_km"], down, order)
+    gp = os.path.join(WORK, "gires.npz")
+    if not os.path.exists(gp):
+        raise SystemExit("no work/gires.npz: run the gires stage")
+    p30 = np.nan_to_num(np.load(gp)["p30"], nan=0.0)
+    p30 = hotdesert.along_mean(p30, r["length_km"], down, r["q"], only=share >= hotdesert.HOT_SHARE)
+    no_flow = p30 >= hotdesert.NO_FLOW_P
+    in_hot, qe, qme, ok = hotdesert.desert_rivers(share, r["q"], r["qmin"], r["length_km"], down, order, no_flow)
     tmp = os.path.join(WORK, "desert.tmp.npz")
-    np.savez(tmp, share=share.astype(np.float32), in_hot=in_hot, q_in=qe, qmin_in=qme, ok=ok)
+    np.savez(tmp, share=share.astype(np.float32), in_hot=in_hot, q_in=qe, qmin_in=qme, ok=ok, no_flow=in_hot & no_flow)
     os.replace(tmp, os.path.join(WORK, "desert.npz"))
     L = r["length_km"]
     log("reaches in hot desert %d, %.0f km; rivers there %.0f km; dropped %d, %.0f km" %
@@ -227,26 +260,34 @@ def stage_desert():
 
 # ---------------------------------------------------------------- build
 
+def closing_gradient(q):
+    """m/km above which a reach is unrunnable (T-031): 5 on small rivers; from Q_BIG on, a roughly
+    constant stream power (~100 W/m2 over the wetted width W = 7.2 Q^0.5): 2.5 x sqrt(1000 / Q),
+    between BIG_MIN and 2."""
+    big = np.clip(2.5 * np.sqrt(Q_BIG / np.maximum(q, Q_BIG)), BIG_MIN, 2.0)
+    return np.where(q >= Q_BIG, big, 5.0)
+
+
 def natural_class(q, g):
     """g in m/km."""
     g = np.where(np.isfinite(g) & (g > 0), g, 0)
-    lim = np.where(q >= Q_BIG, 2.0, 5.0)
-    return np.where(g > lim, UNRUNNABLE, np.where(g >= 1.0, RAPIDS, FLAT)).astype(np.uint8)
+    return np.where(g > closing_gradient(q), UNRUNNABLE, np.where(g >= 1.0, RAPIDS, FLAT)).astype(np.uint8)
 
 
-def north_gradient(r, down, order):
-    """Reach gradient (m/km) north of 60N, where RiverATLAS's sgr_dk_rav comes from HYDRO1k and is
-    noise (its drops summed down the lower Yukon come to ~13 km). From GMTED instead: the lowest
-    elevation in the 3 x 3 pixels round each reach end, made never to rise downstream, and the drop
-    over at least NORTH_WIN_KM downstream of the reach start."""
+def dem_gradient(r, down, order):
+    """Reach gradient (m/km) from GMTED, world-wide (T-031; north of 60N since T-020). RiverATLAS's
+    sgr_dk_rav reads canyons as cliffs (Lees Ferry to Lake Mead sums to 14.7 km, real ~0.6) and short
+    lowland reaches' 1 m DEM steps as rapids; north of 60N, from HYDRO1k, it is noise. Here: the
+    lowest elevation in the 3 x 3 pixels round each reach end, made never to rise downstream, and the
+    drop over at least WIN_KM downstream of the reach start."""
     import rasterio
     from scipy.ndimage import minimum_filter
     co, off, L = r["co"], r["off"], r["length_km"]
-    rows = int((NORTH - NORTH_LAT) * 120) + 2
     with rasterio.open(os.path.join(HERE, "data", "surface", "elev.tif")) as ds:
-        z = ds.read(1, window=((0, rows), (0, L1W))).astype(np.float32)
-    z[z == -32768] = np.nan
-    z = minimum_filter(np.nan_to_num(z, nan=1e4), size=3, mode="wrap")
+        z = ds.read(1).astype(np.float32)
+    rows = z.shape[0]
+    z[z == -32768] = 1e4
+    z = minimum_filter(z, size=3, mode="wrap")
 
     def sample(p):
         c = np.floor((p[:, 0] - WEST) * 120).astype(np.int64) % L1W
@@ -268,20 +309,20 @@ def north_gradient(r, down, order):
         d = dl[k]
         if d >= 0 and b < up_min[d]:
             up_min[d] = b
-    north = np.nonzero(co[off[:-1], 1] > NORTH_LAT)[0]
+    del z
     g = np.full(R, np.nan)
     Ll = L.tolist()
-    for k0 in north.tolist():
+    for k0 in range(R):
         k, dist = k0, 0.0
         while True:
             dist += Ll[k]
             zend = ze[k]
-            if dist >= NORTH_WIN_KM or dl[k] < 0:
+            if dist >= WIN_KM or dl[k] < 0:
                 break
             k = dl[k]
         if np.isfinite(zs[k0]) and np.isfinite(zend) and dist > 0:
             g[k0] = (zs[k0] - zend) / dist
-    log("north of %gN: %d reaches get a GMTED gradient" % (NORTH_LAT, np.isfinite(g).sum()))
+    log("%d of %d reaches get a GMTED gradient" % (np.isfinite(g).sum(), R))
     return g
 
 
@@ -825,9 +866,7 @@ def stage_build(levels=(10, 3, 1)):
     sub_v = (0.51 * q ** 0.11)[sub_reach].astype(np.float32)
     down = reach_down(r)
     order = np.argsort(r["dist_up"], kind="stable")
-    grad = r["sgr"] / 10.0                                   # dm/km -> m/km
-    gn = north_gradient(r, down, order)
-    grad = np.where(np.isfinite(gn), gn, grad)
+    grad = dem_gradient(r, down, order)
     np.save(os.path.join(WORK, "gradient.npy"), grad)
     sub_nat = natural_class(q, grad)[sub_reach]
     sub_hum = np.zeros(len(mx), np.uint8)
@@ -1015,6 +1054,8 @@ def main():
         stage_lakes()
     elif stage == "snap":
         stage_snap()
+    elif stage == "gires":
+        stage_gires()
     elif stage == "desert":
         stage_desert()
     elif stage in ("build", "contract"):
