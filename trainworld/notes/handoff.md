@@ -94,8 +94,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - T-2707 and T-2720 COMMITTED (after master f9142979; smoke 26/26 on 6192, 12,521,264 rail trips). **boardmem**
   a3c779d9947d39c3e resumed on T-2722 (masks generated on demand), main tree sim/, 3 cores; may file T-2724.
 - T-2722 COMMITTED (WASM 412 -> 257 MB on all Japan; smoke 26/26 on 6193, my Vite task boz8ay9gq). boardmem done.
-- **condense** ([971c94]'s, Opus, main tree diagram/, Vite 6183, 3 cores): T-2625 continent-scale diagram condensation
-  (visual: before/after in artifacts/trainworld/t2625/; show Anita). May file T-2724.
+- T-2625 COMMITTED (diagram floor falls from the networks; NA networks 5.6% -> 13.9% of the sheet; smoke 26/26 on 6194,
+  my Vite task bqituvq1a). Picture for Anita: artifacts/trainworld/review/diagram-na-condense.png. Follow-up T-2724 filed
+  (waits on her look). Next id **T-2725**.
 - Join at 04:51: alive, log last written 04:28.
 - (earlier:) boardmem T-2707;
   citynames2 finished T-2720 (archived), UNCOMMITTED: ui/Cities, GoalTicks, MoneyHistory, SavesPanel, StatusTag,
