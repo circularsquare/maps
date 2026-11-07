@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **8 moves at sea past 20 km from shore stay** (T-035, notes/T-035.md): after the bucket queue,
+  16 everywhere still costs 10-25% a canoe click and takes Constanta and Cluj to ~1 s in Chrome.
+  The sea edges are only a sixth of a click's work, so cheaper sea edges can't pay for it. The
+  price of 8: octagonal open-sea bands, and Marseille to Barcelona 9.7 days instead of 8.2.
 - **`cfg.access` 0.5 -> 1.0** (T-102, notes/T-102.md): once coarse river steps count only the
   main river (T-100), river starts sit at 1.0-1.1 at every access value, so the cost that kept 0.5
   (Coari and Kisangani too slow) is gone. At 1.0 canoe L1/L10 1.07 -> 1.05, mean abs ln 0.110 ->

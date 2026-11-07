@@ -10,6 +10,9 @@ DECISIONS.md and leave here.
 - 2026-11-07, T-091: are the straighter 100 m corridor lines (Kathmandu 27% of km in straight
   runs, was 20%) acceptable, or loosen NEAR/SPREAD?
 - 2026-11-07, T-011: do mountain walks now look too fast?
+- 2026-11-07, T-035: open sea with 8 moves (today; eight-sided bands, corridors in straight 45
+  degree runs) or 16 (round bands, curving corridors, canoe clicks 10-25% slower, ~1 s in Chrome
+  on a busy machine)? Shots: artifacts/isochrone/t035_blacksea_live.png and _sea16.png.
 - 2026-11-07, T-100: the canoe's river heights and lengths in tropical forest now come from
   Hydrography90m, CC BY-NC 4.0 (non-commercial). Fine for publishing? If not, register for MERIT
   Hydro (ODbL option; Google Form, password by email:

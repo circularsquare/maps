@@ -1,5 +1,7 @@
 # Archive
 
+- T-035 [P3] Canoe search speed. Closed 2026-11-07, no code change: sea edges are a sixth of a click's work and their tables cost nothing measurable; no exact trim helped. 16 sea moves still cost 10-25% (Constanta ~1 s in Chrome), so 8 stay. notes/T-035.md.
+
 - T-102 [P2] Canoe level agreement after T-100. Done 2026-11-07: canoe L1/L10 1.04 -> 1.07 (river starts faster at L10, Coari 0.86 -> 1.08), L1/L3 1.01; `cfg.access` 0.5 kept, 0.75-1.0 now fits slightly better. Harness in notes/T-102/. notes/T-102.md.
 
 - T-101 [P3] Canopy read as rapids. Done 2026-11-07: in 132 tropical forest tiles the river drop is MERIT Hydro's (via Hydrography90m, CC BY-NC); Amazon lowland Q 1-10 rapids 61% -> 33%. notes/T-100.md.

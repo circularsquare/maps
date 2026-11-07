@@ -376,13 +376,16 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
 
 ## 7. Speed and memory
 
-Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
+Measurements: notes/T-022.md, notes/T-035.md (and the first estimates, notes/T-005.md).
 
 - The 128-day limit bounds the work: at 5 km/h a canoe covers ~5,000 km, ~1.1 M nodes from a
   coast at L10, not the 5.3 M sea cells of the world. No coarser open-sea grid is used.
-- **8 moves past 20 km from shore** (`cfg.sea8`), 16 nearer: with 16 everywhere a canoe click at
-  L10 took 1.0-1.1 s, over the 1 s limit; with 8 it takes **~0.75-0.85 s** (Cluj, Lisbon,
-  Jakarta), against ~0.2 s walking. Open-sea bands run up to 8% long on diagonals. Water hazard
+- **8 moves past 20 km from shore** (`cfg.sea8`), 16 nearer: a canoe click at L10 takes
+  **~0.5-0.85 s** in Chrome (Jakarta, Lisbon, Cluj, Constanta the slowest), against ~0.2 s
+  walking; 16 everywhere costs 10-25% more and takes Constanta and Cluj to ~1 s, the limit.
+  About half the work is carrying over land and getting in and out, a sixth paddling at sea.
+  Open-sea bands run up to 8% long on diagonals, and an open-water crossing on a diagonal can
+  lose to the coast (Marseille to Barcelona 9.7 days, 8.2 with 16 moves). Water hazard
   makes no click slower: the survival stop rule leaves open ocean unexpanded, so an ocean-coast
   start does about half the work (0.5-0.7 M nodes against 1.1 M) and an inland or enclosed-sea
   start about the same (notes/T-006.md).

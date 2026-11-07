@@ -30,7 +30,7 @@ export const cfg = {
     access: 1.0,                 // share of a coarse river piece's access carried getting in or out within its cell (T-082, T-102)
     iceMax: 15,                  // % summer ice cover above which a sea cell has no canoe node
     hzStop: Math.log(100),       // survival under 1% stops a path
-    sea8: true,                  // 8 moves only past 20 km from shore: 16 took ~1.0-1.1 s a click (T-022)
+    sea8: true,                  // 8 moves only past 20 km from shore: 16 takes some clicks to ~1 s (T-022, T-035)
 };
 
 export function setConfig(msg) {
