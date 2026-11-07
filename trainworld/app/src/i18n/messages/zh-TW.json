@@ -1995,7 +1995,7 @@
   "tripInspector.groupNote": "照地圖氣泡的算法，連同這附近的住家和地點一起算：鐵路{train}，{apart, select, true {無路可達{none}} other {開車{drive}，步行{walk}}}",
   "tripInspector.liftedNote": "{slower, select, true {從這兩個確切地點步行比較快。附近出發的旅次會走這條路徑。} other {車站離這兩個確切地點太遠。附近出發的旅次會走這條路徑。}}",
   "tripInspector.liftedTip": "{slower, select, true {從這兩點步行要{walk}，比任何列車都快。這裡計入的鐵路旅次，是以兩點周圍的地區算出來的。} other {從起點到車站算{start}，從車站到終點算{end}。兩者合計不超過{max}時，才有鐵路可選。這裡計入的鐵路旅次，是以兩點周圍的地區算出來的。}}",
-  "tripInspector.noRail": "{why, select, noStationStart {起點步行或開車可到的範圍內沒有車站。} noStationEnd {終點步行可到的範圍內沒有車站。} noRoute {這個時段，兩端附近的車站之間沒有列車行駛。} other {沒有鐵路。}}",
+  "tripInspector.noRail": "{why, select, noStationStart {找不到鐵路路線。} noStationEnd {找不到鐵路路線。} noRoute {這個時段，兩端附近的車站之間沒有列車行駛。} other {沒有鐵路。}}",
   "tripInspector.noRailTip": "{how, select, none {起點步行可到的範圍內沒有車站；從車站步行到終點算{end}。兩者合計不超過{max}時，才有鐵路可選。} foot {步行到車站算{start}，從車站步行到終點算{end}。兩者合計不超過{max}時，才有鐵路可選。} other {步行或開車到車站算{start}，從車站步行到終點算{end}。兩者合計不超過{max}時，才有鐵路可選。}}",
   "tripInspector.ofPeople": "在{period}進行這趟旅次的人",
   "tripInspector.ofTrips": "兩地之間{day}的{trips}",

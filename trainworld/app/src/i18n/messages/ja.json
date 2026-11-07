@@ -1995,7 +1995,7 @@
   "tripInspector.groupNote": "地図の円と同じく、このあたりの住宅や場所を含めて数えると：鉄道{train}、{apart, select, true {経路なし{none}} other {車{drive}、徒歩{walk}}}",
   "tripInspector.liftedNote": "{slower, select, true {この2地点からは歩いたほうが早いです。近くからの移動はこの経路を使います。} other {この2地点からは駅が遠すぎます。近くからの移動はこの経路を使います。}}",
   "tripInspector.liftedTip": "{slower, select, true {この2地点の間は歩いて{walk}で、どの列車よりも短くなります。ここで数えた鉄道での移動は、2地点の周りの地区について計算したものです。} other {駅までの移動は、出発側で{start}、到着側で{end}として数えます。この2つの合計が{max}以下のとき、列車が選択肢に入ります。ここで数えた鉄道での移動は、2地点の周りの地区について計算したものです。}}",
-  "tripInspector.noRail": "{why, select, noStationStart {出発地から徒歩や車で行ける範囲に駅がありません。} noStationEnd {目的地から歩ける範囲に駅がありません。} noRoute {この時間帯は、両端近くの駅の間を走る列車がありません。} other {列車はありません。}}",
+  "tripInspector.noRail": "{why, select, noStationStart {鉄道の経路が見つかりません。} noStationEnd {鉄道の経路が見つかりません。} noRoute {この時間帯は、両端近くの駅の間を走る列車がありません。} other {列車はありません。}}",
   "tripInspector.noRailTip": "{how, select, none {出発地から歩ける範囲に駅がなく、駅から目的地までは徒歩で{end}として数えます。この2つの合計が{max}以下のとき、列車が選択肢に入ります。} foot {駅までは徒歩で{start}、駅からは徒歩で{end}として数えます。この2つの合計が{max}以下のとき、列車が選択肢に入ります。} other {駅までは徒歩か車で{start}、駅からは徒歩で{end}として数えます。この2つの合計が{max}以下のとき、列車が選択肢に入ります。}}",
   "tripInspector.ofPeople": "{period}にこの移動をする人",
   "tripInspector.ofTrips": "2地点間の{day}の{trips}",

@@ -1995,7 +1995,7 @@
   "tripInspector.groupNote": "按这附近的住处和地点计算，与地图上的需求气泡一致：铁路{train}，{apart, select, true {无路可达{none}} other {开车{drive}，步行{walk}}}",
   "tripInspector.liftedNote": "{slower, select, true {从这两个精确位置步行更快。附近的出行走这条路线。} other {车站离这两个精确位置太远。附近的出行走这条路线。}}",
   "tripInspector.liftedTip": "{slower, select, true {从这两点步行需要{walk}，比任何列车都快。这里计入的铁路出行是按两点周围的片区计算的。} other {从起点到车站算作{start}，从车站到终点算作{end}。两者合计不超过{max}时才提供铁路。这里计入的铁路出行是按两点周围的片区计算的。}}",
-  "tripInspector.noRail": "{why, select, noStationStart {起点附近步行或开车范围内都没有车站。} noStationEnd {终点附近步行范围内没有车站。} noRoute {这个时段两端附近的车站之间没有列车。} other {没有列车。}}",
+  "tripInspector.noRail": "{why, select, noStationStart {未找到铁路路线。} noStationEnd {未找到铁路路线。} noRoute {这个时段两端附近的车站之间没有列车。} other {没有列车。}}",
   "tripInspector.noRailTip": "{how, select, none {起点附近步行范围内没有车站，从车站步行到终点{end}。两者合计不超过{max}时才提供铁路。} foot {步行到车站算作{start}，从车站步行到终点{end}。两者合计不超过{max}时才提供铁路。} other {步行或开车到车站算作{start}，从车站步行到终点{end}。两者合计不超过{max}时才提供铁路。}}",
   "tripInspector.ofPeople": "{period}进行这次出行的人",
   "tripInspector.ofTrips": "{day}两地之间的{trips}",
