@@ -19,8 +19,7 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 
 ## In flight
 - T-092 done and committed (5469ab95): cfg.access kept at 0.5.
-- **T-094** ktrips.mjs reads the direction planes: agent a5f8b52325b558523 (Sonnet), started
-  ~23:45. Files: checks/ktrips.mjs, notes/T-094.md.
+- T-094 done and committed (66ee3fda): ktrips walks directed; walks 1-6% faster, canoe unchanged.
 - **T-039** first part (GLO-90 heights in the 100 m tiles, directed slope at L0.1; bucket queue
   filed as T-093, not built): agent a98f3d32b23d45d3b (Opus), started ~23:25, claims 2 cores as
   `iso-t039`. Files: tools/fine/, fine js, docs/fine.md, notes/T-039.md.
