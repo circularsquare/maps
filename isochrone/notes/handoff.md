@@ -35,9 +35,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-078 M2 doc tidy done and committed (3482bb83): T-006, T-051 closed; T-097 to T-099 filed.
 - T-097, T-098, T-099 done and committed (eb35c7d6): hazard band rebuilt on the T-011 tiles,
   page text current, dead code gone.
-- **T-031 + T-083 river rebuild** (gradient south of 60 N, GIRES desert no-flow): agent
-  a1b21ef148c27b321 (Opus), 1-2 cores as `iso-rivers`. Files: tools/canoe/, data/canoe,
-  docs/canoe.md, notes/T-031.md. Old canoe data kept as backup until checked.
+- T-031 + T-083 river rebuild done and committed (6c4068a1): GMTED gradient everywhere plus a
+  big-river stream-power rule (Livingstone Falls portaged), GIRES dries hot-desert reaches
+  (Cooper, Diamantina). Backups deleted.
+- **T-073 small-river speeds** (records, maybe a depth/width rule): agent a27b4f976817ea713
+  (Opus), 1 core. Files: canoe code, research/canoe.md, notes/T-073.md.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
