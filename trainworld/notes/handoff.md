@@ -1,7 +1,8 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session cd5c271d-f4a2-4f0f-8c6e-5249850f0046, name maps-b9 [971c94], since 2026-11-07 00:05
-Updated: 2026-11-07 10:35 (Get-Date). Past 500k tokens: ready to be replaced any time; a new orchestrator takes the
+Updated: 2026-11-07 12:25 (Get-Date). The "Publish in progress" section below is the current state; the State
+bullets under it are from 10:35 and partly stale (everything listed as uncommitted there is now in de29a14c). Past 500k tokens: ready to be replaced any time; a new orchestrator takes the
 agents below over by SendMessage to their ids (they report to "maps-b9 [971c94]" today; tell them the new name).
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
@@ -23,6 +24,19 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   WASM rebuilt; T-2732's TASKS line says so; archive T-2732 when committed). Also notes/T-2732.md,
   research/upkeep-by-terrain.md (payback's analysis). Commit with the next smoked batch.
 - 8800 has everything committed on master (T-2721's ferry fix included).
+
+## Publish in progress (~12:40, Anita: publish now without waiting for worldfix)
+- Committed de29a14c (everything but worldfix's files). 8800 = de29a14c on freeze 20261107-060902, smoke light/dark
+  26/26, 12,521,264. deploy.py --version 2026-11-07b --smoked running (task, log scratch deploy2.log). Then website
+  `git add trainsworld/ trainworld/`, commit, push (with the unpushed 30-min timeout commit), watch the Pages run,
+  `deploy.py --verify --page --version 2026-11-07b`. Then purge R2 2026-11-03, 2026-11-03b, 2026-11-07.
+- bubbleclick DONE T-2746 (archived; rapid-click p95 4.8 s -> 1.2 s on NYC); T-2747 sparse icSel filed (P1, own tree).
+- **sparse** a5e09f5724cd0f3ea (Opus, tree .tw-trees/sparse from de29a14c, Vite 6193, 3 cores): T-2747 sparse icSel
+  answers (WASM interface change). Land with agent-tree land sparse, then rebuild main WASM. May file T-2756.
+
+- **HOLD the website push**: Anita saw Tokyo's "Loading the bubbles" stall >4 min on 8800 (de29a14c) after leaving and
+  returning. **tokyoload** (Opus, main tree, Vite 6194, T-2756) checks whether it's a regression from de29a14c (vs
+  b2822e6a) and fixes it; also "say why in the tooltip" when a stage runs long. Push only after its answer.
 
 ## In flight ([971c94]'s agents; SendMessage by id; all in the MAIN tree, no commits; each archives its own lines)
 - **worldfix** ae45801a1a16dbcc8 (Opus): T-2702 coastal units + T-2712 Colombia blobs. All 53 rows gated; **JOIN running**
