@@ -374,6 +374,10 @@ export function setFares(nodes: FareNode[]) {
 export function setFareScale(country: string, scale: number | null) {
   return edit({ op: "fareScale", country, scale });
 }
+/** T-2679: the reference country, whose fares the Money tab's multiples are of. */
+export function setFareRef(country: string) {
+  return edit({ op: "fareRef", country });
+}
 /** T-1626: the fare multiplier on high-speed lines. */
 export function setFareHsr(mul: number) {
   return edit({ op: "fareHsr", mul });

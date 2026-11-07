@@ -1,14 +1,15 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
 import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, moneyCash, runCostHere, runCostLine, runCostRule, upkeepLines } from "../game/format";
-import { borrow, repay, setFareFerry, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
+import { borrow, repay, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode } from "../game/fareCurve";
+import { FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
-import { FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
+import { defaultScale, FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
+import { gameStartZone } from "../game/realms";
 import { selection } from "../game/ui";
 import { scopeZone, viewCentre } from "../game/listScope";
 import { regionLedger } from "../game/regionMoney";
@@ -85,22 +86,41 @@ function fareCountry(): string {
 }
 
 
-/** T-1277: the fare scale where the panel looks, as a multiple of the country's default (T-1906:
- * 1.00x until set): a stepper by 0.05, typed on a click, and a button back to the default once the
- * player has set one. */
-function FareScaleRow({ country, scale, own, scales }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined }) {
-  const set = (v: number) => void setFareScale(country, storedScale(v, country, scales));
+/** T-2679: the reference country, whose fares the panel's multiples are of: the game's (its first
+ * built station's, or the player's pick), else the start zone's, else the home city's. */
+function fareRef(f: Fares): string {
+  const z = gameStartZone();
+  return f.ref ?? (z && isCity(z) ? cityById(z).country : undefined) ?? cityById(HOME_CITY).country ?? FARE_BASELINE;
+}
+
+/** T-1277: the fare scale where the panel looks, as a multiple of the reference country's (T-2679):
+ * the reference itself a plain 1.00x; any other a stepper to the next 0.05x up or down (a default is
+ * an odd multiple like 0.63x), typed on a click, a button that
+ * makes it the reference, and one back to its default once the player has set one. */
+function FareScaleRow({ country, scale, own, scales, refCountry: ref }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined; refCountry: string }) {
   const name = tCountry(country);
-  const shown = shownScale(scale, country, scales);
   const text = (v: number) => `${fix2(v)}x`;
+  if (country === ref) {
+    return (
+      <li>
+        <span class="fr-what">{t("moneyTab.countryFares", { name })}</span>
+        <span class="fr-ref" data-tip={t("moneyTab.referenceTip", { name })}>{text(1)}</span>
+        <span />
+      </li>
+    );
+  }
+  const refScale = fareScale(ref, scales);
+  const set = (v: number) => void setFareScale(country, storedScale(v, country, scales, refScale));
+  const shown = shownScale(scale, refScale);
   return (
     <li>
       <span class="fr-what">{t("moneyTab.countryFares", { name })}</span>
-      <Stepper value={text(shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set(Math.round(shown * 100) / 100 + d * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name }) }} />
-      {own
-        ? <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: text(1) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>
-        : <span />}
+      <Stepper value={text(shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set((d > 0 ? Math.floor(shown / SHOWN_STEP + 1e-6) + d : Math.ceil(shown / SHOWN_STEP - 1e-6) + d) * SHOWN_STEP)}
+        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(ref) }) }} />
+      <span class="group">
+        <button class="btn icon" aria-label={t("moneyTab.makeRef")} data-tip={`${t("moneyTab.makeRef")}\n${t("moneyTab.makeRefSame")}`} onClick={() => void setFareRef(country)}><Icon.anchor /></button>
+        {own && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: text(shownScale(defaultScale(country, scales), refScale)) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>}
+      </span>
     </li>
   );
 }
@@ -252,7 +272,7 @@ export function MoneyTab() {
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
           {ferry !== null && <FerryFareRow mul={ferry} />}
           <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
-          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} />
+          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} refCountry={fareRef(m.fares)} />
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />

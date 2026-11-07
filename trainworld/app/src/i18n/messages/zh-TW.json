@@ -1222,7 +1222,6 @@
   "moneyTab.cash": "資金",
   "moneyTab.construction": "興建費用",
   "moneyTab.countryFares": "{name}票價",
-  "moneyTab.countryFaresTip": "{name}的票價，以預設票價的倍數表示。",
   "moneyTab.daysLeft": "剩餘天數",
   "moneyTab.fare": "票價",
   "moneyTab.fareImpact": "調整票價的預估影響",

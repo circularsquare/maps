@@ -1222,7 +1222,6 @@
   "moneyTab.cash": "資金",
   "moneyTab.construction": "建設費",
   "moneyTab.countryFares": "{name}の運賃",
-  "moneyTab.countryFaresTip": "標準運賃に対する{name}の運賃の倍率です。",
   "moneyTab.daysLeft": "残り日数",
   "moneyTab.fare": "運賃",
   "moneyTab.fareImpact": "運賃変更の影響（推定）",

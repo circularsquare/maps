@@ -17,7 +17,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
-import { EVERY, FARE_BASELINE, FARE_E, incomeScale, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
+import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
@@ -75,8 +75,10 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-2670: a start key from before is its country's income scale under T-1521's power; the same
   // country's now (the US's is the same 11.6, so a game started there charges as it did)
   if (scales[START] !== undefined && (f.income ?? OLD_FARE_E) !== FARE_E && scales[START] > 0) scales[START] = startFromOld(scales[START]);
-  // T-2021: each country's own multiple is kept to the nearest 0.01x (the start and every-country keys are the default's, not a multiple)
-  for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = tidyOwn(c, scales[c], scales);
+  // T-2021: each country's own multiple is kept to the nearest 0.01x (the start and every-country keys are the default's, not a multiple);
+  // T-2679: once there is a reference country, scales are kept as set (multiples of its fares)
+  const ref = typeof f.ref === "string" && f.ref ? { ref: f.ref } : {};
+  for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = ref.ref ? keepOwn(scales[c]) : tidyOwn(c, scales[c], scales);
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
   const ferry = typeof f.ferry === "number" && Number.isFinite(f.ferry) ? { ferry: tidyHsr(f.ferry) } : {};
@@ -85,7 +87,22 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
   const curve = faresOf(g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}) };
+  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}), ...ref };
+}
+/** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
+function demandFares(): Fares {
+  const { ref: _, ...rest } = fares;
+  return rest;
+}
+/** T-2679: the first built station's lng and lat (lowest node id), as the last state was built. */
+let firstBuiltAt: [number, number] | null = null;
+/** T-2679: a game without a reference country takes its first built station's country, once the
+ * zones' outlines can name it. Not marked for saving: a reload works out the same one. */
+function pinFareRef() {
+  if (fares.ref || !firstBuiltAt) return;
+  const z = cityWithin(firstBuiltAt[0], firstBuiltAt[1]);
+  const c = z ? cityById(z).country : undefined;
+  if (c) fares = { ...fares, ref: c };
 }
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
@@ -1501,6 +1518,10 @@ function buildState(): ClockState {
     return [l.id, n ? [n.lng, n.lat] : null];
   }));
   placeLineCountries();
+  let first: ClockNode | null = null;
+  for (let k = 0; k < stationCount; k++) if (nodes[k].stationBuilt && (!first || nodes[k].id < first.id)) first = nodes[k];
+  firstBuiltAt = first ? [first.lng, first.lat] : null;
+  pinFareRef();
   syncHolidays();
   applyRunFactors();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
@@ -3013,7 +3034,7 @@ function buildSnapshot(): NetworkSnapshot {
     });
   }
   snapStations = stationsKey(ni);
-  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: { ...fares }, ...(passages.length ? { passages } : {}) };
+  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}) };
 }
 
 /** T-1464: a bus line's row (`ClockBus`); its stops that are no station join `nodes` once each,
@@ -3400,7 +3421,7 @@ function apply(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}) };
       return { r: 0 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
@@ -3419,10 +3440,14 @@ function apply(op: EditOp): Applied {
     case "fareScale": {
       const scales = { ...fares.scales };
       if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
-      else scales[op.country] = tidyOwn(op.country, op.scale, scales);
+      else scales[op.country] = keepOwn(op.scale);
       fares = { ...fares, scales };
       return { r: 0 };
     }
+    case "fareRef":
+      if (typeof op.country !== "string" || !op.country) return { r: 1 };
+      fares = { ...fares, ref: op.country };
+      return { r: 0 };
     case "borrow":
     case "repay":
       return { r: loanOp(op) };
@@ -3522,6 +3547,7 @@ async function processMessage(msg: ToClock) {
     outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
       if (!api) return;
       placeLineCountries();
+      pinFareRef();
       if (syncHolidays()) sendTrips();
     });
     ready = (async () => {
@@ -3763,6 +3789,13 @@ async function handle(msg: ToClock) {
       sendMoney();
       scheduleSnapshot();
       send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
+      return;
+    }
+    if (msg.op.op === "fareRef") {
+      // T-2679: no fare changes, so demand is not asked again
+      const r = apply(msg.op).r;
+      if (r === 0) { dirty = edited = true; editAt = Date.now(); sendMoney(); }
+      send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: [], charge: 0 });
       return;
     }
     if (msg.op.op === "borrow" || msg.op.op === "repay") {

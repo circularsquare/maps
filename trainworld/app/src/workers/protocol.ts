@@ -127,6 +127,8 @@ export type EditOp =
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
   | { op: "fareScale"; country: string; scale: number | null }
+  /** T-2679: the reference country, whose fares the Money tab's multiples are of; changes no fare */
+  | { op: "fareRef"; country: string }
   /** T-1626: the fare multiplier on high-speed lines */
   | { op: "fareHsr"; mul: number }
   /** T-2194: the fare multiplier on ferry lines */

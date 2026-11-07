@@ -61,7 +61,9 @@ export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
  * header fields the snapshot reads. Equal keys give the same snapshot under the same build (the
  * stored result's key carries the build). */
 export async function saveNetKey(track: Uint8Array, h: { city?: string; fares?: unknown; fleet?: number; fleetFast?: number; fleetBus?: number; mode?: string }): Promise<string> {
-  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ?? null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
+  // T-2679: the reference country changes no fare, so no key
+  const { ref: _, ...fares } = (h.fares ?? {}) as { ref?: unknown };
+  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ? fares : null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
   const all = new Uint8Array(track.length + head.length);
   all.set(track);
   all.set(head, track.length);

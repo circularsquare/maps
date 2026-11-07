@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { launchChrome, collectErrors, importSave, registry, REAL_SAVE, ANGLE, ARTIFACTS } from './lib.mjs';
 // T-1906: a new game starts with round fares for where it starts (New York $2.50 base, Tokyo $1.55 since T-2670),
-// every other country at its own start fares by income, and every dial at 1.00x; the real save keeps its fares and stored scales and reads
-// 1.00x too; a loan whose payment a day (T-2022) is past the last week's profit a day is refused, with the
+// every other country at its own start fares by income; the start country's dial a plain 1.00x and every other one its default
+// multiple of that (T-2679: Japan 0.63x in a New York game); the real save keeps its fares and stored scales and reads 1.00x; a loan whose payment a day (T-2022) is past the last week's profit a day is refused, with the
 // reason in its hover.
 //   node trainworld/checks/t1906-money-rules.mjs [url]     (from the maps root; default localhost:6150)
 // Prints PASS or FAIL lines and exits 1 on failure; pictures in artifacts/trainworld/t1906/. About a minute.
@@ -26,7 +26,7 @@ async function open(page, query) {
 }
 const scaleRow = (page) => page.$$eval('ul.fare-rows > li', (lis) => {
   const li = lis.find((l) => / fares$/.test(l.querySelector('.fr-what')?.textContent ?? ''));
-  return li && { name: li.querySelector('.fr-what').textContent, value: li.querySelector('.stepper .v')?.textContent };
+  return li && { name: li.querySelector('.fr-what').textContent, value: (li.querySelector('.stepper .v') ?? li.querySelector('.fr-ref'))?.textContent };
 });
 const loanButtons = (page) => page.$$eval('button.btn.text', (bs) => bs.filter((b) => /^\$\d+B$/.test(b.textContent)).map((b) => ({ text: b.textContent, disabled: b.disabled, tip: b.dataset.tip })));
 const scalesIn = (page) => page.evaluate(async () => {
@@ -55,15 +55,16 @@ try {
   const own = await page.evaluate(async () => {
     const { setFareScale } = await import('/src/game/world.ts');
     const { fareScale, storedScale, shownScale } = await import('/src/game/income.ts');
-    await setFareScale('JP', storedScale(2, 'JP', window.tw.moneyState.value.fares.scales));
+    const s0 = window.tw.moneyState.value.fares.scales;
+    await setFareScale('JP', storedScale(2, 'JP', s0, fareScale('US', s0)));
     await new Promise((r) => setTimeout(r, 500));
     const s = window.tw.moneyState.value.fares.scales;
-    const out = { scales: s, jp: fareScale('JP', s), shown: shownScale(fareScale('JP', s), 'JP', s), old: [fareScale('US', { '*': 1 }), fareScale('JP', { '*': 1, JP: 2 })] };
+    const out = { scales: s, jp: fareScale('JP', s), shown: shownScale(fareScale('JP', s), fareScale('US', s)), old: [fareScale('US', { '*': 1 }), fareScale('JP', { '*': 1, JP: 2 })] };
     await setFareScale('JP', null);
     await new Promise((r) => setTimeout(r, 500));
     return out;
   });
-  report(`Japan's dial set to 2.00x: stored 2, charged twice its default, reads 2.00x; a "*" save still reads`, own.scales.JP === 2 && near(own.jp, 2 * 7.3 / 11.6) && near(own.shown, 2) && own.old[0] === 1 && own.old[1] === 2, JSON.stringify(own));
+  report(`Japan's dial set to 2.00x: charged twice the US's scale, reads 2.00x; a "*" save still reads`, near(own.scales.JP, 2 * 11.6 / 7.3) && near(own.jp, 2) && near(own.shown, 2) && own.old[0] === 1 && own.old[1] === 2, JSON.stringify(own));
   const nyRow = await scaleRow(page);
   report('New York: the panel reads "United States fares 1.00x"', nyRow?.name === 'United States fares' && nyRow?.value === '1.00x', JSON.stringify(nyRow));
   const loans = await loanButtons(page);
@@ -78,7 +79,7 @@ try {
   await page.evaluate(() => window.tw.map.jumpTo({ center: [139.7, 35.69], zoom: 10 }));
   await page.waitForFunction(() => [...document.querySelectorAll('ul.fare-rows .fr-what')].some((e) => e.textContent === 'Japan fares'), undefined, { timeout: 30000 }).catch(() => {});
   const jpRow = await scaleRow(page);
-  report('New York game, viewing Tokyo: "Japan fares 1.00x"', jpRow?.name === 'Japan fares' && jpRow?.value === '1.00x', JSON.stringify(jpRow));
+  report('New York game, viewing Tokyo: "Japan fares 0.63x" (T-2679: a multiple of US fares)', jpRow?.name === 'Japan fares' && jpRow?.value === '0.63x', JSON.stringify(jpRow));
   await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.99, 40.73], zoom: 11 }));
   await page.waitForTimeout(800);
   const b5 = await page.$$('button.btn.text');

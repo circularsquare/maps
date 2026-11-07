@@ -637,6 +637,8 @@ rect.now { fill-opacity: .45; }
 .fare-rows .fr-what button.v { cursor: text; }
 .fare-rows .fr-what button.v:hover { background: var(--shade); }
 .fare-rows .fr-what input.v { width: 44px; text-align: center; border-color: var(--accent); outline: 0; }
+/* T-2679: the reference country's 1.00x, where the other countries' stepper value sits */
+.fare-rows .fr-ref { justify-self: center; font-variant-numeric: tabular-nums; }
 
 /* stops strip, drawn in the line's colour */
 /* T-2623: the plain list's bar, dots and stretches are shifted half a pixel so they are painted

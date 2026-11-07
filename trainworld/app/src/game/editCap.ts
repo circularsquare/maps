@@ -88,7 +88,7 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
 }
 
 /** Ops that change nothing demand reads. */
-const NEUTRAL = new Set(["lineLook", "lineGroup", "groupName", "groupLook", "borrow", "repay"]);
+const NEUTRAL = new Set(["lineLook", "lineGroup", "groupName", "groupLook", "borrow", "repay", "fareRef"]);
 /** T-2622: ops whose demand change shows on no running line's stops, trains, cars or times, so no line
  * reads "loading..." for it (lineFigures.ts `linesPending`); every other op's does */
 const WIDE = new Set(["fares", "fareScale", "fareHsr", "fareFerry", "fareTransfer", "removeLine", "link", "addBuilding", "reshapeBuilding", "removeBuilding", "undo", "redo"]);

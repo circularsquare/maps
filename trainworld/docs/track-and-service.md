@@ -1186,14 +1186,22 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   11.6 stays), and the fares carry `income: 0.5` from then on. A new game's curve is its start country's fares and
   it stores that country's income scale as `scales["@"]` (`START`), so a country's default is its
   income scale over that one (1 where it started). There the player's own scales are kept as multiples
-  of the default, 0.1 to 19.9 to a hundredth, so stored and shown are the same; a save from before
-  T-1906 has no `"@"`, its curve in India's units and its scales absolute (`scales["*"]`, `EVERY`, in a
-  few saves of 2026-11-02, is one default for every country). The Money tab shows a scale divided by
-  the country's default, so every country reads 1.00x until the player sets one (`shownScale`,
-  `storedScale`). **The multiple is kept and used to the nearest 0.01x** (T-2021, Anita): set, loaded
-  (an old save's absolute scale becomes its multiple of the default, rounded, times the default) and in
-  every effect (`fareScale`, `fareFactors`, so fares charged, income and the demand sent to the sim),
-  so a displayed 1.30x acts as exactly 1.30 times the default (`multipleOf`, `tidyOwn`). A new game's curve is set once from the country it starts in (`startNodes` in
+  of the country's default; a save from before T-1906 has no `"@"`, its curve in India's units and its
+  scales absolute (`scales["*"]`, `EVERY`, in a few saves of 2026-11-02, is one default for every
+  country). **The Money tab shows each country's fares as a multiple of the reference country's**
+  (T-2679, Anita): the country of the first built station (the lowest node id among constructed
+  stations), kept in `Fares.ref` as soon as one is built, until the player makes another country the
+  reference; with nothing built, the start zone's country, else the home city's. The reference reads a
+  plain 1.00x; any other country its scale over the reference's (`shownScale`), so in a US-started game
+  Mexico reads 0.40x and Japan 0.63x until set. **A multiple the player sets is kept to 0.01x** and
+  stored so it charges exactly that many times the reference's scale (`storedScale`, T-2021), in fares
+  charged, income and the demand sent to the sim alike. Making another country the reference changes
+  only `ref`: no stored scale, fare or demand input changes (demand's network and the save's demand
+  cache key leave `ref` out), so with Mexico the reference Mexico reads 1.00x and the US 2.52x, every
+  fare the same to the cent. A reference country whose own scale was set before keeps it (its row and
+  the curve show what it charges). A save without `ref` has each own scale rounded to 0.01x of the
+  country's default as it loads (`tidyOwn`), so it charges what it did; from then on scales are kept as
+  set (`keepOwn`). A new game's curve is set once from the country it starts in (`startNodes` in
   `game/fareDefault.ts`, T-1906): `START_NODES` (nodes at 0, 20 and 100 km at $0.0862, $0.2241 and
   $0.7757, one straight line, T-1670) times the factor giving the US $2.50, times the country's
   `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.55, $4.10 and $14. While

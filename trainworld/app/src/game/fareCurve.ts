@@ -36,6 +36,11 @@ export interface Fares {
   /** T-1801: the transfer fare, paid on each boarding after a trip's first, in the curve's units
    * (times a country's scale where charged); absent for 0 */
   transfer?: number;
+  /** T-2679: the reference country (ISO alpha-2), whose fares the Money tab's multiples are of: the
+   * first built station's until the player picks another. It changes no fare, so demand never sees
+   * it. Absent until a station is built, and in a save from before, whose own scales are then
+   * rounded as they load (game/income.ts `tidyOwn`). */
+  ref?: string;
 }
 
 /** T-1801: the transfer fare of `f`, 0 unless set. */

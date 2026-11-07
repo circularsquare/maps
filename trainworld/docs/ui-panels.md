@@ -711,11 +711,17 @@ line runs high-speed trains, "High speed" with the high-speed fare multiplier in
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
-fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852) with its scale in a stepper as a multiple of the country's default fares, "1.00x" until set (hover "Fares in Japan as a multiple of the default fares."),
-stepping by 0.05 from 0.10 to 19.90 in a game from T-1906 on (a click types one, kept to 0.01x and
-acting as exactly that, T-2021); once the player has set one, an undo icon after the stepper ("Back to 1.00x")
-returns to the default. Its stepper sits in the same column as the rows above
-[T-1277, T-1554, T-1584, T-1727, T-1906]. The base fare
+fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852)
+with its fares as a multiple of the reference country's (T-2679, docs/track-and-service.md "Fares by country").
+The reference country's row shows a plain "1.00x" in the stepper's column, no stepper and no buttons (hover
+"Reference country" over "Other countries' fares are set as a multiple of United States fares."). Any other
+country's is a stepper, its default multiple until set (a US-started game's Mexico 0.40x, Japan 0.63x; hover
+"Japan fares as a multiple of United States fares"), stepping to the next 0.05x up or down (0.63x to 0.65x or
+0.60x) from 0.10 to 19.90 (a click types one, kept to 0.01x and acting as exactly that many times the
+reference's fares, T-2021); after it an anchor icon ("Use as the reference country" over "Fares charged stay
+the same.") makes that country the reference, and once the player has set one, an undo icon ("Back to 0.40x",
+its default) returns to the default. The stepper sits in the same column as the rows above
+[T-1277, T-1554, T-1584, T-1727, T-1906, T-2679]. The base fare
 steps by $0.25; a rate to the next whole cent above or below ($0.138 to $0.14 or $0.13), or by a
 cent of fare where a stretch is too short for that to move it. A click on any value opens a box to
 type it, Enter or leaving the box applying and Escape cancelling [T-626, `TypedValue` in

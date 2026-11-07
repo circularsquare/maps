@@ -1222,7 +1222,6 @@
   "moneyTab.cash": "资金",
   "moneyTab.construction": "建造费用",
   "moneyTab.countryFares": "{name}票价",
-  "moneyTab.countryFaresTip": "{name}的票价，以默认票价的倍数表示。",
   "moneyTab.daysLeft": "剩余天数",
   "moneyTab.fare": "票价",
   "moneyTab.fareImpact": "票价调整的预计影响",

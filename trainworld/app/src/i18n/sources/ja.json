@@ -1222,7 +1222,6 @@
   "moneyTab.cash": "Cash",
   "moneyTab.construction": "Construction",
   "moneyTab.countryFares": "{name} fares",
-  "moneyTab.countryFaresTip": "Fares in {name} as a multiple of the default fares.",
   "moneyTab.daysLeft": "Days left",
   "moneyTab.fare": "Fare",
   "moneyTab.fareImpact": "Estimated impact of fare change",
