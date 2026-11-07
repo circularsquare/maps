@@ -38,8 +38,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-031 + T-083 river rebuild done and committed (6c4068a1): GMTED gradient everywhere plus a
   big-river stream-power rule (Livingstone Falls portaged), GIRES dries hot-desert reaches
   (Cooper, Diamantina). Backups deleted.
-- **T-073 small-river speeds** (records, maybe a depth/width rule): agent a27b4f976817ea713
-  (Opus), 1 core. Files: canoe code, research/canoe.md, notes/T-073.md.
+- T-073 done and committed (6ce2a9be): upstream through rapids 2.5 km/h on every river.
+- **T-100 + T-101 MERIT Hydro** (small-river lengths, canopy read as rapids): agent
+  aea544d0d6ddc9082 (Opus), 1-2 cores as `iso-rivers`; downloads MERIT tiles, keeps C: over
+  40 GB. Files: tools/canoe/, data/canoe, docs/canoe.md, notes/T-100.md.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
