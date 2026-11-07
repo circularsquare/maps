@@ -22,7 +22,9 @@ the counting between levels; the next view counts what is left (T-077).
   the 16), reached and settled earlier. First every trip is spread over the near-equal routes:
   each such node passes its trips to these parents in proportion to (1 - slack / (3% of its
   time))², slack being the weight lost going through the parent, time plus K x hazard as the
-  search costs the move (T-077), none past 3%. Then each takes the parent most spread trips pass
+  search costs the move (T-077): directed by each cell's E/W/S/N hours per km where the level has
+  them (`docs/resolution.md` "Directions"), with the slope at L0.1 (`docs/fine.md` "Terrain"),
+  carried at 2x on a canoe start (T-091), none past 3%. Then each takes the parent most spread trips pass
   through, among those that keep its route's weight through the tree within 1% of its time of
   the fastest; the search's parent always qualifies. A node with fewer spread trips than 2% of
   the drawing threshold passes them all to the search's parent and keeps it (most nodes; T-077).
@@ -38,7 +40,8 @@ the counting between levels; the next view counts what is left (T-077).
   L10; the same threshold at every level. Strength is log(count / threshold) over
   log(L10 total / threshold) in 8 steps; width and opacity rise with it.
 - **Speed** (T-062, T-064). An edge's speed is the length travelled over its time in the search
-  (time only, no hazard; a re-chosen land parent's edge, the move's own time), summed over the edge and up to 6 edges of the same mode each way along
+  (time only, no hazard; a re-chosen land parent's edge, the move's own time costed the same way,
+  so uphill and downhill read their own speeds), summed over the edge and up to 6 edges of the same mode each way along
   the route (towards the start, and on along the child with the most trips). A river step
   travels the river's own length (meanders included, `rKm` of the canoe layer), so a reach reads
   its model speed, and the window evens out routes that hop between rivers sharing cells. A grid

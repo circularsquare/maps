@@ -126,5 +126,6 @@ to, so trunks along rivers, valleys, roads and coasts branch and fade toward the
 the speed along the stretch, one ramp for every mode: bright red (under 1.5 km/h) through orange
 to yellow (9 km/h and over). Lines are straightened and smoothed; hovering one shows whether it is
 walked, carried or paddled, and its km/h. Counted in the worker from the path tree (near-equal
-land parents re-chosen, so there are no spokes), at L10 for the world and again in each window,
+land parents re-chosen by the search's own move cost, directed, so there are no spokes), at L10
+for the world and again in each window,
 once every level of the view is painted (`docs/corridors.md`).

@@ -1,5 +1,7 @@
 # Archive
 
+- T-091 [P3] Corridor parents by directed cost. Done 2026-11-07: `js/corridors.js` costs candidate parents and re-chosen edges as the search walks (directed, sloped at L0.1, carried x2); 5-11% of walking parents change at L10-L1, 15-28% at L0.1; corridors check 10/10, smoke 18/18. notes/T-091.md.
+
 - T-057 [P2] Fine level world build. Done 2026-11-07: towns, water country and now 796 mountain tiles (26 past 80 N left out, no LC100), 2.15 GB in 5,350 tiles with heights; mountain windows against L1 1.004 at 25 km; smoke 18/18. notes/T-057.md.
 
 - T-039 [P3] Fine level stage 2. Done 2026-11-07: GLO-90 heights in the 100 m tiles (1.48 GB), each L0.1 move walked by the L1 walker's slope rule; windows against L1 25 km out 1.04 -> 1.004 (Brig centred 1.78 -> 1.06); smoke 18/18. Bucket queue split off as T-093. notes/T-039.md.

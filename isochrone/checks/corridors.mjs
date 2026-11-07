@@ -5,8 +5,10 @@
 //     back from the codes that is not is outside the counted tree, and leaves the shared work
 //     arrays dirty);
 //   - every drawn line ends at the start or on another line;
+//   - every land node's own move (the search's), costed by corridors.moveWeight, gives its weight
+//     (T-091: corridors costs other parents' moves the same way, directed);
 // and the first start counted again after the others gives the same lines (no state carried over).
-// One PASS or FAIL line each; exit 1 on a fail.
+// One PASS or FAIL line each (10); exit 1 on a fail.
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -16,7 +18,7 @@ globalThis.fetch = async (u) => new Response(readFileSync(String(u).replace(/^fi
 const imp = (m) => import(pathToFileURL(ROOT + 'js/' + m).href);
 const { cfg, setConfig } = await imp('config.js');
 const { makeLevel, snap, setHazard, setDirs } = await imp('levels.js');
-const { solve, P_NONE } = await imp('search.js');
+const { solve, P_NONE, P_GRID, MDC, MDR } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
 const { buildCanoe } = await imp('canoe.js');
 const { loadHazardWorld, applyRoads } = await imp('tiles.js');
@@ -69,6 +71,19 @@ for (const s of solved) {
         bad++;
     }
     report(`${s.name}: parents reached before their children`, bad === 0, `(${c.nr} nodes, ${bad} not${ex})`);
+    // the search's own land moves as corridors costs them
+    let moves = 0, off = 0, worst = 0;
+    for (let v = 0; v < L.W * L.H; v++) {
+        const code = pred[v];
+        if (!L.grid[v] || code < P_GRID || code >= P_GRID + 16 || !(t[v] <= cfg.maxHours)) continue;
+        const k = code - P_GRID, r = (v / L.W) | 0;
+        const u = (r - MDR[k]) * L.W + ((v - r * L.W - MDC[k]) % L.W + L.W) % L.W;
+        const e = Math.abs(w[u] + corridors.moveWeight(L, s.canoe, u, v, k) - w[v]) / Math.max(1, w[v]);
+        moves++;
+        if (!(e <= 2e-6)) off++;
+        if (!(e <= worst)) worst = e;
+    }
+    report(`${s.name}: own moves cost their weight`, moves > 1000 && off === 0, `(${moves} moves, ${off} off, worst ${worst.toExponential(1)})`);
     // each line's last point (towards the start) is the start's cell or a point of another line
     const key = (x, y) => x.toFixed(4) + ',' + y.toFixed(4);
     const seen = new Map();

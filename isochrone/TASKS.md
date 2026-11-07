@@ -11,7 +11,7 @@ canoe paddles rivers, lakes and sea with currents and carries overland at x2. Wa
 danger are on with K = 1000 h. Corridors are coloured by speed, drawn by trips and hoverable.
 Smoke passes 18/18.
 
-**Next up**: the search's bucket queue (T-093), corridors by directed cost (T-091), then the
+**Next up**: the search's bucket queue (T-093), then the
 known coarse-level errors (T-007 fjords and rivers, T-075 islands) and M2's doc tidy (T-078).
 10,000 BC is for later. Open questions: `notes/for-anita.md`.
 
@@ -20,8 +20,6 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 (Anita, 2026-11-05: "not really that necessary").
 
 ## In progress
-
-- T-091 [P3] Corridor parents by directed cost: `js/corridors.js` costs candidate parents' moves with the symmetric speed, so near-equal parents share flow and the line's speed class is read from the symmetric speed; use the search's directed cost now that T-011 is on the page (notes/T-011.md stage 3).
 
 ## M1: canoe, today
 

@@ -6,6 +6,7 @@
 import { cfg } from './config.js';
 import { MDC, MDR, P_NONE, P_GRID, P_XFER, P_DOWN, P_UP, P_SEED } from './search.js';
 import { eachCanoeNode, canoeFrom } from './canoe.js';
+import { SLOPE_STEPS, NO_HEIGHT } from './levels.js';
 
 export const STEPS = 8;      // strength steps; a polyline is a run of one step
 // Speed classes (km/h) a line's colour stands for: below the first edge is class 0, at or above the
@@ -127,8 +128,8 @@ export function count(L, canoe, coarser) {
 // canoe start); every other node keeps the search's parent. A node's candidates are the land cells
 // one move back in the directions next to the search's move (NEXT), reached and settled earlier
 // (smaller weight, so the links never loop); the slack of one is the weight lost going through it,
-// w[u] + move time + K x move hazard - w[v], costed as the search costs a land move (T-077), 0 for
-// the search's parent.
+// w[u] + move time + K x move hazard - w[v], costed as the search costs a land move (T-077; move(),
+// directed and sloped as the search's, T-091), 0 for the search's parent.
 // 1. links(), in cell order: each node's parent and own trips, and which candidates it has, so
 //    each node knows how many nodes may pass trips to it (nch).
 // 2. Leaves first, the trips spread: each node passes its own and its children's to its candidates
@@ -246,24 +247,13 @@ function earliest(cn, cell, res, v) {
 // world: the area reached at L10, whose share SHARE is the drawing threshold. Returns how many
 // nodes it ordered (all nr of them when the links form a tree).
 function reparent(L, canoe, par, nr, dtl, world) {
-    const { W, H, grid } = L;
+    const { W } = L;
     const { t, w } = L.res;
-    const inv = cfg.inv, f = canoe ? cfg.carry : 1, K = cfg.K;
+    const f = canoe ? cfg.carry : 1, K = cfg.K;
     // hazard per km by cell, as the search reads it (none with hazard off or no band)
     const hq = cfg.hazard && L.hq ? L.hq : null;
     const NW = 2 * WIDE + 1;
     const off = offsets(W);
-    let sk = L.stepKm16;      // move lengths by the row moved from, km, as the search has them
-    if (!sk) {
-        const { dxKm, dyKm } = L;
-        sk = L.stepKm16 = new Float32Array(H * 16);
-        for (let r = 0; r < H; r++) for (let k = 0; k < 16; k++) {
-            const r2 = r + MDR[k];
-            if (r2 < 0 || r2 >= H) continue;
-            const dx = MDC[k] * (dxKm[r] + dxKm[r2]) * 0.5, dy = MDR[k] * dyKm;
-            sk[r * 16 + k] = Math.sqrt(dx * dx + dy * dy);
-        }
-    }
     const low = LOW * SHARE * world;
     const us = new Int32Array(NW);
     // 2. spread, leaves first
@@ -296,28 +286,12 @@ function reparent(L, canoe, par, nr, dtl, world) {
         let qs = 63 << (6 * WIDE), sum = 63;
         if (fv >= low) {
             // the shares: each candidate's move costed as the search costs it
-            const gv = grid[v], iv = inv[gv], wv = w[v];
+            const wv = w[v];
             const lim = SPREAD * t[v], isc = 1 / lim;
             for (let j = 0; j < NW; j++) {
                 const u = us[j];
-                if (j === WIDE || u < 0) continue;
-                const k = NEXT[k0 + j], ru = r - MDR[k], gu = grid[u];
-                let mean, mq = 0;
-                if (k < 8) { mean = (inv[gu] + iv) * 0.5; if (hq) mq = (hq[u] + hq[v]) * 0.5; }
-                else {
-                    let i0, i1;
-                    if (inner) { i0 = v - off[16 + k]; i1 = v - off[32 + k]; }
-                    else {
-                        const cu = u - ru * W;
-                        i0 = (ru + E0R[k]) * W + (cu + E0C[k] + W) % W; i1 = (ru + E1R[k]) * W + (cu + E1C[k] + W) % W;
-                    }
-                    const e0 = grid[i0], e1 = grid[i1];
-                    if (!e0 || !e1) continue;
-                    mean = (inv[gu] + iv + inv[e0] + inv[e1]) * 0.25;
-                    if (hq) mq = (hq[u] + hq[v] + hq[i0] + hq[i1]) * 0.25;
-                }
-                const len = sk[ru * 16 + k] * f;
-                const slack = w[u] + len * mean + K * (len * mq) - wv;
+                if (j === WIDE || u < 0 || !move(L, u, v, NEXT[k0 + j], f, hq)) continue;
+                const slack = w[u] + mvT + K * mvH - wv;
                 let q = 63;
                 if (slack > 0) {
                     if (slack >= lim) continue;
@@ -360,22 +334,74 @@ function reparent(L, canoe, par, nr, dtl, world) {
         if (best === p) { excess[v] = excess[p]; continue; }
         excess[v] = excess[best] + bs;
         par[v] = best;
-        dtl[v] = moveTime(L, best, v, bk, f);
+        move(L, best, v, bk, f, null);
+        dtl[v] = mvT;
     }
     return no;
 }
 
-// The time of land move k from u into v (a candidate's: a knight move's two cells are land).
-function moveTime(L, u, v, k, f) {
-    const { W, grid } = L, inv = cfg.inv;
-    const ru = (u / W) | 0, cu = u - ru * W;
-    let mean;
-    if (k < 8) mean = (inv[grid[u]] + inv[grid[v]]) * 0.5;
-    else {
-        const e0 = grid[(ru + E0R[k]) * W + (cu + E0C[k] + W) % W], e1 = grid[(ru + E1R[k]) * W + (cu + E1C[k] + W) % W];
-        mean = (inv[grid[u]] + inv[grid[v]] + inv[e0] + inv[e1]) * 0.25;
+// Land moves costed as js/search.js's land loops cost them (T-091): the mean of the cells' hours
+// per km, directed by L.sd where the level has it (T-011, docs/resolution.md "Directions"), times
+// the slope's factor at L0.1 (L.zs, docs/fine.md "Terrain"), carried at f; hazard per km stays the
+// cells' own. The search inlines this in its loops; checks/corridors.mjs holds the two together
+// (every node's own move, costed here, must give its weight).
+// Per level and from the search: move lengths, km, and the east-west share of each move's km, by
+// the row moved from; which of a cell's four directed values (E W S N) a move's parts use.
+const DXK = Int8Array.from({ length: 16 }, (_, k) => MDC[k] > 0 ? 0 : 1);
+const DYK = Int8Array.from({ length: 16 }, (_, k) => MDR[k] > 0 ? 2 : 3);
+function moveTables(L) {
+    if (L.wx16) return;
+    const { H, dxKm, dyKm } = L;
+    const sk = new Float32Array(H * 16), wx = new Float32Array(H * 16);
+    for (let r = 0; r < H; r++) for (let k = 0; k < 16; k++) {
+        const r2 = r + MDR[k];
+        if (r2 < 0 || r2 >= H) continue;
+        const dx = MDC[k] * (dxKm[r] + dxKm[r2]) * 0.5, dy = MDR[k] * dyKm;
+        sk[r * 16 + k] = Math.sqrt(dx * dx + dy * dy);
+        const ax = Math.abs(dx), ay = Math.abs(dy);
+        wx[r * 16 + k] = ax / (ax + ay);
     }
-    return L.stepKm16[ru * 16 + k] * f * mean;
+    L.stepKm16 = sk; L.wx16 = wx;
+    if (L.zs) L.iStep16 = sk.map((s) => s > 0 ? SLOPE_STEPS / (1000 * s) : 0);
+}
+let mvT = 0, mvH = 0;     // the last move's time and hazard
+// Land move k from u into v: false where the search does not make it (a knight move past water,
+// too steep), else mvT and mvH set (hq: hazard per km by cell, or null for none).
+function move(L, u, v, k, f, hq) {
+    const { W, grid } = L, inv = cfg.inv, sd = L.sd;
+    moveTables(L);
+    const ru = (u / W) | 0, cu = u - ru * W, sr = ru * 16;
+    let i0 = 0, i1 = 0, mean, mq = 0;
+    if (k >= 8) {
+        i0 = (ru + E0R[k]) * W + (cu + E0C[k] + W) % W; i1 = (ru + E1R[k]) * W + (cu + E1C[k] + W) % W;
+        if (!grid[i0] || !grid[i1]) return false;
+    }
+    if (sd) {
+        const a = L.wx16[sr + k], b = 1 - a, X = DXK[k], Y = DYK[k];
+        mean = a * (sd[4 * u + X] + sd[4 * v + X]) + b * (sd[4 * u + Y] + sd[4 * v + Y]);
+        if (k < 8) mean *= 0.5;
+        else mean = (mean + a * (sd[4 * i0 + X] + sd[4 * i1 + X]) + b * (sd[4 * i0 + Y] + sd[4 * i1 + Y])) * 0.25;
+    } else if (k < 8) mean = (inv[grid[u]] + inv[grid[v]]) * 0.5;
+    else mean = (inv[grid[u]] + inv[grid[v]] + inv[grid[i0]] + inv[grid[i1]]) * 0.25;
+    if (hq) mq = k < 8 ? (hq[u] + hq[v]) * 0.5 : (hq[u] + hq[v] + hq[i0] + hq[i1]) * 0.25;
+    const zs = L.zs;
+    if (zs && zs[u] !== NO_HEIGHT && zs[v] !== NO_HEIGHT) {
+        const sG = L.slopeG, rq = L.roadQ;
+        let q = (zs[v] - zs[u]) * L.iStep16[sr + k];
+        if (L.zg[u] & L.zg[v]) q = q > rq ? rq : q < -rq ? -rq : q;
+        else if (q > sG || q < -sG) return false;
+        const sG5 = sG + 0.5;
+        mean *= L.slopeT[(q + sG5) | 0] * L.zh[u] * L.zh[v];
+    }
+    const len = L.stepKm16[sr + k] * f;
+    mvT = len * mean; mvH = len * mq;
+    return true;
+}
+
+// For checks: the weight move k from u into v adds on a solved level, as reparent costs it, or NaN.
+export function moveWeight(L, canoe, u, v, k) {
+    const hq = cfg.hazard && L.hq ? L.hq : null;
+    return move(L, u, v, k, canoe ? cfg.carry : 1, hq) ? mvT + cfg.K * mvH : NaN;
 }
 
 // A window only holds the trips that end inside it. The trips that leave it are the coarser

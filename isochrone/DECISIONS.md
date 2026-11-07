@@ -5,6 +5,13 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **Corridor parents are costed exactly as the search walks, even where that leaves straighter
+  lines** (T-091, notes/T-091.md): at L0.1 the old symmetric cost left out slope and height, so
+  every candidate looked free and parents were re-chosen past the 1% limit; with the true cost
+  Kathmandu's L0.1 lines have 27% of their km in 1 km+ straight runs (20% before). If that reads
+  too spoky, loosen NEAR/SPREAD per level; don't cheapen the cost. The cost's match to the search
+  is held by `checks/corridors.mjs`, not shared code, as the search inlines it in its loops.
+
 - **No 100 m tiles past 80 N** (T-057, notes/T-057.md): LC100 stops there, so the 26 mountain
   tiles T-047's rule picks in north Greenland and Ellesmere stay at L1. RGI ice could fill them
   if anyone ever walks there.
