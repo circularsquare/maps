@@ -616,6 +616,19 @@ is known without its files (T-302, T-400):
   copy of the outlines for a save's cities and its lines' countries. Local time alone keeps the centre rule, as the track model
   has it (world.md "Local time"). A nearest centre alone put Yuen Long in Shenzhen.
 
+**Start tiers** [T-2690; `pipeline/start_difficulty.py`, `app/src/game/start-difficulty.json`,
+`game/startDifficulty.ts`]: every registry entry is an easy, medium or hard start. Its score is the
+weekday trip legs a km² (every purpose but attractions, walking included, no rail) with both ends
+within 10 km of its centre, times its country's fare scale over the US's to the power 0.2 (fares
+follow income, construction does not). The centre is a metro's OSM city or town of its name nearest
+the registry centre within 40 km, else the registry centre; each pack the circle reaches counts its
+own trips, and trips between packs are left out. The well-known starts (every metro built as a city,
+the suggested starts and zones with over 1.5M people in the circle, 408) are cut into equal thirds:
+easy from 10,304, medium from 6,372. The new game sheet's search names each result's tier, and the
+zoomed-out map colours unopened zones' dots by it until the first line is set up
+(ui-panels.md "The new game sheet", ui-demand-views.md "Zoomed far out"). Rerun the script after
+packs change; `--tiers` re-cuts in seconds.
+
 ## 7. Other countries and borders
 
 Every rule above is per country: the unit (US county, Canadian census division, NUTS-3), the data

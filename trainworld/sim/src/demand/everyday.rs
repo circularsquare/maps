@@ -2586,6 +2586,23 @@ impl EverydayApi {
             .map(|k| (self.walks[k] * (OUTWARD[k][q] + RETURN[k][q]) as f64 - st.walk_lost[k]).max(0.0))
             .collect()
     }
+    /// T-2690: the legs on `day` with no rail of every outing whose two ends are both `inside`
+    /// cells, and of those the ones walked: (legs, walked).
+    pub fn legs_within(&self, inside: &[bool], day: u32) -> (f64, f64) {
+        let day = day as usize;
+        let (mut legs, mut walked) = (0f64, 0f64);
+        for k in 0..self.destinations.len() {
+            let Some((kind, c, d, w, pw)) = self.edge(k) else { continue };
+            if !(inside[c] && inside[d]) {
+                continue;
+            }
+            let p = everyday(kind);
+            let s: f32 = (0..5).map(|q| share_out(day, p, q) + share_ret(day, p, q)).sum();
+            legs += (w * s) as f64;
+            walked += (w * s * pw) as f64;
+        }
+        (legs, walked)
+    }
     /// `selection` on a kind of day (T-260): that day's trips and period shares.
     pub fn selection_day(&self, end: u32, cells: &[u32], day: u32) -> Vec<f32> {
         let n = self.engine.city.len();

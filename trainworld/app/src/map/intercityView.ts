@@ -33,8 +33,9 @@ import { lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, type Corridors, type CorridorTable, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, UNBUILT_FILL } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
+import { lineSetUp, startTier } from "../game/startDifficulty";
 import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { CommutersOneWay, Selection } from "../game/types";
@@ -324,6 +325,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // layer's trips to and from it (commutes between zones and longer trips)
     const local = cityDemandViews.peek();
     const opened = openedZones.peek();
+    const tiered = !lineSetUp.peek();
     const loads = zoneLoads.peek();
     const day = shownDayPhrase.peek();
     const points = CITIES.flatMap((c) => {
@@ -347,12 +349,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const inter = !own || isOwn ? total(c.place) : t;
       const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: c.name });
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
+      const unbuilt = !own && opened !== null && !opened.has(c.id);
+      // T-2690: until a line is set up an unopened zone's dot is coloured by its start tier
+      const tier = unbuilt && tiered ? startTier(c.id) : null;
       const tag = !own
-        ? [localLine, localBar, interLine, interBar]
+        ? [localLine, localBar, interLine, interBar, ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
           : [tr("intercityView.between", { count: count(t.all), when: day, a: own.name, b: c.name }), interBar, tr("intercityView.explore")];
-      return [{ ...t, city: c, isOwn, tag, unbuilt: !own && opened !== null && !opened.has(c.id) }];
+      return [{ ...t, city: c, isOwn, tag, unbuilt, tier }];
     });
     points.sort((a, b) => b.all - a.all);
     const zoom = map.getZoom();
@@ -361,10 +366,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
     const dot = rgb(UNBUILT_FILL);
+    const tierDot = { easy: rgb(START_TIER_FILL.easy), medium: rgb(START_TIER_FILL.medium), hard: rgb(START_TIER_FILL.hard) };
     const size = display.peek().bubbleSize * BUBBLE_BASE;
     points.forEach((p, i) => {
       const [x, y] = toLocal(p.city.center[0], p.city.center[1], a);
-      const c = p.unbuilt ? dot : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk - p.none), p.none);
+      const c = p.unbuilt ? (p.tier ? tierDot[p.tier] : dot) : bubbleColour(p.rail, p.walk, Math.max(0, p.all - p.rail - p.walk - p.none), p.none);
       let r = Math.sqrt(p.all / (own ? SELECTED_TRIPS_PER_PX2 : TRIPS_PER_PX2)) * zoomScale / pxPerUnit;
       // T-976: a zone not opened is a dot of half the radius it would have, in whole CSS px, at least 2
       // so its 1 px outline leaves some fill; then a quarter bigger (T-1886: beside the opened zones' bubbles it read small)
@@ -465,6 +471,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     display.value.commuters;
     shade.value;
     openedZones.value; // T-976: a zone opening turns its dot into a bubble
+    lineSetUp.value; // T-2690: the dots' start tier colours go with the first line set up
     setBubbleShade(shade.value);
     setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);
     purposeFilter.value;

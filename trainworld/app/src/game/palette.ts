@@ -234,6 +234,9 @@ export const UNBUILT_FILL = "#ffffff";
 /** T-2391: their 1 px outline, a medium grey in both themes (on the light map's land and on the
  * dark map's alike; the dark theme's map ink is near white and left the dots rimless). */
 export const UNBUILT_RIM = "#8c8c8c";
+/** T-2690: their fill by start tier until a line is set up: the crowding ramp's green, yellow and
+ * red, mid-tones that read on the light and dark maps alike. */
+export const START_TIER_FILL = { easy: CROWD_STOPS[0][1], medium: CROWD_STOPS[2][1], hard: CROWD_STOPS[4][1] } as const;
 
 /** Commuter bubbles are this opaque, so the network shows through where they pile up. */
 export const BUBBLE_ALPHA = 0.8;

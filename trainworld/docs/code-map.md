@@ -102,6 +102,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
   `zone-successors.json` (each removed zone id's successor, for old saves, `pipeline/zone_successors.py`; T-1053),
+  `startDifficulty.ts` and `start-difficulty.json` (each start's tier, easy, medium or hard, from `pipeline/start_difficulty.py`, and `lineSetUp`, whether a line runs yet; T-2690),
   `realms.ts` and the hand-edited `realms.json` (the country-sized realms: each zone's, which are shown, each realm's circle point from the registry, and `hiddenRealmAt` for a click on its land, T-975, T-1006), `search.ts` (the search box's matching, `cityMatch` for zones by name or alias, T-148), `walks.ts` (walking minutes to the
   closest stations on the demand model's walking barrier, T-312).
 - Stations and lines: `complexes.ts` (station complexes from platform geometry and the player's
@@ -796,8 +797,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `data/work/target` dir, `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`); `packio.py` writes packs (the
   .bin and .json through .part files, `replace_cell_arrays`).
 - `start_difficulty.py [--tiers] [--fresh]` (T-2690) writes `app/src/game/start-difficulty.json`, the
-  easy and medium starts (any other is hard): weekday trip legs a km² with both ends within 10 km of
-  each start's centre, cut at thirds of the well-known starts; the table in
+  easy and medium starts (any other is hard; zones.md "Start tiers"), read by `game/startDifficulty.ts`; the table in
   `../artifacts/trainworld/t2690/scores.json`. About 25 minutes on one core; `--tiers` re-cuts in seconds.
 - `realms.py [--registry F] [--out F] [--dry]` writes each registry row's `realm` and `data/packs/realms.geojson`, the land of the realms in `app/src/game/realms.json` (T-975, about 1.5 minutes; run by the join).
 - `regions.py`: each cell's state, as the build writes it (T-162). To re-solve a finished pack's

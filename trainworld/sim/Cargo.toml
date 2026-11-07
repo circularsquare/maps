@@ -85,6 +85,12 @@ name = "calib"
 path = "src/bin/calib.rs"
 required-features = ["demand"]
 
+# T-2690: each start's trips inside circles round its centre (pipeline/start_difficulty.py).
+[[bin]]
+name = "start_difficulty"
+path = "src/bin/start_difficulty.rs"
+required-features = ["demand"]
+
 [profile.release]
 opt-level = 3
 lto = true

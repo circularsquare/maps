@@ -9,11 +9,12 @@ import { cityMatch, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 import { dataUrl } from "../game/dataBase";
 import { display } from "../game/ui";
+import { startTier } from "../game/startDifficulty";
 import { newGameEnd, setStartAt } from "./locate";
 import { t, tCountry } from "../i18n";
 
 /** The suggested starts (T-728): the cities the demand model was checked on, each with a real
- * network. A fixed list, so easy, medium and hard starts can take its place later. */
+ * network; meant to be easy starts (T-2690, Anita 2026-11-06). */
 const START_CITIES = ["nyc", "lon", "par", "tyo", "tor"];
 /** The cities with a real network a sandbox can start from (`packs/real/<id>.save`,
  * pipeline/realnet.py ship). */
@@ -38,6 +39,12 @@ function findStart(text: string): { city: City; matched?: string }[] {
   })
     .sort((a, b) => a.score - b.score || Number(!!a.matched) - Number(!!b.matched) || (b.city.localTrips ?? 0) - (a.city.localTrips ?? 0))
     .slice(0, MAX_HITS);
+}
+
+/** T-2690: a search result's start tier, in light text after its name. */
+function TierWord({ id }: { id: string }) {
+  const tier = startTier(id);
+  return <span class="new-game-tier muted small" style={{ marginLeft: "0.6em" }} data-tier={tier} data-tip={t("newGame.tierTip", { tier })}>{t("newGame.tier", { tier })}</span>;
 }
 
 /** The world map centred on a location no zone is near: the continent round it in view. */
@@ -165,7 +172,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         {hits.length > 0 && <ul class="new-game-hits" role="listbox">
           {hits.map(({ city: c, matched }, i) => (
             <li role="option" aria-selected={i === cursor} class={i === cursor ? "on" : ""} data-city={c.id} onMouseDown={(e) => { e.preventDefault(); pick(c.id); }}>
-              <span>{c.name}{matched && <span class="muted small">{t("newGame.matched", { alias: matched })}</span>}</span><span class="muted small">{countryOf(c)}</span>
+              <span>{c.name}{matched && <span class="muted small">{t("newGame.matched", { alias: matched })}</span>}<TierWord id={c.id} /></span><span class="muted small">{countryOf(c)}</span>
             </li>
           ))}
         </ul>}

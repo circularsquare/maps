@@ -995,6 +995,9 @@ registry centre and zoom, or over New York with none [T-310].
   (`zoneForLocation`). Then "Find a city", which lists up to eight of
   the registry's cities and zones whose name has a word starting with the text (case and accents
   ignored, so "hague" finds Rotterdam [The Hague]), biggest by local trips first, each with its
+  start tier in light lowercase text after the name, "easy", "medium" or "hard", whose hover says
+  "Many (Some, Few) trips begin and end within 10 km of the centre" (`game/startDifficulty.ts`;
+  zones.md "Start tiers") [T-2690], and its
   country (the registry's code, named by the browser). Up and down move, Enter or a click picks;
   a pick of one of the five lights its button. Then Choose on map, lit while nothing else
   is picked: the game starts on the world map (its tutorial card begins with "Zoom into a city") with Homes on and every realm shown (zones.md

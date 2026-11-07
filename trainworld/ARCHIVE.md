@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2690 How hard each start is (2026-11-07, agent difficulty): trip density within 10 km times fare scale^0.2, thirds of 408 well-known starts (easy from 10,304, medium from 6,372); tier after each search result, coloured dots until a line runs. Toronto is medium; a swap waits on Anita. notes/T-2690.md.
 - T-2693 Loading status ring and bars (2026-11-07, agent loadui): bunny train replaced by a pill running round a ring (card and status tags); every status tag has a bar (real share, rounds, downloads, else last wait's time). DECISIONS.md; docs/ui-panels.md.
 - T-2694 Region loading bars capped (2026-11-07, agent loadui): at most half the region's on-screen width, 24 to 96 px (`map/zoneLoading.ts`). DECISIONS.md.
 - T-2692 Line improvements at the foot of the line view (2026-11-06, agent lineimprove): heading "Line improvements" over "Add passing tracks" (price small under it, no overhang), "Add parking at end stations" and "Add parking at all stations"; one `stationUpgrade` edit each; new worker query `upgradeCosts`. docs/ui-inspectors.md.
