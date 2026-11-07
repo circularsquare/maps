@@ -296,7 +296,7 @@ world market from the packs. U hospital beds per 1,000 people from the World Ban
 CC BY 4.0, the country's latest year, cached in `pipeline/hospital_beds.json`; none for Taiwan,
 which takes the world figure) scale every pack's hospital beds (T-387). U attractions from
 Wikidata through QLever (CC0; visitors P1174 where given; one world file,
-`pipeline/attractions_json.py`, T-263): figures for 1,273 of 12,682 places, most in the US and
+`pipeline/attractions_json.py`, T-263): figures for 1,295 of 13,304 places, most in the US and
 Western Europe (China 21, Japan 24, India 19, Nigeria none); the rest sized by a budget shared by
 U Wikipedia page views (Wikimedia's monthly pageview dump, September 2026, CC0; English plus the
 country's editions; the per-article APIs allow a client naming no contact 10 requests a minute) and

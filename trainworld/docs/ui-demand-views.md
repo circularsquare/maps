@@ -213,7 +213,7 @@ hover and clicks. They do not enlarge the station's click target.
   overview. No clicks (a click reaches what is under). The hover, within 8 px: the name, "About
   17,700 visits per weekday" (the year's visitors on the day shown, the weekend's at social's
   factors), and with a result "34% by train" with the mode bar, from the attractions purpose's legs
-  at the attraction's cell (the nearest within 600 m, as the demand layer places it; attractions
+  at the attraction's cell (the nearest within 2 km, as the demand layer places it; attractions
   sharing a cell share it), read again with each demand result.
 
 **The bubbles show a new result as soon as it lands** [T-906]: the local bubbles, nearby zones'

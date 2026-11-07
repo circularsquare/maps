@@ -9,7 +9,7 @@ use super::{
     lengths::{add_in, len_bin, scale_to, N_LEN},
     network::PERIODS,
     pack,
-    trip::NEAR_CELL_M,
+    trip::ATTRACTION_REACH_M,
 };
 use crate::track::params::PERIOD_HOURS;
 use wasm_bindgen::prelude::*;
@@ -373,7 +373,7 @@ fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32]
 }
 
 /// T-263: the attractions (x, y, visitors a year triples) that lie in the pack, each as its index,
-/// the nearest cell within `NEAR_CELL_M` and its visits a weekday: a year's visitors over 365
+/// the nearest cell within `ATTRACTION_REACH_M` and its visits a weekday: a year's visitors over 365
 /// days, set on weekdays so the weekend's factors (social's) bring the week back to them.
 fn attraction_sites(commutes: &DemandApi, a: &[f32]) -> Vec<(u32, u32, f32)> {
     let city = &commutes.city;
@@ -387,10 +387,10 @@ fn attraction_sites(commutes: &DemandApi, a: &[f32]) -> Vec<(u32, u32, f32)> {
     let mut out = vec![];
     for (i, t) in a.chunks_exact(3).enumerate() {
         let (x, y, v) = (t[0], t[1], t[2]);
-        if !(v > 0.0) || x < x0 - NEAR_CELL_M || x > x1 + NEAR_CELL_M || y < y0 - NEAR_CELL_M || y > y1 + NEAR_CELL_M {
+        if !(v > 0.0) || x < x0 - ATTRACTION_REACH_M || x > x1 + ATTRACTION_REACH_M || y < y0 - ATTRACTION_REACH_M || y > y1 + ATTRACTION_REACH_M {
             continue;
         }
-        if let Some(c) = commutes.nearest_cell(x, y) {
+        if let Some(c) = commutes.nearest_cell_within(x, y, ATTRACTION_REACH_M) {
             out.push((i as u32, c as u32, v * week));
         }
     }
@@ -1681,7 +1681,7 @@ impl EverydayApi {
         Self::beside_with(commutes, header, bin, &[])
     }
     /// `beside` with attractions (T-263): (x, y, visitors a year) triples in the pack's frame,
-    /// each taken where a cell of the pack lies within `NEAR_CELL_M` (`attractions` lists them).
+    /// each taken where a cell of the pack lies within `ATTRACTION_REACH_M` (`attractions` lists them).
     pub fn beside_with(commutes: &DemandApi, header: &str, bin: &[u8], attractions: &[f32]) -> Result<EverydayApi, String> {
         let n = commutes.city.len();
         let sites = attraction_sites(commutes, attractions);

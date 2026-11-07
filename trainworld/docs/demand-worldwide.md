@@ -840,8 +840,10 @@ notes/T-420.md has the tables.
   above 2,000, up to one per 1,000 visitors a year, leave social's weight (T-1932; a theme park's own
   jobs otherwise drew a city's social outings as if they were restaurants). A lake, hill or island that Wikidata also tags a tourist attraction counts (West Lake;
   in practice China's AAAAA class); a presidential palace or headquarters counts only with a figure.
-  Of 12,641 places, 1,273 carry a figure (the US 268, Italy 193, France 156, China 21, Japan 24,
-  Nigeria none); against them the budget is within 3x for 76%, within 2x for 53%. Why it may not
+  Waterfalls, caves, hot springs, opera houses, Ferris wheels and casinos (also hotels) count too
+  (T-2666), and an attraction takes the nearest cell within 2 km. Of 13,304 places, 1,295 carry a
+  figure (the US 275, Italy 193, France 156, China 21, Japan 25, Nigeria none); against them the
+  budget is within 3x for 75%, within 2x for 54%. Why it may not
   carry over: the country factors rest on few figures (China 18, Korea 7), and another country
   where Wikipedia is little read would need its own; views follow fame abroad as well as visits, so a
   famous place with no figure runs high (the Oriental Pearl Tower 5.5M against about 3.4M, Delhi's

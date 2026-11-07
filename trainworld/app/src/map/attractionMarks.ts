@@ -2,7 +2,7 @@
 // visits a day and how many come by train. The bigger ones show first as the map zooms in; with the
 // purpose filter on Attractions they show from further out. The share by train is the attractions
 // purpose's legs at the attraction's cell (the cell the demand layer gave it, the nearest within
-// 600 m), so two attractions in one cell share it.
+// 2 km), so two attractions in one cell share it.
 
 import { effect } from "@preact/signals";
 import * as maplibregl from "maplibre-gl";
@@ -26,8 +26,8 @@ import { PlaceThrottle } from "./moving";
 const MARK_PATH = "M8 1 15 5H1ZM2.5 6h2.2v6H2.5ZM6.9 6h2.2v6H6.9ZM11.3 6h2.2v6h-2.2ZM1 13h14v2H1Z";
 const SIZE = 12;
 const HOVER_PX = 8;
-/** As the sim's `NEAR_CELL_M` (sim/src/demand/trip.rs). */
-const NEAR_CELL_M = 600;
+/** As the sim's `ATTRACTION_REACH_M` (sim/src/demand/trip.rs). */
+const REACH_M = 2000;
 /** The zoom from which attractions show, and from which with the purpose filter on Attractions. */
 const MIN_ZOOM = 12;
 const MIN_ZOOM_FILTERED = 10;
@@ -58,14 +58,14 @@ export function startAttractionMarks(map: MlMap, overlay: Overlay) {
   const placeIn = (zone: CityId, xy: Float32Array, n: number): Map<Attraction, number> => {
     const frame = getWorldFrame(), grid = new Map<string, number[]>();
     for (let c = 0; c < n; c++) {
-      const k = `${Math.floor(xy[2 * c] / NEAR_CELL_M)},${Math.floor(xy[2 * c + 1] / NEAR_CELL_M)}`;
+      const k = `${Math.floor(xy[2 * c] / REACH_M)},${Math.floor(xy[2 * c + 1] / REACH_M)}`;
       (grid.get(k) ?? grid.set(k, []).get(k)!).push(c);
     }
     const [w, s, e, nn] = widenBox(zoneBox(cityById(zone)), 1000), out = new Map<Attraction, number>();
     for (const a of all) {
       if (a.lng < w || a.lng > e || a.lat < s || a.lat > nn) continue;
-      const [x, y] = frame.fromLonLat(a.lng, a.lat), gx = Math.floor(x / NEAR_CELL_M), gy = Math.floor(y / NEAR_CELL_M);
-      let best = -1, bd = NEAR_CELL_M;
+      const [x, y] = frame.fromLonLat(a.lng, a.lat), gx = Math.floor(x / REACH_M), gy = Math.floor(y / REACH_M);
+      let best = -1, bd = REACH_M;
       for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
         for (const c of grid.get(`${gx + dx},${gy + dy}`) ?? []) {
           const d = Math.hypot(xy[2 * c] - x, xy[2 * c + 1] - y);

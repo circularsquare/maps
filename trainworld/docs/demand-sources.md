@@ -268,7 +268,9 @@ mapped places instead. Per city: [T-142](../notes/T-142.md).
 **Attractions (T-263, every pack, no rebuild).** Visitors to museums, galleries, zoos, aquariums,
 amusement, theme and water parks, botanical gardens, planetariums, temples, shrines, churches,
 cathedrals, basilicas, mosques, synagogues, castles, palaces, fortifications, observation towers,
-monuments, statues, archaeological sites and what Wikidata calls a tourist attraction outright.
+monuments, statues, archaeological sites, waterfalls, caves, hot springs, opera houses, Ferris wheels,
+casinos (also when a hotel: the Las Vegas resorts; not one Wikidata has closed) and what Wikidata calls a
+tourist attraction outright (T-2666).
 One world file, `app/src/game/attractions.json` from `pipeline/attractions_json.py` (Wikidata
 through QLever: those classes and their subclasses, with coordinates; squares, streets, bridges,
 settlements, districts, parks and nature, stadiums and arenas, stations, airports, universities,
@@ -283,12 +285,13 @@ not listed, a place's share s counting as s / (1 + s / 0.05) so no place takes m
 them (T-1905); and one world pool of tourists, the World Bank's international arrivals (2019) plus one
 domestic trip a resident a year, each seeing 0.6 listed places, shared among all places by
 views^0.5; times 5 in mainland China and 2.5 in South Korea, where Wikipedia is little read, but
-not for an observation tower (T-1935); at most 25M. A presidential palace or headquarters counts only with a figure. Kept from
+not for an observation tower, a Ferris wheel or an opera house (T-1935, T-2666); at most 25M. A presidential palace or headquarters counts only with a figure. Kept from
 100,000. One that lies in another (location or part of, within 500 m) or within 100 m of
 a larger one is left to the larger, and a few the build names (passers-by, a resort beside its own
-parks) are left out. About 12,900 worldwide. At a pack's opening the demand worker hands its
+parks) are left out. About 13,300 worldwide. At a pack's opening the demand worker hands its
 everyday layer the attractions in its box (`EverydayApi.beside_with`); each goes to the nearest cell
-within 600 m, so an attraction off every cell (in water, outside the zones) draws nobody. Visits a
+within 2 km (`ATTRACTION_REACH_M`, trip.rs; a mountain's point is its summit, a park's centre is off the
+built-up cells; T-2666), so an attraction off every cell (in water, outside the zones) draws nobody. Visits a
 weekday are the year's over 365 days, set so the weekend's factors (social's, below) bring a week
 back to them; each visit is an outward and a return leg. The other end is half residents and half
 leisure jobs (where visitors eat and stay), each normalised, drawn with a 14.4 km exponential decay

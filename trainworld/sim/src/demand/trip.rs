@@ -27,6 +27,9 @@ const NONE: u32 = u32::MAX;
 /// A point takes the nearest cell whose centre is within this many metres; farther, it is outside
 /// the city's cells (water, or past the pack's edge).
 pub const NEAR_CELL_M: f32 = 600.0;
+/// An attraction takes the nearest cell within this many metres (T-2666): a mountain's or lake's
+/// point is its summit or middle, a theme park's centre is off the built-up cells.
+pub const ATTRACTION_REACH_M: f32 = 2000.0;
 /// Station pairs carrying less than this share of the trip's rail riders are not walked for routes.
 const PAIR_MIN: f32 = 0.005;
 /// Routes carrying less than this share of the trip's rail riders are left out.
@@ -515,7 +518,12 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
 impl DemandApi {
     /// The cell nearest (x, y) (pack frame) within `NEAR_CELL_M`.
     pub(crate) fn nearest_cell(&self, x: f32, y: f32) -> Option<usize> {
-        let mut best = (NEAR_CELL_M * NEAR_CELL_M, None);
+        self.nearest_cell_within(x, y, NEAR_CELL_M)
+    }
+
+    /// The cell nearest (x, y) within `reach` metres.
+    pub(crate) fn nearest_cell_within(&self, x: f32, y: f32, reach: f32) -> Option<usize> {
+        let mut best = (reach * reach, None);
         for c in 0..self.city.len() {
             let d2 = (self.city.x[c] - x).powi(2) + (self.city.y[c] - y).powi(2);
             if d2 <= best.0 {

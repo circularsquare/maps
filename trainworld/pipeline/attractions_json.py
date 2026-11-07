@@ -56,7 +56,14 @@ KINDS = {
     "Q163687": "basilica", "Q32815": "mosque", "Q34627": "synagogue", "Q23413": "castle",
     "Q16560": "palace", "Q57821": "fortification", "Q1440300": "observation tower",
     "Q4989906": "monument", "Q179700": "statue", "Q839954": "archaeological site",
+    # T-2666: places people travel to see that the first list missed (Niagara Falls, Son Doong,
+    # Pamukkale, the Sydney Opera House, the London Eye); a show cave is a subclass of cave
+    "Q34038": "waterfall", "Q35509": "cave", "Q177380": "hot spring", "Q153562": "opera house",
+    "Q202570": "Ferris wheel",
 }
+# T-2666: a casino counts even when it is also a hotel (the Las Vegas resorts, Marina Bay Sands),
+# unless Wikidata has it demolished or closed (the Stardust, the Riviera).
+CASINO = {"Q133215": "casino"}
 # Direct class only: the subclasses of tourist attraction run to rides and trails, of tower and
 # skyscraper to masts and office blocks.
 DIRECT = {"Q570116": "tourist attraction", "Q12518": "tower", "Q11303": "skyscraper"}
@@ -86,6 +93,7 @@ NOT = {
 NOT_UNLESS_FIGURE = {"Q1021645"}
 NOT_UNLESS_RUIN = {"Q483110", "Q641226", "Q1076486"}
 RUIN = "Q839954"
+NOT_UNLESS_CASINO = {"Q27686"}
 # Found by reading the largest: figures that count passers-by, and places whose visitors another
 # row counts already (the resort beside its parks, a statue inside its monument). Left out.
 LEFT_OUT = {
@@ -154,6 +162,7 @@ def qid(uri):
 
 PATTERN = f"""{{ VALUES ?k {{ {" ".join("wd:" + k for k in KINDS)} }} ?s wdt:P31/wdt:P279* ?k }}
   UNION {{ VALUES ?k {{ {" ".join("wd:" + k for k in DIRECT)} }} ?s wdt:P31 ?k }}
+  UNION {{ VALUES ?k {{ {" ".join("wd:" + k for k in CASINO)} }} ?s wdt:P31/wdt:P279* ?k . FILTER NOT EXISTS {{ ?s wdt:P576 ?gone }} }}
   UNION {{ ?s wdt:P31 ?k . ?k wdt:P279+ wd:{TOURIST} . VALUES ?n {{ {" ".join("wd:" + n for n in SCENIC)} }} ?s wdt:P31/wdt:P279* ?n }}
   ?s wdt:P625 ?g ; wikibase:sitelinks ?sl .
   FILTER(?sl >= {MIN_SITELINKS} || EXISTS {{ ?s wdt:P1174 ?any }})"""
@@ -411,6 +420,9 @@ SHARE_HALF = 0.05
 # Oriental Pearl Tower about 3.4M a year, its 100 millionth in its 30th year).
 COUNTRY_SCALE = {"CN": 5.0, "KR": 2.5}
 OBSERVATION_TOWER = "Q1440300"
+# Not scaled either (T-2666): a big wheel's cabins and an opera house's seats hold their visitors
+# (the Guangzhou Opera House came to 19.6M and the Star of Nanchang to 8.1M with the x5).
+NOT_SCALED = {OBSERVATION_TOWER, "Q202570", "Q153562"}
 # lon/lat boxes: Hong Kong, Macau
 NOT_MAINLAND = [(113.82, 22.13, 114.45, 22.57), (113.52, 22.10, 113.61, 22.22)]
 ARRIVALS_YEAR = 2019
@@ -449,7 +461,7 @@ def budget(todo):
     for it in todo:
         it["tourist"] = pool * it["pv"] ** TOURIST_POWER / weight
         mainland = not any(w <= it["lon"] <= e and s <= it["lat"] <= n for w, s, e, n in NOT_MAINLAND)
-        scale = COUNTRY_SCALE.get(it["cc"], 1.0) if mainland and OBSERVATION_TOWER not in it["kinds"] else 1.0
+        scale = COUNTRY_SCALE.get(it["cc"], 1.0) if mainland and not it["kinds"] & NOT_SCALED else 1.0
         it["est"] = min(scale * (it["local"] + it["tourist"]), MAX_FIGURE)
 
 
@@ -487,8 +499,10 @@ def build(raw):
             bad -= NOT_UNLESS_FIGURE
         if RUIN in it["kinds"]:
             bad -= NOT_UNLESS_RUIN
+        if it["kinds"] & CASINO.keys():
+            bad -= NOT_UNLESS_CASINO
         # an open place Wikidata also gives a tourist-attraction class is one in spite of its own
-        it["open"] = not it["kinds"] & (KINDS.keys() | DIRECT.keys())
+        it["open"] = not it["kinds"] & (KINDS.keys() | DIRECT.keys() | CASINO.keys())
         if it["open"]:
             # only a place whose own class is a scenic one: a scenic byway is tagged too, and is a road
             if not it["classes"] & SCENIC.keys():
