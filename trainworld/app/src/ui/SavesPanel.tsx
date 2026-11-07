@@ -466,7 +466,7 @@ export function SavesPanel() {
   return (
     <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <HeadMark />}>
       {sheet
-        ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start); savesOpen.value = false; }} />
+        ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start, game.mode); savesOpen.value = false; }} />
         : <Saves onNewGame={() => setSheet(true)} />}
     </Modal>
   );

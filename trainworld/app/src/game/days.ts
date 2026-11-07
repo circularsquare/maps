@@ -50,6 +50,11 @@ const MONTH_SHORT = lazyTexts(["days.shortMonthJanuary", "days.shortMonthFebruar
 export const MONTH_LONG = lazyTexts(["days.longMonthJanuary", "days.longMonthFebruary", "days.longMonthMarch", "days.longMonthApril", "days.longMonthMay", "days.longMonthJune", "days.longMonthJuly", "days.longMonthAugust", "days.longMonthSeptember", "days.longMonthOctober", "days.longMonthNovember", "days.longMonthDecember"]);
 /** Day of the year of game day `day`, 0 January 1. */
 export const dayOfYear = (day: number): number => ((day - 1 + DAY1_OF_YEAR) % 365 + 365) % 365;
+/** T-2684: the game's year, 1 from the first day to the first December 31, then 2 from the next
+ * January 1 (calendar years, so the year turns with the date). */
+export const yearOf = (day: number): number => Math.floor((day - 1 + DAY1_OF_YEAR) / 365) + 1;
+/** "Feb 24, year 2": a date with its year */
+export const withYear = (text: string, day: number): string => t("days.withYear", { date: text, year: yearOf(day) });
 /** The weekday (0 Monday) of January 1 of game day `day`'s year: which real year's holidays it
  * takes (game/holidays.ts). */
 export const newYearWeekday = (day: number): number => weekdayOf(day - dayOfYear(day));

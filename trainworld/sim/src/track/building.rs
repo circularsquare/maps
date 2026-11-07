@@ -339,12 +339,13 @@ pub fn refusal(net: &Network, id: u32, c: &[P]) -> Option<Issue> {
     None
 }
 
-/// A building's name when the player gave none: its first constructed member's, the part before
-/// any slash.
+/// A building's name when the player gave none: the first member whose name the player typed, else
+/// the first constructed member's, the part before any slash.
 pub fn default_name(net: &Network, members: &[u32]) -> String {
     members
         .iter()
-        .find(|&&m| net.node_built[m as usize])
+        .find(|&&m| net.node_named[m as usize])
+        .or_else(|| members.iter().find(|&&m| net.node_built[m as usize]))
         .or(members.first())
         .map(|&m| net.node_name[m as usize].split('/').next().unwrap_or("").trim().to_string())
         .unwrap_or_default()

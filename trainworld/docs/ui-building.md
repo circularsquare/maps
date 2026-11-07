@@ -142,7 +142,8 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
 [T-2284; `MapToolBar` in `ui/ToolBar.tsx`, `ui/ToolNotes.tsx`, `CLICK_MODE_COLOURS` in
 `game/palette.ts`; design notes/T-2267.md 3.7] Each click mode but plain selecting has its own
 colour: track `#0a819d`, station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
-ferry `#16716f`, line stops `#d777ed`, trip explorer `#268769`, station building `#a15b7b`, passage
+ferry `#16716f`, line stops the edited line's own colour (kept legible on the shade, `legibleOn`; `#d777ed`
+while no line is picked yet), trip explorer `#268769`, station building `#a15b7b`, passage
 `#b0866a`, the same in both shades (chosen 11 or more CIEDE2000 from every colour the game draws).
 
 - **The aura**: the mode's colour round the inside of the map, full at the edge and fading to nothing

@@ -200,7 +200,8 @@ player is looking.
 
 - **Dates** (T-861, T-862; `game/days.ts`): a 365-day year with no leap day. Game day 1 is Monday
   January 27 (`DAY1_OF_YEAR`). Weekdays run on from the day number, so each game year starts a
-  weekday later.
+  weekday later. The game year counts from 1 and turns on January 1 (`yearOf`; year 1 is January 27 to
+  December 31) [T-2684].
 - **Holidays** (T-862, T-262; `game/holidays.ts`, `holidays.json` from `pipeline/holidays_json.py`
   and the Python `holidays` package): each country's national public holidays with the substitute
   days its law gives (the package's observed days: Korea's substitute days, Japan's

@@ -7,7 +7,7 @@
 // older than a day sit in the temp folder); Playwright from PLAYWRIGHT_MODULE,
 // else `playwright`, else the npx cache.
 //
-// Browser: a plain load with no saved game shows the new game sheet, which starts a game with Destinations on (T-677, T-1441); a ?new=1 game
+// Browser: a plain load with no saved game shows the new game sheet, which starts a game with Homes on in a fresh profile, whose tutorial asks for Destinations next (T-677, T-1441, T-2685); a ?new=1 game
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
 // bubbles in the bare new game and on the real save (T-994); a click on a station
@@ -97,8 +97,8 @@ async function browserChecks(BASE) {
       await page.click('.start-menu .new-game .start-new');
       await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu'), undefined, { timeout: 180000 });
       const n = await page.evaluate(() => window.tw.world.value.save.stations.length);
-      const bubbles = await page.evaluate(() => window.tw.display.value.commuters && window.tw.display.value.commuterEnd === 'work');
-      report('start menu', before === 0 && n === 0 && bubbles, `(${before} workers before the pick, ${n} stations after New game, Destinations ${bubbles ? 'on' : 'off'})`);
+      const bubbles = await page.evaluate(() => window.tw.display.value.commuters && window.tw.display.value.commuterEnd === 'home');
+      report('start menu', before === 0 && n === 0 && bubbles, `(${before} workers before the pick, ${n} stations after New game, Homes ${bubbles ? 'on' : 'off'})`);
     } catch (e) {
       report('start menu', false, e.message.split('\n')[0]);
     }

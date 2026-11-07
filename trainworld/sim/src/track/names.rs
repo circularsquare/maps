@@ -4,7 +4,8 @@
 //! before; a save records no "imported" flag, so a name is tidied only when it has the untidy
 //! shape exactly: a station name with a part in capitals (a word of five letters or more, or
 //! two words), a line name that is a known feed's key, a space and the route, with no symbol.
-//! Anything else, a player's own names included, is left alone, so tidying twice changes nothing.
+//! Anything else, a player's own names included, is left alone, so tidying twice changes nothing;
+//! a station name the player typed (`node_named`, T-2683) is never touched, in capitals or not.
 
 use super::net::Network;
 
@@ -175,7 +176,7 @@ fn title(w: &str) -> String {
 pub fn tidy_network(net: &mut Network) -> (usize, usize) {
     let (mut stations, mut lines) = (0, 0);
     for i in 0..net.node_name.len() {
-        if net.node_name[i].is_empty() {
+        if net.node_name[i].is_empty() || net.node_named[i] {
             continue;
         }
         if let Some(n) = tidy_station(&net.node_name[i]) {

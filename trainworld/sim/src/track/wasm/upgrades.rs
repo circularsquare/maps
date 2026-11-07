@@ -73,4 +73,10 @@ impl TrackApi {
             .flat_map(|n| [n, net.node_upgrades[n as usize] as u32])
             .collect()
     }
+
+    /// Stations whose name the player typed (T-2683): their nodes.
+    pub fn named_stations(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.node_count() as u32).filter(|&n| net.is_station(n) && net.node_named[n as usize]).collect()
+    }
 }

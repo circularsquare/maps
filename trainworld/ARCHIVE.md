@@ -1,10 +1,15 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2693 Loading status ring and bars (2026-11-07, agent loadui): bunny train replaced by a pill running round a ring (card and status tags); every status tag has a bar (real share, rounds, downloads, else last wait's time). DECISIONS.md; docs/ui-panels.md.
+- T-2694 Region loading bars capped (2026-11-07, agent loadui): at most half the region's on-screen width, 24 to 96 px (`map/zoneLoading.ts`). DECISIONS.md.
+- T-2692 Line improvements at the foot of the line view (2026-11-06, agent lineimprove): heading "Line improvements" over "Add passing tracks" (price small under it, no overhang), "Add parking at end stations" and "Add parking at all stations"; one `stationUpgrade` edit each; new worker query `upgradeCosts`. docs/ui-inspectors.md.
+- T-2683 A player's own names survive edits (2026-11-07, agent keepnames): typed station names are flagged (`StationData::named`, save bit 8) and a complex goes by its typed member before its busiest; load's tidy, building default and line-group names no longer overwrite typed ones. DECISIONS.md; `checks/t2683-keep-names.mjs`.
 - T-2675 Diagram borders nearer track (2026-11-06, agent namespread): sheetLines trackKm 50 -> 30, wholeShare 0.3 -> 0.5; NY's figures unchanged, far fewer border lines around NA's network. artifacts/trainworld/namespread/borders-na-pair.png.
 - T-2674 Diagram zone names spread across the view (2026-11-06, agent namespread): busiest first, then the highest sqrt(stations) x distance to names shown; whole NA in the page now Seattle, Los Angeles, Chicago, New York, Boston, Washington DC; whole Japan Sapporo to Kasuga. docs/ui-diagram.md.
 - T-2688 Crowding dots from 70% (2026-11-06, agent uitweaks): `CROWD_STOPS` is green to 70%, yellow-green 80%, yellow 100%, then the old orange 130%, red 140%, crimson 150%; strain marks still start at `CROWDED_FROM` 1.005.
 - T-2687 Stops halo in the line's colour (2026-11-06, agent uitweaks): while a line's stops are edited the aura and the descriptor's square take that line's colour (`clickColour` in ui/ToolBar.tsx), kept legible on the shade by `legibleOn`; other modes keep theirs.
+- T-2689 Tutorial share goal 1% (2026-11-06, agent yearsdest): the last step reads "Reach 1% train share in New York" (`GUIDE_SHARE` 1; Anita: 2% is not easy everywhere).
 - T-2686 Tutorial hint text one grey (2026-11-06, agent yearsdest): a ticked step's note keeps the muted grey of an undone step instead of fading again (ui/guide.css).
 - T-2685 Tutorial starts on Homes, then Destinations (2026-11-06, agent yearsdest): a new Normal game with the tutorial opens on Homes; the Homes step is replaced by "Click Destinations to see where trips end" after the trip step. checks/t2123-tutorial.mjs updated.
 - T-2684 Years (2026-11-06, agent yearsdest): calendar year from 1, shown on the top bar's date from year 2 (hover always) and as Year N labels under the Money tab's All time history past 365 days. checks/t2684-years.mjs.

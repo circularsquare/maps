@@ -52,7 +52,7 @@ function selectors(step: Target): string[] {
     case "split": return [GUIDE_SPLIT];
     case "track": case "stations": case "construct": return [own, '[data-guide-tab="build"]'];
     case "line": return [own, '[data-guide-tab="lines"]'];
-    case "homes": return [own, '[data-fold="bubbles"]'];
+    case "destinations": return [own, '[data-fold="bubbles"]'];
     case "traffic": return [own, '[data-fold="track"]'];
     case "play": case "end": return [own];
     // on the map itself, nothing to point at

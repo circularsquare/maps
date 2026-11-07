@@ -91,7 +91,7 @@ export function DemandSelector() {
   return <div class="demand-selector" role="group" aria-label={t("demandSelector.group")}>
     <FoldCell row="bubbles" />
     {([ ["none", "demandSelector.none"], ["home", "demandSelector.homes"], ["work", "demandSelector.destinations"], ["both", "demandSelector.total"] ] as const).map(([value, label]) =>
-      <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value} data-guide={value === "home" ? "homes" : undefined}
+      <button type="button" class={`btn${selected === value ? " on" : ""}${!ready && value !== "none" ? " demand-pending" : ""}`} aria-pressed={selected === value} data-guide={value === "work" ? "destinations" : undefined}
         aria-disabled={!ready && value !== "none"} data-tip={!ready && value !== "none" ? pending : t(KEYED[value], { key: KEY })}
         onClick={() => {
           if (!ready && value !== "none") return;

@@ -10,7 +10,7 @@ import { fitView } from "../game/loading";
 import { WORLD_ZOOM } from "../game/worldTotals";
 import { WORLD_HOME } from "../workers/saveFile";
 import { openedZones } from "../game/openedZones";
-import { display } from "../game/ui";
+import { display, guideFinished } from "../game/ui";
 import { stopsById, world } from "../game/world";
 import { placeAt, zoneAt } from "../game/zones";
 import { live } from "../map/live";
@@ -35,7 +35,7 @@ export function setStartAt(at: { center: [number, number]; zoom: number } | null
 
 /** Move the camera to a new game's start: the city's registry view, or the world map; a start from
  * the player's location goes to that location instead. */
-export function viewStart(start?: string) {
+export function viewStart(start?: string, mode?: string) {
   const at = startAt;
   startAt = null;
   const c = start ? CITIES.find((x) => x.id === start) : undefined;
@@ -46,7 +46,13 @@ export function viewStart(start?: string) {
   }
   live.map?.jumpTo(at ?? (c ? { center: c.center, zoom: c.zoom } : WORLD_VIEW));
   // T-801: a start on the map is picked from the zones' zoomed-out bubbles, so Destinations goes on (T-1441)
-  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: "work" };
+  if (!c) display.value = { ...display.peek(), commuters: true, commuterEnd: newGameEnd(mode) };
+}
+
+/** T-2685: a new game with the tutorial opens on Homes, whose card goes on to ask for Destinations;
+ * any other new game opens on Destinations (T-1441). */
+export function newGameEnd(mode?: string): "home" | "work" {
+  return mode === "normal" && !guideFinished.peek() ? "home" : "work";
 }
 
 /** Furthest in a saved game opens: a district, so a lone station is not shown at street level (T-895). */

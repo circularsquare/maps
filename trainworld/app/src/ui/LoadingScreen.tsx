@@ -13,7 +13,7 @@ import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, la
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
 import { blockKeysOutside } from "./keys";
-import { BunnyTrain } from "./Spinner";
+import { PillRing } from "./Spinner";
 import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
@@ -38,17 +38,17 @@ export function loadingCardShown(): boolean {
 
 /** T-243: a bar filling as the load goes, in place of a percentage; the percentage is its hover.
  * The fill jumps to each new value (no transition). */
-export function LoadBar({ fraction, step, thin, tip }: { fraction: number; step: string; thin?: boolean; tip?: string }) {
+export function LoadBar({ fraction, step, thin, tip, quiet }: { fraction: number; step: string; thin?: boolean; tip?: string; quiet?: boolean }) {
   const pct = Math.floor(fraction * 100);
-  return <span class={"load-bar" + (thin ? " thin" : "")} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}
-    data-tip={tip ?? t("loadingScreen.loaded", { pct: tNumber(pct), step })}>
+  return <span class={"load-bar" + (thin ? " thin" : "") + (quiet ? " quiet" : "")} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}
+    data-tip={quiet ? undefined : tip ?? t("loadingScreen.loaded", { pct: tNumber(pct), step })}>
     <i class="load-fill" style={{ width: `${fraction * 100}%` }} />
   </span>;
 }
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
  * the map. Pointer events pass through it to the map, except on the bar (its hover).
- * T-677: the bunny's train on top. T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
+ * T-2693: the pill ring on top. T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
   // (T-2574: a load ended at a cached result shows its bar full a moment first)
@@ -61,7 +61,7 @@ function LoadingCard() {
   // T-1479: the share done and, once there is an estimate, the time left
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
-      <BunnyTrain />
+      <PillRing big />
       <p class="big">{step}</p>
       <LoadBar fraction={fraction} step={step} />
       <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>

@@ -8,6 +8,7 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
+import { leadOf } from "../game/complexLead";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
@@ -123,7 +124,7 @@ function MoreRows({ more }: { more: () => void }) {
 
 /** A Stations tab row: a station complex (T-530), or a station on its own. */
 interface StationRow {
-  /** the member a click selects, whose name the row takes: most lines, then constructed, then save order */
+  /** the member a click selects, whose name the row takes (`leadOf`: a typed name, then most lines) */
   lead: StationInput;
   members: string[];
   lines: LineInput[];
@@ -146,17 +147,18 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
     seen.add(k);
     const members = membersOf(cx, s.id);
     const at = new Set<number>();
-    let lead = s, leadLines = -1, built = false, d: number | undefined;
+    let built = false, d: number | undefined;
+    const present: StationInput[] = [];
     for (const id of members) {
       const m = byId.get(id);
       if (!m) continue;
-      const li = lineIdx.get(id) ?? [];
-      for (const i of li) at.add(i);
-      if (li.length > leadLines || (li.length === leadLines && m.built && !lead.built)) { lead = m; leadLines = li.length; }
+      present.push(m);
+      for (const i of lineIdx.get(id) ?? []) at.add(i);
       built ||= m.built;
       const dm = dist.get(id);
       if (dm !== undefined && (d === undefined || dm < d)) d = dm;
     }
+    const lead = present.length ? leadOf(present, (id) => lineIdx.get(id)?.length ?? 0) : s;
     rows.push({ lead, members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
   }
   return rows;

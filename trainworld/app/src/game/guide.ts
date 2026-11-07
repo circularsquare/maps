@@ -19,12 +19,13 @@ import { t } from "../i18n";
 import type { GuideSave } from "../workers/saveFile";
 
 export type GuideId = "zoom" | "track" | "stations" | "construct" | "line" | "stops" | "trains" | "crowd" | "levels"
-  | "play" | "homes" | "bubble" | "trip" | "star" | "split" | "traffic";
+  | "play" | "destinations" | "bubble" | "trip" | "star" | "split" | "traffic";
 
-/** Each step's bit in `GuideSave.done`: the first six are T-1822's, so older saves keep their ticks. */
+/** Each step's bit in `GuideSave.done`: the first six are T-1822's, so older saves keep their ticks.
+ * Bit 9 was the retired "homes" step (T-2685); a new game opens with Homes on. */
 export const GUIDE_BITS: Record<GuideId, number> = {
   track: 0, stations: 1, construct: 2, line: 3, stops: 4, trains: 5,
-  zoom: 6, crowd: 7, levels: 8, homes: 9, bubble: 10, trip: 11, star: 12, play: 13, split: 14, traffic: 15,
+  zoom: 6, crowd: 7, levels: 8, destinations: 16, bubble: 10, trip: 11, star: 12, play: 13, split: 14, traffic: 15,
 };
 
 export interface GuideStep {
@@ -40,11 +41,11 @@ export interface GuideStep {
 /** track to lay, m, and its stations apart from each other, m (step 1, 2) */
 export const GUIDE_TRACK_M = 5000, GUIDE_STATIONS = 3, GUIDE_APART_M = 500;
 /** the last step's train share, % (Anita, T-2263: the region star's 10% was too far for a tutorial) */
-export const GUIDE_SHARE = 2;
+export const GUIDE_SHARE = 1;
 const WORDS: Record<Exclude<GuideId, "star">, string> = {
   get zoom() { return t("guide.zoom"); },
   get split() { return t("guide.split"); },
-  get homes() { return t("guide.homes"); },
+  get destinations() { return t("guide.destinations"); },
   get bubble() { return t("guide.bubble"); },
   get trip() { return t("guide.trip"); },
   get track() { return t("guide.track"); },
@@ -60,7 +61,7 @@ const WORDS: Record<Exclude<GuideId, "star">, string> = {
 };
 const NOTES: Partial<Record<GuideId, string>> = {
   get split() { return t("guide.splitNote"); },
-  get homes() { return t("guide.homesNote"); },
+  get bubble() { return t("guide.bubbleNote"); },
   get crowd() { return t("guide.crowdNote"); },
   get levels() { return t("guide.levelsNote"); },
   get traffic() { return t("guide.trafficNote"); },
@@ -101,9 +102,9 @@ function firstSteps(w: WorldView, g: GuideSave): GuideStep[] {
   if (g.zoom) steps.push(step("zoom", !zoomedOut.value && !!viewedZone.value && cityDemandViews.value.has(activeCity.value)));
   steps.push(
     step("split", splitSeen.value),
-    step("homes", d.commuters && d.commuterEnd === "home"),
     step("bubble", s?.kind === "commuters"),
     step("trip", s?.kind === "trip" && s.to !== null),
+    step("destinations", d.commuters && d.commuterEnd === "work"),
     step("track", laid >= GUIDE_TRACK_M, { have: km(laid), goal: GUIDE_TRACK_M / 1000, unit: "km" }),
     step("stations", stationsOn >= GUIDE_STATIONS, { have: Math.min(stationsOn, GUIDE_STATIONS), goal: GUIDE_STATIONS }),
     step("construct", built >= GUIDE_TRACK_M && builtCount >= GUIDE_STATIONS),

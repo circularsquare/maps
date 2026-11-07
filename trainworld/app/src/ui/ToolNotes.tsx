@@ -4,9 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ask, lineDraft, selection, tool } from "../game/ui";
 import { linesByNum, notice, stationsById, world } from "../game/world";
 import { cancelLink, linking } from "../game/links";
-import { CLICK_MODE_COLOURS } from "../game/palette";
 import { live } from "../map/live";
-import { clickMode, type ClickMode } from "./ToolBar";
+import { clickColour, clickMode, type ClickMode } from "./ToolBar";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
 import { buildingDraft } from "../game/buildingView";
@@ -102,7 +101,7 @@ function Notice() {
   if (!show && !hint && !bus && !ferry && !building && !simple) return null;
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = tl === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
-  const sq = mode !== "select" && <span class="mode-sq" style={{ background: CLICK_MODE_COLOURS[mode] }} />;
+  const sq = mode !== "select" && <span class="mode-sq" style={{ background: clickColour(mode) }} />;
   return (
     <div id="tool-notes">
       {simple && (

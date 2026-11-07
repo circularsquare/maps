@@ -381,7 +381,10 @@ impl TrackApi {
     /// paid for at once (final).
     pub fn set_station_props(&mut self, node: u32, platform: u16, name: String) -> u32 {
         let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
-        let op = Op::Station { node, data: Some(StationData { platform, name, ..old.clone() }) };
+        // T-2683: a new name here is the player's (typed, or picked with the cycle button); the same
+        // name sent back with a new platform keeps the flag as it was
+        let named = old.named || name != old.name;
+        let op = Op::Station { node, data: Some(StationData { platform, name, named, ..old.clone() }) };
         if old.built && old.platform != platform {
             self.run_charged(op)
         } else {

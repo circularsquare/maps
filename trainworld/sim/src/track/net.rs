@@ -167,6 +167,8 @@ pub struct EdgeData {
 pub struct StationData {
     pub platform: u16,
     pub name: String,
+    /// The player typed the name, so the game keeps it (T-2683).
+    pub named: bool,
     /// Constructed; false = blueprint (SPEC 6.4).
     pub built: bool,
     /// Switched off while a blueprint (T-333, see `EdgeData::off`).
@@ -369,6 +371,8 @@ pub struct Network {
     /// Platform length, 0 = not a station.
     pub node_platform: Vec<u16>,
     pub node_name: Vec<String>,
+    /// The player typed the station's name (T-2683); no code renames it afterwards.
+    pub node_named: Vec<bool>,
     /// The station on the node is constructed (meaningless without a platform).
     pub node_built: Vec<bool>,
     /// The blueprint station is switched off (T-333).
@@ -684,6 +688,7 @@ impl Network {
             node_flying: vec![],
             node_platform: vec![],
             node_name: vec![],
+            node_named: vec![],
             node_built: vec![],
             node_off: vec![],
             node_upgrades: vec![],
@@ -896,6 +901,7 @@ impl Network {
         self.node_flying.push(false);
         self.node_platform.push(0);
         self.node_name.push(String::new());
+        self.node_named.push(false);
         self.node_built.push(false);
         self.node_off.push(false);
         self.node_upgrades.push(0);
@@ -993,7 +999,7 @@ impl Network {
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -1310,6 +1316,7 @@ impl Network {
                 }
                 self.node_platform[i] = 0;
                 self.node_name[i].clear();
+                self.node_named[i] = false;
                 self.node_built[i] = false;
                 self.node_off[i] = false;
                 self.node_upgrades[i] = 0;
@@ -1318,6 +1325,7 @@ impl Network {
             Some(d) => {
                 self.node_platform[i] = d.platform;
                 self.node_name[i] = d.name;
+                self.node_named[i] = d.named;
                 self.node_built[i] = d.built;
                 self.node_off[i] = d.off && !d.built;
                 self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;

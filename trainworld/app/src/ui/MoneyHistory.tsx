@@ -8,7 +8,7 @@
 
 import { signal } from "@preact/signals";
 import { clockTime, count, money } from "../game/format";
-import { DAY1_OF_YEAR, dateName, dateOf, dateRange, shortDate, weekdayOf } from "../game/days";
+import { DAY1_OF_YEAR, dateName, dateOf, dateRange, shortDate, weekdayOf, withYear, yearOf } from "../game/days";
 import { clock } from "../game/clock";
 import { moneyState } from "../game/money";
 import { cityById, isCity } from "../game/cities";
@@ -117,7 +117,15 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   const bw = Math.max(1, col - GAP);
   /** a binned column's figures are per day */
   const per = binned ? t("moneyHistory.perDay") : "";
-  const name = (e: Entry, i: number) => { const w = binned ? dateRange(e.from!, e.to!) : when(e, hours, sh); return i === last ? t("moneyHistory.soFar", { when: w }) : w; };
+  // T-2684: years are labelled once the days shown span more than one
+  const firstDay = list[0].from ?? list[0].at, lastDay = list[last].to !== undefined ? list[last].to! - 1 : list[last].at;
+  const years = span.value === "all" && !hours && lastDay - firstDay + 1 > 365;
+  const dayEnd = (e: Entry) => (e.to !== undefined ? e.to - 1 : e.at);
+  const name = (e: Entry, i: number) => {
+    let w = binned ? dateRange(e.from!, e.to!) : when(e, hours, sh);
+    if (years) w = withYear(w, dayEnd(e));
+    return i === last ? t("moneyHistory.soFar", { when: w }) : w;
+  };
 
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
@@ -202,6 +210,12 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
           {list.map((e, i) => marks[i].lines.length ? <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={4} data-tip={[name(e, i), ...marks[i].lines].join("\n")} /> : null)}
         </svg>
       )}
+      {years && <div class="hist-years small muted">{list.map((e, i) => {
+        const y = yearOf(dayEnd(e));
+        if (i > 0 && y === yearOf(dayEnd(list[i - 1]))) return null;
+        const at = ((x0 + i * col) / W) * 100;
+        return <span class={at > 85 ? "late" : ""} style={{ left: `${at}%` }}>{t("moneyHistory.year", { year: y })}</span>;
+      })}</div>}
       <div class="hist-x small muted"><span>{when(first, hours, sh, false)}</span><span>{when(binned ? { ...list[last], at: list[last].to! - 1 } : list[last], hours, sh, false)}</span></div>
     </>
   );

@@ -108,7 +108,7 @@ export function GroupInspector({ group }: { group: number }) {
   const names = stationNames(w);
   const nm = (s: string) => names.get(s) ?? "";
   const name = groupName(byNum);
-  const rename = (n: string) => void edit({ op: "groupName", group, name: n === byNum[0].name ? "" : n });
+  const rename = (n: string) => void edit({ op: "groupName", group, name: n });
   // T-1813: the bullet's text and colour set by hand, sent together
   const look = { symbol: byNum[0].groupSymbol ?? "", colour: byNum[0].groupColour || null };
   const setLook = (v: { symbol?: string; colour?: string | null }) => void edit({ op: "groupLook", group, symbol: v.symbol ?? look.symbol, colour: v.colour === undefined ? look.colour : v.colour }).then(() => setPreview(null));

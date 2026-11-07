@@ -1,10 +1,10 @@
 // T-2123, T-2263: the tutorial walked in a fresh profile. Run 1: the start menu's default (New
 // York); the first card: the bubbles row open and the other view rows folded, the top bar's split
-// hovered (its note), Homes, a bubble and a trip, the ripple repeating until its control is clicked
+// hovered (its note), a bubble and a trip from the Homes the game opens on, Destinations, the ripple repeating until its control is clicked
 // and moving from the Lines tab to New line, the close confirmation, a line built with stops, then
 // the ripple on Continue. The second card: trains at High (Medium and Low stay 0: T-2092's fill is
 // gone), the game paused from the start until the play step (T-2142), which now comes before the
-// crowding dot, its hover merged with the level name's (T-2334), every level, Traffic, the 2% share step; the road
+// crowding dot, its hover merged with the level name's (T-2334), every level, Traffic, the 1% share step; the road
 // crossings chip's tutorial wording and its short one once the card is closed; Start again in
 // Settings. Run 2: Choose on map, whose first step is a zoom.
 // Screenshots in artifacts/trainworld/t2123/.
@@ -72,7 +72,7 @@ const startGame = async (page) => {
     const ui = (k) => page.evaluate(async (k) => (await import('/src/game/ui.ts'))[k].value, k);
     check((await ui('tab')) === 'build', 'the game opens on Build');
     check((await page.evaluate(() => window.tw.clock.running.value)) === false, 'a new game starts paused (T-2142)');
-    check(!!(await page.$('[data-guide="homes"]')) && !(await page.$('[data-guide="traffic"]')) && !(await page.$('[data-fold="stations"] ~ .btn')),
+    check(!!(await page.$('[data-guide="destinations"]')) && !(await page.$('[data-guide="traffic"]')) && !(await page.$('[data-fold="stations"] ~ .btn')),
       'the first card opens the bubbles row and folds the station and track rows');
     console.log('card 1', JSON.stringify(await steps(page)));
     check(!(await page.$('.guide-steps li[data-step="zoom"]')), 'no zoom step on a city start');
@@ -87,12 +87,8 @@ const startGame = async (page) => {
     check(/^85 road crossings \+\$12/.test(await roadChip(page)), `the road chip's tutorial wording (${await roadChip(page)})`);
 
     await page.hover('#topbar .split-row');
-    check(await waitStep(page, 'homes', 5000), `hovering the split ticks it (now ${await stepNow(page)})`);
-    await page.mouse.move(700, 450);
-    await page.waitForTimeout(1500);
-    check(await ringOn(page, '[data-guide="homes"]'), 'the Homes step ripples Homes');
-    await page.click('[data-guide="homes"]');
-    check(await waitStep(page, 'bubble', 5000), `Homes ticks (now ${await stepNow(page)})`);
+    check(await waitStep(page, 'bubble', 5000), `hovering the split ticks it (now ${await stepNow(page)})`);
+    check(await page.evaluate(async () => { const d = (await import('/src/game/ui.ts')).display.value; return d.commuters && d.commuterEnd === 'home'; }), 'a tutorial game opens on Homes (T-2685)');
     console.log('bubble note', await noteNow(page));
     await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.94, 40.70], zoom: 12 }));
     await page.waitForFunction(() => window.twDemand?.view?.()?.final, undefined, { timeout: 120000 }).catch(() => {});
@@ -107,6 +103,7 @@ const startGame = async (page) => {
       await page.keyboard.press('Escape');
     }
     check(picked && await waitStep(page, 'trip', 5000), `a bubble click ticks (now ${await stepNow(page)})`);
+    await shotCard(page, '03a-homes-on');
     await page.waitForTimeout(3000);
     // its destinations: one of the far bubbles, by the trip tool's two clicks if none is hit
     await page.keyboard.press('Escape');
@@ -114,9 +111,15 @@ const startGame = async (page) => {
     await page.mouse.click(760, 470);
     await page.waitForTimeout(500);
     await page.mouse.click(560, 300);
-    check(await waitStep(page, 'track', 10000), `a trip ticks (now ${await stepNow(page)})`);
+    check(await waitStep(page, 'destinations', 10000), `a trip ticks (now ${await stepNow(page)})`);
     await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
+    await page.mouse.move(700, 450);
+    await page.waitForTimeout(1500);
+    check(await ringOn(page, '[data-guide="destinations"]'), 'the Destinations step ripples Destinations');
+    await shotCard(page, '03b-destinations-step');
+    await page.click('[data-guide="destinations"]');
+    check(await waitStep(page, 'track', 5000), `Destinations ticks (now ${await stepNow(page)})`);
 
     // the ripple keeps going: at 1.5 s, 6 s and 11 s it is round the Track tool
     await page.waitForTimeout(1500);
@@ -229,7 +232,7 @@ const startGame = async (page) => {
     check(await waitStep(page, 'star', 5000), `Traffic ticks (now ${await stepNow(page)})`);
     const star = await page.$eval('.guide-steps li[data-step="star"]', (l) => l.textContent);
     console.log('star step', star);
-    check(/^Reach 2% train share in New York/.test(star), `the share step asks for 2% (${star})`);
+    check(/^Reach 1% train share in New York/.test(star), `the share step asks for 1% (${star})`);
     await shotCard(page, '13-card-two-star');
 
     // closing, then Start again in Settings

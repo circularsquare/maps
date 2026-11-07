@@ -139,7 +139,7 @@ function namesOf(g: DiagramGraph): DiagramNames {
     const id = String(key), c = cx.of.get(id), members = c === undefined ? [id] : cx.members[c];
     return pickName(members.flatMap((m) => {
       const s = byId.get(m);
-      return s ? [{ name: s.name, lines: stops.get(m) ?? 0 }] : [];
+      return s ? [{ name: s.name, lines: (stops.get(m) ?? 0) + (s.named ? 1e6 : 0) }] : []; // T-2683: a typed name outranks any line count
     }));
   });
   const wOf = (t: string) => widthOf(t, f);

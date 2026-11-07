@@ -288,6 +288,25 @@ mod tests {
         assert_eq!(b.save(), bytes);
     }
 
+    /// T-2683: a name the player typed is flagged; the flag survives a platform change, undo, a
+    /// save and load, and the load's tidying of capitals; a name placed by the game is not flagged.
+    #[test]
+    fn a_typed_station_name_is_flagged_and_kept() {
+        let (mut a, st) = net();
+        assert_eq!(a.named_stations(), Vec::<u32>::new(), "placed names are the game's");
+        assert_eq!(a.set_station_props(st[1], 200, "MY HOME STATION".into()), 0, "{}", a.issues());
+        assert_eq!(a.named_stations(), vec![st[1]]);
+        assert_eq!(a.set_station_props(st[1], 200, "MY HOME STATION".into()), 0);
+        assert_eq!(a.set_station_props(st[0], 240, "Central / Main".into()), 0, "{}", a.issues());
+        assert_eq!(a.named_stations(), vec![st[1]], "the same name with a new platform is no typing");
+        let bytes = a.save();
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        assert!(b.load(&bytes));
+        assert_eq!(b.named_stations(), vec![st[1]]);
+        assert_eq!(b.node_name(st[1]), "MY HOME STATION", "load does not tidy it");
+        assert_eq!(b.save(), bytes);
+    }
+
     /// After T-2193: a save with ferries and buildings writes LFR2 then BLD1 and loads both; the
     /// ferry save from before the building reads back without buildings, to the bit.
     #[test]

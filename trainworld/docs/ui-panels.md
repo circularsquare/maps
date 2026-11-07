@@ -197,7 +197,14 @@ wide so a longer date moves nothing [T-1868].
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
   "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar
-  after it (Loading, below). The figures change in one step when a detailed solve lands
+  after it (Loading, below). Every status text has the pill ring before it and a thin bar after it
+  (none on a failure) [T-2693]: the load's own share for "Loading data"; a zone's share
+  (`zoneLoads`) for a wait on a zone's load, and for bubbles on their way; the running solve's
+  rounds published of all (`demandStep`) for a recomputing, behind or capped status and a click
+  waiting on a solve; terrain downloads finished of the most waiting at once; and where nothing
+  measures the work (or a solve has not begun), the share of the time the last such wait took that
+  has passed, to 95% at most, 3 s for the first. Only the load's bar has a hover; the others pass
+  the pointer to the tag. The figures change in one step when a detailed solve lands
   [T-1223, docs/demand-runtime.md "Levels of detail"]. No grey and no bar: those stay for a zone with no figures. A rough zone's city view,
   opened from elsewhere, and the Cities list mark nothing: rough figures are close enough (Anita,
   T-1206, 2026-10-28).
@@ -218,8 +225,9 @@ wide so a longer date moves nothing [T-1868].
   "Sandbox" in the muted colour, with the money since day 1 (the cash minus the $10B start) and
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
-  (figure style) and the date without the year (normal style) on one line 6 px apart, "13:24 Mon Feb
-  24" (hover "Monday, February 24, day 29"), [T-1868]. The day and night picture
+  (figure style) and the date (normal style) on one line 6 px apart, "13:24 Mon Feb
+  24" (hover "Monday, February 24, year 1, day 29"), [T-1868]. The date carries the year from year 2 on
+  ("Mon Feb 24, year 2"); year 1 shows none [T-2684]. The day and night picture
   and its 2 px demand band are not in the bar: they sit at the top right of the map under the bar
   (`MapSky` in `ui/TopBar.tsx`, right 10 px and top 10 px of the map), right-aligned under the time
   and speed controls, on the wide bar and the two-row one. It is 250 px wide, shrinking to 150 px as
@@ -355,8 +363,8 @@ bold) and an x (no hover; screen readers get "Close the tutorial"), then a row o
 12 px tick box, the step, its counter right in tabular figures (no hovers on the counters). Done steps
 carry a tick; the step in hand (the first not done) is in the text colour, steps after it muted. Ticks
 show at once. Some steps have a note under the step's words: in the muted colour while it is the step
-in hand, and once the step is ticked it stays for the rest of the card, greyer (the muted colour 65% over
-the background) [T-2473]; a step after the one in hand, not yet ticked, shows none. The search results open over it. Two cards, one after the other.
+in hand, and once the step is ticked it stays for the rest of the card in the same muted colour
+[T-2473, T-2686: the card has only the text colour and one grey]; a step after the one in hand, not yet ticked, shows none. The search results open over it. Two cards, one after the other.
 
 **The first card**, reading demand, then laying a line:
 
@@ -364,9 +372,9 @@ the background) [T-2473]; a step after the one in hand, not yet ticked, shows no
 |---|---|---|---|
 | Zoom into a city | none | only in a game started on the world map (Choose on map, or a location far from every zone): a zone in view at city zoom (not the zoomed-out bubbles) with its demand drawn | |
 | Hover the red and green bar at the top of the screen to see how people travel | none | the pointer on the top bar's mode split in this page | Green is walking, red is cars and other modes, blue is your trains. |
-| Show Homes on the map | none | the demand view on Homes | A bubble shows trips from homes there. Red bubbles mostly drive and green bubbles mostly walk. |
-| Click a red bubble to see where its trips go | none | a bubble selection | none |
+| Click a red bubble to see where its trips go | none | a bubble selection | A bubble shows trips from homes there. Red bubbles mostly drive and green bubbles mostly walk. |
 | Click one of its destinations to see that trip | none | the trip explorer with both ends | |
+| Click Destinations to see where trips end | none | the demand view on Destinations [T-2685] | |
 | Place 5km of track | 2.3/5.0 km | any track, blueprint or built, not switched off | |
 | Place stations on the track (space them ~1km apart) | 1/3 | stations, blueprint or built, at least 500 m apart | |
 | Construct your blueprints | none | at least 5 km of built track and 3 built stations 500 m apart | |
@@ -382,7 +390,7 @@ the background) [T-2473]; a step after the one in hand, not yet ticked, shows no
 | Hover the dot by High to see if there are enough trains | none | the pointer on a line panel's crowding dot (any level's) in this page | If trains are crowded, they will show as >100% capacity, and people will be less likely to ride. To carry more, you can increase train length. |
 | Add trains at high, medium and low demand | 1/3 | the demand levels with at least one train, on the rail line with most | If only a short stretch is crowded, adding more trains can end up costing more than they earn. |
 | Show line traffic on the map | none | the track display on Traffic | Thicker lines represent more riders. Red borders indicate track at full capacity. |
-| Reach 2% train share in New York (the zone in focus) | 0.6/2% | the zone's train share on the average day at 2% (`GUIDE_SHARE`), or any region's star | |
+| Reach 1% train share in New York (the zone in focus) | 0.6/1% | the zone's train share on the average day at 1% (`GUIDE_SHARE`, T-2689), or any region's star | |
 
 A step ticks the first time its check holds and stays ticked (undo never unticks it); counters keep
 following the world and cap at their goal. A later step can tick before an earlier one. Once every
@@ -404,7 +412,7 @@ card; the second card's last tick gives a Done! button (closes the card for good
 - **The view rows fold**: while the first card is up, the map's station ridership and track colour
   rows (ui-demand-views.md) show only their fold icons, as if folded, without changing the remembered
   folds; a row the player opens stays open for the page. The demand bubbles' row shows as remembered,
-  since the card starts with Homes. The second card shows every row as remembered.
+  since a new game with the card opens on Homes (any other new game opens on Destinations) [T-2685]. The second card shows every row as remembered.
 - **Longer hovers** [T-2263]: while the card is up in a game (`guideVerbose` in `game/ui.ts`), the
   track tool's road chip reads "85 road crossings +$12.0M" (afterwards "85 crossings +$12.0M"), and the
   line panel's crowding dots and the Lines list's crowding add "Maximum crowding in the busiest
@@ -430,7 +438,7 @@ step. With reduced motion asked for: one still outline 8 px out, held until the 
   stops Edit stops (the line panel; the attribute is off while the stops are being edited), trains
   the stepper in the High row of the Schedule (the trains count or the headway, whichever the line's
   schedule uses), crowd the High row's crowding dot, levels the stepper of the first row with no
-  train, play the top bar's Normal speed button, homes the Homes button, traffic the track display's
+  train, play the top bar's Normal speed button, destinations the Destinations button, traffic the track display's
   Traffic button, and "end" the card's Continue or Done! button once every step is ticked. The split
   step points at the top bar's mode split by its class (`GUIDE_SPLIT`). The bubble, trip and train
   share steps point at nothing. The tab icons carry `data-guide-tab`, the view rows' fold icons `data-fold`.
@@ -441,7 +449,7 @@ step. With reduced motion asked for: one still outline 8 px out, held until the 
   waits for it to end.
 - **Out of view**: a target whose tab is closed ripples the tab icon (Build for track, stations and
   construct, Lines for the line and line panel steps); the line panel steps with no line picked
-  ripple the first row of the Lines list when that tab is open; Homes or Traffic in a folded row
+  ripple the first row of the Lines list when that tab is open; Destinations or Traffic in a folded row
   ripples the row's fold icon. The ripple moves to the target itself as soon as it shows (the tab opened, the
   dot drawn), and back to the stand-in if it goes. A target scrolled out of its pane is scrolled into
   view (instantly) first, then ripples.
@@ -662,7 +670,7 @@ average over the days it covers ("$22.8M/day", the hover's name "Nov 10-16"), th
 far as it has gone, and no holiday ticks (All time only; 30d is always one a column). A young game's
 few sit at the right of at least 7 days or 12 hours. The
 day or hour now is drawn as it fills (paler bars) and moves as fares land.
-Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
+Under the charts a tick under each day or hour that was a holiday or a superholiday's day where the player has built (the region's country with the place on), pink for a day off and a day away, paler for going out and coming back, its hover the day and one line each ("Thanksgiving Day, United States", "Golden Week, Apr 29-30, China") [T-264, T-1697]; then, when All time spans more than 365 days, a row of year labels ("Year 1", "Year 2") each at the column its year starts in, with a thin rule at its left (the last ones on the right edge end in it instead) and the hovers' dates ending ", year 2" [T-2684]; then the first and last dates ("Apr 14", "Apr 14, 04:00"). Hovering a column gives its
 day or hour ("Mon Apr 14", "Mon Apr 14, 04:00", "so far" for now) with fares,
 costs and their parts, or its train rides. Days run midnight to midnight in the start zone's
 local time (the ledgers', [track-and-service.md](track-and-service.md) 6.4), so today's column turns as
@@ -1136,10 +1144,10 @@ registry centre and zoom, or over New York with none [T-310].
   only the bar's hover ("42% loaded"). The card has no Cancel (T-1236: a reload does the same). It
   takes no input but the bar's hover (a press elsewhere pans the map beneath) and goes when the
   clock starts.
-  Loading is the one place with motion [T-647, T-677, Anita; `ui/Spinner.tsx`]: on top of the card a
-  drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
-  by, the train chugs, the ears bob, steam puffs), and a 26 px copy of
-  it before the status tag's text; a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
+  Loading is the one place with motion [T-647, T-2693, Anita; `ui/Spinner.tsx`]: on top of the card a
+  pill drawn as the map draws a train (a rim in a darker shade of the theme's accent round a fill of it)
+  runs round a ring, 44 px, and a 20 px copy leads the status tag's text (a CSS turn of 1.1 s, nothing
+  per frame; paused under reduced motion); a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
   space); a line whose shown result has no riders for it as its stops are now (just given trains,

@@ -33,6 +33,8 @@ const EDGE = 48;
 /** how far under the zone's centre a bar sits, px */
 const BELOW = 24;
 const MAX_BARS = 3;
+/** T-2694: a bar is at most this share of its zone's width on screen, between BAR_MIN and BAR_MAX px */
+const BAR_SHARE = 0.5, BAR_MIN = 24, BAR_MAX = 96;
 
 type Box = [number, number, number, number];
 
@@ -81,6 +83,8 @@ export function startZoneLoading(map: MlMap): () => void {
       const p = map.project(cityById(id).center);
       const x = Math.min(right, Math.max(left, p.x)), y = Math.min(bottom, Math.max(top, p.y + BELOW));
       el.style.display = "";
+      const sw = Math.abs(map.project([s.box[2], s.box[1]]).x - map.project([s.box[0], s.box[1]]).x);
+      el.style.setProperty("--zl-w", String(Math.round(Math.min(BAR_MAX, Math.max(BAR_MIN, sw * BAR_SHARE)))));
       placeAt(el, x, y);
     }
   };

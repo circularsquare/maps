@@ -218,6 +218,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   node) goes on the pair clicked only (T-1687); a second click on the other pair adds its station
   there. A station placed level with one on the pair beside (`twin_at`; its node within half that
   platform of the spot beside) takes that station's name, so the two are one complex with one label.
+  A station's name the player typed is flagged (`StationData::named`, bit 8 of its node flags in the save,
+  set by `set_station_props` when the name changes; the twin copies it): load's tidying of capitals
+  skips it, and a building's default name prefers such a member [T-2683].
 - **No automatic crossovers** (T-1688): nothing the player does adds a crossover by itself, not
   drawing (quad included), placing stations or doubling up. The player draws crossing track between
   the pairs where lines should change over. A line whose stops lie on two pairs with no way between

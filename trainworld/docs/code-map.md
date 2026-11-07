@@ -61,6 +61,7 @@ tests natively.
 - `src/bin/`: native tools behind feature `demand`, built in `data/work/target`: `calib`
   (T-509: a weekday on a city's real network with a parameter set, for `pipeline/calib.py`),
   `realsave`, `pack_gravity`, `pack_walk`, `market_pack`, `joint_gravity`, `zone_summary`, `demand_bench` (the kernel's timings, `demand/bench.rs`),
+  `start_difficulty` (T-2690: each start's trips with both ends in circles round its centre, for `pipeline/start_difficulty.py`),
   `cross_everyday` (T-1175: a solve unit's everyday outings across zone lines, its draw in
   `demand::cross`, native only; docs/zones.md 4a).
   `demand::network::RealNet` reads a real network's JSON for `calib` and the real-network tests
@@ -112,7 +113,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
   the pills' hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
-  zoomed-out dot groups; T-217, T-249), `links.ts` (the player's links, T-197), `lineActions.ts`
+  zoomed-out dot groups; T-217, T-249), `complexLead.ts` (the member a complex goes by: a typed name, then
+  most lines; check `checks/t2683-keep-names.mjs`, T-2683), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `colourPick.ts`
   (the automatic line colour pick as pure functions: palette pick, CIEDE2000, the lines beside a line, T-2291;
   `lineColour.ts` re-picks a new line's colour after its stop edits; `checks/t2291-line-colour.mjs` in Node and
@@ -539,10 +541,11 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   player change on top, the conflict and idle-tab rules through `settleSlot` against a fake account
   server in the page, pictures of the start menu and saves panel light and dark, collapsed and
   open, into artifacts/trainworld/t2037/; about three minutes),
+  `t2684-years.mjs [url]` (no year in year 1's date, a forged two-year ledger's Year 1, Year 2, Year 3 labels under the Money tab's history, where the year turns; about a minute),
   `t2123-tutorial.mjs [url]` (the tutorial in a fresh profile: New York by default, the folded view
   rows, the ripple repeating until its control is pressed and following the tabs, the close
-  confirmation, card 1 in its order (split, Homes, bubble and trip, then track to stops) with its notes and
-  Continue rippled, card 2 (trains, play, crowd, levels, Traffic, 2%), the tutorial-only longer crowding hover
+  confirmation, card 1 in its order (split, bubble and trip from the Homes the game opens on, Destinations, then track to stops) with its notes and
+  Continue rippled, card 2 (trains, play, crowd, levels, Traffic, 1%), the tutorial-only longer crowding hover
   and road chip, a new game paused until the play step (T-2142), Start again, and a Choose on map start's zoom
   step, into artifacts/trainworld/t2123/; about four minutes),
   `t2266-fare-lag.mjs [url] [save] [out.json]` (the real save: fares to 10x then 5x while solving; income held
@@ -792,6 +795,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `simbin.py` runs or builds the sim crate's binaries for every pipeline step (cargo on PATH, the
   `data/work/target` dir, `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`); `packio.py` writes packs (the
   .bin and .json through .part files, `replace_cell_arrays`).
+- `start_difficulty.py [--tiers] [--fresh]` (T-2690) writes `app/src/game/start-difficulty.json`, the
+  easy and medium starts (any other is hard): weekday trip legs a km² with both ends within 10 km of
+  each start's centre, cut at thirds of the well-known starts; the table in
+  `../artifacts/trainworld/t2690/scores.json`. About 25 minutes on one core; `--tiers` re-cuts in seconds.
 - `realms.py [--registry F] [--out F] [--dry]` writes each registry row's `realm` and `data/packs/realms.geojson`, the land of the realms in `app/src/game/realms.json` (T-975, about 1.5 minutes; run by the join).
 - `regions.py`: each cell's state, as the build writes it (T-162). To re-solve a finished pack's
   gravity after a decay or border factor change without a rebuild, use `pack_gravity --keep-zones`.

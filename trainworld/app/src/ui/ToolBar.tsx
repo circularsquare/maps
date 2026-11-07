@@ -7,9 +7,10 @@ import { useState } from "preact/hooks";
 import { distUnit, length, levelLabel, levelName, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
-import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS } from "../game/palette";
+import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
+import { linesByNum, world } from "../game/world";
 import { stepPlatform } from "../game/boarding";
-import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, setTrackType, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, setTrackType, shade, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -19,7 +20,19 @@ export type ClickMode = keyof typeof CLICK_MODE_COLOURS | "select";
 /** What a click on the map does now: the tool, or picking a passage's other station (T-197). */
 export const clickMode = computed<ClickMode>(() => (linking.value !== null ? "passage" : tool.value));
 
-const trackTypes = (): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")]];
+/** T-2687: the colour the click mode shows (the aura, the descriptor's square): the line's own while its
+ * stops are edited, kept legible on the shade (`legibleOn`); the mode's fixed colour otherwise. */
+export function clickColour(mode: ClickMode): string {
+  if (mode === "select") return "transparent";
+  const draft = lineDraft.value, w = world.value;
+  if (mode === "line" && draft.line !== null && w) {
+    const l = linesByNum(w).get(draft.line);
+    if (l) return legibleOn(l.colour, shade.value === "dark");
+  }
+  return CLICK_MODE_COLOURS[mode];
+}
+
+const trackTypes =(): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")]];
 const speedTip = () => t("toolBar.speedTip");
 
 function stepSpeed(s: number) {
@@ -122,7 +135,7 @@ export function MapToolBar() {
   const tl = tool.value;
   return (
     <>
-      {mode !== "select" && <div class="mode-aura" style={{ "--mode": CLICK_MODE_COLOURS[mode] }} />}
+      {mode !== "select" && <div class="mode-aura" style={{ "--mode": clickColour(mode) }} />}
       {tl === "track" ? <TrackBar /> : tl === "station" ? <StationBar /> : null}
     </>
   );

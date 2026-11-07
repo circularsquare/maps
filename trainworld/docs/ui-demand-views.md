@@ -251,6 +251,7 @@ riders counters keep their own smoothing (Live feel).
   like an unselected one. Only the zone in view gets the loading fill (over the basemap, under the
   labels and the network, whether or not a demand view is on); every other loading zone already lies
   under the outside shade, and a second fill would darken it. A thin bar sits a little under the zone's centre, kept inside the zone's on-screen part,
+  at most half the zone's width on screen, 24 to 96 px [T-2694],
   filling as it loads (the top bar's load for the zones in it, a
   loaded game's zone still solving its solve's rounds and time against its expected final, else
   the zone's own download and opening, then for a zone a solve covers that solve's rounds, to its final with the
@@ -395,7 +396,7 @@ zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius tim
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
 A zone the game has not opened (not the start zone, not reached by a station and not crossed by built track: `openedZones`, game/openedZones.ts, T-1047) is not a bubble but a dot, half the radius it would have, floored to whole CSS px and at least 2 px, then 1.25 times that (`UNBUILT_GROW`, T-1886), filled white, opaque, with a 1 px medium grey outline, #8c8c8c in both themes (`UNBUILT_RIM`; hover unchanged) [T-976, T-1120, T-2391]; it turns into a bubble when the zone opens. A dot within 20 px (centre to centre) of a bigger zone's dot or bubble is left out (`DOT_GAP`) [T-1133], so a dense realm zoomed out shows its biggest cities and more appear closer in; opened zones' bubbles are never left out. With a zone selected the bubbles are the trips to and from it as before, none for a zone of under half a trip with it [T-1246].
 Homes and Destinations look the same, and both work zoomed out even over dead space, where
-the buttons are otherwise off; a start on the world map turns Homes on [T-801]. Under a local purpose the focused zone's own
+the buttons are otherwise off; a start on the world map turns the bubbles on [T-801], as does every new game: on Homes in a Normal game with the tutorial, else on Destinations [T-1441, T-2685]. Under a local purpose the focused zone's own
 bubbles stay instead. Toronto (`market: -1`) has none.
 
 A click on one selects the zone (a `city` selection, kept at any zoom; zoomed in past

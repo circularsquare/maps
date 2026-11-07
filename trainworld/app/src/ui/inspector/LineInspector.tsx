@@ -35,7 +35,7 @@ import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, schedul
 import { drawnReversed } from "../../game/northUp";
 import { MareyButton } from "./MareyChart";
 import type { EditOp } from "../../workers/protocol";
-import { UPGRADE } from "../../game/upgrades";
+import { hasUpgrade, UPGRADE } from "../../game/upgrades";
 import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 
@@ -458,11 +458,75 @@ function PassingTracks({ l, version }: { l: LineInput; version: number }) {
     }
   };
   return (
-    <div class="line-stop-actions">
-      <button ref={btn} class="btn text" data-tip={tr("lineInspector.passingTip", { names })} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
-        {tr("lineInspector.passingButton", { stations: n, priced: price > 1e-9, price: money(price * 1e6) })}
+    <button ref={btn} class="btn text improve" data-tip={tr("lineInspector.passingTip", { names })} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
+      {tr("lineInspector.passingButton")}
+      {price > 1e-9 && <small class="improve-price">{money(price * 1e6)}</small>}
+    </button>
+  );
+}
+
+/** T-2692: parking lots (the station upgrade `parkRide`) at the line's end stations, or at every
+ * station of it that lacks one: the existing per-station upgrade, one edit for all. Disabled once
+ * none is missing. */
+function ParkingButtons({ l, version }: { l: LineInput; version: number }) {
+  const all = world.value ? stationsById(world.value) : new Map<string, StationInput>();
+  const uniq = [...new Set(l.stops)].map((id) => all.get(id)).filter((s): s is StationInput => !!s);
+  const ends = [...new Set([l.stops[0], l.stops[l.stops.length - 1]])].map((id) => all.get(id)).filter((s): s is StationInput => !!s);
+  const missing = (list: StationInput[]) => list.filter((s) => !hasUpgrade(s.upgrades, UPGRADE.parkRide));
+  const endsMissing = missing(ends), allMissing = missing(uniq);
+  const nums = allMissing.map((s) => s.num);
+  const costs = useClockQuery({ what: "upgradeCosts", nodes: nums, bit: UPGRADE.parkRide }, [l.num, version, nums.join(",")], (d) => Array.from(d));
+  const priceOf = (list: StationInput[]) => list.reduce((a, s) => a + (s.built ? costs?.[nums.indexOf(s.num)] ?? 0 : 0), 0);
+  const busy = useRef(false);
+  const endsBtn = useRef<HTMLButtonElement>(null), allBtn = useRef<HTMLButtonElement>(null);
+  const show = (list: StationInput[]) => {
+    const names = list.map((s) => s.name);
+    return list.length > 8 ? tr("lineInspector.andMore", { list: tSeries(names.slice(0, 7)), count: list.length - 7 }) : tList(names);
+  };
+  const go = async (list: StationInput[], btn: { current: HTMLButtonElement | null }) => {
+    if (busy.current || !list.length) return;
+    busy.current = true;
+    try {
+      const a = await edit({ op: "stationUpgrade", nodes: list.map((s) => s.num), bit: UPGRADE.parkRide, on: true });
+      if (!a.ok) { shakeEl(btn.current); return; }
+      const built = list.filter((s) => s.built);
+      say(a.charge > 1e-9
+        ? tr("lineInspector.parkingBuilt", { stations: tr("inspector.stations", { count: built.length }), price: money(a.charge * 1e6) })
+        : tr("lineInspector.parkingAdded", { stations: tr("inspector.stations", { count: list.length }) }));
+    } finally {
+      busy.current = false;
+    }
+  };
+  const one = (list: StationInput[], btn: { current: HTMLButtonElement | null }, label: string, done: string) => {
+    const price = priceOf(list);
+    return (
+      <button ref={btn} class="btn text improve" disabled={!list.length} data-tip={list.length ? tr("lineInspector.parkingTip", { names: show(list) }) : done}
+        onClick={() => void go(list, btn)} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
+        {label}
+        {price > 1e-9 && <small class="improve-price">{money(price * 1e6)}</small>}
       </button>
-    </div>
+    );
+  };
+  // with only end stations on the line the second button would repeat the first
+  const sameSet = uniq.length <= ends.length;
+  return (
+    <>
+      {one(endsMissing, endsBtn, tr("lineInspector.parkingEndsButton"), tr("lineInspector.parkingEndsDone"))}
+      {!sameSet && one(allMissing, allBtn, tr("lineInspector.parkingAllButton"), tr("lineInspector.parkingAllDone"))}
+    </>
+  );
+}
+
+/** T-2692: the foot of the line view, under one heading. */
+function LineImprovements({ l, version }: { l: LineInput; version: number }) {
+  return (
+    <>
+      <div class="h">{tr("lineInspector.improvements")}</div>
+      <div class="improvements">
+        <PassingTracks l={l} version={version} />
+        <ParkingButtons l={l} version={version} />
+      </div>
+    </>
   );
 }
 
@@ -780,7 +844,7 @@ function RailLineInspector({ id }: { id: string }) {
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}
-      {st.status !== "broken" && l.stops.length >= 2 && <PassingTracks l={l} version={w.version} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <LineImprovements l={l} version={w.version} />}
     </>
   );
 }

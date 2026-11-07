@@ -57,11 +57,12 @@ export const busSpeedColour = (kmh: number) => rampColour(BUS_SPEED_STOPS, kmh);
 export const PROFIT_STOPS: [number, string][] = [[0, "#b2182b"], [0.5, "#e9853b"], [0.95, "#f1d54a"], [1.05, "#96d58f"], [1.6, "#8ecae6"], [3, "#2166ac"]];
 export const profitColour = (ratio: number) => rampColour(PROFIT_STOPS, ratio);
 
-/** T-2236: crowding's colour by trains' load as a share of the rated load (the busiest hour's), the
- * same in both themes: green to 100%, then yellow-green at 110%, yellow at 120%, orange at 130%,
+/** T-2236, T-2688: crowding's colour by trains' load as a share of the rated load (the busiest hour's),
+ * the same in both themes: green to 70%, yellow-green at 80%, yellow at 100%, orange at 130%,
  * red at 140% and crimson at crush's 150% (the old wait ramp's colours, T-1255). The line panel's
- * crowding dots and stops diagram, the Lines list's trains, and the Traffic view's hover. */
-export const CROWD_STOPS: [number, string][] = [[1, "#4f9a4f"], [1.1, "#98bd3a"], [1.2, "#d8b425"], [1.3, "#e07a1f"], [1.4, "#c43c3c"], [1.5, "#a82846"]];
+ * crowding dots and stops diagram, the Lines list's trains, and the Traffic view's hover. The map's
+ * strain marks start at `CROWDED_FROM` (boarding.rs), not here. */
+export const CROWD_STOPS: [number, string][] = [[0.7, "#4f9a4f"], [0.8, "#98bd3a"], [1, "#d8b425"], [1.3, "#e07a1f"], [1.4, "#c43c3c"], [1.5, "#a82846"]];
 export const crowdColour = (load: number) => rampColour(CROWD_STOPS, load);
 
 /** Station rings and names on the map. */

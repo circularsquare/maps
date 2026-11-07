@@ -473,6 +473,10 @@ centres are within 100 m (demand's merge distance) are linked too, whatever thei
 directly or through others, plus the player's links [T-197] and every station touching one station
 building [T-2217]. Worked out whenever stations or links change; only links and buildings are saved.
 Riders change between any two stations of a complex on foot [T-161, [demand-kernel.md](demand-kernel.md) 4.4].
+A complex has no name of its own: each station keeps its name, and where one name stands for the complex
+(Stations tab row, diagram label) it is the member's whose name the player typed, else the one with the
+most lines [T-2683, `game/complexLead.ts`]. A splitting or merging complex changes no name; each part
+shows its own typed name, or the busiest member's.
 
 **Station buildings on the map** [T-2219, `map/buildingFloors.ts` drawing what `map/buildingNet.ts`
 works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; the tool and panel in

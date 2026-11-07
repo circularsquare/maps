@@ -384,8 +384,8 @@ export function LinesTab() {
   };
   const renameGroup = (it: Item, typed: string) => {
     setRenaming(null);
-    const n = typed.trim(), name = n === it.ls[0].name ? "" : n;
-    if (n && name !== (it.ls[0].groupName ?? "")) void edit({ op: "groupName", group: it.g, name });
+    const n = typed.trim();
+    if (n && n !== it.name) void edit({ op: "groupName", group: it.g, name: n });
   };
   const ghost = drag?.on ? w.save.lines.find((l) => l.id === drag.id) : undefined;
   const ghostGroup = drag?.on && drag.id.startsWith("g:") ? items.find((it) => it.g === Number(drag.id.slice(2))) : undefined;

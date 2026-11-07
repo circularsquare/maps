@@ -234,7 +234,7 @@ effect(() => {
   renderer.buses.setProfit(sm?.buses ?? null); // T-2452
   overlay.invalidate();
 });
-if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start); // T-728: `?new=1&city=tyo`
+if (params.has("city") && urlChoice?.game) viewStart(urlChoice.game.start, urlChoice.game.mode); // T-728: `?new=1&city=tyo`
 // Panning follows the zone under the view, except while a bubble, station or trip selection holds
 // the focus; the zones beside it on screen show their bubbles too (T-276, map/zoneFocus.ts).
 startZoneFocus(map);
@@ -627,7 +627,7 @@ onNetAhead(netAhead);
 if (!urlChoice) showStartMenu((choice) => {
   // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
   enterGame(); // T-2477: a pan before the pick does not count
-  if (choice.game) viewStart(choice.game.start);
+  if (choice.game) viewStart(choice.game.start, choice.game.mode);
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
   startGameWait(waitKey(choice));
   startDemandPool(!!choice.newGame && !choice.game?.real);

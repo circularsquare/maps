@@ -317,7 +317,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   fill is 100% plus the power-3 mean over every interval of its load past 100% (`stretchLoad`,
   notes/T-2279.md) and its 1 px ring 1 px outside it (a gap between) the fullest interval's load, so one
   packed interval among many reads yellow inside a crimson ring [T-2279, T-2335]; its colour
-  running smoothly with that load: green to 100%, yellow-green at 110%, yellow at 120%, orange at 130%, red at
+  running smoothly with that load: green to 70%, yellow-green at 80%, yellow at 100%, orange at 130%, red at
   140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
   the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,
   T-2236]. The dot and the level's name share one hover (`LevelName`, T-2334): the level's hours as above,
@@ -501,14 +501,20 @@ The round trip split into running, dwell, turning and waiting,
   ("Behind J trains") [T-1924]. Time standing at passing tracks for faster trains is
   "Waiting for faster trains", its places "At E, for Express trains" (both directions summed, from
   `TrackApi.line_waits`) [T-2232]. Each of these three rows has its own places right under it, the
-  largest three; places under 0.5 s are left out. Under the round trip, on a line
-  that shares track with a faster or slower one, a button "Add passing tracks at 5 stations for
-  $225M" (no price where the stations are blueprint; hover "At B, C, D, E and F", past 8 stations
-  the first 7 and "and 3 more") adds passing tracks at every station `TrackApi.passing_spots` names
-  in one `stationUpgrade` edit; the price is the tracks' alone, and the notice adds the trains a
-  slower line then buys for its headway ("Passing tracks built at 5 stations for $225M. New trains
-  cost $150M."; blueprint: "Passing tracks added to the blueprint at 5 stations."). A refusal shakes
-  the button and the notice says why. Gone once none is missing [T-2232]. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  largest three; places under 0.5 s are left out. The foot of the view, under the round trip, is the
+  heading "Line improvements" over buttons set apart by spacing, each its label with the price small
+  on a line under it (none where the stations are blueprint; hover "At B, C, D, E and F", past 8
+  stations the first 7 and "and 3 more"). "Add passing tracks", on a line that shares track with a
+  faster or slower one, adds passing tracks at every station `TrackApi.passing_spots` names in one
+  `stationUpgrade` edit; the price is the tracks' alone, and the notice adds the trains a slower
+  line then buys for its headway ("Passing tracks built at 5 stations for $225M. New trains cost
+  $150M."; blueprint: "Passing tracks added to the blueprint at 5 stations."); gone once none is
+  missing [T-2232]. "Add parking at end stations" and "Add parking at all stations" give the
+  parking lot upgrade to those of the line's stations that lack it, again one `stationUpgrade`
+  edit, priced by the worker's `upgradeCosts` ("Parking built at 38 stations for $760M."); the
+  second is left out when every station is an end station, and a button is disabled once none is
+  missing, its hover saying so ("The end stations already have parking") [T-2692]. A refusal
+  shakes the button and the notice says why. A **loop** [T-798] shows its lap (one way round, the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); its trains steppers move by 2 and the count's hover says how many run each way; the
@@ -769,7 +775,12 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   city or town, wrapping round, worked out then from where it stands (map/stationNames.ts,
   [track-and-service.md](track-and-service.md) "Placing stations"). The cross street needs the
   station on screen at zoom 13 or closer; with nothing else to offer it says "No other name is
-  suggested here."
+  suggested here." **A name the player typed stays** [T-2683]: a rename or a pick of the cycle button
+  marks the station's name as the player's (saved), and nothing renames it afterwards (not adding a
+  station or a line to its complex, a complex splitting or merging, loading). A complex goes by one
+  name in the Stations tab row and the diagram: its member with a typed name, else the one with the
+  most lines (`game/complexLead.ts`); the map still labels every distinct name. A line group's name
+  typed in its title stays even when it equals its first line's name.
 
 ## The complex map
 
