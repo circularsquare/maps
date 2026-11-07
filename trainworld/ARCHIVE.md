@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2404 Track placement lag on big saves (2026-11-06, agent placelag): an early segment's state waits for the pointer's rest (stand-ins drawn, joined segments, asked at once near a held piece); big grids built at once (T-1861's scans); New York's click freeze 271-322 -> 35-42 ms p50, North America's 492-595 -> 37-45. notes/T-2404.md.
 - T-2690 How hard each start is (2026-11-07, agent difficulty): trip density within 10 km times fare scale^0.2, thirds of 408 well-known starts (easy from 10,304, medium from 6,372); tier after each search result, coloured dots until a line runs. Toronto is medium; a swap waits on Anita. notes/T-2690.md.
 - T-2693 Loading status ring and bars (2026-11-07, agent loadui): bunny train replaced by a pill running round a ring (card and status tags); every status tag has a bar (real share, rounds, downloads, else last wait's time). DECISIONS.md; docs/ui-panels.md.
 - T-2694 Region loading bars capped (2026-11-07, agent loadui): at most half the region's on-screen width, 24 to 96 px (`map/zoneLoading.ts`). DECISIONS.md.
