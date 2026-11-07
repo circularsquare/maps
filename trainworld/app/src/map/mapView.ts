@@ -62,12 +62,18 @@ export function createMap(container: HTMLElement): maplibregl.Map {
 }
 
 /** T-1510: a fetch that fails outright (the page is being left, the network or a server is down) is
- * a warning: MapLibre's default handler prints it as a console error, which smoke counts. Any other
- * map error is logged as MapLibre would. */
+ * a warning: MapLibre's default handler prints it as a console error, which smoke counts. A tile
+ * fetched in MapLibre's worker fails as an AJAXError rebuilt on this side without its stack, which
+ * the console prints as its minified class name alone ("Nn", T-2691), so it is written out. Any
+ * other map error is logged as MapLibre would. */
 function warnOnNetworkFailure(map: maplibregl.Map) {
   map.on("error", (e) => {
-    const err = e.error;
-    if (err instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(err.message)) console.warn(`Map: ${(e as { sourceId?: string }).sourceId ?? "a resource"} did not load (${err.message})`); // i18n-ignore
+    const err = e.error, what = (e as { sourceId?: string }).sourceId ?? "a resource";
+    if (err instanceof maplibregl.AJAXError) {
+      const text = `Map: ${what} did not load (${err.status || "failed"} ${err.statusText}: ${err.url})`; // i18n-ignore
+      if (err.status === 0) console.warn(text);
+      else console.error(text);
+    } else if (err instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(err.message)) console.warn(`Map: ${what} did not load (${err.message})`); // i18n-ignore
     else console.error(err);
   });
 }

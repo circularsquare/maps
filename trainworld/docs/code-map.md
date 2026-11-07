@@ -137,7 +137,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   `moneyTiming.ts` (each game hour's fares, rides, points and running cost from the period tables, T-736),
   `regionMoney.ts` (each line's and each construction's split between regions, the region ledgers, T-531), `stretchMoney.ts` (money by edge and track stretch for the Profit track display, T-2420, and by bus or ferry stretch, T-2452), `points.ts`
   (each line's points per hour by region, points a day, each region's past 24 hours' points, the star's mark, T-684, T-685, T-694), `achievements.ts` (the achievements' tiers, firsts, their figures and words, posting the steps met to the clock worker, T-2124) and `continents.ts` (each country's continent, T-2124; their panel `ui/inspector/AchievementsView.tsx`, the medal and toasts `ui/Achievements.tsx`, styles `ui/achievements.css`, check `checks/t2124-achievements.mjs`), `realShare.ts` (the real networks' train shares the city view's Within bar marks, a table from `checks/t2145-real-share.mjs`, T-2145), `issues.ts`
-  (the track model's refusals in plain words), `editNote.ts` (what the last edits did to train trips and profit a day, shown under the view rows at the map's upper left once demand settles, T-2125, T-2237; drawn by ui/EditNote.tsx; `checks/old/t2125-edit-note.mjs`), `profitEstimate.ts` (the network's profit change a day from a trains, headway or cars edit before demand solves it: exact running cost, fares by the wait term, the edit note's estimating state, T-2626; `checks/t2626-profit-estimate.mjs`), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
+  (the track model's refusals in plain words), `editNote.ts` (what the last edits did to train trips and profit a day, shown under the view rows at the map's upper left once demand settles, T-2125, T-2237; drawn by ui/EditNote.tsx; `checks/old/t2125-edit-note.mjs`, `checks/t2682-editnote.mjs` for edits in a new game still loading or shown coarse), `profitEstimate.ts` (the network's profit change a day from a trains, headway or cars edit before demand solves it: exact running cost, fares by the wait term, the edit note's estimating state, T-2626; `checks/t2626-profit-estimate.mjs`), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
   stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195;
   the time left's count and text, T-1479),
@@ -155,8 +155,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 `index.ts` (`t` and `tRich` over the ICU messages, the `language` signal, `setLanguage`, the `tNumber`,
 `tList`, `tDate`, `tCountry` helpers), `intl.ts` (`LANGS` and the cached `Intl` formatters by language,
 worker-safe), `messages/` (`en.json` bundled, the other languages fetched), `context.json` (a note per key),
-`glossary.json`, `sources/` (the English each translation was made from). `game/remove.ts` is the worked
-example.
+`glossary.json`, `sources/` (the English each translation was made from), `places.ts` (`tPlace`: a registry
+city's name in Japanese or Chinese from `place-names.json`, written by `tools/place_names.mjs`, T-2681).
+`game/remove.ts` is the worked example.
 
 ### src/map/: the map and what is drawn on it
 
@@ -299,7 +300,7 @@ with a panel per city, T-894), `stateRows.ts` (`StateRows`: the state's edge, no
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format
-and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988), `cloud.ts` (games on the account, T-988: uploads, claims, settling, conflicts split off as versions; used by the clock worker and the main thread), `versions.ts` (T-2037: a save's origin and latest player change, the origin rule for older saves, saves grouped into one card per game), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
+and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988; a failed read tried again, then thrown, never taken as an empty slot, T-2703, the slot list too, T-2705, check `checks/t2703-storeread.mjs`), `cloud.ts` (games on the account, T-988: uploads, claims, settling, conflicts split off as versions; used by the clock worker and the main thread), `versions.ts` (T-2037: a save's origin and latest player change, the origin rule for older saves, saves grouped into one card per game), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),
 `demandProtocol.ts` (the demand workers' messages; `isQuery`, the view questions' kinds; `ALL_PERIODS`), `cacheWrite.worker.ts` (the demand cache's IndexedDB write, off the main thread, T-789), `demandLod.ts` (which zones are held fine and which coarse, T-1223; the zones built in last are spared, T-2005), `demandFocus.ts` (the focus pool: a game load's zone in view solved alone to its last round, T-2045), `deviceMemory.ts` (the device's memory the pool sizes itself by, and whether it is a phone, tablet or 4 GB device, T-2122), `demandClusters.ts` (the network split into clusters that share no rider,
 each a sub-network, T-326; `reachView`, a city's own network inside its cluster, T-756; `cityReach`, the stations a city reaches; the stations the market's riders can reach are flagged on the cluster, T-396), `demandTest.ts`, `cityReach.ts` (which city packs a network's stations can
@@ -354,7 +355,9 @@ The standing checks stay in `checks/`. One-off checks of finished tasks (screens
 measurements, a feature's first test) are in `checks/old/`, written `old/<file>` below: run them as
 `node trainworld/checks/old/<file>`; they still work, nobody runs them as a habit (T-1586).
 
-- `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"). Writes the real
+- `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"). It fails when a worker
+  refuses a market or city pack ("market and city packs open", T-2631; `SMOKE_BREAK_MARKET=nyc` serves a
+  broken copy of the rows to prove it). Writes the real
   save's weekday rail trips per url to `artifacts/trainworld/smoke-figures.json`, which t883 compares
   against (T-1135). It prints a WARN line when over 20 `tw-*` folders older than a day sit in the
   temp folder (profiles an old check left; T-1213).
@@ -386,6 +389,7 @@ measurements, a feature's first test) are in `checks/old/`, written `old/<file>`
 - `dev-nowatch.mjs <port>`: the app's Vite with watching and HMR off, for an agent's own loop.
 - `agent-tree.mjs new|list|land|remove`: agent worktrees in `maps/.tw-trees/<name>` on branch
   `tw/<name>` (CLAUDE.md "Agent worktrees"); `land` squashes a tree's trainworld/ changes onto master.
+  `new` and `land` warn when the tree's app/src/game/*.json differ from master's or the main tree's copies (T-2631).
 - `every-pack-opens.mjs [url] [zone ...]`: every registered zone, in a fresh new game, opens for
   the view and solves a three-station line across its centre without a demand error (T-484; about
   16 s a zone, so 7 to 8 hours for all 1,700; name the zones to run).
@@ -624,7 +628,9 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   between draws otherwise, as a mask and a frame strip),
   `t328-cache-check.mjs` (the demand cache on reload: timing, cached
   against fresh final to the bit, a changed build, pack or network shows none; `MODE=edit`, T-2560: an
-  edit made while the cache's network is solved again ends at a cold solve's figures), `old/t348-lag.mjs`
+  edit made while the cache's network is solved again ends at a cold solve's figures),
+  `t2588-netkey.mjs` (a big save opened as a file, then reloads: one `saveNetKey` on every load, the read
+  ahead of the network hits from the second reload, a line's trains +1 gives another key), `old/t348-lag.mjs`
   (main-thread long tasks and frame gaps while demand loads: startup, pans, a re-solve, a zone
   joining the solve; optional Chrome trace) with `old/t348-analyze.mjs` (what each long task in a
   trace spent its time on), `old/t1008-load-lag.mjs` (long tasks, frame gaps and each demand message's

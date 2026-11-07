@@ -161,7 +161,9 @@ export type ToClock =
       /** T-2058: how lines side by side are worked out (`bandTry` in perfFlags.ts) */
       bandMode?: string;
       /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
-      guide?: boolean }
+      guide?: boolean;
+      /** T-2703: reads of the saved game to fail on purpose, for checks (`?debug=1&readFails=N`) */
+      readFails?: number }
   /** T-1822: the Getting started card's progress, to keep in the save */
   | { kind: "guide"; guide: GuideSave }
   /** T-2395: the game's home, a zone id or `WORLD_HOME`; null for none */
@@ -708,8 +710,11 @@ export type FromClock =
   /** T-1007: the track model panicked and was rebuilt from the game's last edit (or, `down`, could
    * not be: the player is asked to reload). `detail` is for the console, `notice` for the player. */
   | { kind: "recovered"; detail: string; notice: string; down?: boolean }
-  /** T-950: the worker's start (its WASM, the first game) threw; no game will come */
-  | { kind: "failed"; error: string };
+  /** T-950: the worker's start (its WASM, the first game) threw; no game will come. `storage` (T-2703):
+   * the saved game could not be read, and was left as it is */
+  | { kind: "failed"; error: string; storage?: boolean }
+  /** T-2710: the worker's script has loaded, its first message */
+  | { kind: "booted" };
 
 // ---------- the network as demand sees it (T-025 -> T-026) ----------
 

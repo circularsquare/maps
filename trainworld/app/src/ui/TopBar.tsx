@@ -19,6 +19,7 @@ import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTable, splitTip } from "../game/splitTip";
 import { lengthsOf, wantLengths } from "../game/zoneLengths";
 import { t, tList, tNumber, tSpaced } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { pointsPast24h, pointsPerDay, pointsShort } from "../game/points";
@@ -283,13 +284,14 @@ export function TopBar() {
   const s = known ?? { train: 0, walk: 0, drive: 0 };
   // T-318: no name over dead space (the focus stays on the last zone, which is not where the view is)
   const city = !far && viewedZone.value ? cityById(activeCity.value) : null;
+  const cityName = city ? tPlace(city.id, city.name) : "";
   // T-172: no figures until the city has opened (the game is playable while it loads)
   // T-1440: zoomed out, the train trips/day in place of the world's share
   const pct = (v: number) => (!known ? "–" : far ? t("topBar.tripsPerDay", { count: pointsShort(total?.rides?.train ?? 0) }) : tNumber(v, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%");
   // T-342: the shares are of rides (trip legs) a day; the train's count beside its share, all in the hover
   const rides = total ? total.rides : modeRides.value;
   const dayPhrase = shownDay.value === AVERAGE_DAY ? "" : shownDayOn.value;
-  const where = joinWhere(far ? t("topBar.inWorld") : city ? t("topBar.inCity", { name: city.name }) : "", dayPhrase);
+  const where = joinWhere(far ? t("topBar.inWorld") : city ? t("topBar.inCity", { name: cityName }) : "", dayPhrase);
   // T-1223: the zone in view shown rough while it is worked out in detail
   // T-1851: one note for every case where the trips are being recomputed
   const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? tSpaced(t("topBar.recomputing")) : "";
@@ -297,7 +299,7 @@ export function TopBar() {
   return (
     <><header id="topbar">
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
-      {far ? <CityName id={null} name={t("topBar.world")} tip={worldTip} /> : <CityName id={city?.id ?? null} name={city?.name ?? ""} />}
+      {far ? <CityName id={null} name={t("topBar.world")} tip={worldTip} /> : <CityName id={city?.id ?? null} name={cityName} />}
       <div class="split">
         <div data-tip={total ? worldShareTip(total, dayPhrase, note) : splitTable(where, known, rides, city ? lengthsOf(city.id) : null, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}
           onPointerEnter={() => setOver(true)} onPointerLeave={() => setOver(false)}>

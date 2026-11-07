@@ -478,6 +478,9 @@ class Newest<Q, A extends unknown[]> {
   }
 }
 
+/** T-2710: the waits before each new start of a clock worker whose script did not download (as wasmInit.ts's) */
+const BOOT_WAITS_MS = [1_000, 4_000];
+
 export class ClockClient {
   private worker: Worker | null = null;
   private waiting: [ToClock, Transferable[]][] = [];
@@ -557,10 +560,7 @@ export class ClockClient {
    * posted before this wait and follow the worker's init. */
   start(choice: GameChoice) {
     if (this.worker) return;
-    this.worker = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
-    this.worker.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
-    this.worker.onerror = (e) => this.failed(e.message || "its script did not load"); // i18n-ignore
-    this.worker.onmessageerror = () => this.failed("a message could not be read"); // i18n-ignore
+    this.spawnWorker();
     const q = new URLSearchParams(location.search);
     const fresh = !!choice.fresh;
     // T-320: a check or stress page never writes over a saved game
@@ -568,17 +568,45 @@ export class ClockClient {
     let slot = choice.slot ?? "autosave";
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
+    const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
     this.patchMode = q.get("patch") ?? "1";
-    this.worker.postMessage({ kind: "init", pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []);
-    for (const [msg, transfer] of this.waiting) this.worker.postMessage(msg, transfer);
+    // (first, before any message posted ahead of the start)
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+  }
+
+  /** T-2710: the worker's script loaded (its `booted`): until then every message waits here, its
+   * transfers whole, so a worker whose script did not download is started again with all of them */
+  private booted = false;
+  private bootTries = 0;
+  private spawnWorker() {
+    const w = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
+    this.worker = w;
+    this.booted = false;
+    w.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
+    w.onerror = (e) => {
+      if (this.worker !== w) return;
+      // a script that did not download: an error with no message, before `booted`
+      if (!e.message && !this.booted && this.bootTries < BOOT_WAITS_MS.length) {
+        console.warn("clock worker: its script did not download; trying again"); // i18n-ignore
+        w.terminate();
+        setTimeout(() => { if (this.worker === w) this.spawnWorker(); }, BOOT_WAITS_MS[this.bootTries++]);
+        return;
+      }
+      this.failed(e.message || "its script did not load"); // i18n-ignore
+    };
+    w.onmessageerror = () => this.failed("a message could not be read"); // i18n-ignore
+  }
+  private onBooted() {
+    this.booted = true;
+    for (const [msg, transfer] of this.waiting) this.worker!.postMessage(msg, transfer);
     this.waiting = [];
   }
 
   /** T-950: the worker failed; before its first game no game will come, so the card gives way to the
    * failure screen */
-  private failed(why: string) {
+  private failed(why: string, storage = false) {
     clockWorkerStatus.value = "failed to load: " + why; // i18n-ignore
-    if (!world.peek()) loadCannotFinish(t("clockClient.cannotStart", { why }), true);
+    if (!world.peek()) loadCannotFinish(t(storage ? "clockClient.storageUnreadable" : "clockClient.cannotStart", { why }), true);
   }
 
   constructor(cityId = HOME_CITY) {
@@ -748,7 +776,7 @@ export class ClockClient {
   get running() { return !!this.worker; }
 
   post(msg: ToClock, transfer: Transferable[] = []) {
-    if (this.worker) this.worker.postMessage(msg, transfer);
+    if (this.worker && this.booted) this.worker.postMessage(msg, transfer);
     else this.waiting.push([msg, transfer]);
   }
 
@@ -918,6 +946,9 @@ export class ClockClient {
     // T-950: the steps toward a loading card's game (not the money ticks, which come regardless)
     if (msg.kind === "ready" || msg.kind === "loaded" || msg.kind === "state" || msg.kind === "snapshot" || msg.kind === "stationsAhead") markAlive();
     switch (msg.kind) {
+      case "booted":
+        this.onBooted();
+        break;
       case "ready":
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`; // i18n-ignore
         setWorldFrame(msg.frame);
@@ -932,7 +963,7 @@ export class ClockClient {
         break;
       case "failed":
         console.error("clock worker:", msg.error);
-        this.failed(msg.error);
+        this.failed(msg.error, msg.storage);
         break;
       case "state": {
         const st = msg.state;

@@ -328,6 +328,14 @@ Web first, so it can be shared as a link.
   replacement did, so all hold the same corridor table, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
   a solve through, or a fifth replacement in the page, stops the pool as before. `?debug=1` on the
   dev server has `twDemand.client.debugPanic(worker, "now" | "solve")`; check `t1174-panic-recover.mjs`.
+  A demand worker whose code did not download (an error with no message before the worker said
+  anything) is replaced the same way after 1 s, then 4 s, and counts as no panic; a third failure
+  for that worker stops the pool [T-2704; `scriptFailed`, check `t2704-worker-retry.mjs`]. The clock
+  worker's first message is `booted` (its script and imports have loaded); until then `ClockClient`
+  holds every message, init first, with its transfers unsent, so a script that did not download is
+  started again with all of them after 1 s, then 4 s; a third failure is the failure screen's "The
+  train simulation could not start" [T-2710; `spawnWorker`]. The focus pool's workers are not
+  retried (a failed focus pool falls back to the main pool).
 - **Growing a demand worker's memory** [T-1594] (`sim/src/demand/wasm.rs`, `AHEAD`): a WASM memory
   grow costs about as much as the memory already held, not the bytes added, and the allocator grows
   by what a request lacks (64 KB for a small one). So whenever an allocation grows the memory, the
@@ -615,8 +623,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   market's corridor table (shared by the days) copied once and transferred to it.
   **Ahead of the network** (T-1539): a result whose network is the one a load worked out from its
   save also holds that network snapshot and the key of the save's network inputs (a SHA-256 of the
-  save's track bytes, which a save numbers densely, and the header fields the snapshot reads:
-  `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
+  save's track bytes, which a save numbers densely, without their eras tail (the trains changing over
+  after an edit, drawn only and pruned as the clock runs, T-2588), and the header fields the snapshot
+  reads: `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
   load starts (`netAhead`), before it works the network out (17-42 s on the China save), and the
   page shows the result through the same key checks, on the stored network; the network that
   arrives is compared with it: the same one takes its place with no second look, a different one

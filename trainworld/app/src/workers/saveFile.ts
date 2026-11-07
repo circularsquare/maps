@@ -426,11 +426,52 @@ function req<T>(r: IDBRequest<T>): Promise<T> {
   });
 }
 
+/** T-2703: a read that browser storage answered with an error, every try; the slot may hold a game, so
+ * nothing may take it as empty. The message is the last error's, for the failure screen. */
+export class StorageReadError extends Error {
+  override name = "StorageReadError";
+}
+/** waits before each try after the first (T-2703) */
+const READ_BACKOFF_MS = [100, 400, 1600];
+/** reads to fail on purpose, for checks: slot reads (T-2703, `?debug=1&readFails=N`) and slot lists
+ * (T-2705, `?debug=1&listFails=N`) */
+const forced = { read: 0, list: 0 };
+export function failReads(n: number) { forced.read = Math.max(0, Math.floor(n)); }
+export function failLists(n: number) { forced.list = Math.max(0, Math.floor(n)); }
+
+/** Storage this page may not use at all (cookies blocked, no IndexedDB): nothing was ever saved here,
+ * and every write fails the same way. */
+export function storageBlocked(err: unknown): boolean {
+  return typeof indexedDB === "undefined" || (err as { name?: string } | null)?.name === "SecurityError";
+}
+
+/** T-2703: `read` tried again on a connection opened afresh after each error, the error thrown as a
+ * StorageReadError when it persists; a blocked storage's error is thrown at once, as it is. */
+async function retried<T>(what: string, kind: keyof typeof forced, read: () => Promise<T>): Promise<T> {
+  for (let tries = 0; ; tries++) {
+    try {
+      if (forced[kind] > 0) { forced[kind]--; throw new DOMException("forced by ?debug=1", "UnknownError"); } // i18n-ignore
+      return await read();
+    } catch (err) {
+      if (storageBlocked(err)) throw err;
+      if (tries >= READ_BACKOFF_MS.length) {
+        console.error(`T-2703: ${what} could not be read after ${tries + 1} tries:`, err); // i18n-ignore
+        throw new StorageReadError(String(err));
+      }
+      db = null;
+      await new Promise((go) => setTimeout(go, READ_BACKOFF_MS[tries]));
+    }
+  }
+}
+
+/** Slot `key` as stored, or null when nothing is there (or storage is blocked: play without autosave).
+ * A read that keeps failing throws a StorageReadError (T-2703). */
 export async function readStored(key: string): Promise<StoredSave | null> {
   try {
-    return ((await req((await store("readonly")).get(key))) as StoredSave | undefined) ?? null;
-  } catch {
-    return null; // storage blocked (private window, previews): play without autosave
+    return await retried(`slot ${key}`, "read", async () => ((await req((await store("readonly")).get(key))) as StoredSave | undefined) ?? null);
+  } catch (err) {
+    if (storageBlocked(err)) return null;
+    throw err;
   }
 }
 
@@ -459,12 +500,16 @@ export async function writeStored(key: string, v: StoredSave): Promise<boolean> 
 
 /** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. Only
  * the slots are read, not the demand caches beside them (several MB each, T-328). Also read by the
- * start menu on the main thread (T-677). */
+ * start menu on the main thread (T-677). Throws a blocked storage's error as it is, and a
+ * StorageReadError when the reads keep failing (T-2705). */
 export async function listSlots(): Promise<SaveSlot[]> {
-  const s = await store("readonly");
-  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
-  const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
-  const syncs = await Promise.all(keys.map((k) => req(s.get(SYNC_PREFIX + k)) as Promise<SyncRecord | undefined>));
+  const [keys, saves, syncs] = await retried("the slot list", "list", async () => {
+    const s = await store("readonly");
+    const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
+    const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
+    const syncs = await Promise.all(keys.map((k) => req(s.get(SYNC_PREFIX + k)) as Promise<SyncRecord | undefined>));
+    return [keys, saves, syncs] as const;
+  });
   return keys.flatMap((key, i) => {
     const s = saves[i];
     if (!s) return [];

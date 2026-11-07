@@ -9,6 +9,7 @@ import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
 import { t, tSeries } from "../../i18n";
+import { tPlace } from "../../i18n/places";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
 import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
 import { localModes } from "../../map/modeBar";
@@ -79,13 +80,14 @@ export function CityInspector({ id }: { id: string }) {
   const drawn = filter === "all";
   const top = places.slice(0, 3);
   const built = builtCities().has(city.id);
+  const shownName = tPlace(city.id, city.name);
   return (
     <>
       <div class="title">
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
-        <span class="name">{city.name}</span>
+        <span class="name">{shownName}</span>
         <HomeButton place={city.id} />
-        <button class="btn icon" data-tip={t("cityInspector.goTo", { city: city.name })} aria-label={t("cityInspector.goTo", { city: city.name })} onClick={() => goTo({ kind: "city", name: city.name, city })}>
+        <button class="btn icon" data-tip={t("cityInspector.goTo", { city: shownName })} aria-label={t("cityInspector.goTo", { city: shownName })} onClick={() => goTo({ kind: "city", name: city.name, city })}>
           <Icon.locate />
         </button>
       </div>
@@ -97,9 +99,9 @@ export function CityInspector({ id }: { id: string }) {
           <ul class="rows">
             {lm ? (
               <TripsBar
-                label={t("cityInspector.tripsWithin", { city: city.name })}
+                label={t("cityInspector.tripsWithin", { city: shownName })}
                 kind="within"
-                city={city.name}
+                city={shownName}
                 parts={[
                   { name: t("cityInspector.train"), n: lm.train, cls: "seg-train" },
                   { name: t("cityInspector.walk"), n: lm.walk, cls: "seg-walk" },
@@ -111,8 +113,8 @@ export function CityInspector({ id }: { id: string }) {
             ) : localAll > 0 ? (
               <li class="zone-trips">
                 <div class="line">
-                  <span class="grow">{t("cityInspector.tripsWithin", { city: city.name })}</span>
-                  <span class="val" data-tip={t("cityInspector.totalTip", { count: exact(localAll), kind: "within", city: city.name, phrase: shownDayPhrase.value })}>{count(localAll)}</span>
+                  <span class="grow">{t("cityInspector.tripsWithin", { city: shownName })}</span>
+                  <span class="val" data-tip={t("cityInspector.totalTip", { count: exact(localAll), kind: "within", city: shownName, phrase: shownDayPhrase.value })}>{count(localAll)}</span>
                 </div>
               </li>
             ) : null}
@@ -121,7 +123,7 @@ export function CityInspector({ id }: { id: string }) {
                 label={t("cityInspector.toOther")}
                 tip={t("cityInspector.toOtherTip")}
                 kind="inter"
-                city={city.name}
+                city={shownName}
                 parts={[
                   { name: t("cityInspector.train"), n: interRail, cls: "seg-train" },
                   { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
@@ -140,7 +142,7 @@ export function CityInspector({ id }: { id: string }) {
               {top.map(([place, p]) => (
                 <li key={place}>
                   <span class="grow">{INTERCITY_PLACES[place]}</span>
-                  <span class="val" data-tip={t("cityInspector.destinationTip", { count: exact(p.all), phrase: shownDayPhrase.value, city: city.name, place: INTERCITY_PLACES[place] })}>{count(p.all)}</span>
+                  <span class="val" data-tip={t("cityInspector.destinationTip", { count: exact(p.all), phrase: shownDayPhrase.value, city: shownName, place: INTERCITY_PLACES[place] })}>{count(p.all)}</span>
                 </li>
               ))}
             </ul>

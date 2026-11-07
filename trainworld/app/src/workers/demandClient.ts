@@ -430,6 +430,8 @@ const RETRY_MS = [500, 1500, 4000];
 const BROKEN_RETRY_MS = [10000, 30000, 60000];
 /** T-1174: workers replaced after a panic in one page, before a further panic stops the pool */
 const MAX_RESPAWNS = 4;
+/** T-2704: the waits before each new try of a worker whose code did not download (as wasmInit.ts's) */
+const SCRIPT_WAITS_MS = [1_000, 4_000];
 /** T-1205 (measured, notes/T-1205.md): a fresh worker's WASM after a solve, as its heap at rest or that
  * solve's heap peak times these, plus MEM_BASE (New York and all-China within 4%) */
 const MEM_NEED: [number, number] = [1.38, 1.07];
@@ -829,9 +831,18 @@ class DemandClient {
     const at = () => this.workers.indexOf(w);
     w.onmessage = (e: MessageEvent<FromDemand>) => { const j = at(); if (j >= 0) this.receive(j, e.data); };
     // an uncaught WASM trap is a panic as `dead` reports one
-    // (T-2478: a worker whose script did not download has an error with no message)
-    // i18n-ignore
-    w.onerror = (e) => { const j = at(); if (j >= 0) (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") ? this.workerDied(j, e.message) : this.fail(`worker ${j}: ${e.message ?? "its code could not be downloaded"}`)); };
+    // (T-2478: a worker whose script did not download has an error with no message; T-2704: such a
+    // worker, which never said anything, is tried again)
+    let heard = false;
+    w.addEventListener("message", () => { heard = true; }, { once: true });
+    w.onerror = (e) => {
+      const j = at();
+      if (j < 0) return;
+      if (!e.message && !heard) return this.scriptFailed(j);
+      // i18n-ignore
+      if (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "")) this.workerDied(j, e.message);
+      else this.fail(`worker ${j}: ${e.message || "its code could not be downloaded"}`); // i18n-ignore
+    };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
     const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
@@ -2256,6 +2267,12 @@ class DemandClient {
       // the zones it covered must be the ones this solve will cover
       await loadFootprints(this.nearOf(svc).near);
       const need = this.solveNeed(svc);
+      // T-2588: ahead of the network, a zone opened before the reach was known that this network neither
+      // reaches nor views is not counted: closeStrays closes it before the load's solve
+      if (ahead && need) {
+        const reached = this.reachedSet(svc), viewed = this.viewedSet();
+        if (reached) for (const id of this.unknownReach) if (!reached.has(id) && !viewed.has(id)) need.delete(id);
+      }
       const cities = Object.keys(stored.packs ?? {}).filter((k) => !isMarket(k));
       if (!need || need.size !== cities.length || cities.some((id) => !need.has(id))) return void (log.miss = "zones");
       const markets = this.wantsMarket(svc);
@@ -2531,18 +2548,33 @@ class DemandClient {
    * replacement has seen a solve through, or more than MAX_RESPAWNS, stops the pool as before: the
    * cause is then one a fresh worker does not cure (most likely memory, T-1169). `planned`
    * (T-1205): an idle worker restarted to give back its memory, which counts toward neither. */
-  private workerDied(i: number, why: string, planned = false) {
+  private workerDied(i: number, why: string, planned = false, download = false) {
     if (this.failed) return;
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
-    if (!planned && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
-    if (planned) console.info(`demand: worker ${i} restarted to give back memory: ${why}`);
+    if (!planned && !download && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
+    if (download) console.warn(`demand: worker ${i}'s code did not download; trying again`); // i18n-ignore
+    else if (planned) console.info(`demand: worker ${i} restarted to give back memory: ${why}`);
     else { console.warn(`demand: worker ${i} panicked, replaced: ${why}`); this.respawns++; }
-    this.respawn.set(i, { left: null, solving: false, planned });
+    // (a download's replacement counts as planned: it neither stops the pool at a panic nor counts as one)
+    this.respawn.set(i, { left: null, solving: false, planned: planned || download });
     this.workers[i].terminate();
     if (this.isReady.delete(i)) this.ready--;
     this.endQueries();
     this.workers[i] = this.spawn(i, false);
   }
+
+  /** T-2704: worker `i`'s code did not download (a dropped fetch): a new worker takes its place after a
+   * wait, as `workerDied` replaces one, reopening what it should hold (anything posted to it was lost);
+   * after SCRIPT_WAITS_MS's tries for that worker the pool stops. */
+  private scriptFailed(i: number) {
+    if (this.failed) return;
+    const k = this.scriptTries[i] ?? 0;
+    if (k >= SCRIPT_WAITS_MS.length) return this.fail(`worker ${i}: its code could not be downloaded`); // i18n-ignore
+    this.scriptTries[i] = k + 1;
+    const dead = this.workers[i];
+    setTimeout(() => { if (this.workers[i] === dead) this.workerDied(i, "its code did not download", false, true); }, SCRIPT_WAITS_MS[k]); // i18n-ignore
+  }
+  private scriptTries: number[] = [];
 
   /** Questions waiting on a worker's answer end empty, as at a failure; the views ask again. */
   private endQueries() {

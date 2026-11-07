@@ -8,7 +8,7 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
-import { leaseSlot, listSlots, newGameName, type SaveSlot } from "../workers/saveFile";
+import { failLists, leaseSlot, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
@@ -80,16 +80,19 @@ function playedBefore(): boolean {
   try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
 }
 
-function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: GameChoice) => void; settling: Promise<void> }) {
+function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveSlot[]; unread: boolean; pick: (c: GameChoice) => void; settling: Promise<void> }) {
   const first = useRef<HTMLButtonElement>(null);
   // T-1612: Load from file is for someone who has played here: a saved game, or a game played before
   // (the slot opened last is remembered even once its save is deleted)
-  const [returning] = useState(() => first0.length + accountOnly(first0).length > 0 || playedBefore());
+  const [returning] = useState(() => first0.length + accountOnly(first0).length > 0 || playedBefore() || unread0);
   // T-1441: a first visit, with no saved game to pick, opens on the new game sheet
   const [sheet, setSheet] = useState(!returning);
   useEffect(() => { if (!sheet) first.current?.focus(); }, [sheet]);
   // T-988: the slots again once the account has settled them (downloads, deletions, forks)
-  const [slots, setSlots] = useState(first0);
+  const [slots, setSlotsOnly] = useState(first0);
+  // T-2705: the saved games could not be read (storage kept failing), as against there being none
+  const [unread, setUnread] = useState(unread0);
+  const setSlots = (s: SaveSlot[]) => { setSlotsOnly(s); setUnread(false); };
   const changed = slotsChanged.value;
   useEffect(() => { if (changed) void listSlots().then(setSlots, () => {}); }, [changed]);
   // T-1197: a saved game too big for this device is refused with the reason
@@ -122,7 +125,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
     const ctx = cloudContext();
     if (ctx?.on) void sendDeletes(ctx).catch(() => {});
     setRefused(null);
-    setSlots(await listSlots().catch(() => []));
+    await listSlots().then(setSlots, (err) => { if (err instanceof StorageReadError) setUnread(true); else setSlots([]); });
   };
   // T-1612: a save file picked here opens as it does from the saves panel (its game waits in storage)
   const load = () => pickSaveFile(async (file) => {
@@ -172,6 +175,7 @@ function Menu({ slots: first0, pick, settling }: { slots: SaveSlot[]; pick: (c: 
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
       </div>
       {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
+      {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
         <h2 class="start-head">{t("startMenu.savedGames")}</h2>
         <ul class="start-saves">
@@ -221,6 +225,10 @@ export function showStartMenu(onPick: (c: GameChoice) => void) {
   };
   // T-988: the slots settled against the account (signed in) while the menu is up
   const settling = settleOnStart().catch(() => {});
-  // storage blocked (a private window): no saved games, New game alone
-  void listSlots().catch(() => [] as SaveSlot[]).then((slots) => { if (!done) render(h(Menu, { slots, pick, settling }), root); });
+  // storage blocked (a private window): no saved games, New game alone; storage that kept failing to
+  // read says so (T-2705)
+  const q = new URLSearchParams(location.search);
+  if (q.get("debug") === "1") failLists(Number(q.get("listFails")) || 0);
+  void listSlots().then((slots) => ({ slots, unread: false }), (err) => ({ slots: [] as SaveSlot[], unread: err instanceof StorageReadError }))
+    .then(({ slots, unread }) => { if (!done) render(h(Menu, { slots, unread, pick, settling }), root); });
 }

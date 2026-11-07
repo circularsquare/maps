@@ -1072,7 +1072,10 @@ registry centre and zoom, or over New York with none [T-310].
   account"); a click downloads it into a new slot and opens it. A backup opened from the list waits
   as a file does (`pending-load`) and opens in a new slot.
   With no saved game and no game played here before (a first visit) it opens straight on the new
-  game sheet [T-1441, T-1612]. The dock and top bar are taken out of the page and the
+  game sheet [T-1441, T-1612]. When browser storage keeps failing to list the saved games (four tries
+  over about two seconds, as a slot's read at startup), the menu opens on New game with the grey line
+  "Could not read your saved games from browser storage. Reload the page to try again." in place of
+  the cards, never on the sheet as for a first visit [T-2705]. The dock and top bar are taken out of the page and the
   map controls hidden, so the map fills the page; it is centred around 10° E, 20° N one zoom closer
   than the zoom at which the world from 60° S to 75° N covers the page [T-927, T-1593;
   `worldCover`], with the zone outlines, outside shade and every basemap name hidden until the pick [T-974, T-1567]. The menu takes every key outside itself, and nothing loads behind it but the map.
@@ -1256,7 +1259,9 @@ registry centre and zoom, or over New York with none [T-310].
 - If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
   without demand, and takes every key until one is pressed. If the game itself never started (the
   clock worker failed to start, or the page's setup threw before its end), it has Try again alone
-  [T-950]. The box is centred, 400 px wide, the sentence balanced over its lines; when the address
+  [T-950]. A saved game that browser storage cannot read (four tries over about two seconds) is such a
+  failure: the reason line says the save could not be read and nothing was written over it, and the game
+  never opens as the Original game or a new one in its place [T-2703]. The box is centred, 400 px wide, the sentence balanced over its lines; when the address
   names a game (it has a query), a Back to start button sits beside Try again (it opens the address
   without the query, so the start menu). The small muted line under the sentence (`.load-why`) is the
   slot for the failure's reason text. The screen gives no reason, only "Ran out of memory. This game works best on a computer." when

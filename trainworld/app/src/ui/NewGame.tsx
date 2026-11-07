@@ -3,15 +3,16 @@
 // or zone found by name, or the world map. In a sandbox, a city with a real network (T-731) can start with it.
 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { CITIES, cityById, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
+import { CITIES, cityById, isCity, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
 import { zoneHolding } from "../game/realms";
-import { cityMatch, normalise } from "../game/search";
+import { cityMatch, matchScore, normalise } from "../game/search";
 import type { GameMode, NewGameSpec } from "../workers/saveFile";
 import { dataUrl } from "../game/dataBase";
 import { display } from "../game/ui";
 import { startTier } from "../game/startDifficulty";
 import { newGameEnd, setStartAt } from "./locate";
 import { t, tCountry } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 /** The suggested starts (T-728), easy starts (T-2690); Guangzhou for Toronto, for a start outside the West with
  * many cities near it (Anita, 2026-11-06). */
@@ -26,6 +27,9 @@ function countryOf(c: City): string {
   return code ? tCountry(code) : "";
 }
 
+/** A city's name in the current language (T-2681); zones keep theirs. */
+const shown = (c: City) => tPlace(c.id, c.name);
+
 /** Registry cities and zones with a word of their name or of an alias starting with the text,
  * ignoring case and accents ("hague" finds Rotterdam through The Hague, T-825): best match first
  * (search.ts cityMatch): an exact match first, then by name before by alias, then biggest. */
@@ -33,7 +37,11 @@ function findStart(text: string): { city: City; matched?: string }[] {
   const q = normalise(text);
   if (!q) return [];
   return CITIES.flatMap((city) => {
-    const m = cityMatch(city, q);
+    const own = shown(city);
+    // a name in Japanese or Chinese is found as the Latin name is
+    const loc = own !== city.name ? matchScore(normalise(own), q) : -1;
+    const latin = cityMatch(city, q);
+    const m = loc >= 0 && (!latin || loc <= latin.score) ? { score: loc, matched: undefined } : latin;
     // an exact name first; any other word start ranks by size, so "hague" finds Rotterdam before Haguenau's Bas-Rhin
     return m && m.score <= 2 ? [{ city, matched: m.matched, score: m.score ? 1 : 0 }] : [];
   })
@@ -93,7 +101,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => first.current?.focus(), []);
   useEffect(() => () => { asked.current++; }, []);
-  const hits = useMemo(() => (start && text === cityById(start)?.name ? [] : findStart(text)), [text, start]);
+  const hits = useMemo(() => (start && isCity(start) && text === shown(cityById(start)) ? [] : findStart(text)), [text, start]);
   const startId = located ? located.zone : start;
   const city = startId ? cityById(startId) : null;
   const realOffered = mode === "sandbox" && !!startId && REAL_NETWORKS.has(startId);
@@ -102,7 +110,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
     setHere("idle");
     setStart(id);
     setLocated(null);
-    setText(id && !START_CITIES.includes(id) ? cityById(id).name : "");
+    setText(id && !START_CITIES.includes(id) ? shown(cityById(id)) : "");
     setCursor(0);
     setError(null);
   };
@@ -131,7 +139,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         spec.real = await realNetwork(startId!);
       } catch {
         setBusy(false);
-        setError(t("newGame.downloadFailed", { city: city!.name }));
+        setError(t("newGame.downloadFailed", { city: shown(city!) }));
         return;
       }
     }
@@ -154,7 +162,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         <span class="start-head">{t("newGame.startIn")}</span>
         <div class="new-game-cities">
           {START_CITIES.map((id) => (
-            <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(id)}>{cityById(id).name}</button>
+            <button class={"btn text" + (start === id ? " on" : "")} aria-pressed={start === id} data-city={id} onClick={() => pick(id)}>{shown(cityById(id))}</button>
           ))}
           {CAN_LOCATE && <button class={"btn text new-game-here" + (located ? " on" : "") + (here === "failed" ? " muted" : "")} aria-pressed={!!located} data-state={located ? "located" : here} disabled={here === "asking"} onClick={locate}>
             {here === "asking" ? t("newGame.locating") : here === "failed" ? t("newGame.locationUnavailable") : t("newGame.currentLocation")}
@@ -172,20 +180,20 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         {hits.length > 0 && <ul class="new-game-hits" role="listbox">
           {hits.map(({ city: c, matched }, i) => (
             <li role="option" aria-selected={i === cursor} class={i === cursor ? "on" : ""} data-city={c.id} onMouseDown={(e) => { e.preventDefault(); pick(c.id); }}>
-              <span>{c.name}{matched && <span class="muted small">{t("newGame.matched", { alias: matched })}</span>}<TierWord id={c.id} /></span><span class="muted small">{countryOf(c)}</span>
+              <span>{shown(c)}{matched && <span class="muted small">{t("newGame.matched", { alias: matched })}</span>}<TierWord id={c.id} /></span><span class="muted small">{countryOf(c)}</span>
             </li>
           ))}
         </ul>}
         <span class="new-game-or muted small">{t("newGame.or")}</span>
         <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>{t("newGame.chooseOnMap")}</button>
       </div>
-      {realOffered && <label class="check new-game-real" data-tip={t("newGame.realTip", { city: city!.name })}>
+      {realOffered && <label class="check new-game-real" data-tip={t("newGame.realTip", { city: shown(city!) })}>
         <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />
         <span>{t("newGame.realNetwork")}</span>
       </label>}
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
-        <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: city.name }) : t("newGame.start")}</button>
+        <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: shown(city) }) : t("newGame.start")}</button>
         <button class="btn text" onClick={onBack}>{t("newGame.back")}</button>
       </div>
     </div>

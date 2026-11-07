@@ -7,7 +7,8 @@
 // `land` takes everything changed under trainworld/ in the tree (committed on the branch or not), rebases it
 // onto master, squashes it into one commit and fast-forwards master to it. Master's own uncommitted edits
 // stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
-// changed sim/ rebuilds the main tree's WASM before it returns.
+// changed sim/ rebuilds the main tree's WASM before it returns. `new` and `land` warn (T-2631) when the
+// tree's app/src/game/*.json differ from master's committed or the main tree's working copies.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,6 +55,34 @@ function changes(dir) {
   return { tw, other: [...files].filter((f) => !f.startsWith('trainworld/')) };
 }
 
+// T-2631: the tree's data/ is the main tree's, and it is built from master's app/src/game/*.json (registry,
+// market rows, realms ...); a tree whose copies differ runs with packs its json does not match, and a refused
+// market pack is only a console warning. Warns, never stops: the tree may have changed one on purpose.
+const GAME_JSON = 'trainworld/app/src/game';
+function warnGameJson(dir, when) {
+  const rels = git(maps, 'ls-tree', '--name-only', 'master', `${GAME_JSON}/`).split('\n').filter((f) => f.endsWith('.json'));
+  const behind = [];
+  for (const rel of rels) {
+    const mine = path.join(dir, rel);
+    if (!fs.existsSync(mine)) { behind.push(`${rel} (missing in the tree)`); continue; }
+    // git show gives LF, a checkout may be CRLF
+    const lf = (b) => Buffer.from(b.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+    const have = lf(fs.readFileSync(mine));
+    let committed = null;
+    try { committed = execFileSync('git', ['-C', maps, 'show', `master:${rel}`], { maxBuffer: 1 << 30, stdio: ['ignore', 'pipe', 'ignore'] }); } catch { /* not committed */ }
+    const main = path.join(maps, rel);
+    const live = fs.existsSync(main) ? lf(fs.readFileSync(main)) : null;
+    const notes = [];
+    if (committed && !have.equals(lf(committed))) notes.push("differs from master's committed copy");
+    if (live && !have.equals(live)) notes.push("differs from the main tree's working copy");
+    if (notes.length) behind.push(`${path.basename(rel)} ${notes.join(' and ')}`);
+  }
+  if (!behind.length) return;
+  console.warn(`WARNING: ${when}, app/src/game json in ${path.basename(dir)} is out of step with master:\n  ${behind.join('\n  ')}\n` +
+    `The tree shares master's data/packs, so a page here may refuse a market pack ("demand: market pack X would not open") and run with no regional market; smoke fails on that.\n` +
+    `Unless you changed these on purpose, copy the main tree's version of each (the packs were built for it).`);
+}
+
 const [cmd, name, ...rest] = process.argv.slice(2);
 
 if (cmd === 'new') {
@@ -74,6 +103,7 @@ if (cmd === 'new') {
   if (fs.existsSync(wasm)) fs.cpSync(wasm, path.join(dir, 'trainworld', 'app', 'src', 'wasm'), { recursive: true });
   console.log(`\n${dir}\nbranch ${branch} from ${git(dir, 'rev-parse', '--short', 'HEAD')}`);
   console.log(`Rust builds into the tree's own trainworld/sim/target (first wasm build a few minutes).`);
+  warnGameJson(dir, 'new');
 } else if (cmd === 'list') {
   if (!fs.existsSync(trees)) { console.log('no trees'); process.exit(0); }
   for (const n of fs.readdirSync(trees)) {
@@ -92,6 +122,7 @@ if (cmd === 'new') {
   const { tw, other } = changes(dir);
   if (other.length) fail(`changes outside trainworld/, land them by hand:\n  ${other.join('\n  ')}`);
   if (!tw.length) fail('nothing to land');
+  warnGameJson(dir, 'land');
   // The links are untracked junctions; `add trainworld` must not see them as content.
   gitLoud(dir, 'add', '--all', '--', 'trainworld');
   if (git(dir, 'diff', '--cached', '--name-only')) gitLoud(dir, 'commit', '-q', '-m', 'agent-tree: work in progress');

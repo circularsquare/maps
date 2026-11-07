@@ -34,16 +34,61 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   docs/ui-panels.md, docs/code-map.md, DECISIONS.md, ARCHIVE.md, TASKS.md, checks/t2703-storeread.mjs. Filed T-2705.
 - pinchecks finished: T-2630 landed 983d5192 (checks/cores.mjs; TW_CORES=n, else a ledger claim; TW_NOPIN=1 for
   timing runs). Smoke on 2 cores takes ~6 min, so give it TW_CORES=4 when the machine allows. T-2706 unused.
-- **boarding** ab7583ab6d3c9eea9 ([971c94]'s, Opus, tree .tw-trees/boarding, Vite 6173, 3 cores): T-2699 boarding
-  steps speed (sim/). May file T-2707. Land after worldnext's gates (WASM rebuild of main after).
-- **editnote** a3e76ee8c5cadc238 ([971c94]'s, Opus, main tree, Vite 6174, 2 cores): T-2682 edit note never settles.
-  May file T-2708. Owns editNote.ts and settle-rule code. App change: commit after worldnext's gates.
+- **boarding** ab7583ab6d3c9eea9 ([971c94]'s, Opus, tree .tw-trees/boarding, Vite 6173, 3 cores): T-2699 DONE in the tree
+  (memory grows were the cost: new sim/src/heap.rs allocator grows ahead; WASM step p50 311 -> 6.6 ms, round 359 s ->
+  6.6 s on all Japan; dumps byte-identical; filed T-2707). T-2700 DONE too (one hunk in track/world.rs
+  `trial`: previews price the network 2x not 4x; median 2.4 -> 1.6 ms, byte-identical). boarding retired (context).
+  **T-2716 is a landing risk**: heap.rs's grow-ahead (alloc+free a >=32 MB pad) aborts dlmalloc's validate_size in a
+  cargo --release wasm build (fine in the app's --profile wasm); same trick in the demand module since T-1594.
+  heapfix SETTLED it (T-2716 archived): an LLVM GVN fold of std dlmalloc's inlined validate_size header read after
+  alloc_zeroed (false abort, no corruption found); heap.rs now a dlmalloc crate 0.2.14 over its own grow-in-big-steps
+  system side, GlobalAlloc methods inline(never); demand/wasm.rs uses it too. Dumps byte-identical, step p50 4.4 ms.
+  **The boarding tree is ready to land whole** (T-2699 + T-2700 + T-2716; Cargo.toml/lock). t1148 "place pairs" fails
+  in the tree before and after (unrelated; check on master). T-2707 Open.
+  Order: netkey reports -> smoke main tree -> commit main-tree work by path (docs/code-map.md and architecture.md first,
+  the tree touches them too) -> agent-tree land boarding -> rebuild main WASM -> smoke. 8800 after the join.
+- editnote finished T-2682 (archived), **UNCOMMITTED, commit after worldnext's gates**: app/src/game/editNote.ts,
+  checks/t2682-editnote.mjs (new; FAIL before, PASS after), docs/ui-map.md, docs/code-map.md, DECISIONS.md, ARCHIVE.md,
+  TASKS.md. No strings. T-2708 unused.
+- storeread finished T-2705 and T-2704 too (archived; checks t2703-storeread.mjs 4/4, t2704-worker-retry.mjs 2/2, smoke
+  25/25), **UNCOMMITTED with T-2703**: also app/src/ui/StartMenu.tsx, app/src/workers/demandClient.ts,
+  docs/architecture.md, checks/t2704-worker-retry.mjs; new string startMenu.savesUnreadable shown to Anita. Filed T-2710
+  (clock worker download retry). ui-panels.md "Loading" is 160 lines (over the ~150 cap): a doc-tidy item.
 - **framing** a1605459efab5fade ([971c94]'s, Opus, read-only, no cores): Anita's ask (relayed by old tab, 2026-11-07)
   "for when i post about it online, how do you think i should frame the optimization we've done, that sounds impressive
   and is honest? ... in general what we've done over other similar games". DONE: research/post-framing.md (6 framings,
   top pick the exact speedups; drop "fractal" for "level of detail"; Japan whole-solve 21 min predates this week's speedups).
 - Cap 16 (Anita 2026-11-07 ~00:25: "feel free to use all coores"); back to 10 when she is up.
-- Next unassigned id **T-2709**.
+- marketpack finished T-2631 (archived), **UNCOMMITTED**: checks/smoke.mjs (new check "market and city packs open",
+  26 checks now; `SMOKE_BREAK_MARKET=nyc` to test), checks/agent-tree.mjs (warns on game/*.json drift). No app code or
+  strings. Commit with the rest after the gates (code-map/TASKS/ARCHIVE mix everyone's records).
+- nnerr finished T-2691 (archived): "Nn" is MapLibre's AJAXError (a failed openfreemap basemap tile, stackless after
+  the worker hop); status-0 now a console warning, HTTP errors readable. UNCOMMITTED: app/src/map/mapView.ts. T-2711 unused.
+- worldnext 01:39: Gulf run 1 done (22 gated, 13 parked, no fault); Oman's plan_units rule fixed, 8 gate parks relaxed
+  (dam/mei pop_vs_fua, sabkha water points, Qatar jobs 0.74); rerun run-gulf2.cmd python 25296, log t2697-run-gulf2.log.
+- worldnext 01:44: South Africa run 1 done (45 gated, 2 parked, relaxed: sos pop_vs_fua, inh jobs); rerun python 46556,
+  log t2696-run-za2.log. Latin America: AR 39, CO 48, PE 27 built, Chile running, EC/UY to come; 7 parks so far.
+- worldnext ~02:10: Gulf (35) and South Africa (47) all gated; Latin America running (Chile, then EC, UY). Given T-2712
+  (Colombia GHSL blobs tiq pis lve held; DANE admin_totals) and T-2713/T-2714 spare.
+- sheetfix finished: T-2597 closed without change (already right since T-2567); T-2637 check edit only, UNCOMMITTED:
+  checks/t2580-sheet-water.mjs. Filed T-2715 (two zones' stations in one grid cell, 1 case on Japan): left at P3.
+- storeread finished T-2710 too (archived; clock worker holds messages until `booted`, retries 1 s / 4 s;
+  t2704-worker-retry.mjs 4/4, smoke 26/26). UNCOMMITTED with T-2703. storeread done for the night (~245k).
+- **netkey** a056de92a7ef940f3: T-2588 DONE (archived; saveNetKey hashed the eras tail, which autosave prunes; now
+  hashed without it; demandCache.ts, checks/t2588-netkey.mjs, notes/T-2588.md; UNCOMMITTED). Now applying T-2718 (its
+  tryCache patch in demandClient.ts: drop unknownReach strays from the read-ahead need).
+- citynames finished T-2681 (archived; 431/432 cities matched, ja 428, zh 429). UNCOMMITTED: tools/place_names.mjs,
+  app/src/i18n/place-names.json + places.ts, ui/NewGame.tsx, listParts.tsx, TopBar.tsx, Cities.tsx,
+  inspector/CityInspector.tsx, docs/localization.md. **Rerun after the join**: `node trainworld/tools/place_names.mjs
+  --opencc <scratch>/opencc/node_modules/opencc-js` (~1 min). Filed T-2720 (places still Latin).
+- worldnext 02:29: Latin America run 1 done (138 gated, 20 parked; tiq pis lve held for T-2712; 16 relaxed); Guayaquil's
+  broken OSM school ring fixed in pipeline tier0.osm_education (worldnext's, uncommitted). Rerun of 17: python 15992, log
+  t2695-run-latam2.log, ~20-30 min, then the JOIN (hold pack writers then).
+- worldnext ~03:00: **last gate done (app/WASM landings may resume); JOIN running** (15 countries, 237 rows gated, 6
+  held), --jobs 11, log artifacts/trainworld/t2695-join.log, ~3-4 h. **HOLD all data/packs and data/terrain writers.**
+  Undo: tools/country/restore.py T2695 prejoin --go. Plan: when netkey and citynames report (both mid-edit in app/),
+  smoke the main tree once and commit tonight's app work by path; rebuild 8800 only after the join (it copies packs).
+- Next unassigned id **T-2721**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.

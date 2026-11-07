@@ -13,7 +13,7 @@ import { openSave, waterOf, masksOf, app as A } from './diagram-saves.mjs';
 import { loadApp } from './lib.mjs';
 
 const L = await loadApp(`export { rubberSheet, massAt, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, riverCellM, SHEET_LINES, carryMap, cutLand } from '@app/src/diagram/sheetLines.ts';
-export { realWater } from '@app/src/diagram/waterReal.ts'; export { inRings } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
+export { realWater } from '@app/src/diagram/waterReal.ts'; export { inRings, stationZones } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
 const TW = new URL('../', import.meta.url);
 const which = (process.argv[2] ?? 'nyc,jpn').split(',');
 /** stair runs allowed per 1000 pitches of coast or border (before T-2580 New York had 82) */
@@ -210,7 +210,22 @@ for (const city of which) {
     if ((M.riverFits ?? []).some(({ fit, w }) => { for (let q = 0; q + 3 < fit.length; q += 2) if (segDist(x, y, fit[q], fit[q + 1], fit[q + 2], fit[q + 3]) < w / 2) return true; return false; })) under.push(i);
   }
   say(wet.length === 0 && under.length === 0 && M.info.offLand === 0, `${city}: every station on its own land, none in the sea or under a river`, `${wet.length} in the sea, ${under.length} under a band, ${M.info.offLand} off their land in the carried map`);
-  say(M.info.wrongZone === 0, `${city}: every station on its own zone's side`, `${M.info.wrongZone} not`);
+  // a station whose cell also holds a station of another zone cannot be on its own side: one cell takes one zone, so that
+  // pair is reported (a game limit of the drawn grid) and the rest must be none
+  {
+    const shapes = shapesNear(box, frame), zone = L.stationZones(g, shapes), G0 = M.grid, C = lines.carry, cellOf = (k) => Math.floor((C.sy[k] - G0.y0) / G0.cell) * G0.w + Math.floor((C.sx[k] - G0.x0) / G0.cell);
+    const byCell = new Map();
+    for (let k = 0; k < n; k++) { const c = cellOf(k); if (c >= 0 && Math.floor((C.sx[k] - G0.x0) / G0.cell) < G0.w) (byCell.get(c) ?? byCell.set(c, []).get(c)).push(k); }
+    let shared = 0, other = 0;
+    for (let i = 0; i < n; i++) {
+      const c = cellOf(i);
+      if (zone[i] < 0 || !(c >= 0 && c < G0.w * G0.h) || G0.d[c] === zone[i] + 1) continue;
+      const lab = G0.d[c], mx = g.x[i] / frame[2] + frame[0], my = frame[1] - g.y[i] / frame[2], mates = (byCell.get(c) ?? []).filter((k) => k !== i && zone[k] >= 0 && zone[k] !== zone[i]);
+      mates.length ? shared++ : other++;
+      console.log(`     off its zone: station ${i} at ${(mx * 360 - 180).toFixed(3)},${((Math.atan(Math.sinh(Math.PI * (1 - 2 * my))) * 180) / Math.PI).toFixed(3)}, zone ${shapes[zone[i]].id}, its cell is ${shapes[lab - 1]?.id ?? (lab === 0 ? 'water' : 'none')}${mates.length ? `, shared with station ${mates.join()} of ${mates.map((k) => shapes[zone[k]].id).join()}` : ''}`);
+    }
+    say(other === 0, `${city}: every station on its own zone's side`, `${M.info.wrongZone} not (the map's count), ${shared} of them in a cell shared with another zone's station, ${other} other`);
+  }
   const ls = landSea(city, lines, M, frame, K);
   say(ls.biggestFalseSeaKm2 <= FALSE_KM2 * ls.rhoKm ** 2 && ls.biggestFalseLandKm2 <= FALSE_KM2 * ls.rhoKm ** 2, `${city}: land drawn as land and sea as sea, away from coasts`, JSON.stringify(ls));
   // rivers: crossings drawn, lines crossed where the river does not

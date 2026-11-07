@@ -64,10 +64,23 @@ export async function saveNetKey(track: Uint8Array, h: { city?: string; fares?: 
   // T-2679: the reference country changes no fare, so no key
   const { ref: _, ...fares } = (h.fares ?? {}) as { ref?: unknown };
   const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ? fares : null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
-  const all = new Uint8Array(track.length + head.length);
-  all.set(track);
-  all.set(head, track.length);
+  const net = withoutEras(track);
+  const all = new Uint8Array(net.length + head.length);
+  all.set(net);
+  all.set(head, net.length);
   return sha256(all);
+}
+
+/** T-2588: a save's network bytes without the eras tail (sim `split_eras`): the trains changing over
+ * after an edit (T-1071), which only the drawing reads and which every autosave prunes as the clock
+ * runs, so a save that has any would key differently on each load. */
+function withoutEras(track: Uint8Array): Uint8Array {
+  const n = track.length;
+  if (n < 8) return track;
+  const tag = String.fromCharCode(...track.subarray(n - 4));
+  if (tag !== "ERA2" && tag !== "ERA1") return track;
+  const len = new DataView(track.buffer, track.byteOffset, n).getUint32(n - 8, true);
+  return len <= n - 8 ? track.subarray(0, n - 8 - len) : track;
 }
 
 /** The service demand reads, as demandClient's `Service`. */

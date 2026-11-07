@@ -15,7 +15,7 @@
 // to the solved figure.
 
 import { effect, signal } from "@preact/signals";
-import { demandByDay, demandUpdating, editsSettling, finalWorld, networkWorld, roughZones, type DayDemand, type DemandView } from "./demand";
+import { demandByDay, demandUpdating, editsSettling, finalWorld, networkWorld, refiningZone, roughZones, type DayDemand, type DemandView } from "./demand";
 import { DAY_KINDS, DEMAND_DAY_PHRASE } from "./days";
 import { editStamp, lastEdit } from "./editCap";
 import { trainKind } from "./format";
@@ -38,6 +38,8 @@ export const NOTE_COUNT_MS = 900;
 const NO_SOLVE_MS = 8000;
 /** Wall ms after which edits demand never settled are forgotten. */
 const GIVE_UP_MS = 5 * 60_000;
+/** T-2682: the longest wall ms edits wait for the zone in view's fine figures (`refiningZone`) */
+const REFINE_WAIT_MS = 60_000;
 /** T-2390: the most lines the note names, and the least change in a line's riders a day that names it */
 const MOVED_SHOWN = 5;
 const MOVED_MIN = 100;
@@ -85,8 +87,15 @@ interface Figures {
   /** the day the figures are for, and the demand result they came from */
   day: number;
   version: number;
-  /** the zones shown from a coarse solve: figures at other levels of detail are not compared (T-2180) */
-  rough: string;
+  /** T-2180, T-2682: each zone with train trips, true when shown from a coarse solve */
+  coarse: Map<string, boolean>;
+}
+
+/** T-2682: figures at other levels of detail are not compared (T-2180): a zone with train trips on both
+ * sides at two levels. A zone with none on one side (new to the network, or left) is 0 there at any level. */
+function sameLevels(a: Figures, b: Figures): boolean {
+  for (const [id, c] of a.coarse) if (b.coarse.has(id) && b.coarse.get(id) !== c) return false;
+  return true;
 }
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
@@ -138,13 +147,15 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
   inc.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p]; });
   const run = runningADay(m) / 1e6;
   const upkeep = m.upkeep.track + m.upkeep.stations + m.upkeep.buses;
-  return { est: dv && inc ? estimateBase(w, dv, inc, m) : null, trips: d ? railTrips(d) : 0, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1, rough: [...roughZones.peek()].sort().join() };
+  const coarse = new Map<string, boolean>(), rough = roughZones.peek();
+  if (d) for (const [id, v] of d.cities) if ((v.railTripsPerDay ?? 0) > 0) coarse.set(id, rough.has(id));
+  return { est: dv && inc ? estimateBase(w, dv, inc, m) : null, trips: d ? railTrips(d) : 0, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1, coarse };
 }
 
 /** Start watching for edits. Call once. */
 export function startEditNote() {
   /** the figures at the last settled state */
-  let base: Figures | null = null;
+  let base: Figures | null = null, day = -1;
   /** edits since `base`: when the first was made, and the last activity (an edit, demand updating or
    * a city loading). A city that loads meanwhile is no worry: one no line reaches has no train trips,
    * and track into a new zone loads it as part of the edit. */
@@ -165,6 +176,12 @@ export function startEditNote() {
     // the note shown is about the network before this edit
     if (editNote.peek() && !editNote.peek()!.estimating) { clearTimeout(hide); editNote.value = null; }
     const now = performance.now();
+    // T-2682: a network with nothing running needs no solve for its figures, so a new game's first line
+    // counts even while the game is still loading (the settle effect waits for a quiet moment)
+    if (!base) {
+      const w = world.peek(), kind = shownDay.peek() < DAY_KINDS.length ? shownDay.peek() : 0, inc = incomeByDay.peek()[kind], m = moneyState.peek();
+      if (w && inc && m && !w.save.lines.some((l) => w.lineStats[l.id]?.status === "running")) { base = figuresOf(w, null, kind, inc, m); day = kind; }
+    }
     if (!base) return;
     if (pending) pending.last = now;
     else setPending({ since: now, last: now, lines: new Set(), estimable: true });
@@ -178,8 +195,11 @@ export function startEditNote() {
 
   /** T-2626: the estimate note, or no note when the edits so far are not covered or change nothing */
   const estimate = (w: WorldView, m: MoneyState | null | undefined, now: number) => {
+    // (with no edits pending an estimate left showing is on its way out, holdNote)
+    if (!pending) return;
     const cur = editNote.peek(), shown = cur?.estimating ? cur : null;
-    const e = pending?.estimable && base?.est && m && base.rough === [...roughZones.peek()].sort().join() ? estimateChange(base.est, w, m) : null;
+    // (all from the base's own figures, so a level of detail changed since is no matter)
+    const e = pending?.estimable && base?.est && m ? estimateChange(base.est, w, m) : null;
     const dm = e ? e.fares - e.running : 0;
     if (!e || !base || Math.abs(dm) < 500) { if (shown) { clearTimeout(hide); editNote.value = null; } return; }
     if (shown && shown.est!.running === e.running && shown.est!.fares === e.fares) return;
@@ -187,7 +207,6 @@ export function startEditNote() {
     editNote.value = { estimating: true, est: e, trips: { from: 0, to: 0 }, money: { from: base.money, to: base.money + dm }, moved: [], day: shownDayPhrase.peek(), at: shown?.at ?? now };
   };
 
-  let day = -1;
   effect(() => {
     void tick.value;
     void roughZones.value;
@@ -215,14 +234,23 @@ export function startEditNote() {
       if (given < editWorld) later(NO_SOLVE_MS - (now - pending.last) + 50);
       return;
     }
+    // T-2682: the zone in view is shown coarse and its fine figures are on the way (a zone's first solve):
+    // they come in seconds, and settling on the coarse ones first would leave the next edit at another level
+    if (pending && !idle && refiningZone.value && now - pending.since < REFINE_WAIT_MS) {
+      estimate(w, m, now);
+      later(REFINE_WAIT_MS - (now - pending.since) + 50);
+      return;
+    }
     const after = figuresOf(w, idle ? null : dd, kind, inc, m);
     const was = pending ? base : null, edited = pending?.lines;
     const est = editNote.peek()?.estimating ? editNote.peek()! : null;
     base = after;
     setPending(null);
+    if (!was || !edited) { dropEstimate(); return; }
     // a zone's level of detail changed between them (a change already under way at the first edit):
-    // coarse and fine figures differ by more than a small edit moves (T-2180)
-    if (!was || !edited || (was.rough !== after.rough)) { dropEstimate(); return; }
+    // coarse and fine figures differ by more than a small edit moves (T-2180). An estimate showing stays,
+    // and goes like a settled note.
+    if (!sameLevels(was, after)) { if (est) holdNote(false); return; }
     const trips = { from: Math.round(was.trips), to: Math.round(after.trips) };
     const money = { from: was.money, to: after.money };
     if (trips.from === trips.to && Math.abs(money.to - money.from) < 500) { dropEstimate(); return; }
@@ -245,7 +273,7 @@ export function startEditNote() {
   /** While the pointer is on the note it stays; it goes NOTE_MS after it lands or the pointer leaves. */
   holdNote = (on: boolean) => {
     clearTimeout(hide);
-    if (!on) hide = setTimeout(() => { if (!editNote.peek()?.estimating) editNote.value = null; }, NOTE_MS) as unknown as number;
+    if (!on) hide = setTimeout(() => { if (!editNote.peek()?.estimating || !pending) editNote.value = null; }, NOTE_MS) as unknown as number;
   };
 }
 

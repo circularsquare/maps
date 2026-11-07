@@ -36,7 +36,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { RoadFeed } from "./roadFeed";
@@ -3637,6 +3637,7 @@ async function processMessage(msg: ToClock) {
       testPage = !!(msg.fresh || msg.testPage);
       guideWanted = msg.guide === true;
       if (msg.backupMs && msg.backupMs > 0) backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
+      if (msg.readFails) failReads(msg.readFails);
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from kept to fall back on
       const pending = msg.pending ? await takePending() : null;
@@ -3719,7 +3720,16 @@ async function processMessage(msg: ToClock) {
       sendHome();
       sendState();
       send({ kind: "snapshot", snapshot: buildSnapshot() });
-    })().catch((err) => send({ kind: "failed", error: String(err) }));
+    })().catch((err) => {
+      // T-2703: a start that failed (a slot that could not be read among the causes) writes no slot
+      activeLease?.release();
+      hold(null);
+      activeSlot = "";
+      unwritten = null;
+      newSlotName = null;
+      const storage = err instanceof StorageReadError;
+      send({ kind: "failed", error: storage ? err.message : String(err), storage });
+    });
     // T-988: the game in hand claimed on the account, the other slots settled
     void ready.then(() => { initDone = true; void cloudKick(); });
     addEventListener("online", () => { void cloudKick(); if (cloudRetryAt) void cloudUp(activeSlot); });
@@ -4208,3 +4218,6 @@ function sendNodePreview(seq: number, out: Float64Array) {
   const marks = markPoints(api!.preview_marks(), 3);
   send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, marks.buffer]);
 }
+
+// T-2710: the script has loaded (every import with it); the page posts its held messages on this
+send({ kind: "booted" });

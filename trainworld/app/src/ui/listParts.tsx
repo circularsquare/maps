@@ -5,6 +5,7 @@ import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopeEmpty } from "../game/listScope";
 import { Icon } from "./widgets";
 import { t } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 /** Line names in natural order ("2" before "10"). One collator for every comparison: localeCompare
  * with options builds a new one each call, which made sorting 109 lines take 15-400 ms (T-348). */
@@ -14,7 +15,7 @@ export const natural = new Intl.Collator(undefined, { numeric: true, sensitivity
  * adds a line to the place's hover (T-531). */
 export function ScopeToggle({ tip }: { tip?: string }) {
   const zone = viewedZone.value;
-  const name = zone ? cityById(zone).name : null;
+  const name = zone ? tPlace(zone, cityById(zone).name) : null;
   const empty = scopeEmpty();
   const here = listScope.value === "here" && !!zone && !empty;
   return (

@@ -85,6 +85,19 @@ async function browserChecks(BASE) {
     // SMOKE_SHADE=dark runs it all in the dark theme (T-039)
     await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, process.env.SMOKE_SHADE ?? 'light');
     collectErrors(page, errors, NOISE, GLYPH_404);
+    // T-2631: a market pack the workers refuse is only a console warning, so a page whose registry.json and
+    // market-rows.json are out of step with data/packs would run with no regional market and pass
+    const refused = [];
+    page.on('console', (m) => { if (m.type() === 'warning' && /^demand: .*pack \S+ would not open/.test(m.text())) refused.push(m.text().replace(/^demand: /, '')); });
+    // SMOKE_BREAK_MARKET=<zone> serves a copy of market-rows.json whose zone has one zone, to prove the check
+    // fails (nothing on disk changes)
+    if (process.env.SMOKE_BREAK_MARKET) {
+      const zone = process.env.SMOKE_BREAK_MARKET;
+      const rows = JSON.parse(await readFile(join(MAPS, 'trainworld/app/src/game/market-rows.json'), 'utf8'));
+      rows[zone].zones = 1;
+      const body = JSON.stringify(rows);
+      await page.route('**/market-rows.json*', (route) => route.fulfill({ contentType: 'application/json', body }));
+    }
     const sep = BASE.includes('?') ? '&' : '?';
 
     // 0. the start menu (T-677): a plain load waits on it with no worker started; New game starts one
@@ -249,6 +262,7 @@ async function browserChecks(BASE) {
     // 6. GL and console
     const gl = await page.evaluate(() => window.tw.renderer.gl?.getError?.() ?? -1).catch(() => -2);
     report('no GL error', gl === 0, gl === 0 ? '' : `(getError ${gl})`);
+    report('market and city packs open', refused.length === 0, refused.length ? `(${[...new Set(refused)].slice(0, 3).join(' | ').slice(0, 400)}; registry.json and market-rows.json may be out of step with data/packs)` : '');
     report('no console errors', errors.length === 0, errors.length ? `(${errors.length}: ${errors.slice(0, 3).join(' | ').slice(0, 400)})` : '');
   } finally {
     await close();

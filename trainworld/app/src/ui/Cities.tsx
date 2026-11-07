@@ -11,6 +11,7 @@ import { AVERAGE_DAY } from "../game/days";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
 import { t, tSpaced } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { regionLedger } from "../game/regionMoney";
 import { splitTip } from "../game/splitTip";
 import { citySort, selection, shownDay, shownDayOn, tool } from "../game/ui";
@@ -173,7 +174,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
   if (!built.size) return empty;
   const rows: CityRow[] = [...built].map(([id, stations]) => {
     const view = views.get(id);
-    return { id, name: cityById(id).name, stations, view, trainShare: view ? view.split.train : null, rides: view ? view.railTripsPerDay : null, money: m ? figures(id, m) : null };
+    return { id, name: tPlace(id, cityById(id).name), stations, view, trainShare: view ? view.split.train : null, rides: view ? view.railTripsPerDay : null, money: m ? figures(id, m) : null };
   });
   const { key, dir } = citySort.value;
   const past = pointsPast24h.value;

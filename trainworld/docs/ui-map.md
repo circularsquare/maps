@@ -764,7 +764,8 @@ those who got on, less the load carried on.
     state, so edits add up and a line's early local result does not move it. It stays, and follows
     the network, while demand settles, with no 8 s limit; the settled note then replaces it, its profit
     easing from the estimate to the solved figure. With no estimate (any other edit, a figure under
-    $500, a zone that changed level of detail) the note waits as before. The line panel and the Lines
+    $500) the note waits as before. When a zone's level of detail changed meanwhile (like with like,
+    below) the estimate is the note and goes after 8 s [T-2682]. The line panel and the Lines
     tab keep their "calculating..." figures.
   - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
     (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
@@ -777,11 +778,16 @@ those who got on, less the load carried on.
     is never taken for the edit's; or, when no network came after the edit (it changed nothing demand
     reads), 8 s with no edit and no demand update. Both sides of a note are so settled.
     A switch of the shown day, or 5 minutes without settling, makes none. A network with no line
-    running counts as settled with 0 train trips, so a new game's first line has a note.
+    running counts as settled with 0 train trips at any moment, the game's load included, so a new
+    game's first line has a note however early it is built [T-2682]. While the zone in view is shown
+    coarse with its fine figures on the way (`refiningZone`, a zone's first solve) edits wait for
+    those, up to a minute.
   - **Like with like** [T-2180]: while edits settle (`editsSettling`) no zone changes its level of
-    detail ([demand-runtime.md](demand-runtime.md) "Levels of detail"), and when the zones shown
-    coarse (`roughZones`) differ between the two states (a change already under way at the first
-    edit) there is no note: coarse and fine figures differ by more than a small edit moves.
+    detail ([demand-runtime.md](demand-runtime.md) "Levels of detail"), and when a zone with train
+    trips in both states is shown coarse (`roughZones`) in one and fine in the other (a change already
+    under way at the first edit) there is no settled note: coarse and fine figures differ by more than
+    a small edit moves. A zone with no train trips on one side (new to the network) is 0 there at any
+    level, so it never counts [T-2682].
   - **Figures**: for the day shown (the weekday's for the average day). Train trips [T-2237] are the
     trips taken by rail, each once however many lines it rides (`railTrips`): every zone's view's
     `railTripsPerDay` (the city views' train trips) plus the market's between places (longer trips

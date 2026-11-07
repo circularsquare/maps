@@ -78,7 +78,8 @@ Chinese take theirs, as Intl (ICU) writes them for the locale.
 ## What is never translated
 
 - Save data and anything stored: ids, kinds, slot keys, the names a player gave.
-- Station, line, zone and place names from the data (they are the data's, in their own language).
+- Station, line, zone and place names from the data (they are the data's, in their own language). Registry
+  cities are the exception (below).
 - Logs, `console.*`, thrown errors that only a developer sees, the `?debug` readouts, checks' output.
 - Message keys, CSS classes, `data-*` values other than `data-tip`, URLs.
 - The privacy and terms pages (the English is the binding text). The licence notices are on the about page
@@ -86,6 +87,21 @@ Chinese take theirs, as Intl (ICU) writes them for the locale.
 
 Text that looks like player text but is not, and stays inline, gets an `// i18n-ignore` comment on its line or
 the line above, so the scan stops counting it.
+
+## City names
+
+The registry's cities (rows with no `kind`; zones keep their Latin names) show in Japanese and Chinese by their
+Wikidata labels: `i18n/place-names.json`, `{ id: { q, ja, "zh-Hans", "zh-TW" } }`, read through
+`tPlace(id, latinName)` (`i18n/places.ts`) where a city's name is shown. A missing label, an unmatched city
+(`q: null`) and every other language show the Latin name. Labels: ja's own; zh-Hans from zh-hans, zh-cn, then zh
+(through OpenCC to Simplified); zh-TW from zh-tw, zh-hant, then zh-Hans through OpenCC s2twp. A city is matched to the
+item with the most sitelinks among those Wikidata's search finds for its name that have a coordinate within 60 km
+of its centre.
+
+`node trainworld/tools/place_names.mjs --opencc <opencc-js folder>` adds the cities not yet in the file (rerun it
+after a join), `--relabel` fetches every known item's labels again, `--redo id,...` matches those ids again. A
+wrong match is fixed by writing the right item into its `q` and running with `--relabel`. Search in the new game
+sheet finds a city by its shown name as well as its Latin one.
 
 ## Workers
 
