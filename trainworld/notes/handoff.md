@@ -1,106 +1,103 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session cd5c271d-f4a2-4f0f-8c6e-5249850f0046, name maps-b9 [971c94], since 2026-11-07 00:05
-Updated: 2026-11-07 07:05 (Get-Date). The old maps-b9 [3e1b28] has finished (worldnext done); its tab may close.
+Updated: 2026-11-07 10:35 (Get-Date). Past 500k tokens: ready to be replaced any time; a new orchestrator takes the
+agents below over by SendMessage to their ids (they report to "maps-b9 [971c94]" today; tell them the new name).
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **8ca54120** = 8800 **build 1349** (07:00; dev smoke 26/26, 8800 light/dark 26/26). Real save 12,521,264 rail
-  trips. Has the 15 new countries (T-2695/6/7: AR CL CO PE UY EC, ZA LS SZ, AE SA QA BH KW OM; 237 rows; frozen
-  data/frozen/20261107-060902), and tonight's work below. Backups pre-T2695 deleted.
-- Cap 10 again (Anita up, ~08:45).
-- Anita 2026-11-07 morning: posting about the game as "trainsworld", earlier today, not waiting for worldfix; condensed
-  NA diagram "looks ok"; "lets make the regionb orders look liketwice as wide and like 18% as visible". Done in
-  app/src/diagram/draw.ts (BORDER_W 0.2 -> 0.4, BORDER_ALPHA 0.7 -> 0.126) + docs/ui-diagram.md, typechecked,
-  **UNCOMMITTED** (app landings held for worldfix's gates). Asked her whether to publish before her post.
-- master after 8ca54120 also has T-2721's ferry fix (not on 8800).
-- LIVE = 821. Publish only on Anita's word. The upkeep tree still needs `agent-tree.mjs remove upkeep --force`.
+- master: last trainworld commit **b2822e6a** (+ isochrone commits after). 8800 = **b2822e6a** built on freeze
+  20261107-060902 (snapbuild-frozen.cmd), smoke light/dark 25/26 (the 1 FAIL, t1053-zone-ids, is the main tree's
+  registry mid-worldfix, not the build). Real save 12,521,264 rail trips.
+- **LIVE is still 2026-11-03b.** Publish of 2026-11-07 (b2822e6a): data on R2 `trainworld/2026-11-07` verified; website
+  commit 6445d9b pushed, but GitHub Pages' deploy timed out 3 times (10-min sync limit; githubstatus "operational").
+  **Do NOT purge R2 2026-11-03/03b** (live). Website repo has an UNPUSHED commit raising deploy-pages' timeout to 30 min
+  (.github/workflows/jekyll.yml). Anita: "we should try to get our other stuff done before pushing again": next
+  publish = everything below landed + worldfix's join, rebuild 8800 (plain snapbuild after the join), smoke light/dark,
+  `deploy.py --version <new>` (dry-run first), website add/commit, ONE push (her go given for this publish), then
+  `deploy.py --verify --page --version <new>`; then purge the old R2 prefixes except the live one.
+- Cap **15** while Anita is off the computer (~10:20, "feel free to use more cores"); back to 10 when she's back.
+- Uncommitted, mine: passenger grey #a4a19d (map/renderer.ts CROWD_RGB, game/shadeTable.ts light walkers, docs/ui-map.md);
+  ROAD_CROSSING_COST 6 -> 10 (sim params.rs, docs/track-and-service.md, docs/ui-building.md; roads tests pass; main
+  WASM rebuilt; T-2732's TASKS line says so; archive T-2732 when committed). Also notes/T-2732.md,
+  research/upkeep-by-terrain.md (payback's analysis). Commit with the next smoked batch.
+- 8800 has everything committed on master (T-2721's ferry fix included).
 
-## Landed overnight (maps-b9 [971c94]), all on master
-- T-2630 checks pin Chrome to their core claim (checks/cores.mjs; TW_CORES=n, else a ledger claim).
-- T-2703/T-2705/T-2704/T-2710 failed save, saves-list, demand-worker and clock-worker loads retry or stop with a reason.
-- T-2682 edit note settles; T-2631 smoke fails on a refused market pack (26 checks; agent-tree warns on game json drift);
-  T-2691 "Nn" = MapLibre AJAXError of a failed basemap tile, now a readable warning; T-2637 sheet-water check; T-2597 no
-  change needed.
-- T-2588/T-2718 NA save's demand cache hits on reload (saveNetKey without the eras tail; read-ahead drops stray zones).
-- T-2699/T-2700/T-2716 (f9142979): sim heap = dlmalloc crate over its own grow-in-big-steps system side (T-2716: the
-  --release abort was an LLVM fold of std dlmalloc's inlined size check, no corruption found); boarding step p50 on all
-  Japan 311 -> ~4.2 ms; previews 2x not 4x pricing. T-2707/T-2722 boarding memory 1,056 -> 257 MB. All byte-identical.
-- T-2681/T-2720 registry city names in ja/zh everywhere (app/src/i18n/place-names.json; rerun
-  `node trainworld/tools/place_names.mjs --opencc <scratch>/opencc/node_modules/opencc-js` after any join; done after
-  T-2695's, nothing new).
-- T-2625 continent diagram condensation (NA networks 5.6% -> 13.9% of the sheet). Follow-up T-2724 waits on Anita's look.
-- research/post-framing.md (Anita's ask, how to describe the optimizations in a post).
+## In flight ([971c94]'s agents; SendMessage by id; all in the MAIN tree, no commits; each archives its own lines)
+- **worldfix** ae45801a1a16dbcc8 (Opus): T-2702 coastal units + T-2712 Colombia blobs. All 53 rows gated; **JOIN running**
+  (BR,MX,CO,CN,KR,VN,MY,BN; --jobs 5; log artifacts/trainworld/t2702-join.log; ~3-5 h from ~10:00). **Hold data/packs and
+  data/terrain writers** until it reports. It runs zone_successors/t1053 before hand-back. Don't commit registry.json,
+  market-rows.json, world_plan.json until it reports. Backup data/work/pre-T2702/pre (5.5 GB) to delete once committed.
+  Also found+fixed brazil.unit_states (units across a state line got no census tracts).
+- **profile** a0bea940649aa47c0 (Opus): T-2734 line cross-section in the line inspector (terrain from the hillshade's
+  Terrarium tiles, 5 m a level, crossings, stations, 2 km hover lens; low priority, never holds up the panel).
+- **loadbar** ac01a9ea182c43905 (Opus): T-2729 bar progress for whole solves, T-2730 Trains column 32 px, T-2737 settings
+  rows spacing, T-2739 Cities Profit column, T-2743 crossings chip tint (white/tan/red-brown by cheapest level, $10M),
+  T-2744 0.5x cost chip halfway toward 1.0x.
+- **l10nlast** ac4f1b469c1b1e554 (Opus lead + its own subagents): last ja/zh round (11 inline strings, 2 missing keys),
+  language selector top right under the first row (hover: AI-translated), layout pass, add to OFFERED. Ids T-2740..42.
+- **bubbleclick** aad9e4c06a312476e (Opus): T-2746 slow bubble clicks. Cause: a quick second click waits behind the
+  previous click's icSel (1-2.7 s) and its own. Approved: demandClient flows/icSel ordering hunks + drop superseded
+  icSel; and T-2747 (sim selection.rs zone_row cache) if byte-identical.
+- **newgame** a45e2b478492fea41 (Opus): T-2748 medium band +80%, lighter red/green, stable panel top, map-picking lag.
+  Its item 4 (difficulty for the new countries) WAITS for worldfix's join: tell it when the join has landed.
+- **deleteall** a10dd5e117aa37343 (Opus): T-2738 one delete removes every version, local and cloud; "Delete" red, "Keep".
+- **darkterrain** a1b97c22a16cb85d7 (Sonnet): T-2745 three dark terrain variants behind ?debug=1&terrainDark=a|b|c;
+  4-up picture artifacts/trainworld/darkterrain/darkterrain-nj-4up.png for Anita to pick; default unchanged.
+- **faces** a60e075848e4ece1a (Opus): T-2751 rider faces at each line's own platform.
+- Landing plan: as each reports, check its strings and pictures (copy the best to artifacts/trainworld/review/ and show
+  Anita), then one smoke of the main tree on my own Vite (dev-nowatch, TW_CORES=4) and commit by path in batches.
+- Next unassigned id **T-2753**.
 
-## In flight ([971c94]'s agents; SendMessage by id)
-- **worldfix** ae45801a1a16dbcc8 (Opus, main tree): T-2702 coastal units missing from shipped countries (BR, MX, check
-  all) + T-2712 Colombia GHSL blobs (DANE admin_totals; tiq pis lve held). Rows + one join; it messages before its
-  join: **then hold pack writers**. Claims <= 8 cores. May file T-2725, T-2726. Commit its files when it reports.
-  07:29 run started: batch 20261107-072922, 39 rows (BR 15, MX 4, CN 5, KR 4, VN 5, MY 1, BN 1, CO 4), python 16076,
-  port 6371, log artifacts/trainworld/t2702-run.log; backup data/work/pre-T2702/pre (5.5 GB). **Hold app/ and WASM
-  landings until its gates end.** Join after (BR,MX,CO,CN,KR,VN,MY,BN).
-- pairs finished T-2721 (committed after 8ca54120): app's marketRule.ts kept T-279's ferry (30 min, 35 km/h, $50)
-  after T-2424 moved the sim to 90 min, 30 km/h, $80; check passes. Not on 8800 yet (rebuild with worldfix's batch).
-- My Vite 6195 (task b8p351viu) for smokes.
-- Anita ~09:00 (her words are in each brief): **publish in about an hour, with the border change** ("ok, can wait the
-  hour"): when worldfix's gates end, commit borders (+ loadbar's items 1 and 3 if ready), rebuild 8800, smoke, then
-  freeze.py build + deploy.py --dist on the last freeze (code-map.md "publish during a batch"); push needs nothing more.
-- **loadbar** ac01a9ea182c43905 (Opus, main tree, Vite 6185): T-2728 remove the 13 px status ring, T-2730 Lines-view
-  Trains column spacing (report these first, for the publish), T-2729 real progress for "calculating all cities".
-- **payback** a0dc9df687e6f9220 (Opus, analysis only, no code): T-2732 upkeep payback at grade vs tunnel/viaduct in
-  mountains and cities, terrain upkeep and street-crossing upkeep options -> notes/T-2732.md, research/upkeep-by-terrain.md.
-  Answer to her "did we land the upkeep": yes, T-2619 (1c9b3c72); T-2620 still waits on her.
-- **profile** a0bea940649aa47c0 (Opus, main tree, Vite 6186): T-2734 line cross-section (elevation profile, track by
-  level, crossings, stations, fixed-scale hover lens). Stage 1 feasibility message first, then builds.
-- Next unassigned id **T-2737**.
+## Landed today (maps-b9 [971c94]), all on master
+- Overnight: T-2630 checks pin Chrome; T-2703/2705/2704/2710 failed loads retry or stop with a reason; T-2682 edit note;
+  T-2631 smoke catches a refused market pack (26 checks); T-2691 "Nn" = MapLibre AJAXError; T-2637; T-2588/T-2718 NA cache
+  hits on reload; T-2699/2700/2716 (f9142979) sim heap + boarding 311 -> ~4 ms; T-2707/2722 boarding memory 1,056 ->
+  257 MB; T-2681/2720 city names ja/zh (rerun tools/place_names.mjs after a join); T-2625 continent diagram
+  condensation; T-2695/6/7 15 new countries (8ca54120); research/post-framing.md.
+- Morning: T-2721 trip explorer ferry = sim's; diagram borders 2x wide, 18% (b9fd8ca7); T-2728 no status ring, T-2731
+  date without the year (b2822e6a).
+
+## Waiting on Anita
+- Two strings (shown): clockClient.storageUnreadable, startMenu.savesUnreadable (no answer = fine).
+- darkterrain's 4-up when ready; T-2724 (diagram far land smaller) after her look at T-2625 (she said "looks ok").
+- T-2620 (keep old rates on track >5 km from stations).
+- T-2667 OSM attractions: after release. T-1856 hex terrain: after release (Anita).
+
+## Next
+1. Land agents as they report (above); then, after worldfix: rerun place_names.mjs, tell newgame to run difficulty for
+   the new countries, smoke, commit, rebuild 8800, smoke light/dark, PUBLISH (State).
+2. Queued: T-2713, T-2714 (census totals for the new countries), T-2698 (start cameras; registry, not during a join),
+   T-2627, T-2638 (later), T-2593, T-2592, T-2701 (big: design to Anita first), T-2715 (leave unless seen).
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
 - linesPending cleared on any demand update end (T-1733): T-2658 replaced the blanket clear; check it is gone.
 
-## Waiting on Anita
-- Two strings (shown 2026-11-07): clockClient.storageUnreadable "Could not read your saved game from browser storage
-  ({why}). Nothing was written over it."; startMenu.savesUnreadable "Could not read your saved games from browser
-  storage. Reload the page to try again."
-- Which name she posts under ("trainsworld" or "anitabuilder") for research/post-framing.md.
-- A look at artifacts/trainworld/review/diagram-na-condense.png (T-2625) before T-2724.
-- T-2620 (keep old rates on track >5 km from stations): maps-93's question.
-- T-2667 OSM attractions: yes, after release work.
-- Strings shown, no answer = fine.
-
-## Next
-1. When worldfix reports: smoke, commit its files by path, rebuild 8800, smoke light/dark, delete its backups.
-2. When pairs reports: land if a check fix; take a sim drive-time change to Anita first.
-3. Localization left: pass 5 screenshots (checks/l10n-shots.mjs) per language; T-2643 swept files then their
-   translation; T-2672 (l10nfix's leftovers); ja/zh for the new storage strings; OFFERED on Anita's release word.
-   l10nfix's and ridersnow's pictures still to show her (artifacts/trainworld/l10nfix/, ridersnow/).
-4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
-5. Queued: T-2713, T-2714 (census totals for the new countries), T-2698 (start cameras; registry.json, not during a
-   join), T-2627, T-2638 (later), T-2593, T-2592, T-2701 (big: design to Anita first), T-2715 (leave unless seen).
-
 ## How to
 - My scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\cd5c271d-f4a2-4f0f-8c6e-5249850f0046\scratchpad:
-  snapbuild.cmd <hash> (PowerShell: `cmd /c "<scratch>\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"`),
-  smoke8800.cmd (light+dark, TW_CORES=6, logs smoke-light/dark.log), opencc\ (opencc-js). The old orchestrator's scratch
+  snapbuild.cmd <hash>, snapbuild-frozen.cmd <hash> <freeze> (packs from a freeze while a run owns data/packs),
+  smoke8800.cmd (light+dark, TW_CORES=2 now), opencc\ (opencc-js). Run via PowerShell:
+  `cmd /c "<scratch>\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"`. The old orchestrator's scratch
   (...\b35f881f-...\scratchpad) has merge3json.py, resolve_*.py, translate/back/review briefs, the worldnext kit.
 - Smoke dev: own Vite via `node trainworld/checks/dev-nowatch.mjs <port>` (restart after app or WASM changes), then
   `$env:TW_CORES='4'; node trainworld\checks\smoke.mjs http://localhost:<port>/` (~3.5 min).
+- Publish: notes/T-924.md "Commands"; `venv\Scripts\python.exe trainworld\tools\deploy.py --dry-run --version X`, then
+  `--version X --smoked` (~15 min upload), website `git add trainsworld/ trainworld/`, commit, push; Pages deploy can be
+  slow (`gh run list --repo circularsquare/circularsquare.github.io`), then `--verify --page --version X`.
 - Build number = `git rev-list --count`. If 8800 does not answer, restart serve.py detached.
-- Landing: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`, then `remove <name>`. On a rebase conflict
-  resolve in the tree, `git add`, `git -c core.editor=true rebase --continue`, land again. Commit the main tree's
-  uncommitted edits in files the landing touches first.
+- Landing a tree: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`, then `remove <name>`.
 - Commit by path: `git commit -m "..." -- <paths>`; `git add` a new file first.
-- Publish: see trainworld/docs (freeze.py, deploy.py); push only on Anita's word.
 
 ## Lessons from this run
+- Always Get-Date before writing a time: this session's own estimates ran ~2 h ahead by mid-morning.
 - Two sessions can share a name (both maps-b9): message by ref.
-- Agents sharing the main tree work well when each brief lists the others' uncommitted files; commit app work in one
-  smoked batch once the agents editing app/ have reported.
-- A "false" debug-build abort can hide in the allocator: T-2716's fold. inline(never) on GlobalAlloc methods.
-- Copying files back after a source swap keeps old mtimes: cargo/wasm-pack then skip the rebuild (touch them).
-- maps-93's handoff times ran ~4 h ahead of the machine clock: always Get-Date.
-- A smoke that times out on page.goto at 30 s is the busy machine, not the change: rerun with 4 cores.
+- A world run's gates serve the main tree's app/ live: hold app/ writes (not just commits) during gates; commits,
+  .tw-snap rebuilds and freeze-based publishes are safe.
+- Agents sharing the main tree work well when each brief lists the others' files; commit app work in one smoked batch.
+- T-2716: inline(never) on GlobalAlloc methods; a debug-build abort can be an LLVM fold, not corruption.
+- Copying files back after a source swap keeps old mtimes: cargo/wasm-pack skip the rebuild (touch them).
 - Agents that leave a background wait re-notify: TaskStop them after their report.
 
 ## Anita's standing asks
