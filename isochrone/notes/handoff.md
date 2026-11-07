@@ -26,8 +26,12 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   backup deleted. Agent a98f3d32b23d45d3b idle (~400k), retire.
 - T-091 done and committed (677e6c58). Open with Anita: L0.1 lines are straighter now (Kathmandu
   27% of km in straight runs, was 20%); if too spoky, loosen NEAR/SPREAD per level (DECISIONS).
-- **T-007 stage 1, design only** (fjords and rivers too fast at L3/L10): agent a3da9fe09ce9819fc
-  (Opus), 1 core. Files: notes/T-007.md, notes/T-007/. Design goes to Anita before building.
+- T-007 stage 1 (design) done and committed (6640c94e): split coarse cells into L1 land pieces;
+  prototype Sogndal 1.32 -> 1.01, Coari 1.39 -> 1.01, ~5 MB, speed unchanged. Stage 2 waits on
+  Anita's go (asked; notes/for-anita.md). Agent a3da9fe09ce9819fc (~370k) knows it; resume it
+  for stage 2 if context allows, else brief fresh from notes/T-007.md section 7.
+- **T-043 lake temperature**: agent a7608dfafd418f099 (Opus), 1-2 cores as `iso-t043`. Files:
+  the canoe water hazard build, docs/canoe.md 3, notes/T-043.md.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
@@ -37,8 +41,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
 
 ## Next
-1. When T-007's design reports: take it to Anita before building. Then T-075 islands (measure
-   first), T-043 lake temperature, T-078 M2 doc tidy, T-095 when the machine is quiet.
+1. On Anita's go: T-007 stage 2. Then T-075 islands (measure first; after T-007, which touches
+   coarse nodes too), T-078 M2 doc tidy once T-043 lands, T-095 when the machine is quiet.
 2. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075, T-007 (fjord and
    river country too fast at L3/L10: Sogndal, Coari 1.3-1.4).
 3. Anita has not yet seen T-011 served; shots in the State line's notes.
