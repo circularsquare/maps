@@ -10,7 +10,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   T-2678, T-2672 (ja/zh numbers, startup waits for the language: top-level await in i18n/index.ts, builds fine), T-2680,
   T-2679. Next rebuild after namespread / attract2 / parking land: claim 4, `node trainworld/checks/dev-nowatch.mjs 6191`,
   scratch `smokedev.cmd 6191`, stop that Vite by PID, snapbuild.cmd <hash>, smoke8800.cmd, tell Anita to reload.
-- Anita is back (~19:05); cap 12. Her jekyll server stays (~3 cores outside the ledger).
+- Anita is back (~19:05). **Cap 9 from ~20:30 for a few hours** (Anita: "could we try to keep 4 cores free for the next
+  few hrs?"; 9 + her jekyll's ~3 leaves 4): agents at 1-2 cores each, no new long runs. Her Chrome (the game) can use ~8.
+  Parking (T-2677) approved: "yes can land 0.5"; one label "calculating..." landed c1ddb7ca ("use calculating throughout"). Her jekyll server stays (~3 cores outside the ledger).
 - LIVE = 821. Publish only on Anita's word (English first; ja/zh soon; languages switch on via OFFERED in i18n/intl.ts).
   maps-eb's play count ships with the next release build.
 - maps-93 is done. The upkeep tree still needs `node trainworld/checks/agent-tree.mjs remove upkeep --force`.
