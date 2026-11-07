@@ -8,8 +8,9 @@ import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
 import { busSpeedColour, inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import { BASE_M_PER_KM, trackMult } from "../ui/trackPrice";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
-import { guideVerbose, highSpeed } from "../game/ui";
+import { guideVerbose, highSpeed, trackType, type TrackType } from "../game/ui";
 import type { Level, LineInput } from "../game/types";
 import type { PreviewAnswer } from "../workers/clockClient";
 import { onScreen, placeAt } from "./screenPlace";
@@ -37,10 +38,10 @@ export function chip(text: string, colour: string | null, alpha = 0.5): HTMLSpan
 
 const COST_YELLOW = "#f2c200", COST_GREEN = "#8fd97a";
 /** A cost multiplier's colour and strength (T-411, T-1159): light yellow at 1x (Anita, T-2271),
- * growing above it, light green growing below it down to 0.5x. The track tool's tag and the Build
- * tab's price. */
+ * growing above it, light green growing below it down to 0.5x, at most 0.5 strong
+ * (T-2744: 0.8 there outshone 1x, most in dark mode). The track tool's tag and the Build tab's price. */
 export function costTint(mult: number): [string, number] | null {
-  if (mult < 0.995) return [COST_GREEN, 0.3 + 0.5 * Math.min(1, (1 - mult) / 0.5)];
+  if (mult < 0.995) return [COST_GREEN, 0.3 + 0.2 * Math.min(1, (1 - mult) / 0.5)];
   return [COST_YELLOW, 0.2 + 0.6 * Math.min(1, Math.max(0, mult - 1) / 1.5)];
 }
 /** `costTint` as a CSS background. */
@@ -128,16 +129,56 @@ export function waterFact(ground: ArrayLike<number> | undefined): HTMLSpanElemen
 /** A road with its centre line dashed. */
 const ROAD_PATH = "M5 1.5L3.5 14.5M11 1.5l1.5 13M8 2v2.2M8 6.9v2.2M8 11.8V14";
 const ROAD_COLOUR = "#c9b28a";
+/** T-2743: the crossings chip by what they make cheapest for the stretch at ground level: a viaduct
+ * (tan), a bored tunnel (light red-brown), else at grade, faded the further the crossings are from
+ * paying for the cheaper of the two (`ROAD_FADE` of its strength gone with none) */
+const ROAD_UNDER = "#c98a76", ROAD_FADE = 0.75;
+
+/** T-2743: the cheapest way to build the ground-level stretch of a route that crosses roads costing
+ * `crossM` US$M: at grade with them, a viaduct (cut and cover costs the same) or a bored tunnel,
+ * from the levels' multipliers (trackPrice.ts) plus the route's mean terrain surcharge, which bored
+ * tunnels do not pay; `share` the crossings over what the cheaper of the two adds. `groundKm` the
+ * stretch's length. */
+export function crossingCheapest(crossM: number, groundKm: number, ground: ArrayLike<number>, tt: TrackType): { best: "ground" | "up" | "down"; share: number } {
+  let m = 0, ms = 0;
+  for (let k = 0; k < 4; k++) { m += ground[k] ?? 0; ms += (ground[k] ?? 0) * TERRAIN_SURCHARGES[k]; }
+  const s = m > 0 ? ms / m : 0;
+  const up = trackMult(1, tt) - trackMult(0, tt), down = trackMult(-2, tt) - trackMult(0, tt) - s * trackMult(1, tt);
+  const extra = BASE_M_PER_KM * groundKm * Math.min(up, down);
+  if (extra > 0 && crossM <= extra) return { best: "ground", share: crossM / extra };
+  return { best: down < up ? "down" : "up", share: 1 };
+}
+
+/** the crossings chip's colour and strength (T-2743): at grade the tan thins toward the tag's own
+ * background, which is near white in the light theme and dark in the dark one */
+export function crossingColour(c: ReturnType<typeof crossingCheapest>): [string, number] {
+  const a = 0.6;
+  return c.best === "down" ? [ROAD_UNDER, a] : c.best === "up" ? [ROAD_COLOUR, a] : [ROAD_COLOUR, a * (1 - ROAD_FADE * (1 - c.share))];
+}
+
+/** The share of a preview's length at ground level, from its points (x, y, height m triples); 1
+ * with none */
+function groundShare(pts: ArrayLike<number>): number {
+  let all = 0, at = 0;
+  for (let i = 3; i + 2 < pts.length; i += 3) {
+    const d = Math.hypot(pts[i] - pts[i - 3], pts[i + 1] - pts[i - 2]);
+    all += d;
+    if (Math.round((pts[i + 2] + pts[i - 1]) / 16) === 0) at += d;
+  }
+  return all > 0 ? at / all : 1;
+}
 
 /** The icon and a chip for the roads a route crosses at ground level and what they add (T-1929, the
- * preview's sixth and seventh figures: weighted count, US$M); null where it crosses none. */
-export function roadFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+ * preview's sixth and seventh figures: weighted count, US$M); null where it crosses none. `groundKm`
+ * the route's length at ground level, for the chip's colour (T-2743). */
+export function roadFact(ground: ArrayLike<number> | undefined, groundKm: number): HTMLSpanElement | null {
   const n = ground?.[5] ?? 0;
   if (!ground || n < 1) return null;
+  const [colour, alpha] = crossingColour(crossingCheapest(ground[6] ?? 0, groundKm, ground, trackType.peek()));
   const s = document.createElement("span");
   s.className = "tag-fact";
   // T-2263: the tutorial's longer wording
-  s.append(icon(ROAD_PATH, t("trackTagRows.roads")), chip(t("trackTagRows.roadsAdd", { verbose: guideVerbose.peek(), count: Number(n.toPrecision(3)), cost: moneyShort((ground[6] ?? 0) * 1e6) }), ROAD_COLOUR, 0.6));
+  s.append(icon(ROAD_PATH, t("trackTagRows.roads")), chip(t("trackTagRows.roadsAdd", { verbose: guideVerbose.peek(), count: Number(n.toPrecision(3)), cost: moneyShort((ground[6] ?? 0) * 1e6) }), colour, alpha));
   return s;
 }
 
@@ -202,7 +243,7 @@ export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[]
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground)].filter((f) => f !== null);
+  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
   if (ground.length) out.push(factRow(...ground));
   return out;
 }

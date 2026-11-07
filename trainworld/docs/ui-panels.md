@@ -201,7 +201,10 @@ wide so a longer date moves nothing [T-1868].
   (no bar on a failure) [T-2693, T-2728]: the load's own share for "Loading data"; a zone's share
   (`zoneLoads`) for a wait on a zone's load, and for bubbles on their way; the running solve's
   rounds published of all (`demandStep`) for a recomputing, behind or capped status and a click
-  waiting on a solve; terrain downloads finished of the most waiting at once; and where nothing
+  waiting on a solve, except an edit's solve, which publishes only at each stage's end: there the
+  solving workers' units done of all planned (a period of the local solve while its result is
+  awaited, then a round of a period of the whole solve), the unit in hand by its time against the
+  stage's mean unit, to 90% of it (`demandWork`, to 97% at most) [T-2729]; terrain downloads finished of the most waiting at once; and where nothing
   measures the work (or a solve has not begun), the share of the time the last such wait took that
   has passed, to 95% at most, 3 s for the first. Only the load's bar has a hover; the others pass
   the pointer to the tag. The figures change in one step when a detailed solve lands
@@ -575,9 +578,9 @@ dismissed, and the map and tools are blocked meanwhile.
 `ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
 opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
-"Logged in as alice" or "Not logged in" [T-1728]; then, once a language besides English is offered (or with `?lang=` in
-the address), the Language row: a globe icon (hover "Language" over "Languages other than English are translated by AI")
-and a select of the languages each in its own name, remembered on this device ([localization.md](localization.md)
+"Logged in as alice" or "Not logged in" [T-1728]; then the Language row: a globe icon (hover "Language" over
+"Non-English text is translated by AI") and a select of English, 日本語, 简体中文 and 繁體中文 (台灣), each in its own
+name, switching at once and remembered on this device; a first visit takes the browser's language when offered ([localization.md](localization.md)
 "Choosing a language") [T-2636]; Demand bubbles, first the Day choice (Average, Weekday, Sat, Sun;
 "Demand shown for", below) [T-703], under this heading since it sets the day of every demand figure [T-2345], then the Purpose
 choice (the map's purpose filter, the same list as the one on the map's demand row, which phones do not show; T-2548), then three sliders: Size
@@ -905,7 +908,14 @@ keeps what it had and earns no more.
   - **A card's bin deletes the game**: every version, after `Delete "Tokyo" and its 3 other
     versions from this browser and your account?` (or "from this browser", "from your account" as
     the versions are kept; the Playing card's adds "The game ends and you go back to the start
-    menu."); the game being played goes last.
+    menu."), with Delete (in the red of negative money) and Keep; the game being played goes last
+    [T-2738; `deleteVersions` in `game/accountGames.ts`, shared with the start menu]. The account's
+    copies are recorded as owed before anything is deleted here and leave the card at once; until the
+    server takes a deletion, the account's list read in this browser leaves that game out, so a
+    deleted version never comes back as a game only on the account. When the server cannot be
+    reached, the panel (or the start menu, after the Playing card's delete) says "Deleted from this
+    browser. Still on your account until the server can be reached." and the deletion is sent at the
+    next load.
 
 ### Card actions
 
@@ -944,8 +954,8 @@ keeps what it had and earns no more.
   and the start menu alike). The list is every other version, newest save first, one row each:
   "Saved today at 14:05 · Day 26 · 164 stations" (the day and stations where the version knows
   them), a bin for a slot or an account game (asked first in the row: `Delete this version from this
-  browser?`, "from this browser and your account?", "from your account?", with Delete version and
-  Keep it), and Open. The versions are the game's other slots in this browser (Open opens that slot,
+  browser?`, "from this browser and your account?", "from your account?", with Delete version (red)
+  and Keep), and Open. The versions are the game's other slots in this browser (Open opens that slot,
   which stays as it was until changed), its account games not in this browser (a cloud after the
   text, hover "On your account. Open downloads it here."; Open downloads it into a new slot), each
   slot's backups but those that are the slot's own version (its save time, or its latest player change with only the clock run since; up to four tiers reaching back about 10 minutes, an hour, a day and a week, hover
@@ -1064,8 +1074,9 @@ registry centre and zoom, or over New York with none [T-310].
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
-  no tagline [T-1710] (the account button at
-  its top right when accounts are on [T-972]), New game at the top, then "Saved games", one card per game as in the saves panel (T-2037: the version with the latest player change on top, the latest save first), each a button with the
+  no tagline [T-1710], New game at the top with, at the right of its row, the language picker (the Settings
+  row's globe and select) and the account button when accounts are on [T-972, T-2753]; the new game sheet
+  has the picker at the right of its heading, then "Saved games", one card per game as in the saves panel (T-2037: the version with the latest player change on top, the latest save first), each a button with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash), and under it, joined to it, the saves panel's "3 other versions" line and list (above).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
   that, 10 s at most), and a game only on the account is a card with a cloud (hover "On your
@@ -1094,13 +1105,13 @@ registry centre and zoom, or over New York with none [T-310].
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
-- **Delete and Load from file** [T-1612; the same code as the saves panel's: `removeSlot`,
+- **Delete and Load from file** [T-1612; the same code as the saves panel's: `deleteVersions`,
   `deleteGroupQuestion`, `pickSaveFile`]. Every card has the panel's bin at its bottom right (hover
   "Delete"); it asks under the card, `Delete "Tokyo" from this browser?` (from this browser and your
   account when the slot is tied to it; `Delete "Tokyo" from your account?` for an account-only card;
   `Delete "Tokyo" and its 3 other versions from ...` with more than one version, T-2037), with
-  Delete save and Keep it, and the card goes at once with every version, the account's copies with
-  it (now, or at the next chance). A slot open in another tab says so and stays. Load from file (beside New game) is shown
+  Delete (red) and Keep, and the card goes at once with every version, the account's copies with
+  it (now, or at the next chance, as in the saves panel). A slot open in another tab says so and stays. Load from file (beside New game) is shown
   to a returning visitor only: one with a saved game here or on the account, or whose browser has played
   a game before (the remembered last slot, even once every save is deleted); a first visit sees only New
   game, and a returning visitor with no saves opens on the menu, not the sheet. A .save file goes to a

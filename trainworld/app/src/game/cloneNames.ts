@@ -25,7 +25,7 @@ export function cloneName(name: string, names: ReadonlySet<string>): string {
   if (lettered) return lettered;
   let n = 1;
   while (names.has(`${t} clone ${n}`)) n++;
-  return `${t} clone ${n}`;
+  return `${t} clone ${n}`; // i18n-ignore: a line's saved name
 }
 
 /** The copy's symbol: the next letter after a trailing number, else the old symbol's first letter and the

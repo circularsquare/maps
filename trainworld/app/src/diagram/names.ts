@@ -380,7 +380,7 @@ export function placeNames(g: DiagramGraph, lay: DiagramLayout, d: Drawing, text
             const dist = segBoxDist(x0, y0, x1, y1, Tn) - grid.r[i];
             hit = kind === 1 ? dist <= own : dist < 0;
           }
-          if (hit) why?.(P, k, c.dir, c.lifted, kind === 0 ? "line" : grid.owner[i] === k ? "own" : `${kind === 1 ? "pill" : "passage"} of ${grid.owner[i]}`);
+          if (hit) why?.(P, k, c.dir, c.lifted, kind === 0 ? "line" : grid.owner[i] === k ? "own" : `${kind === 1 ? "pill" : "passage"} of ${grid.owner[i]}`); // i18n-ignore: debug reason
           return hit;
         });
         if (blocked) continue;

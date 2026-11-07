@@ -39,6 +39,7 @@ import { fetchRange } from "./rangeFetch";
 import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
+import { lineProfile } from "./lineProfile";
 import { RoadFeed } from "./roadFeed";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, stampAll, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
@@ -4080,6 +4081,14 @@ async function handle(msg: ToClock) {
     else panicNow();
   } else if (msg.kind === "query") {
     const q = msg.q;
+    if (q.what === "lineProfile") {
+      // T-2734: worked between the other messages, and answered when done
+      const a = api, seq = msg.seq;
+      const masksUnder = async (xy: number[]) => (await Promise.all(zonesOfPoints(xy).map((id) => fetchWater(id).catch(() => null)))).filter((m): m is WaterRaster => !!m);
+      void lineProfile(a, q.line, packLngLat, () => api === a, masksUnder).catch(() => new Float64Array(0))
+        .then((data) => send({ kind: "answer", seq, data }, [data.buffer]));
+      return;
+    }
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
       : q.what === "stopTiers" ? api.stop_tiers(q.line)

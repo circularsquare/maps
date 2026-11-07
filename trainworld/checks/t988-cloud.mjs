@@ -244,7 +244,7 @@ try {
   await panel(a);
   await a.click(`.save-slots li[data-slot="${G}"] .save-delete`);
   const ask = await a.locator(`.save-slots li[data-slot="${G}"] .callout p`).textContent();
-  await a.click(`.save-slots li[data-slot="${G}"] .callout button:has-text("Delete saved game")`);
+  await a.click(`.save-slots li[data-slot="${G}"] .callout button:text-is("Delete")`);
   const gone = await until(async () => { const l = await account(); return !l.games.some((g) => g.id === gid) && l.tombstones.some((t) => t.id === gid) ? l : null; }, 20000);
   await panel(a, false);
   b = await open(B);

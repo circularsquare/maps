@@ -503,7 +503,7 @@ export async function writeStored(key: string, v: StoredSave): Promise<boolean> 
  * start menu on the main thread (T-677). Throws a blocked storage's error as it is, and a
  * StorageReadError when the reads keep failing (T-2705). */
 export async function listSlots(): Promise<SaveSlot[]> {
-  const [keys, saves, syncs] = await retried("the slot list", "list", async () => {
+  const [keys, saves, syncs] = await retried("the slot list", "list", async () => { // i18n-ignore: console text
     const s = await store("readonly");
     const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
     const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
@@ -584,10 +584,13 @@ export async function readCloudDeletes(): Promise<CloudDelete[]> {
     return [];
   }
 }
-export async function writeCloudDeletes(v: CloudDelete[]): Promise<boolean> {
+/** The list changed by `f` in one transaction (T-2738: both threads add and drop entries at once, and a
+ * read then a write apart lost one, leaving its game on the account). */
+export async function changeCloudDeletes(f: (v: CloudDelete[]) => CloudDelete[]): Promise<boolean> {
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
+    const v = f(((await req(s.get(CLOUD_DELETES))) as CloudDelete[] | undefined) ?? []);
     if (v.length) await req(s.put(v, CLOUD_DELETES));
     else await req(s.delete(CLOUD_DELETES));
     await done;

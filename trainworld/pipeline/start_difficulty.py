@@ -3,17 +3,20 @@
     python pipeline/start_difficulty.py            measure (resumes), then write the labels
     python pipeline/start_difficulty.py --tiers    only the labels, from the measured lines
     python pipeline/start_difficulty.py --fresh    measure every pack again
+    python pipeline/start_difficulty.py --jobs 2   measure with two batches at once
 
 A start's score is the weekday trip legs with both ends inside a circle of RADIUS_KM round its
 centre (`centre`), by every purpose but attractions and with no rail, per km² of the circle (each
 pack the circle reaches counts its own trips, the sim's `start_difficulty` bin; trips between two
 packs are not counted), times its country's fare scale over the US's to FARE_POW: fares follow
 income, construction does not, and Anita asked for a weak weight (2026-11-06). The cut points split
-the well-known starts (`notable`) into equal thirds, and every start takes the label of its score.
-Writes `app/src/game/start-difficulty.json` (the easy and medium ids; any other start is hard) and
-the full table to `../artifacts/trainworld/t2690/scores.json`. Measuring runs one pack at a time,
-18-24 minutes on one core.
+the well-known starts (`notable`) by EASY_SHARE and HARD_SHARE, and every start takes the label of
+its score. Writes `app/src/game/start-difficulty.json` (the easy and medium ids; any other start is
+hard) and the full table to `../artifacts/trainworld/t2690/scores.json`. Measuring runs one pack at
+a time per job, 18-24 minutes on one core (`--jobs N` runs N batches at once).
 """
+import threading
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import math
@@ -41,6 +44,10 @@ CENTRE_REACH_KM = 40
 BATCH = 40
 INCOME = ROOT / "app/src/game/countryIncome.json"
 FARE_POW = 0.2
+# shares of the well-known starts: thirds widened to 80% more medium, 20% of a third taken from
+# easy and 60% from hard (Anita, 2026-11-07, T-2748)
+EASY_SHARE = (1 - 0.2) / 3
+HARD_SHARE = (1 - 0.6) / 3
 
 
 def fare_weight(country, gdp):
@@ -88,7 +95,7 @@ def lines_of(spec):
     return WORK / f"lines-{hashlib.sha1(json.dumps(spec, sort_keys=True).encode()).hexdigest()[:12]}.jsonl"
 
 
-def measure(reg, spec, fresh):
+def measure(reg, spec, fresh, jobs=1):
     WORK.mkdir(parents=True, exist_ok=True)
     spec_path, lines_path = WORK / "starts.json", lines_of(spec)
     spec_path.write_text(json.dumps(spec, sort_keys=True), encoding="utf-8")
@@ -107,20 +114,23 @@ def measure(reg, spec, fresh):
         return lines_path
     exe = simbin.exe(ROOT, "start_difficulty", jobs="1")
     t0 = time.time()
+    lock, done_n = threading.Lock(), [0]
     with open(lines_path, "a", encoding="utf-8") as out:
-        for i in range(0, len(todo), BATCH):
-            part = todo[i:i + BATCH]
+        def batch(part):
             r = subprocess.run([str(exe), str(spec_path), *[f"{p}.json" for p in part]], cwd=PACKS,
                                capture_output=True, text=True, encoding="utf-8")
-            for line in r.stdout.splitlines():
-                if line.startswith("{"):
-                    out.write(line + "\n")
-            out.flush()
-            if r.returncode:
-                print(f"batch from {part[0]} exited {r.returncode}: {r.stderr[-400:]}", flush=True)
-            n = i + len(part)
-            el = time.time() - t0
-            print(f"{n}/{len(todo)} packs, {el / 60:.1f} min, about {el / n * (len(todo) - n) / 60:.0f} min left", flush=True)
+            with lock:
+                for line in r.stdout.splitlines():
+                    if line.startswith("{"):
+                        out.write(line + "\n")
+                out.flush()
+                if r.returncode:
+                    print(f"batch from {part[0]} exited {r.returncode}: {r.stderr[-400:]}", flush=True)
+                done_n[0] += len(part)
+                n, el = done_n[0], time.time() - t0
+                print(f"{n}/{len(todo)} packs, {el / 60:.1f} min, about {el / n * (len(todo) - n) / 60:.0f} min left", flush=True)
+        with ThreadPoolExecutor(max(1, jobs)) as pool:
+            list(pool.map(batch, [todo[i:i + BATCH] for i in range(0, len(todo), BATCH)]))
     return lines_path
 
 
@@ -161,14 +171,16 @@ def tiers(reg, sums, centres):
     country = {c["id"]: c.get("country") for c in reg["cities"]}
     score = {i: (v[r][0] + v[r][2]) / area * fare_weight(country[i], gdp) for i, v in sums.items()}
     known = sorted(notable(reg, sums, r), key=lambda i: -score[i])
-    easy_min = score[known[len(known) // 3 - 1]]
-    medium_min = score[known[2 * len(known) // 3 - 1]]
+    n = len(known)
+    easy_min = score[known[round(n * EASY_SHARE) - 1]]
+    medium_min = score[known[n - round(n * HARD_SHARE) - 1]]
     tier = {i: "easy" if s >= easy_min else "medium" if s >= medium_min else "hard" for i, s in score.items()}
     out = {
         "task": "T-2690",
         "rule": f"weekday trip legs a km² with both ends within {RADIUS_KM:g} km of the start's centre, no rail, "
                 f"times (fare scale over the US's)^{FARE_POW:g}; "
-                f"easy from {easy_min:,.0f}, medium from {medium_min:,.0f} (thirds of {len(known)} well-known starts)",
+                f"easy from {easy_min:,.0f}, medium from {medium_min:,.0f} ({EASY_SHARE:.0%} easy, {HARD_SHARE:.0%} hard "
+                f"of {n} well-known starts)",
         "easy": sorted(i for i, t in tier.items() if t == "easy"),
         "medium": sorted(i for i, t in tier.items() if t == "medium"),
     }
@@ -190,6 +202,8 @@ if __name__ == "__main__":
     reg = json.loads(REG.read_text(encoding="utf-8"))
     spec = {"radii_km": RADII_KM, "starts": starts(reg)}
     lines = lines_of(spec)
-    if "--tiers" not in sys.argv[1:]:
-        lines = measure(reg, spec, "--fresh" in sys.argv[1:])
+    args = sys.argv[1:]
+    if "--tiers" not in args:
+        jobs = int(args[args.index("--jobs") + 1]) if "--jobs" in args else 1
+        lines = measure(reg, spec, "--fresh" in args, jobs)
     tiers(reg, scores(reg, lines), {s["id"]: [s["lon"], s["lat"]] for s in spec["starts"]})

@@ -501,7 +501,7 @@ The round trip split into running, dwell, turning and waiting,
   ("Behind J trains") [T-1924]. Time standing at passing tracks for faster trains is
   "Waiting for faster trains", its places "At E, for Express trains" (both directions summed, from
   `TrackApi.line_waits`) [T-2232]. Each of these three rows has its own places right under it, the
-  largest three; places under 0.5 s are left out. The foot of the view, under the round trip, is the
+  largest three; places under 0.5 s are left out. Under the round trip is the
   heading "Line improvements" over buttons set apart by spacing, each its label with the price small
   on a line under it (none where the stations are blueprint; hover "At B, C, D, E and F", past 8
   stations the first 7 and "and 3 more"). "Add passing tracks", on a line that shares track with a
@@ -521,6 +521,37 @@ The round trip split into running, dwell, turning and waiting,
   stop count under the name counts the first stop once.
 - A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].
+
+#### The cross section
+
+[T-2734, `ui/inspector/LineProfile.tsx`, `workers/lineProfile.ts`, `game/groundHeights.ts`, notes/T-2734.md]
+Last in a rail line's view, under Line improvements, the heading "Cross section" over a strip 72 px
+tall and as wide as the panel: the line from its first stop (left) to its last along its length, on the
+ground's real height above sea level (the hillshade's Terrain Tiles, read at the zoom whose pixel is about
+the line's length / 600). The ground is a faint filled area. Water is the map's water colour, from its
+surface down a nominal 4 m to the ground drawn under it (`WATER_M`; at least 1.5 px on the strip): where the
+zones' water masks (read every 20 m along the line by the clock worker) say water, its surface the tiles'
+height there, or where no mask covers the place and the tiles go below 0 m, the sea at 0 m. The track is
+a 2 px line coloured by its level (`LEVEL_COLOURS`), level n drawn n x 5 m from the ground or the water's
+surface (the sim's 8 m a level scaled to 5, so ramps keep their shape; `PROFILE_LEVEL_M`). Heights are
+stretched to fill the strip (a range of at least 40 m), with no figure for the stretch; sea level is a faint
+dashed rule with "0 m" at its left, where it falls inside the strip (the close-up's too). Stops are white dots ringed in map ink on the track; other rail lines'
+track crossing the line's (edges of their paths off its path, an intersection more than 3 m from the
+other edge's ends, at more than about 12 degrees) is a 2.5 px dot in the first such line's colour at
+that track's own height; crossings at one height within 60 m, or of a same line within 400 m, are one.
+Nothing is asked until the page is idle, the clock worker works the query in 6 ms slices between its
+other messages, and tiles are decoded when idle: until the line and its ground are in, the strip is empty.
+
+Pointer over the strip (or a finger on it) shows a close-up in the hover tag's style above the strip,
+at one scale for every line: 2 km of line over 320 px and 1 m of height a pixel,
+centred on the track at the pointer, with a dashed centre rule; the 2 km is shaded on the strip. A stop or
+crossing within 4 px of the pointer on the strip takes the centre. The close-up draws the ground, track
+(3 px), water, crossing dots (4 px) and stops with their names, then lines: "2.4 km from Ash" (from the
+first stop), "Ground 23 m above sea level" ("Water at sea level" or "Water 12 m above sea level" over water,
+"Ground height not loaded" without a tile), "Track at −1, 5 m below ground" ("... above the water", "...
+under the water" over water, "Track at ground level" at 0), and one line for each crossing within 250 m, at
+most 3 ("[5] crosses 10 m above", "[A] [C] cross at grade", relative to this line's track, within 2.5 m
+being at grade). Asked again (`lineProfile`, the clock worker) when the line or network changes.
 
 ## The group view
 

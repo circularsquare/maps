@@ -59,7 +59,7 @@ The rules behind these tools (geometry, levels, stations, costs, edits) are in
   only while the breakdown is open. By kind shows track
   by priced level, single, double or high-speed, land or water and ramps (charged at the dearer end), stations,
   junction switches, flyovers and flat crossings, with lengths, counts and prices from the track
-  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $6M per road crossing", "Road crossings × 12", "= $72M") [T-1929, T-2017]. The fleet quote previews the constructed service, so lines started together include their
+  model. Each row reads one line, "3.7 km viaduct (+2)" and its price, and its hover is the price worked out, one item a line: "Base cost $90M per km", then "Length × 3.7 km", "Viaduct × 1.3", "Over water × 2", "Hills × 1.25", "Single track × 0.6" or "High-speed track × 1.5" for each factor that is not 1, and "= $430M" [T-1839]. Track rows are split by level, track type, water and terrain class (the sixth quote field, `blueprint_cost_items`; ramps are not told apart, being charged at the dearer end; there is no separate terrain row); stations, junctions, flyovers, crossings, cars, buses, passages and upgrades keep their own rows with the same kind of hover, and the roads crossed at ground level are one "Road crossings" row, "12 road crossings" (hover "Base cost $10M per road crossing", "Road crossings × 12", "= $72M") [T-1929, T-2017]. The fleet quote previews the constructed service, so lines started together include their
   resulting delays, without changing the game. The quote, and a planned line's Construct price in
   its panel, are asked of the clock worker only while a panel shows them, 250 ms after the last
   edit (`game/quotes.ts`, T-1171); a state carries neither.
@@ -101,7 +101,8 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   [track-and-service.md](track-and-service.md) 6.1 "Ramping over track"], then the price: the picked
   level's price per km and multiplier, "$99M per km (1.1x cost)" (with High speed picked,
   high-speed track's: 1.5x, so 0.75x at ground), the multiplier on the track tool's tag colours:
-  light yellow at 1x [T-2271], yellow growing above it, light green growing below it (`costTint` in
+  light yellow at 1x [T-2271], yellow growing above it, light green growing below it to 0.5 strong
+  at 0.5x [T-2744] (`costTint` in
   `map/trackTagRows.ts`); its hover names the level [T-1159] (with ", high-speed track" after it)
   and gives the same upkeep line as the level buttons [T-2006].
   The second row: **Regular** or **High speed** track [T-255, T-817; no single track, T-733], the
@@ -282,7 +283,11 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   it is on existing track. A third line names the roughest terrain class charged with its
   surcharge ("Mountains +3.0x", "Hills +1.2x", "Hills +0.5x") and "Water +2.5x" when the segment
   crosses water, and the roads it crosses at ground level with what they add ("12 crossings
-  +$72M" beside the road icon, 6.4) [T-2226], each with an icon; a chip's label and value stay on one line, and when the row is too wide whole chips move to the next line [T-1394, T-1887, T-1890, T-1929, T-2017]. The cost line's price includes
+  +$72M" beside the road icon, 6.4) [T-2226], each with an icon. The crossings chip is coloured by
+  what they make cheapest for the segment's stretch at ground level (its length from the ghost's
+  heights, the route's mean terrain surcharge): tan where a viaduct would cost less (cut and cover
+  costs the same), light red-brown where a bored tunnel would, else at grade, the tan thinned toward
+  the tag's background by how far the crossings fall short of the cheaper one's extra price [T-2743]; a chip's label and value stay on one line, and when the row is too wide whole chips move to the next line [T-1394, T-1887, T-1890, T-1929, T-2017]. The cost line's price includes
   the road crossings; its multiplier does not. Road tiles landing after the ghost was priced ask it
   again.
 - **Shift**: with a tool on, MapLibre's shift-drag zoom is off so a shift-click reaches the tool.

@@ -129,7 +129,7 @@ export const CROWD_ZOOM = STATION_BOX_ZOOM;
  * where a train is drawn as its cars at about its true length, so two at a crossing read apart;
  * further out they are drawn through each other (Anita, 2026-11-03: only where we're looking closely). */
 export const CONFLICT_ZOOM = STATION_BOX_ZOOM;
-const CROWD_RGB = rgbf("#77726d");
+const CROWD_RGB = rgbf("#a4a19d");
 /** The track drawn through a station box (T-236) is at most this share of the box's white, so the
  * crowd shows beside it. */
 const TRACK_IN_BOX = 0.3;

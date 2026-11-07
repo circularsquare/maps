@@ -395,6 +395,10 @@ export type FromDemand =
       local?: number }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
+  /** T-2729: an edit's solve's units on this worker, done and planned by stage (0 its local solve, 1
+   * the whole solve), the stage of the unit begun or ended, whether one is in hand (`busy`) and each
+   * stage's mean unit time, ms (0: not known) */
+  | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number] }
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */

@@ -198,7 +198,7 @@ function vectorWait(map: maplibregl.Map, z: number, x: number, y: number, signal
 }
 
 let demProtocolAdded = false;
-const terrainUrl = (z: number, x: number, y: number) => TERRAIN_TILES.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`);
+export const terrainUrl = (z: number, x: number, y: number) => TERRAIN_TILES.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`);
 /** the clock worker loads the class grids of the zones in view below this width (clock.worker.ts VIEW_SPAN_M) */
 const GRID_VIEW_M = 400_000;
 let demMap: maplibregl.Map | null = null;

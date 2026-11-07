@@ -28,7 +28,7 @@ import { tPlace } from "../i18n/places";
 import { computed, effect, signal } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
-import { activeCity, cityById, CITIES } from "../game/cities";
+import { activeCity, cityById, CITIES, type City } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
@@ -36,7 +36,7 @@ import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_P
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
-import { lineSetUp, startTier } from "../game/startDifficulty";
+import { lineSetUp, startTier, type StartTier } from "../game/startDifficulty";
 import { purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { CommutersOneWay, Selection } from "../game/types";
@@ -47,6 +47,7 @@ import { addFinder, discAt, pointerAt } from "./demandHover";
 import { BUBBLE_BASE, bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
 import { hiddenOnGlobe } from "./live";
+import { perfOff } from "../perfFlags";
 
 /** A bubble selection's longer trips, for the commuters inspector; null while unknown. */
 export const intercityPick = signal<{ sel: Selection; data: IntercitySelection; own: number } | null>(null);
@@ -161,12 +162,15 @@ export const cityOverview = signal(false);
  * the buttons work there even over dead space (T-801). */
 export const zoomedOut = signal(false);
 
+/** A zone of the overview (`renderCities`): its trips, and how it is drawn and tagged. */
+interface CityPoint { all: number; rail: number; air: number; walk: number; none: number; city: City; isOwn: boolean; tag: () => string[]; unbuilt: boolean; tier: StartTier | null }
+
 interface Marks {
   discs: Float32Array;
   /** the draw anchor the discs are relative to (T-317) */
   anchor: Anchor;
-  /** per disc, in disc order: the hover tag's lines */
-  tags: string[][];
+  /** per disc, in disc order: the hover tag's lines, or what writes them */
+  tags: (string[] | (() => string[]))[];
   /** per disc, the city it stands for, in the city view (T-186) */
   cities?: string[];
   /** the disc whose label is placed first (the selected city's) */
@@ -255,7 +259,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   map.getContainer().appendChild(labels);
   /** each disc's label, in disc order; an element only for each label placed (T-1026: the overview
    * has one per zone, and making them all took 10-20 ms a render) */
-  let texts: string[] = [];
+  let texts: (string | (() => string))[] = [];
   const placeLabels = () => {
     const used: { x: number; y: number; w: number; h: number; px: number; py: number }[] = [];
     if (marks) {
@@ -278,7 +282,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           el.className = "intercity-label";
           labels.appendChild(el);
         }
-        if (el.textContent !== texts[i]) el.textContent = texts[i];
+        const tx = texts[i], text = typeof tx === "function" ? (texts[i] = tx()) : tx;
+        if (el.textContent !== text) el.textContent = text;
         const w = el.offsetWidth, h = el.offsetHeight;
         const positions = [[p.x + r + 5, p.y - h / 2], [p.x - w - r - 5, p.y - h / 2], [p.x - w / 2, p.y + r + 5], [p.x - w / 2, p.y - h - r - 5]];
         const at = positions.find(([x, y]) => x >= 0 && y >= 0 && x + w <= W && y + h <= H && !used.some(a => x < a.x + a.w + LABEL_GAP_X && x + w + LABEL_GAP_X > a.x && y < a.y + a.h + LABEL_GAP_Y && y + h + LABEL_GAP_Y > a.y));
@@ -290,7 +295,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     }
     while (labels.children.length > used.length) labels.lastChild!.remove();
   };
-  const label = (text: string) => { texts.push(text); };
+  const label = (text: string | (() => string)) => { texts.push(text); };
+  /** T-2748: the overview's points, kept while what they are made from is the same (`inputs`), and
+   * `spaced` their dots left after `spaceDots` at zoom `zq` tenths */
+  let cityPoints: { inputs: unknown[]; all: CityPoint[]; zq: number; spaced: CityPoint[] } | null = null;
 
   // ---- the market's corridors ----
   let market: MarketPairs | null = null;
@@ -329,7 +337,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const tiered = !lineSetUp.peek();
     const loads = zoneLoads.peek();
     const day = shownDayPhrase.peek();
-    const points = CITIES.flatMap((c) => {
+    // T-2748: a zoom step reuses the points and, within a tenth of a zoom level, their spacing; only the discs change
+    const inputs = [pairsIn, own, local, opened, tiered, loads, day, shownRealms.peek()];
+    const zoom = map.getZoom();
+    const zq = Math.round(zoom * 10);
+    if (!cityPoints || perfOff("overviewCache") || inputs.some((x, k) => x !== cityPoints!.inputs[k])) {
+      cityPoints = { inputs, all: CITIES.flatMap((c) => {
       const isOwn = c === own;
       let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0, none: 0 };
       if (!own) {
@@ -341,28 +354,36 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // T-421: a zone still loading has its bar instead
       // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
       if (!isOwn && !((own ? shownCount(t.all) : t.all > 0) && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
-      // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
-      const v = local.get(c.id);
-      const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
-      const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: tPlace(c.id, c.name) });
-      const lm = localModes(v);
-      const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
-      const inter = !own || isOwn ? total(c.place) : t;
-      const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: tPlace(c.id, c.name) });
-      const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
       const unbuilt = !own && opened !== null && !opened.has(c.id);
       // T-2690: until a line is set up an unopened zone's dot is coloured by its start tier
       const tier = unbuilt && tiered ? startTier(c.id) : null;
-      const tag = !own
-        ? [localLine, localBar, interLine, interBar, ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
-        : isOwn
-          ? [interLine, interBar, `(${localLine})`]
-          : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
+      // T-494: a zone's local and inter-region trips are two figures, each with a mode bar; written
+      // when hovered (T-2748: writing every zone's on each zoom step was most of a step)
+      const tag = () => {
+        const v = local.get(c.id);
+        const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
+        const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: tPlace(c.id, c.name) });
+        const lm = localModes(v);
+        const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
+        const inter = !own || isOwn ? total(c.place) : t;
+        const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: tPlace(c.id, c.name) });
+        const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
+        return !own
+          ? [localLine, localBar, interLine, interBar, ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
+          : isOwn
+            ? [interLine, interBar, `(${localLine})`]
+            : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
+      };
       return [{ ...t, city: c, isOwn, tag, unbuilt, tier }];
-    });
-    points.sort((a, b) => b.all - a.all);
-    const zoom = map.getZoom();
-    if (!own) spaceDots(points, zoom);
+    }).sort((a, b) => b.all - a.all), zq: NaN, spaced: [] };
+    }
+    const cp = cityPoints;
+    if (cp.zq !== zq) {
+      cp.zq = zq;
+      cp.spaced = cp.all.slice();
+      if (!own) spaceDots(cp.spaced, zoom);
+    }
+    const points = cp.spaced;
     const pxPerUnit = pxPerUnitAt(zoom);
     const zoomScale = 2 ** (ZOOM_GROWTH * (zoom - SCALE_ZOOM));
     const discs = new Float32Array(points.length * DISC);
@@ -377,7 +398,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // so its 1 px outline leaves some fill; then a quarter bigger (T-1886: beside the opened zones' bubbles it read small)
       if (p.unbuilt) r = (UNBUILT_GROW * Math.max(2, Math.floor((r * pxPerUnit * size) / 2))) / (pxPerUnit * size);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, p.unbuilt ? 1 : BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
-      label(tr("intercityView.label", { name: tPlace(p.city.id, p.city.name), count: count(p.all) }));
+      label(() => tr("intercityView.label", { name: tPlace(p.city.id, p.city.name), count: count(p.all) }));
     });
     const first = points.findIndex((p) => p.isOwn);
     marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };
@@ -501,7 +522,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   addFinder(5, (p) => {
     if (!marks) return null;
     const i = discAt(marks.discs, p, marks.anchor, view.bubbleSize);
-    return i < 0 ? null : marks.tags[i];
+    const tag = i < 0 ? null : marks.tags[i];
+    return typeof tag === "function" ? tag() : tag;
   });
 
   // ---- what is selected ----
@@ -535,9 +557,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     void (async () => {
       const own = marketOf(focus);
       const cells = Uint32Array.from(sel.cells);
+      // T-2746: a selection gone by the time its far end is on its way asks the workers nothing
+      const still = () => selection.peek() === sel;
       if (sel.end === "both") {
         // T-1903: Total draws the trips starting here and those ending here as one far end
-        const [h, w] = await Promise.all([intercitySelection("home", cells), intercitySelection("work", cells)]);
+        const [h, w] = await Promise.all([intercitySelection("home", cells, still), intercitySelection("work", cells, still)]);
         if (mine !== ask || !h || !w || selection.peek() !== sel) return;
         const by = new Map<PurposeKey, { starts: PlaceFlows; ends: PlaceFlows }>();
         for (const k of new Set([...(h.byPurpose?.keys() ?? []), ...(w.byPurpose?.keys() ?? [])])) {
@@ -550,7 +574,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         show(all, "both", own, by, "home", { home: h.starts, work: w.ends });
         return;
       }
-      const r = await intercitySelection(sel.end, cells);
+      const r = await intercitySelection(sel.end, cells, still);
       // null: the workers moved on, and the next demandView asks again
       if (mine !== ask || !r || selection.peek() !== sel) return;
       intercityPick.value = { sel, data: r, own };

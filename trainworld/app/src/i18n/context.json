@@ -453,6 +453,7 @@
   "cloud.unreachable": "Why a game was not uploaded to the account: no answer from the server. No final period.",
   "cloud.full": "Why a game was not uploaded to the account: the account has no room left.",
   "cloud.tooBig": "Why a game was not uploaded to the account: the save is over the size limit.",
+  "cloud.deleteOwed": "Grey text in the saves panel or on the start menu: a game was deleted in this browser, but the server did not answer, so its copy on the player's account is deleted the next time the page reaches it.",
   "colourPicker.area": "Screen-reader label of the colour picker's square area, where one axis is saturation and the other brightness.",
   "colourPicker.hue": "Screen-reader label of the colour picker's hue strip.",
   "colourPicker.hex": "Screen-reader label of the colour picker's text box holding a colour as a hex code such as #3366cc.",
@@ -1032,6 +1033,13 @@
   "lineInspector.turnEnds": "Row label in the round trip rows of a line view: time turning round at the two ends.",
   "lineInspector.waitSpot": "Name of a place where a line waits for faster trains, in the round trip rows. name: the station's name; faster: true when faster lines are known; list: their names as a list, \"Express and Local\".",
   "lineInspector.why": "Second line of the hover on a stop's time in a line view: what limits the speed. why: top, track, curve or crossover; speed: \"120 km/h\".",
+  "lineProfile.along": "Close-up hover over a rail line's cross section (a side view of the line on the ground's height): how far along the line the middle of the close-up is. {distance} like \"2.4 km\", {stop} the line's first stop's name.",
+  "lineProfile.crosses": "Close-up hover over a line's cross section: another line's track crosses this line's here. {lines} is one or more small line bullets (nodes), {count} how many lines, {height} like \"10 m\"; dir up: the other track is above this line's track, down: below, other: at the same height.",
+  "lineProfile.ground": "Close-up hover over a line's cross section: the ground's height at the middle of the close-up. {height} like \"23 m\".",
+  "lineProfile.groundUnknown": "Close-up hover over a line's cross section, when the ground heights could not be downloaded.",
+  "lineProfile.heading": "Section heading at the foot of a rail line's view, over a side view of the whole line drawn on the ground's real height.",
+  "lineProfile.track": "Close-up hover over a line's cross section: the track's level at the middle of the close-up. {level} like \"−1\" or \"+2\", {height} like \"5 m\"; dir up: viaduct, down: below ground, over: a bridge over water, under: a tunnel under water, other: at ground level.",
+  "lineProfile.water": "Close-up hover over a line's cross section, where the line is over water (sea, river or lake): the water surface's height. sea true when it is at sea level; {height} like \"12 m\".",
   "lineRunning.idle": "Extra hover line on a line's bullet when the line has no trains.",
   "linesTab.planned": "Word in a line's row in the Lines tab when the line is drawn but has no trains yet.",
   "linesTab.broken": "Word in a line's row in the Lines tab when the line cannot run, for example because its route is cut.",
@@ -2159,5 +2167,9 @@
   "widgets.type": "Screen reader name of the number of a stepper, which opens a box for typing the value. label: what the stepper sets, lowercase, e.g. \"fare scale\".",
   "world.busStopNear": "Default name of a bus stop. name: the nearest station's name, \"Canal St\".",
   "world.busStop": "Default name of a bus stop with no station near it.",
-  "zoneLoading.loading": "Hover on a city's loading bar. name: the city, \"Boston\"; share: a whole number, \"40\"."
+  "zoneLoading.loading": "Hover on a city's loading bar. name: the city, \"Boston\"; share: a whole number, \"40\".",
+  "diagramView.savingPicture": "Network diagram: the busy label shown while the diagram's picture is being made for download, after the player clicks Save picture.",
+  "diagramView.pictureFile": "Network diagram: the downloaded picture's file name, without .png. name: the saved game's name (\"Brooklyn loop\"), or diagramView.unnamed. Keep it short; no / \\ : * ? \" < > |.",
+  "diagramView.unnamed": "Network diagram: the name used in the downloaded picture's file name when the game has no saved name; a noun for the player's whole rail network.",
+  "tools.fromLast": "Map hover while placing stations: how far the pointer is from the station placed last, and that station's name. distance: \"1.2 km\"; name: \"Times Sq-42 St\"."
 }

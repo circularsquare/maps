@@ -68,7 +68,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
  * other map error is logged as MapLibre would. */
 function warnOnNetworkFailure(map: maplibregl.Map) {
   map.on("error", (e) => {
-    const err = e.error, what = (e as { sourceId?: string }).sourceId ?? "a resource";
+    const err = e.error, what = (e as { sourceId?: string }).sourceId ?? "a resource"; // i18n-ignore: console text
     if (err instanceof maplibregl.AJAXError) {
       const text = `Map: ${what} did not load (${err.status || "failed"} ${err.statusText}: ${err.url})`; // i18n-ignore
       if (err.status === 0) console.warn(text);

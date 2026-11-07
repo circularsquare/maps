@@ -3,7 +3,7 @@
 // Its hover says more. T-2693: a thin bar in every case (see `share` below); no ring since T-2728.
 
 import { computed, effect, signal } from "@preact/signals";
-import { demandBehindFrom, demandScope, demandStep, demandSolving, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
+import { demandBehindFrom, demandScope, demandStep, demandSolving, demandWork, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
@@ -109,9 +109,26 @@ function timeShare(kind: string): number {
 function stopWaitTimer() {
   if (waitTimer) { clearInterval(waitTimer); waitTimer = 0; }
 }
+/** T-2729: a quarter second's tick while the bar moves through the unit in hand of an edit's solve */
+const workTick = signal(0);
+let workTimer = 0;
+function tickWork() {
+  workTick.value;
+  if (!workTimer) workTimer = window.setInterval(() => {
+    if (demandUpdating.peek() && demandWork.peek()) workTick.value++;
+    else { clearInterval(workTimer); workTimer = 0; }
+  }, 250);
+}
 /** results published so far of the running solve's, when one runs */
 function roundShare(): number | null {
   const { done, of } = demandStep.value;
+  // T-2729: an edit's solve publishes only at each stage's end (its local solve while that is
+  // awaited, then the whole one): the workers' units done instead, the unit in hand by its time
+  const w = demandWork.value;
+  if (demandUpdating.value && w) {
+    const share = workShare(w, of === 2 && done === 0 ? 0 : 1, performance.now());
+    if (share !== null) { tickWork(); return Math.min(0.97, share); }
+  }
   return demandUpdating.value && of > 0 ? Math.min(0.95, done / of) : null;
 }
 

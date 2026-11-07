@@ -73,7 +73,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.11, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
     realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6", realOpacity: 0.15,
-    walkers: "#77726d",
+    walkers: "#a4a19d",
     lot: "#e7e3dc", lotLine: "#c4beb4",
     fullTrack: "#c0392b",
     ghost: "#000000",

@@ -38,6 +38,8 @@ import {
   type DayDemand,
   type DemandView,
   demandStep,
+  demandWork,
+  type WorkPart,
   demandScope,
   demandUpdating,
   networkWorld,
@@ -123,6 +125,8 @@ const HOLD_ROUND = ROUNDS;
 const PERIOD_STRIDE = 6;
 
 const FLOWS_FIRST_MS = 1000;
+/** T-2746: the same wait with no solve running, a guard only: the far end's `flows` is posted within ~100 ms */
+const FLOWS_IDLE_MS = 5000;
 
 /** The first registry zone of each market place (a scan per place was 45 ms a query in China, T-1165). */
 let placeCities: Map<number, (typeof CITIES)[number]> | null = null;
@@ -372,6 +376,8 @@ interface Solve {
   /** T-1733: per solving worker, how many clusters it solves locally first (`plan.local`), and
    * whether `whole` went */
   localPlans?: number[];
+  /** T-2729: per solving worker, an edit's solve's last `work` */
+  work?: WorkPart[];
   wholeSent?: boolean;
   /** T-1790: local cluster results shown so far, and (T-1734) when the first was */
   localShown?: number;
@@ -673,9 +679,12 @@ class DemandClient {
    * took it up, how long it took, when it landed here (window.twDemand.client.qlog, ?debug=1) */
   qlog: { id: number; kind: string; sent: number; replies: { w: number; start: number; ms: number; at: number }[] }[] = [];
 
-  /** T-1165: a bubble selection's far end being worked out; its longer trips wait for it (up to
-   * FLOWS_FIRST_MS), so the market's selection sum (100-200 ms in China) does not hold it up */
+  /** T-1165: a bubble selection's far end being worked out; its longer trips wait for it, so the
+   * market's selection sum (1-3 s on New York's real save at 2 cores) does not hold it up */
   private flowsPending: Promise<unknown> | null = null;
+  /** T-2746: settles once that far end's `flows` question is posted to worker 0 (or it ends without
+   * one): a longer-trips question posted before it would hold it up in the worker's queue */
+  private flowsPosted: Promise<void> | null = null;
   private focusEpoch = 0;
   private focusCity = activeCity.peek();
   private focusFrame = worldFrameEpoch.peek();
@@ -3282,6 +3291,14 @@ class DemandClient {
       if (msg.local) s.local = msg.local;
       return;
     }
+    if (msg.kind === "work") {
+      if (i >= this.computeN || s.barrier) return;
+      const w = (s.work ??= []);
+      w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now() };
+      for (let k = 0; k < this.computeN; k++) if (!w[k]) return;
+      if (s === this.cur) demandWork.value = w.slice(0, this.computeN);
+      return;
+    }
     if (msg.kind === "plan") {
       if (i === 0) {
         demandSolving.value = new Set(msg.solving.flat());
@@ -3533,6 +3550,7 @@ class DemandClient {
     // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
     // whole one (`plan` says whether there is a local one), not rounds
     demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
+    demandWork.value = null;
     demandScope.value = cities.length;
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
@@ -4140,13 +4158,19 @@ class DemandClient {
       const dv = demandView.peek();
       return dv ? this.flowsAt(shownTarget(dv.version, dv.round), end, cells) : Promise.resolve(null);
     }
-    const p = this.viaRound(`flows|${end}|${cells.join(",")}`, (t) => this.flowsAt(t, end, cells));
+    let sent!: () => void;
+    const posted = new Promise<void>((r) => (sent = r));
+    const p = this.viaRound(`flows|${end}|${cells.join(",")}`, (t) => this.flowsAt(t, end, cells, sent));
     this.flowsPending = p;
-    const done = () => { if (this.flowsPending === p) this.flowsPending = null; };
+    this.flowsPosted = posted;
+    const done = () => {
+      sent();
+      if (this.flowsPending === p) this.flowsPending = this.flowsPosted = null;
+    };
     p.then(done, done);
     return p;
   }
-  private async flowsAt(t: Target, end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
+  private async flowsAt(t: Target, end: "home" | "work", cells: Uint32Array, sent?: () => void): Promise<Flows | null> {
     const city = activeCity.peek(), round = demandView.peek()?.round;
     const version = t.view;
     const e = end === "home" ? 0 : 1;
@@ -4174,7 +4198,9 @@ class DemandClient {
         else addInto(sums, r.sums);
       }
       if (!sums || mask !== ALL_PERIODS) return null;
-      const [r] = await this.ask((id) => ({ kind: "flows", id, version: t.version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
+      const asked = this.ask((id) => ({ kind: "flows", id, version: t.version, end: e, cells, sums: sums! }), [0], [sums.buffer]);
+      sent?.();
+      const [r] = await asked;
       if (r?.kind !== "flows" || !r.packed) return null;
       p = r.packed;
       purposeParts = [];
@@ -4265,16 +4291,22 @@ class DemandClient {
   }
 
   /** The longer trips of a bubble selection (game/demand.ts `IntercitySelection`, T-118). */
-  intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> {
+  /** `still`: whether the selection is still wanted; asked once the far end is on its way, so a
+   * superseded one posts nothing (T-2746) */
+  intercitySelection(end: "home" | "work", cells: Uint32Array, still?: () => boolean): Promise<IntercitySelection | null> {
     if (cells.length === 0) return Promise.resolve(null);
-    return this.viaRound(`icSel|${end}|${cells.join(",")}`, (t) => this.intercitySelectionAt(t, end, cells));
+    return this.viaRound(`icSel|${end}|${cells.join(",")}`, (t) => this.intercitySelectionAt(t, end, cells, still));
   }
-  private async intercitySelectionAt(t: Target, end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> {
+  private async intercitySelectionAt(t: Target, end: "home" | "work", cells: Uint32Array, still?: () => boolean): Promise<IntercitySelection | null> {
     const version = t.view;
     const e = end === "home" ? 0 : 1;
     const sq = this.isBare(activeCity.peek()) ? await this.bareSquares(version, e, cells) : undefined;
     if (sq === null) return null;
-    if (this.flowsPending) await Promise.race([this.flowsPending, new Promise((r) => setTimeout(r, FLOWS_FIRST_MS))]);
+    // T-2746: after the far end's `flows` is posted, never before it in worker 0's queue; while a solve
+    // runs that can wait for a round, hence the shorter cap then
+    const first = this.flowsPosted ?? this.flowsPending;
+    if (first) await Promise.race([first, new Promise((r) => setTimeout(r, demandUpdating.peek() ? FLOWS_FIRST_MS : FLOWS_IDLE_MS))]);
+    if (still && !still()) return null;
     const parts = await this.partsIntercity("icSel", t, (id) => ({ kind: "icSel", id, version: t.version, end: e, cells, ...(sq ? { sq } : {}) }));
     if (!parts) return null;
     const own = CITIES.find((c) => c.id === activeCity.peek())?.place ?? -1;
@@ -4695,7 +4727,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   onLoadStop((why) => c.fail(why));
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
-  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells) => c.intercitySelection(end, cells), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
+  setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;

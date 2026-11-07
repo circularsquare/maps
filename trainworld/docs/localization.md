@@ -136,12 +136,15 @@ in order: `?lang=<code>` in the address (not remembered), the player's pick on t
 `zh-Hant` give zh-TW, other `zh` zh-Hans; English ranked first keeps English), else English. `?lang=pseudo`
 shows every message in ⟦ ⟧ over the English, so text still inline stands out on screen.
 
-**Offered languages** are `OFFERED` in `i18n/intl.ts`: English alone until a translation is released
-(below). Settings shows the Language row (`ui/SettingsTab.tsx`, under the icon buttons) once `OFFERED` has
-two languages, or whenever the address has `?lang=`, which lists all of `PICKER` (English, 日本語, 简体中文,
-繁體中文 (台灣)) so translations can be seen before release. Each language is listed by its own name
-(`LANG_NAMES`, never translated); the globe icon's hover names the row and says that languages other than
-English are translated by AI. A pick is remembered on this device.
+**Offered languages** are `OFFERED` in `i18n/intl.ts`: English, Japanese, Simplified and Traditional Chinese
+(released 2026-11-07, T-2585); a new language joins once released (below). Settings shows the Language row
+(`ui/SettingsTab.tsx`, right under the first row's Controls and account buttons), and the start menu the same picker
+(`ui/LanguageSelect.tsx`) at the right of its card's first row (T-2753), while `OFFERED` has two
+languages, and with `?lang=` in the address lists all of `PICKER` so a language can be seen before release.
+Each language is listed by its own name (`LANG_NAMES`, never translated); the globe icon's hover names the row
+and says that non-English text is translated by AI. A pick takes effect at once, without a reload (panels
+redraw; text already made, such as an open question or a notice, keeps its language), and is remembered on
+this device.
 
 ## Fonts
 

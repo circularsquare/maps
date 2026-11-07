@@ -23,7 +23,8 @@ const PX_PER_CELL = 12;
 /** RGB and the alpha of rolling, hilly and mountain ground, in each theme */
 const WASH = {
   light: { rgb: [150, 88, 30], alpha: [0, 0.08, 0.15, 0.24] },
-  dark: { rgb: [230, 160, 90], alpha: [0, 0.06, 0.11, 0.18] },
+  // a warm grey with little colour, so it reads as ground beside the parks' green (Anita picked it, T-2745)
+  dark: { rgb: [190, 178, 164], alpha: [0, 0.06, 0.11, 0.18] },
 };
 
 const shown = computed(() => display.value.hillshade && isBuildTool(tool.value));
@@ -80,6 +81,7 @@ export function startTerrainTint(map: MlMap): () => void {
     drawn = key;
 
     const wash = WASH[s];
+    const rgbOf = (_k: number) => wash.rgb;
     const px = new Uint8ClampedArray(W * H * 4);
     const grids = [...terrainGrids.values()];
     // per grid, the lattice column of each canvas column (-1 outside it)
@@ -109,7 +111,8 @@ export function startTerrainTint(map: MlMap): () => void {
           const k = classAt(g, base + c);
           if (k) {
             const i = (y * W + x) * 4;
-            px[i] = wash.rgb[0], px[i + 1] = wash.rgb[1], px[i + 2] = wash.rgb[2], px[i + 3] = Math.round(wash.alpha[k] * 255);
+            const c3 = rgbOf(k);
+            px[i] = c3[0], px[i + 1] = c3[1], px[i + 2] = c3[2], px[i + 3] = Math.round(wash.alpha[k] * 255);
             any = true;
           }
           break;

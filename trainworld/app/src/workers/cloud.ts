@@ -7,7 +7,7 @@
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
 import { t } from "../i18n";
-import { backupBeforeReplace, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeCloudDeletes, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, changeCloudDeletes, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
 
 /** What a page needs to reach the account: the server, the session and this browser's device id.
@@ -104,10 +104,15 @@ const failure = (status: number) => status === 0 ? (typeof navigator !== "undefi
 let listFailure = WHY_UNREACHABLE;
 export const lastListFailure = () => listFailure;
 
+/** The account's games, but those deleted here whose deletion has not reached the account (T-2738:
+ * else a slot deleted here came back as a game only on the account). */
 export async function listGames(ctx: CloudContext): Promise<AccountList | null> {
   if (!ctx.on) return null;
   const a = await call(ctx, "GET", "trainworld/games");
-  if (a.status === 200 && a.json) return a.json as AccountList;
+  if (a.status === 200 && a.json) {
+    const list = a.json as AccountList, owed = new Set(await owedDeletes(ctx));
+    return owed.size ? { ...list, games: list.games.filter((g) => !owed.has(g.id)) } : list;
+  }
   listFailure = failure(a.status);
   return null;
 }
@@ -179,13 +184,19 @@ export async function deleteGame(ctx: CloudContext, id: string): Promise<boolean
   return a.status === 204 || a.status === 404;
 }
 
+/** Games `ids` of account `acct` to delete from it, now or at the next chance (`sendDeletes`). */
+export async function owe(acct: string, ids: string[]) {
+  if (!ids.length) return;
+  // unrecorded, the slot stays: deleted here alone, its account copy would come back as a game of its own
+  if (!await changeCloudDeletes((list) => [...list, ...ids.filter((id) => !list.some((d) => d.id === id)).map((id) => ({ id, acct }))])) throw new Error(t("savesPanel.deleteFailed"));
+}
+/** The deletions this browser owes account `ctx.acct`. */
+export const owedDeletes = async (ctx: CloudContext) => (await readCloudDeletes()).filter((d) => d.acct === ctx.acct).map((d) => d.id);
 /** A slot deleted in this browser: its account game goes too, now or at the next chance. Call before
  * the slot (and its record) is deleted. */
 export async function forgetSlot(key: string) {
   const rec = await readSync(key);
-  if (!rec?.acct || rec.local) return;
-  const list = await readCloudDeletes();
-  if (!list.some((d) => d.id === rec.id)) await writeCloudDeletes([...list, { id: rec.id, acct: rec.acct }]);
+  if (rec?.acct && !rec.local) await owe(rec.acct, [rec.id]);
 }
 /** A slot deleted from this browser (T-1612: the clock worker's and the start menu's delete), its
  * account game with it. The caller holds the slot's lock. */
@@ -193,13 +204,14 @@ export async function removeSlot(key: string) {
   await forgetSlot(key);
   await deleteSlot(key);
 }
-/** Send the deletions this browser owes the account. */
-export async function sendDeletes(ctx: CloudContext) {
-  if (!ctx.on) return;
-  for (const d of await readCloudDeletes()) {
-    if (d.acct !== ctx.acct || !await deleteGame(ctx, d.id)) continue;
-    await writeCloudDeletes((await readCloudDeletes()).filter((x) => x.id !== d.id));
+/** Send the deletions this browser owes the account; those still owed after (the server refused or
+ * could not be reached). */
+export async function sendDeletes(ctx: CloudContext): Promise<string[]> {
+  if (!ctx.on) return owedDeletes(ctx);
+  for (const id of await owedDeletes(ctx)) {
+    if (await deleteGame(ctx, id)) await changeCloudDeletes((list) => list.filter((x) => x.id !== id));
   }
+  return owedDeletes(ctx);
 }
 
 // ---------------------------------------------------------------- uploads

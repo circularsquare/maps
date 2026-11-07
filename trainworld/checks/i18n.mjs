@@ -261,6 +261,10 @@ function scan({ parseAst }) {
       row.sites++;
       if (listDir && file.startsWith(listDir)) listed.push(`${file}:${ln} ${text.replace(/\s+/g, " ").slice(0, 140)}`);
     };
+    const pluralFound = (node) => {
+      row.plurals++;
+      if (listDir && file.startsWith(listDir)) listed.push(`${file}:${lineOf(node.start)} plural or list: ${code.slice(node.start, node.end).replace(/\s+/g, " ").slice(0, 120)}`);
+    };
     // a literal inside a handler (onClick={() => ask({ text: "..." })}) is the function's, not the attribute's
     const attrOf = (anc) => {
       for (let i = anc.length - 1; i >= Math.max(0, anc.length - 6); i--) {
@@ -292,14 +296,25 @@ function scan({ parseAst }) {
         if (!codeCtx() && isProse(node.value)) found(node.value, node.start);
       } else if (node.type === "TemplateLiteral" && parent?.type !== "TaggedTemplateExpression") {
         const text = node.quasis.map((q, i) => q.value.cooked + (i < node.expressions.length ? "{" + i + "}" : "")).join("");
-        if (!codeCtx() && isProse(text.replace(/\{\d+\}/g, " "))) found(text, node.start);
+        // one word between two pieces ("{0} riders {1}") is a sentence, though alone it would pass for an id
+        if (!codeCtx() && (isProse(text.replace(/\{\d+\}/g, " ")) || (/\}\s+[a-z]{3,}\s+\{/.test(text) && !/[;=#]/.test(text)))) found(text, node.start);
       }
       if (node.type === "CallExpression") {
         const c = node.callee, n = c?.type === "MemberExpression" ? c.property?.name : c?.name;
-        if (["plural", "andList", "busesText", "boatsText"].includes(n) && !ignored(lineOf(node.start))) row.plurals++;
+        if (["plural", "andList"].includes(n) && !ignored(lineOf(node.start))) pluralFound(node);
       } else if (node.type === "ConditionalExpression") {
+        // a word in a branch ("stop" : "stops"); a message key chosen by the count ("topBar.inDays" against
+        // "topBar.timingTomorrow"), a code value compared with and a bare "\n" are not
         const s = code.slice(node.test.start, node.test.end), whole = code.slice(node.start, node.end);
-        if (/(===|!==|==)\s*1\b/.test(s) && /["'`][^"'`]*[a-z]s?["'`]/.test(whole) && whole.length < 200 && !ignored(lineOf(node.start))) row.plurals++;
+        const worded = (n) => {
+          if (!n || typeof n.type !== "string") return false;
+          if (n.type === "Literal") return typeof n.value === "string" && /[A-Za-z]{2,}/.test(n.value) && !/^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+$/.test(n.value);
+          if (n.type === "TemplateLiteral") return n.quasis.some((q) => /[A-Za-z]{2,}/.test(q.value.cooked));
+          if (n.type === "BinaryExpression" && ["===", "!==", "==", "!="].includes(n.operator)) return false;
+          if (n.type === "CallExpression" && ["t", "tr", "tRich"].includes(n.callee?.name)) return n.arguments.slice(1).some(worded);
+          return Object.keys(n).some((k) => k !== "parent" && (Array.isArray(n[k]) ? n[k].some(worded) : n[k] && typeof n[k] === "object" && worded(n[k])));
+        };
+        if (/(===|!==|==)\s*1\b/.test(s) && (worded(node.consequent) || worded(node.alternate)) && whole.length < 200 && !ignored(lineOf(node.start))) pluralFound(node);
       }
       const next = [...anc, node];
       for (const k of Object.keys(node)) {

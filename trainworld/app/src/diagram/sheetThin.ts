@@ -128,8 +128,8 @@ export function thinPass(G: MapGrid, water: boolean, o: ThinOptions, stats: Thin
     const joints: number[] = [];
     for (const ch of chains) {
       const n = ch.px.length;
-      const endA = ch.a === 1 ? (near(ch.px[0], 2) ? "body" : "free") : ch.a === 0 ? "loop" : "join";
-      const endB = ch.b === 1 ? (near(ch.px[n - 1], 2) ? "body" : "free") : ch.b === 0 ? "loop" : "join";
+      const endA = ch.a === 1 ? (near(ch.px[0], 2) ? "body" : "free") : ch.a === 0 ? "loop" : "join"; // i18n-ignore: end kinds
+      const endB = ch.b === 1 ? (near(ch.px[n - 1], 2) ? "body" : "free") : ch.b === 0 ? "loop" : "join"; // i18n-ignore: end kinds
       const ws = ch.px.map((p) => wOf(toG(p))).sort((a, b) => a - b);
       const wc = Math.round(Math.max(o.minW, ws[ws.length >> 1]) * 4) / 4;
       if (((endA === "free" && endB === "join") || (endB === "free" && endA === "join")) && n * cell < Math.max(3, 2 * wc)) continue;

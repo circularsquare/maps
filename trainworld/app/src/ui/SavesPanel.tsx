@@ -17,7 +17,7 @@ import { storageKept } from "../game/saveSafety";
 import { exportGame, exportSlot, importGame, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
-import { accountList, accountOnly, addToAccount, cardOf, deleteAccountGame, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
+import { accountList, accountOnly, addToAccount, cardOf, deleteVersions, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
 import { tiedTo, type CloudContext } from "../workers/cloud";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
@@ -284,7 +284,7 @@ export function VersionsLine({ group, now, act, children }: { group: GameGroup; 
           </div>
           {asking === id && <div class="callout bad">
             <p>{t("savesPanel.deleteVersionQuestion", { where })}</p>
-            <div class="pane-foot"><button class="btn text" onClick={() => { setAsking(null); void run(act.remove(v)); }}>{t("savesPanel.deleteVersion")}</button><button class="btn text" onClick={() => setAsking(null)}>{t("savesPanel.keepIt")}</button></div>
+            <div class="pane-foot"><button class="btn text danger" onClick={() => { setAsking(null); void run(act.remove(v)); }}>{t("savesPanel.deleteVersion")}</button><button class="btn text" onClick={() => setAsking(null)}>{t("savesPanel.keepIt")}</button></div>
           </div>}
         </li>;
       })}
@@ -371,24 +371,22 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
       const name = g.top.kind === "slot" ? g.top.slot.name : g.top.game.name;
       return await restoreAccountBackup(v.game.id, name, g.origin, v.backup) ? shut() : t("savesPanel.backupDownloadFailed");
     },
-    remove: async (v) => {
-      if (v.kind === "slot") manageSaveSlot("delete", v.slot.key);
-      else if (v.kind === "account" && !await deleteAccountGame(v.game.id)) return t("savesPanel.deleteFailed");
-      return "";
-    },
+    remove: (v) => removeVersions([v]),
   });
-  // the card's delete: every slot and account game of the game, the one being played last
-  const removeGroup = (g: GameGroup) => {
-    for (const v of groupHeads(g)) {
-      if (v.kind === "account") void deleteAccountGame(v.game.id);
-      else if (v.slot.key !== saves.active) manageSaveSlot("delete", v.slot.key);
-    }
-    if (groupHeads(g).some((v) => v.kind === "slot" && v.slot.key === saves.active)) manageSaveSlot("delete", saves.active);
+  // T-2738: every slot and account game of the game, the one being played last (the page then leaves it)
+  const [removed, setRemoved] = useState("");
+  const removeVersions = async (versions: Version[]) => {
+    setRemoved("");
+    const why = await deleteVersions(versions, saves.active);
+    if (versions.some((v) => v.kind === "slot" && v.slot.key === saves.active)) manageSaveSlot("delete", saves.active);
+    return why;
   };
+  const removeGroup = async (g: GameGroup) => setRemoved(await removeVersions(groupHeads(g)));
   return (
     <>
       {!saves.writable && saves.reason && <p class="callout bad">{saves.reason}</p>}
       {saves.error && <p class="callout bad">{saves.error}</p>}
+      {removed && <p class="callout bad save-delete-failed">{removed}</p>}
       <div class="save-files">
         <button class="btn text save-new" onClick={onNewGame}>{t("savesPanel.newGame")}</button>
         <button class="btn text" data-tip={t("savesPanel.openFileTip")} onClick={pick}>{t("savesPanel.openFile")}</button>
@@ -410,7 +408,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
             </VersionsLine>
             {removing === g.origin && <div class="callout bad">
               <p>{deleteGroupQuestion(g, playing)}</p>
-              <div class="pane-foot"><button class="btn text" onClick={() => { removeGroup(g); setRemoving(null); }}>{t("savesPanel.deleteGame")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("savesPanel.keepIt")}</button></div>
+              <div class="pane-foot"><button class="btn text danger" onClick={() => { void removeGroup(g); setRemoving(null); }}>{t("savesPanel.deleteGame")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("savesPanel.keepIt")}</button></div>
             </div>}
           </li>;
         })}

@@ -106,10 +106,10 @@ pub const WATER_SPAN_MAX: f64 = 30_000.0;
 pub const TERRAIN_MIN_LEVEL: i8 = -1;
 /// Terrain sampling step along track, m: under a quarter of the class grid's ~115 m cell (T-1854).
 pub const TERRAIN_STEP: f64 = 25.0;
-/// Per road that track at ground level crosses, US$M (T-1929, notes/T-1929.md: ground through a
-/// dense centre's 11-13 crossings a km comes out dearer than a viaduct, open country's under 1 a
-/// km stays cheapest). Each road comes with its weight, a motorway's 3 (app `roadTiles.ts`).
-pub const ROAD_CROSSING_COST: f64 = 6.0;
+/// Per road that track at ground level crosses, US$M (T-1929; 10 since T-2732, Anita, standing in for
+/// the buildings cleared: a viaduct is cheaper to build from about 3.75 crossings a km, open country's
+/// under 1 a km stays cheapest at grade). Each road comes with its weight, a motorway's 3 (app `roadTiles.ts`).
+pub const ROAD_CROSSING_COST: f64 = 10.0;
 /// Step along track for finding road crossings, m: chords this long stray under 20 cm from a
 /// 300 m curve.
 pub const ROAD_STEP: f64 = 20.0;

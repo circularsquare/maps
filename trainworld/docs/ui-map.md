@@ -32,7 +32,8 @@ roads and under its labels, so under our own network (which is drawn on the over
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
 in `game/shadeTable.ts`): main line, other passenger rail, metro. Trams, light rail, monorails,
 funiculars, narrow gauge, heritage lines and track no line runs over are not drawn. Lines appear
-from zoom 4; each region's tiles are added when the view first touches it, nearest first, and
+from zoom 6 [T-2748: from zoom 4 a view of Europe drew 41 regions' tiles, most of a frame's cost on
+the map a new game picks a city on]; each region's tiles are added when the view first touches it, nearest first, and
 nothing is fetched while it is hidden. The lines are noritetsu's per-region tiles (OSM and
 the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
 there is no high-speed class and no hover yet.
@@ -420,7 +421,7 @@ number) and shows n as its symbol.
   among those under the pointer and selects its complex; the delete and line tools take that
   station, and its tag lists its own lines.
 - **Crowd pie** [T-228, T-553]: with platform crowds on, a dot's white fills like a pie chart,
-  clockwise from 12 o'clock on the screen, with the crowd grey (#77726d) in proportion to its fullest
+  clockwise from 12 o'clock on the screen, with the crowd grey (#a4a19d) in proportion to its fullest
   platform side's share of the room (full circle at full), or the over-full red once that side is
   full [T-559]. The rim stays; each dot of a complex is its own pie, and the
   connectors stay white. The same colours in both themes.
@@ -603,7 +604,7 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
 ## Platform crowds
 
 [T-164, T-219, T-236, T-553] From zoom 14 the white of each platform box fills with a dark warm grey
-(#77726d, right up to the rim, T-1121) as riders wait. Each direction of travel
+(#a4a19d, right up to the rim, T-1121) as riders wait. Each direction of travel
 has its half of the box along its length (close in on double track, its own platform beside its
 track, "Stations", T-658c; at a passing station the island inside its outer track, T-2249); a platform whose trains all use one side (a terminal)
 fills as one. A side fills from the middle outwards by its riders' share of the room
@@ -637,8 +638,12 @@ arrivals until it leaves, less those left behind; those who get off are the load
 those who got on, less the load carried on.
 
 - **Faces**: one per 20 riders getting off (rounded at random), at most 4 per train, 5 per platform
-  and 36 in all. Each rises 30 px from a random point along the platform over 2 s and fades, 14 px
-  across at zoom 14 to 20 px at 17. Happy (pale yellow, blushing); sad (blue, brows raised at the
+  and 36 in all. Each rises 30 px over 2 s and fades, 14 px across at zoom 14 to 20 px at 17, from
+  its train's own platform as drawn (each line's station is its own box, so a complex's faces stay
+  with their lines; the figures are that platform's own) [T-2751]: one of 5 places spread over the
+  middle 80% of the box, the least used by faces alive on that side first, 55% of the box's half
+  width out from the centre line on the side its riders stand (as the crowd fill's sides), off the
+  track. Happy (pale yellow, blushing); sad (blue, brows raised at the
   inner ends, a tear, a frown) when the train before left 20 or more riders behind (`CROWDED_LEFT`);
   tired (drained yellow, heavy lids, a flat mouth) when the riders waiting have waited 10 minutes
   or more on average (`TIRED_WAIT_S`) [T-696, T-802]. The average counts the newcomers at half the

@@ -8,20 +8,19 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
-import { failLists, leaseSlot, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
+import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
-import { groupHeads, groupVersions, type GameGroup } from "../workers/versions";
+import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { StartLogo } from "./StartLogo";
 import { AboutLink } from "./Credits";
 import { AccountButton, startAccountUi } from "./AccountPanel";
+import { LanguageSelect } from "./LanguageSelect";
 import { deleteGroupQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
-import { cloudContext } from "../game/account";
-import { accountBackupFile, accountList, accountOnly, cardOf, deleteAccountGame, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
-import { removeSlot, sendDeletes } from "../workers/cloud";
+import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
@@ -112,19 +111,11 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
   };
   // T-1612: the card whose delete is being asked about
   const [removing, setRemoving] = useState<string | null>(null);
-  const remove = async (s: SaveSlot) => {
+  // T-2738: a card's every version, or one, here and on the account (`deleteVersions`)
+  const remove = async (versions: Version[]) => {
     setRemoving(null);
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
-    if (s.key.startsWith("account:")) {
-      if (!await deleteAccountGame(s.key.slice("account:".length))) setRefused(t("startMenu.deleteFailed"));
-      return;
-    }
-    const lease = await leaseSlot(s.key);
-    if (!lease) { setRefused(t("startMenu.openElsewhere")); return; }
-    try { await removeSlot(s.key); } catch { setRefused(t("startMenu.deleteFailed")); } finally { lease.release(); }
-    const ctx = cloudContext();
-    if (ctx?.on) void sendDeletes(ctx).catch(() => {});
-    setRefused(null);
+    setRefused(await deleteVersions(versions) || null);
     await listSlots().then(setSlots, (err) => { if (err instanceof StorageReadError) setUnread(true); else setSlots([]); });
   };
   // T-1612: a save file picked here opens as it does from the saves panel (its game waits in storage)
@@ -149,32 +140,26 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
       const file = await accountBackupFile(v.game.id, g.top.kind === "slot" ? g.top.slot.name : g.top.game.name, v.backup);
       return file ? chose(await fileChoice(file, { origin: g.origin, edit: v.backup.savedAt * 1000 })) : t("startMenu.backupDownloadFailed");
     },
-    remove: async (v) => {
-      if (v.kind === "slot" || v.kind === "account") await remove(v.kind === "slot" ? v.slot : cardOf(v.game));
-      return "";
-    },
+    remove: async (v) => { await remove([v]); return ""; },
   });
-  const removeGroup = async (g: GameGroup) => {
-    setRemoving(null);
-    for (const v of groupHeads(g)) await remove(v.kind === "slot" ? v.slot : cardOf(v.game));
-  };
   // T-728: the new game sheet; its game gets a slot of its own named after its start, so no saved game is replaced
   // T-1567: the logo stays mounted over both, so its trains run on when the sheet opens
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}
     <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}<AboutLink class="start-about" /></p>
+    {/* T-2753: the language on the card's first row at the right, so a new player (who lands on the sheet) sets it first */}
     {sheet ? <div class="start-box new-game-box">
-      <h1 id="start-title" class="big">{t("startMenu.newGame")}</h1>
+      <div class="start-titlebar"><h1 id="start-title" class="big">{t("startMenu.newGame")}</h1><LanguageSelect class="start-top" /></div>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
     </div> : <div class="start-box">
-      <AccountButton kind="start" />
       {!LOGO && <h1 id="start-title" class="big">{t("startMenu.welcome")}</h1>}
       <div class="save-files">
         <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>{t("startMenu.newGame")}</button>
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
+        <div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div>
       </div>
-      {refused && <p class="muted small start-refused" role="alert">{refused}</p>}
+      {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
       {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
         <h2 class="start-head">{t("startMenu.savedGames")}</h2>
@@ -192,7 +177,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
                 <p>{deleteGroupQuestion(g)}</p>
-                <div class="pane-foot"><button class="btn text start-delete-yes" onClick={() => void removeGroup(g)}>{t("startMenu.deleteSave")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("startMenu.keepIt")}</button></div>
+                <div class="pane-foot"><button class="btn text danger start-delete-yes" onClick={() => void remove(groupHeads(g))}>{t("startMenu.deleteSave")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("startMenu.keepIt")}</button></div>
               </div>}
             </li>;
           })}

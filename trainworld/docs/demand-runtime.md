@@ -203,7 +203,9 @@ figures (notes/T-1904.md). The commuters by mode per cell (`cell_modes`) read on
 network's subzones, so the worker with no periods answers them whatever round the others are in.
 Stations, selections, transfers, trips and longer-trip queries read a period's state, so a worker
 answers them only at a round all its periods hold; a selection's far end spread (`flows`) reads
-only the sums it is handed and answers at any round. While the running solve's estimates are
+only the sums it is handed and answers at any round. A worker answers one question at a time, so a
+bubble selection's longer trips (`icSel`, seconds at most) are asked only once its far end's `flows`
+is posted (at most 1 s later while a solve runs), and not at all once the selection is gone (T-2746). While the running solve's estimates are
 shown (startup, a zone just opened), a cached result of the same network is, or nothing is shown
 yet, the client asks about the round after the published one (round 0 before any), marked `wait`:
 a worker short of that round keeps the question and answers it the moment it reaches the round,

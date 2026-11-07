@@ -263,7 +263,8 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box { container-type: inline-size; container-name: lines; }
 .lines-box .w-riders { width: 40px; }
 .lines-box .w-linemoney { width: 54px; white-space: nowrap; }
-.lines-box .w-trains { width: 40px; }
+/* T-2730: as wide as its label; its figures are short */
+.lines-box .w-trains { width: 32px; }
 .lines-box .sort-btn.grow { min-width: 56px; }
 /* T-1818: a wide bullet takes room from the name, not from the columns, so they stay in line */
 .lines-box .rows .grow.line-name { min-width: 0; }
@@ -274,9 +275,9 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.pending.stacked { display: flex; flex-direction: column; align-items: flex-end; line-height: 13px; }
 .rows .val.pending .pending-label { font-size: 11px; line-height: 11px; }
 .h .pending-note { margin-left: auto; font-weight: 400; font-size: 12px; }
-@container lines (max-width: 250px) { .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 242px) { .lines-box .w-linemoney { display: none; } }
 @container lines (max-width: 308px) { .lines-box.with-city .w-linemoney { display: none; } }
-@container lines (max-width: 316px) { .lines-box.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 308px) { .lines-box.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 374px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 312px) { .lines-box.with-city.near-on .w-city { display: none; } }
 /* T-1791: a line group's row (chevron, its lines' chips, its name) and its lines indented under it;
@@ -345,7 +346,6 @@ body.resizing, body.resizing * { user-select: none; }
 .rows.stations.dragging > li { cursor: grabbing; }
 .rows.stations > li.dragged { opacity: 0.5; }
 .lines-box.with-city .w-riders { width: 36px; }
-.lines-box.with-city .w-trains { width: 32px; }
 /* T-550: the Money tab's Cities section: name, split bar, train rides a day, net money a day */
 .w-citybar { width: 64px; }
 .w-money { width: 76px; white-space: nowrap; }
@@ -365,13 +365,14 @@ body.resizing, body.resizing * { user-select: none; }
 .cities-box :is(.w-citybar, .city-bar) { grid-column: 3; margin-left: 8px; justify-self: end; }
 .cities-box .w-citybar { width: auto; min-width: 44px; }
 .cities-box .w-riders { grid-column: 4; margin-left: 8px; width: auto; min-width: 40px; }
-.cities-box .w-money { grid-column: 5; margin-left: 8px; width: auto; min-width: 62px; }
+/* T-2739: the Profit column as wide as its widest figure, as the others */
+.cities-box .w-money { grid-column: 5; margin-left: 8px; width: auto; min-width: 40px; }
 .cities-box .w-points { grid-column: 6; margin-left: 8px; width: auto; min-width: 40px; }
 /* T-693: about six characters of a name kept (60 px with the ellipsis); a narrower list drops the
    star, then the money (each width: the columns, their 8 px gaps and that name) */
 .cities-box { container-type: inline-size; container-name: cities; }
-@container cities (max-width: 298px) { .cities-box .rows.cities .city-star { display: none; } }
-@container cities (max-width: 277px) { .cities-box .c-money { display: none; } }
+@container cities (max-width: 276px) { .cities-box .rows.cities .city-star { display: none; } }
+@container cities (max-width: 255px) { .cities-box .c-money { display: none; } }
 /* T-1438: beside the city view on a phone, then the points and the bar */
 @container cities (max-width: 215px) { .cities-box .w-points { display: none; } }
 @container cities (max-width: 167px) { .cities-box .w-citybar, .cities-box .city-bar { display: none; } }
@@ -837,6 +838,9 @@ rect.now { fill-opacity: .45; }
 .clock { flex: none; display: flex; align-items: center; height: 24px; padding-left: 14px; border-left: 1px solid var(--rule);
   font-variant-numeric: tabular-nums; }
 .clock-text { flex: none; width: 132px; display: flex; align-items: baseline; gap: 6px; line-height: 20px; }
+/* the widest date of the year fits: 10月10日（金） and 10月10日 周五 */
+:root:lang(ja) .clock-text { width: 160px; }
+:root:lang(zh) .clock-text { width: 150px; }
 .clock .time.held { color: var(--muted); }
 .sky { position: relative; height: 21px; }
 /* T-1868: the day and night picture at the map's top right, under the bar. Its width is --sky-w: 250 px,
@@ -943,6 +947,11 @@ rect.now { fill-opacity: .45; }
 a.btn { text-decoration: none; }
 .start-box:has(.start-saves) { width: min(540px, 100%); }
 .start-box h1 { margin: 0; }
+/* T-2753: the language picker (and the account button) at the right of the card's first row */
+.start-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.start-top, .start-top .lang-row { display: flex; align-items: center; gap: 6px; margin: 0 0 0 auto; }
+.start-top:empty { display: none; }
+.start-top .acct-start { position: static; margin-left: 2px; }
 .start-new { align-self: flex-start; border-color: var(--accent); }
 .start-new:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .start-head { font-size: 14px; font-weight: 700; margin: 6px 0 0; }
@@ -957,6 +966,9 @@ a.btn { text-decoration: none; }
 .start-save .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 /* T-728: the new game sheet, in the start menu's box or the saves panel */
 .new-game-box { width: min(440px, 100%); }
+/* T-2748: the new game sheet's box keeps its top (NewGame.tsx usePinnedTop sets the padding) */
+.start-menu.pinned { align-items: start; overflow-y: auto; }
+.start-menu.with-logo.pinned { align-items: center; justify-content: flex-start; }
 .new-game { display: flex; flex-direction: column; gap: 12px; }
 .new-game-mode { align-self: flex-start; }
 .new-game-where { display: flex; flex-direction: column; gap: 6px; }
@@ -978,6 +990,8 @@ button.save-add { background: none; border: 0; padding: 0; font: inherit; cursor
 button.save-add:hover { color: var(--text); }
 .cash.sandbox { color: var(--muted); }
 .game-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* T-2737: the rows' buttons apart */
+.game-mode + .game-mode { margin-top: 6px; }
 /* T-927: the dock and top bar take no room either, so the world map fills the page behind the menu */
 .choosing #dock-root, .choosing #topbar-root, .choosing #tools-root { display: none; }
 .choosing .map-top-left, .choosing .map-sky, .choosing .blueprint-bar, .choosing .tool-bar, .choosing .mode-aura, .choosing .maplibregl-ctrl-bottom-right { visibility: hidden; }

@@ -10,7 +10,7 @@ export const isLang = (s: string): s is Lang => (LANGS as readonly string[]).inc
 /** The languages a player is offered: the Language row's list, and what a first visit may pick from the
  * browser. A language joins once its translation is complete and reviewed (docs/localization.md
  * "Releasing a language"); `?lang=<code>` opens any language and lists all of `PICKER` (T-2636). */
-export const OFFERED: readonly Lang[] = ["en"];
+export const OFFERED: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW"];
 /** The Language row's list when previewing, in this order. */
 export const PICKER: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW"];
 

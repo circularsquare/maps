@@ -2,7 +2,8 @@
 // where to start: one of five suggested cities or the player's location (T-1132), any registry city
 // or zone found by name, or the world map. In a sandbox, a city with a real network (T-731) can start with it.
 
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import type { RefObject } from "preact";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { CITIES, cityById, isCity, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
 import { zoneHolding } from "../game/realms";
 import { cityMatch, matchScore, normalise } from "../game/search";
@@ -77,6 +78,50 @@ export function zoneForLocation(lon: number, lat: number): string | null {
   return best?.id ?? null;
 }
 
+/** CSS px kept below the sheet for the search's list: MAX_HITS rows and its border. */
+const LIST_ROOM = MAX_HITS * 24 + 8;
+/** the least gap kept between the pinned box and the window's top and bottom, CSS px */
+const PIN_MARGIN = 16;
+
+/** T-2748: the box holding the sheet keeps its top while the player types, so the search's list
+ * lengthens it downward only (Anita, 2026-11-07). The top is where the box sat centred, raised if
+ * need be so a full list still fits above the window's bottom; worked out again on a resize and when
+ * the start menu's logo takes its size. The start menu centres its box (with the logo above it, or
+ * not) and the saves panel is a centred dialog: the menu is given the offset of its first item as its
+ * top padding and set to start there, the dialog a top margin. */
+function usePinnedTop(sheet: RefObject<HTMLElement | null>) {
+  useLayoutEffect(() => {
+    const box = sheet.current?.closest<HTMLElement>(".start-box, dialog");
+    if (!box) return;
+    const menu = box.closest<HTMLElement>(".start-menu");
+    const logo = menu?.querySelector<HTMLElement>(".start-logo") ?? null;
+    const unpin = () => {
+      if (menu) { menu.classList.remove("pinned"); menu.style.paddingTop = ""; }
+      else { box.style.marginTop = ""; box.style.marginBottom = ""; }
+    };
+    const pin = () => {
+      unpin();
+      // CSS zoom scales the box and its margin as they draw
+      const zoom = (box as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1;
+      const lead = (logo ?? box).getBoundingClientRect().top, b = box.getBoundingClientRect();
+      const top = Math.max(PIN_MARGIN, Math.min(lead, innerHeight - PIN_MARGIN - LIST_ROOM * zoom - (b.bottom - lead)));
+      if (menu) {
+        menu.style.paddingTop = `${top - menu.getBoundingClientRect().top}px`;
+        menu.classList.add("pinned");
+      } else {
+        box.style.marginTop = `${top / zoom}px`;
+        box.style.marginBottom = "auto";
+      }
+    };
+    pin();
+    addEventListener("resize", pin);
+    // the logo is sized by its own effect, after this one
+    const sized = logo ? new ResizeObserver(pin) : null;
+    if (logo) sized!.observe(logo);
+    return () => { removeEventListener("resize", pin); sized?.disconnect(); unpin(); };
+  }, []);
+}
+
 /** The real network's save for a start city (T-731). */
 async function realNetwork(id: string): Promise<ArrayBuffer> {
   const r = await fetch(dataUrl(`real/${id}.save`));
@@ -99,6 +144,8 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const [located, setLocated] = useState<{ zone: string | null; at: [number, number] } | null>(null);
   const asked = useRef(0);
   const first = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  usePinnedTop(root);
   useEffect(() => first.current?.focus(), []);
   useEffect(() => () => { asked.current++; }, []);
   const hits = useMemo(() => (start && isCity(start) && text === shown(cityById(start)) ? [] : findStart(text)), [text, start]);
@@ -152,7 +199,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
     <button ref={ref} class={"btn" + (mode === m ? " on" : "")} aria-pressed={mode === m} data-mode={m} data-tip={tip} onClick={() => setMode(m)}>{label}</button>
   );
   return (
-    <div class="new-game">
+    <div class="new-game" ref={root}>
       {heading && <h2 class="new-game-title">{t("newGame.title")}</h2>}
       <div class="group new-game-mode">
         {modeBtn("normal", t("newGame.normal"), undefined, first)}

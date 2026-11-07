@@ -315,7 +315,7 @@ function viewDiff(x: PopView, y: PopView): string | null {
     if (k === "complex" && u instanceof Uint32Array && v instanceof Uint32Array) [u, v] = [canonical(u), canonical(v)];
     if (ArrayBuffer.isView(u) && ArrayBuffer.isView(v)) {
       const p = u as unknown as ArrayLike<number>, w = v as unknown as ArrayLike<number>;
-      if (p.length !== w.length) return `${k} length ${p.length} ${w.length}`;
+      if (p.length !== w.length) return `${k} length ${p.length} ${w.length}`; // i18n-ignore: debug diff
       // run times, trains an hour and the like move by float noise and by small knock-on changes
       // when a line is added beside them (0.1% seen): within VIEW_TOLERANCE they count as the same
       const tol = !(u instanceof Float32Array) || k === "stXY" || k === "catchXY" ? 0 : k === "tph" ? TRAINS_TOLERANCE : k === "span" ? SPAN_TOLERANCE : VIEW_TOLERANCE;
@@ -480,6 +480,38 @@ function failed(err: unknown) {
   if (isPanic(err)) died(err);
   else sendMessage({ kind: "failed", error: String(err) });
 }
+
+/** T-2729: the mean time of a unit of an edit's solve in each stage, ms, as the last solve that had
+ * one found it (0: none yet) */
+const unitMsLast: [number, number] = [0, 0];
+/** T-2729: an edit's solve counted in units of like work by stage, 0 the local solve of the zones it
+ * touched and 1 the whole solve after: a unit is one period of a cluster's local solve (or local
+ * refine), or one round of one period of a cluster's whole solve. Sent as `work` as each unit starts
+ * and ends, with the mean unit time so far, so the page can move its bar through the unit in hand. */
+class Work {
+  done: [number, number] = [0, 0];
+  of: [number, number] = [0, 0];
+  private ms: [number, number] = [0, 0];
+  private stage: 0 | 1 = 0;
+  private t0 = 0;
+  constructor(readonly version: number) {}
+  plan(stage: 0 | 1, units: number) { this.of[stage] += units; }
+  begin(stage: 0 | 1) {
+    this.stage = stage;
+    this.t0 = performance.now();
+    this.send(true);
+  }
+  end() {
+    const s = this.stage;
+    this.ms[s] += performance.now() - this.t0;
+    unitMsLast[s] = this.ms[s] / ++this.done[s];
+    this.send(false);
+  }
+  send(busy: boolean) {
+    sendMessage({ kind: "work", version: this.version, stage: this.stage, busy, done: [...this.done], of: [...this.of], unitMs: [...unitMsLast] });
+  }
+}
+let work: Work | null = null;
 
 /** Yield to the event loop so a waiting message (a newer network) is delivered. */
 async function yieldNow(): Promise<void> {
@@ -1065,7 +1097,8 @@ function query(msg: Query) {
       let packed: Float64Array | null = null;
       if (sq) {
         const place = MARKET_OF[msg.city];
-        packed = Float64Array.from(intercity!.selection_all_day(place, sq.xy, sq.share, day, maskOf(at?.markets ?? mine)));
+        // (a fresh array from the binding: no second copy, 409 MB on the real save, T-2746)
+        packed = intercity!.selection_all_day(place, sq.xy, sq.share, day, maskOf(at?.markets ?? mine));
         for (const c of mcs) {
           const v = c.part!.selection_rail_day(place, sq.xy, sq.share, day);
           for (let i = 0; i < v.length; i++) packed[i] += v[i];
@@ -1842,6 +1875,17 @@ async function run() {
       const citiesOf = (c: JobCluster, f: Population[]) => c.cities.filter((id) => f.includes(cities.get(id)!) || (everyday.has(id) && f.includes(everyday.get(id)!)));
       const freshCities = (c: JobCluster) => citiesOf(c, localOf.get(c)!);
       sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => (localOf.has(c) ? freshCities(c) : c.cities)), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities), ...(ahead ? { ahead: dirty[0].cities } : {}), local: editOf.size });
+      // T-2729: an edit's solve's units, as the loops below make them; a cluster's kept periods come
+      // off as it is set up
+      work = job.barrier ? null : new Work(job.version);
+      if (work) {
+        for (const c of early) {
+          if (editOf.has(c)) work.plan(0, mine.length);
+          const fresh = localOf.get(c);
+          work.plan(1, fresh ? (fresh.length ? mine.length : 0) : mine.length * (job.rounds + 1));
+        }
+        work.send(false);
+      }
       current = job.version;
       roundsHeld.fill(-1);
       // T-1609: in a solve where every cluster solved is a local refine, a zone it does not solve
@@ -2153,7 +2197,8 @@ async function run() {
       // network as the cluster's market and solved, in the periods `less` gives, in one pass at the
       // crowding of the touched cities' last round; the result's market less `less(q)`, the window's
       // pairs' old loads, plus `sub`'s)
-      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }): Promise<boolean> => {
+      // (`stage`: the T-2729 work stage its periods count in)
+      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1): Promise<boolean> => {
         const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
         setUpPops(c, win ? [...order, win.sub] : order);
         for (const p of win ? [...fresh, win.sub] : fresh) {
@@ -2164,6 +2209,7 @@ async function run() {
         c.reuse = 0;
         ready.add(c);
         for (const q of mine) {
+          work?.begin(stage);
           const sh = sharedOf(c, q, shared), shTrail = sh && c.part ? sharedTrail.get(c.part)?.[q] : undefined;
           // the others' loads as each round was priced on (`trail`), when every one holds them;
           // else as they ended, before the cap (`capRatio`)
@@ -2239,6 +2285,7 @@ async function run() {
           }
           release_skims();
           periodsSolved++;
+          work?.end();
         }
         return true;
       };
@@ -2274,7 +2321,7 @@ async function run() {
           },
         } : undefined;
         try {
-          if (!(await localSolve(c, e.fresh, e.sig, shared, win))) { stale = true; break; }
+          if (!(await localSolve(c, e.fresh, e.sig, shared, win, 0))) { stale = true; break; }
           for (const p of e.fresh) cityOn.set(p, viewOf(c, p));
           const touched = citiesOf(c, e.fresh);
           // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of
@@ -2328,6 +2375,7 @@ async function run() {
           continue;
         }
         setUp(c);
+        if (work) for (const q of mine) if (c.reuse & (1 << q)) work.plan(1, -(job.rounds + 1));
         // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
         // the shown result (T-324), rather than at the cluster's last round
         // (T-1733: none after its local result)
@@ -2349,7 +2397,9 @@ async function run() {
           const todo = mine.filter((q) => !(c.reuse & (1 << q)));
           for (const q of todo) {
             await yieldNow();
+            work?.begin(1);
             if (pending || !(await step(c, round, q, done.get(q)))) { stale = true; break; }
+            work?.end();
             release_skims();
             // T-1538: the other periods estimated from the first one's free flow, so the preview
             // goes now; they are solved after it, replacing the estimates
@@ -2487,6 +2537,8 @@ async function run() {
             sharedTrail.set(c.part, trails);
           }
         });
+        if (work && import.meta.env.DEV) console.info(`T2729 v${job.version} units ${work.done.join("+")} of ${work.of.join("+")}, ${unitMsLast.map((v) => Math.round(v)).join(" and ")} ms each`); // i18n-ignore
+        work = null;
         sendMessage({ kind: "done", version: job.version, memBytes: wasm_memory_bytes(), heap: heap(), clusters: [jobClusters.length - dirty.length, dirty.length], periods: [periodsKept, periodsSolved], ...(localOf.size ? { local: [...localOf.keys()].flatMap(freshCities) } : {}) });
       }
     }

@@ -5,8 +5,10 @@
 
 import { effect, signal } from "@preact/signals";
 import { accountOpen, accountState, cloudContext, deviceId, forgetScoreSlots, session, signOut } from "./account";
-import { answerMerge, changedHere, deleteGame, downloadGame, ELSEWHERE_MS, fetchBackup, gamePicture, listGames, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
+import { answerMerge, changedHere, downloadGame, ELSEWHERE_MS, fetchBackup, gamePicture, listGames, owe, owedDeletes, removeSlot, sendDeletes, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
 import { deleteSlot, leaseSlot, listSlots, readStored, readSync, type SaveSlot } from "../workers/saveFile";
+import type { Version } from "../workers/versions";
+import { t } from "../i18n";
 import { clockRunning, importGame, leaveToMenu, postAccount, saveSlotsState } from "../workers/clockClient";
 
 /** The account's games and tombstones, as last listed; null signed out or unreachable. */
@@ -19,6 +21,8 @@ const picturesTried = signal<Record<string, true>>({});
 export const mergeAsk = signal<SaveSlot[] | null>(null);
 /** Moves on whenever this browser's slots changed under the start menu (it lists them again). */
 export const slotsChanged = signal(0);
+/** The start menu's sync left deletions owed to the account (it could not be reached). */
+export const deleteOwed = signal(false);
 
 /** Whether the account's games are in use on this page (signed in, a server that keeps them). */
 export const gamesOn = () => !!cloudContext()?.on;
@@ -111,6 +115,8 @@ async function settleNow(): Promise<void> {
   if (!ctx?.on || picked) return;
   // once a game is picked no other slot is locked here, so the clock worker can take the picked one
   const list = await settle(ctx, "", () => picked).catch(() => null);
+  // T-2738: a game deleted here (the one played, say, as the page left it) still on the account
+  deleteOwed.value = (await owedDeletes(ctx)).length > 0;
   if (!list) return;
   accountList.value = list;
   slotsChanged.value++;
@@ -123,12 +129,40 @@ export async function downloadAccountGame(g: AccountGame): Promise<string | null
   return ctx?.on ? downloadGame(ctx, g, accountList.peek()) : null;
 }
 
-/** An account game not in this browser deleted from the account. */
-export async function deleteAccountGame(id: string): Promise<boolean> {
+/** T-2738: versions of a game deleted (a card's every version, or one), in this browser and on the
+ * account. The account's copies are owed first (`owe`), so neither a reload nor a refused call leaves
+ * one behind as a game only on the account, and they leave the list at once; then this browser's
+ * slots go but `playing`, which the caller has the clock worker delete (that sends what is owed, and
+ * the page goes to the start menu); then what is owed is sent. A reason to show, or "". */
+export async function deleteVersions(versions: Version[], playing = ""): Promise<string> {
   const ctx = cloudContext();
-  if (!ctx?.on || !await deleteGame(ctx, id)) return false;
-  await refreshAccountGames();
-  return true;
+  const slots = versions.flatMap((v) => v.kind === "slot" ? [v.slot] : []);
+  const only = versions.flatMap((v) => v.kind === "account" ? [v.game.id] : []);
+  const gone = new Set([...only, ...slots.flatMap((s) => s.cloud?.id ? [s.cloud.id] : [])]);
+  const list = accountList.peek();
+  if (list) accountList.value = { ...list, games: list.games.filter((g) => !gone.has(g.id)) };
+  try { if (ctx) await owe(ctx.acct, only); } catch { void refreshAccountGames(); return t("savesPanel.deleteFailed"); }
+  let why = "";
+  for (const s of slots) {
+    if (s.key === playing) continue;
+    const lease = await leaseSlot(s.key);
+    if (!lease) { why = t("startMenu.openElsewhere"); continue; }
+    try { await removeSlot(s.key); } catch { why ||= t("savesPanel.deleteFailed"); } finally { lease.release(); }
+  }
+  slotsAltered();
+  if (!ctx?.on || slots.some((s) => s.key === playing)) return why;
+  const owed = await sendDeletes(ctx).catch(() => [...gone]);
+  deleteOwed.value = false; // the answer below says it
+  void refreshAccountGames();
+  return why || (owed.some((id) => gone.has(id)) ? t("cloud.deleteOwed") : "");
+}
+
+const slotChannel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
+/** Slots changed from this thread: the start menu lists them again, and every clock worker (this
+ * page's and other tabs') publishes them again. */
+function slotsAltered() {
+  slotsChanged.value++;
+  slotChannel?.postMessage({});
 }
 
 // ---------------------------------------------------------------- the sign-in question

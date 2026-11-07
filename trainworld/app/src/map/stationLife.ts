@@ -20,10 +20,11 @@ import { clock } from "../game/clock";
 import { display } from "../game/ui";
 import type { LineInput, StationInput } from "../game/types";
 import { world } from "../game/world";
-import { Faces, type Mood } from "./faces";
-import { profileS } from "./network";
+import { Faces, type Mood, type PlatformSpot } from "./faces";
+import { lineAt, platformShapeAt, profileS, stationIndexOf, type NetworkBuffers } from "./network";
+import { toLngLat } from "./geo";
 import type { Overlay } from "./overlay";
-import { STATION_BOX_ZOOM } from "./stationGeometry";
+import { platformPoints, STATION_BOX_ZOOM } from "./stationGeometry";
 import { lineNote, popsFor, StationSound } from "./stationSound";
 import { stationZone } from "../game/listScope";
 import { moneyState } from "../game/money";
@@ -85,6 +86,33 @@ export function boardedAt(b: BoardHour, q: number, t: number): { boarded: number
   const fresh = Math.max(0, waiting - left), riders = left + fresh;
   const waited = riders > 0 ? (left * (gap + before / 2) + (fresh * gap) / 2) / riders : 0;
   return { boarded, waited, left };
+}
+
+/** Where station `s`'s faces rise (T-2751): along its box as drawn, each line's station being its own
+ * box, on the side queue `q`'s riders stand (+ where its trains run along the box's axis, as
+ * map/platformCrowds.ts places them; either side, at random, for an unknown queue). Null for a
+ * station not on the drawn network. */
+function platformSpot(net: NetworkBuffers | null, s: StationInput, board: BoardHour | null, q: number): PlatformSpot | null {
+  const i = net ? stationIndexOf(net, String(s.num)) : -1;
+  if (!net || i < 0) return null;
+  const x = net.stations[i * 3], y = net.stations[i * 3 + 1], pts = platformPoints(platformShapeAt(net, i));
+  let side = Math.random() < 0.5 ? 1 : -1;
+  if (board && q >= 0) {
+    const o = q * QUEUE_STRIDE, line = board.queues[o + 1], run = board.queues[o + 2], d = board.queues[o + 3];
+    const [ax, ay] = lineAt(net, line, d - 5), [bx, by] = lineAt(net, line, d + 5);
+    const along = (bx - ax) * (net.stationAxis?.[i * 2] ?? 1) + (by - ay) * (net.stationAxis?.[i * 2 + 1] ?? 0);
+    side = along * (run === 1 ? -1 : 1) >= 0 ? 1 : -1;
+  }
+  const P = pts.length / 2, line = new Float64Array(P * 2), across = new Float64Array(P * 2);
+  for (let k = 0; k < P; k++) {
+    const a = Math.max(0, k - 1), b = Math.min(P - 1, k + 1);
+    const tx = pts[b * 2] - pts[a * 2], ty = pts[b * 2 + 1] - pts[a * 2 + 1], tl = Math.hypot(tx, ty) || 1;
+    // the + side is to the right of the axis on screen: (-ty, tx), local y running south
+    const px = x + pts[k * 2], py = y + pts[k * 2 + 1], nx = (-ty / tl) * side, ny = (tx / tl) * side;
+    line.set(toLngLat(px, py, net.anchor), k * 2);
+    across.set(toLngLat(px + nx * 4, py + ny * 4, net.anchor), k * 2);
+  }
+  return { line, across, side };
 }
 
 /** Each line's note (T-706): chosen once and kept in the save (the clock worker's `lineNotes`, the
@@ -202,12 +230,12 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
 
   const arrive = (i: number, vl: VisLine, run: number, k: number, s: StationInput, tEpoch: number, board: BoardHour | null, d: ReturnType<typeof display.peek>, speed: number) => {
     let off = 0, on = 0, mood: Mood = "happy";
+    const q = board ? queueOf(board, s.num, vl.num, run) : -1;
     if (board) {
       const n = vl.line.stops.length;
       const stretch = (seg: number) => (run === 0 ? seg : n - 2 - seg);
       const before = k > 0 ? tripLoad(board, i, stretch(k - 1)) : 0;
       const after = k < n - 1 ? tripLoad(board, i, stretch(k)) : 0;
-      const q = queueOf(board, s.num, vl.num, run);
       if (before !== null && after !== null) {
         const b = q >= 0 ? boardedAt(board, q, tEpoch) : { boarded: 0, waited: 0, left: 0 };
         on = b.boarded;
@@ -221,7 +249,8 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
     }
     if (d.faces && off >= 1) {
       const count = Math.min(MAX_FACES_PER_TRAIN, Math.floor(off / RIDERS_PER_FACE + Math.random()));
-      if (count > 0) faces.spawn(s.id, s.lng, s.lat, s.length, s.heading, count, mood);
+      const spot = count > 0 ? platformSpot(overlay.renderer.net, s, board, q) : null;
+      if (spot) faces.spawn(s.id, s.lng, s.lat, spot, count, mood);
     }
   };
 

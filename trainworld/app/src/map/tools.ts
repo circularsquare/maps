@@ -1830,7 +1830,7 @@ export class Tools {
     const row = (s: string) => Object.assign(document.createElement("div"), { textContent: s });
     const lines = first ? [row(first)] : [];
     const last = this.lastPlacedName(), [lng, lat] = toLngLat(h.lx, h.ly);
-    if (last) lines.push(row(`${distance(metresBetween(lng, lat, last.lng, last.lat))} from ${last.name}`));
+    if (last) lines.push(row(tr("tools.fromLast", { distance: distance(metresBetween(lng, lat, last.lng, last.lat)), name: last.name })));
     const trips = this.tripsNear(lng, lat);
     if (trips) {
       const bar = Object.assign(document.createElement("div"), { className: "size-bar" });

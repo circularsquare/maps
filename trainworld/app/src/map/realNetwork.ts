@@ -8,7 +8,7 @@
 // it, c colour; nm and w only from zoom 10). The tiles carry no line type, so the classes are what they
 // do carry: metro (subway), main line (rail, rank 0), other passenger rail (rank 1 with a route over
 // it). Trams, light rail, monorails, funiculars, narrow gauge, heritage and track no line runs over are
-// left out. A region's source is added when the view first touches it, from zoom 4 up.
+// left out. A region's source is added when the view first touches it, from zoom 6 up.
 //
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
 // regions.json (8800 serves it; the dev server proxies the path, vite.config.ts), else Cloudflare R2,
@@ -23,10 +23,14 @@ import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { noritetsuBases, ringBox } from "../game/rings";
 import { PUBLISHED } from "../game/dataBase";
+import { perfOff } from "../perfFlags";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
-/** below this the view spans too many regions and the lines are too small to follow */
-const MIN_ZOOM = 4;
+/** below this the view spans too many regions and the lines are too small to follow; at 4 a view of
+ * Europe drew 41 regions' tiles, most of each frame's cost on the zoomed-out map (T-2748) */
+const MIN_ZOOM = perfOff("realZoom") ? 4 : 6;
+/** the zoom the line widths' stops count from */
+const WIDTH_ZOOM = 4;
 /** regions added in one pass, nearest the middle of the view first */
 const PER_PASS = 16;
 const ID = "tw-real-";
@@ -37,7 +41,7 @@ const MAIN = ["all", kind("rail"), ["==", ["get", "r"], 0]];
 const SHOWN = ["all", ["!=", ["get", "n"], 1], ["any", METRO, ["all", kind("rail"), ["any", ["==", ["get", "r"], 0], ["==", ["get", "p"], 1]]]]];
 
 /** line width (px) by zoom; main and metro the same, other rail thinner */
-const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
+const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
 const WIDTH = width(0.6, 1, 1.5, 2.4, 4, 8);
 /** T-727: stronger while the track tool snaps to it */
 const OPACITY_SNAP = 0.4;
@@ -52,7 +56,7 @@ export const realReach = signal<{ xy: Float32Array; off: Uint32Array; cls: Uint8
 const REACH = "tw-reach";
 const OPACITY_DIM = 0.25;
 const REACH_OPACITY = 0.9;
-const reachWidth = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [MIN_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["==", ["get", "c"], 1], v * 0.7, v]])];
+const reachWidth = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["==", ["get", "c"], 1], v * 0.7, v]])];
 const REACH_WIDTH = reachWidth(1, 1.5, 2.2, 3.4, 5.5, 10);
 const reachColour = (c: ShadeColours) => ["match", ["get", "c"], 2, c.realMetro, 0, c.realMain, c.realOther];
 

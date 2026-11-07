@@ -30,22 +30,39 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   data/terrain writers** until it reports. It runs zone_successors/t1053 before hand-back. Don't commit registry.json,
   market-rows.json, world_plan.json until it reports. Backup data/work/pre-T2702/pre (5.5 GB) to delete once committed.
   Also found+fixed brazil.unit_states (units across a state line got no census tracts).
-- **profile** a0bea940649aa47c0 (Opus): T-2734 line cross-section in the line inspector (terrain from the hillshade's
-  Terrarium tiles, 5 m a level, crossings, stations, 2 km hover lens; low priority, never holds up the panel).
-- **loadbar** ac01a9ea182c43905 (Opus): T-2729 bar progress for whole solves, T-2730 Trains column 32 px, T-2737 settings
-  rows spacing, T-2739 Cities Profit column, T-2743 crossings chip tint (white/tan/red-brown by cheapest level, $10M),
-  T-2744 0.5x cost chip halfway toward 1.0x.
-- **l10nlast** ac4f1b469c1b1e554 (Opus lead + its own subagents): last ja/zh round (11 inline strings, 2 missing keys),
-  language selector top right under the first row (hover: AI-translated), layout pass, add to OFFERED. Ids T-2740..42.
+- profile's revision DONE (scale lines removed, 0 m dashed rule, water band 4 m deep from masks/sea; smoke 26/26).
+  New ja/zh keys unreviewed (a small review pass later). Picture review/cross-section-7-river.png. Delete strings
+  approved by Anita.
+- profile T-2734 (archived; smoke 26/26), UNCOMMITTED: ui/inspector/LineProfile.tsx, workers/lineProfile.ts,
+  game/groundHeights.ts (new); clock.worker.ts, protocol.ts, LineInspector.tsx, map/basemap.ts, en.json, context.json;
+  docs ui-inspectors.md, code-map.md; DECISIONS, ARCHIVE, TASKS, notes/T-2734.md. Strings shown to Anita. Pictures
+  review/cross-section-nlr.png, cross-section-tohoku.png. Unfiled follow-ups: ground includes buildings in dense
+  centres, click strip to move map, hover covers the panel above.
+- loadbar DONE T-2729/2730/2737/2739/2743/2744 (archived; smoke 26/26, t2552 pass), UNCOMMITTED: demand.worker.ts
+  (Work class + a DEV-only console.info "T2729"), demandProtocol.ts, demandClient.ts, game/demand.ts, StatusTag.tsx,
+  ui/style.css, trackTagRows.ts, docs ui-panels.md, ui-building.md, DECISIONS, ARCHIVE, TASKS. Pictures
+  review/chips-dark.png, status-bar-mid.png.
+- l10nlast DONE (T-2584/2585/2643 archived): ja, zh-Hans, zh-TW in OFFERED, 2174/2174 each, 0 inline strings; clock
+  width per language; smoke 26/26 and 26/26 ?lang=ja. UNCOMMITTED (files listed in its report: diagram/*, map/tools.ts,
+  i18n/*, ui/style.css, checks/i18n.mjs, l10n-shots.mjs, docs). It kept the Settings Language row as the selector
+  (Anita confirmed the Settings row). T-2753 DONE too: start menu language picker (ui/LanguageSelect.tsx new, shared
+  with Settings; StartMenu.tsx keeps deleteall's edits; account button moved into the New game row), UNCOMMITTED.
 - **bubbleclick** aad9e4c06a312476e (Opus): T-2746 slow bubble clicks. Cause: a quick second click waits behind the
   previous click's icSel (1-2.7 s) and its own. Approved: demandClient flows/icSel ordering hunks + drop superseded
   icSel; and T-2747 (sim selection.rs zone_row cache) if byte-identical.
-- **newgame** a45e2b478492fea41 (Opus): T-2748 medium band +80%, lighter red/green, stable panel top, map-picking lag.
-  Its item 4 (difficulty for the new countries) WAITS for worldfix's join: tell it when the join has landed.
-- **deleteall** a10dd5e117aa37343 (Opus): T-2738 one delete removes every version, local and cloud; "Delete" red, "Keep".
-- **darkterrain** a1b97c22a16cb85d7 (Sonnet): T-2745 three dark terrain variants behind ?debug=1&terrainDark=a|b|c;
-  4-up picture artifacts/trainworld/darkterrain/darkterrain-nj-4up.png for Anita to pick; default unchanged.
-- **faces** a60e075848e4ece1a (Opus): T-2751 rider faces at each line's own platform.
+- newgame a45e2b478492fea41: T-2748 items 1,2,3,5 built (smoke 26/26), UNCOMMITTED: game/palette.ts, map/intercityView.ts
+  (shared with bubbleclick's edits), map/realNetwork.ts (real network from z6 not z4), perfFlags.ts, ui/NewGame.tsx,
+  ui/style.css, pipeline/start_difficulty.py, docs zones.md, ui-demand-views.md, ui-map.md, DECISIONS, TASKS, notes/T-2748.md.
+  Filed T-2749, T-2750. **Item 4 after the join: resume it** (`pipeline\start_difficulty.py --jobs 2`, ~10-12 min,
+  writes app/src/game/start-difficulty.json; then it fixes zones.md cut numbers). Until then the game shows old thirds.
+- deleteall DONE T-2738 (archived; t2738-delete.mjs 7/7, smoke pass), UNCOMMITTED: game/accountGames.ts, workers/cloud.ts,
+  workers/saveFile.ts, ui/SavesPanel.tsx, ui/StartMenu.tsx, checks/t2738-delete.mjs, checks/t988-cloud.mjs, en.json,
+  context.json, messages/*, sources/*, docs ui-panels.md, code-map.md, DECISIONS, ARCHIVE, TASKS. Strings shown to
+  Anita; 5 keys passed to l10nlast for review. Cause: accountList not updated on local delete -> ghost cloud-only card.
+- T-2745 DONE: Anita picked B; WASH.dark = rgb 190,178,164 (switch removed), archived. UNCOMMITTED: map/terrainTint.ts.
+- Anita: keep going (this orchestrator) until this batch ends, then cycle.
+- faces DONE T-2751 (archived; smoke 27/27), UNCOMMITTED: map/stationLife.ts, map/faces.ts, docs/ui-map.md, ARCHIVE,
+  TASKS. Picture review/faces-grandcentral-after.png. Limit: lanes ~8 m apart, faces can overlap the next lane at z16-17.
 - Landing plan: as each reports, check its strings and pictures (copy the best to artifacts/trainworld/review/ and show
   Anita), then one smoke of the main tree on my own Vite (dev-nowatch, TW_CORES=4) and commit by path in batches.
 - Next unassigned id **T-2753**.
@@ -62,7 +79,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## Waiting on Anita
 - Two strings (shown): clockClient.storageUnreadable, startMenu.savesUnreadable (no answer = fine).
 - darkterrain's 4-up when ready; T-2724 (diagram far land smaller) after her look at T-2625 (she said "looks ok").
-- T-2620 (keep old rates on track >5 km from stations).
+- (T-2620 abandoned by Anita 2026-11-07: upkeep stays as it is, "simple and interpretable".)
 - T-2667 OSM attractions: after release. T-1856 hex terrain: after release (Anita).
 
 ## Next

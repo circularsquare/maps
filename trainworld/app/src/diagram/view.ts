@@ -26,6 +26,7 @@ import { placeNameInk } from "../map/basemap";
 import { SHADES } from "../game/shadeTable";
 import { DATA_BASE } from "../game/dataBase";
 import { tPlace } from "../i18n/places";
+import { t } from "../i18n";
 import { perfOff } from "../perfFlags";
 import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
 import { mixOklab } from "../game/palette";
@@ -245,8 +246,8 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
   const name = factRow(lineBullet(l), Object.assign(document.createElement("span"), { textContent: l.name }));
   name.style.gap = "5px";
   const status = world.peek()?.lineStats[l.id]?.status;
-  if (status === "planned") return [name, "Not running yet"];
-  if (status === "broken") return [name, "Not running"];
+  if (status === "planned") return [name, t("trackHover.notRunningYet")];
+  if (status === "broken") return [name, t("trackHover.notRunning")];
   const dv = demandView.peek();
   if (!dv) return [name];
   // the stretch: the stops the line has made up to the last node passed, less one
@@ -257,8 +258,8 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
   const purpose = purposeFilter.peek();
   const day = dailyRiders(dv, l.id, l.stops, k, purpose);
   if (day === null) return [name];
-  const count = `${day < 0.5 ? "0" : forecast(day)} riders ${shownDayPhrase.peek()}`;
-  return purpose === "all" ? [name, count] : [name, count, `${purposeName(purpose)} trips only`];
+  const count = t("trackHover.riders", { n: day < 0.5 ? "0" : forecast(day), when: shownDayPhrase.peek() });
+  return purpose === "all" ? [name, count] : [name, count, t("trackHover.tripsOnly", { purpose: purposeName(purpose) })];
 }
 
 export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void {
@@ -636,7 +637,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   saver = () => {
     const s = shown;
     if (!s) return;
-    const token = showBusy("Saving picture");
+    const token = showBusy(t("diagramView.savingPicture"));
     afterPaint(() => {
       let blobbing = false;
       try {
@@ -651,8 +652,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           const a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
           const { slots, active } = saveSlotsState.peek();
-          const name = (slots.find((x) => x.key === active)?.name || "Network").replace(/[\\/:*?"<>|]/g, "").trim();
-          a.download = `${name || "Network"} diagram.png`;
+          const name = (slots.find((x) => x.key === active)?.name ?? "").replace(/[\\/:*?"<>|]/g, "").trim();
+          a.download = t("diagramView.pictureFile", { name: name || t("diagramView.unnamed") }) + ".png";
           a.click();
           setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
         }, "image/png");

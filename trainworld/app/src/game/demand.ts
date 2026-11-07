@@ -222,6 +222,26 @@ export const demandBehindFrom = signal<number | null>(null);
 /** How far that solve has got: results published so far (the free-flow estimate, then each
  * crowding round) of all it will publish. */
 export const demandStep = signal({ done: 0, of: 4 });
+/** T-2729: an edit's solve, whose results land at each stage's end: every solving worker's last `work`
+ * (demandProtocol.ts) and when it came (performance.now()), or null before each has sent one (and for
+ * other solves) */
+export type WorkPart = { stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; at: number };
+export const demandWork = signal<WorkPart[] | null>(null);
+/** before any unit has been measured, the time over which the unit in hand goes 63% of the way to 90%
+ * of a unit, ms: it slows rather than stops, since a first unit can take 15 s (New York's real save) */
+const UNIT_MS = 4000;
+/** The share of stage `stage` done at `now`: units finished, and the unit in hand by the time it has
+ * taken against the stage's mean (to 90% of it); null where the stage has no units. */
+export function workShare(parts: WorkPart[], stage: 0 | 1, now: number): number | null {
+  let done = 0, of = 0;
+  for (const p of parts) {
+    of += p.of[stage];
+    done += p.done[stage];
+    const t = now - p.at, mean = p.unitMs[stage];
+    if (p.busy && p.stage === stage) done += mean ? Math.min(0.9, t / mean) : 0.9 * (1 - Math.exp(-t / UNIT_MS));
+  }
+  return of > 0 ? Math.min(1, done / of) : null;
+}
 /** T-1904: how many zones the running solve covers (a load's, or an edit's whole solve), or 0 for
  * a solve of the zone in view alone (a rough solve, an edit's local solve): the status tag says
  * which, since a whole solve of a big game takes much longer */
@@ -511,7 +531,7 @@ export interface DemandQueries {
   cellModes(purpose?: PurposeFilter, city?: CityId): Promise<CellModes | null>;
   stationRiders(stationId: string, top?: number, members?: string[]): Promise<StationRiders | null>;
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null>;
-  intercitySelection(end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null>;
+  intercitySelection(end: "home" | "work", cells: Uint32Array, still?: () => boolean): Promise<IntercitySelection | null>;
   intercityStation(stationId: string, members?: string[]): Promise<IntercityStation | null>;
   tripLengths(zone?: CityId): Promise<TripLengths | null>;
   legsKey(zone?: CityId): string;
@@ -544,9 +564,10 @@ export const stationRiders = (stationId: string, top?: number, members?: string[
 export const flows = (end: "home" | "work", cells: Uint32Array): Promise<Flows | null> =>
   queries?.flows(end, cells) ?? Promise.resolve(null);
 /** The longer (non-commute) trips of the people living or working in `cells`, by place, for the
- * solve `demandView` shows. Null while there is no solve or the workers moved on. */
-export const intercitySelection = (end: "home" | "work", cells: Uint32Array): Promise<IntercitySelection | null> =>
-  queries?.intercitySelection(end, cells) ?? Promise.resolve(null);
+ * solve `demandView` shows. Null while there is no solve or the workers moved on, or once `still` says
+ * the selection is no longer wanted (T-2746). */
+export const intercitySelection = (end: "home" | "work", cells: Uint32Array, still?: () => boolean): Promise<IntercitySelection | null> =>
+  queries?.intercitySelection(end, cells, still) ?? Promise.resolve(null);
 /** A station's longer-trip riders by place, or a complex's (`members`). Null as above. */
 export const intercityStation = (stationId: string, members?: string[]): Promise<IntercityStation | null> =>
   queries?.intercityStation(stationId, members) ?? Promise.resolve(null);

@@ -2,7 +2,6 @@
 // their own panel (ui/SavesPanel.tsx).
 
 import type { ComponentChildren } from "preact";
-import { useState } from "preact/hooks";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
@@ -16,7 +15,8 @@ import { accountState } from "../game/account";
 import { AccountButton, AccountSection, loginText } from "./AccountPanel";
 import { PurposeSelect } from "./DemandSelector";
 import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
-import { chooseLanguage, isLang, language, LANG_NAMES, pickable, t, tNumber, type MessageKey } from "../i18n";
+import { t, tNumber, type MessageKey } from "../i18n";
+import { LanguageSelect } from "./LanguageSelect";
 
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
@@ -184,26 +184,8 @@ export function SettingsTab() {
   );
 }
 
-/** T-2636: the language, each listed by its own name, remembered on this device; first from the browser. Shown
- * once a language besides English is offered (i18n/intl.ts OFFERED), or with `?lang=` in the address. */
-function LanguageRow() {
-  // as the purpose select (T-169): the focus ring for keyboard focus only
-  const [mouse, setMouse] = useState(false);
-  if (pickable.length < 2) return null;
-  const tip = t("settingsTab.language") + "\n" + t("settingsTab.languageAi");
-  return (
-    <div class="slider lang-row">
-      <span class="lang-icon" data-tip={tip}><Icon.globe /></span>
-      <label class={"purpose-filter" + (mouse ? " mouse" : "")}>
-        <select aria-label={t("settingsTab.language")} value={language.value}
-          onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
-          onChange={(e) => { const v = (e.currentTarget as HTMLSelectElement).value; if (isLang(v)) void chooseLanguage(v); }}>
-          {pickable.map((l) => <option key={l} value={l} lang={l}>{LANG_NAMES[l]}</option>)}
-        </select>
-      </label>
-    </div>
-  );
-}
+/** T-2636: the language, right under the first row; first from the browser. */
+const LanguageRow = () => <LanguageSelect class="slider" />;
 
 /** A labelled range input. */
 function Slider({ label, min, max, step, value, tip, percent: pct, set }: { label: string; min: number; max: number; step: number; value: number; tip?: string; percent?: boolean; set: (v: number) => void }) {

@@ -122,7 +122,7 @@ export const SHEET: SheetOptions = {
   wFold: 10, lo: 0.3, nearKm: 3, landShare: 0.4,
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
-  schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12", scheduleFar: "e-2:10:0.3,raise,e-2:6:0.3,raise,e-2:4:0.3,e0:5:0.3,s12",
+  schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12", scheduleFar: "e-2:10:0.3,raise,e-2:6:0.3,raise,e-2:4:0.3,e0:5:0.3,s12", // i18n-ignore: solver schedules
   settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6,
 };
 
@@ -1483,8 +1483,8 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       rounds++;
       if (m90 < o.settle) break;
     }
-    if (!stages.length) stages.push(`hierarchy rows/blocks ${P.AL.map((C) => `${C.n}/${C.rs[C.n]}`).join(" ")}`);
-    stages.push(`level ${P.d - K0} ${keep === null ? "frozen" : `keep ${keep}`}: ${moves.length} rounds, moves ${moves.join(" ")}, solver ${its.join(" ")}, ms ${tm.map(Math.round).join(" ")}`);
+    if (!stages.length) stages.push(`hierarchy rows/blocks ${P.AL.map((C) => `${C.n}/${C.rs[C.n]}`).join(" ")}`); // i18n-ignore: debug readout
+    stages.push(`level ${P.d - K0} ${keep === null ? "frozen" : `keep ${keep}`}: ${moves.length} rounds, moves ${moves.join(" ")}, solver ${its.join(" ")}, ms ${tm.map(Math.round).join(" ")}`); // i18n-ignore: debug readout
   };
   /** the next level's problem from P: its places by prolongation, each triangle's hold its parent triangle's */
   const finer = (P: Prob): Prob => {

@@ -1027,14 +1027,14 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
   "Water +2.5x" when it crosses water (T-1887); its multiplier includes both, and the blueprint breakdown has a
   Terrain row per class with what the ground adds.
-- **Road crossings** (T-1929, Anita 2026-11-02, notes/T-1929.md): track adds **US$6M for each road
+- **Road crossings** (T-1929, Anita 2026-11-02, notes/T-1929.md; US$10M since T-2732): track adds **US$10M for each road
   it crosses at level 0** (`ROAD_CROSSING_COST`; its height under half a level, so the low half of
   a ramp too), standing for the knockdowns and road works of a city. Roads are the basemap's zoom
   14 lines (OpenMapTiles `transportation`): trunk, primary, secondary, tertiary, minor and busway
   count 1, a motorway 3; service ways, tracks, paths, and any road on a bridge or in a tunnel count
   none. A divided road is two lines, so it counts twice. So ground track through a dense centre
-  (11-13 crossings a km) costs about US$100-115M a km, more than a +1 viaduct, and in open country
-  (under 1 a km) about US$40M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
+  (11-13 crossings a km) costs about US$145-165M a km, more than a +1 viaduct (dearer from about 3.75
+  crossings a km), and in open country (under 1 a km) about US$40M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
   sends, `roadFeed.ts`, decoded by `map/roadTiles.ts`) under each route preview and under the
   blueprint after a load, and puts each in the track model (`TrackApi::add_road_tile`,
   `track/roads.rs`: in Web Mercator tile units, indexed 32 x 32 cells a tile, never dropped in a

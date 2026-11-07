@@ -9,6 +9,7 @@ import { sizeCanvasLike } from "./gl";
 import type { Overlay } from "./overlay";
 import { mix, SKIN, toneFor } from "./faceTones";
 import { countryAt } from "../game/holidays";
+import { plainBoxHalfPx } from "./stationGeometry";
 
 /** Faces alive at once, all platforms together. */
 const MAX_ALIVE = 36;
@@ -23,13 +24,32 @@ const RISE_PX = 30;
 const SPRITE = 64;
 const SPRITE_SCALE = SPRITE / 48;
 
+/** Where a platform's faces rise (T-2751): its drawn centre line, PLATFORM_POINTS lng, lat pairs
+ * along the box, and the side its train's riders stand on, as lng, lat a little way from each point
+ * across towards that side. */
+export interface PlatformSpot {
+  line: ArrayLike<number>;
+  across: ArrayLike<number>;
+  /** 1 or -1, the side of the box the riders stand on */
+  side: number;
+}
+
+/** Faces on one platform side sit in this many places along it, kept apart (T-2751). */
+const SLOTS = 5;
+/** A face starts this share of the box's half width out from the centre line towards its riders'
+ * side: off the track, on the platform (T-2751). */
+const ACROSS = 0.55;
+
 interface Face {
   station: string;
+  /** the platform and side's key, and the place along it (0 to SLOTS - 1) */
+  side: string;
+  slot: number;
   lng: number;
   lat: number;
-  /** metres east and north of the station's lng, lat */
-  dx: number;
-  dy: number;
+  /** a point a little way across the platform from lng, lat, towards the riders' side */
+  alng: number;
+  alat: number;
   born: number;
   look: Look;
   /** sideways sway, px */
@@ -381,20 +401,33 @@ export class Faces {
     return this.faces.length;
   }
 
-  /** `count` faces from the platform of `station` (centre `lng`, `lat`, `length` m along `heading`),
-   * staggered over the next stretch of the train's stop. */
-  spawn(station: string, lng: number, lat: number, length: number, heading: number, count: number, mood: Mood) {
+  /** `count` faces from the platform of `station` (`lng`, `lat` its position, for its country),
+   * rising from `spot`'s side of its drawn box, each in a free place along it, staggered over the
+   * next stretch of the train's stop. */
+  spawn(station: string, lng: number, lat: number, spot: PlatformSpot, count: number, mood: Mood) {
     const room = Math.min(count, MAX_PER_PLATFORM - this.on(station), MAX_ALIVE - this.faces.length);
     if (room <= 0) return;
     this.ensure();
     const now = performance.now();
-    const half = Math.max(10, length * 0.4);
     let country = this.countries.get(station) ?? null;
     if (!country && (country = countryAt(lng, lat))) this.countries.set(station, country);
+    const side = `${station}|${spot.side}`;
+    const used = new Array<number>(SLOTS).fill(0);
+    for (const f of this.faces) if (f.side === side) used[f.slot]++;
+    const n = spot.line.length / 2;
     for (let i = 0; i < room; i++) {
-      const along = (Math.random() * 2 - 1) * half, across = (Math.random() * 2 - 1) * 2;
-      const dx = Math.cos(heading) * along - Math.sin(heading) * across, dy = Math.sin(heading) * along + Math.cos(heading) * across;
-      this.faces.push({ station, lng, lat, dx, dy, born: now + i * 160 + Math.random() * 220, look: pickLook(mood, Math.random, country), sway: (Math.random() * 2 - 1) * 5 });
+      // the least used place, at random among equals
+      const least = Math.min(...used), free = used.flatMap((u, k) => (u === least ? [k] : []));
+      const slot = free[Math.floor(Math.random() * free.length)];
+      used[slot]++;
+      // places spread over the middle 80% of the box, a little jitter within each
+      const t = Math.max(0, Math.min(1, 0.1 + (0.8 * (slot + 0.5 + (Math.random() - 0.5) * 0.4)) / SLOTS)) * (n - 1);
+      const j = Math.min(n - 2, Math.floor(t)), r = t - j;
+      const at = (p: ArrayLike<number>, o: number) => p[j * 2 + o] + (p[j * 2 + 2 + o] - p[j * 2 + o]) * r;
+      this.faces.push({
+        station, side, slot, lng: at(spot.line, 0), lat: at(spot.line, 1), alng: at(spot.across, 0), alat: at(spot.across, 1),
+        born: now + i * 160 + Math.random() * 220, look: pickLook(mood, Math.random, country), sway: (Math.random() * 2 - 1) * 5,
+      });
     }
     if (!this.raf) this.raf = requestAnimationFrame(() => this.frame());
   }
@@ -446,15 +479,16 @@ export class Faces {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // a little larger the closer the view, from 14 px at the platforms' zoom to 20 px
     const size = 14 + 6 * Math.min(1, Math.max(0, (zoom - 14) / 3));
-    // metres to degrees at the platform's latitude
+    const out = ACROSS * plainBoxHalfPx(this.overlay.renderer.stationStyle, zoom);
     for (const f of this.faces) {
       const u = (now - f.born) / LIFE_MS;
       if (u < 0) continue;
-      const lat = f.lat + f.dy / 110574, lng = f.lng + f.dx / (111320 * Math.cos((f.lat * Math.PI) / 180));
-      const p = this.map.project([lng, lat]);
+      const p = this.map.project([f.lng, f.lat]), q = this.map.project([f.alng, f.alat]);
+      const ql = Math.hypot(q.x - p.x, q.y - p.y) || 1;
+      const px = p.x + ((q.x - p.x) / ql) * out, py = p.y + ((q.y - p.y) / ql) * out;
       const ease = 1 - (1 - u) * (1 - u);
       ctx.globalAlpha = Math.min(1, u * 8) * (u < 0.55 ? 1 : 1 - (u - 0.55) / 0.45) * 0.95;
-      const x = p.x + f.sway * Math.sin(u * Math.PI * 2), y = p.y - RISE_PX * ease - 4;
+      const x = px + f.sway * Math.sin(u * Math.PI * 2), y = py - RISE_PX * ease - 4;
       const key = lookKey(f.look);
       let img = sp.get(key);
       if (!img) sp.set(key, (img = sprite(f.look)));
