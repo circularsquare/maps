@@ -37,6 +37,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   theirs: Anita confirmed), T-2688 crowding dots from 70%. yearsdest also has T-2686 (hint grey) and T-2689 (goal 1%).
 - **difficulty** a4d3c5c6cdbbc5523 (Opus, main tree, 1 core): T-2690 start city difficulty; stage 1 measure + propose
   cut points, then WAIT for Anita's OK before the new game sheet label.
+- **placelag** a80284aad4038b6b9 (Opus, tree placelag, 2 cores 0x3000): T-2404 + T-1861 track placement lag on big
+  saves (Anita 21:00: "what exctly is causing the slow unresponsive feeling track placement on large saves?"): fresh
+  profile, plain answer in notes/T-2404.md, fixes.
+- parking LANDED a07d6006 (T-2677; WASM rebuilt).
 - namespread LANDED 75c606e5 (T-2674, T-2675). T-2691 filed: "Nn" console errors under load.
 - Anita ~20:25: Tijuana "looks great now in both ways" (fares N + reference country). "No train route found" landed d575630a.
 - Done and retired this evening: ridersnow, l10nsmall (ad2c18ea6567fefa9, can be resumed for small translation
