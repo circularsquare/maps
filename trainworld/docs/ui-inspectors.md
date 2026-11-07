@@ -119,12 +119,17 @@ purpose filter the purpose drawn is ringed in the bar.
   [T-1434, [ui-map.md](ui-map.md) "Opening day"] its Riders cell reads 0 until its figure first
   shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
   gives the real figure.
-  **A line whose riders are being worked out again after an edit** keeps its old riders figure
-  with a small label above it [T-2392]: "constructing..." for a line that has just started running
-  (its blueprint constructed, or new), "loading..." for one already running whose stops, service or
-  times changed (a train count, say, or track moved under it [T-2622]). With no old figure the label stands alone. A group's row takes the
-  label of its lines, "constructing..." first. The line inspector's counts block keeps its old
-  figures too, the label at the right of its heading and the purpose split hidden. The label stays
+  **A line whose riders are being worked out again after an edit** keeps a riders figure
+  with a small label above it [T-2392]: "calculating..." for a line that has just started running
+  (its blueprint constructed, or new) [T-2678], "loading..." for one already running whose stops, service or
+  times changed (a train count, say, or track moved under it [T-2622]). The figure is the last there is
+  [T-2678, `pendingRiders` in game/today.ts]: its count now; else its last count while the line exists
+  (a line stopped and built again; a game load forgets them); else the riders a day demand has for it
+  (once solved but not yet counted by the boarding account, or a new line's first estimate). With none,
+  for a line that never had riders, the label stands alone. A group's row takes the label of its
+  lines, "calculating..." first, and adds up the figures its rows show. The line inspector's counts
+  block shows the same figure with its other figures, the label at the right of its heading and the
+  purpose split hidden. The label stays
   until the riders that count the change land: its cluster's local result after the
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
   run or more those in a window of zones round it re-solved, T-1735) or the whole final [T-1665,

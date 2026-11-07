@@ -17,7 +17,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, pendingOf, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, dayNote, PERIOD_STRIDE, pendingOf, pendingRiders, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
 import { lineReversed } from "../game/northUp";
 import { kindIn, lineCountry } from "../game/holidays";
 import { DAY_KINDS } from "../game/days";
@@ -62,7 +62,7 @@ function RidersToday({ l }: { l: LineInput }) {
     return () => cancelAnimationFrame(raf);
   }, [o?.landed]);
   const k = pendingOf(l);
-  if (k) return <PendingRiders k={k} text={d ? count(d.riders) : ""} />;
+  if (k) { const r = pendingRiders(l); return <PendingRiders k={k} text={r !== null ? count(r) : ""} />; }
   const shown = countingRiders(o, d?.riders ?? 0);
   const text = shown !== null ? count(shown) : d ? count(d.riders) : "";
   return <span class="val w-riders" data-tip={d ? t("linesTab.ridersTip", { count: count(d.riders) }) : undefined}>{text}</span>;
@@ -104,10 +104,12 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
     return <span class="val muted">{statusText(st)}</span>;
   }
   const by = (f: (l: LineInput) => string) => run.map((l) => `${l.name}: ${f(l)}`).join("\n");
-  // a line being constructed names the group's state over one only loading
+  // a line just started names the group's state over one only loading
   const pending = run.map((l) => pendingOf(l)).filter((k): k is PendingKind => !!k).sort()[0];
-  const riders = run.reduce((n, l) => n + (tod.get(l.id)?.riders ?? 0), 0);
-  const any = run.some((l) => tod.has(l.id));
+  // (T-2678: while pending, each line's figure as its row shows it)
+  const ridersOf = (l: LineInput) => (pending && pendingOf(l) ? pendingRiders(l) : tod.get(l.id)?.riders) ?? null;
+  const riders = run.reduce((n, l) => n + (ridersOf(l) ?? 0), 0);
+  const any = run.some((l) => ridersOf(l) !== null);
   const anyProfit = run.some((l) => tod.has(l.id) && profitKnown(l));
   const net = run.reduce((n, l) => n + lineNet(tod.get(l.id), l, w.lineStats[l.id]), 0);
   const n = run.reduce((k, l) => k + trains(l.id), 0);

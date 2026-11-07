@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2678 Pending riders show the last figure; "calculating..." for "constructing..." (2026-11-06, agent ridersnow): beside the label, the count now, else the line's last count, else demand's riders; "loading..." kept. notes/T-2658.md.
 - T-2676 Upkeep shown as multiples (2026-11-06, agent farescale): track level hovers say "0.7x upkeep", base a viaduct = 1.0x as the construction chip (ground 0.7x, cut and cover 2.0x, bored 2.6x); totals stay in dollars. notes/T-2668.md section 7.
 - T-2670 Fares and value of time at income^0.5 (2026-11-06, agent farescale): default bases Mexico $1.00, India $0.45, Japan $1.55; in-city rail Mumbai -0.3%, Tijuana -2.0% (5-cent rounding), NY unchanged; the market's rail share of 100-250 km trips about halves in India and Mexico (Anita: "lower in mexico/india is okay"). notes/T-2668.md section 7.
 - T-2669 Train running costs at each country's prices (2026-11-06, agent farescale): US prices times (GDP per head over the US's)^0.5 per line by its km; busy Tijuana line -$10.8M to +$7.1M a game day, break-even 4.5-4.6 riders a car in Mumbai, Tijuana, Tokyo and NY. notes/T-2668.md section 7.

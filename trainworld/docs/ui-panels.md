@@ -191,7 +191,7 @@ wide so a longer date moves nothing [T-1868].
   tag's hover says "Time capped at 4x while updating demand".
   **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
   day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while
-  some figures in play still miss it: a line reading "constructing..." or "loading...", or the zone
+  some figures in play still miss it: a line reading "calculating..." or "loading...", or the zone
   in view recomputing [T-2409]. Lines whose local result is in count for nothing: they are within
   about 2% of the whole solve [T-1733, T-2410]. While the
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
@@ -271,7 +271,7 @@ wide so a longer date moves nothing [T-1868].
   as text on that button and stays until another speed button is pressed (not saved with the game).
   **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
   `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders
-  again (each reads "loading..." or "constructing..." meanwhile: its cluster's local result, or the
+  again (each reads "loading..." or "calculating..." meanwhile: its cluster's local result, or the
   solve's end), and after an edit no line's riders follow (fares, a station link or building, a line
   removed or stopped running, an undo), until the whole solve's final; and while a load the network waits on is going
   (a game's, a zone a station has just reached). The rule is the same wherever the camera is
@@ -280,7 +280,7 @@ wide so a longer date moves nothing [T-1868].
   the clock starts, a cached result's network solved again). The chosen speed's button is dimmed,
   its hover says the clock is held at 4x while demand updates and then returns to the chosen speed, and
   the cap lifts by itself; the status tag shows all the while it holds [T-1790].
-  A new line with no riders yet ("constructing...", running trains that cost and earn nothing) holds
+  A new line with no riders yet ("calculating...", running trains that cost and earn nothing) holds
   the cap until its riders land, after quiet edits too [T-2409]. The cap is never lower
   than 4x (Anita, 2026-11-04).
   Demand that stopped (its notice) caps nothing. **A quiet edit does not cap** [T-1803,

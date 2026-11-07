@@ -11,7 +11,7 @@ import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
-import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, pendingOf, profitKnown, runningToday, today } from "../../game/today";
+import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today } from "../../game/today";
 import { accountVersion, BOAT_CARS, BUS_CARS, capacity } from "../../game/boarding";
 import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -278,12 +278,14 @@ function averageLoad(v: Float64Array, st: LineStats): number | null {
 export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: LineStats; periods: Float64Array | null; kind: number; extra?: ComponentChildren }) {
   const d = today.value.get(l.id);
   const pending = pendingOf(l);
+  // T-2678: while pending, the last figure there is (its count, its last one, or demand's), the label beside it
+  const shown = pending ? pendingRiders(l) : null;
   if (!d) {
     if (!pending) return null;
     return (
       <>
-        <div class="h divided" />
-        <ul class="rows"><Row label={t("schedule.riders")}><span class="muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span></Row></ul>
+        <div class="h divided">{shown !== null && <span class="pending-note muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</div>
+        <ul class="rows"><Row label={t("schedule.riders")}>{shown !== null ? count(shown) : <span class="muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</Row></ul>
       </>
     );
   }
@@ -295,7 +297,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
     <>
       <div class="h divided">{pending && <span class="pending-note muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</div>
       <ul class="rows">
-        <Row label={t("schedule.riders")}>{count(d.riders)}</Row>
+        <Row label={t("schedule.riders")}>{count(shown ?? d.riders)}</Row>
         {!pending && extra}
         {profitKnown(l) ? (
           <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>

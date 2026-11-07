@@ -10,6 +10,7 @@ import { demandBehindFrom, demandUpdating, finalWorld, networkWorld } from "./de
 import { demandStopped, loadProgress } from "./loading";
 import { openedZones } from "./openedZones";
 import { world } from "./world";
+import { t } from "../i18n";
 
 /** T-2392: "build" for a line that has just started running (its blueprint constructed, or new);
  * "change" for one already running whose stops or service changed */
@@ -19,7 +20,7 @@ export type PendingKind = "build" | "change";
 export const linesPending = signal<ReadonlyMap<string, PendingKind>>(new Map());
 
 /** The label over a pending line's riders. */
-export const pendingLabel = (k: PendingKind) => (k === "build" ? "constructing..." : "loading...");
+export const pendingLabel = (k: PendingKind) => (k === "build" ? t("lineFigures.pendingNew") : t("lineFigures.pendingChange"));
 
 /** T-2658: the world version each pending line's last change was seen at */
 const since = new Map<string, number>();

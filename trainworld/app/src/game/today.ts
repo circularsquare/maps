@@ -194,8 +194,25 @@ export function pendingOf(l: LineInput): PendingKind | undefined {
   const k = linesPending.value.get(l.id);
   if (k) return k;
   const d = today.value.get(l.id);
-  if (d && d.riders > 0) return undefined;
-  return (demandView.value?.lines.get(l.id)?.ridersPerDay ?? 0) > 0 && hasTrains(l) ? (d ? "change" : "build") : undefined;
+  if (d && d.riders >= 1) return undefined;
+  // (the line's trains as set, not as the account last counted them: those may be none yet)
+  const runs = l.tph.high > 0 || l.tph.medium > 0 || l.tph.low > 0;
+  return (demandView.value?.lines.get(l.id)?.ridersPerDay ?? 0) >= 1 && runs ? (d ? "change" : "build") : undefined;
+}
+
+/** T-2678: each line's last riders count of 1 or more (`today`), while the line exists */
+const lastRiders = new Map<string, number>();
+
+/** T-2678: the riders figure shown beside a pending line's label: its count now, else its last count (a
+ * line stopped and built again), else the riders a day demand has for it (the account not counting them
+ * yet, or a new line's first estimate); null with none, when the label stands alone. */
+export function pendingRiders(l: LineInput): number | null {
+  const d = today.value.get(l.id);
+  if (d && d.riders >= 1) return d.riders;
+  const last = lastRiders.get(l.id);
+  if (last !== undefined) return last;
+  const r = demandView.value?.lines.get(l.id)?.ridersPerDay ?? 0;
+  return r >= 1 ? r : null;
 }
 
 /** Per line id; empty until the first answer (and for a line with no riders yet). */
@@ -271,6 +288,9 @@ function ask(force = false) {
       else if (!t && p && !lineFiguresIn(demandView.peek(), l.id, l.stops.length) && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
     }
     todayService.value = service;
+    // T-2678: each line's last count, kept while the line exists (it may stop and be built again)
+    for (const [id, x] of next) if (x.riders >= 1) lastRiders.set(id, x.riders);
+    if (lastRiders.size > next.size) { const ids = new Set((w?.save.lines ?? []).map((l) => l.id)); for (const id of lastRiders.keys()) if (!ids.has(id)) lastRiders.delete(id); }
     today.value = next;
   });
 }
@@ -281,6 +301,7 @@ let readFor = new Map<string, string[]>();
 /** T-648: a stop edit renumbers the line's stops, and the counts (until the next answer) would sit
  * one row off: they follow their stations to the new order now, a new stop at 0. */
 world.subscribe((w) => {
+  if (w && clock.held.peek()) lastRiders.clear(); // (a game loading: its lines are other lines)
   const t = today.peek();
   if (!w || !t.size) return;
   let out: Map<string, LineToday> | null = null;

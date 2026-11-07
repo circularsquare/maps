@@ -262,7 +262,7 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .sort-btn.grow { min-width: 56px; }
 /* T-1818: a wide bullet takes room from the name, not from the columns, so they stay in line */
 .lines-box .rows .grow.line-name { min-width: 0; }
-/* T-2152: "constructing..." is wider than the riders column: it takes the room from the name, so
+/* T-2152: "calculating..." is wider than the riders column: it takes the room from the name, so
    the right-aligned columns stay in line and Money keeps its place */
 .lines-box .rows .val.w-riders.pending { width: auto; white-space: nowrap; }
 /* T-2392: a pending line's label sits small above its old riders figure, inside the row's height */

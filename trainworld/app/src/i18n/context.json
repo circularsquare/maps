@@ -940,6 +940,8 @@
   "leaderboard.title": "Title of the leaderboards panel, and hover and screen-reader label of the trophy button that opens it.",
   "lineActions.defaultName": "The name a new line starts with, saved with the line. n: 3.",
   "lineActions.constructed": "Notice after Construct. cost: \"$12M\".",
+  "lineFigures.pendingNew": "Small muted label beside a line's riders figure (Lines tab, line view) while the riders of a line that has just started running are worked out; any figure beside it is the line's last one.",
+  "lineFigures.pendingChange": "Small muted label beside a line's old riders figure (Lines tab, line view) while its riders are worked out again after the player changed its stops or service. Anita's chosen word.",
   "lineGroup.leave": "Hover and screen-reader label of the button that takes a line out of its group.",
   "lineGroup.open": "Hover on a group's bullet in a line view.",
   "lineGroup.openNamed": "Hover on a group's bullet in a line view when the bullet shows the name shortened: the full name, then the action. name: the group's name.",
