@@ -34,7 +34,16 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   docs/ui-panels.md, docs/code-map.md, DECISIONS.md, ARCHIVE.md, TASKS.md, checks/t2703-storeread.mjs. Filed T-2705.
 - pinchecks finished: T-2630 landed 983d5192 (checks/cores.mjs; TW_CORES=n, else a ledger claim; TW_NOPIN=1 for
   timing runs). Smoke on 2 cores takes ~6 min, so give it TW_CORES=4 when the machine allows. T-2706 unused.
-- Next unassigned id **T-2707**.
+- **boarding** ab7583ab6d3c9eea9 ([971c94]'s, Opus, tree .tw-trees/boarding, Vite 6173, 3 cores): T-2699 boarding
+  steps speed (sim/). May file T-2707. Land after worldnext's gates (WASM rebuild of main after).
+- **editnote** a3e76ee8c5cadc238 ([971c94]'s, Opus, main tree, Vite 6174, 2 cores): T-2682 edit note never settles.
+  May file T-2708. Owns editNote.ts and settle-rule code. App change: commit after worldnext's gates.
+- **framing** a1605459efab5fade ([971c94]'s, Opus, read-only, no cores): Anita's ask (relayed by old tab, 2026-11-07)
+  "for when i post about it online, how do you think i should frame the optimization we've done, that sounds impressive
+  and is honest? ... in general what we've done over other similar games". DONE: research/post-framing.md (6 framings,
+  top pick the exact speedups; drop "fractal" for "level of detail"; Japan whole-solve 21 min predates this week's speedups).
+- Cap 16 (Anita 2026-11-07 ~00:25: "feel free to use all coores"); back to 10 when she is up.
+- Next unassigned id **T-2709**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
