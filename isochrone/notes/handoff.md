@@ -1,7 +1,7 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-06 18:45 (terrain run 11,230 of 18,984 tiles, ~6 h left on 3 workers; C: 130 GB free after Anita's cleanup)
+Updated: 2026-11-06 22:30 (terrain run done 22:22, all 18,984 tiles; tiles_t011 build running; C: 130 GB free)
 
 Read isochrone/CLAUDE.md and TASKS.md first.
 
@@ -16,16 +16,13 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   downloader waits under 22 GB.
 
 ## In flight
-- **T-011 stage 2, world terrain run** (90 m GLO-90 streamed, directed crossings per L1 cell),
-  started 2026-11-06 11:23; since 12:16 run through `tools/terrain/launch.py 3` (PID 38812), which
-  claims `iso-terrain` under its own pid and runs world.py with what is granted (3 at 12:16, so
-  isochrone holds its 4 with the stage 3 build's 1). Status: `python
-  isochrone/tools/terrain/world.py status` (maps root); log data/terrain/world.log; stdout/err
-  data/terrain/world.out/.err. 1,436 of 18,984 tiles at 12:16. Compute ~35 core-hours left, so
-  runs ~12 h on 3 workers. Restart if needed: stop the launcher's process tree only (check the
-  command line first), then start `python isochrone/tools/terrain/launch.py 3` detached from the
-  maps root with `--min-free 40 --ahead 1` (resumes from data/terrain/done.txt). A background
-  wait in this session (scratchpad/orch/wait_pid.py 35848) fires when it exits.
+- **T-011 stage 2, world terrain run: done** 2026-11-06 22:22, 18,984 of 18,984 tiles, world.err
+  empty. Planes in data/terrain/l1/, GLO-90 for the fine tiles in data/terrain/elev/; data/terrain/work/
+  can go once the swap is checked.
+- **tiles_t011 build from the world planes**, started 22:30: scratchpad/orch/build_launch.py 3
+  claims `iso-tiles` under its own pid, runs `tools/build_tiles.py 3 --out tiles_t011`, log
+  data/tiles_t011_build.log (ends "exit 0"), ~1 h. Background task in this session fires on exit.
+  Restart: the same command line, detached, from anywhere (it overwrites data/tiles_t011).
 - T-011 stage 3 landed behind a switch: build_tiles.py two passes (L1 from planes, L3/L10 by
   crossing), directed search, `localhost:8800/isochrone/?tiles=t011` reads data/tiles_t011 (built
   from the run's planes to ~75N plus the pilot tiles and an Alps block). L1/L10 0.91 -> 1.01,
@@ -37,9 +34,8 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   a75105d4c451ffaf1.
 
 ## Next
-1. When cores free up: restart the run with more workers.
-2. When the world run ends: `python isochrone/tools/build_tiles.py --out tiles_t011` from the
-   run's planes only (~1 h, claim cores), `node isochrone/checks/levels.mjs` and smoke with
+1. (Terrain run done 22:22.)
+2. When the tiles_t011 build ends: `node isochrone/checks/levels.mjs` and smoke with
    `?tiles=t011`, then `build_tiles.py swap <backup> --from tiles_t011` (today's data/tiles is the
    backup), show Anita before/after (mountains faster: 0.64-0.83 of today's; fjord and river
    country too fast at L3/L10, T-007). Then re-measure canoe cfg.access (notes/T-082.md), then
