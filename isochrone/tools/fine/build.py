@@ -8,10 +8,13 @@
     python isochrone/tools/fine/build.py region <region> [<region> ...]
         a test region with roads read from its Geofabrik extracts in data/raw/osm/, then index.json
     python isochrone/tools/fine/build.py index        (rewrite data/fine/index.json only)
+Any of them with --out NAME writes into data/NAME/ instead (a build to check before swapping it in).
 
 Per 1 x 1 degree tile, named by its south-west corner (n40w074), into data/fine/:
   <name>.land.bin.gz   1200 x 1200 LC100 class (nearest pixel to the cell centre), then
-                       120 x 120 terrain factor of the L1 cells x 250 (data/surface/terrain_factor.tif)
+                       1200 x 1200 int16 LE GLO-90 height in metres at the cell centre as plane
+                       deltas (plane_deltas), from the T-011 run's data/terrain/elev/
+                       (tools/terrain/world.py)
   <name>.roads.bin.gz  1200 x 1200 road bits (ROAD_* below); a way marks every cell it passes through
 A town tile holds only its selected 0.25 degree blocks: every byte of the others is 0, and
 index.json gives the tile's block mask (docs/fine.md, "Town blocks"). The worker turns these into
@@ -32,16 +35,18 @@ from rasterio.windows import Window
 
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RAW = os.path.join(HERE, "data", "raw")
-OUT = os.path.join(HERE, "data", "fine")
+# the output folder; set from --out through the environment so pool workers see it too
+OUT = os.path.join(HERE, "data", os.environ.get("ISO_FINE_OUT", "fine"))
 LC100 = os.path.join(RAW, "lc100", "cgls-lc100-2019-cog.tif")
-TERRAIN = os.path.join(HERE, "data", "surface", "terrain_factor.tif")
+ELEV = os.path.join(HERE, "data", "terrain", "elev")
 OSM = os.path.join(RAW, "osm")
 BITS = os.path.join(HERE, "data", "roads", "bits")
-SELECTION = os.path.join(OUT, "selection.json")
+SELECTION = os.path.join(HERE, "data", "fine", "selection.json")
+
+sys.path.insert(0, os.path.join(HERE, "tools", "terrain"))
+from walk import SLOPE_RULE                # noqa: E402  the page walks the same slope rule as L1
 
 N = 1200            # cells a tile side
-L1N = 120           # L1 cells a tile side
-TF_SCALE = 250      # terrain factor byte = factor x 250
 BLOCK = 300         # cells a town block side (0.25 degree)
 FULL = 0xFFFF       # block mask of a whole tile; bit 4 * i + j = block row i from the north, column j
 
@@ -179,14 +184,26 @@ def land_classes(box):
     return a[np.ix_(rows - r0, cols - c0)]
 
 
-def terrain(box):
-    """L1 terrain factor x 250 for the region, (H/10, W/10) uint8."""
-    west, south, east, north = box
-    with rasterio.open(TERRAIN) as src:
-        c0 = int(round((west - src.transform.c) / src.transform.a))
-        r0 = int(round((north - src.transform.f) / src.transform.e))
-        a = src.read(1, window=Window(c0, r0, (east - west) * L1N, (north - south) * L1N)).astype(np.float32)
-    return np.clip(np.rint(a / 10000 * TF_SCALE), 1, 255).astype(np.uint8)
+def heights(name):
+    """GLO-90 height of the tile's cells, metres, (N, N) int16, from the T-011 run's elev/ file
+    (column deltas; ocean and the blocks outside a town tile's mask 0)."""
+    p = os.path.join(ELEV, name + ".bin.gz")
+    if not os.path.exists(p):
+        raise SystemExit("no GLO-90 heights for %s (%s)" % (name, p))
+    d = np.frombuffer(gzip.open(p).read(), "<i2").reshape(N, N)
+    return np.cumsum(d, axis=1, dtype=np.int32).astype(np.int16)
+
+
+def plane_deltas(z):
+    """int16 heights as each value minus the plane through its west, north and north-west
+    neighbours (z - w - n + nw); along the first row minus the west one, down the first column
+    minus the north one, the corner as it is. 15% smaller gzipped than deltas along rows."""
+    a = z.astype(np.int32)
+    d = a.copy()
+    d[1:, 1:] = a[1:, 1:] - a[1:, :-1] - a[:-1, 1:] + a[:-1, :-1]
+    d[0, 1:] = a[0, 1:] - a[0, :-1]
+    d[1:, 0] = a[1:, 0] - a[:-1, 0]
+    return d.astype("<i2")
 
 
 def write_gz(path, *arrays):
@@ -210,18 +227,18 @@ def block_keep(mask):
 
 
 def build_tile(job):
-    """One tile from LC100, the terrain factor and data/roads/bits; job = (name, mask).
+    """One tile from LC100, GLO-90 heights and data/roads/bits; job = (name, mask).
     Returns (name, mask, bytes written, has roads)."""
     name, mask = job
     box = tile_box(name)
     cls = land_classes(box)
-    tf = terrain(box)
+    z = heights(name)
     bits = os.path.join(BITS, name + ".bits.gz")
     roads = np.frombuffer(gzip.open(bits).read(), np.uint8).reshape(N, N) if os.path.exists(bits) else None
     if mask != FULL:
         keep = block_keep(mask)
         cls = np.where(keep, cls, 0).astype(np.uint8)
-        tf = np.where(keep[::10, ::10], tf, 0).astype(np.uint8)
+        z = np.where(keep, z, 0).astype(np.int16)
         if roads is not None:
             roads = np.where(keep, roads, 0).astype(np.uint8)
     rp = os.path.join(OUT, name + ".roads.bin.gz")
@@ -232,7 +249,7 @@ def build_tile(job):
         if os.path.exists(rp):
             os.remove(rp)
     lp = os.path.join(OUT, name + ".land.bin.gz")
-    write_gz(lp, cls, tf)
+    write_gz(lp, cls, plane_deltas(z))
     size = os.path.getsize(lp) + (os.path.getsize(rp) if roads is not None else 0)
     return name, mask, size, roads is not None
 
@@ -253,8 +270,7 @@ def plan():
 
 
 def build_tiles(jobs, workers):
-    """Build (name, mask) jobs on workers processes; stop if the terrain factor changes under us."""
-    tf_mtime = os.path.getmtime(TERRAIN)
+    """Build (name, mask) jobs on workers processes."""
     os.makedirs(OUT, exist_ok=True)
     t0 = time.time()
     total = 0
@@ -271,8 +287,6 @@ def build_tiles(jobs, workers):
             done += 1
             total += size
             if done % 50 == 0 or done == len(jobs):
-                if os.path.getmtime(TERRAIN) != tf_mtime:
-                    raise SystemExit("terrain_factor.tif changed during the build; stopping")
                 el = time.time() - t0
                 print("%d/%d tiles, %.0f MB, %.0f s, ~%.0f s left" % (
                     done, len(jobs), total / 1e6, el, el / done * (len(jobs) - done)), flush=True)
@@ -280,8 +294,6 @@ def build_tiles(jobs, workers):
         if pool:
             pool.close()
             pool.join()
-    if os.path.getmtime(TERRAIN) != tf_mtime:
-        raise SystemExit("terrain_factor.tif changed during the build; stopping")
     print("built %d tiles, %.0f MB, %.0f s" % (done, total / 1e6, time.time() - t0), flush=True)
 
 
@@ -301,7 +313,6 @@ def build(region):
     t0 = time.time()
     print("%s: land cover" % region, flush=True)
     cls = land_classes(box)
-    tf = terrain(box)
     print("%s: roads from %s" % (region, ", ".join(extracts)), flush=True)
     lons, lats, codes, nways = read_ways(box, extracts)
     roads = rasterise(box, lons, lats, codes)
@@ -312,9 +323,8 @@ def build(region):
             r = (north - 1 - lat) * N
             c = (lon - west) * N
             name = tile_name(lat, lon)
-            write_gz(os.path.join(OUT, name + ".land.bin.gz"), cls[r:r + N, c:c + N],
-                     tf[r // 10:(r + N) // 10, c // 10:(c + N) // 10])
             write_gz(os.path.join(OUT, name + ".roads.bin.gz"), roads[r:r + N, c:c + N])
+            write_gz(os.path.join(OUT, name + ".land.bin.gz"), cls[r:r + N, c:c + N], plane_deltas(heights(name)))
             sz = sum(os.path.getsize(os.path.join(OUT, name + e)) for e in (".land.bin.gz", ".roads.bin.gz"))
             print("  %s %.2f MB" % (name, sz / 1e6), flush=True)
     print("%s: %d ways, %.0f s" % (region, nways, time.time() - t0), flush=True)
@@ -329,7 +339,8 @@ def index():
     whole = [n for n in names if masks.get(n, FULL) == FULL]
     partial = {n: masks[n] for n in names if masks.get(n, FULL) != FULL}
     roads = [n for n in names if os.path.exists(os.path.join(OUT, n + ".roads.bin.gz"))]
-    idx = {"tile": N, "terrain": L1N, "tfScale": TF_SCALE, "block": BLOCK,
+    # elev: the land file's second part is heights (stage 2; stage 1's had "terrain" and "tfScale")
+    idx = {"tile": N, "block": BLOCK, "elev": "int16 plane deltas", "slope": SLOPE_RULE,
            "tiles": whole, "partial": partial, "roads": roads}
     path = os.path.join(OUT, "index.json")
     with open(path + ".tmp", "w") as f:
@@ -342,6 +353,12 @@ def index():
 
 if __name__ == "__main__":
     args = sys.argv[1:] or ["index"]
+    if "--out" in args:
+        i = args.index("--out")
+        os.environ["ISO_FINE_OUT"] = args[i + 1]
+        OUT = os.path.join(HERE, "data", args[i + 1])
+        del args[i:i + 2]
+        args = args or ["index"]
     if args[0] == "world":
         world(args[1:])
     elif args[0] == "tiles":

@@ -6,6 +6,7 @@ export const cfg = {
     inv: null,                   // hours per km for each stored value, -1 for water
     canoeBase: 'data/canoe/',    // canoe data folder, relative to worker.js
     hazardBase: 'data/hazard/',  // land hazard band (docs/hazard.md 4), relative to worker.js
+    fineBase: 'data/fine/',      // L0.1 tiles (docs/fine.md), relative to worker.js; the page's ?fine=
     roads: true,                 // fold the road bytes into L10, L3 and L1 speeds (docs/roads.md); off, never fetched
     // the canoe model (docs/canoe.md 2, 3)
     K: 1000,                     // hours of weight per unit of hazard
@@ -37,6 +38,7 @@ export function setConfig(msg) {
     if (msg.look) cfg.look = msg.look;
     if (msg.canoeBase) cfg.canoeBase = msg.canoeBase;
     if (msg.hazardBase) cfg.hazardBase = msg.hazardBase;
+    if (msg.fineBase) cfg.fineBase = msg.fineBase;
     cfg.inv = new Float32Array(256).fill(-1);
     for (let v = 1; v < 256; v++) cfg.inv[v] = msg.meta.scale / v;
 }

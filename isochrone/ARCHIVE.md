@@ -1,5 +1,7 @@
 # Archive
 
+- T-039 [P3] Fine level stage 2. Done 2026-11-07: GLO-90 heights in the 100 m tiles (1.48 GB), each L0.1 move walked by the L1 walker's slope rule; windows against L1 25 km out 1.04 -> 1.004 (Brig centred 1.78 -> 1.06); smoke 18/18. Bucket queue split off as T-093. notes/T-039.md.
+
 - T-094 [P2] ktrips on directed walking. Done 2026-11-06: ktrips calls `setDirs` as the page does (`SYMMETRIC=1` for the old way, `REV=1` reverses the walks); canoe trips unchanged, walks 1-6% faster (Greenland K=1000 -5.6%). notes/T-094.md.
 
 - T-092 [P2] Re-measure the canoe's `cfg.access` on the T-011 tiles. Done 2026-11-06: kept at 0.5. Canoe L1/L10 0.95 -> 1.04, all walking's own shift (0.91 -> 1.02); the canoe's part over walking is 1.00. Coari 0.86, Khulna 1.05; smoke 18/18. notes/T-092.md.

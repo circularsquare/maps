@@ -61,7 +61,7 @@ holes (`notes/T-028.md`).
   inside a cell. A move weighs the east-west and north-south speeds of the cells it touches by its
   share of each (`docs/resolution.md`, "Directions"); carrying is twice that. Hazard per km and
   getting in or out use the cell's one speed, the geometric mean of the four. The 100 m level
-  is not directed yet (T-039).
+  walks each move on its grade (section 4).
 - **Roads.** A walkable OSM way is walked at 5 km/h times the height factor and the slope factor
   of at most a 10% grade, since roads wind up hills (T-084); a 1 km
   cell blends road and off-road time by three times its share of 100 m road cells, capped at all
@@ -92,8 +92,11 @@ measured times and the thin-ridge question: `docs/resolution.md`.
 
 On walking starts, where 100 m tiles are built (towns and water country, T-057), a 100 m window is
 solved once the view fits in 1.5 M cells (from about zoom 9.4): LC100 land cover, OSM roads and
-bridges, the 1 km terrain factor (`docs/fine.md`). Which tiles get 100 m worldwide: open
-(T-047, `docs/fine.md`, "Where the fine level goes").
+bridges, and GLO-90 heights, each move walked by the rule of the 100 m walker that made L1
+(directed Tobler on its grade, MAP's height factor, at most a 10% grade between two road or
+urban cells, nothing steeper than 45 degrees; T-039), so a 100 m window and the 1 km level round
+it agree (`docs/fine.md`). Which tiles get 100 m worldwide: open (T-047, `docs/fine.md`, "Where
+the fine level goes").
 
 ## 5. Interface
 

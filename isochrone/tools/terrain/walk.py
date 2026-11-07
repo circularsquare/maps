@@ -22,7 +22,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(HERE, "tools", "surface"))
-import common as SC                       # noqa: E402  LC100 speeds, MAP's height factor
+import common as SC                       # noqa: E402  LC100 speeds
 
 BITS = os.path.join(HERE, "data", "roads", "bits")
 N = 1200                                  # fine cells per tile side
@@ -31,6 +31,11 @@ KM_DEG = 111.195
 ROAD_KMH = 5.0
 ROAD_GRADE = 0.10                         # streets and paths climb at most this grade (T-084)
 G_MAX = 1.0                               # steeper than 45 degrees is not walked
+TOBLER_K, TOBLER_G0 = 3.5, 0.05           # directed Tobler normalised to the flat, exp(-k (|g + g0| - g0))
+HEIGHT_A, HEIGHT_B = 1.016, 0.0001072     # MAP's height factor, a exp(-b h), h in metres
+# the slope rule as the fine level's index.json carries it to the page (tools/fine/build.py, js/levels.js)
+SLOPE_RULE = {"toblerK": TOBLER_K, "toblerG0": TOBLER_G0, "heightA": HEIGHT_A, "heightB": HEIGHT_B,
+              "roadGrade": ROAD_GRADE, "gMax": G_MAX}
 WALK_BITS, BRIDGE = 7, 16
 URBAN, WATER = 50, (80, 200)
 
@@ -51,11 +56,11 @@ BETWEEN = {k[0]: (k[1], k[2]) for k in KNIGHT}
 
 def tobler(g):
     """Directed Tobler normalised to the flat: 1 on the flat, 1.19 at 5% down, 0.35 at 30% up."""
-    return np.exp(-3.5 * (np.abs(g + 0.05) - 0.05))
+    return np.exp(-TOBLER_K * (np.abs(g + TOBLER_G0) - TOBLER_G0))
 
 
 def height(z):
-    return SC.elev_factor(np.maximum(z, 0))
+    return HEIGHT_A * np.exp(-HEIGHT_B * np.maximum(z, 0))
 
 
 # ---------------------------------------------------------------- inputs
@@ -156,9 +161,9 @@ def move_costs(cls, bits, z, north, roads, cap=None):
     dy = np.float32(KM_DEG / N)
     # -log of the height factor per cell: the factor at the mean height of two cells is the
     # geometric mean of theirs (it is exponential in height)
-    nlh = (np.float32(-np.log(1.016)) + np.float32(0.0001072) * np.maximum(z, 0)).astype(np.float32)
+    nlh = (np.float32(-np.log(HEIGHT_A)) + np.float32(HEIGHT_B) * np.maximum(z, 0)).astype(np.float32)
     out = {}
-    lim = None if cap is None else np.float32(-np.log(cap) / 3.5)   # |g + 0.05| - 0.05 at least this
+    lim = None if cap is None else np.float32(-np.log(cap) / TOBLER_K)   # |g + g0| - g0 at least this
     for mv in MOVES:
         if mv in out:
             continue
@@ -189,12 +194,12 @@ def move_costs(cls, bits, z, north, roads, cap=None):
         hh = nlh[U] + nlh[V]
         hh *= np.float32(0.5)
         for sign, key in ((1, mv), (-1, (-dc, -dr))):
-            e = g + np.float32(0.05 * sign)
+            e = g + np.float32(TOBLER_G0 * sign)
             np.abs(e, out=e)
-            e -= np.float32(0.05)
+            e -= np.float32(TOBLER_G0)
             if lim is not None:
                 np.maximum(e, lim, out=e)
-            e *= np.float32(3.5)
+            e *= np.float32(TOBLER_K)
             e += hh
             np.exp(e, out=e)
             e *= base
@@ -528,8 +533,7 @@ def crossings_js(cls, bits, z, north, halo, jobs, cap=None, tmp=None):
     import subprocess
     import tempfile
     P = cls.shape[0]
-    hdr = {"P": P, "halo": halo, "north": north, "K": K, "cap": cap, "roadKmh": ROAD_KMH,
-           "roadGrade": ROAD_GRADE, "gMax": G_MAX,
+    hdr = {"P": P, "halo": halo, "north": north, "K": K, "cap": cap, "roadKmh": ROAD_KMH, **SLOPE_RULE,
            "jobs": [{"grid": j["grid"], "along": j["along"], "m": j["m"], "maxSweeps": j.get("max_sweeps", 12),
                      "cells": int(len(j["cells"][0]))} for j in jobs]}
     fd, pin = tempfile.mkstemp(suffix=".in", dir=tmp)

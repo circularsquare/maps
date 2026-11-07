@@ -2,7 +2,8 @@
 // (move_costs, crossings), in node for speed. Run by walk.py's crossings_js.
 //   node isochrone/tools/terrain/cross.mjs <in file> <out file>
 // In: a JSON header line, then cls (P*P uint8), bits (P*P uint8), z (P*P float32 LE), the LC speed
-// table (256 float32). Header: {P, halo, north, K, cap, roadKmh, roadGrade, gMax, jobs: [{grid,
+// table (256 float32). Header: {P, halo, north, K, cap, roadKmh, and walk.py's SLOPE_RULE (toblerK,
+// toblerG0, heightA, heightB, roadGrade, gMax), jobs: [{grid,
 // along, m, maxSweeps, cells: n}]}, then per job its cells as int32 pairs (I, J) after the table.
 // Out: per job and direction E, W, S, N, n float32 (hours per km, Infinity where not crossed),
 // then per job one int32 of sweeps run (the most of its directions).
@@ -41,7 +42,8 @@ const dx = new Float32Array(P);
 for (let r = 0; r < P; r++) dx[r] = KM_DEG / N * Math.cos((north - (r + 0.5) / N) * Math.PI / 180);
 const dy = KM_DEG / N;
 const nlh = new Float32Array(PP);
-for (let i = 0; i < PP; i++) nlh[i] = -Math.log(1.016) + 0.0001072 * Math.max(z[i], 0);
+for (let i = 0; i < PP; i++) nlh[i] = -Math.log(H.heightA) + H.heightB * Math.max(z[i], 0);
+const TK = H.toblerK, G0 = H.toblerG0;
 
 function costs(roads) {
   const s = new Float32Array(PP), graded = new Uint8Array(PP);
@@ -59,7 +61,7 @@ function costs(roads) {
     graded[i] = g;
   }
   const C = new Float32Array(16 * PP).fill(Infinity);
-  const lim = H.cap == null ? -Infinity : -Math.log(H.cap) / 3.5;
+  const lim = H.cap == null ? -Infinity : -Math.log(H.cap) / TK;
   for (let k = 0; k < 16; k++) {
     const [dc, dr] = MV[k];
     const bt = BET[k];
@@ -76,9 +78,9 @@ function costs(roads) {
         let g = (z[v] - z[u]) / (len * 1000);
         if (graded[u] && graded[v]) g = g < -H.roadGrade ? -H.roadGrade : g > H.roadGrade ? H.roadGrade : g;
         if (Math.abs(g) > H.gMax) continue;
-        let e = Math.abs(g + 0.05) - 0.05;
+        let e = Math.abs(g + G0) - G0;
         if (e < lim) e = lim;
-        C[16 * u + k] = len * mean * Math.exp(3.5 * e + 0.5 * (nlh[u] + nlh[v]));
+        C[16 * u + k] = len * mean * Math.exp(TK * e + 0.5 * (nlh[u] + nlh[v]));
       }
     }
   }

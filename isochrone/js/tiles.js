@@ -2,6 +2,7 @@
 // hazard band (data/hazard/): fetched on demand, kept in a cache, cut into a window's grid.
 // The fetch URL is relative to the worker entry, worker.js.
 import { cfg } from './config.js';
+import { NO_HEIGHT } from './levels.js';
 
 let tiles = null;                // data/tiles/index.json, with a Set of tiles per level and kind
 let tilesBase = 'data/tiles/';
@@ -75,7 +76,7 @@ export function forTiles(w, T, TX, fn) {
 // the build has them (docs/resolution.md "Directions"): dirs.d without roads, dirs.e with roads
 // (only when roads are on), each 4 planes of the window's cells, or null where no tile has them.
 export async function loadWindow(w, dirs) {
-    if (w.f === 0.1) return loadFineWindow(w);
+    if (w.f === 0.1) return loadFineWindow(w, dirs);
     const lv = tiles.levels[w.f], T = lv.tile, TX = tiles.tilesX, N = w.cols * w.rows;
     const rd = cfg.roads && lv.roads;
     const dl = dirs && lv.dirs, el = dirs && cfg.roads && lv.dirsRoads;
@@ -96,7 +97,7 @@ export async function loadWindow(w, dirs) {
     return roads ? applyRoads(grid, roads) : grid;
 }
 
-// ---- L0.1: 1 x 1 degree tiles of data/fine/ (docs/fine.md), turned into speeds here ----
+// ---- L0.1: 1 x 1 degree tiles of data/fine/ (cfg.fineBase, docs/fine.md), turned into speeds here ----
 
 // LC100 class -> off-road km/h (docs/surface.md, tools/surface/common.py LC_SPEED); 0 = not land
 const LC_KMH = new Float32Array(256);
@@ -113,7 +114,7 @@ const SCALE = 40;                        // stored speed = km/h x 40, as every l
 const FULL = 0xFFFF;
 let fine;
 export function fineIndex() {
-    if (fine === undefined) fine = fetch('data/fine/index.json')
+    if (fine === undefined) fine = fetch(cfg.fineBase + 'index.json')
         .then(r => r.ok ? r.json() : null)
         .then(ix => {
             if (!ix) return null;
@@ -158,32 +159,66 @@ export function fineName(tr, tcw) {
            (lon >= 0 ? 'e' : 'w') + String(Math.abs(lon)).padStart(3, '0');
 }
 
-// Decoded speed tiles, name -> Promise<Uint8Array>, oldest first, ~100 MB.
+// Decoded tiles, name and roads switch -> Promise<{ s: speeds, z: heights, g: graded flags }>,
+// oldest first, ~150 MB.
 const fineCache = new Map();
+let fineBytes = 0;
 function fineTile(ix, name) {
-    let p = fineCache.get(name);
-    if (p) { fineCache.delete(name); fineCache.set(name, p); return p; }
-    const T = ix.tile;
-    p = Promise.all([fetchGz('data/fine/' + name + '.land.bin.gz'),
-                     ix.roadSet.has(name) ? fetchGz('data/fine/' + name + '.roads.bin.gz') : null])
-        .then(([land, roads]) => fineSpeed(land, roads, T, ix.terrain, ix.tfScale));
-    p.catch(() => { if (fineCache.get(name) === p) fineCache.delete(name); });
-    fineCache.set(name, p);
-    while (fineCache.size * T * T > 100e6) fineCache.delete(fineCache.keys().next().value);
+    const key = name + (cfg.roads ? '' : '-');
+    let p = fineCache.get(key);
+    if (p) { fineCache.delete(key); fineCache.set(key, p); return p; }
+    const T = ix.tile, base = cfg.fineBase, per = ix.elev ? 4 * T * T : T * T;
+    p = Promise.all([fetchGz(base + name + '.land.bin.gz'),
+                     cfg.roads && ix.roadSet.has(name) ? fetchGz(base + name + '.roads.bin.gz') : null])
+        .then(([land, roads]) => ix.elev ? fineDecode(land, roads, T) : { s: fineSpeedTf(land, roads, T, ix.terrain, ix.tfScale) });
+    p.catch(() => { if (fineCache.get(key) === p) { fineCache.delete(key); fineBytes -= per; } });
+    fineCache.set(key, p);
+    fineBytes += per;
+    while (fineBytes > 150e6 && fineCache.size > 1) { fineCache.delete(fineCache.keys().next().value); fineBytes -= per; }
     return p;
 }
 
 // Land cover speed, raised to road speed where a walkable way crosses land; water is 0 except
-// under a walkable bridge; times the L1 terrain factor of the cell's L1 cell.
-function fineSpeed(land, roads, T, TF, tfScale) {
+// under a walkable bridge.
+function cellKmh(cls, rd) {
+    if (cls === 80 || cls === 200) return rd & ROAD_BRIDGE ? ROAD_KMH : 0;
+    const kmh = LC_KMH[cls];
+    return rd & ROAD_WALK && kmh < ROAD_KMH ? ROAD_KMH : kmh;
+}
+
+// A tile of stage 2's layout: speeds (cellKmh, no terrain: the search walks the slope, js/search.js),
+// heights in metres from the plane deltas (tools/fine/build.py plane_deltas), and the cells whose
+// moves take the street grade cap: urban land, and with roads a walkable way or bridge.
+function fineDecode(land, roads, T) {
+    const n = T * T, s = new Uint8Array(n), g = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+        const cls = land[i], rd = roads ? roads[i] : 0;
+        const kmh = cellKmh(cls, rd);
+        if (!kmh) continue;
+        const v = Math.round(kmh * SCALE);
+        s[i] = v > 255 ? 255 : v;
+        if (cls === 50 || rd & (ROAD_WALK | ROAD_BRIDGE)) g[i] = 1;
+    }
+    const d = new Int16Array(land.buffer.slice(land.byteOffset + n, land.byteOffset + 3 * n));
+    const z = new Int16Array(n);   // int16 arithmetic wraps as the encoder's did
+    z[0] = d[0];
+    for (let c = 1; c < T; c++) z[c] = z[c - 1] + d[c];
+    for (let r = 1; r < T; r++) {
+        const i0 = r * T;
+        z[i0] = z[i0 - T] + d[i0];
+        for (let i = i0 + 1, e = i0 + T; i < e; i++) z[i] = d[i] + z[i - 1] + z[i - T] - z[i - T - 1];
+    }
+    return { s, z, g };
+}
+
+// A tile of stage 1's layout (data/fine_pre_t039/, kept to compare): speeds times the L1 terrain
+// factor of the cell's L1 cell; no heights.
+function fineSpeedTf(land, roads, T, TF, tfScale) {
     const out = new Uint8Array(T * T), k = T / TF, tf = land.subarray(T * T);
     for (let r = 0; r < T; r++) {
         const tfRow = ((r / k) | 0) * TF;
         for (let c = 0, i = r * T; c < T; c++, i++) {
-            const cls = land[i], rd = roads ? roads[i] : 0;
-            let kmh = LC_KMH[cls];
-            if (cls === 80 || cls === 200) kmh = rd & ROAD_BRIDGE ? ROAD_KMH : 0;
-            else if (rd & ROAD_WALK) kmh = Math.max(kmh, ROAD_KMH);
+            const kmh = cellKmh(land[i], roads ? roads[i] : 0);
             if (!kmh) continue;
             const v = Math.round(kmh * tf[tfRow + ((c / k) | 0)] / tfScale * SCALE);
             out[i] = v < 1 ? 1 : v > 255 ? 255 : v;
@@ -194,15 +229,21 @@ function fineSpeed(land, roads, T, TF, tfScale) {
 
 // The window's speeds: fine blocks from their tiles; every other block (absent from a partial
 // tile, or no tile) takes the speed of the L1 cell it lies in, roads folded in as at L1, so the
-// window needs only some fine blocks.
-async function loadFineWindow(w) {
+// window needs only some fine blocks. With stage 2 tiles, dirs gets the window's heights (z,
+// NO_HEIGHT outside fine blocks), graded flags (g) and the slope rule (slope) for levels.setSlope.
+async function loadFineWindow(w, dirs) {
     const ix = await fineIndex(), T = ix.tile;
     const grid = new Uint8Array(w.cols * w.rows);
+    const z = ix.elev ? new Int16Array(w.cols * w.rows).fill(NO_HEIGHT) : null;
+    const g = ix.elev ? new Uint8Array(w.cols * w.rows) : null;
     const jobs = [];
     forTiles(w, T, 360, (tr, tc, tcw) => {
         const name = fineName(tr, tcw);
         if (!ix.mask.has(name)) return;
-        jobs.push(fineTile(ix, name).then(t => cutInto(grid, w, t, 0, T, tr, tc)));
+        jobs.push(fineTile(ix, name).then(t => {
+            cutInto(grid, w, t.s, 0, T, tr, tc);
+            if (z) { cutInto(z, w, t.z, 0, T, tr, tc); cutInto(g, w, t.g, 0, T, tr, tc); }
+        }));
     });
     const gaps = [];
     forBlocks(ix, w.row0, w.row0 + w.rows, w.col0, w.col0 + w.cols, (r0, r1, c0, c1, on) => {
@@ -221,7 +262,9 @@ async function loadFineWindow(w) {
         for (let r = r0; r < r1; r++) {
             const src = (Math.floor((w.row0 + r) / 10) - w1.row0) * w1.cols - w1.col0;
             for (let c = c0, i = r * w.cols + c0; c < c1; c++, i++) grid[i] = l1[src + Math.floor((w.col0 + c) / 10)];
+            if (z) { z.fill(NO_HEIGHT, r * w.cols + c0, r * w.cols + c1); g.fill(0, r * w.cols + c0, r * w.cols + c1); }
         }
+    if (dirs && z) { dirs.z = z; dirs.g = g; dirs.slope = ix.slope; }
     return grid;
 }
 

@@ -45,6 +45,23 @@ export function setDirs(L, d, e) {
     if (any) L.sd = sd;
 }
 
+// Slope per move at L0.1 (docs/fine.md "Terrain"): the rule of tools/terrain/walk.py, its numbers
+// from the fine index (walk.py SLOPE_RULE). z: the window's heights (Int16, metres, NO_HEIGHT where
+// none), g: graded cells (1: urban, a walkable way or bridge). Sets L.zs, L.zg, L.zh (per cell
+// exp(-ln height factor / 2): a move's height factor is at the mean of its end cells' heights, the
+// product of theirs as it is exponential) and L.slopeT (the cost factor 1 / Tobler on grade x
+// SLOPE_STEPS, offset by SLOPE_STEPS x gMax); js/search.js reads them.
+export const SLOPE_STEPS = 1000, NO_HEIGHT = -32768;
+export function setSlope(L, z, g, rule) {
+    const n = z.length, zh = new Float32Array(n).fill(1);
+    const la = -Math.log(rule.heightA), b = rule.heightB;
+    for (let i = 0; i < n; i++) { const h = z[i]; if (h !== NO_HEIGHT) zh[i] = Math.exp(0.5 * (la + b * Math.max(h, 0))); }
+    const G = Math.round(rule.gMax * SLOPE_STEPS), T = new Float32Array(2 * G + 1);
+    for (let i = 0; i <= 2 * G; i++) T[i] = Math.exp(rule.toblerK * (Math.abs((i - G) / SLOPE_STEPS + rule.toblerG0) - rule.toblerG0));
+    L.zs = z; L.zg = g; L.zh = zh; L.slopeT = T;
+    L.slopeG = G; L.roadQ = rule.roadGrade * SLOPE_STEPS;
+}
+
 // A level: a block of cells cellDeg wide, its top-left corner at (west, north).
 export function makeLevel(grid, W, H, west, north, cellDeg, wrap) {
     const dxKm = new Float32Array(H);
@@ -53,7 +70,7 @@ export function makeLevel(grid, W, H, west, north, cellDeg, wrap) {
         dxKm[r] = cellDeg * KM_PER_DEG * Math.cos(lat * Math.PI / 180);
     }
     return { grid, W, H, west, north, south: north - H * cellDeg, east: west + W * cellDeg,
-             cellDeg, wrap, dxKm, dyKm: cellDeg * KM_PER_DEG, dist: null, sd: null };
+             cellDeg, wrap, dxKm, dyKm: cellDeg * KM_PER_DEG, dist: null, sd: null, zs: null };
 }
 
 // Nearest land cell to a point within R cells, or -1.

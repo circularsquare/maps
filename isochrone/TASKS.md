@@ -36,7 +36,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## Roads and 100 m
 
-- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; mountain tiles wait for T-039.
+- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; heights in since T-039 (1.48 GB); mountain tiles are next (`build.py` reads their heights from data/terrain/elev/, ~1 GB more).
 
 ## M2: survival
 
@@ -47,10 +47,10 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Later
 
 - T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
-- T-039 [P3] Fine level stage 2: GLO-90 elevation in the 100 m tiles, directed slope per move with the street grade cap (until then 100 m walks hill roads slower than L1, which has the 10% cap since T-084), a bucket queue in the search for every level, times in a real browser (docs/fine.md). Once T-011 is on the page an L0.1 window is ~12-16% slower than the directed L1 round it (it keeps the 1 km terrain factor; Cluj shows it); T-011's run keeps GLO-90 for the fine tiles in data/terrain/elev/. taking, 2026-11-06
+- T-093 [P3] Bucket queue in the search for every level (from T-039, fine level stage 2): a bucket queue in place of the heap was 1.3-1.6x faster in T-030's test; L0.1 windows at the cap take ~1.1-1.2 s in node with the slope per move (notes/T-039.md "Times"), canoe L10 ~0.8 s (T-035). Measure in a real browser (docs/fine.md "Times").
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
-- T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-039 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
+- T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-093 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
 - T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011. Under T-011's crossing rule fjord and river country is too fast at L3/L10 (Sogndal L1/L10 1.32, Coari 1.32): a coarse cell crossed along its land joins its neighbours, so coarse walks cross water L1 goes round (notes/T-011.md stage 3).
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.

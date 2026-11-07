@@ -1,12 +1,13 @@
 # Fine level (L0.1, 100 m)
 
 A fourth level under L10, L3 and L1 (`docs/resolution.md`), so the map keeps sharpening past
-zoom 9: streets, bridges, ponds, river banks and single hillsides. **Stage 1 is built**: land
-cover, OSM roads and bridges, the 1 km terrain factor, walking starts, for New York and Cluj
-(T-038) and for the towns and water country of "Where the fine level goes" worldwide (T-057,
-read by block in the page since T-086). Mountain tiles wait for stage 2's elevation.
+zoom 9: streets, bridges, ponds, river banks and single hillsides. **Built**: land cover, OSM
+roads and bridges, walking starts, for New York and Cluj (T-038) and for the towns and water
+country of "Where the fine level goes" worldwide (T-057, read by block in the page since T-086),
+with GLO-90 heights and directed slope per move, the rule L1 was made by (T-039). Mountain tiles
+are next (T-057).
 Measurements: `notes/T-030.md`, `notes/T-038.md`, `notes/T-047.md`, `notes/T-057.md`,
-`notes/T-086.md`.
+`notes/T-086.md`, `notes/T-039.md`.
 
 ## Grid
 
@@ -23,9 +24,12 @@ Measurements: `notes/T-030.md`, `notes/T-038.md`, `notes/T-047.md`, `notes/T-057
 | File | Part | Bytes | From |
 |---|---|---|---|
 | `.land` | land cover class | 1200 x 1200 | LC100 2019, class at the cell centre |
-| `.land` | terrain factor x 250 (stage 1) | 120 x 120 | `data/surface/terrain_factor.tif`, the L1 cell's |
-| `.land` | elevation, metres (stage 2, in place of the terrain factor) | 2 a cell, row deltas | GLO-90, bilinear north of 50 degrees |
+| `.land` | height, whole metres, int16 little-endian, as plane deltas | 2 x 1200 x 1200 | GLO-90 at the cell centre (bilinear between its posts), from T-011's `data/terrain/elev/`; ocean 0 |
 | `.roads` | road bits: 1 path, 2 local, 4 main, 8 not walkable, 16 walkable bridge | 1200 x 1200 | OSM `highway=*` ways |
+
+Plane deltas: each height minus its west and north neighbours plus its north-west one
+(`z - w - n + nw`); along the first row minus the west one, down the first column minus the
+north one, the corner as it is. They gzip 15% smaller than deltas along rows.
 
 Road kinds: path = footway, path, steps, track, bridleway, pedestrian, cycleway; local =
 residential, service, unclassified, living street, tertiary, road; main = secondary to trunk;
@@ -36,22 +40,25 @@ The worker turns these into speeds when it fetches a tile, so a toggle (roads of
 different speed table) changes no data. Roads are a file of their own so "no roads" and
 10,000 BC never fetch them, and so the OSM part stays apart for its licence (see "Publishing").
 **Town blocks.** A town tile holds only its selected 0.25 degree blocks (300 x 300 cells): every
-byte of the other blocks is 0 in both files (class, terrain factor and road bits alike), so they
+byte of the other blocks is 0 in both files (class, height and road bits alike), so they
 cost almost nothing gzipped and the files keep one layout. A tile's **block mask** is 16 bits, bit
 `4 i + j` for block row i from the north and column j from the west (0-3); 0xFFFF is a whole
 tile. Whole tiles are the test regions, water country and town tiles with all 16 blocks.
 
-`data/fine/index.json`: `tile` 1200, `terrain` 120, `tfScale` 250, `block` 300; `tiles` the
+`data/fine/index.json`: `tile` 1200, `block` 300, `elev` (the layout: heights as plane
+deltas), `slope` (the slope rule's numbers, from `tools/terrain/walk.py` `SLOPE_RULE`, so the
+page walks exactly the rule L1 was made by); `tiles` the
 whole tiles; `partial` {tile: mask} the town tiles with some blocks; `roads` the tiles with a
 `.roads` file (a tile with no OSM way has none). Whole and partial tiles are listed apart so a
 page that reads only `tiles` treats partial ones as missing rather than reading their zero
-blocks as water. Whole tiles are
-0.05-0.6 MB (median 0.3), a town block 7-51 KB (median 23); index.json is 114 KB.
+blocks as water. Whole tiles are 0.11-1.53 MB (median 0.84), a town block 13-134 KB (median
+67), heights most of it; index.json is 114 KB.
 
 ## Speeds
 
-Worked out per cell in the worker (`fineSpeed` in `js/tiles.js`), into the same uint8
-km/h x 40 grid the search reads at every level:
+Worked out per cell in the worker (`fineDecode` in `js/tiles.js`), into the same uint8
+km/h x 40 grid the search reads at every level, beside the cells' heights and which cells are
+graded (urban, or a walkable way or bridge):
 
 - **Land cover**: the LC100 speed table of `docs/surface.md`, unchanged.
 - **Roads**: a land cell with a walkable way (path, local or main) is walked at least at
@@ -62,12 +69,16 @@ km/h x 40 grid the search reads at every level:
   never closes a channel. LC100 shows every New York bridge span as water.
 - **Water**: LC100 inland water (80) and sea (200). No small-water rule at this level: ponds are
   walked round. Rivers narrower than a cell (the Somes in Cluj) are not water, as at L1.
-- **Terrain**, stage 1: the speed times the terrain factor of the L1 cell (MAP's elevation and
-  slope factors, `docs/surface.md`). Stage 2: altitude factor per cell, and slope per move from
-  the two cells' elevations, directed Tobler normalised to the flat (research/friction.md 2),
-  from a lookup table on the grade. Between two cells that both have a road or are urban, the
-  grade counts at most 10%: streets are graded, and GLO-90 is a surface model whose Midtown
-  towers would otherwise be a 171 m mountain.
+- **Terrain**: per move, in the search (`js/search.js`), the rule of the 100 m walker that made
+  L1 (notes/T-011.md 1), its numbers from index.json. A move's cost (length x the mean hours
+  per km of the cells it touches) is divided by directed Tobler normalised to the flat,
+  `exp(-3.5 (|g + 0.05| - 0.05))` on its grade g from its two end cells' heights (a knight move's
+  too), read from a table in steps of 0.1% grade; and by MAP's height factor
+  `1.016 exp(-0.0001072 h)` at the mean height of its end cells. Steeper than 45 degrees
+  (|g| > 1) is not walked. Between two graded cells the grade counts at most 10%: streets are
+  graded, and GLO-90 is a surface model whose Midtown towers would otherwise be a 171 m
+  mountain. A move with an end in a block without 100 m data takes no slope (that cell's speed is
+  its L1 cell's, terrain in it already). Hazard per km stays the cells' own.
 - **10,000 BC**: no roads; land cover speed from the era's L1 layer (no finer source exists);
   terrain from GLO-90. Shelves that are sea today have no GLO-90 and stay at L1.
 
@@ -101,13 +112,15 @@ as at L1 (`docs/canoe.md`) with three changes:
 1. `python isochrone/tools/fine/select.py` (~1 min): the rule of "Where the fine level goes"
    on the 1 km layers of `data/surface/`, into `data/fine/selection.json` (town tiles with
    their block masks, water country tiles, mountain tiles for later).
-2. `python isochrone/tools/fine/build.py world --jobs 3` (~15 min): every town and water
-   country tile, and the test regions whole. Per tile: the LC100 window from the local COG,
-   the terrain factor from `data/surface/terrain_factor.tif` (the build stops if that file
-   changes under it), road bits from `data/roads/bits/` (the T-053 world pass, `docs/roads.md`),
-   absent blocks zeroed. Every file is written to a temporary name and renamed, roads before
-   land, and `index.json` is rewritten last, so the page never sees half a tile or a tile
-   before its files. `--resume` skips tiles whose land file exists.
+2. `python isochrone/tools/fine/build.py world --jobs 2 --out fine_new` (~47 min on 2): every
+   town and water country tile, and the test regions whole, into `data/fine_new/` to check
+   (the page's `?fine=new`, `checks/fine.mjs --fine=new`) before swapping it in for
+   `data/fine/`. Per tile: the LC100 window from the local COG, heights from
+   `data/terrain/elev/` (T-011's run keeps them for every tile of the selection; the build
+   stops at a tile without one), road bits from `data/roads/bits/` (the T-053 world pass,
+   `docs/roads.md`), absent blocks zeroed. Every file is written to a temporary name and
+   renamed, roads before land, and `index.json` is rewritten last, so the page never sees half a
+   tile or a tile before its files. `--resume` skips tiles whose land file exists.
 
 `build.py tiles <name>...` makes whole tiles from `bits/`; `build.py region <name>` a test
 region with its roads read from Geofabrik extracts in `data/raw/osm/` (`REGIONS`; Cluj 3.5 min,
@@ -131,9 +144,11 @@ read from the extracts on 98.9-99.99% of the test tiles' cells (OSM edits since)
   window twice that, so the L0.1 ring is seeded from well inside L1.
 - **In `js/windows.js`**: `fineWindowFor`, then `solveWindow` as for L1, seeded on its ring from
   L1 (then L3, L10) by the same bilinear sample; reuse and cancelling as for L1. Tiles come
-  through `js/tiles.js` with their own cache of decoded speed tiles (~100 MB, 1.44 MB a tile).
-- **Times**: about 1.5 s at the cap, much less when zoomed in (notes/T-038.md). A bucket queue in
-  place of the heap is 1.3-1.6x faster (stage 2).
+  through `js/tiles.js` with their own cache of decoded tiles (~150 MB; 5.8 MB a tile: speeds,
+  heights, graded cells).
+- **Times**: 1.5-2 s at the cap in headless Chrome, 0.15 s at zoom 11.5, ~0.05 s at zoom 12
+  (notes/T-039.md "Times"); the slope per move costs about a tenth to a third more than stage 1's
+  search. A bucket queue in place of the heap is 1.3-1.6x faster (T-093).
 - **Paint**: a fourth canvas source on top (`walk01`), holes cut in L1, L3 and L10 under it.
   Cells show from about zoom 12 (5 px; 10-13 px at 13, 20-26 at 14). The map's maximum zoom is 14.
 - **Hover** and the route read L0.1 first where it is shown.
@@ -162,9 +177,9 @@ with roads (T-010, T-028), much cheaper than 100 m everywhere.
 
 About **2.8 GB** with stage 2's elevation (towns ~1 MB a tile of area: class, roads, flat
 elevation; mountains ~1.5 MB: elevation is most of it). Quarter-degree blocks keep towns small: most of a 1 degree tile round a town is fields.
-Built at stage 1 (T-057): **0.52 GB**, towns 0.48 GB (4,507 tiles), water country 0.04 GB
-(157 tiles), test regions 3 MB; 0.36 MB a tile of area. Whole tiles round every town would
-have been twice that. Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
+Built (T-057, heights since T-039): **1.48 GB** in 4,672 tiles (1,454 tiles of area), 1.0 MB a
+tile of area; without heights it was 0.52 GB. Whole tiles round every town would have been
+twice that. Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
 view stays at L1, as now.
 
 Not picked, and measured as changing least: deserts without dunes, ice, taiga and rainforest,
@@ -191,21 +206,22 @@ to cell map is kept per grid geometry. A real hex grid would not pay:
 
 ## Publishing
 
-R2 holds 135 MB for the page now (T-016). Stage 1's towns, water country and test regions are
-0.52 GB in 4,672 tiles; the whole selection with elevation ~2.8 GB (R2's free tier is 10 GB of
+R2 holds 135 MB for the page now (T-016). The towns, water country and test regions are
+1.48 GB in 4,672 tiles; the whole selection with mountains ~2.8 GB (R2's free tier is 10 GB of
 storage).
 - OSM's licence: the published `.roads` tiles are a database derived from OSM, so they are
   published under the ODbL with "© OpenStreetMap contributors" (the info panel credits OSM
   already, for the basemap). The other files and the painted map are not bound by it.
-- LC100 and GLO-90 credits go in the info panel when the level ships (a licence check of
-  GLO-90's credit line is part of T-039).
+- LC100 and GLO-90 are credited in the info panel. GLO-90's licence (research/friction.md,
+  "GLO-90 licence") asks for its "produced using" notice and a no-liability sentence, both in the
+  panel, and binds whoever we let redistribute the heights in the `.land` tiles to the same.
 
 ## Stages
 
 | Stage | Task | What | Anita sees |
 |---|---|---|---|
-| 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor. The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
-| 2 | T-039 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
+| 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor (until stage 2). The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
+| 2 | T-039 built; the bucket queue is T-093 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
 | 3 | T-050 | The canoe at L0.1: kind, bridge cells, river steps. | Paddling under bridges |
 | 4 | T-057 and T-086, towns and water country built | The tiles of "Where the fine level goes": towns and water country (stage 1 content, roads from T-053's world pass) and the page reading them by block (T-086); mountain tiles once stage 2 gives them elevation. | 100 m round every town |
 

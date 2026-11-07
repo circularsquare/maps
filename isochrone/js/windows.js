@@ -1,7 +1,7 @@
 // View windows at L3, L1 and L0.1: which cells they cover, and the solve seeded from the next
 // coarser level, layer by layer. See docs/resolution.md and docs/canoe.md 5.
 import { cfg } from './config.js';
-import { makeLevel, snap, sampleNode, setHazard, setDirs } from './levels.js';
+import { makeLevel, snap, sampleNode, setHazard, setDirs, setSlope } from './levels.js';
 import { loadWindow, loadHazardWindow, fineIndex, fineShare } from './tiles.js';
 import { loadWindowWater } from './canoedata.js';
 import { buildCanoe, shoreAt, eachCanoeNode } from './canoe.js';
@@ -89,6 +89,7 @@ export async function solveWindow(w, coarser, origin, alive, canoe) {
     const L = makeLevel(grid, w.cols, w.rows, w.west, w.north, w.cell, false);
     L.win = w;
     setDirs(L, dirs.d, dirs.e);
+    if (dirs.z) setSlope(L, dirs.z, dirs.g, dirs.slope);
     if (hzc) setHazard(L, hzc);
     if (canoe) {
         const data = await loadWindowWater(w, grid, (lng, lat) => {

@@ -4,6 +4,7 @@
 // canoe node is canoeOf[cell] >= N), joined by transfers. Minimises weight = time + K x hazard;
 // time and hazard are kept per node beside it.
 import { cfg } from './config.js';
+import { SLOPE_STEPS, NO_HEIGHT } from './levels.js';
 
 // 16 moves as flat tables: 8 neighbours, then 8 knight moves. A knight move also counts
 // the speed of the two cells it passes between, which must be land too, so a one cell wide
@@ -49,6 +50,16 @@ function dirWeights(H, dxKm, dyKm) {
     return wx;
 }
 
+// Slope per move at L0.1 (docs/fine.md "Terrain", js/levels.js setSlope): a move between two cells
+// with heights costs its mean times 1 / Tobler on its grade (looked up in L.slopeT at grade x
+// SLOPE_STEPS, clipped to the street grade cap between graded cells, not walked past gMax) times
+// the height factor of its end cells (L.zh). The grade per metre climbed is iStep per row and move.
+function slopeSteps(stepKm) {
+    const s = new Float32Array(stepKm.length);
+    for (let i = 0; i < s.length; i++) if (stepKm[i] > 0) s[i] = SLOPE_STEPS / (1000 * stepKm[i]);
+    return s;
+}
+
 // How each node was reached (Uint8), for tracing the route back (T-024). The predecessor cell is
 // the node's cell minus the move's offset; its layer is the node's own, except for a transfer.
 export const P_NONE = 0;     // the start, or not reached
@@ -85,6 +96,8 @@ async function solveWalk(L, seeds, alive) {
         const dx = MDC[k] * (dxKm[r] + dxKm[r2]) * 0.5, dy = MDR[k] * dyKm;
         stepKm[r * 16 + k] = Math.sqrt(dx * dx + dy * dy);
     }
+    const zs = L.zs, zg = L.zg, zh = L.zh, sT = L.slopeT, iStep = zs ? slopeSteps(stepKm) : null;
+    const sG = zs ? L.slopeG : 0, sG5 = sG + 0.5, rq = zs ? L.roadQ : 0, NOH = NO_HEIGHT;
     const dist = new Float32Array(N).fill(Infinity);
     const pred = new Uint8Array(N);
     const heap = new Int32Array(N);
@@ -133,6 +146,7 @@ async function solveWalk(L, seeds, alive) {
         const r = (u / W) | 0, c = u - r * W;
         const invU = inv[grid[u]];
         const sr = r * 16;
+        const za = zs ? zs[u] : NOH, gu = za !== NOH ? zg[u] : 0, zhU = za !== NOH ? zh[u] : 1;
         for (let k = 0; k < 16; k++) {
             const r2 = r + MDR[k];
             if (r2 < 0 || r2 >= H) continue;
@@ -156,6 +170,15 @@ async function solveWalk(L, seeds, alive) {
                 else mean = (mean + a * (sd[4 * i0 + X] + sd[4 * i1 + X]) + b * (sd[4 * i0 + Y] + sd[4 * i1 + Y])) * 0.25;
             } else if (k < 8) mean = (invU + inv[s]) * 0.5;
             else mean = (invU + inv[s] + inv[grid[i0]] + inv[grid[i1]]) * 0.25;
+            if (za !== NOH) {
+                const zb = zs[v];
+                if (zb !== NOH) {
+                    let q = (zb - za) * iStep[sr + k];
+                    if (gu & zg[v]) q = q > rq ? rq : q < -rq ? -rq : q;
+                    else if (q > sG || q < -sG) continue;
+                    mean *= sT[(q + sG5) | 0] * zhU * zh[v];
+                }
+            }
             const nd = du + stepKm[sr + k] * mean;
             if (nd < dist[v]) {
                 dist[v] = nd; pred[v] = P_GRID + k;
@@ -194,6 +217,8 @@ export async function solve(L, seeds, alive, canoe) {
         stepKm[r * 16 + k] = len; ux[r * 16 + k] = dx / len; uy[r * 16 + k] = -dy / len;
     }
     const sd = L.sd, wk = sd ? dirWeights(H, dxKm, dyKm) : null;
+    const zs = L.zs, zg = L.zg, zh = L.zh, sT = L.slopeT, iStep = zs ? slopeSteps(stepKm) : null;
+    const sG = zs ? L.slopeG : 0, sG5 = sG + 0.5, rq = zs ? L.roadQ : 0, NOH = NO_HEIGHT;
     // With cfg.hazard off weight is time: t is w and hz stays 0.
     const split = cfg.hazard;
     // past this weight no node can pass both stop rules
@@ -275,6 +300,7 @@ export async function solve(L, seeds, alive, canoe) {
         if (u < N && grid[u]) {
             // ---- land node: walk or carry ----
             const invU = inv[grid[u]], hqU = hq[u];
+            const za = zs ? zs[u] : NOH, gu = za !== NOH ? zg[u] : 0, zhU = za !== NOH ? zh[u] : 1;
             for (let k = 0; k < 16; k++) {
                 const r2 = r + MDR[k];
                 if (r2 < 0 || r2 >= H) continue;
@@ -300,6 +326,15 @@ export async function solve(L, seeds, alive, canoe) {
                     mean = a * (sd[4 * u + X] + sd[4 * v + X]) + b * (sd[4 * u + Y] + sd[4 * v + Y]);
                     if (k < 8) mean *= 0.5;
                     else mean = (mean + a * (sd[4 * i0 + X] + sd[4 * i1 + X]) + b * (sd[4 * i0 + Y] + sd[4 * i1 + Y])) * 0.25;
+                }
+                if (za !== NOH) {   // slope at L0.1, as in solveWalk; hazard per km stays the cells' own
+                    const zb = zs[v];
+                    if (zb !== NOH) {
+                        let q = (zb - za) * iStep[sr + k];
+                        if (gu & zg[v]) q = q > rq ? rq : q < -rq ? -rq : q;
+                        else if (q > sG || q < -sG) continue;
+                        mean *= sT[(q + sG5) | 0] * zhU * zh[v];
+                    }
                 }
                 const len = stepKm[sr + k] * f, dt = len * mean, dh = len * mq, nw = wu + dt + K * dh;
                 {   // relax, inlined

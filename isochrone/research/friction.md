@@ -117,6 +117,20 @@ separate layers rather than one baked surface.
 Recommendation: **GLO-90 for land**, **GEBCO 2024 (or ETOPO 2022 30") for sea floor** only
 where it is needed for the 10,000 BC coast.
 
+**GLO-90 licence, checked 2026-11-06 (T-039).** "Licence for COP-DEM-GLO-90-F Global 90m Full,
+Free & Open" (in ESA's `copernicus_contributing_mission_data_access_v2_cop_dem_licenses.pdf`, linked
+from dataspace.copernicus.eu's COP-DEM page): reproduction, distribution, communication to the public
+and adaptation, free, worldwide, no non-commercial clause. Article 6: adapted or modified data carry
+"produced using Copernicus WorldDEM™-90 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH
+2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved" (unmodified:
+the same without "produced using Copernicus WorldDEM™-90"); whoever distributes it, modified or
+not, adds "The organisations in charge of the Copernicus programme by law or by delegation do not
+incur any liability for any use of the Copernicus WorldDEM™-90" in a licence or legal notice, does
+not suggest endorsement, and binds anyone they let redistribute it to the same. Our heights are
+modified (bilinear at cell centres, whole metres), so the info panel carries the "produced using"
+notice and the liability sentence. The published fine tiles hold the heights: whoever is let
+redistribute them must be bound to these obligations (T-016).
+
 ### How much 1 km understates steepness (measured)
 
 Apuseni mountains tile (N46 E023, moderate hills to 1,800 m), slope from GLO-90 at 90 m

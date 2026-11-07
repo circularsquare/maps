@@ -5,6 +5,11 @@ reasoning and what it replaced.
 
 ## 2026-11-06
 
+- **L0.1 walks each move on GLO-90 heights by the L1 walker's rule** (T-039, notes/T-039.md), in
+  place of MAP's 1 km terrain factor: an L0.1 window seeded from L1 now agrees with it (0.995-1.015
+  away from the start, was 1.00-1.30). Heights stay in `.land` (one file fewer to fetch) as plane
+  deltas, 15% smaller gzipped than deltas along rows; the tiles grow 0.52 -> 1.48 GB. The slope
+  rule's numbers ride in index.json from walk.py, so the page cannot drift from L1.
 - **`cfg.access` stays 0.5 on directed walking** (T-092, notes/T-092.md): canoe L1/L10 moved 0.95
   -> 1.04, all of it walking's own shift; the canoe's part over walking is 1.00 at 0.5 to 1.0
   alike. A full access (1.0) gives 1.02 by offsetting walking's +2%, closer in lakes, further off
