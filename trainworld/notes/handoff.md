@@ -33,6 +33,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666 done-when met; on cargo tests (1 core), then smoke.
 - **keepnames** a985b1e84eba08358 (Sonnet, main tree, 1 core 0x400): T-2683 player names survive edits.
 - **yearsdest** a83f90bf0d5edb270 (Sonnet, main tree, 1 core 0x800): T-2684 years, T-2685 tutorial on homes bubbles.
+- **uitweaks** a4d9a2653761aeede (Sonnet, main tree, 0x200): T-2687 stops halo in the line colour (remove/construct keep
+  theirs: Anita confirmed), T-2688 crowding dots from 70%. yearsdest also has T-2686 (hint grey) and T-2689 (goal 1%).
+- **difficulty** a4d3c5c6cdbbc5523 (Opus, main tree, 1 core): T-2690 start city difficulty; stage 1 measure + propose
+  cut points, then WAIT for Anita's OK before the new game sheet label.
+- namespread LANDED 75c606e5 (T-2674, T-2675). T-2691 filed: "Nn" console errors under load.
 - Anita ~20:25: Tijuana "looks great now in both ways" (fares N + reference country). "No train route found" landed d575630a.
 - Done and retired this evening: ridersnow, l10nsmall (ad2c18ea6567fefa9, can be resumed for small translation
   batches), l10nshots, l10npolish, l10nunits, fareref.
@@ -57,7 +62,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2686**.
+   (Brazil, pack lock free). Next unassigned id **T-2692**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
