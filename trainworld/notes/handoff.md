@@ -32,8 +32,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **worldfix** ae45801a1a16dbcc8 (Opus, main tree): T-2702 coastal units missing from shipped countries (BR, MX, check
   all) + T-2712 Colombia GHSL blobs (DANE admin_totals; tiq pis lve held). Rows + one join; it messages before its
   join: **then hold pack writers**. Claims <= 8 cores. May file T-2725, T-2726. Commit its files when it reports.
-- **pairs** a7100cf9df5247851 (Opus, main tree, Vite 6184, 3 cores): T-2721 t1148 place pairs failing on master (check
-  ~8% under the sim's drive minutes). A sim drive-time fix is a demand change: comes back unlanded. May file T-2727.
+- pairs finished T-2721 (committed after 8ca54120): app's marketRule.ts kept T-279's ferry (30 min, 35 km/h, $50)
+  after T-2424 moved the sim to 90 min, 30 km/h, $80; check passes. Not on 8800 yet (rebuild with worldfix's batch).
 - My Vite 6195 (task b8p351viu) for smokes.
 - Next unassigned id **T-2728**.
 

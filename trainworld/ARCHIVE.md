@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2721 t1148 "place pairs" failing (2026-11-07, agent pairs): the app's main-thread ferry (marketRule.ts) still had T-279's 30 min, 35 km/h, $50; T-2424 moved the sim and pipeline to 90 min, 30 km/h, $80. App matched to the sim, check passes (worst car 0.002 min).
 - T-2695 Rest of Latin America (2026-11-07, agent worldnext): Argentina, Chile, Colombia, Peru, Uruguay and Ecuador from the world plan, 155 rows shipped (4 held: T-2712's three blobs, a lone Puerto Carreno); Buenos Aires's lost comunas put back. notes/T-2695.md.
 - T-2696 South Africa (2026-11-07, agent worldnext): South Africa with Lesotho and Eswatini, 47 rows shipped on the reach rule; Pretoria is the whole City of Tshwane. notes/T-2695.md.
 - T-2697 The Gulf (2026-11-07, agent worldnext): Saudi Arabia, the UAE, Qatar, Bahrain, Kuwait and Oman, 35 rows shipped (Farasan and Musandam held as lone zones). notes/T-2695.md.

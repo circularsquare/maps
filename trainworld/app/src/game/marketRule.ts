@@ -70,8 +70,9 @@ const HOKKAIDO_LAT = 41.4;
 export interface Crossing { kind: "channel" | "tsugaru" | "ferry"; usd: number; min: number; km?: number }
 const CHANNEL: Crossing = { kind: "channel", usd: 150, min: 60 };
 const TSUGARU: Crossing = { kind: "tsugaru", usd: 170, min: 240 };
-/** T-279: a car ferry over open water the landmass has no road across, a base plus per km. */
-export const FERRY_MIN = 30, FERRY_KMH = 35, FERRY_USD = 50, FERRY_USD_PER_KM = 0.5;
+/** T-279: a car ferry over open water the landmass has no road across, a base plus per km; the
+ * sim's numbers (intercity/drives.rs, T-2424). */
+export const FERRY_MIN = 90, FERRY_KMH = 30, FERRY_USD = 80, FERRY_USD_PER_KM = 0.5;
 const ferry = (km: number, n: number): Crossing => ({ kind: "ferry", usd: n * FERRY_USD + FERRY_USD_PER_KM * km, min: n * FERRY_MIN + (km / FERRY_KMH) * 60, km });
 
 /** T-279: a pair of places' routed drive against the rule (market-drives.bin, pipeline/market_drives.py):
