@@ -33,6 +33,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   unless numbers move >5%).
 - **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): resumed to rebase, run checks, report (T-2674, T-2675).
 - **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666; last seen on cargo tests (21:46 UTC). Ask if quiet.
+- **fareref** a24127dfc645123a5 (Opus, tree fareref): T-2679 fare multiples relative to a reference country (Anita
+  19:05, her words in the TASKS line); display only, fares charged unchanged. Pinned 0xF0 beside parking.
 - **l10nshots** a33678a02637e9875 (Opus, main tree): pass 5 screenshots ja/zh-Hans/zh-TW; layout fixes come back to me.
 
 ## Noticed by capview, not filed yet (worth small tasks)
@@ -54,7 +56,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2679**.
+   (Brazil, pack lock free). Next unassigned id **T-2680**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
