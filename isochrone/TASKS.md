@@ -8,12 +8,14 @@ view windows, 100 m for towns, water country and mountains: 5,350 tiles), on a g
 cells. Walking is on our own surface with OSM roads and directed from 90 m GLO-90 terrain at every
 level, L3 and L10 made by crossing L1 (T-011), and at 100 m by the same slope rule (T-039). The
 canoe paddles rivers, lakes and sea with currents and carries overland at x2. Water and land
-danger are on with K = 1000 h. Corridors are coloured by speed, drawn by trips and hoverable.
-Smoke passes 18/18.
+danger are on with K = 1000 h, lakes with their own temperature. Corridors are coloured by speed,
+drawn by trips and hoverable. M1 and M2 (survival) are closed, their doc tidies done (T-023,
+T-078). Smoke passes 18/18.
 
-**Next up**: the
-known coarse-level errors (T-007 fjords and rivers, T-075 islands) and M2's doc tidy (T-078).
-10,000 BC is for later. Open questions: `notes/for-anita.md`.
+**Next up**: the known coarse-level errors, T-007 stage 2 (fjords and rivers too fast at L3 and
+L10, waiting on Anita's go) and T-075 (islands); small ones: T-098 (hazard band on T-011's L1),
+T-097 (page text), T-095 (re-time on a quiet machine). 10,000 BC is for later. Open questions:
+`notes/for-anita.md`.
 
 Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
 you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC moved to later
@@ -23,33 +25,27 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## M1: canoe, today
 
-- T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Once canoe routes show on the page (T-022), compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
+- T-031 [P2] River gradient south of 60N: `sgr_dk_rav` closes 24% of paddleable length (mostly Q < 10 streams over 5 m/km) and reads lowland Amazon streams as rapids (Manaus to the sea sums to 140 m, real ~20). Canoe routes show on the page (T-022): compare a few basins with the GMTED drop-over-10 km used north of 60N (`rivers.py north_gradient`) and pick per region by eye; the Livingstone Falls stretch between OSM rapids points still runs (notes/T-020.md).
 - T-083 [P3] Desert river permanence: Cooper Creek and the Diamantina still paddle since WaterGAP says the Thomson never runs dry; try GIRES (Messager et al. 2021, CC BY 4.0) no-flow flags on hot-desert reaches. Glacier-fed desert rivers (Tarim, Hotan, Keriya) drop today since WaterGAP has no glacier melt; matters for 10,000 BC (notes/T-079.md).
 - T-075 [P3] Island water: water round an island that no river line comes near stays unreached on canoe starts (25 cells in the Amazon window at Santarem): the water is reached only from the island and the island only from the water (notes/T-036.md). The one-pixel ponds in river water were fixed by T-088; the island case needs depth counted from canoe nodes first, which lets canoes reach banks across all wide river water, so measure it first (notes/T-088.md).
 - T-065 [P3] Upstream creek-weaving: going up the Madeira or Solimoes the cheapest canoe route weaves between small rivers that share an L10 cell, paddling down some and up others (4.3 km/h at Q = 1), since the Amazon main stem upstream sits at the 2.5 km/h floor (`upMin`, T-071); Belem to Manaus still paddles ~78 h downstream on the way up. A side effect of joining rivers that share a cell (docs/canoe.md 8). Decide whether it needs fixing once Anita has seen it (notes/T-064.md, notes/T-071.md).
 - T-073 [P3] Small rivers may be too fast both ways: upstream on a Q = 1 stream is 4.3 km/h, but shallow small rivers were often dragged or poled (Lewis and Clark up the Jefferson). Check small-river records and whether a depth or width limit belongs in the upstream rule (notes/T-071.md).
 
-## Roads and 100 m
-
-
-## M2: survival
-
-- T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1 done 2026-10-26: water hazard on canoe starts, K = 1000 kept after the check trips (notes/T-006.md). Land danger is done (T-042, 2026-11-05: design, world band, page; walking trips in checks/ktrips.mjs, notes/T-042.md and T-067.md). Left: close with M2's doc tidy (T-078).
-- T-096 [P3] Check FLake lake temperatures against satellite: T-043 gives lakes ERA5's SST, else FLake's `lmlt`, which are model values; high Tibetan lakes at 2-5 C in June-August may be too cold, Titicaca 16.7 C in December-February (just over the 15 C cold line) too warm. Compare big lakes with ESA CCI Lakes (open at CEDA; subset, the whole set is 768 GB) (notes/T-043.md).
-- T-078 [P2] M2 doc tidy: spec against code, prune TASKS, fold notes (as T-023 did for M1). Last in M2, after T-006 and T-043 are closed or moved.
-
 ## Later
 
+- T-096 [P3] Check FLake lake temperatures against satellite: T-043 gives lakes ERA5's SST, else FLake's `lmlt`, which are model values; high Tibetan lakes at 2-5 C in June-August may be too cold, Titicaca 16.7 C in December-February (just over the 15 C cold line) too warm. Compare big lakes with ESA CCI Lakes (open at CEDA; subset, the whole set is 768 GB) (notes/T-043.md).
 - T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
-- T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. The bucket queue (T-093) gave the canoe L10 click only ~1.1x in Chrome and none in node: its cost is the sea edges. Try fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
 - T-007 [P3] Coarse cells across water: under T-011's crossing rule a coarse cell joins land L1 keeps apart, so fjord and river country is too fast at L3/L10 (Sogndal L1/L10 1.32, Coari 1.39). Stage 1 (design) done 2026-11-07: split coarse cells into their L1 land pieces, every piece a node with its own crossings and links (prototype: all 25 starts L1/L10 1.02 (0.93-1.21) -> 1.01 (0.93-1.13), L1/L3 to 97% within 10%; ~5 MB, search speed unchanged). Stage 2 (build_tiles.py, worker) waits on Anita's go (notes/T-007.md).
 - T-095 [P3] Re-time the solves on a quiet machine (smoke.mjs and notes/T-093/chrome.mjs, when the core ledger is near empty) and restate SPEC.md 2's 0.3-0.7 s L10 click and ~0.8 s canoe click and docs/canoe.md's canoe times; T-093's bucket queue made them 1.1-1.4x faster but was measured under full load.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.
-- T-016 [P3] Publishing: data/tiles is 735 MB since T-011 (l1 151, d1 314, e1 144, r1 66 MB); goes to R2 with the page. Try a tighter encoding (row deltas, brotli) before publishing.
+- T-097 [P3] Page text behind the model: the info panel says the view is worked out "on cells of 3 km and then 1 km" (no 100 m), and the speeds panel's "On foot" hover gives MAP's one-way slope factor ("x0.xx on a 5° slope", `js/speeds.js`) though walking is directed Tobler on 90 m heights, faster downhill (docs/fine.md "Terrain"). Reword both in `index.html` and `js/speeds.js`.
+- T-098 [P3] Rebuild the land hazard band on T-011's L1: `data/hazard/` (2026-11-06 02:39) predates the T-011 tiles (22:43), so its L3 and L10 rates are weighted by the old L1 speeds (docs/hazard.md 4); the L1 rates are per pixel and do not change. `HAZARD_OUT=hazard_next python isochrone/tools/hazard/build.py tiles` (~5-7 min, one core), compare `checks/ktrips.mjs trips 1000`, swap.
+- T-099 [P3] Drop the stage 1 fine reader: `fineSpeedTf` in `js/tiles.js` reads the 100 m layout without heights for `data/fine_pre_t039/`, which no longer exists (its comment says "kept to compare"); remove it and the `ix.elev` branch, or say why it stays.
+- T-016 [P3] Publishing: data/tiles is ~750 MB since T-011 (l1 151, d1 314, e1 144, r1 66 MB); goes to R2 with the page. Try a tighter encoding (row deltas, brotli) before publishing.
 
 ## Someday
 
-- Bike and car modes on the roads layer. In-between eras (1 AD, 1500) with HYDE. A season switch. OSM tracks and paths over passes. A heavy dugout and a big crewed canoe as canoe variants. Paleo rivers on exposed shelves. (No ids yet; filed when picked up.)
+- Bike and car modes on the roads layer. In-between eras (1 AD, 1500) with HYDE. A season switch. A K slider and roads and era toggles in the mode panel (docs/canoe.md 3). OSM tracks and paths over passes. A heavy dugout and a big crewed canoe as canoe variants. Paleo rivers on exposed shelves. (No ids yet; filed when picked up.)

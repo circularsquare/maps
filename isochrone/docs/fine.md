@@ -51,7 +51,7 @@ whole tiles; `partial` {tile: mask} the town tiles with some blocks; `roads` the
 `.roads` file (a tile with no OSM way has none). Whole and partial tiles are listed apart so a
 page that reads only `tiles` treats partial ones as missing rather than reading their zero
 blocks as water. Whole tiles are 0.11-1.53 MB (median 0.84), a town block 13-134 KB (median
-67), heights most of it; index.json is 114 KB.
+67), heights most of it; index.json is 126 KB.
 
 ## Speeds
 
@@ -165,10 +165,11 @@ mountains (90 m slopes; the 1 km slope smooths hillsides and valleys away), and 
 mixed farmland and towns with hills or rivers. One-piece cities (urban land is 5 km/h at both
 levels), sand seas, ice, taiga, unbroken forest and flat open tundra change little.
 
-Most of what stands out in farmland today is MAP's road model, not resolution: MAP walks a
-whole 1 km pixel at road speed when a road crosses it, so rural times at 100 m are 18-52%
-longer than the page shows now. That is fixed at 1 km for the whole world by our own surface
-with roads (T-010, T-028), much cheaper than 100 m everywhere.
+Farmland is left at 1 km because L1 already walks it as the 100 m level does: L1's speeds are
+the 100 m walker's crossings, roads included (`docs/resolution.md`, "Directions"), so a 100 m
+window and the L1 round it agree to under 1% 25 km out (Cluj 1.00-1.01, `checks/fine.mjs`). The
+gap measured before that (rural times at 100 m 18-52% longer, notes/T-047.md) was MAP's road
+model, which walked a whole 1 km pixel at road speed when a road crossed it.
 
 **The rule:**
 
@@ -189,11 +190,10 @@ Not picked, and measured as changing least: deserts without dunes, ice, taiga an
 flat farmland, open tundra. Dune seas gain 20% from GLO-90's slopes (Sahara) and stay out all
 the same: nobody crosses them by choice.
 
-**The coarse levels.** The same idea, coarse cells where land is uniform and fine ones where it
-is not, is the portals plan (T-007, `docs/resolution.md`): each coarse cell keeps crossing times
-between its edges worked out from the fine grid, few for a uniform cell, many for a rugged one.
-The measurement above says where that pays: the uniform tiles (gain under 0.1) are where a
-coarse cell already gives the fine answer.
+**The coarse levels.** The same idea, coarse cells where land is uniform and finer ones where it
+is not, is in T-007's design (`docs/resolution.md`, "Thin barriers"): a coarse cell that water
+cuts into pieces of land becomes one node a piece. The measurement above says where finer cells
+pay: the uniform tiles (gain under 0.1) are where a coarse cell already gives the fine answer.
 
 ## Hexes
 
@@ -209,8 +209,8 @@ to cell map is kept per grid geometry. A real hex grid would not pay:
 
 ## Publishing
 
-R2 holds 135 MB for the page now (T-016). The whole selection is 2.15 GB in 5,350 tiles (R2's
-free tier is 10 GB of storage).
+The page's data goes to R2 when it is published (T-016): the 100 m selection is 2.15 GB in 5,350
+tiles beside ~750 MB of walking levels (R2's free tier is 10 GB of storage).
 - OSM's licence: the published `.roads` tiles are a database derived from OSM, so they are
   published under the ODbL with "© OpenStreetMap contributors" (the info panel credits OSM
   already, for the basemap). The other files and the painted map are not bound by it.

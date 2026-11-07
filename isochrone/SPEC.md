@@ -20,9 +20,10 @@ The motivating question (Anita): "if you just have a canoe in 10,000 BC, how far
 Walking only, on our own 1 km surface: the Malaria Atlas Project's recipe (Weiss et al. 2020)
 rebuilt from Copernicus LC100 2019 land cover (`docs/surface.md`), its slopes from a 100 m walker
 on Copernicus GLO-90 heights (T-011, section 3), with OSM roads and paths as a layer of their own
-(`docs/roads.md`); the 3 km and ~10 km levels (4320 x 1740) are made by crossing the 1 km one. One search from the clicked cell to everywhere (Dijkstra, 16
-neighbours, wraps at 180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a
-worker with land hazard. Bands from 1 hour to 128 days, a day being 8 hours of walking. Water is
+(`docs/roads.md`); the 3 km and ~10 km levels (4320 x 1740) are made by crossing the 1 km one.
+One search from the clicked cell to everywhere (Dijkstra on a bucket queue, 16 neighbours, wraps
+at 180 degrees, a knight move may not hop a water cell) takes 0.3-0.7 s in a worker with land
+hazard. Bands from 1 hour to 128 days, a day being 8 hours of walking. Water is
 crossed only on bridges. The default start is Cluj-Napoca.
 
 A canoe start (the mode buttons, or `?mode=canoe`) searches carrying on land and the
@@ -31,11 +32,10 @@ click at 10 km. The search minimises time + K x hazard (water and land, section 
 the route to the pointer. Cells are drawn as hexagons by default (`?look=crisp` gives squares,
 `?look=diag` cut corners); the look is paint only, the search runs on square cells.
 
-Every level stores the off-road speed and, beside it, a road byte per cell that the worker folds
-in as it loads the level, so turning roads off later needs no other data. The land hazard band is
-cut to the same land (T-084). The canoe water is still cut to MAP's land and water until its
-rebuild (T-079); where ours differs (about 2% of 1 km land cells) the search handles it without
-holes (`notes/T-028.md`).
+Every level stores the off-road speed and, beside it, a road byte and four direction planes per
+cell that the worker folds in as it loads the level, so turning roads off later needs no other
+data. The land hazard band and the canoe water are cut to the same land and water, cell for cell
+(T-084, T-085).
 
 ## 3. Travel model
 
@@ -62,10 +62,13 @@ holes (`notes/T-028.md`).
   share of each (`docs/resolution.md`, "Directions"); carrying is twice that. Hazard per km and
   getting in or out use the cell's one speed, the geometric mean of the four. The 100 m level
   walks each move on its grade (section 4).
-- **Roads.** A walkable OSM way is walked at 5 km/h times the height factor and the slope factor
-  of at most a 10% grade, since roads wind up hills (T-084); a 1 km
-  cell blends road and off-road time by three times its share of 100 m road cells, capped at all
-  road (`docs/roads.md`). Walkable bridges carry walks over water; tunnels are left out.
+- **Roads.** The 100 m walker walks a walkable OSM way at 5 km/h or its land cover's speed if
+  faster, on its grade capped at 10% since roads wind up hills (T-084), and a 1 km cell's speeds
+  with roads are its crossings on that grid (T-011). Where the walker crosses a cell in no
+  direction (2.5% of 1 km land: past 80 N, small water, LC100's missing islands, cells walled by
+  water at 100 m) the cell blends road and off-road time by three times its share of 100 m road
+  cells, capped at all road (`docs/roads.md`). Walkable bridges carry walks over water; tunnels
+  are left out.
 - **Water.** A 1 km cell is water when LC100 has it half water or more; islands LC100 leaves out
   are put back from GMTED2010. Water patches under 5 km² are waded at 1 km/h (MAP's rate) instead
   of blocking (T-013). A coarse cell is land when a quarter of its 1 km cells are
@@ -87,8 +90,11 @@ holes (`notes/T-028.md`).
 
 Coarse everywhere first, then finer wherever the viewer is looking: from zoom 5 a window round
 the view is re-solved at 3 km cells, and from zoom 7 also at 1 km, each seeded at its edges by
-the next coarser answer and drawn over it. Hover reads the finest level shown. Full design,
-measured times and the thin-ridge question: `docs/resolution.md`.
+the next coarser answer and drawn over it. Hover reads the finest level shown. A coarse cell is
+one node, so where water cuts its land in two (fjords, wide rivers) L3 and L10 join banks that L1
+keeps apart and come out too fast (round Sogndal and Coari L1 takes 1.3-1.4 times as long;
+T-007). Full design and the
+thin-ridge question: `docs/resolution.md`; solve times: `notes/T-002.md`.
 
 On walking starts, where 100 m tiles are built (towns, water country and mountains, T-057), a 100 m window is
 solved once the view fits in 1.5 M cells (from about zoom 9.4): LC100 land cover, OSM roads and

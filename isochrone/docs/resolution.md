@@ -15,8 +15,8 @@ L0.1's sources, tiles and when it is solved are in `docs/fine.md`; it is seeded 
 L3, L10), painted (canvas source `walk01`), holed and hovered as the windows below.
 
 L1 is our own surface (`docs/surface.md`: LC100 land cover, GMTED2010 height and slope) under the
-water rule below, its land cells' speeds replaced by their directed crossings wherever the terrain
-run has measured them ("Directions" below). L3 and L10 are made by crossing the L1 cells (T-081,
+water rule below, its land cells' speeds replaced by their directed crossings wherever the 100 m
+walker crosses them ("Directions" below). L3 and L10 are made by crossing the L1 cells (T-011,
 the same section); a coarse cell is land when a quarter of its L1 cells are. Every level stores
 the off-road speed (uint8 km/h x 40, 0 = water), beside it a road byte per cell (`docs/roads.md`,
 "The page part"), which the worker folds into the speed as it loads a level (`applyRoads` in
@@ -26,11 +26,11 @@ the off-road speed (uint8 km/h x 40, 0 = water), beside it a road byte per cell 
 of them, named `l<level>/<tile row>_<tile col>.bin.gz` (row 0 at 85N, col 0 at 180W), road bytes
 the same in `r<level>/`. A speed tile is written where it has land, a road tile where it has a
 road byte; `data/tiles/index.json` lists both per level (as `row * 72 + col`, the road tiles under
-`roads`, the direction tiles under `dirs` and `dirsRoads`). L1 is 1137 tiles, 155 MB gzipped, and
-1040 road tiles, 59 MB; L3 is 1121 tiles, 18 MB, 1026 road tiles, 10 MB, and direction tiles of 20
-and 13 MB; L10 is 1.9 MB, 1.2 MB and 1.8 + 1.4 MB. L1's direction tiles grow with the terrain run
-(3.9 MB for its first 2.3 M cells). The build takes ~1 h on one core, in two passes (L1, then L3
-and L10 crossing it), into `data/tiles_next/` or `--out <name>`; `build_tiles.py swap <backup>
+`roads`, the direction tiles under `dirs` and `dirsRoads`). Gzipped, L1 is 1137 speed tiles,
+151 MB, 1040 road tiles, 66 MB, and direction tiles of 314 MB (`d1`, 992) and 144 MB (`e1`, 938);
+L3 is 1121 tiles, 17 MB, 1026 road tiles, 10 MB, and direction tiles of 28 and 18 MB; L10 is
+1.8 MB, 1.2 MB and 2.3 + 1.9 MB: ~750 MB in all. The build takes ~1 h on one core (19 min on
+three), in two passes (L1, then L3 and L10 crossing it), into `data/tiles_next/` or `--out <name>`; `build_tiles.py swap <backup>
 [--from <name>]` serves it by renames and moves what was served to `data/<backup>/`.
 `data/` is gitignored.
 
@@ -43,15 +43,27 @@ are on (`docs/roads.md`).
 
 ## Directions
 
-Walking is directed (T-011; the rule and its measurements: `notes/T-011.md`). Each L1 cell has
-four crossing speeds, east, west, south and north, without roads and with them, from the 100 m
-walker on GLO-90 heights (`data/terrain/l1/`, `tools/terrain/walk.py` `tile_l1`).
+Walking is directed (T-011; measurements: `notes/T-011.md`). Each L1 cell has four crossing
+speeds, east, west, south and north, without roads and with them, from the 100 m walker on GLO-90
+heights (`data/terrain/l1/`, `tools/terrain/walk.py` `tile_l1`).
 
+- **The 100 m walker** walks the L0.1 grid by the page's 16 moves and the slope rule of
+  `docs/fine.md` ("Terrain"): LC100 class speeds, with roads a walkable way at least 5 km/h and a
+  walkable bridge over water at 5 km/h, each move divided by directed Tobler on its grade and by
+  MAP's height factor. A cell's crossing in a direction is the least time from the 100 m line just
+  outside the cell to its far edge, inside the cell plus a margin of one 100 m cell, over the
+  cell's width; it is then scaled by the cell's 3-cell strip along that direction (the strip's
+  crossing over the sum of its three cells' own). With roads the same is solved on the grid with
+  roads, with a strip margin of three 100 m cells, on cells with a walkable way or bridge in
+  their 3 x 3; elsewhere, and where it would be slower, a direction keeps its value without roads.
 - **L1 speed byte**: the geometric mean of the four directions without roads. A direction the
-  walker does not cross takes that mean; a cell it crosses in no direction (water inside the
-  cell's margin, or no terrain tile yet) keeps the surface's speed and is the same every way.
-- **L1 road byte**: as before (time with roads over time without, x 250), from the geometric mean
-  with roads. A direction with roads is never slower than without.
+  walker does not cross takes that mean; a cell it crosses in no direction (2.5% of L1 land: past
+  80 N where LC100 has no class, small water, LC100's missing islands, cells walled by water at
+  100 m) keeps the surface's speed, is the same every way, and takes the road rule of
+  `docs/roads.md`.
+- **L1 road byte**: time with roads over time without, x 250 (`docs/roads.md`), from the
+  geometric means of the four directions with and without roads. A direction with roads is never
+  slower than without.
 - **Direction planes**, four int8 planes E W S N a level: `d` = 32 ln(speed that way / the speed
   byte), and `e` = 32 ln(speed that way with roads / the speed with the road byte folded in), less
   `d`. Values within ±1 (3%) are written 0. With roads on a direction's speed is the folded speed x
@@ -91,10 +103,12 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
 3. Below zoom 5 only L10 shows. From zoom 5 the worker solves an **L3 window**: the view plus a
    quarter of its size on each side. From zoom 7 it solves an L3 window of the view plus its
    full size on each side (three times as wide and tall), then an **L1 window** of the view plus
-   a quarter on each side.
+   a quarter on each side. Under an L0.1 window the L1 margin is the view's full size and the L3
+   margin twice that (`docs/fine.md`, "In the page").
 4. Window edges are rounded outwards to multiples of 0.25 degree, which is a whole number of
    cells at every level. Latitude is clipped to 85N-60S. A window is capped at 3 million cells
-   for L3 and 2 million for L1 by shrinking the margin round the view centre.
+   for L3 (1.5 million on a canoe start) and 2 million for L1 by shrinking the margin round the
+   view centre.
 5. **Seeding.** Every land cell on the window's outer ring starts at the time the next coarser
    solved level gives there: L3 from L10, L1 from the L3 window (L10 where the L3 window does not
    reach). The value is a bilinear blend of the four coarser cell centres round the point, using
@@ -144,18 +158,23 @@ stays water.
 ## Thin barriers (Anita's ridge question)
 
 A coarse cell's speeds are its best crossings of the finer cells in each direction ("Directions"),
-and an L1 cell's are the 100 m walker's on 90 m heights where the terrain run has measured them. So
+and an L1 cell's are the 100 m walker's on 90 m heights. So
 a ridge inside a cell costs what the finer walk pays to get over or round it, a gap through it is
 found (the pass is kept), and a path along a valley pays the valley's speed in that direction, not
-the ridge's. Two things still go wrong:
+the ridge's. Three things still go wrong:
 
 - **One-way passes.** A cell's four values say how fast it is crossed east, west, south and north,
   not between which parts of its edges. A ridge with one gap, or a river crossed at one bridge,
   makes the cell fast that way for every path through it.
-- **The 1 km source** where the terrain run has not reached: L1 is then the GMTED2010 surface,
-  whose 1 km slope already smooths a 100 m wide wall (research T-004).
+- **Water inside a coarse cell.** A coarse cell is one node, so where a fjord, a wide river, a
+  strait or a lake cuts its land in two, it joins both banks: a coarse walk steps in on one and out
+  on the other where L1 goes round (1.9% of L10 land cells, 0.17% at L3). Fjord and river country
+  is too fast at L3 and L10 (Sogndal L1/L10 1.32, Coari 1.39).
+- **The 1 km source** where the walker crosses a cell in no direction (2.5% of L1 land): L1 is
+  then the GMTED2010 surface, whose 1 km slope already smooths a 100 m wide wall (research T-004).
 
-The view refine fixes both wherever you look closely. Crossing times between several points on
-each edge ("portals", as in HPA*) would hold the one-way passes in the coarse solve too, and give
-Anita's idea of coarse cells in uniform land and fine ones in mountains (a uniform block needs few
-portals, a rugged one many). Not planned (T-007; notes/T-080.md weighs it).
+The view refine fixes these wherever you look closely. T-007's design splits each coarse cell
+into its L1 land pieces, every piece a node with its own crossings and links, as the canoe's water
+units are (`docs/canoe.md` 4); stage 2, the build, waits on Anita (`notes/T-007.md`). Crossing
+times between several points on each edge ("portals", as in HPA*) would also hold the one-way
+passes; not planned (notes/T-080.md weighs it).

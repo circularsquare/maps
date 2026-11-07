@@ -1,5 +1,11 @@
 # Archive
 
+- T-078 [P2] M2 doc tidy. Done 2026-11-07: SPEC, resolution, roads, fine, hazard, canoe, surface and code-map brought to T-011/T-039/T-085/T-093 (roads from the 100 m walker, canoe water on our mask, sizes, T-007's design); T-006 and T-051 closed; done tasks' one-off scripts deleted; T-097-T-099 filed; smoke 18/18.
+
+- T-051 [P2] Rural seams at L0.1 window edges. Done 2026-11-07 (closed by T-078): MAP's road model is gone (T-028), L1 is the 100 m walker's crossings (T-011) and L0.1 walks the same rule (T-039); `checks/fine.mjs` round Cluj, Genoa and Pittsburgh gives L0.1/L1 25 km out 1.003 (1.00-1.01), ring step 1.004. notes/T-039.md.
+
+- T-006 [P2] Danger and survival. Done 2026-11-07 (closed by T-078): time + K x hazard on every layer, K = 1000 h, survival in the hover; water hazard (stage 1, notes/T-006.md), land hazard from CHELSA, water distance, ice and height (T-042, T-066, T-067), lakes' own temperature (T-043). docs/canoe.md 3, docs/hazard.md.
+
 - T-043 [P3] Lake water temperature. Done 2026-11-07: big lakes already read ERA5's own SST; a lake band in `sea.bin.gz` (that SST, else ERA5's FLake `lmlt`) fixes the 137 wave-sized lakes that read far-off water (Yellowstone 24 -> 7 C); lake trips' risk moves at most 0.06 points; smoke 18/18. notes/T-043.md.
 
 - T-093 [P3] Bucket queue in the search. Done 2026-11-07: Dial's buckets under the lightest edge, both loops; weights equal the heap's in every node; L0.1 at the cap in Chrome median 1.96 -> 1.42 s, L1 and L10 1.2-1.4x, canoe L10 ~1.1x; smoke 18/18, corridors 10/10. notes/T-093.md.

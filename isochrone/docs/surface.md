@@ -1,10 +1,12 @@
 # Our walking surface
 
 Today's off-road walking speed, built by us at 1 km from primary layers with the Malaria Atlas
-Project's recipe (research/friction.md 1). It is the base later stages swap layers into: roads
-(T-010), 10,000 BC (T-012), 90 m terrain (T-011). The page's L1, L3 and L10 are built from
+Project's recipe (research/friction.md 1). The page's L1, L3 and L10 are built from
 `walk_today.tif` (`tools/build_tiles.py`, docs/resolution.md, which also has the water rule the
-page adds: LC100's missing islands and small water). Agreement with MAP: notes/T-009.md.
+page adds: LC100's missing islands and small water). Roads (T-010) and 90 m terrain (T-011) are
+added there: wherever the 100 m walker crosses an L1 cell (97.5% of land) its crossings replace
+this surface's speed, so the slope below decides only the rest. 10,000 BC (T-012) will swap layers
+in here. Agreement with MAP: notes/T-009.md.
 
 ## Grid
 

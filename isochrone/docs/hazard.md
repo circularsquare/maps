@@ -117,26 +117,27 @@ whole 128-day limit they add under 0.1%. 241-255 are unused.
 | `data/hazard/l1/<r>_<c>.bin.gz` | L1, 5° tiles of 600 x 600 | 28.5 MB, 1,135 tiles |
 | `data/hazard/index.json` | grid, coding, the tiles per level (`levels["1"].tiles`, ids r x 72 + c), as `data/tiles/index.json` | |
 
-38.6 MB in all, against 173 MB of speed tiles. Each file is gzip of one uint8 band, as the speed
+38.6 MB in all, against 169 MB of L1 and L3 speed tiles. Each file is gzip of one uint8 band, as the speed
 tiles. L0.1 windows read the L1 pixel under each cell. A separate band, not a byte inside the
 speed files: an era (T-012) or a season switch swaps the hazard files and leaves the speeds
 alone. A tile with no hazard anywhere is not written (all 0): the reader treats a missing tile
 as 0.
 
 **Coarse levels**: an L3 or L10 cell's rate is the time-weighted mean of its L1 land pixels'
-rates, weights the pixels' off-road time per metre (the same weights as the cell's speed, so a coarse
-straight crossing pays the same hazard as the fine one). A coarse cell with an avoidable bad
-corner therefore reads a little worse than the best line through it, as its speed does; the finer
-windows correct it.
+rates, weights the pixels' time per metre from the L1 speed tiles (the weights of the mean rule,
+`docs/resolution.md`, so a coarse straight crossing pays about the hazard of the fine one). A
+coarse cell's speed is its best crossing, but its rate is this mean, so a cell with an avoidable
+bad corner reads worse than the best line through it; the finer windows correct it.
 
-**What the worker multiplies.** L10's band loads once, on the first start of either mode; each
+**What the worker multiplies.** L10's band loads once, from `init`, before the first start; each
 L3 and L1 window loads its tiles beside its speeds (the same cache); an L0.1 window takes the L1
 pixel under each cell. Then one table per cell, `L.hq` = rate x hours per km (`inv` of its speed),
 the hazard per km walked, 0 on water (`setHazard`, js/levels.js). Then:
 - a land move: dh = length x f x the mean of hq over the cells whose `inv` the move averages
   (two, or four for a knight move), f = 1 walking, 2 carrying;
-- getting in or out: dh = 0.25 h x the land cell's rate, plus the land part of the step as a move
-  (half of it, or all of it to a canoe node on a land cell); the paddled half pays nothing;
+- getting in or out: dh = (0.25 h plus, within a coarse cell, the river piece's or water unit's
+  access carried, `docs/canoe.md` 4) x the land cell's rate, plus the land part of the step as a
+  move (half of it, or all of it to a canoe node on a land cell); the paddled half pays nothing;
 - weight += dt + K x dh, hazard += dh, exactly as water edges.
 
 A walking start runs the general search (`solve`, js/search.js) with its time and hazard arrays;

@@ -56,7 +56,7 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 
 | Edge | Between | Time | Directed |
 |---|---|---|---|
-| walk / carry | land node to its 16 neighbours | as now; x 2 when carrying | no (until T-011) |
+| walk / carry | land node to its 16 neighbours | as walking (`docs/resolution.md`, "Directions"); x 2 when carrying | yes, by each cell's east, west, south and north speeds (T-011) |
 | river down | canoe node to the next cell of a reach | length / (p + v) | yes |
 | river up | the reverse | length / max(p - 0.4 v, 2.5 km/h) | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
@@ -146,8 +146,8 @@ survival stop rule (section 5) does, in open ocean. The check trips and their fi
 `notes/T-006.md`.
 
 **A slider later.** K is one number in the worker; changing it re-solves (~0.3-0.8 s at L10),
-with no new data. A slider in the mode panel (T-008), log steps from 0 ("fastest, whatever the
-risk") to 10,000, costs nothing extra.
+with no new data. A slider in the mode panel, log steps from 0 ("fastest, whatever the risk")
+to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
 
 ## 4. Data per level
 
@@ -380,6 +380,6 @@ currents, waves and ice are reused.
 
 ## 10. Not built yet
 
-- A slider for K and the other toggles in the mode panel, and the era switch (T-008 later parts).
+- A slider for K and the other toggles in the mode panel, and the era switch (TASKS.md "Someday").
 - The canoe at 100 m (T-050, `docs/fine.md`).
 - 10,000 BC (T-012, section 9).

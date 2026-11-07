@@ -4,9 +4,15 @@ Roads are their own layer, from OSM, on the 1 km grid of our surface (`docs/surf
 roads" is a toggle and 10,000 BC has none. The road kinds are the 100 m level's (`docs/fine.md`,
 "Roads: OSM"), and both levels come from one pass over the extracts. The page reads it at L1, L3
 and L10 (T-028). Measurements: `notes/T-010.md` (the rule), `notes/T-053.md` (the world pass),
-`notes/T-028.md` (the page).
+`notes/T-028.md` (the page), `notes/T-011.md` (roads on the 100 m walker).
 
 ## How a road changes a cell
+
+Wherever the 100 m walker crosses an L1 cell (97.5% of L1 land; `docs/resolution.md`,
+"Directions"), the cell's speeds with roads are its crossings on the 100 m grid with roads: a
+walkable way is walked at 5 km/h or its land cover's speed if faster, on its grade capped at 10%,
+and a walkable bridge carries the walk over water. The share rule below is for the cells the
+walker crosses in no direction.
 
 MAP walks a whole 1 km pixel at a flat 5 km/h when any road crosses it, whatever the slope.
 Against 100 m with OSM roads, MAP's L1 is 2-50% off in median on the test tiles and up to 1.5x
@@ -59,16 +65,23 @@ cell at every level, beside the off-road speed, in `data/tiles/r1/`, `r3/` and
 - **On land**: the cell's time with roads over its time without, x 250 (1-249; 0 = no road or
   no change, as in towns, where land cover is 5 km/h already).
 - **On water**: a walkable bridge's speed over 5 km/h, x 250 (1-250), which makes the cell land.
-- **L1**: the rule above, cell by cell; a small-water cell blends with its 1 km/h, a cell LC100
-  leaves as sea with its 3 km/h (docs/resolution.md, "Water at L1").
-- **L3 and L10**: a coarse cell's speed is the mean time of its L1 cells, so its road byte is the
-  mean time with roads over the mean time without. Bridge cells join the mean with roads, at
+- **L1**: where the walker crosses the cell, the geometric mean of its four directions without
+  roads over the same with roads; elsewhere the rule above, cell by cell, a small-water cell
+  blending with its 1 km/h, a cell LC100 leaves as sea with its 3 km/h (docs/resolution.md,
+  "Water at L1").
+- **L3 and L10**: crossed with roads as without (docs/resolution.md, "Directions"), on coarse
+  cells within two coarse cells of an L1 road byte, the byte again the ratio of the geometric
+  means. A coarse cell that is not crossed takes the mean rule: its road byte is the mean time of
+  its L1 cells with roads over the mean time without. Bridge cells join the mean with roads, at
   their speed, and count toward the quarter-land rule: a coarse water cell they make land takes
-  the water byte. The coarse map with roads is then exactly the average of the L1 one.
+  the water byte.
+- **Directions with roads**: the `e` planes beside the `d` ones (docs/resolution.md,
+  "Directions"), fetched only with roads on.
 
 The worker folds the byte into the speed as it loads a level (`applyRoads`, `js/tiles.js`):
 speed x 250 / byte on land, byte x 0.8 (km/h x 40) on water. Everything downstream (search,
-hazard per km, canoe, paint) reads the folded speed. `cfg.roads` off, as "no roads" and 10,000 BC
+hazard per km, canoe, paint) reads the folded speed, and the search's directed speeds take the
+`e` planes on top. `cfg.roads` off, as "no roads" and 10,000 BC
 will be, skips the road files: they are never fetched.
 
 The byte depends on land cover and terrain (the grade cap), so it is rebuilt with the levels when
@@ -77,7 +90,7 @@ either changes. The OSM part depends on neither.
 ## Fetching the world
 
 The planet file (~90 GB) does not fit on C: (shared with other projects). The pass
-(`tools/roads/world.py`, running as T-053) goes extract by extract:
+(`tools/roads/world.py`, run as T-053, done 2026-11-06) goes extract by extract:
 
 1. **The list** (`tools/roads/regions.py`, into `data/roads/regions.json`): the leaves of
    Geofabrik's tree (index-v1.json, with outlines), minus groupings mostly covered by smaller
@@ -115,15 +128,14 @@ database derived from OSM, so like the 100 m `.roads` tiles (`docs/fine.md`, "Pu
 they are published under the ODbL with "© OpenStreetMap contributors"; the info panel credits
 OpenStreetMap (ODbL) for roads and paths. The road byte is also derived from LC100 (CC BY 4.0,
 credited beside it). The painted map and the travel times are produced works, not bound by the
-ODbL. What the 1 km layer adds: a second ODbL database on R2 (the page's road bytes, 68 MB),
-offered under the same terms as the 100 m tiles.
+ODbL. What the 1 km layer adds: a second ODbL database to publish (the page's road bytes and
+`e` direction planes, ~240 MB), offered under the same terms as the 100 m tiles.
 
-## Open
+## Known approximations
 
-- **The 100 m level's roads** still take the full 1 km terrain factor (`fineSpeed`), so on
-  hillsides L0.1 walks roads slower than L1 does since the grade cap (T-084). The same cap there
-  needs the height and slope factors apart in the fine tiles, or T-039's per-move slope.
+- **Canal country** (the Mekong): a road beside a canal makes an L1 cell fast along it, while at
+  100 m the canals are crossed only on bridges (34% off against 100 m with roads, 5% without;
+  notes/T-011.md). Not solved.
 - **The factor 3** is measured on eight tiles in two countries (farm and hill villages in
-  Transylvania, the New York region). Proposed: keep it for the world build and check it on a
-  few T-057 tiles elsewhere (a desert town, a rice delta, a forest track network) when they
-  exist.
+  Transylvania, the New York region); it now decides only the 2.5% of L1 land the walker does not
+  cross.
