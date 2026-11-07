@@ -8,7 +8,7 @@ import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
 import { clockTime, dayOf, exact, money, moneyCash } from "../game/format";
-import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway, withYear, yearOf } from "../game/days";
+import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway, yearOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
 import { StatusTag } from "./StatusTag";
@@ -152,7 +152,7 @@ function Clock() {
     <div class="clock">
       <div class="clock-text" data-tip={held ? t("topBar.clockHeld") : [dateTip, ...todayHols].join("\n")}>
         <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
-        <span class="date"><HolidayDot today={todayHols.length > 0} />{yearOf(day) > 1 ? withYear(dateName(day), day) : dateName(day)}</span>
+        <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
       </div>
     </div>
   );

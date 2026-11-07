@@ -18,7 +18,7 @@ nothing else is left for it to undo: a question, a drag and the selection come f
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
 the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map", T-2416), the
 save button once a drawing is up, the busy tag, and during the first layout
-the demand status's tag: the pill ring, "Calculating diagram" and a thin loading bar (hover: its
+the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
 the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
 Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` lays it out with round

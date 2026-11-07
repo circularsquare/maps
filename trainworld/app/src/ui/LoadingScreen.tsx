@@ -54,7 +54,7 @@ export function LoadBar({ fraction, step, thin, tip, quiet }: { fraction: number
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
  * the map. Pointer events pass through it to the map, except on the bar (its hover).
- * T-677: the bunny's train on top (T-2693 follow-up: only here; the small statuses have the pill ring). T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
+ * T-677: the bunny's train on top (only here; the small statuses have their bar alone, T-2728). T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
   // (T-2574: a load ended at a cached result shows its bar full a moment first)

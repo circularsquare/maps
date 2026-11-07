@@ -197,8 +197,8 @@ wide so a longer date moves nothing [T-1868].
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
   "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar
-  after it (Loading, below). Every status text has the pill ring before it and a thin bar after it
-  (none on a failure) [T-2693]: the load's own share for "Loading data"; a zone's share
+  after it (Loading, below). Every status text has a thin bar after it and nothing before it
+  (no bar on a failure) [T-2693, T-2728]: the load's own share for "Loading data"; a zone's share
   (`zoneLoads`) for a wait on a zone's load, and for bubbles on their way; the running solve's
   rounds published of all (`demandStep`) for a recomputing, behind or capped status and a click
   waiting on a solve; terrain downloads finished of the most waiting at once; and where nothing
@@ -226,8 +226,8 @@ wide so a longer date moves nothing [T-1868].
   today's fares and running costs in its hover [T-728].
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
   (figure style) and the date (normal style) on one line 6 px apart, "13:24 Mon Feb
-  24" (hover "Monday, February 24, year 1, day 29"), [T-1868]. The date carries the year from year 2 on
-  ("Mon Feb 24, year 2"); year 1 shows none [T-2684]. The day and night picture
+  24" (hover "Monday, February 24, year 1, day 29"), [T-1868]. The date never carries the year; its hover
+  does [T-2684, T-2731]. The day and night picture
   and its 2 px demand band are not in the bar: they sit at the top right of the map under the bar
   (`MapSky` in `ui/TopBar.tsx`, right 10 px and top 10 px of the map), right-aligned under the time
   and speed controls, on the wide bar and the two-row one. It is 250 px wide, shrinking to 150 px as

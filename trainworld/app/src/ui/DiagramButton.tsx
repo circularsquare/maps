@@ -2,7 +2,6 @@ import { diagramProgress, diagramReady, diagramShown, diagramWater, saveDiagramP
 import { t } from "../i18n";
 import { BusyTag } from "./BusyTag";
 import { LoadBar } from "./LoadingScreen";
-import { PillRing } from "./Spinner";
 import { Icon } from "./widgets";
 
 /** T-2160: the network diagram in place of the map, and back (no key while it is a work in progress, T-2608). */
@@ -28,7 +27,6 @@ export function DiagramTopLeft() {
       <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip={t("diagramButton.showWater")} aria-label={t("diagramButton.showWater")} aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip={t("diagramButton.savePicture")} aria-label={t("diagramButton.savePicture")} onClick={saveDiagramPicture}><Icon.download /></button>}
       {share !== null && <div class="status-tag" role="status">
-        <PillRing />
         <span class="demand-busy">{t("diagramButton.calculating")}</span>
         <LoadBar fraction={share} step={t("diagramButton.calculating")} thin tip={`${Math.floor(share * 100)}%`} />
       </div>}

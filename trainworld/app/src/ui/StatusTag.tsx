@@ -1,6 +1,6 @@
 // T-349: the demand status ("Trips here being recomputed…", "Loading data") as a
 // small tag on the map's top row, to the right of the demand buttons. It appears and goes in one step.
-// Its hover says more. T-2693: a pill ring and a thin bar in every case (see `share` below).
+// Its hover says more. T-2693: a thin bar in every case (see `share` below); no ring since T-2728.
 
 import { computed, effect, signal } from "@preact/signals";
 import { demandBehindFrom, demandScope, demandStep, demandSolving, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
@@ -14,7 +14,6 @@ import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgre
 import { selection } from "../game/ui";
 import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
-import { PillRing } from "./Spinner";
 import { bubblesWaiting, farWaiting } from "../map/commuterView";
 import { groundNet, shadeDownloads } from "../game/terrain";
 import { t } from "../i18n";
@@ -181,7 +180,6 @@ export function StatusTag() {
   const measured = share !== null;
   if (!failed && !measured) share = timeShare(kind); else stopWaitTimer();
   return <div class="status-tag" role="status" data-tip={tip}>
-    {!failed && <PillRing />}
     <span class="demand-busy">{busy}</span>
     {!failed && <LoadBar fraction={share!} step={busy} thin quiet={kind !== "load"} />}
   </div>;
