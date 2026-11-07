@@ -1,5 +1,7 @@
 # Archive
 
+- T-094 [P2] ktrips on directed walking. Done 2026-11-06: ktrips calls `setDirs` as the page does (`SYMMETRIC=1` for the old way, `REV=1` reverses the walks); canoe trips unchanged, walks 1-6% faster (Greenland K=1000 -5.6%). notes/T-094.md.
+
 - T-092 [P2] Re-measure the canoe's `cfg.access` on the T-011 tiles. Done 2026-11-06: kept at 0.5. Canoe L1/L10 0.95 -> 1.04, all walking's own shift (0.91 -> 1.02); the canoe's part over walking is 1.00. Coari 0.86, Khulna 1.05; smoke 18/18. notes/T-092.md.
 
 - T-011 [P2] 90 m terrain. Done 2026-11-06: GLO-90 streamed for 18,984 tiles, directed crossing speeds per L1 cell from a 100 m walker, L3/L10 by crossing; served. L1/L10 0.91 -> 1.02, mountains 0.78 -> 1.02; smoke 18/18. notes/T-011.md.

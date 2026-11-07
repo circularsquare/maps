@@ -14,7 +14,7 @@ globalThis.fetch = async (u) => {
 };
 const imp = (m) => import(pathToFileURL(ROOT + 'js/' + m).href);
 const { cfg, setConfig } = await imp('config.js');
-const { makeLevel, snap, setHazard } = await imp('levels.js');
+const { makeLevel, snap, setHazard, setDirs } = await imp('levels.js');
 const { solve, cellTimes, MDC, MDR, P_GRID, P_XFER, P_DOWN, P_UP } = await imp('search.js');
 const { loadWorld } = await imp('canoedata.js');
 const { buildCanoe, eachCanoeNode, canoeFrom } = await imp('canoe.js');
@@ -27,6 +27,9 @@ const grid = gunzipSync(readFileSync(ROOT + 'data/grid.bin.gz'));
 const cell = (meta.north - meta.south) / meta.height;
 const L = makeLevel(new Uint8Array(grid.buffer, grid.byteOffset, grid.length), meta.width, meta.height, meta.west, meta.north, cell, true);
 if (cfg.roads && meta.roads) applyRoads(L.grid, gunzipSync(readFileSync(ROOT + 'data/' + meta.roads)));
+// directed walking, as the page reads it (index.html loadGrid, js/session.js)
+const gz = (f) => { const b = gunzipSync(readFileSync(ROOT + 'data/' + f)); return new Uint8Array(b.buffer, b.byteOffset, b.length); };
+if (!process.env.SYMMETRIC) setDirs(L, meta.dirs ? gz(meta.dirs) : null, cfg.roads && meta.dirsRoads ? gz(meta.dirsRoads) : null);
 setHazard(L, await loadHazardWorld());
 const d = await loadWorld(L.W, L.H);
 let t0 = performance.now();
@@ -129,6 +132,8 @@ const WALKS = process.env.ONLY ? [] : [
     ['Leh-Manali', [34.16, 77.58], [32.24, 77.19]],
 ];
 
+// REV=1 walks each trip the other way (a check that directed walking differs uphill and downhill)
+if (process.env.REV) for (let i = 0; i < WALKS.length; i++) WALKS[i] = [WALKS[i][0] + ' (reverse)', WALKS[i][2], WALKS[i][1]];
 const mode = process.argv[2] || 'trips';
 if (mode === 'time') {
     const STARTS = [['Cluj', 46.77, 23.6], ['Lisbon', 38.72, -9.14], ['Jakarta', -6.1, 106.8], ['Brest', 48.39, -4.49], ['Constanta', 44.17, 28.63]];
