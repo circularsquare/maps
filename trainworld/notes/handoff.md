@@ -6,10 +6,10 @@ Updated: 2026-11-06 19:40 (Get-Date). maps-b9 is past 600k tokens: ready to be r
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **1f5de214**+. 8800 = **build 1265 (72d62101)**: NOT fares option N (08133e44), the about links (cf923482),
-  T-2678 (2921b335), pass 5 fixes (1f5de214). Rebuild once namespread/attract2 land: claim 4,
-  `node trainworld/checks/dev-nowatch.mjs 6191`, scratch `smokedev.cmd 6191`, stop that Vite by PID, snapbuild.cmd <hash>,
-  smoke8800.cmd (light + dark), tell Anita to reload.
+- master **40050f7b** = 8800 **build 1279** (dev smoke + 8800 light/dark 25/25). Has fares option N, about links,
+  T-2678, T-2672 (ja/zh numbers, startup waits for the language: top-level await in i18n/index.ts, builds fine), T-2680,
+  T-2679. Next rebuild after namespread / attract2 / parking land: claim 4, `node trainworld/checks/dev-nowatch.mjs 6191`,
+  scratch `smokedev.cmd 6191`, stop that Vite by PID, snapbuild.cmd <hash>, smoke8800.cmd, tell Anita to reload.
 - Anita is back (~19:05); cap 12. Her jekyll server stays (~3 cores outside the ledger).
 - LIVE = 821. Publish only on Anita's word (English first; ja/zh soon; languages switch on via OFFERED in i18n/intl.ts).
   maps-eb's play count ships with the next release build.
@@ -27,14 +27,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **parking** a1e7652663fd3f414 (Opus, tree parking): T-2677 BUILT, stopped for Anita: in-city rail -3 to -7% in Mexico/
   India packs, parking dollars match real (Mumbai $0.55 vs $0.60). Asked her ~19:30; on yes: resume it to run cargo
   tests, wasm, smoke, records; then land.
-- **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): resumed to rebase, run checks, report (T-2674, T-2675).
-- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666; quiet a long while: ask it.
-- **fareref** a24127dfc645123a5 (Opus, tree fareref): T-2679 fare multiples relative to a reference country (Anita
-  19:05, her words in the TASKS line); display only, fares charged unchanged.
-- **l10npolish** ae9880d84bb49a85d (Opus, MAIN tree): T-2680 (zh-TW bold, ja Cities column, TrackInspector join, ja
-  Riders word) + T-2643's EditNote/editNote/profitEstimate/editCap/StatusTag strings.
-- **l10nunits** a36b3080f7932057e (Opus, MAIN tree): T-2672 ja/zh number, money and duration forms (orchestrator's
-  call: the locale's own, 763万, $1.2億, 4分8秒), startup flash. Owns format.ts, walks.ts, tripView.ts, intl.ts, index.ts.
+- **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): rebased, on its checks (T-2674, T-2675).
+- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666 done-when met; on cargo tests (1 core), then smoke.
+- Done and retired this evening: ridersnow, l10nsmall (ad2c18ea6567fefa9, can be resumed for small translation
+  batches), l10nshots, l10npolish, l10nunits, fareref.
 - Asked Anita ~19:30: one label "calculating..." for changed lines too (instead of "loading...")? maps-b9 recommends yes.
 
 ## Noticed by capview, not filed yet (worth small tasks)
@@ -56,7 +52,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2682**.
+   (Brazil, pack lock free). Next unassigned id **T-2683**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
