@@ -195,6 +195,9 @@ export type ToClock =
    * started, or waiting for water masks, is answered `stale` at once (T-1039); handled outside
    * the queue */
   | { kind: "previewStale"; seq: number }
+  /** T-2404: the track tool's segments placed early, their state held while the pointer moves, are
+   * wanted now (the run ended, or the pointer came near them) */
+  | { kind: "release" }
   /** whether `addStation` with these arguments would succeed, nothing changed (T-311, the
    * placement ghost's colour); answered with "stationCheck" */
   | { kind: "previewStation"; seq: number; at: StationAt; platform: number }
@@ -602,7 +605,7 @@ export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`);
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";
       seq: number;

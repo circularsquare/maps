@@ -1,11 +1,14 @@
 // A grid over boxes for pointer queries (T-724): picking, the build tools' snap. Every edit makes a
 // new network, so it is built in two passes over typed arrays (a hash of the occupied cells, then
-// each cell's items) and in idle time: 5-10 ms for the real New York network's 100,000 segments.
+// each cell's items), in idle time for small sets and at once for big ones: 5-10 ms for the real
+// New York network's 100,000 segments.
 
 /** cell sides, local units: a query uses the smallest whose side covers its width */
 const CELL_SIDES = [256, 2048, 16384, 131072];
 /** an item covering more cells than this is kept apart and handed to every query */
 const BIG_CELLS = 16;
+/** items from which a level wanted is built at once rather than in idle time (`CellLevels.for`) */
+const BUILD_NOW = 4096;
 
 const hash = (cx: number, cy: number) => Math.imul(cx, 0x9e3779b1) ^ Math.imul(cy, 0x85ebca77);
 
@@ -146,6 +149,9 @@ export class CellLevels {
     if (L < 0 || !(reach >= 0)) return null;
     const had = this.level(L);
     if (had) return had;
+    // T-2404: a big set's scan costs about what building its grid does, and a pointer move scanning
+    // it each time leaves the thread no idle time to build in (T-1861): built now
+    if (this.count >= BUILD_NOW) return (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L]));
     if (!this.levels[L]) {
       this.levels[L] = "asked";
       whenIdle(() => (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L])));

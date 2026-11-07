@@ -93,6 +93,9 @@ export interface EditAnswer {
   skipped?: number;
   /** T-1407: answered before the edit's state, which `world` does not hold yet */
   early?: boolean;
+  /** T-2404: an early answer whose state waits for the pointer's rest: the blueprint edges it made
+   * or changed, local x, y, z each, for their stand-ins */
+  held?: Float32Array[];
 }
 
 /** A preview's answer: the worker's "preview" message, but for the sequence number and what only the
@@ -1071,7 +1074,7 @@ export class ClockClient {
         // (an early answer's world comes with its state, T-1407)
         if (msg.ok && msg.charge > 0 && msg.early) this.earlyShares = { seq: msg.seq, line: msg.line };
         else if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
-        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early });
+        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early, held: msg.held });
         break;
       }
       case "preview": {
@@ -1183,6 +1186,11 @@ export class ClockClient {
   dropPreview() {
     this.previews.waiting = null;
     this.staleInFlight();
+  }
+
+  /** T-2404: the state of segments placed early, held while the ghost is asked, wanted now */
+  placedNow() {
+    this.post({ kind: "release" });
   }
 
   /** the preview in flight, and whether the worker was told it is no longer wanted (T-1039) */

@@ -74,6 +74,9 @@ const SNAP_EDGE_PX = 15;
 // a branch; a node (a loose end to carry on from) keeps more
 const TRACK_NODE_PX = 12;
 const TRACK_EDGE_PX = 8;
+/** T-2404: the pointer this near a segment whose state is held (twice the node snap, so the state
+ * lands before the pointer reaches what it could snap to), unless this near the start */
+const HELD_NEAR_PX = 2 * TRACK_NODE_PX, HELD_START_PX = 3 * TRACK_NODE_PX;
 const notOnTrack = () => tr("tools.notOnTrack");
 /** T-2271: the station tool's trips-near bar is empty at 1,000 trips and full at 1M, log scaled
  * (New York's lines have 30k-1M within 1 km); its ticks (style.css `.size-bar`) are 10k and 100k */
@@ -159,6 +162,9 @@ export class Tools {
   private placing = false;
   /** T-1407: the end node of a segment answered before its state, until `world` has it (-1: none) */
   private earlyNode = -1;
+  /** T-2404: the points (local x, y, z) of the segments placed early whose state the worker holds
+   * while the pointer moves; the snap cannot see them until it lands */
+  private held: Float32Array[] = [];
   /** a double click's second click came while the segment was still being placed (T-445) */
   private endRun = false;
   private hover: Snap | null = null;
@@ -486,6 +492,7 @@ export class Tools {
     // T-1721: from any start, and before the first click for the ring
     this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.real.active ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
+    if (t === "track" && this.held.length) this.releaseNear(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
     if (t === "station") this.nameAhead(e.point.x, e.point.y);
     this.place();
@@ -748,6 +755,9 @@ export class Tools {
   reset() {
     // T-1039: a ghost asked for this run and not yet worked out is not worked out
     if (this.start) this.client.dropPreview();
+    // T-2404: the run's segments held for the pointer's rest go now
+    if (this.held.length) this.client.placedNow();
+    this.held = [];
     this.start = null;
     this.chain = [];
     this.delHover = null;
@@ -773,6 +783,12 @@ export class Tools {
     if (e.originalEvent.detail >= 2 && (this.placing || this.chain.length)) {
       if (this.placing) this.endRun = true;
       else this.reset();
+      return;
+    }
+    if (this.held.length && this.nearHeld(e.point.x, e.point.y)) {
+      this.held = [];
+      this.client.placedNow();
+      void this.heldLanded().then(() => this.trackClick(e));
       return;
     }
     let s = this.snap(e.point.x, e.point.y, e.lngLat);
@@ -842,7 +858,10 @@ export class Tools {
     }
     // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
     if (a.ok && a.early) {
+      // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
       if (p) this.overlay.renderer.keepPreviewAsPlaced();
+      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, 255, highSpeed.peek()));
+      if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
     }
     if (!a.ok || this.start !== from) return;
@@ -923,6 +942,40 @@ export class Tools {
     this.client.preview(req, (a) => {
       if (this.start && !this.real.active && this.wantKey === key) this.showPreview(a, key);
     });
+  }
+
+  /** T-2404: the pointer near a held segment, away from the start the newest one ends at: their
+   * state is wanted now, so the snap finds them by the time a click might */
+  private releaseNear(px: number, py: number) {
+    if (!this.nearHeld(px, py)) return;
+    this.held = [];
+    this.client.placedNow();
+  }
+  /** whether a held segment is within HELD_NEAR_PX of (px, py), away from the start (dropping the
+   * held list once their state has landed) */
+  private nearHeld(px: number, py: number): boolean {
+    if (this.earlyNode < 0 || world.peek()?.nodes.has(this.earlyNode)) {
+      this.held = [];
+      return false;
+    }
+    if (this.start) {
+      const [sx, sy] = this.screen(...toLocal(this.start.lng, this.start.lat));
+      if (Math.hypot(sx - px, sy - py) < HELD_START_PX) return false;
+    }
+    const r2 = HELD_NEAR_PX * HELD_NEAR_PX;
+    for (const pts of this.held)
+      for (let k = 0; k + 5 < pts.length; k += 3) {
+        const [x0, y0] = this.screen(pts[k], pts[k + 1]), [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
+        const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
+        const t = l2 ? Math.max(0, Math.min(1, ((px - x0) * dx + (py - y0) * dy) / l2)) : 0;
+        if ((x0 + t * dx - px) ** 2 + (y0 + t * dy - py) ** 2 < r2) return true;
+      }
+    return false;
+  }
+  /** T-2404: a click near a held segment waits for their state (at most 3 s), so its snap can find them */
+  private async heldLanded() {
+    const node = this.earlyNode, until = performance.now() + 3000;
+    while (node >= 0 && !world.peek()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
   }
 
   /** since when the ghost has been behind the pointer, and since when a click has waited (ms) */

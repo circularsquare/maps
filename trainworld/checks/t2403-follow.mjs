@@ -1,11 +1,15 @@
-// T-2388, T-2403: how fast the track tool's ghost follows the pointer, right after a click and in
-// steady movement. The pointer is driven by CDP on a fixed 16 ms schedule that never waits for the
-// page (a hand keeps moving while the page is busy); clicks fall mid-movement.
-//   node trainworld/checks/t2403-follow.mjs <url> <setup>   setup: new | nyc | nycdense | japan
+// T-2388, T-2403, T-2404: how fast the track tool's ghost follows the pointer, right after a click
+// and in steady movement. The pointer is driven by CDP on a fixed 16 ms schedule that never waits for
+// the page (a hand keeps moving while the page is busy); clicks fall mid-movement. Also the tool's own
+// move handler, and every grid query the snap and pick make (built, being built, carried, too wide).
+//   node trainworld/checks/t2403-follow.mjs <url> <setup>   setup: new | nyc | nycdense | japan | na
+// (japan: t737-japan-trains.save; na: Anita's North America day 383, t2606/na383.save, beside its
+// densest stations unless NA_AT=lng,lat,zoom). Before the run, demand is left to settle after the
+// camera's jump (SETTLE_S, default 600).
 // Env: SEGS (clicks, default 8), SEG_MS (ms between clicks, default 1600), STEADY_MS (moving with no
 // click first, default 4000), TRACE=1 (a Chrome trace over the clicks), PROFILE=1 (a CPU profile of
-// the main thread), STOPS=1 (the line tool's stop clicks after), OUT, LABEL, DW (demand workers),
-// EXTRA (more URL parameters, e.g. patch=check)
+// the main thread over the clicks; PROFILE=steady from the start click), STOPS=1 (the line tool's stop
+// clicks after), OUT, LABEL, DW (demand workers), EXTRA (more URL parameters, e.g. patch=check)
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { launchChrome, importSave, demandFinal, REAL_SAVE, ANGLE, ARTIFACTS } from './lib.mjs';
@@ -16,7 +20,9 @@ const SEGS = Number(process.env.SEGS ?? 8), SEG_MS = Number(process.env.SEG_MS ?
 const OUT = process.env.OUT ?? join(ARTIFACTS, 't2403');
 const LABEL = process.env.LABEL ?? SETUP;
 const JAPAN = join(ARTIFACTS, 't737-japan-trains.save');
-const AT = { new: [-74.13, 40.585, 14], nyc: [-74.13, 40.585, 14], nycdense: [-73.955, 40.68, 14], japan: [139.95, 35.87, 14] };
+const NA = join(ARTIFACTS, 't2606', 'na383.save');
+const BIG = { japan: JAPAN, na: NA };
+const AT = { new: [-74.13, 40.585, 14], nyc: [-74.13, 40.585, 14], nycdense: [-73.955, 40.68, 14], japan: [139.95, 35.87, 14], na: (process.env.NA_AT ?? '-87.75,41.80,14').split(',').map(Number) };
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const pct = (a, p) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))]); };
 await mkdir(OUT, { recursive: true });
@@ -51,8 +57,16 @@ try {
   page.on('console', (m) => { if (m.type() === 'error' && !/favicon|openfreemap|AJAXError/.test(m.text())) errors.push(m.text().slice(0, 200)); });
   await page.addInitScript(() => {
     try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch { /* */ }
-    const m = (window.__m = { on: false, frames: [], lt: [], moves: [], downs: [], previews: [], msgs: [], posts: [] });
-    const tick = (t) => { if (m.on) m.frames.push(t); requestAnimationFrame(tick); };
+    const m = (window.__m = { on: false, frames: [], lt: [], moves: [], downs: [], previews: [], msgs: [], posts: [], moveMs: [], grid: [], objs: [] });
+    let lastNodes = null, lastNet = null, lastWorld = null;
+    const tick = (t) => {
+      if (m.on) {
+        m.frames.push(t);
+        const tw = window.tw, w = tw?.world?.value, n = tw?.renderer?.net;
+        if (w && (w !== lastWorld || w.nodes !== lastNodes || n !== lastNet)) { m.objs.push([t, w !== lastWorld ? 1 : 0, w.nodes !== lastNodes ? 1 : 0, n !== lastNet ? 1 : 0]); lastWorld = w; lastNodes = w.nodes; lastNet = n; }
+      }
+      requestAnimationFrame(tick);
+    };
     requestAnimationFrame(tick);
     m.ltAll = [];
     try { new PerformanceObserver((l) => { for (const e of l.getEntries()) { if (m.on) m.lt.push([e.startTime, e.duration]); m.ltAll.push([e.startTime, e.duration]); if (m.ltAll.length > 500) m.ltAll.shift(); } }).observe({ type: 'longtask', buffered: false }); } catch { /* */ }
@@ -64,6 +78,8 @@ try {
       const tw = window.tw;
       if (!tw?.world || !tw.client || !tw.renderer) return;
       clearInterval(hook);
+      const tl = tw.tools;
+      if (tl) { const mv = tl.move.bind(tl); tl.move = (e) => { const t = performance.now(); try { return mv(e); } finally { if (m.on) m.moveMs.push([t, performance.now() - t]); } }; }
       const c = tw.client, recv = c.receive.bind(c), post = c.post.bind(c);
       c.receive = (msg) => { const t = performance.now(); try { return recv(msg); } finally { if (m.on && msg.kind !== 'cash') m.msgs.push([t, msg.kind === 'state' && msg.state.ms ? `state[w ${msg.state.ms.map((x) => Math.round(x)).join('+')}]` : msg.kind, performance.now() - t]); } };
       c.post = (msg, tr) => { if (m.on && msg.kind !== 'epoch') m.posts.push([performance.now(), msg.kind + (msg.op ? ':' + msg.op.op : '')]); return post(msg, tr); };
@@ -85,10 +101,10 @@ try {
   await page.goto(`${BASE}?debug=1&new=1&demandWorkers=${dw}${process.env.EXTRA ? '&' + process.env.EXTRA : ''}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && window.tw.tools, undefined, { timeout: 180000 });
   const t0 = Date.now();
-  if (SETUP === 'nyc' || SETUP === 'nycdense' || SETUP === 'japan') {
-    await importSave(page, await readFile(SETUP === 'japan' ? JAPAN : REAL_SAVE));
+  if (SETUP === 'nyc' || SETUP === 'nycdense' || BIG[SETUP]) {
+    await importSave(page, await readFile(BIG[SETUP] ?? REAL_SAVE));
     await page.waitForFunction((n) => (window.tw.world.value?.save?.lines?.length ?? 0) >= n, SETUP === 'japan' ? 300 : 100, { timeout: 900000, polling: 500 });
-    if (SETUP !== 'japan') await demandFinal(page, { timeout: 900000 }).catch(() => log('no demand final'));
+    if (!BIG[SETUP]) await demandFinal(page, { timeout: 900000 }).catch(() => log('no demand final'));
     else {
       // settled: the clock worker answers a trivial query in under 50 ms and the main thread has had
       // no long task for 5 s, checked every 5 s, at most JAPAN_WAIT s
@@ -123,6 +139,16 @@ try {
   out.figuresReady = await figures();
   log('figures at ready', out.figuresReady);
 
+  if (SETUP === 'na' && !process.env.NA_AT) {
+    // beside the densest cluster of stations: the one with most others within 15 km, 3 km east of it
+    AT.na = await page.evaluate(() => {
+      const st = window.tw.world.value.save.stations;
+      let best = st[0], bn = -1;
+      for (let i = 0; i < st.length; i += 3) { let c = 0; for (const o of st) if (Math.abs(o.lat - st[i].lat) < 0.135 && Math.abs(o.lng - st[i].lng) < 0.18) c++; if (c > bn) (bn = c), (best = st[i]); }
+      return [best.lng + 0.036, best.lat, 14, best.name, bn];
+    });
+    log('na at', JSON.stringify(AT.na));
+  }
   const [lng, lat, zoom] = AT[SETUP];
   await page.evaluate(async ([lng, lat, zoom]) => {
     const ui = await import('/src/game/ui.ts');
@@ -131,6 +157,20 @@ try {
     window.tw.map.jumpTo({ center: [lng, lat], zoom });
   }, [lng, lat, zoom]);
   await page.waitForTimeout(5000);
+  // the jump makes demand solve the view's area: wait until no solve has been logged for 10 s
+  {
+    const until = Date.now() + Number(process.env.SETTLE_S ?? 600) * 1000;
+    let last = '';
+    for (;;) {
+      const s = await page.evaluate(async () => { const d = window.twDemand, v = d?.view?.(), a = await import('/src/game/achievements.ts'); return `${d?.log?.length}/${v?.version}/${(a.demandFigures.value?.trips ?? 0) > 0}/${v?.final}/${!!d?.client?.waiting}`; });
+      if (s.includes('/false/')) { last = ''; if (Date.now() > until) { log('demand not settled', s); break; } await page.waitForTimeout(5000); continue; }
+      if (s === last && /\/true\/false$/.test(s)) break;
+      if (Date.now() > until) { log('demand not settled', s); break; }
+      last = s;
+      await page.waitForTimeout(10000);
+    }
+    log('demand settled', last);
+  }
   // whether the snap's grids answer (null: every node and track point is scanned on each move)
   const probe = () => page.evaluate(async () => {
     const tw = window.tw, si = await import('/src/map/snapIndex.ts'), geo = await import('/src/map/geo.ts');
@@ -139,6 +179,22 @@ try {
     const nn = si.nodesNear(tw.world.value, x, y, 200), en = si.edgesNear(tw.renderer.net, x, y, 200);
     return { nodes: nn === null ? 'scan' : nn.length, edges: en === null ? 'scan' : en.length, ms: +(performance.now() - t).toFixed(1), version: tw.world.value.version };
   });
+  // the camera, and every grid query from here on: built, still being built, or too wide
+  out.camera = await page.evaluate(async () => {
+    const tw = window.tw, pick = await import('/src/map/pick.ts'), ci = await import('/src/map/cellIndex.ts');
+    const ov = tw.overlay ?? tw.renderer?.overlay, mm = ov?.camMatrix, cv = tw.map.getCanvas();
+    const at = ov ? pick.pointerLocal(ov, cv.clientWidth / 2, cv.clientHeight / 2) : null;
+    const P = ci.CellLevels.prototype, orig = P.for;
+    P.for = function (reach) {
+      const sides = [256, 2048, 16384, 131072], L = sides.findIndex((s) => 2 * reach <= s);
+      const st = L < 0 ? 'wide' : this.levels[L] === undefined ? (this.from ? 'carry?' : 'none') : this.levels[L] === 'asked' ? 'asked' : 'built';
+      const t = performance.now(), g = orig.call(this, reach), m = window.__m;
+      if (m.on) m.grid.push([t, this.count, L, st, g ? 1 : 0, performance.now() - t]);
+      return g;
+    };
+    return { globe: ov?.globe, pitch: tw.map.getPitch(), bearing: tw.map.getBearing(), zoom: tw.map.getZoom(), m3: mm?.[3], m7: mm?.[7], at: at && at.map((v) => +v.toFixed(3)) };
+  });
+  log('camera', JSON.stringify(out.camera));
   out.gridProbe = [await probe()];
   await page.waitForTimeout(3000);
   out.gridProbe.push(await probe());
@@ -169,7 +225,7 @@ try {
       const t = Date.now() - start;
       const [x, y] = pos(t);
       if (pi < plan.length && t >= plan[pi].at) {
-        if (process.env.PROFILE === '1' && plan[pi].kind === 'seg' && !profiling) {
+        if (((process.env.PROFILE === '1' && plan[pi].kind === 'seg') || process.env.PROFILE === 'steady') && !profiling) {
           profiling = true;
           cdp.send('Profiler.enable').then(() => cdp.send('Profiler.setSamplingInterval', { interval: 200 })).then(() => cdp.send('Profiler.start')).catch((e) => log('profiler', e.message));
         }
@@ -206,7 +262,21 @@ try {
     await writeFile(join(OUT, `${LABEL}.trace.json`), parts.join(''));
     log('trace written');
   }
-  const raw = await page.evaluate(() => { const m = window.__m; return { frames: m.frames, lt: m.lt, moves: m.moves, downs: m.downs, previews: m.previews, msgs: m.msgs, posts: m.posts, editLog: window.tw.client.editLog.slice(-20), edges: window.tw.world.value.edges.length }; });
+  const raw = await page.evaluate(() => { const m = window.__m; return { frames: m.frames, lt: m.lt, moves: m.moves, downs: m.downs, previews: m.previews, msgs: m.msgs, posts: m.posts, moveMs: m.moveMs, grid: m.grid, objs: m.objs, editLog: window.tw.client.editLog.slice(-20), edges: window.tw.world.value.edges.length }; });
+  {
+    // the tool's own move handler, steady (before the first segment click) and after the clicks
+    const firstSeg = raw.downs[1]?.[0] ?? 1e12;
+    const st0 = (a) => ({ n: a.length, p50: pct(a, 0.5), p95: pct(a, 0.95), max: pct(a, 1) });
+    out.moveHandler = { steady: st0(raw.moveMs.filter(([t]) => t < firstSeg).map(([, d]) => d * 10).map((x) => x / 10)), after: st0(raw.moveMs.filter(([t]) => t >= firstSeg).map(([, d]) => d)) };
+    out.moveHandlerTenths = { steady: raw.moveMs.filter(([t]) => t < firstSeg).map(([, d]) => Math.round(d * 10)).sort((a, b) => a - b).filter((_, i, a) => i % Math.max(1, Math.floor(a.length / 20)) === 0) };
+    const byKind = {};
+    for (const [, count, L, st, ok, ms] of raw.grid) { const k = `${count}/L${L}/${st}/${ok}`; (byKind[k] ??= [0, 0])[0]++; byKind[k][1] += ms; }
+    out.gridQueries = Object.fromEntries(Object.entries(byKind).map(([k, [n, ms]]) => [k, `${n} q, ${ms.toFixed(1)} ms`]));
+    out.objChanges = raw.objs.map(([t, w, nd, ne]) => `${Math.round(t - (raw.downs[0]?.[0] ?? 0))}:${w}${nd}${ne}`);
+    log('move handler', JSON.stringify(out.moveHandler), 'tenths', JSON.stringify(out.moveHandlerTenths));
+    log('grid queries', JSON.stringify(out.gridQueries));
+    log('world/nodes/net changes (ms after start click)', out.objChanges.length, out.objChanges.slice(0, 60).join(' '));
+  }
   // page times to epoch
   const E = (t) => origin + t;
   const prevs = raw.previews.filter((p) => p.drawn && p.move >= 0).map((p) => ({ ...p, moveTs: E(raw.moves[p.move][0]), drawnE: E(p.drawn), askedE: E(p.asked), answeredE: E(p.answered) }));

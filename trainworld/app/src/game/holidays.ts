@@ -43,9 +43,22 @@ export const kindIn = (country: string | null, day: number) => kindOfIn(data.val
 
 /** A line's country (T-872): its first stop's, as its local time is. */
 export function lineCountry(stops: readonly string[]): string | null {
-  const s = stops.length ? world.value?.save.stations.find((x) => x.id === stops[0]) : undefined;
-  return s ? countryAt(s.lng, s.lat) : null;
+  const st = world.value?.save.stations;
+  if (!stops.length || !st) return null;
+  // T-2404: asked per line on every state (the Lines tab), ~200 ms on all of Japan done by search
+  let byId = stationsById.get(st);
+  if (!byId) stationsById.set(st, (byId = new Map(st.map((x) => [x.id, x]))));
+  const s = byId.get(stops[0]);
+  if (!s) return null;
+  const outlines = outlinesIn.value;
+  let c = stationCountry.get(s);
+  if (!c || c.outlines !== outlines) stationCountry.set(s, (c = { outlines, country: countryAt(s.lng, s.lat) }));
+  return c.country;
 }
+/** the world's stations by id, and each station's country while the zone outlines stay (a moved
+ * station is a new object) */
+const stationsById = new WeakMap<readonly object[], Map<string, { lng: number; lat: number }>>();
+const stationCountry = new WeakMap<object, { outlines: unknown; country: string | null }>();
 
 const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
 export const countryName = (cc: string): string => regionNames?.of(cc) ?? cc;

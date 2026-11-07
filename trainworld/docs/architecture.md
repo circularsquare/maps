@@ -93,10 +93,19 @@ Web first, so it can be shared as a link.
   state, trips and boarding hour and answers it (`later` in the clock worker; any other message, or
   trips sent from a timer, runs the follow-up first, so nothing else sees the model ahead of its
   state). The track tool's blueprint segment that changes no line for demand asks `early`: it is
-  answered before its state (the worker waits up to 30 ms for the next ghost's ask), the tool asks
-  that ghost from the answer's node, the ghost just placed is drawn as the stand-in for the new
-  blueprint until the next network is set (`Renderer.keepPreviewAsPlaced`), and the client takes
-  that state after the next paint (`ghostFirst`). A state carries only the edges,
+  answered before its state, the tool asks the next ghost from the answer's node, and the ghost
+  just placed is drawn as the stand-in for the new blueprint until the next network is set
+  (`Renderer.keepPreviewAsPlaced`). **Its state waits for the pointer to rest** [T-2404]: the
+  worker holds the follow-up while ghosts keep being asked, until none has been asked for 220 ms,
+  5 s after the first segment held, or a message other than a preview, a line query, demand's
+  results, the clock or the next early segment comes, which joins it (one state for both); the
+  hourly trips go without it, since a blueprint changes no line's run. A segment that paid (a
+  junction off built track) is not held. Each held segment is drawn as a stand-in: its ghost, or
+  the edges the early answer carries (`held`) when no ghost of it was answered
+  (`Renderer.addPlaced`). The tool asks for the state at once (`release`) when the run ends and
+  when the pointer comes within 24 px of a held segment away from the start, since the snap sees a
+  segment only once its state lands; a click there waits for that state (at most 3 s) before it
+  snaps. The client takes the state after the next paint (`ghostFirst`). A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last
