@@ -498,7 +498,7 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map. With `?
 none of this runs.
 
 - **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
-  with a floor, doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
+  with a floor (falling away from the networks on a big map, below), doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
 - **The cut** (a map 600 km across or more; T-2609): empty bands across the whole map are drawn narrow, so the land
   between far-apart networks (the Plains between Denver and Chicago) condenses to a band the lines cross. A network
   station is one with 2 others within 10 km (a lonely stop on a long line is not). Each column of the lattice whose
@@ -509,6 +509,12 @@ none of this runs.
   the warp stay in real metres, so what follows the sheet is unchanged. On such a map, land farther than 25 km from
   every network station costs as little as water to stretch unevenly, even beside a lonely line or inside a zone with
   stations elsewhere (the Los Angeles zone's empty east), so the networks get the room they ask for.
+- **The floor's fall** (the same maps; T-2625): the floor falls away from the networks in both directions, so land in
+  one network's column and another's row condenses too. At each lattice node it is the best of the network stations'
+  own scales times (1 + d / 2 km)^-0.5, d the distance to that station, at most the floor and at least 0.1 of it. A
+  scale falling as the square root of distance is what the sheet can draw with its uneven stretch held to 2:1, inside
+  the fold guard. A station of no network asks at most the floor where it is. To keep the networks at their ask, the
+  size pull on land near lines is 3 times as strong and the rounds raise the cores' wish twice.
 - **The lattice**: a quadtree of square cells, fine where the field is high or changes fast and near coasts with lines,
   coarse elsewhere (512 finest cells along a city map's longer side, 1024 on a map 600 km across or more).
 - **The rounds**: each cell's map (from its rest shape) is pulled toward its planned size at its current turn, with a cost to stretch it

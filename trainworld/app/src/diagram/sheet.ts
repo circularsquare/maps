@@ -47,6 +47,14 @@ export interface SheetOptions {
   cutMin: number;
   /** on such a map, land farther than freeKm from every network station costs aWater to stretch unevenly (0: off) */
   freeKm: number;
+  /** on such a map, the floor falls away from the networks: each node's the best of the network stations' scales times
+   * (1 + distance / farKm)^-farP, at most the floor and at least farMin of it; a station of no network asks at most the
+   * floor where it is; the size pull on land near lines is times farS; and the rounds are `scheduleFar` (T-2625; farP 0: off) */
+  farP: number;
+  farKm: number;
+  farMin: number;
+  farS: number;
+  scheduleFar: string;
   /** a cell near folding, or under `lo` of its planned size, is held with up to this weight */
   wFold: number;
   lo: number;
@@ -110,11 +118,11 @@ export interface SheetOptions {
 export const SHEET: SheetOptions = {
   dial: 0.5, D: 40, maxStep: 1.6, gap: 4, core: 1.8, coreCountry: 2.1,
   aLine: 4, sLine: 1, sMax: 6, aLand: 2, sLand: 0.1, aWater: 0.1, sWater: 0.1,
-  cutKm: 10, cutN: 2, cutD: 20, cutMin: 0.02, freeKm: 25,
+  cutKm: 10, cutN: 2, cutD: 20, cutMin: 0.02, freeKm: 25, farP: 0.5, farKm: 2, farMin: 0.1, farS: 3,
   wFold: 10, lo: 0.3, nearKm: 3, landShare: 0.4,
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
-  schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12",
+  schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12", scheduleFar: "e-2:10:0.3,raise,e-2:6:0.3,raise,e-2:4:0.3,e0:5:0.3,s12",
   settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6,
 };
 
@@ -462,7 +470,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   // scale (twice the field's own rate, T-2629), at least cutMin. Empty bands across the whole map are drawn narrow; a cell's rest
   // shape is its columns' by its rows'. Only on a map 600 km across or more: a city map's margins are its context
   // (Long Island's east end)
-  const cutM = E < 6e5 ? 0 : o.cutKm * 1000, kxF = new Float64Array(GX).fill(1), kyF = new Float64Array(GY).fill(1), xs: number[] = [], ys: number[] = [];
+  const cutM = E < 6e5 ? 0 : o.cutKm * 1000, kxF = new Float64Array(GX).fill(1), kyF = new Float64Array(GY).fill(1), xs: number[] = [], ys: number[] = [], netSt = new Uint8Array(n);
   if (cutM > 0) {
     const H = new Map<number, number[]>(), key = (i: number, j: number) => i * 100003 + j;
     for (let s = 0; s < n; s++) { const k = key(Math.floor(PX[s] / cutM), Math.floor(PY[s] / cutM)); let l = H.get(k); if (!l) H.set(k, (l = [])); l.push(s); }
@@ -470,7 +478,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       let c = 0;
       const ci = Math.floor(PX[s] / cutM), cj = Math.floor(PY[s] / cutM);
       for (let a = -1; a <= 1 && c < o.cutN; a++) for (let b = -1; b <= 1 && c < o.cutN; b++) for (const t of H.get(key(ci + a, cj + b)) ?? []) if (t !== s && Math.hypot(PX[t] - PX[s], PY[t] - PY[s]) < cutM && ++c >= o.cutN) break;
-      if (c >= o.cutN) xs.push(PX[s]), ys.push(PY[s]);
+      if (c >= o.cutN) xs.push(PX[s]), ys.push(PY[s]), (netSt[s] = 1);
     }
     const rate = (sFloor * Math.LN2) / o.cutD;
     const band = (v: number[], k: Float64Array, o0: number) => {
@@ -489,11 +497,52 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   const kxS = new Float64Array(GX + 1), kyS = new Float64Array(GY + 1);
   for (let i = 0; i < GX; i++) kxS[i + 1] = kxS[i] + kxF[i];
   for (let j = 0; j < GY; j++) kyS[j + 1] = kyS[j] + kyF[j];
+  // the floor per lattice node on a country map (T-2625): the best of the network stations' own scales fallen as
+  // (1 + distance / farKm)^-farP, never above the floor, nor under farMin of it. A scale falling as r^-p round a network
+  // is what a map can draw with its uneven stretch held to 1 / (1 - p) (the radial stretch r^(1-p)), 2:1 at p 0.5,
+  // inside the fold guard; a fall from the floor itself, or faster, asks the ring round a network for more and the
+  // sheet folds or never settles (notes/T-2625.md)
+  const far = cutM > 0 && o.farP > 0 && xs.length > 0, LfN = new Float64Array(GN).fill(lf);
+  if (far) {
+    // each node carries its best station and that station's distance from neighbour to neighbour, as a chamfer distance
+    const sL = new Float64Array(GN).fill(-Infinity), sD = new Float64Array(GN).fill(Infinity), r0 = o.farKm * 1000, hd2 = h * Math.SQRT2;
+    const val = (L: number, d: number) => L - o.farP * Math.log(1 + d / r0);
+    for (let s = 0; s < n; s++) {
+      if (!netSt[s]) continue;
+      const fi = (PX[s] - bx0) / h, fj = (PY[s] - by0) / h, ls = Math.log(sSt[s]);
+      for (let j = Math.max(0, Math.floor(fj)); j <= Math.min(GY, Math.ceil(fj)); j++) for (let i = Math.max(0, Math.floor(fi)); i <= Math.min(GX, Math.ceil(fi)); i++) {
+        const v = j * GW + i, d = Math.hypot(i - fi, j - fj) * h;
+        if (val(ls, d) > val(sL[v], sD[v])) (sL[v] = ls), (sD[v] = d);
+      }
+    }
+    for (let pass = 0; pass < 4; pass++) {
+      const s = pass & 1 ? -1 : 1;
+      for (let jj = 0; jj < GH; jj++) {
+        const j = s > 0 ? jj : GH - 1 - jj;
+        for (let ii = 0; ii < GW; ii++) {
+          const i = s > 0 ? ii : GW - 1 - ii, v = j * GW + i;
+          let bL = sL[v], bD = sD[v], bv = val(bL, bD);
+          const take = (u: number, step: number) => { const c = val(sL[u], sD[u] + step); if (c > bv) (bv = c), (bL = sL[u]), (bD = sD[u] + step); };
+          if (i - s >= 0 && i - s < GW) take(v - s, h);
+          if (j - s >= 0 && j - s < GH) {
+            const u = v - s * GW;
+            take(u, h);
+            if (i - s >= 0 && i - s < GW) take(u - s, hd2);
+            if (i + s >= 0 && i + s < GW) take(u + s, hd2);
+          }
+          (sL[v] = bL), (sD[v] = bD);
+        }
+      }
+    }
+    const lmin = lf + Math.log(o.farMin);
+    for (let v = 0; v < GN; v++) LfN[v] = Math.max(lmin, Math.min(lf, val(sL[v], sD[v])));
+  }
+  const floorAt = (x: number, y: number) => LfN[Math.min(GY, Math.max(0, Math.round((y - by0) / h))) * GW + Math.min(GX, Math.max(0, Math.round((x - bx0) / h)))];
   const Lf = new Float64Array(GN);
   {
     const Lw = new Float64Array(GN), Ws = new Float64Array(GN), gx = new Float64Array(GW), gy = new Float64Array(GH);
     for (let s = 0; s < n; s++) {
-      const R = Math.max(1500, d4[s], 0.75 * h, 0.75 * hRef), ls = Math.log(sSt[s]), k2 = 1 / (2 * R * R);
+      const R = Math.max(1500, d4[s], 0.75 * h, 0.75 * hRef), ls = far && !netSt[s] ? Math.min(Math.log(sSt[s]), floorAt(PX[s], PY[s])) : Math.log(sSt[s]), k2 = 1 / (2 * R * R);
       const i0 = Math.max(0, Math.floor((PX[s] - 3 * R - bx0) / h)), i1 = Math.min(GX, Math.ceil((PX[s] + 3 * R - bx0) / h));
       const j0 = Math.max(0, Math.floor((PY[s] - 3 * R - by0) / h)), j1 = Math.min(GY, Math.ceil((PY[s] + 3 * R - by0) / h));
       for (let i = i0; i <= i1; i++) { const dx = bx0 + i * h - PX[s]; gx[i] = Math.exp(-dx * dx * k2); }
@@ -501,7 +550,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       for (let j = j0; j <= j1; j++) for (let i = i0, v = j * GW + i0; i <= i1; i++, v++) { const w = gx[i] * gy[j]; (Lw[v] += w * ls), (Ws[v] += w); }
     }
     const W0 = 0.05;
-    for (let v = 0; v < GN; v++) Lf[v] = Math.max(lf, (Lw[v] + W0 * lf) / (Ws[v] + W0));
+    for (let v = 0; v < GN; v++) Lf[v] = Math.max(LfN[v], (Lw[v] + W0 * LfN[v]) / (Ws[v] + W0));
   }
   // between neighbouring nodes the field may fall at most to double every D drawn pitches and maxStep a cell: sweeps
   // forward and back raising the low side, as T-2566's prototype, each node looked at again only once a neighbour moved
@@ -770,10 +819,11 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   {
     const nz: number[] = [];
     for (let c = 0; c < NFC; c++) if (cntC[c] > 0) nz.push(cntC[c]);
+    const sLine = far ? o.sLine * o.farS : o.sLine;
     const cm = nz.length ? median(nz) : 1, AW = [o.aLine, o.aLand, o.aWater], SW = [o.sLine, o.sLand, o.sWater];
     for (let c = 0; c < NFC; c++) {
       const k = kindC[c];
-      (aC[c] = islC[c] ? o.aIsland : free[c] && k !== 2 ? o.aWater : AW[k]), (sC[c] =k === 0 ? o.sLine * Math.min(o.sMax, Math.max(0.3, cntC[c] / cm)) : SW[k]);
+      (aC[c] = islC[c] ? o.aIsland : free[c] && k !== 2 ? o.aWater : AW[k]), (sC[c] = k === 0 ? sLine * Math.min(o.sMax, Math.max(0.3, cntC[c] / cm)) : SW[k]);
     }
   }
   // islands keep one size: the nodes on each, and the ring a cell round it raised to it
@@ -1496,7 +1546,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   // ---- the rounds, as the schedule says; the first problem starts from the field's scale integrated along the
   // finest nodes' rows and columns
   let P: Prob | null = null;
-  for (const st of o.schedule.split(",")) {
+  for (const st of (far ? o.scheduleFar : o.schedule).split(",")) {
     if (st === "raise") { if (P) raise(P); continue; }
     // "L:R:K" moving rounds; "sN" frozen on the finest; "fL:N" frozen on level K0 + L, holds as they are; "hL:N" holds
     // taken from the map as it is, then frozen rounds that may tighten them

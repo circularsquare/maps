@@ -264,7 +264,7 @@ drawing's smoothed scale `scaleAt`, cut to its room, T-2528) and
 `waterSea.ts` (the sea decided in the drawing by the nearest stations' look to the sea on the ground, its coast
 fitted at 0, 45 and 90 degrees, T-2169; these three, the layout's A and blocks' stage and `borders.ts`' pill regions
 are the `?sheet=0` path), `sheet.ts` (the rubber sheet, the diagram's default: a quadtree lattice
-stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568), `sheetLines.ts` (the layout's
+stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568; the cut T-2609 and the floor's fall from the networks T-2625), `sheetLines.ts` (the layout's
 octilinear stages run from the sheet, the map carried with the stations, and its sea and zone borders, `sheetLines` and
 `sheetMap`, T-2567; its carry's solve in WASM through `carryWasm.ts`, T-2589), `sheetThin.ts` (the sheet's map before its coasts are traced: thin water and land drawn again as
 bands, nibs smoothed, a city map's narrow rivers as bands, T-2580), `lsqr.ts`
