@@ -6,12 +6,16 @@ Updated: 2026-11-06 19:40 (Get-Date). maps-b9 is past 600k tokens: ready to be r
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **976956cc** = 8800 **build 1303** (~23:00; dev smoke + 8800 light/dark 25/25). Has everything up to placelag
-  (T-2404), T-2690 difficulty, the main-tree batch 3e195f4b, Guangzhou for Toronto among the start buttons.
-- Next rebuild after attract2 (T-2666, tree attract2; quiet, on 1 core) and the overnight country runs.
-- Cap 10 (Anita gaming earlier; "its definitely fine"). Raise to 12-15 when she goes to bed for worldnext's runs.
-- LIVE = 821. Publish only on Anita's word (languages switch on via OFFERED in i18n/intl.ts).
-- maps-93 is done. The upkeep tree still needs `node trainworld/checks/agent-tree.mjs remove upkeep --force`.
+- master **db6fc554** = 8800 **build 1315** (~23:40; dev smoke + 8800 light/dark 25/25). Has attractions T-2666 (WASM
+  rebuilt), the load-failure work (reason on screen, WASM start retries), bunny back on the loading card, 13 px ring.
+- Anita's NA save failed to load once on 1303 then loaded fine twice; cause not found (loadfail's report: likely a
+  dropped .wasm fetch, now retried, or a load during the 8800 swap). Next failure names itself (`.load-why`).
+- **worldnext waits for maps-b9's GO** (stage 1 done; three detached runs, --no-join, then one join, 6-7 h, 12 cores).
+  Go when Anita heads to bed: `python cores.py cap 14`, SendMessage worldnext "go" (it refreshes its sim copy from
+  HEAD first). While its gates run: NO app/ or WASM landings; before its join it messages: hold pack writers.
+- Uncommitted, worldnext's: app/src/game/realms.json, zone-names.json, pipeline/world_plan.json, world_plan.py,
+  docs/world-run.md, notes/T-2695.md (it commits nothing; maps-b9 commits them when the runs ship).
+- Cap 10. LIVE = 821. Publish only on Anita's word. The upkeep tree still needs `agent-tree.mjs remove upkeep --force`.
 
 ## Landed this session (maps-b9)
 - translations units 1-4; T-2656 + play count 5a71e6f6; T-2634 2c04f007; T-2641 75e04c44; T-2657 838c46e7; T-2635
@@ -21,16 +25,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   retired); pass 5 wording 1f5de214 (l10nshots: 15 fixes; shots in artifacts/trainworld/l10nshots/).
 
 ## In flight (maps-b9's agents; SendMessage by Agent id)
-- **worldnext** a71baa8e4eb55b6ba (Opus, MAIN tree): T-2695 rest of Latin America (ARG CHL COL PER URY ECU), T-2696 South
-  Africa, T-2697 Gulf. Stage 1 prep; it messages before starting the detached overnight runs and before a join (hold
-  other pack writers then). Its uncommitted files: pipeline/world_plan.py, world_plan.json, notes/T-2695.md.
-- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666; done-when met, on tests (1 core). Ask if quiet.
-- Done this evening and retired: ridersnow, l10nsmall (ad2c18ea6567fefa9, resumable for small translation batches),
-  l10nshots, l10npolish, l10nunits, fareref, parking, namespread, keepnames, yearsdest, uitweaks, lineimprove, loadui,
-  difficulty, placelag.
-- Follow-ups filed: T-2691 ("Nn" console errors under load), T-2698 (start cameras on the city), T-2699-2701 (placement
-  lag: boarding steps on Japan, preview_route on Japan, local rebuild at rest), T-2682 (edit note may never settle),
-  T-2681 (ja/zh city names).
+- **worldnext** a71baa8e4eb55b6ba (Opus, MAIN tree): T-2695 Latin America, T-2696 South Africa, T-2697 Gulf; 244 rows
+  planned (3 held lone zones); found and fixed a coastal-units plan bug (T-2702 for Brazil/Mexico's holes). Holding
+  for GO (see State).
+- Everything else finished and landed this evening (attract2, loadfail, bunnyback the last). Follow-ups filed:
+  T-2691, T-2698, T-2699-2704, T-2682, T-2681.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
@@ -51,7 +50,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2702**.
+   (Brazil, pack lock free). Next unassigned id **T-2705**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
