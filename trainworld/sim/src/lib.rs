@@ -6,6 +6,10 @@
 #[cfg(feature = "demand")]
 pub mod demand;
 
+/// The wasm memory grown ahead of need, and the clock worker's module's allocator (T-2699).
+#[cfg(target_arch = "wasm32")]
+pub mod heap;
+
 /// T-2589: the network diagram's carry solve (`diagram::CarrySolver`), for the diagram worker.
 #[cfg(feature = "diagram")]
 pub mod diagram;

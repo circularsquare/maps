@@ -444,7 +444,9 @@ impl TrackWorld {
     /// shared real network), so the result's `dirty` has no lines, resources or service.
     pub fn trial(&mut self, op: Op) -> Result<EditResult, Vec<Issue>> {
         let (r, inv) = self.commit_with(op, true, false)?;
-        let _ = self.commit_with(inv, false, false);
+        // T-2700: the rollback as `commit_with(inv, false, false)` did it, without pricing the
+        // whole network twice for a result nobody reads
+        let _ = self.apply_and_derive(inv);
         Ok(r)
     }
 

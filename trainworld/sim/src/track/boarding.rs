@@ -289,6 +289,8 @@ pub struct Boarding {
     pub accounts: [Vec<Option<LineAccount>>; DAY_KINDS],
     /// lines worked out again since `take_redone`
     redone: usize,
+    /// where `ensure_some` goes on from: day kind times lines plus line
+    cursor: usize,
     /// Riders a day changing onto each platform (line, run, stop in the run's order) from other
     /// platforms (T-554, `set_transfers`). Only the timing of drawn crowds reads them.
     pub xfer: HashMap<(u32, u8, u32), Vec<Feeder>>,
@@ -459,11 +461,10 @@ impl Boarding {
         }
     }
 
-    /// What a line's account depends on, hashed.
-    fn key(&self, net: &Network, svc: &Service, l: usize, day: usize) -> u64 {
+    /// What a line's account depends on in the service, hashed (the riders: `generation`).
+    fn key(net: &Network, svc: &Service, l: usize) -> u64 {
         let ls = &svc.lines[l];
         let mut h = Hash::new();
-        h.add(self.generation[day]);
         h.add(ls.cars as u64);
         h.add(net.line_trains[l].is_some() as u64);
         h.f(net.line_turn[l] as f64);
@@ -510,36 +511,50 @@ impl Boarding {
     /// clock worker calls it a few lines at a time after new riders, so it never blocks long.
     pub fn ensure_some(&mut self, net: &Network, svc: &Service, max_lines: usize) -> bool {
         let nl = svc.lines.len();
-        let mut done = 0;
         for day in 0..DAY_KINDS {
             self.accounts[day].resize(nl, None);
             self.accounts[day].truncate(nl);
-            for l in 0..nl {
-                let ls = &svc.lines[l];
-                let lr = self.riders[day].get(l).and_then(|r| r.as_ref());
-                let ok = ls.running && l < net.line_count() && lr.map_or(false, |r| r.n == ls.stops.len() && r.n >= 2);
-                if !ok {
-                    self.accounts[day][l] = None;
-                    continue;
-                }
-                let key = self.key(net, svc, l, day);
-                if self.accounts[day][l].as_ref().map_or(false, |a| a.key == key) {
-                    continue;
-                }
-                if done == max_lines {
-                    return true;
-                }
-                done += 1;
-                let lr = lr.unwrap();
-                // One day from the quiet of the night; a platform still waiting at its end means a
-                // queue that carries round, so that direction is run again from a day earlier.
-                let runs = [0, 1].map(|r| {
-                    let a = simulate(net, svc, l, r, lr, &self.peak, false);
-                    if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true) } else { a }
-                });
-                self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
-                self.redone += 1;
+        }
+        // T-2699: the scan goes on from where the last call stopped, wrapping round, so a round of
+        // steps hashes each line about once (from the start every call it hashed lines squared);
+        // only a call that finds nothing out of date looks at every line. A line's service hash is
+        // the same on every kind of day.
+        let total = DAY_KINDS * nl;
+        let mut svc_key: Vec<Option<u64>> = vec![None; nl];
+        let mut done = 0;
+        for i in 0..total {
+            let at = (self.cursor + i) % total;
+            let (day, l) = (at / nl, at % nl);
+            let ls = &svc.lines[l];
+            let lr = self.riders[day].get(l).and_then(|r| r.as_ref());
+            let ok = ls.running && l < net.line_count() && lr.map_or(false, |r| r.n == ls.stops.len() && r.n >= 2);
+            if !ok {
+                self.accounts[day][l] = None;
+                continue;
             }
+            let base = *svc_key[l].get_or_insert_with(|| Self::key(net, svc, l));
+            let key = {
+                let mut h = Hash(base);
+                h.add(self.generation[day]);
+                h.0
+            };
+            if self.accounts[day][l].as_ref().map_or(false, |a| a.key == key) {
+                continue;
+            }
+            if done == max_lines {
+                self.cursor = at;
+                return true;
+            }
+            done += 1;
+            let lr = lr.unwrap();
+            // One day from the quiet of the night; a platform still waiting at its end means a
+            // queue that carries round, so that direction is run again from a day earlier.
+            let runs = [0, 1].map(|r| {
+                let a = simulate(net, svc, l, r, lr, &self.peak, false);
+                if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true) } else { a }
+            });
+            self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
+            self.redone += 1;
         }
         false
     }

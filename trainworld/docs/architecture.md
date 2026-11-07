@@ -336,12 +336,14 @@ Web first, so it can be shared as a link.
   started again with all of them after 1 s, then 4 s; a third failure is the failure screen's "The
   train simulation could not start" [T-2710; `spawnWorker`]. The focus pool's workers are not
   retried (a failed focus pool falls back to the main pool).
-- **Growing a demand worker's memory** [T-1594] (`sim/src/demand/wasm.rs`, `AHEAD`): a WASM memory
-  grow costs about as much as the memory already held, not the bytes added, and the allocator grows
-  by what a request lacks (64 KB for a small one). So whenever an allocation grows the memory, the
-  allocator is handed 32 MB more at once (a block allocated and freed at the top), and the small
-  allocations after it are carved from that. A worker's memory ends at most 32 MB above what it
-  needed; the heap figures below do not count the block.
+- **Growing a WASM module's memory** [T-1594, T-2699, T-2716] (`sim/src/heap.rs`): a WASM memory
+  grow costs about as much as the memory already held, not the bytes added, and dlmalloc on its own
+  grows by what a request lacks (64 KB for a small one). So the modules run dlmalloc over a system
+  side of their own that grows by at least 32 MB (the clock worker's module: or an eighth of the
+  memory once that is more), and the small allocations after it are carved from that. A worker's
+  memory ends at most one step above what it needed; the heap figures below do not count it. The
+  allocator's methods are never inlined: LLVM takes `__rust_alloc_zeroed`'s result for a fresh
+  object and folded dlmalloc's inlined read of a block's header to 0 (T-2716).
 - **Demand workers' memory** [T-1205] (`demandClient.ts` "T-1205: memory"): WASM memory never
   shrinks, so each worker reports its memory with its heap in use and its last solve's heap peak
   (`wasm_heap_bytes`, `wasm_heap_peak`; the peak is reset as each solve starts and forgotten when

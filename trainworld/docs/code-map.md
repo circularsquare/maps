@@ -18,7 +18,9 @@ tests natively.
   `lines.rs` (the gap a stop cannot cross: `gap.rs`, T-1896), `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
   `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283; `TW_DUMP=<file>` writes `lines_info` at load, after the edits and after a save and reload, T-1787; `TW_LINES=<file>` a table of each line's rates, round trips, delays and trains at load, to compare two builds, T-1924);
-  `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779).
+  `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779);
+  `--bin boarding_bench -- <track bytes>` times the boarding account's steps on made-up riders (T-2699; `TW_DUMP=<file>` writes every line's account readouts, to compare two builds).
+  `src/heap.rs`: on wasm32, the modules' allocator: dlmalloc over a system side that grows the memory in big steps, methods never inlined (T-1594, T-2699, T-2716); the clock worker's module's global allocator.
   Station placements swept along every piece, refusals counted by reason and by the joints under the platform: the ignored tests in `wasm/station_sweep_tests.rs` (a drawn network, and a save's network bytes in `T1964_NET`; T-1964).
   notes/T-040.md. Methods only tests and bins call (`set_line`, `set_edge`, `to_lonlat` and the
   like) sit in plain `impl` blocks, not in the WASM exports; the same holds for `DemandApi`,
@@ -46,8 +48,8 @@ tests natively.
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
   its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
-  `wasm.rs` (WASM only): the memory and heap figures, the last panic, and the allocator that grows
-  the memory 32 MB ahead of need (T-1205, T-1174, T-1594).
+  `wasm.rs` (WASM only): the memory and heap figures, the last panic, and the counting allocator over
+  `heap::Heap`, which grows the memory 32 MB at a time (T-1205, T-1174, T-1594, T-2716).
   `lod.rs`: a zone's level of detail (T-1222), the everyday sampling and commute chunk a zone opens
   at (`DemandApi::at_level`); its checks in `everyday/lod_tests.rs` (`t1222_probe` measures memory, times and bias).
   Zones of two sizes (T-852: `kernel::coarsen`, `Zones::size`): every zone-pair table goes through

@@ -22,6 +22,10 @@ wasm-bindgen = "0.2"
 serde_json = { version = "1", optional = true, features = ["preserve_order"] }
 serde = { version = "1", optional = true, features = ["derive"] }
 
+# T-2716: the wasm modules' allocator (src/heap.rs), std's wasm32 one over a system side of our own.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+dlmalloc = "0.2.14"
+
 [[bin]]
 name = "demand_bench"
 path = "src/bin/demand_bench.rs"
