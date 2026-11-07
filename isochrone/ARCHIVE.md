@@ -1,5 +1,6 @@
 # Archive
 
+- T-104 (first part) [P3] Corridor jog at window corners. Done 2026-11-07: a finer window's lines started up to 5 cells inside the edge, beside the coarser line's cut end or raw piece; the page now moves each such end onto the coarser end and tapers the shift along the line (6 px jog gone at Cluj L1 z8, Cluj L3 z6, Brig L0.1 z11). notes/T-104.md.
 - T-014 [P3] Window edges. Done 2026-11-07: finer windows fade into the coarser level over 3 of its cells, per-texel alpha against the texels as MapLibre draws them; the edge line (up to 22% brighter, 1-6 px) is gone, under 2% left. notes/T-014.md.
 
 - T-035 [P3] Canoe search speed. Closed 2026-11-07, no code change: sea edges are a sixth of a click's work and their tables cost nothing measurable; no exact trim helped. 16 sea moves still cost 10-25% (Constanta ~1 s in Chrome), so 8 stay. notes/T-035.md.

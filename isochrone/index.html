@@ -762,19 +762,78 @@ function simplifyLine(c, tol) {
     }
     return c.filter((_, i) => keep[i]);
 }
+function chaikin(c) {
+    const out = [c[0]], last = c.length - 1;
+    for (let i = 0; i < last; i++) {
+        const [x0, y0] = c[i], [x1, y1] = c[i + 1];
+        if (i > 0) out.push([0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1]);
+        if (i < last - 1) out.push([0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1]);
+    }
+    out.push(c[last]);
+    return out;
+}
+const round4 = c => c.map(p => [Math.round(p[0] * 1e4) / 1e4, Math.round(p[1] * 1e4) / 1e4]);
 function smoothLine(c, cell) {
     c = simplifyLine(c, CORR_SIMPLIFY * cell);
-    for (let pass = 0; pass < CORR_SMOOTH_PASSES && c.length > 2; pass++) {
-        const out = [c[0]], last = c.length - 1;
-        for (let i = 0; i < last; i++) {
-            const [x0, y0] = c[i], [x1, y1] = c[i + 1];
-            if (i > 0) out.push([0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1]);
-            if (i < last - 1) out.push([0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1]);
-        }
-        out.push(c[last]);
-        c = out;
+    for (let pass = 0; pass < CORR_SMOOTH_PASSES && c.length > 2; pass++) c = chaikin(c);
+    return round4(c);
+}
+
+// A finer level's line starts a few cells inside its window, where the coarser line was cut at the
+// window edge (T-104). The finer line's end nearest each cut end moves onto it, the shift dying away
+// along the line over CORR_JOIN_LEAN times its length, so the join has no corner. Ends and cuts pair
+// by distance, nearest first.
+const CORR_JOIN_CELLS = 5, CORR_JOIN_LEAN = 5;
+function leanEnd(c, p, cell) {   // c ends where p is to be reached; returns the leaned copy
+    const kx = Math.cos(p[1] * Math.PI / 180), n = c.length - 1;
+    const dx = p[0] - c[n][0], dy = p[1] - c[n][1];
+    let total = 0;
+    for (let i = 1; i <= n; i++) total += Math.hypot((c[i][0] - c[i - 1][0]) * kx, c[i][1] - c[i - 1][1]);
+    const reach = Math.min(Math.max(CORR_JOIN_LEAN * Math.hypot(dx * kx, dy), 3 * cell), total / 2), step = reach / 8;
+    // from the end inwards: points with their arc length, the shift 1 at the end and 0 at `reach`
+    const back = [[c[n], 0]];
+    let s = 0, i = n, part = false;
+    for (; i > 0 && s < reach; i--) {
+        const [x0, y0] = c[i], [x1, y1] = c[i - 1];
+        const l = Math.hypot((x1 - x0) * kx, y1 - y0), f = Math.min(1, (reach - s) / l);
+        part = f < 1;
+        const m = Math.ceil(f * l / step);
+        for (let q = 1; q <= m; q++) back.push([[x0 + (x1 - x0) * f * q / m, y0 + (y1 - y0) * f * q / m], s + f * l * q / m]);
+        s += l;
     }
-    return c.map(p => [Math.round(p[0] * 1e4) / 1e4, Math.round(p[1] * 1e4) / 1e4]);
+    const lean = back.map(([q, a]) => { const w = 0.5 * (1 + Math.cos(Math.PI * Math.min(1, a / reach))); return [q[0] + dx * w, q[1] + dy * w]; });
+    // the points before the taper stay; it ends on a point of the line, or part way along a segment
+    return round4(c.slice(0, part ? i + 1 : i).concat(lean.reverse()));
+}
+// Moves the ends of `set` onto the targets within `max` degrees, nearest pair first; returns the
+// targets used.
+function pairUp(set, targets, max, cell) {
+    const pairs = [], used = new Set(), ends = new Set();
+    if (!targets.length) return used;
+    const kx = Math.cos(targets[0][1] * Math.PI / 180);
+    set.forEach((ln, i) => {
+        const c = ln.sm;
+        for (const e of [0, c.length - 1]) targets.forEach((p, j) => {
+            const d = Math.hypot((c[e][0] - p[0]) * kx, c[e][1] - p[1]);
+            if (d <= max) pairs.push([d, i, e ? 1 : 0, j]);
+        });
+    });
+    pairs.sort((a, b) => a[0] - b[0]);
+    for (const [, i, e, j] of pairs) {
+        if (ends.has(i * 2 + e) || used.has(j)) continue;
+        ends.add(i * 2 + e); used.add(j);
+        const out = leanEnd(e ? set[i].sm : set[i].sm.slice().reverse(), targets[j], cell);
+        set[i].sm = e ? out : out.reverse();
+    }
+    return used;
+}
+// cuts: where the coarser level was cut at this level's window; pcell: the coarser level's cell.
+// Its pieces (lines from np on) first meet the cuts, then the level's own lines meet the cuts left
+// and the pieces' ends.
+function joinCuts(lines, cuts, cell, pcell) {
+    const pieces = lines.filter(ln => ln.piece), own = lines.filter(ln => !ln.piece);
+    const used = pairUp(pieces, cuts, pcell, pcell);
+    pairUp(own, cuts.filter((_, j) => !used.has(j)).concat(pieces.flatMap(ln => [ln.sm[0], ln.sm[ln.sm.length - 1]])), Math.max(CORR_JOIN_CELLS * cell, 1.5 * pcell), cell);
 }
 
 function drawCorridors() {
@@ -784,18 +843,32 @@ function drawCorridors() {
     // levels with lines for this start; each is cut where the next finer one shows
     const has = LEVELS.filter(k => layers[k].shown && corr[k] && corr[k].originId === originId);
     const features = [];
+    let cuts = [];   // where the level above was cut at this level's window edge
     for (const [i0, k] of has.entries()) {
         const c = corr[k];
         const h = i0 + 1 < has.length ? layers[has[i0 + 1]].m : null;
+        if (!c.sm) c.sm = [];
+        const lines = [];
         for (let i = 0; i < c.s.length; i++) {
-            if (!c.sm) c.sm = [];
             if (!c.sm[i]) {
                 const raw = [];
                 for (let j = c.off[i]; j < c.off[i + 1]; j++) raw.push([c.xy[2 * j], c.xy[2 * j + 1]]);
                 c.sm[i] = smoothLine(raw, CORR_CELL[k]);
             }
-            let parts = [c.sm[i]];
-            if (h) for (const sh of [-360, 0, 360]) parts = parts.flatMap(p => clipOut(p, h.west + sh, h.east + sh, h.south, h.north));
+            lines.push({ i, sm: c.sm[i], piece: i >= c.np });
+        }
+        joinCuts(lines, cuts, CORR_CELL[k], i0 ? CORR_CELL[has[i0 - 1]] : 0);
+        cuts = [];
+        for (const { i, sm } of lines) {
+            let parts = [sm];
+            if (h) for (const sh of [-360, 0, 360]) {
+                const w = h.west + sh, e = h.east + sh;
+                parts = parts.flatMap(p => clipOut(p, w, e, h.south, h.north));
+                for (const p of parts) for (const q of [p[0], p[p.length - 1]]) {
+                    const onW = Math.abs(q[0] - w) < 1e-9 || Math.abs(q[0] - e) < 1e-9, onS = Math.abs(q[1] - h.south) < 1e-9 || Math.abs(q[1] - h.north) < 1e-9;
+                    if ((onW || onS) && q[0] >= w - 1e-9 && q[0] <= e + 1e-9 && q[1] >= h.south - 1e-9 && q[1] <= h.north + 1e-9) cuts.push([Math.round(q[0] * 1e4) / 1e4, Math.round(q[1] * 1e4) / 1e4]);
+                }
+            }
             for (const p of parts) if (p.length > 1) features.push({ type: 'Feature', properties: { s: c.s[i] & 7, m: (c.s[i] >> 3) & 3, c: c.s[i] >> 5, v: c.v[i] / 10 },
                 geometry: { type: 'LineString', coordinates: p } });
         }

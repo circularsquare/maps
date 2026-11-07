@@ -649,8 +649,9 @@ export function lines(L, canoe, world, coarser) {
         vs.push(v10);
     }
     for (let i = 0; i < nk; i++) { const n = stack[i]; nch[par[n]] = 0; flag[par[n]] = 0; }
+    const np = s.length;    // lines from np on are the coarser level's pieces
     if (org && P && P.drawn) coarserLines(L, canoe, P.drawn, P.cellDeg, xy, off, s, vs);
-    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s), v: new Uint8Array(vs) };
+    const out = { xy: new Float32Array(xy), off: new Uint32Array(off), s: new Uint8Array(s), v: new Uint8Array(vs), np };
     L.drawn = { xy: out.xy.slice(), off: out.off.slice(), s: out.s.slice(), v: out.v.slice() };
     return out;
 }

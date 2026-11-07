@@ -78,3 +78,14 @@ next coarser level. So:
   all along one side and do not converge.
 
 The page keeps each level's lines and cuts a level's where the next finer level with lines shows.
+
+**Where the lines meet at a window edge** (T-104). A window's own lines start at the node that took
+the flux, up to a coarse cell from where the coarser line was cut, and its coarser-line pieces
+(the worker sends `np`, the number of lines before the pieces) follow the raw route, which lies up
+to 0.7 coarse cell from the smoothed line. So the page joins them after smoothing, in `joinCuts`:
+
+- each piece end within one coarse cell of a cut end moves onto it;
+- then each of the level's own line ends within the larger of 5 of its cells and 1.5 coarse cells
+  moves onto the nearest cut end left or piece end, nearest pair first, one end per target;
+- the move dies away along the line (cosine taper over 5 times the move, at least 3 cells, at most
+  half the line), so the line stays smooth and the rest of it does not shift.
