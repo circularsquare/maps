@@ -77,7 +77,8 @@ data. The land hazard band and the canoe water are cut to the same land and wate
   with currents) and carrying on land. The canoe is never left behind: overland it is carried, at
   twice the walking time (carry x2, Anita 2026-11-05). Paddling is 5 km/h on still
   water; downstream adds the river's current, upstream is 5 km/h minus 0.4 of the current with a
-  floor of 2.5 km/h (lining or poling along the bank). Design: `docs/canoe.md`; model and
+  floor of 2.5 km/h (lining or poling along the bank), and 2.5 km/h up rapids (1 m/km or
+  steeper) on any river, where the canoe is poled, lined or waded. Design: `docs/canoe.md`; model and
   sources: research/canoe.md.
 - **Eras.** Today, and later 10,000 BC (no roads, no cleared land, lower sea level, ice sheets,
   Beyer 2020 biomes at 12 ka for land cover). Sources: research/friction.md.
@@ -119,7 +120,7 @@ canoe starts water is painted 22% towards white, paler than land.
 
 Top left, under the title, a collapsible speeds panel lists the model's speeds in km/h, each row
 with a hover giving its basis: walking by ground type (LC100 classes at MAP's survey speeds), and on a canoe
-start still water, small, big and huge rivers (1, 100, 10,000 m³/s) down and up, a 1 m/s sea
+start still water, small, big and huge rivers (1, 100, 10,000 m³/s) down and up, up rapids, a 1 m/s sea
 current with and against, carrying and getting in or out. The worker sends them with `ready`
 (`js/speeds.js`), worked out from the model constants. Two buttons in the row switch hill shading
 (Terrain Tiles on AWS, under the basemap's water and the time colours) and river lines (the

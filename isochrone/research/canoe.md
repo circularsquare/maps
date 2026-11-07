@@ -219,6 +219,54 @@ straits (several m/s), which no climatology captures; stage 1 ignores them.
   the margin of a big river (mean depth 5-12 m) it is ~0.25-0.4 of the section mean, with eddies
   behind points running backwards. Crossings at bends meet the full current. An upstream
   paddler meets about 0.3-0.5 of the mean overall (worked, not measured).
+- **Small rivers** (T-073; comparison with the model in notes/T-073.md). Upstream records are all
+  under 4 km/h per moving hour and put the slowness in the riffles; still reaches of the same
+  streams were paddled:
+  - *Lewis and Clark, Jefferson and Beaverhead.* Up from the Three Forks (30 July 1805) to the
+    forks of the Beaverhead, Camp Fortunate (Clark's canoes, 17 August): 18 days for ~245 km
+    (today's published lengths, 83 + 69 miles), ~1.2 km/h in ~11 h days, in loaded cottonwood
+    dugouts at August low water. Lewis, 3 Aug 1805: "the currant more rapid & much more shallow
+    than usual ... in many places they were obliged to double man the canoes and drag them over
+    the stone and gravel"; Clark, 5 Aug: "Men much fatigued from their excessive labours in hauling
+    the Canoes over the rapids", "verry weak being in the water all day"; Ordway, 10 Aug: "gitting
+    a Small Stream verry crooked and Shole in places, So that we have to wade and hall the canoes
+    over"; Clark, 12 Aug: "the river much more Sholey than below which obliges us to haul the
+    Canoes". Their own day estimates (generous): 13 miles on 3 Aug, 9¼ on 5 Aug, 13 on 10 Aug, 6½
+    on 12 Aug. Down the same rivers with the same
+    canoes the next summer in high water: set out after breakfast 10 July 1806 (Ordway: "97 miles
+    this day by water", an overestimate), at the Big Hole mouth 7 pm 11 July (Clark), at the Three
+    Forks 13 July: ~3 days, ~35 h, ~7 km/h. Up/down ~5.7.
+  - *Mackenzie, Parsnip and Bad River (James Creek), 1793.* 18 August, coming down the Parsnip:
+    "We were seven days in going up that part of the river which we came down to-day" (up in the
+    June freshet, down at August low water). 11 August, a long rapid on the way back up the Fraser
+    side "we ascended with poles much easier than we expected". 15 August, up the small Bad River:
+    "the men were obliged to be continually in it to drag on the canoe", and they carried round
+    the drift-wood jams ("embarras"); going down it in the June flood the canoe was wrecked on 13
+    June.
+  - *Schoolcraft, Mississippi headwaters, July 1832.* Rapids above Cass Lake "require the men
+    frequently to wade, and pull up the canoes" (ten in 20-25 miles; 11 July); above Lake
+    Kubbakunna the stream "resembles a thread wound across a savannah valley" and was paddled
+    from 5 am to 5.30 pm (12 July). The Itasca outlet "ten to twelve feet broad, with an apparent
+    depth of twelve to eighteen inches" (ch. VI) was run downstream: chopping with the axe
+    "frequently necessary", and in rapids the men "step into the channel, and lead down the
+    canoes" (ch. VI). Itasca, afternoon of 13 July, to Cass Lake, 9 am 15 July (ch. VII): ~32
+    moving hours, with a night run, for 134 km (MN DNR river miles 1341.6 to 1258.2), ~4 km/h
+    downstream.
+  - *Thoreau, Umbazookskus, 27 July 1857* (high water). "A very meadowy stream, and deadwater",
+    paddled; then "it suddenly contracted to a mere brook, narrow and swift ... and we landed to
+    get a black spruce pole for pushing against the stream"; they walked once "at a swift and
+    shallow reach" while the guide got the canoe up. About 10 miles by 11 am from an early start:
+    roughly 3 km/h.
+  - *Allagash Stream, August 2006* (T. Smith, solo, low water). Little Round Pond to below
+    Allagash Lake by poling and wading, "six miles of upstream travel and had taken me seven
+    hours": 1.4 km/h; shallow riffles slowed it "from that of a brisk walk to that of a crawl".
+  - *Least water for a canoe.* Hyra (1978), Table 1, p. 3: canoe or kayak needs 0.5 ft (0.15 m)
+    of depth and 4 ft (1.2 m) of width at a river's shallowest cross-section, "minimal and would
+    not provide a satisfactory experience if the entire river was at that level". Hydraulic
+    geometry gives Q = 1 m³/s a mean depth of 0.27 m and width 7.2 m.
+  - *Mississippi headwaters today* (MN DNR water trail, Map 1): the first 50 miles are "five to
+    10 feet wide", with beaver dams and downed trees between Itasca and Bemidji; May high water is
+    recommended for paddling through.
 - **Portage rates**: a single carry on a trail runs ~3 km/h (Boundary Waters planning: ~0.75 km
   in ~30 min with unloading and loading; 20 min per km a trip), so about 1.5-2 x walking time;
   a double carry about 3 x the single; voyageur brigades with several 41 kg loads a man about an
@@ -234,7 +282,7 @@ noted after.
 | Paddling speed on still water, p | **5 km/h** | trippers 3-5, dugout crossing ~5, voyageur crews 8 |
 | Paddling hours per day | **8** (same day as walking) | keeps the map's clock one convention; voyageurs did 14+ as professionals |
 | Downstream | p + v (mid-channel, full velocity) | |
-| Upstream | max(p - 0.4 v, 2.5 km/h) | 0.4: the share of the mean current met keeping to the bank, eddies and inside bends (worked from the bank current above, 0.3-0.5); 2.5 km/h floor: lining or poling along the bank, near recorded tracking rates (2.5-3 km/h). Gives 4.3 km/h on a small river to 3.0 on a huge one, the 2.5-3.5 recorded per moving hour (T-071). Never impossible, except at falls |
+| Upstream | max(p - 0.4 v, 2.5 km/h); up rapids 2.5 km/h | 0.4: the share of the mean current met keeping to the bank, eddies and inside bends (worked from the bank current above, 0.3-0.5); 2.5 km/h floor: lining or poling along the bank, near recorded tracking rates (2.5-3 km/h). Gives 4.3 km/h on a small river to 3.0 on a huge one, the 2.5-3.5 recorded per moving hour (T-071). Up rapids (1 m/km or steeper) on any river, poled, lined or waded at 2.5: small-river records are 1.2-3 km/h, slow in the riffles (T-073). Never impossible, except at falls |
 | Unrunnable reach (steep or fall) | portage: carry overland | |
 | Portage speed | MAP walking time x **2** | a single carry with a light canoe and little kit (recorded 1.5-2 x on trails); a double carry would be ~3-5 x, a voyageur brigade's ~6 x. Trackless ground is in MAP's walking time already (T-071) |
 | Fall or dam | fixed **1 h** plus the carry around it | |
@@ -376,7 +424,8 @@ means paying 10 extra hours to cut death risk by 1%). This is Anita's call (it r
 - **Nodes**: the walking layer (as now), and a canoe layer: every sea and lake cell, plus every
   cell a paddleable river (mean flow >= 1 m3/s) passes through.
 - **River edges**: directed, between consecutive cells of each rasterised reach. Downstream time
-  = true length / (p + v); upstream = length / max(p - 0.4 v, 2.5 km/h), with v = 0.51 Q^0.11.
+  = true length / (p + v); upstream = length / max(p - 0.4 v, 2.5 km/h), and length / 2.5 km/h
+  up rapids (T-073), with v = 0.51 Q^0.11.
   Reaches steeper than the rapids limit, and falls and dams, become portage edges both ways.
 - **Sea and lake edges**: 16 neighbours, time from the current triangle; lakes have no current.
   Sea cells with summer ice > 15% are closed.
@@ -436,6 +485,23 @@ Speeds
 - Voyageur pace and portages: https://digital.library.mcgill.ca/nwc/history/12.htm , https://digital.library.mcgill.ca/nwc/history/08.htm , https://wolf-ridge.org/wp-content/uploads/2025/12/Voyageur-Canoe.pdf , https://ecvoyageurs.com/t2k/history.html
 - Trip-planning averages: https://forums.paddling.com/t/if-you-were-planning-a-trip/21898
 - Upstream travel and portage rates (T-071; each figure's source in notes/T-071.md): https://www.nps.gov/parkhistory/online_books/lewisandclark/intro38.htm , https://en.wikipedia.org/wiki/Portage_La_Loche_Brigade , https://nancymargueriteanderson.com/eleventh-leg/ , https://newscut.mprnews.org/2015/03/to-rediscover-n-america-5-friends-paddle-against-the-current/index.html , https://en.wikipedia.org/wiki/Pedro_Teixeira , https://williamsandhall.com/bwca-blog/portage-in-bwca , https://en.wikipedia.org/wiki/Portage
+- Small rivers (T-073). All cited for facts and short quotations only, nothing reused, so no
+  licence applies; the journals and Gutenberg texts are public domain in the US, Hyra 1978 is a
+  US federal work. Lewis and Clark journals, ed. G. Moulton (University of Nebraska Press), by
+  date: https://lewisandclarkjournals.unl.edu/item/lc.jrn.1805-08-03 (and -08-05, -08-10, -08-12,
+  1806-07-10, -07-11, -07-13). Schoolcraft, *Narrative of an Expedition Through the Upper
+  Mississippi to Itasca Lake* (1834), chs. V-VII: https://www.gutenberg.org/ebooks/64866 .
+  Mackenzie, *Voyages from Montreal* (1801), entries 13 June and 11-18 August 1793:
+  https://www.gutenberg.org/ebooks/35659 . Thoreau, *The Maine Woods* (1864), "The Allegash and
+  East Branch", 27 July 1857: https://www.gutenberg.org/ebooks/42500 . T. Smith, "Poling a Canoe
+  Up Allagash Stream" (23 Aug 2006): https://blog.jackmtn.com/poling-a-canoe-up-allagash-stream .
+  R. Hyra, *Methods of Assessing Instream Flows for Recreation*, Instream Flow Information Paper
+  6, FWS/OBS-78/34 (US Fish and Wildlife Service, 1978), Table 1 p. 3:
+  https://www.arlis.org/docs/vol1/AK_Heritage/FWS/OBS/78/FWS-OBS-78-34.pdf . MN DNR Mississippi
+  River State Water Trail, segments and river miles:
+  https://www.dnr.state.mn.us/state-water-trails/mississippi-river/segments-maps.html . River
+  lengths for notes/T-073.md: Wikipedia infoboxes (Beaverhead, Jefferson, Big Hole, Gallatin,
+  Crow Wing, Upper Iowa, Kishwaukee, Ruby) and the Ohio, Illinois and Missouri river miles.
 - Taiwan-Yonaguni dugout voyage: https://earthsky.org/human-world/stone-age-ocean-voyage-re-enacted/ , https://www.bairdmaritime.com/work-boat-world/research-environment-training/feature-scientists-replicate-ancient-seafaring-with-rudimentary-canoe (papers: Kaifu et al., Science Advances, 25 June 2025)
 - Pesse canoe: https://en.wikipedia.org/wiki/Pesse_canoe
 

@@ -58,13 +58,15 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 |---|---|---|---|
 | walk / carry | land node to its 16 neighbours | as walking (`docs/resolution.md`, "Directions"); x 2 when carrying | yes, by each cell's east, west, south and north speeds (T-011) |
 | river down | canoe node to the next cell of a reach | length / (p + v) | yes |
-| river up | the reverse | length / max(p - 0.4 v, 2.5 km/h) | yes |
+| river up | the reverse | length / max(p - 0.4 v, 2.5 km/h); up rapids, length / 2.5 km/h | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
 | sea | canoe node to neighbouring sea canoe nodes | length / s, s from the current | yes |
 | transfer | land node to a canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node); within the cell at L3 and L10, half the piece's access carried as well (a piece of river or of sea or lake) | both ways |
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
-  D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s.
+  D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s: a mean depth of
+  0.27 m and width of 7 m, against a canoe's least 0.15 m and 1.2 m at a river's shallowest point
+  (Hyra 1978; research/canoe.md 4). No depth limit beyond that, either way (T-073).
 - **Hot desert** (T-079; the land hazard's mask, `docs/hazard.md` 2.1, one rule in
   `tools/hotdesert.py`): a reach with half its length or more in hot desert does not use its own
   WaterGAP discharge, which gives dry wadis hundreds of m³/s (Wadi ad-Dawasir 292, 98 in its driest
@@ -84,9 +86,13 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 - **Upstream** the canoe keeps to the bank, eddies and inside bends, where the current is slower
   than the section mean v: it meets 0.4 v. Where that leaves under 2.5 km/h (v over 6.25 km/h,
   Q over about 68,000 m³/s: only the Amazon from about Manaus down) it lines or poles along the
-  bank at 2.5 km/h. So upstream runs from
+  bank at 2.5 km/h. So upstream on flat water runs from
   4.3 km/h on a small river (Q = 1 m³/s) to 3.8 on a big one (100) and 3.0 on a huge one (10,000),
   near what recorded upstream canoe travel made per moving hour (research/canoe.md 4).
+- **Up rapids** (a step of class rapids, 1 m/km up to the closing gradient, or an OSM rapids on a
+  river under 1000 m³/s) the canoe is poled, lined or waded at 2.5 km/h on any river: riffles too
+  shallow and swift to paddle against are what made small rivers slow upstream, while their still
+  meadow reaches were paddled (T-073, research/canoe.md 4). Downstream, rapids run at p + v.
 - **River length** is the reach's real length spread over its cell steps, so meanders cost their
   length.
 - **Sea current** c is the mean of the edge's two cells from the drifter climatology, x0.5 within
@@ -108,8 +114,8 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
   carry" for a fall. Watersheds between rivers are crossed the same way. Upstream on a big
   meandering river, carrying on a straighter line over open land or roads (2.4-2.5 km/h) can beat
   paddling the bends at 3 km/h; the search takes the quicker.
-- **Rapids** from 1 m/km up to the closing gradient are run at the same speeds, with their own
-  hazard class.
+- **Rapids** from 1 m/km up to the closing gradient are run downstream at the same speed as flat
+  water and poled upstream at 2.5 km/h, with their own hazard class both ways.
 
 ## 3. Time and danger
 
@@ -372,7 +378,12 @@ Measurements: notes/T-022.md (and the first estimates, notes/T-005.md).
   dry below its reservoirs, but in 10,000 BC these run (T-012).
 - The gradient is a 1 km surface model's (GMTED) over 10 km: a cataract shorter than that is
   averaged with the water round it, and under forest the canopy adds a few metres where a stream
-  leaves it (about half the length of small Amazon streams reads 1-2 m/km, rapids).
+  leaves it (about 60% of the length of small Amazon streams reads 1-2 m/km, rapids, so is poled
+  upstream; 60% of Q 1-10 rivers worldwide are rapids, 37% at 10-100, 16% at 100-1000).
+- RiverATLAS measures a river on its 15 arc-second network, so meanders smaller than a few hundred
+  metres are lost: small rivers are short, both ways. Against published river miles, Q 1-70
+  stretches are 1.27-1.47 x longer than RiverATLAS says, rivers from 100 m³/s 0.96-1.00 x
+  (notes/T-073.md).
 - A coarse canoe node on a land cell stands at the cell's centre for a transfer to or from a
   neighbouring cell, wherever its water lies in the cell, so L10 still finds chains of lakes and
   rivers a little cheaper than L1 does: ~10-15% fast round Jyvaskyla, New York and Utrecht

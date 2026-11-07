@@ -5,6 +5,15 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **Up rapids is 2.5 km/h on any river; no depth limit either way** (T-073, notes/T-073.md).
+  Small-river upstream records are 1.2-3 km/h against the model's ~4.3, and the accounts put it in
+  the riffles (Lewis and Clark dragging up the Beaverhead, Mackenzie poling, Allagash Stream
+  waded), while still meadow reaches were paddled (Thoreau, Schoolcraft); the rapids class tells
+  them apart with no new number. Rejected: full current or a depth cut on all small rivers (slows
+  the meadow reaches too, and adds a number). Q >= 1 already meets a canoe's least water (Hyra
+  1978: 0.15 m deep). Kept 2.5 though records run lower, since they are heavy dugouts or low water
+  and carrying (2.4-2.5 on open ground) caps it. Revisit if RiverATLAS's short small-river lengths
+  (1.27-1.47x) get fixed, or the canopy's false rapids in the Amazon do.
 - **River gradient from GMTED's drop over 10 km everywhere, not RiverATLAS `sgr_dk_rav`** (T-031,
   notes/T-031.md): summed down main stems, `sgr_dk_rav` gives Lees Ferry to Lake Mead 14.7 km of
   drop (real ~0.6), Skardu to Tarbela 5.5 km (~1.75), the Glomma 1.0 km (~0.19), Manaus to the sea

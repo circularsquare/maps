@@ -144,6 +144,11 @@ const RIVER_TRIPS = [
     ['Bourke-Wentworth', [-30.09, 145.94], [-34.11, 141.92]],
     ['Mopti-Gao', [14.49, -4.20], [16.27, -0.04]],
     ['Khartoum-Aswan', [15.60, 32.53], [24.09, 32.90]],
+    // small rivers both ways (T-073): Lewis and Clark's Jefferson and Beaverhead, Schoolcraft's Mississippi headwaters
+    ['Three Forks-Camp Fortunate', [45.925, -111.515], [45.006, -112.852]],
+    ['Camp Fortunate-Three Forks', [45.006, -112.852], [45.925, -111.515]],
+    ['Cass Lake-Itasca', [47.449, -94.482], [47.240, -95.208]],
+    ['Itasca-Cass Lake', [47.240, -95.208], [47.449, -94.482]],
 ];
 const TRIPS = process.env.ONLY === 'lakes' ? LAKE_TRIPS : process.env.ONLY === 'rivers' ? RIVER_TRIPS : process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.63], [35.34, 33.32]], ['Constanta-Izmir', [44.17, 28.63], [38.42, 27.14]]] : [
     ['Brest-A Coruna', [48.39, -4.49], [43.37, -8.40]],

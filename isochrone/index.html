@@ -259,6 +259,7 @@ function drawSpeeds(s) {
     row(['Still water', kmh(s.paddle), ''], 'Lakes and seas without a current: a steady touring pace.', 'boat');
     for (const r of s.rivers) row([r.label, kmh(r.down), kmh(r.up)],
         `${r.q.toLocaleString('en')} m³/s of water, flowing ${kmh(r.v)} km/h (from its mean flow, Moody and Troutman 2002). Upstream loses ${s.upShare} of the current, never below ${kmh(s.upMin)} km/h, towing from the bank.`, 'boat');
+    row(['Up rapids', '', kmh(s.upMin)], 'Where a river drops 1 m a km or more. Going up, the canoe is poled, towed from the bank or walked through the shallows. Going down, rapids are paddled like the rest of the river.', 'boat');
     row(['Sea, strong current', kmh(s.sea.with), kmh(s.sea.against)],
         `A ${kmh(s.sea.c)} km/h current, as in the Gulf Stream. Half as strong within 5 km of the shore. A current from the side pushes the canoe off course and slows it.`, 'boat');
     row(['Carried, on grass', kmh(s.walk.find(w => w.label.startsWith('Grass')).max / s.carry), ''],

@@ -1,5 +1,7 @@
 # Archive
 
+- T-073 [P3] Small rivers too fast both ways. Done 2026-11-07: up rapids is 2.5 km/h on any river (records 1.2-3 against ~4.3); no depth limit, downstream kept. Found RiverATLAS small-river lengths 1.27-1.47x short, not fixed. notes/T-073.md.
+
 - T-031 [P2] River gradient south of 60N. Done 2026-11-07: GMTED drop over 10 km everywhere (RiverATLAS's summed to 14.7 km down the Grand Canyon); big rivers close at 2.5 x sqrt(1000/Q) m/km, so the Livingstone Falls portage; ~23% still closed. notes/T-031.md.
 
 - T-083 [P3] Desert river permanence. Done 2026-11-07: GIRES no flow 30 days a year (p >= 0.6, averaged 25 km along) dries hot desert reaches: Cooper, Diamantina, Finke gone, the Nile, Niger and Senegal kept; hazard rebuilt to match. notes/T-031.md.

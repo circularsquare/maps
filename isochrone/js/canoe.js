@@ -325,11 +325,12 @@ export function buildCanoe(L, data, sea) {
         if (!open[s]) continue;
         const a = nodeAt(steps.a[s], steps.sa[s]), b = nodeAt(steps.b[s], steps.sb[s]), m = DIR_MOVE[steps.dir[s]];
         const v = steps.v[s] * 3.6, km = steps.km[s];
-        const rate = steps.cls[s] === CLS.rapids ? cfg.hz.rapids : cfg.hz.river;
+        const rapids = steps.cls[s] === CLS.rapids, rate = rapids ? cfg.hz.rapids : cfg.hz.river;
         let e = fill[a]++;
         rTo[e] = b; rDt[e] = km / (p + v); rCode[e] = P_DOWN + m; rHz[e] = rDt[e] * rate; rKm[e] = km;
         e = fill[b]++;
-        rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate; rKm[e] = km;
+        // up rapids the canoe is poled, lined or waded, whatever the river's size (T-073)
+        rTo[e] = a; rDt[e] = km / (rapids ? cfg.upMin : Math.max(p - cfg.upShare * v, cfg.upMin)); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate; rKm[e] = km;
     }
     // the strongest current (in curr's units) and the quickest river edge, for the search's
     // bucket width (T-093)

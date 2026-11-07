@@ -23,7 +23,7 @@ export const cfg = {
         farKm: 20, exposure: 3,      // past farKm a paddling hour is this many real hours out
     },
     paddle: 5,                   // km/h on still water
-    upMin: 2.5,                  // km/h, the slowest upstream travel: lining or poling along the bank (T-071)
+    upMin: 2.5,                  // km/h, the slowest upstream travel, and all of it up rapids: lining or poling (T-071, T-073)
     upShare: 0.4,                // upstream speed is paddle - upShare x river speed: the bank current (T-071)
     transfer: 0.25,              // hours to get in or out of the canoe
     carry: 2,                    // carrying the canoe takes this many times the walking time
