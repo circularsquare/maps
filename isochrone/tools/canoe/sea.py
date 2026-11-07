@@ -1,6 +1,6 @@
 """The 0.25 degree sea grid for the canoe (docs/canoe.md 4): data/canoe/sea.bin.gz.
 
-    python tools/canoe/sea.py          # seconds; inputs from sea_fetch.py
+    python tools/canoe/sea.py [--out DIR]     # seconds; inputs from sea_fetch.py; DIR: data/canoe
 
 Local summer everywhere: June-August for cells north of the equator, December-February south.
 Currents: the drifter monthly climatology averaged over those months (months without data
@@ -8,7 +8,8 @@ skipped), else the annual mean, else 0. Wave height and sea temperature: the ERA
 climatology (sea_fetch.py era5); sea ice: the least-ice month, August north and February south
 (sea_fetch.py era5ice). Each is the mean of the four ERA5 points round each cell centre;
 cells with no ERA5 value (land, or waves under ice) take the nearest cell that has one.
-Layout: notes/T-021.md.
+Lake temperature (T-043): the four-point SST where ERA5 has one, else the four-point summer mean of
+ERA5's lake mix-layer temperature (sea_fetch.py era5lake). Layout: notes/T-021.md.
 """
 import gzip
 import json
@@ -83,8 +84,11 @@ def era5():
     i0 = np.rint((90 - (LAT + STEP / 2)) / STEP).astype(int)
     j0 = np.rint(((LON - STEP / 2) % 360) / STEP).astype(int)
     j1 = (j0 + 1) % 1440
-    out = {}
-    for v in ("hs", "ice", "sst"):
+    # lake mix-layer temperature (sea_fetch.py era5lake), defined at every ERA5 point
+    cl = np.load(os.path.join(RAW, "era5_summer", "clim_lake.npz"))
+    c["lmlt_jja"], c["lmlt_djf"] = cl["lmlt_jja"], cl["lmlt_djf"]
+    out, raw = {}, {}
+    for v in ("hs", "ice", "sst", "lmlt"):
         f = np.where(NORTHERN[:, None], 0, 1)
         stack = []
         for s in ("jja", "djf"):
@@ -92,9 +96,15 @@ def era5():
             stack.append(np.stack([a[i0][:, j0], a[i0][:, j1], a[i0 + 1][:, j0], a[i0 + 1][:, j1]]))
         with _quiet():
             m = np.where(f == 0, np.nanmean(stack[0], axis=0), np.nanmean(stack[1], axis=0))
+        raw[v] = m
         out[v + "_has"] = np.isfinite(m)
         out[v] = fill_nearest(m)
     out["sst"] = out["sst"] - 273.15
+    # Lakes (T-043): ERA5's own temperature at the place. Its SST covers inland water where ERA5
+    # has a water point (FLake's value, or observed on the Great Lakes and the Caspian); elsewhere
+    # FLake's lake mix-layer temperature there, never a sea's filled in from far away.
+    out["lake"] = np.where(np.isfinite(raw["sst"]), raw["sst"], out["lmlt"]) - 273.15
+    del out["lmlt"]
     return out
 
 
@@ -115,7 +125,7 @@ def main():
     u8 = lambda x, step, lo, hi, dt: np.clip(np.rint(x / step), lo, hi).astype(dt)
     planes = [u8(cur["U"], CUR_STEP, -127, 127, np.int8), u8(cur["V"], CUR_STEP, -127, 127, np.int8),
               u8(sea["hs"], HS_STEP, 0, 255, np.uint8), u8(sea["ice"] * 100, 1, 0, 100, np.uint8),
-              u8(sea["sst"], 1, -127, 127, np.int8)]
+              u8(sea["sst"], 1, -127, 127, np.int8), u8(sea["lake"], 1, -127, 127, np.int8)]
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "sea.bin.gz")
     data = gzip.compress(b"".join(p.tobytes() for p in planes), compresslevel=9)
@@ -124,11 +134,11 @@ def main():
     os.replace(path + ".tmp", path)
     np.savez_compressed(os.path.join(RAW, "sea_debug.npz"), U=cur["U"], V=cur["V"], has_cur=cur["has"],
                         U_from_annual=cur["U_from_annual"], hs=sea["hs"], ice=sea["ice"], sst=sea["sst"],
-                        hs_has=sea["hs_has"], ice_has=sea["ice_has"])
+                        lake=sea["lake"], hs_has=sea["hs_has"], ice_has=sea["ice_has"], sst_has=sea["sst_has"])
     ip = os.path.join(OUT, "index.json")
     idx = json.load(open(ip)) if os.path.exists(ip) else {}
     idx["sea"] = {"file": "sea.bin.gz", "west": -180.0, "north": NORTH, "step": STEP, "width": W, "height": H,
-                  "bands": ["u", "v", "hs", "ice", "sst"]}
+                  "bands": ["u", "v", "hs", "ice", "sst", "lake"]}
     with open(ip + ".tmp", "w") as fh:
         json.dump(idx, fh, separators=(",", ":"))
     os.replace(ip + ".tmp", ip)
@@ -141,4 +151,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys
+    if "--out" in sys.argv:
+        OUT = os.path.abspath(sys.argv[sys.argv.index("--out") + 1])
     main()

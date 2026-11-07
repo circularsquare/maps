@@ -1,5 +1,7 @@
 # Archive
 
+- T-043 [P3] Lake water temperature. Done 2026-11-07: big lakes already read ERA5's own SST; a lake band in `sea.bin.gz` (that SST, else ERA5's FLake `lmlt`) fixes the 137 wave-sized lakes that read far-off water (Yellowstone 24 -> 7 C); lake trips' risk moves at most 0.06 points; smoke 18/18. notes/T-043.md.
+
 - T-093 [P3] Bucket queue in the search. Done 2026-11-07: Dial's buckets under the lightest edge, both loops; weights equal the heap's in every node; L0.1 at the cap in Chrome median 1.96 -> 1.42 s, L1 and L10 1.2-1.4x, canoe L10 ~1.1x; smoke 18/18, corridors 10/10. notes/T-093.md.
 
 - T-091 [P3] Corridor parents by directed cost. Done 2026-11-07: `js/corridors.js` costs candidate parents and re-chosen edges as the search walks (directed, sloped at L0.1, carried x2); 5-11% of walking parents change at L10-L1, 15-28% at L0.1; corridors check 10/10, smoke 18/18. notes/T-091.md.

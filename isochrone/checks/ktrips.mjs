@@ -3,6 +3,7 @@
 //   node isochrone/checks/ktrips.mjs trips -1 0 300 1000   -> each trip at each K (-1: hazard off)
 //   node isochrone/checks/ktrips.mjs time [K]              -> canoe solve times, hazard off and on
 //   ONLY=cyprus ...                                        -> Constanta to Cyprus and Izmir, by edge kind
+//   ONLY=lakes ...                                         -> lake crossings (T-043), by edge kind
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -113,7 +114,18 @@ function describe(res, path) {
     return { pad, carry, far, maxOff, pts };
 }
 
-const TRIPS = process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.63], [35.34, 33.32]], ['Constanta-Izmir', [44.17, 28.63], [38.42, 27.14]]] : [
+// ONLY=lakes: lake crossings for the lake temperature (notes/T-043.md)
+const LAKE_TRIPS = [
+    ['Yellowknife-Fort Resolution (Great Slave)', [62.45, -114.37], [61.17, -113.67]],
+    ['Listvyanka-Ust-Barguzin (Baikal)', [51.85, 104.87], [53.42, 109.02]],
+    ['Puno-Copacabana (Titicaca)', [-15.84, -70.02], [-16.17, -69.09]],
+    ['Polson-Somers (Flathead)', [47.69, -114.16], [48.08, -114.23]],
+    ['Ibanez-Chile Chico (General Carrera)', [-46.30, -71.94], [-46.54, -71.73]],
+    ['West Thumb-Lake Village (Yellowstone)', [44.42, -110.57], [44.55, -110.40]],
+    ['Karakul east-west (Karakul)', [39.01, 73.55], [39.05, 73.33]],
+    ['Divnogorsk-Krasnoturansk (Krasnoyarsk Reservoir)', [55.96, 92.38], [54.32, 91.56]],
+];
+const TRIPS = process.env.ONLY === 'lakes' ? LAKE_TRIPS : process.env.ONLY === 'cyprus' ? [['Constanta-Kyrenia', [44.17, 28.63], [35.34, 33.32]], ['Constanta-Izmir', [44.17, 28.63], [38.42, 27.14]]] : [
     ['Brest-A Coruna', [48.39, -4.49], [43.37, -8.40]],
     ['Dover-Calais', [51.12, 1.31], [50.95, 1.85]],
     ['Tarifa-Tangier', [36.01, -5.60], [35.78, -5.81]],
@@ -174,7 +186,7 @@ if (mode === 'time') {
                 if (n < 0 || !(res.t[n] <= 1024)) { console.log(`  ${name}: not reached`); continue; }
                 const path = trace(res, n);
                 const ds = describe(res, path);
-                console.log(`  ${name}: ${(res.t[n] / 8).toFixed(1)} days (${res.t[n].toFixed(0)} h), survival ${(100 * Math.exp(-res.hz[n])).toFixed(1)}%, ` +
+                console.log(`  ${name}: ${(res.t[n] / 8).toFixed(1)} days (${res.t[n].toFixed(0)} h), survival ${(100 * Math.exp(-res.hz[n])).toFixed(1)}% (risk ${(100 * -Math.expm1(-res.hz[n])).toFixed(3)}%), ` +
                     `paddled ${ds.pad.toFixed(0)} h (${ds.far.toFixed(0)} h past 20 km), carried ${ds.carry.toFixed(0)} h, farthest ${ds.maxOff} km out\n    via ${ds.pts.join(' ')}`);
             }
         }

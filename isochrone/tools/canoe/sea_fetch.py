@@ -2,6 +2,8 @@
 
   python tools/canoe/sea_fetch.py drifter      # ~100 MB of ERDDAP .nc into data/raw/gdp_drifter/
   python tools/canoe/sea_fetch.py era5 [threads]
+  python tools/canoe/sea_fetch.py era5ice [threads]
+  python tools/canoe/sea_fetch.py era5lake [threads]   # ~600 chunks, ~1 GB, a few minutes
 
 drifter: the NOAA Global Drifter Program climatology (Laurindo et al. 2017, CC BY 4.0) from AOML
 ERDDAP: monthly U, V for June-August and December-February, and the annual U, V, N.
@@ -11,7 +13,8 @@ running sums, so nothing hourly is stored. Years 1991-2020; one hour every 73 h 
 cycles) for wave height, every third of those for sea ice and sea temperature; only hours in June-
 August or December-February. Output data/raw/era5_summer/clim.npz: per season (jja, djf) the mean
 of each variable on ERA5's 721 x 1440 grid (90N..90S, 0..359.75E), NaN where never valid, and the
-sample counts.
+sample counts. era5lake: ERA5's lake mix-layer temperature (FLake, defined at every point) on the
+sea temperature's hours, to clim_lake.npz (T-043).
 """
 import datetime
 import os
@@ -31,7 +34,7 @@ ERDDAP = "https://erddap.aoml.noaa.gov/gdp/erddap/griddap/"
 ARCO = "https://storage.googleapis.com/gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3/"
 EPOCH = datetime.datetime(1940, 1, 1)       # ARCO time index 0
 VARS = {"hs": "significant_height_of_combined_wind_waves_and_swell",
-        "ice": "sea_ice_cover", "sst": "sea_surface_temperature"}
+        "ice": "sea_ice_cover", "sst": "sea_surface_temperature", "lmlt": "lake_mix_layer_temperature"}
 SEASON = {6: "jja", 7: "jja", 8: "jja", 12: "djf", 1: "djf", 2: "djf"}
 STRIDE_H = 73
 SLOW_EVERY = 3                              # ice and sst on every third wave sample
@@ -73,9 +76,10 @@ def drifter():
         print("%s %.1f MB %.0f s" % (name, len(data) / 1e6, time.time() - t0), flush=True)
 
 
-def era5(threads=4, ice_only=False):
+def era5(threads=4, ice_only=False, lake_only=False):
     """ice_only: sea ice alone for the least-ice months (aug, feb), one hour every 49 h,
-    to data/raw/era5_summer/clim_ice.npz."""
+    to data/raw/era5_summer/clim_ice.npz. lake_only: lake mix-layer temperature alone (T-043),
+    sampled as sea temperature is, to clim_lake.npz."""
     from numcodecs import Blosc
     codec = Blosc()
     out = os.path.join(RAW, "era5_summer")
@@ -92,6 +96,11 @@ def era5(threads=4, ice_only=False):
             continue
         if ice_only:
             jobs.append((season, "ice", t))
+            continue
+        if lake_only:
+            if n % SLOW_EVERY == 0:
+                jobs.append((season, "lmlt", t))
+            n += 1
             continue
         jobs.append((season, "hs", t))
         if n % SLOW_EVERY == 0:
@@ -128,7 +137,7 @@ def era5(threads=4, ice_only=False):
         with np.errstate(invalid="ignore", divide="ignore"):
             res["%s_%s" % (v, s)] = np.where(c > 0, sm / np.maximum(c, 1), np.nan).astype(np.float32)
         res["n_%s_%s" % (v, s)] = c
-    name = "clim_ice.npz" if ice_only else "clim.npz"
+    name = "clim_ice.npz" if ice_only else "clim_lake.npz" if lake_only else "clim.npz"
     np.savez_compressed(os.path.join(out, name + ".tmp.npz"), **res)
     os.replace(os.path.join(out, name + ".tmp.npz"), os.path.join(out, name))
     print("done: %d chunks, %.2f GB streamed, %.0f s" % (done[0], done[1] / 1e9, time.time() - t0), flush=True)
@@ -142,3 +151,5 @@ if __name__ == "__main__":
         era5(int(sys.argv[2]) if len(sys.argv) > 2 else 4)
     elif what == "era5ice":
         era5(int(sys.argv[2]) if len(sys.argv) > 2 else 4, ice_only=True)
+    elif what == "era5lake":
+        era5(int(sys.argv[2]) if len(sys.argv) > 2 else 4, lake_only=True)

@@ -35,7 +35,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## M2: survival
 
 - T-006 [P2] Danger and survival: per-cell hazard for walking and canoe (research/friction.md 6, canoe.md 5), the search's cost becomes time + K x hazard (SPEC 3), survival along the path in the hover. Climate from CHELSA (stage E). Stage 1 done 2026-10-26: water hazard on canoe starts, K = 1000 kept after the check trips (notes/T-006.md). Land danger is done (T-042, 2026-11-05: design, world band, page; walking trips in checks/ktrips.mjs, notes/T-042.md and T-067.md). Left: close with M2's doc tidy (T-078).
-- T-043 [P3] Lake water temperature: lakes take the nearest sea's summer temperature for the cold factor of their wave hazard (docs/canoe.md 3), so a big cold lake far from a cold sea reads warm. Try ERA5 lake mix-layer temperature for lakes over ~100 km².
+- T-096 [P3] Check FLake lake temperatures against satellite: T-043 gives lakes ERA5's SST, else FLake's `lmlt`, which are model values; high Tibetan lakes at 2-5 C in June-August may be too cold, Titicaca 16.7 C in December-February (just over the 15 C cold line) too warm. Compare big lakes with ESA CCI Lakes (open at CEDA; subset, the whole set is 768 GB) (notes/T-043.md).
 - T-078 [P2] M2 doc tidy: spec against code, prune TASKS, fold notes (as T-023 did for M1). Last in M2, after T-006 and T-043 are closed or moved.
 
 ## Later

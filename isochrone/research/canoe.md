@@ -125,6 +125,24 @@ Contents: 1 rivers, 2 lakes, 3 sea, 4 speeds and costs, 5 hazard, 6 10,000 BC,
   area): a 1 km2 lake gives 0.1 m (harmless); Lake Superior (82,000 km2) hits the cap at about
   1 m. Use that Hs in the same wave hazard table as the sea (section 5), and the same distance
   from shore rule. U = 7 m/s is a **guess**; ERA5 wind over lakes could replace it later.
+- **Lake water temperature** (T-043, for the cold factor of section 5). Source: **ERA5's
+  `lake_mix_layer_temperature`** (`lmlt`, from the FLake lake model ERA5 runs at every grid
+  point), read from ARCO-ERA5 like the sea fields: open anonymous HTTPS, no account; ERA5 is
+  CC BY 4.0 (Copernicus licence since 2 July 2025, link in the sources below), credited in the
+  info panel as ERA5. Checked in the store: `lake_mix_layer_temperature`, `lake_total_layer_temperature`,
+  `lake_cover`, `lake_depth`, `lake_ice_temperature`, `lake_ice_depth`, `lake_mix_layer_depth`
+  are all there (one hour per chunk, ~1.7 MB). Found on the way: ERA5's SST field is not
+  ocean-only. It has values at every ERA5 water point, inland lakes included, equal to `lmlt`
+  on most lakes (Great Bear, Great Slave, Baikal, Ladoga, Victoria, Titicaca: same value to
+  0.1 C in a test hour) and different on the Great Lakes. So big lakes already read their own
+  temperature; only lakes with no ERA5 water point took a value filled in from the nearest
+  water, often a sea or a lake far away. Measurements: notes/T-043.md.
+  FLake in the IFS runs each point with its own lake depth from GLDB (capped at 50 m in the IFS,
+  Balsamo et al. 2012), so deep lakes may run warm early in summer. Titicaca reads 16.7 C for
+  December-February, which may be warm; not yet checked against measurements.
+  **ESA CCI Lakes** (Lakes_cci v2.1, CEDA, open with no registration, citation asked, ESA
+  Lakes_cci terms) has satellite lake surface water temperature for ~2,000 lakes, 1992-2022, but
+  768 GB of daily files; a later check of FLake on the big lakes, not a source for now.
 - 10,000 BC: HydroLAKES reservoirs should be removed (it has a reservoir flag via its link to
   GRanD; check the `Lake_type` field) and the river restored. Glacial lakes are section 6.
 

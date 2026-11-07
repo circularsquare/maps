@@ -5,6 +5,13 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **Lakes read ERA5's SST where it has one, FLake's `lmlt` elsewhere, for every lake** (T-043,
+  notes/T-043.md): ERA5's SST already covers its inland water points (FLake's value on most
+  lakes), so only lakes without a water point read a far-off value; `lmlt` everywhere would have
+  traded the Great Lakes' SST for FLake's. No 100 km² cut: under ~350 km² Hs is below 0.5 m and
+  the cold factor multiplies 0. ESA CCI Lakes' satellite temperatures are the check if FLake's
+  values (cold Tibetan lakes, warm Titicaca) look wrong.
+
 - **The search's queue is Dial's buckets as wide as the lightest edge the level can have** (T-093,
   notes/T-093.md): a width proven from minima recorded when a level is built keeps the heap's
   results exactly (weights bitwise, times differing only at ties), where a guessed width or a

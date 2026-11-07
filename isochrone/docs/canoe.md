@@ -124,12 +124,15 @@ works it out from the canoe data when it builds a level's canoe layer. Rates are
 | river, rapids (class 1) | 1e-4 |
 | sea or lake, anywhere | 2e-5, plus waves and supplies |
 | waves, by summer Hs: under 0.5 m / 0.5-1 / 1-1.5 / 1.5-2 / 2-3 / over 3 m | 0 / 2e-4 / 1e-3 / 3e-3 / 1e-2 / 3e-2, x min(d / 20 km, 1), x the cold factor |
-| cold factor, by sea temperature | x1 from 15 C, x2 at 5-15 C, x3 under 5 C |
+| cold factor, by summer water temperature | x1 from 15 C, x2 at 5-15 C, x3 under 5 C |
 | supplies, by distance from shore d | 0 to 250 km, rising linearly to 0.05 at 600 km and beyond |
 
-- d is the cell's `shore` distance; Hs and sea temperature come from the sea grid at the cell
-  (sea) or Hs from the lake's `kind` code with the sea grid's temperature there (lakes: the
-  nearest sea's, a stand-in).
+- d is the cell's `shore` distance. At sea, Hs and temperature come from the sea grid at the
+  cell. On a lake, Hs comes from the lake's `kind` code and the temperature from the sea grid's
+  lake band there (T-043): ERA5's own summer temperature at the place, its SST where ERA5 has
+  water there (on most lakes that is FLake's value; the Great Lakes read otherwise), else FLake's
+  lake mix-layer temperature at that point; never a sea's from elsewhere. Every lake
+  takes it, though only lakes over ~350 km² have Hs of 0.5 m or more, where the factor counts.
 - A sea or lake edge's hazard is its time x the mean of its two cells' rates; a river step's is
   its time x its class rate. Carrying, walking and getting in or out pay the land band's.
 
@@ -153,7 +156,7 @@ risk") to 10,000, costs nothing extra.
 | `data/canoe/water.bin.gz` | L10, whole world | 3 bytes a cell: `kind`, `shore`, `links` | 1.1 MB |
 | `data/canoe/l3/<r>_<c>.bin.gz` | L3, 5° tiles | the same 3 bands | 4.5 MB, 1122 tiles |
 | `data/canoe/l1/<r>_<c>.bin.gz` | L1, 5° tiles | `kind`, `shore` (links implicit at L1) | 13.7 MB, 1140 tiles |
-| `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea temperature (int8, °C) | 0.6 MB |
+| `data/canoe/sea.bin.gz` | 0.25°, whole world | current U, V (int8, 0.02 m/s), summer wave height (uint8, 0.05 m), ice (uint8, %), sea and lake temperature (int8, °C) | 0.7 MB |
 | `data/canoe/rivers.bin.gz` | L10, whole world | 1.24 M river steps, with slots and access | 6.7 MB |
 | `data/canoe/rivers/l3/`, `l1/` | 5° tiles | 4.1 M (with slots and access) and 11.0 M river steps | 20.8 MB, 906 tiles; 38.1 MB, 913 tiles |
 | `data/canoe/pieces.bin.gz` | L10, whole world | 222k water units, 65k water links (T-088) | 0.7 MB |
@@ -189,7 +192,10 @@ risk") to 10,000, costs nothing extra.
   equator, December-February south. Currents: the drifter monthly means over those months, else
   the annual mean, else 0 (40% of cells, mostly land). Wave height and sea temperature: the
   summer mean; ice: the August (north) or February (south) mean. Each is the mean of the four ERA5 points round the cell centre; cells with no ERA5 value (land, waves
-  under ice) hold the nearest cell's, so a lookup anywhere returns a sea value.
+  under ice) hold the nearest cell's, so a lookup anywhere returns a sea value. Lake
+  temperature (section 3): the four-point SST where there is one, else the four-point summer mean
+  of ERA5's lake mix-layer temperature, which ERA5 has at every point; nothing is filled from
+  elsewhere.
 - **River steps**: one record per downstream step, stored with the tile of the upstream cell.
   File: gzip of uint32 n, then columns cell (uint32[n]; row x 4320 + col at L10, local row x T +
   col in a tile), length (uint16[n], 10 m), direction to the next cell (uint8[n], 0-7 as `links`),
@@ -265,8 +271,8 @@ risk") to 10,000, costs nothing extra.
   V2.1 for the hot desert mask (as the land hazard), HydroLAKES (local;
   `Lake_type` 2 = reservoir, its pour point = the dam), OSM `waterway=waterfall|dam|weir|rapids`
   and `natural=waterfall` (from QLever's OSM planet endpoint), GMTED2010 north of 60N, the Natural Earth 10 m ocean polygon (public domain), the GDP drifter monthly
-  climatology, ARCO-ERA5 sampled to a local-summer mean of wave height and sea temperature and a
-  least-ice-month mean of ice,
+  climatology, ARCO-ERA5 sampled to a local-summer mean of wave height, sea temperature and lake
+  mix-layer temperature and a least-ice-month mean of ice,
   NSIDC median ice edges as a check. SWORD's obstruction flags are a later check (1.6 GB).
 
 ## 5. Search
@@ -375,6 +381,5 @@ currents, waves and ice are reused.
 ## 10. Not built yet
 
 - A slider for K and the other toggles in the mode panel, and the era switch (T-008 later parts).
-- Lake water temperature from ERA5 in place of the nearest sea's (T-043).
 - The canoe at 100 m (T-050, `docs/fine.md`).
 - 10,000 BC (T-012, section 9).

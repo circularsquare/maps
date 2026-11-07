@@ -19,7 +19,7 @@ const SHORE_KM = new Float32Array(256);
 for (let s = 0; s < 256; s++) SHORE_KM[s] = s <= 20 ? s : 20 + 10 * (Math.min(s, 78) - 20);
 
 // Hazard per paddling hour on open water (cfg.hz), from distance to shore d (km), wave height
-// Hs (m) and sea temperature (C): exposure x (water + waves(Hs) x min(d / waveKm, 1) x cold +
+// Hs (m) and water temperature (C, the lake band on a lake): exposure x (water + waves(Hs) x min(d / waveKm, 1) x cold +
 // supplies(d)), exposure being cfg.hz.exposure real hours an hour past farKm.
 function waterRate(d, hs, sst) {
     const h = cfg.hz;
@@ -78,7 +78,7 @@ function waterLinks(L, data, sea, pieces, info, nodeAt, seaRow, seaCol) {
         if (k === 1 && sea.ice[s] > cfg.iceMax) return false;
         const m = sh <= 5 ? 1 : 2;
         o.node = node; o.k = k;
-        o.rate = waterRate(SHORE_KM[sh], k === 1 ? sea.hs[s] * 0.05 : (k - 3) * 0.05, sea.sst[s]);
+        o.rate = k === 1 ? waterRate(SHORE_KM[sh], sea.hs[s] * 0.05, sea.sst[s]) : waterRate(SHORE_KM[sh], (k - 3) * 0.05, sea.lake[s]);
         o.cx = k === 1 ? sea.u[s] * m : 0; o.cy = k === 1 ? sea.v[s] * m : 0;
         return true;
     };
@@ -203,7 +203,8 @@ export function buildCanoe(L, data, sea) {
             }
             if (ok) {
                 const s = so + seaCol[c];
-                hzr[i] = waterRate(SHORE_KM[shore[i]], k === 1 ? sea.hs[s] * 0.05 : (k - 3) * 0.05, sea.sst[s]);
+                hzr[i] = k === 1 ? waterRate(SHORE_KM[shore[i]], sea.hs[s] * 0.05, sea.sst[s])
+                                 : waterRate(SHORE_KM[shore[i]], (k - 3) * 0.05, sea.lake[s]);
             }
             if (land) isLand[i] = 1;
             if (ok || onRiver[i] || (pieces && wet0[i])) { canoeOf[i] = land ? N + E++ : i; hasNode[i] = 1; }
