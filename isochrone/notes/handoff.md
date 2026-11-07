@@ -45,8 +45,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-102 done and committed (8acbee22): canoe L1/L10 1.07 after T-100; cfg.access raised to 1.0
   on its sweep (1.05). Harness kept in notes/T-102/.
 - T-035 closed without a code change (95ab0610); T-103 filed; 8 vs 16 sea moves asked of Anita.
-- **T-014 window edge fade**: agent launched 2026-11-07 (Opus), 1 core. Files: index.html
-  painting, the worker's paint code, docs/resolution.md, notes/T-014.md.
+- T-014 done and committed (1e42de07): windows fade into the coarser level over 3 cells; the
+  edge line is gone. `drawnAt` reads MapLibre 5.24.0 internals (T-104 notes it).
+- **T-104 corridor jog at window corners**: agent a3... launched 2026-11-07 (Sonnet), 1 core.
+  Files: index.html corridor drawing, docs/corridors.md, notes/T-104.md.
 - Waiting on Anita (notes/for-anita.md): T-007 stage 2 go (then T-075, T-103), Hydrography90m
   NC licence, 8 or 16 sea moves, and her look at mountains, corridors, rivers.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
