@@ -37,6 +37,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   theirs: Anita confirmed), T-2688 crowding dots from 70%. yearsdest also has T-2686 (hint grey) and T-2689 (goal 1%).
 - **difficulty** a4d3c5c6cdbbc5523 (Opus, main tree, 1 core): T-2690 start city difficulty; stage 1 measure + propose
   cut points, then WAIT for Anita's OK before the new game sheet label.
+- **worldnext** a71baa8e4eb55b6ba (Opus, MAIN tree): T-2695 rest of Latin America (ARG CHL COL PER URY ECU), T-2696 South
+  Africa, T-2697 Gulf (Anita ~22:30: "yeah i'd target rest of latin america and south africa and gulf"). Stage 1 prep now
+  at 2 cores; it messages before starting the detached overnight runs and before a join (hold other pack writers). Raise
+  the cap to 12-15 when Anita goes to bed. Israel (T-2082) held for her territory call.
+- main-tree batch COMMITTED 3e195f4b (T-2683, T-2684-2689, T-2692-2694; smoke 25/25 on 1 core). Not on 8800 yet.
 - **placelag** a80284aad4038b6b9 (Opus, tree placelag, 2 cores 0x3000): T-2404 + T-1861 track placement lag on big
   saves (Anita 21:00: "what exctly is causing the slow unresponsive feeling track placement on large saves?"): fresh
   profile, plain answer in notes/T-2404.md, fixes.
@@ -73,7 +78,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2695**.
+   (Brazil, pack lock free). Next unassigned id **T-2698**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
