@@ -3,20 +3,17 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
-**Where things stand (2026-11-05, evening).** Walking and canoe both work worldwide (L10 world,
-L3 and L1 view windows, 100 m in New York and Cluj), on a globe, with hex cells. The canoe paddles
-rivers, lakes and sea with currents (upstream 0.4 of the current, floor 2.5 km/h) and carries
-overland at x2. Water and land danger are on with K = 1000 h; the hover shows survival from 0.5%
-risk. Corridors are coloured by speed, drawn by trips, re-chosen over land and hoverable; a
-speeds panel, hill shading and river lines are on the page. Our own 1 km walking surface and the
-roads design (share3 rule) are built but not on the page. The world roads pass (T-053) is running
-in the background. Smoke passes 15/15.
+**Where things stand (2026-11-07).** Walking and canoe both work worldwide (L10 world, L3 and L1
+view windows, 100 m for towns, water country and mountains: 5,350 tiles), on a globe, with hex
+cells. Walking is on our own surface with OSM roads and directed from 90 m GLO-90 terrain at every
+level, L3 and L10 made by crossing L1 (T-011), and at 100 m by the same slope rule (T-039). The
+canoe paddles rivers, lakes and sea with currents and carries overland at x2. Water and land
+danger are on with K = 1000 h. Corridors are coloured by speed, drawn by trips and hoverable.
+Smoke passes 18/18.
 
-**Next up** (Anita, 2026-11-05): when the roads pass ends, reduce and build the world GeoTIFF,
-then our own surface with roads on the page (T-028, which fixes rural walking times 18-52% too
-short) and the 100 m tiles by T-047's rule (T-057, towns and water country first). Then 90 m
-terrain (T-011), then T-039 and the mountain tiles. 10,000 BC is for later. M1 and M2 each wait
-on a doc tidy (T-023 done; M2's is T-078). Open questions: `notes/for-anita.md`.
+**Next up**: the search's bucket queue (T-093), corridors by directed cost (T-091), then the
+known coarse-level errors (T-007 fjords and rivers, T-075 islands) and M2's doc tidy (T-078).
+10,000 BC is for later. Open questions: `notes/for-anita.md`.
 
 Milestones started from Anita's question, "if you just have a canoe in 10,000 BC, how far can
 you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC moved to later
@@ -36,7 +33,6 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 
 ## Roads and 100 m
 
-- T-057 [P2] Fine level world build: the 100 m tiles T-047's rule picks (~2.8 GB, docs/fine.md "Where the fine level goes", approved 2026-11-05), their `.roads` from the same region-by-region OSM pass as T-010's world build. Towns and water country first; mountain tiles gain mostly from 90 m slopes, so they wait for T-039. Towns and water country built 2026-11-06 (4,672 tiles, 0.52 GB, notes/T-057.md); partial town tiles need T-086 to show; heights in since T-039 (1.48 GB); mountain tiles are next (`build.py` reads their heights from data/terrain/elev/, ~1 GB more).
 
 ## M2: survival
 
@@ -47,7 +43,7 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Later
 
 - T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
-- T-093 [P3] Bucket queue in the search for every level (from T-039, fine level stage 2): a bucket queue in place of the heap was 1.3-1.6x faster in T-030's test; L0.1 windows at the cap take ~1.1-1.2 s in node with the slope per move (notes/T-039.md "Times"), canoe L10 ~0.8 s (T-035). Measure in a real browser (docs/fine.md "Times").
+- T-093 [P3] Bucket queue in the search for every level (from T-039, fine level stage 2): a bucket queue in place of the heap was 1.3-1.6x faster in T-030's test; L0.1 windows at the cap take ~1.1-1.2 s in node with the slope per move (notes/T-039.md "Times"), canoe L10 ~0.8 s (T-035). Measure in a real browser (docs/fine.md "Times"). taking, 2026-11-07
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
 - T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-093 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).

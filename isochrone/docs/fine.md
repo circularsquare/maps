@@ -2,10 +2,9 @@
 
 A fourth level under L10, L3 and L1 (`docs/resolution.md`), so the map keeps sharpening past
 zoom 9: streets, bridges, ponds, river banks and single hillsides. **Built**: land cover, OSM
-roads and bridges, walking starts, for New York and Cluj (T-038) and for the towns and water
-country of "Where the fine level goes" worldwide (T-057, read by block in the page since T-086),
-with GLO-90 heights and directed slope per move, the rule L1 was made by (T-039). Mountain tiles
-are next (T-057).
+roads and bridges, walking starts, for New York and Cluj (T-038) and for the towns, water
+country and mountains of "Where the fine level goes" worldwide (T-057, read by block in the page
+since T-086), with GLO-90 heights and directed slope per move, the rule L1 was made by (T-039).
 Measurements: `notes/T-030.md`, `notes/T-038.md`, `notes/T-047.md`, `notes/T-057.md`,
 `notes/T-086.md`, `notes/T-039.md`.
 
@@ -111,16 +110,20 @@ as at L1 (`docs/canoe.md`) with three changes:
 
 1. `python isochrone/tools/fine/select.py` (~1 min): the rule of "Where the fine level goes"
    on the 1 km layers of `data/surface/`, into `data/fine/selection.json` (town tiles with
-   their block masks, water country tiles, mountain tiles for later).
-2. `python isochrone/tools/fine/build.py world --jobs 2 --out fine_new` (~47 min on 2): every
-   town and water country tile, and the test regions whole, into `data/fine_new/` to check
+   their block masks, water country tiles, mountain tiles).
+2. `python isochrone/tools/fine/build.py world --jobs 2 --out fine_new` (~1 h on 2): every
+   town tile by its blocks, and water country, mountain tiles (a town tile among them whole) and
+   the test regions whole, into `data/fine_new/` to check
    (the page's `?fine=new`, `checks/fine.mjs --fine=new`) before swapping it in for
    `data/fine/`. Per tile: the LC100 window from the local COG, heights from
    `data/terrain/elev/` (T-011's run keeps them for every tile of the selection; the build
    stops at a tile without one), road bits from `data/roads/bits/` (the T-053 world pass,
    `docs/roads.md`), absent blocks zeroed. Every file is written to a temporary name and
    renamed, roads before land, and `index.json` is rewritten last, so the page never sees half a
-   tile or a tile before its files. `--resume` skips tiles whose land file exists.
+   tile or a tile before its files. `--resume` skips tiles whose land file exists with the
+   blocks the folder's `index.json` gives them, so a copy of `data/fine/` takes only new or
+   changed tiles. Tiles past 80 N are left out: LC100 has no class there (26 mountain tiles,
+   north Greenland and Ellesmere), and the view stays at L1.
 
 `build.py tiles <name>...` makes whole tiles from `bits/`; `build.py region <name>` a test
 region with its roads read from Geofabrik extracts in `data/raw/osm/` (`REGIONS`; Cluj 3.5 min,
@@ -171,15 +174,14 @@ with roads (T-010, T-028), much cheaper than 100 m everywhere.
 | Tier | Test (from the 1 km layers) | Unit | Count | Size |
 |---|---|---|---|---|
 | towns | LC100 urban >= 2% of the block's pixels | 0.25 degree block | 21,644 blocks in 4,671 tiles (1,353 tiles of area) | ~1.4 GB |
-| mountains | >= 70% of land sloping over 5 degrees (GMTED) | 1 degree tile | 822 | ~1.2 GB |
+| mountains | >= 70% of land sloping over 5 degrees (GMTED), south of 80 N | 1 degree tile | 796 (822 picked, 26 past LC100) | 0.71 GB |
 | water country with people | >= 10% of pixels part water (2-98%) and urban >= 1% of land | 1 degree tile | 158 | ~0.15 GB |
 | everything else | stays at 1 km | | ~17,000 | |
 
-About **2.8 GB** with stage 2's elevation (towns ~1 MB a tile of area: class, roads, flat
-elevation; mountains ~1.5 MB: elevation is most of it). Quarter-degree blocks keep towns small: most of a 1 degree tile round a town is fields.
-Built (T-057, heights since T-039): **1.48 GB** in 4,672 tiles (1,454 tiles of area), 1.0 MB a
-tile of area; without heights it was 0.52 GB. Whole tiles round every town would have been
-twice that. Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
+Built (T-057, heights since T-039): **2.15 GB** in 5,350 tiles (2,227 tiles of area), 1.0 MB a
+tile of area, heights most of it; mountain tiles 0.71 GB (median 1.0 MB). Quarter-degree blocks
+keep towns small: most of a 1 degree tile round a town is fields; whole tiles round every town
+would have been twice the size. Bridges and straits fall in town blocks, passes in mountain tiles. Where no tile exists the
 view stays at L1, as now.
 
 Not picked, and measured as changing least: deserts without dunes, ice, taiga and rainforest,
@@ -206,9 +208,8 @@ to cell map is kept per grid geometry. A real hex grid would not pay:
 
 ## Publishing
 
-R2 holds 135 MB for the page now (T-016). The towns, water country and test regions are
-1.48 GB in 4,672 tiles; the whole selection with mountains ~2.8 GB (R2's free tier is 10 GB of
-storage).
+R2 holds 135 MB for the page now (T-016). The whole selection is 2.15 GB in 5,350 tiles (R2's
+free tier is 10 GB of storage).
 - OSM's licence: the published `.roads` tiles are a database derived from OSM, so they are
   published under the ODbL with "© OpenStreetMap contributors" (the info panel credits OSM
   already, for the basemap). The other files and the painted map are not bound by it.
@@ -223,7 +224,7 @@ storage).
 | 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor (until stage 2). The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
 | 2 | T-039 built; the bucket queue is T-093 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
 | 3 | T-050 | The canoe at L0.1: kind, bridge cells, river steps. | Paddling under bridges |
-| 4 | T-057 and T-086, towns and water country built | The tiles of "Where the fine level goes": towns and water country (stage 1 content, roads from T-053's world pass) and the page reading them by block (T-086); mountain tiles once stage 2 gives them elevation. | 100 m round every town |
+| 4 | T-057 and T-086, built | The tiles of "Where the fine level goes": towns, water country and mountains (roads from T-053's world pass, heights from T-011's run) and the page reading them by block (T-086). | 100 m round every town and in the mountains |
 
 ## Open
 

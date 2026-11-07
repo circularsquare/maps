@@ -1,4 +1,4 @@
-// L0.1 against the L1 round it (T-039): the worker's modules in node, from the maps root:
+// L0.1 against the L1 round it (T-039, T-057): the worker's modules in node, from the maps root:
 //   node isochrone/checks/fine.mjs [--fine=<name>] [--only=Cluj,Brig] [--noroads]
 // --fine reads data/fine_<name>/ (the page's ?fine= switch), else data/fine/; L1 from the served
 // data/tiles/. Walking, hazard off. For each start, an L1 box +-0.6 degrees solved from the start
@@ -38,6 +38,9 @@ T.setTiles(JSON.parse(readFileSync(ROOT + 'data/tiles/index.json', 'utf8')), ROO
 const STARTS = [
     ['Cluj', 46.77, 23.60], ['New York', 40.758, -73.985], ['Innsbruck', 47.268, 11.393],
     ['Brig', 46.316, 7.988], ['Genoa', 44.41, 8.93], ['Pittsburgh', 40.44, -79.99],
+    // in mountain tiles only (T-057's third group), no town blocks round them
+    ['Zermatt', 46.02, 7.75], ['Chamonix', 45.92, 6.87], ['Ghandruk', 28.375, 83.807],
+    ['Dillon', 39.63, -106.04], ['Sogndal', 61.23, 7.10],
 ];
 const KM = 111.195, HALF1 = 0.6, SIDE = 0.15, OFF_KM = 25;
 

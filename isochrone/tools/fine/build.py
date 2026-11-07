@@ -47,6 +47,7 @@ sys.path.insert(0, os.path.join(HERE, "tools", "terrain"))
 from walk import SLOPE_RULE                # noqa: E402  the page walks the same slope rule as L1
 
 N = 1200            # cells a tile side
+LC100_NORTH = 80    # LC100's northern edge, degrees
 BLOCK = 300         # cells a town block side (0.25 degree)
 FULL = 0xFFFF       # block mask of a whole tile; bit 4 * i + j = block row i from the north, column j
 
@@ -255,12 +256,14 @@ def build_tile(job):
 
 
 def plan():
-    """{tile: block mask} of every tile to build: the selection's towns and water country, and
-    the test regions whole."""
+    """{tile: block mask} of every tile to build: the selection's towns, and whole its water
+    country, mountains (a town tile among them whole too) and the test regions."""
     sel = json.load(open(SELECTION))
     tiles = {n: int(m) for n, m in sel["towns"].items()}
-    for n in sel["water"]:
+    for n in sel["water"] + sel["mountains"]:
         tiles[n] = FULL
+    # LC100 stops at 80 N: the 26 mountain tiles past it (north Greenland, Ellesmere) stay at L1
+    tiles = {n: m for n, m in tiles.items() if tile_box(n)[3] <= LC100_NORTH}
     for box, _ in REGIONS.values():
         west, south, east, north = box
         for lat in range(south, north):
@@ -302,7 +305,16 @@ def world(args):
     tiles = plan()
     jobs = sorted(tiles.items())
     if "--resume" in args:
-        jobs = [j for j in jobs if not os.path.exists(os.path.join(OUT, j[0] + ".land.bin.gz"))]
+        # skip a tile already built with the same blocks: its land file exists and the folder's
+        # index.json gives it the planned mask (a town tile that is now a mountain one is rebuilt whole)
+        ip = os.path.join(OUT, "index.json")
+        have = {}
+        if os.path.exists(ip):
+            ix = json.load(open(ip))
+            have = {n: FULL for n in ix["tiles"]}
+            have.update({n: int(m) for n, m in ix.get("partial", {}).items()})
+        jobs = [j for j in jobs if not (os.path.exists(os.path.join(OUT, j[0] + ".land.bin.gz"))
+                                        and (not have or have.get(j[0]) == j[1]))]
     print("world: %d tiles to build on %d workers" % (len(jobs), workers), flush=True)
     build_tiles(jobs, workers)
 

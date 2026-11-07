@@ -90,13 +90,13 @@ the view is re-solved at 3 km cells, and from zoom 7 also at 1 km, each seeded a
 the next coarser answer and drawn over it. Hover reads the finest level shown. Full design,
 measured times and the thin-ridge question: `docs/resolution.md`.
 
-On walking starts, where 100 m tiles are built (towns and water country, T-057), a 100 m window is
+On walking starts, where 100 m tiles are built (towns, water country and mountains, T-057), a 100 m window is
 solved once the view fits in 1.5 M cells (from about zoom 9.4): LC100 land cover, OSM roads and
 bridges, and GLO-90 heights, each move walked by the rule of the 100 m walker that made L1
 (directed Tobler on its grade, MAP's height factor, at most a 10% grade between two road or
 urban cells, nothing steeper than 45 degrees; T-039), so a 100 m window and the 1 km level round
-it agree (`docs/fine.md`). Which tiles get 100 m worldwide: open (T-047, `docs/fine.md`, "Where
-the fine level goes").
+it agree (`docs/fine.md`). Which tiles get 100 m: T-047's rule, approved 2026-11-05
+(`docs/fine.md`, "Where the fine level goes"); 2.15 GB built, nothing past 80 N.
 
 ## 5. Interface
 

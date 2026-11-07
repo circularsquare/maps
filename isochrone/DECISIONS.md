@@ -3,6 +3,12 @@
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
+## 2026-11-07
+
+- **No 100 m tiles past 80 N** (T-057, notes/T-057.md): LC100 stops there, so the 26 mountain
+  tiles T-047's rule picks in north Greenland and Ellesmere stay at L1. RGI ice could fill them
+  if anyone ever walks there.
+
 ## 2026-11-06
 
 - **L0.1 walks each move on GLO-90 heights by the L1 walker's rule** (T-039, notes/T-039.md), in

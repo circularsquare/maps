@@ -109,8 +109,8 @@ Subagents never commit. **Pushing needs Anita's word.**
 - `index.html` + `worker.js` (a module worker over `js/`): the page. Plain JS, MapLibre GL 5.24.0 from unpkg (globe projection), no build step.
   The worker owns the grids and runs the searches; the main thread only paints and handles input.
 - `tools/build_tiles.py` makes L1 from our surface, the roads layer and T-011's directed
-  crossing planes, then L3 and the L10 world grid by crossing L1 (~1 h on one core);
-  `tools/fine/build.py world` the 100 m tiles (~15 min).
+  crossing planes, then L3 and the L10 world grid by crossing L1 (~20 min on 3 cores);
+  `tools/fine/build.py world` the 100 m tiles (~1 h on 2 cores).
   Details: `docs/code-map.md`.
 
 ## Working here (Anita's decisions)
