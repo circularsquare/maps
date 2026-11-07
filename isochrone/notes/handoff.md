@@ -28,14 +28,17 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   27% of km in straight runs, was 20%); if too spoky, loosen NEAR/SPREAD per level (DECISIONS).
 - **T-007 stage 1, design only** (fjords and rivers too fast at L3/L10): agent a3da9fe09ce9819fc
   (Opus), 1 core. Files: notes/T-007.md, notes/T-007/. Design goes to Anita before building.
-- **T-093 bucket queue**: agent a1b45d0a8f0b37ef0 (Opus), 1 core. Files: js/search.js, notes/T-093.md.
+- T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
+  1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
+- Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
+  2026-11-07) and Anita wants isochrone slow.
 - Idle agents, retire: a3e69e0de8c33f136 (T-011 stage 3), a0fa8e1aa1250534e (T-011 stage 1),
   a615cd2144584c81f (T-090), a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43,
   a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
 
 ## Next
-1. When T-093 and T-091 report: review, smoke, commit. Then T-007 / T-075 coarse-level errors,
-   T-078 M2 doc tidy.
+1. When T-007's design reports: take it to Anita before building. Then T-075 islands (measure
+   first), T-043 lake temperature, T-078 M2 doc tidy, T-095 when the machine is quiet.
 2. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075, T-007 (fjord and
    river country too fast at L3/L10: Sogndal, Coari 1.3-1.4).
 3. Anita has not yet seen T-011 served; shots in the State line's notes.
