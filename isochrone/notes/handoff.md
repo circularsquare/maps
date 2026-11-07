@@ -30,8 +30,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   prototype Sogndal 1.32 -> 1.01, Coari 1.39 -> 1.01, ~5 MB, speed unchanged. Stage 2 waits on
   Anita's go (asked; notes/for-anita.md). Agent a3da9fe09ce9819fc (~370k) knows it; resume it
   for stage 2 if context allows, else brief fresh from notes/T-007.md section 7.
-- **T-043 lake temperature**: agent a7608dfafd418f099 (Opus), 1-2 cores as `iso-t043`. Files:
-  the canoe water hazard build, docs/canoe.md 3, notes/T-043.md.
+- T-043 done and committed (4b3ff126): every lake its own ERA5 summer temperature; T-096 filed
+  (check FLake against ESA CCI Lakes).
+- **T-078 M2 doc tidy** (spec against code, prune TASKS, close T-006): agent ad2138cd934c65429
+  (Opus), no cores. Edits SPEC.md, docs/, TASKS.md, ARCHIVE.md, notes/; may file T-097 to T-099.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
