@@ -9,7 +9,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - master **8ca54120** = 8800 **build 1349** (07:00; dev smoke 26/26, 8800 light/dark 26/26). Real save 12,521,264 rail
   trips. Has the 15 new countries (T-2695/6/7: AR CL CO PE UY EC, ZA LS SZ, AE SA QA BH KW OM; 237 rows; frozen
   data/frozen/20261107-060902), and tonight's work below. Backups pre-T2695 deleted.
-- Cap 16 overnight (Anita ~00:25: "feel free to use all coores"); **set back to 10 when she is up** (`python cores.py cap 10`).
+- Cap 10 again (Anita up, ~08:45).
+- Anita 2026-11-07 morning: posting about the game as "trainsworld", earlier today, not waiting for worldfix; condensed
+  NA diagram "looks ok"; "lets make the regionb orders look liketwice as wide and like 18% as visible". Done in
+  app/src/diagram/draw.ts (BORDER_W 0.2 -> 0.4, BORDER_ALPHA 0.7 -> 0.126) + docs/ui-diagram.md, typechecked,
+  **UNCOMMITTED** (app landings held for worldfix's gates). Asked her whether to publish before her post.
+- master after 8ca54120 also has T-2721's ferry fix (not on 8800).
 - LIVE = 821. Publish only on Anita's word. The upkeep tree still needs `agent-tree.mjs remove upkeep --force`.
 
 ## Landed overnight (maps-b9 [971c94]), all on master
@@ -32,10 +37,23 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **worldfix** ae45801a1a16dbcc8 (Opus, main tree): T-2702 coastal units missing from shipped countries (BR, MX, check
   all) + T-2712 Colombia GHSL blobs (DANE admin_totals; tiq pis lve held). Rows + one join; it messages before its
   join: **then hold pack writers**. Claims <= 8 cores. May file T-2725, T-2726. Commit its files when it reports.
+  07:29 run started: batch 20261107-072922, 39 rows (BR 15, MX 4, CN 5, KR 4, VN 5, MY 1, BN 1, CO 4), python 16076,
+  port 6371, log artifacts/trainworld/t2702-run.log; backup data/work/pre-T2702/pre (5.5 GB). **Hold app/ and WASM
+  landings until its gates end.** Join after (BR,MX,CO,CN,KR,VN,MY,BN).
 - pairs finished T-2721 (committed after 8ca54120): app's marketRule.ts kept T-279's ferry (30 min, 35 km/h, $50)
   after T-2424 moved the sim to 90 min, 30 km/h, $80; check passes. Not on 8800 yet (rebuild with worldfix's batch).
 - My Vite 6195 (task b8p351viu) for smokes.
-- Next unassigned id **T-2728**.
+- Anita ~09:00 (her words are in each brief): **publish in about an hour, with the border change** ("ok, can wait the
+  hour"): when worldfix's gates end, commit borders (+ loadbar's items 1 and 3 if ready), rebuild 8800, smoke, then
+  freeze.py build + deploy.py --dist on the last freeze (code-map.md "publish during a batch"); push needs nothing more.
+- **loadbar** ac01a9ea182c43905 (Opus, main tree, Vite 6185): T-2728 remove the 13 px status ring, T-2730 Lines-view
+  Trains column spacing (report these first, for the publish), T-2729 real progress for "calculating all cities".
+- **payback** a0dc9df687e6f9220 (Opus, analysis only, no code): T-2732 upkeep payback at grade vs tunnel/viaduct in
+  mountains and cities, terrain upkeep and street-crossing upkeep options -> notes/T-2732.md, research/upkeep-by-terrain.md.
+  Answer to her "did we land the upkeep": yes, T-2619 (1c9b3c72); T-2620 still waits on her.
+- **profile** a0bea940649aa47c0 (Opus, main tree, Vite 6186): T-2734 line cross-section (elevation profile, track by
+  level, crossings, stations, fixed-scale hover lens). Stage 1 feasibility message first, then builds.
+- Next unassigned id **T-2737**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.

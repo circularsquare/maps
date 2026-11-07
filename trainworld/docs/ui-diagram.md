@@ -107,8 +107,8 @@ that arrive after a layout), between blocks as inside them.
   most 3, and outward (away from the lines) up to 10, so the edge fills notches and steps with long runs (T-2491);
   between zones, clearance from those and the region's edge, at most 12. Corners are rounded with a radius of 3
   pitches (less on short runs).
-- **Drawn** under everything, the lines' casings cutting it, in the map's outline grey (#73798b) at 0.7 opacity,
-  0.2 of a pitch wide; below a device px, a px wide and fainter by its width's share, never below half (the lines'
+- **Drawn** under everything, the lines' casings cutting it, in the map's outline grey (#73798b) at 0.126 opacity,
+  0.4 of a pitch wide (Anita, 2026-11-07: twice as wide, 18% as visible); below a device px, a px wide and fainter by its width's share, never below half (the lines'
   rule, T-2408, with a higher floor). One path; a border two zones share is drawn once.
 
 ## Water

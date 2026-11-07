@@ -579,7 +579,7 @@ export interface DiagramTheme {
 export const WATER_SHARE = 0.55;
 /** zone borders (T-2464): this share of a pitch wide at this opacity; below a device px, a px wide and fainter by its
  * width's share, though never below BORDER_THIN of it (the lines' rule, T-2408, with a higher floor) */
-const BORDER_W = 0.2, BORDER_ALPHA = 0.7, BORDER_THIN = 0.5;
+const BORDER_W = 0.4, BORDER_ALPHA = 0.126, BORDER_THIN = 0.5;
 /** the edge's width, in stroke widths */
 const EDGE_W = 0.16;
 
