@@ -1318,7 +1318,6 @@
   "newGame.startIn": "Label before the row of start city buttons on the new game sheet.",
   "newGame.startInCity": "Button that starts the new game. city: a city name, e.g. \"Tokyo\".",
   "newGame.tier": "Short light word after a city's name in the new game sheet's search results: how hard a game started there is. Lowercase in English. tier: easy, medium or hard. Use the words games use for difficulty levels; short.",
-  "newGame.tierTip": "Hover on newGame.tier: what makes a start easy or hard, how many trips start and end close to the city's centre. tier: easy, medium or hard.",
   "newGame.title": "Heading of the new game sheet.",
   "nodeDrag.builtFixed": "Notice when pressing on a built node to drag it.",
   "nodeDrag.cannotMoveThis": "Notice after dropping a dragged node on a spot that is refused with no reason given.",

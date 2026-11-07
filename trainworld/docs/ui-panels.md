@@ -983,7 +983,7 @@ registry centre and zoom, or over New York with none [T-310].
   means. A sandbox is the normal game with nothing refused for money and the cash hidden; demand,
   fares, running costs, line money, the Money tab, points and stars are worked out as in normal.
 - **Start in**, three ways separated by a small muted "or" [T-1132]. First New York, London, Paris,
-  Tokyo and Toronto (`START_CITIES`, a fixed list) and Current location, one lit at most; New York
+  Guangzhou and Tokyo (`START_CITIES`, a fixed list of easy starts, T-2690) and Current location, one lit at most; New York
   is lit to begin with, so Start reads "Start in New York" [T-2123]. A click on a lit city keeps it
   (Choose on map is the way to no city); a second click on Current location unlights it. Current location shows only where the browser can give a location (a secure
   page with geolocation); the browser asks the player itself. While it waits the button says

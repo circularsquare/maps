@@ -1318,7 +1318,6 @@
   "newGame.startIn": "開始地点",
   "newGame.startInCity": "{city}で開始",
   "newGame.tier": "{tier, select, easy {簡単} medium {普通} other {難しい}}",
-  "newGame.tierTip": "{tier, select, easy {中心から10km以内で始まって終わる移動が多い} medium {中心から10km以内で始まって終わる移動はそこそこ} other {中心から10km以内で始まって終わる移動が少ない}}",
   "newGame.title": "新しいゲーム",
   "nodeDrag.builtFixed": "建設済みの線路と駅は動かせません。",
   "nodeDrag.cannotMove": "そこへは移動できません。",

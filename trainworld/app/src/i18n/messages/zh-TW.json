@@ -1318,7 +1318,6 @@
   "newGame.startIn": "起始城市",
   "newGame.startInCity": "從{city}開始",
   "newGame.tier": "{tier, select, easy {簡單} medium {普通} other {困難}}",
-  "newGame.tierTip": "{tier, select, easy {起訖都在市中心10km以內的旅次很多} medium {起訖都在市中心10km以內的旅次不多不少} other {起訖都在市中心10km以內的旅次很少}}",
   "newGame.title": "新遊戲",
   "nodeDrag.builtFixed": "已完工的軌道和車站無法移動。",
   "nodeDrag.cannotMove": "無法移到這裡。",
