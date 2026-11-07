@@ -10,6 +10,7 @@ import { GOAL_SHARES, goalsReached, STAR_SHARE } from "../game/points";
 import { realShare } from "../game/realShare";
 import { shownDay, shownDayOn } from "../game/ui";
 import { t, tNumber } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { weekdayLong } from "../i18n/calendar";
 import { Icon } from "./widgets";
 
@@ -20,7 +21,7 @@ export function goalWhen(city: City, at: number): string {
 }
 
 export function goalTip(city: City, share: number, at: number | undefined): string {
-  return t("goalTicks.tip", { star: share === STAR_SHARE, reached: at !== undefined, share: tNumber(share), city: city.name, when: at === undefined ? "" : goalWhen(city, at) });
+  return t("goalTicks.tip", { star: share === STAR_SHARE, reached: at !== undefined, share: tNumber(share), city: tPlace(city.id, city.name), when: at === undefined ? "" : goalWhen(city, at) });
 }
 
 /** T-2145 (Anita: "the bars at 10%, 20%, etc are a bit much"): the goals drawn as ticks; the higher
@@ -39,7 +40,7 @@ export function GoalTicks({ city }: { city: City }) {
         </i>
       ))}
       {real !== null && (
-        <i class="real-mark" style={{ left: real + "%" }} data-tip={t("goalTicks.real", { share: tNumber(real, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), city: city.name, dayed, day: shownDayOn.value })} />
+        <i class="real-mark" style={{ left: real + "%" }} data-tip={t("goalTicks.real", { share: tNumber(real, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), city: tPlace(city.id, city.name), dayed, day: shownDayOn.value })} />
       )}
     </>
   );

@@ -10,6 +10,7 @@
 // (ui/LoadingScreen.tsx).
 
 import { t, tList } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { computed, effect, signal } from "@preact/signals";
 import { isMemoryFailure } from "./loadText";
 import { leftText } from "./loadBar";
@@ -232,6 +233,6 @@ export function continueWithoutDemand() {
 
 /** "New York", "New York and Philadelphia", "New York, Philadelphia and Boston". */
 export function cityNames(ids: CityId[]): string {
-  const names = ids.map((id) => cityById(id).name);
+  const names = ids.map((id) => tPlace(id, cityById(id).name));
   return tList(names);
 }

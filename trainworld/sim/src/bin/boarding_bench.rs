@@ -89,6 +89,12 @@ fn main() {
         a.set_riders(riders(&lines, 10 + r), 0);
         round(&mut a, &format!("new weekday riders {r}"));
     }
+    let mem = a.boarding_mem();
+    let tot: usize = mem.iter().map(|x| x.1).sum();
+    eprintln!("account memory {:.1} MB:", tot as f64 / 1e6);
+    for (k, b) in mem {
+        eprintln!("  {k}: {:.1} MB", b as f64 / 1e6);
+    }
     if let Ok(path) = std::env::var("TW_DUMP") {
         let mut s = String::new();
         for &(id, _) in &lines {

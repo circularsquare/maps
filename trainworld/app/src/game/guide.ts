@@ -16,6 +16,7 @@ import { zoomedOut } from "../map/intercityView";
 import type { WorldView } from "./types";
 import { saveGuide } from "../workers/clockClient";
 import { t } from "../i18n";
+import { tPlace } from "../i18n/places";
 import type { GuideSave } from "../workers/saveFile";
 
 export type GuideId = "zoom" | "track" | "stations" | "construct" | "line" | "stops" | "trains" | "crowd" | "levels"
@@ -130,7 +131,7 @@ function secondSteps(w: WorldView, trains: (line: string) => readonly number[] |
     step("crowd", crowdSeen.value),
     step("levels", levels >= 3, { have: levels, goal: 3 }),
     step("traffic", display.value.trackColour === "traffic"),
-    { id: "star", words: t("guide.star", { share: GUIDE_SHARE, city: cityById(city)?.name ?? t("guide.aCity") }), count: { have: starred ? GUIDE_SHARE : Math.min(share, GUIDE_SHARE), goal: GUIDE_SHARE, unit: "%" }, met: starred || share >= GUIDE_SHARE },
+    { id: "star", words: t("guide.star", { share: GUIDE_SHARE, city: city && cityById(city) ? tPlace(city, cityById(city).name) : t("guide.aCity") }), count: { have: starred ? GUIDE_SHARE : Math.min(share, GUIDE_SHARE), goal: GUIDE_SHARE, unit: "%" }, met: starred || share >= GUIDE_SHARE },
   ];
 }
 

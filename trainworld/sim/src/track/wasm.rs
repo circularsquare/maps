@@ -1420,6 +1420,11 @@ impl RouteTrace {
 }
 
 impl TrackApi {
+    /// T-2707: the boarding account's heap bytes by structure (benches; not exported).
+    pub fn boarding_mem(&self) -> Vec<(&'static str, usize)> {
+        self.boarding.mem_bytes()
+    }
+
     /// Compose the water mask from the pack rasters for the loaded network's frame. In the legacy
     /// frame each raster is the affine `TransformedMask` earlier builds used (same arithmetic as
     /// the clock worker's, so the costs of legacy saves are unchanged); in the world frame it is

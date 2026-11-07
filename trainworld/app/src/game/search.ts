@@ -5,6 +5,7 @@
 // loaded them; addresses are not searched (notes/T-148.md).
 
 import { t, tSeries } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { CITIES, type City } from "./cities";
 import { zoneAt } from "./zones";
 import { complexes } from "./complexView";
@@ -132,7 +133,7 @@ export function search(query: string): SearchHit[] {
   }
   CITIES.forEach((c, i) => {
     const m = cityMatch(c, q);
-    if (m) scored.push({ hit: { kind: "city", name: c.name, city: c, matched: m.matched }, score: m.score, weight: (m.matched ? -1e6 : 0) - i });
+    if (m) scored.push({ hit: { kind: "city", name: tPlace(c.id, c.name), city: c, matched: m.matched }, score: m.score, weight: (m.matched ? -1e6 : 0) - i });
   });
   for (const list of places.peek().values())
     for (const p of list) {
@@ -154,7 +155,7 @@ export function search(query: string): SearchHit[] {
   return hits;
 }
 
-const cityById = (id: string) => CITIES.find((c) => c.id === id)?.name ?? "";
+const cityById = (id: string) => { const c = CITIES.find((x) => x.id === id); return c ? tPlace(c.id, c.name) : ""; };
 
 const aliasKeys = new Map<string, string[]>();
 /** How well a registry city or zone matches the normalised query `q` by its name or an alias
@@ -162,11 +163,13 @@ const aliasKeys = new Map<string, string[]>();
  * an alias scores as one through the name, so "osaka" finds Kansai before Osaka's place-list
  * entries; callers put name matches first among equal scores. Null when nothing matches. */
 export function cityMatch(c: City, q: string): { score: number; matched?: string } | null {
+  const shown = tPlace(c.id, c.name);
+  const loc = shown !== c.name ? matchScore(normalise(shown), q) : -1;
   const own = matchScore(normalise(c.name), q);
-  if (own === 0) return { score: 0 };
+  if (own === 0 || loc === 0) return { score: 0 };
   let keys = aliasKeys.get(c.id);
   if (!keys) aliasKeys.set(c.id, (keys = c.aliases.map(normalise)));
-  let best = own < 0 ? Infinity : own, matched: string | undefined;
+  let best = own < 0 ? (loc < 0 ? Infinity : loc) : loc >= 0 ? Math.min(own, loc) : own, matched: string | undefined;
   keys.forEach((k, i) => {
     const s = matchScore(k, q);
     // among equal matches the shortest alias, so "hague" shows The Hague rather than "Rotterdam [The Hague]"

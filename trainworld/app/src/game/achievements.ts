@@ -6,13 +6,14 @@
 // once its first final result is in: everything met then is recorded and nothing is toasted.
 
 import { computed, effect, signal } from "@preact/signals";
-import { cityById, type CityId } from "./cities";
+import { CITIES, cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
 import { continentLabel, continentOf } from "./continents";
 import { AVERAGE_DAY, WEEKDAY_LONG } from "./days";
 import { demandByDay, demandUpdating, eachCorridor, lineFiguresIn, roughZones, type Corridors } from "./demand";
 import { bigDistance, clockTime, dayOf, money, speed } from "./format";
 import { t, tCountry, tList, tNumber } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 import { stationZone } from "./listScope";
 import { moneyState } from "./money";
@@ -76,6 +77,8 @@ export const SLEEPER_S = 12 * 3600;
 /** riders a day who must be on one train that long */
 export const SLEEPER_RIDERS = 1;
 
+/** A record keeps the city's Latin name; shown in the language now set. */
+const cityShown = (name: string | undefined) => { const c = name ? CITIES.find((x) => x.name === name) : undefined; return c ? tPlace(c.id, c.name) : name; };
 const pct = (v: number) => `${Math.floor(v)}%`;
 const decimals = (v: number, dp: number) => tNumber(v, { minimumFractionDigits: dp, maximumFractionDigits: dp });
 /** The countries of a Over-the-border record: new ones store ISO codes, older saves the English names. */
@@ -90,8 +93,8 @@ export const FIRSTS: First[] = [
   { id: "circle", get name() { return t("achievements.nameCircle"); }, rule: () => t("achievements.ruleCircle", { n: CIRCLE_STOPS }), text: (a) => t("achievements.textCircle", { of: a.of, n: a.v ?? 0 }) },
   { id: "change", get name() { return t("achievements.nameChange"); }, rule: () => t("achievements.ruleChange", { trips: short(CHANGE_MIN_TRIPS) }), text: (a) => t("achievements.textChange", { n: decimals(a.v ?? 0, 2) }),
     now: () => { const v = demandFigures.value?.transfersPerTrip; return v === undefined ? "" : t("achievements.nowChange", { n: decimals(v, 2) }); } },
-  { id: "city", get name() { return t("achievements.nameCity"); }, rule: () => t("achievements.ruleCity", { share: CITY_SHARE }), text: (a) => t("achievements.textCity", { share: pct(a.v ?? 0), of: a.of }) },
-  { id: "intercity", get name() { return t("achievements.nameIntercity"); }, rule: () => t("achievements.ruleIntercity", { share: INTERCITY_SHARE }), text: (a) => t("achievements.textIntercity", { share: pct(a.v ?? 0), of: a.of }) },
+  { id: "city", get name() { return t("achievements.nameCity"); }, rule: () => t("achievements.ruleCity", { share: CITY_SHARE }), text: (a) => t("achievements.textCity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
+  { id: "intercity", get name() { return t("achievements.nameIntercity"); }, rule: () => t("achievements.ruleIntercity", { share: INTERCITY_SHARE }), text: (a) => t("achievements.textIntercity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
   { id: "sleeper", get name() { return t("achievements.nameSleeper"); }, rule: () => t("achievements.ruleSleeper", { hours: SLEEPER_S / 3600 }), text: (a) => t("achievements.textSleeper", { hours: decimals(a.v ?? 0, 1), of: a.of }) },
 ];
 

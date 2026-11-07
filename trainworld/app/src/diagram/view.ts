@@ -25,6 +25,7 @@ import { EARTH_C, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
 import { SHADES } from "../game/shadeTable";
 import { DATA_BASE } from "../game/dataBase";
+import { tPlace } from "../i18n/places";
 import { perfOff } from "../perfFlags";
 import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
 import { mixOklab } from "../game/palette";
@@ -313,8 +314,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       const g = outlineMap.get(c.id);
       if (!g || zonesSent.has(c.id)) continue;
       zonesSent.add(c.id);
+      const shown = tPlace(c.id, c.name);
       // T-2438: its shown name, for the city names far out
-      out.push({ id: c.id, rings: mercRings(g), label: { name: c.name, width: widthOf(c.name), trips: c.localTrips ?? 0, city: c.kind !== "zone" } });
+      out.push({ id: c.id, rings: mercRings(g), label: { name: shown, width: widthOf(shown), trips: c.localTrips ?? 0, city: c.kind !== "zone" } });
     }
     return out;
   };

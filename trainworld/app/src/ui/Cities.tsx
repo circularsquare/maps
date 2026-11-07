@@ -81,7 +81,7 @@ function PointsCell({ id, name }: { id: CityId; name: string }) {
 /** T-685: the star beside a region that has reached the mark, with when (its local time, as the
  * top bar's clock hover names a day). */
 function Star({ city, at }: { city: City; at: number }) {
-  return <span class="city-star" data-tip={t("cities.starTip", { when: goalWhen(city, at), city: city.name, share: STAR_SHARE })}><Icon.star /></span>;
+  return <span class="city-star" data-tip={t("cities.starTip", { when: goalWhen(city, at), city: tPlace(city.id, city.name), share: STAR_SHARE })}><Icon.star /></span>;
 }
 
 interface CityRow {

@@ -24,6 +24,7 @@
 // meanwhile.
 
 import { t as tr } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { computed, effect, signal } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
@@ -343,11 +344,11 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar
       const v = local.get(c.id);
       const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
-      const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: c.name });
+      const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: tPlace(c.id, c.name) });
       const lm = localModes(v);
       const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
       const inter = !own || isOwn ? total(c.place) : t;
-      const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: c.name });
+      const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: tPlace(c.id, c.name) });
       const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
       const unbuilt = !own && opened !== null && !opened.has(c.id);
       // T-2690: until a line is set up an unopened zone's dot is coloured by its start tier
@@ -356,7 +357,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         ? [localLine, localBar, interLine, interBar, ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
         : isOwn
           ? [interLine, interBar, `(${localLine})`]
-          : [tr("intercityView.between", { count: count(t.all), when: day, a: own.name, b: c.name }), interBar, tr("intercityView.explore")];
+          : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
       return [{ ...t, city: c, isOwn, tag, unbuilt, tier }];
     });
     points.sort((a, b) => b.all - a.all);
@@ -376,7 +377,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       // so its 1 px outline leaves some fill; then a quarter bigger (T-1886: beside the opened zones' bubbles it read small)
       if (p.unbuilt) r = (UNBUILT_GROW * Math.max(2, Math.floor((r * pxPerUnit * size) / 2))) / (pxPerUnit * size);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, p.unbuilt ? 1 : BUBBLE_ALPHA, p.unbuilt ? UNBUILT_EDGE : edgeOf(p.isOwn ? 2 : 1, p.rail, p.all)], i * DISC);
-      label(tr("intercityView.label", { name: p.city.name, count: count(p.all) }));
+      label(tr("intercityView.label", { name: tPlace(p.city.id, p.city.name), count: count(p.all) }));
     });
     const first = points.findIndex((p) => p.isOwn);
     marks = { discs, anchor: a, tags: points.map((p) => p.tag), cities: points.map((p) => p.city.id), first: first >= 0 ? first : undefined };

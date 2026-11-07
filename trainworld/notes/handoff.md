@@ -91,7 +91,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Main-tree app work committed (one commit before f9142979; smoke 26/26). t1148 place pairs FAILS on master too: T-2721.
   Still uncommitted: worldnext's files (game/*.json, world_plan.*, tier0.py, world-run.md, notes/T-2695.md).
   After the join: rerun place_names.mjs, smoke, commit worldnext's files, rebuild 8800 (snapbuild), smoke light/dark.
-- Next unassigned id **T-2722**.
+- 03:50 started: **boardmem** a3c779d9947d39c3e (Opus, main tree sim/, Vite 6181, 3 cores) T-2707, may file T-2722;
+  citynames2 finished T-2720 (archived), UNCOMMITTED: ui/Cities, GoalTicks, MoneyHistory, SavesPanel, StatusTag,
+  DemandSelector, LinesTab; game/loading, guide, achievements, search; map/intercityView, commuterView, zoneLoading;
+  diagram/view.ts; docs/localization.md. Commit with the post-join batch after one smoke.
+  My Vite 6191 (task bns7h3nn9) still up for smokes. T-2721 waits for the join (the check reads packs).
+- Next unassigned id **T-2724**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.

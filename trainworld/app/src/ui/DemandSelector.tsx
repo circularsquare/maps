@@ -19,6 +19,7 @@ import { DiagramTopLeft } from "./DiagramButton";
 import { live, mapBearing } from "../map/live";
 import { DEMAND_KEY } from "./toolKeys";
 import { t, tNumber, type MessageKey } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 /** The map's upper left: the demand buttons with the status tag to their right (T-349), and under
  * them the track display, the station ridership (T-1448, T-1477), the find button (T-1868; with the
@@ -85,7 +86,7 @@ export function DemandSelector() {
   // T-149: the viewed city may still be loading after a pan
   const load = loadProgress.value;
   const pending = !viewedZone.value ? t("demandSelector.nothing") // T-318: dead space
-    : load?.cities.includes(activeCity.value) ? t("demandSelector.loading", { city: cityById(activeCity.value).name, percent: tNumber(Math.floor(load.fraction * 100)) }) : t("demandSelector.calculating");
+    : load?.cities.includes(activeCity.value) ? t("demandSelector.loading", { city: tPlace(activeCity.value, cityById(activeCity.value).name), percent: tNumber(Math.floor(load.fraction * 100)) }) : t("demandSelector.calculating");
   const selected = d.commuters ? d.commuterEnd : "none";
   if (folded("bubbles")) return <div class="demand-selector" role="group" aria-label={t("demandSelector.group")}><FoldCell row="bubbles" /></div>;
   return <div class="demand-selector" role="group" aria-label={t("demandSelector.group")}>

@@ -18,6 +18,7 @@ import { PillRing } from "./Spinner";
 import { bubblesWaiting, farWaiting } from "../map/commuterView";
 import { groundNet, shadeDownloads } from "../game/terrain";
 import { t } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 /** T-2409: whole game days since the oldest edit no final covers, while figures in play still miss it
  * (a line with no riders or old ones, or the zone in view recomputing); 0 otherwise. A computed, so
@@ -51,7 +52,7 @@ const clickWait = computed<CityId | null>(() => {
 /** T-2523: what that wait is on, in the words of the load's stages: the zone's packs, its own solve during a
  * load (the focus pool), an edit's solve or a whole solve */
 function waitText(zone: CityId): string {
-  const name = cityById(zone).name;
+  const name = tPlace(zone, cityById(zone).name);
   if (zoneSteps.value.get(zone)?.step === STAGE_TEXT.data) return t("statusTag.loadingPlace", { name });
   if (focusZones.value.get(zone) === false) return t("statusTag.calculatingPlace", { name });
   if (!demandUpdating.value) return t("statusTag.loadingDataDots");
@@ -136,7 +137,7 @@ export function StatusTag() {
   const stopped = demandStopped.value;
   const busy = stopped ? (loadingCardShown() ? null : terrain)
     : loadFailure.value ? t("statusTag.demandFailed")
-    : zoneFailure ? t("statusTag.placeFailed", { name: cityById(activeCity.value).name })
+    : zoneFailure ? t("statusTag.placeFailed", { name: tPlace(activeCity.value, cityById(activeCity.value).name) })
     // T-180: while the clock waits, the card in the middle of the map says it instead
     : loadingCardShown() ? null
     // T-212: "Loading data", not the cities' names (those are in the hover)
@@ -160,7 +161,7 @@ export function StatusTag() {
   const base = onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
     : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
     : !demandView.value ? busy
-    : bubblesWaiting.value ? t("statusTag.loadingBubbles", { name: cityById(activeCity.value).name })
+    : bubblesWaiting.value ? t("statusTag.loadingBubbles", { name: tPlace(activeCity.value, cityById(activeCity.value).name) })
     : clickWait.value ? waitTip(clickWait.value)
     : "");
   const tip = [base, !onTerrain && clock.capped.value ? t("statusTag.capped", { cap: DEMAND_CAP }) : ""].filter(Boolean).join("\n") || undefined;

@@ -22,6 +22,7 @@ use super::params::*;
 use super::service::{LineSvc, Service, Trip};
 use super::span::{self, Mask};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Seats, riders at the rated load (100%) and at crush (150%, T-2186) per 20 m car: the demand
 /// kernel's `SEATS_PER_CAR`, `RATED_PER_CAR` and `CRUSH_PER_CAR` (sim/src/demand/api.rs).
@@ -107,12 +108,23 @@ pub struct Arrivals {
 
 #[derive(Clone, Debug, Default)]
 struct Masked {
-    m: Mask,
+    /// the same for every kind of day's account of the service (T-2707)
+    m: Arc<Mask>,
     /// per period, the mask's share over its riders by this platform's shape (0: no train due all
     /// period, and the period's riders arrive as if unmasked)
     norm: [f64; PERIODS],
-    /// riders arrived from the start of the day to each segment's start
+    /// riders arrived from the start of the day to the start of every `PRE_EVERY`th segment
     pre: Vec<f64>,
+}
+
+/// T-2707: `Masked::pre` keeps one sum in this many; `cum` adds the segments between in the same
+/// order, so its sums are the same to the bit.
+const PRE_EVERY: usize = 8;
+
+impl Masked {
+    fn end(&self, i: usize) -> f64 {
+        self.m.t.get(i + 1).copied().unwrap_or(DAY)
+    }
 }
 
 impl Arrivals {
@@ -126,22 +138,26 @@ impl Arrivals {
     /// `new`, with riders spread only where `m` lets them arrive; a mask letting everyone arrive
     /// all day changes nothing.
     pub fn with_mask(per: [f64; PERIODS], peak: &[f64; PERIODS], m: Mask) -> Self {
+        Self::with_shared(per, peak, Arc::new(m))
+    }
+    /// `with_mask` on a mask other platforms' accounts hold too.
+    pub fn with_shared(per: [f64; PERIODS], peak: &[f64; PERIODS], m: Arc<Mask>) -> Self {
         let mut a = Self::new(per, peak);
         let ns = m.t.len();
         if ns == 0 || m.s.iter().all(|&s| s == 1.0) {
             return a;
         }
-        let ends: Vec<f64> = (0..ns).map(|i| if i + 1 < ns { m.t[i + 1] } else { DAY }).collect();
-        let mut norm = [0.0; PERIODS];
+        let mut x = Masked { m, norm: [0.0; PERIODS], pre: Vec::with_capacity(ns.div_ceil(PRE_EVERY)) };
         for i in 0..ns {
-            let p = period_at(m.t[i]);
-            norm[p] += m.s[i] * (a.w(p, ends[i]) - a.w(p, m.t[i]));
+            let p = period_at(x.m.t[i]);
+            x.norm[p] += x.m.s[i] * (a.w(p, x.end(i)) - a.w(p, x.m.t[i]));
         }
-        let mut x = Masked { m, norm, pre: Vec::with_capacity(ns) };
         let mut tot = 0.0;
         for i in 0..ns {
-            x.pre.push(tot);
-            tot += a.seg(&x, i, x.m.t[i], ends[i]);
+            if i % PRE_EVERY == 0 {
+                x.pre.push(tot);
+            }
+            tot += a.seg(&x, i, x.m.t[i], x.end(i));
         }
         a.day = tot;
         a.masked = Some(Box::new(x));
@@ -169,7 +185,11 @@ impl Arrivals {
         let mut tot = d * self.day;
         if let Some(x) = &self.masked {
             let i = x.m.t.partition_point(|&u| u <= s).saturating_sub(1);
-            return tot + x.pre[i] + self.seg(x, i, x.m.t[i], s);
+            let mut pre = x.pre[i / PRE_EVERY];
+            for j in i / PRE_EVERY * PRE_EVERY..i {
+                pre += self.seg(x, j, x.m.t[j], x.end(j));
+            }
+            return tot + pre + self.seg(x, i, x.m.t[i], s);
         }
         for p in 0..PERIODS {
             let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
@@ -291,6 +311,9 @@ pub struct Boarding {
     redone: usize,
     /// where `ensure_some` goes on from: day kind times lines plus line
     cursor: usize,
+    /// T-2707: per line id, the service key (`key`) its arrival masks were made for, and per run
+    /// the masks (`line_masks`), which every kind of day's account shares
+    masks: Vec<Option<(u64, [RunMasks; 2])>>,
     /// Riders a day changing onto each platform (line, run, stop in the run's order) from other
     /// platforms (T-554, `set_transfers`). Only the timing of drawn crowds reads them.
     pub xfer: HashMap<(u32, u8, u32), Vec<Feeder>>,
@@ -419,6 +442,7 @@ impl Boarding {
             self.riders[d].clear();
             self.accounts[d].clear();
         }
+        self.masks.clear();
         self.xfer.clear();
     }
 
@@ -468,6 +492,10 @@ impl Boarding {
         h.add(ls.cars as u64);
         h.add(net.line_trains[l].is_some() as u64);
         h.f(net.line_turn[l] as f64);
+        // the lattice's waits under a headway (T-2607), which the arrival masks read
+        for lev in 0..3 {
+            h.add(net.line_auto[l].map_or(0, |a| a[lev] as u64 + 1));
+        }
         h.f(ls.shift);
         if ls.is_loop() {
             h.add(ls.kind as u64 + 100);
@@ -547,14 +575,29 @@ impl Boarding {
             }
             done += 1;
             let lr = lr.unwrap();
+            if self.masks.len() < nl {
+                self.masks.resize(nl, None);
+            }
+            if self.masks[l].as_ref().map_or(true, |m| m.0 != base) {
+                self.masks[l] = Some((base, [0, 1].map(|r| line_masks(net, svc, l, r))));
+            }
+            let masks = &self.masks[l].as_ref().unwrap().1;
             // One day from the quiet of the night; a platform still waiting at its end means a
             // queue that carries round, so that direction is run again from a day earlier.
             let runs = [0, 1].map(|r| {
-                let a = simulate(net, svc, l, r, lr, &self.peak, false);
-                if a.leftover > 0.5 { simulate(net, svc, l, r, lr, &self.peak, true) } else { a }
+                let m = masks[r].as_deref();
+                let a = simulate_with(net, svc, l, r, lr, &self.peak, false, m);
+                if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m) } else { a }
             });
             self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
             self.redone += 1;
+        }
+        // every line seen: no masks kept for a line without an account
+        self.masks.truncate(nl);
+        for (l, m) in self.masks.iter_mut().enumerate() {
+            if self.accounts.iter().all(|a| a[l].is_none()) {
+                *m = None;
+            }
         }
         false
     }
@@ -1224,6 +1267,53 @@ impl Boarding {
         }
     }
 
+    /// T-2707: heap bytes held, by structure (benches).
+    pub fn mem_bytes(&self) -> Vec<(&'static str, usize)> {
+        use std::mem::size_of;
+        let v = |c: usize, s: usize| c * s;
+        let mut seen = std::collections::HashSet::new();
+        let mut out: Vec<(&'static str, usize)> = vec![];
+        let mut add = |k: &'static str, b: usize| match out.iter_mut().find(|x| x.0 == k) {
+            Some(x) => x.1 += b,
+            None => out.push((k, b)),
+        };
+        for d in 0..DAY_KINDS {
+            add("riders", v(self.riders[d].capacity(), size_of::<Option<LineRiders>>()));
+            for lr in self.riders[d].iter().flatten() {
+                add("riders", v(lr.board.capacity() + lr.alight.capacity() + lr.come.capacity(), 8));
+            }
+            add("accounts", v(self.accounts[d].capacity(), size_of::<Option<LineAccount>>()));
+            for acc in self.accounts[d].iter().flatten() {
+                for ra in &acc.runs {
+                    add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
+                    add("load, q_after, gone", v(ra.load.capacity() + ra.q_after.capacity() + ra.gone.capacity(), 4));
+                    add("order, order_t", v(ra.order.capacity(), 4) + v(ra.order_t.capacity(), 8));
+                    add("left_h, wait_h, hour_load", v(ra.left_h.capacity() + ra.wait_h.capacity() + ra.hour_load.capacity(), 4));
+                    add("stop_open, ride_km", v(ra.stop_open.capacity() + ra.ride_km.capacity(), 8));
+                    add("arrivals", v(ra.arrivals.capacity(), size_of::<Arrivals>()));
+                    for a in &ra.arrivals {
+                        if let Some(x) = &a.masked {
+                            if seen.insert(Arc::as_ptr(&x.m)) {
+                                add("mask t, s", size_of::<Mask>() + v(x.m.t.capacity() + x.m.s.capacity(), 8));
+                            }
+                            add("mask pre", size_of::<Masked>() + v(x.pre.capacity(), 8));
+                        }
+                    }
+                }
+            }
+        }
+        add("masks kept", v(self.masks.capacity(), size_of::<Option<(u64, [RunMasks; 2])>>()));
+        for runs in self.masks.iter().flatten() {
+            for m in runs.1.iter().flatten().flatten() {
+                add("masks kept", size_of::<Arc<Mask>>());
+                if seen.insert(Arc::as_ptr(m)) {
+                    add("mask t, s", size_of::<Mask>() + v(m.t.capacity() + m.s.capacity(), 8));
+                }
+            }
+        }
+        out
+    }
+
     /// Riders aboard a trip leaving each stop, in its own stop order (checks and inspectors).
     pub fn trip_account(&self, line: u32, run: usize, dep: f64) -> Option<Vec<f32>> {
         // the line's local time (T-309): both kinds of day's accounts carry the same shift
@@ -1350,11 +1440,27 @@ pub const BUSY_PLATFORM_S: f64 = 60.0;
 /// still waiting when the day ended (then the warm run is the right one).
 #[allow(clippy::too_many_arguments)]
 pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool) -> RunAccount {
+    simulate_with(net, svc, l, r, lr, peak, warm, line_masks(net, svc, l, r).as_deref())
+}
+
+/// Per stop of run `r` (in its travel order), when riders arrive by the tolerance (T-842b): by
+/// the steady day's departures, as demand prices them; None for a line without a steady pattern.
+pub type RunMasks = Option<Vec<Arc<Mask>>>;
+pub fn line_masks(net: &Network, svc: &Service, l: usize, r: usize) -> RunMasks {
+    let ls = &svc.lines[l];
+    let deps = span::stop_deps(ls, &svc.lattice(net, l)?, r);
+    Some(deps.iter().map(|d| Arc::new(span::stop_mask(d))).collect())
+}
+
+/// `simulate` with each stop's arrival mask (`line_masks`).
+#[allow(clippy::too_many_arguments)]
+pub fn simulate_with(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, masks: Option<&[Arc<Mask>]>) -> RunAccount {
     // T-798: on a circle the riders still aboard at the last stop ride on round: a second pass
     // queues them at the first stop when their train arrives there, ahead of later arrivals
     let wrap = svc.lines[l].kind == crate::track::net::LoopKind::Circle;
+    let masks = masks.filter(|m| m.len() == lr.n);
     let mut through = vec![];
-    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &[], &mut through);
+    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, &[], &mut through);
     if wrap && !through.is_empty() {
         through.sort_by(|a, b| a.0.total_cmp(&b.0));
         let mut sum = 0.0;
@@ -1362,7 +1468,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
             sum += x.1;
             x.1 = sum;
         }
-        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, &through, &mut vec![]);
+        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, &through, &mut vec![]);
     }
     acc.hour_load = acc.hour_loads();
     acc
@@ -1379,7 +1485,7 @@ impl Cum<'_> {
 /// `simulate`, with `carry_in` (time, riders so far, in time order) joining the first stop's queue,
 /// and on a circle (`wrap`) the riders staying aboard at the last stop pushed to `carry_out`.
 #[allow(clippy::too_many_arguments)]
-fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
+fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, masks: Option<&[Arc<Mask>]>, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
     let ls = &svc.lines[l];
     let n = lr.n;
     let cap = ls.crush();
@@ -1399,17 +1505,14 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     trips.sort_by(|a, b| a.dep.total_cmp(&b.dep));
     let m = trips.len();
     let stop_dep: [Vec<f64>; LEVELS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
-    // T-842b: riders arrive while a train is due within their tolerance, by the steady day's
-    // departures, as demand prices them
-    let deps = svc.lattice(net, l).map(|lat| span::stop_deps(ls, &lat, r)).filter(|d| d.len() == n);
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| {
             let per = std::array::from_fn(|p| {
                 let i = (p * 2 + r) * n + k;
                 lr.board[i].max(lr.come.get(i).copied().unwrap_or(0.0))
             });
-            match &deps {
-                Some(d) => Arrivals::with_mask(per, peak, span::stop_mask(&d[k])),
+            match masks {
+                Some(m) => Arrivals::with_shared(per, peak, m[k].clone()),
                 None => Arrivals::new(per, peak),
             }
         })

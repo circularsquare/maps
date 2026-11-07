@@ -3,6 +3,7 @@
 import { demandAt, lineSeconds } from "../game/clock";
 import { PERIODS, periodAt } from "../game/periods";
 import { t } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
 import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
@@ -185,7 +186,7 @@ export function LinesTab() {
     const at = stationsById(w);
     for (const l of sc.lines) {
       const s = at.get(l.stops[0]), z = s ? stationZone(s) : null;
-      cityOf.set(l.id, z ? cityById(z).name : "");
+      cityOf.set(l.id, z ? tPlace(z, cityById(z).name) : "");
     }
   }
   const showCity = new Set([...cityOf.values()].filter(Boolean)).size >= 2;

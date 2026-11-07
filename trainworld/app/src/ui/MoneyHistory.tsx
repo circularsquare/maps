@@ -16,6 +16,7 @@ import { calendarAt } from "../game/holidays";
 import { regionLedger } from "../game/regionMoney";
 import { Segmented } from "./widgets";
 import { t, tNumber, tRich } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 type Span = "1d" | "30d" | "all";
 /** The span shown, kept while the game is open. */
@@ -163,7 +164,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
 
   const first = list[0];
   // T-2487: the titles say which scope they are, being a scroll below the switch that sets it
-  const where = zone ? cityById(zone).name : t("moneyHistory.allCities");
+  const where = zone ? tPlace(zone, cityById(zone).name) : t("moneyHistory.allCities");
   return (
     <>
       <div class="h">

@@ -101,7 +101,10 @@ of its centre.
 `node trainworld/tools/place_names.mjs --opencc <opencc-js folder>` adds the cities not yet in the file (rerun it
 after a join), `--relabel` fetches every known item's labels again, `--redo id,...` matches those ids again. A
 wrong match is fixed by writing the right item into its `q` and running with `--relabel`. Search in the new game
-sheet finds a city by its shown name as well as its Latin one.
+sheet and the map search box find a city by its shown name as well as its Latin one (`cityMatch` in `game/search.ts`;
+`isRegistryCity` stays on the Latin name). Every place a city's name is worded (hovers, the status tag, saves panel,
+guide, records, bubble tags, diagram labels) reads it through `tPlace`; an achievement record keeps the Latin name and
+is translated when shown.
 
 ## Workers
 

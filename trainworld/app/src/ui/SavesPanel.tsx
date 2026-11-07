@@ -26,6 +26,7 @@ import { Modal } from "./Modal";
 import { Money } from "./MoneyText";
 import { NewGameSheet } from "./NewGame";
 import { t, tDate, tList } from "../i18n";
+import { tPlace } from "../i18n/places";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
@@ -42,7 +43,7 @@ function savedWhen(at: number, now: number, auto = false): string {
 
 /** "New York", "New York and Newark", "New York, Philadelphia and 2 more". */
 function cityList(ids: string[]): string {
-  const names = ids.filter(isCity).map((id) => cityById(id).name);
+  const names = ids.filter(isCity).map((id) => tPlace(id, cityById(id).name));
   if (names.length <= 3) return tList(names);
   return t("savesPanel.citiesMore", { first: names[0], second: names[1], count: names.length - 2 });
 }
@@ -68,7 +69,7 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
   return <div class="save-thumb" style={{ "--thumb-ink": sh.mapInk, "--thumb-land": sh.land }}>
     {src && <img src={src} alt="" data-tip={t("savesPanel.thumbTip", { name: slot.name })} />}
     {panels.map((p) => {
-      const name = p.city === WHOLE_PANEL ? t("savesPanel.wholeNetwork") : cityById(p.city).name, stations = stationsText(p.stations);
+      const name = p.city === WHOLE_PANEL ? t("savesPanel.wholeNetwork") : tPlace(p.city, cityById(p.city).name), stations = stationsText(p.stations);
       return <div class="thumb-label" style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }} data-tip={t("savesPanel.panelTip", { name, stations })}>
         <div class="thumb-city">{name}</div>
         {panels.length > 1 && <div class="thumb-figure num">{stations}</div>}

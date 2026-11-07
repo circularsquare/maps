@@ -11,6 +11,7 @@
 // show each new result as soon as it lands (T-906).
 
 import { t } from "../i18n";
+import { tPlace } from "../i18n/places";
 import { computed, effect, signal } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
@@ -566,7 +567,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const sel = selection.peek();
     if (sel?.kind !== "city") return [];
     const c = cityById(sel.city);
-    return c.place === cityById(activeCity.peek()).place ? [] : [t("commuterView.exploreWith", { name: c.name })];
+    return c.place === cityById(activeCity.peek()).place ? [] : [t("commuterView.exploreWith", { name: tPlace(c.id, c.name) })];
   };
   /** A nearby zone's bubble under the point (T-276): drawn under the focused zone's, shown with them. */
   const nearbyAt = (p: Pointer): { id: CityId; s: ZoneShown; i: number } | null => {
