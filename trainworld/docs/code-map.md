@@ -765,6 +765,9 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   dry plan (docs/adding-a-country.md 3): FLAG lines for scattered rows, far origins, zones under
   50,000 and big FUAs' centres split between rows; NOTE lines for built neighbours within 50 km,
   reused ids' old terrain files and empty far islets; a picture of the rows. Exit 1 on a FLAG.
+- `state_gaps.py <ISO3,...>` (Python, T-2695): geoBoundaries units no unit of the cached plan state covers, with
+  their people. `ghsl_blobs.py <ISO3,...>` (Python, T-2695): zone origins on a GHS-POP village blob (a 1 km pixel of
+  10,000+ at three times its neighbours).
 - `build_inputs.py [--list]` (Python, T-1738): the files a production build copies for the registry
   (vite.config.ts `writeBundle`) checked without a build, and a routed-drive place for every zone; a FLAG
   line per gap, by country. Exit 1 on a FLAG.

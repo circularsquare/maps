@@ -93,11 +93,18 @@ Rule keys a new country may need (T-2294, T-2295):
   left out of the zones ("outside Europe, left out" in the log).
 - Metro rows planned before the country had an `ARCHETYPE` entry keep archetype D and no module: give them the
   zones' module by hand under the plan lock before the run.
+- **No `plan_units` for a country with no metro row** (Oman, Lesotho, Eswatini): it has no units in the plan state,
+  so its zones read geoBoundaries afresh anyway, and with `plan_units` every build fails "plan units not in
+  geoBoundaries" (T-2697).
+- **Units the plan state lost**: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no plan unit covers (before
+  T-2695 a coastal unit whose point lay outside the simplified first-level coast was dropped: Buenos Aires's comunas).
+  Any found: add them to the state and to the metro they belong to under the plan lock, as notes/T-2695.md did.
 
 **People where GHSL has them wrong.** Zones that are not cities but hold a city's people (Cambodia's
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
 figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a
-district (1 km pixels of 20,000-48,000 in villages). Such rows are held (`setbuilt.py <ids> --hold "<reason>"`)
+district (1 km pixels of 20,000-48,000 in villages; Colombia's Tiquisio 192,229 in one pixel, T-2712;
+`checks/ghsl_blobs.py <ISO3>` flags zone origins on such a pixel). Such rows are held (`setbuilt.py <ids> --hold "<reason>"`)
 with a task, the rest of the country built. GHSL can be as wrong the other way (Muslim Mindanao, 0.1-0.55x the
 census): a row under about a third of its census is held too, the rest shipped low with a task. Compare by zone where
 the census has small areas (the Philippines' barangays, T-1738 13), else by province. Hold them on the live plan before

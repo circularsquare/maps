@@ -1180,9 +1180,14 @@ def osm_education(city, boundary, extract):
     rows = []
     polys = {k: [] for k in kinds}
     for r in mp.itertuples():
-        c = r.geometry.representative_point()
-        rows.append((r.amenity, r.name or "", c.y, c.x, overpass.area_m2(r.geometry), rt.tag(r.other_tags, "wikidata")))
-        polys[r.amenity].append(shapely.make_valid(r.geometry))  # a self-crossing site breaks the query (T-431)
+        try:
+            g = shapely.make_valid(r.geometry)  # a self-crossing site breaks the query (T-431)
+            c = g.representative_point()
+            a = overpass.area_m2(g)
+        except shapely.errors.GEOSException:  # a ring of under 4 points (Guayaquil, T-2695)
+            continue
+        rows.append((r.amenity, r.name or "", c.y, c.x, a, rt.tag(r.other_tags, "wikidata")))
+        polys[r.amenity].append(g)
     trees = {k: shapely.STRtree(v) for k, v in polys.items() if v}
     n_dup = 0
     for r in pts.itertuples():

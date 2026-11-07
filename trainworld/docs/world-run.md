@@ -232,7 +232,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   - **Units.** NUTS-3 2024 in Europe, ITL3 in the UK, Census 2020 counties in the US and Puerto
     Rico; elsewhere geoBoundaries gbOpen at the finest
     of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that
-    level misses a tenth of the people of takes the finest level covering it (Moscow). No
+    level misses a tenth of the people of takes the finest level covering it (Moscow). A unit of the chosen level that
+    the units taken leave half of is taken too (a coastal unit whose point lies outside the simplified first-level
+    coast: Buenos Aires's comunas, T-2695). No
     geoBoundaries at all: the territory whole (Hong Kong, Macau). Zones take units on the de facto lines: a unit
     held by another side goes to it (`DE_FACTO_TAKE`, Crimea to Russia) or is left out (`LEFT_OUT`, occupied
     Ukraine; docs/zones.md 2).

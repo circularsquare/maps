@@ -208,7 +208,28 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "MEX": {"min_density": 0.0, "plan_units": True, "fua_whole": 300_000, "module": "mexico", "task": "T-2436"},
               "BRA": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "fua_whole": 500_000, "plan_units": True, "module": "brazil",
-                      "task": "T-2437"}}
+                      "task": "T-2437"},
+              # T-2695-T-2697: Brazil's rule where towns sit in empty land (Patagonia, the Atacama, the Amazon and Llanos,
+              # the Karoo, Arabia's deserts): at the default 20 a km2 Argentina left 10.5M dead (Rio Cuarto, Comodoro
+              # Rivadavia), Chile 2.7M (Antofagasta, Copiapo, Calama), Peru 4.7M (Pucallpa), South Africa 4.4M, Saudi
+              # Arabia 4.9M (Hail, Arar, Sakaka), Oman 0.8M (Ibri)
+              **{iso: {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                       "fua_whole": 500_000, "plan_units": True, "task": t}
+                 for iso, t in (("ARG", "T-2695"), ("CHL", "T-2695"), ("COL", "T-2695"), ("PER", "T-2695"), ("ECU", "T-2695"),
+                                ("ZAF", "T-2696"), ("SAU", "T-2697"))},
+              # Oman had no metro, so no units in the plan state: the same rule on geoBoundaries read afresh (with
+              # `plan_units` its rows' builds found none of their units)
+              "OMN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "fua_whole": 500_000, "task": "T-2697"},
+              # settled everywhere at 5-20 a km2 (Uruguay's interior departments, Kuwait's and Qatar's outer units): no
+              # floor, as Mexico (at 20 a km2 Uruguay left 1.14M dead: Salto, Paysandu, Rivera; Kuwait and Qatar kept
+              # lone zones of 16,000-37,000 between dead units)
+              **{iso: {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": t}
+                 for iso, t in (("URY", "T-2695"), ("KWT", "T-2697"), ("QAT", "T-2697"))},
+              # Lesotho's community councils by district (two zones, the south and the north; council by council the same
+              # two, named Maseru twice; with Maseru's FUA kept whole the other 74 councils were one zone of 2.0M). Maseru's
+              # northern councils lie in Berea district, so the north's origin is in Maseru's edge, 4.7 km from the south's
+              "LSO": {"group_level": 0, "contiguous": True, "task": "T-2696"}}
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -918,6 +939,17 @@ def country_units(iso, meta, nuts, pop, need, whole=None):
                         own += [a] * len(got)
                         filled += len(got) if a != chosen else 0
                         break
+            # T-2695: a unit whose representative point lies in no first-level unit (a coastal unit against a
+            # simplified first-level coast) was in no unit: Avellaneda, Ushuaia and 11 of Buenos Aires's comunas,
+            # Brazil's Guaruja. Each unit of the chosen level that the units taken leave half of is taken too
+            taken_ids, tree = {u[0] for u in raw}, STRtree([u[2] for u in raw])
+            for u in levels[chosen]:
+                if u[0] in taken_ids:
+                    continue
+                near = tree.query(u[2], predicate="intersects")
+                if not len(near) or u[2].difference(union_all([raw[i][2] for i in near])).area >= 0.5 * u[2].area:
+                    raw.append(u)
+                    own.append(chosen)
         else:
             raw, own = list(levels[chosen]), [chosen] * len(levels[chosen])
         # parents: the coarser levels' units holding each unit's representative point

@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2695 Rest of Latin America (2026-11-07, agent worldnext): Argentina, Chile, Colombia, Peru, Uruguay and Ecuador from the world plan, 155 rows shipped (4 held: T-2712's three blobs, a lone Puerto Carreno); Buenos Aires's lost comunas put back. notes/T-2695.md.
+- T-2696 South Africa (2026-11-07, agent worldnext): South Africa with Lesotho and Eswatini, 47 rows shipped on the reach rule; Pretoria is the whole City of Tshwane. notes/T-2695.md.
+- T-2697 The Gulf (2026-11-07, agent worldnext): Saudi Arabia, the UAE, Qatar, Bahrain, Kuwait and Oman, 35 rows shipped (Farasan and Musandam held as lone zones). notes/T-2695.md.
 - T-2625 Network diagram condenses in two dimensions at continent scale (2026-11-07, agent condense): on a country map the floor falls from the networks' own scales as (1 + d / 2 km)^-0.5, a fall the sheet can draw inside its fold guard; networks pulled to their ask. North America: networks' boxes 5.6% -> 13.9% of the sheet, 0 folds. notes/T-2625.md.
 - T-2722 The arrival masks' segments made when needed (2026-11-07, agent boardmem): a tolerance ramp is one piece (start, step, departure), its segments made with the same arithmetic; sums kept at each piece and every 8th ramp step. Account 340 -> 183 MB native, WASM 412 -> 257 MB, step p50 no worse, dumps byte-identical. notes/T-2722.md.
 - T-2707 The boarding account's memory on all Japan (2026-11-07, agent boardmem): the arrival masks were 835 of 950 MB. Masks now shared by every kind of day, running sums kept one in eight; WASM 1,056 -> 412 MB, steps faster, dumps byte-identical. Rest: T-2722. notes/T-2707.md.

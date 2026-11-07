@@ -27046,6 +27046,1078 @@
       {
         "name": "Douglas County",
         "regionName": "Douglas County region"
+      },
+      {
+        "name": "Buenos Aires",
+        "regionName": "Buenos Aires region"
+      },
+      {
+        "name": "Cordoba",
+        "regionName": "Cordoba region"
+      },
+      {
+        "name": "Rosario",
+        "regionName": "Rosario region"
+      },
+      {
+        "name": "Mendoza",
+        "regionName": "Mendoza region"
+      },
+      {
+        "name": "Capital",
+        "regionName": "Capital region"
+      },
+      {
+        "name": "General Pueyrredón",
+        "regionName": "General Pueyrredón region"
+      },
+      {
+        "name": "General López",
+        "regionName": "General López region"
+      },
+      {
+        "name": "Capital, Banda",
+        "regionName": "Capital, Banda region"
+      },
+      {
+        "name": "La Plata",
+        "regionName": "La Plata region"
+      },
+      {
+        "name": "Capital, Santo Tomé",
+        "regionName": "Capital, Santo Tomé region"
+      },
+      {
+        "name": "Johannesburg",
+        "regionName": "Johannesburg region"
+      },
+      {
+        "name": "Cape Town",
+        "regionName": "Cape Town region"
+      },
+      {
+        "name": "Soshanguve",
+        "regionName": "Soshanguve region"
+      },
+      {
+        "name": "Nelson Mandela Bay",
+        "regionName": "Nelson Mandela Bay region"
+      },
+      {
+        "name": "Polokwane",
+        "regionName": "Polokwane region"
+      },
+      {
+        "name": "Emfuleni",
+        "regionName": "Emfuleni region"
+      },
+      {
+        "name": "Mbombela",
+        "regionName": "Mbombela region"
+      },
+      {
+        "name": "King Sabata Dalindyebo",
+        "regionName": "King Sabata Dalindyebo region"
+      },
+      {
+        "name": "Buffalo City",
+        "regionName": "Buffalo City region"
+      },
+      {
+        "name": "Jozini",
+        "regionName": "Jozini region"
+      },
+      {
+        "name": "Río Cuarto",
+        "regionName": "Río Cuarto region"
+      },
+      {
+        "name": "La Capital",
+        "regionName": "La Capital region"
+      },
+      {
+        "name": "Confluencia",
+        "regionName": "Confluencia region"
+      },
+      {
+        "name": "Capital, Cerrillos",
+        "regionName": "Capital, Cerrillos region"
+      },
+      {
+        "name": "Dr. Manuel Belgrano",
+        "regionName": "Dr. Manuel Belgrano region"
+      },
+      {
+        "name": "Concordia",
+        "regionName": "Concordia region"
+      },
+      {
+        "name": "Zárate",
+        "regionName": "Zárate region"
+      },
+      {
+        "name": "Comandante Fernández",
+        "regionName": "Comandante Fernández region"
+      },
+      {
+        "name": "San Rafael",
+        "regionName": "San Rafael region"
+      },
+      {
+        "name": "Bahía Blanca",
+        "regionName": "Bahía Blanca region"
+      },
+      {
+        "name": "Capital, San Ignacio",
+        "regionName": "Capital, San Ignacio region"
+      },
+      {
+        "name": "Formosa",
+        "regionName": "Formosa region"
+      },
+      {
+        "name": "Orán",
+        "regionName": "Orán region"
+      },
+      {
+        "name": "Chivilcoy",
+        "regionName": "Chivilcoy region"
+      },
+      {
+        "name": "Paraná",
+        "regionName": "Paraná region"
+      },
+      {
+        "name": "La Capital, General Pedernera",
+        "regionName": "La Capital, General Pedernera region"
+      },
+      {
+        "name": "San Fernando",
+        "regionName": "San Fernando region"
+      },
+      {
+        "name": "Tandil",
+        "regionName": "Tandil region"
+      },
+      {
+        "name": "General Roca",
+        "regionName": "General Roca region"
+      },
+      {
+        "name": "General Obligado",
+        "regionName": "General Obligado region"
+      },
+      {
+        "name": "Riyadh",
+        "regionName": "Riyadh region"
+      },
+      {
+        "name": "Dubai",
+        "regionName": "Dubai region"
+      },
+      {
+        "name": "Jeddah",
+        "regionName": "Jeddah region"
+      },
+      {
+        "name": "Kuwait City",
+        "regionName": "Kuwait City region"
+      },
+      {
+        "name": "Mecca",
+        "regionName": "Mecca region"
+      },
+      {
+        "name": "Doha",
+        "regionName": "Doha region"
+      },
+      {
+        "name": "Medina",
+        "regionName": "Medina region"
+      },
+      {
+        "name": "Manama",
+        "regionName": "Manama region"
+      },
+      {
+        "name": "Abu Dhabi",
+        "regionName": "Abu Dhabi region"
+      },
+      {
+        "name": "Ras al-Khaimah",
+        "regionName": "Ras al-Khaimah region"
+      },
+      {
+        "name": "Durban",
+        "regionName": "Durban region"
+      },
+      {
+        "name": "Mogalakwena",
+        "regionName": "Mogalakwena region"
+      },
+      {
+        "name": "Ray Nkonyeni",
+        "regionName": "Ray Nkonyeni region"
+      },
+      {
+        "name": "Greater Tubatse",
+        "regionName": "Greater Tubatse region"
+      },
+      {
+        "name": "Emalahleni",
+        "regionName": "Emalahleni region"
+      },
+      {
+        "name": "Mangaung",
+        "regionName": "Mangaung region"
+      },
+      {
+        "name": "Rustenburg",
+        "regionName": "Rustenburg region"
+      },
+      {
+        "name": "uMhlathuze",
+        "regionName": "uMhlathuze region"
+      },
+      {
+        "name": "Nyandeni",
+        "regionName": "Nyandeni region"
+      },
+      {
+        "name": "Thulamela",
+        "regionName": "Thulamela region"
+      },
+      {
+        "name": "Lima",
+        "regionName": "Lima region"
+      },
+      {
+        "name": "Arequipa",
+        "regionName": "Arequipa region"
+      },
+      {
+        "name": "Chiclayo",
+        "regionName": "Chiclayo region"
+      },
+      {
+        "name": "Trujillo",
+        "regionName": "Trujillo region"
+      },
+      {
+        "name": "Huanuco",
+        "regionName": "Huanuco region"
+      },
+      {
+        "name": "Satipo",
+        "regionName": "Satipo region"
+      },
+      {
+        "name": "Cusco",
+        "regionName": "Cusco region"
+      },
+      {
+        "name": "Ica",
+        "regionName": "Ica region"
+      },
+      {
+        "name": "Cajamarca",
+        "regionName": "Cajamarca region"
+      },
+      {
+        "name": "Jaen",
+        "regionName": "Jaen region"
+      },
+      {
+        "name": "Rawson",
+        "regionName": "Rawson region"
+      },
+      {
+        "name": "Oberá",
+        "regionName": "Oberá region"
+      },
+      {
+        "name": "Escalante",
+        "regionName": "Escalante region"
+      },
+      {
+        "name": "Capital, Valle Viejo",
+        "regionName": "Capital, Valle Viejo region"
+      },
+      {
+        "name": "Capital, Chilecito",
+        "regionName": "Capital, Chilecito region"
+      },
+      {
+        "name": "Capital, Maracó",
+        "regionName": "Capital, Maracó region"
+      },
+      {
+        "name": "Punilla",
+        "regionName": "Punilla region"
+      },
+      {
+        "name": "Rawson, Biedma",
+        "regionName": "Rawson, Biedma region"
+      },
+      {
+        "name": "Güer Aike",
+        "regionName": "Güer Aike region"
+      },
+      {
+        "name": "Río Grande",
+        "regionName": "Río Grande region"
+      },
+      {
+        "name": "Cruz del Eje",
+        "regionName": "Cruz del Eje region"
+      },
+      {
+        "name": "Sol Plaatjie",
+        "regionName": "Sol Plaatjie region"
+      },
+      {
+        "name": "Newcastle",
+        "regionName": "Newcastle region"
+      },
+      {
+        "name": "Alfred Duma",
+        "regionName": "Alfred Duma region"
+      },
+      {
+        "name": "Drakenstein",
+        "regionName": "Drakenstein region"
+      },
+      {
+        "name": "Mafikeng",
+        "regionName": "Mafikeng region"
+      },
+      {
+        "name": "The Msunduzi",
+        "regionName": "The Msunduzi region"
+      },
+      {
+        "name": "Enoch Mgijima",
+        "regionName": "Enoch Mgijima region"
+      },
+      {
+        "name": "Local Municipality of Madibeng",
+        "regionName": "Local Municipality of Madibeng region"
+      },
+      {
+        "name": "Matatiele",
+        "regionName": "Matatiele region"
+      },
+      {
+        "name": "George",
+        "regionName": "George region"
+      },
+      {
+        "name": "Dammam",
+        "regionName": "Dammam region"
+      },
+      {
+        "name": "Buraydah",
+        "regionName": "Buraydah region"
+      },
+      {
+        "name": "Al Taif",
+        "regionName": "Al Taif region"
+      },
+      {
+        "name": "Khamis Mushayt",
+        "regionName": "Khamis Mushayt region"
+      },
+      {
+        "name": "Tabuk",
+        "regionName": "Tabuk region"
+      },
+      {
+        "name": "Abu Arish",
+        "regionName": "Abu Arish region"
+      },
+      {
+        "name": "Arar",
+        "regionName": "Arar region"
+      },
+      {
+        "name": "Al Qunfudhah",
+        "regionName": "Al Qunfudhah region"
+      },
+      {
+        "name": "Najran",
+        "regionName": "Najran region"
+      },
+      {
+        "name": "Abha",
+        "regionName": "Abha region"
+      },
+      {
+        "name": "Piura",
+        "regionName": "Piura region"
+      },
+      {
+        "name": "San Roman",
+        "regionName": "San Roman region"
+      },
+      {
+        "name": "Huancayo",
+        "regionName": "Huancayo region"
+      },
+      {
+        "name": "San Martin",
+        "regionName": "San Martin region"
+      },
+      {
+        "name": "Maynas",
+        "regionName": "Maynas region"
+      },
+      {
+        "name": "Huaura",
+        "regionName": "Huaura region"
+      },
+      {
+        "name": "Huaraz",
+        "regionName": "Huaraz region"
+      },
+      {
+        "name": "Sullana",
+        "regionName": "Sullana region"
+      },
+      {
+        "name": "Huamanga",
+        "regionName": "Huamanga region"
+      },
+      {
+        "name": "Puno",
+        "regionName": "Puno region"
+      },
+      {
+        "name": "Santa",
+        "regionName": "Santa region"
+      },
+      {
+        "name": "Viru",
+        "regionName": "Viru region"
+      },
+      {
+        "name": "Matjhabeng",
+        "regionName": "Matjhabeng region"
+      },
+      {
+        "name": "Greater Tzaneen",
+        "regionName": "Greater Tzaneen region"
+      },
+      {
+        "name": "KwaDukuza",
+        "regionName": "KwaDukuza region"
+      },
+      {
+        "name": "Thembisile",
+        "regionName": "Thembisile region"
+      },
+      {
+        "name": "Govan Mbeki",
+        "regionName": "Govan Mbeki region"
+      },
+      {
+        "name": "Bushbuckridge",
+        "regionName": "Bushbuckridge region"
+      },
+      {
+        "name": "Swartland",
+        "regionName": "Swartland region"
+      },
+      {
+        "name": "Collins Chabane",
+        "regionName": "Collins Chabane region"
+      },
+      {
+        "name": "City of Matlosana",
+        "regionName": "City of Matlosana region"
+      },
+      {
+        "name": "Maluti a Phofung",
+        "regionName": "Maluti a Phofung region"
+      },
+      {
+        "name": "Bogota",
+        "regionName": "Bogota region"
+      },
+      {
+        "name": "Medellín",
+        "regionName": "Medellín region"
+      },
+      {
+        "name": "Cali",
+        "regionName": "Cali region"
+      },
+      {
+        "name": "Barranquilla",
+        "regionName": "Barranquilla region"
+      },
+      {
+        "name": "Cartagena De Indias",
+        "regionName": "Cartagena De Indias region"
+      },
+      {
+        "name": "Bucaramanga",
+        "regionName": "Bucaramanga region"
+      },
+      {
+        "name": "Pereira",
+        "regionName": "Pereira region"
+      },
+      {
+        "name": "Sahagún",
+        "regionName": "Sahagún region"
+      },
+      {
+        "name": "Tunja",
+        "regionName": "Tunja region"
+      },
+      {
+        "name": "Cúcuta",
+        "regionName": "Cúcuta region"
+      },
+      {
+        "name": "Ad Duwadimi",
+        "regionName": "Ad Duwadimi region"
+      },
+      {
+        "name": "Hail",
+        "regionName": "Hail region"
+      },
+      {
+        "name": "Sabya",
+        "regionName": "Sabya region"
+      },
+      {
+        "name": "Al Kharj",
+        "regionName": "Al Kharj region"
+      },
+      {
+        "name": "Bahrah",
+        "regionName": "Bahrah region"
+      },
+      {
+        "name": "Al Bahah",
+        "regionName": "Al Bahah region"
+      },
+      {
+        "name": "Wadi Ad Dawasir",
+        "regionName": "Wadi Ad Dawasir region"
+      },
+      {
+        "name": "Yanbu",
+        "regionName": "Yanbu region"
+      },
+      {
+        "name": "75",
+        "regionName": "75 region"
+      },
+      {
+        "name": "Bar_Elahmadi",
+        "regionName": "Bar_Elahmadi region"
+      },
+      {
+        "name": "Chief Albert Luthuli",
+        "regionName": "Chief Albert Luthuli region"
+      },
+      {
+        "name": "Stellenbosch",
+        "regionName": "Stellenbosch region"
+      },
+      {
+        "name": "Ventersdorp",
+        "regionName": "Ventersdorp region"
+      },
+      {
+        "name": "Greater Taung",
+        "regionName": "Greater Taung region"
+      },
+      {
+        "name": "Inkhundla Mbabane",
+        "regionName": "Inkhundla Mbabane region"
+      },
+      {
+        "name": "Moyobamba",
+        "regionName": "Moyobamba region"
+      },
+      {
+        "name": "Tacna",
+        "regionName": "Tacna region"
+      },
+      {
+        "name": "Caylloma",
+        "regionName": "Caylloma region"
+      },
+      {
+        "name": "Coronel Portillo",
+        "regionName": "Coronel Portillo region"
+      },
+      {
+        "name": "Huancavelica",
+        "regionName": "Huancavelica region"
+      },
+      {
+        "name": "Utcubamba",
+        "regionName": "Utcubamba region"
+      },
+      {
+        "name": "Andahuaylas",
+        "regionName": "Andahuaylas region"
+      },
+      {
+        "name": "Morropon",
+        "regionName": "Morropon region"
+      },
+      {
+        "name": "La Convencion",
+        "regionName": "La Convencion region"
+      },
+      {
+        "name": "Maseru District",
+        "regionName": "Maseru District region"
+      },
+      {
+        "name": "Berea District",
+        "regionName": "Berea District region"
+      },
+      {
+        "name": "Yopal",
+        "regionName": "Yopal region"
+      },
+      {
+        "name": "Barrancabermeja",
+        "regionName": "Barrancabermeja region"
+      },
+      {
+        "name": "Villavicencio",
+        "regionName": "Villavicencio region"
+      },
+      {
+        "name": "Caucasia",
+        "regionName": "Caucasia region"
+      },
+      {
+        "name": "Montería",
+        "regionName": "Montería region"
+      },
+      {
+        "name": "Manizales",
+        "regionName": "Manizales region"
+      },
+      {
+        "name": "Santa Marta",
+        "regionName": "Santa Marta region"
+      },
+      {
+        "name": "Sincelejo",
+        "regionName": "Sincelejo region"
+      },
+      {
+        "name": "Pasto",
+        "regionName": "Pasto region"
+      },
+      {
+        "name": "Pinillos",
+        "regionName": "Pinillos region"
+      },
+      {
+        "name": "Sabanalarga",
+        "regionName": "Sabanalarga region"
+      },
+      {
+        "name": "Tuluá",
+        "regionName": "Tuluá region"
+      },
+      {
+        "name": "Tiquiso",
+        "regionName": "Tiquiso region"
+      },
+      {
+        "name": "Apartadó",
+        "regionName": "Apartadó region"
+      },
+      {
+        "name": "Uribia",
+        "regionName": "Uribia region"
+      },
+      {
+        "name": "Armenia",
+        "regionName": "Armenia region"
+      },
+      {
+        "name": "Pitalito",
+        "regionName": "Pitalito region"
+      },
+      {
+        "name": "Riohacha",
+        "regionName": "Riohacha region"
+      },
+      {
+        "name": "Neiva",
+        "regionName": "Neiva region"
+      },
+      {
+        "name": "Palmira",
+        "regionName": "Palmira region"
+      },
+      {
+        "name": "Popayán",
+        "regionName": "Popayán region"
+      },
+      {
+        "name": "Santa Cruz (Guachavés)",
+        "regionName": "Santa Cruz (Guachavés) region"
+      },
+      {
+        "name": "Florencia",
+        "regionName": "Florencia region"
+      },
+      {
+        "name": "Jamundí",
+        "regionName": "Jamundí region"
+      },
+      {
+        "name": "La Vega",
+        "regionName": "La Vega region"
+      },
+      {
+        "name": "Quibdó",
+        "regionName": "Quibdó region"
+      },
+      {
+        "name": "Rionegro",
+        "regionName": "Rionegro region"
+      },
+      {
+        "name": "Buenaventura",
+        "regionName": "Buenaventura region"
+      },
+      {
+        "name": "Tumaco",
+        "regionName": "Tumaco region"
+      },
+      {
+        "name": "Valle Del Guamuez",
+        "regionName": "Valle Del Guamuez region"
+      },
+      {
+        "name": "Ocaña",
+        "regionName": "Ocaña region"
+      },
+      {
+        "name": "Sesquilé",
+        "regionName": "Sesquilé region"
+      },
+      {
+        "name": "Soshanguve",
+        "regionName": "Soshanguve region"
+      },
+      {
+        "name": "Inkhundla Mbabane",
+        "regionName": "Inkhundla Mbabane region"
+      },
+      {
+        "name": "Dammam",
+        "regionName": "Dammam region"
+      },
+      {
+        "name": "Doha",
+        "regionName": "Doha region"
+      },
+      {
+        "name": "Medina",
+        "regionName": "Medina region"
+      },
+      {
+        "name": "Abu Dhabi",
+        "regionName": "Abu Dhabi region"
+      },
+      {
+        "name": "Al Taif",
+        "regionName": "Al Taif region"
+      },
+      {
+        "name": "Hail",
+        "regionName": "Hail region"
+      },
+      {
+        "name": "Wadi Ad Dawasir",
+        "regionName": "Wadi Ad Dawasir region"
+      },
+      {
+        "name": "75",
+        "regionName": "75 region"
+      },
+      {
+        "name": "WILAYAT AS SEEB",
+        "regionName": "WILAYAT AS SEEB region"
+      },
+      {
+        "name": "WILAYAT AS SUWAYQ",
+        "regionName": "WILAYAT AS SUWAYQ region"
+      },
+      {
+        "name": "WILAYAT SOHAR",
+        "regionName": "WILAYAT SOHAR region"
+      },
+      {
+        "name": "WILAYAT NIZWA",
+        "regionName": "WILAYAT NIZWA region"
+      },
+      {
+        "name": "WILAYAT SALALAH",
+        "regionName": "WILAYAT SALALAH region"
+      },
+      {
+        "name": "WILAYAT SOHAR",
+        "regionName": "WILAYAT SOHAR region"
+      },
+      {
+        "name": "WILAYAT NIZWA",
+        "regionName": "WILAYAT NIZWA region"
+      },
+      {
+        "name": "Santiago",
+        "regionName": "Santiago region"
+      },
+      {
+        "name": "Puerto Montt",
+        "regionName": "Puerto Montt region"
+      },
+      {
+        "name": "Concepción",
+        "regionName": "Concepción region"
+      },
+      {
+        "name": "Coquimbo",
+        "regionName": "Coquimbo region"
+      },
+      {
+        "name": "Talca",
+        "regionName": "Talca region"
+      },
+      {
+        "name": "Temuco",
+        "regionName": "Temuco region"
+      },
+      {
+        "name": "Valparaíso",
+        "regionName": "Valparaíso region"
+      },
+      {
+        "name": "Iquique",
+        "regionName": "Iquique region"
+      },
+      {
+        "name": "Antofagasta",
+        "regionName": "Antofagasta region"
+      },
+      {
+        "name": "Melipilla",
+        "regionName": "Melipilla region"
+      },
+      {
+        "name": "Ibagué",
+        "regionName": "Ibagué region"
+      },
+      {
+        "name": "Valledupar",
+        "regionName": "Valledupar region"
+      },
+      {
+        "name": "Andes",
+        "regionName": "Andes region"
+      },
+      {
+        "name": "Zipaquira",
+        "regionName": "Zipaquira region"
+      },
+      {
+        "name": "Girardot",
+        "regionName": "Girardot region"
+      },
+      {
+        "name": "Fusagasugá",
+        "regionName": "Fusagasugá region"
+      },
+      {
+        "name": "Leticia",
+        "regionName": "Leticia region"
+      },
+      {
+        "name": "Rancagua",
+        "regionName": "Rancagua region"
+      },
+      {
+        "name": "Quillota",
+        "regionName": "Quillota region"
+      },
+      {
+        "name": "Chillán",
+        "regionName": "Chillán region"
+      },
+      {
+        "name": "Los Angeles",
+        "regionName": "Los Angeles region"
+      },
+      {
+        "name": "Punta Arenas",
+        "regionName": "Punta Arenas region"
+      },
+      {
+        "name": "Coyhaique",
+        "regionName": "Coyhaique region"
+      },
+      {
+        "name": "Quito",
+        "regionName": "Quito region"
+      },
+      {
+        "name": "Ambato",
+        "regionName": "Ambato region"
+      },
+      {
+        "name": "Portoviejo",
+        "regionName": "Portoviejo region"
+      },
+      {
+        "name": "Quevedo",
+        "regionName": "Quevedo region"
+      },
+      {
+        "name": "Machala",
+        "regionName": "Machala region"
+      },
+      {
+        "name": "Esmeraldas",
+        "regionName": "Esmeraldas region"
+      },
+      {
+        "name": "Loja",
+        "regionName": "Loja region"
+      },
+      {
+        "name": "Daule",
+        "regionName": "Daule region"
+      },
+      {
+        "name": "Santo Domingo",
+        "regionName": "Santo Domingo region"
+      },
+      {
+        "name": "Milagro",
+        "regionName": "Milagro region"
+      },
+      {
+        "name": "Montevideo",
+        "regionName": "Montevideo region"
+      },
+      {
+        "name": "Salto",
+        "regionName": "Salto region"
+      },
+      {
+        "name": "Maldonado",
+        "regionName": "Maldonado region"
+      },
+      {
+        "name": "Cuenca",
+        "regionName": "Cuenca region"
+      },
+      {
+        "name": "Ibarra",
+        "regionName": "Ibarra region"
+      },
+      {
+        "name": "Riobamba",
+        "regionName": "Riobamba region"
+      },
+      {
+        "name": "Lago Agrio",
+        "regionName": "Lago Agrio region"
+      },
+      {
+        "name": "Azogues",
+        "regionName": "Azogues region"
+      },
+      {
+        "name": "Santa Elena",
+        "regionName": "Santa Elena region"
+      },
+      {
+        "name": "Chone",
+        "regionName": "Chone region"
+      },
+      {
+        "name": "Guayaquil",
+        "regionName": "Guayaquil region"
+      },
+      {
+        "name": "Quito",
+        "regionName": "Quito region"
+      },
+      {
+        "name": "Rawson, Biedma",
+        "regionName": "Rawson, Biedma region"
+      },
+      {
+        "name": "Güer Aike",
+        "regionName": "Güer Aike region"
+      },
+      {
+        "name": "Punta Arenas",
+        "regionName": "Punta Arenas region"
+      },
+      {
+        "name": "Pereira",
+        "regionName": "Pereira region"
+      },
+      {
+        "name": "Riohacha",
+        "regionName": "Riohacha region"
+      },
+      {
+        "name": "Florencia",
+        "regionName": "Florencia region"
+      },
+      {
+        "name": "Tumaco",
+        "regionName": "Tumaco region"
+      },
+      {
+        "name": "Andes",
+        "regionName": "Andes region"
+      },
+      {
+        "name": "Girardot",
+        "regionName": "Girardot region"
+      },
+      {
+        "name": "Fusagasugá",
+        "regionName": "Fusagasugá region"
+      },
+      {
+        "name": "Leticia",
+        "regionName": "Leticia region"
+      },
+      {
+        "name": "Maynas",
+        "regionName": "Maynas region"
+      },
+      {
+        "name": "Huaraz",
+        "regionName": "Huaraz region"
+      },
+      {
+        "name": "Huamanga",
+        "regionName": "Huamanga region"
+      },
+      {
+        "name": "La Convencion",
+        "regionName": "La Convencion region"
       }
     ],
     "rule": {
@@ -118841,6 +119913,6141 @@
       "country": "US",
       "realm": "us-midwest",
       "localTrips": 3381104.0
+    },
+    {
+      "id": "bue",
+      "name": "Buenos Aires",
+      "origin": {
+        "lon": -58.3967,
+        "lat": -34.5928
+      },
+      "center": [
+        -58.3967,
+        -34.5928
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -59.576,
+        -35.887,
+        -57.105,
+        -33.967
+      ],
+      "place": 6757,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 43795408.0
+    },
+    {
+      "id": "cor",
+      "name": "Cordoba",
+      "origin": {
+        "lon": -64.1838,
+        "lat": -31.4276
+      },
+      "center": [
+        -64.1838,
+        -31.4276
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -64.471,
+        -31.562,
+        -62.793,
+        -30.396
+      ],
+      "place": 6758,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 5096365.0
+    },
+    {
+      "id": "roa",
+      "name": "Rosario",
+      "origin": {
+        "lon": -60.6411,
+        "lat": -32.9529
+      },
+      "center": [
+        -60.6411,
+        -32.9529
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -62.161,
+        -33.845,
+        -59.745,
+        -32.2
+      ],
+      "place": 6759,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 5453174.0
+    },
+    {
+      "id": "men",
+      "name": "Mendoza",
+      "origin": {
+        "lon": -68.8433,
+        "lat": -32.8924
+      },
+      "center": [
+        -68.8433,
+        -32.8924
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -70.194,
+        -33.566,
+        -67.144,
+        -31.981
+      ],
+      "place": 6760,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 4010599.0
+    },
+    {
+      "id": "cpt",
+      "name": "Capital",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.2038,
+        "lat": -26.8205
+      },
+      "center": [
+        -65.2038,
+        -26.8205
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -66.162,
+        -28.033,
+        -64.461,
+        -26.04
+      ],
+      "place": 6761,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 4727269.0
+    },
+    {
+      "id": "gen",
+      "name": "General Pueyrredón",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.5508,
+        "lat": -38.0076
+      },
+      "center": [
+        -57.5508,
+        -38.0076
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -60.87,
+        -38.949,
+        -56.641,
+        -36.272
+      ],
+      "place": 6762,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 3504499.0
+    },
+    {
+      "id": "ger",
+      "name": "General López",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.9611,
+        "lat": -33.7497
+      },
+      "center": [
+        -61.9611,
+        -33.7497
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -63.415,
+        -36.052,
+        -59.76,
+        -33.243
+      ],
+      "place": 6763,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2842604.0
+    },
+    {
+      "id": "cpl",
+      "name": "Capital, Banda",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.2649,
+        "lat": -27.7849
+      },
+      "center": [
+        -64.2649,
+        -27.7849
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -65.209,
+        -29.835,
+        -61.691,
+        -25.631
+      ],
+      "place": 6764,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2736515.0
+    },
+    {
+      "id": "lal",
+      "name": "La Plata",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.9523,
+        "lat": -34.9152
+      },
+      "center": [
+        -57.9523,
+        -34.9152
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -58.311,
+        -35.254,
+        -57.687,
+        -34.156
+      ],
+      "place": 6765,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2628852.0
+    },
+    {
+      "id": "cps",
+      "name": "Capital, Santo Tomé",
+      "kind": "zone",
+      "origin": {
+        "lon": -58.8321,
+        "lat": -27.4716
+      },
+      "center": [
+        -58.8321,
+        -27.4716
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -59.135,
+        -30.748,
+        -55.599,
+        -27.243
+      ],
+      "place": 6766,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2482721.0
+    },
+    {
+      "id": "joh",
+      "name": "Johannesburg",
+      "origin": {
+        "lon": 28.0956,
+        "lat": -26.1034
+      },
+      "center": [
+        28.0956,
+        -26.1034
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.405,
+        -26.636,
+        28.548,
+        -25.777
+      ],
+      "place": 6767,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 27263139.0
+    },
+    {
+      "id": "cap",
+      "name": "Cape Town",
+      "origin": {
+        "lon": 18.658,
+        "lat": -34.0188
+      },
+      "center": [
+        18.658,
+        -34.0188
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        18.285,
+        -34.377,
+        19.028,
+        -33.453
+      ],
+      "place": 6768,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 12331065.0
+    },
+    {
+      "id": "nes",
+      "name": "Nelson Mandela Bay",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.5767,
+        "lat": -33.7931
+      },
+      "center": [
+        25.5767,
+        -33.7931
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.713,
+        -34.232,
+        26.552,
+        -31.67
+      ],
+      "place": 6770,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 4216598.0
+    },
+    {
+      "id": "plo",
+      "name": "Polokwane",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.427,
+        "lat": -23.8782
+      },
+      "center": [
+        29.427,
+        -23.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.077,
+        -24.316,
+        30.068,
+        -22.428
+      ],
+      "place": 6771,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 3131453.0
+    },
+    {
+      "id": "emf",
+      "name": "Emfuleni",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.8273,
+        "lat": -26.5925
+      },
+      "center": [
+        27.8273,
+        -26.5925
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.108,
+        -27.849,
+        29.036,
+        -26.317
+      ],
+      "place": 6772,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 3057606.0
+    },
+    {
+      "id": "mbo",
+      "name": "Mbombela",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.016,
+        "lat": -25.7665
+      },
+      "center": [
+        31.016,
+        -25.7665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.958,
+        -26.018,
+        32.052,
+        -24.442
+      ],
+      "place": 6773,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 3216464.0
+    },
+    {
+      "id": "kib",
+      "name": "King Sabata Dalindyebo",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.8048,
+        "lat": -31.6081
+      },
+      "center": [
+        28.8048,
+        -31.6081
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.09,
+        -32.697,
+        29.207,
+        -31.184
+      ],
+      "place": 6774,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 3145898.0
+    },
+    {
+      "id": "bff",
+      "name": "Buffalo City",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.8713,
+        "lat": -33.0135
+      },
+      "center": [
+        27.8713,
+        -33.0135
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.926,
+        -33.775,
+        28.409,
+        -32.076
+      ],
+      "place": 6775,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2946219.0
+    },
+    {
+      "id": "joz",
+      "name": "Jozini",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.0304,
+        "lat": -27.624
+      },
+      "center": [
+        32.0304,
+        -27.624
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.9,
+        -28.571,
+        32.912,
+        -26.786
+      ],
+      "place": 6776,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2873460.0
+    },
+    {
+      "id": "rit",
+      "name": "Río Cuarto",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.346,
+        "lat": -33.1259
+      },
+      "center": [
+        -64.346,
+        -33.1259
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -65.165,
+        -35.034,
+        -61.749,
+        -29.625
+      ],
+      "place": 6777,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 3936722.0
+    },
+    {
+      "id": "lac",
+      "name": "La Capital",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.704,
+        "lat": -31.6425
+      },
+      "center": [
+        -60.704,
+        -31.6425
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -62.263,
+        -33.109,
+        -59.605,
+        -27.98
+      ],
+      "place": 6778,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 3668124.0
+    },
+    {
+      "id": "cof",
+      "name": "Confluencia",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.0584,
+        "lat": -38.9571
+      },
+      "center": [
+        -68.0584,
+        -38.9571
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -72.212,
+        -43.653,
+        -67.972,
+        -36.034
+      ],
+      "place": 6779,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2505264.0
+    },
+    {
+      "id": "cpc",
+      "name": "Capital, Cerrillos",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.4123,
+        "lat": -24.7832
+      },
+      "center": [
+        -65.4123,
+        -24.7832
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -66.826,
+        -26.435,
+        -65.002,
+        -23.396
+      ],
+      "place": 6780,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2314033.0
+    },
+    {
+      "id": "drn",
+      "name": "Dr. Manuel Belgrano",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.3157,
+        "lat": -24.188
+      },
+      "center": [
+        -65.3157,
+        -24.188
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -67.201,
+        -24.632,
+        -64.13,
+        -21.762
+      ],
+      "place": 6781,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2197302.0
+    },
+    {
+      "id": "ccd",
+      "name": "Concordia",
+      "kind": "zone",
+      "origin": {
+        "lon": -58.017,
+        "lat": -31.3932
+      },
+      "center": [
+        -58.017,
+        -31.3932
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -60.317,
+        -33.834,
+        -57.776,
+        -30.14
+      ],
+      "place": 6782,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2171968.0
+    },
+    {
+      "id": "zaa",
+      "name": "Zárate",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.0231,
+        "lat": -34.097
+      },
+      "center": [
+        -59.0231,
+        -34.097
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -60.165,
+        -35.273,
+        -58.365,
+        -33.135
+      ],
+      "place": 6783,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1870014.0
+    },
+    {
+      "id": "cmt",
+      "name": "Comandante Fernández",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.4392,
+        "lat": -26.7867
+      },
+      "center": [
+        -60.4392,
+        -26.7867
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -63.443,
+        -28.02,
+        -58.666,
+        -24.06
+      ],
+      "place": 6784,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1849335.0
+    },
+    {
+      "id": "srf",
+      "name": "San Rafael",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.3277,
+        "lat": -34.6189
+      },
+      "center": [
+        -68.3277,
+        -34.6189
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -70.265,
+        -36.019,
+        -66.455,
+        -32.704
+      ],
+      "place": 6785,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1813001.0
+    },
+    {
+      "id": "bhb",
+      "name": "Bahía Blanca",
+      "kind": "zone",
+      "origin": {
+        "lon": -62.2695,
+        "lat": -38.7171
+      },
+      "center": [
+        -62.2695,
+        -38.7171
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -63.409,
+        -41.057,
+        -60.481,
+        -36.439
+      ],
+      "place": 6786,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1806260.0
+    },
+    {
+      "id": "cpn",
+      "name": "Capital, San Ignacio",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.8992,
+        "lat": -27.37
+      },
+      "center": [
+        -55.8992,
+        -27.37
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.079,
+        -28.183,
+        -54.639,
+        -26.631
+      ],
+      "place": 6787,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1775030.0
+    },
+    {
+      "id": "foo",
+      "name": "Formosa",
+      "kind": "zone",
+      "origin": {
+        "lon": -58.1717,
+        "lat": -26.1792
+      },
+      "center": [
+        -58.1717,
+        -26.1792
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -62.363,
+        -26.915,
+        -57.533,
+        -22.458
+      ],
+      "place": 6788,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1718638.0
+    },
+    {
+      "id": "orn",
+      "name": "Orán",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.3282,
+        "lat": -23.1342
+      },
+      "center": [
+        -64.3282,
+        -23.1342
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -65.906,
+        -26.325,
+        -62.319,
+        -21.98
+      ],
+      "place": 6789,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1634035.0
+    },
+    {
+      "id": "cvi",
+      "name": "Chivilcoy",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.0207,
+        "lat": -34.8978
+      },
+      "center": [
+        -60.0207,
+        -34.8978
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -63.408,
+        -37.019,
+        -58.26,
+        -34.622
+      ],
+      "place": 6790,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1550110.0
+    },
+    {
+      "id": "pbb",
+      "name": "Paraná",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.5294,
+        "lat": -31.7285
+      },
+      "center": [
+        -60.5294,
+        -31.7285
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -60.793,
+        -32.699,
+        -58.921,
+        -30.297
+      ],
+      "place": 6791,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1519508.0
+    },
+    {
+      "id": "lai",
+      "name": "La Capital, General Pedernera",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.3363,
+        "lat": -33.3077
+      },
+      "center": [
+        -66.3363,
+        -33.3077
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -67.498,
+        -34.843,
+        -64.86,
+        -31.815
+      ],
+      "place": 6792,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1461900.0
+    },
+    {
+      "id": "sfr",
+      "name": "San Fernando",
+      "kind": "zone",
+      "origin": {
+        "lon": -58.9849,
+        "lat": -27.4462
+      },
+      "center": [
+        -58.9849,
+        -27.4462
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -60.238,
+        -28.087,
+        -58.354,
+        -26.586
+      ],
+      "place": 6793,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1451658.0
+    },
+    {
+      "id": "tnl",
+      "name": "Tandil",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.1317,
+        "lat": -37.3271
+      },
+      "center": [
+        -59.1317,
+        -37.3271
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -61.774,
+        -38.018,
+        -56.991,
+        -35.668
+      ],
+      "place": 6794,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1462785.0
+    },
+    {
+      "id": "gea",
+      "name": "General Roca",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.576,
+        "lat": -39.0283
+      },
+      "center": [
+        -67.576,
+        -39.0283
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -69.831,
+        -41.18,
+        -62.765,
+        -37.556
+      ],
+      "place": 6795,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1342071.0
+    },
+    {
+      "id": "geb",
+      "name": "General Obligado",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.6483,
+        "lat": -29.1441
+      },
+      "center": [
+        -59.6483,
+        -29.1441
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -61.103,
+        -30.724,
+        -58.287,
+        -27.981
+      ],
+      "place": 6796,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1423843.0
+    },
+    {
+      "id": "riy",
+      "name": "Riyadh",
+      "origin": {
+        "lon": 46.6849,
+        "lat": 24.6909
+      },
+      "center": [
+        46.6849,
+        24.6909
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.059,
+        24.201,
+        47.8,
+        26.7
+      ],
+      "place": 6797,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 25416229.0
+    },
+    {
+      "id": "dua",
+      "name": "Dubai",
+      "origin": {
+        "lon": 55.399,
+        "lat": 25.3375
+      },
+      "center": [
+        55.399,
+        25.3375
+      ],
+      "zoom": 11.2,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        54.87,
+        24.605,
+        56.402,
+        25.677
+      ],
+      "place": 6798,
+      "country": "AE",
+      "realm": "gulf",
+      "localTrips": 17030917.0
+    },
+    {
+      "id": "jed",
+      "name": "Jeddah",
+      "origin": {
+        "lon": 39.1876,
+        "lat": 21.4845
+      },
+      "center": [
+        39.1876,
+        21.4845
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.91,
+        20.875,
+        40.64,
+        22.554
+      ],
+      "place": 6799,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 15812041.0
+    },
+    {
+      "id": "kuw",
+      "name": "Kuwait City",
+      "origin": {
+        "lon": 48.0174,
+        "lat": 29.3315
+      },
+      "center": [
+        48.0174,
+        29.3315
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.531,
+        28.659,
+        48.417,
+        29.505
+      ],
+      "place": 6800,
+      "country": "KW",
+      "realm": "gulf",
+      "localTrips": 12952605.0
+    },
+    {
+      "id": "mec",
+      "name": "Mecca",
+      "origin": {
+        "lon": 39.8231,
+        "lat": 21.418
+      },
+      "center": [
+        39.8231,
+        21.418
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.486,
+        21.101,
+        40.495,
+        21.867
+      ],
+      "place": 6801,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 7034176.0
+    },
+    {
+      "id": "mam",
+      "name": "Manama",
+      "origin": {
+        "lon": 50.6059,
+        "lat": 26.213
+      },
+      "center": [
+        50.6059,
+        26.213
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.304,
+        25.554,
+        50.839,
+        26.35
+      ],
+      "place": 6804,
+      "country": "BH",
+      "realm": "gulf",
+      "localTrips": 4539948.0
+    },
+    {
+      "id": "rsa",
+      "name": "Ras al-Khaimah",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.925,
+        "lat": 25.7244
+      },
+      "center": [
+        55.925,
+        25.7244
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        55.71,
+        24.805,
+        56.404,
+        26.093
+      ],
+      "place": 6806,
+      "country": "AE",
+      "realm": "gulf",
+      "localTrips": 2177497.0
+    },
+    {
+      "id": "dur",
+      "name": "Durban",
+      "origin": {
+        "lon": 30.9978,
+        "lat": -29.7408
+      },
+      "center": [
+        30.9978,
+        -29.7408
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.375,
+        -30.287,
+        31.207,
+        -29.482
+      ],
+      "place": 6807,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 9958593.0
+    },
+    {
+      "id": "mow",
+      "name": "Mogalakwena",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.0004,
+        "lat": -24.1461
+      },
+      "center": [
+        29.0004,
+        -24.1461
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.387,
+        -25.442,
+        30.033,
+        -22.793
+      ],
+      "place": 6808,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2597528.0
+    },
+    {
+      "id": "rae",
+      "name": "Ray Nkonyeni",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.3314,
+        "lat": -30.8098
+      },
+      "center": [
+        30.3314,
+        -30.8098
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.993,
+        -31.102,
+        30.85,
+        -29.478
+      ],
+      "place": 6809,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2843850.0
+    },
+    {
+      "id": "gre",
+      "name": "Greater Tubatse",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.3123,
+        "lat": -24.5903
+      },
+      "center": [
+        30.3123,
+        -24.5903
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.012,
+        -25.144,
+        31.274,
+        -23.925
+      ],
+      "place": 6810,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2650113.0
+    },
+    {
+      "id": "ema",
+      "name": "Emalahleni",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.1232,
+        "lat": -25.8507
+      },
+      "center": [
+        29.1232,
+        -25.8507
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.47,
+        -26.403,
+        30.686,
+        -25.194
+      ],
+      "place": 6811,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2448448.0
+    },
+    {
+      "id": "mgn",
+      "name": "Mangaung",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.2273,
+        "lat": -29.1952
+      },
+      "center": [
+        26.2273,
+        -29.1952
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.325,
+        -30.713,
+        27.671,
+        -27.775
+      ],
+      "place": 6812,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2648569.0
+    },
+    {
+      "id": "rue",
+      "name": "Rustenburg",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.2578,
+        "lat": -25.6151
+      },
+      "center": [
+        27.2578,
+        -25.6151
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.364,
+        -26.161,
+        27.667,
+        -24.7
+      ],
+      "place": 6813,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2482557.0
+    },
+    {
+      "id": "umh",
+      "name": "uMhlathuze",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.9066,
+        "lat": -28.8717
+      },
+      "center": [
+        31.9066,
+        -28.8717
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.6,
+        -29.277,
+        32.436,
+        -28.332
+      ],
+      "place": 6814,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2591761.0
+    },
+    {
+      "id": "nyn",
+      "name": "Nyandeni",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.8059,
+        "lat": -31.5565
+      },
+      "center": [
+        28.8059,
+        -31.5565
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.733,
+        -31.969,
+        30.216,
+        -30.629
+      ],
+      "place": 6815,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2456523.0
+    },
+    {
+      "id": "tha",
+      "name": "Thulamela",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.431,
+        "lat": -23.009
+      },
+      "center": [
+        30.431,
+        -23.009
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.882,
+        -23.456,
+        31.365,
+        -22.106
+      ],
+      "place": 6816,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2768773.0
+    },
+    {
+      "id": "lim",
+      "name": "Lima",
+      "origin": {
+        "lon": -76.9986,
+        "lat": -12.0565
+      },
+      "center": [
+        -76.9986,
+        -12.0565
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.218,
+        -12.539,
+        -75.974,
+        -11.294
+      ],
+      "place": 6817,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 33363267.0
+    },
+    {
+      "id": "are",
+      "name": "Arequipa",
+      "origin": {
+        "lon": -71.5534,
+        "lat": -16.4523
+      },
+      "center": [
+        -71.5534,
+        -16.4523
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.311,
+        -17.304,
+        -70.287,
+        -15.856
+      ],
+      "place": 6818,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 3833030.0
+    },
+    {
+      "id": "ccl",
+      "name": "Chiclayo",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.842,
+        "lat": -6.7714
+      },
+      "center": [
+        -79.842,
+        -6.7714
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.646,
+        -7.656,
+        -79.102,
+        -5.462
+      ],
+      "place": 6819,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 4579369.0
+    },
+    {
+      "id": "tru",
+      "name": "Trujillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.0047,
+        "lat": -8.0777
+      },
+      "center": [
+        -79.0047,
+        -8.0777
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.488,
+        -8.406,
+        -78.23,
+        -7.37
+      ],
+      "place": 6820,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 4046230.0
+    },
+    {
+      "id": "hau",
+      "name": "Huanuco",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.2437,
+        "lat": -9.9305
+      },
+      "center": [
+        -76.2437,
+        -9.9305
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.337,
+        -11.174,
+        -74.506,
+        -8.295
+      ],
+      "place": 6821,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 3160699.0
+    },
+    {
+      "id": "stp",
+      "name": "Satipo",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.5296,
+        "lat": -11.3227
+      },
+      "center": [
+        -74.5296,
+        -11.3227
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.538,
+        -12.406,
+        -73.336,
+        -9.427
+      ],
+      "place": 6822,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 2451135.0
+    },
+    {
+      "id": "csc",
+      "name": "Cusco",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.9664,
+        "lat": -13.5263
+      },
+      "center": [
+        -71.9664,
+        -13.5263
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.792,
+        -14.297,
+        -70.326,
+        -12.488
+      ],
+      "place": 6823,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 2617249.0
+    },
+    {
+      "id": "ica",
+      "name": "Ica",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.7295,
+        "lat": -14.0661
+      },
+      "center": [
+        -75.7295,
+        -14.0661
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.417,
+        -15.462,
+        -74.627,
+        -12.946
+      ],
+      "place": 6824,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 2520590.0
+    },
+    {
+      "id": "cja",
+      "name": "Cajamarca",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.5194,
+        "lat": -7.1607
+      },
+      "center": [
+        -78.5194,
+        -7.1607
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.388,
+        -7.782,
+        -77.723,
+        -6.37
+      ],
+      "place": 6825,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 2275409.0
+    },
+    {
+      "id": "jex",
+      "name": "Jaen",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.8107,
+        "lat": -5.7014
+      },
+      "center": [
+        -78.8107,
+        -5.7014
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.477,
+        -6.892,
+        -78.259,
+        -4.605
+      ],
+      "place": 6826,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 2166271.0
+    },
+    {
+      "id": "raw",
+      "name": "Rawson",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.5366,
+        "lat": -31.5823
+      },
+      "center": [
+        -68.5366,
+        -31.5823
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -70.591,
+        -32.645,
+        -66.64,
+        -29.583
+      ],
+      "place": 6827,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 2170835.0
+    },
+    {
+      "id": "obe",
+      "name": "Oberá",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.109,
+        "lat": -27.4885
+      },
+      "center": [
+        -55.109,
+        -27.4885
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -55.683,
+        -27.951,
+        -53.616,
+        -25.476
+      ],
+      "place": 6828,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1984084.0
+    },
+    {
+      "id": "esc",
+      "name": "Escalante",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.4948,
+        "lat": -45.862
+      },
+      "center": [
+        -67.4948,
+        -45.862
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -72.1,
+        -48.602,
+        -65.161,
+        -43.765
+      ],
+      "place": 6829,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1256756.0
+    },
+    {
+      "id": "cpv",
+      "name": "Capital, Valle Viejo",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.7749,
+        "lat": -28.4722
+      },
+      "center": [
+        -65.7749,
+        -28.4722
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -67.383,
+        -30.138,
+        -64.76,
+        -25.113
+      ],
+      "place": 6830,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1261439.0
+    },
+    {
+      "id": "cph",
+      "name": "Capital, Chilecito",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.855,
+        "lat": -29.4167
+      },
+      "center": [
+        -66.855,
+        -29.4167
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -69.656,
+        -32.017,
+        -65.402,
+        -27.691
+      ],
+      "place": 6831,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 1170072.0
+    },
+    {
+      "id": "cpm",
+      "name": "Capital, Maracó",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.292,
+        "lat": -36.6226
+      },
+      "center": [
+        -64.292,
+        -36.6226
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -68.274,
+        -39.348,
+        -63.36,
+        -34.984
+      ],
+      "place": 6832,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 991909.0
+    },
+    {
+      "id": "pbc",
+      "name": "Punilla",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.4884,
+        "lat": -31.419
+      },
+      "center": [
+        -64.4884,
+        -31.419
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -65.793,
+        -32.344,
+        -64.393,
+        -30.638
+      ],
+      "place": 6833,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 818327.0
+    },
+    {
+      "id": "rog",
+      "name": "Río Grande",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.7103,
+        "lat": -53.791
+      },
+      "center": [
+        -67.7103,
+        -53.791
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -68.641,
+        -55.076,
+        -64.079,
+        -52.64
+      ],
+      "place": 6836,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 459518.0
+    },
+    {
+      "id": "crl",
+      "name": "Cruz del Eje",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.8095,
+        "lat": -30.7241
+      },
+      "center": [
+        -64.8095,
+        -30.7241
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -65.62,
+        -31.445,
+        -62.136,
+        -29.482
+      ],
+      "place": 6837,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 341149.0
+    },
+    {
+      "id": "slj",
+      "name": "Sol Plaatjie",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.7214,
+        "lat": -28.7016
+      },
+      "center": [
+        24.7214,
+        -28.7016
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        19.488,
+        -30.257,
+        25.069,
+        -25.964
+      ],
+      "place": 6838,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2379623.0
+    },
+    {
+      "id": "nec",
+      "name": "Newcastle",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.0656,
+        "lat": -27.768
+      },
+      "center": [
+        30.0656,
+        -27.768
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.596,
+        -28.684,
+        31.592,
+        -27.249
+      ],
+      "place": 6839,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2471745.0
+    },
+    {
+      "id": "ald",
+      "name": "Alfred Duma",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.9237,
+        "lat": -28.6251
+      },
+      "center": [
+        29.9237,
+        -28.6251
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.852,
+        -29.434,
+        30.786,
+        -27.912
+      ],
+      "place": 6840,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2393649.0
+    },
+    {
+      "id": "drk",
+      "name": "Drakenstein",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.9909,
+        "lat": -33.6716
+      },
+      "center": [
+        18.9909,
+        -33.6716
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        18.762,
+        -34.471,
+        21.908,
+        -32.166
+      ],
+      "place": 6841,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2137322.0
+    },
+    {
+      "id": "mfi",
+      "name": "Mafikeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.5969,
+        "lat": -25.8423
+      },
+      "center": [
+        25.5969,
+        -25.8423
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.445,
+        -26.986,
+        26.828,
+        -24.618
+      ],
+      "place": 6842,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2217378.0
+    },
+    {
+      "id": "ths",
+      "name": "The Msunduzi",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.3886,
+        "lat": -29.5702
+      },
+      "center": [
+        30.3886,
+        -29.5702
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.272,
+        -30.132,
+        30.565,
+        -29.227
+      ],
+      "place": 6843,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2230806.0
+    },
+    {
+      "id": "eno",
+      "name": "Enoch Mgijima",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.8547,
+        "lat": -31.9178
+      },
+      "center": [
+        26.8547,
+        -31.9178
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.586,
+        -33.334,
+        28.184,
+        -29.793
+      ],
+      "place": 6844,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2253759.0
+    },
+    {
+      "id": "lot",
+      "name": "Local Municipality of Madibeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.7991,
+        "lat": -25.6066
+      },
+      "center": [
+        27.7991,
+        -25.6066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.404,
+        -25.913,
+        28.319,
+        -24.939
+      ],
+      "place": 6845,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1691917.0
+    },
+    {
+      "id": "mtt",
+      "name": "Matatiele",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.7939,
+        "lat": -30.2619
+      },
+      "center": [
+        28.7939,
+        -30.2619
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.91,
+        -31.526,
+        29.584,
+        -29.983
+      ],
+      "place": 6846,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1999464.0
+    },
+    {
+      "id": "geg",
+      "name": "George",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.4901,
+        "lat": -34.0101
+      },
+      "center": [
+        22.4901,
+        -34.0101
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.18,
+        -34.364,
+        24.245,
+        -31.565
+      ],
+      "place": 6847,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1886918.0
+    },
+    {
+      "id": "byd",
+      "name": "Buraydah",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.3714,
+        "lat": 25.8423
+      },
+      "center": [
+        43.3714,
+        25.8423
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.28,
+        24.465,
+        45.01,
+        28.27
+      ],
+      "place": 6849,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 3975563.0
+    },
+    {
+      "id": "khh",
+      "name": "Khamis Mushayt",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.7215,
+        "lat": 18.3048
+      },
+      "center": [
+        42.7215,
+        18.3048
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.468,
+        17.348,
+        44.507,
+        20.821
+      ],
+      "place": 6851,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 3094007.0
+    },
+    {
+      "id": "tbu",
+      "name": "Tabuk",
+      "kind": "zone",
+      "origin": {
+        "lon": 36.5606,
+        "lat": 28.4042
+      },
+      "center": [
+        36.5606,
+        28.4042
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        34.473,
+        24.543,
+        38.817,
+        29.994
+      ],
+      "place": 6852,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 3024616.0
+    },
+    {
+      "id": "abr",
+      "name": "Abu Arish",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.8339,
+        "lat": 16.9703
+      },
+      "center": [
+        42.8339,
+        16.9703
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.586,
+        16.361,
+        43.356,
+        17.62
+      ],
+      "place": 6853,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 2446949.0
+    },
+    {
+      "id": "aab",
+      "name": "Arar",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.0558,
+        "lat": 30.9813
+      },
+      "center": [
+        41.0558,
+        30.9813
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        36.984,
+        28.349,
+        42.997,
+        32.173
+      ],
+      "place": 6854,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 2365582.0
+    },
+    {
+      "id": "aqu",
+      "name": "Al Qunfudhah",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.0758,
+        "lat": 19.1471
+      },
+      "center": [
+        41.0758,
+        19.1471
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.569,
+        18.544,
+        43.131,
+        20.61
+      ],
+      "place": 6855,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 2138132.0
+    },
+    {
+      "id": "nar",
+      "name": "Najran",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.2218,
+        "lat": 17.5465
+      },
+      "center": [
+        44.2218,
+        17.5465
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.576,
+        17.215,
+        46.402,
+        18.644
+      ],
+      "place": 6856,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1749922.0
+    },
+    {
+      "id": "abx",
+      "name": "Abha",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.5017,
+        "lat": 18.2141
+      },
+      "center": [
+        42.5017,
+        18.2141
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.039,
+        17.467,
+        43.553,
+        19.104
+      ],
+      "place": 6857,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1646572.0
+    },
+    {
+      "id": "piu",
+      "name": "Piura",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.63,
+        "lat": -5.191
+      },
+      "center": [
+        -80.63,
+        -5.191
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.347,
+        -6.391,
+        -79.99,
+        -4.067
+      ],
+      "place": 6858,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 3619181.0
+    },
+    {
+      "id": "sbp",
+      "name": "San Roman",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.1368,
+        "lat": -15.4916
+      },
+      "center": [
+        -70.1368,
+        -15.4916
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.448,
+        -16.053,
+        -68.632,
+        -11.015
+      ],
+      "place": 6859,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 3168675.0
+    },
+    {
+      "id": "hac",
+      "name": "Huancayo",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.1994,
+        "lat": -12.0646
+      },
+      "center": [
+        -75.1994,
+        -12.0646
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.81,
+        -13.343,
+        -74.324,
+        -11.24
+      ],
+      "place": 6860,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 3342424.0
+    },
+    {
+      "id": "sbq",
+      "name": "San Martin",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.3576,
+        "lat": -6.4876
+      },
+      "center": [
+        -76.3576,
+        -6.4876
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.784,
+        -8.815,
+        -74.481,
+        -5.847
+      ],
+      "place": 6861,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1906909.0
+    },
+    {
+      "id": "hax",
+      "name": "Huaura",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.6038,
+        "lat": -11.1027
+      },
+      "center": [
+        -77.6038,
+        -11.1027
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.905,
+        -11.697,
+        -76.438,
+        -10.255
+      ],
+      "place": 6863,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1826266.0
+    },
+    {
+      "id": "sbs",
+      "name": "Sullana",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.6771,
+        "lat": -4.8913
+      },
+      "center": [
+        -80.6771,
+        -4.8913
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.063,
+        -5.312,
+        -80.108,
+        -3.379
+      ],
+      "place": 6865,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1723204.0
+    },
+    {
+      "id": "pbd",
+      "name": "Puno",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.0243,
+        "lat": -15.8281
+      },
+      "center": [
+        -70.0243,
+        -15.8281
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.582,
+        -17.314,
+        -68.776,
+        -15.46
+      ],
+      "place": 6867,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1582558.0
+    },
+    {
+      "id": "sbt",
+      "name": "Santa",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.5889,
+        "lat": -9.0687
+      },
+      "center": [
+        -78.5889,
+        -9.0687
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.677,
+        -9.813,
+        -77.538,
+        -8.031
+      ],
+      "place": 6868,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1564310.0
+    },
+    {
+      "id": "viu",
+      "name": "Viru",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.6805,
+        "lat": -8.5406
+      },
+      "center": [
+        -78.6805,
+        -8.5406
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.954,
+        -8.989,
+        -76.882,
+        -6.923
+      ],
+      "place": 6869,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1340783.0
+    },
+    {
+      "id": "mtj",
+      "name": "Matjhabeng",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.7819,
+        "lat": -27.9714
+      },
+      "center": [
+        26.7819,
+        -27.9714
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.303,
+        -29.129,
+        28.123,
+        -26.834
+      ],
+      "place": 6870,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 2072382.0
+    },
+    {
+      "id": "gez",
+      "name": "Greater Tzaneen",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.2735,
+        "lat": -23.9703
+      },
+      "center": [
+        30.2735,
+        -23.9703
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.834,
+        -24.214,
+        31.905,
+        -23.197
+      ],
+      "place": 6871,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1849660.0
+    },
+    {
+      "id": "kwa",
+      "name": "KwaDukuza",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.2126,
+        "lat": -29.4423
+      },
+      "center": [
+        31.2126,
+        -29.4423
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.255,
+        -29.646,
+        31.496,
+        -28.703
+      ],
+      "place": 6872,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1687413.0
+    },
+    {
+      "id": "teb",
+      "name": "Thembisile",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.6395,
+        "lat": -25.4636
+      },
+      "center": [
+        28.6395,
+        -25.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.359,
+        -25.764,
+        29.383,
+        -24.883
+      ],
+      "place": 6873,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1609556.0
+    },
+    {
+      "id": "gob",
+      "name": "Govan Mbeki",
+      "kind": "zone",
+      "origin": {
+        "lon": 29.085,
+        "lat": -26.5672
+      },
+      "center": [
+        29.085,
+        -26.5672
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.159,
+        -27.283,
+        29.891,
+        -26.151
+      ],
+      "place": 6874,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1542579.0
+    },
+    {
+      "id": "buh",
+      "name": "Bushbuckridge",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.2009,
+        "lat": -24.7245
+      },
+      "center": [
+        31.2009,
+        -24.7245
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.775,
+        -25.206,
+        32.054,
+        -23.963
+      ],
+      "place": 6875,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1462384.0
+    },
+    {
+      "id": "swt",
+      "name": "Swartland",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.7057,
+        "lat": -33.4636
+      },
+      "center": [
+        18.7057,
+        -33.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        17.158,
+        -33.706,
+        19.538,
+        -29.813
+      ],
+      "place": 6876,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1252903.0
+    },
+    {
+      "id": "clh",
+      "name": "Collins Chabane",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7029,
+        "lat": -23.0006
+      },
+      "center": [
+        30.7029,
+        -23.0006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.274,
+        -23.719,
+        31.584,
+        -22.516
+      ],
+      "place": 6877,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1039406.0
+    },
+    {
+      "id": "cit",
+      "name": "City of Matlosana",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.6208,
+        "lat": -26.9725
+      },
+      "center": [
+        26.6208,
+        -26.9725
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.589,
+        -27.755,
+        26.919,
+        -26.465
+      ],
+      "place": 6878,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1308759.0
+    },
+    {
+      "id": "mlh",
+      "name": "Maluti a Phofung",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.8586,
+        "lat": -28.5316
+      },
+      "center": [
+        28.8586,
+        -28.5316
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.674,
+        -28.794,
+        29.806,
+        -26.985
+      ],
+      "place": 6879,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1338943.0
+    },
+    {
+      "id": "bog",
+      "name": "Bogota",
+      "origin": {
+        "lon": -74.0355,
+        "lat": 4.7212
+      },
+      "center": [
+        -74.0355,
+        4.7212
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.591,
+        3.686,
+        -73.652,
+        5.052
+      ],
+      "place": 6880,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 32111627.0
+    },
+    {
+      "id": "mee",
+      "name": "Medellín",
+      "origin": {
+        "lon": -75.5485,
+        "lat": 6.293
+      },
+      "center": [
+        -75.5485,
+        6.293
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.876,
+        5.944,
+        -75.198,
+        6.548
+      ],
+      "place": 6881,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 10722482.0
+    },
+    {
+      "id": "cal",
+      "name": "Cali",
+      "origin": {
+        "lon": -76.5503,
+        "lat": 3.4502
+      },
+      "center": [
+        -76.5503,
+        3.4502
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.904,
+        3.181,
+        -75.937,
+        3.897
+      ],
+      "place": 6882,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 8096560.0
+    },
+    {
+      "id": "baa",
+      "name": "Barranquilla",
+      "origin": {
+        "lon": -74.7883,
+        "lat": 10.9154
+      },
+      "center": [
+        -74.7883,
+        10.9154
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.093,
+        10.624,
+        -74.408,
+        11.125
+      ],
+      "place": 6883,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 6898490.0
+    },
+    {
+      "id": "crs",
+      "name": "Cartagena De Indias",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.5068,
+        "lat": 10.4025
+      },
+      "center": [
+        -75.5068,
+        10.4025
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.209,
+        9.359,
+        -74.767,
+        10.82
+      ],
+      "place": 6884,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 4209929.0
+    },
+    {
+      "id": "bug",
+      "name": "Bucaramanga",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.1113,
+        "lat": 7.1201
+      },
+      "center": [
+        -73.1113,
+        7.1201
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.564,
+        6.866,
+        -72.983,
+        7.448
+      ],
+      "place": 6885,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 3460164.0
+    },
+    {
+      "id": "sux",
+      "name": "Sahagún",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.447,
+        "lat": 8.9549
+      },
+      "center": [
+        -75.447,
+        8.9549
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.534,
+        7.339,
+        -74.766,
+        9.305
+      ],
+      "place": 6887,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2594846.0
+    },
+    {
+      "id": "tuj",
+      "name": "Tunja",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.363,
+        "lat": 5.5312
+      },
+      "center": [
+        -73.363,
+        5.5312
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.684,
+        4.637,
+        -71.925,
+        7.073
+      ],
+      "place": 6888,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 3146525.0
+    },
+    {
+      "id": "ccu",
+      "name": "Cúcuta",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.5071,
+        "lat": 7.8748
+      },
+      "center": [
+        -72.5071,
+        7.8748
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.093,
+        6.854,
+        -72.031,
+        9.159
+      ],
+      "place": 6889,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 3163978.0
+    },
+    {
+      "id": "adw",
+      "name": "Ad Duwadimi",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.3892,
+        "lat": 24.5064
+      },
+      "center": [
+        44.3892,
+        24.5064
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.661,
+        22.399,
+        46.681,
+        27.721
+      ],
+      "place": 6890,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 2009664.0
+    },
+    {
+      "id": "sby",
+      "name": "Sabya",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.6236,
+        "lat": 17.1513
+      },
+      "center": [
+        42.6236,
+        17.1513
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.909,
+        16.789,
+        43.075,
+        18.077
+      ],
+      "place": 6892,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1411652.0
+    },
+    {
+      "id": "aka",
+      "name": "Al Kharj",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.3329,
+        "lat": 24.1545
+      },
+      "center": [
+        47.3329,
+        24.1545
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.601,
+        22.76,
+        48.174,
+        24.603
+      ],
+      "place": 6893,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1395200.0
+    },
+    {
+      "id": "baz",
+      "name": "Bahrah",
+      "kind": "zone",
+      "origin": {
+        "lon": 39.5088,
+        "lat": 21.4097
+      },
+      "center": [
+        39.5088,
+        21.4097
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.291,
+        19.674,
+        42.063,
+        21.879
+      ],
+      "place": 6894,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1082428.0
+    },
+    {
+      "id": "aah",
+      "name": "Al Bahah",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.462,
+        "lat": 20.0159
+      },
+      "center": [
+        41.462,
+        20.0159
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        40.816,
+        19.491,
+        42.15,
+        20.848
+      ],
+      "place": 6895,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1195909.0
+    },
+    {
+      "id": "ynb",
+      "name": "Yanbu",
+      "kind": "zone",
+      "origin": {
+        "lon": 38.0599,
+        "lat": 24.0875
+      },
+      "center": [
+        38.0599,
+        24.0875
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        37.064,
+        23.625,
+        38.992,
+        27.492
+      ],
+      "place": 6897,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1123064.0
+    },
+    {
+      "id": "brm",
+      "name": "Bar_Elahmadi",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.1659,
+        "lat": 28.8717
+      },
+      "center": [
+        48.1659,
+        28.8717
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.869,
+        28.506,
+        48.451,
+        30.122
+      ],
+      "place": 6899,
+      "country": "KW",
+      "realm": "gulf",
+      "localTrips": 369767.0
+    },
+    {
+      "id": "chf",
+      "name": "Chief Albert Luthuli",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.1192,
+        "lat": -26.0865
+      },
+      "center": [
+        30.1192,
+        -26.0865
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.398,
+        -27.525,
+        31.296,
+        -25.693
+      ],
+      "place": 6900,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1578761.0
+    },
+    {
+      "id": "slb",
+      "name": "Stellenbosch",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.8465,
+        "lat": -33.9233
+      },
+      "center": [
+        18.8465,
+        -33.9233
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        18.686,
+        -34.852,
+        20.894,
+        -33.775
+      ],
+      "place": 6901,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1051802.0
+    },
+    {
+      "id": "ves",
+      "name": "Ventersdorp",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.0547,
+        "lat": -26.7191
+      },
+      "center": [
+        27.0547,
+        -26.7191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.438,
+        -26.999,
+        27.651,
+        -26.013
+      ],
+      "place": 6902,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1165248.0
+    },
+    {
+      "id": "geu",
+      "name": "Greater Taung",
+      "kind": "zone",
+      "origin": {
+        "lon": 24.7205,
+        "lat": -27.4123
+      },
+      "center": [
+        24.7205,
+        -27.4123
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.608,
+        -28.132,
+        25.856,
+        -25.254
+      ],
+      "place": 6903,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 1119499.0
+    },
+    {
+      "id": "moy",
+      "name": "Moyobamba",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.9775,
+        "lat": -6.0336
+      },
+      "center": [
+        -76.9775,
+        -6.0336
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.845,
+        -6.432,
+        -75.367,
+        -2.494
+      ],
+      "place": 6905,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1516409.0
+    },
+    {
+      "id": "tcn",
+      "name": "Tacna",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.2453,
+        "lat": -17.9914
+      },
+      "center": [
+        -70.2453,
+        -17.9914
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -71.51,
+        -18.369,
+        -69.449,
+        -16.443
+      ],
+      "place": 6906,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1641313.0
+    },
+    {
+      "id": "cyl",
+      "name": "Caylloma",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.1879,
+        "lat": -16.3619
+      },
+      "center": [
+        -72.1879,
+        -16.3619
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.092,
+        -16.63,
+        -70.77,
+        -13.708
+      ],
+      "place": 6907,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1394100.0
+    },
+    {
+      "id": "cro",
+      "name": "Coronel Portillo",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.5802,
+        "lat": -8.3619
+      },
+      "center": [
+        -74.5802,
+        -8.3619
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.965,
+        -11.467,
+        -72.101,
+        -7.244
+      ],
+      "place": 6908,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1321292.0
+    },
+    {
+      "id": "hal",
+      "name": "Huancavelica",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.9832,
+        "lat": -12.7828
+      },
+      "center": [
+        -74.9832,
+        -12.7828
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.829,
+        -14.148,
+        -74.251,
+        -12.341
+      ],
+      "place": 6909,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1134515.0
+    },
+    {
+      "id": "utc",
+      "name": "Utcubamba",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.4452,
+        "lat": -5.7581
+      },
+      "center": [
+        -78.4452,
+        -5.7581
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.731,
+        -7.005,
+        -77.114,
+        -2.967
+      ],
+      "place": 6910,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1110000.0
+    },
+    {
+      "id": "anh",
+      "name": "Andahuaylas",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.3925,
+        "lat": -13.6572
+      },
+      "center": [
+        -73.3925,
+        -13.6572
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.867,
+        -14.861,
+        -72.032,
+        -13.152
+      ],
+      "place": 6911,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1148316.0
+    },
+    {
+      "id": "mpo",
+      "name": "Morropon",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.1623,
+        "lat": -5.0938
+      },
+      "center": [
+        -80.1623,
+        -5.0938
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.384,
+        -5.959,
+        -79.191,
+        -4.267
+      ],
+      "place": 6912,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1176205.0
+    },
+    {
+      "id": "mse",
+      "name": "Maseru District",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.5185,
+        "lat": -29.323
+      },
+      "center": [
+        27.5185,
+        -29.323
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        26.99,
+        -30.696,
+        29.191,
+        -29.263
+      ],
+      "place": 6914,
+      "country": "LS",
+      "realm": "southern-africa",
+      "localTrips": 3038350.0
+    },
+    {
+      "id": "brd",
+      "name": "Berea District",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.5223,
+        "lat": -29.2804
+      },
+      "center": [
+        27.5223,
+        -29.2804
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.489,
+        -29.907,
+        29.477,
+        -28.552
+      ],
+      "place": 6915,
+      "country": "LS",
+      "realm": "southern-africa",
+      "localTrips": 2843129.0
+    },
+    {
+      "id": "yop",
+      "name": "Yopal",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.3985,
+        "lat": 5.3449
+      },
+      "center": [
+        -72.3985,
+        5.3449
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.093,
+        4.267,
+        -69.417,
+        7.123
+      ],
+      "place": 6916,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2752519.0
+    },
+    {
+      "id": "brc",
+      "name": "Barrancabermeja",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.8576,
+        "lat": 7.0634
+      },
+      "center": [
+        -73.8576,
+        7.0634
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.545,
+        5.688,
+        -72.458,
+        8.162
+      ],
+      "place": 6917,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2763027.0
+    },
+    {
+      "id": "viv",
+      "name": "Villavicencio",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.6402,
+        "lat": 4.1463
+      },
+      "center": [
+        -73.6402,
+        4.1463
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.953,
+        0.876,
+        -69.976,
+        4.944
+      ],
+      "place": 6918,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2901334.0
+    },
+    {
+      "id": "ccs",
+      "name": "Caucasia",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.1987,
+        "lat": 7.9803
+      },
+      "center": [
+        -75.1987,
+        7.9803
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.941,
+        6.191,
+        -73.861,
+        8.218
+      ],
+      "place": 6919,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2413311.0
+    },
+    {
+      "id": "mnr",
+      "name": "Montería",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.8836,
+        "lat": 8.7518
+      },
+      "center": [
+        -75.8836,
+        8.7518
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.435,
+        8.245,
+        -75.561,
+        9.467
+      ],
+      "place": 6920,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2438432.0
+    },
+    {
+      "id": "miz",
+      "name": "Manizales",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.4884,
+        "lat": 5.0533
+      },
+      "center": [
+        -75.4884,
+        5.0533
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.941,
+        4.784,
+        -74.606,
+        5.798
+      ],
+      "place": 6921,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2423850.0
+    },
+    {
+      "id": "sbo",
+      "name": "Santa Marta",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.1922,
+        "lat": 11.2331
+      },
+      "center": [
+        -74.1922,
+        11.2331
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.504,
+        10.033,
+        -73.523,
+        11.368
+      ],
+      "place": 6922,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2443717.0
+    },
+    {
+      "id": "scl",
+      "name": "Sincelejo",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.4032,
+        "lat": 9.3125
+      },
+      "center": [
+        -75.4032,
+        9.3125
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.723,
+        8.258,
+        -74.514,
+        10.167
+      ],
+      "place": 6923,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2237083.0
+    },
+    {
+      "id": "pst",
+      "name": "Pasto",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.2833,
+        "lat": 1.2011
+      },
+      "center": [
+        -77.2833,
+        1.2011
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.982,
+        0.725,
+        -76.815,
+        2.144
+      ],
+      "place": 6924,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2108874.0
+    },
+    {
+      "id": "slg",
+      "name": "Sabanalarga",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.9261,
+        "lat": 10.6304
+      },
+      "center": [
+        -74.9261,
+        10.6304
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.269,
+        8.898,
+        -73.779,
+        10.905
+      ],
+      "place": 6926,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1763307.0
+    },
+    {
+      "id": "tlu",
+      "name": "Tuluá",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.1948,
+        "lat": 4.0816
+      },
+      "center": [
+        -76.1948,
+        4.0816
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.904,
+        3.695,
+        -75.72,
+        4.858
+      ],
+      "place": 6927,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1893699.0
+    },
+    {
+      "id": "apr",
+      "name": "Apartadó",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.6329,
+        "lat": 7.8829
+      },
+      "center": [
+        -76.6329,
+        7.8829
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.146,
+        7.114,
+        -76.171,
+        8.908
+      ],
+      "place": 6929,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1733725.0
+    },
+    {
+      "id": "uri",
+      "name": "Uribia",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.2688,
+        "lat": 11.714
+      },
+      "center": [
+        -72.2688,
+        11.714
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.909,
+        11.097,
+        -71.094,
+        12.477
+      ],
+      "place": 6930,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1495856.0
+    },
+    {
+      "id": "arn",
+      "name": "Armenia",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.6925,
+        "lat": 4.5269
+      },
+      "center": [
+        -75.6925,
+        4.5269
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.914,
+        4.057,
+        -75.364,
+        4.74
+      ],
+      "place": 6931,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1664840.0
+    },
+    {
+      "id": "pit",
+      "name": "Pitalito",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.0403,
+        "lat": 1.8562
+      },
+      "center": [
+        -76.0403,
+        1.8562
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.643,
+        1.537,
+        -75.367,
+        2.699
+      ],
+      "place": 6932,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1609213.0
+    },
+    {
+      "id": "nei",
+      "name": "Neiva",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.2883,
+        "lat": 2.9323
+      },
+      "center": [
+        -75.2883,
+        2.9323
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.048,
+        2.296,
+        -74.393,
+        3.863
+      ],
+      "place": 6934,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1607527.0
+    },
+    {
+      "id": "plm",
+      "name": "Palmira",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.2942,
+        "lat": 3.523
+      },
+      "center": [
+        -76.2942,
+        3.523
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.631,
+        3.193,
+        -75.931,
+        4.086
+      ],
+      "place": 6935,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1281022.0
+    },
+    {
+      "id": "pop",
+      "name": "Popayán",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.6175,
+        "lat": 2.4468
+      },
+      "center": [
+        -76.6175,
+        2.4468
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.951,
+        0.94,
+        -75.729,
+        3.065
+      ],
+      "place": 6936,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1468063.0
+    },
+    {
+      "id": "snv",
+      "name": "Santa Cruz (Guachavés)",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.673,
+        "lat": 1.2253
+      },
+      "center": [
+        -77.673,
+        1.2253
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.228,
+        0.342,
+        -77.069,
+        1.483
+      ],
+      "place": 6937,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1218947.0
+    },
+    {
+      "id": "jmu",
+      "name": "Jamundí",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.5409,
+        "lat": 3.256
+      },
+      "center": [
+        -76.5409,
+        3.256
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.802,
+        2.686,
+        -76.033,
+        3.377
+      ],
+      "place": 6939,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1207949.0
+    },
+    {
+      "id": "qub",
+      "name": "Quibdó",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.6576,
+        "lat": 5.6852
+      },
+      "center": [
+        -76.6576,
+        5.6852
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.912,
+        3.946,
+        -75.984,
+        8.696
+      ],
+      "place": 6941,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1253511.0
+    },
+    {
+      "id": "roe",
+      "name": "Rionegro",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.3761,
+        "lat": 6.1552
+      },
+      "center": [
+        -75.3761,
+        6.1552
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.529,
+        5.4,
+        -74.516,
+        6.357
+      ],
+      "place": 6942,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1179496.0
+    },
+    {
+      "id": "bna",
+      "name": "Buenaventura",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.0026,
+        "lat": 3.8792
+      },
+      "center": [
+        -77.0026,
+        3.8792
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.568,
+        3.089,
+        -76.669,
+        4.253
+      ],
+      "place": 6943,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1243603.0
+    },
+    {
+      "id": "vle",
+      "name": "Valle Del Guamuez",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.905,
+        "lat": 0.4246
+      },
+      "center": [
+        -76.905,
+        0.4246
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.205,
+        -0.572,
+        -73.823,
+        1.486
+      ],
+      "place": 6945,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1101991.0
+    },
+    {
+      "id": "oca",
+      "name": "Ocaña",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.3499,
+        "lat": 8.232
+      },
+      "center": [
+        -73.3499,
+        8.232
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.888,
+        7.511,
+        -72.854,
+        9.31
+      ],
+      "place": 6946,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1231122.0
+    },
+    {
+      "id": "seq",
+      "name": "Sesquilé",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.7975,
+        "lat": 5.0452
+      },
+      "center": [
+        -73.7975,
+        5.0452
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.097,
+        4.196,
+        -73.032,
+        5.592
+      ],
+      "place": 6947,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 887861.0
+    },
+    {
+      "id": "sos",
+      "name": "Soshanguve",
+      "origin": {
+        "lon": 28.0483,
+        "lat": -25.7834
+      },
+      "center": [
+        28.0483,
+        -25.7834
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.87,
+        -26.097,
+        29.119,
+        -25.091
+      ],
+      "place": 6948,
+      "country": "ZA",
+      "realm": "southern-africa",
+      "localTrips": 9247778.0
+    },
+    {
+      "id": "inh",
+      "name": "Inkhundla Mbabane",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.1245,
+        "lat": -26.2973
+      },
+      "center": [
+        31.1245,
+        -26.2973
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.77,
+        -27.335,
+        32.156,
+        -25.7
+      ],
+      "place": 6949,
+      "country": "SZ",
+      "realm": "southern-africa",
+      "localTrips": 2950589.0
+    },
+    {
+      "id": "dam",
+      "name": "Dammam",
+      "origin": {
+        "lon": 50.1015,
+        "lat": 26.4406
+      },
+      "center": [
+        50.1015,
+        26.4406
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.625,
+        16.931,
+        55.687,
+        29.178
+      ],
+      "place": 6950,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 17001567.0
+    },
+    {
+      "id": "doh",
+      "name": "Doha",
+      "origin": {
+        "lon": 51.5277,
+        "lat": 25.2787
+      },
+      "center": [
+        51.5277,
+        25.2787
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.869,
+        24.7,
+        51.651,
+        25.674
+      ],
+      "place": 6951,
+      "country": "QA",
+      "realm": "gulf",
+      "localTrips": 7743990.0
+    },
+    {
+      "id": "mei",
+      "name": "Medina",
+      "origin": {
+        "lon": 39.6455,
+        "lat": 24.4813
+      },
+      "center": [
+        39.6455,
+        24.4813
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.356,
+        22.501,
+        42.179,
+        26.823
+      ],
+      "place": 6952,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 6085379.0
+    },
+    {
+      "id": "abd",
+      "name": "Abu Dhabi",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.3701,
+        "lat": 24.4897
+      },
+      "center": [
+        54.3701,
+        24.4897
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        51.48,
+        22.613,
+        56.038,
+        24.985
+      ],
+      "place": 6953,
+      "country": "AE",
+      "realm": "gulf",
+      "localTrips": 9998413.0
+    },
+    {
+      "id": "atf",
+      "name": "Al Taif",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.4219,
+        "lat": 21.2601
+      },
+      "center": [
+        40.4219,
+        21.2601
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        38.646,
+        20.234,
+        43.85,
+        23.714
+      ],
+      "place": 6954,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 3579020.0
+    },
+    {
+      "id": "hai",
+      "name": "Hail",
+      "kind": "zone",
+      "origin": {
+        "lon": 41.677,
+        "lat": 27.4885
+      },
+      "center": [
+        41.677,
+        27.4885
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.093,
+        25.236,
+        44.388,
+        29.226
+      ],
+      "place": 6955,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1664244.0
+    },
+    {
+      "id": "waw",
+      "name": "Wadi Ad Dawasir",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.8571,
+        "lat": 20.4468
+      },
+      "center": [
+        44.8571,
+        20.4468
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.25,
+        19.25,
+        46.682,
+        24.97
+      ],
+      "place": 6956,
+      "country": "SA",
+      "realm": "saudi-arabia",
+      "localTrips": 1044211.0
+    },
+    {
+      "id": "xah",
+      "name": "75",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.5423,
+        "lat": 25.7329
+      },
+      "center": [
+        51.5423,
+        25.7329
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.729,
+        24.452,
+        51.681,
+        26.177
+      ],
+      "place": 6957,
+      "country": "QA",
+      "realm": "gulf",
+      "localTrips": 1194967.0
+    },
+    {
+      "id": "wit",
+      "name": "WILAYAT AS SEEB",
+      "kind": "zone",
+      "origin": {
+        "lon": 58.2202,
+        "lat": 23.6272
+      },
+      "center": [
+        58.2202,
+        23.6272
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        58.004,
+        22.76,
+        59.269,
+        23.734
+      ],
+      "place": 6958,
+      "country": "OM",
+      "realm": "gulf",
+      "localTrips": 4946187.0
+    },
+    {
+      "id": "wiu",
+      "name": "WILAYAT AS SUWAYQ",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.5076,
+        "lat": 23.7945
+      },
+      "center": [
+        57.5076,
+        23.7945
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        56.498,
+        23.1,
+        58.104,
+        24.063
+      ],
+      "place": 6959,
+      "country": "OM",
+      "realm": "gulf",
+      "localTrips": 2049198.0
+    },
+    {
+      "id": "wix",
+      "name": "WILAYAT SALALAH",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.0817,
+        "lat": 17.0114
+      },
+      "center": [
+        54.0817,
+        17.0114
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        52.912,
+        16.632,
+        55.326,
+        17.657
+      ],
+      "place": 6962,
+      "country": "OM",
+      "realm": "gulf",
+      "localTrips": 1381486.0
+    },
+    {
+      "id": "wio",
+      "name": "WILAYAT SOHAR",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.7395,
+        "lat": 24.3388
+      },
+      "center": [
+        56.7395,
+        24.3388
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        55.191,
+        21.318,
+        57.164,
+        25.024
+      ],
+      "place": 6963,
+      "country": "OM",
+      "realm": "gulf",
+      "localTrips": 2638988.0
+    },
+    {
+      "id": "win",
+      "name": "WILAYAT NIZWA",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.5287,
+        "lat": 22.9338
+      },
+      "center": [
+        57.5287,
+        22.9338
+      ],
+      "zoom": 10.5,
+      "utcOffset": 4,
+      "market": -1,
+      "box": [
+        56.506,
+        20.879,
+        59.86,
+        23.564
+      ],
+      "place": 6964,
+      "country": "OM",
+      "realm": "gulf",
+      "localTrips": 2003229.0
+    },
+    {
+      "id": "san",
+      "name": "Santiago",
+      "origin": {
+        "lon": -70.5871,
+        "lat": -33.6196
+      },
+      "center": [
+        -70.5871,
+        -33.6196
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.323,
+        -34.203,
+        -70.154,
+        -32.904
+      ],
+      "place": 6965,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 22092888.0
+    },
+    {
+      "id": "peo",
+      "name": "Puerto Montt",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.9546,
+        "lat": -41.4742
+      },
+      "center": [
+        -72.9546,
+        -41.4742
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -74.859,
+        -44.085,
+        -71.556,
+        -39.268
+      ],
+      "place": 6966,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3950304.0
+    },
+    {
+      "id": "cne",
+      "name": "Concepción",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.0468,
+        "lat": -36.8249
+      },
+      "center": [
+        -73.0468,
+        -36.8249
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -73.984,
+        -38.511,
+        -72.515,
+        -36.424
+      ],
+      "place": 6967,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3768089.0
+    },
+    {
+      "id": "coq",
+      "name": "Coquimbo",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.3412,
+        "lat": -29.9543
+      },
+      "center": [
+        -71.3412,
+        -29.9543
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.737,
+        -32.301,
+        -68.242,
+        -25.876
+      ],
+      "place": 6968,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3329946.0
+    },
+    {
+      "id": "tlc",
+      "name": "Talca",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.6587,
+        "lat": -35.4216
+      },
+      "center": [
+        -71.6587,
+        -35.4216
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -72.809,
+        -36.562,
+        -70.29,
+        -34.666
+      ],
+      "place": 6969,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3235292.0
+    },
+    {
+      "id": "tmc",
+      "name": "Temuco",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6057,
+        "lat": -38.7348
+      },
+      "center": [
+        -72.6057,
+        -38.7348
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -73.543,
+        -39.656,
+        -70.803,
+        -37.563
+      ],
+      "place": 6970,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3091740.0
+    },
+    {
+      "id": "vlp",
+      "name": "Valparaíso",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.6238,
+        "lat": -33.0481
+      },
+      "center": [
+        -71.6238,
+        -33.0481
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -80.137,
+        -33.265,
+        -70.963,
+        -26.268
+      ],
+      "place": 6971,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 3082241.0
+    },
+    {
+      "id": "iqu",
+      "name": "Iquique",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.1367,
+        "lat": -20.2147
+      },
+      "center": [
+        -70.1367,
+        -20.2147
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.398,
+        -21.646,
+        -68.385,
+        -17.48
+      ],
+      "place": 6972,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1597773.0
+    },
+    {
+      "id": "anf",
+      "name": "Antofagasta",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.394,
+        "lat": -23.6523
+      },
+      "center": [
+        -70.394,
+        -23.6523
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.649,
+        -25.417,
+        -66.97,
+        -20.916
+      ],
+      "place": 6973,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1751204.0
+    },
+    {
+      "id": "mlp",
+      "name": "Melipilla",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.1995,
+        "lat": -33.6803
+      },
+      "center": [
+        -71.1995,
+        -33.6803
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.865,
+        -34.094,
+        -70.913,
+        -33.136
+      ],
+      "place": 6974,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1078803.0
+    },
+    {
+      "id": "ibg",
+      "name": "Ibagué",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.2364,
+        "lat": 4.4297
+      },
+      "center": [
+        -75.2364,
+        4.4297
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.125,
+        2.852,
+        -74.456,
+        5.338
+      ],
+      "place": 6975,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 3636120.0
+    },
+    {
+      "id": "vll",
+      "name": "Valledupar",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.2494,
+        "lat": 10.4757
+      },
+      "center": [
+        -73.2494,
+        10.4757
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.159,
+        8.965,
+        -72.867,
+        10.886
+      ],
+      "place": 6976,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 2512837.0
+    },
+    {
+      "id": "zip",
+      "name": "Zipaquira",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.9964,
+        "lat": 5.029
+      },
+      "center": [
+        -73.9964,
+        5.029
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.788,
+        4.707,
+        -73.887,
+        5.855
+      ],
+      "place": 6978,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 856874.0
+    },
+    {
+      "id": "rag",
+      "name": "Rancagua",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.7462,
+        "lat": -34.1665
+      },
+      "center": [
+        -70.7462,
+        -34.1665
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -72.078,
+        -35.025,
+        -69.747,
+        -33.033
+      ],
+      "place": 6982,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 2752924.0
+    },
+    {
+      "id": "qul",
+      "name": "Quillota",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.2475,
+        "lat": -32.8751
+      },
+      "center": [
+        -71.2475,
+        -32.8751
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.57,
+        -33.205,
+        -69.967,
+        -32.002
+      ],
+      "place": 6983,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1900589.0
+    },
+    {
+      "id": "cbe",
+      "name": "Chillán",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.1045,
+        "lat": -36.605
+      },
+      "center": [
+        -72.1045,
+        -36.605
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -72.908,
+        -37.217,
+        -70.984,
+        -35.987
+      ],
+      "place": 6984,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1372450.0
+    },
+    {
+      "id": "lol",
+      "name": "Los Angeles",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.3533,
+        "lat": -37.4683
+      },
+      "center": [
+        -72.3533,
+        -37.4683
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -73.094,
+        -38.333,
+        -70.96,
+        -36.877
+      ],
+      "place": 6985,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 1234529.0
+    },
+    {
+      "id": "coh",
+      "name": "Coyhaique",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.0618,
+        "lat": -45.5749
+      },
+      "center": [
+        -72.0618,
+        -45.5749
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -75.676,
+        -47.113,
+        -71.065,
+        -43.907
+      ],
+      "place": 6987,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 304669.0
+    },
+    {
+      "id": "amt",
+      "name": "Ambato",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.6213,
+        "lat": -1.2415
+      },
+      "center": [
+        -78.6213,
+        -1.2415
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.358,
+        -2.628,
+        -75.566,
+        -0.437
+      ],
+      "place": 6989,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 3698254.0
+    },
+    {
+      "id": "prj",
+      "name": "Portoviejo",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.4442,
+        "lat": -1.0555
+      },
+      "center": [
+        -80.4442,
+        -1.0555
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.103,
+        -1.97,
+        -79.854,
+        -0.044
+      ],
+      "place": 6990,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 3432290.0
+    },
+    {
+      "id": "quv",
+      "name": "Quevedo",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.4658,
+        "lat": -1.0231
+      },
+      "center": [
+        -79.4658,
+        -1.0231
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.897,
+        -2.222,
+        -78.825,
+        -0.52
+      ],
+      "place": 6991,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 3006862.0
+    },
+    {
+      "id": "mcx",
+      "name": "Machala",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.9571,
+        "lat": -3.2641
+      },
+      "center": [
+        -79.9571,
+        -3.2641
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.325,
+        -3.909,
+        -79.347,
+        -3.028
+      ],
+      "place": 6992,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1990551.0
+    },
+    {
+      "id": "esm",
+      "name": "Esmeraldas",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.6545,
+        "lat": 0.9584
+      },
+      "center": [
+        -79.6545,
+        0.9584
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.121,
+        -0.058,
+        -78.408,
+        1.472
+      ],
+      "place": 6993,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1766350.0
+    },
+    {
+      "id": "loj",
+      "name": "Loja",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.2079,
+        "lat": -4.0006
+      },
+      "center": [
+        -79.2079,
+        -4.0006
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.503,
+        -5.034,
+        -78.349,
+        -3.311
+      ],
+      "place": 6994,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1679688.0
+    },
+    {
+      "id": "dul",
+      "name": "Daule",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.9832,
+        "lat": -1.8724
+      },
+      "center": [
+        -79.9832,
+        -1.8724
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.465,
+        -2.133,
+        -79.483,
+        -0.818
+      ],
+      "place": 6995,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1426000.0
+    },
+    {
+      "id": "std",
+      "name": "Santo Domingo",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.1691,
+        "lat": -0.2548
+      },
+      "center": [
+        -79.1691,
+        -0.2548
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.635,
+        -0.717,
+        -78.727,
+        0.346
+      ],
+      "place": 6996,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1586822.0
+    },
+    {
+      "id": "mir",
+      "name": "Milagro",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.592,
+        "lat": -2.1394
+      },
+      "center": [
+        -79.592,
+        -2.1394
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.839,
+        -2.868,
+        -79.079,
+        -1.909
+      ],
+      "place": 6997,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1422538.0
+    },
+    {
+      "id": "moe",
+      "name": "Montevideo",
+      "origin": {
+        "lon": -56.143,
+        "lat": -34.9065
+      },
+      "center": [
+        -56.143,
+        -34.9065
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.516,
+        -34.957,
+        -55.681,
+        -34.512
+      ],
+      "place": 6998,
+      "country": "UY",
+      "realm": "ar-uy",
+      "localTrips": 4978862.0
+    },
+    {
+      "id": "sbv",
+      "name": "Salto",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.9509,
+        "lat": -31.3932
+      },
+      "center": [
+        -57.9509,
+        -31.3932
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -58.517,
+        -34.803,
+        -54.43,
+        -30.067
+      ],
+      "place": 6999,
+      "country": "UY",
+      "realm": "ar-uy",
+      "localTrips": 2932249.0
+    },
+    {
+      "id": "mld",
+      "name": "Maldonado",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.9433,
+        "lat": -34.8978
+      },
+      "center": [
+        -54.9433,
+        -34.8978
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.559,
+        -34.993,
+        -53.159,
+        -31.632
+      ],
+      "place": 7000,
+      "country": "UY",
+      "realm": "ar-uy",
+      "localTrips": 1800496.0
+    },
+    {
+      "id": "ccx",
+      "name": "Cuenca",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.0016,
+        "lat": -2.8999
+      },
+      "center": [
+        -79.0016,
+        -2.8999
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.782,
+        -3.388,
+        -78.724,
+        -2.197
+      ],
+      "place": 7001,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 2415912.0
+    },
+    {
+      "id": "ibx",
+      "name": "Ibarra",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.1319,
+        "lat": 0.3599
+      },
+      "center": [
+        -78.1319,
+        0.3599
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.294,
+        -0.214,
+        -77.507,
+        1.216
+      ],
+      "place": 7002,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 2240913.0
+    },
+    {
+      "id": "rim",
+      "name": "Riobamba",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.6604,
+        "lat": -1.6702
+      },
+      "center": [
+        -78.6604,
+        -1.6702
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.273,
+        -2.586,
+        -78.34,
+        -1.412
+      ],
+      "place": 7003,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1467915.0
+    },
+    {
+      "id": "lgr",
+      "name": "Lago Agrio",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.8938,
+        "lat": 0.093
+      },
+      "center": [
+        -76.8938,
+        0.093
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.998,
+        -1.583,
+        -75.174,
+        0.681
+      ],
+      "place": 7004,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1277505.0
+    },
+    {
+      "id": "azo",
+      "name": "Azogues",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.845,
+        "lat": -2.7381
+      },
+      "center": [
+        -78.845,
+        -2.7381
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.327,
+        -3.647,
+        -76.674,
+        -1.43
+      ],
+      "place": 7005,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1182766.0
+    },
+    {
+      "id": "stl",
+      "name": "Santa Elena",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.8627,
+        "lat": -2.2284
+      },
+      "center": [
+        -80.8627,
+        -2.2284
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.03,
+        -2.526,
+        -80.181,
+        -1.65
+      ],
+      "place": 7006,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1154746.0
+    },
+    {
+      "id": "cbg",
+      "name": "Chone",
+      "kind": "zone",
+      "origin": {
+        "lon": -80.0903,
+        "lat": -0.6996
+      },
+      "center": [
+        -80.0903,
+        -0.6996
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.305,
+        -1.174,
+        -79.388,
+        0.393
+      ],
+      "place": 7007,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 1073606.0
+    },
+    {
+      "id": "guy",
+      "name": "Guayaquil",
+      "origin": {
+        "lon": -79.9109,
+        "lat": -2.1232
+      },
+      "center": [
+        -79.9109,
+        -2.1232
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.582,
+        -3.083,
+        -79.427,
+        -1.428
+      ],
+      "place": 7008,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 10121747.0
+    },
+    {
+      "id": "qui",
+      "name": "Quito",
+      "origin": {
+        "lon": -78.4905,
+        "lat": -0.2062
+      },
+      "center": [
+        -78.4905,
+        -0.2062
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.188,
+        -0.914,
+        -77.238,
+        0.275
+      ],
+      "place": 7009,
+      "country": "EC",
+      "realm": "ecuador",
+      "localTrips": 9015904.0
+    },
+    {
+      "id": "ras",
+      "name": "Rawson, Biedma",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.3155,
+        "lat": -43.2515
+      },
+      "center": [
+        -65.3155,
+        -43.2515
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -67.175,
+        -43.802,
+        -63.558,
+        -41.974
+      ],
+      "place": 7010,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 846315.0
+    },
+    {
+      "id": "gue",
+      "name": "Güer Aike",
+      "kind": "zone",
+      "origin": {
+        "lon": -69.2305,
+        "lat": -51.6243
+      },
+      "center": [
+        -69.2305,
+        -51.6243
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -72.471,
+        -52.416,
+        -68.322,
+        -50.663
+      ],
+      "place": 7011,
+      "country": "AR",
+      "realm": "ar-uy",
+      "localTrips": 456822.0
+    },
+    {
+      "id": "pte",
+      "name": "Punta Arenas",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.935,
+        "lat": -53.1721
+      },
+      "center": [
+        -70.935,
+        -53.1721
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -74.762,
+        -54.811,
+        -68.388,
+        -51.981
+      ],
+      "place": 7012,
+      "country": "CL",
+      "realm": "chile",
+      "localTrips": 399952.0
+    },
+    {
+      "id": "pei",
+      "name": "Pereira",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.6913,
+        "lat": 4.8103
+      },
+      "center": [
+        -75.6913,
+        4.8103
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.23,
+        4.51,
+        -75.357,
+        5.587
+      ],
+      "place": 7013,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 3202385.0
+    },
+    {
+      "id": "rih",
+      "name": "Riohacha",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.9083,
+        "lat": 11.5428
+      },
+      "center": [
+        -72.9083,
+        11.5428
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.683,
+        10.378,
+        -72.385,
+        11.58
+      ],
+      "place": 7014,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1464530.0
+    },
+    {
+      "id": "fle",
+      "name": "Florencia",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.6051,
+        "lat": 1.6136
+      },
+      "center": [
+        -75.6051,
+        1.6136
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.324,
+        0.007,
+        -73.12,
+        2.952
+      ],
+      "place": 7015,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1364899.0
+    },
+    {
+      "id": "tma",
+      "name": "Tumaco",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.7638,
+        "lat": 1.8077
+      },
+      "center": [
+        -78.7638,
+        1.8077
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.029,
+        0.986,
+        -77.287,
+        2.702
+      ],
+      "place": 7016,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 1121012.0
+    },
+    {
+      "id": "ads",
+      "name": "Andes",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.8743,
+        "lat": 5.6528
+      },
+      "center": [
+        -75.8743,
+        5.6528
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.992,
+        5.462,
+        -75.249,
+        6.864
+      ],
+      "place": 7017,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 999367.0
+    },
+    {
+      "id": "gio",
+      "name": "Girardot",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.7981,
+        "lat": 4.2921
+      },
+      "center": [
+        -74.7981,
+        4.2921
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.909,
+        4.18,
+        -74.251,
+        4.861
+      ],
+      "place": 7018,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 747220.0
+    },
+    {
+      "id": "fus",
+      "name": "Fusagasugá",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.3618,
+        "lat": 4.3487
+      },
+      "center": [
+        -74.3618,
+        4.3487
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.574,
+        3.711,
+        -74.221,
+        4.446
+      ],
+      "place": 7019,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 393101.0
+    },
+    {
+      "id": "lex",
+      "name": "Leticia",
+      "kind": "zone",
+      "origin": {
+        "lon": -69.9365,
+        "lat": -4.2192
+      },
+      "center": [
+        -69.9365,
+        -4.2192
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -70.732,
+        -4.247,
+        -69.695,
+        -2.984
+      ],
+      "place": 7020,
+      "country": "CO",
+      "realm": "colombia",
+      "localTrips": 171048.0
+    },
+    {
+      "id": "mbh",
+      "name": "Maynas",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.4087,
+        "lat": -3.7497
+      },
+      "center": [
+        -73.4087,
+        -3.7497
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.8,
+        -5.165,
+        -69.919,
+        -0.62
+      ],
+      "place": 7021,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1816903.0
+    },
+    {
+      "id": "huz",
+      "name": "Huaraz",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.5272,
+        "lat": -9.5401
+      },
+      "center": [
+        -77.5272,
+        -9.5401
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.264,
+        -10.806,
+        -76.707,
+        -8.218
+      ],
+      "place": 7022,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1743811.0
+    },
+    {
+      "id": "hma",
+      "name": "Huamanga",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.2316,
+        "lat": -13.1586
+      },
+      "center": [
+        -74.2316,
+        -13.1586
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.159,
+        -15.649,
+        -72.828,
+        -12.966
+      ],
+      "place": 7023,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1448949.0
+    },
+    {
+      "id": "lco",
+      "name": "La Convencion",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6989,
+        "lat": -12.8727
+      },
+      "center": [
+        -72.6989,
+        -12.8727
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.6,
+        -13.495,
+        -71.927,
+        -11.165
+      ],
+      "place": 7024,
+      "country": "PE",
+      "realm": "peru",
+      "localTrips": 1070891.0
     }
   ]
 }

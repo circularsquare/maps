@@ -45,10 +45,13 @@ def register(reg):
 
 def local_trips(reg):
     ids = [c["id"] for c in reg["cities"] if (ROOT / f"data/packs/{c['id']}.json").exists()]
-    # names relative to data/packs: 590 absolute paths passed Windows' 32k command line (T-788)
-    out = simbin.run(ROOT, "zone_summary", [f"{i}.json" for i in ids], capture_output=True, text=True,
-                     cwd=str(ROOT / "data/packs"))
-    trips = json.loads(out.stdout)
+    # names relative to data/packs: 590 absolute paths passed Windows' 32k command line (T-788), and in chunks: 3,719
+    # relative names passed it too (T-2695)
+    trips = {}
+    for k in range(0, len(ids), 1500):
+        out = simbin.run(ROOT, "zone_summary", [f"{i}.json" for i in ids[k:k + 1500]], capture_output=True, text=True,
+                         cwd=str(ROOT / "data/packs"))
+        trips.update(json.loads(out.stdout))
     for c in reg["cities"]:
         if c["id"] in trips:
             c["localTrips"] = trips[c["id"]]
