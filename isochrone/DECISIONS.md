@@ -5,6 +5,12 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **`cfg.access` 0.5 -> 1.0** (T-102, notes/T-102.md): once coarse river steps count only the
+  main river (T-100), river starts sit at 1.0-1.1 at every access value, so the cost that kept 0.5
+  (Coari and Kisangani too slow) is gone. At 1.0 canoe L1/L10 1.07 -> 1.05, mean abs ln 0.110 ->
+  0.099, Coari 1.08 -> 1.01; gains flatten past 1.0 and Coari goes under 1 at 1.5. Lake country
+  (Jyvaskyla ~1.13) is the coarse-node effect the knob does not reach.
+
 - **A coarse river step counts only its pieces' main river, not every twig in the cell** (T-100,
   notes/T-100.md). T-082 gave a coarse step half of each piece's whole river length, so every
   small tributary inside an L10 cell was paddled along a big river: Kisangani to Kinshasa took 242

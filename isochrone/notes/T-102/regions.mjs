@@ -1,0 +1,30 @@
+// Test starts by kind of land. [name, kind, lat, lng]  (T-088's, kept here with the harness)
+export const STARTS = [
+    ['Poltava', 'farmland', 49.59, 34.55],
+    ['Ames', 'farmland', 42.03, -93.62],
+    ['Pampa', 'farmland', -34.59, -60.95],
+    ['Ludhiana', 'farmland', 30.90, 75.85],
+    ['Brig', 'mountains', 46.32, 7.99],
+    ['Cusco', 'mountains', -13.53, -71.97],
+    ['Pokhara', 'mountains', 28.21, 83.99],
+    ['Dillon', 'mountains', 39.63, -106.04],
+    ['Jyvaskyla', 'lakes', 62.24, 25.75],
+    ['Sudbury', 'lakes', 46.49, -80.99],
+    ['Bemidji', 'lakes', 47.47, -94.88],
+    ['Tamanrasset', 'desert', 22.79, 5.53],
+    ['Alice Springs', 'desert', -23.70, 133.88],
+    ['Dalanzadgad', 'desert', 43.57, 104.42],
+    ['Kisangani', 'forest', 0.52, 25.19],
+    ['Coari', 'forest', -4.08, -63.14],
+    ['Ust-Ilimsk', 'forest', 58.00, 102.66],
+    ['Cluj', 'city', 46.77, 23.60],
+    ['New York', 'city', 40.758, -73.985],
+    ['London', 'city', 51.507, -0.128],
+    ['Lagos', 'city', 6.52, 3.38],
+    ['Delhi', 'city', 28.61, 77.21],
+    ['Khulna', 'coast/delta', 22.82, 89.55],
+    ['Utrecht', 'coast/delta', 52.09, 5.12],
+    ['Sogndal', 'coast/delta', 61.23, 7.10],
+];
+export const DISTS = [5, 10, 20, 40, 80, 160, 300];
+export const BEARINGS = 12;

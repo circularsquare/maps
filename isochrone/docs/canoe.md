@@ -61,7 +61,7 @@ Paddling speed p = 5 km/h on still water. Clock: paddling hours, the same 8-hour
 | river up | the reverse | length / max(p - 0.4 v, 2.5 km/h); up rapids, length / 2.5 km/h | yes |
 | lake | canoe node to neighbouring lake canoe nodes | length / p | no |
 | sea | canoe node to neighbouring sea canoe nodes | length / s, s from the current | yes |
-| transfer | land node to a canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node); within the cell at L3 and L10, half the piece's access carried as well (a piece of river or of sea or lake) | both ways |
+| transfer | land node to a canoe node in its own cell or one of its 8 neighbours | 0.25 h + half the step at each side's speed; the whole step carried when the canoe node is on a land cell (a river or strait node); within the cell at L3 and L10, the piece's access carried as well (a piece of river or of sea or lake) | both ways |
 
 - **River speed** v = 0.51 Q^0.11 m/s from mean discharge Q, from hydraulic geometry W = 7.2 Q^0.5,
   D = 0.27 Q^0.39 (Moody and Troutman 2002). A reach is paddleable at Q >= 1 m³/s: a mean depth of
@@ -260,9 +260,10 @@ to 10,000, would cost nothing extra (no task yet: TASKS.md "Someday").
   twigs of small tributaries joining a big river inside the cell are not paddled along it (T-100). One record per (cell,
   direction, slot pair), chosen as at L1. A piece's **access** is the mean straight distance from
   the coarse cell's L1 land pixels to the piece (0 on a sea or lake node). Getting in or out of a
-  coarse river node within its own cell carries half that distance at the cell's walking speed
-  (`cfg.access`, 0.5): the land node stands for the whole cell, the river for a line through it.
-  Measurements and why half: notes/T-082.md, and on T-011's directed walking notes/T-092.md.
+  coarse river node within its own cell carries that whole distance at the cell's walking speed
+  (`cfg.access`, 1.0): the land node stands for the whole cell, the river for a line through it.
+  Measurements and why: notes/T-082.md, notes/T-092.md and, after T-100's main-river steps,
+  notes/T-102.md.
 - **Water units** (T-088, `tools/canoe/pieces.py` and `water_units` in `rivers.py`). A water
   piece is an 8-connected run of L1 sea or lake pixels inside one coarse cell. A cell is *split*
   when it holds two or more, or any while it is river water (kind 2). In a split cell a unit is a

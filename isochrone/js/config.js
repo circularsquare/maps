@@ -27,7 +27,7 @@ export const cfg = {
     upShare: 0.4,                // upstream speed is paddle - upShare x river speed: the bank current (T-071)
     transfer: 0.25,              // hours to get in or out of the canoe
     carry: 2,                    // carrying the canoe takes this many times the walking time
-    access: 0.5,                 // share of a coarse river piece's access carried getting in or out within its cell (T-082)
+    access: 1.0,                 // share of a coarse river piece's access carried getting in or out within its cell (T-082, T-102)
     iceMax: 15,                  // % summer ice cover above which a sea cell has no canoe node
     hzStop: Math.log(100),       // survival under 1% stops a path
     sea8: true,                  // 8 moves only past 20 km from shore: 16 took ~1.0-1.1 s a click (T-022)

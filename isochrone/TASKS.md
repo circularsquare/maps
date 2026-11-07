@@ -26,7 +26,6 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## M1: canoe, today
 
 - T-075 [P3] Island water: water round an island that no river line comes near stays unreached on canoe starts (25 cells in the Amazon window at Santarem): the water is reached only from the island and the island only from the water (notes/T-036.md). The one-pixel ponds in river water were fixed by T-088; the island case needs depth counted from canoe nodes first, which lets canoes reach banks across all wide river water, so measure it first (notes/T-088.md).
-- T-102 [P2] Canoe level agreement after T-100: coarse river steps now count only each piece's main river (Kisangani to Kinshasa at L10 30.8 -> 20.8 days), so re-measure canoe L1/L10 and L1/L3 on T-092's 25 starts (its harness, notes/T-092/lib.mjs and measure.mjs, is in git at 5469ab95) and check `cfg.access` still holds (notes/T-100.md, notes/T-092.md).
 - T-065 [P3] Upstream creek-weaving: going up the Madeira or Solimoes the cheapest canoe route weaves between small rivers that share an L10 cell, paddling down some and up others (flat small rivers 4.3 km/h up at Q = 1; rapids 2.5 since T-073), since the Amazon main stem upstream sits at the 2.5 km/h floor (`upMin`, T-071); Belem to Manaus paddles ~65 h downstream on the way up (68 h up, 2026-11-07). A side effect of joining rivers that share a cell (docs/canoe.md 8). Decide whether it needs fixing once Anita has seen it (notes/T-064.md, notes/T-071.md).
 
 ## Later
