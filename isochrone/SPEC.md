@@ -91,7 +91,8 @@ data. The land hazard band and the canoe water are cut to the same land and wate
 
 Coarse everywhere first, then finer wherever the viewer is looking: from zoom 5 a window round
 the view is re-solved at 3 km cells, and from zoom 7 also at 1 km, each seeded at its edges by
-the next coarser answer and drawn over it. Hover reads the finest level shown. A coarse cell is
+the next coarser answer and drawn over it, fading in over 3 of its cells at the window's edge.
+Hover reads the finest level shown. A coarse cell is
 one node, so where water cuts its land in two (fjords, wide rivers) L3 and L10 join banks that L1
 keeps apart and come out too fast (round Sogndal and Coari L1 takes 1.3-1.4 times as long;
 T-007). Full design and the

@@ -153,7 +153,8 @@ read from the extracts on 98.9-99.99% of the test tiles' cells (OSM edits since)
   window of a session 1.2-1.7 s), 0.15 s at zoom 11.5, ~0.05 s at zoom 12 (notes/T-093.md,
   notes/T-039.md "Times"); the slope per move costs about a tenth to a third more than stage 1's
   search.
-- **Paint**: a fourth canvas source on top (`walk01`), holes cut in L1, L3 and L10 under it.
+- **Paint**: a fourth canvas source on top (`walk01`), fading in over 3 L1 cells at its edge
+  (`docs/resolution.md`, "The view refine" 9).
   Cells show from about zoom 12 (5 px; 10-13 px at 13, 20-26 at 14). The map's maximum zoom is 14.
 - **Hover** and the route read L0.1 first where it is shown.
 

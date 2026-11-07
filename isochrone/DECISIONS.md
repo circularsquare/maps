@@ -5,6 +5,10 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **Window edges fade over 3 coarser cells, worked out per texel in the page** (T-014,
+  notes/T-014.md): replaces the hole rounded inwards, whose overlap strip was the line. Lining
+  the canvases up to one pixel grid can't work (texel rows are linear in Mercator, window edges
+  at 0.25 degree), so the finer level matches the coarser texel actually drawn under it.
 - **8 moves at sea past 20 km from shore stay** (T-035, notes/T-035.md): after the bucket queue,
   16 everywhere still costs 10-25% a canoe click and takes Constanta and Cluj to ~1 s in Chrome.
   The sea edges are only a sixth of a click's work, so cheaper sea edges can't pay for it. The

@@ -336,16 +336,18 @@ function addRelief(firstSymbol) {
 // ---- overlays ----
 // One canvas source per level: 10 (whole world), 3 and 1 (windows round the view), finest on
 // top. The worker paints each one linear in Web Mercator y, which is how MapLibre stretches
-// a canvas between its corners. Where a finer window is shown, the coarser canvas has a hole
-// cut in it, so the coarse colours do not show through the window's water.
+// a canvas between its corners. Where a finer window is shown, the coarser canvas fades out
+// inside it and the finer one fades in (fade() below), so the coarse colours do not show
+// through the window's water.
 const merc = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+const unmerc = y => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * 180 / Math.PI;
 const LEVELS = [10, 3, 1, 0.1];
 const layers = {};
 for (const k of LEVELS) {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
     layers[k] = { id: 'walk' + (k === 10 ? '' : String(k).replace('.', '')), canvas, ctx: canvas.getContext('2d'),
-                  img: null, m: null, shown: false, holeRect: null, holes: [] };
+                  img: null, m: null, shown: false, key: null, base: null, fa: null, clear: null, cover: [], hole: [] };
 }
 
 // Quiet the OpenFreeMap dark style so the colours lead: roads thin and faint, labels small and
@@ -455,10 +457,31 @@ function show(k, m) {
     lv.ctx.putImageData(lv.img, 0, 0);
     delete m.px;
     lv.m = m;
-    lv.holes = []; lv.holeRect = null;
+    lv.cover = []; lv.hole = []; lv.key = lv.base = null; lv.fa = null;
     lv.shown = true;
-    map.getSource(lv.id).setCoordinates([[m.west, m.north], [m.east, m.north], [m.east, m.south], [m.west, m.south]]);
+    const src = map.getSource(lv.id);
+    src.setCoordinates([[m.west, m.north], [m.east, m.north], [m.east, m.south], [m.west, m.south]]);
+    m.sid = ++drawSerial;
+    m.g = drawnAt(m, src);
     map.setLayoutProperty(lv.id, 'visibility', 'visible');
+}
+
+// Where MapLibre draws a canvas: it rounds the corners to whole 1/8192 units of one tile
+// (ImageSource.setCoordinates, 5.24.0 internals tileID and tileCoords), up to ~0.02 degree for
+// L10, so the levels' texels are matched by the corners as drawn. Lon of the west and east
+// edges, Mercator y of the north and south, the lat of every texel row's edges.
+let drawSerial = 0;
+function drawnAt(m, src) {
+    let w = m.west, e = m.east, yN = merc(m.north), yS = merc(m.south);
+    const t = src.tileID, c = src.tileCoords;
+    if (t && c && c.length === 4) {
+        const n = 2 ** t.z;
+        const lon = u => (t.x + u / 8192) / n * 360 - 180, my = v => (0.5 - (t.y + v / 8192) / n) * 2 * Math.PI;
+        w = lon(c[0].x); e = lon(c[1].x); yN = my(c[0].y); yS = my(c[2].y);
+    }
+    const lat = new Float64Array(m.ch + 1);
+    for (let y = 0; y <= m.ch; y++) lat[y] = unmerc(yN - y / m.ch * (yN - yS));
+    return { w, e, yN, yS, lat, latN: lat[0], latS: lat[m.ch], dx: (e - w) / m.cw, full: e - w >= 359.99 };
 }
 
 function hide(k) {
@@ -468,38 +491,205 @@ function hide(k) {
     map.setLayoutProperty(lv.id, 'visibility', 'none');
 }
 
-// Cut the finer window out of a canvas (and put back the last hole). Rounded inwards, so a
-// sliver of the coarser canvas may stay under the finer one's edge but no gap opens.
-function setHole(lv, rect) {
-    const same = (a, b) => a === b || (a && b && a.west === b.west && a.east === b.east &&
-                                       a.north === b.north && a.south === b.south);
-    if (same(lv.holeRect, rect)) return false;
-    for (const h of lv.holes) lv.ctx.putImageData(lv.img, 0, 0, h[0], h[1], h[2], h[3]);
-    lv.holes = []; lv.holeRect = rect;
-    if (rect) {
-        const m = lv.m, cw = m.cw, ch = m.ch;
-        const yT = merc(m.north), yB = merc(m.south);
-        const y0 = Math.max(0, Math.ceil((yT - merc(rect.north)) / (yT - yB) * ch));
-        const y1 = Math.min(ch, Math.floor((yT - merc(rect.south)) / (yT - yB) * ch));
-        for (const s of [-360, 0, 360]) {
-            const x0 = Math.max(0, Math.ceil((rect.west + s - m.west) / (m.east - m.west) * cw));
-            const x1 = Math.min(cw, Math.floor((rect.east + s - m.west) / (m.east - m.west) * cw));
-            if (x1 > x0 && y1 > y0) {
-                lv.ctx.clearRect(x0, y0, x1 - x0, y1 - y0);
-                lv.holes.push([x0, y0, x1 - x0, y1 - y0]);
-            }
+// Window edges (T-014, docs/resolution.md "The view refine" 9). A finer window fades in over
+// FADE cells of the coarser level, inside the window's edge, and the coarser level fades out over
+// the same cells: a coarser texel wholly inside the window, s of the way in (0 at the edge, 1
+// from FADE cells on), keeps alpha 1 - (1 - a)^(1 - s). A texel with coarser levels drawn under
+// it, B their alpha together, takes (a - B) / (1 - B), so the levels add up to the painted alpha
+// a. Both are worked out per texel against the texels actually drawn, so a level's texels need
+// not line up with the next one's. The (1 - a)^s shape keeps the step between texels small.
+const FADE = 3;
+const EPS = 1e-9;
+window.fadeLog = [];   // { level, ms, holeOnly } of each level's fade, for checks
+
+// How far in each texel column (and row) of g is from the edges of window F, as a share of D:
+// 0 where the texel is not wholly inside. An edge with nothing of g beyond it does not fade.
+function fadeCols(g, cw, Fg, D) {
+    const sx = new Float32Array(cw);
+    for (const sh of [-360, 0, 360]) {
+        const Fw = Fg.w + sh, Fe = Fg.e + sh;
+        if (Fe <= g.w || Fw >= g.e) continue;
+        const ow = g.full || g.w < Fw - EPS, oe = g.full || g.e > Fe + EPS;
+        const x0 = Math.max(0, Math.floor((Fw - g.w) / g.dx)), x1 = Math.min(cw, Math.ceil((Fe - g.w) / g.dx));
+        for (let x = x0; x < x1; x++) {
+            const L = g.w + x * g.dx, R = L + g.dx;
+            if (L < Fw - EPS || R > Fe + EPS) continue;
+            sx[x] = Math.max(sx[x], Math.min(1, Math.min(ow ? L - Fw : Infinity, oe ? Fe - R : Infinity) / D));
         }
     }
-    return true;
+    return sx;
+}
+function fadeRows(g, ch, Fg, D) {
+    const sy = new Float32Array(ch);
+    const on = g.latN > Fg.latN + EPS, os = g.latS < Fg.latS - EPS;
+    for (let y = 0; y < ch; y++) {
+        const top = g.lat[y], bot = g.lat[y + 1];
+        if (top > Fg.latN + EPS || bot < Fg.latS - EPS) continue;
+        sy[y] = Math.min(1, Math.min(on ? Fg.latN - top : Infinity, os ? bot - Fg.latS : Infinity) / D);
+    }
+    return sy;
+}
+// The texel column (row) of a coarser canvas gc under each texel column (row) centre of g, or -1.
+function texelCols(g, cw, gc, cwc) {
+    const out = new Int32Array(cw), span = gc.e - gc.w;
+    for (let x = 0; x < cw; x++) {
+        let u = g.w + (x + 0.5) * g.dx - gc.w;
+        if (gc.full) u = ((u % 360) + 360) % 360;
+        else if (u < 0 && u + 360 < span) u += 360;
+        else if (u >= span && u - 360 >= 0) u -= 360;
+        const c = Math.floor(u / gc.dx);
+        out[x] = c >= 0 && c < cwc ? c : -1;
+    }
+    return out;
+}
+function texelRows(g, ch, gc, chc) {
+    const out = new Int32Array(ch);
+    for (let y = 0; y < ch; y++) {
+        const r = Math.floor((gc.yN - (g.yN - (y + 0.5) / ch * (g.yN - g.yS))) / (gc.yN - gc.yS) * chc);
+        out[y] = r >= 0 && r < chc ? r : -1;
+    }
+    return out;
 }
 
-// After any change: each shown level gets a hole where the next finer shown level is.
+// A level's canvas from its painted image, faded inside the next finer window F and under the
+// coarser shown levels (their fa already current). Only texels that change are rewritten: the
+// hole (texels wholly inside F) and the cover (the strips round the level's edge where a coarser
+// level still shows). With holeOnly, F alone changed and the cover stays.
+function fade(lv, F, coarser, holeOnly) {
+    const m = lv.m, g = m.g, cw = m.cw, ch = m.ch, data = lv.img.data;
+    if (!holeOnly) {
+        for (const d of [...lv.cover, ...lv.hole]) lv.ctx.putImageData(lv.img, 0, 0, d[0], d[1], d[2], d[3]);
+        lv.cover = []; lv.hole = [];
+    }
+    let sx = null, sy = null;
+    lv.clear = null;
+    if (F) {
+        const D = FADE * m.cellDeg, Fg = F.g;
+        sx = fadeCols(g, cw, Fg, D); sy = fadeRows(g, ch, Fg, D);
+        // where every texel of this level is gone (D and a texel in from the edge), in F's longitudes
+        let M = D + g.dx;
+        for (let y = 0; y < ch; y++) M = Math.max(M, D + g.lat[y] - g.lat[y + 1]);
+        const ow = g.full || g.w < Fg.w - EPS, oe = g.full || g.e > Fg.e + EPS;
+        lv.clear = { w: ow ? Fg.w + M : -Infinity, e: oe ? Fg.e - M : Infinity, mid: (Fg.w + Fg.e) / 2,
+                     n: g.latN > Fg.latN + EPS ? Fg.latN - M : Infinity, s: g.latS < Fg.latS - EPS ? Fg.latS + M : -Infinity };
+    }
+    // the part of this level where the coarser levels are all gone, and the coarser levels that
+    // still show somewhere on it, each with the last texel asked of it (runs of texels share one)
+    let w = -Infinity, e = Infinity, n = Infinity, s = -Infinity;
+    const mid = (g.w + g.e) / 2, cs = [];
+    for (const k of coarser) {
+        const c = layers[k], cl = c.clear, sh = Math.round((mid - cl.mid) / 360) * 360;
+        if (cl.w + sh <= g.w && cl.e + sh >= g.e && cl.n >= g.latN && cl.s <= g.latS) continue;
+        w = Math.max(w, cl.w + sh); e = Math.min(e, cl.e + sh); n = Math.min(n, cl.n); s = Math.max(s, cl.s);
+        cs.push({ fa: c.fa, cx: texelCols(g, cw, c.m.g, c.m.cw), cy: texelRows(g, ch, c.m.g, c.m.ch), u: -1, v: -1, a: 0 });
+    }
+    const nc = cs.length;
+    const fa = (x, y) => {
+        const a0 = data[(y * cw + x) * 4 + 3];
+        if (!a0) return 0;
+        const s = sx ? Math.min(sx[x], sy[y]) : 0;
+        if (s >= 1) return 0;
+        let a = a0 / 255, keep = 1;
+        for (let i = 0; i < nc; i++) {
+            const c = cs[i], u = c.cx[x], v = c.cy[y];
+            if (u < 0 || v < 0) continue;
+            if (u !== c.u || v !== c.v) { c.u = u; c.v = v; c.a = c.fa(u, v); }
+            keep *= 1 - c.a;
+        }
+        if (keep < 1) a = 1 - keep >= a ? 0 : (a - 1 + keep) / keep;
+        return s > 0 ? 1 - Math.pow(1 - a, 1 - s) : a;
+    };
+    lv.fa = fa;
+    // runs of columns with the same fade and the same coarser texels: along a row, a texel with the
+    // painted alpha of the one before it in the same run gets the same alpha
+    const run = new Int32Array(cw);
+    for (let x = 1; x < cw; x++) {
+        let same = !sx || sx[x] === sx[x - 1];
+        for (let i = 0; i < nc && same; i++) same = cs[i].cx[x] === cs[i].cx[x - 1];
+        run[x] = run[x - 1] + (same ? 0 : 1);
+    }
+    const put = (list, x0, y0, w, h) => {
+        x0 = Math.max(0, x0); y0 = Math.max(0, y0); w = Math.min(cw - x0, w); h = Math.min(ch - y0, h);
+        if (w <= 0 || h <= 0) return;
+        const id = new ImageData(w, h), d = id.data;
+        for (let y = 0; y < h; y++) {
+            const o0 = ((y0 + y) * cw + x0) * 4;
+            d.set(data.subarray(o0, o0 + w * 4), y * w * 4);
+            let r = -1, a0 = 0, v = 0;
+            for (let x = 0, o = y * w * 4 + 3; x < w; x++, o += 4) {
+                if (!d[o]) continue;
+                if (run[x0 + x] !== r || d[o] !== a0) { r = run[x0 + x]; a0 = d[o]; v = Math.round(255 * fa(x0 + x, y0 + y)); }
+                d[o] = v;
+            }
+        }
+        lv.ctx.putImageData(id, x0, y0);
+        if (list) list.push([x0, y0, w, h]);
+    };
+    // the old hole goes back to what was painted, and the cover where it crossed it
+    if (holeOnly) {
+        for (const d of lv.hole) {
+            lv.ctx.putImageData(lv.img, 0, 0, d[0], d[1], d[2], d[3]);
+            for (const c of lv.cover) {
+                const x0 = Math.max(d[0], c[0]), y0 = Math.max(d[1], c[1]);
+                put(null, x0, y0, Math.min(d[0] + d[2], c[0] + c[2]) - x0, Math.min(d[1] + d[3], c[1] + c[3]) - y0);
+            }
+        }
+        lv.hole = [];
+    }
+    // the new hole: cleared where the fade is complete, worked out texel by texel round that
+    if (sx) {
+        let r0 = -1, r1 = -1, ja = -1, jb = -1;
+        for (let y = 0; y < ch; y++) {
+            if (sy[y] > 0) { if (r0 < 0) r0 = y; r1 = y + 1; }
+            if (sy[y] >= 1) { if (ja < 0) ja = y; jb = y + 1; }
+        }
+        if (r0 >= 0) for (let x = 0; x < cw; x++) {
+            if (!(sx[x] > 0)) continue;
+            let x1 = x;
+            while (x1 < cw && sx[x1] > 0) x1++;
+            let ia = x, ib = x1;
+            while (ia < x1 && sx[ia] < 1) ia++;
+            while (ib > ia && sx[ib - 1] < 1) ib--;
+            if (ib > ia && ja >= 0) {
+                lv.ctx.clearRect(ia, ja, ib - ia, jb - ja);
+                put(null, x, r0, x1 - x, ja - r0); put(null, x, jb, x1 - x, r1 - jb);
+                put(null, x, ja, ia - x, jb - ja); put(null, ib, ja, x1 - ib, jb - ja);
+            } else put(null, x, r0, x1 - x, r1 - r0);
+            lv.hole.push([x, r0, x1 - x, r1 - r0]);
+            x = x1;
+        }
+    }
+    if (nc && !holeOnly) {
+        const xa = Math.max(0, Math.min(cw, Math.ceil((w - g.w) / g.dx))), xb = Math.max(0, Math.min(cw, Math.floor((e - g.w) / g.dx)));
+        let ya = 0, yb = ch;
+        while (ya < ch && g.lat[ya] > n) ya++;
+        while (yb > 0 && g.lat[yb] < s) yb--;
+        if (xb <= xa || yb <= ya) put(lv.cover, 0, 0, cw, ch);
+        else {
+            put(lv.cover, 0, 0, cw, ya); put(lv.cover, 0, yb, cw, ch - yb);
+            put(lv.cover, 0, ya, xa, yb - ya); put(lv.cover, xb, ya, cw - xb, yb - ya);
+        }
+    }
+}
+
+// After any change: each shown level fades under the next finer shown one and over the coarser
+// ones. A level is redone when it or anything under it changed, and its hole alone when only
+// the next finer window did.
 function refresh(changed) {
     const ch = new Set(changed);
-    const rect = k => layers[k].shown ? layers[k].m : null;
-    if (layers[10].shown && setHole(layers[10], rect(3) || rect(1) || rect(0.1))) ch.add(10);
-    if (layers[3].shown && setHole(layers[3], rect(1) || rect(0.1))) ch.add(3);
-    if (layers[1].shown && setHole(layers[1], rect(0.1))) ch.add(1);
+    const shown = LEVELS.filter(k => layers[k].shown);
+    let under = '';
+    shown.forEach((k, i) => {
+        const lv = layers[k], F = i + 1 < shown.length ? layers[shown[i + 1]].m : null;
+        const base = under + lv.m.sid, key = base + ':' + (F ? F.sid : 0);
+        under = key + ' ';
+        if (lv.key === key) return;
+        const t1 = performance.now(), holeOnly = lv.base === base;
+        lv.key = key; lv.base = base;
+        fade(lv, F, shown.slice(0, i), holeOnly);
+        fadeLog.push({ level: k, ms: Math.round(performance.now() - t1), holeOnly });
+        ch.add(k);
+    });
     for (const k of ch) if (layers[k].shown) upload(layers[k]);
     drawCorridors();
 }

@@ -12,7 +12,7 @@ How the map looks sharp up close without solving the whole world at full detail.
 | L0.1 | ~100 m (1/1200 degree) | 1 degree tiles, where built | a window round the view once the view fits in 1.5 M cells (zoom ~9.4 on 1400 x 900), walking starts | `data/fine/` (`docs/fine.md`) |
 
 L0.1's sources, tiles and when it is solved are in `docs/fine.md`; it is seeded (from L1, then
-L3, L10), painted (canvas source `walk01`), holed and hovered as the windows below.
+L3, L10), painted (canvas source `walk01`), faded in and hovered as the windows below.
 
 L1 is our own surface (`docs/surface.md`: LC100 land cover, GMTED2010 height and slope) under the
 water rule below, its land cells' speeds replaced by their directed crossings wherever the 100 m
@@ -130,10 +130,25 @@ All of this runs in the worker (`worker.js`, `js/`); the page only shows what it
    canvas is uploaded to the GPU once per change, not every frame. MapLibre 5 draws a canvas
    source on the projection's tile mesh, linear in Mercator within the tile, so on the globe the
    same canvases bend onto the sphere unchanged.
-9. **Holes.** Where a finer window is shown, the coarser canvas has that rectangle cleared, so
-   coarse colours do not show through the window's water or unreached land. The hole is rounded
-   inwards to whole canvas pixels.
-10. **Hover** reads the finest shown level whose window holds the pointer.
+9. **Window edges** (T-014). A finer window fades in over 3 cells of the next coarser shown
+   level (`FADE`), inside its edge, while the coarser level fades out over the same cells;
+   further in, the coarser canvas is cleared, so coarse colours do not show through the
+   window's water or unreached land. The page works out each canvas texel's alpha from the
+   painted alpha a:
+   - a coarser texel wholly inside the window, s of the way through the fade (0 at the edge, 1
+     from 3 cells in), keeps 1 - (1 - a)^(1 - s);
+   - a texel with coarser levels drawn under it, B their alpha together, takes
+     (a - B) / (1 - B), so the levels add up to a (none where B reaches a).
+
+   With one level under another the two ramps are 1 - (1 - a)^(1 - s) and 1 - (1 - a)^s, a shape
+   that keeps the step between neighbouring texels small. The second rule reads the texel
+   actually drawn under each texel, against the corners as drawn: MapLibre rounds a canvas's
+   corners to whole 1/8192 units of one tile (up to ~0.02 degree for L10), and the page takes
+   where it put them (`drawnAt`). An edge with nothing of the coarser level beyond it (85N,
+   60S, an edge the coarser window shares) does not fade. Only the texels that change are
+   rewritten, on the main thread (`fade` in `index.html`), when a window arrives; a level's
+   hole alone when only the window over it changed.
+10. **Hover** reads the finest shown level whose window holds the pointer, in the fade too.
 
 Solve times by level and screen size: `notes/T-002.md`. The window caps (3 M cells at L3, 2 M at
 L1) keep an L1 window to about a second on a 2560 x 1440 screen.
@@ -142,10 +157,8 @@ L1) keep an L1 window to about a second on a 2560 x 1440 screen.
 the coarse answer at the border. The coarse answer can also be a little early or late at the
 border (half a coarse cell). Both show up as small seams at the window edge, not as wrong times
 inside it. In checks near Cluj and in the Alps the bands carry on across window edges with only
-small steps. Along a window's north and south edges a strip up to one coarser cell tall (about 5
-px at zoom 9) shows both levels at once and so reads a little brighter, because the hole is
-rounded inwards to whole canvas rows; the edges sit in the margin, off screen once the view has
-settled.
+small steps, and the fade (9) spreads them over 3 coarser cells; the edges sit in the margin,
+off screen once the view has settled.
 
 **Small water.** A connected patch of L1 water cells (8-connected, so a diagonal channel stays one
 body) under 5 km², its area summed from cell areas at their latitude, is land at 1 km/h (MAP's
