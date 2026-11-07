@@ -948,7 +948,6 @@
   "leaderboard.world": "全球",
   "lineActions.constructed": "已建成，花费{cost}。",
   "lineActions.defaultName": "{n}号线",
-  "lineFigures.pendingChange": "加载中…",
   "lineFigures.pendingNew": "计算中…",
   "lineGroup.leave": "退出分组",
   "lineGroup.open": "打开分组",

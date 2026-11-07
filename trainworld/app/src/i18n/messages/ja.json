@@ -948,7 +948,6 @@
   "leaderboard.world": "世界",
   "lineActions.constructed": "{cost}で着工しました。",
   "lineActions.defaultName": "路線{n}",
-  "lineFigures.pendingChange": "読み込み中…",
   "lineFigures.pendingNew": "計算中…",
   "lineGroup.leave": "グループから外す",
   "lineGroup.open": "グループを開く",

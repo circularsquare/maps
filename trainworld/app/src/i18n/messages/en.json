@@ -949,7 +949,6 @@
   "lineActions.defaultName": "Line {n}",
   "lineActions.constructed": "Constructed for {cost}.",
   "lineFigures.pendingNew": "calculating...",
-  "lineFigures.pendingChange": "loading...",
   "lineGroup.leave": "Leave group",
   "lineGroup.open": "Open the group",
   "lineGroup.openNamed": "{name}\nOpen the group",

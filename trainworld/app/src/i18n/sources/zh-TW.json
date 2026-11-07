@@ -948,7 +948,6 @@
   "leaderboard.world": "World",
   "lineActions.constructed": "Constructed for {cost}.",
   "lineActions.defaultName": "Line {n}",
-  "lineFigures.pendingChange": "loading...",
   "lineFigures.pendingNew": "calculating...",
   "lineGroup.leave": "Leave group",
   "lineGroup.open": "Open the group",

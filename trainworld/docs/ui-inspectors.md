@@ -120,9 +120,9 @@ purpose filter the purpose drawn is ringed in the bar.
   shows, then counts up to it over 2.4 s, fast at first and slowing to the end; the hover always
   gives the real figure.
   **A line whose riders are being worked out again after an edit** keeps a riders figure
-  with a small label above it [T-2392]: "calculating..." for a line that has just started running
-  (its blueprint constructed, or new) [T-2678], "loading..." for one already running whose stops, service or
-  times changed (a train count, say, or track moved under it [T-2622]). The figure is the last there is
+  with a small label above it [T-2392], "calculating..." [T-2678], both for a line that has just started running
+  (its blueprint constructed, or new) and for one already running whose stops, service or times changed (a train
+  count, say, or track moved under it [T-2622]). The figure is the last there is
   [T-2678, `pendingRiders` in game/today.ts]: its count now; else its last count while the line exists
   (a line stopped and built again; a game load forgets them); else the riders a day demand has for it
   (once solved but not yet counted by the boarding account, or a new line's first estimate). With none,

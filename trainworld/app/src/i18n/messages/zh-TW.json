@@ -948,7 +948,6 @@
   "leaderboard.world": "全世界",
   "lineActions.constructed": "已完工，花費{cost}。",
   "lineActions.defaultName": "{n}號線",
-  "lineFigures.pendingChange": "載入中…",
   "lineFigures.pendingNew": "計算中…",
   "lineGroup.leave": "退出群組",
   "lineGroup.open": "開啟群組",

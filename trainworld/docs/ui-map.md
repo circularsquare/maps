@@ -761,7 +761,7 @@ those who got on, less the load carried on.
     the network, while demand settles, with no 8 s limit; the settled note then replaces it, its profit
     easing from the estimate to the solved figure. With no estimate (any other edit, a figure under
     $500, a zone that changed level of detail) the note waits as before. The line panel and the Lines
-    tab keep their "loading..." figures.
+    tab keep their "calculating..." figures.
   - **Which edits**: every edit through `edit()` but a line's or group's look, grouping and loans
     (`NEUTRAL` in game/editCap.ts): trains, headways, stops, lines new or removed, cars, high speed,
     track, stations, construction, fares, undo and redo. Edits made while demand settles from earlier

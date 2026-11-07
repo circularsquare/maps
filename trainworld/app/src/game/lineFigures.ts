@@ -19,8 +19,8 @@ export type PendingKind = "build" | "change";
 /** Lines whose riders are being worked out again after an edit, and why. */
 export const linesPending = signal<ReadonlyMap<string, PendingKind>>(new Map());
 
-/** The label over a pending line's riders. */
-export const pendingLabel = (k: PendingKind) => (k === "build" ? t("lineFigures.pendingNew") : t("lineFigures.pendingChange"));
+/** The label over a pending line's riders: one word for a new line and a changed one (Anita, 2026-11-06). */
+export const pendingLabel = (_k: PendingKind) => t("lineFigures.pendingNew");
 
 /** T-2658: the world version each pending line's last change was seen at */
 const since = new Map<string, number>();

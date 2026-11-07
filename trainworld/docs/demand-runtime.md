@@ -360,7 +360,7 @@ read through its old route nodes, carried to the new network's by line and stati
 those zones' subzone sums (marked `local`, kept apart on the page until the whole solve's of the same
 round are all in, T-2532), so their bubbles follow the figures: the page
 puts its lines, their stations and those zones' views in (never the market's own figures) and
-clears the lines' pending label ("calculating..." or "loading...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
+clears the lines' pending label ("calculating...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time is solved locally too; the whole solves follow as above and replace everything.
 **Stations on no line** (T-2410, `?perfOff=alone` off) are left out of the network demand solves
