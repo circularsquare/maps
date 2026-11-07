@@ -10,7 +10,7 @@ All in `app/src/i18n/`:
 
 | File | Holds |
 |---|---|
-| `index.ts` | `t`, `tRich`, the `language` signal, `setLanguage`, and the formatting helpers in the current language (`tNumber`, `tList`, `tSeries`, `tSpaced`, `tDate`, `tCountry`) |
+| `index.ts` | `t`, `tRich`, the `language` signal, `setLanguage`, and the formatting helpers in the current language (`tNumber`, `tList`, `tSeries`, `tSpaced`, `tDate`, `tCountry`, `tCompact`, `tDuration`) |
 | `calendar.ts` | `weekdayLong(i)`: the full weekday name in the current language for the game's weekday index (0 is Monday); use it rather than a list of English day names |
 | `intl.ts` | `LANGS`, and the same formatting with the language passed in; no signals or DOM, so workers and Node checks may import it |
 | `messages/en.json` | Every English message, the source. Bundled with the game |
@@ -56,6 +56,25 @@ is plain text.
 - **Read while rendering.** `t` reads the language signal, so a component or computed that calls it redraws on
   a change. Text kept in a signal or the save (a question asked, a notice) stays in the language it was made in.
 
+## Numbers, money and durations
+
+`game/format.ts` writes every figure in the current language. English keeps the game's own forms; Japanese and
+Chinese take theirs, as Intl (ICU) writes them for the locale.
+
+- **Short counts and money** (`count`, `money`, `moneyShort`, `moneyCash`, `millions`, `pointsShort`): English
+  "763k", "1.17M", "$74.0M", "$6B", "$10-55M". Any other language gets the value English shows (after English's
+  rounding) to as many significant digits, in `Intl.NumberFormat(lang, { notation: "compact" })`
+  (`i18n/intl.ts` `formatCompact`, through `compactOf`): 76.3万, 117万, $7400万, $60億 in Japanese; 万 and 亿 in
+  zh-Hans (1.2万亿 above 1万亿); 萬 and 億 in zh-TW. Money is "$" before the figure in every language, a minus
+  "−" before that. Exact sums (`moneyExact`, `exact`) keep en-US's commas in every language.
+- **Durations** (`duration`, `i18n/intl.ts` `formatDuration`): English "4m08s", "1h01m", "42s". Japanese 4分8秒,
+  1時間1分, 42秒; zh-Hans 4分8秒, 1小时1分; zh-TW 4分8秒, 1小時1分. A zero last part is left off (1時間, and a
+  whole minute 2分, 2分钟, 2分鐘). A language with no words in `DURATION_UNITS` writes English's.
+- **Minutes** (`headway`, `minutesText`, `ui/inspector/tripText.ts` `minText` and the like) go through the
+  `inspector.min` message: "5.5 min", 5.5分, 5.5分钟, 5.5分鐘.
+- **Units** km, m, mi, ft, km/h, mph and m² stay as written in every language: they are international, and
+  Japanese and Chinese players read them so in games and on maps.
+
 ## What is never translated
 
 - Save data and anything stored: ids, kinds, slot keys, the names a player gave.
@@ -89,7 +108,10 @@ translated `label` (`CostTerm` in `game/trip.ts`).
 ## Choosing a language
 
 `setLanguage(lang)` fetches that language's messages, then sets `language` and `<html lang>` (`en`, `ja`,
-`zh-Hans`, `zh-TW`), and asks canvas text to be measured again (`tw-fontchange`). At startup the language is,
+`zh-Hans`, `zh-TW`), and asks canvas text to be measured again (`tw-fontchange`). At startup `i18n/index.ts`
+awaits the language's messages at its top level, so every module that imports it, `main.ts` among them, runs
+and first renders in that language; English is bundled and waits for nothing, and a failed fetch opens in
+English. Workers (no document) skip this and are passed their language. At startup the language is,
 in order: `?lang=<code>` in the address (not remembered), the player's pick on this device (localStorage
 `trainworld-lang`), the first of `navigator.languages` that is offered (`zh-TW`, `zh-HK`, `zh-MO` and any
 `zh-Hant` give zh-TW, other `zh` zh-Hans; English ranked first keeps English), else English. `?lang=pseudo`
@@ -108,7 +130,9 @@ English are translated by AI. A pick is remembered on this device.
 tabular figures, are the same in every language; then the language's own face. Japanese: Zen Maru Gothic
 (`ui/zenmaru.css`). Traditional Chinese: Huninn (jf open-huninn, rounded like Zen Maru, SIL OFL; Google Fonts'
 111 woff2 slices self-hosted in `public/fonts/Huninn-400-*.woff2`, 2.5 MB in all, `i18n/huninn.css`; a page
-loads only the slices its text uses), then PingFang TC, Microsoft JhengHei, Noto Sans TC. Simplified Chinese:
+loads only the slices its text uses), then PingFang TC, Microsoft JhengHei, Noto Sans TC. Huninn has no bold, so
+zh-TW turns off the browser's made-up bold (`font-synthesis-weight: none`) and sets `.h` headings at 16px instead.
+Simplified Chinese:
 the system's face (PingFang SC, Microsoft YaHei, Noto Sans SC), since no rounded Simplified face is free to
 host. Chinese never falls into Zen Maru, which lacks a third of common Simplified hanzi and draws Japanese
 glyph shapes. In Japanese and Chinese the page sets `text-autospace` (the small gap between hanzi or kana

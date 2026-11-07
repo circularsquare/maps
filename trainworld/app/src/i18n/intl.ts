@@ -79,6 +79,36 @@ export function numberFormat(lang: Lang, opts: Intl.NumberFormatOptions = {}): I
 /** 1234567.4 -> "1,234,567.4" in English, "1.234.567,4" in German; up to 3 decimals unless `opts` says. */
 export const formatNumber = (lang: Lang, n: number, opts?: Intl.NumberFormatOptions): string => numberFormat(lang, opts).format(n);
 
+/** A figure in the language's own short form, to at most `sig` significant digits: 763000 -> "76.3万"
+ * in Japanese, 1.15e9 -> "11.5亿" in Simplified Chinese (T-2672). English keeps the game's own "763k" and
+ * "1.15B" (`game/format.ts`), so it never comes here. */
+export const formatCompact = (lang: Lang, v: number, sig: number): string =>
+  formatNumber(lang, v, { notation: "compact", maximumSignificantDigits: Math.min(21, Math.max(1, sig)) });
+
+/** The hour, minute and second words of a short duration where a language has its own (T-2672), then the
+ * minute word standing alone ("2分钟", against "4分8秒"). */
+const DURATION_UNITS: Partial<Record<Lang, [string, string, string, string]>> = {
+  ja: ["時間", "分", "秒", "分"],
+  "zh-Hans": ["小时", "分", "秒", "分钟"],
+  "zh-TW": ["小時", "分", "秒", "分鐘"],
+};
+
+/** Seconds as a short duration: 83 -> "1m23s", 4330 -> "1h12m" in English (and a language without words of
+ * its own); "1分23秒", "1時間12分" in Japanese, a zero minute or second left off ("2分", "1小时"). */
+export function formatDuration(lang: Lang, s: number): string {
+  s = Math.round(s);
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60;
+  const u = DURATION_UNITS[lang];
+  if (!u) {
+    if (s >= 3600) return `${h}h${String(m).padStart(2, "0")}m`;
+    if (s >= 60) return `${m}m${String(sec).padStart(2, "0")}s`;
+    return `${s}s`;
+  }
+  if (s >= 3600) return h + u[0] + (m ? m + u[1] : "");
+  if (s >= 60) return sec ? m + u[1] + sec + u[2] : m + u[3];
+  return s + u[2];
+}
+
 /** ["a", "b", "c"] -> "a, b and c", "a、b、c", "a、b和c"; `or` for "a, b or c". */
 export function formatList(lang: Lang, items: string[], type: "and" | "or" = "and"): string {
   const loc = locale(lang, "list");

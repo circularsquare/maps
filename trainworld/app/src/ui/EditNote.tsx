@@ -8,6 +8,7 @@ import { count, exact, money, moneyNegative } from "../game/format";
 import { editNote, holdNote, NOTE_COUNT_MS, shownChange, type FromTo } from "../game/editNote";
 import type { ProfitEstimate } from "../game/profitEstimate";
 import { world } from "../game/world";
+import { t, type MessageKey } from "../i18n";
 import { Chip } from "./widgets";
 
 const Arrow = ({ up }: { up: boolean }) => (
@@ -20,8 +21,8 @@ const signed = (n: number, text: string) => (n > 0 ? "+" : n < 0 ? "−" : "") +
 
 /** T-2626: the estimate's hover, its two parts; a part under $500 is left out. */
 const estimateTip = (e: ProfitEstimate, day: string) =>
-  [[e.running, "Running cost"], [e.fares, "Fares about"]].filter(([v]) => Math.abs(v as number) >= 500)
-    .map(([v, what]) => `${what} ${signed(v as number, money(Math.abs(v as number)))} ${day}`).join("\n");
+  ([[e.running, "editNote.runningTip"], [e.fares, "editNote.faresTip"]] as const).filter(([v]) => Math.abs(v) >= 500)
+    .map(([v, key]) => t(key, { change: signed(v, money(Math.abs(v))), day })).join("\n");
 
 export function EditNote() {
   const n = editNote.value;
@@ -44,26 +45,25 @@ export function EditNote() {
   const tr = Math.round(shownChange(dt, n.at)), m = n.estimating ? dm : shownChange(dm, n.at, performance.now(), n.start);
   const tripsText = signed(dt, Math.abs(dt) >= 10_000 ? count(Math.abs(tr)) : exact(Math.abs(tr)));
   // the line's part: its riders (its boardings) under the train trips, its profit under the profit
-  const tip = (what: string, t: FromTo, lineWhat: string, line: FromTo | undefined, f: (v: number) => string) =>
-    `${what} ${n.day}: ${f(t.from)} to ${f(t.to)}` + (name && line ? `\n${lineWhat}${name}: ${f(line.from)} to ${f(line.to)}` : "");
+  const tip = (key: MessageKey, ft: FromTo, lineKey: MessageKey, line: FromTo | undefined, f: (v: number) => string) =>
+    t(key, { day: n.day, from: f(ft.from), to: f(ft.to) }) + (name && line ? "\n" + t(lineKey, { line: name, from: f(line.from), to: f(line.to) }) : "");
   return (
     <div class="edit-note" onPointerEnter={() => holdNote(true)} onPointerLeave={() => holdNote(false)}>
       {dt !== 0 && (
-        <div class="edit-row" data-tip={tip("Trips", n.trips, "Riders on ", n.line?.riders, exact)}>
+        <div class="edit-row" data-tip={tip("editNote.tripsTip", n.trips, "editNote.lineRidersTip", n.line?.riders, exact)}>
           <Arrow up={dt > 0} />
-          <span>{tripsText} trips/day</span>
+          <span>{t("editNote.trips", { change: tripsText })}</span>
         </div>
       )}
       {Math.abs(dm) >= 500 && (
-        <div class={"edit-row" + (n.estimating ? " estimating" : moneyNegative(dm) ? " money-neg" : "")} data-tip={n.est ? estimateTip(n.est, n.day) : tip("Profit", n.money, "", n.line?.money, money)}>
+        <div class={"edit-row" + (n.estimating ? " estimating" : moneyNegative(dm) ? " money-neg" : "")} data-tip={n.est ? estimateTip(n.est, n.day) : tip("editNote.profitTip", n.money, "editNote.lineProfitTip", n.line?.money, money)}>
           <Arrow up={dm > 0} />
-          <span>{n.estimating ? "Estimated " : ""}{signed(dm, money(m))} profit/day</span>
+          <span>{t("editNote.profit", { estimating: !!n.estimating, change: signed(dm, money(m)) })}</span>
         </div>
       )}
       {moved.length > 0 && (
         <div class="edit-row edit-lines">
-          {moved.map(({ l, riders }) => <Chip line={l} size="sm" tip={`${l.name}
-${exact(riders.from)} to ${exact(riders.to)} riders ${n.day}`} />)}
+          {moved.map(({ l, riders }) => <Chip line={l} size="sm" tip={l.name + "\n" + t("editNote.lineChipTip", { from: exact(riders.from), to: exact(riders.to), day: n.day })} />)}
         </div>
       )}
     </div>

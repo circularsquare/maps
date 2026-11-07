@@ -3,7 +3,7 @@
 
 import { distance, levelLabel, money, speed, upkeepText } from "../../game/format";
 import { selection } from "../../game/ui";
-import { t } from "../../i18n";
+import { t, tSeries } from "../../i18n";
 import { edit, say, world } from "../../game/world";
 import { createLine } from "../../game/lineActions";
 import { removeThing } from "../../game/remove";
@@ -50,7 +50,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         {e.tracks === 2 && !e.crossover && !e.hsr && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
-        {distance(e.lengthM)}, {lv}
+        {tSeries([distance(e.lengthM), lv])}
       </div>
       <ConstructRemove built={e.built} construct={construct} constructLabel={t("trackInspector.construct", { price: money(cost) })} remove={remove}
         removeLabel={t("trackInspector.remove", { kind: e.crossover ? "crossover" : e.built ? "track" : "blueprint" })} removeTip="" />

@@ -6,7 +6,7 @@ import { signal } from "@preact/signals";
 import type { ComponentChild, ComponentChildren } from "preact";
 import IntlMessageFormat from "intl-messageformat";
 import en from "./messages/en.json";
-import { countryName, formatDate, formatList, formatNumber, formatSeries, formatSpaced, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
+import { countryName, formatCompact, formatDate, formatDuration, formatList, formatNumber, formatSeries, formatSpaced, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
 
 export { LANGS, LANG_NAMES, isLang, type Lang } from "./intl";
 
@@ -91,6 +91,8 @@ export const tSeries = (items: string[]) => formatSeries(language.value, items);
 export const tSpaced = (phrase: string) => formatSpaced(language.value, phrase);
 export const tDate = (d: Date | number, opts?: Intl.DateTimeFormatOptions) => formatDate(language.value, d, opts);
 export const tCountry = (code: string) => countryName(language.value, code);
+export const tCompact = (v: number, sig: number) => formatCompact(language.value, v, sig);
+export const tDuration = (s: number) => formatDuration(language.value, s);
 
 const STORE = "trainworld-lang";
 
@@ -108,7 +110,9 @@ export function chooseLanguage(lang: Lang): Promise<void> {
   return setLanguage(lang);
 }
 
-if (typeof location !== "undefined") {
+/** The language a page opens in; workers (no document) are passed theirs with each job. */
+function startLanguage(): Lang {
+  if (typeof document === "undefined") return "en";
   const q = new URLSearchParams(location.search).get("lang");
   let saved: string | null = null;
   try {
@@ -116,11 +120,16 @@ if (typeof location !== "undefined") {
   } catch {
     // no storage: the browser's language decides
   }
-  if (q === "pseudo") pseudo.value = true;
-  else if (q && isLang(q)) void setLanguage(q);
-  else if (saved && isLang(saved)) void setLanguage(saved);
-  else {
-    const lang = langOfBrowser(typeof navigator !== "undefined" ? (navigator.languages ?? [navigator.language]) : []);
-    if (lang !== "en") void setLanguage(lang);
+  if (q === "pseudo") {
+    pseudo.value = true;
+    return "en";
   }
+  if (q && isLang(q)) return q;
+  if (saved && isLang(saved)) return saved;
+  return langOfBrowser(typeof navigator !== "undefined" ? (navigator.languages ?? [navigator.language]) : []);
 }
+
+// T-2672: every module that imports this one waits for the language's messages, so the first render is
+// already in it; English is bundled and waits for nothing. A failed fetch opens in English.
+const first = startLanguage();
+if (first !== "en") await setLanguage(first).catch((e) => console.warn(`i18n: ${first} messages did not load:`, e));

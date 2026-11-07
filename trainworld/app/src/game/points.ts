@@ -13,7 +13,7 @@ import { computed } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, awayNear, DAY_KINDS, DEMAND_DAYS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, type DayDemand } from "./demand";
-import { sig3 } from "./format";
+import { compactOf, sig3 } from "./format";
 import { lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
 import { stopsById } from "./world";
@@ -35,12 +35,12 @@ export function goalsReached(zone: string): (number | undefined)[] {
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
 
-/** Points short, three significant digits (T-831): 980, 12.3k, 512k, 4.56M, 103M, 1.25B. */
+/** Points short, three significant digits (T-831): 980, 12.3k, 512k, 4.56M, 103M, 1.25B; 1.23万 in Japanese. */
 export function pointsShort(n: number): string {
   // a figure that rounds up to the next unit (999.6k) is written in that unit
-  if (n >= 999.5e6) return sig3(n / 1e9) + "B";
-  if (n >= 999.5e3) return sig3(n / 1e6) + "M";
-  if (n >= 1e3) return sig3(n / 1e3) + "k";
+  if (n >= 999.5e6) return compactOf(sig3(n / 1e9), 1e9, "B");
+  if (n >= 999.5e3) return compactOf(sig3(n / 1e6), 1e6, "M");
+  if (n >= 1e3) return compactOf(sig3(n / 1e3), 1e3, "k");
   return String(Math.round(n));
 }
 const add = (m: Map<string, number>, k: string, v: number) => m.set(k, (m.get(k) ?? 0) + v);

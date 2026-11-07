@@ -4,11 +4,11 @@
 // selected demand bubble (its centre). A click on a row selects that station and moves the map to
 // it if it is off screen.
 
-import { length } from "../../game/format";
+import { length, minutesText } from "../../game/format";
 import { t } from "../../i18n";
 import { selection } from "../../game/ui";
 import type { LineInput, StationInput } from "../../game/types";
-import { closestStations, minLabel } from "../../game/walks";
+import { closestStations, walkMinutes } from "../../game/walks";
 import { linesAt, world } from "../../game/world";
 import { live } from "../../map/live";
 import { Chip } from "../widgets";
@@ -48,7 +48,7 @@ export function ClosestStations({ lng, lat, exclude, own }: { lng: number; lat: 
                 {chips.length > CHIPS && <span class="muted small">+{chips.length - CHIPS}</span>}
               </span>
               <span class="val" data-tip={r.metres === null ? t("closestStations.water") : t("closestStations.onFoot", { length: length(r.metres) })}>
-                {r.metres === null ? t("closestStations.noWalk") : minLabel(r.metres)}
+                {r.metres === null ? t("closestStations.noWalk") : minutesText(walkMinutes(r.metres))}
               </span>
             </li>
           );

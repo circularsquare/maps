@@ -5,7 +5,7 @@ import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
-import { distUnit, distance, levelLabel, levelName, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
+import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
@@ -57,8 +57,7 @@ const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2, BUS_
 /** the level a flying junction's flyover sits at (sim `junction_cost`) */
 const awayLevel = (l: Level): Level => (l === 3 ? 2 : l === -3 ? -2 : l >= 0 ? l + 1 : l - 1) as Level;
 const num = (v: number) => tNumber(v, { maximumFractionDigits: 2 });
-/** a price in US$M as the Build tab quotes it: "$90M", "$1.5M" */
-const mil = (v: number) => t("blueprint.mil", { value: tNumber(v, { maximumFractionDigits: 1 }) });
+const mil = millions;
 /** "3.7 km" */
 const withUnit = (value: number) => t("blueprint.amountUnit", { value: num(value), unit: unitShort() });
 

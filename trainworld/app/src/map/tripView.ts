@@ -15,7 +15,7 @@ import { CITIES } from "../game/cities";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { cityCells, demandView, flows, intercitySelection, viewFinal, viewUpdating } from "../game/demand";
 import { dealFlows } from "../game/farChunks";
-import { count, distance } from "../game/format";
+import { count, distance, minutesText } from "../game/format";
 import { loadMarketRows, rowsAnswer, stationNear } from "../game/marketRule";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
@@ -516,7 +516,7 @@ function segDist(x: number, y: number, a: [number, number], b: [number, number])
   return Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy);
 }
 
-const minutes = (m: number) => `${Math.max(1, Math.round(m))} min`;
+const minutes = minutesText;
 
 /** Pack metres to local units. */
 function packLocal(p: [number, number]): [number, number] {

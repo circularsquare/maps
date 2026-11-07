@@ -2,7 +2,7 @@
 
 import type { Level } from "./types";
 import { display } from "./ui";
-import { t, tList, tNumber } from "../i18n";
+import { language, t, tCompact, tDuration, tList, tNumber } from "../i18n";
 
 // one formatter each: `toLocaleString` makes a new one per call, 5-10 µs, which a panel of a few
 // thousand rows felt (T-1165)
@@ -23,10 +23,17 @@ export const andList = (names: string[]): string => tList(names);
 
 export const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** 312000 -> "312k", 1.84e6 -> "1.84M" */
+/** A short figure: `digits` of `scale` with English's `unit` ("1.84", 1e6, "M"), or in another language
+ * the same value to as many significant digits in its own form ("184万", T-2672). */
+export function compactOf(digits: string, scale: number, unit: string): string {
+  if (language.value === "en") return digits + unit;
+  return tCompact(Number(digits) * scale, digits.replace(/\D/g, "").replace(/^0+/, "").length);
+}
+
+/** 312000 -> "312k", 1.84e6 -> "1.84M"; "31.2万", "184万" in Japanese */
 export function count(n: number): string {
-  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, "") + "M";
-  if (n >= 1e3) return Math.round(n / 1000) + "k";
+  if (n >= 1e6) return compactOf((n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, ""), 1e6, "M");
+  if (n >= 1e3) return compactOf(String(Math.round(n / 1000)), 1e3, "k");
   return String(Math.round(n));
 }
 
@@ -44,8 +51,16 @@ export function moneyCash(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";
   if (a < 999.95e3) return moneyExact(n);
   const sig = (v: number) => String(Number(v.toPrecision(4)));
-  return a >= 999.95e6 ? s + "$" + sig(a / 1e9) + "B" : s + "$" + sig(a / 1e6) + "M";
+  return a >= 999.95e6 ? s + "$" + compactOf(sig(a / 1e9), 1e9, "B") : s + "$" + compactOf(sig(a / 1e6), 1e6, "M");
 }
+
+/** A price in millions, to a tenth, as the Build tab quotes it: 90 -> "$90M", 1.5 -> "$1.5M"; "$150万" in Japanese. */
+export const millions = (v: number): string =>
+  "$" + (language.value === "en" ? tNumber(v, { maximumFractionDigits: 1 }) + "M" : compactOf(String(Number(v.toFixed(1))), 1e6, "M"));
+
+/** A range of whole millions: 10, 55 -> "$10-55M"; "$1000万-5500万" in Japanese. */
+export const millionsRange = (lo: number, hi: number): string =>
+  language.value === "en" ? `$${lo}-${hi}M` : `$${compactOf(String(lo), 1e6, "M")}-${compactOf(String(hi), 1e6, "M")}`;
 
 /** Whether `money(n)` shows a minus, for the panels' red (T-722). */
 export const moneyNegative = (n: number): boolean => n < 0 && Math.abs(n) >= 500;
@@ -65,9 +80,9 @@ export const sig3 = (v: number): string => {
 export function moneyShort(n: number): string {
   const a = Math.abs(n), s = n < 0 ? "−" : "";
   // a figure that rounds up to the next unit (999.6k, 999.7M) is written in that unit
-  if (a >= 999.5e6) return s + "$" + sig3(a / 1e9) + "B";
-  if (a >= 999.5e3) return s + "$" + sig3(a / 1e6) + "M";
-  return s + "$" + Math.round(a / 1000) + "k";
+  if (a >= 999.5e6) return s + "$" + compactOf(sig3(a / 1e9), 1e9, "B");
+  if (a >= 999.5e3) return s + "$" + compactOf(sig3(a / 1e6), 1e6, "M");
+  return s + "$" + compactOf(String(Math.round(a / 1000)), 1e3, "k");
 }
 
 // Distances, lengths and speeds shown to the player (T-381). Every figure in the game is metric;
@@ -224,25 +239,23 @@ export const boatRunRule = (m: { runCostBoatKm: number }) => t("format.boatRunRu
 export const unitMetres = () => (us() ? M_PER_MILE : 1000);
 export const unitShort = () => (us() ? "mi" : "km");
 
-/** headway in minutes from trains an hour */
+/** headway in minutes from trains an hour: "5.5 min", "5.5分" */
 export function headway(tph: number): string {
   if (!tph) return t("format.headwayNone");
   const m = 60 / tph;
-  return (Number.isInteger(m) ? m : m.toFixed(1)) + " min";
+  return t("inspector.min", { n: Number.isInteger(m) ? String(m) : m.toFixed(1) });
 }
+
+/** Whole minutes, at least one: "7 min", "7分". */
+export const minutesText = (m: number): string => t("inspector.min", { n: Math.max(1, Math.round(m)) });
 
 /** trains needed to run `tph` on a round trip of `rtS` seconds */
 export function trainsNeeded(rtS: number, tph: number): number {
   return Math.ceil((rtS * tph) / 3600);
 }
 
-/** 83 -> "1m23s", 4330 -> "1h12m" */
-export function duration(s: number): string {
-  s = Math.round(s);
-  if (s >= 3600) return `${Math.floor(s / 3600)}h${String(Math.floor(s / 60) % 60).padStart(2, "0")}m`;
-  if (s >= 60) return `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
-  return `${s}s`;
-}
+/** 83 -> "1m23s", 4330 -> "1h12m"; "1分23秒", "1時間12分" in Japanese */
+export const duration = (s: number): string => tDuration(s);
 
 export function clockTime(minute: number): string {
   const m = minute % 1440;

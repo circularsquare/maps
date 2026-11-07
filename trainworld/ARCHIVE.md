@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2672 Numbers, money and durations in ja/zh; no English flash at startup (2026-11-06, agent l10nunits): ICU compact at English's digits (76.3万, $7400万, $60億), 4分8秒, 1小时1分, 5.5分钟; i18n/index.ts awaits the language's messages before anything renders. docs/localization.md "Numbers, money and durations".
+- T-2680 Pass 5 layout follow-ups (2026-11-06, agent l10npolish): zh-TW drops made-up bold (headings 16px instead); the Cities list is a grid so a long head widens its column; track sub line through tSeries; ja Riders 乗客 on both tabs. Shots artifacts/trainworld/l10npolish/.
+- T-2679 Fare multiples relative to a reference country (2026-11-06, agent fareref, tree): the first built station's country reads a plain 1.00x, others their multiple of it (US start: Mexico 0.40x, Japan 0.63x); an anchor makes another the reference, no fare changing. checks/t2679-fare-ref.mjs.
 - T-2678 Pending riders show the last figure; "calculating..." for "constructing..." (2026-11-06, agent ridersnow): beside the label, the count now, else the line's last count, else demand's riders; "loading..." kept. notes/T-2658.md.
 - T-2676 Upkeep shown as multiples (2026-11-06, agent farescale): track level hovers say "0.7x upkeep", base a viaduct = 1.0x as the construction chip (ground 0.7x, cut and cover 2.0x, bored 2.6x); totals stay in dollars. notes/T-2668.md section 7.
 - T-2670 Fares and value of time at income^0.5 (2026-11-06, agent farescale): default bases Mexico $1.00, India $0.45, Japan $1.55; in-city rail Mumbai -0.3%, Tijuana -2.0% (5-cent rounding), NY unchanged; the market's rail share of 100-250 km trips about halves in India and Mexico (Anita: "lower in mexico/india is okay"). notes/T-2668.md section 7.

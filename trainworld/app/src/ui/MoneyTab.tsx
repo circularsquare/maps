@@ -1,6 +1,6 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, runCostHere, runCostLine, runCostRule, upkeepLines } from "../game/format";
+import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, moneyCash, runCostHere, runCostLine, runCostRule, upkeepLines } from "../game/format";
 import { borrow, repay, setFareFerry, setFareHsr, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
@@ -332,7 +332,7 @@ function LoanRows({ loan, ledger }: { loan: Loan | null; ledger: DayLedger[] }) 
             <span class="group">
               {LOAN_AMOUNTS.map((a) => {
                 const no = loanRefusal(a, profit);
-                return <button class="btn text" disabled={no !== null} data-tip={no ?? t("moneyTab.borrowTip", { amount: money(a * 1e6), payment: money(loanPayment(a) * 1e6), days: LOAN_TERM })} onClick={() => void borrow(a)}>{`$${a / 1000}B`}</button>;
+                return <button class="btn text" disabled={no !== null} data-tip={no ?? t("moneyTab.borrowTip", { amount: money(a * 1e6), payment: money(loanPayment(a) * 1e6), days: LOAN_TERM })} onClick={() => void borrow(a)}>{moneyCash(a * 1e6)}</button>;
               })}
             </span>
           </Row>

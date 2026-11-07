@@ -3,7 +3,7 @@
 // junction inspector's flyover does. The passage (the player's link, T-197) starts a pick of the
 // other station instead; its passages are listed below the row.
 
-import { money, perArea, roughDistance } from "../../game/format";
+import { millionsRange, money, perArea, roughDistance } from "../../game/format";
 import { LINK_MAX_M } from "../../game/complexes";
 import { BUILDING_PER_M2, offeredRectangle } from "../../game/buildings";
 import { buildingDraft, buildingMembersById, buildingOf } from "../../game/buildingView";
@@ -154,7 +154,7 @@ function PassageButton({ s }: { s: StationInput }) {
   const pairs = linksAmong([s.id]);
   const built = pairs.some(([a, b]) => byId.get(a)?.built && byId.get(b)?.built);
   const state = picking ? " on" : built ? " on" : pairs.length ? " planned" : "";
-  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: `$${PASSAGE_BASE}-${Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)}M`, picking });
+  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: millionsRange(PASSAGE_BASE, Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)), picking });
   return (
     <button class={"btn icon upgrade" + state} aria-label={t("stationUpgrades.passage")} aria-pressed={picking} data-tip={tip}
       onClick={() => (picking ? cancelLink() : startLink(s.id))}>

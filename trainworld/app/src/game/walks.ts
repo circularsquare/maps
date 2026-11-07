@@ -158,9 +158,6 @@ export function metresBetween(lng0: number, lat0: number, lng1: number, lat1: nu
 /** Walking minutes for a walk of `metres` along the routed path. */
 export const walkMinutes = (metres: number) => metres * WALK_DETOUR / (WALK_KMH / 3.6) / 60;
 
-/** "7 min", "1 min" at the least. */
-export const minLabel = (metres: number) => `${Math.max(1, Math.round(walkMinutes(metres)))} min`;
-
 const fields = new Map<string, Field | null>();
 function fieldAt(city: CityId, g: Grid, x: number, y: number, bound: number): Field | null {
   const key = `${city}|${x.toFixed(0)}|${y.toFixed(0)}|${bound}`;
