@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2722 The arrival masks' segments made when needed (2026-11-07, agent boardmem): a tolerance ramp is one piece (start, step, departure), its segments made with the same arithmetic; sums kept at each piece and every 8th ramp step. Account 340 -> 183 MB native, WASM 412 -> 257 MB, step p50 no worse, dumps byte-identical. notes/T-2722.md.
 - T-2707 The boarding account's memory on all Japan (2026-11-07, agent boardmem): the arrival masks were 835 of 950 MB. Masks now shared by every kind of day, running sums kept one in eight; WASM 1,056 -> 412 MB, steps faster, dumps byte-identical. Rest: T-2722. notes/T-2707.md.
 - T-2720 Rest of the registry city names through `tPlace` (2026-11-07, agent citynames2): hovers (star, goal ticks, profit), status tag, saves panel, money history, demand selector, Lines city column, guide, achievements, loading text, intercity and commuter bubble tags, zone loading tags, diagram labels, map search by shown name. Skipped: networkTips (station names only).
 - T-2718 The read ahead of the network missing on a stray zone (2026-11-07, agent netkey): `tryCache` ahead of the network leaves out a zone opened before the reach was known that the network neither reaches nor views (`closeStrays` closes it). North America save: reloads 2 and 3 hit ahead; `checks/t2588-netkey.mjs` 3/3. notes/T-2588.md.

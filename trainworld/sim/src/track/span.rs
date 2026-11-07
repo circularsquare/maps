@@ -35,9 +35,119 @@ pub fn within(wait: f64) -> f64 {
 /// (unrounded). The boarding account spreads riders by it (T-842b).
 #[derive(Clone, Debug, Default)]
 pub struct Mask {
-    pub t: Vec<f64>,
-    pub s: Vec<f64>,
+    /// the segments in time order, a ramp's held as the departure it leads to (T-2722: a stop with
+    /// hourly trains has ~600 segments, nearly all of them ramp)
+    p: Vec<Piece>,
+    len: usize,
+    /// marks in all (`Piece::mark`)
+    pub marks: usize,
+    /// every share 1: riders arrive as if unmasked
+    pub all_one: bool,
     pub phi: [f64; PERIODS],
+}
+
+/// A segment's place in a mask: piece and segment within it.
+pub type At = (usize, usize);
+
+/// A sum of riders the boarding account keeps (`Masked::pre`) at every piece's first segment and
+/// every `MARK_EVERY`th of a ramp; the segments between are added up again when needed.
+pub const MARK_EVERY: usize = 8;
+
+/// One segment (`h` 0: from `t0`, share `x`), or a ramp of `n` segments before the departure at
+/// `x`, the `j`th from `t0 + j * h` with share `within(x - start - h / 2)`, the same arithmetic
+/// `stop_mask` made them with. `mark`: the index of its first mark.
+#[derive(Clone, Copy, Debug)]
+struct Piece {
+    mark: u32,
+    n: u32,
+    t0: f64,
+    h: f64,
+    x: f64,
+}
+
+impl Piece {
+    fn start(&self, j: usize) -> f64 {
+        if self.h == 0.0 { self.t0 } else { self.t0 + j as f64 * self.h }
+    }
+    fn share(&self, start: f64) -> f64 {
+        if self.h == 0.0 { self.x } else { within(self.x - start - 0.5 * self.h) }
+    }
+}
+
+impl Mask {
+    pub fn len(&self) -> usize {
+        self.len
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+    /// The last segment starting at or before `s` (the first if none).
+    pub fn find(&self, s: f64) -> At {
+        let k = self.p.partition_point(|p| p.t0 <= s).saturating_sub(1);
+        let Some(p) = self.p.get(k) else { return (0, 0) };
+        let n = p.n as usize;
+        if p.h == 0.0 || n == 1 {
+            return (k, 0);
+        }
+        let mut j = (((s - p.t0) / p.h).floor().max(0.0) as usize).min(n - 1);
+        while j + 1 < n && p.start(j + 1) <= s {
+            j += 1;
+        }
+        while j > 0 && p.start(j) > s {
+            j -= 1;
+        }
+        (k, j)
+    }
+    /// A segment's start and share.
+    pub fn seg(&self, (k, j): At) -> (f64, f64) {
+        let p = &self.p[k];
+        let t = p.start(j);
+        (t, p.share(t))
+    }
+    /// The mark at or before a segment, and that mark's segment.
+    pub fn mark_before(&self, (k, j): At) -> (usize, At) {
+        let i = j / MARK_EVERY;
+        (self.p[k].mark as usize + i, (k, i * MARK_EVERY))
+    }
+    /// The segments from `at` on: start, end (the next one's start, the last's the end of the
+    /// day), share, and whether a mark falls on it.
+    pub fn segs_from(&self, (k, j): At) -> Segs<'_> {
+        let next = self.p.get(k).map(|p| p.start(j));
+        Segs { m: self, k, j, next }
+    }
+    #[cfg(test)]
+    fn expand(&self) -> Vec<(f64, f64)> {
+        self.segs_from((0, 0)).map(|(t, _, s, _)| (t, s)).collect()
+    }
+    /// Heap bytes held (benches).
+    pub fn heap_bytes(&self) -> usize {
+        self.p.capacity() * std::mem::size_of::<Piece>()
+    }
+}
+
+pub struct Segs<'a> {
+    m: &'a Mask,
+    k: usize,
+    j: usize,
+    /// the current segment's start
+    next: Option<f64>,
+}
+
+impl Iterator for Segs<'_> {
+    type Item = (f64, f64, f64, bool);
+    fn next(&mut self) -> Option<Self::Item> {
+        let t = self.next?;
+        let p = &self.m.p[self.k];
+        let s = p.share(t);
+        let mark = self.j % MARK_EVERY == 0;
+        self.j += 1;
+        if self.j >= p.n as usize {
+            self.k += 1;
+            self.j = 0;
+        }
+        self.next = self.m.p.get(self.k).map(|q| q.start(self.j));
+        Some((t, self.next.unwrap_or(DAY), s, mark))
+    }
 }
 
 /// The period's arrival shape: the share of its riders arrived by `t` (seconds of the day).
@@ -51,6 +161,8 @@ pub fn period_cum(q: usize, t: f64) -> f64 {
 pub fn stop_mask(deps: &[f64]) -> Mask {
     let ext: Vec<f64> = deps.iter().copied().chain(deps.iter().map(|d| d + DAY)).collect();
     let mut seg: Vec<(f64, f64)> = vec![];
+    // where each whole ramp starts in `seg`: its first segment's index, start, step and departure
+    let mut ramps: Vec<(usize, usize, f64, f64, f64)> = vec![];
     let mut phi = [0.0; PERIODS];
     let mut order: [usize; PERIODS] = std::array::from_fn(|q| q);
     order.sort_by(|&a, &b| PERIOD_HOURS[a].0.total_cmp(&PERIOD_HOURS[b].0));
@@ -58,42 +170,79 @@ pub fn stop_mask(deps: &[f64]) -> Mask {
         let (a, b) = (PERIOD_HOURS[q].0 * 3600.0, PERIOD_HOURS[q].1 * 3600.0);
         // a new period starts a segment of its own
         let mut fresh = true;
-        let mut push = |u0: f64, u1: f64, s: f64, tot: &mut f64| {
+        // true when it adds a segment
+        let mut push = |seg: &mut Vec<(f64, f64)>, u0: f64, u1: f64, s: f64, tot: &mut f64| {
+            let mut added = false;
             if u1 > u0 {
                 *tot += (period_cum(q, u1) - period_cum(q, u0)) * s;
                 match seg.last() {
                     Some(&(_, x)) if x == s && !fresh => {}
-                    _ => seg.push((u0, s)),
+                    _ => {
+                        seg.push((u0, s));
+                        added = true;
+                    }
                 }
                 fresh = false;
             }
+            added
         };
         let mut j = ext.partition_point(|&d| d <= a);
         let (mut t, mut tot) = (a, 0.0f64);
         while t < b {
             let Some(&d) = ext.get(j) else {
-                push(t, b, 0.0, &mut tot);
+                push(&mut seg, t, b, 0.0, &mut tot);
                 break;
             };
             let end = d.min(b);
-            push(t, end.min(d - TOL_MAX_S), 0.0, &mut tot);
+            push(&mut seg, t, end.min(d - TOL_MAX_S), 0.0, &mut tot);
             let (p0, p1) = (t.max(d - TOL_MAX_S), end.min(d - TOL_MIN_S));
             if p1 > p0 {
                 let m = ((p1 - p0) / STEP_S).ceil().max(1.0) as usize;
                 let h = (p1 - p0) / m as f64;
+                let mut added = 0;
+                let at = seg.len();
                 for i in 0..m {
                     let u0 = p0 + i as f64 * h;
-                    push(u0, u0 + h, within(d - u0 - 0.5 * h), &mut tot);
+                    added += push(&mut seg, u0, u0 + h, within(d - u0 - 0.5 * h), &mut tot) as usize;
+                }
+                // every step its own segment: kept as the ramp
+                if added == m && m > 1 && h > 0.0 {
+                    ramps.push((at, m, p0, h, d));
                 }
             }
             // a train due within the shortest tolerance: everyone
-            push(t.max(d - TOL_MIN_S), end, 1.0, &mut tot);
+            push(&mut seg, t.max(d - TOL_MIN_S), end, 1.0, &mut tot);
             t = d;
             j += 1;
         }
         phi[q] = tot.clamp(0.0, 1.0);
     }
-    Mask { t: seg.iter().map(|x| x.0).collect(), s: seg.iter().map(|x| x.1).collect(), phi }
+    let mut p: Vec<Piece> = Vec::with_capacity(seg.len().min(4 * ramps.len() + 8));
+    let mut ramps = ramps.into_iter().peekable();
+    let (mut i, mut marks) = (0, 0);
+    while i < seg.len() {
+        match ramps.peek() {
+            Some(&(at, n, t0, h, x)) if at == i => {
+                p.push(Piece { mark: marks as u32, n: n as u32, t0, h, x });
+                ramps.next();
+                i += n;
+                marks += n.div_ceil(MARK_EVERY);
+            }
+            _ => {
+                p.push(Piece { mark: marks as u32, n: 1, t0: seg[i].0, h: 0.0, x: seg[i].1 });
+                i += 1;
+                marks += 1;
+            }
+        }
+    }
+    p.shrink_to_fit();
+    let mask = Mask { p, len: seg.len(), marks, all_one: seg.iter().all(|x| x.1 == 1.0), phi };
+    #[cfg(test)]
+    {
+        let e = mask.expand();
+        assert!(e.len() == seg.len() && e.iter().zip(&seg).all(|(a, b)| a.0.to_bits() == b.0.to_bits() && a.1.to_bits() == b.1.to_bits()), "a mask's pieces give back its segments");
+    }
+    mask
 }
 
 /// `phi` per period for one stop (`stop_mask`), rounded to hundredths so a share that does not
@@ -197,5 +346,21 @@ mod tests {
         assert!(phi[4] > 0.25 && phi[4] < 0.55, "{phi:?}");
         // no departures: nobody
         assert_eq!(stop_phi(&[]), [0.0; PERIODS]);
+    }
+
+    #[test]
+    fn a_masks_ramps_find_the_segment_a_list_would() {
+        // stop_mask itself checks its pieces give back its segments
+        let m = stop_mask(&[5.0 * 3600.0 + 17.0, 7.5 * 3600.0, 8.0 * 3600.0 + 0.3, 13.0 * 3600.0, 21.0 * 3600.0 + 59.0]);
+        let e = m.expand();
+        assert!(e.len() > 100 && m.p.len() < 40, "{} segments in {} pieces", e.len(), m.p.len());
+        for k in 0..20000 {
+            let s = k as f64 * 4.3201 - 10.0;
+            let i = e.partition_point(|x| x.0 <= s).saturating_sub(1);
+            let at = m.find(s);
+            assert_eq!(m.seg(at), e[i], "at {s}");
+            assert_eq!(m.segs_from(at).count(), e.len() - i, "at {s}");
+        }
+        assert_eq!(m.segs_from((0, 0)).filter(|x| x.3).count(), m.marks);
     }
 }

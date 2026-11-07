@@ -113,19 +113,12 @@ struct Masked {
     /// per period, the mask's share over its riders by this platform's shape (0: no train due all
     /// period, and the period's riders arrive as if unmasked)
     norm: [f64; PERIODS],
-    /// riders arrived from the start of the day to the start of every `PRE_EVERY`th segment
+    /// riders arrived from the start of the day to each of the mask's marks (`span::MARK_EVERY`);
+    /// `cum` adds the segments after one in the order this sum did, so its sums are the same to the
+    /// bit (T-2707)
     pre: Vec<f64>,
 }
 
-/// T-2707: `Masked::pre` keeps one sum in this many; `cum` adds the segments between in the same
-/// order, so its sums are the same to the bit.
-const PRE_EVERY: usize = 8;
-
-impl Masked {
-    fn end(&self, i: usize) -> f64 {
-        self.m.t.get(i + 1).copied().unwrap_or(DAY)
-    }
-}
 
 impl Arrivals {
     pub fn new(per: [f64; PERIODS], peak: &[f64; PERIODS]) -> Self {
@@ -143,21 +136,22 @@ impl Arrivals {
     /// `with_mask` on a mask other platforms' accounts hold too.
     pub fn with_shared(per: [f64; PERIODS], peak: &[f64; PERIODS], m: Arc<Mask>) -> Self {
         let mut a = Self::new(per, peak);
-        let ns = m.t.len();
-        if ns == 0 || m.s.iter().all(|&s| s == 1.0) {
+        if m.is_empty() || m.all_one {
             return a;
         }
-        let mut x = Masked { m, norm: [0.0; PERIODS], pre: Vec::with_capacity(ns.div_ceil(PRE_EVERY)) };
-        for i in 0..ns {
-            let p = period_at(x.m.t[i]);
-            x.norm[p] += x.m.s[i] * (a.w(p, x.end(i)) - a.w(p, x.m.t[i]));
+        // the shares worked out once (a ramp's are a logarithm each)
+        let segs: Vec<(f64, f64, f64, bool)> = m.segs_from((0, 0)).collect();
+        let mut x = Masked { norm: [0.0; PERIODS], pre: Vec::with_capacity(m.marks), m };
+        for &(t, e, s, _) in &segs {
+            let p = period_at(t);
+            x.norm[p] += s * (a.w(p, e) - a.w(p, t));
         }
         let mut tot = 0.0;
-        for i in 0..ns {
-            if i % PRE_EVERY == 0 {
+        for &(t, e, s, mark) in &segs {
+            if mark {
                 x.pre.push(tot);
             }
-            tot += a.seg(&x, i, x.m.t[i], x.end(i));
+            tot += a.seg(&x, t, s, t, e);
         }
         a.day = tot;
         a.masked = Some(Box::new(x));
@@ -168,15 +162,15 @@ impl Arrivals {
         let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
         shape_cum(SHAPE[p], self.c[p], ((s - a) / (b - a)).clamp(0.0, 1.0))
     }
-    /// The mask's weight on riders in segment `i`.
-    fn eff(&self, x: &Masked, i: usize) -> f64 {
-        let p = period_at(x.m.t[i]);
-        if x.norm[p] > 1e-9 { x.m.s[i] / x.norm[p] } else { 1.0 }
+    /// The mask's weight on riders in the segment starting at `t` with share `s`.
+    fn eff(x: &Masked, t: f64, s: f64) -> f64 {
+        let p = period_at(t);
+        if x.norm[p] > 1e-9 { s / x.norm[p] } else { 1.0 }
     }
-    /// Riders arriving in segment `i` between `u0` and `u1` seconds into the day.
-    fn seg(&self, x: &Masked, i: usize, u0: f64, u1: f64) -> f64 {
-        let p = period_at(x.m.t[i]);
-        self.per[p] * self.eff(x, i) * (self.w(p, u1) - self.w(p, u0))
+    /// Riders arriving in that segment between `u0` and `u1` seconds into the day.
+    fn seg(&self, x: &Masked, t: f64, s: f64, u0: f64, u1: f64) -> f64 {
+        let p = period_at(t);
+        self.per[p] * Self::eff(x, t, s) * (self.w(p, u1) - self.w(p, u0))
     }
     /// Riders arrived since the start of game day 0 (negative before it).
     pub fn cum(&self, t: f64) -> f64 {
@@ -184,12 +178,16 @@ impl Arrivals {
         let s = t - d * DAY;
         let mut tot = d * self.day;
         if let Some(x) = &self.masked {
-            let i = x.m.t.partition_point(|&u| u <= s).saturating_sub(1);
-            let mut pre = x.pre[i / PRE_EVERY];
-            for j in i / PRE_EVERY * PRE_EVERY..i {
-                pre += self.seg(x, j, x.m.t[j], x.end(j));
+            let at = x.m.find(s);
+            let (c, from) = x.m.mark_before(at);
+            let mut pre = x.pre[c];
+            let mut segs = x.m.segs_from(from);
+            for _ in from.1..at.1 {
+                let (t, e, sh, _) = segs.next().unwrap();
+                pre += self.seg(x, t, sh, t, e);
             }
-            return tot + pre + self.seg(x, i, x.m.t[i], s);
+            let (t, _, sh, _) = segs.next().unwrap();
+            return tot + pre + self.seg(x, t, sh, t, s);
         }
         for p in 0..PERIODS {
             let (a, b) = (PERIOD_HOURS[p].0 * 3600.0, PERIOD_HOURS[p].1 * 3600.0);
@@ -208,7 +206,10 @@ impl Arrivals {
         let s = t.rem_euclid(DAY);
         let r = self.per[p] / (b - a) * (1.0 + self.c[p] * shape_g(SHAPE[p], ((s - a) / (b - a)).clamp(0.0, 1.0)));
         match &self.masked {
-            Some(x) => r * self.eff(x, x.m.t.partition_point(|&u| u <= s).saturating_sub(1)),
+            Some(x) => {
+                let (u, sh) = x.m.seg(x.m.find(s));
+                r * Self::eff(x, u, sh)
+            }
             None => r,
         }
     }
@@ -1294,7 +1295,7 @@ impl Boarding {
                     for a in &ra.arrivals {
                         if let Some(x) = &a.masked {
                             if seen.insert(Arc::as_ptr(&x.m)) {
-                                add("mask t, s", size_of::<Mask>() + v(x.m.t.capacity() + x.m.s.capacity(), 8));
+                                add("mask segments", size_of::<Mask>() + x.m.heap_bytes());
                             }
                             add("mask pre", size_of::<Masked>() + v(x.pre.capacity(), 8));
                         }
@@ -1307,7 +1308,7 @@ impl Boarding {
             for m in runs.1.iter().flatten().flatten() {
                 add("masks kept", size_of::<Arc<Mask>>());
                 if seen.insert(Arc::as_ptr(m)) {
-                    add("mask t, s", size_of::<Mask>() + v(m.t.capacity() + m.s.capacity(), 8));
+                    add("mask segments", size_of::<Mask>() + m.heap_bytes());
                 }
             }
         }
