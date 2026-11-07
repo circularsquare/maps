@@ -75,10 +75,11 @@ are written "06:00" to match the top bar clock (you wrote "6:00"; say if you wan
   minutes (no fare, crowding or weights); T-1782's "only a little quicker" fade is gone. Real save 11.72M -> 12.51M
   rail trips a day (+6.7%). It made the demand solve about 10% slower; T-2307 and T-2324 got back most of that (now
   about 3% over the old rule, figures unchanged; notes/T-2324.md).
-- **Parking by income**: paid parking times min(1, (GDP per head / $35,000)^0.3), from parking price surveys across
-  57 cities (notes/T-2278.md). India 0.46, Vietnam 0.56, China 0.76, Turkey 0.83; 1 from Japan and Korea up. With no
-  rail, Ho Chi Minh City's car share 53.7% -> 60.6%, Delhi 59.7% -> 60.9%, rich cities unchanged. Curve:
-  artifacts/trainworld/demand/t2278-curve.png.
+- **Parking by income**: paid parking times min(1, (GDP per head / $35,000)^0.5), from parking price surveys across
+  57 cities (notes/T-2278.md); the power was 0.3 until T-2677 matched it to the fares' 0.5 (notes/T-2677.md). India
+  0.28, Vietnam 0.38, China and Mexico 0.63, Turkey 0.73; 1 from Japan and Korea up. With no rail at 0.3, Ho Chi Minh
+  City's car share 53.7% -> 60.6%, Delhi 59.7% -> 60.9%, rich cities unchanged; the move to 0.5 took in-city rail on
+  test lines down 3% (Mexico City) to 7% (Mumbai). Curve (drawn at 0.3): artifacts/trainworld/demand/t2278-curve.png.
 - **Station buildings**: a change inside counts 1 of the fixed 2 minutes; waits inside count 0.8 (a waiting room).
 - Strings: trip explorer no-train line "Walking there is shorter than the walks to, between and from the stations."
   -> "Walking there is quicker than the train.", its new hover "By train at least 34 min, walking 28 min." /
