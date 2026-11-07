@@ -37,6 +37,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **HOLD the website push**: Anita saw Tokyo's "Loading the bubbles" stall >4 min on 8800 (de29a14c) after leaving and
   returning. **tokyoload** (Opus, main tree, Vite 6194, T-2756) checks whether it's a regression from de29a14c (vs
   b2822e6a) and fixes it; also "say why in the tooltip" when a stage runs long. Push only after its answer.
+  Likely cause: our own R2 upload saturating her Wi-Fi (16.6 Mbps up), slowing tile/terrain downloads; tokyoload tests
+  with throttled network and adds a "connection is slow" hover. Fresh reload loaded in ~40 s.
+- **loadbar** ac01a9ea182c43905 resumed on T-2638 (reweight loading bars: early stages less, time-left estimate).
+- **tokyoload** a92dc3a2c8eb3d255 (Opus, main tree, Vite 6194): T-2756.
+- Next unassigned id **T-2757** (tokyoload may use it).
 
 ## In flight ([971c94]'s agents; SendMessage by id; all in the MAIN tree, no commits; each archives its own lines)
 - **worldfix** ae45801a1a16dbcc8 (Opus): T-2702 coastal units + T-2712 Colombia blobs. All 53 rows gated; **JOIN running**
@@ -122,6 +127,8 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Commit by path: `git commit -m "..." -- <paths>`; `git add` a new file first.
 
 ## Lessons from this run
+- deploy.py's rclone (32 transfers) saturated Anita's Wi-Fi upload (16.6 Mbps) and slowed her game's tile and terrain
+  downloads on 8800 (2026-11-07). Anita: no need to cap it, just confirm the cause (tokyoload is checking).
 - Always Get-Date before writing a time: this session's own estimates ran ~2 h ahead by mid-morning.
 - Two sessions can share a name (both maps-b9): message by ref.
 - A world run's gates serve the main tree's app/ live: hold app/ writes (not just commits) during gates; commits,
