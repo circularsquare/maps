@@ -28,10 +28,12 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 ## In flight
 - **worldnext** (old session's subagent, Opus, MAIN tree): T-2695 Latin America, T-2696 South Africa, T-2697 Gulf; 244
   rows (3 held); runs started 00:03, reports to [971c94].
-- **storeread** a52ca8519e40ed2d8 ([971c94]'s, Opus, main tree, Vite 6171, 2 cores): T-2703 safe startup save read.
-  May file T-2705. Owns the startup/storage code. App change: commit after worldnext's gates end.
-- **pinchecks** abce91c261b124265 ([971c94]'s, Sonnet, main tree, Vite 6172): T-2630 checks pin to their core claim.
-  May file T-2706. Owns checks/*.mjs, CLAUDE.md "CPU", code-map checks line.
+- storeread finished T-2703 (archived; check t2703-storeread.mjs PASS, smoke 25/25), **UNCOMMITTED, commit after
+  worldnext's gates end**: app/src/workers/saveFile.ts, clock.worker.ts, protocol.ts, clockClient.ts, en.json +
+  context.json (string clockClient.storageUnreadable, shown to Anita 2026-11-07; ja/zh translation still to do),
+  docs/ui-panels.md, docs/code-map.md, DECISIONS.md, ARCHIVE.md, TASKS.md, checks/t2703-storeread.mjs. Filed T-2705.
+- pinchecks finished: T-2630 landed 983d5192 (checks/cores.mjs; TW_CORES=n, else a ledger claim; TW_NOPIN=1 for
+  timing runs). Smoke on 2 cores takes ~6 min, so give it TW_CORES=4 when the machine allows. T-2706 unused.
 - Next unassigned id **T-2707**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
