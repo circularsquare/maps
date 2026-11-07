@@ -5,6 +5,13 @@ reasoning and what it replaced.
 
 ## 2026-11-07
 
+- **The search's queue is Dial's buckets as wide as the lightest edge the level can have** (T-093,
+  notes/T-093.md): a width proven from minima recorded when a level is built keeps the heap's
+  results exactly (weights bitwise, times differing only at ties), where a guessed width or a
+  radix heap would not or would cost more a pop. River edges (some 0 km) re-queue within the
+  bucket instead of shrinking it. The queue's arrays are reused between solves: allocated fresh,
+  the worker's GC made it slower than the heap in Chrome.
+
 - **Corridor parents are costed exactly as the search walks, even where that leaves straighter
   lines** (T-091, notes/T-091.md): at L0.1 the old symmetric cost left out slope and height, so
   every candidate looked free and parents were re-chosen past the 1% limit; with the true cost

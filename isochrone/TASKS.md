@@ -11,7 +11,7 @@ canoe paddles rivers, lakes and sea with currents and carries overland at x2. Wa
 danger are on with K = 1000 h. Corridors are coloured by speed, drawn by trips and hoverable.
 Smoke passes 18/18.
 
-**Next up**: the search's bucket queue (T-093), then the
+**Next up**: the
 known coarse-level errors (T-007 fjords and rivers, T-075 islands) and M2's doc tidy (T-078).
 10,000 BC is for later. Open questions: `notes/for-anita.md`.
 
@@ -41,11 +41,11 @@ you get?": the canoe in today's world, roads and 100 m, survival; 10,000 BC move
 ## Later
 
 - T-012 [P3] 10,000 BC land: ICE-6G sea level and ice, glacial lakes (drawn outlines first), Beyer 2020 biomes (research/friction.md 4, stage D). Later at Anita's word (2026-11-05).
-- T-093 [P3] Bucket queue in the search for every level (from T-039, fine level stage 2): a bucket queue in place of the heap was 1.3-1.6x faster in T-030's test; L0.1 windows at the cap take ~1.1-1.2 s in node with the slope per move (notes/T-039.md "Times"), canoe L10 ~0.8 s (T-035). Measure in a real browser (docs/fine.md "Times"). taking, 2026-11-07
 - T-050 [P3] Fine level stage 3: the canoe at L0.1 (LC100 water kinds, bridge cells as both land and canoe nodes, RiverATLAS steps at 1/1200 degree); until then a canoe start stops at L1 (docs/fine.md).
 - T-051 [P2] Rural seams at L0.1 window edges: MAP's L1 walks a whole 1 km pixel at road speed when a road crosses it, so outside towns 100 m times are 18-52% longer than L1 (notes/T-047.md) and an L0.1 window's ring is seeded early. Check how it looks round Cluj at zoom 10-11; the real fix is L1 from our own surface with roads as a share of each cell (T-010, T-028).
-- T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. Try the bucket queue of T-093 and fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
-- T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011. Under T-011's crossing rule fjord and river country is too fast at L3/L10 (Sogndal L1/L10 1.32, Coari 1.32): a coarse cell crossed along its land joins its neighbours, so coarse walks cross water L1 goes round (notes/T-011.md stage 3).
+- T-035 [P3] Canoe search speed: a canoe click at L10 is ~0.8 s with 8 moves past 20 km from shore (16 everywhere was 1.0-1.1 s), and canoe L3 windows are capped at 1.5 M cells. The bucket queue (T-093) gave the canoe L10 click only ~1.1x in Chrome and none in node: its cost is the sea edges. Try fewer tables read per sea edge, then go back to 16 moves at sea if it gets under 1 s (notes/T-022.md).
+- T-007 [P3] Coarse solve with portals (docs/resolution.md, thin barriers). After T-011. Under T-011's crossing rule fjord and river country is too fast at L3/L10 (Sogndal L1/L10 1.32, Coari 1.32): a coarse cell crossed along its land joins its neighbours, so coarse walks cross water L1 goes round (notes/T-011.md stage 3). taking, 2026-11-07, stage 1 (design)
+- T-095 [P3] Re-time the solves on a quiet machine (smoke.mjs and notes/T-093/chrome.mjs, when the core ledger is near empty) and restate SPEC.md 2's 0.3-0.7 s L10 click and ~0.8 s canoe click and docs/canoe.md's canoe times; T-093's bucket queue made them 1.1-1.4x faster but was measured under full load.
 - T-014 [P3] Window edges: fade the finer window into the coarser one over a few cells instead of a hard hole edge, to remove the faint 1-3 px line (docs/resolution.md).
 - T-015 [P3] Big screens: L1 windows of ~2M cells take ~1-1.5 s in headless tests. Try painting the inner view first, or a smaller L1 margin above 2560 px wide; measure in a normal browser first.
 - T-016 [P3] Publishing: data/tiles is 735 MB since T-011 (l1 151, d1 314, e1 144, r1 66 MB); goes to R2 with the page. Try a tighter encoding (row deltas, brotli) before publishing.

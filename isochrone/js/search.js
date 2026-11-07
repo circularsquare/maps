@@ -1,4 +1,4 @@
-// Dijkstra with an indexed binary heap over the nodes of a level (docs/canoe.md 1, 5).
+// Dijkstra with a bucket queue over the nodes of a level (docs/canoe.md 1, 5).
 // Walking start: land nodes only (ids 0..N-1 = cells). Canoe start: land nodes carried at
 // cfg.carry x walking time, plus canoe nodes (a water cell's id is its canoe node; a land cell's
 // canoe node is canoeOf[cell] >= N), joined by transfers. Minimises weight = time + K x hazard;
@@ -76,6 +76,93 @@ export const NEAR_CANOE = 1 << 17;   // a canoe node in the 3 x 3
 export const FAR = 1 << 18;          // 20 km or more from shore
 export const ON_RIVER = 1 << 19;     // river edges leave the cell
 
+// Dial's bucket queue (T-093). Bucket b holds the queued nodes of weight in [b d, (b + 1) d), as a
+// list through a pool of entries, popped last in first out; a node whose weight falls to another
+// bucket gets a new entry and its old one is passed over (pos no longer names that bucket).
+// d is under every grid and transfer edge's weight (edgeFloor, less float32 rounding), so no such
+// edge from a node of the current bucket can improve another node in it: each node is expanded
+// once at its final weight, as by a heap, and weights come out the same; only the order of nodes
+// within a bucket differs (ties, so pred and a time or hazard where weights tie). River edges can
+// be shorter than d (some are 0 km), so the river loop alone also relaxes nodes already popped
+// from the current bucket and queues any it improves again (`again`): weights stay least, and the
+// heap's results exactly while again is 0. pos: -1 never queued, >= 0 its bucket, <= -2 popped
+// (from bucket -2 - pos). Nodes past wStop are never queued. If d would need over NB_MAX buckets
+// (or a level lacks its minima) d is wStop / NB_MAX and every edge relaxes popped nodes of the
+// current bucket: weights are still least, but with hazard on the stop rules may then have read a
+// node's earlier time or hazard.
+const NB_MAX = 1 << 21;
+export const queueInfo = { exact: true, d: 0, buckets: 0, again: 0, entries: 0 };   // the last solve's, for checks
+class Buckets {
+    constructor(M, wStop, floor, riverFloor) {
+        const fit = (x) => x > 0 && wStop / x < NB_MAX - 2;
+        const less = (x) => (x - wStop * 2 ** -23) * (1 - 1e-6);   // float32 rounding of weights
+        let d = less(Math.min(floor, riverFloor));
+        if (!fit(d)) d = less(floor);
+        this.exact = fit(d);
+        if (!this.exact) d = wStop / (NB_MAX - 2);
+        this.d = d; this.inv = 1 / d; this.wStop = wStop;
+        // arrays of an earlier solve are reused: allocating them each time costs the worker GC
+        const sp = spare.pop(), nb = Math.floor(wStop * this.inv) + 2;
+        this.headBuf = sp && sp.head.length >= nb ? sp.head : new Int32Array(nb);
+        this.posBuf = sp && sp.pos.length >= M ? sp.pos : new Int32Array(M);
+        this.head = this.headBuf.subarray(0, nb).fill(-1);
+        this.pos = this.posBuf.subarray(0, M).fill(-1);
+        this.ent = sp ? sp.ent : new Int32Array(1 << 20); this.nxt = sp ? sp.nxt : new Int32Array(1 << 20); this.top = 0;
+        this.cur = 0; this.n = 0; this.again = 0;
+        // a popped node is passed over when its pos is above lim (grid and transfer edges) or limR
+        // (river edges): every popped node, or those of earlier buckets only
+        this.limR = -2;
+        this.lim = this.exact ? -0x80000000 : -2;
+    }
+    // v's weight fell to wv
+    set(v, wv) {
+        if (!(wv <= this.wStop)) return;
+        const b = (wv * this.inv) | 0, pv = this.pos[v];
+        if (pv === b) return;
+        if (pv < 0) { this.n++; if (pv < -1) this.again++; }
+        if (this.top === this.ent.length) {
+            const ent = new Int32Array(2 * this.top), nxt = new Int32Array(2 * this.top);
+            ent.set(this.ent); nxt.set(this.nxt); this.ent = ent; this.nxt = nxt;
+        }
+        const e = this.top++;
+        this.ent[e] = v; this.nxt[e] = this.head[b]; this.head[b] = e; this.pos[v] = b;
+    }
+    pop() {
+        const head = this.head, ent = this.ent, nxt = this.nxt, pos = this.pos;
+        for (let c = this.cur; ;) {
+            const e = head[c];
+            if (e < 0) { c++; continue; }
+            head[c] = nxt[e];
+            const u = ent[e];
+            if (pos[u] !== c) continue;
+            if (c !== this.cur) { this.cur = c; this.limR = -2 - c; if (!this.exact) this.lim = this.limR; }
+            pos[u] = -2 - c; this.n--;
+            return u;
+        }
+    }
+    // done: the figures for checks, and the arrays back for the next solve
+    release() {
+        queueInfo.exact = this.exact; queueInfo.d = this.d; queueInfo.buckets = this.cur + 1; queueInfo.again = this.again; queueInfo.entries = this.top;
+        if (spare.length < 2) spare.push({ head: this.headBuf, pos: this.posBuf, ent: this.ent, nxt: this.nxt });
+    }
+}
+const spare = [];
+
+// The least weight a grid or transfer edge of a solve can have, hours: the shortest move at the
+// fastest hours per km a land cell has (L.sdMin directed, else the fastest speed byte), times the
+// slope's least factor (L.slopeMin), carried at f; on a canoe start also getting in or out, and
+// paddling at the paddle speed plus the strongest current both ends could add. Hazard only adds.
+// NaN (a level without its minima) leaves the queue label-correcting, never wrong.
+function edgeFloor(L, stepKm, f, cn) {
+    let s = Infinity, h = Infinity;
+    for (let i = 0; i < stepKm.length; i++) if (stepKm[i] > 0 && stepKm[i] < s) s = stepKm[i];
+    if (L.sd) h = L.sdMin;
+    else for (let v = 1; v < 256; v++) if (cfg.inv[v] > 0 && cfg.inv[v] < h) h = cfg.inv[v];
+    let e = s * f * h * (L.zs ? L.slopeMin : 1);
+    if (cn) e = Math.min(e, cfg.transfer, s / (cfg.paddle + cn.curKmh * cn.curMax));
+    return e;
+}
+
 // Yield to the event loop so newer messages can land; much faster than setTimeout.
 const chan = new MessageChannel();
 const wakers = [];
@@ -100,49 +187,22 @@ async function solveWalk(L, seeds, alive) {
     const sG = zs ? L.slopeG : 0, sG5 = sG + 0.5, rq = zs ? L.roadQ : 0, NOH = NO_HEIGHT;
     const dist = new Float32Array(N).fill(Infinity);
     const pred = new Uint8Array(N);
-    const heap = new Int32Array(N);
-    const pos = new Int32Array(N).fill(-1);
-    let size = 0;
-    function up(i) {
-        const node = heap[i], d = dist[node];
-        while (i > 0) {
-            const p = (i - 1) >> 1;
-            if (dist[heap[p]] <= d) break;
-            heap[i] = heap[p]; pos[heap[i]] = i; i = p;
-        }
-        heap[i] = node; pos[node] = i;
-    }
-    function down(i) {
-        const node = heap[i], d = dist[node];
-        for (;;) {
-            let c = 2 * i + 1;
-            if (c >= size) break;
-            if (c + 1 < size && dist[heap[c + 1]] < dist[heap[c]]) c++;
-            if (dist[heap[c]] >= d) break;
-            heap[i] = heap[c]; pos[heap[i]] = i; i = c;
-        }
-        heap[i] = node; pos[node] = i;
-    }
+    const bq = new Buckets(N, maxHours, edgeFloor(L, stepKm, 1, null), Infinity), pos = bq.pos;
     for (let k = 0; k < seeds.idx.length; k++) {
         const v = seeds.idx[k], t = seeds.w[k];
         if (!(t < dist[v])) continue;
         dist[v] = t; pred[v] = seeds.pred ? seeds.pred[k] : P_NONE;
-        if (pos[v] === -1) { heap[size] = v; pos[v] = size; size++; up(size - 1); }
-        else up(pos[v]);
+        bq.set(v, dist[v]);
     }
     let pops = 0, tLast = performance.now();
-    while (size > 0) {
+    while (bq.n > 0) {
         if ((++pops & 0x3FFF) === 0 && performance.now() - tLast > 30) {
             await tick();
-            if (!alive()) return null;
+            if (!alive()) { bq.release(); return null; }
             tLast = performance.now();
         }
-        const u = heap[0];
-        pos[u] = -2; // settled
-        size--;
-        if (size > 0) { heap[0] = heap[size]; pos[heap[0]] = 0; down(0); }
+        const u = bq.pop(), lim = bq.lim;
         const du = dist[u];
-        if (du > maxHours) break;
         const r = (u / W) | 0, c = u - r * W;
         const invU = inv[grid[u]];
         const sr = r * 16;
@@ -152,8 +212,8 @@ async function solveWalk(L, seeds, alive) {
             if (r2 < 0 || r2 >= H) continue;
             let c2 = c + MDC[k];
             if (c2 < 0 || c2 >= W) { if (!wrap) continue; c2 = (c2 + W) % W; }
-            const v = r2 * W + c2;
-            if (pos[v] === -2) continue;
+            const v = r2 * W + c2, pv = pos[v];
+            if (pv < -1 && pv > lim) continue;
             const s = grid[v];
             if (!s) continue;
             let mean, i0 = 0, i1 = 0;
@@ -182,11 +242,11 @@ async function solveWalk(L, seeds, alive) {
             const nd = du + stepKm[sr + k] * mean;
             if (nd < dist[v]) {
                 dist[v] = nd; pred[v] = P_GRID + k;
-                if (pos[v] === -1) { heap[size] = v; pos[v] = size; size++; up(size - 1); }
-                else up(pos[v]);
+                bq.set(v, dist[v]);
             }
         }
     }
+    bq.release();
     return { w: dist, t: dist, hz: zeros(N), pred };
 }
 let zeroArr = new Float32Array(0);
@@ -230,43 +290,14 @@ export async function solve(L, seeds, alive, canoe) {
     // hazard per km walked by cell (0 on water); read-only zeros when off or not loaded
     const hq = split && L.hq ? L.hq : zeros(N);
 
-    // Indexed heap, 4 children a node (half the depth of a binary heap, the children in one cache
-    // line), each entry's weight kept beside it (hk) so sifting reads no other per-node array.
-    // pos: -1 never queued, -2 settled, else the heap slot.
-    const heap = new Int32Array(M), hk = new Float32Array(M);
-    const pos = new Int32Array(M).fill(-1);
-    let size = 0;
-    function up(i, node, d) {
-        while (i > 0) {
-            const p = (i - 1) >> 2;
-            const kp = hk[p];
-            if (kp <= d) break;
-            const np = heap[p];
-            heap[i] = np; hk[i] = kp; pos[np] = i; i = p;
-        }
-        heap[i] = node; hk[i] = d; pos[node] = i;
-    }
-    function down(i, node, d) {
-        for (;;) {
-            const c0 = 4 * i + 1;
-            if (c0 >= size) break;
-            let c = c0, kc = hk[c0];
-            const end = c0 + 4 < size ? c0 + 4 : size;
-            for (let j = c0 + 1; j < end; j++) if (hk[j] < kc) { kc = hk[j]; c = j; }
-            if (kc >= d) break;
-            const nc = heap[c];
-            heap[i] = nc; hk[i] = kc; pos[nc] = i; i = c;
-        }
-        heap[i] = node; hk[i] = d; pos[node] = i;
-    }
-
+    const bq = new Buckets(M, wStop, edgeFloor(L, stepKm, f, cn), cn ? cn.rDtMin : Infinity), pos = bq.pos;
     for (let k = 0; k < seeds.idx.length; k++) {
         const v = seeds.idx[k];
         if (!(seeds.w[k] < w[v])) continue;
         w[v] = seeds.w[k];
         if (split) { t[v] = seeds.t[k]; hz[v] = seeds.hz[k]; }
         pred[v] = seeds.pred ? seeds.pred[k] : P_NONE;
-        up(pos[v] === -1 ? size++ : pos[v], v, w[v]);
+        bq.set(v, w[v]);
     }
 
     // canoe tables
@@ -280,18 +311,14 @@ export async function solve(L, seeds, alive, canoe) {
     const p = cfg.paddle, p2 = p * p, invP = 1 / p, xfer = cfg.transfer, sea8 = cfg.sea8;
 
     let pops = 0, tLast = performance.now();
-    while (size > 0) {
+    while (bq.n > 0) {
         if ((++pops & 0x3FFF) === 0 && performance.now() - tLast > 30) {
             await tick();
-            if (!alive()) return null;
+            if (!alive()) { bq.release(); return null; }
             tLast = performance.now();
         }
-        const u = heap[0];
-        pos[u] = -2;
-        size--;
-        if (size > 0) down(0, heap[size], hk[size]);
+        const u = bq.pop(), lim = bq.lim, limR = bq.limR;
         const wu = w[u];
-        if (wu > wStop) break;
         const tu = t[u], hu = hz[u];
         if (tu > maxHours || hu > hzStop) continue;
         const cell = u < N ? u : cellOf[u - N];
@@ -307,7 +334,7 @@ export async function solve(L, seeds, alive, canoe) {
                 let c2 = c + MDC[k];
                 if (c2 < 0 || c2 >= W) { if (!wrap) continue; c2 = (c2 + W) % W; }
                 const v = r2 * W + c2;
-                if (pos[v] === -2) continue;
+                if (pos[v] < -1 && pos[v] > lim) continue;
                 const s = grid[v];
                 if (!s) continue;
                 let mean, mq, i0 = 0, i1 = 0;
@@ -341,8 +368,7 @@ export async function solve(L, seeds, alive, canoe) {
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_GRID + k;
                     if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
-                    const pv = pos[v];
-                    up(pv === -1 ? size++ : pv, v, w[v]);
+                    bq.set(v, w[v]);
                   } }
             }
             if (!cn || !(info[cell] & NEAR_CANOE)) continue;
@@ -355,7 +381,7 @@ export async function solve(L, seeds, alive, canoe) {
                 const cell2 = r2 * W + c2, nx = extraN ? extraN[cell2] : 0;
                 // the cell's own canoe node, then its further river nodes
                 for (let q = 0, v = canoeOf[cell2]; q <= nx; v = extra0 && q < nx ? extra0[cell2] + q : -1, q++) {
-                if (v < 0 || pos[v] === -2) continue;
+                if (v < 0 || (pos[v] < -1 && pos[v] > lim)) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
                 // a canoe node on a land cell (a river, a strait) is reached overland the whole step:
                 // half a step paddled would let a path hop from river cell to river cell (T-006)
@@ -370,8 +396,7 @@ export async function solve(L, seeds, alive, canoe) {
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
                     if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
-                    const pv = pos[v];
-                    up(pv === -1 ? size++ : pv, v, w[v]);
+                    bq.set(v, w[v]);
                   } }
                 }
             }
@@ -388,7 +413,7 @@ export async function solve(L, seeds, alive, canoe) {
                 let c2 = c + j % 3 - 1;
                 if (c2 < 0 || c2 >= W) { if (!wrap) continue; c2 = (c2 + W) % W; }
                 const v = r2 * W + c2, s = grid[v];
-                if (!s || pos[v] === -2) continue;
+                if (!s || (pos[v] < -1 && pos[v] > lim)) continue;
                 const len = j === 4 ? 0 : stepKm[sr + JK[j]];
                 const ac = j === 4 && acc && su && u >= N ? accF * acc[u - N] * inv[su] : 0;
                 const dt = xfer + 0.5 * len * (f * inv[s] + fInvU) + ac;
@@ -397,8 +422,7 @@ export async function solve(L, seeds, alive, canoe) {
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_XFER + j;
                     if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
-                    const pv = pos[v];
-                    up(pv === -1 ? size++ : pv, v, w[v]);
+                    bq.set(v, w[v]);
                   } }
             }
         }
@@ -416,7 +440,7 @@ export async function solve(L, seeds, alive, canoe) {
                 const cell2 = r2 * W + c2, k2 = info[cell2] & 0xFF;
                 if (!k2) continue;
                 const v = grid[cell2] ? canoeOf[cell2] : cell2;
-                if (pos[v] === -2) continue;
+                if (pos[v] < -1 && pos[v] > lim) continue;
                 if (k < 8) { if (!(lk & (1 << k))) continue; }
                 else {
                     let c0 = c + E0C[k], c1 = c + E1C[k];
@@ -448,25 +472,24 @@ export async function solve(L, seeds, alive, canoe) {
                   if (nw < w[v]) {
                     w[v] = nw; pred[v] = P_GRID + k;
                     if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
-                    const pv = pos[v];
-                    up(pv === -1 ? size++ : pv, v, w[v]);
+                    bq.set(v, w[v]);
                   } }
             }
         }
         if (!(iu & ON_RIVER)) continue;
         for (let e = rOff[u], e1 = rOff[u + 1]; e < e1; e++) {
             const v = rTo[e];
-            if (pos[v] === -2) continue;
+            if (pos[v] < -1 && pos[v] > limR) continue;
             const dt = rDt[e], dh = split ? rHz[e] : 0;
             { const nw = wu + dt + K * dh;   // relax, inlined
               if (nw < w[v]) {
                 w[v] = nw; pred[v] = rCode[e];
                 if (split) { t[v] = tu + dt; hz[v] = hu + dh; }
-                const pv = pos[v];
-                up(pv === -1 ? size++ : pv, v, w[v]);
+                bq.set(v, w[v]);
               } }
         }
     }
+    bq.release();
     return { w, t, hz, pred };
 }
 

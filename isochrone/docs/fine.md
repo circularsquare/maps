@@ -149,9 +149,10 @@ read from the extracts on 98.9-99.99% of the test tiles' cells (OSM edits since)
   L1 (then L3, L10) by the same bilinear sample; reuse and cancelling as for L1. Tiles come
   through `js/tiles.js` with their own cache of decoded tiles (~150 MB; 5.8 MB a tile: speeds,
   heights, graded cells).
-- **Times**: 1.5-2 s at the cap in headless Chrome, 0.15 s at zoom 11.5, ~0.05 s at zoom 12
-  (notes/T-039.md "Times"); the slope per move costs about a tenth to a third more than stage 1's
-  search. A bucket queue in place of the heap is 1.3-1.6x faster (T-093).
+- **Times**: 1.1-1.7 s at the cap in headless Chrome on a loaded machine (median 1.4 s; the first
+  window of a session 1.2-1.7 s), 0.15 s at zoom 11.5, ~0.05 s at zoom 12 (notes/T-093.md,
+  notes/T-039.md "Times"); the slope per move costs about a tenth to a third more than stage 1's
+  search.
 - **Paint**: a fourth canvas source on top (`walk01`), holes cut in L1, L3 and L10 under it.
   Cells show from about zoom 12 (5 px; 10-13 px at 13, 20-26 at 14). The map's maximum zoom is 14.
 - **Hover** and the route read L0.1 first where it is shown.
@@ -222,7 +223,7 @@ free tier is 10 GB of storage).
 | Stage | Task | What | Anita sees |
 |---|---|---|---|
 | 1 | T-038, built | Tiles for New York (40-42 N, 75-73 W) and Cluj (46-48 N, 23-25 E): LC100 classes, OSM roads and bridges, the L1 terrain factor (until stage 2). The L0.1 window in the worker, seeded from L1, painted, hovered. | Manhattan reached over its bridges; streets, parks, ponds and fields at 100 m |
-| 2 | T-039 built; the bucket queue is T-093 | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
+| 2 | T-039 and T-093, built | GLO-90 elevation in the land tiles; directed slope per move with the street grade cap; the bucket queue for every level. | Hillsides and valleys round Cluj |
 | 3 | T-050 | The canoe at L0.1: kind, bridge cells, river steps. | Paddling under bridges |
 | 4 | T-057 and T-086, built | The tiles of "Where the fine level goes": towns, water country and mountains (roads from T-053's world pass, heights from T-011's run) and the page reading them by block (T-086). | 100 m round every town and in the mountains |
 

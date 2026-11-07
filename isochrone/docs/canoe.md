@@ -273,8 +273,9 @@ risk") to 10,000, costs nothing extra.
 
 - **One Dijkstra over the node ids** (`js/search.js`), over each node's out-edges: grid moves of
   its layer, its river steps, and transfers. Directed edges need only that a cost is always
-  worked out from u to v. The heap is indexed, 4 children a node, each entry's weight kept
-  beside it. A walking start runs it too (land hazard, docs/hazard.md 4); with hazard off it runs
+  worked out from u to v. The queue is a bucket queue (T-093): buckets narrower than the
+  lightest grid or transfer edge the level can have, so nodes leave it in the heap's order up to
+  ties; river edges, some 0 km, may re-queue a node within its bucket. A walking start runs it too (land hazard, docs/hazard.md 4); with hazard off it runs
   a separate small loop (the old walking search), which the general one matches cell for cell.
 - **Per level** (`js/canoe.js`, built when a level is loaded on a canoe start): `canoeOf` and the
   further nodes of a cell (`extra0`, `extraN`, from the steps' and the water units' slots), one 32-bit word a cell

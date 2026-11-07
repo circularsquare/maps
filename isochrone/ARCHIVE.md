@@ -1,5 +1,7 @@
 # Archive
 
+- T-093 [P3] Bucket queue in the search. Done 2026-11-07: Dial's buckets under the lightest edge, both loops; weights equal the heap's in every node; L0.1 at the cap in Chrome median 1.96 -> 1.42 s, L1 and L10 1.2-1.4x, canoe L10 ~1.1x; smoke 18/18, corridors 10/10. notes/T-093.md.
+
 - T-091 [P3] Corridor parents by directed cost. Done 2026-11-07: `js/corridors.js` costs candidate parents and re-chosen edges as the search walks (directed, sloped at L0.1, carried x2); 5-11% of walking parents change at L10-L1, 15-28% at L0.1; corridors check 10/10, smoke 18/18. notes/T-091.md.
 
 - T-057 [P2] Fine level world build. Done 2026-11-07: towns, water country and now 796 mountain tiles (26 past 80 N left out, no LC100), 2.15 GB in 5,350 tiles with heights; mountain windows against L1 1.004 at 25 km; smoke 18/18. notes/T-057.md.

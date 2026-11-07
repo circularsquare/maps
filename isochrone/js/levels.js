@@ -31,7 +31,7 @@ export function setDirs(L, d, e) {
     if (!d && !e) return;
     const { grid } = L, inv = cfg.inv, n = grid.length;
     const sd = new Float32Array(4 * n);
-    let any = false;
+    let any = false, min = Infinity;
     for (let j = 0; j < 4; j++) {
         const dj = d ? d.subarray(j * n, (j + 1) * n) : null, ej = e ? e.subarray(j * n, (j + 1) * n) : null;
         for (let i = 0; i < n; i++) {
@@ -40,9 +40,11 @@ export function setDirs(L, d, e) {
             const a = dj ? dj[i] : 0, b = ej ? ej[i] : 0;
             if (a | b) any = true;
             sd[4 * i + j] = inv[s] * NEG[a] * NEG[b];
+            if (sd[4 * i + j] < min) min = sd[4 * i + j];
         }
     }
-    if (any) L.sd = sd;
+    // the least, for the search's bucket width (T-093)
+    if (any) { L.sd = sd; L.sdMin = min; }
 }
 
 // Slope per move at L0.1 (docs/fine.md "Terrain"): the rule of tools/terrain/walk.py, its numbers
@@ -55,11 +57,20 @@ export const SLOPE_STEPS = 1000, NO_HEIGHT = -32768;
 export function setSlope(L, z, g, rule) {
     const n = z.length, zh = new Float32Array(n).fill(1);
     const la = -Math.log(rule.heightA), b = rule.heightB;
-    for (let i = 0; i < n; i++) { const h = z[i]; if (h !== NO_HEIGHT) zh[i] = Math.exp(0.5 * (la + b * Math.max(h, 0))); }
+    let zMin = 1, tMin = Infinity;
+    for (let i = 0; i < n; i++) {
+        const h = z[i];
+        if (h !== NO_HEIGHT) { zh[i] = Math.exp(0.5 * (la + b * Math.max(h, 0))); if (zh[i] < zMin) zMin = zh[i]; }
+    }
     const G = Math.round(rule.gMax * SLOPE_STEPS), T = new Float32Array(2 * G + 1);
-    for (let i = 0; i <= 2 * G; i++) T[i] = Math.exp(rule.toblerK * (Math.abs((i - G) / SLOPE_STEPS + rule.toblerG0) - rule.toblerG0));
+    for (let i = 0; i <= 2 * G; i++) {
+        T[i] = Math.exp(rule.toblerK * (Math.abs((i - G) / SLOPE_STEPS + rule.toblerG0) - rule.toblerG0));
+        if (T[i] < tMin) tMin = T[i];
+    }
     L.zs = z; L.zg = g; L.zh = zh; L.slopeT = T;
     L.slopeG = G; L.roadQ = rule.roadGrade * SLOPE_STEPS;
+    // the least factor a move's slope can bring, for the search's bucket width (T-093)
+    L.slopeMin = Math.min(1, tMin * zMin * zMin);
 }
 
 // A level: a block of cells cellDeg wide, its top-left corner at (west, north).

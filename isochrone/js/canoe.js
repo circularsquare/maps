@@ -330,8 +330,18 @@ export function buildCanoe(L, data, sea) {
         e = fill[b]++;
         rTo[e] = a; rDt[e] = km / Math.max(p - cfg.upShare * v, cfg.upMin); rCode[e] = P_UP + OPP[m]; rHz[e] = rDt[e] * rate; rKm[e] = km;
     }
+    // the strongest current (in curr's units) and the quickest river edge, for the search's
+    // bucket width (T-093)
+    let curMax = 0, rDtMin = Infinity;
+    for (let i = 0; i < N; i++) {
+        const cu = curr[i];
+        if (!cu) continue;
+        const x = (cu << 16) >> 16, y = cu >> 16, m = Math.sqrt(x * x + y * y);
+        if (m > curMax) curMax = m;
+    }
+    for (let e = 0; e < nE; e++) if (rDt[e] < rDtMin) rDtMin = rDt[e];
     L.cn = { E, E1, canoeOf, cellOf, extra0, extraN, acc, info, curr, curKmh: sea.unit * 0.5 * 3.6, shore, hzr,
-             rOff, rTo, rDt, rCode, rHz, rKm };
+             rOff, rTo, rDt, rCode, rHz, rKm, curMax, rDtMin };
     return L.cn;
 }
 
