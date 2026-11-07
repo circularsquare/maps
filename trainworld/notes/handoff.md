@@ -40,6 +40,11 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - **placelag** a80284aad4038b6b9 (Opus, tree placelag, 2 cores 0x3000): T-2404 + T-1861 track placement lag on big
   saves (Anita 21:00: "what exctly is causing the slow unresponsive feeling track placement on large saves?"): fresh
   profile, plain answer in notes/T-2404.md, fixes.
+- **lineimprove** a53256edd4550fecb (Sonnet, main tree, 0x100): T-2692 "Line improvements" (passing tracks, parking).
+- **loadui** a332d55d0d8aac401 (Sonnet, main tree, 0x80): T-2693 ring-chasing pill + progress bars, T-2694 bar size.
+- uitweaks DONE (T-2687, T-2688; Anita: "halo looks nice, also dots"), uncommitted in the main tree with keepnames' and
+  yearsdest's work, plus maps-b9's "Drawing diagram" wording: commit all together after a 4-core smoke.
+- Cap back to 12 at ~21:20 (Anita: "jekyll is done, feel free to use those cores").
 - parking LANDED a07d6006 (T-2677; WASM rebuilt).
 - namespread LANDED 75c606e5 (T-2674, T-2675). T-2691 filed: "Nn" console errors under load.
 - Anita ~20:25: Tijuana "looks great now in both ways" (fares N + reference country). "No train route found" landed d575630a.
@@ -66,7 +71,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2692**.
+   (Brazil, pack lock free). Next unassigned id **T-2695**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
