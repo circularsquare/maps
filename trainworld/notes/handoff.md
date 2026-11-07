@@ -6,17 +6,12 @@ Updated: 2026-11-06 19:40 (Get-Date). maps-b9 is past 600k tokens: ready to be r
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
 ## State
-- master **40050f7b** = 8800 **build 1279** (dev smoke + 8800 light/dark 25/25). Has fares option N, about links,
-  T-2678, T-2672 (ja/zh numbers, startup waits for the language: top-level await in i18n/index.ts, builds fine), T-2680,
-  T-2679. Next rebuild after namespread / attract2 / parking land: claim 4, `node trainworld/checks/dev-nowatch.mjs 6191`,
-  scratch `smokedev.cmd 6191`, stop that Vite by PID, snapbuild.cmd <hash>, smoke8800.cmd, tell Anita to reload.
-- Anita is back (~19:05). **Cap 9 from ~20:30 for a few hours** (Anita: "could we try to keep 4 cores free for the next
-  few hrs?"; 9 + her jekyll's ~3 leaves 4): agents at 1-2 cores each, no new long runs. Her Chrome (the game) can use ~8.
-  Parking (T-2677) approved: "yes can land 0.5"; one label "calculating..." landed c1ddb7ca ("use calculating throughout"). Her jekyll server stays (~3 cores outside the ledger).
-- LIVE = 821. Publish only on Anita's word (English first; ja/zh soon; languages switch on via OFFERED in i18n/intl.ts).
-  maps-eb's play count ships with the next release build.
+- master **976956cc** = 8800 **build 1303** (~23:00; dev smoke + 8800 light/dark 25/25). Has everything up to placelag
+  (T-2404), T-2690 difficulty, the main-tree batch 3e195f4b, Guangzhou for Toronto among the start buttons.
+- Next rebuild after attract2 (T-2666, tree attract2; quiet, on 1 core) and the overnight country runs.
+- Cap 10 (Anita gaming earlier; "its definitely fine"). Raise to 12-15 when she goes to bed for worldnext's runs.
+- LIVE = 821. Publish only on Anita's word (languages switch on via OFFERED in i18n/intl.ts).
 - maps-93 is done. The upkeep tree still needs `node trainworld/checks/agent-tree.mjs remove upkeep --force`.
-- Core pins: parking/fareref 0xF0, namespread 0xF00, l10npolish 0x3000, l10nunits 0xC000.
 
 ## Landed this session (maps-b9)
 - translations units 1-4; T-2656 + play count 5a71e6f6; T-2634 2c04f007; T-2641 75e04c44; T-2657 838c46e7; T-2635
@@ -26,38 +21,16 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   retired); pass 5 wording 1f5de214 (l10nshots: 15 fixes; shots in artifacts/trainworld/l10nshots/).
 
 ## In flight (maps-b9's agents; SendMessage by Agent id)
-- **parking** a1e7652663fd3f414 (Opus, tree parking): T-2677 BUILT, stopped for Anita: in-city rail -3 to -7% in Mexico/
-  India packs, parking dollars match real (Mumbai $0.55 vs $0.60). Asked her ~19:30; on yes: resume it to run cargo
-  tests, wasm, smoke, records; then land.
-- **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): rebased, on its checks (T-2674, T-2675).
-- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666 done-when met; on cargo tests (1 core), then smoke.
-- **keepnames** a985b1e84eba08358 (Sonnet, main tree, 1 core 0x400): T-2683 player names survive edits.
-- **yearsdest** a83f90bf0d5edb270 (Sonnet, main tree, 1 core 0x800): T-2684 years, T-2685 tutorial on homes bubbles.
-- **uitweaks** a4d9a2653761aeede (Sonnet, main tree, 0x200): T-2687 stops halo in the line colour (remove/construct keep
-  theirs: Anita confirmed), T-2688 crowding dots from 70%. yearsdest also has T-2686 (hint grey) and T-2689 (goal 1%).
-- **difficulty** a4d3c5c6cdbbc5523 (Opus, main tree, 1 core): T-2690 start city difficulty; stage 1 measure + propose
-  cut points, then WAIT for Anita's OK before the new game sheet label.
 - **worldnext** a71baa8e4eb55b6ba (Opus, MAIN tree): T-2695 rest of Latin America (ARG CHL COL PER URY ECU), T-2696 South
-  Africa, T-2697 Gulf (Anita ~22:30: "yeah i'd target rest of latin america and south africa and gulf"). Stage 1 prep now
-  at 2 cores; it messages before starting the detached overnight runs and before a join (hold other pack writers). Raise
-  the cap to 12-15 when Anita goes to bed. Israel (T-2082) held for her territory call.
-- main-tree batch COMMITTED 3e195f4b (T-2683, T-2684-2689, T-2692-2694; smoke 25/25 on 1 core). Not on 8800 yet.
-- **placelag** a80284aad4038b6b9 (Opus, tree placelag, 2 cores 0x3000): T-2404 + T-1861 track placement lag on big
-  saves (Anita 21:00: "what exctly is causing the slow unresponsive feeling track placement on large saves?"): fresh
-  profile, plain answer in notes/T-2404.md, fixes.
-- **lineimprove** a53256edd4550fecb (Sonnet, main tree, 0x100): T-2692 "Line improvements" (passing tracks, parking).
-- **loadui** a332d55d0d8aac401 (Sonnet, main tree, 0x80): T-2693 ring-chasing pill + progress bars, T-2694 bar size.
-- uitweaks DONE (T-2687, T-2688; Anita: "halo looks nice, also dots"), uncommitted in the main tree with keepnames' and
-  yearsdest's work, plus maps-b9's "Drawing diagram" wording: commit all together after a 4-core smoke.
-- **Cap 6 from ~21:45** (Anita: "it feelslike we're using more cores"; she is gaming, ~11 cores): placelag told to pause
-  browser measurements (its Chrome used 3 on a 2 claim), others 1 core each. Raise again when she says.
-- Cap back to 12 at ~21:20 (Anita: "jekyll is done, feel free to use those cores").
-- parking LANDED a07d6006 (T-2677; WASM rebuilt).
-- namespread LANDED 75c606e5 (T-2674, T-2675). T-2691 filed: "Nn" console errors under load.
-- Anita ~20:25: Tijuana "looks great now in both ways" (fares N + reference country). "No train route found" landed d575630a.
-- Done and retired this evening: ridersnow, l10nsmall (ad2c18ea6567fefa9, can be resumed for small translation
-  batches), l10nshots, l10npolish, l10nunits, fareref.
-- Asked Anita ~19:30: one label "calculating..." for changed lines too (instead of "loading...")? maps-b9 recommends yes.
+  Africa, T-2697 Gulf. Stage 1 prep; it messages before starting the detached overnight runs and before a join (hold
+  other pack writers then). Its uncommitted files: pipeline/world_plan.py, world_plan.json, notes/T-2695.md.
+- **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666; done-when met, on tests (1 core). Ask if quiet.
+- Done this evening and retired: ridersnow, l10nsmall (ad2c18ea6567fefa9, resumable for small translation batches),
+  l10nshots, l10npolish, l10nunits, fareref, parking, namespread, keepnames, yearsdest, uitweaks, lineimprove, loadui,
+  difficulty, placelag.
+- Follow-ups filed: T-2691 ("Nn" console errors under load), T-2698 (start cameras on the city), T-2699-2701 (placement
+  lag: boarding steps on Japan, preview_route on Japan, local rebuild at rest), T-2682 (edit note may never settle),
+  T-2681 (ja/zh city names).
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
@@ -78,7 +51,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2698**.
+   (Brazil, pack lock free). Next unassigned id **T-2702**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
