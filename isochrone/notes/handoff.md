@@ -42,8 +42,10 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-100 + T-101 done and committed (f2406ef1): small rivers lengthened, tropical-forest gradients
   from Hydrography90m (CC BY-NC; licence asked of Anita in for-anita.md), coarse river steps count
   the main river only. Backup deleted.
-- **T-102 canoe level agreement re-measure** after T-100's main-river change: agent
-  ac3f39873fe117fcb (Sonnet), 1 core. Files: notes/T-102.md, notes/T-102/ (T-092's harness kept).
+- T-102 done and committed (8acbee22): canoe L1/L10 1.07 after T-100; cfg.access raised to 1.0
+  on its sweep (1.05). Harness kept in notes/T-102/.
+- **T-035 canoe search speed** (per-edge sea costs; maybe back to 16 sea moves): agent launched
+  2026-11-07 (Opus), 1 core. Files: js/canoe.js, sea paths of js/search.js, notes/T-035.md.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
