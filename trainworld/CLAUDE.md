@@ -116,7 +116,10 @@ Briefs carry only the task; these hold for every agent.
   calibration beyond the pipeline's gate. No big calibration at the end either: it happens in
   parts, task by task (Anita, 2026-10-22).
 - **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
-  scratchpad folder, not heredocs.
+  scratchpad folder, not heredocs. **Never pass `cmd /c start ... /b /wait /affinity` through Git Bash**: Bash turns
+  `/b` into `B:/` and strips the quotes from a `start "title"`, so Windows pops "cannot find" dialogs and probes the B
+  drive on Anita's screen (2026-11-06). Pin a process from PowerShell (`cmd /c start '""' /b /wait /affinity F000 node ...`)
+  or from a `.cmd` file in your scratchpad.
 - **Screenshots and diagnostics** go in `../artifacts/trainworld/`, never in this folder. The one
   or two images Anita should look at now, the orchestrator copies to `../artifacts/trainworld/review/`
   (short names, older copies deleted) and gives her that single full path (Anita, 2026-10-27).
