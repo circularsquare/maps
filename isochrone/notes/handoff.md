@@ -47,8 +47,9 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-035 closed without a code change (95ab0610); T-103 filed; 8 vs 16 sea moves asked of Anita.
 - T-014 done and committed (1e42de07): windows fade into the coarser level over 3 cells; the
   edge line is gone. `drawnAt` reads MapLibre 5.24.0 internals (T-104 notes it).
-- **T-104 corridor jog at window corners**: agent ad75514f9bdf79b90 (Sonnet), 1 core.
-  Files: index.html corridor drawing, docs/corridors.md, notes/T-104.md.
+- T-104 first part done and committed (3b5ef041): corridor lines join at window edges.
+- **T-105 corridor pieces from the smoothed line**: same agent ad75514f9bdf79b90 (Sonnet),
+  resumed. Files: index.html corridor drawing, maybe js/corridors.js, notes/T-104.md.
 - Waiting on Anita (notes/for-anita.md): T-007 stage 2 go (then T-075, T-103), Hydrography90m
   NC licence, 8 or 16 sea moves, and her look at mountains, corridors, rivers.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
