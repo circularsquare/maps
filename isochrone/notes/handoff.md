@@ -44,8 +44,11 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   the main river only. Backup deleted.
 - T-102 done and committed (8acbee22): canoe L1/L10 1.07 after T-100; cfg.access raised to 1.0
   on its sweep (1.05). Harness kept in notes/T-102/.
-- **T-035 canoe search speed** (per-edge sea costs; maybe back to 16 sea moves): agent launched
-  2026-11-07 (Opus), 1 core. Files: js/canoe.js, sea paths of js/search.js, notes/T-035.md.
+- T-035 closed without a code change (95ab0610); T-103 filed; 8 vs 16 sea moves asked of Anita.
+- **T-014 window edge fade**: agent launched 2026-11-07 (Opus), 1 core. Files: index.html
+  painting, the worker's paint code, docs/resolution.md, notes/T-014.md.
+- Waiting on Anita (notes/for-anita.md): T-007 stage 2 go (then T-075, T-103), Hydrography90m
+  NC licence, 8 or 16 sea moves, and her look at mountains, corridors, rivers.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
