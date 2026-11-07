@@ -1090,6 +1090,7 @@
   "loadBar.minutes": "Loading card: the time left in minutes. n: 3.",
   "loading.stalledSeconds": "Loading card, shown when nothing has arrived for a while. n: seconds, rounded down to 10, 30.",
   "loading.stalledMinutes": "Loading card, shown when nothing has arrived for a while. n: minutes, 2.",
+  "loadingScreen.backToStart": "Button on the screen shown when loading fails, beside Try again. Opens the start menu (the page without its game choice). Shown only when the address names a game to load.",
   "loadingScreen.demandTimeout": "Message on the loading failure screen when nothing has moved for a long while and the game had started. time: loadingScreen.minutes, e.g. \"3 minutes\".",
   "loadingScreen.loaded": "Hover on the loading bar: two lines. pct: percent done, e.g. 42; step: the stage being loaded, e.g. \"Loading demand\".",
   "loadingScreen.minutes": "A length of time, used inside loadingScreen.demandTimeout and loadingScreen.simTimeout. count: 3.",

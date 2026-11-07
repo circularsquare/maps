@@ -159,6 +159,7 @@ effect(() => { if (gameReady.value || demandIdle.value) setLoadFlag(false); });
 /** Demand could not load. At startup the loading screen says so and offers a way on; later the
  * clock is released at once, since there is no result to wait for. */
 export function loadFailed(why: string) {
+  console.error("load failed:", why); // i18n-ignore
   loadFailure.value = why;
   loadProgress.value = null;
   holdArmed = false;

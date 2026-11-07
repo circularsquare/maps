@@ -1090,6 +1090,7 @@
   "loadBar.minutes": "About {n} min left",
   "loading.stalledSeconds": "No progress for {n} s",
   "loading.stalledMinutes": "No progress for {n} min",
+  "loadingScreen.backToStart": "Back to start",
   "loadingScreen.demandTimeout": "Demand figures did not load after {time}.",
   "loadingScreen.loaded": "{pct}% loaded\n{step}",
   "loadingScreen.minutes": "{count, plural, one {# minute} other {# minutes}}",

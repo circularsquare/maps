@@ -22,6 +22,7 @@
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
 import { CITIES, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
+import { initWasm } from "./wasmInit";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
@@ -834,7 +835,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     opening = opening.then(async () => {
       try {
         const t0 = performance.now();
-        [raw, attractions] = await Promise.all([init(), loadAttractions()]);
+        [raw, attractions] = await Promise.all([initWasm(() => init(), "demand worker"), loadAttractions()]); // i18n-ignore
         const t1 = performance.now();
         aux = !!msg.aux;
         copies = !!msg.copies;

@@ -1092,6 +1092,7 @@
   "loadText.outOfMemory": "内存不足。这个游戏在电脑上玩效果最好。",
   "loading.stalledMinutes": "{n}分钟没有进展",
   "loading.stalledSeconds": "{n}秒没有进展",
+  "loadingScreen.backToStart": "返回开始页面",
   "loadingScreen.demandTimeout": "等了{time}，需求数据仍未加载完成。",
   "loadingScreen.loaded": "已加载{pct}%\n{step}",
   "loadingScreen.minutes": "{count, plural, other {#分钟}}",

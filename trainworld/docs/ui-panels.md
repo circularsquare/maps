@@ -1147,10 +1147,12 @@ registry centre and zoom, or over New York with none [T-310].
   only the bar's hover ("42% loaded"). The card has no Cancel (T-1236: a reload does the same). It
   takes no input but the bar's hover (a press elsewhere pans the map beneath) and goes when the
   clock starts.
-  Loading is the one place with motion [T-647, T-2693, Anita; `ui/Spinner.tsx`]: on top of the card a
-  pill drawn as the map draws a train (a rim in a darker shade of the theme's accent round a fill of it)
-  runs round a ring, 44 px, and a 20 px copy leads the status tag's text (a CSS turn of 1.1 s, nothing
-  per frame; paused under reduced motion); a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
+  Loading is the one place with motion [T-647, T-677, T-2693, Anita; `ui/Spinner.tsx`]: on top of the card a
+  drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
+  by, the train chugs, the ears bob; paused under reduced motion; the card alone has it, T-2693
+  follow-up); a pill drawn as the map draws a train (a rim in a darker shade of the theme's accent
+  round a fill of it) runs round a 13 px ring leading the status tag's text and the diagram tag (a CSS
+  turn of 1.1 s, nothing per frame; paused under reduced motion); a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead
   space); a line whose shown result has no riders for it as its stops are now (just given trains,
@@ -1254,7 +1256,10 @@ registry centre and zoom, or over New York with none [T-310].
 - If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
   without demand, and takes every key until one is pressed. If the game itself never started (the
   clock worker failed to start, or the page's setup threw before its end), it has Try again alone
-  [T-950]. The screen gives no reason, only "Ran out of memory. This game works best on a computer." when
+  [T-950]. The box is centred, 400 px wide, the sentence balanced over its lines; when the address
+  names a game (it has a query), a Back to start button sits beside Try again (it opens the address
+  without the query, so the start menu). The small muted line under the sentence (`.load-why`) is the
+  slot for the failure's reason text. The screen gives no reason, only "Ran out of memory. This game works best on a computer." when
   the failure was a failed allocation (`isMemoryFailure`, `game/loadText.ts`), else "Failed to load :( This game
   works best on a computer." [T-2545]; the cause goes to the console. The same two sentences come
   back for a game or a real network the clock worker could not load, and as the hover of the status

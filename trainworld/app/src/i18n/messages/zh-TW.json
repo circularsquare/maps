@@ -1092,6 +1092,7 @@
   "loadText.outOfMemory": "記憶體不足。這個遊戲最適合在電腦上玩。",
   "loading.stalledMinutes": "已經{n}分鐘沒有進度",
   "loading.stalledSeconds": "已經{n}秒沒有進度",
+  "loadingScreen.backToStart": "回到開始畫面",
   "loadingScreen.demandTimeout": "等了{time}，需求資料還是沒有載入。",
   "loadingScreen.loaded": "已載入{pct}%\n{step}",
   "loadingScreen.minutes": "{count, plural, other {#分鐘}}",

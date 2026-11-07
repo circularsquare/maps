@@ -75,8 +75,24 @@ body {
   border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent); border-top-color: var(--muted); vertical-align: 1px; animation: spin 1.2s linear infinite !important; }
 .spin.row-dot { margin-right: 6px; }
 .status-tag .spin { width: 10px; height: 10px; vertical-align: 0; }
+/* T-677, T-1057: the bunny's train (ui/Spinner.tsx), the loading card's motion: wheels turn, the
+   track runs by, the car chugs, the ear tips bob */
+.bunny-train { display: block; width: 104px; height: auto; margin: 0 auto 4px; overflow: visible; }
+.bt-rail, .bt-ties { stroke: var(--muted); }
+.bt-body { fill: color-mix(in srgb, var(--accent) 72%, #fff); }
+.bt-roof { fill: color-mix(in srgb, var(--accent) 30%, #f4efec); }
+.bt-curtain { fill: color-mix(in srgb, var(--accent) 52%, #fffdfb); }
+@keyframes bt-turn { to { transform: rotate(360deg); } }
+@keyframes bt-run { to { stroke-dashoffset: 12; } }
+@keyframes bt-chug { to { transform: translateY(-1.2px); } }
+@keyframes bt-bob { to { transform: rotate(-6deg); } }
+.bt-wheel { transform-box: fill-box; transform-origin: center; animation: bt-turn .7s linear infinite !important; }
+.bt-ties { animation: bt-run .35s linear infinite !important; }
+.bt-train { animation: bt-chug .35s steps(2, jump-none) infinite alternate !important; }
+.bt-ears { transform-box: fill-box; transform-origin: 50% 100%; animation: bt-bob .7s ease-in-out infinite alternate !important; }
+@media (prefers-reduced-motion: reduce) { .bunny-train * { animation-play-state: paused !important; } }
 /* T-2693: the pill ring (ui/Spinner.tsx): a pill like the map's trains runs round a ring */
-.pill-ring { display: inline-block; flex: none; width: 20px; height: 20px; vertical-align: -5px; overflow: visible; }
+.pill-ring { display: inline-block; flex: none; width: 13px; height: 13px; vertical-align: -2px; overflow: visible; }
 .pill-ring.big { display: block; width: 44px; height: 44px; margin: 0 auto 6px; }
 .pr-track { stroke: color-mix(in srgb, var(--muted) 22%, transparent); stroke-width: 4.6; }
 .pr-rim { stroke: color-mix(in srgb, var(--accent) 50%, #000); stroke-width: 5; }
@@ -903,6 +919,11 @@ rect.now { fill-opacity: .45; }
   background: color-mix(in srgb, var(--bg) 72%, transparent); }
 .loading-box { background: var(--bg); border: 1px solid var(--rule); padding: 14px 18px; max-width: 420px; cursor: default; }
 .loading-box p + p { margin-top: 2px; }
+.loading-box.failed { width: 400px; max-width: 100%; padding: 18px 22px 16px; text-align: center; }
+.loading-box.failed .big { text-wrap: balance; line-height: 1.35; }
+.loading-box.failed .load-why { max-height: 4.5em; overflow-y: auto; }
+.loading-box.failed .loading-actions { justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.loading-box .load-why { margin-top: 6px; overflow-wrap: anywhere; user-select: text; }
 .loading-actions { display: flex; gap: 8px; margin-top: 12px; }
 /* T-180: while a loaded game's clock waits for demand, a card in the middle of the map. The map
    under it keeps every pointer event. */

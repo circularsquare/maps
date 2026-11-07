@@ -13,18 +13,24 @@ import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, la
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
 import { blockKeysOutside } from "./keys";
-import { PillRing } from "./Spinner";
+import { BunnyTrain } from "./Spinner";
 import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
   const game = gameFailed.value;
-  const text = loadFailText(loadFailure.value ?? "");
+  const why = loadFailure.value ?? "";
+  const text = loadFailText(why);
+  // a reload of an address that names a game loads that game again; without the choice it is the start menu
+  const named = location.search !== "";
   return <div class="loading-screen" role="alertdialog" aria-label={text}>
-    <div class="loading-box">
+    <div class="loading-box failed">
       <p class="big">{text}</p>
+      {/* the reason as the failure gave it (also in the console), so a rare one can be told apart */}
+      {why && <p class="small muted load-why">{why}</p>}
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
+        {named && <button class="btn" onClick={() => location.assign(location.pathname)}>{t("loadingScreen.backToStart")}</button>}
         {!game && <button class="btn" onClick={continueWithoutDemand}>{t("loadingScreen.playWithoutDemand")}</button>}
       </div>
     </div>
@@ -48,7 +54,7 @@ export function LoadBar({ fraction, step, thin, tip, quiet }: { fraction: number
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
  * the map. Pointer events pass through it to the map, except on the bar (its hover).
- * T-2693: the pill ring on top. T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
+ * T-677: the bunny's train on top (T-2693 follow-up: only here; the small statuses have the pill ring). T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
   // (T-2574: a load ended at a cached result shows its bar full a moment first)
@@ -61,7 +67,7 @@ function LoadingCard() {
   // T-1479: the share done and, once there is an estimate, the time left
   return <div class="loading-card-wrap">
     <div class="loading-card" role="status">
-      <PillRing big />
+      <BunnyTrain />
       <p class="big">{step}</p>
       <LoadBar fraction={fraction} step={step} />
       <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>

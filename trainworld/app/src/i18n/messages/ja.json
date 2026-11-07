@@ -1092,6 +1092,7 @@
   "loadText.outOfMemory": "メモリが足りなくなりました。このゲームはパソコンのほうが快適に動きます。",
   "loading.stalledMinutes": "{n}分間進んでいません",
   "loading.stalledSeconds": "{n}秒間進んでいません",
+  "loadingScreen.backToStart": "最初の画面に戻る",
   "loadingScreen.demandTimeout": "{time}たっても需要のデータを読み込めませんでした。",
   "loadingScreen.loaded": "読み込み{pct}%\n{step}",
   "loadingScreen.minutes": "{count, plural, other {#分}}",

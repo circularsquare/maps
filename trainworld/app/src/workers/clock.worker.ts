@@ -8,6 +8,7 @@
 
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
 import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
+import { initWasm } from "./wasmInit";
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
@@ -3624,7 +3625,7 @@ async function processMessage(msg: ToClock) {
     });
     ready = (async () => {
       const t0 = performance.now();
-      await init();
+      await initWasm(() => init(), "clock worker"); // i18n-ignore
       const model = newModel();
       loadHolidays();
       emptyTrack = model.save();
@@ -3685,7 +3686,7 @@ async function processMessage(msg: ToClock) {
             void autosave();
             return;
           } catch (err) {
-            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("real network:", err), loadFailKey(String(err))), frame: frameSpec(), game });
+            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("real network did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
           }
         }
         const empty = msg.game && { ...msg.game, real: undefined };
@@ -3710,7 +3711,7 @@ async function processMessage(msg: ToClock) {
             hold(await leaseSlot(activeSlot));
             await publishSlots();
           }
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.warn("last game:", err), loadFailKey(String(err))), frame: frameSpec(), game });
+          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
         }
       }
       keep();

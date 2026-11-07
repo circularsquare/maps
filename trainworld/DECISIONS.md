@@ -5,6 +5,22 @@ reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
 
+- 2026-11-06 (Anita, T-2693 follow-up): the bunny's train is back on the main loading card (ui/LoadingScreen.tsx), the one shown while a save or game loads at the start; the pill ring stays on every small status (status tag, diagram tag). Anita: "i didnt mean to get rid of the bunny train from the main loading panel. we should keep it in the one case when we are loading a save, at the beginning. just dont want itfor the small loading things that display elsewhere". The small bunny of the status tag stays gone. The small pill ring is 13 px (was 20), Anita: "35% smaller radius ... quite discreet". The failure screen is centred with a Back to start button beside Try again when the address names a game.
+
+- 2026-11-06 (agent's call, T-2695): `world_plan.country_units` takes a unit of the chosen level that the units taken
+  leave half of, as well as those whose representative point lies in a first-level unit: a coastal unit whose point fell
+  outside the simplified first-level coast was in no unit (11 of Buenos Aires's comunas, Avellaneda, Ushuaia). The cached
+  plan state got Argentina's 14 lost units by hand (backup `data/work/worldplan/state.pre-T2695.pkl`) and bue the
+  comunas and Avellaneda under the plan lock; shipped Brazil and Mexico have the same gaps (1.46M people), left for
+  T-2702. notes/T-2695.md.
+- 2026-11-06 (agent's call, T-2695, T-2696, T-2697): Argentina, Chile, Colombia, Peru, Ecuador, South Africa, Saudi
+  Arabia and Oman are zoned on Brazil's reach rule (towns in empty land; at the default 20 a km2 Argentina left 10.5M
+  dead, Saudi Arabia 4.9M); Uruguay, Kuwait and Qatar with no density floor (settled everywhere at 5-20 a km2);
+  Lesotho's councils by district. Lesotho, Eswatini, Oman, Bahrain and Kuwait are planned with the Gulf and South
+  Africa (cheap, and Lesotho is a hole in South Africa otherwise). The UAE's units are geoBoundaries' seven emirates, so
+  Abu Dhabi with Al Ain is one zone of 3.2M. All archetype D. Lone zones the cut-off rule keeps (Puerto Carreno,
+  Farasan, Musandam) are held. notes/T-2695.md.
+
 - 2026-11-07 (agent difficulty, T-2690; Anita 2026-11-06: "we can maybe weight weakly by fare money. like ^0.2", "even thirds of well known cities"): a start's tier is its weekday trip legs a km² with both ends within 10 km of its centre, times (fare scale over the US's)^0.2, cut at thirds of the 408 well-known starts (every metro built as a city, the suggested starts, zones with over 1.5M people in the circle). 10 km fits the first view; 5 and 15 km ranked alike (Spearman 0.89, 0.95). Trips between packs and attraction visits are left out (11 of 408 have over a quarter of the circle in another pack). A metro is measured at its OSM city of the same name nearest the registry centre, since 112 registry centres are over 5 km off (Atlanta 23 km). The coloured dots last until any line, bus or ferry included, runs with service, in every game, not only a map start: the colours matter before a first line wherever the player looks. Notes: notes/T-2690.md.
 
 - 2026-11-07 (agent loadui, T-2693): the bunny train is gone; loading shows a pill like the map's trains (darker accent rim, accent fill, bent along a ring, a CSS turn of 1.1 s) on the card and before every status text. Every status tag has a bar. Measures: "Loading data" its real share; a zone wait and bubbles on their way the zone's share when it has one; recomputing, behind, capped and click-waits-on-a-solve the solve's rounds published of all (`demandStep`); terrain downloads finished of the peak waiting (time when only one); anything else, or a solve not yet begun, the share of how long the last such wait took, capped at 95%, 3 s the first time (an honest "about as long as last time", never a made-up percentage; only the load's bar has a percentage hover). The small `.spin` dot in line rows, the purpose breakdown and the map's selected-bubble outline stays: no room for a bar. The busy tag (a frozen page) has neither ring nor bar: nothing can move while it shows.

@@ -1092,6 +1092,7 @@
   "loadText.outOfMemory": "Ran out of memory. This game works best on a computer.",
   "loading.stalledMinutes": "No progress for {n} min",
   "loading.stalledSeconds": "No progress for {n} s",
+  "loadingScreen.backToStart": "Back to start",
   "loadingScreen.demandTimeout": "Demand figures did not load after {time}.",
   "loadingScreen.loaded": "{pct}% loaded\n{step}",
   "loadingScreen.minutes": "{count, plural, one {# minute} other {# minutes}}",
