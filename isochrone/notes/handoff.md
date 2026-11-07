@@ -32,8 +32,9 @@ Read isochrone/CLAUDE.md and TASKS.md first.
   for stage 2 if context allows, else brief fresh from notes/T-007.md section 7.
 - T-043 done and committed (4b3ff126): every lake its own ERA5 summer temperature; T-096 filed
   (check FLake against ESA CCI Lakes).
-- **T-078 M2 doc tidy** (spec against code, prune TASKS, close T-006): agent ad2138cd934c65429
-  (Opus), no cores. Edits SPEC.md, docs/, TASKS.md, ARCHIVE.md, notes/; may file T-097 to T-099.
+- T-078 M2 doc tidy done and committed (3482bb83): T-006, T-051 closed; T-097 to T-099 filed.
+- **T-097, T-098, T-099** (page text behind the model, hazard band rebuild on the new tiles,
+  dead `fineSpeedTf`): agent a9f73bad42781f5aa (Opus), 1 core as `iso-t098` for the rebuild.
 - T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
   1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
 - Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
