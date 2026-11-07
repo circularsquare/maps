@@ -22,15 +22,18 @@ Read isochrone/CLAUDE.md and TASKS.md first.
 - T-094 done and committed (66ee3fda): ktrips walks directed; walks 1-6% faster, canoe unchanged.
 - T-039 done and committed (86b67450): 100 m tiles carry GLO-90 heights, L0.1 walks walk.py's
   slope rule; seam round the start 1.23 -> 1.04; data/fine is 1.48 GB; old fine tiles deleted.
-- **T-057 mountain tiles**: the T-039 agent a98f3d32b23d45d3b (Opus, ~350k) resumed 2026-11-07,
-  2 cores as `iso-t039`; builds into a new folder and swaps data/fine. Files: tools/fine/, data/fine.
+- T-057 done and committed (fa86aa62): 796 mountain tiles, data/fine 2.15 GB in 5,350 tiles;
+  backup deleted. Agent a98f3d32b23d45d3b idle (~400k), retire.
+- **T-091 corridors by directed cost**: agent ad3f561e9b5eeefc6 (Opus), 1 core. Files:
+  js/corridors.js, notes/T-091.md.
 - **T-093 bucket queue**: agent a1b45d0a8f0b37ef0 (Opus), 1 core. Files: js/search.js, notes/T-093.md.
 - Idle agents, retire: a3e69e0de8c33f136 (T-011 stage 3), a0fa8e1aa1250534e (T-011 stage 1),
   a615cd2144584c81f (T-090), a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43,
   a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
 
 ## Next
-1. When T-057 and T-093 report: review, smoke, commit. Then T-091 corridors by directed cost.
+1. When T-093 and T-091 report: review, smoke, commit. Then T-007 / T-075 coarse-level errors,
+   T-078 M2 doc tidy.
 2. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075, T-007 (fjord and
    river country too fast at L3/L10: Sogndal, Coari 1.3-1.4).
 3. Anita has not yet seen T-011 served; shots in the State line's notes.
