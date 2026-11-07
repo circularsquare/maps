@@ -43,7 +43,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   heapfix SETTLED it (T-2716 archived): an LLVM GVN fold of std dlmalloc's inlined validate_size header read after
   alloc_zeroed (false abort, no corruption found); heap.rs now a dlmalloc crate 0.2.14 over its own grow-in-big-steps
   system side, GlobalAlloc methods inline(never); demand/wasm.rs uses it too. Dumps byte-identical, step p50 4.4 ms.
-  **The boarding tree is ready to land whole** (T-2699 + T-2700 + T-2716; Cargo.toml/lock). t1148 "place pairs" fails
+  **LANDED** f9142979 (tree removed, main WASM rebuilt, smoke 26/26, same 12,521,264 rail trips). Was: the tree ready to land whole (T-2699 + T-2700 + T-2716; Cargo.toml/lock). t1148 "place pairs" fails
   in the tree before and after (unrelated; check on master). T-2707 Open.
   Order: netkey reports -> smoke main tree -> commit main-tree work by path (docs/code-map.md and architecture.md first,
   the tree touches them too) -> agent-tree land boarding -> rebuild main WASM -> smoke. 8800 after the join.
@@ -88,7 +88,10 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   held), --jobs 11, log artifacts/trainworld/t2695-join.log, ~3-4 h. **HOLD all data/packs and data/terrain writers.**
   Undo: tools/country/restore.py T2695 prejoin --go. Plan: when netkey and citynames report (both mid-edit in app/),
   smoke the main tree once and commit tonight's app work by path; rebuild 8800 only after the join (it copies packs).
-- Next unassigned id **T-2721**.
+- Main-tree app work committed (one commit before f9142979; smoke 26/26). t1148 place pairs FAILS on master too: T-2721.
+  Still uncommitted: worldnext's files (game/*.json, world_plan.*, tier0.py, world-run.md, notes/T-2695.md).
+  After the join: rerun place_names.mjs, smoke, commit worldnext's files, rebuild 8800 (snapbuild), smoke light/dark.
+- Next unassigned id **T-2722**.
 
 ## Noticed by capview, not filed yet (worth small tasks)
 - A transfer-fare edit (setFareTransfer 0 -> 0.5) right after a stop-drop's long update never started a solve within 60 s.
