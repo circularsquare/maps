@@ -166,8 +166,10 @@ own last 10 km: 3 km inside Manhattan takes about 12 minutes, Brooklyn to Midtow
 perceived minutes (T-636, T-637; the base of every car trip, with the ownership cost below), to park and any congestion charge there; a paid space costs `15 x ln(d / 3,000)` more per
 one-way trip, capped at 50, with `d` the jobs per km² of land in the destination's 2 km zone (none
 below 3,000: 18 at 10,000, 40 at 42,000, 50 from 85,000), times the pack country's income factor
-`Params::park_income` (T-2278, `kernel::park_income_of`): (GDP per head at market rates / $35,000)^0.3
-below $35,000, 1 above (India 0.46, Vietnam 0.56, China 0.76; notes/T-2278.md); the parking at home
+`Params::park_income` (T-2278, `kernel::park_income_of`): (GDP per head at market rates / $35,000)^0.5
+below $35,000, 1 above (India 0.28, Vietnam 0.38, Mexico and China 0.63; notes/T-2278.md). The power
+is 1 minus the fares' power of income (`PARK_INCOME_E` = 1 - `MONEY_E`, game/income.ts `FARE_E`, T-2677);
+the parking at home
 takes it too. A share `1 / (1 + d / 8,000)` of the
 drivers to that zone park free (80% at 2,000, 50% at 8,000, 16% at 43,000). Rail's share is the mix
 of two choices, one against the free driver and one against the paying one, weighted by that

@@ -536,9 +536,10 @@ notes/T-420.md has the tables.
   York, London and Toronto (within about half of each) and US and Toronto free-parking shares.
   By income (T-2278, Anita 2026-11-03: "yes lets do parking cost scale with income. less than
   linear"): in a country under $35,000 of GDP per head at market rates the paid space and the
-  parking at home are times (GDP / 35,000)^0.3 (Delhi 0.46, Ho Chi Minh City 0.56, Beijing 0.76),
-  1 above. Colliers' 2009 CBD prices rise about in proportion to GDP below $40,000 and not at all
-  above it (notes/T-2278.md), and a dollar weighs GDP^-0.7 minutes as fares do, which leaves 0.3.
+  parking at home are times (GDP / 35,000)^0.5 (Delhi 0.28, Ho Chi Minh City 0.38, Mexico City 0.63,
+  Beijing 0.63), 1 above. Colliers' 2009 CBD prices rise about in proportion to GDP below $40,000 and
+  not at all above it (notes/T-2278.md), and a dollar weighs GDP^-0.5 minutes as fares do (T-2670),
+  which leaves 1 - 0.5 (T-2677; `kernel::PARK_INCOME_E`, held to the fares' power by a test).
   The local layers and the cross-zone outings use it (`Params::park_income`); the market's longer
   trips keep their own parking.
   Why it may not carry over: prices relative to wages differ (Tokyo, Hong Kong and Singapore
@@ -620,8 +621,9 @@ notes/T-420.md has the tables.
   the same power (T-1906; the US's 11.6 times its income over the US's in a save from before), so at the default scales a fare
   weighs the same everywhere and a poorer country brings in less per rider; a scale the player sets
   moves inter-city riders from that country too (T-1286, every country's scale over its income's).
-  Train running costs follow income at the same 0.5 (T-2669). In the local layers the car's money (ownership, parking) stays
-  at 3 minutes a dollar everywhere. The regional market's longer trips split each country's people
+  Train running costs follow income at the same 0.5 (T-2669). In the local layers the car's ownership money stays at 3
+  minutes a dollar everywhere; parking is counted in minutes, times its income factor at 1 minus
+  this power (Parking, above; T-2677). The regional market's longer trips split each country's people
   into three income groups (T-1431, below). Why it may not carry over: incomes differ within a
   country as much as between (a Mumbai suburb against Bandra), which the local layers ignore, and
   their car's money should scale too. Check: a country's transit fares against its income, and its

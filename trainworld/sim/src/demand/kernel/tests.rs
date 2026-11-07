@@ -324,6 +324,18 @@ fn parking_by_land_density() {
     }
 }
 
+/// T-2677: parking by income takes the fares' power of income from game/income.ts, so the two
+/// cannot drift apart; India's factor (GDP $2,702 a head) is (2,702 / 35,000)^0.5.
+#[test]
+fn money_power_is_the_fares() {
+    let src = include_str!("../../../../app/src/game/income.ts");
+    let fare_e: f32 = src.lines().find_map(|l| l.strip_prefix("export const FARE_E = ")).and_then(|v| v.trim_end_matches(';').trim().parse().ok()).expect("FARE_E in game/income.ts");
+    assert_eq!(MONEY_E, fare_e);
+    assert!((park_income_of(Some(2702.0)) - 0.278).abs() < 0.001);
+    assert_eq!(park_income_of(Some(90_027.0)), 1.0);
+    assert_eq!(park_income_of(None), 1.0);
+}
+
 /// T-621: ownership is dollars a trip in the destination's fixed part plus dollars a km of
 /// road in the drive, FARE_MIN_PER_USD minutes a dollar; at 0 both change nothing to the bit.
 #[test]

@@ -1,7 +1,7 @@
 # How demand works, in plain words
 
 For Anita. One page, kept current: an agent who changes a rule here updates this page too.
-Last updated 2026-11-04 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
+Last updated 2026-11-06 (the T-636 model, with T-710's route choice and crowding, T-717's cost of
 changing, T-718's route choice between cities, T-720's walking bands, T-938's car speeds and
 ownership cost, T-1000's cap on how far jobs pull and its set share of long commutes, T-1055's
 rule that every rail trip rides a train, T-2265's that it never takes longer than walking there,
@@ -186,11 +186,12 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   what parking costs at work by the same density rule (none under 3,000 people a km², 7 minutes at
   10,000, 16 at 40,000). This is why dense neighbourhoods take the train more; there is no
   "households without a car" figure.
-- In poorer countries both prices count less: times (GDP per head / $35,000) to the power 0.3
-  where a country is under $35,000 a head, so 0.46 in India, 0.56 in Vietnam, 0.76 in China, the
-  full price in Japan, Korea, Europe and the US. Real parking prices rise about in step with
-  income up to there (Colliers' city centre prices: Delhi about $25 a month, Tokyo $530) and not
-  beyond; a poorer driver also feels each dollar more, as with fares, which leaves the 0.3.
+- In poorer countries both prices count less: times (GDP per head / $35,000) to the power 0.5
+  where a country is under $35,000 a head, so 0.28 in India, 0.38 in Vietnam, 0.63 in Mexico and
+  China, the full price in Japan, Korea, Europe and the US. Real parking prices rise about in step
+  with income up to there (Colliers' city centre prices: Delhi about $25 a month, Tokyo $530) and
+  not beyond; a poorer driver also feels each dollar more, by income to the power 0.5 as with
+  fares, which leaves the 0.5.
 - Owning the car: $2.10 a trip plus $0.1365 a km, at 3 minutes a dollar. A typical trip pays $3.05
   to $5.50, and a driver's day comes to about $14. The long trips between cities pay none.
 - Everyone can drive. "Walking" also stands for cycling and short bus trips (one reason its share

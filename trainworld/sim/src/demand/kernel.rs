@@ -246,10 +246,14 @@ pub const WALK_REACH_KM: f32 = 10.0;
 pub const WALK_SLIVER: f32 = 0.01;
 
 /// T-2278 (`park_income_of`, notes/T-2278.md): CBD parking prices rise about with GDP per head
-/// (market US$) below this and not above it, and a dollar weighs GDP^-0.7 minutes (the fares'
-/// rule, app game/income.ts), so paid parking's minutes go as GDP^0.3 below it.
+/// (market US$, power `PARK_PRICE_E`) below this and not above it, and a dollar weighs
+/// GDP^-`MONEY_E` minutes, so paid parking's minutes go as GDP^`PARK_INCOME_E` below it (T-2677).
 pub const PARK_INCOME_KNEE_USD: f32 = 35_000.0;
-pub const PARK_INCOME_E: f32 = 0.3;
+pub const PARK_PRICE_E: f32 = 1.0;
+/// The fares' power of income in a dollar's minutes: app game/income.ts `FARE_E`, which
+/// `kernel::tests::money_power_is_the_fares` holds this to.
+pub const MONEY_E: f32 = 0.5;
+pub const PARK_INCOME_E: f32 = PARK_PRICE_E - MONEY_E;
 
 /// The factor on paid parking for a country of `gdp` US$ a head at market rates (T-2278): 1 from
 /// `PARK_INCOME_KNEE_USD` up, (gdp / knee)^`PARK_INCOME_E` below; 1 with no figure.
