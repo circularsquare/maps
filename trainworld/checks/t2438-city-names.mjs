@@ -121,6 +121,17 @@ for (const city of which) {
       say(!bad, `${city}: at ${px} px a pitch (view ${where}) ${calls.length} names, centred, 1.25 to 2.5 sizes, apart`, bad);
     }
   }
+  // T-2674: the whole drawing in a 1400 by 900 view shows names spread over it, not the busiest only: in North America
+  // at least 2 in the west third, 1 in the middle third and 1 in the east third; in Japan one in each of the south,
+  // middle and north thirds
+  {
+    const bw = box[2] - box[0], bh = box[3] - box[1], WW = +(process.env.WHOLE_W ?? 1400), HH = +(process.env.WHOLE_H ?? 900), sc = Math.min((0.96 * WW) / bw, (0.96 * HH) / bh), cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, got = [];
+    L.paintCityNames({ save() {}, restore() {}, setTransform() {}, fillText: (t, x, y) => got.push({ t, x, y }), font: '', fillStyle: '', globalAlpha: 1, textBaseline: '', textAlign: '' }, cn, d.pitch, WW, HH, cx, cy, sc, 1, { ink: '#777', font: 'sans' });
+    console.log(`     whole drawing: ${got.map((c) => `${c.t} (${Math.round(c.x)},${Math.round(c.y)})`).join('; ')}`);
+    const third = (v, n, k) => got.filter((c) => (c[v] / (v === 'x' ? WW : HH)) * 3 >= k && (c[v] / (v === 'x' ? WW : HH)) * 3 < k + 1).length >= n;
+    if (city === 'na') say(third('x', 2, 0) && third('x', 1, 1) && third('x', 1, 2), 'na: the whole drawing has names in its west (2), middle and east thirds', got.map((c) => c.t).join(', '));
+    if (city === 'jpn') say(third('y', 1, 0) && third('y', 1, 1) && third('y', 1, 2), 'jpn: the whole drawing has names in its north, middle and south thirds', got.map((c) => c.t).join(', '));
+  }
   // T-2581: each name sits inside the drawn box of its block's own city stations (a block's lines out of its city,
   // Washington's to Atlanta, once moved it far off)
   let off = '';

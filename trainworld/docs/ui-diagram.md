@@ -269,10 +269,12 @@ cross it and it has no halo. They are drawn at every zoom, with the station name
 layout worker after the borders (names and anchors), chosen, sized and placed on every paint.
 
 - **How many**: the screen sets a count, one name per 150,000 CSS px squared of the canvas, at least 4 and at most 40
-  (about 9 on a 1400 by 1000 canvas). Of the names with a place in view, the busiest (most stations) come first until
-  the count is reached, so a whole continent shows its few biggest cities and a view with only a few zones in it shows
-  most of them. Where at least 3 names have a place in view, 3 are shown even if the clear places run out (they then
-  lie over pills).
+  (about 9 on a 1400 by 1000 canvas). The names are spread over the view (T-2674): the busiest name with a place in
+  view comes first, and each next one tried is the one with the highest score, the square root of its stations times its distance on
+  screen (its middle, kept inside the canvas) to the nearest name already shown. So a whole continent shows its big
+  cities and also one on each coast and in the middle, and a view with only a few zones in it shows most of them. A name
+  that does not fit is left out and the next best is tried; it does not count toward the spread. Where at least 3
+  names have a place in view, 3 are shown even if the clear places run out (they then lie over pills).
 - **In view**: a name whose middle is off screen moves to the middle of the part of its stations' box that is on
   screen, so a city cut by the edge keeps its name.
 
@@ -573,8 +575,8 @@ none of this runs.
   (T-2629); a run is kept only where every station stays on its own side, at least a pitch from the border (or as near
   as the traced border was), and the run stays on the land of the zones that border meets. A border is drawn only where a
   line passes through at least one of the two zones (a station in it, or a hop's track across it; T-2609: in a cut band
-  other zones' borders would be slivers), and only within 50 km (on the ground) of built track, so a zone is an open
-  outline that shows where lines cross it or come near (T-2639). Where that would draw more than 30% of the borders of a
+  other zones' borders would be slivers), and only within 30 km (on the ground) of built track, so a zone is an open
+  outline that shows where lines cross it or come near (T-2639). Where that would draw more than 50% of the borders of a
   zone a line passes through (coasts not counted), the zone's whole outline is drawn instead, so no small gap is left on
   its far side. Any map, city or country. Corners
   rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90

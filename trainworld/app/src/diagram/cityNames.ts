@@ -35,6 +35,8 @@ const NAME_ALPHA = 0.5;
 export const NAME_AREA_PX = 150000, MIN_NAMES = 4, MAX_NAMES = 40;
 /** at least this many names are shown when that many have a place in view, over pills if need be */
 export const FEW_NAMES = 3;
+/** the power of a name's stations in the score that spreads the names (T-2674): 1 is stations times distance, 0 is distance alone; 0.5 keeps a big city first without letting its neighbours crowd out Denver */
+const SPREAD_RANK = 0.5;
 /** where the names keep clear of the station names, a name is tried at up to this many steps of its half size off its
  * middle, across and up and down */
 const STEPS_X = 2, STEPS_Y = 3;
@@ -213,8 +215,7 @@ export function paintCityNames(ctx: CanvasRenderingContext2D, c: CityNames, pitc
   const cap = Math.min(MAX_NAMES, Math.max(MIN_NAMES, Math.round((w * h) / (dpr * dpr) / NAME_AREA_PX)));
   const clear = near && over ? drawnBoxes(over, w, h, cx, cy, scale, dpr) : null;
   const placed: number[][] = [], shown: [number, number, number, string][] = [], sp = SPACE_PX * dpr;
-  for (const b of c.order) {
-    if (shown.length >= cap) break;
+  const tryPlace = (b: number): number[] | null => {
     const x = w / 2 + (c.mx[b] - cx) * scale, y = h / 2 - (c.my[b] - cy) * scale, bwp = c.bw[b] * scale, bhp = c.bh[b] * scale;
     const per = c.width[b] / c.fontPx, spanPx = Math.max(c.bw[b], c.bh[b], 1e-9) * s;
     let f = c.fontPx * Math.min(BIG_MAX, Math.max(BIG_MIN, BIG_AT * pow(spanPx / SPAN_PX, GROW)));
@@ -224,7 +225,7 @@ export function paintCityNames(ctx: CanvasRenderingContext2D, c: CityNames, pitc
       let bx = x, by = y;
       if (x < 0 || x > w || y < 0 || y > h) {
         const x0 = Math.max(x - bwp / 2, 0), x1 = Math.min(x + bwp / 2, w), y0 = Math.max(y - bhp / 2, 0), y1 = Math.min(y + bhp / 2, h);
-        if (x0 > x1 || y0 > y1 || (x0 === x1 && y0 === y1)) break;
+        if (x0 > x1 || y0 > y1 || (x0 === x1 && y0 === y1)) return null;
         (bx = (x0 + x1) / 2), (by = (y0 + y1) / 2);
       }
       const spots: [number, number][] = [[bx, by]];
@@ -250,10 +251,27 @@ export function paintCityNames(ctx: CanvasRenderingContext2D, c: CityNames, pitc
       if (got) {
         placed.push(got.slice(2));
         shown.push([got[0], got[1], f * dpr, c.text[b]]);
-        break;
+        return [got[0], got[1]];
       }
-      if (f <= BIG_MIN * c.fontPx) break;
+      if (f <= BIG_MIN * c.fontPx) return null;
       f = Math.max(BIG_MIN * c.fontPx, f * 0.9);
+    }
+  };
+  // T-2674: the next name tried is the one with the highest square root of its stations times its distance on screen to the nearest name already
+  // shown (the busiest first, while none is), so the names spread over the view; one that does not fit is dropped
+  const left = [...c.order], near2 = new Float64Array(c.order.length).fill(Infinity);
+  while (shown.length < cap && left.length) {
+    let bi = 0, bs = -1;
+    for (let i = 0; i < left.length; i++) {
+      const sc = pow(c.rank[left[i]], SPREAD_RANK) * (near2[i] === Infinity ? 1e9 : Math.sqrt(near2[i]));
+      if (sc > bs) (bs = sc), (bi = i);
+    }
+    const b = left[bi], at = tryPlace(b);
+    left.splice(bi, 1), near2.copyWithin(bi, bi + 1);
+    if (!at) continue;
+    for (let i = 0; i < left.length; i++) {
+      const o = left[i], ox = Math.min(w, Math.max(0, w / 2 + (c.mx[o] - cx) * scale)), oy = Math.min(h, Math.max(0, h / 2 - (c.my[o] - cy) * scale));
+      near2[i] = Math.min(near2[i], (ox - at[0]) ** 2 + (oy - at[1]) ** 2);
     }
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);

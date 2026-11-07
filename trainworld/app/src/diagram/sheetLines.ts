@@ -53,7 +53,7 @@ export interface SheetLinesOptions {
 
 export const SHEET_LINES: SheetLinesOptions = {
   dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
-  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24, trackKm: 50, wholeShare: 0.3,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24, trackKm: 30, wholeShare: 0.5,
 };
 
 /** the stations laid out on the sheet and the map carried with them */
