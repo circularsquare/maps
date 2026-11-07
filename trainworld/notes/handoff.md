@@ -31,6 +31,9 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
   tests, wasm, smoke, records; then land.
 - **namespread** ab73cb12c3a351833 (Sonnet, tree namespread): rebased, on its checks (T-2674, T-2675).
 - **attract2** a7442af28854bb4e7 (Sonnet, tree attract2): T-2666 done-when met; on cargo tests (1 core), then smoke.
+- **keepnames** a985b1e84eba08358 (Sonnet, main tree, 1 core 0x400): T-2683 player names survive edits.
+- **yearsdest** a83f90bf0d5edb270 (Sonnet, main tree, 1 core 0x800): T-2684 years, T-2685 tutorial on homes bubbles.
+- Anita ~20:25: Tijuana "looks great now in both ways" (fares N + reference country). "No train route found" landed d575630a.
 - Done and retired this evening: ridersnow, l10nsmall (ad2c18ea6567fefa9, can be resumed for small translation
   batches), l10nshots, l10npolish, l10nunits, fareref.
 - Asked Anita ~19:30: one label "calculating..." for changed lines too (instead of "loading...")? maps-b9 recommends yes.
@@ -54,7 +57,7 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
    (l10nfix's leftovers); OFFERED on Anita's release word.
 4. On Anita's fares answer: build T-2669/T-2670 (+ the multiples display) per notes/T-2668.md.
 5. Queued, not started: T-2624, T-2625, T-2627, T-2630, T-2631, T-2637, T-2638, T-2597, T-2593, T-2588, T-2592, T-2437
-   (Brazil, pack lock free). Next unassigned id **T-2683**.
+   (Brazil, pack lock free). Next unassigned id **T-2686**.
 
 ## How to
 - Scratch = C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\b35f881f-a7d6-4f9f-9c17-4b4b2ffbdf21\scratchpad:
