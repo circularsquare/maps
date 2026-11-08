@@ -73,7 +73,18 @@ function parse(d: Float64Array): Profile | null {
     if (!m) merged.push(c);
     else for (const id of c.lines) if (!m.lines.includes(id)) m.lines.push(id);
   }
-  return { s, lng, lat, h, len: s[nP - 1], stops, crosses: merged, wet };
+  const len = s[nP - 1];
+  // T-2779: west on the left; a line that starts in the east is read backwards, so the strip, the hover and the first stop all flip together
+  if (lng[0] > lng[nP - 1]) {
+    const r = (a: Float64Array) => a.slice().reverse();
+    return {
+      s: r(s).map((v) => len - v), lng: r(lng), lat: r(lat), h: r(h), len,
+      stops: stops.map((x) => ({ s: len - x.s, node: x.node })).reverse(),
+      crosses: merged.map((c) => ({ ...c, s: len - c.s })).reverse(),
+      wet: wet.map((x) => ({ a: len - x.b, b: len - x.a, kind: x.kind })).reverse(),
+    };
+  }
+  return { s, lng, lat, h, len, stops, crosses: merged, wet };
 }
 
 /** The line at `at` m along: lng, lat, track height over the ground (sim m). */

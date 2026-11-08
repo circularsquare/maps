@@ -937,6 +937,7 @@
   "keepDot.tipAccount": "Saved only in this browser!\nIf your browser data is cleared, this game will be lost. You can make an account to save it online, or download a copy locally.",
   "keepDot.tipDownload": "Saved only in this browser!\nIf your browser data is cleared, this game will be lost. You can download a copy to keep it.",
   "keepDot.label": "Saved only in this browser",
+  "leaderboard.value": "{points} points",
   "leaderboard.valueTip": "{world, select, true {{points} points in the world in past 24h} other {{points} points in {city} in past 24h}}",
   "leaderboard.sandbox": "Sandbox games are not listed",
   "leaderboard.signIn": "Sign in to be listed",

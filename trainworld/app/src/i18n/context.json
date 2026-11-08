@@ -937,6 +937,7 @@
   "keepDot.tipAccount": "Hover of the dot beside the search button when the game exists only in this browser and accounts are available. The first line is a title.",
   "keepDot.tipDownload": "Hover of the dot beside the search button when the game exists only in this browser and there is no account server. The first line is a title.",
   "keepDot.label": "Screen-reader label of the dot beside the search button.",
+  "leaderboard.value": "A score in a leaderboard row. points: a short number, e.g. \"1.2k\".",
   "leaderboard.valueTip": "Hover of a score in a leaderboard row. points: a number, e.g. \"1,200\"; world: true on the world board; city: the city's name on a city board, e.g. \"Osaka\".",
   "leaderboard.sandbox": "Note at the foot of the leaderboards while a sandbox game is being played.",
   "leaderboard.signIn": "Button at the foot of the leaderboards, for a signed-out player, that opens the account panel.",

@@ -951,6 +951,7 @@
   "leaderboard.signIn": "ログインして参加",
   "leaderboard.thisGame": "このゲームの都市",
   "leaderboard.title": "ランキング",
+  "leaderboard.value": "{points}ポイント",
   "leaderboard.valueTip": "{world, select, true {世界で過去24時間に{points}ポイント} other {{city}で過去24時間に{points}ポイント}}",
   "leaderboard.world": "世界",
   "lineActions.constructed": "{cost}で着工しました。",

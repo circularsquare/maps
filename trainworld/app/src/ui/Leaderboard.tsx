@@ -10,7 +10,7 @@ import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoard
 import { exact } from "../game/format";
 import { t } from "../i18n";
 import { moneyState } from "../game/money";
-import { pointsPast24h, pointsShort } from "../game/points";
+import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
 
@@ -22,7 +22,7 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
-    <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : cityName(board.slice(WORLD.length + 1)) })}>{pointsShort(r.value)}</span>
+    <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : cityName(board.slice(WORLD.length + 1)) }) + "\n" + t("cities.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM })}>{t("leaderboard.value", { points: pointsShort(r.value) })}</span>
   </li>;
 }
 

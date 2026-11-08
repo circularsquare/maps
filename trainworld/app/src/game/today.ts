@@ -76,7 +76,7 @@ function peaksAt(v: ArrayLike<number>, stops: number): number {
 
 /** T-2279: the power the stretches' loads past 100% are averaged at. Above 1 the mean leans to the
  * fullest: one stretch packed to crush among 20 grades as 118% (1.5 - 1 over the cube root of 20). */
-export const CROWD_MEAN_POWER = 3;
+export const CROWD_MEAN_POWER = 2;
 
 /** T-2279: a line's load from its stretches' loads (shares of the rated load): 100% plus the power
  * mean of each one's load past 100% (`CROWD_MEAN_POWER`), so it is the fullest stretch's load when

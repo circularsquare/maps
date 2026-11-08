@@ -951,6 +951,7 @@
   "leaderboard.signIn": "登录后上榜",
   "leaderboard.thisGame": "本局游戏的城市",
   "leaderboard.title": "排行榜",
+  "leaderboard.value": "{points}积分",
   "leaderboard.valueTip": "{world, select, true {过去24小时在全球获得{points}积分} other {过去24小时在{city}获得{points}积分}}",
   "leaderboard.world": "全球",
   "lineActions.constructed": "已建成，花费{cost}。",

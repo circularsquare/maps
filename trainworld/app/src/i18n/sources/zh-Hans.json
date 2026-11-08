@@ -951,6 +951,7 @@
   "leaderboard.signIn": "Sign in to be listed",
   "leaderboard.thisGame": "Cities in this game",
   "leaderboard.title": "Leaderboards",
+  "leaderboard.value": "{points} points",
   "leaderboard.valueTip": "{world, select, true {{points} points in the world in past 24h} other {{points} points in {city} in past 24h}}",
   "leaderboard.world": "World",
   "lineActions.constructed": "Constructed for {cost}.",

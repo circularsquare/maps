@@ -207,7 +207,18 @@ checks/state_gaps.py, app/src/game/zone-names.json, registry.json, market-rows.j
 notes/T-2702.md, TASKS, DECISIONS, docs adding-a-country.md, data-register.md, code-map.md. Delete after commit:
 data/work/pre-T2702/ (5.2 GB), data/work/worldplan/state.pre-T2702.pkl. Retrospective in notes/T-2702.md; T-2775..2777 filed.
 **Load checks of 8 new metros + control moe time out at "opening its pack" under the uncommitted app edits** (smoke passes).
-landing (Opus): diagnose+fix that, land sparse, place_names, start_difficulty, load checks, smoke; then I commit, snapbuild-
+~21:20: landing DONE (load checks 9/9 on a fresh Vite: the timeouts were worldfix's stale no-watch Vite; sparse landed
+e941d196; difficulty + place names run; smoke 26/26). COMMITTED 094a132a (everything but TODO.md). 8800 = 094a132a,
+smoke light/dark 26/26 (12,521,264). **LIVE = 2026-11-07c (094a132a)**, website 7fcc3b5, verify --page 6/6 PASS. R2 holds only 2026-11-07c (07b purged);
+pre-T2702 backups deleted. Anita posts Sunday morning; video recording via ?video=1 on 8800 (T-2774 open until she
+records). Open for her: T-2773 retry on her save. ~22:10 Anita: video ok; video2 resumed for a slow globe spin ~1 zoom before the end (&spin) and a look at dropped
+frames at state zoom. Start URL now &at=40.75077,-73.99361,15.8 (100 m E, 8 m N). video2 round 2 DONE, committed 8ae3670e (video.tsx only: spin, fade 0.9 s from -0.5 s, &pace), 8800 rebuilt to it
+(not published; only matters under ?video=1). Anita recorded; the state-scale hitch stays even at pace=2 (T-2778 P3).
+Cropped her pick: C:\Users\anita\Videos\Captures\trainsworldchosen-cropped.mp4 (first 17 s cut, crop 1536x952 at 192,88). (Earlier: resumed at full speed on Anita's word ~21:40) (paused ~21:30 for her internet). If paused again, resume with
+env RCLONE_BWLIMIT=1M (or lower), RCLONE_TRANSFERS=8, `deploy.py --version 2026-11-07c --smoked --resume`
+(log my scratch deploy3.log); next deploy 2026-11-07c, push, verify, purge 07b, then
+delete data/work/pre-T2702/ and state.pre-T2702.pkl.
+(was) landing (Opus): diagnose+fix that, land sparse, place_names, start_difficulty, load checks, smoke; then I commit, snapbuild-
 frozen with 20261107-202835, smoke 8800 light/dark, deploy 2026-11-07c, push (Anita's go given).
 Asked worldfix for a retrospective in notes/T-2702.md (Anita: why ~5 h over); ids T-2775..2777 reserved for it.
 Publish from that re-freeze (the 18:30 freeze 20261107-183057 lacks market-drives.bin and 53 terrain files).
@@ -217,6 +228,11 @@ After worldfix reports, one Sonnet landing agent: land sparse (agent-tree land/r
 start_difficulty.py --jobs 2 and tools/place_names.mjs, one smoke on own Vite; then orchestrator commits by path,
 snapbuild 8800, smoke light/dark. On her word: deploy.py --dry-run, --version 2026-11-07c --smoked, website commit+push,
 verify --page, purge 2026-11-07b.
+
+## 2026-11-08 (Anita has posted; live 2026-11-07c; weekly tokens nearly out)
+quickbits (Sonnet, T-2779..2782: cross section west-left, language select spacing/size, leaderboard points hover, crowding
+bubble average), main tree, no commit yet. T-2783..2790 filed for later (leaderboard not updating T-2783 is the one
+that matters most now that it's public). Next free id T-2791. Deploying needs her word.
 
 ## Anita's standing asks
 - **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and

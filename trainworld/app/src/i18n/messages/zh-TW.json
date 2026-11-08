@@ -951,6 +951,7 @@
   "leaderboard.signIn": "登入後列入排行",
   "leaderboard.thisGame": "這局遊戲的城市",
   "leaderboard.title": "排行榜",
+  "leaderboard.value": "{points}積分",
   "leaderboard.valueTip": "{world, select, true {過去24小時在全世界獲得{points}積分} other {過去24小時在{city}獲得{points}積分}}",
   "leaderboard.world": "全世界",
   "lineActions.constructed": "已完工，花費{cost}。",

@@ -167,7 +167,9 @@ svg .stroke2 { stroke-width: 2; }
 .tab.gear { flex: none; width: 36px; min-width: 0; border-right: 0; border-left: 1px solid var(--rule); }
 .settings-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .lang-row { margin: 0 0 4px; }
+.lang-row { display: flex; align-items: center; gap: 4px; }
 .lang-row .lang-icon { display: inline-flex; }
+.lang-row .purpose-filter { margin-left: 0; font-size: inherit; }
 .settings-top .login-text { margin-left: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* T-908: the controls panel, over the map beside the dock's tab row */
 .help-panel { position: absolute; top: 36px; left: calc(100% + 1px); z-index: 20; width: 430px;
