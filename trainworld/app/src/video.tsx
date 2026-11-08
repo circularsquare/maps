@@ -5,6 +5,8 @@
 //   `&at=lat,lng,zoom` the start camera (default: wherever the game opens)
 //   `&end=lat,lng,zoom` where the zoom out ends (default: the start's centre, zoom 2.4 on the globe, 3 flat)
 //   `&hold=5` seconds at the start, `&secs=15` seconds of zooming out
+//   `&pace=2` all of it, game clock included, twice as slow (for a recording sped up afterwards)
+//   `&spin=1.5` degrees a second the globe turns from a zoom level before the end, on until Esc (0 none; globe only)
 // Keys: V runs it (the hold, the zoom out, then the start menu's logo fading in); Esc goes back to the start.
 // The tiles along the way are fetched first (the camera flies the path once and comes back), and the
 // map is told to keep them.
@@ -23,13 +25,20 @@ const triple = (k: string): Cam | null => {
   return v.length === 3 && v.every(Number.isFinite) ? { lat: v[0], lng: v[1], zoom: v[2] } : null;
 };
 const num = (k: string, d: number) => { const v = Number(q.get(k)); return q.has(k) && Number.isFinite(v) && v >= 0 ? v : d; };
+/** `&pace=2`: everything twice as slow, game and camera, for a recording sped up 2x afterwards */
+const PACE = Math.max(0.1, num("pace", 1));
 const HOLD = num("hold", 5);
 const SECS = num("secs", 15);
 /** seconds the zoom rate takes to build up, and to die away at the end */
 const EASE_IN = 2.5, EASE_OUT = 1.2;
 /** the share of the zoom out after which the centre may drift to `&end`'s */
 const DRIFT_FROM = 0.8;
-const FADE = 0.4;
+/** the logo's fade: seconds long, starting this long before the zoom stops (Anita, 2026-11-07) */
+const FADE = 0.9, FADE_LEAD = 0.5;
+/** degrees of longitude a second the globe turns at the end (`&spin=`, 0 none), and the seconds it takes to get up to that */
+const SPIN = num("spin", 1.5), SPIN_EASE = 3;
+/** degrees turned `u` seconds after the turning starts */
+const spun = (u: number) => SPIN * (u < SPIN_EASE ? u / 2 - (SPIN_EASE / (2 * Math.PI)) * Math.sin((Math.PI * u) / SPIN_EASE) : SPIN_EASE / 2 + u - SPIN_EASE);
 
 const CSS = `
 html.tw-video, html.tw-video * { cursor: none !important; outline: none !important; }
@@ -98,6 +107,10 @@ export function startVideo(map: MlMap) {
       put({ zoom: z, lng: s.lng + (e.lng - s.lng) * k, lat: s.lat + (e.lat - s.lat) * k });
       await idle();
     }
+    // the globe's side that turns into view (a minute's turning, and more)
+    if (SPIN > 0 && display.peek().projection === "globe") {
+      for (let d = 30; d <= Math.min(180, SPIN * 70) && g === gen; d += 30) { put({ ...e, lng: e.lng - d }); await idle(); }
+    }
     if (g !== gen) return;
     put(s);
     await idle();
@@ -116,22 +129,28 @@ export function startVideo(map: MlMap) {
     if (fetched !== key(start)) await prefetch(start, g);
     if (g !== gen) return;
     document.documentElement.classList.add("tw-video-run");
-    clock.setSpeed(0); // normal speed
+    if (PACE === 1) clock.setSpeed(0); // normal speed
+    else clock.setMultiple(1 / PACE);
     const s = start, e = endOf(s), D = Math.max(SECS, EASE_IN + EASE_OUT);
+    // on the globe, from a zoom level before the end, the Earth turns west to east and keeps turning
+    let spinFrom = Infinity;
+    if (SPIN > 0 && display.peek().projection === "globe") for (let t = 0; t <= D; t += 0.01) if (along(s, e, t).zoom <= e.zoom + 1) { spinFrom = t; break; }
+    // the logo is set up unseen while the camera holds still: setting it up mid-zoom cost a 100 ms frame
+    logo = document.createElement("div");
+    logo.className = "tw-video-logo";
+    document.body.appendChild(logo);
+    render(<StartLogo />, logo);
     const t0 = performance.now();
     const frame = () => {
       if (g !== gen) return;
-      const t = (performance.now() - t0) / 1000 - HOLD;
-      if (t > 0) put(along(s, e, t));
-      // the logo starts drawing a second early, unseen, so its first frames are not in the fade
-      if (t > D - 1 && !logo) {
-        logo = document.createElement("div");
-        logo.className = "tw-video-logo";
-        document.body.appendChild(logo);
-        render(<StartLogo />, logo);
+      const t = (performance.now() - t0) / 1000 / PACE - HOLD;
+      if (t > 0) {
+        const c = along(s, e, t);
+        if (t > spinFrom) c.lng -= spun(t - spinFrom);
+        put(c);
       }
-      if (logo) logo.style.opacity = String(Math.min(1, Math.max(0, (t - D) / FADE)));
-      if (t < D + FADE + 0.1) requestAnimationFrame(frame);
+      if (logo) logo.style.opacity = String(Math.min(1, Math.max(0, (t - D + FADE_LEAD) / FADE)));
+      if (t < D - FADE_LEAD + FADE + 0.1 ||spinFrom < Infinity) requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
   };
