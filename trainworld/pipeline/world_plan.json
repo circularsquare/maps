@@ -17320,7 +17320,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 4357288,
+   "people": 4478205,
    "origin": [
     120.6697,
     28.0223
@@ -17337,13 +17337,14 @@
      "62558664B39126419705007",
      "62558664B29852567611938",
      "62558664B36210394254445",
-     "62558664B33236632947404"
+     "62558664B33236632947404",
+     "62558664B79437707634898"
     ]
    },
    "bbox": [
     120.176,
     27.618,
-    121.216,
+    121.235,
     28.16
    ],
    "source": {
@@ -17352,32 +17353,37 @@
     ],
     "fua": [
      10339
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "62558664B79437707634898"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "solve_region": "zhejiang",
    "gate_relax": {
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261024-191220-30572",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:42:06",
+    "gated": "2026-11-07T08:50:22",
+    "shipped": "2026-11-07T17:39:19",
     "steps": {
-     "build": 7.0,
+     "build": 22.7,
      "stations": 0.9,
-     "places": 1.2,
-     "coarse": 0.4,
-     "routes": 20.6,
+     "places": 1.5,
+     "routes": 30.1,
      "merge": 0.7,
-     "nocar": 1.2,
-     "everyday": 0.9
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-10-24T19:28:43",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6031.8642578125"
+      "top_school_cell_pupils 6020.97607421875"
      ]
-    },
-    "gated": "2026-10-24T19:51:40",
-    "shipped": "2026-10-25T00:57:57"
+    }
    }
   },
   {
@@ -19005,7 +19011,7 @@
     "KOR"
    ],
    "iso2": "KR",
-   "people": 4037605,
+   "people": 4178501,
    "origin": [
     129.1706,
     35.1682
@@ -19212,7 +19218,17 @@
      "71637012B62496339983685",
      "71637012B1497362594190",
      "71637012B63910232629440",
-     "71637012B17735725242506"
+     "71637012B17735725242506",
+     "71637012B23450703501271",
+     "71637012B81798712273112",
+     "71637012B23519681665283",
+     "71637012B11603440333014",
+     "71637012B70026588359077",
+     "71637012B41050556935771",
+     "71637012B62275754754050",
+     "71637012B15807809755676",
+     "71637012B40737167812320",
+     "71637012B2360085372224"
     ]
    },
    "bbox": [
@@ -19233,24 +19249,40 @@
      "units": [
       "71637012B17735725242506"
      ]
+    },
+    "T-2702": {
+     "added": [
+      "71637012B23450703501271",
+      "71637012B81798712273112",
+      "71637012B23519681665283",
+      "71637012B11603440333014",
+      "71637012B70026588359077",
+      "71637012B41050556935771",
+      "71637012B62275754754050",
+      "71637012B15807809755676",
+      "71637012B40737167812320",
+      "71637012B2360085372224"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
     }
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:46:59",
+    "shipped": "2026-11-07T17:39:20",
     "steps": {
-     "build": 131.4,
-     "stations": 0.9,
-     "places": 1.9,
-     "routes": 25.5,
+     "build": 27.7,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 28.5,
      "merge": 0.7,
-     "nocar": 1.5,
-     "everyday": 1.0
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T10:50:49",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-25T11:51:55"
+    "gated": "2026-11-07T08:50:23"
    }
   },
   {
@@ -35783,7 +35815,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1416583,
+   "people": 1740856,
    "origin": [
     -46.3202,
     -23.9703
@@ -35802,13 +35834,14 @@
      "56859067B70576554205910",
      "56859067B11159751681526",
      "56859067B16208795434371",
-     "56859067B44693730351298"
+     "56859067B44693730351298",
+     "56859067B97137242485272"
     ]
    },
    "bbox": [
     -46.983,
     -24.491,
-    -46.178,
+    -46.112,
     -23.736
    ],
    "source": {
@@ -35817,28 +35850,33 @@
     ],
     "fua": [
      6700
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B97137242485272"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:02:47",
+    "gated": "2026-11-07T08:50:25",
+    "shipped": "2026-11-07T17:39:20",
     "steps": {
-     "build": 54.2,
-     "stations": 1.9,
-     "places": 3.4,
-     "routes": 55.6,
-     "merge": 1.1,
-     "nocar": 2.0,
-     "everyday": 1.6
+     "build": 40.8,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 35.9,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T00:01:12",
-    "gated": "2026-11-06T02:29:26",
-    "parked": "2026-11-06T02:44:56",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0"
+      "top_school_cell_pupils 5999.99951171875"
      ]
-    },
-    "shipped": "2026-11-06T07:11:12"
+    }
    },
    "solve_region": "sudeste"
   },
@@ -37231,7 +37269,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1370788,
+   "people": 1530665,
    "origin": [
     -44.283,
     -2.5277
@@ -37248,14 +37286,16 @@
      "56859067B58306550614975",
      "56859067B1800832829345",
      "56859067B76385045703481",
-     "56859067B87661364521174"
+     "56859067B87661364521174",
+     "56859067B28423582121888",
+     "56859067B6565916351535"
     ]
    },
    "bbox": [
     -44.497,
     -3.184,
-    -44.024,
-    -2.461
+    -44.023,
+    -2.403
    ],
    "source": {
     "ucdb": [
@@ -37270,26 +37310,32 @@
       "56859067B76385045703481",
       "56859067B87661364521174"
      ]
+    },
+    "T-2702": {
+     "added": [
+      "56859067B28423582121888",
+      "56859067B6565916351535"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
     }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:10:10",
+    "gated": "2026-11-07T08:50:30",
+    "shipped": "2026-11-07T17:39:21",
     "steps": {
-     "build": 33.6,
-     "stations": 1.0,
-     "places": 2.2,
-     "routes": 21.1,
-     "merge": 0.8,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "build": 39.4,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 27.6,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 1.4
     },
-    "built": "2026-11-06T00:12:13",
-    "gated": "2026-11-06T02:29:31",
-    "parked": "2026-11-06T02:45:02",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:12"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -38330,7 +38376,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 1351704,
+   "people": 1585502,
    "origin": [
     113.5579,
     22.2085
@@ -38345,12 +38391,13 @@
    "units": {
     "CHN": [
      "62558664B79452091668044",
-     "43563684B97104103456250"
+     "43563684B97104103456250",
+     "62558664B77745584166637"
     ]
    },
    "bbox": [
-    113.408,
-    21.851,
+    113.105,
+    21.836,
     114.319,
     22.445
    ],
@@ -38365,34 +38412,38 @@
     "satellites": [
      11115
     ],
-    "recut": "T-897: Zhuhai's units (Xiangzhou, and Hengqin in geoBoundaries' Macau SAR unit)"
+    "recut": "T-897: Zhuhai's units (Xiangzhou, and Hengqin in geoBoundaries' Macau SAR unit)",
+    "T-2702": {
+     "added": [
+      "62558664B77745584166637"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "solve_region": "guangdong",
    "gate_relax": {
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261024-183518",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:13:59",
+    "gated": "2026-11-07T08:50:33",
+    "shipped": "2026-11-07T17:39:21",
     "steps": {
-     "build": 13.9,
+     "build": 59.3,
      "stations": 1.2,
-     "places": 2.7,
-     "coarse": 0.4,
-     "routes": 12.1,
-     "merge": 0.7,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "places": 7.1,
+     "routes": 17.6,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-10-24T18:42:52",
-    "parked": "2026-10-24T18:58:15",
     "gate": {
      "warn": [
-      "pop_vs_fua 0.7196989690195511",
-      "fleet_range 1"
+      "pop_vs_plan 1.261655980171176",
+      "osm_land_share 0.8211"
      ]
-    },
-    "gated": "2026-10-24T19:54:39",
-    "shipped": "2026-10-25T00:58:03"
+    }
    }
   },
   {
@@ -46490,7 +46541,7 @@
     "KOR"
    ],
    "iso2": "KR",
-   "people": 611231,
+   "people": 658044,
    "origin": [
     127.522,
     34.9501
@@ -46592,7 +46643,11 @@
      "71637012B89522954628717",
      "71637012B20510768157605",
      "71637012B48024239310505",
-     "71637012B69680919231108"
+     "71637012B69680919231108",
+     "71637012B95818928168604",
+     "71637012B37083405170236",
+     "71637012B54197693899175",
+     "71637012B11470162514300"
     ]
    },
    "bbox": [
@@ -46692,7 +46747,11 @@
      "Muncheok-myeon",
      "Gyeombaek-myeon",
      "Yeongnam-myeon",
-     "Mundeok-myeon"
+     "Mundeok-myeon",
+     "Geumho-dong",
+     "Taein-dong",
+     "Gwangyeong-dong",
+     "Hwajeong-myeon"
     ],
     "groups": [
      "Suncheon-si",
@@ -46701,24 +46760,34 @@
      "Goheung-gun",
      "Boseong-gun",
      "Gurye-gun"
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "71637012B95818928168604",
+      "71637012B37083405170236",
+      "71637012B54197693899175",
+      "71637012B11470162514300"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:47:10",
+    "shipped": "2026-11-07T17:39:22",
     "steps": {
-     "build": 34.7,
-     "stations": 1.1,
-     "places": 1.8,
-     "routes": 24.2,
+     "build": 37.3,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 27.1,
      "merge": 0.9,
-     "nocar": 1.6,
-     "everyday": 1.0
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T10:52:27",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-25T11:51:58"
+    "gated": "2026-11-07T08:50:23"
    }
   },
   {
@@ -47199,7 +47268,7 @@
     "KOR"
    ],
    "iso2": "KR",
-   "people": 456468,
+   "people": 511003,
    "origin": [
     126.984,
     35.9555
@@ -47262,11 +47331,12 @@
      "71637012B82254902729439",
      "71637012B708265573261",
      "71637012B9080720221932",
-     "71637012B80464735135433"
+     "71637012B80464735135433",
+     "71637012B430526896357"
     ]
    },
    "bbox": [
-    126.583,
+    126.513,
     35.87,
     127.14,
     36.157
@@ -47323,31 +47393,39 @@
      "Napo-myeon",
      "Yeongdeung2-dong",
      "Ungpo-myeon",
-     "Songhak-dong"
+     "Songhak-dong",
+     "Soryong-dong"
     ],
     "groups": [
      "Iksan-si",
      "Gunsan-si"
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "71637012B430526896357"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:46:43",
+    "shipped": "2026-11-07T17:39:22",
     "steps": {
-     "build": 12.6,
+     "build": 13.0,
      "stations": 0.9,
-     "places": 1.5,
-     "routes": 16.2,
-     "merge": 0.7,
-     "nocar": 1.3,
-     "everyday": 1.0
+     "places": 1.8,
+     "routes": 20.2,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T10:52:23",
     "gate": {
      "warn": [
       "fleet_range 1"
      ]
     },
-    "shipped": "2026-10-25T11:51:58"
+    "gated": "2026-11-07T08:50:24"
    }
   },
   {
@@ -47499,7 +47577,7 @@
     "KOR"
    ],
    "iso2": "KR",
-   "people": 429629,
+   "people": 502559,
    "origin": [
     126.3866,
     34.8019
@@ -47606,7 +47684,13 @@
      "71637012B42696265421392",
      "71637012B3711562927326",
      "71637012B45809751609734",
-     "71637012B76218161333967"
+     "71637012B76218161333967",
+     "71637012B84711711378008",
+     "71637012B31136110853554",
+     "71637012B60546490033901",
+     "71637012B98643470284396",
+     "71637012B17934759829464",
+     "71637012B72496236323183"
     ]
    },
    "bbox": [
@@ -47711,7 +47795,13 @@
      "Haui-myeon",
      "Sinui-myeon",
      "Omcheon-myeon",
-     "Heuksan-myeon"
+     "Heuksan-myeon",
+     "Yeonsan-dong",
+     "Buheung-dong",
+     "Manho-dong",
+     "Sinheung-dong",
+     "Samhak-dong",
+     "Yudal-dong"
     ],
     "groups": [
      "Mokpo-si",
@@ -47723,27 +47813,39 @@
      "Gangjin-gun",
      "Jindo-gun",
      "Sinan-gun"
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "71637012B84711711378008",
+      "71637012B31136110853554",
+      "71637012B60546490033901",
+      "71637012B98643470284396",
+      "71637012B17934759829464",
+      "71637012B72496236323183"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:48:15",
+    "shipped": "2026-11-07T17:39:23",
     "steps": {
-     "build": 62.8,
-     "stations": 1.3,
-     "places": 29.9,
-     "routes": 20.5,
-     "merge": 0.7,
-     "nocar": 1.1,
+     "build": 67.7,
+     "stations": 1.7,
+     "places": 37.9,
+     "routes": 26.7,
+     "merge": 0.8,
+     "nocar": 1.2,
      "everyday": 0.7
     },
-    "built": "2026-10-25T10:54:04",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1071570910939912",
+      "top_zone_jobs_share 0.10242054447120463",
       "fleet_range 1"
      ]
     },
-    "shipped": "2026-10-25T11:51:59"
+    "gated": "2026-11-07T08:50:24"
    }
   },
   {
@@ -48538,7 +48640,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 2629282,
+   "people": 2898698,
    "origin": [
     122.2904,
     29.9457
@@ -48556,14 +48658,16 @@
      "62558664B3826759588876",
      "62558664B25029359546701",
      "62558664B37625372962425",
-     "62558664B73803868148071"
+     "62558664B73803868148071",
+     "62558664B87833503992747",
+     "62558664B1875524142653"
     ]
    },
    "bbox": [
     120.68,
     28.952,
-    122.783,
-    30.214
+    122.833,
+    30.863
    ],
    "source": {
     "zone": "T-723",
@@ -48572,30 +48676,38 @@
      "Xiangshan County",
      "Dinghai District",
      "Tiantai County",
-     "Putuo District"
-    ]
+     "Putuo District",
+     "Daishan County",
+     "Shengsi County"
+    ],
+    "T-2702": {
+     "added": [
+      "62558664B87833503992747",
+      "62558664B1875524142653"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "solve_region": "zhejiang",
    "run": {
-    "run_batch": "20261025-124019-29608",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T07:42:56",
+    "gated": "2026-11-07T08:50:22",
+    "shipped": "2026-11-07T17:39:23",
     "steps": {
-     "build": 72.3,
-     "stations": 1.9,
-     "places": 3.3,
-     "coarse": 2.6,
-     "routes": 52.5,
-     "merge": 1.5,
-     "nocar": 2.2,
-     "everyday": 3.0
+     "build": 68.9,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 32.6,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-10-25T13:39:07",
     "gate": {
      "warn": [
-      "osm_land_share 0.9064"
+      "osm_land_share 0.9087"
      ]
-    },
-    "gated": "2026-10-25T14:21:55",
-    "shipped": "2026-10-25T22:25:04"
+    }
    }
   },
   {
@@ -51840,7 +51952,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 2328211,
+   "people": 2395109,
    "origin": [
     124.3805,
     40.1531
@@ -51858,12 +51970,13 @@
      "62558664B80046856608032",
      "62558664B73997834239622",
      "62558664B70034553182695",
-     "62558664B41938920804449"
+     "62558664B41938920804449",
+     "62558664B94145630009393"
     ]
    },
    "bbox": [
-    122.488,
-    39.463,
+    122.278,
+    39.008,
     124.507,
     40.396
    ],
@@ -51874,30 +51987,36 @@
      "Donggang City",
      "Yuanbao District",
      "Zhenxing District",
-     "Zhen'an District"
-    ]
+     "Zhen'an District",
+     "Changhai County"
+    ],
+    "T-2702": {
+     "added": [
+      "62558664B94145630009393"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "solve_region": "liaoning",
    "run": {
-    "run_batch": "20261025-124020",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:15:18",
+    "gated": "2026-11-07T08:50:34",
+    "shipped": "2026-11-07T17:39:24",
     "steps": {
-     "build": 24.0,
-     "stations": 1.2,
-     "places": 1.7,
-     "coarse": 1.5,
-     "routes": 31.9,
-     "merge": 1.7,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 28.4,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 21.7,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T13:22:17",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
-    },
-    "gated": "2026-10-25T15:26:02",
-    "shipped": "2026-10-25T22:25:15"
+    }
    }
   },
   {
@@ -85195,7 +85314,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 1077325,
+   "people": 1112734,
    "origin": [
     120.533,
     37.6449
@@ -85210,44 +85329,51 @@
    "units": {
     "CHN": [
      "62558664B35136473630202",
-     "62558664B12405344807684"
+     "62558664B12405344807684",
+     "62558664B6773775584691"
     ]
    },
    "bbox": [
     120.216,
     37.415,
     121.088,
-    37.834
+    38.401
    ],
    "source": {
     "zone": "T-723",
     "unit_names": [
      "Longkou City",
-     "Penglai City"
-    ]
+     "Penglai City",
+     "Changdao County"
+    ],
+    "T-2702": {
+     "added": [
+      "62558664B6773775584691"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "solve_region": "shandong",
    "run": {
-    "run_batch": "20261025-124019-29608",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:17:47",
+    "gated": "2026-11-07T08:50:34",
+    "shipped": "2026-11-07T17:39:24",
     "steps": {
-     "build": 12.9,
-     "stations": 1.1,
-     "places": 1.3,
-     "coarse": 0.5,
-     "routes": 23.0,
-     "merge": 0.9,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "build": 14.7,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 16.5,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-10-25T13:13:22",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6002.27392578125",
-      "osm_land_share 0.987"
+      "top_school_cell_pupils 6005.04296875",
+      "osm_land_share 0.9765"
      ]
-    },
-    "gated": "2026-10-25T14:21:48",
-    "shipped": "2026-10-25T22:27:05"
+    }
    }
   },
   {
@@ -103525,7 +103651,7 @@
     "VNM"
    ],
    "iso2": "VN",
-   "people": 1729237,
+   "people": 1753797,
    "origin": [
     105.0904,
     9.9956
@@ -103551,14 +103677,15 @@
      "81297802B871478188231",
      "81297802B41363610148385",
      "81297802B37875930391216",
-     "81297802B34321495303848"
+     "81297802B34321495303848",
+     "81297802B10550571931229"
     ]
    },
    "bbox": [
     103.187,
     9.255,
     105.54,
-    10.463
+    10.532
    ],
    "source": {
     "zone": "T-723",
@@ -103575,30 +103702,37 @@
      "Phu Quoc",
      "Kien Luong",
      "U Minh Thuong",
-     "Ha Tien"
+     "Ha Tien",
+     "Kien Hai"
     ],
     "origin_was": [
      104.532,
      10.1746
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "81297802B10550571931229"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261029-033117",
-    "built": "2026-10-29T03:43:21",
-    "gated": "2026-10-29T03:51:32",
-    "shipped": "2026-10-29T04:38:07",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:23:28",
+    "gated": "2026-11-07T08:50:35",
+    "shipped": "2026-11-07T17:39:25",
     "steps": {
-     "build": 23.4,
-     "stations": 1.3,
-     "places": 1.9,
-     "routes": 35.3,
-     "merge": 1.1,
-     "nocar": 1.5,
-     "everyday": 1.0
+     "build": 22.9,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 42.7,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6061.15087890625"
+      "top_school_cell_pupils 6058.45263671875"
      ]
     }
    }
@@ -104398,7 +104532,7 @@
     "VNM"
    ],
    "iso2": "VN",
-   "people": 1164979,
+   "people": 1195714,
    "origin": [
     108.1036,
     10.9398
@@ -104420,13 +104554,14 @@
      "81297802B85161602276488",
      "81297802B72040378952039",
      "81297802B68049284687871",
-     "81297802B21171501026834"
+     "81297802B21171501026834",
+     "81297802B90799057915407"
     ]
    },
    "bbox": [
     107.394,
-    10.569,
-    108.876,
+    10.483,
+    108.969,
     11.556
    ],
    "source": {
@@ -104440,30 +104575,36 @@
      "La Gi",
      "Tanh Linh",
      "Ham Thuan Nam",
-     "Ham Tan"
+     "Ham Tan",
+     "Phu Quy"
     ],
     "origin_was": [
      108.7342,
      11.2249
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "81297802B90799057915407"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261029-033117",
-    "built": "2026-10-29T03:43:25",
-    "gated": "2026-10-29T03:51:32",
-    "shipped": "2026-10-29T04:38:07",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:23:33",
+    "gated": "2026-11-07T08:50:35",
+    "shipped": "2026-11-07T17:39:25",
     "steps": {
-     "build": 24.2,
-     "stations": 1.1,
-     "places": 1.7,
-     "routes": 39.2,
-     "merge": 0.9,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "build": 23.5,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 46.1,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.7
     },
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10406929965139745",
       "top_school_cell_pupils 6000.0"
      ]
     }
@@ -107687,7 +107828,7 @@
     "VNM"
    ],
    "iso2": "VN",
-   "people": 621133,
+   "people": 752744,
    "origin": [
     107.2718,
     21.011
@@ -107708,14 +107849,17 @@
      "81297802B1435628045096",
      "81297802B85934029741785",
      "81297802B53696601888295",
-     "81297802B18420716282175"
+     "81297802B18420716282175",
+     "81297802B69562638547328",
+     "81297802B23156291808671",
+     "81297802B76384767601248"
     ]
    },
    "bbox": [
     106.826,
-    20.91,
-    107.824,
-    21.663
+    20.716,
+    108.087,
+    21.665
    ],
    "source": {
     "zone": "T-723",
@@ -107727,26 +107871,37 @@
      "Tien Yen",
      "Dam Ha",
      "Binh Lieu",
-     "Ba Che"
-    ]
+     "Ba Che",
+     "Mong Cai",
+     "Van Don",
+     "Co To"
+    ],
+    "T-2702": {
+     "added": [
+      "81297802B69562638547328",
+      "81297802B23156291808671",
+      "81297802B76384767601248"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261028-185827",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:23:26",
+    "gated": "2026-11-07T08:50:36",
+    "shipped": "2026-11-07T17:39:26",
     "steps": {
-     "build": 25.5,
-     "stations": 1.2,
-     "places": 1.8,
-     "routes": 18.1,
-     "merge": 0.9,
-     "nocar": 1.5,
-     "everyday": 1.1
+     "build": 36.4,
+     "stations": 1.7,
+     "places": 2.6,
+     "routes": 26.7,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-10-28T19:18:35",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-10-28T19:48:00",
-    "shipped": "2026-10-28T20:57:38"
+    }
    }
   },
   {
@@ -108407,7 +108562,7 @@
     "VNM"
    ],
    "iso2": "VN",
-   "people": 544427,
+   "people": 586760,
    "origin": [
     106.6768,
     10.3618
@@ -108424,13 +108579,14 @@
      "81297802B70172971551103",
      "81297802B95868582932177",
      "81297802B95643835690721",
-     "81297802B81408558281677"
+     "81297802B81408558281677",
+     "81297802B25768458282790"
     ]
    },
    "bbox": [
     106.345,
-    10.276,
-    106.715,
+    10.19,
+    106.801,
     10.532
    ],
    "source": {
@@ -108439,30 +108595,37 @@
      "Cho Gao",
      "Go Cong",
      "Go Cong Tay",
-     "Chau Thanh"
-    ]
+     "Chau Thanh",
+     "Tan Phu Dong"
+    ],
+    "T-2702": {
+     "added": [
+      "81297802B25768458282790"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261028-185827",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:23:08",
+    "gated": "2026-11-07T08:50:36",
+    "shipped": "2026-11-07T17:39:26",
     "steps": {
-     "build": 10.2,
-     "stations": 1.0,
-     "places": 1.3,
-     "routes": 22.2,
+     "build": 10.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 28.8,
      "merge": 0.8,
-     "nocar": 1.4,
-     "everyday": 1.1
+     "nocar": 1.6,
+     "everyday": 1.2
     },
-    "built": "2026-10-28T19:19:55",
     "gate": {
      "warn": [
       "university_rate 0.0",
-      "top_school_cell_pupils 6034.66748046875",
+      "top_school_cell_pupils 6039.818359375",
       "fleet_range 3"
      ]
-    },
-    "gated": "2026-10-28T19:48:03",
-    "shipped": "2026-10-28T20:57:41"
+    }
    }
   },
   {
@@ -108611,7 +108774,7 @@
     "VNM"
    ],
    "iso2": "VN",
-   "people": 518902,
+   "people": 545345,
    "origin": [
     106.7622,
     21.0359
@@ -108627,13 +108790,14 @@
     "VNM": [
      "81297802B48433290328639",
      "81297802B38356347526872",
-     "81297802B42641748496229"
+     "81297802B42641748496229",
+     "81297802B5756602808944"
     ]
    },
    "bbox": [
     106.555,
-    20.812,
-    106.951,
+    20.613,
+    107.209,
     21.168
    ],
    "source": {
@@ -108641,29 +108805,35 @@
     "unit_names": [
      "Thuy Nguyen",
      "Quang Yen",
-     "Uong Bi"
-    ]
+     "Uong Bi",
+     "Cat Hai"
+    ],
+    "T-2702": {
+     "added": [
+      "81297802B5756602808944"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261028-185827",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:23:15",
+    "gated": "2026-11-07T08:50:37",
+    "shipped": "2026-11-07T17:39:27",
     "steps": {
-     "build": 13.7,
-     "stations": 1.0,
-     "places": 1.5,
-     "routes": 20.9,
-     "merge": 0.8,
+     "build": 23.8,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 30.7,
+     "merge": 0.7,
      "nocar": 1.5,
      "everyday": 1.2
     },
-    "built": "2026-10-28T19:20:23",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6076.59228515625",
-      "fleet_range 1"
+      "top_school_cell_pupils 6017.37451171875"
      ]
-    },
-    "gated": "2026-10-28T19:48:04",
-    "shipped": "2026-10-28T20:57:42"
+    }
    }
   },
   {
@@ -123202,7 +123372,7 @@
     "MYS"
    ],
    "iso2": "MY",
-   "people": 84245,
+   "people": 103927,
    "origin": [
     99.8489,
     6.3254
@@ -123223,7 +123393,8 @@
      "33779110B11024554668266",
      "33779110B5572381815843",
      "33779110B86104967752726",
-     "33779110B67992794746527"
+     "33779110B67992794746527",
+     "33779110B28506466666523"
     ]
    },
    "bbox": [
@@ -123242,33 +123413,40 @@
      "MUKIM AYER HANGAT",
      "MUKIM KEDAWANG",
      "MUKIM PADANG MAT SIRAT",
-     "PEKAN TELOK DATAI"
+     "PEKAN TELOK DATAI",
+     "Bandar Padang Mat Sirat"
     ],
     "groups": [
      "Langkawi"
-    ]
+    ],
+    "T-2702": {
+     "added": [
+      "33779110B28506466666523"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:27:16",
+    "gated": "2026-11-07T10:01:46",
+    "shipped": "2026-11-07T17:39:27",
     "steps": {
-     "build": 9.5,
-     "stations": 1.1,
-     "places": 1.9,
-     "routes": 4.5,
-     "merge": 0.9,
-     "nocar": 1.5,
-     "everyday": 1.2
+     "build": 10.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 6.4,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
     },
-    "built": "2026-11-02T14:00:09",
+    "parked": "2026-11-07T09:06:43",
     "gate": {
      "warn": [
-      "university_rate 0.0",
-      "top_zone_jobs_share 0.17926139130469698",
+      "top_zone_jobs_share 0.18187619282643994",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-02T14:09:46",
-    "shipped": "2026-11-02T14:34:06"
+    }
    }
   },
   {
@@ -123282,7 +123460,7 @@
     "BRN"
    ],
    "iso2": "BN",
-   "people": 423326,
+   "people": 439616,
    "origin": [
     114.9179,
     4.8913
@@ -123316,7 +123494,8 @@
      "61948251B77268510442515",
      "61948251B57548256602068",
      "61948251B45352761075123",
-     "61948251B19223628537644"
+     "61948251B19223628537644",
+     "61948251B45101535974167"
     ]
    },
    "bbox": [
@@ -123348,28 +123527,34 @@
      "Tanjong Maya",
      "Tamoi",
      "Saba",
-     "Sungai Kebun"
-    ]
+     "Sungai Kebun",
+     "Kota Batu"
+    ],
+    "T-2702": {
+     "added": [
+      "61948251B45101535974167"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:27:25",
+    "gated": "2026-11-07T10:01:47",
+    "shipped": "2026-11-07T17:39:27",
     "steps": {
-     "build": 23.3,
-     "stations": 1.2,
-     "places": 2.0,
-     "routes": 14.9,
-     "merge": 1.5,
-     "nocar": 2.3,
-     "everyday": 1.5
+     "build": 16.3,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 10.0,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
     },
-    "built": "2026-11-02T14:00:36",
+    "parked": "2026-11-07T09:06:44",
     "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.10018879787949303"
-     ]
-    },
-    "gated": "2026-11-02T14:09:47",
-    "shipped": "2026-11-02T14:34:07"
+     "warn": []
+    }
    }
   },
   {
@@ -291167,7 +291352,7 @@
     "MEX"
    ],
    "iso2": "MX",
-   "people": 1381767,
+   "people": 1530851,
    "origin": [
     -92.9638,
     17.9749
@@ -291195,7 +291380,8 @@
      "50627088B13512547734143",
      "50627088B80636009912832",
      "50627088B67018988182398",
-     "50627088B5498288476190"
+     "50627088B5498288476190",
+     "50627088B18238703345700"
     ]
    },
    "bbox": [
@@ -291221,28 +291407,35 @@
      "Ixtacomitán",
      "Solosuchiapa",
      "Ixtapangajoya",
-     "Sunuapa"
-    ]
+     "Sunuapa",
+     "Nacajuca"
+    ],
+    "T-2702": {
+     "added": [
+      "50627088B18238703345700"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-182304",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:37:34",
+    "gated": "2026-11-07T08:50:38",
+    "shipped": "2026-11-07T17:39:28",
     "steps": {
-     "build": 47.0,
-     "stations": 1.1,
+     "build": 41.1,
+     "stations": 1.2,
      "places": 2.3,
-     "routes": 66.5,
-     "merge": 2.7,
-     "nocar": 3.4,
-     "everyday": 1.8
+     "routes": 53.5,
+     "merge": 1.2,
+     "nocar": 1.4,
+     "everyday": 0.8
     },
-    "built": "2026-11-05T19:03:31",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6051.84033203125"
+      "top_school_cell_pupils 6041.15234375"
      ]
-    },
-    "gated": "2026-11-05T19:48:15",
-    "shipped": "2026-11-05T21:17:43"
+    }
    }
   },
   {
@@ -296702,7 +296895,7 @@
     "MEX"
    ],
    "iso2": "MX",
-   "people": 713728,
+   "people": 767383,
    "origin": [
     -95.2146,
     18.4533
@@ -296733,14 +296926,15 @@
      "50627088B3891560925219",
      "50627088B79823252153906",
      "50627088B35781734794767",
-     "50627088B40766797013882"
+     "50627088B40766797013882",
+     "50627088B94546809143043"
     ]
    },
    "bbox": [
     -96.628,
     18.08,
     -94.864,
-    18.742
+    19.146
    ],
    "source": {
     "zone": "T-723",
@@ -296762,30 +296956,36 @@
      "Tlacojalpan",
      "Acula",
      "Otatitlán",
-     "Tuxtilla"
-    ]
+     "Tuxtilla",
+     "Alvarado"
+    ],
+    "T-2702": {
+     "added": [
+      "50627088B94546809143043"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-182304",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:37:35",
+    "gated": "2026-11-07T08:50:38",
+    "shipped": "2026-11-07T17:39:28",
     "steps": {
-     "build": 44.9,
-     "stations": 1.5,
-     "places": 2.2,
-     "routes": 44.2,
-     "merge": 1.2,
-     "nocar": 1.6,
-     "everyday": 1.1
+     "build": 43.2,
+     "stations": 1.1,
+     "places": 2.6,
+     "routes": 53.2,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-05T19:31:25",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.8435188192959419",
-      "top_cell_jobs_share_other 0.04568289148842985",
+      "top_cell_jobs_share_other 0.04483447163464628",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-05T19:48:53",
-    "shipped": "2026-11-05T21:18:10"
+    }
    }
   },
   {
@@ -297050,7 +297250,7 @@
     "MEX"
    ],
    "iso2": "MX",
-   "people": 664711,
+   "people": 729434,
    "origin": [
     -106.4014,
     23.2344
@@ -297069,12 +297269,13 @@
      "50627088B50606245291674",
      "50627088B76854514222016",
      "50627088B92995602725414",
-     "50627088B50408193042815"
+     "50627088B50408193042815",
+     "50627088B92703262083917"
     ]
    },
    "bbox": [
     -107.165,
-    22.811,
+    22.468,
     -105.392,
     24.826
    ],
@@ -297086,26 +297287,33 @@
      "Elota",
      "Concordia",
      "San Ignacio",
-     "Cosalá"
-    ]
+     "Cosalá",
+     "Escuinapa"
+    ],
+    "T-2702": {
+     "added": [
+      "50627088B92703262083917"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-182304",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:37:20",
+    "gated": "2026-11-07T08:50:39",
+    "shipped": "2026-11-07T17:39:29",
     "steps": {
-     "build": 47.4,
-     "stations": 1.5,
-     "places": 2.7,
-     "routes": 37.0,
-     "merge": 1.4,
-     "nocar": 1.7,
-     "everyday": 1.1
+     "build": 39.0,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 40.4,
+     "merge": 1.2,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-11-05T19:32:46",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-05T19:48:56",
-    "shipped": "2026-11-05T21:18:12"
+    }
    }
   },
   {
@@ -297218,7 +297426,7 @@
     "MEX"
    ],
    "iso2": "MX",
-   "people": 658146,
+   "people": 774315,
    "origin": [
     -95.2052,
     16.1811
@@ -297274,7 +297482,8 @@
      "50627088B48372928795218",
      "50627088B55334990083111",
      "50627088B43192699457410",
-     "50627088B60096120896365"
+     "50627088B60096120896365",
+     "50627088B28921038205871"
     ]
    },
    "bbox": [
@@ -297328,26 +297537,33 @@
      "Magdalena Tlacotepec",
      "Asunción Tlacolulita",
      "Santa María Totolapilla",
-     "San Miguel Tenango"
-    ]
+     "San Miguel Tenango",
+     "Heroica Ciudad de Juchitán de Zaragoza"
+    ],
+    "T-2702": {
+     "added": [
+      "50627088B28921038205871"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-182304",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:37:19",
+    "gated": "2026-11-07T08:50:39",
+    "shipped": "2026-11-07T17:39:29",
     "steps": {
-     "build": 44.1,
-     "stations": 1.2,
-     "places": 2.3,
-     "routes": 39.7,
-     "merge": 1.0,
-     "nocar": 1.4,
+     "build": 35.4,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 46.7,
+     "merge": 1.3,
+     "nocar": 1.5,
      "everyday": 0.9
     },
-    "built": "2026-11-05T19:33:09",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-05T19:48:57",
-    "shipped": "2026-11-05T21:18:13"
+    }
    }
   },
   {
@@ -300121,21 +300337,22 @@
      "União Paulista",
      "Santana da Ponte Pensa",
      "Santa Salete"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261106-073027",
-    "built": "2026-11-06T07:55:13",
-    "gated": "2026-11-06T02:29:28",
-    "shipped": "2026-11-06T09:25:52",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:30:17",
+    "gated": "2026-11-07T09:54:42",
+    "shipped": "2026-11-07T17:39:30",
     "steps": {
-     "build": 69.5,
-     "stations": 1.5,
-     "places": 3.4,
-     "routes": 143.8,
-     "merge": 2.8,
-     "nocar": 1.8,
-     "everyday": 1.0
+     "build": 80.1,
+     "stations": 1.2,
+     "places": 3.5,
+     "routes": 147.9,
+     "merge": 2.7,
+     "nocar": 1.6,
+     "everyday": 0.9
     },
     "gate": {
      "warn": []
@@ -300761,28 +300978,28 @@
      "Venha-Ver",
      "Poço Dantas",
      "Bom Jesus"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:41:48",
+    "gated": "2026-11-07T09:54:45",
+    "shipped": "2026-11-07T17:39:30",
     "steps": {
-     "build": 63.9,
-     "stations": 1.1,
-     "places": 2.2,
-     "routes": 129.0,
-     "merge": 4.0,
+     "build": 70.3,
+     "stations": 1.3,
+     "places": 2.7,
+     "routes": 158.6,
+     "merge": 4.4,
      "nocar": 2.4,
-     "everyday": 1.2
+     "everyday": 1.3
     },
-    "built": "2026-11-06T00:08:11",
-    "gated": "2026-11-06T02:29:29",
-    "parked": "2026-11-06T02:45:00",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10212919152220569"
+      "top_zone_jobs_share 0.10134089910470541"
      ]
-    },
-    "shipped": "2026-11-06T07:11:16"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -300797,7 +301014,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1335249,
+   "people": 1348486,
    "origin": [
     -49.3674,
     -28.6846
@@ -300876,7 +301093,8 @@
      "56859067B39388374799288",
      "56859067B47618181554929",
      "56859067B75265848961106",
-     "56859067B20346666539380"
+     "56859067B20346666539380",
+     "56859067B51048892739897"
     ]
    },
    "bbox": [
@@ -300953,27 +301171,33 @@
      "Itati",
      "Dom Pedro de Alcântara",
      "Ermo",
-     "Santa Rosa de Lima"
-    ]
+     "Santa Rosa de Lima",
+     "Balneário Rincão"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B51048892739897"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:04:54",
+    "gated": "2026-11-07T08:50:26",
+    "shipped": "2026-11-07T17:39:31",
     "steps": {
-     "build": 108.1,
-     "stations": 1.1,
-     "places": 3.4,
-     "routes": 130.9,
-     "merge": 2.5,
-     "nocar": 2.7,
-     "everyday": 2.0
+     "build": 109.1,
+     "stations": 1.0,
+     "places": 3.1,
+     "routes": 97.5,
+     "merge": 2.0,
+     "nocar": 1.8,
+     "everyday": 0.9
     },
-    "built": "2026-11-06T00:09:05",
-    "gated": "2026-11-06T02:29:30",
-    "parked": "2026-11-06T02:45:01",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:17"
+    }
    },
    "solve_region": "sul"
   },
@@ -301399,26 +301623,26 @@
      "Painel",
      "Presidente Nereu",
      "Pinhal da Serra"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:31:10",
+    "gated": "2026-11-07T09:54:42",
+    "shipped": "2026-11-07T17:39:31",
     "steps": {
-     "build": 117.8,
-     "stations": 1.1,
-     "places": 2.8,
-     "routes": 137.1,
-     "merge": 4.2,
-     "nocar": 2.0,
-     "everyday": 0.9
+     "build": 138.6,
+     "stations": 1.5,
+     "places": 4.0,
+     "routes": 138.9,
+     "merge": 3.7,
+     "nocar": 1.7,
+     "everyday": 0.8
     },
-    "built": "2026-11-06T00:12:40",
-    "gated": "2026-11-06T02:29:33",
-    "parked": "2026-11-06T02:45:04",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:18"
+    }
    },
    "solve_region": "sul"
   },
@@ -303584,7 +303808,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1225350,
+   "people": 1252356,
    "origin": [
     -48.7988,
     -26.2804
@@ -303614,7 +303838,8 @@
      "56859067B85566328375653",
      "56859067B13667370892418",
      "56859067B4015811011138",
-     "56859067B40062272044728"
+     "56859067B40062272044728",
+     "56859067B48185053064222"
     ]
    },
    "bbox": [
@@ -303642,27 +303867,33 @@
      "Rio dos Cedros",
      "Balneário Barra do Sul",
      "São João do Itaperiú",
-     "Doutor Pedrinho"
-    ]
+     "Doutor Pedrinho",
+     "Barra Velha"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B48185053064222"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:03:13",
+    "gated": "2026-11-07T08:50:26",
+    "shipped": "2026-11-07T17:39:32",
     "steps": {
-     "build": 74.4,
-     "stations": 1.3,
-     "places": 3.2,
-     "routes": 48.5,
+     "build": 63.9,
+     "stations": 1.4,
+     "places": 3.4,
+     "routes": 46.4,
      "merge": 1.0,
-     "nocar": 1.9,
-     "everyday": 1.4
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T00:26:35",
-    "gated": "2026-11-06T02:29:39",
-    "parked": "2026-11-06T02:45:12",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:25"
+    }
    },
    "solve_region": "sul"
   },
@@ -303844,28 +304075,28 @@
      "Santa Inês",
      "Nova Aliança do Ivaí",
      "Jardim Olinda"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:29:41",
+    "gated": "2026-11-07T09:54:43",
+    "shipped": "2026-11-07T17:39:32",
     "steps": {
-     "build": 54.8,
-     "stations": 1.3,
-     "places": 2.7,
-     "routes": 119.1,
-     "merge": 3.4,
-     "nocar": 2.3,
-     "everyday": 1.4
+     "build": 60.3,
+     "stations": 1.1,
+     "places": 2.5,
+     "routes": 129.9,
+     "merge": 2.3,
+     "nocar": 2.2,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T00:29:42",
-    "gated": "2026-11-06T02:29:40",
-    "parked": "2026-11-06T02:45:13",
     "gate": {
      "warn": [
       "top_zone_jobs_share 0.1333473798961763"
      ]
-    },
-    "shipped": "2026-11-06T07:11:25"
+    }
    },
    "solve_region": "sul"
   },
@@ -304071,26 +304302,26 @@
      "Taboleiro Grande",
      "Fernando Pedroza",
      "Viçosa"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:42:45",
+    "gated": "2026-11-07T09:54:46",
+    "shipped": "2026-11-07T17:39:33",
     "steps": {
-     "build": 114.3,
-     "stations": 1.7,
-     "places": 3.3,
-     "routes": 171.1,
-     "merge": 4.9,
-     "nocar": 2.1,
-     "everyday": 2.3
+     "build": 109.6,
+     "stations": 1.1,
+     "places": 2.7,
+     "routes": 177.4,
+     "merge": 3.6,
+     "nocar": 1.6,
+     "everyday": 0.9
     },
-    "built": "2026-11-06T00:32:11",
-    "gated": "2026-11-06T02:29:40",
-    "parked": "2026-11-06T02:45:13",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:26"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -304812,29 +305043,29 @@
      "Taipas do Tocantins",
      "Rio da Conceição",
      "Lavandeira"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:46:54",
+    "gated": "2026-11-07T09:54:46",
+    "shipped": "2026-11-07T17:39:33",
     "steps": {
-     "build": 196.0,
+     "build": 190.9,
      "stations": 1.6,
-     "places": 3.4,
-     "routes": 431.2,
-     "merge": 35.9,
-     "nocar": 3.1,
-     "everyday": 1.7
+     "places": 4.3,
+     "routes": 322.2,
+     "merge": 21.9,
+     "nocar": 1.8,
+     "everyday": 0.8
     },
-    "built": "2026-11-06T00:43:51",
-    "gated": "2026-11-06T02:29:44",
-    "parked": "2026-11-06T02:45:17",
     "gate": {
      "warn": [
-      "area_km2 183227.7585738675",
+      "area_km2 183227.66174518326",
       "fleet_range 1"
      ]
-    },
-    "shipped": "2026-11-06T07:11:28"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -304849,7 +305080,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1167027,
+   "people": 1275658,
    "origin": [
     -40.0501,
     -19.4034
@@ -304900,7 +305131,8 @@
      "56859067B53855567891195",
      "56859067B59978415419512",
      "56859067B23060074651511",
-     "56859067B59979261152966"
+     "56859067B59979261152966",
+     "56859067B44994056013366"
     ]
    },
    "bbox": [
@@ -304949,22 +305181,29 @@
      "São Domingos do Norte",
      "Alto Rio Novo",
      "Ponto Belo",
-     "Mucurici"
-    ]
+     "Mucurici",
+     "Aracruz"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B44994056013366"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261106-073027",
-    "built": "2026-11-06T07:57:44",
-    "gated": "2026-11-06T02:29:44",
-    "shipped": "2026-11-06T09:25:57",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:06:10",
+    "gated": "2026-11-07T08:50:27",
+    "shipped": "2026-11-07T17:39:34",
     "steps": {
-     "build": 169.9,
-     "stations": 1.2,
-     "places": 4.0,
-     "routes": 186.5,
-     "merge": 7.6,
-     "nocar": 3.3,
-     "everyday": 2.0
+     "build": 151.2,
+     "stations": 0.8,
+     "places": 2.6,
+     "routes": 128.8,
+     "merge": 4.4,
+     "nocar": 1.7,
+     "everyday": 0.9
     },
     "gate": {
      "warn": []
@@ -305982,21 +306221,22 @@
      "Sarutaiá",
      "Mombuca",
      "Águas de São Pedro"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261106-073027",
-    "built": "2026-11-06T07:55:21",
-    "gated": "2026-11-06T02:29:47",
-    "shipped": "2026-11-06T09:25:53",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:30:29",
+    "gated": "2026-11-07T09:54:43",
+    "shipped": "2026-11-07T17:39:34",
     "steps": {
-     "build": 70.4,
-     "stations": 1.2,
-     "places": 3.4,
-     "routes": 152.6,
-     "merge": 3.1,
-     "nocar": 2.5,
-     "everyday": 1.3
+     "build": 83.5,
+     "stations": 1.5,
+     "places": 3.6,
+     "routes": 151.5,
+     "merge": 2.3,
+     "nocar": 1.6,
+     "everyday": 1.0
     },
     "gate": {
      "warn": []
@@ -306325,26 +306565,26 @@
      "São Domingos do Cariri",
      "Coxixola",
      "Riacho de Santo Antônio"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:42:05",
+    "gated": "2026-11-07T09:54:47",
+    "shipped": "2026-11-07T17:39:35",
     "steps": {
-     "build": 83.9,
+     "build": 64.8,
      "stations": 1.6,
      "places": 3.2,
-     "routes": 144.0,
-     "merge": 2.1,
-     "nocar": 1.6,
-     "everyday": 2.0
+     "routes": 181.5,
+     "merge": 2.6,
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-11-06T00:51:54",
-    "gated": "2026-11-06T02:29:48",
-    "parked": "2026-11-06T02:45:22",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:33"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -306359,7 +306599,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 1094872,
+   "people": 1117343,
    "origin": [
     -48.6036,
     -27.5901
@@ -306387,12 +306627,13 @@
      "56859067B80537926238149",
      "56859067B60801601029552",
      "56859067B25915712564646",
-     "56859067B14701683367947"
+     "56859067B14701683367947",
+     "56859067B6248133710185"
     ]
    },
    "bbox": [
     -49.51,
-    -28.108,
+    -28.117,
     -48.356,
     -27.135
    ],
@@ -306413,29 +306654,33 @@
      "Águas Mornas",
      "Angelina",
      "São Bonifácio",
-     "Rancho Queimado"
-    ]
+     "Rancho Queimado",
+     "Garopaba"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B6248133710185"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:02:53",
+    "gated": "2026-11-07T08:50:27",
+    "shipped": "2026-11-07T17:39:35",
     "steps": {
-     "build": 53.2,
-     "stations": 0.9,
-     "places": 2.0,
-     "routes": 37.3,
-     "merge": 1.7,
-     "nocar": 2.4,
-     "everyday": 1.2
+     "build": 51.4,
+     "stations": 1.2,
+     "places": 2.8,
+     "routes": 36.3,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-11-06T00:52:15",
-    "gated": "2026-11-06T02:29:49",
-    "parked": "2026-11-06T02:45:23",
     "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.12841902597881116"
-     ]
-    },
-    "shipped": "2026-11-06T07:11:33"
+     "warn": []
+    }
    },
    "solve_region": "sul"
   },
@@ -307715,21 +307960,22 @@
      "São José de Ubá",
      "Laje do Muriaé",
      "Antônio Prado de Minas"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261106-073027",
-    "built": "2026-11-06T07:54:08",
-    "gated": "2026-11-06T02:29:54",
-    "shipped": "2026-11-06T09:25:55",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:29:14",
+    "gated": "2026-11-07T09:54:44",
+    "shipped": "2026-11-07T17:39:36",
     "steps": {
-     "build": 62.4,
+     "build": 74.3,
      "stations": 1.5,
-     "places": 2.8,
-     "routes": 84.3,
-     "merge": 1.7,
-     "nocar": 1.7,
-     "everyday": 1.1
+     "places": 3.2,
+     "routes": 90.3,
+     "merge": 2.4,
+     "nocar": 2.2,
+     "everyday": 1.3
     },
     "gate": {
      "warn": []
@@ -309835,7 +310081,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 882364,
+   "people": 907531,
    "origin": [
     -45.0817,
     -2.5277
@@ -309886,7 +310132,9 @@
      "56859067B54906018261321",
      "56859067B53661341879056",
      "56859067B48113685319098",
-     "56859067B88031270249569"
+     "56859067B88031270249569",
+     "56859067B98855082713",
+     "56859067B69390320621521"
     ]
    },
    "bbox": [
@@ -309935,29 +310183,37 @@
      "Presidente Médici",
      "Amapá do Maranhão",
      "Bacurituba",
-     "Junco do Maranhão"
-    ]
+     "Junco do Maranhão",
+     "Apicum-Açu",
+     "Porto Rico do Maranhão"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B98855082713",
+      "56859067B69390320621521"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:11:21",
+    "gated": "2026-11-07T08:50:30",
+    "shipped": "2026-11-07T17:39:36",
     "steps": {
-     "build": 74.1,
+     "build": 82.0,
      "stations": 1.1,
-     "places": 2.1,
-     "routes": 55.9,
-     "merge": 3.4,
-     "nocar": 1.8,
+     "places": 2.2,
+     "routes": 55.1,
+     "merge": 2.9,
+     "nocar": 1.4,
      "everyday": 1.1
     },
-    "built": "2026-11-06T01:19:11",
-    "gated": "2026-11-06T02:30:01",
-    "parked": "2026-11-06T02:45:37",
     "gate": {
      "warn": [
       "fleet_range 1"
      ]
-    },
-    "shipped": "2026-11-06T07:11:44"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -311931,7 +312187,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 777063,
+   "people": 820283,
    "origin": [
     -40.3567,
     -3.6849
@@ -311965,7 +312221,9 @@
      "56859067B4010642262930",
      "56859067B67706386881403",
      "56859067B38471619751725",
-     "56859067B49551412752455"
+     "56859067B49551412752455",
+     "56859067B90634068804727",
+     "56859067B84967197177731"
     ]
    },
    "bbox": [
@@ -311997,29 +312255,37 @@
      "Martinópole",
      "Groaíras",
      "Moraújo",
-     "Senador Sá"
-    ]
+     "Senador Sá",
+     "Cruz",
+     "Barroquinha"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B90634068804727",
+      "56859067B84967197177731"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:10:57",
+    "gated": "2026-11-07T08:50:31",
+    "shipped": "2026-11-07T17:39:37",
     "steps": {
-     "build": 49.1,
-     "stations": 0.9,
-     "places": 1.7,
-     "routes": 67.4,
-     "merge": 1.9,
-     "nocar": 1.9,
-     "everyday": 1.0
+     "build": 48.7,
+     "stations": 1.5,
+     "places": 2.9,
+     "routes": 64.9,
+     "merge": 1.6,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T01:29:50",
-    "gated": "2026-11-06T02:30:08",
-    "parked": "2026-11-06T02:45:45",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10343501839230249"
+      "top_zone_jobs_share 0.1010859095615428"
      ]
-    },
-    "shipped": "2026-11-06T07:11:51"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -312237,7 +312503,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 754460,
+   "people": 771710,
    "origin": [
     -41.7554,
     -2.9161
@@ -312286,14 +312552,16 @@
      "56859067B36609863905827",
      "56859067B3346916621202",
      "56859067B88089338838597",
-     "56859067B58876353314423"
+     "56859067B58876353314423",
+     "56859067B71807415879430",
+     "56859067B66814431717617"
     ]
    },
    "bbox": [
     -42.989,
     -4.885,
     -41.091,
-    -2.757
+    -2.75
    ],
    "source": {
     "zone": "T-723",
@@ -312333,30 +312601,39 @@
      "Bom Princípio do Piauí",
      "Joca Marques",
      "Cocal de Telha",
-     "Domingos Mourão"
-    ]
+     "Domingos Mourão",
+     "Ilha Grande",
+     "Cajueiro da Praia"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B71807415879430",
+      "56859067B66814431717617"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    },
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:40:34",
+    "gated": "2026-11-07T09:54:47",
+    "shipped": "2026-11-07T17:39:37",
     "steps": {
-     "build": 63.2,
-     "stations": 1.2,
-     "places": 2.1,
-     "routes": 69.8,
-     "merge": 3.8,
-     "nocar": 2.2,
-     "everyday": 1.0
+     "build": 65.0,
+     "stations": 1.7,
+     "places": 2.7,
+     "routes": 85.8,
+     "merge": 4.1,
+     "nocar": 2.3,
+     "everyday": 1.9
     },
-    "built": "2026-11-06T01:32:04",
-    "gated": "2026-11-06T02:30:09",
-    "parked": "2026-11-06T02:45:46",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10773837749813983",
+      "top_zone_jobs_share 0.10681163221018233",
       "fleet_range 1"
      ]
-    },
-    "shipped": "2026-11-06T07:11:52"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -312785,7 +313062,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 734526,
+   "people": 926429,
    "origin": [
     -48.6966,
     -26.905
@@ -312810,14 +313087,18 @@
      "56859067B31749157862997",
      "56859067B31114791802058",
      "56859067B33823737687392",
-     "56859067B69843073310031"
+     "56859067B69843073310031",
+     "56859067B93664630758988",
+     "56859067B78825911007655",
+     "56859067B52127181831063",
+     "56859067B26603049963849"
     ]
    },
    "bbox": [
     -49.226,
     -27.503,
-    -48.511,
-    -26.741
+    -48.404,
+    -26.706
    ],
    "source": {
     "zone": "T-723",
@@ -312833,27 +313114,41 @@
      "Nova Trento",
      "Ilhota",
      "Canelinha",
-     "Major Gercino"
-    ]
+     "Major Gercino",
+     "Balneário Camboriú",
+     "Penha",
+     "Balneário Piçarras",
+     "Bombinhas"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B93664630758988",
+      "56859067B78825911007655",
+      "56859067B52127181831063",
+      "56859067B26603049963849"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:02:46",
+    "gated": "2026-11-07T08:50:28",
+    "shipped": "2026-11-07T17:39:38",
     "steps": {
-     "build": 42.2,
-     "stations": 1.0,
-     "places": 2.0,
-     "routes": 26.3,
-     "merge": 0.8,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "build": 43.4,
+     "stations": 1.2,
+     "places": 2.6,
+     "routes": 32.8,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-11-06T01:33:20",
-    "gated": "2026-11-06T02:30:11",
-    "parked": "2026-11-06T02:45:48",
     "gate": {
-     "warn": []
-    },
-    "shipped": "2026-11-06T07:11:54"
+     "warn": [
+      "top_school_cell_pupils 5499.431640625"
+     ]
+    }
    },
    "solve_region": "sul"
   },
@@ -313420,28 +313715,28 @@
      "Curral Velho",
      "Carrapateira",
      "Amparo"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:41:20",
+    "gated": "2026-11-07T09:54:48",
+    "shipped": "2026-11-07T17:39:38",
     "steps": {
-     "build": 74.0,
-     "stations": 1.0,
-     "places": 2.1,
-     "routes": 90.3,
-     "merge": 2.2,
-     "nocar": 1.7,
-     "everyday": 1.1
+     "build": 76.3,
+     "stations": 1.8,
+     "places": 2.9,
+     "routes": 119.6,
+     "merge": 2.9,
+     "nocar": 2.2,
+     "everyday": 1.4
     },
-    "built": "2026-11-06T01:37:19",
-    "gated": "2026-11-06T02:30:14",
-    "parked": "2026-11-06T02:45:51",
     "gate": {
      "warn": [
       "fleet_range 1"
      ]
-    },
-    "shipped": "2026-11-06T07:11:56"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -313456,7 +313751,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 706590,
+   "people": 710859,
    "origin": [
     -37.4346,
     -10.6874
@@ -313511,7 +313806,8 @@
      "56859067B71066777145580",
      "56859067B36241430136927",
      "56859067B37767461390703",
-     "56859067B64009913440528"
+     "56859067B64009913440528",
+     "56859067B31979699807440"
     ]
    },
    "bbox": [
@@ -313564,27 +313860,34 @@
      "São Francisco",
      "Canhoba",
      "Telha",
-     "Amparo do São Francisco"
-    ]
+     "Amparo do São Francisco",
+     "Santa Rosa de Lima"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B31979699807440"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    },
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:40:28",
+    "gated": "2026-11-07T09:54:48",
+    "shipped": "2026-11-07T17:39:39",
     "steps": {
-     "build": 51.3,
-     "stations": 1.2,
-     "places": 2.3,
-     "routes": 70.2,
-     "merge": 1.4,
-     "nocar": 1.5,
-     "everyday": 0.9
+     "build": 54.3,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 94.1,
+     "merge": 1.9,
+     "nocar": 2.2,
+     "everyday": 1.6
     },
-    "built": "2026-11-06T01:37:11",
-    "gated": "2026-11-06T02:30:15",
-    "parked": "2026-11-06T02:45:52",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:11:57"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -314763,28 +315066,28 @@
      "Heliópolis",
      "Sítio do Quinto",
      "Pinhão"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:40:45",
+    "gated": "2026-11-07T09:54:49",
+    "shipped": "2026-11-07T17:39:39",
     "steps": {
-     "build": 50.9,
-     "stations": 1.1,
-     "places": 2.0,
-     "routes": 93.9,
-     "merge": 2.3,
-     "nocar": 1.6,
-     "everyday": 0.9
+     "build": 53.4,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 107.4,
+     "merge": 4.4,
+     "nocar": 2.7,
+     "everyday": 1.5
     },
-    "built": "2026-11-06T01:47:30",
-    "gated": "2026-11-06T02:30:21",
-    "parked": "2026-11-06T02:45:58",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.12815293863726945"
+      "top_zone_jobs_share 0.12780929395633137"
      ]
-    },
-    "shipped": "2026-11-06T07:12:02"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -314799,7 +315102,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 643971,
+   "people": 662969,
    "origin": [
     -48.5388,
     -25.5141
@@ -314834,12 +315137,13 @@
      "56859067B70757280308936",
      "56859067B2977467796065",
      "56859067B13489548048326",
-     "56859067B83930730788661"
+     "56859067B83930730788661",
+     "56859067B97691755303432"
     ]
    },
    "bbox": [
     -48.992,
-    -25.993,
+    -26.207,
     -46.899,
     -23.995
    ],
@@ -314866,27 +315170,34 @@
      "Cananéia",
      "Pedro de Toledo",
      "Ilha Comprida",
-     "Guaraqueçaba"
-    ]
+     "Guaraqueçaba",
+     "Itapoá"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B97691755303432"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    },
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:29:15",
+    "gated": "2026-11-07T09:54:44",
+    "shipped": "2026-11-07T17:39:40",
     "steps": {
-     "build": 75.4,
-     "stations": 1.3,
-     "places": 2.5,
-     "routes": 57.2,
-     "merge": 1.4,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 89.7,
+     "stations": 1.6,
+     "places": 3.3,
+     "routes": 76.9,
+     "merge": 1.9,
+     "nocar": 2.0,
+     "everyday": 1.3
     },
-    "built": "2026-11-06T01:47:35",
-    "gated": "2026-11-06T02:30:22",
-    "parked": "2026-11-06T02:45:59",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:12:02"
+    }
    },
    "solve_region": "sul"
   },
@@ -315116,26 +315427,26 @@
      "Duas Estradas",
      "Riachão",
      "Serra da Raiz"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:42:48",
+    "gated": "2026-11-07T09:54:49",
+    "shipped": "2026-11-07T17:39:40",
     "steps": {
-     "build": 42.7,
-     "stations": 1.0,
-     "places": 2.4,
-     "routes": 58.5,
-     "merge": 1.4,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 52.1,
+     "stations": 1.3,
+     "places": 3.0,
+     "routes": 61.0,
+     "merge": 1.1,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-11-06T01:49:21",
-    "gated": "2026-11-06T02:30:23",
-    "parked": "2026-11-06T02:46:00",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:12:03"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -315150,7 +315461,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 638707,
+   "people": 670783,
    "origin": [
     -42.0453,
     -22.8921
@@ -315170,13 +315481,14 @@
      "56859067B78416297759673",
      "56859067B77221127039248",
      "56859067B51771199201484",
-     "56859067B6449938642044"
+     "56859067B6449938642044",
+     "56859067B15483842761864"
     ]
    },
    "bbox": [
     -42.679,
     -23.014,
-    -41.903,
+    -41.822,
     -22.401
    ],
    "source": {
@@ -315188,30 +315500,35 @@
      "Saquarema",
      "Arraial do Cabo",
      "Iguaba Grande",
-     "Silva Jardim"
-    ]
+     "Silva Jardim",
+     "Armação dos Búzios"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B15483842761864"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:02:37",
+    "gated": "2026-11-07T08:50:29",
+    "shipped": "2026-11-07T17:39:41",
     "steps": {
-     "build": 33.3,
-     "stations": 1.3,
-     "places": 1.9,
-     "routes": 27.6,
-     "merge": 0.7,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "build": 35.2,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 33.9,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T01:48:44",
-    "gated": "2026-11-06T02:30:24",
-    "parked": "2026-11-06T02:46:00",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10697454670938188",
-      "top_school_cell_pupils 6000.0"
+      "top_school_cell_pupils 5506.1142578125"
      ]
-    },
-    "shipped": "2026-11-06T07:12:03"
+    }
    },
    "solve_region": "sudeste"
   },
@@ -315467,28 +315784,28 @@
      "Ibirajuba",
      "Terezinha",
      "Minador do Negrão"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:42:27",
+    "gated": "2026-11-07T09:54:50",
+    "shipped": "2026-11-07T17:39:41",
     "steps": {
-     "build": 32.8,
-     "stations": 1.2,
-     "places": 2.2,
-     "routes": 49.4,
-     "merge": 1.3,
-     "nocar": 1.7,
-     "everyday": 1.0
+     "build": 40.9,
+     "stations": 1.4,
+     "places": 2.6,
+     "routes": 61.9,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.1
     },
-    "built": "2026-11-06T01:50:15",
-    "gated": "2026-11-06T02:30:26",
-    "parked": "2026-11-06T02:46:02",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1461278198889903"
+      "top_zone_jobs_share 0.11653342865095112"
      ]
-    },
-    "shipped": "2026-11-06T07:12:05"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -315871,26 +316188,25 @@
      "Fortaleza de Minas",
      "Bom Jesus da Penha",
      "Cássia dos Coqueiros"
-    ]
+    ],
+    "T-2702b": "rebuilt: a unit across a state line had no census tracts"
    },
    "run": {
-    "run_batch": "20261106-073027",
-    "built": "2026-11-06T08:00:31",
-    "gated": "2026-11-06T02:30:27",
-    "shipped": "2026-11-06T09:26:02",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:29:05",
+    "gated": "2026-11-07T09:54:45",
+    "shipped": "2026-11-07T17:39:42",
     "steps": {
-     "build": 71.4,
+     "build": 55.2,
      "stations": 1.3,
-     "places": 2.7,
-     "routes": 83.9,
-     "merge": 1.7,
-     "nocar": 1.9,
-     "everyday": 1.0
+     "places": 2.3,
+     "routes": 97.5,
+     "merge": 2.5,
+     "nocar": 2.4,
+     "everyday": 1.3
     },
     "gate": {
-     "warn": [
-      "pop_vs_plan 0.8292438326347753"
-     ]
+     "warn": []
     }
    },
    "solve_region": "sudeste"
@@ -316959,7 +317275,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 541300,
+   "people": 578350,
    "origin": [
     -39.5924,
     -3.4988
@@ -316987,7 +317303,8 @@
      "56859067B74610593529944",
      "56859067B49924761215714",
      "56859067B5197375737563",
-     "56859067B86907470602863"
+     "56859067B86907470602863",
+     "56859067B64518825165882"
     ]
    },
    "bbox": [
@@ -317013,27 +317330,33 @@
      "Tururu",
      "Miraíma",
      "São Luís do Curu",
-     "General Sampaio"
-    ]
+     "General Sampaio",
+     "Paracuru"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B64518825165882"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:10:39",
+    "gated": "2026-11-07T08:50:32",
+    "shipped": "2026-11-07T17:39:42",
     "steps": {
-     "build": 41.7,
-     "stations": 0.9,
-     "places": 1.5,
-     "routes": 40.6,
-     "merge": 1.1,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "build": 40.2,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 52.6,
+     "merge": 1.3,
+     "nocar": 1.8,
+     "everyday": 1.0
     },
-    "built": "2026-11-06T01:57:17",
-    "gated": "2026-11-06T02:30:33",
-    "parked": "2026-11-06T02:46:10",
     "gate": {
      "warn": []
-    },
-    "shipped": "2026-11-06T07:12:11"
+    }
    },
    "solve_region": "nordeste"
   },
@@ -317048,7 +317371,7 @@
     "BRA"
    ],
    "iso2": "BR",
-   "people": 538763,
+   "people": 599526,
    "origin": [
     -46.7658,
     -1.0636
@@ -317074,14 +317397,16 @@
      "56859067B73702503430896",
      "56859067B79534795748726",
      "56859067B46461793973564",
-     "56859067B34086017458095"
+     "56859067B34086017458095",
+     "56859067B4042781644411",
+     "56859067B99309548374267"
     ]
    },
    "bbox": [
     -47.497,
     -2.413,
     -46.061,
-    -0.624
+    -0.591
    ],
    "source": {
     "zone": "T-723",
@@ -317098,31 +317423,39 @@
      "Bonito",
      "Nova Timboteua",
      "Primavera",
-     "Peixe-Boi"
-    ]
+     "Peixe-Boi",
+     "Salinópolis",
+     "Quatipuru"
+    ],
+    "T-2702": {
+     "added": [
+      "56859067B4042781644411",
+      "56859067B99309548374267"
+     ],
+     "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
+    }
    },
    "run": {
-    "run_batch": "20261105-234843",
+    "run_batch": "20261107-072922",
+    "built": "2026-11-07T08:40:26",
+    "gated": "2026-11-07T08:50:40",
+    "shipped": "2026-11-07T17:39:43",
     "steps": {
-     "build": 50.8,
+     "build": 48.9,
      "stations": 1.0,
-     "places": 1.6,
-     "routes": 25.2,
-     "merge": 1.3,
+     "places": 1.4,
+     "routes": 23.6,
+     "merge": 1.7,
      "nocar": 1.4,
-     "everyday": 1.0
+     "everyday": 0.8
     },
-    "built": "2026-11-06T01:57:13",
-    "gated": "2026-11-06T02:30:34",
-    "parked": "2026-11-06T02:46:11",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.8322045131246113",
-      "top_zone_jobs_share 0.15202913256326708",
+      "pop_vs_plan 0.8417599907915806",
+      "top_zone_jobs_share 0.1431427489890433",
       "fleet_range 1"
      ]
-    },
-    "shipped": "2026-11-06T07:12:12"
+    }
    },
    "solve_region": "norte"
   },
@@ -326350,7 +326683,7 @@
    "id": "pis",
    "name": "Pinillos",
    "kind": "zone",
-   "status": "held",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "COL"
@@ -326358,16 +326691,16 @@
    "iso2": "CO",
    "people": 728695,
    "origin": [
-    -74.4667,
-    8.9143
+    -74.4255,
+    9.2384
    ],
    "tz": "America/Bogota",
    "utc_offset": -5,
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B11088178486316",
@@ -326409,36 +326742,42 @@
      "Regidor",
      "Zambrano",
      "Córdoba"
-    ]
+    ],
+    "T-2712": {
+     "origin_was": [
+      -74.4667,
+      8.9143
+     ]
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:47:52",
+    "gated": "2026-11-07T09:54:50",
     "steps": {
-     "build": 36.3,
-     "stations": 0.9,
-     "places": 1.7,
-     "routes": 18.6,
+     "build": 30.4,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 19.2,
      "merge": 0.9,
-     "nocar": 1.3,
-     "everyday": 1.1
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:28:00",
-    "reason": "gate: pop_vs_plan 0.6976842114335023; pop_vs_ghsl 0.696303145774513 GHSL 2025 730,140",
     "gate": {
-     "fail": [
-      "pop_vs_plan 0.6976842114335023",
-      "pop_vs_ghsl 0.696303145774513 GHSL 2025 730,140"
-     ],
      "warn": [
-      "top_zone_jobs_share 0.17975473066835157",
-      "drive_factor_median 2.1503379159523",
-      "road_snap_median_m 452.6",
+      "pop_vs_plan 0.5089869636341889",
+      "pop_vs_ghsl_other 0.5079794241129718",
+      "top_zone_jobs_share 0.19891582559625778",
+      "drive_factor_median 2.184200810815618",
+      "road_snap_median_m 450.7",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-07T01:57:17"
+    "shipped": "2026-11-07T17:39:43"
    },
-   "hold_reason": "T-2712: GHSL village blobs (one 1 km pixel of 192,229 at Tiquisio, 88,678 at Pinillos, 14,662 in rural La Vega) put several times the census in the district; held for a DANE municipio admin_totals config and a rebuild"
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2712): 371,093, where the plan's GHSL 2025 has 728,695"
+   }
   },
   {
    "order": 5223,
@@ -326675,7 +327014,7 @@
    "id": "tiq",
    "name": "Tiquiso",
    "kind": "zone",
-   "status": "held",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "COL"
@@ -326683,16 +327022,16 @@
    "iso2": "CO",
    "people": 664576,
    "origin": [
-    -74.2619,
-    8.5568
+    -74.0559,
+    7.9613
    ],
    "tz": "America/Bogota",
    "utc_offset": -5,
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B69446027092984",
@@ -326732,37 +327071,44 @@
      "Simití",
      "Cantagallo",
      "Rioviejo"
-    ]
+    ],
+    "T-2712": {
+     "origin_was": [
+      -74.2619,
+      8.5568
+     ]
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:47:58",
     "steps": {
-     "build": 38.2,
-     "stations": 0.9,
-     "places": 1.9,
-     "routes": 18.8,
-     "merge": 1.3,
-     "nocar": 1.6,
-     "everyday": 1.0
+     "build": 36.8,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 18.2,
+     "merge": 0.9,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:28:54",
-    "reason": "gate: pop_vs_plan 0.6827900627568727; pop_vs_ghsl 0.6813574661773124 GHSL 2025 665,973",
     "gate": {
-     "fail": [
-      "pop_vs_plan 0.6827900627568727",
-      "pop_vs_ghsl 0.6813574661773124 GHSL 2025 665,973"
-     ],
      "warn": [
       "university_rate 0.0",
-      "top_zone_jobs_share 0.16639824043164342",
+      "pop_vs_plan 0.3631904553345137",
+      "pop_vs_ghsl_other 0.3624284269565078",
+      "top_zone_jobs_share 0.21124923759811182",
       "drive_factor_median 2.553589458062927",
-      "road_snap_median_m 539.8",
-      "fleet_range 3"
+      "road_snap_median_m 539.9",
+      "fleet_range 4"
      ]
     },
-    "parked": "2026-11-07T01:57:19"
+    "gated": "2026-11-07T09:54:51",
+    "shipped": "2026-11-07T17:39:44"
    },
-   "hold_reason": "T-2712: GHSL village blobs (one 1 km pixel of 192,229 at Tiquisio, 88,678 at Pinillos, 14,662 in rural La Vega) put several times the census in the district; held for a DANE municipio admin_totals config and a rebuild"
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2712): 241,368, where the plan's GHSL 2025 has 664,576",
+    "top_zone_jobs_share": "Santa Rosa del Sur, the zone's one town (36,613 people), in a rural zone of 241,368"
+   }
   },
   {
    "order": 5226,
@@ -327727,7 +328073,7 @@
    "id": "lve",
    "name": "La Vega",
    "kind": "zone",
-   "status": "held",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "COL"
@@ -327735,16 +328081,16 @@
    "iso2": "CO",
    "people": 498288,
    "origin": [
-    -76.7829,
-    2.0019
+    -76.983,
+    2.1115
    ],
    "tz": "America/Bogota",
    "utc_offset": -5,
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B89331867807141",
@@ -327798,33 +328144,40 @@
      "Sucre",
      "La Sierra",
      "Florencia"
-    ]
+    ],
+    "T-2712": {
+     "origin_was": [
+      -76.7829,
+      2.0019
+     ]
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:48:07",
     "steps": {
-     "build": 50.1,
-     "stations": 3.0,
-     "places": 5.0,
-     "routes": 47.9,
-     "merge": 2.5,
-     "nocar": 6.2,
-     "everyday": 1.6
+     "build": 33.9,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 29.7,
+     "merge": 1.6,
+     "nocar": 2.3,
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:33:21",
-    "reason": "gate: top_cell_jobs_vs_size 607.5115778325574 9,304 jobs, 3.97%, at [-76.9847, 2.1144]",
     "gate": {
-     "fail": [
-      "top_cell_jobs_vs_size 607.5115778325574 9,304 jobs, 3.97%, at [-76.9847, 2.1144]"
-     ],
      "warn": [
+      "top_cell_jobs_vs_size 614.3667716085869",
       "drive_factor_median 2.7610885385501014",
       "fleet_range 3"
      ]
     },
-    "parked": "2026-11-07T01:57:30"
+    "gated": "2026-11-07T09:54:51",
+    "shipped": "2026-11-07T17:39:44"
    },
-   "hold_reason": "T-2712: GHSL village blobs (one 1 km pixel of 192,229 at Tiquisio, 88,678 at Pinillos, 14,662 in rural La Vega) put several times the census in the district; held for a DANE municipio admin_totals config and a rebuild"
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2712): 559,653, where the plan's GHSL 2025 has 498,288",
+    "top_cell_jobs_vs_size": "El Bordo, Patia's town and the zone's market town on the Pan-American highway"
+   }
   },
   {
    "order": 5238,
@@ -328406,16 +328759,16 @@
    "iso2": "CO",
    "people": 417080,
    "origin": [
-    -73.7975,
-    5.0452
+    -73.8138,
+    5.3061
    ],
    "tz": "America/Bogota",
    "utc_offset": -5,
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B63627699058168",
@@ -328487,25 +328840,34 @@
      "Gama",
      "Manta",
      "Tibirita"
-    ]
+    ],
+    "T-2712": {
+     "origin_was": [
+      -73.7975,
+      5.0452
+     ]
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261107-090155",
+    "built": "2026-11-07T09:48:15",
+    "gated": "2026-11-07T09:54:52",
+    "shipped": "2026-11-07T17:39:45",
     "steps": {
-     "build": 42.1,
-     "stations": 1.5,
-     "places": 3.0,
-     "routes": 39.9,
-     "merge": 1.1,
-     "nocar": 1.7,
+     "build": 37.1,
+     "stations": 1.1,
+     "places": 2.6,
+     "routes": 34.8,
+     "merge": 1.0,
+     "nocar": 1.5,
      "everyday": 1.1
     },
-    "built": "2026-11-07T01:36:20",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-07T02:28:39",
-    "shipped": "2026-11-07T05:46:26"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2712): 394,351, where the plan's GHSL 2025 has 417,080"
    }
   },
   {

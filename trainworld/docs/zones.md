@@ -623,9 +623,9 @@ within 10 km of its centre, times its country's fare scale over the US's to the 
 follow income, construction does not). The centre is a metro's OSM city or town of its name nearest
 the registry centre within 40 km, else the registry centre; each pack the circle reaches counts its
 own trips, and trips between packs are left out. The well-known starts (every metro built as a city,
-the suggested starts and zones with over 1.5M people in the circle, 408) are cut 26.7% easy, 60% medium and
+the suggested starts and zones with over 1.5M people in the circle, 435) are cut 26.7% easy, 60% medium and
 13.3% hard (thirds with medium widened by 80% of its count, a fifth of that taken from easy and three fifths
-from hard: Anita, 2026-11-07, T-2748): easy from 12,140, medium from 3,877. The new game sheet's search names each result's tier, and the
+from hard: Anita, 2026-11-07, T-2748): easy from 12,257, medium from 3,877. The new game sheet's search names each result's tier, and the
 zoomed-out map colours unopened zones' dots by it until the first line is set up
 (ui-panels.md "The new game sheet", ui-demand-views.md "Zoomed far out"). Rerun the script after
 packs change; `--tiers` re-cuts in seconds.

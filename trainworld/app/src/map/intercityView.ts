@@ -87,6 +87,8 @@ const FAR_RADIUS = 2;
 export const farAreaPerTrip = signal(0);
 /** T-1246: no bubble for a count its label would round to 0 (`count`). */
 const shownCount = (n: number) => n >= 0.5;
+/** T-2770: with a city selected, a pair of cities under this many trips a day is left out (bubble, line and list rows) */
+export const MIN_PAIR_TRIPS = 10;
 /**
  * At this zoom and below every city is one longer-trips bubble (T-186): the zoom at which the
  * metropolitan outlines are fully drawn, a New York region about half a 1,400 px map wide with
@@ -353,7 +355,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       }
       // T-421: a zone still loading has its bar instead
       // T-975: the overview leaves out the realms not shown; a selection's far ends draw everywhere
-      if (!isOwn && !((own ? shownCount(t.all) : t.all > 0) && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
+      if (!isOwn && !((own ? t.all >= MIN_PAIR_TRIPS : t.all > 0) && (own ? true : zoneShown(c.id) && !loads.has(c.id)))) return [];
       const unbuilt = !own && opened !== null && !opened.has(c.id);
       // T-2690: until a line is set up an unopened zone's dot is coloured by its start tier
       const tier = unbuilt && tiered ? startTier(c.id) : null;

@@ -115,7 +115,16 @@ function selected(r: Removable): boolean {
   return false;
 }
 
-/** Remove it: at once if blueprint and no line changes, else after a modal confirmation. */
+/** T-2763: what the page knows of drawn track, handed over by main.ts: hide an edge until the state
+ * without it lands, show again after a refusal, and whether any line is drawn over an edge. */
+let hider: { hide: (edge: number) => void; show: () => void; onLine: (edge: number) => boolean } | null = null;
+export function setTrackHider(h: typeof hider) {
+  hider = h;
+}
+
+/** Remove it: at once if blueprint and no line changes, else after a modal confirmation. Blueprint
+ * track no line runs over and no station touches goes from the screen at the click and from the
+ * model when the worker answers (T-2763: that took 0.1 to 3 s on the real save). */
 export async function removeThing(r: Removable) {
   const d = describeRemovable(r);
   if (!d) return;
@@ -123,14 +132,22 @@ export async function removeThing(r: Removable) {
     ask.value = null;
     const wasSelected = selected(r);
     const a = await edit(opOf(r));
-    if (!a.ok) return;
+    if (!a.ok) {
+      hider?.show();
+      return;
+    }
     if (wasSelected) selection.value = null;
     say(t("remove.done", { what: d.what }));
   };
-  const lines = r.kind === "flyover" || r.kind === "bus" || r.kind === "building" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
   const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);
+  // nothing a line or a station hangs on: no side effects to ask the worker about
+  if (r.kind === "track" && e && !d.built && !big && !ka && !kb && hider && !hider.onLine(r.edge)) {
+    hider.hide(r.edge);
+    return go();
+  }
+  const lines = r.kind === "flyover" || r.kind === "bus" || r.kind === "building" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   if (!d.built && !lines.length && !big) return go();
   ask.value = { ...removeQuestion(big ? t("remove.track", { length: bigDistance(e!.lengthM - ka - kb), built: d.built }) : d.what, d.built, big), run: () => void go(), lines };
 }

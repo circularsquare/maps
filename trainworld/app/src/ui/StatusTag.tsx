@@ -10,7 +10,7 @@ import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
 import { STAGE_TEXT } from "../game/loadBar";
 import { loadFailText } from "../game/loadText";
-import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, solveLeft, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
+import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
 import { selection } from "../game/ui";
 import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
@@ -132,6 +132,25 @@ function roundShare(): number | null {
   return demandUpdating.value && of > 0 ? Math.min(0.95, done / of) : null;
 }
 
+/** T-2756: a city-data download open this long means a slow connection (from a fast one each takes about a
+ * second); terrain still downloading this long after its tag showed, the same */
+const SLOW_DOWNLOAD_MS = 10_000;
+/** the hover's extra line when the wait on show is slow for a reason the page can tell, else null */
+function slowLine(kind: string): string | null {
+  const now = performance.now(), dl = oldestDownload();
+  if ((dl !== null && now - dl > SLOW_DOWNLOAD_MS) || (kind === "terrain" && terrainSlow.value && now - waitSince > SLOW_DOWNLOAD_MS)) return t("statusTag.slowConnection");
+  // workers restarted (or cut) to give back memory solve the whole game again before they answer anything
+  if (kind !== "terrain" && memoryResolve.value) return t("statusTag.freedMemory");
+  return null;
+}
+/** a second's tick while the tag shows, so a slow wait's line comes when it is due */
+const slowTick = signal(0);
+let slowTimer2 = 0;
+function tickSlow(on: boolean) {
+  if (on && !slowTimer2) slowTimer2 = window.setInterval(() => slowTick.value++, 1000);
+  else if (!on && slowTimer2) { clearInterval(slowTimer2); slowTimer2 = 0; }
+}
+
 /** a second's tick while a click waits, so its hover counts down */
 const second = signal(0);
 let ticking = 0;
@@ -172,12 +191,12 @@ export function StatusTag() {
     : viewRecomputing.value ? recomputing()
     // T-2622: the clock capped for an edit whose figures elsewhere are not in, the zone in view final
     : clock.capped.value ? t("statusTag.calculatingAfterChange") : null;
-  if (!busy) { trackWait(null); stopWaitTimer(); return null; }
+  if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); return null; }
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
   const base = onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
     : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
     : !demandView.value ? busy
-    : bubblesWaiting.value ? t("statusTag.loadingBubbles", { name: tPlace(activeCity.value, cityById(activeCity.value).name) })
+    : bubblesWaiting.value ? ""
     : clickWait.value ? waitTip(clickWait.value)
     : "");
   const tip = [base, !onTerrain && clock.capped.value ? t("statusTag.capped", { cap: DEMAND_CAP }) : ""].filter(Boolean).join("\n") || undefined;
@@ -196,7 +215,12 @@ export function StatusTag() {
   trackWait(failed ? null : kind);
   const measured = share !== null;
   if (!failed && !measured) share = timeShare(kind); else stopWaitTimer();
-  return <div class="status-tag" role="status" data-tip={tip}>
+  // T-2756: a slow wait says why, where the page can tell
+  tickSlow(!failed);
+  slowTick.value;
+  const slow = failed ? null : slowLine(kind);
+  const tipAll = [tip, slow].filter(Boolean).join("\n") || undefined;
+  return <div class="status-tag" role="status" data-tip={tipAll}>
     <span class="demand-busy">{busy}</span>
     {!failed && <LoadBar fraction={share!} step={busy} thin quiet={kind !== "load"} />}
   </div>;

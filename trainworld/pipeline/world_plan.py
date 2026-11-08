@@ -215,8 +215,11 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Arabia 4.9M (Hail, Arar, Sakaka), Oman 0.8M (Ibri)
               **{iso: {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
                        "fua_whole": 500_000, "plan_units": True, "task": t}
-                 for iso, t in (("ARG", "T-2695"), ("CHL", "T-2695"), ("COL", "T-2695"), ("PER", "T-2695"), ("ECU", "T-2695"),
+                 for iso, t in (("ARG", "T-2695"), ("CHL", "T-2695"), ("PER", "T-2695"), ("ECU", "T-2695"),
                                 ("ZAF", "T-2696"), ("SAU", "T-2697"))},
+              # the same, on DANE's municipio totals: GHS-POP put 192,229 in one pixel of Tiquisio (T-2712)
+              "COL": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "fua_whole": 500_000, "plan_units": True, "module": "admin_totals", "task": "T-2712"},
               # Oman had no metro, so no units in the plan state: the same rule on geoBoundaries read afresh (with
               # `plan_units` its rows' builds found none of their units)
               "OMN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
@@ -310,7 +313,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
              "NZL": ("C", "admin_totals"),
-             "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico")}
+             "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)

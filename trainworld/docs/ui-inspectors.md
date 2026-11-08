@@ -15,7 +15,7 @@ view's own rows below.
 
 ## The city view
 
-[T-1438; `ui/inspector/CityInspector.tsx` with `CityDetails.tsx`] A city or zone picked by its
+[T-1438; `ui/inspector/CityInspector.tsx` with `CityDetails.tsx`] With a city selected, a pair of cities under 10 trips a day (`MIN_PAIR_TRIPS`, `map/intercityView.ts`) has no bubble or line and no row in Top destinations [T-2770]. A city or zone picked by its
 inter-city bubble zoomed out, or by a click on its row in the Cities tab (a double click there moves
 the camera, as in the Stations tab). The home and go-to icons sit on the title's line, at its right. The home
 icon (a house, `HomeButton.tsx`, T-2395) makes the zone the game's home, where the camera starts whenever the
@@ -327,7 +327,8 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   dots stay and the intervals are thinner pills (`tipStrip` with stops in `ui/tip.ts`, `STOP_CELL_PX`);
   the bar reads **west to east** (`lineReversed` in `game/northUp.ts`: the line's west end on the left, a line within
   about 22 degrees of north-south its north end, a loop as built; the bar has no hover of its own to flip)
-  [T-1926, T-1901, T-2334, T-2661], then, for a level of more than one period with trains, a line for each in time
+  [T-1926, T-1901, T-2334, T-2661], with the first and last station's names right under it, small and muted, one left and one
+  right aligned, each ellipsized (`tipEnds`, `endNames`) [T-2772], then, for a level of more than one period with trains, a line for each in time
   order: "10:00-16:00 load: 118%" [T-1523, T-1672, T-1797, T-2271, T-2334]; in the tutorial, where at most half
   the intervals are past 100%, "Only a short stretch is crowded. More trains would run mostly empty, and may
   cost more than they earn." last [T-2263]; the dot's hover reaches 6 px round it (5 px on the
@@ -525,7 +526,7 @@ The round trip split into running, dwell, turning and waiting,
 #### The cross section
 
 [T-2734, `ui/inspector/LineProfile.tsx`, `workers/lineProfile.ts`, `game/groundHeights.ts`, notes/T-2734.md]
-Last in a rail line's view, under Line improvements, the heading "Cross section" over a strip 72 px
+Last in a rail line's view, under Line improvements, the heading "Cross section" (its pointer x is divided by the panel's CSS zoom, `--ui`: the rect is in screen px, the strip's width in its own, T-2769) over a strip 72 px
 tall and as wide as the panel: the line from its first stop (left) to its last along its length, on the
 ground's real height above sea level (the hillshade's Terrain Tiles, read at the zoom whose pixel is about
 the line's length / 600). The ground is a faint filled area. Water is the map's water colour, from its

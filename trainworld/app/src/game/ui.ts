@@ -206,7 +206,15 @@ const trackColour = (saved.v ?? 1) < 10
 export const tab = signal<Tab>(saved.tab && TABS.includes(saved.tab) ? saved.tab : "lines");
 export const selection = signal<Selection>(null);
 
-export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour });
+/** T-2774: `?video=1`, the launch video's view (video.tsx). Its settings hold for that page only and
+ * nothing is stored, so the player's own come back on the next ordinary load. */
+export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
+const VIDEO_DISPLAY: Partial<DisplaySettings> = {
+  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: false,
+  stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true, lighterMap: "off",
+};
+
+export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour, ...(VIDEO ? VIDEO_DISPLAY : {}) });
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));
@@ -353,7 +361,8 @@ if (typeof window !== "undefined") {
 // "tw-fontchange" event.
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
-  const s = { tab: tab.value, theme: theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
+  if (VIDEO) return; // T-2774
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

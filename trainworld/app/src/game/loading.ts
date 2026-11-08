@@ -208,6 +208,13 @@ export function loadLines(z: { step?: string; leftMs: number | null; at: number 
   return out;
 }
 
+/** T-2756: the demand pool restarted or cut workers to free memory, and is solving the game again (until that final) */
+export const memoryResolve = signal(false);
+/** T-2756: the oldest city-data download in flight's start (performance.now()), or null; the demand pool sets it */
+let downloadProbe: () => number | null = () => null;
+export function setDownloadProbe(f: () => number | null) { downloadProbe = f; }
+export const oldestDownload = () => downloadProbe();
+
 /** T-950: the demand pool's own stop (workers/demandClient.ts), so a failure found outside it ends
  * its work too */
 let stopDemand: ((why: string) => void) | null = null;

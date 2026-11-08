@@ -3,7 +3,7 @@
 // round, the last one's quick converged period included, and a zone's own bar keeps moving through its opening and
 // the solve that covers it.
 //   node --experimental-strip-types trainworld/checks/t2552-load-bar.mjs
-import { keepPlace, solveStage, zoneShare, FEW_MS, nextLeft } from '../app/src/game/loadBarCore.ts';
+import { keepPlace, solveStage, zoneShare, FEW_MS, nextLeft, shownShare } from '../app/src/game/loadBarCore.ts';
 
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -43,7 +43,7 @@ for (const [name, prior, later] of [['remembered (a reload)', 143, 0.6], ['model
   const place = { best: 0 };
   let last = -1, since = SENT, longest = 0, at = 0;
   for (const x of r) {
-    const bar = Math.floor(100 * keepPlace(place, Math.min(0.99, 0.3 + 0.7 * x.share)));
+    const bar = Math.floor(100 * shownShare(keepPlace(place, Math.min(0.99, 0.3 + 0.7 * x.share))));
     if (bar !== last) { if (x.t - since > longest) { longest = x.t - since; at = since; } last = bar; since = x.t; }
   }
   report(`${name}: the bar never sits 20 s on one percent`, longest <= 20, `longest ${longest.toFixed(1)} s from ${at.toFixed(1)} s`);
@@ -63,6 +63,21 @@ for (const [name, prior, later] of [['remembered (a reload)', 143, 0.6], ['model
   report('a zone in a solve: moves with the solve', b > a + 0.4 && b < 0.99, b.toFixed(3));
   const c = zoneShare({ dlMs, dl: 1, openMs, open: 1, solveMs: 0, solve: 0 });
   report('a bare zone: full once open', c === 1, String(c));
+}
+
+// T-2638: the bar shown against the clock on two measured loads (the model's fraction at each tenth of the load's
+// time; notes/T-2638.md): within 12 points of the time from 30% to 90%, and a model's 30% shown at about 15%
+{
+  const MEASURED = {
+    'North America import': [0.29, 0.29, 0.45, 0.60, 0.68, 0.76, 0.83, 0.90, 0.97],
+    'New York real save import': [0.34, 0.42, 0.52, 0.60, 0.66, 0.75, 0.84, 0.89, 0.95],
+  };
+  for (const [name, model] of Object.entries(MEASURED)) {
+    const off = model.map((m, i) => shownShare(m) - (i + 1) / 10).slice(2);
+    const worst = Math.max(...off.map(Math.abs));
+    report(`${name}: the bar within 12 points of the time from 30% to 90%`, worst <= 0.12, `worst ${(100 * worst).toFixed(0)} points`);
+  }
+  report('a model\'s 30% is shown at 10-18%', shownShare(0.3) >= 0.1 && shownShare(0.3) <= 0.18, shownShare(0.3).toFixed(3));
 }
 
 console.log(results.every(Boolean) ? 'T-2552 PASSED' : 'T-2552 FAILED');

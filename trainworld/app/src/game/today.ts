@@ -10,7 +10,7 @@ import { t } from "../i18n";
 import { computed, signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { clock, lineSeconds } from "./clock";
-import { world } from "./world";
+import { stationsById, world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView, lineFiguresIn } from "./demand";
@@ -20,7 +20,7 @@ import { lineRunFactor } from "./regionMoney";
 import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
 import { crowdColour } from "./palette";
-import { tipStrip } from "../ui/tip";
+import { tipEnds, tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
 import { cameraMoving, guideVerbose } from "./ui";
@@ -106,7 +106,7 @@ export function periodLoad(v: ArrayLike<number>, p: number, stops: number): numb
  * peak, a bar of the stretches between their stations, and each period's load where the level has
  * several. T-2661: `flip` (`lineReversed`) draws the bar last stretch first, so it reads west to east.
  * Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false): { load: number; peak: number; tip: string } | null {
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false, ends?: readonly [string, string]): { load: number; peak: number; tip: string } | null {
   const at = peaksAt(v, stops), s = stops - 1;
   if (at < 0) return null;
   let trains = 0, peak = 0;
@@ -130,9 +130,19 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip 
   // T-2263: the tutorial warns where only a short stretch is full
   const short = guideVerbose.value && over > 0 && over * 2 <= s;
   const tip = `${t("today.peak", { load: loadText(peak) })}\n${tipStrip((flip ? per.slice().reverse() : per).map(crowdColour), true)}`
+    + (ends ? `
+${flip ? tipEnds(ends[1], ends[0]) : tipEnds(ends[0], ends[1])}` : "")
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "")
     + (short ? "\n" + t("today.shortStretch") : "");
   return { load: stretchLoad(per), peak, tip };
+}
+
+/** T-2772: the names of a line's first and last station, for the ends of `crowdLevel`'s bar; undefined when unknown */
+export function endNames(l: { stops: readonly string[] }): [string, string] | undefined {
+  const w = world.peek();
+  if (!w || l.stops.length < 2) return undefined;
+  const by = stationsById(w), a = by.get(l.stops[0])?.name, b = by.get(l.stops[l.stops.length - 1])?.name;
+  return a && b ? [a, b] : undefined;
 }
 
 /** T-1893: the profit hover's line when the line's day is not a weekday, so a loss on a quiet day
@@ -202,6 +212,8 @@ export function pendingOf(l: LineInput): PendingKind | undefined {
 
 /** T-2678: each line's last riders count of 1 or more (`today`), while the line exists */
 const lastRiders = new Map<string, number>();
+/** T-2773: each line's counts as last read while it was not pending */
+const settled = new Map<string, LineToday>();
 
 /** T-2678: the riders figure shown beside a pending line's label: its count now, else its last count (a
  * line stopped and built again), else the riders a day demand has for it (the account not counting them
@@ -287,6 +299,15 @@ function ask(force = false) {
       // solved): the last counts stand, moved onto its stops above
       else if (!t && p && !lineFiguresIn(demandView.peek(), l.id, l.stops.length) && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
     }
+    // T-2773: a line whose riders are being worked out again keeps its last settled counts and fares, not the
+    // half-done answer's (a local solve reads a long line far low); the final one replaces them when it lands
+    const pend = linesPending.peek();
+    for (const [id, x] of next) {
+      const s = settled.get(id);
+      if (pend.has(id) && s) next.set(id, { ...x, riders: s.riders, fullTrains: s.fullTrains, leftBehind: s.leftBehind, fares: s.fares, dayFares: s.dayFares, stops: s.stops.length === x.stops.length ? s.stops : x.stops });
+      else settled.set(id, x);
+    }
+    for (const id of settled.keys()) if (!next.has(id) && !pend.has(id)) settled.delete(id);
     todayService.value = service;
     // T-2678: each line's last count, kept while the line exists (it may stop and be built again)
     for (const [id, x] of next) if (x.riders >= 1) lastRiders.set(id, x.riders);
@@ -301,7 +322,7 @@ let readFor = new Map<string, string[]>();
 /** T-648: a stop edit renumbers the line's stops, and the counts (until the next answer) would sit
  * one row off: they follow their stations to the new order now, a new stop at 0. */
 world.subscribe((w) => {
-  if (w && clock.held.peek()) lastRiders.clear(); // (a game loading: its lines are other lines)
+  if (w && clock.held.peek()) { lastRiders.clear(); settled.clear(); } // (a game loading: its lines are other lines)
   const t = today.peek();
   if (!w || !t.size) return;
   let out: Map<string, LineToday> | null = null;

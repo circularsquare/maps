@@ -12,6 +12,7 @@ import { t, tSeries } from "../../i18n";
 import { tPlace } from "../../i18n/places";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
 import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
+import { MIN_PAIR_TRIPS } from "../../map/intercityView";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
 import { Icon, SegBar } from "../widgets";
@@ -78,7 +79,7 @@ export function CityInspector({ id }: { id: string }) {
   const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk - none), none);
   const filter = purposeFilter.value;
   const drawn = filter === "all";
-  const top = places.slice(0, 3);
+  const top = places.filter(([, p]) => p.all >= MIN_PAIR_TRIPS).slice(0, 3); // T-2770
   const built = builtCities().has(city.id);
   const shownName = tPlace(city.id, city.name);
   return (

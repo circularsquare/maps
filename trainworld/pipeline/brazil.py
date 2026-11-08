@@ -127,12 +127,23 @@ def unit_states(units):
     for adm in ("ADM1", "ADM2"):
         with open(wp.RAW / "geoboundaries" / f"BRA_{adm}.geojson", encoding="utf-8") as f:
             feats[adm] = json.load(f)["features"]
+    from shapely import STRtree
     want = set(units)
-    pts = [make_valid(shape(f["geometry"])).representative_point() for f in feats["ADM2"] if f["properties"]["shapeID"] in want]
-    if len(pts) != len(want):
-        raise ValueError(f"{len(want) - len(pts)} plan units not in geoBoundaries BRA ADM2")
-    return sorted({s["properties"]["shapeISO"][3:] for s in feats["ADM1"]
-                   if any(make_valid(shape(s["geometry"])).contains(p) for p in pts)})
+    gs = [make_valid(shape(f["geometry"])) for f in feats["ADM2"] if f["properties"]["shapeID"] in want]
+    if len(gs) != len(want):
+        raise ValueError(f"{len(want) - len(gs)} plan units not in geoBoundaries BRA ADM2")
+    # every state a unit overlaps by 1%: a coastal unit's representative point can lie outside the simplified state
+    # coast, and the simplified lines can put most of a border unit in its neighbour (Itapoa, in Santa Catarina, mostly
+    # in Parana's polygon: pgu read no Santa Catarina tracts and Itapoa came out empty, T-2702); tracts are taken by
+    # their own point in the outline, so an extra state costs only its read
+    top = [make_valid(shape(s["geometry"])) for s in feats["ADM1"]]
+    tree = STRtree(top)
+    out = set()
+    for g in gs:
+        for i in tree.query(g, predicate="intersects"):
+            if g.intersection(top[i]).area > 0.01 * g.area:
+                out.add(feats["ADM1"][i]["properties"]["shapeISO"][3:])
+    return sorted(out)
 
 
 def plan_setores(city, boundary, ufs):

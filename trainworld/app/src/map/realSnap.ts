@@ -265,6 +265,28 @@ export class RealSnap {
     this.ask();
   }
 
+  /** Road tiles landed in the track model (T-2760): only the price of the fitted route can have
+   * changed, so it is priced again where it stands; the route is not searched and fitted again and
+   * the tag is not blanked meanwhile (tiles keep landing for as long as a long route's last ones
+   * take, and a new search each time made the tag blink the whole while). */
+  roadsLanded() {
+    const s = this.spot;
+    if (!s || !this.from || this.held) return;
+    if (s.phase === "preview") this.roadsDirty = true;
+    else if (s.phase === "done" && s.route) this.reprice(s, s.route);
+  }
+
+  private roadsDirty = false;
+
+  private reprice(s: Spot, route: RealRoute) {
+    const req = this.request(route);
+    this.client.preview(req, (a) => {
+      if (this.spot !== s) return;
+      s.preview = a;
+      this.show(a, req);
+    });
+  }
+
   /** The segment is placed or dropped. */
   reset() {
     this.from = null;
@@ -274,6 +296,7 @@ export class RealSnap {
 
   private drop() {
     clearTimeout(this.timer);
+    this.roadsDirty = false;
     const s = this.spot;
     this.spot = null;
     if (s) {
@@ -355,6 +378,10 @@ export class RealSnap {
       if (this.last) this.last.previewMs = performance.now() - t;
       this.show(a, req);
       this.finish(s, "done");
+      if (this.roadsDirty) {
+        this.roadsDirty = false;
+        this.reprice(s, s.route!);
+      }
     });
   }
 

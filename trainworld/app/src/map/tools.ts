@@ -44,7 +44,7 @@ import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/
 import { roadTileTemplate } from "./busRoads";
 import { toLngLat, toLocal } from "./geo";
 import type { Level } from "../game/types";
-import { circleOnScreen, endHeading } from "./curveCircle";
+import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
@@ -102,8 +102,6 @@ const HOLD_AT = 7;
 /** the worker's answer for a track tried this close to the pointer's spot stands for it (T-695) */
 const KNOWN_PX = 16;
 const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformStation", "PlatformJunction", "PlatformJoint", "PlatformCrossing", "StationPorts", "StationJunction"]);
-/** how far the line on from a segment's end reaches (T-1895) */
-const TANGENT_PX = 120;
 /** track drawn beside track, centre to centre (sim `BESIDE_SPACING`, T-1895) */
 const BESIDE_SPACING_M = 12;
 
@@ -255,7 +253,7 @@ export class Tools {
     };
     map.on("styledata", sendRoadTiles);
     sendRoadTiles();
-    onRoadsLanded(() => { if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    onRoadsLanded(() => { if (tool.peek() === "track" && this.start) this.real?.active ? this.real.roadsLanded() : this.requestPreview(); });
     // T-727d: the snap switch's routes along the real network
     this.real = new RealSnap(map, overlay, client, (r) => this.realReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
@@ -1047,6 +1045,7 @@ export class Tools {
     const v = this.verdict();
     // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal
     if (!(v && !v.ok && !v.held)) playBuild("station");
+    const pend = v?.ok && !v.held && this.hover && this.hover.kind !== "free" ? this.addPending() : null;
     const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...this.alts];
     const key = this.nameKey(e.point.x, e.point.y);
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
@@ -1055,6 +1054,7 @@ export class Tools {
     const platform = buildPlatform.peek();
     const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform, name });
     const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
+    this.dropPending(pend);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(tr("tools.blueprintStation", { name }));
@@ -1385,6 +1385,35 @@ export class Tools {
     return svg;
   }
 
+  /** T-2763: the box of the ghost last drawn, kept for a click to stand in for the station it places */
+  private lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number } | null = null;
+  /** T-2763: stations clicked and not yet in the world (the worker takes 0.3 to 3 s on a big network),
+   * drawn where they were clicked; the worker's answer takes them away, and a refusal leaves none */
+  private pendingSt: { b: NonNullable<Tools["lastBox"]>; el: SVGSVGElement }[] = [];
+  private addPending() {
+    const b = this.lastBox;
+    if (!b) return null;
+    const el = this.svgMark(["path"], false);
+    el.setAttribute("class", "station-ghost ok placed");
+    const p = { b, el };
+    this.pendingSt.push(p);
+    this.placePending();
+    return p;
+  }
+  private dropPending(p: { b: unknown; el: SVGSVGElement } | null) {
+    if (!p) return;
+    p.el.remove();
+    this.pendingSt = this.pendingSt.filter((x) => x !== p);
+  }
+  private placePending() {
+    for (const { b, el } of this.pendingSt) {
+      const style = { ...this.overlay.renderer.stationStyle, boxes: true };
+      const shape = stationShape(b.lx, b.ly, platformShape(b.ways, 0, b.plat / 2 * b.perM), PLATFORM_HALF_M * b.perM, (x, y) => this.screen(x, y), style, false);
+      placeAt(el, shape.x, shape.y, 0, 0, false);
+      el.firstElementChild!.setAttribute("d", stationPath(shape));
+    }
+  }
+
   /** The placement ghost: the platform as it will be drawn, at the configured length along the
    * snapped track and curved with it, as built stations are (T-144, T-189). */
   private ghost: SVGSVGElement | null = null;
@@ -1415,6 +1444,7 @@ export class Tools {
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
    * on quad. */
   private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = buildPlatform.peek()) {
+    this.lastBox={lx,ly,ways,perM,plat};
     const sh=platformShape(ways,0,plat/2*perM);
     // always the full box at its true length, whatever the zoom (T-311): the map's own style
     // draws dots below STATION_BOX_ZOOM
@@ -1629,19 +1659,7 @@ export class Tools {
       return;
     }
     this.tangent ??= this.svgMark(["line"], true);
-    const [x0, y0] = this.screen(h.x, h.y);
-    const [x1, y1] = this.screen(h.x + h.ux, h.y + h.uy);
-    const l = Math.hypot(x1 - x0, y1 - y0);
-    if (!(l > 0)) {
-      this.tangent.style.display = "none";
-      return;
-    }
-    this.tangent.style.display = "";
-    this.tangent.setAttribute("class", "curve-circle" + (pv!.ok ? "" : " bad"));
-    placeAt(this.tangent, x0, y0, 0, 0, false);
-    const line = this.tangent.firstElementChild!;
-    line.setAttribute("x2", String(((x1 - x0) / l) * TANGENT_PX));
-    line.setAttribute("y2", String(((y1 - y0) / l) * TANGENT_PX));
+    drawTangent(this.tangent, h, pv!.ok, (x, y) => this.screen(x, y));
   }
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
@@ -1655,6 +1673,7 @@ export class Tools {
       if (this.touchAt && tool.peek() === "delete") this.delAt = [s.x, s.y];
     }
     this.placeMarks();
+    if (this.pendingSt.length) this.placePending();
     this.placeTouch();
     this.drawBand();
   }

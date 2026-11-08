@@ -19,6 +19,7 @@ import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
 import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
+import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world } from "../game/world";
@@ -624,8 +625,27 @@ export class ClockClient {
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
     // One table per kind of day (T-260): the worker settles each hour by its own day's.
     let lastIncome = "";
+    // T-2773: a line whose riders are being worked out again is paid what it last earned settled, not a
+    // half-done answer's (a local solve reads a long line far low): its entries stand in for the new ones
+    const settledIncome = new Map<string, { perHour: number[]; rides: number[] }[]>();
     effect(() => {
-      const days = incomeByDay.value;
+      const inc = incomeByDay.value, pend = linesPending.value;
+      const days = inc.map((i) => ({ ...i, perHour: [...i.perHour], rides: [...i.rides], lines: new Map(i.lines) }));
+      const live = new Set(days.flatMap((i) => [...i.lines.keys()]));
+      for (const id of [...settledIncome.keys()]) if (!live.has(id)) settledIncome.delete(id);
+      for (const id of live) {
+        const was = settledIncome.get(id);
+        if (!pend.has(id) || !was) { settledIncome.set(id, days.map((i) => ({ perHour: i.lines.get(id)?.perHour ?? [], rides: i.lines.get(id)?.rides ?? [] }))); continue; }
+        days.forEach((i, d) => {
+          const cur = i.lines.get(id), old = was[d];
+          if (!cur || !old) return;
+          for (let p = 0; p < i.perHour.length; p++) {
+            i.perHour[p] += (old.perHour[p] ?? 0) - (cur.perHour[p] ?? 0);
+            if (i.rides[p] !== undefined) i.rides[p] += (old.rides[p] ?? 0) - (cur.rides[p] ?? 0);
+          }
+          i.lines.set(id, { ...cur, perHour: old.perHour, rides: old.rides });
+        });
+      }
       const per = days.map((i) => i.perHour);
       // T-293: each line's too, for its fares taken today
       const ids = new Set(days.flatMap((i) => [...i.lines.keys()]));

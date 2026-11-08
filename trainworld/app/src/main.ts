@@ -17,7 +17,7 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -27,6 +27,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
+import { setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
@@ -154,9 +155,12 @@ if (urlChoice) {
 if (!urlChoice) document.documentElement.classList.add("choosing");
 const map = createMap(document.getElementById("map")!);
 if (!urlChoice) map.jumpTo(worldCover(map.getContainer()));
-startCityBoundaries(map);
-startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a loading bar
-startRealmOverlay(map); // T-975: the realms not shown, dark with a button each
+// T-2774: the launch video's view (`?video=1`, video.tsx) has no boundaries and nothing darkened
+if (!VIDEO) {
+  startCityBoundaries(map);
+  startZoneLoading(map); // T-343: zones whose demand has not arrived, grey with a loading bar
+  startRealmOverlay(map); // T-975: the realms not shown, dark with a button each
+} else void import("./video").then((m) => m.startVideo(map));
 const demandSelectorRoot = document.createElement("div");
 map.getContainer().appendChild(demandSelectorRoot);
 render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the stations full alert (T-231)
@@ -178,6 +182,17 @@ mountGuide(map.getContainer()); // T-1822: the Getting started card under the da
 mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();
 renderer.checkPatch = params.get("patch") === "check"; // T-1029
+// T-2763: blueprint track the player removes leaves the screen at the click
+setTrackHider({
+  hide: (edge) => renderer.hideEdge(edge),
+  show: () => renderer.unhideEdges(),
+  onLine: (edge) => {
+    const l = renderer.net?.lines;
+    if (!l) return true;
+    for (let i = 0; i < l.count; i++) if (l.edge[i] === edge) return true;
+    return false;
+  },
+});
 /** A click on the commuter bubbles (T-097; set below once the demand views start). */
 let demandClick: ((x: number, y: number, add: boolean, under?: boolean) => Selection | undefined) | null = null;
 let demandHover: ((x: number, y: number) => string[] | null) | null = null;

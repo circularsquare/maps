@@ -110,6 +110,20 @@ CONFIGS = {
         "national": "TUR",
         "mode": "factor",
     },
+    # T-2712: GHS-POP put 3-10x the census in single 1 km pixels of Bolivar's and Cundinamarca's villages (Tiquisio
+    # 192,229 in one pixel, its municipio 20,268)
+    "CO": {
+        "source": "DANE 2025 population projections by municipio (2018 census base), COD-PS COL on HDX, on COD-AB COL "
+                  "municipios (HDX, CC BY-IGO)",
+        "polygons": {"file": "CO/col-administrative-divisions-shapefiles.zip",
+                     "url": "https://data.humdata.org/dataset/cod-ab-col",
+                     "mirror": "religiondots/data/raw/co/col-administrative-divisions-shapefiles.zip",
+                     "layer": "col_admbnda_adm2_mgn_20200416", "code": "ADM2_PCODE", "name": "ADM2_ES"},
+        "totals": {"file": "CO/co_mpio_2025.csv", "made_by": "tools/country/colombia_census.py", "code": "code", "pop": "pop"},
+        "parent": r"^(CO\d\d)\d{3}$",
+        "national": "CO",
+        "mode": "factor",
+    },
     # T-2111: 2011 is still the latest count (the 2027 census has no results yet), so shares within each state
     "IN": {
         "source": "Census of India 2011, Primary Census Abstract by district (NADA catalog 6191), on Datameet's 2011 "

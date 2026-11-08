@@ -3934,6 +3934,8 @@ async function handle(msg: ToClock) {
       if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
     }
     const tA = performance.now();
+    // T-2763: blueprint track taken out carries no train, as a segment put in (T-1780)
+    const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
     if (service) {
@@ -3957,7 +3959,7 @@ async function handle(msg: ToClock) {
     // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
     // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
     // junction it pays for when it branches off constructed track
-    const trips = !(op.op === "route" && !demand.length);
+    const trips = !((op.op === "route" || bpRemove) && !demand.length);
     const effectiveAt = service ? api.edit_time() : undefined;
     // T-1407: the track tool's free segment is answered now (its next ghost needs only the model),
     // its state a moment later (a junction it pays for has its money's split read off that state)

@@ -81,6 +81,7 @@ uniform int u_sel_n;         // T-1812: more lines drawn selected, a selected gr
 uniform int u_sel_set[${SEL_SET_MAX}];
 uniform int u_sel_edge;
 uniform ivec2 u_hot;         // the hovered line and bare track edge, -1 none (T-730)
+uniform ivec2 u_hide;        // T-2763: two edges just removed, not drawn before the state without them lands, -2 none
 uniform int u_only_sel;
 uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 blueprint only
 uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted (0-1), how far the
@@ -150,6 +151,7 @@ void main() {
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
   v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
+  if (int(a_edge) == u_hide.x || int(a_edge) == u_hide.y) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;

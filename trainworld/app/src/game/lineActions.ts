@@ -38,9 +38,16 @@ function linesStoppingIn(city: CityId | null): LineInput[] {
 
 /** T-813, T-2526: "Line m" with m the lowest number no line stopping in the city has as its name. */
 export function nextLineName(city: CityId | null): string {
-  const taken = new Set(linesStoppingIn(city).map((l) => l.name));
-  for (let k = 1; ; k++) if (!taken.has(t("lineActions.defaultName", { n: k }))) return t("lineActions.defaultName", { n: k });
+  const taken = new Set([...linesStoppingIn(city).map((l) => l.name), ...recentNames.filter((r) => r.city === city && Date.now() - r.at < 5000).map((r) => r.name)]);
+  let k = 1;
+  while (taken.has(t("lineActions.defaultName", { n: k }))) k++;
+  const name = t("lineActions.defaultName", { n: k });
+  // T-2764: a name handed out before the world holds its line still counts as taken
+  recentNames.push({ city, name, at: Date.now() });
+  if (recentNames.length > 8) recentNames.shift();
+  return name;
 }
+const recentNames: { city: CityId | null; name: string; at: number }[] = [];
 
 /** T-1278: lines with a stop this near where a new line starts set its colour, m ... */
 const NEAR_M = 15_000;
@@ -62,8 +69,19 @@ export function nextFreeColour(at: [number, number] | null, cityLines = Infinity
     }
     return { colour: l.colour, d: at ? d : 0 };
   }).sort((a, b) => a.d - b.d);
-  return pickColour(near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => x.colour), cityLines);
+  // T-2764: a line with no stops yet (closed quickly) has no position, and a laggy game's snapshot may not
+  // hold the last pick yet; both left the pick identical. Count stopless lines and our own recent picks as used.
+  const stopless = lines.filter((l) => !l.stops.length).map((l) => l.colour);
+  const used = [...near.filter((x, i) => x.d <= NEAR_M || i < NEAR_MIN).map((x) => x.colour), ...stopless, ...recentPicks];
+  const colour = pickColour(used, cityLines);
+  recentPicks.push(colour);
+  if (recentPicks.length > RECENT_MAX) recentPicks.shift();
+  return colour;
 }
+
+/** T-2764: the colours this function handed out last, so a pick made before the world holds the previous line still differs. */
+const recentPicks: string[] = [];
+const RECENT_MAX = 4;
 
 /** Where a new line starts: its first stop, else the middle of the map. */
 function startOf(first: StationInput | undefined): [number, number] | null {

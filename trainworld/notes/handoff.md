@@ -1,9 +1,61 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session cd5c271d-f4a2-4f0f-8c6e-5249850f0046, name maps-b9 [971c94], since 2026-11-07 00:05
-Updated: 2026-11-07 12:25 (Get-Date). The "Publish in progress" section below is the current state; the State
-bullets under it are from 10:35 and partly stale (everything listed as uncommitted there is now in de29a14c). Past 500k tokens: ready to be replaced any time; a new orchestrator takes the
-agents below over by SendMessage to their ids (they report to "maps-b9 [971c94]" today; tell them the new name).
+Orchestrator: session 70947ac4-74ea-441a-b6e5-c704eedaf536, name maps-68 [224d6e], since 2026-11-07 12:32
+Updated: 2026-11-07 12:37 (Get-Date; maps-b9's clock ran ~15 min ahead). Anita 12:37: at the computer but idle,
+keep cap 15; ja/zh review is ours (she reads neither). l10nreview DONE: 17 keys x 3 languages reviewed, one fix,
+UNCOMMITTED: zh-TW.json diagramView.unnamed 軌道交通 -> 軌道運輸 (commit with the next batch); i18n.mjs and tsc pass.
+tokyoload interim: no regression on a fresh page, even throttled; publish need not wait; it runs a 20-min session next.
+2026-11-07b upload DONE (R2 verified 3/3, maps-b9). Website commit 57c68d2 PUSHED (with 8ec33bb, Pages 30-min timeout;
+Anita's go 2026-11-07). Pages run 42398866884 succeeded; verify --page 6/6 PASS. **LIVE = 2026-11-07b.** R2 purged
+2026-11-03, 03b and 07; only 2026-11-07b left on R2. Publish complete.
+loadbar DONE T-2638 (archived; smoke 26/26, t2552 pass; no strings): bars shown as fraction^1.7. UNCOMMITTED:
+game/loadBarCore.ts, game/demandClient.ts, checks/t2552-load-bar.mjs, docs/ui-panels.md, DECISIONS, ARCHIVE, TASKS,
+notes/T-2638.md. Commit with the next batch.
+tokyoload DONE T-2756 (smoke 26/26; maybe not archived yet, check TASKS at commit): cause = memCheck restarts all demand
+workers in a long-open window, re-solve blocks a returning zone's cells. Fix: cache focus cells + last 6 zones' legs/bubbles.
+UNCOMMITTED: workers/demandClient.ts (shared with loadbar), map/commuterView.ts, ui/StatusTag.tsx, game/loading.ts,
+i18n messages/sources/context.json, docs/ui-panels.md, TASKS, DECISIONS, notes/T-2756.md. Filed T-2757 [P2] (other
+questions still wait on the re-solve). Strings approved by Anita, with her rewording applied by maps-68
+("Recomputing after freeing memory", "Internet connection seems slow"; ja/zh unchanged, already fit). Next free id T-2758.
+**Anita posts Sunday 2026-11-08 morning.** Before then: worldfix lands -> commit batch, rebuild 8800, smoke, republish.
+firstvisit DONE T-2758 (archived): live site cold loads playable in 6.5 s unthrottled, 17-18 s at 20 Mbit, ~45 s on
+slow 4G from page open; no errors, no stalls. Minor: glyph 404s (expected), nyc.bin fetched twice on slow 4G (unknown),
+outlines.json 4.55 MB already gzipped. notes/T-2758.md. Nothing blocks posting.
+Anita will wait for worldfix before posting. flicker DONE T-2760 (archived; smoke 26/26; no strings): road tiles
+landing re-ran RealSnap.again() and blanked the tag; now roadsLanded() re-prices in place. 32 flips/5 s -> 0. UNCOMMITTED:
+map/realSnap.ts, map/tools.ts, checks/t2760-snap-flicker.mjs, TASKS, ARCHIVE. Land in the post batch. T-2761 (crossing-tracks highlight) filed P3, after the post.
+sparse DONE T-2747 (archived; byte-identical NYC+NA, cargo 367+543, smoke 26/26; no strings): far zones packed by
+gid; NYC rapid-click p95 1089 -> 194 ms, NA 1670 -> 279. In tree .tw-trees/sparse, NOT landed: **land only after
+worldfix's join ends** (WASM rebuild mid-join can park units, T-2298): agent-tree land sparse, remove, rebuild main WASM,
+then smoke the whole batch. Follow-up T-2762 filed. Next free id T-2766.
+Anita's TODO 2026-11-07 afternoon, filed: editlag acafed71623273ce1 (Sonnet, T-2763 station/delete/bonk latency, Vite
+6100-6149, no Rust) and linecolour a16b82c008c7452cc (Sonnet, T-2764 same-colour lines + T-2765 endpoint tangent, Vite
+6150-6199). Both main tree, may share map/tools.ts. Land in the post batch if done in time.
+linecolour DONE T-2764, T-2765 (archived; smoke 26/26; no strings). UNCOMMITTED: game/lineActions.ts, map/curveCircle.ts,
+map/nodeDrag.ts, map/tools.ts, checks/t2764-line-colour-quick.mjs, docs ui-map.md, ui-building.md. editlag DONE T-2763 (archived; smoke 26/26; no strings): station ghost stays until the worker answers, blueprint
+deletes hidden at click (renderer hideEdge/u_hide), worker skips trips/boarding for a bare blueprint removeEdge. Visible
+in 0-3 ms. UNCOMMITTED: map/tools.ts, map/renderer.ts, map/rendererShaders.ts, game/remove.ts, main.ts,
+workers/clock.worker.ts, checks/t2763-edit-lag.mjs, docs/ui-building.md, notes/T-2763.md. Proposals filed T-2766 (P2 stop
+edits pipelined, likely the bonk), T-2767, T-2768.
+uibits DONE T-2769..2772 (archived; smoke 26/26; no strings). UNCOMMITTED: ui/inspector/LineProfile.tsx,
+map/intercityView.ts, ui/inspector/CityInspector.tsx, map/labelNames.ts, map/stationLabels.ts, ui/style.css, ui/tip.ts,
+game/today.ts, ui/schedule.tsx, ui/LinesTab.tsx (crowdLevel ends), docs/ui-inspectors.md. T-2772 = the crowding
+hover's bar (Anita confirmed). Picture review/load-ends.png.
+Anita's string: linesTab.pendingTip + schedule.recalculating "Calculating riders after your change" -> "Calculating rides…"
+riderdip ended T-2773 (open, see TASKS): settled-figure hold built, smoke 26/26, UNVERIFIED (no dip on NYC). UNCOMMITTED:
+game/today.ts, workers/clockClient.ts, checks/t2773-pending-dip.mjs, DECISIONS. Ships in the batch; Anita retries on her save. Next free id T-2774.
+(maps-68 edited en, sources, ja 乗車を計算中…, zh-Hans 正在计算乘车…, zh-TW 正在計算搭乘…; i18n check passes). UNCOMMITTED. Next free id T-2773.
+linecolour follow-up DONE:
+nextLineName counts names handed out in the last 5 s (check passes; smoke not rerun, the batch smoke covers it). Picture review/tangent-drag.png. T-2332 still open.
+worldfix join at 13:51: Brazil sudeste's intercity solve took 5389 s, still in that group.
+T-2546 (video) abandoned by Anita. T-2757 skipped for now (tokens). Next free id T-2759.
+maps-b9 [971c94] wound down; its agents (tokyoload, loadbar, sparse, worldfix) report to
+maps-68 now. The "Publish in progress" section below is the current state; the State bullets are from 10:35 and partly
+stale (everything listed as uncommitted there is in de29a14c). Exception to "wound down": the deploy.py 2026-11-07b upload
+runs in maps-b9's tab (log in its scratch, deploy2.log); maps-b9 messages maps-68 when it ends, then maps-68 does the
+website commit/push (after tokyoload's answer), verify and R2 purge. Anita's new TODO item (drop the "Loading the bubbles
+for Tokyo" hover, no "bubbles") was passed verbatim to tokyoload. Open for Anita: profile's new cross-section ja/zh keys
+need a short review pass.
 
 Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `git log`.
 
@@ -138,7 +190,38 @@ Read trainworld/CLAUDE.md and TASKS.md first. Landings are in ARCHIVE.md and `gi
 - Copying files back after a source swap keeps old mtimes: cargo/wasm-pack skip the rebuild (touch them).
 - Agents that leave a background wait re-notify: TaskStop them after their report.
 
+## Wrap-up plan (Anita ~16:10: 4% weekly limit left; post Sunday morning)
+worldfix: join ended 17:43, 53/53 shipped; market step failed (thl zone count), fixed in pipeline/market_zones.py, redoing
+register --market --trips (pid 26856, log artifacts/trainworld/t2702-market.log), then checks; still hold pack writers.
+Anita (back, ~18:00): "fine to publish and push" -> GO given for 2026-11-07c deploy + website push once landed.
+video2 (Opus, T-2774, Anita asked for Opus; Sonnet "video" stopped): launch video from her day-473 save, Penn Station
+8th Ave/33rd St; relay feedback by SendMessage "video2". DONE (not archived; T-2774 open until Anita records): ?video=1 recording mode,
+V runs / Esc resets, &at=lat,lng,z &hold &secs &end. UNCOMMITTED: app/src/video.tsx (new), game/ui.ts, main.ts; deleted
+videoLogo.tsx. URL after rebuild: localhost:8800/trainworld/?continue=1&video=1&at=40.7507,-73.9948,15.8. Frames p50 16.7 ms.
+Pictures review/video-start.png, video-end.png.
+~20:05 worldfix: the 17:49 panic was a partial retry; the full retry (t2702-market2.log) succeeded, stale 0, gaps 0,
+3,722 shipped; terrain + market-drives done. Doing 8 metro load checks + smoke (~15-20 min), then RE-FREEZE and hand back.
+~20:40 worldfix HANDED BACK (T-2702/T-2712 open only for load checks): publish from freeze data/frozen/20261107-202835.
+Its files: pipeline/admin_totals.py, world_plan.py, brazil.py, market_zones.py, world_plan.json, tools/country/colombia_census.py,
+checks/state_gaps.py, app/src/game/zone-names.json, registry.json, market-rows.json, zone-aliases.json, data/packs outputs,
+notes/T-2702.md, TASKS, DECISIONS, docs adding-a-country.md, data-register.md, code-map.md. Delete after commit:
+data/work/pre-T2702/ (5.2 GB), data/work/worldplan/state.pre-T2702.pkl. Retrospective in notes/T-2702.md; T-2775..2777 filed.
+**Load checks of 8 new metros + control moe time out at "opening its pack" under the uncommitted app edits** (smoke passes).
+landing (Opus): diagnose+fix that, land sparse, place_names, start_difficulty, load checks, smoke; then I commit, snapbuild-
+frozen with 20261107-202835, smoke 8800 light/dark, deploy 2026-11-07c, push (Anita's go given).
+Asked worldfix for a retrospective in notes/T-2702.md (Anita: why ~5 h over); ids T-2775..2777 reserved for it.
+Publish from that re-freeze (the 18:30 freeze 20261107-183057 lacks market-drives.bin and 53 terrain files).
+(Earlier: Anita 16:25 out for a walk; deploy held until her word, now given.) Subagents
+(Sonnet) are fine for landing ("in general its efficient to use subagents").
+After worldfix reports, one Sonnet landing agent: land sparse (agent-tree land/remove, rebuild main WASM), run
+start_difficulty.py --jobs 2 and tools/place_names.mjs, one smoke on own Vite; then orchestrator commits by path,
+snapbuild 8800, smoke light/dark. On her word: deploy.py --dry-run, --version 2026-11-07c --smoked, website commit+push,
+verify --page, purge 2026-11-07b.
+
 ## Anita's standing asks
+- **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and
+  lean to use sonnets going forward")**: new agents on Sonnet unless a task truly needs Opus; fewer, smaller agents;
+  let the running Opus agents (worldfix, sparse, tokyoload) finish rather than restart them.
 - Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
   her. Zone, region and realm names need no review.
 - TODO.md short-term = prompts: copy her words verbatim into briefs.

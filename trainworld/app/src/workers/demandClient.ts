@@ -71,8 +71,8 @@ import {
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
-import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, onLoadStop, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
-import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
+import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
 import { PERIODS, periodsMatch } from "../game/periods";
@@ -1498,6 +1498,23 @@ class DemandClient {
 
   /** Download one pack file once, counting its bytes as they arrive. */
   private async downloadOnce(file: string, high = false): Promise<Uint8Array> {
+    const token = {};
+    this.downloadsOpen.set(token, performance.now());
+    try {
+      return await this.fetchPackFile(file, high);
+    } finally {
+      this.downloadsOpen.delete(token);
+    }
+  }
+  /** T-2756: when each pack download in flight started (before its headers came), for the status tag's slow-connection line */
+  private downloadsOpen = new Map<object, number>();
+  /** the oldest pack download in flight's start, performance.now(), or null */
+  oldestDownload(): number | null {
+    let o: number | null = null;
+    for (const at of this.downloadsOpen.values()) if (o === null || at < o) o = at;
+    return o;
+  }
+  private async fetchPackFile(file: string, high: boolean): Promise<Uint8Array> {
     const r = await fetch(file === MARKET_ROWS ? file : dataUrl(file), high ? { priority: "high" } as RequestInit : undefined);
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
@@ -1949,10 +1966,10 @@ class DemandClient {
     const cardUp = !!clock?.held.peek();
     const places = new Map<CityId, BarPlace>();
     const placed = (id: CityId, f: number) => {
-      if (cardUp) return Math.min(0.99, f);
+      if (cardUp) return shownShare(Math.min(0.99, f));
       const p = this.zonePlaces.get(id) ?? { best: 0 };
       places.set(id, p);
-      return keepPlace(p, Math.min(0.99, f));
+      return shownShare(keepPlace(p, Math.min(0.99, f))); // (T-2638)
     };
     const sn = this.solveNeed(this.latest());
     for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
@@ -2212,7 +2229,7 @@ class DemandClient {
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
     this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
-    loadProgress.value = { cities, fraction: job.best, step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
+    loadProgress.value = { cities, fraction: shownShare(job.best), step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
   }
 
   // --- T-328: the demand cache (workers/demandCache.ts) -----------------------------------------
@@ -2562,7 +2579,7 @@ class DemandClient {
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
     if (!planned && !download && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
     if (download) console.warn(`demand: worker ${i}'s code did not download; trying again`); // i18n-ignore
-    else if (planned) console.info(`demand: worker ${i} restarted to give back memory: ${why}`);
+    else if (planned) { console.info(`demand: worker ${i} restarted to give back memory: ${why}`); memoryResolve.value = true; }
     else { console.warn(`demand: worker ${i} panicked, replaced: ${why}`); this.respawns++; }
     // (a download's replacement counts as planned: it neither stops the pool at a panic nor counts as one)
     this.respawn.set(i, { left: null, solving: false, planned: planned || download });
@@ -2771,6 +2788,7 @@ class DemandClient {
     this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand));
     this.endQueries();
     this.freshParts = true;
+    memoryResolve.value = true;
   }
 
   /** T-1205: the page's memory outside the workers' WASM, where the browser can say (a cross-origin
@@ -3379,7 +3397,7 @@ class DemandClient {
       // T-327: every worker has the round, so the next may start
       if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: s.ahead ? 1 : 0 } satisfies ToDemand);
       this.publish(s, round);
-      if (round === ROUNDS && !s.rough) { this.refreshing = false; this.lastStir = performance.now(); this.memSoon(); void this.measurePage(); }
+      if (round === ROUNDS && !s.rough) { this.refreshing = false; memoryResolve.value = false; this.lastStir = performance.now(); this.memSoon(); void this.measurePage(); }
       if (round > 0) s.byRound[round - 1] = []; // release previous typed-array snapshots
     }
     this.progress();
@@ -3717,15 +3735,23 @@ class DemandClient {
       }
       return p;
     }
+    // T-2756: a zone's cells from an earlier visit (they change only with its pack and the frame), so a return needs
+    // no worker: after a memory restart the workers answer only once the whole game is solved again
+    const focus = activeCity.peek(), frame = worldFrameEpoch.peek(), key = `${focus}:${frame}`;
+    const kept = this.otherCells.get(key);
+    if (kept) return kept;
     // waits for the viewed city to open (T-149: it may be loading after a pan); a failed answer is
     // not kept, so the bubbles' next ask tries again (T-1493)
     if (!this.cellsP) {
-      const p = (this.cellsP = load(activeCity.peek()));
-      p.then((v) => { if (!v && this.cellsP === p) this.cellsP = null; });
+      const p = (this.cellsP = load(focus));
+      p.then((v) => {
+        if (!v) { if (this.cellsP === p) this.cellsP = null; }
+        else if (this.opened.has(focus) && worldFrameEpoch.peek() === frame) { this.dropCells(focus); this.otherCells.set(key, p); }
+      });
     }
     return this.cellsP;
   }
-  /** Nearby zones' cells (T-276), `zone:frame epoch`. */
+  /** Nearby zones' cells (T-276) and the focus's from earlier visits (T-2756), `zone:frame epoch`. */
   private otherCells = new Map<string, Promise<CityCells | null>>();
   /** A zone's cells in every frame, when it closes or its frame is out of date. */
   private dropCells(id: string) {
@@ -4725,6 +4751,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   NEW_GAME = newGame && !TEST;
   const c = (client = new DemandClient(city));
   onLoadStop((why) => c.fail(why));
+  setDownloadProbe(() => c.oldestDownload()); // T-2756
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });

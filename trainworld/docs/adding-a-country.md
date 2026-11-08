@@ -51,7 +51,7 @@ Take the first that holds; never take a source from memory.
    people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
    or province, spread by the census shares). A config may cover part of a country (`only`, a code regex: Cambodia's
    north-west) or a file with no parent rows (`parent` None, `national_total` the published figure and how near the
-   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN. Switch a country on with `"module": "admin_totals"`
+   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO. Switch a country on with `"module": "admin_totals"`
    in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
    signal cache), and its `pop_vs_plan` is relaxed with the census figure.
 4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
@@ -96,9 +96,11 @@ Rule keys a new country may need (T-2294, T-2295):
 - **No `plan_units` for a country with no metro row** (Oman, Lesotho, Eswatini): it has no units in the plan state,
   so its zones read geoBoundaries afresh anyway, and with `plan_units` every build fails "plan units not in
   geoBoundaries" (T-2697).
-- **Units the plan state lost**: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no plan unit covers (before
-  T-2695 a coastal unit whose point lay outside the simplified first-level coast was dropped: Buenos Aires's comunas).
-  Any found: add them to the state and to the metro they belong to under the plan lock, as notes/T-2695.md did.
+- **Units the plan state lost**: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no row names and the zones
+  did not leave dead, with their people outside every pack (before T-2695 a coastal unit whose point lay outside the
+  simplified first-level coast was dropped: Buenos Aires's comunas, Guaruja, Zhoushan's islands). Run it on the dry plan
+  and again after the join. Any found with 10,000+: add them to the state (`plan_units` countries) and to the row
+  holding their longest border within their first-level unit, under the plan lock, as notes/T-2702.md did.
 
 **People where GHSL has them wrong.** Zones that are not cities but hold a city's people (Cambodia's
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census

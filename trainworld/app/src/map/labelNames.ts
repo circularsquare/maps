@@ -12,7 +12,6 @@
 
 import type { Complexes } from "../game/complexes";
 import type { LineId, LineInput, StationId, StationInput } from "../game/types";
-import { hasUpgrade, UPGRADE } from "../game/upgrades";
 
 export interface NameGroup {
   /** stays with the name while its stations change */
@@ -22,8 +21,6 @@ export interface NameGroup {
   lat: number;
   heading: number;
   built: boolean;
-  /** a member has a park and ride (T-1281): a P beside the name */
-  park: boolean;
   /** distinct lines stopping at any of its stations */
   lines: number;
 }
@@ -47,7 +44,7 @@ export function labelGroups(stations: readonly StationInput[], lines: ReadonlyMa
       for (const l of lines.get(s.id) ?? []) ids.add(l);
       if ((lines.get(s.id)?.size ?? 0) > (lines.get(lead.id)?.size ?? 0)) lead = s;
     }
-    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), park: members.some((s) => hasUpgrade(s.upgrades, UPGRADE.parkRide)), lines: ids.size });
+    out.push({ name: lead.name, lng: lng / members.length, lat: lat / members.length, heading: lead.heading, built: members.some((s) => s.built), lines: ids.size });
   }
   return out.sort((a, b) => b.lines - a.lines || Number(b.built) - Number(a.built));
 }
@@ -274,7 +271,7 @@ export class NameIndex {
       }
       const key = `${d.root}\u0000${d.s.name}`;
       let g = this.groups.get(key);
-      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: false, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, lines: 0 }));
+      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: false, name: "", lng: 0, lat: 0, heading: 0, built: false, lines: 0 }));
       g.members.push(m);
       m.group = g;
       touched.add(g);
@@ -318,7 +315,7 @@ export class NameIndex {
       this.mems.set(s.id, m);
       const key = `${root}\u0000${s.name}`;
       let g = this.groups.get(key);
-      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: true, name: "", lng: 0, lat: 0, heading: 0, built: false, park: false, lines: 0 }));
+      if (!g) this.groups.set(key, (g = { uid: ++this.uids, key, members: [], first: m, inList: true, name: "", lng: 0, lat: 0, heading: 0, built: false, lines: 0 }));
       g.members.push(m);
       m.group = g;
     });
@@ -347,7 +344,6 @@ export class NameIndex {
     g.lat = lat / ms.length;
     g.heading = lead.s.heading;
     g.built = ms.some((m) => m.s.built);
-    g.park = ms.some((m) => hasUpgrade(m.s.upgrades, UPGRADE.parkRide));
     g.lines = ids.size;
   }
 

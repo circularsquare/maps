@@ -308,7 +308,9 @@ export function LineProfile({ l, version }: { l: LineInput; version: number }) {
 
   function move(e: PointerEvent) {
     const r = box.current!.getBoundingClientRect();
-    const px = Math.max(0, Math.min(W, e.clientX - r.left));
+    // the panel is under CSS zoom (--ui): the rect is in screen px, W in the strip's own px
+    const k = r.width / (box.current!.offsetWidth || 1);
+    const px = Math.max(0, Math.min(W, (e.clientX - r.left) / k));
     let s = (px / W) * p.len, x = px;
     let best = SNAP_PX;
     for (const m of [...p.stops, ...p.crosses]) {

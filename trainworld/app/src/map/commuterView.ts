@@ -155,6 +155,8 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
   /** T-285: performance.now() when a selection's far end was asked for, its answer came, the
    * bubble worker's sums came and the far end was handed to the overlay */
   pickAt: 0, flowsAt: 0, summedAt: 0, farAt: 0,
+  /** T-2756, dev server: the last focus change's kept legs against the result shown */
+  kept: "",
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
   probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null),
   farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
@@ -277,6 +279,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     s.dv.version === dv.version && s.dv.day === dv.day && s.end === end && s.purpose === purpose && (s.dv === dv || (updating && s.src === legsKey(zone))) && s.bubbles.anchor.version === anchor().version;
   let shown: ZoneShown | null = null;
   let built: Built | null = null;
+  /** T-2756: zones focused before, newest last: their legs and bubbles of a final result, and the solve the legs came from */
+  const keptBuilt = new Map<CityId, { built: Built; src: string }>();
+  const KEPT_ZONES = 6;
   commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
   let wanted = 0;
   // T-1493: an ask that ended without bubbles, and is still the newest, is made again after a wait
@@ -328,6 +333,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         view.setNearbyBubbles(focus, null);
       }
       const old = focusSeen, was = shown;
+      // T-2756: the zone left keeps its final legs and bubbles for a return
+      if (sameFrame && was && built && built.dv === was.dv && was.dv.final) {
+        keptBuilt.delete(old);
+        keptBuilt.set(old, { built, src: was.src });
+        while (keptBuilt.size > KEPT_ZONES) keptBuilt.delete(keptBuilt.keys().next().value!);
+      } else if (!sameFrame) keptBuilt.clear();
       if (sameFrame && worker && city && cellsWorld && !zones.has(old)) {
         const keep = was ? { dv: was.dv, end: was.end, purpose: was.purpose, bubbles: was.bubbles, modes: was.modes, src: was.src } : null;
         zones.set(old, { worker, city, cellsWorld, start: Promise.resolve(true), ask: 0, shown: keep, built });
@@ -352,7 +363,31 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
           }
           showBubbles(a);
         }
-      } else adopted?.worker?.terminate();
+      } else {
+        adopted?.worker?.terminate();
+        // T-2756: a return to a zone whose legs are kept for the result shown takes them, so its bubbles need no worker's
+        // answer (after a memory restart those come only once the whole game is solved again: minutes on a big game)
+        const k = keptBuilt.get(focus), dv = demandView.peek();
+        if (import.meta.env.DEV) commuterStats.kept = k ? `${k.built.dv.version}/${k.built.dv.day}/${k.src} now ${dv?.version}/${dv?.day}/${legsKey(focus)}` : `none of ${[...keptBuilt.keys()]}`; // i18n-ignore
+        if (k && dv && k.built.dv.day === dv.day && k.built.purpose === purposeFilter.peek()) {
+          if (k.built.dv.version === dv.version && k.src === legsKey(focus)) {
+            built = newBuilt(dv, k.built.purpose, k.built.modes);
+            for (const [e, b] of k.built.done) { built.ends.set(e, Promise.resolve(b)); built.done.set(e, b); }
+          }
+          else {
+            // of an earlier result: shown while the result shown's are asked for, as a nearby zone's stay (T-1533); the
+            // zone's cells are kept too (demandClient `cityCells`), so this asks the pool nothing
+            const old = newBuilt(k.built.dv, k.built.purpose, k.built.modes), end = display.peek().commuterEnd, epoch = focusEpoch;
+            for (const [e, b] of k.built.done) { old.ends.set(e, Promise.resolve(b)); old.done.set(e, b); }
+            void (async () => {
+              if (!(await startWorker()) || epoch !== focusEpoch || shown || !worker) return;
+              const b = await endBubbles(old, end, worker);
+              if (epoch !== focusEpoch || shown || display.peek().commuterEnd !== end || purposeFilter.peek() !== old.purpose) return;
+              showBubbles({ dv: old.dv, end, purpose: old.purpose, bubbles: b, modes: old.modes, src: k.src });
+            })();
+          }
+        }
+      }
       commuterPick.value = null;
       if (selection.peek()?.kind === "commuters") selection.value = null;
     }

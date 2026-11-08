@@ -244,6 +244,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   go; a straight segment has one too [T-1895], except one from a start on open ground, whose
   line on would only continue it [T-2008]. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
+- **Tangent on a node drag** [T-2765; `drawTangent` in `map/curveCircle.ts`]: dragging a track end with no other track
+  at it draws the same dotted line on from the end as the track tool does; none for a junction, a curve middle or a platform end.
 - **What a click joins** [T-1895]: within 12 px of a node (a track end, a junction, a station) a
   click joins at it; within 8 px of a piece of track it branches off it (the station tool reaches
   15 px for track); further out it is open ground.
@@ -469,6 +471,9 @@ switch on, the track tool follows the real network the layer draws.
 
 [T-065, T-311, T-312]
 
+- **A click leaves the ghost standing** [T-2763; `addPending` in `map/tools.ts`] where it was clicked, until
+  the clock worker's answer puts the station in the world (0.3 to 3 s on the real save, the lines through a
+  split piece drawing again); a refusal takes it away.
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
@@ -554,7 +559,7 @@ and 4 m either side), rings and removes the station, with its own question, and 
 zoomed out where stations are hidden. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
-removed at once (undoable); anything constructed only after a yes in the confirmation dialog
+removed at once (undoable; [T-2763] a piece no line runs over and no station touches leaves the screen at the click, `hideEdge` in `map/renderer.ts`, and the line-effects question to the clock worker is skipped; the model follows when the worker answers); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of built track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
 inspectors' Remove buttons and the Select tool's Remove ask the same way. **A big delete asks
 too** [T-1649; `isBigDelete`, `removeQuestion` in `game/remove.ts`]: more than 50 km of track, or a

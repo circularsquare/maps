@@ -11,7 +11,7 @@ import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
-import { crowdLevel, dayNote, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today } from "../../game/today";
+import { crowdLevel, dayNote, endNames, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today } from "../../game/today";
 import { accountVersion, BOAT_CARS, BUS_CARS, capacity } from "../../game/boarding";
 import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
@@ -164,8 +164,8 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
  * on today's kind of day (`crowdLevel`, from the boarding account) while `v` has one: the fill graded
  * over the line's stretches, the ring (1 px out with a 1 px gap) at its fullest. One hover for both
  * (T-2334): the level's hours, then the dot's. */
-function LevelName({ v, d, stops, flip, pending }: { v: Float64Array | null; d: Demand; stops: number; flip: boolean; pending: boolean }) {
-  const c = v ? crowdLevel(v, d, stops, flip) : null;
+function LevelName({ v, d, stops, flip, pending, ends }: { v: Float64Array | null; d: Demand; stops: number; flip: boolean; pending: boolean; ends?: [string, string] }) {
+  const c = v ? crowdLevel(v, d, stops, flip, ends) : null;
   return (
     <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
       {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
@@ -215,7 +215,7 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
           const p = dot && crowd && lineFiguresIn(demandView.value, l.id, stops) ? crowd : null;
           return (
             <tr class={d === now ? "now" : ""}>
-              <td><LevelName v={p} d={d} stops={stops} flip={flip} pending={dot && !p && demandPending.value} /></td>
+              <td><LevelName v={p} d={d} stops={stops} flip={flip} ends={endNames(l)} pending={dot && !p && demandPending.value} /></td>
               <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
             </tr>
           );

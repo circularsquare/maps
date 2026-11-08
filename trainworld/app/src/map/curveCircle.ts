@@ -2,6 +2,7 @@
 // the segment arrives at its end (T-1895).
 
 import { EARTH_R } from "../game/frame";
+import { placeAt } from "./screenPlace";
 
 /**
  * Where to draw a preview's circle: `arc` is centre x, y (local units), ground radius m, 0 (the
@@ -61,4 +62,28 @@ export function endHeading(
     }
   }
   return { x, y, ux, uy };
+}
+
+/** how far the line on from a segment's end reaches, px (T-1895) */
+const TANGENT_PX = 120;
+
+/** T-1895, T-2765: draw (or hide, `h` null) the line on from a segment's end in the 1 px SVG `svg`
+ * (a `line` child; the track tool's tangent and the node drag's share it). */
+export function drawTangent(
+  svg: SVGSVGElement,
+  h: { x: number; y: number; ux: number; uy: number } | null,
+  ok: boolean,
+  screen: (lx: number, ly: number) => [number, number],
+) {
+  if (!h) { svg.style.display = "none"; return; }
+  const [x0, y0] = screen(h.x, h.y);
+  const [x1, y1] = screen(h.x + h.ux, h.y + h.uy);
+  const l = Math.hypot(x1 - x0, y1 - y0);
+  if (!(l > 0)) { svg.style.display = "none"; return; }
+  svg.style.display = "";
+  svg.setAttribute("class", "curve-circle" + (ok ? "" : " bad"));
+  placeAt(svg, x0, y0, 0, 0, false);
+  const line = svg.firstElementChild!;
+  line.setAttribute("x2", String(((x1 - x0) / l) * TANGENT_PX));
+  line.setAttribute("y2", String(((y1 - y0) / l) * TANGENT_PX));
 }

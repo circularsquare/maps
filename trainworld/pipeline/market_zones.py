@@ -236,6 +236,7 @@ class Groups:
         self.rows, self.source, self.keys = {}, {}, {}
         work = work or ROOT / "data/work"
         only = None if only is None else set(only)
+        self.only = only
         want = (lambda h: True) if only is None else only.__contains__
         # each pair of packs from the newest file covering it (T-786: a country's file covers its own
         # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves).
@@ -313,10 +314,17 @@ class Groups:
         return sorted(agg.items())
 
     def zone_keys(self, cid):
-        """A pack's 6 km zones' squares, in its zone file's order."""
+        """A pack's 6 km zones' squares, in its zone file's order. A pack this call does not rewrite keeps
+        its zone file's own squares: worked out again from its cells they can differ from a file written
+        under older code (thl: 159 against its file's 158, so tug's commute named a zone thl's file lacks
+        and market_pack refused it, T-2702)."""
         if cid not in self.keys:
-            o = self.reg[cid]["origin"]
-            self.keys[cid] = zones_of(own_sites(cid, {"kind": "equirect", "lon": o["lon"], "lat": o["lat"]})[0])[0]
+            path = PACKS / f"{cid}.market.json"
+            if self.only is not None and cid not in self.only and path.exists():
+                self.keys[cid] = [tuple(k) for k in json.loads(path.read_text(encoding="utf-8"))["zones"]]
+            else:
+                o = self.reg[cid]["origin"]
+                self.keys[cid] = zones_of(own_sites(cid, {"kind": "equirect", "lon": o["lon"], "lat": o["lat"]})[0])[0]
         return self.keys[cid]
 
     @staticmethod

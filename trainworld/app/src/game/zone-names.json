@@ -1435,5 +1435,9 @@
 "wiu": {"name": "Suwayq", "aliases": ["WILAYAT AS SUWAYQ", "Barka"]},
 "win": {"name": "Nizwa", "aliases": ["WILAYAT NIZWA"]},
 "wix": {"name": "Salalah", "aliases": ["WILAYAT SALALAH"]},
-"wik": {"name": "Musandam", "aliases": ["WILAYAT KHASAB", "Khasab"]}
+"wik": {"name": "Musandam", "aliases": ["WILAYAT KHASAB", "Khasab"]},
+"tiq": {"name": "Santa Rosa del Sur", "aliases": ["Tiquisio", "Tiquiso"]},
+"pis": {"name": "Mompox", "aliases": ["Mompós", "Pinillos"]},
+"lve": {"name": "El Bordo", "aliases": ["Patía", "La Vega"]},
+"seq": {"name": "Ubaté", "aliases": ["Villa de San Diego de Ubaté", "Sesquilé"]}
 }

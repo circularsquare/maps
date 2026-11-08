@@ -1145,6 +1145,11 @@ button.save-add:hover { color: var(--text); }
 /* T-1926: a strip of cells in a hover; width 0 with a full minimum keeps it from widening the tag */
 .tool-tag .tip-strip { display: flex; gap: 1px; width: 0; min-width: 100%; height: 5px; margin: 3px 0; }
 .tool-tag .tip-strip i { flex: 1 1 0; min-width: 0; }
+/* T-2772: a name at each end of the strip above it; width 0 with a full minimum keeps it from widening the tag */
+.tool-tag .tip-ends { display: flex; justify-content: space-between; gap: 8px; width: 0; min-width: 100%; margin-top: -1px; font-size: 11px;
+  color: color-mix(in srgb, var(--map-ink) 60%, transparent); }
+.tool-tag .tip-ends span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-tag .tip-ends span:last-child { text-align: right; }
 /* T-2334: a line's stretches between station dots; `dense`, too many for a dot at each, keeps the end ones */
 .tool-tag .tip-strip.stops { max-width: 100%; height: 7px; align-items: center; margin: 4px 0; }
 .tool-tag .tip-strip.stops i { height: 5px; }
@@ -1204,9 +1209,6 @@ button.save-add:hover { color: var(--text); }
 .touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
   background: #fff; border: 2px solid var(--net-ink); }
 .stn-label.plan { opacity: 0.6; }
-/* T-1281: a park and ride's P after the name */
-.stn-label.park::after { content: "P"; display: inline-block; margin-left: 4px; padding: 0 3px; border-radius: 2px;
-  background: var(--map-ink); color: var(--bg); font-weight: 700; font-size: 0.85em; line-height: 1.25; vertical-align: 1px; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }

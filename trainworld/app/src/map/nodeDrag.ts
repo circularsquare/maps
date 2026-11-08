@@ -29,6 +29,7 @@ import { queryClock } from "../workers/clockClient";
 import type { PiInput } from "../workers/protocol";
 import type { Level } from "../game/types";
 import { MARKS_ZOOM, NODE_HIT_PX, stationEnds, visibleCurves, type CurveHandle } from "./dragHandles";
+import { drawTangent, endHeading } from "./curveCircle";
 import { toLngLat, toLocal } from "./geo";
 import { live } from "./live";
 import { previewStrokes, strokesFromPreview } from "./network";
@@ -90,6 +91,7 @@ export class NodeDrag {
   private box: HTMLDivElement;
   private ring: HTMLDivElement;
   private tag: HTMLDivElement;
+  private tangent: SVGSVGElement;
   private labels: CurveLabelPool;
   private press: (Hit & { px: number; py: number; told?: boolean; pis?: Promise<Float64Array | null> }) | null = null;
   /** `x, y`: where the node goes, pack metres (node + `ox, oy` from the pointer); `lx, ly`: the pointer, local */
@@ -104,6 +106,13 @@ export class NodeDrag {
     this.tag = document.createElement("div");
     this.tag.className = "tool-tag bad";
     this.box.append(this.ring, this.tag);
+    const NS = "http://www.w3.org/2000/svg";
+    this.tangent = document.createElementNS(NS, "svg");
+    this.tangent.setAttribute("width", "1");
+    this.tangent.setAttribute("height", "1");
+    this.tangent.appendChild(document.createElementNS(NS, "line"));
+    this.tangent.style.display = "none";
+    this.box.insertBefore(this.tangent, this.box.firstChild);
     overlay.afterMapFrame.push(() => this.place());
     // capture: before MapLibre's own handlers on the canvas
     map.getContainer().addEventListener("mousedown", (e) => this.onDown(e), true);
@@ -325,6 +334,28 @@ export class NodeDrag {
       this.ring.style.display = "none";
       this.tag.style.display = "none";
     }
+    this.placeTangent(d, pv);
     this.labels.place(pv ? curveLabels(pv.verts) : [], (x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
+  }
+
+  /** T-2765: dragging a loose end (the only track at the node), the line on from where the track arrives
+   * at it, as the track tool draws while placing (map/curveCircle.ts). */
+  private placeTangent(d: NodeDrag["drag"], pv: PreviewAnswer | null) {
+    let h = null;
+    const w = world.peek();
+    if (d && pv && w && !d.bend) {
+      const es = w.edges.filter((e) => e.a === d.node || e.b === d.node);
+      if (es.length === 1 && pv.verts.length >= 8 && pv.pts.length >= 6) {
+        if (es[0].b === d.node) h = endHeading(pv.verts, pv.pts, pv.arc, toLngLat, toLocal);
+        else {
+          // the node is the edge's first end: read the preview from the other way round
+          const v: number[] = [], p: number[] = [];
+          for (let i = pv.verts.length - 4; i >= 0; i -= 4) v.push(pv.verts[i], pv.verts[i + 1], pv.verts[i + 2], pv.verts[i + 3]);
+          for (let i = pv.pts.length - 3; i >= 0; i -= 3) p.push(pv.pts[i], pv.pts[i + 1], pv.pts[i + 2]);
+          h = endHeading(v, p, undefined, toLngLat, toLocal);
+        }
+      }
+    }
+    drawTangent(this.tangent, h, !!pv?.ok, (x, y) => this.overlay.toScreen(x, y));
   }
 }

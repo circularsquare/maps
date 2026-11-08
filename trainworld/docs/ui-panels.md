@@ -1201,7 +1201,9 @@ registry centre and zoom, or over New York with none [T-310].
   rate; times how this browser's last load compared with the model), the solve 34 s plus 148 ms a
   zone it covers plus 7.88 ms times the square of its line stops, times how this browser's last game solve of 10 s or
   more compared with that [T-1479, T-2552]. A file or backup being opened has none of its own (never the last game's)
-  and is remembered under the slot it goes into [T-2552]. The solve's first round and its later ones are timed apart: before the first lands the
+  and is remembered under the slot it goes into [T-2552]. Every load bar (the card's, "Loading data"'s and a
+  zone's) shows the model's fraction to the power 1.7 (`shownShare`), since the model ran ahead of the clock
+  early and crawled at the end on measured loads: a model's 30% shows as 13% [T-2638, notes/T-2638.md]. The solve's first round and its later ones are timed apart: before the first lands the
   later ones are expected at this browser's last ratio of the two (0.5 with none), after it at that
   ratio times the first, from the second on at their own mean; a round running late stretches the
   rounds after it too. The bar never goes back: when the model's share falls (the network arrives and the
@@ -1252,9 +1254,14 @@ registry centre and zoom, or over New York with none [T-310].
   ground under the blueprint and is refused while it could not load (track-and-service.md 6.4).
 - **Bubbles on their way** [T-1493]: with Homes, Destinations or Total on, a zone in view that has its
   figures but whose own bubbles are not drawn yet (being asked for, waiting behind a solve, built)
-  has the status "Loading data…", its hover "Loading the bubbles for Boston". An ask that ends with
+  has the status "Loading data…", with no hover. An ask that ends with
   no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in
-  view always arrive.
+  view always arrive. A zone come back to (the last 6 left) takes its cells and final legs from its last
+  visit: at once for the same result, else shown until the result shown's come [T-2756].
+- **Why a wait is slow** [T-2756]: the tag's hover adds "Your internet connection seems slow" while a
+  city-data download has been open over 10 s, or terrain has been downloading 10 s past its tag; and
+  "Recalculating after freeing up memory" while the workers restarted (or cut) to give back memory solve
+  the game again (T-1205), which every question waits for.
 - **A click that waits** [T-2523]: a bubble selection whose far end has not come, a trip the explorer
   is working out, or a city picked in the overview that is loading or has no trips to other places yet,
   puts the status (after the cases above, before "Calculation 1 day behind") on what it waits for:

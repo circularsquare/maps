@@ -770,8 +770,9 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   dry plan (docs/adding-a-country.md 3): FLAG lines for scattered rows, far origins, zones under
   50,000 and big FUAs' centres split between rows; NOTE lines for built neighbours within 50 km,
   reused ids' old terrain files and empty far islets; a picture of the rows. Exit 1 on a FLAG.
-- `state_gaps.py <ISO3,...>` (Python, T-2695): geoBoundaries units no unit of the cached plan state covers, with
-  their people. `ghsl_blobs.py <ISO3,...>` (Python, T-2695): zone origins on a GHS-POP village blob (a 1 km pixel of
+- `state_gaps.py <ISO3,...> [--min N]` (Python, T-2695, T-2702): geoBoundaries units of the plan level that no row
+  names and the zones did not leave dead, with their people outside every registered pack (units held by another
+  side and metros-only countries skipped). `ghsl_blobs.py <ISO3,...>` (Python, T-2695): zone origins on a GHS-POP village blob (a 1 km pixel of
   10,000+ at three times its neighbours).
 - `build_inputs.py [--list]` (Python, T-1738): the files a production build copies for the registry
   (vite.config.ts `writeBundle`) checked without a build, and a routed-drive place for every zone; a FLAG
@@ -1025,7 +1026,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `enrich_all.py`'s steps, each also run alone on a finished pack: `enrich_airports.py`, `enrich_everyday.py`, `enrich_parks.py`, `enrich_schools.py` (with `education_sources.py`), `enrich_universities.py`; they share `overpass.py` (one cached Overpass request, kept as `.json.gz`) and `arcgis.py` (one cached, paged ArcGIS REST query).
 - Calibration cities beside `calib_tyo.py`: `calib_lon.py`, `calib_par.py`, `calib_seo.py`, `calib_sdj.py` and `calib_tor.py` hold each city's trips file and targets for `realnet.py` and `calib.py`.
 - US helpers: `spread.py` (each census block's people and jobs over H3 cells), `wfh.py` (work from home from the ACS), `group_quarters.py` (people in institutional group quarters), `fit_decay.py` (the gravity decay fitted against LODES OD), `lumps.py` (job cells far above their neighbourhood), `look_water.py` (a look-image of a pack's water mask).
-- `tools/country/` (adding-a-country.md's scripts): `backup.py` and `restore.py` (the shared files a run or join rewrites, saved and put back), `setbuilt.py` (parked plan rows set back to built), `stale.py` (market packs naming a market place with no pack), `setup_sim.py` (a sim copy for a long run), `start_hidden.ps1` and `waitany.ps1` (a detached start and the one background wait), and the census inputs of `admin_totals.py`: `turkey_census.py` (Turkey's people by ilce), `india_census.py` (India's two files), `cambodia_census.py` (Cambodia by district).
+- `tools/country/` (adding-a-country.md's scripts): `backup.py` and `restore.py` (the shared files a run or join rewrites, saved and put back), `setbuilt.py` (parked plan rows set back to built), `stale.py` (market packs naming a market place with no pack), `setup_sim.py` (a sim copy for a long run), `start_hidden.ps1` and `waitany.ps1` (a detached start and the one background wait), and the census inputs of `admin_totals.py`: `turkey_census.py` (Turkey's people by ilce), `india_census.py` (India's two files), `cambodia_census.py` (Cambodia by district), `colombia_census.py` (Colombia by municipio, T-2712).
 
 ### The Northeast's build order
 

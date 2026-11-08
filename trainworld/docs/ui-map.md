@@ -358,7 +358,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   still the one the game picked, is under 19 apart in CIEDE2000 (the palette's own spacing) from one
   of them, it takes the default farthest from the colours beside it, ties at random, unless none is
   farther than it already is. A colour the player sets is never changed, nor an older line's
-  (`colourPick.ts`, `lineColour.ts`, T-2291).
+  (`colourPick.ts`, `lineColour.ts`, T-2291). A pick counts as used the lines with no stops yet and the last four
+  colours it handed out, so lines made back to back before the game has the earlier ones still differ [T-2764].
 - **Marks on the track** [T-629, T-655, T-1871; `map/gradeMarks.ts`, data in `map/markData.ts`], drawn by the
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):
