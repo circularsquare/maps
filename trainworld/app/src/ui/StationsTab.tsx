@@ -1,6 +1,6 @@
 // The Stations tab: station ridership setting and the list of stations and complexes.
 
-import { untracked } from "@preact/signals";
+import { signal, untracked } from "@preact/signals";
 import { demandView } from "../game/demand";
 import { stationUse, useFigure } from "../game/stationUse";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -9,6 +9,7 @@ import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { leadOf } from "../game/complexLead";
+import { edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
@@ -134,7 +135,7 @@ interface StationRow {
 
 /** The Stations tab's rows: one per complex with a member in `stations` (T-530, Anita: Times Sq's
  * platforms were rows of one bullet each), its lines and numbers over the whole complex. */
-function stationRows(stations: readonly StationInput[], all: readonly StationInput[], lines: readonly LineInput[], dist: Map<string, number>): StationRow[] {
+function stationRows(stations: readonly StationInput[], all: readonly StationInput[], lines: readonly LineInput[], dist: Map<string, number>, apart = false): StationRow[] {
   const cx = complexes.value;
   const byId = new Map(all.map((s) => [s.id, s]));
   const lineIdx = new Map<string, number[]>();
@@ -142,10 +143,10 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
   const seen = new Set<number | string>();
   const rows: StationRow[] = [];
   for (const s of stations) {
-    const k = cx.of.get(s.id) ?? s.id;
+    const k = apart ? s.id : cx.of.get(s.id) ?? s.id;
     if (seen.has(k)) continue;
     seen.add(k);
-    const members = membersOf(cx, s.id);
+    const members = apart ? [s.id] : membersOf(cx, s.id);
     const at = new Set<number>();
     let built = false, d: number | undefined;
     const present: StationInput[] = [];
@@ -164,9 +165,13 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
   return rows;
 }
 
+/** T-2788: list each station of a complex on its own row (off: one row per complex) */
+const apart = signal(false);
+
 export function StationsTab() {
   useToday(); // T-293
   const [limit, setLimit] = useState(ROWS_FIRST);
+  const [renamingStation, setRenamingStation] = useState<string | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   /** a drag just ended: the click that follows it selects nothing */
   const dragged = useRef(false);
@@ -189,7 +194,7 @@ export function StationsTab() {
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
     || natural(a.lead.name, b.lead.name) * (key === "name" ? dir : 1);
   const inOrder = (rows: StationRow[]) => (hand.length ? byHand(rows.sort(order), (r) => r.members, hand) : rows.sort(order));
-  const st = inOrder(stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist));
+  const st = inOrder(stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist, apart.value));
   // T-1813: a row dragged into the gap above or below another goes there; the order then covers
   // every station, the viewed place's or not
   const dropRow = (d: Drag) => {
@@ -236,7 +241,9 @@ export function StationsTab() {
   const ridersWhat = t("stationsTab.ridersWhat", { mode: d.stationUse, when: shownDayPhrase.value });
   return (
     <>
-      <div class="line-list-actions"><ScopeToggle /></div>
+      <div class="line-list-actions"><ScopeToggle />
+        <button class={"btn" + (apart.value ? " on" : "")} aria-pressed={apart.value} onClick={() => (apart.value = !apart.value)}>{t("stationsTab.apart")}</button>
+      </div>
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : t("stationsTab.noneHere")}</p>}
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
         { key: "name", label: t("stationsTab.name"), tip: t("stationsTab.sortName"), first: 1 },
@@ -247,7 +254,15 @@ export function StationsTab() {
         {st.slice(0, limit).map((r) => (
           <li class={(sel?.kind === "station" && r.members.includes(sel.station) ? "on" : "") + mark(r)} data-drop={r.members[0]} onPointerDown={(e) => pointerDown(e, r.members[0])}
             onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: r.lead.id }; }} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
-            <span class={"grow" + (r.built ? "" : " muted")}><span>{r.lead.name}</span></span>
+            {renamingStation === r.lead.id ? (
+              <input class="name-edit grow" value={r.lead.name} aria-label={t("stationsTab.stationName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
+                onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
+                onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.lead.name) void edit({ op: "stationProps", node: r.lead.num, platform: r.lead.length, name: n }); }}
+                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingStation(null); }} />
+            ) : (
+              // T-2786: a triple click renames (a double click snaps the camera)
+              <span class={"grow" + (r.built ? "" : " muted")}><span onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingStation(r.lead.id); } }}>{r.lead.name}</span></span>
+            )}
             <Chips lines={r.lines} name={r.lead.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">{t("stationsTab.plan")}</span>}
             {key === "near" && <Near m={r.dist} />}

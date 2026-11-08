@@ -20,7 +20,8 @@ import { selection } from "../../game/ui";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
-import { nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
+import { CAR_M, nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
+import { carsText } from "./schedule";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
 import { stationUpkeep } from "../../game/regionMoney";
@@ -367,7 +368,7 @@ function StationDetails({ s, lines, props }: {
       <ul class="rows">
         {!s.port && <li>
           <span class="grow">{tr("stationInspector.platforms")}</span>
-          <Stepper value={length(s.length)} wide label={tr("stationInspector.platformLength")} onStep={(d) => {
+          <Stepper value={carsText(Math.round(s.length / CAR_M))} wide label={tr("stationInspector.platformLength")} onStep={(d) => {
             const to = stepPlatform(s.length, d);
             if (to === s.length) return false;
             return props(to);

@@ -18,7 +18,7 @@ import { StartLogo } from "./StartLogo";
 import { AboutLink } from "./Credits";
 import { AccountButton, startAccountUi } from "./AccountPanel";
 import { LanguageSelect } from "./LanguageSelect";
-import { deleteGroupQuestion, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
+import { DeleteAsk, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t } from "../i18n";
@@ -176,8 +176,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
               </div>
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
-                <p>{deleteGroupQuestion(g)}</p>
-                <div class="pane-foot"><button class="btn text danger start-delete-yes" onClick={() => void remove(groupHeads(g))}>{t("startMenu.deleteSave")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("startMenu.keepIt")}</button></div>
+                <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => void remove(groupHeads(g))} onKeep={() => setRemoving(null)} />
               </div>}
             </li>;
           })}

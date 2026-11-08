@@ -233,6 +233,10 @@ verify --page, purge 2026-11-07b.
 quickbits (Sonnet, T-2779..2782: cross section west-left, language select spacing/size, leaderboard points hover, crowding
 bubble average), main tree, no commit yet. T-2783..2790 filed for later (leaderboard not updating T-2783 is the one
 that matters most now that it's public). Next free id T-2791. Deploying needs her word.
+Anita later 11-08: "lets do the rest of the changes too now". Sonnet agents, main tree: board (T-2783 + hover key), rename
+(T-2784, 2785, 2786, 2791), extras (T-2789, 2788, 2787, 2790; may skip the expensive ones). After them: smoke, commit by
+path (not TODO.md), rebuild 8800, ask her before publishing. T-2779..2782 are committed, on 8800, not live.
+Next free id T-2792.
 
 ## Anita's standing asks
 - **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and

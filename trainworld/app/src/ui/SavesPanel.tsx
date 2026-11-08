@@ -293,6 +293,24 @@ export function VersionsLine({ group, now, act, children }: { group: GameGroup; 
   </div>;
 }
 
+/** T-2784: from this many stations up, deleting a game asks for the count to be typed. */
+const TYPE_TO_DELETE = 100;
+
+/** The delete question with its two buttons (T-2784: a big game also asks for its station count). Shared by this panel and the start menu. */
+export function DeleteAsk({ group, playing = false, yesLabel, keepLabel, yesClass = "", onYes, onKeep }: { group: GameGroup; playing?: boolean; yesLabel: string; keepLabel: string; yesClass?: string; onYes: () => void; onKeep: () => void }) {
+  const top = group.top;
+  const stations = top.kind === "slot" ? top.slot.stations : top.game.facts?.stations;
+  const [typed, setTyped] = useState("");
+  const gate = stations !== undefined && stations >= TYPE_TO_DELETE;
+  const ok = !gate || typed.trim() === String(stations);
+  return <>
+    <p>{deleteGroupQuestion(group, playing)}</p>
+    {gate && <label class="delete-type"><span>{t("savesPanel.typeToDelete", { count: stations })}</span>
+      <input type="text" inputMode="numeric" value={typed} autocomplete="off" onInput={(e) => setTyped((e.target as HTMLInputElement).value)} /></label>}
+    <div class="pane-foot"><button class={"btn text danger " + yesClass} disabled={!ok} onClick={onYes}>{yesLabel}</button><button class="btn text" onClick={onKeep}>{keepLabel}</button></div>
+  </>;
+}
+
 /** The question before a card's game is deleted with every version (T-2037); also the start menu's. */
 export function deleteGroupQuestion(group: GameGroup, playing = false): string {
   const name = group.top.kind === "slot" ? group.top.slot.name : group.top.game.name;
@@ -407,8 +425,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
                 : <AccountActions slot={slot} onDelete={() => setRemoving(g.origin)} />}
             </VersionsLine>
             {removing === g.origin && <div class="callout bad">
-              <p>{deleteGroupQuestion(g, playing)}</p>
-              <div class="pane-foot"><button class="btn text danger" onClick={() => { void removeGroup(g); setRemoving(null); }}>{t("savesPanel.deleteGame")}</button><button class="btn text" onClick={() => setRemoving(null)}>{t("savesPanel.keepIt")}</button></div>
+              <DeleteAsk group={g} playing={playing} yesLabel={t("savesPanel.deleteGame")} keepLabel={t("savesPanel.keepIt")} onYes={() => { void removeGroup(g); setRemoving(null); }} onKeep={() => setRemoving(null)} />
             </div>}
           </li>;
         })}

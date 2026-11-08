@@ -712,7 +712,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   is boardings in the past 24 hours. Its hovers, header and footer say which. The scope
   toggle and distance column are the Lines tab's (above); the footer reads "N of M stations" when
   only the viewed place is listed. The first 80 rows are drawn when the tab opens, and 160 more each
-  time the list's end comes within 400 px of view as it scrolls [T-1200]. A row is a station complex [T-530]: the name of its member with
+  time the list's end comes within 400 px of view as it scrolls [T-1200]. A row is a station complex [T-530] (the button "Show stations separately" beside the place toggle, off at each load, gives each station its own row, T-2788): the name of its member with
   the most lines, every line stopping at any member, riders summed over the members, and a
   click selects the complex as a click on the map does and a double click also moves the map to
   that member, to zoom 14 or closer so its platform boxes show [T-569]; a station on its own is its own row, and
@@ -1147,3 +1147,5 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   stations are named beside their dots in map ink on a halo of the land, a name that would overlap
   one already drawn left out [T-1902]. Hovering a ride gives line, stations, stops, minutes after the wait, crowding's effect
   and the route's share; a walk its distance and minutes; a station what the route does there.
+
+- The platform stepper reads in cars and is called station length (T-2785).

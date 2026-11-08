@@ -1304,3 +1304,5 @@ registry centre and zoom, or over New York with none [T-310].
 - A game whose view is over dead space and whose stations reach no zone loads nothing: no card, no
   status, the clock not held, the split "–" [T-318]; a change to its stations or lines is still
   solved, with no pack, so its lines get their figures (nobody aboard) [T-845].
+
+- Triple click on a line name (Lines list) or a station name (Stations list) renames it (T-2786). Deleting a game of 100+ stations asks for its station count typed (T-2784).

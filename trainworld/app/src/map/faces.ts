@@ -85,8 +85,9 @@ export interface Look {
   skin: number;
 }
 export const EXPR_CHANCE: Record<Exclude<Expression, "">, number> = { flat: 0.04, sleepy: 0.04, crying: 0.08, dead: 0.03 };
-export const ACC_CHANCE: Record<Exclude<Accessory, "">, number> = { bucket: 0.025, cap: 0.025, shades: 0.025 };
-export const HAIR_CHANCE: Record<Exclude<Hair, "">, number> = { short: 0.1, long: 0.1 };
+export const ACC_CHANCE: Record<Exclude<Accessory, "">, number> = { bucket: 0.04, cap: 0.04, shades: 0.03 };
+/** T-2789: with the hats, about half of all faces have hair or a hat. */
+export const HAIR_CHANCE: Record<Exclude<Hair, "">, number> = { short: 0.22, long: 0.22 };
 export const CHILD_CHANCE = 0.06;
 export const CHILD_SCALE = 0.72;
 

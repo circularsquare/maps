@@ -10,7 +10,7 @@ import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
 import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
-import { edit, stationsById } from "../game/world";
+import { edit, renameLine, stationsById } from "../game/world";
 import { closedGroups, groupName, lineGroups, toggleGroup } from "../game/lineGroups";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
@@ -140,6 +140,7 @@ export function LinesTab() {
   const [creating, setCreating] = useState(false);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [renaming, setRenaming] = useState<number | null>(null);
+  const [renamingLine, setRenamingLine] = useState<string | null>(null);
   /** a drag just ended: the click that follows it selects nothing */
   const dragged = useRef(false);
   useToday(); // T-446: riders in the past 24 hours, kept fresh while the tab is open
@@ -342,7 +343,14 @@ export function LinesTab() {
       <li class={(on ? "on" : "") + (inGroup ? " in-group" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === l.id ? " dragged" : "")}
         data-drop={drop} onPointerDown={(e) => pointerDown(e, l.id)} onClick={() => pick(l.id)} onDblClick={() => locateLine(l.stops)}>
         <Chip line={l} />
-        <span class="grow line-name">{l.name}</span>
+        {renamingLine === l.id ? (
+          <input class="name-edit grow" value={l.name} aria-label={t("linesTab.lineName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
+            onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
+            onBlur={(e) => { setRenamingLine(null); renameLine(l.id, e.currentTarget.value); }} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingLine(null); }} />
+        ) : (
+          // T-2786: a triple click renames (a double click snaps the camera)
+          <span class="grow line-name" onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingLine(l.id); } }}>{l.name}</span>
+        )}
         {showCity && <span class="val muted w-city" data-tip={cityOf.get(l.id) ? t("linesTab.cityTip", { city: cityOf.get(l.id) }) : undefined}>{cityOf.get(l.id)}</span>}
         {st.status !== "running" ? (
           <span class="val muted">{statusText(st.status)}</span>

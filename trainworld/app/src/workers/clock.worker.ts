@@ -3438,7 +3438,10 @@ function apply(op: EditOp): Applied {
       }
       const r = a.copy_line(op.line, id, name);
       // T-1872: the copy always has a symbol of its own (the source's, or the one it shows, stepped on)
-      if (r === 0) a.set_line_badge(id, name, colour, cloneSymbol(a.line_symbol(op.line) || letterOf(from), symbols));
+      // T-2791: a lettered name ("Line 1d") gives the symbol too ("1d") when that is free, so bullet and name agree
+      const tail = /\d+[A-Za-z]$/.exec(name)?.[0];
+      const symbol = tail && !op.name?.trim() && tail.length <= 5 && !symbols.has(tail.toLowerCase()) ? tail : cloneSymbol(a.line_symbol(op.line) || letterOf(from), symbols);
+      if (r === 0) a.set_line_badge(id, name, colour, symbol);
       return { r, line: id };
     }
     case "setStops": {

@@ -9,7 +9,8 @@ import { linking } from "../game/links";
 import { moneyState } from "../game/money";
 import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
 import { linesByNum, world } from "../game/world";
-import { stepPlatform } from "../game/boarding";
+import { CAR_M, stepPlatform } from "../game/boarding";
+import { carsText } from "./inspector/schedule";
 import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, setTrackType, shade, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
@@ -118,7 +119,7 @@ function StationBar() {
     <div class="tool-bar station-bar" role="group" aria-label={t("toolBar.station")} style={{ "--mode": CLICK_MODE_COLOURS.station }}>
       <div class="tb-row">
         <span>{t("toolBar.platformLength")}</span>
-        <Stepper value={length(buildPlatform.value)} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
+        <Stepper value={carsText(Math.round(buildPlatform.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
           const to = stepPlatform(buildPlatform.value, s);
           if (to === buildPlatform.value) return false;
           buildPlatform.value = to;

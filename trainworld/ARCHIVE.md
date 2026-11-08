@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2791 Bullet and name of a copied line agree (2026-11-08, agent rename): copyLine in workers/clock.worker.ts gives the copy the lettered tail of its name ("Line 1d" gives "1d") as its symbol when free, else the old stepped symbol.
+- T-2784 Type the station count to delete a big save (2026-11-08, agent rename): `DeleteAsk` in ui/SavesPanel.tsx, shared with ui/StartMenu.tsx; from 100 stations (the slot's or account game's saved count) the delete button waits for the count typed; below, the old confirm.
+- T-2785 Station length in cars (2026-11-08, agent rename): the station tool bar and the station inspector show the platform stepper as cars (`carsText`, length / CAR_M) and call it station length; the sim is unchanged.
+- T-2786 Triple click renames (2026-11-08, agent rename): a line's name in the Lines list (ui/LinesTab.tsx) and a station or complex's name in the Stations list (ui/StationsTab.tsx) become a text box on a triple click; a double click still snaps the camera.
+- T-2788 Stations list: split complexes (2026-11-08, agent extras): a "Show stations separately" button (default off) in the list's top row; on, each station of a complex gets its own row (`apart` in ui/StationsTab.tsx).
+- T-2789 More faces with hair or hats (2026-11-08, agent extras): HAIR_CHANCE 0.22 short + 0.22 long, hats 0.04/0.04 (map/faces.ts), about half of faces have hair or a hat.
+- T-2783 Leaderboard stuck below a big score (2026-11-08, agent board): the server refuses points over 1e9 (twMaxPoints), so a 1.58b game never sent again and stayed at its last accepted 958m; account.ts `figures` now caps points and cities at 1e9. Hover has its own key `leaderboard.pointsRule`.
 - T-2779 Cross section west on the left (2026-11-08, agent quickbits): LineProfile's `parse` flips a line that starts in the east, strip, hover and stops together.
 - T-2780 Language select spacing and size (2026-11-08, agent quickbits): globe-to-select gap 4px, select text at panel size (was 12px), in style.css.
 - T-2781 Leaderboard "points" (2026-11-08, agent quickbits): rows read "N points"; hover adds the points rule line (`cities.pointsRule`).
