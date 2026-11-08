@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2796 Server failures say it seems to be down (2026-11-08, agent easy): account.unreachable, cloud.unreachable, feedbackPanel.unreachable reworded in all languages; no ping to Anita yet.
+- T-2795 Tutorial pulse canvas sized to innerWidth/innerHeight in px (2026-11-08, agent easy): ui/ripple.ts; 100vh was taller than the phone's visible height and stretched the rings. Untested on a phone.
+- T-2792 Leaderboard limit raised to 1e12 (2026-11-08): server deployed (shonei-server twMaxPoints), the game's cap follows it, so scores over a billion rank properly.
 - T-2791 Bullet and name of a copied line agree (2026-11-08, agent rename): copyLine in workers/clock.worker.ts gives the copy the lettered tail of its name ("Line 1d" gives "1d") as its symbol when free, else the old stepped symbol.
 - T-2784 Type the station count to delete a big save (2026-11-08, agent rename): `DeleteAsk` in ui/SavesPanel.tsx, shared with ui/StartMenu.tsx; from 100 stations (the slot's or account game's saved count) the delete button waits for the count typed; below, the old confirm.
 - T-2785 Station length in cars (2026-11-08, agent rename): the station tool bar and the station inspector show the platform stepper as cars (`carsText`, length / CAR_M) and call it station length; the sim is unchanged.

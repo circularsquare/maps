@@ -236,7 +236,15 @@ that matters most now that it's public). Next free id T-2791. Deploying needs he
 Anita later 11-08: "lets do the rest of the changes too now". Sonnet agents, main tree: board (T-2783 + hover key), rename
 (T-2784, 2785, 2786, 2791), extras (T-2789, 2788, 2787, 2790; may skip the expensive ones). After them: smoke, commit by
 path (not TODO.md), rebuild 8800, ask her before publishing. T-2779..2782 are committed, on 8800, not live.
-Next free id T-2792.
+Next free id T-2793. Batch landed. Server deployed with 1e12 limit (shonei-server commit, unpushed). Anita: "lets deploy" (go for
+this publish, version 2026-11-08): 8800 = 4f1b6fc8, smoke light/dark 26/26; **LIVE = 2026-11-08 (4f1b6fc8), website 7352eae, verify --page 6/6 PASS.** Purge R2 2026-11-07c after 2026-11-10 or so.
+(done: deploy, website commit+push,
+verify --page. **Do NOT purge R2 2026-11-07c the same day** (players are live now: open tabs keep reading their own version's data; wait a day or two).
+
+## 2026-11-08 evening
+Anita's X account locked (birth date set; under 13 at creation; ID submitted), so traffic from the thread stopped. 2,600 plays,
+1,863 browsers on 11-08. Her complaints filed T-2793..2798, T-2793 and T-2794 wait for her next usage window; agent easy (Sonnet, ~40 calls max) on T-2796, 2795, 2798, 2797 (2% left).
+Then smoke, commit, 8800; publish only on her word. Next free id T-2799.
 
 ## Anita's standing asks
 - **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and

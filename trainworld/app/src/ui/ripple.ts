@@ -116,6 +116,11 @@ function frame(now: number) {
   const cv = ensureCanvas();
   const dpr = devicePixelRatio || 1, w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  // T-2795: 100vw/100vh is the large viewport on a phone (its address bar hidden), taller than innerHeight, which
+  // stretched the drawing and put rings an inch off; the box is the drawing's own size so one unit is one css px
+  const cw = innerWidth + "px", ch = innerHeight + "px";
+  if (cv.style.width !== cw) cv.style.width = cw;
+  if (cv.style.height !== ch) cv.style.height = ch;
   const g = cv.getContext("2d")!;
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.clearRect(0, 0, w, h);
