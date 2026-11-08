@@ -225,8 +225,8 @@ function figures(): { day: number; points: number; cities: Record<string, number
   const hour = m?.hours.at(-1)?.hour;
   if (!m || hour === undefined) return null;
   const per = [...pointsPast24h.peek()].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]);
-  // the server refuses a figure over 1e9 (twMaxPoints), which left a bigger game stuck on its last accepted one
-  const cap = (v: number) => Math.min(Math.round(v), 1e9);
+  // the server refuses a figure over 1e12 (twMaxPoints), which would leave a bigger game stuck on its last accepted one
+  const cap = (v: number) => Math.min(Math.round(v), 1e12);
   const points = cap(per.reduce((a, [, v]) => a + v, 0));
   const cities: Record<string, number> = {};
   for (const [id, v] of per.slice(0, MAX_CITIES)) cities[id] = cap(v);
