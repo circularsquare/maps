@@ -19,31 +19,53 @@ import { mergeEveryday } from "./selectionMerge";
  * `IntercityApi.selection`'s blocks (sim `E_CROSS`). */
 export const CROSS_KINDS = [0, 1, 2, 3, 5];
 
-/** The zone count of a longer-trip answer of `len` numbers, with `m` market places. For M markets a
- * selection has 1+8*M header numbers, 4 per zone of flows, 3 per zone of x, y, market, then (T-276)
- * the commutes between zones: 4 per market and 4 per zone, then (T-1229) 6 per zone for each of the
- * everyday kinds that cross zone lines (`CROSS_KINDS`: legs, rail and walking, starting and ending),
- * then (T-378) the trips with places that have no zone, starting and ending; a station has 6*M
- * header numbers then 5 per zone. */
-export function intercityZones(kind: "icSel" | "icStation", len: number, m: number): number {
-  return kind === "icSel" ? (len - 3 - 12 * m) / (11 + 6 * CROSS_KINDS.length) : (len - 6 * m) / 5;
+/** A selection's numbers per far zone (sim `SEL_Z`): all and rail of the longer trips starting in the
+ * selection and ending there, the same of the commutes (T-276), then per `CROSS_KINDS` kind
+ * (T-1229) legs, rail and walking legs at the home end and at the activity end. */
+export const SEL_Z = 8 + 6 * CROSS_KINDS.length;
+/** T-2747: where a longer-trip answer's far zones start, with `m` market places. A selection
+ * (`IntercityApi.selection_all_day`) has the matched share, 8 per place, the commutes 4 per place,
+ * then (T-378) the trips with places that have no zone, starting and ending; a station 6 per place.
+ * Then the count of far zones the answer reaches, and each (global zone ascending) as its gid, x,
+ * y, market place and its numbers (`SEL_Z`; a station's: riders starting, ending). */
+export function intercityHead(kind: "icSel" | "icStation", m: number): number {
+  return kind === "icSel" ? 3 + 12 * m : 6 * m;
 }
-/** Where the zones' own x, y, market start: the same on every worker, so never added up. */
-export function intercityZoneXY(kind: "icSel" | "icStation", len: number, m: number): number {
-  const nz = intercityZones(kind, len, m);
-  return kind === "icSel" ? 1 + 8 * m + 4 * nz : 6 * m + 2 * nz;
+/** The numbers of one far zone of a longer-trip answer, its gid, x, y and place included. */
+export function intercityRow(kind: "icSel" | "icStation"): number {
+  return 4 + (kind === "icSel" ? SEL_Z : 2);
 }
-/** Add a worker's longer-trip answer into `sums`: everything but the matched share (a selection's
- * first number) and the zones' x, y, market. */
-export function addIntercity(kind: "icSel" | "icStation", sums: Float64Array, v: Float64Array, m: number) {
-  const xy = intercityZoneXY(kind, sums.length, m), end = xy + 3 * intercityZones(kind, sums.length, m);
-  for (let k = kind === "icSel" ? 1 : 0; k < sums.length; k++) if (k < xy || k >= end) sums[k] += v[k];
+/** A worker's longer-trip answer `v` added to `sums`: everything but the matched share (a
+ * selection's first number) and the zones' gid, x, y, market, the zones merged by gid. A new array. */
+export function addIntercity(kind: "icSel" | "icStation", sums: Float64Array, v: Float64Array, m: number): Float64Array {
+  const h = intercityHead(kind, m), w = intercityRow(kind), at = h + 1;
+  const na = sums[h], nb = v[h];
+  const out = new Float64Array(at + w * (na + nb));
+  out.set(sums.subarray(0, h));
+  for (let k = kind === "icSel" ? 1 : 0; k < h; k++) out[k] += v[k];
+  let i = 0, j = 0, o = at;
+  while (i < na || j < nb) {
+    const ga = i < na ? sums[at + w * i] : Infinity, gb = j < nb ? v[at + w * j] : Infinity;
+    if (ga <= gb) {
+      out.set(sums.subarray(at + w * i, at + w * (i + 1)), o);
+      if (ga === gb) {
+        for (let k = 4; k < w; k++) out[o + k] += v[at + w * j + k];
+        j++;
+      }
+      i++;
+    } else {
+      out.set(v.subarray(at + w * j, at + w * (j + 1)), o);
+      j++;
+    }
+    o += w;
+  }
+  out[h] = (o - at) / w;
+  return o === out.length ? out : out.slice(0, o);
 }
-/** Every worker's answer added up, in the order given (the workers' period order). The first is
- * added into, so the caller hands over arrays it no longer needs. */
+/** Every worker's answer added up, in the order given (the workers' period order). */
 export function sumParts(kind: "icSel" | "icStation", parts: Float64Array[], m: number): Float64Array {
-  const sums = parts[0];
-  for (let i = 1; i < parts.length; i++) addIntercity(kind, sums, parts[i], m);
+  let sums = parts[0];
+  for (let i = 1; i < parts.length; i++) sums = addIntercity(kind, sums, parts[i], m);
   return sums;
 }
 
@@ -85,18 +107,15 @@ function toWorld(ctx: SumsCtx): (x: number, y: number) => { x: number; y: number
  * `IntercitySelection`, T-118), less its version. */
 export function selectionFlows(v: Float64Array, ctx: SumsCtx): Omit<IntercitySelection, "version"> {
   const marketXY = toWorld(ctx), world = makeFrame(ctx.world);
-  // per place, 8 numbers after the matched share: starts (all, rail, x, y) then ends; then per
-  // far zone (all, rail) of starts and of ends, then zone x, y, market (not summed)
+  // per place, 8 numbers after the matched share: starts (all, rail, x, y) then ends; then
+  // (T-276) the commutes between zones per place: the legs of commuters living in the selection (by
+  // where they work) and of those working there (by where they live), all and rail. Starts take the
+  // first, ends the second. Per far zone row (`intercityRow`) at `r0 + w * z`: gid, x, y, market,
+  // then the same of the longer trips (+4) and of the commutes (+8), then (T-1229, +12) the everyday
+  // outings across a zone line per kind of `CROSS_KINDS`: (legs, rail legs, walking legs) of the
+  // residents' outings and of those arriving
   const P = ctx.places;
-  const head = 1 + 8 * P, nz = intercityZones("icSel", v.length, P), xy = intercityZoneXY("icSel", v.length, P);
-  // T-276: the commutes between zones after the zones' x, y: per place, then per zone, the legs of
-  // commuters living in the selection (by where they work) and of those working there (by where
-  // they live), all and rail. Starts take the first, ends the second.
-  const tail = xy + 3 * nz;
-  // T-1229: then the everyday outings across a zone line: per kind of `CROSS_KINDS`, per far zone,
-  // (legs, rail legs, walking legs) of the residents' outings and of those arriving, as the
-  // commutes' blocks are
-  const etail = tail + 4 * P + 4 * nz;
+  const tail = 1 + 8 * P, h = intercityHead("icSel", P), nz = v[h], r0 = h + 1, w = intercityRow("icSel");
   const own = ctx.own ?? -1, modes = ctx.modes ?? null, centres = ctx.centres;
   // T-378: the longer trips not by rail by the corridor's shares (`[by plane, by car]`); commuters drive
   const split = (p: number, rest: number): [number, number] => {
@@ -115,7 +134,7 @@ export function selectionFlows(v: Float64Array, ctx: SumsCtx): Omit<IntercitySel
     const cz = new Map<number, [number, number, number]>();
     for (const ki of kinds) {
       for (let z = 0; z < nz; z++) {
-        const o = etail + ki * 6 * nz + 6 * z + 3 * dir;
+        const o = r0 + w * z + 12 + ki * 6 + 3 * dir;
         if (!(v[o] > 0)) continue;
         const e = cz.get(z) ?? cz.set(z, [0, 0, 0]).get(z)!;
         e[0] += v[o]; e[1] += v[o + 1]; e[2] += Math.max(0, v[o + 2]);
@@ -123,9 +142,9 @@ export function selectionFlows(v: Float64Array, ctx: SumsCtx): Omit<IntercitySel
     }
     const cp = new Map<number, [number, number, number, number, number]>();
     for (const [z, e] of cz) {
-      const pl = v[xy + 3 * z + 2];
+      const r = r0 + w * z, pl = v[r + 3];
       const x = cp.get(pl) ?? cp.set(pl, [0, 0, 0, 0, 0]).get(pl)!;
-      x[0] += e[0]; x[1] += e[1]; x[2] += e[2]; x[3] += e[0] * v[xy + 3 * z]; x[4] += e[0] * v[xy + 3 * z + 1];
+      x[0] += e[0]; x[1] += e[1]; x[2] += e[2]; x[3] += e[0] * v[r + 1]; x[4] += e[0] * v[r + 2];
     }
     let all = 0, rail = 0, air = 0, car = 0, walk = 0;
     for (let p = 0; p < P; p++) {
@@ -143,12 +162,12 @@ export function selectionFlows(v: Float64Array, ctx: SumsCtx): Omit<IntercitySel
       }
     }
     for (let z = 0; z < nz; z++) {
-      const c = tail + 4 * P + 4 * z + 2 * dir;
+      const r = r0 + w * z, l = r + 4 + 2 * dir, c = r + 8 + 2 * dir;
       const e = cz.get(z);
-      const a = (longer ? v[head + 4 * z + 2 * dir] + (v[c] ?? 0) : 0) + (e?.[0] ?? 0);
-      if (a > 0) zones.push({ ...marketXY(v[xy + 3 * z], v[xy + 3 * z + 1]), place: v[xy + 3 * z + 2], gid: z, all: a, rail: (longer ? v[head + 4 * z + 2 * dir + 1] + (v[c + 1] ?? 0) : 0) + (e?.[1] ?? 0), ...(e && e[2] > 0 ? { walk: e[2] } : {}) });
+      const a = (longer ? v[l] + v[c] : 0) + (e?.[0] ?? 0);
+      if (a > 0) zones.push({ ...marketXY(v[r + 1], v[r + 2]), place: v[r + 3], gid: v[r], all: a, rail: (longer ? v[l + 1] + v[c + 1] : 0) + (e?.[1] ?? 0), ...(e && e[2] > 0 ? { walk: e[2] } : {}) });
     }
-    return { all, rail, air, car, ...(walk > 0 ? { walk } : {}), elsewhere: longer ? v[v.length - 2 + dir] ?? 0 : 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
+    return { all, rail, air, car, ...(walk > 0 ? { walk } : {}), elsewhere: longer ? v[h - 2 + dir] ?? 0 : 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
   };
   const every = CROSS_KINDS.map((_, i) => i);
   // the filter's far end for each shown purpose: its kinds' outings alone (school counts university)
@@ -172,14 +191,14 @@ export function stationFlows(answers: (Float64Array | null)[], ctx: SumsCtx): Pi
     if (seen.has(sig)) continue;
     seen.add(sig);
     if (!v) v = a.slice();
-    else addIntercity("icStation", v, a, ctx.places);
+    else v = addIntercity("icStation", v, a, ctx.places);
   }
   if (!v) return null;
   const marketXY = toWorld(ctx);
   const n = ctx.places;
   // rows: counts by place for starts then ends, then those times x and y (starts x, y, ends x, y);
-  // then per far zone the riders starting, then ending; then zone x, y, market (not summed)
-  const head = 6 * n, nz = (v.length - head) / 5, xy = intercityZoneXY("icStation", v.length, n);
+  // then the far zones (`intercityHead`), each gid, x, y, market, riders starting, ending
+  const h = intercityHead("icStation", n), nz = v[h], r0 = h + 1, w = intercityRow("icStation");
   const flows = (dir: number): PlaceFlows => {
     const places: PlaceTrips[] = [];
     let rail = 0;
@@ -190,8 +209,8 @@ export function stationFlows(answers: (Float64Array | null)[], ctx: SumsCtx): Pi
     }
     const zones: ZoneTrips[] = [];
     for (let z = 0; z < nz; z++) {
-      const c = v![head + dir * nz + z];
-      if (c > 0) zones.push({ ...marketXY(v![xy + 3 * z], v![xy + 3 * z + 1]), place: v![xy + 3 * z + 2], gid: z, all: c, rail: c });
+      const r = r0 + w * z, c = v![r + 4 + dir];
+      if (c > 0) zones.push({ ...marketXY(v![r + 1], v![r + 2]), place: v![r + 3], gid: v![r], all: c, rail: c });
     }
     return { all: rail, rail, air: 0, car: 0, elsewhere: 0, places: places.sort((a, b) => b.all - a.all), zones: zones.sort((a, b) => b.all - a.all) };
   };

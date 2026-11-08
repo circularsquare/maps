@@ -20,7 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { CITIES, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { initWasm } from "./wasmInit";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
@@ -31,6 +31,7 @@ import { roundedDefault } from "../game/fareDefault";
 import { curveWeight, fareFactors, fareScale, fareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { addIntercity } from "./demandSums";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -1097,19 +1098,16 @@ function query(msg: Query) {
       let packed: Float64Array | null = null;
       if (sq) {
         const place = MARKET_OF[msg.city];
-        // (a fresh array from the binding: no second copy, 409 MB on the real save, T-2746)
+        // (T-2747: packed, only the far zones the selection reaches)
         packed = intercity!.selection_all_day(place, sq.xy, sq.share, day, maskOf(at?.markets ?? mine));
-        for (const c of mcs) {
-          const v = c.part!.selection_rail_day(place, sq.xy, sq.share, day);
-          for (let i = 0; i < v.length; i++) packed[i] += v[i];
-        }
+        for (const c of mcs) packed = addIntercity("icSel", packed, c.part!.selection_rail_day(place, sq.xy, sq.share, day), REGISTRY.market.places.length);
       }
       const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : 0;
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
       const sc = mcs.find((c) => (c.stLocal[msg.station] ?? -1) >= 0);
       const ok = live && (!sc || clusterLive(sc)) && !!intercity;
-      const packed = ok ? Float64Array.from(marketStationFlows(at!, sc, intercity!, msg.station, day)) : null;
+      const packed = ok ? (marketStationFlows(at!, sc, intercity!, msg.station, day)) : null;
       sendMessage({ kind: "icStation", id: msg.id, version: msg.version, mask: ok ? (sc?.part ?? intercity!).solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "purposeModes") {
       // one everyday purpose's legs (T-158); a city without that purpose answers empty, not null

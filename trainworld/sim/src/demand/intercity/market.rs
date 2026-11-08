@@ -356,18 +356,20 @@ impl Market {
     /// others their place's centre.
     pub(super) fn write_zone_xy(&self, out: &mut [f64]) {
         for g in 0..self.n_gid {
-            let c = self.comp_of_gid[g];
-            let (x, y) = if c != u32::MAX {
-                let z = &self.zones[c as usize];
-                (z.x, z.y)
-            } else {
-                let p = &self.places[self.gid_place[g] as usize];
-                (p.x, p.y)
-            };
-            out[3 * g] = x as f64;
-            out[3 * g + 1] = y as f64;
-            out[3 * g + 2] = self.gid_place[g] as f64;
+            out[3 * g..3 * g + 3].copy_from_slice(&self.gid_xy(g));
         }
+    }
+    /// `write_zone_xy` of one global zone.
+    pub(super) fn gid_xy(&self, g: usize) -> [f64; 3] {
+        let c = self.comp_of_gid[g];
+        let (x, y) = if c != u32::MAX {
+            let z = &self.zones[c as usize];
+            (z.x, z.y)
+        } else {
+            let p = &self.places[self.gid_place[g] as usize];
+            (p.x, p.y)
+        };
+        [x as f64, y as f64, self.gid_place[g] as f64]
     }
     /// Zone `z`'s pairs with every other open zone (trips each way), partner ascending.
     #[inline(never)]

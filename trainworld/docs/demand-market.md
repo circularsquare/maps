@@ -116,8 +116,9 @@ pairs dealt in chunks (T-780, [regional.md](regional.md) 5.1), the commutes' all
 for a selection are computed row by row for its zones when asked, against every open zone and, by
 place, every place not open (`selection_all_day`, over any periods: the worker asks it of the
 composition of every pack it holds and adds each part's rail, `selection_rail_day`). Answers lay
-out every place and every 6 km zone of the world (`zone_count`, the rows' zone counts in place
-order); a zone not open has no figures of its own and sits at its place's centre. Positions the
+out every place, then only the 6 km zones of the world they reach (global zone id, ascending,
+each with its x, y and place; `station_flows_day` the same, T-2747), so the workers merge them by
+zone; a zone not open has no figures of its own and sits at its place's centre. Positions the
 app reads are in the market frame (the New York equirectangular one) whatever the place.
 
 ## Distances and the regional API

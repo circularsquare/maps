@@ -107,8 +107,9 @@ const sel = async (id, end, day, version = 1) => {
   assert(r.packed, `icSel ${id} end ${end}`); assert.equal(r.mask, 31);
   return r.packed;
 };
-const layout = (v) => { const nz = (v.length - 3 - 12 * P) / 41; assert(Number.isInteger(nz), `layout: ${v.length} numbers, ${P} places`); return { nz, etail: v.length - 2 - 30 * nz }; };
-const block = (v, ki, dir) => { const { nz, etail } = layout(v); const o = etail + ki * 6 * nz; const rows = []; for (let z = 0; z < nz; z++) if (v[o + 6 * z + 3 * dir] > 0) rows.push([z, v[o + 6 * z + 3 * dir], v[o + 6 * z + 3 * dir + 1], v[o + 6 * z + 3 * dir + 2]]); return rows; };
+// T-2747: the far zones packed after the head, each gid, x, y, place and 38 numbers (the everyday ones from +12)
+const layout = (v) => { const h = 3 + 12 * P, nz = v[h]; assert(v.length === h + 1 + 42 * nz, `layout: ${v.length} numbers, ${P} places`); return { nz, r0: h + 1 }; };
+const block = (v, ki, dir) => { const { nz, r0 } = layout(v); const rows = []; for (let z = 0; z < nz; z++) { const o = r0 + 42 * z + 12 + 6 * ki + 3 * dir; if (v[o] > 0) rows.push([v[r0 + 42 * z], v[o], v[o + 1], v[o + 2]]); } return rows; };
 const EK = [0, 1, 2, 3, 5];
 for (const [id, end, dir] of [[homeId, 0, 0], [awayId, 1, 1]]) {
   const v = await sel(id, end, 0);

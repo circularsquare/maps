@@ -620,9 +620,12 @@ impl IntercityApi {
     }
     /// T-377: `selection_flows_day`'s all-mode numbers alone (rail zero) over the periods in
     /// `mask`, solved or not: a market composed of every open pack answers them, its parts add
-    /// their rail (`selection_rail_day`).
+    /// their rail (`selection_rail_day`). T-2747: packed: the matched share, 8 per place, the
+    /// commutes 4 per place, the trips with places that have no zone (2), then the far zones the
+    /// selection reaches: their count, then each (global zone ascending) with its x, y and place and
+    /// `SEL_Z` numbers.
     pub fn selection_all_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32) -> Vec<f64> {
-        self.selection(market, xy, share, day, mask, false)
+        self.selection(market, xy, share, day, mask, false).pack(&self.m)
     }
     /// T-1204: which corridors' figures this market reads; compositions of one world with rows
     /// (and their parts) share them, so `corridor_pairs`, `corridor_trips`, `commute_base` and

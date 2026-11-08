@@ -71,7 +71,7 @@ impl IntercityApi {
     /// zone's x and y (starts x, starts y, ends x, ends y); then per global 6 km zone the riders
     /// starting, then ending, then every zone's x, y and place. Empty with no such station.
     pub fn station_flows(&self, station: u32) -> Vec<f64> {
-        self.station_flows_day(station, WEEKDAY as u32)
+        self.station_flows_dense(station, WEEKDAY as u32)
     }
 }
 

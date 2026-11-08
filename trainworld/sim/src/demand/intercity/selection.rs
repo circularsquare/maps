@@ -1,5 +1,151 @@
 use super::*;
 
+/// T-2747: a far zone's numbers in a selection's answer: (all, rail) of the longer trips starting
+/// in the selection and of those ending there, the same of the commutes, then per `E_CROSS` kind
+/// (legs, rail legs, walking legs) at the home end and at the activity end.
+pub(super) const SEL_Z: usize = 8 + 6 * E_CROSS.len();
+
+/// T-2747: numbers by global zone, only the zones an answer reaches.
+pub(super) struct ByGid<const W: usize> {
+    slot: HashMap<u32, u32>,
+    gid: Vec<u32>,
+    v: Vec<[f64; W]>,
+}
+impl<const W: usize> ByGid<W> {
+    fn new() -> Self {
+        ByGid { slot: HashMap::new(), gid: vec![], v: vec![] }
+    }
+    fn at(&mut self, g: usize) -> usize {
+        let n = self.v.len() as u32;
+        let s = *self.slot.entry(g as u32).or_insert(n);
+        if s == n {
+            self.gid.push(g as u32);
+            self.v.push([0.; W]);
+        }
+        s as usize
+    }
+    fn get(&self, g: usize) -> Option<&[f64; W]> {
+        self.slot.get(&(g as u32)).map(|&s| &self.v[s as usize])
+    }
+    /// The zone count, then per zone with any number not zero, by global zone ascending: its
+    /// global zone, x, y and place (`Market::gid_xy`), its `W` numbers.
+    fn pack(&self, m: &Market, out: &mut Vec<f64>) {
+        let mut keep: Vec<usize> = (0..self.v.len()).filter(|&i| self.v[i].iter().any(|&x| x != 0.)).collect();
+        keep.sort_unstable_by_key(|&i| self.gid[i]);
+        out.reserve(1 + keep.len() * (4 + W));
+        out.push(keep.len() as f64);
+        for i in keep {
+            let g = self.gid[i] as usize;
+            out.push(g as f64);
+            out.extend(m.gid_xy(g));
+            out.extend(self.v[i]);
+        }
+    }
+    #[cfg(test)]
+    fn unpack(v: &[f64]) -> Self {
+        let mut z = Self::new();
+        for r in v[1..].chunks_exact(4 + W).take(v[0] as usize) {
+            let s = z.at(r[0] as usize);
+            z.v[s].copy_from_slice(&r[4..]);
+        }
+        z
+    }
+}
+
+/// T-2747: a selection's longer trips, commutes and everyday outings: `head` holds the matched
+/// share, 8 numbers per place (as `selection_flows`), the commutes 4 per place, then the trips
+/// with places that have no zone, starting and ending; `zones` the far zones (`SEL_Z`).
+pub(super) struct Selection {
+    head: Vec<f64>,
+    zones: ByGid<SEL_Z>,
+}
+impl Selection {
+    fn empty(np: usize) -> Self {
+        Selection { head: vec![0.; 3 + 12 * np], zones: ByGid::new() }
+    }
+    /// What the app is sent: `head`, then the zones as `ByGid::pack`.
+    pub(super) fn pack(&self, m: &Market) -> Vec<f64> {
+        let mut out = self.head.clone();
+        self.zones.pack(m, &mut out);
+        out
+    }
+    /// `selection_flows`'s layout: every global zone, each with its x, y and place.
+    fn dense(&self, m: &Market) -> Vec<f64> {
+        let (np, ng) = (m.places.len(), m.n_gid);
+        let head = 1 + 8 * np;
+        let tail = head + 7 * ng;
+        let etail = tail + 4 * np + 4 * ng;
+        let mut out = vec![0.; etail + E_CROSS.len() * 6 * ng + 2];
+        let n = out.len();
+        out[..head].copy_from_slice(&self.head[..head]);
+        out[tail..tail + 4 * np].copy_from_slice(&self.head[head..head + 4 * np]);
+        out[n - 2..].copy_from_slice(&self.head[head + 4 * np..]);
+        m.write_zone_xy(&mut out[head + 4 * ng..tail]);
+        for (&g, v) in self.zones.gid.iter().zip(&self.zones.v) {
+            let g = g as usize;
+            out[head + 4 * g..head + 4 * g + 4].copy_from_slice(&v[..4]);
+            out[tail + 4 * np + 4 * g..tail + 4 * np + 4 * g + 4].copy_from_slice(&v[4..8]);
+            for ki in 0..E_CROSS.len() {
+                let o = etail + ki * 6 * ng + 6 * g;
+                out[o..o + 6].copy_from_slice(&v[8 + 6 * ki..14 + 6 * ki]);
+            }
+        }
+        out
+    }
+    /// T-409: its rail numbers alone, the rest zero. The everyday blocks hold (legs, rail legs,
+    /// walkers rail takes): the last two are rail's (T-1229).
+    fn rail_only(&mut self, np: usize) {
+        let c = 1 + 8 * np;
+        for (i, v) in self.head.iter_mut().enumerate() {
+            let rail = if i == 0 {
+                false
+            } else if i < c {
+                (i - 1) % 4 == 1
+            } else if i < c + 4 * np {
+                (i - c) % 2 == 1
+            } else {
+                false
+            };
+            if !rail {
+                *v = 0.;
+            }
+        }
+        for z in &mut self.zones.v {
+            for (j, v) in z.iter_mut().enumerate() {
+                if if j < 8 { j % 2 == 0 } else { (j - 8) % 3 == 0 } {
+                    *v = 0.;
+                }
+            }
+        }
+    }
+}
+
+/// T-2747: a station's longer-trip rail riders: `head` per place (6 numbers, as `station_flows`),
+/// `zones` per far zone the riders starting, then ending.
+pub(super) struct StationSel {
+    head: Vec<f64>,
+    zones: ByGid<2>,
+}
+impl StationSel {
+    pub(super) fn pack(&self, m: &Market) -> Vec<f64> {
+        let mut out = self.head.clone();
+        self.zones.pack(m, &mut out);
+        out
+    }
+    fn dense(&self, m: &Market) -> Vec<f64> {
+        let (np, ng) = (m.places.len(), m.n_gid);
+        let head = 6 * np;
+        let mut out = vec![0.; head + 5 * ng];
+        out[..head].copy_from_slice(&self.head);
+        for (&g, v) in self.zones.gid.iter().zip(&self.zones.v) {
+            out[head + g as usize] = v[0];
+            out[head + ng + g as usize] = v[1];
+        }
+        m.write_zone_xy(&mut out[head + 2 * ng..]);
+        out
+    }
+}
+
 impl IntercityApi {
     pub fn station_map(&self) -> Vec<u32> {
         self.svc.as_ref().map_or(vec![], |s| s.st_map.clone())
@@ -42,7 +188,35 @@ impl IntercityApi {
     }
     /// `selection_flows` on a kind of day (T-260, `days.rs`): that day's trips and period shares.
     pub fn selection_flows_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
-        self.selection(market, xy, share, day, self.solved_mask(), true)
+        self.selection(market, xy, share, day, self.solved_mask(), true).dense(&self.m)
+    }
+    /// `station_flows` on a kind of day, every global zone listed (the app's answer is `station_flows_day`).
+    pub fn station_flows_dense(&self, station: u32, day: u32) -> Vec<f64> {
+        self.station_sel(station, day).map_or(vec![], |s| s.dense(&self.m))
+    }
+    /// T-2747: a `selection_all_day` or `selection_rail_day` answer in `selection_flows`'s layout.
+    #[cfg(test)]
+    pub(super) fn unpack_selection(&self, v: &[f64]) -> Vec<f64> {
+        let h = 3 + 12 * self.m.places.len();
+        Selection { head: v[..h].to_vec(), zones: ByGid::unpack(&v[h..]) }.dense(&self.m)
+    }
+    /// `unpack_selection` of a `selection_rail_day` answer, its zones' x, y and place zero (they
+    /// are not rail's, so an answer and a part's rail add up to the whole).
+    #[cfg(test)]
+    pub(super) fn unpack_rail(&self, v: &[f64]) -> Vec<f64> {
+        let (np, ng) = (self.m.places.len(), self.m.n_gid);
+        let mut out = self.unpack_selection(v);
+        out[1 + 8 * np + 4 * ng..1 + 8 * np + 7 * ng].fill(0.);
+        out
+    }
+    /// T-2747: a `station_flows_day` answer in `station_flows`'s layout.
+    #[cfg(test)]
+    pub(super) fn unpack_station(&self, v: &[f64]) -> Vec<f64> {
+        if v.is_empty() {
+            return vec![];
+        }
+        let h = 6 * self.m.places.len();
+        StationSel { head: v[..h].to_vec(), zones: ByGid::unpack(&v[h..]) }.dense(&self.m)
     }
 }
 impl IntercityApi {
@@ -76,17 +250,16 @@ impl IntercityApi {
             }
         })
     }
-    pub(super) fn selection(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32, with_rail: bool) -> Vec<f64> {
+    pub(super) fn selection(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32, with_rail: bool) -> Selection {
         let m = &self.m;
         let day = day as usize;
-        let (np, ng) = (m.places.len(), m.n_gid);
-        let head = 1 + 8 * np;
-        let etail = head + 7 * ng + 4 * np + 4 * ng;
-        let mut out = vec![0.; etail + E_CROSS.len() * 6 * ng + 2];
-        let away = out.len() - 2;
-        m.write_zone_xy(&mut out[head + 4 * ng..head + 7 * ng]);
+        let np = m.places.len();
+        let mut sel = Selection::empty(np);
+        let (head, zones) = (&mut sel.head, &mut sel.zones);
+        // the commutes per place, then the trips with places that have no zone
+        let (tail, away) = (1 + 8 * np, 1 + 12 * np);
         if xy.len() != 2 * share.len() || market as usize >= np {
-            return out;
+            return sel;
         }
         let nz = m.zones.len();
         let (mut pop_w, mut attr_w, mut job_w) = (vec![0f64; nz], vec![0f64; nz], vec![0f64; nz]);
@@ -105,21 +278,22 @@ impl IntercityApi {
                 job_w[z] += f * ((g.city.jobs[ci] - g.city.pop[ci]) as f64 / 2.).max(0.) / zz.jobs;
             }
         }
-        out[0] = if share.is_empty() { 1. } else { matched / share.len() as f64 };
+        head[0] = if share.is_empty() { 1. } else { matched / share.len() as f64 };
         if mask == 0 {
-            return out;
+            return sel;
         }
         let per_of = |q: usize| if mask >> q & 1 == 0 { None } else { Some(if with_rail { self.per(q) } else { None }) };
-        // each selected zone's pairs with every other open zone, and with each place not open
+        // each selected zone's pairs with every other open zone (and the far zone's slot in
+        // `zones`), and with each place not open
         const NONE: u32 = u32::MAX;
         let closed: Vec<usize> = (0..np).filter(|&p| m.places[p].has && !m.places[p].open).collect();
-        let mut rows: HashMap<usize, (Vec<(u32, u32, u32, f64)>, Vec<(usize, f64)>)> = HashMap::new();
+        let mut rows: HashMap<usize, (Vec<(u32, u32, u32, f64, usize)>, Vec<(usize, f64)>)> = HashMap::new();
         // T-378: each zone's trips each way with places that have no zone: its departures less
         // its trips with every place, as `Market::leaving_by` is a place's
         let mut away_z: HashMap<usize, f64> = HashMap::new();
         for z in (0..nz).filter(|&z| pop_w[z] > 0. || attr_w[z] > 0.) {
             let at = |a: usize, b: usize| self.pair_at(a, b);
-            let row: Vec<_> = m.zone_row(z).into_iter().map(|(b, trips)| (b as u32, at(z, b), at(b, z), trips)).collect();
+            let row: Vec<_> = m.zone_row(z).into_iter().map(|(b, trips)| (b as u32, at(z, b), at(b, z), trips, zones.at(m.zones[b].gid as usize))).collect();
             let far: Vec<_> = closed.iter().map(|&p| (p, m.zone_place_eachway(&m.zones[z], p))).filter(|(_, t)| *t > 0.).collect();
             let known = row.iter().map(|r| r.3).sum::<f64>() + far.iter().map(|f| f.1).sum::<f64>();
             away_z.insert(z, (m.zones[z].dep - known).max(0.));
@@ -152,16 +326,16 @@ impl IntercityApi {
             for (dir, weights) in [(0usize, &pop_w), (1usize, &attr_w)] {
                 for (z, &w) in weights.iter().enumerate().filter(|(_, w)| **w > 0.) {
                     let (row, far) = &rows[&z];
-                    out[away + dir] += w * away_z[&z] * sh;
+                    head[away + dir] += w * away_z[&z] * sh;
                     if !spread.is_empty() {
                         spread.fill((0., 0.));
-                        for &(b, out_i, in_i, trips) in row {
+                        for &(b, out_i, in_i, trips, _) in row {
                             let e = &mut spread[m.zones[b as usize].place];
                             e.0 += rail(per, if dir == 0 { out_i } else { in_i }) as f64;
                             e.1 += if self.solvable(z, b as usize) { trips } else { 0. };
                         }
                     }
-                    for &(b, out_i, in_i, trips) in row {
+                    for &(b, out_i, in_i, trips, s) in row {
                         let zb = &m.zones[b as usize];
                         let k = lean(dir, &m.zones[z], Some(zb), zb.place);
                         let all = w * trips * sh * k;
@@ -172,19 +346,19 @@ impl IntercityApi {
                         };
                         let r = w * pair_r as f64 * f * k;
                         let o = 1 + 8 * zb.place + 4 * dir;
-                        out[o] += all;
-                        out[o + 1] += r;
-                        out[o + 2] += all * zb.x as f64;
-                        out[o + 3] += all * zb.y as f64;
-                        out[head + 4 * zb.gid as usize + 2 * dir] += all;
-                        out[head + 4 * zb.gid as usize + 2 * dir + 1] += r;
+                        head[o] += all;
+                        head[o + 1] += r;
+                        head[o + 2] += all * zb.x as f64;
+                        head[o + 3] += all * zb.y as f64;
+                        zones.v[s][2 * dir] += all;
+                        zones.v[s][2 * dir + 1] += r;
                     }
                     for &(p, trips) in far {
                         let all = w * trips * sh * lean(dir, &m.zones[z], None, p);
                         let o = 1 + 8 * p + 4 * dir;
-                        out[o] += all;
-                        out[o + 2] += all * m.places[p].x as f64;
-                        out[o + 3] += all * m.places[p].y as f64;
+                        head[o] += all;
+                        head[o + 2] += all * m.places[p].x as f64;
+                        head[o + 3] += all * m.places[p].y as f64;
                     }
                 }
             }
@@ -192,14 +366,13 @@ impl IntercityApi {
         // T-276: the commutes between zones, per far place, then per far zone: legs a day of the
         // commuters living in the selection, by where they work, and rail legs; then the same for
         // the commuters working in the selection, by where they live
-        let tail = head + 7 * ng;
         let mut add = |far_gid: usize, side: usize, all: f64, rail: f64| {
             let p = m.gid_place[far_gid] as usize;
-            out[tail + 4 * p + 2 * side] += all;
-            out[tail + 4 * p + 2 * side + 1] += rail;
-            let o = tail + 4 * np + 4 * far_gid + 2 * side;
-            out[o] += all;
-            out[o + 1] += rail;
+            head[tail + 4 * p + 2 * side] += all;
+            head[tail + 4 * p + 2 * side + 1] += rail;
+            let s = zones.at(far_gid);
+            zones.v[s][4 + 2 * side] += all;
+            zones.v[s][4 + 2 * side + 1] += rail;
         };
         for q in 0..PERIODS {
             let Some(per) = per_of(q) else { continue };
@@ -237,69 +410,34 @@ impl IntercityApi {
                         let far = if end == 0 { pair.a as usize } else { m.zones[pair.h as usize].gid as usize };
                         let n = w * pair.trips as f64;
                         let legs = n * (share_out(day, everyday_purpose(k), q) + share_ret(day, everyday_purpose(k), q)) as f64;
-                        let o = etail + ki * 6 * ng + 6 * far + 3 * end;
-                        out[o] += legs;
+                        let s = zones.at(far);
+                        let e = &mut zones.v[s][8 + 6 * ki + 3 * end..8 + 6 * ki + 3 * end + 3];
+                        e[0] += legs;
                         match per {
-                            None => out[o + 2] += legs * pair.walk as f64,
+                            None => e[2] += legs * pair.walk as f64,
                             Some(per) => {
                                 let ei = self.epair_of(i as usize);
                                 let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
                                 let rail = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day, everyday_purpose(k), q) as f64 * frac;
-                                out[o + 1] += rail;
-                                out[o + 2] -= rail * pair.walk as f64;
+                                e[1] += rail;
+                                e[2] -= rail * pair.walk as f64;
                             }
                         }
                     }
                 }
             }
         }
-        out
+        sel
     }
-}
-#[wasm_bindgen]
-impl IntercityApi {
-    /// T-409: `selection_flows_day` with only its rail numbers, the rest zero: what a market beside
-    /// another adds to that one's answer.
-    pub fn selection_rail_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
-        let mut out = self.selection_flows_day(market, xy, share, day);
-        let (np, ng) = (self.m.places.len(), self.m.n_gid);
-        let (head, tail) = (1 + 8 * np, 1 + 8 * np + 7 * ng);
-        let etail = tail + 4 * np + 4 * ng;
-        let away = out.len() - 2;
-        // T-1229: the everyday pairs' blocks hold (legs, rail legs, walkers rail takes): the last
-        // two are rail's
-        let rail = |i: usize| {
-            if i == 0 || i >= away {
-                false
-            } else if i < head {
-                (i - 1) % 4 == 1
-            } else if i < head + 4 * ng {
-                (i - head) % 2 == 1
-            } else if i < tail {
-                false
-            } else if i < etail {
-                (i - tail) % 2 == 1
-            } else {
-                (i - etail) % 3 != 0
-            }
-        };
-        for (i, v) in out.iter_mut().enumerate() {
-            if !rail(i) {
-                *v = 0.;
-            }
-        }
-        out
-    }
-    /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
-    pub fn station_flows_day(&self, station: u32, day: u32) -> Vec<f64> {
-        let Some(svc) = &self.svc else { return vec![] };
-        let Some(&s) = svc.st_map.get(station as usize) else {
-            return vec![];
-        };
+    /// T-2747: `station_flows`'s numbers, by far zone only where the station reaches; None with no
+    /// such station.
+    fn station_sel(&self, station: u32, day: u32) -> Option<StationSel> {
+        let svc = self.svc.as_ref()?;
+        let s = *svc.st_map.get(station as usize)?;
         let m = &self.m;
-        let (np, ng) = (m.places.len(), m.n_gid);
-        let head = 6 * np;
-        let mut out = vec![0.; head + 5 * ng];
+        let np = m.places.len();
+        let mut head = vec![0.; 6 * np];
+        let mut zones = ByGid::<2>::new();
         let ns = self.served.len();
         // T-1373, T-1374: a rush day's riders lean by their places and zones, the station's the
         // zone's that reaches it most
@@ -312,32 +450,45 @@ impl IntercityApi {
             if (s as usize) + 1 < pat.off.len() && per.st.len() == pat.col.len() {
                 for i in pat.row(s as usize) {
                     let k = pat.col.get(i);
-                    let (end, k) = if k < ns { (0, k) } else { (ng, k - ns) };
+                    let (end, k) = if k < ns { (0, k) } else { (1, k - ns) };
                     let zone = &m.zones[self.served[k]];
                     let lean = here.map_or(0., |h| sign * if end == 0 { m.zone_lean(h, zone) } else { m.zone_lean(zone, h) });
-                    out[head + end + zone.gid as usize] += per.st[i] as f64 * f * (1. + lean as f64);
+                    let z = zones.at(zone.gid as usize);
+                    zones.v[z][end] += per.st[i] as f64 * f * (1. + lean as f64);
                 }
             }
         }
         for d in 0..2 {
             for &z in &self.served {
                 let zone = &m.zones[z];
-                let v = out[head + d * ng + zone.gid as usize];
-                out[d * np + zone.place] += v;
-                out[(2 + 2 * d) * np + zone.place] += v * zone.x as f64;
-                out[(3 + 2 * d) * np + zone.place] += v * zone.y as f64;
+                let Some(v) = zones.get(zone.gid as usize) else { continue };
+                let v = v[d];
+                head[d * np + zone.place] += v;
+                head[(2 + 2 * d) * np + zone.place] += v * zone.x as f64;
+                head[(3 + 2 * d) * np + zone.place] += v * zone.y as f64;
             }
         }
-        m.write_zone_xy(&mut out[head + 2 * ng..]);
-        out
+        Some(StationSel { head, zones })
     }
-    /// `station_flows` of a station this network does not hold but the whole one does (T-326).
+}
+#[wasm_bindgen]
+impl IntercityApi {
+    /// T-409: `selection_flows_day` with only its rail numbers, the rest zero: what a market beside
+    /// another adds to that one's answer. Packed as `selection_all_day`.
+    pub fn selection_rail_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
+        let mut sel = self.selection(market, xy, share, day, self.solved_mask(), true);
+        sel.rail_only(self.m.places.len());
+        sel.pack(&self.m)
+    }
+    /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
+    /// T-2747: packed, the 6 numbers per place, then the far zones the station reaches as
+    /// `selection_all_day`'s, each with the riders starting, then ending; empty with no such station.
+    pub fn station_flows_day(&self, station: u32, day: u32) -> Vec<f64> {
+        self.station_sel(station, day).map_or(vec![], |s| s.pack(&self.m))
+    }
+    /// `station_flows_day` of a station this network does not hold but the whole one does (T-326).
     pub fn no_station_flows(&self) -> Vec<f64> {
-        let (np, ng) = (self.m.places.len(), self.m.n_gid);
-        let head = 6 * np;
-        let mut out = vec![0.; head + 5 * ng];
-        self.m.write_zone_xy(&mut out[head + 2 * ng..]);
-        out
+        StationSel { head: vec![0.; 6 * self.m.places.len()], zones: ByGid::new() }.pack(&self.m)
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| {

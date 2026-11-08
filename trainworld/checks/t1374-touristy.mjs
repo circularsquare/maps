@@ -51,7 +51,7 @@ for (const region of REGIONS) {
   // trips ending in a zone a day, all modes, with every place (and places with no zone)
   const ends = (api, place, xy, day) => {
     const v = api.selection_all_day(place, Float32Array.from(xy), new Float32Array(xy.length / 2).fill(1), day, 31);
-    let s = v[v.length - 1];
+    let s = v[2 + 12 * reg.market.places.length];
     for (let p = 0; p < reg.market.places.length; p++) s += v[1 + 8 * p + 4];
     return s;
   };

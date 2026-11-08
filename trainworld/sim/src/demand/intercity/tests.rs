@@ -229,7 +229,7 @@ fn markets_beside_split_by_network_and_pairs_need_track() {
     for (sel, m) in [([0f32, 0.], 0u32), ([300000., 0.], 2)] {
         let j = both.selection_flows_day(m, &sel, &[1.], 0);
         let a = parts[0].selection_flows_day(m, &sel, &[1.], 0);
-        let b = parts[1].selection_rail_day(m, &sel, &[1.], 0);
+        let b = parts[1].unpack_rail(&parts[1].selection_rail_day(m, &sel, &[1.], 0));
         assert!(j.iter().zip(a.iter().zip(&b)).all(|(j, (a, b))| (j - (a + b)).abs() <= 1e-9 * j.abs().max(1.)), "{j:?}\n{a:?}\n{b:?}");
         assert!(b.iter().any(|v| *v > 0.) == (m == 2));
     }
@@ -336,7 +336,7 @@ fn rush_days_lean_towards_touristy_zones() {
     assert_eq!((touristy(0., 1000.), touristy(3000., 1000.), touristy(30000., 1000.), touristy(1e6, 0.)), (0., 0., 1., 1.));
     assert!((touristy(3000. * 10f64.sqrt(), 1000.) - 0.5).abs() < 1e-6);
     let mut a = api();
-    let flows = |a: &IntercityApi, day: u32| a.selection_all_day(2, &[60000., 0.], &[1.], day, 31);
+    let flows = |a: &IntercityApi, day: u32| a.unpack_selection(&a.selection_all_day(2, &[60000., 0.], &[1.], day, 31));
     let (wd0, out0) = (flows(&a, 0), flows(&a, OUT as u32));
     let m = Rc::get_mut(&mut a.m).unwrap();
     let z = m.zones.iter().position(|z| z.place == 2).unwrap();
@@ -385,7 +385,7 @@ fn intercity_station_places_equal_entries_and_exits() {
     let rail: f64 = (0..PERIODS).map(|q| a.summary(q)[2]).sum();
     assert!(rail > 0. && (starts - rail).abs() < 1e-3 * rail && (ends - rail).abs() < 1e-3 * rail);
     assert!(a.station_flows(99).is_empty());
-    let (none, row) = (a.no_station_flows(), a.station_flows(0));
+    let (none, row) = (a.unpack_station(&a.no_station_flows()), a.station_flows(0));
     assert_eq!(none.len(), row.len());
     assert!(none[..ST_W + 2 * nz].iter().all(|&v| v == 0.));
     assert_eq!(none[ST_W + 2 * nz..], row[ST_W + 2 * nz..]);
@@ -829,8 +829,8 @@ fn everyday_pairs_by_purpose_in_selections_and_the_explorer() {
     let far0 = a.m.places[0].off as usize;
     for (market, end, far) in [(0usize, 0usize, far1), (1, 1, far0)] {
         let (xy, share) = sites(market);
-        let base = a.selection_all_day(market as u32, &xy, &share, WEEKDAY as u32, all_q);
-        let with = a.selection_rail_day(market as u32, &xy, &share, WEEKDAY as u32);
+        let base = a.unpack_selection(&a.selection_all_day(market as u32, &xy, &share, WEEKDAY as u32, all_q));
+        let with = a.unpack_rail(&a.selection_rail_day(market as u32, &xy, &share, WEEKDAY as u32));
         assert_eq!(base.len(), etail + E_CROSS.len() * 6 * ng + 2);
         for (ki, &k) in E_CROSS.iter().enumerate() {
             let o = etail + ki * 6 * ng + 6 * far + 3 * end;
@@ -1103,8 +1103,8 @@ fn market_packs_compose_and_answer_all_modes_without_a_solve() {
         solve_all(a);
     }
     let whole = direct.selection_flows(0, &[0., 0.], &[1.]);
-    let all = base.selection_all_day(0, &[0., 0.], &[1.], 0, 31);
-    let rail = part.selection_rail_day(0, &[0., 0.], &[1.], 0);
+    let all = base.unpack_selection(&base.selection_all_day(0, &[0., 0.], &[1.], 0, 31));
+    let rail = part.unpack_rail(&part.selection_rail_day(0, &[0., 0.], &[1.], 0));
     assert!(rail.iter().any(|v| *v > 0.));
     for i in 0..whole.len() {
         assert!((whole[i] - (all[i] + rail[i])).abs() <= 1e-9 * whole[i].abs().max(1.), "{i}: {} vs {} + {}", whole[i], all[i], rail[i]);
@@ -1936,7 +1936,7 @@ fn t1204_signature() {
     }
     for day in 0..3u32 {
         for s in [0u32, 5, 12, 20, 25, 31] {
-            sig.push((format!("station_flows_day {s} {day}"), f64s(&a.station_flows_day(s, day))));
+            sig.push((format!("station_flows_day {s} {day}"), f64s(&a.unpack_station(&a.station_flows_day(s, day)))));
         }
         // a selection: the sites of a few zones of each open place, in their place's plane
         for z in [0usize, 3, 10, 40, 80] {
@@ -1951,8 +1951,8 @@ fn t1204_signature() {
             }
             let p = zz.place as u32;
             sig.push((format!("selection_flows_day z{z} {day}"), f64s(&a.selection_flows_day(p, &xy, &share, day))));
-            sig.push((format!("selection_all_day z{z} {day}"), f64s(&a.selection_all_day(p, &xy, &share, day, 31))));
-            sig.push((format!("selection_rail_day z{z} {day}"), f64s(&a.selection_rail_day(p, &xy, &share, day))));
+            sig.push((format!("selection_all_day z{z} {day}"), f64s(&a.unpack_selection(&a.selection_all_day(p, &xy, &share, day, 31)))));
+            sig.push((format!("selection_rail_day z{z} {day}"), f64s(&a.unpack_rail(&a.selection_rail_day(p, &xy, &share, day)))));
         }
     }
     let pt = a.place_trips(&[(0, 1), (100, 200), (5, 5)], 30.);
