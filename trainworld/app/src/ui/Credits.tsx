@@ -12,11 +12,10 @@ export function AboutLink({ class: cls }: { class?: string }) {
   return <a class={cls} href={ABOUT_URL} target="_blank" rel="noopener">{t("common.aboutGame")}</a>;
 }
 
-/** The foot of Settings: the data sources and the about page. */
+/** The foot of Settings: the about page, which has the data sources. */
 export function Credits() {
   return (
     <div class="pane-foot">
-      <a class="btn text" href={ABOUT_URL + "#sources"} target="_blank" rel="noopener">{t("credits.title")}</a>
       <AboutLink class="btn text" />
     </div>
   );

@@ -52,9 +52,6 @@ export function SettingsTab() {
         <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip={t("settingsTab.controls")} aria-label={t("settingsTab.controls")} aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
           <Icon.help />
         </button>
-        <a class="btn icon discord-link" href="https://discord.gg/RemhwVcZFw" target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}>
-          <Icon.discord />
-        </a>
         <AccountButton kind="settings" />
         {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>

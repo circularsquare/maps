@@ -9,6 +9,7 @@ import { loadFailure } from "../game/loading";
 import { t } from "../i18n";
 import { Modal } from "./Modal";
 import { showPassingNote } from "./PassingNote";
+import { Icon } from "./widgets";
 import "./account.css";
 
 declare const __TW_BUILD__: string | undefined;
@@ -53,6 +54,9 @@ function failText(e: unknown): string {
 export function FeedbackButton() {
   return <div class="pane-foot">
     <button class={"btn text" + (feedbackOpen.value ? " on" : "")} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}</button>
+    <a class="btn icon discord-link" href="https://discord.gg/RemhwVcZFw" target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}>
+      <Icon.discord />
+    </a>
   </div>;
 }
 

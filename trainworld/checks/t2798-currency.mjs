@@ -128,7 +128,7 @@ try {
     setDisplay('currency', 'USD');
     return out;
   });
-  report('high-rate currencies: VND ₫73,000 fare and ₫561B for $22.4M, HUF Ft 1,045 fare, MXN MX$52.00 (to its 0.5 grain), CHF CHF 2.32', big.VND.price === '₫73,000' && /^₫5\d\dB$/.test(big.VND.short) && big.HUF.price === 'Ft 1,045' && big.MXN.price === 'MX$52.00' && big.CHF.price === 'CHF 2.32' && big.IDR.step === 5000, JSON.stringify(big));
+  report('high-rate currencies: VND ₫73,000 fare and ₫561B for $22.4M, HUF Ft 1,045 fare, MXN $52.00 (to its 0.5 grain), CHF CHF 2.32', big.VND.price === '₫73,000' && /^₫5\d\dB$/.test(big.VND.short) && big.HUF.price === 'Ft 1,045' && big.MXN.price === '$52.00' && big.CHF.price === 'CHF 2.32' && big.IDR.step === 5000, JSON.stringify(big));
   const topCash = () => page.$eval('.cash', (e) => e.textContent);
   const usdCash = await topCash();
   await sel.selectOption('JPY');

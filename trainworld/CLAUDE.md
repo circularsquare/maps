@@ -284,4 +284,4 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   `CARGO_TARGET_DIR=maps/.tw-snap-target`), so a rebuild never waits for agents mid-edit.
 - **Commits** (2026-10-13): the orchestrator commits trainworld work without asking, not often (end
   of a round, or when a snapshot build needs it); explicit `trainworld/` paths, one plain sentence.
-  Subagents never commit. **Pushing needs Anita's word.**
+  Subagents never commit. The orchestrator also pushes maps master a couple of times a session (Anita, 2026-11-09); publishing and the website push still wait for her word.
