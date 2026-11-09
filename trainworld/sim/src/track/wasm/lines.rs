@@ -11,7 +11,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -78,6 +78,7 @@ impl TrackApi {
     pub fn copy_line(&mut self, source: u32, id: u32, name: String) -> u32 {
         let Some(mut d) = self.w.net.line_data(source) else { return self.refuse(Issue::NoSuchLine { line: source }) };
         d.name = name;
+        d.day = 0;
         // a bus line's copy is a planned route, paid for on Construct (T-1464)
         if let Some(r) = d.bus.as_mut() {
             r.built = false;

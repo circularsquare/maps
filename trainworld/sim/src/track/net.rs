@@ -161,6 +161,21 @@ pub struct EdgeData {
     /// crossing at all, flat or bad. Set on an imported real network's edges, whose lines were
     /// each given one of six levels and cannot all avoid one another.
     pub sep: bool,
+    /// The day this was first constructed (T-2871), as `DAY_UNKNOWN` documents; 0 on a blueprint.
+    pub day: u32,
+}
+
+/// T-2871: a track piece's, station's or line's build day: 0 until constructed, this for anything
+/// built before recording began (an older save), else the game day + 2 (`Network::today`).
+pub const DAY_UNKNOWN: u32 = 1;
+
+/// The earlier of two build days, a day still unset (0) losing to any other.
+pub fn earliest_day(a: u32, b: u32) -> u32 {
+    match (a, b) {
+        (0, b) => b,
+        (a, 0) => a,
+        _ => a.min(b),
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -178,6 +193,8 @@ pub struct StationData {
     /// A port (T-2193, `ferry.rs`): its berth, where boats stop, in the water near the node (the
     /// landing). None for a station on track.
     pub berth: Option<[f64; 2]>,
+    /// T-2871: when first constructed, as `EdgeData::day`.
+    pub day: u32,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -213,6 +230,9 @@ pub struct LineData {
     pub group_name: String,
     /// The group's bullet as the player set it (T-1813), the same on every line of it.
     pub group_look: GroupLook,
+    /// T-2871: the day this line was added, or for a bus or ferry line its route constructed, as
+    /// `EdgeData::day` (0 for a planned route).
+    pub day: u32,
 }
 
 /// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
@@ -377,6 +397,7 @@ pub struct Network {
     pub node_named: Vec<bool>,
     /// The station on the node is constructed (meaningless without a platform).
     pub node_built: Vec<bool>,
+    pub node_day: Vec<u32>,
     /// The blueprint station is switched off (T-333).
     pub node_off: Vec<bool>,
     /// The station's upgrades (`StationData::upgrades`).
@@ -394,6 +415,7 @@ pub struct Network {
     pub edge_tracks: Vec<u8>,
     /// Constructed; false = blueprint.
     pub edge_built: Vec<bool>,
+    pub edge_day: Vec<u32>,
     /// The blueprint edge is switched off (T-333).
     pub edge_off: Vec<bool>,
     pub edge_pis: Vec<Span>,
@@ -422,9 +444,13 @@ pub struct Network {
     pub road_spans: Pool<[f64; 2]>,
 
     pub line_alive: Vec<bool>,
+    pub line_day: Vec<u32>,
     pub line_name: Vec<String>,
     pub line_symbol: Vec<String>,
     pub next_line_number: u32,
+    /// What is stamped on an element constructed now (T-2871): `DAY_UNKNOWN` until the clock
+    /// worker sets it (`TrackApi::set_game_day`).
+    pub today: u32,
     pub line_colour: Vec<u32>,
     pub line_stops: Vec<Span>,
     pub line_path: Vec<Span>,
@@ -692,6 +718,7 @@ impl Network {
             node_name: vec![],
             node_named: vec![],
             node_built: vec![],
+            node_day: vec![],
             node_off: vec![],
             node_upgrades: vec![],
             node_berth: vec![],
@@ -703,6 +730,7 @@ impl Network {
             edge_b: vec![],
             edge_tracks: vec![],
             edge_built: vec![],
+            edge_day: vec![],
             edge_off: vec![],
             edge_pis: vec![],
             edge_thru: vec![],
@@ -725,9 +753,11 @@ impl Network {
             terrain_spans: Pool::default(),
             road_spans: Pool::default(),
             line_alive: vec![],
+            line_day: vec![],
             line_name: vec![],
             line_symbol: vec![],
             next_line_number: 1,
+            today: DAY_UNKNOWN,
             line_colour: vec![],
             line_stops: vec![],
             line_path: vec![],
@@ -905,6 +935,7 @@ impl Network {
         self.node_name.push(String::new());
         self.node_named.push(false);
         self.node_built.push(false);
+        self.node_day.push(0);
         self.node_off.push(false);
         self.node_upgrades.push(0);
         self.node_berth.push(None);
@@ -917,6 +948,7 @@ impl Network {
         self.edge_b.push(0);
         self.edge_tracks.push(2);
         self.edge_built.push(false);
+        self.edge_day.push(0);
         self.edge_off.push(false);
         self.edge_pis.push(Span::default());
         self.edge_thru.push(vec![]);
@@ -953,6 +985,7 @@ impl Network {
         self.line_group_name.push(String::new());
         self.line_group_look.push(GroupLook::default());
         self.line_broken.push(false);
+        self.line_day.push(0);
     }
     fn claim_node(&mut self, id: u32) {
         while self.node_alive.len() <= id as usize {
@@ -996,12 +1029,12 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i], sep: self.edge_sep[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i], sep: self.edge_sep[i], day: self.edge_day[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -1024,6 +1057,7 @@ impl Network {
                 group: self.line_group[i],
                 group_name: self.line_group_name[i].clone(),
                 group_look: self.line_group_look[i].clone(),
+                day: self.line_day[i],
             }
         })
     }
@@ -1039,6 +1073,15 @@ impl Network {
     /// A live bus line (T-1464).
     pub fn is_bus(&self, l: u32) -> bool {
         self.line_ok(l) && self.line_bus[l as usize].is_some()
+    }
+    /// A rail line has no route of its own to build; a bus or ferry line's route is planned until constructed (T-2871).
+    pub fn route_built(&self, l: u32) -> bool {
+        let i = l as usize;
+        match (&self.line_bus[i], &self.line_ferry[i]) {
+            (Some(r), _) => r.built,
+            (_, Some(r)) => r.built,
+            _ => true,
+        }
     }
     /// The live bus lines.
     pub fn bus_lines(&self) -> Vec<u32> {
@@ -1233,6 +1276,18 @@ impl Network {
         Ok(old)
     }
 
+    /// T-2871: an element's build day after an edit, given what it held before (0 if nothing or a
+    /// blueprint): a set day stands, so undo and redo restore exactly; a built element already
+    /// dated keeps its date; only construction takes today.
+    fn day_for(&self, built: bool, given: u32, before: u32) -> u32 {
+        match (built, given, before) {
+            (false, ..) => 0,
+            (true, 0, 0) => self.today,
+            (true, 0, d) => d,
+            (true, g, _) => g,
+        }
+    }
+
     pub fn set_edge(&mut self, id: u32, data: Option<EdgeData>) -> Result<Option<EdgeData>, Issue> {
         let old = self.edge_data(id);
         if let Some(d) = &data {
@@ -1270,6 +1325,7 @@ impl Network {
                 self.edge_a[i] = d.a;
                 self.edge_b[i] = d.b;
                 self.edge_tracks[i] = d.tracks;
+                self.edge_day[i] = self.day_for(d.built, d.day, old.as_ref().map_or(0, |o| o.day));
                 self.edge_built[i] = d.built;
                 self.edge_off[i] = d.off && !d.built;
                 self.edge_pis[i] = self.pis.replace(self.edge_pis[i], &d.pis);
@@ -1289,6 +1345,7 @@ impl Network {
                 let i = id as usize;
                 self.edge_alive[i] = false;
                 self.edge_built[i] = false;
+                self.edge_day[i] = 0;
                 self.edge_off[i] = false;
                 self.pis.free(self.edge_pis[i]);
                 self.edge_pis[i] = Span::default();
@@ -1317,6 +1374,7 @@ impl Network {
                     }
                 }
                 self.node_platform[i] = 0;
+                self.node_day[i] = 0;
                 self.node_name[i].clear();
                 self.node_named[i] = false;
                 self.node_built[i] = false;
@@ -1325,6 +1383,7 @@ impl Network {
                 self.node_berth[i] = None;
             }
             Some(d) => {
+                self.node_day[i] = self.day_for(d.built, d.day, old.as_ref().map_or(0, |o| o.day));
                 self.node_platform[i] = d.platform;
                 self.node_name[i] = d.name;
                 self.node_named[i] = d.named;
@@ -1353,6 +1412,8 @@ impl Network {
                 }
                 self.claim_line(id);
                 let i = id as usize;
+                let built = d.bus.as_ref().map(|r| r.built).or(d.ferry.as_ref().map(|r| r.built)).unwrap_or(true);
+                self.line_day[i] = self.day_for(built, d.day, old.as_ref().map_or(0, |o| o.day));
                 self.line_alive[i] = true;
                 self.line_name[i] = d.name;
                 self.line_symbol[i] = d.symbol;
@@ -1378,6 +1439,7 @@ impl Network {
                 }
                 let i = id as usize;
                 self.line_alive[i] = false;
+                self.line_day[i] = 0;
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;
@@ -2694,8 +2756,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr, sep };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr, sep };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr, sep, day: self.edge_day[i] };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr, sep, day: self.edge_day[i] };
         Ok((node, a, b))
     }
 }

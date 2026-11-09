@@ -95,7 +95,7 @@ fn main() {
             let raw = st["name"].as_str().unwrap();
             let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
             let platform = st["platform"].as_u64().unwrap() as u16;
-            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
             node_key.push(st["key"].as_str().unwrap().to_string());
             node_names.push(name);
         }
@@ -136,7 +136,7 @@ fn main() {
                 pis.push(Pi::new(lb.0, lb.1, 0.0, -1).quantised());
             }
             let e = net.alloc_edge();
-            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: true })).is_err() {
+            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: true, day: 0 })).is_err() {
                 refused += 1;
             }
             edge_ids.push(e);
@@ -161,7 +161,7 @@ fn main() {
             let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
             let name = names::tidy_line(&name, "").unwrap_or(name);
             let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-            let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }));
+            let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }));
             if r.is_ok() {
                 n_lines_ok += 1;
             }
@@ -212,7 +212,7 @@ fn main() {
             let s = &stations[stops[k]];
             let raw = s["name"].as_str().unwrap();
             let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
-            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
             node_key.push(s["key"].as_str().unwrap().to_string());
             node_names.push(name);
             nodes.push(id);
@@ -267,7 +267,7 @@ fn main() {
             }
             pis.push(Pi::new(lead_b.0, lead_b.1, 0.0, level).quantised());
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr, sep: true })).unwrap();
+            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr, sep: true, day: 0 })).unwrap();
             path.push(e << 1);
         }
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();
@@ -276,7 +276,7 @@ fn main() {
         let name = names::tidy_line(&name, "").unwrap_or(name);
         // the line's real colour ("#rrggbb", `pipeline/realcolour.py`), else the palette
         let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }));
+        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }));
         if r.is_ok() {
             n_lines_ok += 1;
         }

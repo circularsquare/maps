@@ -696,7 +696,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr, sep: false }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr, sep: false, day: 0 }) });
             from = to;
         }
     }
@@ -755,7 +755,7 @@ impl TrackApi {
 
     #[allow(clippy::too_many_arguments)]
     pub(super) fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
-        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None };
+        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 };
         // On quad track only the pair clicked gets the station (T-1687); one level with it on the
         // pair beside lends its name, so the two read as one station.
         if kind == 1 {
@@ -856,7 +856,7 @@ impl TrackApi {
             self.release(&nn, &ne);
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         };
-        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None };
+        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 };
         // on quad, the drawn pair's only (T-1687)
         let r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
         if r != 0 || dry {

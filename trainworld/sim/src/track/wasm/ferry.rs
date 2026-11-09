@@ -20,7 +20,7 @@ impl TrackApi {
     /// within `ferry::BERTH_MAX_M` of it. 0 when added; `last_port` is then its node.
     pub fn add_port(&mut self, x: f64, y: f64, bx: f64, by: f64, name: String) -> u32 {
         let node = self.w.net.alloc_node();
-        let st = StationData { platform: ferry::PORT_PLATFORM, name, named: false, built: false, off: false, upgrades: 0, berth: Some([quant(bx), quant(by)]) };
+        let st = StationData { platform: ferry::PORT_PLATFORM, name, named: false, built: false, off: false, upgrades: 0, berth: Some([quant(bx), quant(by)]), day: 0 };
         let op = Op::Batch(vec![Op::Node { id: node, data: Some(NodeData { x: quant(x), y: quant(y), level: 0, flying: false }) }, Op::Station { node, data: Some(st) }]);
         let r = self.run(op);
         if r == 0 {
@@ -63,7 +63,7 @@ impl TrackApi {
         }
         let data = LineData {
             name, symbol: String::new(), colour, stops: ports.to_vec(), path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
-            dwell_s, turnaround_s, cars: 1, fast: false, bus: None, ferry: Some(r), group: 0, group_name: String::new(), group_look: Default::default(),
+            dwell_s, turnaround_s, cars: 1, fast: false, bus: None, ferry: Some(r), group: 0, group_name: String::new(), group_look: Default::default(), day: 0,
         };
         self.run(Op::Line { id, data: Some(data) })
     }

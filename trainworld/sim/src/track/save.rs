@@ -5,7 +5,7 @@
 
 use super::frame::FrameKind;
 use super::geom::Pi;
-use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData};
+use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData, DAY_UNKNOWN};
 use super::params::*;
 
 /// TWT4 (T-104) is the oldest format read (TWT2 and TWT3 stopped loading, T-1146). A line carries
@@ -26,6 +26,8 @@ use super::params::*;
 /// lines their routes; without it there are none. `LFR1` is the same with its speeds searched at 25
 /// km/h in open water, raised on load (`ferry::v_from_lfr1`).
 /// A trailing `BLD1` block (T-2217) carries the station buildings; without it there are none.
+/// A trailing `LBD1` block (T-2871) carries the day each constructed station, edge and line was
+/// first built; without it, or where it is damaged, they read as built before recording began.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -38,12 +40,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 14] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1"];
+pub const BLOCKS: [&[u8; 4]; 15] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 5;
+pub const LEVEL: u32 = 6;
 
 struct W(Vec<u8>);
 impl W {
@@ -394,7 +396,44 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-2871: the build days, last, in the dense order of the constructed stations, edges and lines
+    // (each list its count, then its days as deltas from the previous). A network with no known day
+    // (an older save played on with no edit) writes nothing, so it saves back to the same bytes
+    let stations: Vec<u32> = nodes.iter().filter(|&&n| net.is_station(n) && net.node_built[n as usize]).map(|&n| net.node_day[n as usize]).collect();
+    let built_edges: Vec<u32> = edges.iter().filter(|&&e| net.edge_built[e as usize]).map(|&e| net.edge_day[e as usize]).collect();
+    let built_lines: Vec<u32> = lines.iter().filter(|&&l| net.route_built(l)).map(|&l| net.line_day[l as usize]).collect();
+    if stations.iter().chain(&built_edges).chain(&built_lines).any(|&d| d > DAY_UNKNOWN) {
+        w.0.extend_from_slice(b"LBD1");
+        for list in [&stations, &built_edges, &built_lines] {
+            w.u(list.len() as u64);
+            let mut prev = 0i64;
+            for &d in list {
+                w.i(d as i64 - prev);
+                prev = d as i64;
+            }
+        }
+    }
     w.0
+}
+
+/// T-2871: the days of an `LBD1` block, one list per kind; None if a list is not the length this
+/// network has, or a day is outside what a build could have written.
+fn read_days(r: &mut R, n: [usize; 3]) -> Option<[Vec<u32>; 3]> {
+    let mut out: [Vec<u32>; 3] = [vec![], vec![], vec![]];
+    for (list, &n) in out.iter_mut().zip(&n) {
+        if r.u().ok()? as usize != n {
+            return None;
+        }
+        let mut prev = 0i64;
+        for _ in 0..n {
+            prev = prev.checked_add(r.i().ok()?)?;
+            if !(DAY_UNKNOWN as i64..u32::MAX as i64).contains(&prev) {
+                return None;
+            }
+            list.push(prev as u32);
+        }
+    }
+    Some(out)
 }
 
 /// Re-express a save's network in another frame (T-125). Every node, PI and drawn-through point
@@ -494,7 +533,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0 })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -530,7 +569,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, hsr, sep })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, hsr, sep, day: 0 })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     let (mut dead_node, mut dead_edge) = (None, None);
@@ -560,7 +599,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -717,6 +756,26 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             net.buildings.push(Some(super::building::Building { name, corners }));
         }
     }
+    // a line is dated when decoded, before the blocks that make it a bus or ferry line: a planned
+    // route has no day yet
+    for l in 0..n_lines as u32 {
+        if !net.route_built(l) { net.line_day[l as usize] = 0; }
+    }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBD1") {
+        r.1 += 4;
+        let stations: Vec<usize> = (0..n_nodes).filter(|&n| net.is_station(n as u32) && net.node_built[n]).collect();
+        let built_edges: Vec<usize> = (0..n_edges).filter(|&e| net.edge_built[e]).collect();
+        let built_lines: Vec<usize> = (0..n_lines).filter(|&l| net.route_built(l as u32)).collect();
+        // a damaged block costs only the days, never the game: it is dropped with the bytes after it
+        match read_days(&mut r, [stations.len(), built_edges.len(), built_lines.len()]) {
+            Some([st, ed, li]) => {
+                for (n, d) in stations.into_iter().zip(st) { net.node_day[n] = d; }
+                for (e, d) in built_edges.into_iter().zip(ed) { net.edge_day[e] = d; }
+                for (l, d) in built_lines.into_iter().zip(li) { net.line_day[l] = d; }
+            }
+            None => r.1 = bytes.len(),
+        }
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -731,12 +790,12 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
         }
         let e = net.alloc_edge();
-        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false })).unwrap();
+        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).unwrap();
+        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 })).unwrap();
         encode(&net)
     }
 
@@ -827,7 +886,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (5, 14), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (6, 15), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

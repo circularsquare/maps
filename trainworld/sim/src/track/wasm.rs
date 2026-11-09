@@ -26,6 +26,15 @@ use std::f64::consts::PI;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
+/// T-2871: the stored build days as the game days `edge_built_days` documents.
+fn built_days(days: &[u32]) -> Vec<i32> {
+    days.iter().map(|&d| match d {
+        0 => -2,
+        crate::track::net::DAY_UNKNOWN => -1,
+        d => (d - 2).min(i32::MAX as u32) as i32,
+    }).collect()
+}
+
 #[wasm_bindgen]
 pub struct TrackApi {
     w: TrackWorld,
@@ -656,6 +665,23 @@ impl TrackApi {
             }
         }
         out
+    }
+    /// T-2871: the game day, set by the clock worker before each edit: what is constructed now is
+    /// dated with it.
+    pub fn set_game_day(&mut self, day: u32) {
+        self.w.net.today = day.min(1 << 30) + 2;
+    }
+    /// T-2871: per edge id, the game day it was first constructed; -1 built before recording
+    /// began, -2 not constructed. `station_built_days` per node id and `line_built_days` per
+    /// line id likewise (a line: the day it was added, a bus or ferry line its route constructed).
+    pub fn edge_built_days(&self) -> Vec<i32> {
+        built_days(&self.w.net.edge_day)
+    }
+    pub fn station_built_days(&self) -> Vec<i32> {
+        built_days(&self.w.net.node_day)
+    }
+    pub fn line_built_days(&self) -> Vec<i32> {
+        built_days(&self.w.net.line_day)
     }
     pub fn save(&self) -> Vec<u8> {
         let mut out = save::encode(&self.w.net);
@@ -1494,10 +1520,10 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).
@@ -1554,7 +1580,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })
@@ -1621,3 +1647,5 @@ mod gap_tests;
 /// T-2414: close crossings, ends near water and islands.
 #[cfg(test)]
 mod water_gap_tests;
+#[cfg(test)]
+mod built_day_tests;

@@ -3363,6 +3363,7 @@ function withAutoFast(a: TrackApi, line: number, edit: () => number): Applied {
 
 function apply(op: EditOp): Applied {
   const a = api!;
+  a.set_game_day(Math.floor(gameNow() / 86400)); // T-2871: what this edit constructs is dated today
   switch (op.op) {
     case "route": {
       const r = a.add_route(...routeArgs(a, op), false);
