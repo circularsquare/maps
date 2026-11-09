@@ -3339,7 +3339,7 @@ function hsrShare(a: TrackApi, line: number): number {
   return all > 0 ? fast / all : 0;
 }
 
-type Applied = { r: number; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number };
+type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number };
 
 /** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
  * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo
@@ -3492,6 +3492,13 @@ function apply(op: EditOp): Applied {
       const r = a.end_line_at(op.line, op.index);
       return { r: r === 0 ? 0 : DROP_REFUSED };
     }
+    case "orderStops": {
+      const fault = [...a.order_fault(new Uint32Array(op.stops))];
+      if (fault.length === 3) return { r: ORDER_REFUSED, fault };
+      return { r: a.order_stops(op.line, new Uint32Array(op.stops)) };
+    }
+    case "sortStops":
+      return { r: a.sort_stops(op.line) };
     case "stopPassed": {
       const r = a.stop_passed(op.line, op.station);
       return { r: r === 0 ? 0 : INSERT_REFUSED };
@@ -3577,6 +3584,8 @@ function apply(op: EditOp): Applied {
 const INSERT_REFUSED = -1;
 /** the same for a dropStop or endLineAt the line cannot take (T-1791) */
 const DROP_REFUSED = -2;
+/** the same for an orderStops with no route between two stops in a row (T-2895) */
+const ORDER_REFUSED = -3;
 
 function issues(): string[] {
   return api!.issue_kinds().split("\n").filter(Boolean);
@@ -3987,7 +3996,7 @@ async function handle(msg: ToClock) {
       api.set_now(gameNow());
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
-    const { r, line, node, skipped, charge: charged, trainCharge } = apply(msg.op);
+    const { r, fault, line, node, skipped, charge: charged, trainCharge } = apply(msg.op);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
     const tB = performance.now();
@@ -3995,7 +4004,7 @@ async function handle(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     dirty = edited = true; editAt = Date.now();
     if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());

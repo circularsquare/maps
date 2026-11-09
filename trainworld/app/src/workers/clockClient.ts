@@ -285,6 +285,7 @@ function toWorld(s: ClockState): WorldView {
       passed: Array.from({ length: l.passed.length >> 1 }, (_, k) => ({ gap: l.passed[k * 2], node: l.passed[k * 2 + 1] })),
       reversals: l.reversals,
       endTurns: l.endTurns,
+      hand: l.hand,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       ...(l.bus ? { bus: l.bus } : {}),
     });

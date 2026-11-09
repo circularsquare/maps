@@ -814,7 +814,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties); an open line whose edited route reverses is tried again
-  stop by stop and takes a straighter order where one exists (`straighten`, T-1899). Copying preserves stops, exact path, dwell, turnaround, cars,
+  stop by stop and takes a straighter order where one exists (`straighten`, T-1899), unless its order
+  was set by hand (T-2895, `LineData::hand`: set by `order_stops`, cleared by `sort_stops`, carried by
+  undo and a copy, never set on a bus or ferry line; saved as a trailing `LHO1` block listing those
+  lines, without which none is). Copying preserves stops, exact path, dwell, turnaround, cars,
   colour and custom badge as independent inputs, and starts with no trains (counts at 0, or a
   headway line's headways at none) until the player sets them, so a copy never doubles a
   service (T-1161); edits and removal are undoable.

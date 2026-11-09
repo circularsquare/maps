@@ -233,6 +233,9 @@ pub struct LineData {
     /// T-2871: the day this line was added, or for a bus or ferry line its route constructed, as
     /// `EdgeData::day` (0 for a planned route).
     pub day: u32,
+    /// T-2895: the player set the stop order by hand, so no stop edit puts the stops in a
+    /// straighter order (`straighten`).
+    pub hand: bool,
 }
 
 /// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
@@ -445,6 +448,7 @@ pub struct Network {
 
     pub line_alive: Vec<bool>,
     pub line_day: Vec<u32>,
+    pub line_hand: Vec<bool>,
     pub line_name: Vec<String>,
     pub line_symbol: Vec<String>,
     pub next_line_number: u32,
@@ -754,6 +758,7 @@ impl Network {
             road_spans: Pool::default(),
             line_alive: vec![],
             line_day: vec![],
+            line_hand: vec![],
             line_name: vec![],
             line_symbol: vec![],
             next_line_number: 1,
@@ -986,6 +991,7 @@ impl Network {
         self.line_group_look.push(GroupLook::default());
         self.line_broken.push(false);
         self.line_day.push(0);
+        self.line_hand.push(false);
     }
     fn claim_node(&mut self, id: u32) {
         while self.node_alive.len() <= id as usize {
@@ -1058,6 +1064,7 @@ impl Network {
                 group_name: self.line_group_name[i].clone(),
                 group_look: self.line_group_look[i].clone(),
                 day: self.line_day[i],
+                hand: self.line_hand[i],
             }
         })
     }
@@ -1424,6 +1431,7 @@ impl Network {
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
+                self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
                 self.line_bus[i] = d.bus;
                 self.line_ferry[i] = d.ferry;
                 self.line_group[i] = d.group;
@@ -1437,6 +1445,7 @@ impl Network {
                 let i = id as usize;
                 self.line_alive[i] = false;
                 self.line_day[i] = 0;
+                self.line_hand[i] = false;
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;
@@ -2575,16 +2584,42 @@ impl Network {
     /// Fastest path through a list of stops, hop by hop; it may turn back at a stop.
     pub fn route(&self, stops: &[u32]) -> Option<Vec<u32>> {
         if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) { return None; }
+        self.route_hops(stops).ok()
+    }
+
+    /// `route` over stops that are all stations, or the first hop with no path (T-2895: hop k runs
+    /// from stop k to stop k + 1).
+    pub fn route_hops(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
         let mut path: Vec<u32> = vec![];
         let mut side = None;
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
         for (k, w) in stops.windows(2).enumerate() {
             let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
-            let (p, s) = want.and_then(|_| self.find_path_side(w[0], w[1], side, want)).or_else(|| self.find_path(w[0], w[1], side))?;
+            let (p, s) = want.and_then(|_| self.find_path_side(w[0], w[1], side, want)).or_else(|| self.find_path(w[0], w[1], side)).ok_or(k)?;
             path.extend(p);
             side = Some(s);
         }
-        Some(path)
+        Ok(path)
+    }
+
+    /// Whether any track joins two nodes, whatever way a train would have to turn on it (T-2895).
+    pub fn joined(&self, a: u32, b: u32) -> bool {
+        let mut seen = vec![false; self.node_count()];
+        let mut queue = vec![a];
+        seen[a as usize] = true;
+        while let Some(n) = queue.pop() {
+            if n == b {
+                return true;
+            }
+            for &c in self.node_ports[n as usize].ends() {
+                let m = self.path_nodes(c).1;
+                if !seen[m as usize] {
+                    seen[m as usize] = true;
+                    queue.push(m);
+                }
+            }
+        }
+        false
     }
 
     /// The side a path ending at its first node must arrive on to carry straight on into its first

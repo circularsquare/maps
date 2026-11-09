@@ -319,11 +319,11 @@ function StopToday({ line, i }: { line: string; i: number }) {
 }
 
 /** The plain stops strip; a loop's bar goes on past its ends and curves round (T-1391). */
-function PlainStops({ looks, colour, loop, onDblClick, children }: { looks: boolean; colour: string; loop: boolean; onDblClick: (e: MouseEvent) => void; children: ComponentChildren }) {
+function PlainStops({ looks, colour, loop, order, onDblClick, children }: { looks: boolean; colour: string; loop: boolean; order: string; onDblClick: (e: MouseEvent) => void; children: ComponentChildren }) {
   const ul = useRef<HTMLUListElement>(null);
   useTightTimes(ul);
   return (
-    <ul ref={ul} class={"stops" + (looks ? " traffic" : "") + (loop ? " loop" : "")} style={{ "--c": colour }} onDblClick={onDblClick}>
+    <ul ref={ul} class={"stops" + (looks ? " traffic" : "") + (loop ? " loop" : "") + order} style={{ "--c": colour }} onDblClick={onDblClick}>
       {loop && <li class="loop-end top" aria-hidden="true" />}
       {children}
       {loop && <li class="loop-end bottom" aria-hidden="true" />}
@@ -612,6 +612,9 @@ function RailLineInspector({ id }: { id: string }) {
   // the gaps picked hold for the world version they were picked in)
   const editingStops = tool.value === "line" && !!l && lineDraft.value.line === l.num;
   const [pendingAt, setPendingAt] = useState<{ v: number; gaps: number[] } | null>(null);
+  // T-2895: a stop row being dragged to a new place: the stop, and the gap it would drop into (before stop `gap`)
+  const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
+  const draggedRow = useRef(false);
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
@@ -687,6 +690,69 @@ function RailLineInspector({ id }: { id: string }) {
   // T-1894: north (or for an east-west line, west) end on top; a loop as built
   const byId = stationsById(w);
   const flip = drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
+  // T-2895: while stops are edited a row drags to a new place in the list (not by touch; in related lines the
+  // line's own rows); a loop keeps its first and closing stop where they are. The line then keeps the order.
+  const loopEnds = st.loop ? 1 : 0;
+  const canDrag = editingStops && nStops >= 3 + 2 * loopEnds;
+  const orderWhy = (issues: string[]) => {
+    const f = issues.find((k) => k.startsWith("StopOrder:"))?.split(":").map(Number); // i18n-ignore
+    if (!f) return describeIssues(issues);
+    const names = { a: name.get(String(f[2])) ?? "", b: name.get(String(f[3])) ?? "" };
+    return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", names);
+  };
+  const moveStop = async (from: number, gap: number) => {
+    if (stopEditing) return;
+    stopEditing = true;
+    try {
+      const stops = l.stops.map(Number).filter((_, k) => k !== from);
+      stops.splice(gap > from ? gap - 1 : gap, 0, Number(l.stops[from]));
+      const a = await edit({ op: "orderStops", line: l.num, stops }, true);
+      if (!a.ok) return say(orderWhy(a.issues), true);
+      const now = world.peek()?.save.lines.find((x) => x.num === l.num);
+      if (now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: now.stops.map(Number) };
+    } finally { stopEditing = false; }
+  };
+  const rowDown = (e: PointerEvent, from: number) => {
+    if (!canDrag || e.button !== 0 || e.pointerType === "touch" || (e.target as Element | null)?.closest?.(".stop-hit, button")) return;
+    if (loopEnds && (from === 0 || from === nStops - 1)) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    let on = false, gap = from;
+    const move = (m: PointerEvent) => {
+      if (!on && Math.hypot(m.clientX - x0, m.clientY - y0) < 4) return;
+      on = true;
+      const row = document.elementFromPoint(m.clientX, m.clientY)?.closest("[data-stop]") as HTMLElement | null;
+      if (row) {
+        const b = row.getBoundingClientRect(), k = Number(row.dataset.stop);
+        // a row's top half is the gap before it in the list as drawn, and a flipped list draws the last stop first
+        const top = m.clientY - b.top < b.height / 2;
+        gap = Math.min(nStops - loopEnds, Math.max(loopEnds, top !== flip ? k : k + 1));
+      }
+      setDrag({ from, gap });
+    };
+    const end = (u: PointerEvent | KeyboardEvent) => {
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("keydown", key);
+      setDrag(null);
+      if (!on) return;
+      draggedRow.current = true;
+      setTimeout(() => { draggedRow.current = false; }, 0);
+      if (u.type === "pointerup" && gap !== from && gap !== from + 1) void moveStop(from, gap);
+    };
+    const key = (k: KeyboardEvent) => { if (k.key === "Escape") end(k); };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", end);
+    addEventListener("keydown", key);
+  };
+  const moving = drag && drag.gap !== drag.from && drag.gap !== drag.from + 1 ? drag : null;
+  // the drop line on row `i`: over it for the gap above it as drawn, under the last row drawn for the gap past it
+  const dropClass = (i: number) => {
+    if (!moving) return "";
+    if (moving.gap === (flip ? i + 1 : i)) return " drop-before";
+    return (flip ? i === 0 && moving.gap === 0 : i === nStops - 1 && moving.gap === nStops) ? " drop-after" : "";
+  };
+  const orderClass = canDrag ? (drag ? " order dragging" : " order") : "";
+  const sortStops = () => void stopEdit({ op: "sortStops", line: l.num });
   // T-1894: while stops are edited a click on a stop's dot takes it out keeping the path, Shift-click
   // ends the line there, as in the group view; a stop the line needs has no click
   const dotClick = (i: number): { tip: string; click: (e: MouseEvent) => void } | null => {
@@ -715,12 +781,13 @@ function RailLineInspector({ id }: { id: string }) {
     const t = flip ? (i < nStops - 1 && times[i] !== undefined ? total - times[i] : undefined) : i > 0 ? times[i] : undefined;
     const dot = dotClick(i);
     return (
-      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "")} data-r={drawn ? true : undefined}>
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + dropClass(i)} data-r={drawn ? true : undefined}
+        data-stop={i} onPointerDown={(e) => rowDown(e, i)}>
         {looks && !drawn && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}
         {looks && !drawn && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}
         {dot && <span class="stop-hit" data-tip={dot.tip} onClick={dot.click} />}
         <span class="grow">
-          <span class="stop-name" onClick={() => (selection.value = { kind: "station", station: s })}>
+          <span class="stop-name" onClick={() => { if (!draggedRow.current) selection.value = { kind: "station", station: s }; }}>
             {name.get(s)}
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above])}>{duration(t)}</span>}
@@ -784,14 +851,17 @@ function RailLineInspector({ id }: { id: string }) {
             <Icon.related />
           </button>
         )}
+        {editingStops && st.hand && (
+          <button class="btn text mini sort-stops" data-tip={tr("lineInspector.sortStopsTip")} onClick={sortStops}>{tr("lineInspector.sortStops")}</button>
+        )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
       {related ? (
-        <div onDblClick={onListDblClick}>
+        <div class={orderClass} onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} flip={flip} lRow={stopRow} after={editingStops ? afterStop : undefined}
             adder={editingStops ? adder : undefined} onAdd={(node) => void stopEdit({ op: "stopPassed", line: l.num, station: node })} transfers={(i, drawn) => transferLines(l, i, drawn)} />
         </div>
-      ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce} onDblClick={onListDblClick}>
+      ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce} order={orderClass} onDblClick={onListDblClick}>
         {flip
           ? l.stops.map((_, k) => { const i = nStops - 1 - k; return <>{stopRow(i)}{i > 0 && afterStop(i - 1)}</>; })
           : l.stops.map((_, i) => (loopOnce && i === nStops - 1 ? null : <>

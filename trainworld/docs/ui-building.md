@@ -748,12 +748,26 @@ route, keeping the existing stop order: its length, plus per reversal twice that
 5 km, `order_cost`), so stops that lie along one way through the track run straight along it unless
 that way is over three times as long (T-1899). Every stop edit of an open line whose route then
 reverses also tries its stops again one at a time in their order, as clicks would add them, and
-takes that order when it reverses fewer times and costs less (`straighten`); removing a stop
-otherwise leaves the others in order. Where several
+takes that order when it reverses fewer times and costs less (`straighten`), unless the player set
+the line's order by hand (below); removing a stop otherwise leaves the others in order. Where several
 positions give the same path (a station on a stretch the line runs out and back over, past a
 reversal), the stop goes where the stops lie closest together along the path (least sum of
 distances between every two stops), so it is served on the pass that leads on to the rest of the
 line, whatever order the stations were clicked in (T-1674); a full tie goes to the later position.
+
+**Stop order by hand** (T-2895; `LineInspector.tsx`, `TrackApi::order_stops`): while a line's stops are
+edited, a press on a stop's row dragged more than 4 px moves the stop to the gap the drop line marks,
+in the plain list and in related lines alike (the pointer is a grab hand; not by touch; Escape puts it
+back). A loop's first and closing rows stay, and nothing drops outside them. The drop is one edit
+(`orderStops`) and one undo: the route is found again for that order, trains reversing wherever it
+needs, with no question asked, and the line then keeps its order (`LineData::hand`): no stop edit
+straightens it, and a map click still fits a new stop in where it costs least without moving the
+others. An order with no route is refused, the list as it was, with "No track joins {a} and {b}." or
+"Trains can't get from {a} to {b} without turning back at a junction." for the first two stops in a row
+with no route between them (`order_fault`). While such a line's stops are edited the Stops heading has
+a **Sort stops** button (hover "Put the stops in the order with the shortest route"; `sortStops`,
+`sort_stops`): the stops, each station once, go in again one at a time as clicks would add them, that
+order is taken when its route costs less, and the line follows the game's order again; one undo.
 
 A **new line** (T-1899) is one from New line until its stop editing first ends (Done, Enter, Escape,
 another tool or line). While it is new, each stop added or removed on the map sets its trains: high

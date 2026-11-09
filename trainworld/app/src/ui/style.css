@@ -686,6 +686,13 @@ rect.now { fill-opacity: .45; }
 .stops.ferry-ports li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
 .stops.ferry-ports li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
 .stops.ferry-ports .n { flex: none; }
+/* T-2895: a line's stops moved the same way while they are edited; a loop's first and closing stop stay */
+.order li[data-stop]:not(.pinned) { cursor: grab; user-select: none; }
+.order.dragging li { cursor: grabbing; }
+.order li.dragged { opacity: 0.5; }
+.order li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
+.order li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
+.h .sort-stops { margin-left: 8px; font-weight: 400; }
 /* T-1464: a bus line's stops: a square at each end, a ring at a station, small rings for the street stops */
 .bus-stops { list-style: none; margin: 0; padding: 0; }
 .bus-stops li { display: flex; align-items: center; gap: 8px; min-height: 25px; }

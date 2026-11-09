@@ -63,7 +63,7 @@ impl TrackApi {
         }
         let data = LineData {
             name, symbol: String::new(), colour, stops: ports.to_vec(), path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
-            dwell_s, turnaround_s, cars: 1, fast: false, bus: None, ferry: Some(r), group: 0, group_name: String::new(), group_look: Default::default(), day: 0,
+            dwell_s, turnaround_s, cars: 1, fast: false, bus: None, ferry: Some(r), group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false,
         };
         self.run(Op::Line { id, data: Some(data) })
     }

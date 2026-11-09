@@ -8,18 +8,77 @@ impl TrackApi {
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let Some((stops, path)) = edited_stops(&self.w.net, stops) else {
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some((stops, path)) = edited_stops(&self.w.net, stops) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-2895: the line's stops in the order the player gave, which the line then keeps: no later
+    /// stop edit puts them in a straighter one. Refused like `set_stops`, and for a bus or ferry line.
+    pub fn order_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.bus.is_some() || d.ferry.is_some() {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, true) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
+        d.path = path;
+        d.hand = true;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-2895: back to the game's own order. An open line's stops, each station once, go in again
+    /// one at a time as clicks would add them, and that order is taken when its route costs less
+    /// (`order_cost`); a loop keeps its stops.
+    pub fn sort_stops(&mut self, id: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        d.hand = false;
+        if !closed(&d.stops) && d.bus.is_none() && d.ferry.is_none() {
+            let net = &self.w.net;
+            let mut once: Vec<u32> = vec![];
+            for &s in &d.stops {
+                if !once.contains(&s) {
+                    once.push(s);
+                }
+            }
+            let mut memo = HopMemo::new();
+            let mut best = Some((vec![], vec![]));
+            for &s in &once {
+                best = best.and_then(|b| best_slot(net, &b.0, s, &mut memo));
+            }
+            let repeats = once.len() < d.stops.len();
+            if let Some((stops, path)) = best.filter(|b| repeats || order_cost(net, &b.1) < order_cost(net, &d.path) - 0.001) {
+                d.stops = stops;
+                d.path = path;
+            }
+        }
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-2895: whether the line keeps a stop order the player set.
+    pub fn line_hand(&self, id: u32) -> bool {
+        self.w.net.line_ok(id) && self.w.net.line_hand[id as usize]
+    }
+    /// T-2895: why `stops` cannot be a line's stops in this order: `[kind, from, to]` for the first
+    /// two stops in a row with no route between them, kind 0 when no track joins them at all, 1
+    /// when the only way turns back at a junction or a station passed. Empty when the order has a
+    /// route, or a stop is no station.
+    pub fn order_fault(&self, stops: &[u32]) -> Vec<f64> {
+        let net = &self.w.net;
+        let stops = distinct_stops(stops);
+        if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
+            return vec![];
+        }
+        match net.route_hops(&stops) {
+            Ok(_) => vec![],
+            Err(k) => vec![if net.joined(stops[k], stops[k + 1]) { 1.0 } else { 0.0 }, stops[k] as f64, stops[k + 1] as f64],
+        }
     }
     /// T-1791: take stop `i` out and keep the path: a stop between the ends leaves the track as it
     /// is (`set_stops` would find the route again, and could move a local onto faster track); an
@@ -402,12 +461,13 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 /// The stops a stop edit leaves and their path. Stops closed into a loop whose path only goes
 /// out and back the same way (a lollipop's loop stops taken out) make no loop (T-1273): the line
 /// ends where it turns, a terminus, rather than reversing partway there. An open line whose path
-/// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`).
-fn edited_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+/// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`),
+/// unless the player set its order by hand (`hand`, T-2895).
+fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
     let path = net.route(&stops)?;
     if !closed(&stops) {
-        return Some(straighten(net, &stops, &path).unwrap_or((stops, path)));
+        return Some(if hand { (stops, path) } else { straighten(net, &stops, &path).unwrap_or((stops, path)) });
     }
     let n = path.len();
     if n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {

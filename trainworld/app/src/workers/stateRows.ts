@@ -50,6 +50,8 @@ interface Heavy {
   passed: number[];
   reversals: number[];
   endTurns: number[];
+  /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
+  hand: boolean;
 }
 
 /** a kept line: its row, and the numbers the row was made from */
@@ -295,6 +297,7 @@ export class StateRows {
         passed: heavy.passed,
         reversals: heavy.reversals,
         endTurns: heavy.endTurns,
+        hand: heavy.hand,
         loopKind,
         ...(r.busRow ? { bus: r.busRow } : {}),
       };
@@ -401,6 +404,7 @@ export class StateRows {
       passed: [...a.passed_stations(id)],
       reversals: [...a.line_reversals(id)],
       endTurns: [...a.line_end_turns(id)],
+      hand: a.line_hand(id),
     };
   }
 }

@@ -110,6 +110,9 @@ export type EditOp =
   | { op: "dropStop"; line: number; index: number }
   | { op: "endLineAt"; line: number; index: number }
   | { op: "stopPassed"; line: number; station: NodeId }
+  /** T-2895: the stops in the order the player dragged them to, which the line then keeps (`TrackApi::order_stops`); refused with "StopOrder:<kind>:<from>:<to>" naming the first two stops in a row with no route between them (kind 0 no track joins them, 1 only by turning back at a junction), else "LinePath". `sortStops` gives the order back to the game (`sort_stops`) */
+  | { op: "orderStops"; line: number; stops: NodeId[] }
+  | { op: "sortStops"; line: number }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
@@ -465,6 +468,8 @@ export interface ClockLine {
   reversals: number[];
   /** the bare track ends (nodes) where its trains reverse between stops (`TrackApi::line_end_turns`, T-797 B3) */
   endTurns: number[];
+  /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
+  hand: boolean;
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
   loopKind: number;
   /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces

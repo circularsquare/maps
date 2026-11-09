@@ -28,7 +28,7 @@ function soundOf(i: Intent): BuildSound | null {
       return s && s.length !== i.platform ? "pop" : null;
     }
     case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast":
-    case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "removeLine": case "copyLine": case "lineGroup":
+    case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "orderStops": case "sortStops": case "removeLine": case "copyLine": case "lineGroup":
     case "doubleUp": case "edgeLevel": case "edgesLevel": case "edgesHsr": case "flying":
       return "pop";
     default:

@@ -29,7 +29,7 @@ fn station(name: &str, built: bool) -> StationData {
 }
 
 fn plain_line(stops: Vec<u32>, path: Vec<u32>) -> LineData {
-    LineData { name: "L".into(), symbol: String::new(), colour: 0, stops, path, tph: [0.0; 3], trains: Some([0; 3]), auto: None, dwell_s: 30.0, turnaround_s: 120.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0 }
+    LineData { name: "L".into(), symbol: String::new(), colour: 0, stops, path, tph: [0.0; 3], trains: Some([0; 3]), auto: None, dwell_s: 30.0, turnaround_s: 120.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false }
 }
 
 /// Two built stations, an edge between them and a line over it, all built on day 5.
