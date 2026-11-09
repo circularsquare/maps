@@ -644,7 +644,7 @@
   "feedbackPanel.anita": "Anita",
   "feedbackPanel.browserOnly": "These are only stored on this browser. Sign in to see them on your other devices.",
   "feedbackPanel.delete": "Delete feedback",
-  "feedbackPanel.deleteConfirm": "Delete this feedback and its replies permanently?",
+  "feedbackPanel.deleteConfirm": "Delete this feedback and its replies permanently? (Developers will also no longer be able to see it)",
   "feedbackPanel.earlier": "Your earlier feedback",
   "feedbackPanel.emailLabel": "Email",
   "feedbackPanel.emailPlaceholder": "Email (optional)",

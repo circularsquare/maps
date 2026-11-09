@@ -18,6 +18,11 @@ h2 { font-size: 15px; font-weight: 600; margin: 36px 0 10px; }
 #now { font-size: 88px; font-weight: 700; line-height: 1; margin-top: 18px; font-variant-numeric: tabular-nums; }
 #now.off { font-size: 28px; color: var(--dim); font-weight: 600; padding: 28px 0 6px; }
 #nowlabel { color: var(--dim); margin-top: 4px; }
+#unlock { margin-top: 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#unlock[hidden], #app[hidden] { display: none; }
+#unlock input { background: #181818; color: var(--fg); border: 1px solid var(--line); padding: 6px 9px; font: inherit; width: 260px; }
+#unlock button { background: #181818; color: var(--fg); border: 1px solid var(--line); padding: 6px 12px; font: inherit; cursor: pointer; }
+footer a { color: inherit; }
 #err { color: #e88; font-size: 13px; margin-top: 8px; min-height: 18px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px 36px; }
 .stat b { display: block; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -42,9 +47,15 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 <body>
 <main>
   <h1>trainworld player numbers</h1>
+  <div id="err"></div>
+  <form id="unlock" hidden>
+    <input id="key" type="password" autocomplete="off" placeholder="Admin key" aria-label="Admin key">
+    <button>Unlock</button>
+    <span class="sub" id="keynote"></span>
+  </form>
+  <div id="app" hidden>
   <div id="now">&nbsp;</div>
   <div id="nowlabel">playing now</div>
-  <div id="err"></div>
 
   <h2>Today so far (UTC)</h2>
   <div class="row" id="today"></div>
@@ -61,18 +72,19 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <h2>Total time played per browser</h2>
   <div id="ptBrowsers"></div>
   <div class="sub" id="ptNoteB"></div>
-  <h2>Time played in one play</h2>
-  <div id="ptPlays"></div>
-  <div class="sub" id="ptNoteP"></div>
+  <h2>Total time played per account</h2>
+  <div id="ptAccounts"></div>
+  <div class="sub" id="ptNoteA"></div>
 
-  <h2>Start cities</h2>
+  <h2>Start countries</h2>
   <div class="cols">
     <div><h3>Today</h3><table id="citiesToday"></table></div>
     <div><h3>Since the data starts</h3><table id="citiesAll"></table></div>
   </div>
-  <div class="sub" style="margin-top:8px">Each day's top 10 only, so the second list is a lower bound. Plays per start zone code.</div>
+  <div class="sub" style="margin-top:8px">Plays by the country of the start city. Each day's top 10 cities only, so the second list is a lower bound.</div>
 
-  <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span></footer>
+  <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
+  </div>
 </main>
 <script>
 "use strict";
@@ -82,6 +94,24 @@ const URL_STATS = BASE.replace(/\/?$/, "/") + "trainworld/stats?days=400";
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString("en-US");
 $("src").textContent = BASE.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+// the same key and storage as the feedback inbox (same origin, so it is already there)
+const KEY_STORE = "twfeedback.adminKey";
+function storedKey() { try { return localStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; } }
+function storeKey(k) { try { k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); } catch (e) { /* private window */ } }
+let key = storedKey();
+let timer = null;
+function showUnlock(note) {
+  $("app").hidden = true; $("unlock").hidden = false; $("keynote").textContent = note;
+  clearInterval(timer); timer = null; days = [];
+}
+$("unlock").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  key = $("key").value.trim();
+  if (!key) return;
+  storeKey(key); $("key").value = ""; $("unlock").hidden = true; start();
+});
+$("forget").addEventListener("click", (ev) => { ev.preventDefault(); storeKey(""); key = ""; showUnlock("Key forgotten on this browser."); });
 
 let days = [];
 
@@ -105,6 +135,19 @@ function renderToday(data) {
   $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`).join("");
 }
 
+let COUNTRY = {};
+const countryName = (code) => {
+  try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code); } catch (e) { return code; }
+};
+function byCountry(starts) {
+  const sum = {};
+  for (const s of starts) {
+    const c = s.start === "other" ? "other" : COUNTRY[s.start] ? countryName(COUNTRY[s.start]) : "unknown";
+    sum[c] = (sum[c] || 0) + s.plays;
+  }
+  return Object.entries(sum).sort((a, b) => b[1] - a[1]);
+}
+
 function cityTable(id, rows) {
   $(id).innerHTML = rows.length
     ? rows.map(([c, n]) => `<tr><td>${c}</td><td>${fmt(n)}</td></tr>`).join("")
@@ -114,10 +157,8 @@ function cityTable(id, rows) {
 function renderCities(data) {
   const key = new Date().toISOString().slice(0, 10);
   const d = data.days.find((x) => x.day === key);
-  cityTable("citiesToday", d ? d.starts.slice(0, 8).map((s) => [s.start, s.plays]) : []);
-  const sum = {};
-  for (const x of data.days) for (const s of x.starts) sum[s.start] = (sum[s.start] || 0) + s.plays;
-  cityTable("citiesAll", Object.entries(sum).sort((a, b) => b[1] - a[1]).slice(0, 8));
+  cityTable("citiesToday", d ? byCountry(d.starts).slice(0, 8) : []);
+  cityTable("citiesAll", byCountry(data.days.flatMap((x) => x.starts)).slice(0, 8));
 }
 
 // ---- chart: three lines over UTC days, hover guide with a tip
@@ -179,10 +220,12 @@ function renderChart(list) {
   $("chartnote").textContent = `${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Days before 2026-11-07 have no browser counts.`;
 }
 
-// ---- histograms: equal-width bars per bin (the bins themselves are uneven), count on hover
-function renderBars(id, labels, counts, unit, color, h) {
+// ---- histograms: equal-width bars per bin (the bins themselves are uneven), height is total time played
+const hrs = (m) => (m >= 600 ? fmt(Math.round(m / 60)) : (m / 60).toFixed(1)) + " h";
+function renderBars(id, labels, counts, minutes, noun, color, h) {
   const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
-  const max = niceMax(Math.max(...counts, 1));
+  const hours = minutes.map((v) => v / 60);
+  const max = niceMax(Math.max(...hours, 1));
   const n = labels.length, bw = (w - m.l - m.r) / n;
   const y = (v) => m.t + (1 - v / max) * (h - m.t - m.b);
   let s = "";
@@ -191,39 +234,41 @@ function renderBars(id, labels, counts, unit, color, h) {
     s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
     s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
   }
-  s += `<text x="${m.l - 6}" y="10" text-anchor="end">${unit}</text>`;
+  s += `<text x="${m.l - 6}" y="10" text-anchor="end">hours played</text>`;
   labels.forEach((lb, i) => {
     const x0 = m.l + i * bw;
-    const bh = y(0) - y(counts[i]);
+    const bh = y(0) - y(hours[i]);
     s += `<g class="bar"><rect x="${x0}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" fill="transparent"/>` +
-      `<rect x="${x0 + 3}" y="${y(counts[i])}" width="${bw - 6}" height="${Math.max(bh, counts[i] ? 1 : 0)}" fill="${color}"/>` +
-      `<title>${lb}: ${fmt(counts[i])} ${unit}</title></g>`;
+      `<rect x="${x0 + 3}" y="${y(hours[i])}" width="${bw - 6}" height="${Math.max(bh, minutes[i] ? 1 : 0)}" fill="${color}"/>` +
+      `<title>${lb}: ${fmt(counts[i])} ${noun}, ${hrs(minutes[i])} played in all</title></g>`;
     s += `<text x="${x0 + bw / 2}" y="${h - 8}" text-anchor="middle">${lb}</text>`;
   });
-  $(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${unit} by time played">${s}</svg>`;
+  $(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Hours played by ${noun}, grouped by each one's total time played">${s}</svg>`;
 }
 
 function renderPlaytime(data) {
   const pt = data.playtime;
-  if (!pt || !Array.isArray(pt.bins)) {
-    for (const id of ["ptBrowsers", "ptPlays"]) $(id).innerHTML = `<div class="sub">not deployed yet</div>`;
-    $("ptNoteB").textContent = ""; $("ptNoteP").textContent = "";
+  if (!pt || !Array.isArray(pt.bins) || !Array.isArray(pt.browserMinutes)) {
+    for (const id of ["ptBrowsers", "ptAccounts"]) $(id).innerHTML = `<div class="sub">not deployed yet</div>`;
+    $("ptNoteB").textContent = ""; $("ptNoteA").textContent = "";
     return;
   }
-  renderBars("ptBrowsers", pt.bins, pt.browsers, "browsers", "var(--browsers)", 240);
-  $("ptNoteB").textContent = `${fmt(pt.browsers.reduce((a, b) => a + b, 0))} browsers, all time. Bars are equal width; the bins are not.`;
-  // a play is capped at 10 h in the file, so everything from 10-20h up is "10h+"
-  const cut = pt.bins.indexOf("10-20h");
-  let labels = pt.bins.slice(0, cut + 1), counts = pt.plays.slice(0, cut + 1);
-  labels[cut] = "10h+"; counts[cut] = pt.plays.slice(cut).reduce((a, b) => a + b, 0);
-  while (counts.length > 1 && counts[counts.length - 1] === 0) { counts.pop(); labels.pop(); }
-  renderBars("ptPlays", labels, counts, "plays", "var(--plays)", 200);
-  $("ptNoteP").textContent = `${fmt(pt.plays.reduce((a, b) => a + b, 0))} plays over every day kept. A play that crosses midnight UTC counts on each day.`;
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  renderBars("ptBrowsers", pt.bins, pt.browsers, pt.browserMinutes, "browsers", "var(--browsers)", 240);
+  $("ptNoteB").textContent = `${fmt(sum(pt.browsers))} browsers, ${hrs(sum(pt.browserMinutes))} played, all time. Bars are equal width and as tall as the time played in the bracket; the brackets are not equal.`;
+  if (!Array.isArray(pt.signedIn)) {
+    $("ptAccounts").innerHTML = `<div class="sub">not deployed yet</div>`; $("ptNoteA").textContent = "";
+    return;
+  }
+  renderBars("ptAccounts", pt.bins, pt.signedIn, pt.signedInMinutes, "accounts", "var(--plays)", 240);
+  $("ptNoteA").textContent = `${fmt(sum(pt.signedIn))} accounts, ${hrs(sum(pt.signedInMinutes))} played while signed in, all time.`;
 }
 
 async function load() {
   try {
-    const r = await fetch(URL_STATS, { cache: "no-store" });
+    const r = await fetch(URL_STATS, { cache: "no-store", headers: { Authorization: "Bearer " + key } });
+    if (r.status === 401) { showUnlock(key ? "That key was refused." : ""); return; }
+    if (r.status === 404) { showUnlock("The stats are off on this server (no admin key set)."); return; }
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
@@ -234,8 +279,12 @@ async function load() {
     $("err").textContent = "Could not reach the server (" + e.message + "). Trying again in 30 s.";
   }
 }
-load();
-setInterval(load, 30000);
+function start() {
+  $("app").hidden = false; $("unlock").hidden = true;
+  load();
+  clearInterval(timer); timer = setInterval(load, 30000);
+}
+fetch("countries.json").then((r) => r.json()).catch(() => ({})).then((c) => { COUNTRY = c; if (key) start(); else showUnlock(""); });
 </script>
 </body>
 </html>

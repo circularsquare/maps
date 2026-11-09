@@ -667,7 +667,7 @@
   "feedbackPanel.replyLabel": "Write back",
   "feedbackPanel.sendReply": "Send reply",
   "feedbackPanel.delete": "Delete feedback",
-  "feedbackPanel.deleteConfirm": "Delete this feedback and its replies permanently?",
+  "feedbackPanel.deleteConfirm": "Delete this feedback and its replies permanently? (Developers will also no longer be able to see it)",
   "feedbackPanel.keep": "Keep it",
   "feedbackPanel.browserOnly": "These are only stored on this browser. Sign in to see them on your other devices.",
   "feedbackPanel.loadFailed": "Couldn't load your earlier feedback. Try again later.",

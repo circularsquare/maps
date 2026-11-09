@@ -644,7 +644,7 @@
   "feedbackPanel.anita": "Anita",
   "feedbackPanel.browserOnly": "這些只存放在這個瀏覽器裡。登入後，在其他裝置上也看得到。",
   "feedbackPanel.delete": "刪除回饋",
-  "feedbackPanel.deleteConfirm": "要永久刪除這則回饋和它的回覆嗎？",
+  "feedbackPanel.deleteConfirm": "要永久刪除這則回饋和它的回覆嗎？（開發者也將無法再看到）",
   "feedbackPanel.earlier": "你之前的回饋",
   "feedbackPanel.emailLabel": "電子郵件",
   "feedbackPanel.emailPlaceholder": "電子郵件（選填）",

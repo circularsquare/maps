@@ -1,8 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 3415d22e-522e-4ce0-ad47-92ca99b058bf, name maps-18 [b94cb3], since 2026-11-09 10:32
-Previous: session a759be5a-7ca4-4099-ab0a-427565802ead, name maps-8a [827003], handed over 2026-11-09 10:32, finishing in-flight work
-Updated: 2026-11-09 10:32
+Updated: 2026-11-09 11:03
 
 ## State, 2026-11-09 10:31
 **LIVE = 2026-11-09 (78ca3b4a), website 84912f4.** R2 holds 2026-11-07c, 11-08, 11-09: purge 07c and 11-08 from about 2026-11-11.
@@ -13,17 +12,16 @@ Server shonei-server fc17e49 deployed (not pushed). Feedback threads ON; inbox l
 **Committed as 8497aa0f after a dev smoke (27 pass), 8800 rebuild following, ship with it:** the feedback panel T-2853/T-2865 (ui/FeedbackPanel.tsx, game/account.ts, ui/Dock.tsx, ui/AccountPanel.tsx, ui/style.css, i18n/*, app/public/privacy.html, notes/T-2853.md; T-2866 follow-ups); full currency prefix (A$ in the top bar's hover and the Money panel's Cash row: game/currency.ts, game/format.ts, ui/TopBar.tsx, ui/MoneyTab.tsx, ui/MoneyText.tsx); trainworld/tools/feedback-inbox/ (new, untracked); TASKS, ARCHIVE. Never TODO.md.
 Update the changelog (ui/updates.ts) for that release and bump its date at publish.
 
-**Running (maps-8a's children, report to it; if taking over, ask ListAgents or check these trees):**
-- firefox2 a8e65c686982d91b6 (Opus, tree .tw-trees/firefox2, Vite 6130-39, T-2867): 32-bit browser out-of-memory crash, a Firefox player on 16 GB; assume 32-bit (Anita); detect it, fewer workers, then no intercity trips; replace "Play without demand" on the memory notice with "Play without intercity trips". Land after a look; WASM unchanged expected.
-- calcspeed a57a2118ee6b06677 (Opus, tree .tw-trees/calcspeed, Vite 6175-79, T-2830): measure and plan faster trip calculation; report goes to Anita, she decides. No app changes.
-- builtday abf45850c45f6397e (Opus, tree .tw-trees/builtday, Vite 6190-94, T-2871): record the build day of track and stations in the save (no UI). Save format and maybe WASM change: land, rebuild main WASM. T-2872 = playback later.
+**Running:**
+- marketwindow a1c707d708af4b2d4 (Opus, tree .tw-trees/marketwindow, Vite 6160-69, T-2878): share the market window's tables (A2), bit-exact; the only trip speed item she approved. T-2830 archived; T-2879 two rounds then three is an idea for later.
 
-**Waiting on Anita:** T-2873 bus backtracking, start it? (reading the code: legs and stop snaps are chosen one at a time; fix is choosing stops' roads across the line with a reversing penalty; asked her for a bad spot). iPhone test of the tutorial (T-2794, Android fine).
+**Landing now (11:03, maps-8a's agents all done):** busroads (T-2873) and builtday (T-2871, needs a main-tree WASM rebuild, save level 6), then a master smoke and 8800. shonei-server 33f7228 and 7214539 (twstats fully behind the admin key) to deploy.
+**Waiting on Anita:** iPhone test of the tutorial (T-2794, Android fine).
 **Queued, no decision needed:** T-2870 basemap loading indicator (small); T-2866 translation review of the feedback strings; T-2843 report's state machines A (done in T-2848), B demand health, C "who may write the save slot" (next, the one that could lose saves); T-2766, T-2757; T-2377 CLAUDE.md cut + moving the "User-facing text" guide out of her global CLAUDE.md + trimming the memory index (she approved all three); T-2854 wiki, design first; T-2851 more languages, order after pricing T-2841's tokens (checks/token_usage.py).
 Later, her word first: Electron/desktop version (she'll bring it up); Discord is up (https://discord.gg/RemhwVcZFw).
 Decided today: cores cap 14 (even while she plays); orchestrator pushes maps master a couple of times a session, publishing and website pushes still wait for her word; 8800 smoke only before a publish; Sonnet for known-file briefs. Cloud saves stay on the server until the 4 GB alert fires.
 10:33: maps-8a handed over the landing; it starts nothing new and forwards firefox2, calcspeed and builtday's reports here. The uncommitted batch is maps-18's to smoke and commit. T-2873 bus routes: agent busroads (Opus, tree .tw-trees/busroads, Vite 6140-49); Anita: no reversing penalty.
-Next free id T-2876 (T-2874 and T-2875 reserved for busroads).
+Next free id T-2881 (T-2880 reserved for marketwindow; T-2874 and T-2875 reserved for busroads). Master and 8800 go to 403016ca (feedback text, reply dot hover, basemap tag). Agent twstats (Sonnet, T-2876). T-2877 English station names: queued, design first. T-2867 landed as 26869c8d (not yet in 8800; run a master smoke before the next commit round); its 3 new strings had translation pass 1 only.
 
 ## How to
 - Scripts in trainworld/checks/: `snapbuild.cmd <hash>`, `snapbuild-frozen.cmd <hash> <freeze>` (packs from a freeze while a

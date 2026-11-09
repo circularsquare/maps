@@ -644,7 +644,7 @@
   "feedbackPanel.anita": "Anita",
   "feedbackPanel.browserOnly": "这些只保存在这个浏览器里。登录后，在其他设备上也能看到。",
   "feedbackPanel.delete": "删除反馈",
-  "feedbackPanel.deleteConfirm": "要彻底删除这条反馈和它的回复吗？",
+  "feedbackPanel.deleteConfirm": "要彻底删除这条反馈和它的回复吗？（开发者也将无法再看到）",
   "feedbackPanel.earlier": "你之前的反馈",
   "feedbackPanel.emailLabel": "邮箱",
   "feedbackPanel.emailPlaceholder": "邮箱（选填）",

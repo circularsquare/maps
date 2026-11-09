@@ -26,7 +26,7 @@ Launch day
 - [ ] Same post on Bluesky.
 - [ ] Show HN on the weekend: Saturday 9am-3pm ET or Sunday 6-11am ET did best in a 2025 study. Post the first comment yourself and stay 3-4 hours to answer.
 - [ ] Don't ask anyone to upvote or comment on HN. It is against the rules and gets posts buried.
-- [ ] Keep an eye on https://market.anita.garden/trainworld/stats, the R2 page in the Cloudflare dashboard, and the feedback mail.
+- [ ] Keep an eye on localhost:8800/twstats/, the R2 page in the Cloudflare dashboard, and the feedback mail.
 
 The week after
 - [ ] Reddit, one subreddit a day: r/WebGames, r/playmygame, r/indiegames (Promotion flair), r/TransitDiagrams (a diagram image), r/MapPorn (a map image).
@@ -365,7 +365,7 @@ Leave `index.html` uncached so a deploy shows at once. The wrangler token cannot
   of their bandwidth; a donation would be a kind gesture if it takes off.
 - **market.anita.garden** (her server): one config read per page load and a playtime ping about once
   a minute per open game (shonei-server CLAUDE.md), so 5,000 people playing at once is roughly 80
-  requests a second. Plays and minutes per day: `curl https://market.anita.garden/trainworld/stats`.
+  requests a second. Plays and minutes per day: `curl -H "Authorization: Bearer <admin key>" https://market.anita.garden/trainworld/stats`.
 - **Terrain tiles** come from the AWS open data bucket (`basemap.ts`); not checked for limits.
 - **Pages vs R2** (memory note): never move a Range-read file to the website repo; Pages behind
   Cloudflare breaks Range requests and the symptom is missing data, not an error.

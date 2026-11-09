@@ -703,7 +703,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (`trainworld.browser`, never tied to the account) so the server counts distinct browsers and each one's
   days and minutes (Anita, 2026-11-06; forgotten after 13 months unseen), the zone the game began in
   (`gameStartZone`), sandbox or not, the build; signed in, the session rides along like every call, so the server counts minutes per
-  account. The server keeps per-UTC-day aggregates, never the IP; `GET /trainworld/stats` is public.
+  account. The server keeps per-UTC-day aggregates, never the IP; `GET /trainworld/stats` needs the admin key.
   Nothing is sent with `notrack` in localStorage (the website's owner opt-out; `?notrack` sets it,
   `?track` clears it), on localhost or from an automated browser (smoke, screenshots) unless the address
   has `?track`, and a localhost page also needs `?acct=local` to have a server. Failures are silent.
