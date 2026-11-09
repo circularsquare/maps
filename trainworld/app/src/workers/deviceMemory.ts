@@ -14,6 +14,24 @@ export function mobileDevice(): boolean {
   return mobile;
 }
 
+let bits32: boolean | null = null;
+/** T-2867: a 32-bit browser, whose page and workers share about 2-4 GB of address space however much the
+ * machine holds (notes/T-2867.md). The user agent cannot tell: 32-bit Firefox on 64-bit Windows says "Win64; x64",
+ * as a 64-bit one does. A resizable ArrayBuffer is the tell: a 32-bit engine refuses a 4 GB maximum at once,
+ * and a 64-bit one only reserves it (3 ms). A browser too old to know the option is taken as 64-bit.
+ * `?bits32=1` or `0` says, for checks. */
+export function addressLimited(): boolean {
+  if (bits32 === null) {
+    const q = new URLSearchParams(location.search).get("bits32");
+    if (q === "0" || q === "1") bits32 = q === "1";
+    else try {
+      new (ArrayBuffer as unknown as new (n: number, o: { maxByteLength: number }) => ArrayBuffer)(0, { maxByteLength: 2 ** 32 });
+      bits32 = false;
+    } catch { bits32 = true; }
+  }
+  return bits32;
+}
+
 /** GB, as `navigator.deviceMemory` reports it; 4 for a phone or tablet that does not report it;
  * undefined for any other device that does not (desktop Safari and Firefox) */
 export function deviceGB(): number | undefined {

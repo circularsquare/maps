@@ -467,6 +467,14 @@ function deal() {
 }
 /** `debugPanic` (dev server only): the next step of a solve panics */
 let panicInSolve = false;
+/** T-2867: `debugPanic`'s `oom`: dies as a failed grow does, with the words of a real one */
+let oomPanic = false;
+function oomNow() {
+  dead = true;
+  let memBytes = 0;
+  try { memBytes = wasm_memory_bytes(); } catch { /* the module has not started */ }
+  sendMessage({ kind: "dead", error: "RuntimeError: unreachable executed", panic: "out of memory: 57318568 bytes could not be allocated", memBytes });
+}
 /** `debugPanic` now: a panic swallowed (as a pack's rejection once swallowed one), then the next
  * call on the object finds its borrow held: the pair of errors T-1174 saw, in that order */
 function panicNow() {
@@ -944,7 +952,9 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     wake?.();
   } else if (msg.kind === "debugPanic") {
     if (!import.meta.env.DEV) return;
+    oomPanic = !!msg.oom;
     if (msg.when === "solve") panicInSolve = true;
+    else if (oomPanic) oomNow();
     else try { panicNow(); } catch (err) { failed(err); }
   } else {
     query(msg);
@@ -1945,7 +1955,7 @@ async function run() {
         if (round > 0 && !total) return false;
         if (total) for (const a of c.pops) if (here(a)) keepTrail(a, q, round - 1);
         for (const a of c.solveOrder) {
-          if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; a.debug_panic(); }
+          if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; if (oomPanic) { oomNow(); return false; } a.debug_panic(); }
           if (!here(a) || (total === null && skip?.has(a))) continue;
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");

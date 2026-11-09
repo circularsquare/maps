@@ -32,7 +32,7 @@ import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_
 import type { FrameSpec } from "../game/frame";
 import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
-import { display, marketOff, selection, shownDay, tool } from "../game/ui";
+import { display, marketDropped, marketOff, selection, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -70,7 +70,8 @@ import {
   lineLoadsFor,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { deviceGB, mobileDevice, smallDevice } from "./deviceMemory";
+import { addressLimited, deviceGB, mobileDevice, smallDevice } from "./deviceMemory";
+import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
@@ -191,11 +192,13 @@ export function marketsOfWorkers(n: number): number[][] {
  * (`smallDevice`), gets 1, and where memory is not reported (desktop Firefox, Safari) at most 2. The "Use more
  * cores" setting restores the older rule, half the threads minus one, 1 to 5 (one per period).
  * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
- * the next load.
+ * the next load. T-2867: a 32-bit browser gets 1 whatever the setting (in 32-bit Firefox New York
+ * reaches its final with 1 and runs out of memory with 2, notes/T-2867.md).
  */
 export function poolSize(): number {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
+  if (addressLimited()) return 1;
   const hc = navigator.hardwareConcurrency || 4;
   if (display.peek().moreCores) return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
   if (smallDevice()) return 1;
@@ -462,6 +465,7 @@ const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
 /** T-1205: what a game may take in all: about 8 GB (Anita, T-1199), less on a device with less
  * (`deviceGB` reports at most 8) */
 function memBudget(): number {
+  if (addressLimited()) return 1.5 * 2 ** 30; // T-2867: what a 32-bit browser's workers can share
   const dm = deviceGB();
   return (dm === undefined ? 6 : dm >= 8 ? 8 : dm * 0.75) * 2 ** 30;
 }
@@ -764,7 +768,7 @@ class DemandClient {
 
   // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
   /** T-2794: not on a small device, which has no memory for the copies a write makes or a worker to write them */
-  private cacheOn = cacheAvailable() && !TEST && !mobileDevice();
+  private cacheOn = cacheAvailable() && !TEST && !mobileDevice() && !marketDropped();
   /** off: no cache is written (a check turns it off to leave a network uncached) */
   cacheWrites = true;
   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
@@ -856,7 +860,7 @@ class DemandClient {
       if (j < 0) return;
       if (!e.message && !heard) return this.scriptFailed(j);
       // i18n-ignore
-      if (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "")) this.workerDied(j, e.message);
+      if (/RuntimeError|unreachable|recursive use of an object/.test(e.message ?? "") || isMemoryFailure(e.message ?? "")) this.workerDied(j, e.message);
       else this.fail(`worker ${j}: ${e.message || "its code could not be downloaded"}`); // i18n-ignore
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
@@ -1778,7 +1782,11 @@ class DemandClient {
     by.add(item);
     const n = (this.acks.get(item) ?? 0) + 1;
     this.acks.set(item, n);
-    if (n < this.workers.length) return;
+    if (n >= this.workers.length) this.openEverywhere(item);
+  }
+
+  /** Every worker holds `item`. */
+  private openEverywhere(item: string) {
     this.opened.add(item);
     if (this.releveling.delete(item as CityId)) this.lodShown();
     if (this.openFails.delete(item)) this.recovered(item);
@@ -2587,6 +2595,7 @@ class DemandClient {
    * (T-1205): an idle worker restarted to give back its memory, which counts toward neither. */
   private workerDied(i: number, why: string, planned = false, download = false) {
     if (this.failed) return;
+    if (!planned && !download && this.computeN > 1 && isMemoryFailure(why)) return this.memoryShort(i, why);
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
     if (!planned && !download && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
     if (download) console.warn(`demand: worker ${i}'s code did not download; trying again`); // i18n-ignore
@@ -2598,6 +2607,28 @@ class DemandClient {
     if (this.isReady.delete(i)) this.ready--;
     this.endQueries();
     this.workers[i] = this.spawn(i, false);
+  }
+
+  /** T-2867: worker `i` could not get memory, however much the machine has (a 32-bit browser's address space, a
+   * full page file): half the solving workers go, the focus pool with them, and the rest solve again;
+   * no figure changes. Workers being replaced start again at their place in the smaller pool. With one
+   * solving worker left, `workerDied` treats it as any panic, and a second stops the pool. */
+  private memoryShort(i: number, why: string) {
+    const aux = this.computeN, n = Math.max(1, Math.floor(aux / 2));
+    console.warn(`demand: worker ${i} ran out of memory, ${aux} solving workers to ${n}: ${why}`); // i18n-ignore
+    this.endFocus();
+    const again = new Set([...this.respawn.keys(), i]);
+    this.respawn.clear();
+    this.shrink(n, why);
+    for (const k of again) {
+      if (k >= n && k !== aux) continue; // (stopped with the shrink)
+      const j = k === aux ? n : k;
+      this.respawn.set(j, { left: null, solving: false, planned: false });
+      this.workers[j].terminate();
+      if (this.isReady.delete(j)) this.ready--;
+      this.workers[j] = this.spawn(j, false);
+    }
+    if (!this.respawn.size) this.solveAgain();
   }
 
   /** T-2704: worker `i`'s code did not download (a dropped fetch): a new worker takes its place after a
@@ -2662,6 +2693,12 @@ class DemandClient {
     r.left = null;
     r.solving = true;
     if (!this.isReady.has(i)) { this.isReady.add(i); this.ready++; }
+    this.solveAgain();
+  }
+
+  /** The pool changed under a solve (`reopened`, `memoryShort`): once every worker is ready, the newest
+   * network is solved again. */
+  private solveAgain() {
     if (this.ready < this.workers.length) return;
     this.status = "ready";
     this.settleWaiters();
@@ -2680,8 +2717,8 @@ class DemandClient {
   }
 
   /** T-1174, dev server only (`?debug=1`, `twDemand.client.debugPanic`): make worker `i` panic. */
-  debugPanic(i = 0, when: "now" | "solve" = "now") {
-    if (import.meta.env.DEV) this.workers[i]?.postMessage({ kind: "debugPanic", when } satisfies ToDemand);
+  debugPanic(i = 0, when: "now" | "solve" = "now", oom = false) {
+    if (import.meta.env.DEV) this.workers[i]?.postMessage({ kind: "debugPanic", when, oom } satisfies ToDemand);
   }
 
   // --- T-1205: memory. An idle worker well above its need restarts; big games run fewer workers ---
@@ -2792,6 +2829,8 @@ class DemandClient {
     this.ready = this.isReady.size;
     this.acks.clear();
     for (const by of this.ackedBy) for (const item of by ?? []) this.acks.set(item, (this.acks.get(item) ?? 0) + 1);
+    // (T-2867: in a load, what only the stopped workers were still opening is now open everywhere)
+    for (const [item, count] of this.acks) if (count >= this.workers.length && !this.opened.has(item) && !this.broken.has(item)) this.openEverywhere(item);
     this.computeN = n;
     this.periodsOf = [...Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), []];
     this.marketsOf = marketsOfWorkers(n);
@@ -2917,7 +2956,7 @@ class DemandClient {
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
     // (none on a small device: its workers would be a second copy of the zone in the tab's memory, T-2122)
-    if (this.fpool || perfOff("focus") || smallDevice() || this.failed || (this.cacheShown() && perfOff("cacheFocus"))) return;
+    if (this.fpool || perfOff("focus") || smallDevice() || addressLimited() || this.failed || (this.cacheShown() && perfOff("cacheFocus"))) return;
     // (at most FOCUS_WORKERS solving workers: each worker is memory of its own, T-2045's follow-up)
     const n = Math.max(1, Math.min(this.computeN, Number(new URLSearchParams(location.search).get("focusWorkers")) || FOCUS_WORKERS));
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
@@ -3216,7 +3255,7 @@ class DemandClient {
   }
 
   private receive(i: number, msg: FromDemand) {
-    if (msg.kind === "failed") return this.fail(`worker ${i}: ${msg.error}`); // i18n-ignore
+    if (msg.kind === "failed") return isMemoryFailure(msg.error) ? this.workerDied(i, msg.error) : this.fail(`worker ${i}: ${msg.error}`); // i18n-ignore
     // i18n-ignore
     if (msg.kind === "dead") return this.workerDied(i, `${msg.error}${msg.panic ? ` (${msg.panic})` : ""}, ${Math.round(msg.memBytes / 2 ** 20)} MB of WASM memory`);
     if (msg.kind === "packOpened") {
@@ -4809,7 +4848,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;
 }
 

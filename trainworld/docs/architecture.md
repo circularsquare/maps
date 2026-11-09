@@ -225,7 +225,7 @@ Web first, so it can be shared as a link.
   less than the phone, an iPhone's killed near 2 GB), and unreported memory (desktop Firefox, Safari)
   at most 2; a big game may then drop some by memory [T-1205, below]. Such a small device runs no
   focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). The Settings "Use more cores" restores half the threads less one, 1 to 5
-  (one per period), at the next load; `?demandWorkers=N` overrides both. Plus one auxiliary worker with no periods
+  (one per period), at the next load; `?demandWorkers=N` overrides both. A 32-bit browser gets 1 whatever the setting, and no focus pool (`addressLimited`, T-2867: a resizable ArrayBuffer's 4 GB maximum refused; its user agent cannot tell). A worker that cannot get memory halves the solving workers, `memoryShort`, and the rest solve again; with one left it is replaced as after a panic, and the failure offers "Play without intercity trips" (`dropMarket`, this tab, game/ui.ts; notes/T-2867.md). Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
   its own copy: the viewed zone first (only above zoom 7.5, docs/zones.md, T-871), and every zone with a built station inside its footprint or

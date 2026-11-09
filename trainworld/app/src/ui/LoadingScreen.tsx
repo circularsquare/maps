@@ -11,7 +11,9 @@ import { clock } from "../game/clock";
 import { world } from "../game/world";
 import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
-import { loadFailText } from "../game/loadText";
+import { isMemoryFailure, loadFailText } from "../game/loadText";
+import { marketOff } from "../game/ui";
+import { playWithoutIntercity } from "./DemandStopped";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 import { t, tNumber } from "../i18n";
@@ -31,7 +33,10 @@ function LoadingScreen() {
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
         {named && <button class="btn" onClick={() => location.assign(location.pathname)}>{t("loadingScreen.backToStart")}</button>}
-        {!game && <button class="btn" onClick={continueWithoutDemand}>{t("loadingScreen.playWithoutDemand")}</button>}
+        {/* T-2867: out of memory, the way on keeps demand and drops intercity trips, while there are any to drop */}
+        {!game && (isMemoryFailure(why) && !marketOff()
+          ? <button class="btn" onClick={() => playWithoutIntercity()}>{t("loadingScreen.playWithoutIntercity")}</button>
+          : <button class="btn" onClick={continueWithoutDemand}>{t("loadingScreen.playWithoutDemand")}</button>)}
       </div>
     </div>
   </div>;

@@ -197,7 +197,7 @@ export type ToDemand =
   | { kind: "corridorsAgain" }
   /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
    * or in the running solve's next step */
-  | { kind: "debugPanic"; when: "now" | "solve" }
+  | { kind: "debugPanic"; when: "now" | "solve"; oom?: boolean }
   /** T-1205: the pool has shrunk: this worker's periods from now on (`init`'s `periods`, `groups`) */
   | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
   /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */

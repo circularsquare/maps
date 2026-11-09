@@ -228,8 +228,19 @@ const VIDEO_DISPLAY: Partial<DisplaySettings> = {
 };
 
 export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour, lighterMap: (migratedDisplay.lighterMap as string) === "on" ? "on" : "off", ...(VIDEO ? VIDEO_DISPLAY : {}) });
-/** T-2802, T-2838: no market (no trips between cities) on a phone or tablet, unless the player turned it on */
-export const marketOff = () => mobileDevice() && !display.peek().mobileIntercity;
+/** T-2867: the player chose to play without intercity trips after running out of memory: this tab, across its
+ * reloads, and gone with it (one bad evening should not take them away for good) */
+const MARKET_DROPPED = "tw-no-intercity";
+let droppedHere = false;
+try { droppedHere = typeof sessionStorage !== "undefined" && sessionStorage.getItem(MARKET_DROPPED) === "1"; } catch { /* storage unavailable */ }
+export const marketDropped = () => droppedHere;
+export function dropMarket() {
+  droppedHere = true;
+  try { sessionStorage.setItem(MARKET_DROPPED, "1"); } catch { /* this page only */ }
+}
+/** T-2802, T-2838: no market (no trips between cities) on a phone or tablet, unless the player turned it on;
+ * T-2867: or after `dropMarket` */
+export const marketOff = () => droppedHere || (mobileDevice() && !display.peek().mobileIntercity);
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));
