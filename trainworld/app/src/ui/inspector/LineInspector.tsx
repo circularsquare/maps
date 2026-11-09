@@ -9,6 +9,7 @@ import { Money } from "../MoneyText";
 import { count, distance, duration, forecast, headway, length, money, runCostLineFactor, speed, trainCostLine, trainKind } from "../../game/format";
 import { lineRunFactor } from "../../game/regionMoney";
 import { t as tr, tList, tNumber, tSeries } from "../../i18n";
+import { mobileDevice } from "../../workers/deviceMemory";
 import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
@@ -693,7 +694,7 @@ function RailLineInspector({ id }: { id: string }) {
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
     return {
-      tip: tr("busInspector.removeStop", { name: here }) + (end || loop || nStops < 3 ? "" : "\n" + tr("lineInspector.shiftEnd")),
+      tip: tr("busInspector.removeStop", { name: here }) + (end || loop || nStops < 3 || mobileDevice() ? "" : "\n" + tr("lineInspector.shiftEnd")),
       click: (e) => void stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i }),
     };
   };

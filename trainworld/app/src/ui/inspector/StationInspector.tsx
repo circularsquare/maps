@@ -3,6 +3,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { t as tr, tList, tNumber, tSeries } from "../../i18n";
+import { mobileDevice } from "../../workers/deviceMemory";
 import { lineDemand } from "../../game/demand";
 import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist, groundScale } from "../../game/coords";
@@ -251,7 +252,7 @@ export function StationInspector({ id }: { id: string }) {
           )}
         </div>
       )}
-      {linking.value === id && <p class="muted">{tr("stationInspector.linking", { distance: roughDistance(LINK_MAX_M) })}</p>}
+      {linking.value === id && <p class="muted">{tr(mobileDevice() ? "stationInspector.linkingTouch" : "stationInspector.linking", { distance: roughDistance(LINK_MAX_M) })}</p>}
       {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{tr(s.port ? "stationInspector.constructPort" : "stationInspector.constructStation")}</button></Actions>}
       {/* T-2194: a port has no platform to upgrade */}
       {!s.port && <div class="h">{tr("stationUpgrades.group")}</div>}

@@ -16,6 +16,7 @@ import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
 import { t, tRich } from "../i18n";
+import { mobileDevice } from "../workers/deviceMemory";
 
 export type ClickMode = keyof typeof CLICK_MODE_COLOURS | "select";
 /** What a click on the map does now: the tool, or picking a passage's other station (T-197). */
@@ -74,7 +75,7 @@ function TrackBar() {
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular")}</button>
           <span class="build-toggles">
             <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label={t("toolBar.keepPlacing")} aria-pressed={keepPlacing.value}
-              data-tip={t("toolBar.keepPlacingTip")}
+              data-tip={t(mobileDevice() ? "toolBar.keepPlacingTipTouch" : "toolBar.keepPlacingTip")}
               onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
             <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
               data-tip={t("toolBar.snapReal")}

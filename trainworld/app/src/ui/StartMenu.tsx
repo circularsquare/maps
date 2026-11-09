@@ -22,6 +22,7 @@ import { DeleteAsk, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, V
 import { Icon } from "./widgets";
 import { Modal } from "./Modal";
 import { dismissUpdate, UPDATES, updateToShow } from "./updates";
+import { mobileDevice } from "../workers/deviceMemory";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t, tDate } from "../i18n";
 
@@ -203,7 +204,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
     <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
       {UPDATES.map((u) => <section key={u.version}>
         <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
-        <ul class="changelog-list">{u.changes.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => <li key={k}>{t(k)}</li>)}</ul>
       </section>)}
     </Modal>
   </div>;

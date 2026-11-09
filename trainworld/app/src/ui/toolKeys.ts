@@ -6,14 +6,15 @@ import { tool, type Tab, type Tool } from "../game/ui";
 import { live } from "../map/live";
 import { Icon } from "./widgets";
 import { t, type MessageKey } from "../i18n";
+import { mobileDevice } from "../workers/deviceMemory";
 
 type ToolEntry = [Tool, string, () => JSX.Element, string, string];
 /** A tool's entry whose label (index 1) and hover (index 4) are read through `t` each time they are
  * used, so a list kept at module level still follows the language. */
-function toolEntry(id: Tool, icon: () => JSX.Element, key: string, label: MessageKey, tip: MessageKey): ToolEntry {
+function toolEntry(id: Tool, icon: () => JSX.Element, key: string, label: MessageKey, tip: MessageKey, touchTip?: MessageKey): ToolEntry {
   const e: ToolEntry = [id, "", icon, key, ""];
   Object.defineProperty(e, 1, { get: () => t(label), enumerable: true });
-  Object.defineProperty(e, 4, { get: () => t(tip), enumerable: true });
+  Object.defineProperty(e, 4, { get: () => t(touchTip && mobileDevice() ? touchTip : tip), enumerable: true });
   return e;
 }
 
@@ -23,7 +24,7 @@ export const TOOLS: ToolEntry[] = [
   toolEntry("track", Icon.track, "1", "toolKeys.track", "toolKeys.trackTip"),
   toolEntry("station", Icon.station, "2", "toolKeys.station", "toolKeys.stationTip"),
   toolEntry("delete", Icon.bin, "3", "toolKeys.delete", "toolKeys.deleteTip"),
-  toolEntry("blueprint", Icon.marquee, "4", "toolKeys.select", "toolKeys.selectTip"),
+  toolEntry("blueprint", Icon.marquee, "4", "toolKeys.select", "toolKeys.selectTip", "toolKeys.selectTipTouch"),
 ];
 
 /** The tool each number key picks (T-096). */

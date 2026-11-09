@@ -30,6 +30,7 @@ import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { TwoRows } from "./LineInspector";
 import { t, tSeries } from "../../i18n";
+import { mobileDevice } from "../../workers/deviceMemory";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
@@ -281,7 +282,7 @@ export function GroupInspector({ group }: { group: number }) {
                   const end = c.index === 0 || c.index === n - 1;
                   const tip = keep
                     ? (turns ? t("groupInspector.turnsBack", { line: B, station: here }) : t("groupInspector.stopsAt", { line: B, station: here }))
-                    : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }));
+                    : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 || mobileDevice() ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }));
                   const click = (e: MouseEvent) => {
                     if (e.shiftKey && !end && !loop) void change({ op: "endLineAt", line: l.num, index: c.index });
                     else void change({ op: "dropStop", line: l.num, index: c.index });

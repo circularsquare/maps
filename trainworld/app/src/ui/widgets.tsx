@@ -12,6 +12,7 @@ import { selection, uiScale, type ListSort } from "../game/ui";
 import { knock } from "../game/world";
 import type { Signal } from "@preact/signals";
 import { t } from "../i18n";
+import { mobileDevice } from "../workers/deviceMemory";
 
 export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
@@ -191,7 +192,7 @@ export function shakeEl(el: HTMLElement | null) {
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
 export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
-  const jump = p.jump ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
+  const jump = p.jump && !mobileDevice() ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
   const box = useRef<HTMLSpanElement>(null);
   // T-1844: a step that returns false was refused (a limit, or no money): the stepper shakes and the

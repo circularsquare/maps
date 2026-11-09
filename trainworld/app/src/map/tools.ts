@@ -22,6 +22,7 @@
 // Everything drawn is blueprint until constructed (SPEC 6.4).
 
 import { t as tr, tNumber } from "../i18n";
+import { mobileDevice } from "../workers/deviceMemory";
 import { effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
@@ -128,7 +129,7 @@ interface Placed {
 const MAX_PIECE_KM = 500;
 /** a click or ghost waiting this long on the worker shows the spinner in the tag, ms (T-1039) */
 const WAIT_MS = 300;
-const tooFarText = () => tr("tools.tooFar", { max: distance(MAX_PIECE_KM * 1000) });
+const tooFarText = () => tr(mobileDevice() ? "tools.tooFarTouch" : "tools.tooFar", { max: distance(MAX_PIECE_KM * 1000) });
 
 /** An x, y, z polyline less the shares `fromA` and `fromB` of its length at its two ends. */
 function trimPolyline(pts: Float32Array, fromA: number, fromB: number): Float32Array {
@@ -1304,7 +1305,7 @@ export class Tools {
     const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
     const hit=station>=0?Number(n.stationIds[station]):-1;
     if (hit < 0) {
-      say(tr("tools.lineHelp"));
+      say(mobileDevice() ? tr("toolNotes.lineHint", { touch: true }) : tr("tools.lineHelp"));
       return;
     }
     this.toggleStop(hit);

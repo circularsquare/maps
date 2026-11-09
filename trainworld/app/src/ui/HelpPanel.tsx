@@ -4,6 +4,7 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import { t } from "../i18n";
+import { mobileDevice } from "../workers/deviceMemory";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./toolKeys";
 
 export const helpOpen = signal(false);
@@ -12,7 +13,27 @@ const keyOf = (act: string) => Object.keys(ACTION_KEYS).find((k) => ACTION_KEYS[
 const toolKeys = Object.keys(TOOL_KEYS).join(", ");
 const tabKeys = Object.keys(TAB_KEYS).map((k) => k.toUpperCase()).join(", ");
 
+/** T-2863: on a phone or tablet, only the rows a finger can do (no keys, no modifiers, no right button) */
+function phoneSections(): [string, [string, string][]][] {
+  return [
+  [t("help.bubblesHead"), [
+    [t("help.holdDrag"), t("help.boxFromBubble")],
+  ]],
+  [t("help.buildingHead"), [
+    [t("help.holdBus"), t("help.doDelete")],
+    [t("help.dragBusPoint"), t("help.doMove")],
+    [t("help.clickBusEnd"), t("help.drawFromEnd")],
+  ]],
+  [t("help.panelsHead"), [
+    [t("help.dblFare"), t("help.doRemove")],
+    [t("help.dblName"), t("help.doRename")],
+    [t("help.dblRow"), t("help.findOnMap")],
+  ]],
+  ];
+}
+
 function sections(): [string, [string, string][]][] {
+  if (mobileDevice()) return phoneSections();
   return [
   [t("help.mapHead"), [
     [t("help.rightDragCtrl"), t("help.rotate")],
