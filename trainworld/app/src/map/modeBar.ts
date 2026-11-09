@@ -18,7 +18,7 @@ export function modeBar(train: number, walk: number, drive: number, none = 0, wi
 /** A bubble's trips under the Purpose scheme's three groups (`PURPOSE_CLASS`). */
 export interface PurposeSplit { work: number; other: number; errands: number }
 
-/** T-2908: the Purpose scheme's hover lines: the bar, then a row per group with any trips. Fixed colours,
+/** T-2908: the Purpose scheme's hover lines: the bar, then a row per group whose share rounds to at least 1%. Fixed colours,
  * the bubbles' own, whatever scheme the plain mode bars are in. */
 export function purposeLines(p: PurposeSplit, width = 1): string[] {
   const all = p.work + p.errands + p.other;
@@ -27,10 +27,8 @@ export function purposeLines(p: PurposeSplit, width = 1): string[] {
   const shown = groups.filter(([v]) => v > 0);
   const bar = `<div class="mode-bar"${width < 1 ? ` style="width:${(100 * width).toFixed(1)}%"` : ""}>${shown.map(([v, c]) => `<i style="flex-grow:${v};background:${c}"></i>`).join("")}</div>`;
   const percent = (v: number) => tNumber(v, { style: "percent", maximumFractionDigits: 0 });
-  return [bar, ...shown.map(([v, c, key]) => {
-    const share = Math.round((100 * v) / all) >= 1 ? percent(v / all) : `&lt;${percent(0.01)}`;
-    return `<span class="tag-fact"><span class="tag-dot" style="background:${c}"></span>${t(key, { share })}</span>`;
-  })];
+  return [bar, ...shown.filter(([v]) => Math.round((100 * v) / all) >= 1).map(([v, c, key]) =>
+    `<span class="tag-fact purpose-row"><span class="tag-dot" style="background:${c}"></span>${t(key, { share: percent(v / all) })}</span>`)];
 }
 
 /** T-2271: where `n` sits on a log scale from `lo` (0) to `hi` (1), held to that range. */

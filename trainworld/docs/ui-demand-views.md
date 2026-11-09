@@ -176,7 +176,7 @@ hover and clicks. They do not enlarge the station's click target.
   blends the mode colours by share. **Purpose** (T-2886) colours by what the trips are for, the same three colours blended by
   share with no grey pull: work and school blue, errands and leisure red, everything else green (medical, airports, attractions, longer trips);
   the purposes' legs are asked for only while it is on (`commuterView.ts` `attachPurp`), and until they are in,
-  the mix or ramp chosen before is used. A selection's own and far-end bubbles are coloured the same way (T-2892). The hover on a bubble so coloured has its bar and a row per group by purpose, not by mode (T-2908). Any of the three colours the local
+  the mix or ramp chosen before is used. A selection's own and far-end bubbles are coloured the same way (T-2892). The hover on a bubble so coloured has its bar and a row per group by purpose, not by mode; a share that rounds to 0% has no row (T-2908, T-2911). Any of the three colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. While a bubble (local or
@@ -187,7 +187,8 @@ hover and clicks. They do not enlarge the station's click target.
 - **The colour is smoothed** [T-900, `smooth` in `workers/commuters.worker.ts`]: the model gives
   every cell of a station's subzone one rail share and every cell of a zone one walk share, so
   for the colour alone each res-9 cell takes its neighbours' legs by mode within 1,250 m, weighted
-  by a Gaussian of the distance (sigma 500 m); a bubble is coloured by its cells' smoothed legs.
+  by a Gaussian of the distance (sigma 500 m); a bubble is coloured by its cells' smoothed legs. The Purpose
+  scheme is not smoothed: a bubble's colour is its own split, the one its hover gives (T-2911).
   Size, hover and clicks, and a selection's own outlined bubbles, keep the real figures. Worked
   out in the bubble worker with each result, not per frame. Nearby zones' bubbles smooth within
   their own zone only.

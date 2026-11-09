@@ -81,12 +81,13 @@ type Modes = { train: Float32Array; walk: Float32Array; drive: Float32Array; non
 /** A level's trips by purpose per disc, in the disc order (T-2886): work, errands and leisure, everything else. */
 type Purposes = { work: Float32Array; errands: Float32Array; other: Float32Array };
 /** Colour built discs again under the scheme now chosen (T-804), in place: `levels` carry each
- * disc's trips by mode in the discs' order, and their smoothed `shade` where there is one (T-900). */
-export function recolour(levels: (Modes & { discs: Float32Array; shade?: Modes; purp?: Purposes & { shade?: Purposes } })[]) {
+ * disc's trips by mode in the discs' order, and their smoothed `shade` where there is one (T-900). Purposes are
+ * painted as they are, unsmoothed, so a bubble's colour says what its hover says (T-2911). */
+export function recolour(levels: (Modes & { discs: Float32Array; shade?: Modes; purp?: Purposes })[]) {
   const byPurpose = purposeSchemeOn();
   for (const l of levels) {
     const m = l.shade ?? l;
-    const p = byPurpose && l.purp ? l.purp.shade ?? l.purp : null;
+    const p = byPurpose ? l.purp : undefined;
     const n = m.train.length;
     for (let i = 0; i < n; i++) {
       const c = p ? purposeColour3(p.work[i], p.other[i], p.errands[i]) : bubbleColour(m.train[i], m.walk[i], m.drive[i], m.none?.[i] ?? 0);

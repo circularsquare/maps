@@ -28,7 +28,7 @@ export type ToCommuters =
   /** the draw anchor moved: measure the cells from the new one and send them back (`Moved`) */
   | { kind: "anchor"; id: number; anchor: Anchor }
   /** `none`: T-2215's trips no way serves (No route) */
-  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array }
+  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array; unsmoothed?: boolean }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */
   | { kind: "sum"; id: number; cells: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array; none?: Float32Array };
@@ -85,9 +85,9 @@ export interface BubbleLevel {
   none: Float32Array;
   /** per disc, the same smoothed among nearby cells (T-900): its colour only */
   shade?: { train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array };
-  /** T-2886: per disc, trips for work, errands and leisure, and the rest (and the same smoothed), only
+  /** T-2886: per disc, trips for work and school, errands and leisure, and the rest, only
    * while bubbles are coloured by purpose; the main thread puts it there */
-  purp?: { work: Float32Array; errands: Float32Array; other: Float32Array; shade?: { work: Float32Array; errands: Float32Array; other: Float32Array } };
+  purp?: { work: Float32Array; errands: Float32Array; other: Float32Array };
 }
 
 export interface Bubbles {

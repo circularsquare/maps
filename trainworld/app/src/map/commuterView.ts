@@ -505,12 +505,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** One end's legs per cell (rail, walking, driving, no route), copies to transfer to a worker. */
   const endCells = (m: CellModes, end: BubbleEnd) => endModes(m, end).map((a) => a.slice());
   /** Bubbles of one end from legs per cell (`endCells`; transferred), in worker `w`. */
-  const buildOn = (w: Worker, end: BubbleEnd, cells: Float32Array[]) => {
+  const buildOn = (w: Worker, end: BubbleEnd, cells: Float32Array[], unsmoothed = false) => {
     const id = nextId++;
     sync(w);
     return new Promise<Bubbles>((done) => {
       pending.set(id, done);
-      const msg: ToCommuters = { kind: "build", id, end, train: cells[0], walk: cells[1], drive: cells[2], none: cells[3] };
+      const msg: ToCommuters = { kind: "build", id, end, train: cells[0], walk: cells[1], drive: cells[2], none: cells[3], unsmoothed };
       w.postMessage(msg, [msg.train.buffer, msg.walk.buffer, msg.drive.buffer, msg.none.buffer]);
     });
   };
@@ -634,7 +634,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const other = new Float32Array(n);
       for (let i = 0; i < n; i++) other[i] = Math.max(0, total[i] - work[i] - errands[i]);
       const perCell = { end, work: work.slice(), other: other.slice(), errands: errands.slice() }; // `buildOn` hands its arrays to the worker
-      const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)]);
+      const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)], true);
       if (!purposeSchemeOn() || pb.anchor.version !== b.anchor.version || pb.levels.length !== b.levels.length) return false;
       cellPurp.set(b, perCell);
       b.levels.forEach((l, li) => {
@@ -651,7 +651,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
           });
           return o;
         };
-        l.purp = { ...take(q), ...(q.shade ? { shade: take(q.shade) } : {}) };
+        l.purp = take(q);
       });
       return true;
     })().catch(() => false).finally(() => purpInflight.delete(b));
