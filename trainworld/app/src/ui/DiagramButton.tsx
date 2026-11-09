@@ -2,6 +2,7 @@ import { diagramProgress, diagramReady, diagramShown, diagramWater, diagramWidth
 import { WIDTH_MAX, WIDTH_MIN } from "../diagram/draw";
 import { t } from "../i18n";
 import { BusyTag } from "./BusyTag";
+import { ShareButton } from "./Community";
 import { LoadBar } from "./LoadingScreen";
 import { Icon } from "./widgets";
 
@@ -31,6 +32,7 @@ export function DiagramTopLeft() {
           onInput={(e) => (diagramWidth.value = Number((e.target as HTMLInputElement).value))} />
       </label>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip={t("diagramButton.savePicture")} aria-label={t("diagramButton.savePicture")} onClick={saveDiagramPicture}><Icon.download /></button>}
+      {diagramReady.value && <ShareButton />}
       {share !== null && <div class="status-tag" role="status">
         <span class="demand-busy">{t("diagramButton.calculating")}</span>
         <LoadBar fraction={share} step={t("diagramButton.calculating")} thin tip={`${Math.floor(share * 100)}%`} />

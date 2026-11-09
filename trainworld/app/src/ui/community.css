@@ -1,0 +1,46 @@
+/* T-2887: Community's modal and the Share dialog; the modal itself is the saves panel's (.saves-panel). */
+
+.community-panel { width: min(1100px, calc(100vw - 32px)); }
+.cm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.cm-views { display: flex; gap: 6px; }
+.cm-bar .lb-find { position: relative; margin: 0; width: 200px; }
+.cm-bar .lb-hits { position: absolute; left: 0; right: 0; z-index: 3; background: var(--bg); border: 1px solid var(--rule); }
+
+.cm-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.cm-card { min-width: 0; }
+.cm-open { display: block; width: 100%; padding: 0; text-align: left; color: inherit; background: var(--bg); border: 1px solid var(--rule); font: inherit; cursor: pointer; position: relative; }
+.cm-open:hover { border-color: var(--accent); }
+.cm-thumb { display: block; width: 100%; height: 168px; }
+.cm-card-info { padding: 6px 8px 8px; border-top: 1px solid var(--rule); }
+.cm-card-name { display: flex; align-items: baseline; gap: 6px; }
+.cm-card-name strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cm-facts { display: flex; flex-wrap: wrap; gap: 0 10px; }
+.cm-likes { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); }
+.cm-likes svg { width: 12px; height: 12px; }
+.cm-note { position: absolute; left: 8px; top: 8px; }
+.cm-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; }
+
+.cm-detail { display: flex; flex-direction: column; gap: 8px; }
+.cm-detail-head { display: flex; align-items: flex-start; gap: 10px; }
+.cm-detail-who { flex: 1; min-width: 0; }
+.cm-detail-who strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cm-detail-acts { display: flex; align-items: center; gap: 6px; flex: none; }
+.cm-like.on { color: var(--accent); }
+.cm-reasons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.cm-canvas-box { position: relative; border: 1px solid var(--rule); }
+.cm-canvas { display: block; width: 100%; height: min(70vh, 720px); cursor: grab; }
+.cm-canvas:active { cursor: grabbing; }
+
+.cm-ask p { margin: 0 0 8px; }
+.cm-ask-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cm-ask-browse { margin-left: auto; }
+.cm-progress { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+
+@media (max-width: 560px) {
+  .cm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .cm-thumb { height: 120px; }
+  .cm-bar .lb-find { width: 100%; order: 3; }
+  .cm-detail-head { flex-wrap: wrap; }
+  .cm-detail-acts { width: 100%; justify-content: flex-end; }
+  .cm-canvas { height: 58vh; }
+}

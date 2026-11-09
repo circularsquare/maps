@@ -15,9 +15,10 @@ import { t } from "../i18n";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
+import { CommunityButton } from "./Community";
 import { Icon } from "./widgets";
 
-const WORLD = "points";
+export const WORLD = "points";
 const cityName = (id: string) => CITIES.find((c) => c.id === id)?.name ?? id;
 const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -53,8 +54,8 @@ const MAX_SHOWN = 8;
 const shownName = (id: string) => tPlace(id, cityName(id));
 
 /** T-2813: the board picker works as the new game's city search does: type, and every matching
- * board is listed (arrows and Enter to choose); with nothing typed it lists the world and this game's cities. */
-function CityPick({ boardKey, mine, all }: { boardKey: string; mine: string[]; all: ReadonlySet<string> }) {
+ * board is listed (arrows and Enter to choose); with nothing typed it lists the world and this game's cities. `onPick`: Community's, in place of loading that board. */
+export function CityPick({ boardKey, mine, all, onPick }: { boardKey: string; mine: string[]; all: ReadonlySet<string>; onPick?: (key: string) => void }) {
   const [text, setText] = useState<string | null>(null);
   const [cursor, setCursor] = useState(0);
   const current = boardKey === WORLD ? t("leaderboard.world") : shownName(boardKey.slice(WORLD.length + 1));
@@ -67,7 +68,7 @@ function CityPick({ boardKey, mine, all }: { boardKey: string; mine: string[]; a
     const hits = findStart(q, all).map(({ city: c, matched }) => ({ key: `${WORLD}_${c.id}`, label: shownName(c.id), sub: matched ? t("newGame.matched", { alias: matched }) : "" }));
     return (normalise(t("leaderboard.world")).startsWith(normalise(q)) ? [world] : []).concat(hits).slice(0, MAX_SHOWN);
   }, [text, mine, all]);
-  const pick = (key: string) => { setText(null); void fetchBoards(key); (document.activeElement as HTMLElement | null)?.blur(); };
+  const pick = (key: string) => { setText(null); if (onPick) onPick(key); else void fetchBoards(key); (document.activeElement as HTMLElement | null)?.blur(); };
   return <div class="lb-find">
     <input type="text" class="new-game-find lb-pick" aria-label={t("leaderboard.pick")} placeholder={t("newGame.findCity")} maxLength={60}
       value={text ?? current}
@@ -114,7 +115,7 @@ function Boards() {
 
 export function Leaderboard() {
   const open = boardsOpen.value;
-  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title={t("leaderboard.title")} cls="acct-panel lb-panel">
+  return <Modal open={open} onClose={() => (boardsOpen.value = false)} title={t("leaderboard.title")} cls="acct-panel lb-panel" head={<CommunityButton />}>
     {open && <Boards />}
   </Modal>;
 }

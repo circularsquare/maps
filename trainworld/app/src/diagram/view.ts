@@ -91,6 +91,24 @@ export function saveDiagramPicture(): void {
   saver?.();
 }
 
+/** T-2887: while a share waits for its layout, how far the first one has got (0 to 1, else null) */
+export const diagramShareProgress = signal<number | null>(null);
+/** a share gives up on a layout that has not come after this long */
+const SHARE_WAIT_MS = 5 * 60_000;
+let sharer: (() => Promise<{ d: Drawing; names: NamePlan } | null>) | null = null;
+/** T-2887: the network as it is now, laid out and named, whether or not the diagram is up; null if no layout came */
+export const diagramForShare = () => sharer?.() ?? Promise.resolve(null);
+
+/** the diagram's colours for what is set now; also Community's cards */
+export function diagramTheme() {
+  const s = getComputedStyle(document.body);
+  const v = (k: string, d: string) => s.getPropertyValue(k).trim() || d;
+  // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
+  // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
+  const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
+  return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
+}
+
 /** the graph node nearest a place on the ground, of `among` if given */
 function nearest(g: DiagramGraph, lng: number, lat: number, among?: Iterable<number>): number {
   const [lx, ly] = toLocal(lng, lat), mx = (lx - g.mid[0]) / g.k, my = -(ly - g.mid[1]) / g.k;
@@ -356,13 +374,35 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   };
   let shownSeq = -1;
   let waterMs: unknown = null;
+  // T-2887: shares waiting for a layout of the network as it is now; with the diagram down the clock worker posts the
+  // graph just for them
+  let forShare: ((s: Shown | null) => void)[] = [], shareTimer = 0;
+  const giveShare = (s: Shown | null) => {
+    if (!forShare.length) return;
+    const waiters = forShare;
+    forShare = [];
+    clearTimeout(shareTimer);
+    diagramShareProgress.value = null;
+    if (!diagramShown.peek()) client.post({ kind: "diagram", on: false });
+    for (const f of waiters) f(s);
+  };
+  sharer = () => new Promise((done) => {
+    const reply = (s: Shown | null) => done(s && { d: s.d, names: s.names });
+    if (diagramShown.peek() && shown && !busy && !waiting) return reply(shown);
+    forShare.push(reply);
+    if (forShare.length > 1) return;
+    shareTimer = window.setTimeout(() => giveShare(null), SHARE_WAIT_MS);
+    if (!diagramShown.peek()) client.post({ kind: "diagram", on: true });
+  });
   client.onDiagram = (g) => {
-    if (!diagramShown.peek()) return;
+    if (!diagramShown.peek() && !forShare.length) return;
     if (!worker) {
       worker = new Worker(new URL("../workers/diagram.worker.ts", import.meta.url), { type: "module" });
+      worker.addEventListener("error", () => giveShare(null));
       worker.onmessage = (e: MessageEvent<FromDiagram>) => {
         if (e.data.kind === "progress") {
           if (!shown && diagramShown.peek()) diagramProgress.value = e.data.share;
+          if (forShare.length) diagramShareProgress.value = e.data.share;
           return;
         }
         if (e.data.kind === "water") {
@@ -395,6 +435,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         const next = waiting;
         waiting = null;
         if (next) send(next);
+        else giveShare(shown);
       };
     }
     send(g);
@@ -458,14 +499,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     map.jumpTo({ center: [st.lng, st.lat] });
     activeCity.value = zoneAt(st.lng, st.lat);
   };
-  const theme = () => {
-    const s = getComputedStyle(document.body);
-    const v = (k: string, d: string) => s.getPropertyValue(k).trim() || d;
-    // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
-    // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
-    const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-    return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
-  };
+  const theme = diagramTheme;
   /** the focus, rebuilt when the selection, the layout or the hot line changes */
   let focusKey: [Selection, number] | null = null, focus: DiagramFocus | undefined;
   const focusNow = (): DiagramFocus | undefined => {

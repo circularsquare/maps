@@ -34,7 +34,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldCommunity?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -93,14 +93,14 @@ export const boardsOpen = signal(false);
 
 export class ApiError extends Error { constructor(msg: string, readonly status: number, readonly code = "") { super(msg); } }
 
-export async function api<T>(method: string, path: string, body?: unknown, opts: { auth?: boolean; keep401?: boolean; headers?: Record<string, string> } = {}): Promise<T> {
+export async function api<T>(method: string, path: string, body?: unknown, opts: { auth?: boolean; keep401?: boolean; headers?: Record<string, string>; form?: FormData } = {}): Promise<T> {
   const headers: Record<string, string> = { ...opts.headers };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   const s = session.peek();
   if (opts.auth !== false && s) headers.Authorization = "Bearer " + s.token; // i18n-ignore
   let r: Response;
   try {
-    r = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    r = await fetch(BASE + path, { method, headers, body: opts.form ?? (body === undefined ? undefined : JSON.stringify(body)) });
   } catch {
     throw new ApiError(t("account.unreachable"), 0);
   }
@@ -255,7 +255,7 @@ export function cloudContext(): CloudContext | null {
 /** The device id, for "Open on another device". */
 export const deviceId = () => DEVICE;
 
-async function loadBoardSetting() {
+export async function loadBoardSetting() {
   if (!session.peek() || accountState.peek() !== "on") return;
   try { boardSetting.value = (await api<{ board: BoardSetting }>("GET", "trainworld/me")).board; }
   catch { /* shown as not joined; a 401 has signed out */ }
@@ -291,13 +291,48 @@ export async function fetchBoards(key = boards.peek().key) {
 
 /** Each browser slot's game id, the account it last sent to, what it sent, and whether its
  * sandbox notice went. */
-interface GameEntry { id: string; acct?: string; sent?: string; at?: number; sandbox?: boolean }
+interface GameEntry { id: string; acct?: string; sent?: string; at?: number; sandbox?: boolean; shared?: boolean }
 const games = (): Record<string, GameEntry> => lsGet<Record<string, GameEntry>>(GAMES_KEY) ?? {};
 
 /** The playing game's slot, when it is a stored one this tab writes (not a `?new=1` page). */
 function playingSlot(): string | null {
   const s = saveSlotsState.peek();
   return s.writable && s.active && s.slots.some((x) => x.key === s.active) ? s.active : null;
+}
+
+/** T-2887: the stored game being played, read as a signal; null for a page with none to share (`?new=1`). */
+export function shareableSlot(): string | null {
+  void saveSlotsState.value;
+  return playingSlot();
+}
+
+/** The playing game's id on the account's figures, if it has one yet. */
+export function playingGameId(): string | null {
+  const slot = playingSlot();
+  if (!slot) return null;
+  return saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id ?? games()[slot]?.id ?? null;
+}
+
+/** T-2887: the id a share of the playing game goes up under, its figures sent first so the server copies the current
+ * ones; null with no stored game or no session. A sandbox game's notice goes up even with no figures before it, or the
+ * share would not be tagged. Remembered, so a share of a game later deleted here is taken down with it. */
+export async function gameForShare(): Promise<string | null> {
+  const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
+  if (!s || !slot) return null;
+  await sendScores(true);
+  const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
+  let e = games()[slot] ?? { id: cid ?? newGameId() };
+  if (cid && e.id !== cid) e = { id: cid };
+  if (m?.mode === "sandbox" && !e.sandbox) {
+    try {
+      await api("PUT", `trainworld/score/${e.id}`, { mode: "sandbox" });
+      e.sandbox = true;
+    } catch { /* shared untagged */ }
+  }
+  e.acct = s.account.id;
+  e.shared = true;
+  lsSet(GAMES_KEY, { ...games(), [slot]: e });
+  return e.id;
 }
 
 /** The game's figures now: points in the past 24 game hours in all, and its best cities. */
@@ -370,9 +405,9 @@ async function dropDeleted() {
   const all = games(), keys = new Set(st.slots.map((x) => x.key));
   for (const [slot, e] of Object.entries(all)) {
     if (keys.has(slot) || slot === st.active) continue;
-    if (e.sent && !e.sandbox) {
+    if ((e.sent && !e.sandbox) || e.shared) {
       if (!s || e.acct !== s.account.id || accountState.peek() !== "on") continue; // later, signed in
-      try { await api("DELETE", `trainworld/score/${e.id}`); } catch { continue; }
+      try { await api("DELETE", `trainworld/score/${e.id}`); } catch (err) { if ((err as ApiError).status !== 404) continue; }
     }
     const now = games();
     delete now[slot];

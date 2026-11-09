@@ -58,6 +58,13 @@ a { color: var(--mine); }
 .bad { color: var(--bad); }
 #reply { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
+#tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+#ping { display: block; width: 100%; text-align: left; background: #2a1414; border: 1px solid var(--bad); color: var(--fg); padding: 6px 10px; margin-bottom: 10px; }
+.count { background: var(--bad); color: #000; font-size: 12px; font-weight: 700; padding: 0 5px; margin-left: 5px; }
+.share { border-top: 1px solid var(--line); padding: 12px 0; }
+.share .head .name { overflow-wrap: anywhere; }
+.share canvas { display: block; width: 100%; height: 460px; background: #fbf5ef; border: 1px solid var(--line); touch-action: none; cursor: grab; margin-top: 8px; }
+.share .reasons { font-size: 13px; color: var(--dim); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -70,6 +77,16 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
     <span class="sub" id="keynote"></span>
   </form>
   <div id="app" hidden>
+    <button type="button" id="ping" hidden></button>
+    <div id="tabs" hidden>
+      <button type="button" id="tabThreads" class="on">Feedback</button>
+      <button type="button" id="tabCommunity">Community<span class="count" id="tabCount" hidden></span></button>
+    </div>
+    <div id="community" hidden>
+      <div class="sub" id="commCount"></div>
+      <div id="shares"></div>
+    </div>
+    <div id="threadsView">
     <div id="filters">
       <label><input type="checkbox" id="fUnread"> Unread only</label>
       <label>Status
@@ -81,6 +98,7 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
     <div id="panes" style="margin-top:8px">
       <div id="list"></div>
       <div id="thread"><div class="empty">Pick a thread.</div></div>
+    </div>
     </div>
     <footer>Data from <span id="src"></span>. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
   </div>
@@ -313,14 +331,163 @@ async function doDelete(id) {
   } catch (e) { fail(e); }
 }
 
+// ---- Community (T-2887): shares players reported, the ping, Keep, Remove, Ban.
+const INBOX_C = "trainworld/inbox/community/";
+const DIR8 = Array.from({ length: 8 }, (_, k) => [Math.round(Math.cos(k * Math.PI / 4) * 1e9) / 1e9, Math.round(Math.sin(k * Math.PI / 4) * 1e9) / 1e9]);
+let communityAvailable = false, showCommunity = false, askBan = "";
+
+async function loadPending() {
+  let p;
+  try { p = await (await api("GET", INBOX_C + "pending")).json(); }
+  catch { p = null; } // Community is off on this server, or it could not be reached
+  communityAvailable = !!p;
+  $("tabs").hidden = !p;
+  if (!p) { $("ping").hidden = true; document.title = "trainworld feedback inbox"; if (showCommunity) setTab(false); return; }
+  const n = p.reported + p.hidden;
+  $("tabCount").hidden = !n;
+  $("tabCount").textContent = n;
+  $("ping").hidden = !n;
+  $("ping").textContent = `Community: ${p.hidden} hidden by reports, ${p.reported} reported and still showing. Open`;
+  document.title = (n ? `(${n}) ` : "") + "trainworld feedback inbox";
+}
+
+function setTab(community) {
+  showCommunity = community;
+  $("tabCommunity").classList.toggle("on", community);
+  $("tabThreads").classList.toggle("on", !community);
+  $("community").hidden = !community;
+  $("threadsView").hidden = community;
+  if (community) loadShares();
+}
+$("tabThreads").addEventListener("click", () => setTab(false));
+$("tabCommunity").addEventListener("click", () => setTab(true));
+$("ping").addEventListener("click", () => setTab(true));
+
+// A plain painter for the drawing format (shonei-server's docs/trainworld-api.md); the game's own is diagram/draw.ts.
+// Names go through fillText only: they are hostile input.
+function paintShare(canvas, d, v) {
+  const dpr = devicePixelRatio || 1, w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  const ctx = canvas.getContext("2d"), scale = v.scale * dpr;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#fbf5ef";
+  ctx.fillRect(0, 0, w, h);
+  ctx.setTransform(scale, 0, 0, -scale, w / 2 - v.cx * scale, h / 2 + v.cy * scale);
+  ctx.lineCap = ctx.lineJoin = "round";
+  d.paths ??= d.lines.map((l) => {
+    const p = new Path2D(), c = l.d;
+    for (let i = 0; i < c.length;) {
+      if (c[i] === 2) { p.quadraticCurveTo(c[i + 1], c[i + 2], c[i + 3], c[i + 4]); i += 5; }
+      else { c[i] ? p.lineTo(c[i + 1], c[i + 2]) : p.moveTo(c[i + 1], c[i + 2]); i += 3; }
+    }
+    return p;
+  });
+  ctx.strokeStyle = "#fbf5ef"; ctx.lineWidth = d.pitch;
+  d.paths.forEach((p) => ctx.stroke(p));
+  ctx.lineWidth = Math.max(d.stroke, 1 / scale);
+  d.paths.forEach((p, i) => { ctx.strokeStyle = d.lines[i].c; ctx.stroke(p); });
+  if (d.pitch * scale >= 0.625) {
+    const bar = (x0, y0, x1, y1, width, colour) => {
+      ctx.strokeStyle = ctx.fillStyle = colour; ctx.lineWidth = width; ctx.beginPath();
+      if (x0 === x1 && y0 === y1) { ctx.arc(x0, y0, width / 2, 0, 7); ctx.fill(); return; }
+      ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    };
+    const radius = (k) => (d.small[k] ? 0.5 : 0.95) * d.stroke, outline = (k) => (d.small[k] ? 0.24 : 0.32) * d.stroke;
+    const each = (a, n, f) => { for (let i = 0; i + n <= a.length; i += n) f(i); };
+    each(d.passages, 5, (i) => bar(d.passages[i], d.passages[i + 1], d.passages[i + 2], d.passages[i + 3], radius(d.passages[i + 4]) * 0.9 + 2 * outline(d.passages[i + 4]), "#2b2b2b"));
+    each(d.pills, 6, (i) => bar(d.pills[i], d.pills[i + 1], d.pills[i + 2], d.pills[i + 3], 2 * (radius(d.pills[i + 5]) + outline(d.pills[i + 5]) + d.pills[i + 4]), "#2b2b2b"));
+    each(d.passages, 5, (i) => bar(d.passages[i], d.passages[i + 1], d.passages[i + 2], d.passages[i + 3], radius(d.passages[i + 4]) * 0.9, "#fff"));
+    each(d.pills, 6, (i) => bar(d.pills[i], d.pills[i + 1], d.pills[i + 2], d.pills[i + 3], 2 * (radius(d.pills[i + 5]) + d.pills[i + 4]), "#fff"));
+  }
+  const pitchPx = d.pitch * v.scale;
+  let li = -1;
+  while (li + 1 < d.levels.length && d.levels[li + 1] / 16 <= pitchPx) li++;
+  if (li < 0) return;
+  const L = d.at[li], s = scale / dpr, f = (d.fontPx / 16) * dpr;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = `${f}px system-ui, sans-serif`; ctx.lineJoin = "round"; ctx.lineWidth = 3 * dpr;
+  for (let i = 0; i < L.node.length; i++) {
+    const [cx, cy] = DIR8[L.dir[i]], o = L.lift[i] + 3 / s, sx = w / 2 + (L.x[i] + cx * o - v.cx) * scale, sy = h / 2 - (L.y[i] + cy * o - v.cy) * scale;
+    if (sx < -300 || sx > w + 300 || sy < -40 || sy > h + 40) continue;
+    ctx.textAlign = cx > 0.3 ? "left" : cx < -0.3 ? "right" : "center";
+    ctx.textBaseline = cy > 0.3 ? "bottom" : cy < -0.3 ? "top" : "middle";
+    ctx.strokeStyle = "#fbf5ef"; ctx.strokeText(d.names[L.node[i]], sx, sy);
+    ctx.fillStyle = "#2b2b2b"; ctx.fillText(d.names[L.node[i]], sx, sy);
+  }
+}
+
+function fit(canvas, d) {
+  const [x0, y0, x1, y1] = d.box, m = 20;
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, scale: Math.min((canvas.clientWidth - 2 * m) / Math.max(1, x1 - x0), (canvas.clientHeight - 2 * m) / Math.max(1, y1 - y0)) };
+}
+
+function viewer(canvas, d) {
+  let v = fit(canvas, d), frame = 0, drag = null;
+  const draw = () => { frame ||= requestAnimationFrame(() => { frame = 0; paintShare(canvas, d, v); }); };
+  canvas.addEventListener("pointerdown", (e) => { drag = [e.clientX, e.clientY]; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    v.cx -= (e.clientX - drag[0]) / v.scale; v.cy += (e.clientY - drag[1]) / v.scale; drag = [e.clientX, e.clientY]; draw();
+  });
+  canvas.addEventListener("pointerup", () => { drag = null; });
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect(), px = e.clientX - r.left - r.width / 2, py = e.clientY - r.top - r.height / 2, f = Math.exp(-e.deltaY * 0.0015), next = Math.min(80 / d.pitch, Math.max(0.05 / d.pitch, v.scale * f));
+    v.cx += px / v.scale - px / next; v.cy -= py / v.scale - py / next; v.scale = next; draw();
+  }, { passive: false });
+  draw();
+}
+
+async function shareAct(id, what) {
+  try { await api("POST", `${INBOX_C}${id}/${what}`); askBan = ""; await Promise.all([loadShares(), loadPending()]); }
+  catch (e) { fail(e); }
+}
+
+function shareRow(s) {
+  const canvas = el("canvas", { "aria-label": "The shared network" });
+  const counts = {};
+  for (const r of s.reports) counts[r.reason] = (counts[r.reason] || 0) + 1;
+  const reasons = Object.entries(counts).map(([r, n]) => `${n} ${r}`).join(", ") || "no reports";
+  const last = s.reports.length ? "last " + ago(Math.max(...s.reports.map((r) => r.at))) + " ago" : "";
+  const acts = askBan === s.id
+    ? el("div", { class: "actions" }, el("span", { class: "sub", text: "Hide everything of theirs and stop them sharing?" }),
+        el("button", { type: "button", text: "Ban account", onclick: () => shareAct(s.id, "ban") }),
+        el("button", { type: "button", text: "Not now", onclick: () => { askBan = ""; loadShares(); } }))
+    : el("div", { class: "actions" },
+        el("button", { type: "button", text: "Keep", onclick: () => shareAct(s.id, "keep") }),
+        el("button", { type: "button", text: "Remove", onclick: () => shareAct(s.id, "remove") }),
+        el("button", { type: "button", text: "Ban", onclick: () => { askBan = s.id; loadShares(); } }));
+  const box = el("div", { class: "share" },
+    el("div", { class: "head" },
+      s.hidden ? el("span", { class: "tag bad", text: "hidden" }) : el("span", { class: "tag", text: "showing" }),
+      s.banned ? el("span", { class: "tag bad", text: "banned" }) : null,
+      el("span", { class: "name", text: s.name || "(no name)" }),
+      el("span", { class: "sub", text: [s.city, Math.round(s.points).toLocaleString("en-US") + " points", `${s.lines} lines`, `${s.stations} stations`, `${s.likes} like${s.likes === 1 ? "" : "s"}`, s.sandbox ? "sandbox" : ""].filter(Boolean).join(" · ") }),
+      acts),
+    el("div", { class: "reasons", text: `${reasons} ${last}` }),
+    el("div", { class: "sub", text: `account ${s.account} · share ${s.id} rev ${s.rev}` }),
+    canvas);
+  api("GET", `${INBOX_C}${s.id}/${s.rev}`).then((r) => r.json()).then((d) => viewer(canvas, d)).catch(fail);
+  return box;
+}
+
+async function loadShares() {
+  try {
+    const list = (await (await api("GET", INBOX_C + "reported")).json()).shares || [];
+    $("commCount").textContent = list.length ? `${list.length} to look at` : "Nothing reported.";
+    $("shares").replaceChildren(...list.map(shareRow));
+  } catch (e) { fail(e); }
+}
+
 async function start() {
   if (!key) { showUnlock(""); return; }
   $("src").textContent = BASE.replace(/^https?:\/\//, "").replace(/\/$/, "");
   await loadList();
+  await loadPending();
   if (selected && rows.some((r) => r.id === selected)) open(selected);
 }
 start();
-setInterval(() => { if (key && !$("app").hidden) loadList(); }, 60000);
+setInterval(() => { if (key && !$("app").hidden) { loadList(); loadPending(); } }, 60000);
 </script>
 </body>
 </html>

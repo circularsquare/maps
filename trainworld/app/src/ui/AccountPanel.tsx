@@ -12,6 +12,7 @@ import { shade } from "../game/ui";
 import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
 import { t, tRich, tNumber } from "../i18n";
 import { Leaderboard } from "./Leaderboard";
+import { Community, ShareDialog } from "./Community";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
 import "./account.css";
@@ -222,5 +223,5 @@ export function startAccountUi() {
   const root = document.createElement("div");
   root.id = "account-root";
   document.body.appendChild(root);
-  render(h(() => <><AccountPanel /><Leaderboard /></>, null), root);
+  render(h(() => <><AccountPanel /><Leaderboard /><Community /><ShareDialog /></>, null), root);
 }
