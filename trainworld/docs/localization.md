@@ -2,7 +2,7 @@
 
 How the game's text is kept by language. The plan and its reasons are in `research/localization.md`;
 this file is the rules. The languages are English (the source), Japanese (`ja`), Simplified Chinese
-(`zh-Hans`), Traditional Chinese as written in Taiwan (`zh-TW`), then Spanish (`es`), Portuguese (`pt`, Brazilian), Turkish (`tr`) and German (`de`).
+(`zh-Hans`), Traditional Chinese as written in Taiwan (`zh-TW`), then Spanish (`es`), Portuguese (`pt`, Brazilian), Turkish (`tr`), Russian (`ru`) and German (`de`).
 
 ## Files
 
@@ -152,7 +152,7 @@ this device.
 
 ## Fonts
 
-`--font` (`ui/style.css`) follows `<html lang>`: Nunito first everywhere, so Latin letters and digits, and so
+`--font` (`ui/style.css`) follows `<html lang>`: Nunito first everywhere (its Latin, Latin extended and Cyrillic subsets, `game/fonts.ts`), so Latin letters and digits, and so
 tabular figures, are the same in every language; then the language's own face. Japanese: Zen Maru Gothic
 (`ui/zenmaru.css`). Traditional Chinese: Huninn (jf open-huninn, rounded like Zen Maru, SIL OFL; Google Fonts'
 111 woff2 slices self-hosted in `public/fonts/Huninn-400-*.woff2`, 2.5 MB in all, `i18n/huninn.css`; a page
