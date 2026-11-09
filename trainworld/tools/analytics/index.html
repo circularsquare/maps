@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <title>trainworld player numbers</title>
 <style>
 :root {
@@ -42,6 +43,17 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
 td { padding: 3px 0; border-bottom: 1px solid var(--line); }
 td:last-child { text-align: right; color: var(--dim); }
 .bar:hover rect:last-of-type { opacity: .8; }
+
+.toggles { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); }
+.seg button { background: #181818; color: var(--dim); border: 0; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: #2a2a2a; color: var(--fg); }
+#map { height: 440px; border: 1px solid var(--line); background: #0a0a0a; }
+#maptip { position: fixed; z-index: 10; pointer-events: none; background: #181818; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; line-height: 1.5; display: none; white-space: nowrap; }
+.more { background: none; border: 0; color: var(--dim); font: inherit; font-size: 13px; cursor: pointer; padding: 6px 0 0; text-decoration: underline; }
+.maplibregl-ctrl-attrib { background: rgba(10,10,10,.7) !important; color: var(--dim) !important; }
+.maplibregl-ctrl-attrib a { color: var(--dim) !important; }
 footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 </style>
 </head>
@@ -77,21 +89,29 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <div id="ptAccounts"></div>
   <div class="sub" id="ptNoteA"></div>
 
-  <h2>Start countries</h2>
-  <div class="cols">
-    <div><h3>Today</h3><table id="citiesToday"></table></div>
-    <div><h3>Since the data starts</h3><table id="citiesAll"></table></div>
+  <h2>Where games start</h2>
+  <div class="toggles">
+    <div class="seg" id="segWeight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
+    <div class="seg" id="segGroup"><button data-v="city" class="on">Start cities</button><button data-v="country">Countries</button></div>
   </div>
-  <div class="sub" style="margin-top:8px">Plays by the country of the start city. Each day's top 10 cities only, so the second list is a lower bound.</div>
+  <div id="map"></div>
+  <div class="sub" id="mapnote" style="margin-top:6px"></div>
+  <div id="maptip"></div>
+  <div class="cols" style="margin-top:20px">
+    <div><h3>Today</h3><table id="citiesToday"></table><button class="more" id="moreToday" hidden></button></div>
+    <div><h3>Since the data starts</h3><table id="citiesAll"></table><button class="more" id="moreAll" hidden></button></div>
+  </div>
+  <div class="sub" id="citynote" style="margin-top:8px"></div>
 
   <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
   </div>
 </main>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 "use strict";
 // ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server.
 const BASE = new URLSearchParams(location.search).get("server") || "https://market.anita.garden/";
-const URL_STATS = BASE.replace(/\/?$/, "/") + "trainworld/stats?days=400";
+const URL_STATS = BASE.replace(/\/?$/, "/") + "trainworld/stats?days=400&starts=all";
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString("en-US");
 $("src").textContent = BASE.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -114,7 +134,7 @@ $("unlock").addEventListener("submit", (ev) => {
 });
 $("forget").addEventListener("click", (ev) => { ev.preventDefault(); storeKey(""); key = ""; showUnlock("Key forgotten on this browser."); });
 
-let days = [];
+let days = [], lastData = null;
 
 function renderNow(data) {
   const el = $("now");
@@ -136,30 +156,129 @@ function renderToday(data) {
   $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`).join("");
 }
 
-let COUNTRY = {};
-const countryName = (code) => {
-  try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code); } catch (e) { return code; }
-};
-function byCountry(starts) {
+let CITY = {};
+const regionNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { return null; } })();
+const countryName = (code) => { try { return regionNames.of(code); } catch (e) { return code; } };
+const view = { weight: "plays", group: "city" };
+const expanded = { Today: false, All: false };
+const SHORT = 10, LONG = 40;
+
+function place(start) {
+  if (start === "other") return { name: "other", cc: "" };
+  const c = CITY[start];
+  if (!c) return { name: "unknown", cc: "" };
+  return { name: c[2], cc: c[3] };
+}
+// rows of [label, value] by country or by city, biggest first
+function tally(starts, group, weight) {
   const sum = {};
   for (const s of starts) {
-    const c = s.start === "other" ? "other" : COUNTRY[s.start] ? countryName(COUNTRY[s.start]) : "unknown";
-    sum[c] = (sum[c] || 0) + s.plays;
+    const p = place(s.start);
+    const label = group === "country" ? (p.cc ? countryName(p.cc) : p.name) : (p.cc ? `${p.name}, ${p.cc}` : p.name);
+    sum[label] = (sum[label] || 0) + s[weight];
   }
   return Object.entries(sum).sort((a, b) => b[1] - a[1]);
 }
 
-function cityTable(id, rows) {
-  $(id).innerHTML = rows.length
-    ? rows.map(([c, n]) => `<tr><td>${c}</td><td>${fmt(n)}</td></tr>`).join("")
+function cityTable(id, rows, which) {
+  const open = expanded[which], more = $("more" + which);
+  const shown = rows.slice(0, open ? LONG : SHORT);
+  $(id).innerHTML = shown.length
+    ? shown.map(([c, n]) => `<tr><td>${c}</td><td>${fmt(n)}</td></tr>`).join("")
     : `<tr><td>none yet</td><td></td></tr>`;
+  more.hidden = rows.length <= SHORT;
+  more.textContent = open ? "Show fewer" : `Show ${Math.min(rows.length, LONG)} of ${fmt(rows.length)}`;
 }
 
 function renderCities(data) {
-  const key = new Date().toISOString().slice(0, 10);
-  const d = data.days.find((x) => x.day === key);
-  cityTable("citiesToday", d ? byCountry(d.starts).slice(0, 8) : []);
-  cityTable("citiesAll", byCountry(data.days.flatMap((x) => x.starts)).slice(0, 8));
+  const day = new Date().toISOString().slice(0, 10);
+  const d = data.days.find((x) => x.day === day);
+  const { weight, group } = view;
+  cityTable("citiesToday", d ? tally(d.starts, group, weight) : [], "Today");
+  cityTable("citiesAll", tally(data.days.flatMap((x) => x.starts), group, weight), "All");
+  const full = data.days.some((x) => x.starts.length > 10);
+  $("citynote").textContent = (weight === "plays" ? "Plays" : "Minutes played") + ` by ${group === "city" ? "start city" : "the country of the start city"}.` +
+    (full ? "" : " This server lists each day's top 10 cities only, so these are lower bounds.");
+  renderMap(data);
+}
+for (const w of ["Today", "All"]) $("more" + w).addEventListener("click", () => { expanded[w] = !expanded[w]; renderCities(lastData); });
+for (const [id, k] of [["segWeight", "weight"], ["segGroup", "group"]]) {
+  $(id).addEventListener("click", (ev) => {
+    const b = ev.target.closest("button"); if (!b || !lastData) return;
+    view[k] = b.dataset.v;
+    for (const x of $(id).children) x.classList.toggle("on", x === b);
+    renderCities(lastData);
+  });
+}
+
+// ---- map: one bubble per start city, or per country, area by the chosen weight
+let map = null, mapReady = false;
+const SKIP = new Set(["transportation", "transportation_name", "building", "poi", "aeroway", "housenumber", "aerodrome_label", "mountain_peak", "waterway", "water_name", "park", "landcover", "landuse"]);
+function darken(m) {
+  for (const l of m.getStyle().layers) {
+    const sl = l["source-layer"];
+    if (l.type === "background") m.setPaintProperty(l.id, "background-color", "#0a0a0a");
+    else if (sl && SKIP.has(sl)) m.setLayoutProperty(l.id, "visibility", "none");
+    else if (l.type === "fill") m.setPaintProperty(l.id, "fill-color", sl === "water" ? "#0a0a0a" : "#1c1c1c");
+    else if (l.type === "line") m.setPaintProperty(l.id, "line-color", "#3a3a3a");
+    else if (l.type === "symbol") {
+      if (/country|continent|state|ocean/.test(l.id)) { m.setPaintProperty(l.id, "text-color", "#5a5a5a"); m.setPaintProperty(l.id, "text-halo-color", "#0a0a0a"); }
+      else m.setLayoutProperty(l.id, "visibility", "none");
+    }
+  }
+}
+function bubbles(data) {
+  const { weight, group } = view;
+  const by = {};
+  let missing = 0;
+  for (const s of data.days.flatMap((x) => x.starts)) {
+    const c = CITY[s.start];
+    if (!c) { missing += s[weight]; continue; }
+    const k = group === "city" ? s.start : c[3];
+    const e = by[k] || (by[k] = { w: 0, x: 0, y: 0, name: group === "city" ? `${c[2]}, ${c[3]}` : countryName(c[3]) });
+    e.w += s[weight]; e.x += c[0] * s[weight]; e.y += c[1] * s[weight];
+  }
+  const feats = Object.values(by).filter((e) => e.w > 0).map((e) => ({
+    type: "Feature", properties: { w: e.w, name: e.name },
+    geometry: { type: "Point", coordinates: [e.x / e.w, e.y / e.w] },
+  })).sort((a, b) => b.properties.w - a.properties.w);
+  return { feats, missing };
+}
+function renderMap(data) {
+  if (!window.maplibregl) { $("mapnote").textContent = "The map library did not load."; return; }
+  if (!map) {
+    map = new maplibregl.Map({ container: "map", style: "https://tiles.openfreemap.org/styles/positron", center: [30, 30], zoom: 0.9, attributionControl: { compact: true }, dragRotate: false });
+    map.touchZoomRotate.disableRotation();
+    map.on("load", () => {
+      darken(map);
+      map.addSource("pts", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "pts", type: "circle", source: "pts", paint: {
+        "circle-radius": 4, "circle-color": "#8fb8e8", "circle-opacity": 0.45,
+        "circle-stroke-color": "#8fb8e8", "circle-stroke-width": 1, "circle-stroke-opacity": 0.9 } });
+      mapReady = true;
+      const tip = $("maptip");
+      map.on("mousemove", "pts", (ev) => {
+        const f = ev.features[0];
+        tip.textContent = `${f.properties.name}: ${fmt(f.properties.w)} ${view.weight === "plays" ? "plays" : "minutes"}`;
+        tip.style.display = "block";
+        tip.style.left = Math.min(ev.originalEvent.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px";
+        tip.style.top = (ev.originalEvent.clientY + 12) + "px";
+      });
+      map.on("mouseleave", "pts", () => { tip.style.display = "none"; });
+      renderMap(lastData);
+    });
+    return;
+  }
+  if (!mapReady) return;
+  const { feats, missing } = bubbles(data);
+  const max = feats.length ? feats[0].properties.w : 1;
+  const maxR = view.group === "city" ? 26 : 40;
+  map.setPaintProperty("pts", "circle-radius", ["max", 3, ["*", maxR / Math.sqrt(max), ["sqrt", ["get", "w"]]]]);
+  map.getSource("pts").setData({ type: "FeatureCollection", features: feats });
+  const unit = view.weight === "plays" ? "plays" : "minutes";
+  $("mapnote").textContent = `${fmt(feats.length)} ${view.group === "city" ? "cities" : "countries"}, bubble area is ${unit}, all days kept.` +
+    (view.group === "country" ? " A country's bubble sits at the average of its start cities." : "") +
+    (missing ? ` ${fmt(missing)} ${unit} have no city to place (other or unknown).` : "");
 }
 
 // ---- chart: three lines over UTC days, hover guide with a tip
@@ -283,7 +402,7 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
-    renderNow(data); renderToday(data); renderCities(data); renderPlaytime(data);
+    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderPlaytime(data);
     if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
     $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
   } catch (e) {
@@ -295,7 +414,7 @@ function start() {
   load();
   clearInterval(timer); timer = setInterval(load, 30000);
 }
-fetch("countries.json").then((r) => r.json()).catch(() => ({})).then((c) => { COUNTRY = c; if (key) start(); else showUnlock(""); });
+fetch("cities.json").then((r) => r.json()).catch(() => ({})).then((c) => { CITY = c; if (key) start(); else showUnlock(""); });
 </script>
 </body>
 </html>
