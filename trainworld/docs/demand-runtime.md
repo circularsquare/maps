@@ -385,7 +385,10 @@ under its home) is assigned as the leg the other way turned round onto the same 
 in one pass a period at the crowding the touched cities' last round ended on, then held to the
 trains' room with them; the old market part gives the same pairs' old loads in one pass at its last
 crowding (`window_loads`), and the result's loads are the frozen market's less those plus the
-window's, each purpose to its own. A shorter edit (a city line) leaves the whole market frozen.
+window's, each purpose to its own. A shorter edit (a city line) leaves the whole market frozen. The
+window's pairs are taken from the market part's own tables when the new network serves the same
+zones and joins them by track the same way (`set_network_ll_beside`, T-2878), else dealt from
+nothing.
 **An edit's solve runs to its end** (T-1734, notes/T-1734.md, `?perfOff=firm` off): from when the
 page sends a solve without the barrier until its final is shown, a newer network (an edit, a zone
 opened or at another level) is held on the page, not sent, and goes the moment that final shows,

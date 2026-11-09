@@ -871,6 +871,7 @@ struct Corridors {
 
 /// A longer trips' zone pair, both ways apart: the modes but rail come from its place pair's rule
 /// and `car` (`PairRule::alt`, T-378, T-1431).
+#[derive(Clone)]
 struct Pair {
     a: u32,
     b: u32,
@@ -883,6 +884,7 @@ struct Pair {
 }
 /// T-276: a commute between two zones some station serves: its index in `commutes`, and the
 /// car's perceived minutes from home to work (the local layer's commute rule).
+#[derive(Clone)]
 struct CPair {
     c: u32,
     car: f32,
@@ -908,6 +910,7 @@ pub const E_CROSS: [usize; 5] = [0, 1, 2, 3, 5];
 /// T-1175: an everyday pair some station serves: its index in `everyday`, the car's perceived
 /// minutes (the commutes' car to the activity zone), the walk's weight against it, as `exp(uw)` of
 /// the local layer's logit, from the pair's share walking with no rail.
+#[derive(Clone)]
 struct EPairOn {
     e: u32,
     car: f32,

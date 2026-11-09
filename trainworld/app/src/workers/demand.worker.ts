@@ -1784,7 +1784,7 @@ async function run() {
       groups.forEach((cs, g) => { for (const c of cs) groupOf.set(c, g); });
       stageGroup = 0;
       let periodsKept = 0, periodsSolved = 0;
-      const setUpPops = (c: JobCluster, pops: Population[]) => {
+      const setUpPops = (c: JobCluster, pops: Population[], beside?: { sub: IntercityApi; part: IntercityApi }) => {
         for (const p of pops) {
           const m = viewOf(c, p).net;
           held.delete(p);
@@ -1809,7 +1809,7 @@ async function run() {
             const cxy = m.catchXY ?? new Float32Array(0), cll = new Float64Array(cxy.length);
             for (let k = 0; k < cll.length; k += 2) [cll[k], cll[k + 1]] = worldToLonLat(cxy[k], cxy[k + 1]);
             p.set_bus_ll(m.catchN ?? new Uint32Array(0), cll);
-            setupMs += p.set_network_ll(ll, m.lineN, m.stops, m.times, m.tph, m.cars);
+            setupMs += beside && p === beside.sub ? p.set_network_ll_beside(beside.part, ll, m.lineN, m.stops, m.times, m.tph, m.cars) : p.set_network_ll(ll, m.lineN, m.stops, m.times, m.tph, m.cars);
           } else {
             if (p instanceof DemandApi) p.set_chunked(!job.exactMarket);
             const city = c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
@@ -2208,7 +2208,7 @@ async function run() {
       // (`stage`: the T-2729 work stage its periods count in)
       const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1): Promise<boolean> => {
         const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
-        setUpPops(c, win ? [...order, win.sub] : order);
+        setUpPops(c, win ? [...order, win.sub] : order, win && c.part ? { sub: win.sub, part: c.part } : undefined);
         for (const p of win ? [...fresh, win.sub] : fresh) {
           const m = p.solved_mask();
           for (let q = 0; q < PERIODS.length; q++) if (m & (1 << q)) p.forget_period(q);

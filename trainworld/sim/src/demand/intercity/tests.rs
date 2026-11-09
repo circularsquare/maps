@@ -1428,6 +1428,46 @@ fn a_window_keeps_its_pairs_trips() {
     // and on the lines no more than the pass carries
     let (a, b): (f64, f64) = (s.avg.seg.iter().map(|&v| v as f64).sum(), whole.loads.seg.iter().map(|&v| v as f64).sum());
     assert!(a > 0. && a <= b * 1.001, "{a} {b}");
+    // T-2878: the window started from the market part's tables is the one dealt from nothing, also
+    // where the part's zones served differ (a stop dropped) and the tables can't be shared
+    let window_set = |api: &IntercityApi, ll: &[f64], mask: &[u8], stops: &[u32], line_n: &[u32], part: Option<&IntercityApi>| {
+        let mut w = api.beside();
+        w.set_window(mask, &[], 0., 1., 0);
+        let times: Vec<f32> = line_n.iter().flat_map(|&n| {
+            let n = n as usize;
+            (0..3).flat_map(move |lev| (0..n).map(move |k| if lev == 0 && k + 1 < n { 600f32 } else { 0. })).chain((0..3 * n).map(move |k| if k % n > 0 { 600f32 } else { 0. }))
+        }).collect();
+        match part {
+            Some(p) => w.set_network_ll_beside(p, ll, line_n, stops, &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap(),
+            None => w.set_network_ll(ll, line_n, stops, &times, &[12., 12., 12., 8., 8., 8.], &[10., 10.]).unwrap(),
+        };
+        w
+    };
+    let same = |a: &IntercityApi, b: &IntercityApi| {
+        assert_eq!(a.pairs.len(), b.pairs.len());
+        assert!(a.pairs.iter().zip(&b.pairs).all(|(x, y)| x.a == y.a && x.b == y.b && x.trips.to_bits() == y.trips.to_bits() && x.corridor == y.corridor && x.car == y.car && x.band == y.band));
+        assert_eq!(a.cpairs.iter().map(|c| c.c).collect::<Vec<_>>(), b.cpairs.iter().map(|c| c.c).collect::<Vec<_>>());
+        assert_eq!(a.epairs.iter().map(|c| c.e).collect::<Vec<_>>(), b.epairs.iter().map(|c| c.e).collect::<Vec<_>>());
+        assert_eq!(a.served, b.served);
+    };
+    let (full, short): (&[u32], &[u32]) = (&[0, 1, 2, 3, 4, 0, 5, 6, 7], &[0, 1, 2, 3, 4, 0, 5, 6]);
+    let (rebuilt, shared) = (window_set(&api, &ll, &mask, full, &[4, 5], None), window_set(&api, &ll, &mask, full, &[4, 5], Some(&api)));
+    assert!(shared.served == api.served && !shared.pairs.is_empty());
+    same(&rebuilt, &shared);
+    let (ll7, mask6) = (&ll[..14], [0, 0, 0, 0, 0, 0, 1u8]);
+    let (rebuilt, shared) = (window_set(&api, ll7, &mask6, short, &[4, 4], None), window_set(&api, ll7, &mask6, short, &[4, 4], Some(&api)));
+    assert_ne!(shared.served, api.served, "the dropped stop leaves a zone unserved");
+    same(&rebuilt, &shared);
+}
+/// T-2878: components join the same zones when only their numbers differ (or a component serves
+/// one zone alone), not when another zone shares one.
+#[test]
+fn same_joins_reads_the_zones_joined() {
+    use super::setup::same_joins;
+    assert!(same_joins(&[vec![1], vec![1, 7], vec![7]], &[vec![3], vec![3, 9], vec![9]]));
+    assert!(same_joins(&[vec![1], vec![1, 5]], &[vec![2], vec![2]]));
+    assert!(!same_joins(&[vec![1], vec![1], vec![2]], &[vec![1], vec![2], vec![2]]));
+    assert!(!same_joins(&[vec![1]], &[vec![1], vec![1]]));
 }
 /// T-1286: fare factors of 1, or for a country outside the market, leave the pass alone to the bit;
 /// a factor of 2 where the trips start costs rail riders, the same streamed or not.
@@ -2304,6 +2344,186 @@ fn working_set() -> (usize, usize) {
     #[cfg(not(windows))]
     (0, 0)
 }
+/// Every figure a period holds, for a comparison to the bit (`figures_differ`).
+fn pass_figures(a: &IntercityApi, q: usize) -> Vec<(String, Vec<f64>)> {
+    let per = a.per(q).unwrap();
+    let f = |v: &[f32]| v.iter().map(|&x| x as f64).collect::<Vec<f64>>();
+    let mut out: Vec<(String, Vec<f64>)> = vec![];
+    let mut loads = |name: &str, l: &Loads| {
+        for (k, v) in [("seg", &l.seg), ("board", &l.board), ("alight", &l.alight), ("rn_board", &l.rn_board), ("rn_alight", &l.rn_alight), ("entry", &l.entry), ("exit", &l.exit), ("rn_fare_x", &l.rn_fare_x)] {
+            out.push((format!("{name}.{k}"), f(v)));
+        }
+        out.push((format!("{name}.pax_min"), vec![l.pax_min]));
+    };
+    loads("all", &per.avg);
+    loads("com", &per.c_avg);
+    if let Some(l) = &per.r_avg {
+        loads("lean", l);
+    }
+    for (i, l) in per.e_avg.iter().enumerate() {
+        if let Some(l) = l {
+            loads(&format!("ev{i}"), l);
+        }
+    }
+    out.push(("rail".into(), vec![per.rail, per.c_rail, per.e_rail, per.e_walk]));
+    out.push(("pair_rail".into(), f(&per.pair_rail)));
+    out.push(("st".into(), f(&per.st)));
+    out.push(("xfer".into(), f(&per.xfer)));
+    out.push(("c_frac".into(), f(&per.c_frac)));
+    out.push(("e_frac".into(), f(&per.e_frac)));
+    out.push(("cor".into(), per.corridors.v.clone()));
+    out.push(("cor_k".into(), per.corridors.k.iter().map(|&x| x as f64).collect()));
+    out
+}
+fn figures_differ(base: &[(String, Vec<f64>)], now: &[(String, Vec<f64>)]) -> String {
+    let mut diff = vec![];
+    if base.len() != now.len() {
+        diff.push(format!("{} blocks -> {}", base.len(), now.len()));
+    }
+    for ((k, a), (_, b)) in base.iter().zip(now) {
+        if a.len() != b.len() {
+            diff.push(format!("{k}: length {} -> {}", a.len(), b.len()));
+            continue;
+        }
+        let (mut n, mut worst) = (0, 0f64);
+        for (x, y) in a.iter().zip(b) {
+            if x.to_bits() != y.to_bits() {
+                n += 1;
+                worst = worst.max((x - y).abs() / x.abs().max(y.abs()).max(1e-30));
+            }
+        }
+        if n > 0 {
+            diff.push(format!("{k}: {n} of {} differ, worst {worst:.2e}", a.len()));
+        }
+    }
+    if diff.is_empty() { "the same to the bit".into() } else { diff.join("; ") }
+}
+/// T-2878: a captured network (`stXY` and the rest as the worker gets them) on `a`, with
+/// `part` given when it is a window beside that market part.
+#[cfg(test)]
+fn t2878_set(a: &mut IntercityApi, j: &serde_json::Value, part: Option<&IntercityApi>) -> f64 {
+    let f = |k: &str| j[k].as_array().map_or(vec![], |v| v.iter().map(|x| x.as_f64().unwrap()).collect::<Vec<f64>>());
+    let u = |k: &str| f(k).into_iter().map(|v| v as u32).collect::<Vec<u32>>();
+    let g = |k: &str| f(k).into_iter().map(|v| v as f32).collect::<Vec<f32>>();
+    let fr = &j["frame"];
+    let frame = Frame::equirect(fr["lon"].as_f64().unwrap(), fr["lat"].as_f64().unwrap()).with_kind(crate::track::frame::FrameKind::Merc);
+    let ll: Vec<f64> = f("stXY").chunks_exact(2).flat_map(|p| { let (x, y) = frame.to_lonlat(p[0], p[1]); [x, y] }).collect();
+    a.set_complexes(&u("complex"));
+    a.set_upgrades(&u("ups").iter().map(|&v| v as u8).collect::<Vec<u8>>());
+    a.set_passages(&u("passages"));
+    a.set_span(&g("span"));
+    let t = now_ms();
+    match part {
+        Some(p) => a.set_network_ll_beside(p, &ll, &u("lineN"), &u("stops"), &g("times"), &g("tph"), &g("cars")),
+        None => a.set_network_ll(&ll, &u("lineN"), &u("stops"), &g("times"), &g("tph"), &g("cars")),
+    }.unwrap();
+    let ms = now_ms() - t;
+    a.set_fares(j["fare"]["base"].as_f64().unwrap() as f32, j["fare"]["perKm"].as_f64().unwrap() as f32, &g("hopKm")).unwrap();
+    ms
+}
+/// T-2878: the changed lines' stations, one byte each, on the network `a` (lines matched in `b` by
+/// their stops' coordinates and order; a stop on a line of `a` not in its twin in `b`, or on a line
+/// with none, is marked).
+#[cfg(test)]
+fn t2878_changed(a: &serde_json::Value, b: &serde_json::Value) -> Vec<u8> {
+    let f = |j: &serde_json::Value, k: &str| j[k].as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect::<Vec<f64>>();
+    let lines = |j: &serde_json::Value| -> Vec<Vec<(i64, i64, usize)>> {
+        let (xy, n, stops) = (f(j, "stXY"), f(j, "lineN"), f(j, "stops"));
+        let mut at = 0;
+        n.iter().map(|&n| {
+            let v = stops[at..at + n as usize].iter().map(|&s| ((xy[2 * s as usize] * 100.) as i64, (xy[2 * s as usize + 1] * 100.) as i64, s as usize)).collect();
+            at += n as usize;
+            v
+        }).collect()
+    };
+    let (la, lb) = (lines(a), lines(b));
+    let key = |l: &[(i64, i64, usize)]| l.iter().map(|e| (e.0, e.1)).collect::<Vec<_>>();
+    let keys: std::collections::HashSet<_> = lb.iter().map(|l| key(l)).collect();
+    let mut mask = vec![0u8; f(a, "stXY").len() / 2];
+    for l in la.iter().filter(|l| !keys.contains(&key(l))) {
+        for e in l {
+            mask[e.2] = 1;
+        }
+    }
+    mask
+}
+/// T-2878: a market window started from its market part's tables against one built from nothing,
+/// on a captured save's network before and after an edit: tables and every figure to the bit, free
+/// flow and crowded, all periods. `TW_MODES` as a list: `0` builds only the slow one (no
+/// comparison, its peak memory), `1` only the shared one, otherwise both.
+/// `TW_T2878_BEFORE=<net> TW_T2878_AFTER=<net> cargo test --release --features demand --lib t2878_ab -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2878_ab() {
+    let read = |k: &str| -> serde_json::Value { serde_json::from_str(&std::fs::read_to_string(std::env::var(k).unwrap()).unwrap()).unwrap() };
+    let (before, after) = (read("TW_T2878_BEFORE"), read("TW_T2878_AFTER"));
+    let ids: Vec<String> = before["markets"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+    let idr: Vec<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let mode = std::env::var("TW_MODES").unwrap_or("both".into());
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut part = IntercityApi::new(&real_world(root, Some(&idr))).unwrap();
+    part.set_chunk(MARKET_CHUNK);
+    let ms = t2878_set(&mut part, &before, None);
+    eprintln!("part set up in {ms:.0} ms: {} zones served, {} pairs, {} commutes, {} outings; working set {:.0} MB", part.served.len(), part.pairs.len(), part.cpairs.len(), part.epairs.len(), working_set().0 as f64 / 1e6);
+    let now = t2878_changed(&after, &before);
+    let was = t2878_changed(&before, &after);
+    eprintln!("changed stations {} on the new network, {} on the old; part's zones at the old ones: {}", now.iter().filter(|&&v| v != 0).count(), was.iter().filter(|&&v| v != 0).count(), part.zones_at(&was).len());
+    let (share, floor) = (0.09, 800);
+    let window = |a: &mut IntercityApi| {
+        a.set_window(&now, &part.zones_at(&was), 180., share, floor);
+    };
+    let mut sub = |shared: bool| -> (IntercityApi, f64) {
+        let mut s = part.beside();
+        s.set_chunk(MARKET_CHUNK);
+        window(&mut s);
+        let t = now_ms();
+        let ms = t2878_set(&mut s, &after, if shared { Some(&part) } else { None });
+        eprintln!("{} set up in {ms:.0} ms ({:.0} ms wall with the fares); window {} zones, {} pairs, {} commutes, {} outings; working set {:.0} MB, peak {:.0} MB", if shared { "shared" } else { "rebuilt" }, now_ms() - t, s.window_zones().len(), s.pairs.len(), s.cpairs.len(), s.epairs.len(), working_set().0 as f64 / 1e6, working_set().1 as f64 / 1e6);
+        (s, ms)
+    };
+    match mode.as_str() {
+        "0" => { sub(false); return; }
+        "1" => { sub(true); return; }
+        _ => {}
+    }
+    let (rebuilt, _) = sub(false);
+    let (shared, _) = sub(true);
+    let (mut rebuilt, mut shared) = (rebuilt, shared);
+    assert_eq!(rebuilt.window_zones(), shared.window_zones(), "window zones");
+    assert_eq!(rebuilt.served, shared.served);
+    assert_eq!(rebuilt.served_at, shared.served_at);
+    assert_eq!(rebuilt.served_comp, shared.served_comp);
+    assert_eq!(rebuilt.pairs.len(), shared.pairs.len());
+    for (a, b) in rebuilt.pairs.iter().zip(&shared.pairs) {
+        assert!(a.a == b.a && a.b == b.b && a.trips.to_bits() == b.trips.to_bits() && a.corridor == b.corridor && a.car == b.car && a.band == b.band, "a pair differs");
+    }
+    assert_eq!(rebuilt.cpairs.len(), shared.cpairs.len());
+    for (a, b) in rebuilt.cpairs.iter().zip(&shared.cpairs) {
+        assert!(a.c == b.c && a.car.to_bits() == b.car.to_bits() && a.corridor == b.corridor && a.ride == b.ride && a.band == b.band, "a commute differs");
+    }
+    assert_eq!(rebuilt.epairs.len(), shared.epairs.len());
+    for (a, b) in rebuilt.epairs.iter().zip(&shared.epairs) {
+        assert!(a.e == b.e && a.car.to_bits() == b.car.to_bits() && a.walk_e.to_bits() == b.walk_e.to_bits() && a.ride == b.ride && a.band == b.band, "an outing differs");
+    }
+    assert_eq!(rebuilt.st_pat.off, shared.st_pat.off);
+    let cols = |c: &Cols| (0..c.len()).map(|i| c.get(i)).collect::<Vec<_>>();
+    assert_eq!(cols(&rebuilt.st_pat.col), cols(&shared.st_pat.col));
+    assert_eq!(cols(&rebuilt.st_pat.zst), cols(&shared.st_pat.zst));
+    assert_eq!(rebuilt.want, shared.want);
+    eprintln!("tables the same to the bit; the part's zones served equal {}, its components equal {} (joined alike {})", part.served == shared.served, part.served_comp == shared.served_comp, super::setup::same_joins(&part.served_comp, &shared.served_comp));
+    for q in 0..PERIODS {
+        assert!(rebuilt.solve(q) && shared.solve(q));
+        let same = figures_differ(&pass_figures(&rebuilt, q), &pass_figures(&shared, q));
+        let per = rebuilt.per(q).unwrap();
+        let total: Vec<f32> = per.avg.seg.iter().chain(&per.avg.rn_board).chain(&per.avg.rn_alight).map(|&x| x * 3.).collect();
+        eprintln!("period {q} free flow: {same}");
+        assert_eq!(same, "the same to the bit");
+        assert!(rebuilt.solve_crowded(q, &total) && shared.solve_crowded(q, &total));
+        let same = figures_differ(&pass_figures(&rebuilt, q), &pass_figures(&shared, q));
+        eprintln!("period {q} crowded: {same}");
+        assert_eq!(same, "the same to the bit");
+    }
+}
 /// T-2653: the market's pass on a captured net with the far-zone table filled by row (`0`) and by
 /// column (`1`) per `TW_MODES`, back to back in one process (`TW_REPS` rounds), every figure of each
 /// compared with the first's to the bit, the pass's sections timed and the memory printed.
@@ -2325,56 +2545,7 @@ fn t2653_ab() {
         Cols::Long(v) => 4 * v.len(),
     };
     eprintln!("set up: {} zones, {} stations, table {ne} entries ({:.1} MB), start half {} entries; index zst {:.1} MB + zoff {:.2} MB; working set {:.0} MB", nz, a.st_pat.off.len() - 1, 4. * ne as f64 / 1e6, a.st_pat.zoff[nz], zst_bytes as f64 / 1e6, 4. * a.st_pat.zoff.len() as f64 / 1e6, ws0 as f64 / 1e6);
-    let figs = |a: &IntercityApi, q: usize| -> Vec<(String, Vec<f64>)> {
-        let per = a.per(q).unwrap();
-        let f = |v: &[f32]| v.iter().map(|&x| x as f64).collect::<Vec<f64>>();
-        let mut out: Vec<(String, Vec<f64>)> = vec![];
-        let mut loads = |name: &str, l: &Loads| {
-            for (k, v) in [("seg", &l.seg), ("board", &l.board), ("alight", &l.alight), ("rn_board", &l.rn_board), ("rn_alight", &l.rn_alight), ("entry", &l.entry), ("exit", &l.exit), ("rn_fare_x", &l.rn_fare_x)] {
-                out.push((format!("{name}.{k}"), f(v)));
-            }
-            out.push((format!("{name}.pax_min"), vec![l.pax_min]));
-        };
-        loads("all", &per.avg);
-        loads("com", &per.c_avg);
-        if let Some(l) = &per.r_avg {
-            loads("lean", l);
-        }
-        for (i, l) in per.e_avg.iter().enumerate() {
-            if let Some(l) = l {
-                loads(&format!("ev{i}"), l);
-            }
-        }
-        out.push(("rail".into(), vec![per.rail, per.c_rail, per.e_rail, per.e_walk]));
-        out.push(("pair_rail".into(), f(&per.pair_rail)));
-        out.push(("st".into(), f(&per.st)));
-        out.push(("xfer".into(), f(&per.xfer)));
-        out.push(("c_frac".into(), f(&per.c_frac)));
-        out.push(("e_frac".into(), f(&per.e_frac)));
-        out.push(("cor".into(), per.corridors.v.clone()));
-        out.push(("cor_k".into(), per.corridors.k.iter().map(|&x| x as f64).collect()));
-        out
-    };
-    let cmp = |base: &[(String, Vec<f64>)], now: &[(String, Vec<f64>)]| -> String {
-        let mut diff = vec![];
-        for ((k, a), (_, b)) in base.iter().zip(now) {
-            if a.len() != b.len() {
-                diff.push(format!("{k}: length {} -> {}", a.len(), b.len()));
-                continue;
-            }
-            let (mut n, mut worst) = (0, 0f64);
-            for (x, y) in a.iter().zip(b) {
-                if x.to_bits() != y.to_bits() {
-                    n += 1;
-                    worst = worst.max((x - y).abs() / x.abs().max(y.abs()).max(1e-30));
-                }
-            }
-            if n > 0 {
-                diff.push(format!("{k}: {n} of {} differ, worst {worst:.2e}", a.len()));
-            }
-        }
-        if diff.is_empty() { "the same to the bit".into() } else { diff.join("; ") }
-    };
+    let (figs, cmp) = (pass_figures, figures_differ);
     let mut base: Option<Vec<(String, Vec<f64>)>> = None;
     let mut base_c: Option<Vec<(String, Vec<f64>)>> = None;
     let mut total: Vec<f32> = vec![];

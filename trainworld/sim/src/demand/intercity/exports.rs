@@ -229,6 +229,14 @@ impl IntercityApi {
     /// T-377: the network with stations as longitude and latitude (a world composition): put in
     /// the frame of its first group of sites for the graph, and in each group's own for access.
     pub fn set_network_ll(&mut self, st_ll: &[f64], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
+        self.set_network_ll_in(st_ll, line_n, stops, times, tph, cars, None)
+    }
+    /// T-2878: `set_network_ll` for a window `beside` `part`, the market part it was made from: the
+    /// window's pairs are taken from `part`'s when `part` serves and joins the same zones.
+    pub fn set_network_ll_beside(&mut self, part: &IntercityApi, st_ll: &[f64], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
+        self.set_network_ll_in(st_ll, line_n, stops, times, tph, cars, Some(part))
+    }
+    fn set_network_ll_in(&mut self, st_ll: &[f64], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32], part: Option<&IntercityApi>) -> Result<f64, String> {
         if st_ll.len() % 2 != 0 || st_ll.iter().any(|v| !v.is_finite()) {
             return Err("intercity station positions".into());
         }
@@ -239,7 +247,7 @@ impl IntercityApi {
             }).collect(),
             None => st_ll.iter().map(|&v| v as f32).collect(),
         };
-        self.set_network_in(&xy, line_n, stops, times, tph, cars)
+        self.set_network_in(&xy, line_n, stops, times, tph, cars, part)
     }
     pub fn set_fares(&mut self, base: f32, per_km: f32, km: &[f32]) -> Result<(), String> {
         if !base.is_finite() || base < 0. || !per_km.is_finite() || per_km < 0. || km.iter().any(|x| !x.is_finite() || *x < 0.) || km.len() != self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()) {

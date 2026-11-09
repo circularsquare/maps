@@ -1,5 +1,24 @@
 use super::*;
 
+/// T-1175: an everyday pair's home zone and activity zone (open zones).
+fn ep_zone(m: &Market, ep: &EPairOn) -> (u32, u32) {
+    let pair = &m.everyday[ep.e as usize];
+    (pair.h, m.comp_of_gid[pair.a as usize])
+}
+/// T-2878: whether two zones' track components (`IntercityApi::served_comp`, a list per zone) join the
+/// same zones. Components are numbered by their first station, so an edit renumbers them; what a
+/// pair's being solved reads is which zones share one.
+pub(super) fn same_joins(a: &[Vec<u32>], b: &[Vec<u32>]) -> bool {
+    let members = |comp: &[Vec<u32>]| -> Vec<Vec<u32>> {
+        let mut by: Vec<(u32, u32)> = comp.iter().enumerate().flat_map(|(z, l)| l.iter().map(move |&c| (c, z as u32))).collect();
+        by.sort_unstable();
+        let mut out: Vec<Vec<u32>> = by.chunk_by(|x, y| x.0 == y.0).filter(|g| g.len() > 1).map(|g| g.iter().map(|e| e.1).collect()).collect();
+        out.sort_unstable();
+        out
+    };
+    a == b || (a.len() == b.len() && members(a) == members(b))
+}
+
 impl IntercityApi {
     /// T-1286: each station pair's expected fare less the base (`FareX::dist`) on the strategies towards the
     /// stations `want`ed that `strategy` has; empty while no one needs them (`need_km`).
@@ -185,6 +204,36 @@ impl IntercityApi {
         self.served_comp = comp;
         self.win = win;
     }
+    /// T-2878: whether `set_served(served, comp)` would deal the pairs `part` holds: a pair's trips and
+    /// sampling read the market, the chunk and the zones served, its being solved only that and
+    /// which zones share a track component.
+    fn same_pairs_as(&self, part: &IntercityApi, served: &[usize], comp: &[Vec<u32>]) -> bool {
+        part.win.is_empty() && part.chunk == self.chunk && part.far_chunks == self.far_chunks && Rc::ptr_eq(&part.m, &self.m) && part.served == served && same_joins(&part.served_comp, comp)
+    }
+    /// T-2878: `set_served` from the tables of `part` (`same_pairs_as`): `part`'s pairs with an end
+    /// in the window, in their order.
+    fn set_served_from(&mut self, part: &IntercityApi, served: Vec<usize>, comp: Vec<Vec<u32>>) {
+        let win = std::mem::take(&mut self.win);
+        let inw = |z: u32| win.is_empty() || win[z as usize];
+        let keeps = |p: &&[Pair]| inw(p[0].a) || inw(p[0].b);
+        self.pairs = Vec::with_capacity(2 * part.pairs.chunks_exact(2).filter(keeps).count());
+        for p in part.pairs.chunks_exact(2).filter(keeps) {
+            self.pairs.extend_from_slice(p);
+        }
+        let m = self.m.clone();
+        self.cpairs = part.cpairs.iter().filter(|cp| inw(m.commutes[cp.c as usize].0) || inw(m.comp_of_gid[m.commutes[cp.c as usize].1 as usize])).cloned().collect();
+        self.cpairs.shrink_to_fit();
+        self.epairs = part.epairs.iter().filter(|ep| inw(ep_zone(&m, ep).0) || inw(ep_zone(&m, ep).1)).cloned().collect();
+        self.epairs.shrink_to_fit();
+        let mut at = vec![u32::MAX; m.zones.len()];
+        for (k, &z) in served.iter().enumerate() {
+            at[z] = k as u32;
+        }
+        self.served_at = at;
+        self.served = served;
+        self.served_comp = comp;
+        self.win = win;
+    }
     /// T-1735: the window from `win_in` on `svc`'s stations: every zone with one of the stations in
     /// an access list, and the zones given; then the zones by their nearest station's minutes by
     /// rail from those, nearest first, within the minutes and the share given. True if it
@@ -265,7 +314,7 @@ impl IntercityApi {
     }
     /// Station access by zone and the zone pairs a station serves, for `svc`'s layout. Each group
     /// of sites sees the stations in its own frame.
-    pub(super) fn set_access(&mut self, svc: &Service) {
+    pub(super) fn set_access(&mut self, svc: &Service, part: Option<&IntercityApi>) {
         let m = self.m.clone();
         let net0 = DemandApi::period_net(svc, 0);
         let nzz = m.zones.len();
@@ -363,7 +412,10 @@ impl IntercityApi {
             .collect();
         let moved = self.refresh_window(svc);
         if moved || served != self.served || comp != self.served_comp {
-            self.set_served(served, comp);
+            match part.filter(|p| self.same_pairs_as(p, &served, &comp)) {
+                Some(p) => self.set_served_from(p, served, comp),
+                None => self.set_served(served, comp),
+            }
         }
         self.set_st_pattern(svc.st_x.len());
     }
@@ -442,7 +494,7 @@ impl IntercityApi {
         };
         self.st_pat = StPattern::new(off, col, nz);
     }
-    pub(super) fn set_network_in(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
+    pub(super) fn set_network_in(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32], part: Option<&IntercityApi>) -> Result<f64, String> {
         let t = now_ms();
         let mut off = vec![0];
         for &n in line_n {
@@ -477,7 +529,7 @@ impl IntercityApi {
         let old = self.svc.as_ref();
         let same = old.map_or(0, |o| svc.same_periods(o));
         if !old.is_some_and(|o| svc.same_layout(o)) {
-            self.set_access(&svc);
+            self.set_access(&svc, part);
         } else if self.refresh_window(&svc) {
             self.set_served(self.served.clone(), self.served_comp.clone());
             self.set_st_pattern(svc.st_x.len());

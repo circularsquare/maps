@@ -24,7 +24,7 @@ impl IntercityApi {
     }
     /// The network with stations in the pack's plane (an old single pack).
     pub fn set_network(&mut self, st_xy: &[f32], line_n: &[u32], stops: &[u32], times: &[f32], tph: &[f32], cars: &[f32]) -> Result<f64, String> {
-        self.set_network_in(st_xy, line_n, stops, times, tph, cars)
+        self.set_network_in(st_xy, line_n, stops, times, tph, cars, None)
     }
     /// T-276: per corridor, the commutes between zones in period `q`: legs and rail legs.
     pub fn commute_corridors(&self, q: usize) -> Vec<f64> {
