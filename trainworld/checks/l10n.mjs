@@ -216,7 +216,7 @@ async function lintOrDiff() {
     if (!(k in m)) continue;
     const text = m[k], w = words(lang, text), note = context[k] ?? "";
     const warn = (msg) => { count++; console.log(`${k}: ${msg}\n    ${text}`); };
-    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "tr" && lang !== "ru") {
+    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "fr" && lang !== "tr" && lang !== "ru") {
       if (new RegExp(`[${CJK}][,.!?:;]|[,!?:;][${CJK}]`).test(w)) warn("half-width punctuation beside CJK; use 、。，！？：；");
       if (new RegExp(`\\([^)]*[${CJK}]`).test(w)) warn("half-width parentheses around CJK; use （）");
       if (new RegExp(`[${CJK}] +[A-Za-z0-9\\u0001]|[A-Za-z0-9\\u0001] +[${CJK}]`).test(w)) warn("a space between CJK and Latin, a digit or a placeholder; the page adds that gap itself (text-autospace)");
@@ -238,6 +238,14 @@ async function lintOrDiff() {
       const changed = (conv) => { const a = [...w], b = [...conv(w)]; return a.length !== b.length ? ["?"] : [...new Set(a.filter((c, i) => c !== b[i] && !"台占".includes(c)))]; };
       if (toTrad && changed(toTrad).length) warn(`simplified characters? ${changed(toTrad).join(" ")} (OpenCC cn->tw changes them)`);
       if (toSimp && changed(toSimp).length) warn(`traditional characters? ${changed(toSimp).join(" ")} (OpenCC tw->cn changes them)`);
+    }
+    if (lang === "fr") {
+      if (w.includes("'")) warn("a straight apostrophe; French uses ’ (U+2019)");
+      if (/[^\s  \d][:;?!](?=\s|$)/.test(w)) warn("no space before : ; ? or !; U+00A0 before :, U+202F before the others");
+      if (/ [:;?!%](\s|$)/.test(w)) warn("a plain space before : ; ? ! or %; use U+00A0 before : and U+202F before the others");
+      if (/«(?! )|(?<! )»/.test(w)) warn("guillemets need a no-break space inside");
+      if (/\b(tu|ton|ta|tes|toi)\b/i.test(w)) warn("tu: the voice is vous");
+      if (/(?<![\p{L}])(de|du|le|la|que|si|ce|ne|je|me|te|se) ?\u0001|(?<![\p{L}])(l|d|j|m|t|s|n|c|qu)’\u0001/iu.test(w)) warn("an article, preposition or elision directly before a placeholder: reword so the value stands alone (fine before a number or price)");
     }
     // a width check counts only a real difference: a full character or two more than the English
     const tw = width(longest(w)), ew = Math.max(1, width(longest(words("en", en[k]))));
