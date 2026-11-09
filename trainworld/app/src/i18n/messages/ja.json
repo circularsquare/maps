@@ -2000,6 +2000,8 @@
   "trip.walkBetween": "駅間の徒歩",
   "tripGraph.all": "合計",
   "tripGraph.between": "{from}～{to} kmの移動（1日あたり）",
+  "tripGraph.byMode": "交通手段",
+  "tripGraph.byPurpose": "目的",
   "tripGraph.driving": "車",
   "tripGraph.kmSuffix": " km",
   "tripGraph.noRoute": "経路なし",

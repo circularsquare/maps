@@ -2000,6 +2000,8 @@
   "trip.walkBetween": "walk between stations",
   "tripGraph.all": "All",
   "tripGraph.between": "Trips of {from}-{to} km per day",
+  "tripGraph.byMode": "Mode",
+  "tripGraph.byPurpose": "Purpose",
   "tripGraph.driving": "Driving",
   "tripGraph.kmSuffix": " km",
   "tripGraph.noRoute": "No route",

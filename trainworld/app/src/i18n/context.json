@@ -1996,6 +1996,8 @@
   "trip.transferFare": "A cost term in the trip breakdown: the extra fare for changing.",
   "tripGraph.all": "Row label in the hover of the trip length graph: the sum over all modes.",
   "tripGraph.between": "Title of the hover on a band of the trip length graph. from, to: the band's ends in kilometres, \"10\" and \"20\".",
+  "tripGraph.byMode": "Button above the trip length graph in a city view: stack the graph by how people travel (train, walking, driving).",
+  "tripGraph.byPurpose": "Button above the trip length graph in a city view: stack the graph by trip purpose (work, leisure, errands).",
   "tripGraph.driving": "Mode name in the hover of the trip length graph: trips by car.",
   "tripGraph.kmSuffix": "The unit after the longest tick label of the trip length graph axis. It starts with a space.",
   "tripGraph.noRoute": "Mode name in the hover of the trip length graph: trips with no way to make them.",

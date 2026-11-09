@@ -446,4 +446,4 @@ export type FromDemand =
   | { kind: "bareSquares"; id: number; city: CityId; xy: Float32Array | null; share: Float32Array | null }
   /** T-2365: eight blocks of `trip_length_edges` bins each (trips, rail, walking, no way, then their
    * km); null: not `version` and `round` (or not held here); `everyday` null for a zone without the layer */
-  | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null };
+  | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null; kinds: Float64Array | null };

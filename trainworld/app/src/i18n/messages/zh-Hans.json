@@ -2000,6 +2000,8 @@
   "trip.walkBetween": "站间步行",
   "tripGraph.all": "全部",
   "tripGraph.between": "每天{from}-{to} km的出行",
+  "tripGraph.byMode": "方式",
+  "tripGraph.byPurpose": "目的",
   "tripGraph.driving": "开车",
   "tripGraph.kmSuffix": " km",
   "tripGraph.noRoute": "无路可达",

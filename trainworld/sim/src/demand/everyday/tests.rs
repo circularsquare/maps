@@ -1062,5 +1062,17 @@ fn trip_lengths_add_up_to_the_summary() {
         assert!(want[1] > 0.0, "no rail");
         // the trips are 4 km long
         assert!((block(4) / block(0) - 4.0).abs() < 1e-3);
+        // T-2790: the purposes' trips add up to the trips bin by bin, and each to its own total
+        let kinds = a.trip_lengths_kinds_day(day as u32, 0b11111);
+        let nk = kinds.len() / N_LEN;
+        for b in 0..N_LEN {
+            let sum: f64 = (0..nk).map(|k| kinds[k * N_LEN + b]).sum();
+            assert!((sum - v[b]).abs() <= 1e-9 * want[0].max(1.0), "day {day} bin {b}: {sum} vs {}", v[b]);
+        }
+        for k in 0..nk {
+            let want_k: f64 = (0..5).map(|q| load_factor(day, everyday(k), q) as f64 * a.kind_totals(q)[3 * k]).sum();
+            let got: f64 = kinds[k * N_LEN..(k + 1) * N_LEN].iter().sum();
+            assert!((got - want_k).abs() <= 1e-6 * want[0].max(1.0), "day {day} kind {k}: {got} vs {want_k}");
+        }
     }
 }
