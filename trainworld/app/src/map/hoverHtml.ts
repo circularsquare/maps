@@ -4,7 +4,7 @@
 // every other attribute (on*, href, src) is dropped.
 
 const TAGS = new Set(["DIV", "SPAN", "I"]);
-const CLASSES = new Set(["mode-bar", "tag-facts", "tag-fact", "tag-dot"]);
+const CLASSES = new Set(["mode-bar", "tag-facts", "tag-fact", "purpose-row", "tag-dot"]);
 const STYLE: Record<string, RegExp> = {
   "flex-grow": /^\d+(\.\d+)?(e[+-]?\d+)?$/i,
   background: /^(#[0-9a-f]{3,8}|var\(--[\w-]+\))$/i,
