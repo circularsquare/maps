@@ -1061,14 +1061,11 @@ impl Network {
             }
         })
     }
-    /// A bus's speed at a point of the plane, m/s (T-1577): its share of the car's street speed
-    /// there, at most `bus::BUS_V`; the top speed where no street grid covers it.
-    pub fn bus_v_at(&self, x: f64, y: f64) -> f64 {
-        if self.streets.is_empty() {
-            return super::bus::BUS_V;
-        }
+    /// The car's local street speed at a point of the plane, km/h (T-1577): open country's where no
+    /// street grid covers it.
+    pub fn car_kmh_at(&self, x: f64, y: f64) -> f64 {
         let (lon, lat) = self.frame.to_lonlat(x, y);
-        self.streets.car_kmh_at(lon, lat).map_or(super::bus::BUS_V, |c| super::streets::bus_kmh(c) / 3.6)
+        self.streets.car_kmh_at(lon, lat).unwrap_or(super::streets::CAR_TOWN_KMH)
     }
     /// A live bus line (T-1464).
     pub fn is_bus(&self, l: u32) -> bool {

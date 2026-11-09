@@ -4,8 +4,8 @@ use crate::track::profile::state_at;
 #[test]
 fn profile_runs_flat_and_stands_between() {
     let p = profile(&[0.0, 1000.0, 3000.0], &[0.0, 30.0, 0.0], &[], &Pace::default());
-    let hop = 1000.0 / BUS_V;
-    assert_eq!(p.arr, vec![0.0, hop, hop + 30.0 + 2000.0 / BUS_V]);
+    let (pace, hop) = (Pace::default(), Pace::default().auto_time(0.0, 1000.0));
+    assert_eq!(p.arr, vec![0.0, hop, hop + 30.0 + pace.auto_time(1000.0, 3000.0)]);
     assert_eq!(p.dep[1] - p.arr[1], 30.0);
     assert!((p.duration - p.arr[2]).abs() < 1e-9);
     assert_eq!(state_at(&p.phases, hop / 2.0).0, 500.0);
@@ -70,16 +70,81 @@ fn spaced_stops_prefer_stations_near_their_place_and_pass_the_rest() {
 }
 
 #[test]
-fn a_spaced_trip_drops_the_stands_it_no_longer_makes() {
-    // 5 m/s flat: 2 km is 400 s, of which 4 stands of 20 s are gone; the stop between stands 20 s inside its hop
-    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 0.0, 0.0], &Pace::default());
-    assert!((p.arr[1] - 300.0).abs() < 1e-9 && (p.dep[1] - 320.0).abs() < 1e-9 && (p.duration - 640.0).abs() < 1e-9, "{p:?}");
+fn a_spaced_trip_takes_each_hops_time_and_stands_inside_it() {
+    let pace = Pace::default();
+    let hop = pace.hop_time(0.0, 2000.0);
+    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 0.0, 0.0], &pace);
+    assert!((p.arr[1] - (hop - 20.0)).abs() < 1e-9 && (p.dep[1] - hop).abs() < 1e-9 && (p.duration - 2.0 * hop).abs() < 1e-9, "{p:?}");
     // a station keeps its own dwell and no extra stand
-    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 30.0, 0.0], &Pace::default());
-    assert!((p.arr[1] - 320.0).abs() < 1e-9 && (p.dep[1] - 350.0).abs() < 1e-9, "{p:?}");
-    // a 400 m hop is a street stop's own: nothing to drop
-    let p = spaced_profile(&[0.0, 400.0], &[0.0, 0.0], &Pace::default());
-    assert!((p.duration - 80.0).abs() < 1e-9, "{p:?}");
+    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 30.0, 0.0], &pace);
+    assert!((p.arr[1] - hop).abs() < 1e-9 && (p.dep[1] - (hop + 30.0)).abs() < 1e-9, "{p:?}");
+    assert!((spaced_profile(&[0.0, 400.0], &[0.0, 0.0], &pace).duration - pace.hop_time(0.0, 400.0)).abs() < 1e-9);
+}
+
+/// A route with the car's local streets at `car` km/h all the way, of `km` km.
+fn flat(car: f64, km: f64) -> Pace {
+    Pace { step: 100.0, car: vec![car; (km * 10.0).ceil() as usize], trunk: vec![] }
+}
+
+fn hop_kmh(p: &Pace, m: f64) -> f64 {
+    m / p.hop_time(0.0, m) * 3.6
+}
+
+#[test]
+fn a_hop_is_the_cars_time_at_nine_tenths_plus_the_stop() {
+    use super::super::streets::car_street_kmh;
+    let dense = flat(16.5, 30.0);
+    let mid = flat(car_street_kmh(5000.0), 30.0);
+    let open = Pace::default();
+    // the dense street's lane and mid density's are the same 30 km/h; open country its car's 39.6
+    for (m, want) in [(400.0, 18.95), (800.0, 23.23), (1000.0, 24.32), (2000.0, 26.87)] {
+        assert!((hop_kmh(&dense, m) - want).abs() < 0.01, "{m}: {}", hop_kmh(&dense, m));
+    }
+    assert!((hop_kmh(&mid, 400.0) - 18.95).abs() < 0.01);
+    assert!((hop_kmh(&open, 400.0) - 22.37).abs() < 0.01, "{}", hop_kmh(&open, 400.0));
+    // 20 km of open country: 2 km of local at each end at 39.6, 8 km of main road each end at 79.2
+    let want = 20_000.0 / (4000.0 / 11.0 + 16_000.0 / 22.0 + 28.0) * 3.6;
+    assert!((hop_kmh(&open, 20_000.0) - want).abs() < 1e-6 && (want - 64.3).abs() < 0.1, "{want}");
+    // 40 km: 20 km of it open highway at 99
+    let want = 40_000.0 / (4000.0 / 11.0 + 16_000.0 / 22.0 + 20_000.0 / 27.5 + 28.0) * 3.6;
+    assert!((hop_kmh(&open, 40_000.0) - want).abs() < 1e-6);
+}
+
+#[test]
+fn spacing_rises_smoothly_and_400_m_matches_automatic_stops() {
+    for pace in [flat(16.5, 30.0), flat(30.25, 30.0), flat(44.0, 30.0), Pace::default()] {
+        let mut last = 0.0;
+        for m in [400.0, 600.0, 800.0, 1000.0, 2000.0, 4000.0, 5000.0, 8000.0, 10_000.0, 20_000.0] {
+            let v = hop_kmh(&pace, m);
+            assert!(v > last, "{m}: {v} after {last}");
+            last = v;
+        }
+        // five 400 m hops, as a line spaced at 400 m runs them, and one automatic 2 km hop with its street stops
+        let stops: Vec<f64> = (0..6).map(|i| i as f64 * 400.0).collect();
+        let spaced = spaced_profile(&stops, &[0.0; 6], &pace);
+        let auto = profile(&[0.0, 2000.0], &[0.0, 0.0], &[400.0, 800.0, 1200.0, 1600.0], &pace);
+        assert!((spaced.duration - auto.duration).abs() < 1e-6, "{} {}", spaced.duration, auto.duration);
+        assert!((pace.auto_time(0.0, 400.0) - pace.hop_time(0.0, 400.0)).abs() < 1e-9);
+    }
+}
+
+#[test]
+fn a_trunk_road_runs_at_highway_speed_even_on_a_short_hop() {
+    let mut p = flat(16.5, 2.0);
+    p.trunk = vec![true; p.car.len()];
+    // 400 m at 79.2 km/h and the stop
+    let want = 400.0 / (400.0 / 22.0 + 28.0) * 3.6;
+    assert!((hop_kmh(&p, 400.0) - want).abs() < 1e-6, "{}", hop_kmh(&p, 400.0));
+    assert!(hop_kmh(&p, 400.0) > hop_kmh(&flat(16.5, 2.0), 400.0) + 10.0);
+    // automatic stops too
+    assert!((p.auto_time(0.0, 400.0) - p.hop_time(0.0, 400.0)).abs() < 1e-9);
+    // a route's kinds mark the stretches: the first 1 km local, the second on a trunk road
+    let net = Network::new(-73.985, 40.758, true);
+    let (pts, kinds) = ([[0.0, 0.0], [1000.0, 0.0], [2000.0, 0.0]], [K_CORNER, K_ROAD, K_ROAD | K_TRUNK]);
+    let pace = Pace::along(&net, &pts, &[0.0, 1000.0, 2000.0], &kinds, 2000.0);
+    assert!(!pace.trunk[4] && pace.trunk[15], "{pace:?}");
+    assert!(pace.reversed().trunk[4] && !pace.reversed().trunk[15]);
+    assert_eq!(Pace::along(&net, &pts, &[0.0, 1000.0, 2000.0], &[K_CORNER, K_ROAD, K_ROAD], 2000.0), Pace::default());
 }
 
 #[test]
@@ -128,23 +193,22 @@ fn simplify_keeps_the_shape_within_the_tolerance() {
 
 #[test]
 fn a_hop_takes_the_time_of_the_streets_it_crosses() {
-    // 100 m steps: 10 m/s for the first 300 m, 5 m/s for the next 200, then 10 again
-    let pace = Pace { step: 100.0, v: vec![10.0, 10.0, 10.0, 5.0, 5.0, 10.0, 10.0, 10.0, 10.0, 10.0] };
-    assert!((pace.time(0.0, 1000.0) - (30.0 + 40.0 + 50.0)).abs() < 1e-9);
+    // 100 m steps: 90 km/h moving for the first 300 m, 36 for the next 200, then 90 again
+    let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![] };
+    let t = |p: &Pace, a: f64, b: f64| p.seconds(a, b, street_bus_kmh);
+    assert!((t(&pace, 0.0, 1000.0) - (12.0 + 20.0 + 20.0)).abs() < 1e-9);
     // inside one step, across two
-    assert!((pace.time(120.0, 180.0) - 6.0).abs() < 1e-9);
-    assert!((pace.time(250.0, 350.0) - (5.0 + 10.0)).abs() < 1e-9);
+    assert!((t(&pace, 120.0, 180.0) - 2.4).abs() < 1e-9);
+    assert!((t(&pace, 250.0, 350.0) - (2.0 + 5.0)).abs() < 1e-9);
     // past the end counts at the last step
-    assert!((pace.time(900.0, 1100.0) - 20.0).abs() < 1e-9);
+    assert!((t(&pace, 900.0, 1100.0) - 8.0).abs() < 1e-9);
     // the same route from its other end
-    assert!((pace.reversed().time(0.0, 1000.0) - 120.0).abs() < 1e-9);
-    assert!((pace.reversed().time(0.0, 500.0) - 50.0).abs() < 1e-9);
-    assert_eq!(pace.top(), 10.0);
-    assert_eq!(Pace::default().time(0.0, 1800.0), 1800.0 / BUS_V);
+    assert!((t(&pace.reversed(), 0.0, 1000.0) - 52.0).abs() < 1e-9);
+    assert!((t(&pace.reversed(), 0.0, 500.0) - 20.0).abs() < 1e-9);
     // the profile runs each hop at its mean
     let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &[], &pace);
-    assert!((p.arr[1] - pace.time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.time(0.0, 1000.0)).abs() < 1e-9);
-    assert!((p.phases[0].v - 500.0 / pace.time(0.0, 500.0)).abs() < 1e-9);
+    assert!((p.arr[1] - pace.auto_time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.auto_time(0.0, 1000.0)).abs() < 1e-9);
+    assert!((p.phases[0].v - 500.0 / pace.auto_time(0.0, 500.0)).abs() < 1e-9);
 }
 
 #[test]
@@ -167,27 +231,24 @@ fn a_bus_stands_at_its_street_stops_within_the_hops_time() {
     let short = profile(&[0.0, 100.0], &[0.0, 0.0], &[50.0], &Pace::default());
     let flat = profile(&[0.0, 100.0], &[0.0, 0.0], &[], &Pace::default());
     assert!((short.duration - flat.duration).abs() < 1e-9);
-    assert!(short.phases.iter().all(|p| p.v == 0.0 || p.v < 2.0 * BUS_V));
+    assert!(short.phases.iter().all(|p| p.v < 30.0));
 }
 
 #[test]
 fn a_route_through_dense_streets_runs_slower() {
-    use super::super::streets::{StreetGrid, BUS_TOP_KMH};
+    use super::super::streets::{StreetGrid, CAR_TOWN_KMH};
     let mut net = Network::new(-73.985, 40.758, true);
     let pts = [[0.0, 0.0], [6000.0, 0.0]];
     let poly = Poly::new(&net, &pts, &[]);
-    let flat = Pace::along(&net, &pts, &poly.road, poly.road_len());
-    assert_eq!(flat, Pace::default());
+    let len = poly.road_len();
+    assert_eq!(Pace::along(&net, &pts, &poly.road, &[], len), Pace::default());
     // the pack's frame at the network's origin; the zone square on x 0..2 km is dense, the rest open
     let (pop, jobs) = ([40_000.0f32, 10.0, 10.0], [40_000.0f32, 10.0, 10.0]);
     let g = StreetGrid::from_zones(2000.0, -1000.0, -1000.0, 4, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758).unwrap();
     net.streets.grids.push(std::sync::Arc::new(g));
-    let pace = Pace::along(&net, &pts, &poly.road, poly.road_len());
-    // the dense stretch at 70% of about 16.5 km/h, the open ones at the top speed
-    let (slow, fast) = (pace.v[2] * 3.6, pace.v[30] * 3.6);
-    assert!((slow - 11.55).abs() < 0.5, "{slow}");
-    assert_eq!(fast, BUS_TOP_KMH);
-    assert!(pace.time(0.0, poly.road_len()) > poly.road_len() / BUS_V);
-    // where no grid covers, the top speed
-    assert_eq!(net.bus_v_at(30_000.0, 0.0), BUS_V);
+    let pace = Pace::along(&net, &pts, &poly.road, &[], len);
+    assert!((pace.car[2] - 16.5).abs() < 1.0 && pace.car[30] > 40.0, "{} {}", pace.car[2], pace.car[30]);
+    assert!(pace.auto_time(0.0, len) > Pace::default().auto_time(0.0, len));
+    // where no grid covers, open country
+    assert_eq!(net.car_kmh_at(30_000.0, 0.0), CAR_TOWN_KMH);
 }

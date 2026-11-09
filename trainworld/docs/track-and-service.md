@@ -1521,20 +1521,26 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   else the place itself, and no two come closer than half the spacing, so a line passes the stations
   it does not stop at. There are no street stops: every stop is one demand sees. Its stretch of route
   (`cover`) reaches at most 400 m each way, so homes between far apart stops have no bus (kept
-  stops at most 800 m apart leave no gap). A hop drops the 20 s stand of each 400 m it no longer stops
-  (`bus::spaced_profile`, at most 40% of the hop), so a 2 km spacing runs about a quarter faster than
-  automatic stops, and the bus stands 20 s at each plain stop inside the hop's time. The Save keeps it
-  (`LBP1`); a redraw keeps it. Free, on a constructed line too: a stop costs nothing by itself.
-- **Run**: door to door (street stops and traffic included) at 70% of the car's speed on local streets
-  where the bus is, at most 18 km/h (`streets.rs`, T-1577): the car's speed is demand's, 44 km/h in
-  open country falling to 16.5 where homes and jobs are dense (half way at 5,000 a km² in the 2 km zone,
-  demand-mode.md), so a bus does 18 outside the dense places and 11.5 in the densest. Each 100 m of road
-  has its own speed and a hop between stops takes the time of the streets it crosses (`bus::Pace`). The
-  street speeds come from the packs (below); a route in a zone with none runs at 18. The line's dwell
-  stands at train stations, the line's turnaround at the ends (120 s for a new bus line). At each
-  street stop (the drawn ones, `plan.street`) the bus stands 20 s (`bus::STREET_DWELL_S`, T-1798), taken out
-  of the hop's time (at most 40% of it), so the bus runs faster between stands and arrives when it
-  did before: run times and demand do not see the stands. No accelerating, no capacity, no holds.
+  stops at most 800 m apart leave no gap). The bus stands 20 s at each plain stop inside the hop's time
+  (`bus::spaced_profile`). The Save keeps it (`LBP1`); a redraw keeps it. Free, on a constructed line
+  too: a stop costs nothing by itself.
+- **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
+  at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
+  down). The moving speed is 90% of the car's (`BUS_SHARE`), never under 30 km/h (`BUS_LANE_KMH`, its own
+  lane). The car's is demand's: over the hop, the first and last 2 km of road (at most half each) on local
+  streets, the next 8 km each end (at most half the rest) on main roads, any middle on open highway at 110;
+  local streets 44 km/h in open country falling to 16.5 where homes and jobs are dense, main roads 88
+  falling the same way (half way at 5,000 a km² in the 2 km zone, demand-mode.md). Each 100 m of road takes
+  the density where it is; a stretch on a trunk road (`K_TRUNK`, below) counts the car at 88 at the least
+  (`CAR_TRUNK_KMH`), however dense the place and however short the hop. A line on automatic stops counts
+  its whole road as local streets, with one stop cost every 400 m: a line spaced at 400 m runs the same.
+  The street speeds come from the packs (below); a route in a zone with none runs as open country. The
+  line's dwell stands at train stations on top of the hop's time, the line's turnaround at the ends (120 s
+  for a new bus line). At each street stop (the drawn ones, `plan.street`) the bus stands 20 s
+  (`bus::STREET_DWELL_S`, T-1798) inside the hop's time, so the run times do not see the stands. No
+  accelerating drawn, no capacity, no holds.
+- **Trunk roads**: the route tool marks each stretch of route that lies on an OpenMapTiles `trunk` road
+  (`K_TRUNK` in the point's kind, saved with it); a route from before T-2904 has no marks until it is redrawn.
 - **Riders**: 80, rated and at crush alike (demand: 0.5 of a car's seats and rated 160, 22 seats;
   a bus takes nobody past its 80, T-2186); the boarding account keeps no
   platform crowd at its stops that are no station.

@@ -20,6 +20,8 @@ const HOP_MIN_M = 4;
 const PARALLEL_COS = 0.9;
 /** A road line of this weight or more (`RoadLines.weights`) is a motorway. */
 export const MOTORWAY = 2;
+/** A road line of exactly this weight is a trunk road (T-2904: a bus runs it at highway speed). */
+export const TRUNK = 1.5;
 const MOTOR_EXTRA_M = 30;
 
 export const lngOf = (gx: number) => (gx / WORLD) * 360 - 180;
@@ -48,6 +50,8 @@ export interface RoadPath {
   m: number;
   /** where it ends: the destination or one of its alternatives */
   to: Snap;
+  /** per stretch between points of `pts`, on a trunk road; absent where a path only crosses a road */
+  fast?: boolean[];
 }
 
 export class RoadGraph {
@@ -62,7 +66,7 @@ export class RoadGraph {
   eb = new Int32Array(1024);
   /** ground metres */
   elen = new Float32Array(1024);
-  /** 1 for a motorway (its line's weight 2 or more), 2 for a link (`LINK`), which a bus may drive and a click does not land on, else 0 */
+  /** 1 for a motorway (its line's weight 2 or more), 2 for a link (`LINK`), which a bus may drive and a click does not land on, 3 for a trunk road (`TRUNK`), else 0 */
   emotor = new Uint8Array(1024);
   private arcNext = new Int32Array(2048);
   private inner = new Map<number, number>();
@@ -159,6 +163,16 @@ export class RoadGraph {
     return found;
   }
 
+  /** Whether the shortest edge between two joined nodes is a trunk road. */
+  private edgeTrunk(a: number, b: number): boolean {
+    let best = Infinity, trunk = false;
+    for (let arc = this.head[a]; arc >= 0; arc = this.arcNext[arc]) {
+      const e = arc >> 1, m = (arc & 1) === 0 ? this.eb[e] : this.ea[e];
+      if (m === b && this.elen[e] < best) (best = this.elen[e]), (trunk = this.emotor[e] === 3);
+    }
+    return trunk;
+  }
+
   private addEdge(a: number, b: number, m: number, kind: number) {
     if (a === b) return;
     if (this.edges === this.ea.length) this.growEdges();
@@ -183,7 +197,7 @@ export class RoadGraph {
     const mpu = metresPerUnit(y0 + EXTENT / 2);
     const seg: number[] = [0, 0, 0, 0];
     rl.lines.forEach((line, li) => {
-      const w = rl.weights?.[li] ?? 1, kind = w >= MOTORWAY ? 1 : w === LINK ? 2 : 0;
+      const w = rl.weights?.[li] ?? 1, kind = w >= MOTORWAY ? 1 : w === LINK ? 2 : w === TRUNK ? 3 : 0;
       let pa = -1, pax = NaN, pay = NaN;
       for (let i = 2; i + 1 < line.length; i += 2) {
         if (!clipSegment(line[i - 2] * scale, line[i - 1] * scale, line[i] * scale, line[i + 1] * scale, seg)) continue;
@@ -334,7 +348,7 @@ export class RoadGraph {
   path(s: Snap, d: Snap, capM: number, alts: Snap[] = [], penM: (c: Snap) => number = () => 0): RoadPath | null {
     const mpu = metresPerUnit(d.y);
     if (s.edge === d.edge) {
-      return { pts: [s.x, s.y, d.x, d.y], m: Math.abs(d.t - s.t) * this.elen[s.edge], to: d };
+      return { pts: [s.x, s.y, d.x, d.y], m: Math.abs(d.t - s.t) * this.elen[s.edge], to: d, fast: [this.emotor[s.edge] === 3] };
     }
     if (this.g.length < this.nodes) {
       const n = Math.max(this.nodes, this.g.length * 2);
@@ -422,20 +436,20 @@ export class RoadGraph {
     }
     if (direct) return { pts: direct, m: best - directPen, to: directTo };
     if (end < 0) return null;
-    const mid: number[] = [];
-    let first = end;
-    for (let n = end; n >= 0; n = this.from[n]) {
-      mid.push(this.gx[n], this.gy[n]);
-      first = n;
+    const chain: number[] = [];
+    for (let n = end; n >= 0; n = this.from[n]) chain.push(n);
+    const pts = [s.x, s.y], fast: boolean[] = [];
+    const sv = viaStart.get(chain[chain.length - 1]);
+    if (sv) pts.push(sv[0], sv[1]), fast.push(false);
+    for (let i = chain.length - 1; i >= 0; i--) {
+      pts.push(this.gx[chain[i]], this.gy[chain[i]]);
+      fast.push(i === chain.length - 1 ? this.emotor[s.edge] === 3 : this.edgeTrunk(chain[i + 1], chain[i]));
     }
-    const pts = [s.x, s.y];
-    const sv = viaStart.get(first);
-    if (sv) pts.push(sv[0], sv[1]);
-    for (let i = mid.length - 2; i >= 0; i -= 2) pts.push(mid[i], mid[i + 1]);
     const e = ends.get(end)!;
-    if (e.via) pts.push(e.via[0], e.via[1]);
+    if (e.via) pts.push(e.via[0], e.via[1]), fast.push(false);
     pts.push(e.to.x, e.to.y);
-    return { pts, m: best - e.pen, to: e.to };
+    fast.push(this.emotor[e.to.edge] === 3);
+    return { pts, m: best - e.pen, to: e.to, fast };
   }
 }
 
@@ -631,6 +645,31 @@ export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
 export function thin(pts: number[], tol: number): number[] {
   const n = pts.length / 2;
   if (n <= 2) return pts;
+  const keep = thinKeep(pts, tol), out: number[] = [];
+  for (let i = 0; i < n; i++) if (keep[i]) out.push(pts[2 * i], pts[2 * i + 1]);
+  return out;
+}
+
+/** `thin` with a flag per stretch between points: each stretch left takes the flag most of its length had. */
+export function thinFlagged(pts: number[], flags: boolean[], tol: number): { pts: number[]; flags: boolean[] } {
+  const n = pts.length / 2;
+  if (n <= 2) return { pts, flags };
+  const keep = thinKeep(pts, tol), out = [pts[0], pts[1]], got: boolean[] = [];
+  let on = 0, all = 0;
+  for (let i = 1; i < n; i++) {
+    const d = Math.hypot(pts[2 * i] - pts[2 * i - 2], pts[2 * i + 1] - pts[2 * i - 1]);
+    all += d;
+    if (flags[i - 1]) on += d;
+    if (!keep[i]) continue;
+    out.push(pts[2 * i], pts[2 * i + 1]);
+    got.push(on > all / 2);
+    on = all = 0;
+  }
+  return { pts: out, flags: got };
+}
+
+function thinKeep(pts: number[], tol: number): Uint8Array {
+  const n = pts.length / 2;
   const keep = new Uint8Array(n);
   keep[0] = keep[n - 1] = 1;
   const stack: [number, number][] = [[0, n - 1]];
@@ -649,7 +688,5 @@ export function thin(pts: number[], tol: number): number[] {
       stack.push([a, at], [at, b]);
     }
   }
-  const out: number[] = [];
-  for (let i = 0; i < n; i++) if (keep[i]) out.push(pts[2 * i], pts[2 * i + 1]);
-  return out;
+  return keep;
 }

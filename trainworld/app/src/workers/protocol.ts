@@ -478,8 +478,8 @@ export interface ClockBus {
   built: boolean;
   /** the route, x, y flat: along the roads where they were found, straight elsewhere */
   route: number[];
-  /** per route point, `bus::K_CORNER` (1: a point the player clicked) and `K_ROAD` (2: the route up to
-   * it follows roads) */
+  /** per route point, `bus::K_CORNER` (1: a point the player clicked), `K_ROAD` (2: the route up to
+   * it follows roads) and `K_TRUNK` (4: the route up to it is on a trunk road) */
   kinds: number[];
   /** road length, m: the drawn length, times 1.2 on the straight stretches */
   roadM: number;

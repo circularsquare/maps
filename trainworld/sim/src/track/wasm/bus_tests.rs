@@ -1,7 +1,7 @@
 //! T-1464: bus lines through the clock worker's API.
 
 use super::*;
-use crate::track::bus::{self, BUS_V, KIND_CROSSING, KIND_END, KIND_MIDDLE, KIND_STATION, ROAD_FACTOR};
+use crate::track::bus::{self, KIND_CROSSING, KIND_END, KIND_MIDDLE, KIND_STATION, ROAD_FACTOR};
 
 fn api() -> TrackApi {
     let mut a = TrackApi::new(-73.985, 40.758, true);
@@ -66,9 +66,9 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     assert!(covers.windows(2).all(|w| (w[0][1] - w[1][0]).abs() < 1e-9));
     // planned: no service yet, no cost, nothing charged
     assert!(!a.w.svc.lines[b as usize].running && a.cash() == cash);
-    // run time: road at 18 km/h, no dwell between (no station between)
+    // run time: open-country road with a stop every 400 m, no dwell between (no station between)
     let t = a.stop_times(b, 0, 0);
-    assert!((t.last().unwrap() - road / BUS_V).abs() < 1e-6, "{t:?}");
+    assert!((t.last().unwrap() - bus::Pace::default().auto_time(0.0, road)).abs() < 1e-6, "{t:?}");
     // construct: the road at $1M a km and the buses at $0.6M
     let quote = a.line_build_cost(b);
     assert!((quote - road / 1000.0).abs() < 1e-6, "{quote}");
@@ -267,11 +267,11 @@ fn a_long_road_route_is_thinned_for_demand_and_still_covers_its_ends() {
 fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     let mut a = api();
     let b = a.new_line_id();
-    // 6 km of straight route east from the origin: 7.2 km of road, timed at 18 km/h
+    // 6 km of straight route east from the origin: 7.2 km of road, timed as open country
     assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
     let road = 6000.0 * ROAD_FACTOR;
     let flat = *a.stop_times(b, 0, 0).last().unwrap();
-    assert!((flat - road / BUS_V).abs() < 1e-6);
+    assert!((flat - bus::Pace::default().auto_time(0.0, road)).abs() < 1e-6);
     let buses = a.w.svc.lines[b as usize].trains[0];
     // a pack at the same origin: one zone of 2 km squares from x = -1 km, three squares, the first
     // two dense (about 100,000 homes and jobs a km2), the third open
@@ -279,8 +279,8 @@ fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     assert!(!a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     let slow = *a.stop_times(b, 0, 0).last().unwrap();
-    // the first 3 km of ground (3.6 km of road) at about 11.7 km/h, the rest at 18
-    let want = 3600.0 / (11.7 / 3.6) + 3600.0 / BUS_V;
+    // the first 3 km of ground (3.6 km of road) in the 30 km/h lane, the rest at open country's 39.6, and 18 stops
+    let want = 3600.0 / (30.0 / 3.6) + 3600.0 / (39.6 / 3.6) + 18.0 * 28.0;
     assert!(slow > flat && (slow - want).abs() < 0.04 * want, "{flat} {slow} {want}");
     assert!(a.w.svc.lines[b as usize].trains[0] >= buses);
     // the way back is as long

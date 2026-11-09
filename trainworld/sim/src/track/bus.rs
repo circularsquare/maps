@@ -2,9 +2,11 @@
 //! draws. Between two clicked points (its corners) the route follows the roads where the app found
 //! a road path (`K_ROAD`: the road length is the drawn length) and runs straight elsewhere, where
 //! the road length is the drawn length times `ROAD_FACTOR`. The road length sets the run time, the
-//! price and the running cost. A bus runs door to door at its share of the car's street speed
-//! where it is (`Pace`, `streets.rs`), at most `BUS_V`, standing the line's dwell at the train
-//! stations it meets and `STREET_DWELL_S` at each street stop (drawn only, within the hop's time).
+//! price and the running cost. A hop between two stops takes the car's time over its road, by
+//! demand's car model with the streets it crosses (`Pace`, `streets.rs`), at the bus's share of the
+//! car's speed, plus `streets::BUS_STOP_S` for the stop (T-2904). Automatic stops count that cost
+//! every `STREET_STOP_M` of road. The bus stands the line's dwell at the train stations it meets
+//! and `STREET_DWELL_S` at each street stop (drawn only, within the hop's time).
 //!
 //! Demand sees a few stops of each route (`plan`): the train stations it passes within
 //! `STATION_REACH_M`, its ends, a stop where it crosses another bus route, and one every
@@ -14,10 +16,8 @@
 
 use super::net::Network;
 use super::profile::{Phase, Profile};
+use super::streets::{bus_kmh, car_main_kmh, BUS_STOP_S, CAR_END_M, CAR_LOCAL_M, CAR_OPEN_KMH, CAR_TOWN_KMH, CAR_TRUNK_KMH};
 
-/// A bus's top speed, street stops and traffic included, m/s: what it does outside dense places and
-/// wherever no street grid is installed (`streets::BUS_TOP_KMH`).
-pub const BUS_V: f64 = super::streets::BUS_TOP_KMH / 3.6;
 /// Road metres of a route that share one speed (`Pace`).
 const PACE_STEP_M: f64 = 100.0;
 /// Road metres per drawn metre on a straight stretch of route: a diagonal across a grid runs
@@ -28,6 +28,8 @@ pub const ROAD_FACTOR: f64 = 1.2;
 pub const K_CORNER: u8 = 1;
 /// The route up to this point follows roads: its road length is its drawn length.
 pub const K_ROAD: u8 = 2;
+/// The stretch up to this point is on a trunk road (T-2904). A save from before has none.
+pub const K_TRUNK: u8 = 4;
 /// A train station this near the route (ground m) is a stop.
 pub const STATION_REACH_M: f64 = 200.0;
 /// Street stops along the road, m.
@@ -455,69 +457,101 @@ pub fn plan_spaced(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_
     Plan { stops, street, len, cum: poly.road.clone() }
 }
 
-/// A route's speed along it: `v[i]` m/s over road metres `i * step` to `(i + 1) * step`. Empty: `BUS_V`
-/// all the way.
+/// What a route's road is like along it: per `step` road metres the car's local street speed there,
+/// km/h, and whether it is a trunk road. Empty: open country and no trunk all the way.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Pace {
     step: f64,
-    v: Vec<f64>,
+    car: Vec<f64>,
+    /// empty when the route has no trunk road
+    trunk: Vec<bool>,
 }
 
 impl Pace {
-    /// The route's speed from the street grids (`Network::bus_v_at`) at the middle of each
-    /// `PACE_STEP_M` of road; flat where there are none. `cum`: the road metres at each of `pts`.
-    pub fn along(net: &Network, pts: &[[f64; 2]], cum: &[f64], len: f64) -> Pace {
-        if net.streets.is_empty() || len <= 0.0 {
+    /// From the street grids and the route's `kinds`, at the middle of each `PACE_STEP_M` of road.
+    /// `cum`: the road metres at each of `pts`.
+    pub fn along(net: &Network, pts: &[[f64; 2]], cum: &[f64], kinds: &[u8], len: f64) -> Pace {
+        let has_trunk = kinds.iter().any(|k| k & K_TRUNK != 0);
+        if (net.streets.is_empty() && !has_trunk) || len <= 0.0 {
             return Pace::default();
         }
         let n = (len / PACE_STEP_M).ceil().max(1.0) as usize;
         let step = len / n as f64;
-        let v = (0..n)
+        let mid = |i: usize| (i as f64 + 0.5) * step;
+        let car = (0..n)
             .map(|i| {
-                let (x, y) = at_road(pts, cum, (i as f64 + 0.5) * step);
-                net.bus_v_at(x, y)
+                let (x, y) = at_road(pts, cum, mid(i));
+                net.car_kmh_at(x, y)
             })
             .collect();
-        Pace { step, v }
+        let trunk = if has_trunk {
+            // kinds[k] is the stretch ending at point k
+            (0..n).map(|i| kinds.get(cum.partition_point(|&c| c < mid(i))).is_some_and(|k| k & K_TRUNK != 0)).collect()
+        } else {
+            vec![]
+        };
+        Pace { step, car, trunk }
     }
     /// The same route run from its other end.
     pub fn reversed(&self) -> Pace {
-        Pace { step: self.step, v: self.v.iter().rev().copied().collect() }
+        Pace { step: self.step, car: self.car.iter().rev().copied().collect(), trunk: self.trunk.iter().rev().copied().collect() }
     }
-    /// The fastest speed on the route, m/s.
-    pub fn top(&self) -> f64 {
-        if self.v.is_empty() { BUS_V } else { self.v.iter().copied().fold(0.0, f64::max) }
-    }
-    /// Seconds to run from road metre `a` to `b` (a before b).
-    pub fn time(&self, a: f64, b: f64) -> f64 {
+    /// Seconds to run from road metre `a` to `b` (a before b) at `kmh(car's local street speed, trunk)`.
+    fn seconds(&self, a: f64, b: f64, kmh: impl Fn(f64, bool) -> f64) -> f64 {
         let d = (b - a).max(0.0);
-        if self.v.is_empty() || d == 0.0 {
-            return d / BUS_V;
+        if d == 0.0 {
+            return 0.0;
         }
-        let last = self.v.len() - 1;
+        if self.car.is_empty() {
+            return d * 3.6 / kmh(CAR_TOWN_KMH, false);
+        }
+        let last = self.car.len() - 1;
+        let at = |i: usize| 3.6 / kmh(self.car[i], self.trunk.get(i).copied().unwrap_or(false));
         let (i0, i1) = (((a / self.step).floor().max(0.0) as usize).min(last), ((b / self.step).floor().max(0.0) as usize).min(last));
         if i0 == i1 {
-            return d / self.v[i0];
+            return d * at(i0);
         }
-        let mut t = ((i0 + 1) as f64 * self.step - a) / self.v[i0] + (b - i1 as f64 * self.step) / self.v[i1];
+        let mut t = ((i0 + 1) as f64 * self.step - a) * at(i0) + (b - i1 as f64 * self.step) * at(i1);
         for i in i0 + 1..i1 {
-            t += self.step / self.v[i];
+            t += self.step * at(i);
         }
         t
     }
+    /// Seconds for road metres `a` to `b` on automatic stops: all local streets, a stop every
+    /// `STREET_STOP_M`.
+    pub fn auto_time(&self, a: f64, b: f64) -> f64 {
+        self.seconds(a, b, street_bus_kmh) + BUS_STOP_S * (b - a).max(0.0) / STREET_STOP_M
+    }
+    /// Seconds for a hop between two stops `a` and `b` road metres along: the car's model over the
+    /// hop, local streets at each end, then main roads, then open highway, plus one stop.
+    pub fn hop_time(&self, a: f64, b: f64) -> f64 {
+        let d = (b - a).max(0.0);
+        let local = (0.5 * d).min(CAR_LOCAL_M);
+        let main = (0.5 * (d - 2.0 * local)).min(CAR_END_M);
+        let (a1, a2, b2, b1) = (a + local, a + local + main, b - local - main, b - local);
+        self.seconds(a, a1, street_bus_kmh) + self.seconds(a1, a2, main_bus_kmh) + self.seconds(a2, b2, |_, _| bus_kmh(CAR_OPEN_KMH)) + self.seconds(b2, b1, main_bus_kmh) + self.seconds(b1, b, street_bus_kmh) + BUS_STOP_S
+    }
 }
 
-/// A bus's trip over stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
-/// stop between the ends: constant speed between stops (the hop's mean over `pace`), no accelerating.
-/// It also stands `STREET_DWELL_S` at each street stop of `street` (ascending) inside a hop, which
-/// is drawn only: the hop's time stays what `pace` gives, the bus running faster between the stands.
+fn street_bus_kmh(car: f64, trunk: bool) -> f64 {
+    bus_kmh(if trunk { car.max(CAR_TRUNK_KMH) } else { car })
+}
+
+fn main_bus_kmh(car: f64, trunk: bool) -> f64 {
+    let main = car_main_kmh(car);
+    bus_kmh(if trunk { main.max(CAR_TRUNK_KMH) } else { main })
+}
+
+/// A bus's trip on automatic stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
+/// stop between the ends: constant speed between stops (the hop's mean), no accelerating. It also
+/// stands `STREET_DWELL_S` at each street stop of `street` (ascending) inside a hop, which is drawn
+/// only: the hop's time stays what `pace` gives, the bus running faster between the stands.
 pub fn profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace) -> Profile {
     run_profile(stop_s, dwell, street, pace, false)
 }
 
-/// The trip of a line with its own spacing (T-2885): `pace` has a stand every `STREET_STOP_M` in
-/// it, so a longer hop drops the stands it no longer makes, and the bus stands at each stop that
-/// has no dwell of its own inside the hop's time; at most 40% of the hop either way.
+/// The trip of a line with its own spacing (T-2885): each hop is `Pace::hop_time`, and the bus
+/// stands `STREET_DWELL_S` inside it at each stop with no dwell of its own.
 pub fn spaced_profile(stop_s: &[f64], dwell: &[f64], pace: &Pace) -> Profile {
     run_profile(stop_s, dwell, &[], pace, true)
 }
@@ -532,15 +566,12 @@ fn run_profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace, space
     p.arr.push(0.0);
     p.dep.push(0.0);
     for i in 0..n - 1 {
-        let mut run = pace.time(stop_s[i], stop_s[i + 1]);
+        let mut run = if spaced { pace.hop_time(stop_s[i], stop_s[i + 1]) } else { pace.auto_time(stop_s[i], stop_s[i + 1]) };
         let d = (stop_s[i + 1] - stop_s[i]).max(0.0);
         let mut own_stand = 0.0;
-        if spaced {
-            run = (run - STREET_DWELL_S * (d / STREET_STOP_M - 1.0).max(0.0)).max(0.6 * run);
-            if i + 1 < n - 1 && dwell.get(i + 1).copied().unwrap_or(0.0) <= 0.0 {
-                own_stand = STREET_DWELL_S.min(0.4 * run);
-                run -= own_stand;
-            }
+        if spaced && i + 1 < n - 1 && dwell.get(i + 1).copied().unwrap_or(0.0) <= 0.0 {
+            own_stand = STREET_DWELL_S.min(BUS_STOP_S);
+            run -= own_stand;
         }
         let lo = street.partition_point(|&s| s <= stop_s[i]);
         let hi = street.partition_point(|&s| s < stop_s[i + 1]);
@@ -548,7 +579,7 @@ fn run_profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace, space
         // at most 40% of the hop standing; the rest is the same time spent moving
         let stand_at = if ss.is_empty() || run <= 0.0 { 0.0 } else { STREET_DWELL_S.min(0.4 * run / ss.len() as f64) };
         let moving = run - stand_at * ss.len() as f64;
-        let v = if moving > 0.0 { d / moving } else { BUS_V };
+        let v = if moving > 0.0 { d / moving } else { 0.0 };
         p.phases.push(Phase { t, s: stop_s[i], v, a: 0.0 });
         for (k, &s) in ss.iter().enumerate() {
             let arrive = t + (s - stop_s[i]) / v + stand_at * k as f64;

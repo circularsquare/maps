@@ -7,7 +7,7 @@ import { distance, levelLabel, moneyShort, speed } from "../game/format";
 import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
 import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
-import { busSpeedColour, inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import { busSpeedColour, ferrySpeedColour, inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
 import { BASE_M_PER_KM, trackMult } from "../ui/trackPrice";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { guideVerbose, highSpeed, trackType, type TrackType } from "../game/ui";
@@ -88,7 +88,7 @@ export function speedFact(kmh: number): HTMLSpanElement {
 export function trainSpeedFact(kmh: number, vehicle = "train"): HTMLSpanElement {
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(...kids(tRich("trackTagRows.fastest", { vehicle, speed: chip(speed(kmh), vehicle === "train" ? speedColour(kmh) : busSpeedColour(kmh)) as unknown as ComponentChild })));
+  s.append(...kids(tRich("trackTagRows.fastest", { vehicle, speed: chip(speed(kmh), vehicle === "train" ? speedColour(kmh) : vehicle === "boat" ? ferrySpeedColour(kmh) : busSpeedColour(kmh)) as unknown as ComponentChild })));
   return s;
 }
 

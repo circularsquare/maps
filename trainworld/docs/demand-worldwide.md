@@ -983,15 +983,16 @@ notes/T-420.md has the tables.
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 - **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
-  A home within 300 m of a bus route walks its distance to the route plus 100 m and rides at 70% of
-  the car's street speed there, at most 18 km/h (T-1577, the same density rule as the car's local
-  streets, 16.5-44 km/h, so 11.5 in a dense centre), on the network's fare curve, bus kilometres included. Every boarding of a bus, a change
+  A home within 300 m of a bus route walks its distance to the route plus 100 m and rides at the bus's run time (T-2904: a hop takes the
+  car's time at 90% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
+  400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Every boarding of a bus, a change
   from a train or another bus onto it included, costs 6 perceived minutes on top of the wait
   (T-1576; unreliability, crowding at the stop, a stop not worth the wait for a short hop). Judgement
   figures, not fitted; the 6 minutes and 300 m were chosen so a drawn route's riders per route-km
   land in the range of busy real routes (notes/T-1466.md). Why they may not carry over: bus speeds
   run from about 10 km/h in dense Asian and African centres to 25-30 in North American suburbs, and
-  the 18 km/h top is the model's, so suburban and country buses are slower than real ones;
+  the model gives every dense centre a bus lane's speed (Seoul's median lanes, Anita 2026-11-09), so
+  buses where traffic holds them up in reality are faster here than real ones;
   where buses are informal or fares flat and separate (minibus taxis, many Latin American cities),
   the one fare curve and the free change to rail overstate the feeder; a 300 m corridor is short
   where blocks are huge or long where people walk further to a bus (low car ownership). Check: a

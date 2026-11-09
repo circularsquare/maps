@@ -1,16 +1,18 @@
 use super::*;
 
 #[test]
-fn a_bus_goes_at_most_18_and_seven_tenths_of_the_car() {
-    // open country: the car's 44 km/h, the bus's cap
-    assert_eq!(bus_kmh(car_street_kmh(0.0)), BUS_TOP_KMH);
-    // dense: the car's 16.5, the bus 11.55
-    assert!((bus_kmh(car_street_kmh(1e9)) - 11.55).abs() < 0.01);
-    // half way at 5,000 a km²: the car 30.25, so the cap
-    assert_eq!(bus_kmh(car_street_kmh(5000.0)), BUS_TOP_KMH);
-    // the cap holds until the car's street speed falls under 18 / 0.7 km/h, at about 10,000 a km²
-    assert_eq!(bus_kmh(car_street_kmh(9000.0)), BUS_TOP_KMH);
-    assert!(bus_kmh(car_street_kmh(12_000.0)) < BUS_TOP_KMH);
+fn a_bus_runs_at_nine_tenths_of_the_car_or_its_lane() {
+    assert!((bus_kmh(car_street_kmh(0.0)) - 39.6).abs() < 1e-9);
+    assert_eq!(bus_kmh(car_street_kmh(1e9)), BUS_LANE_KMH);
+    assert_eq!(bus_kmh(car_street_kmh(5000.0)), BUS_LANE_KMH);
+    assert!((bus_kmh(100.0) - 90.0).abs() < 1e-9);
+}
+
+#[test]
+fn main_roads_follow_the_local_streets_density() {
+    assert_eq!(car_main_kmh(CAR_CITY_KMH), CAR_CITY_KMH);
+    assert_eq!(car_main_kmh(CAR_TOWN_KMH), CAR_FAR_KMH);
+    assert!((car_main_kmh(car_street_kmh(5000.0)) - 52.25).abs() < 1e-9);
 }
 
 #[cfg(feature = "demand")]
@@ -22,6 +24,8 @@ fn the_car_speed_is_demands() {
         assert!((car_street_kmh(d as f64) - want).abs() < 1e-3, "{d}: {} {want}", car_street_kmh(d as f64));
     }
     assert_eq!(CELL_KM2 as f32, crate::demand::kernel::CELL_KM2);
+    assert_eq!((CAR_FAR_KMH as f32, CAR_OPEN_KMH as f32), (p.road_far_kmh, p.road_open_kmh));
+    assert_eq!((CAR_LOCAL_M as f32, CAR_END_M as f32), (p.road_local_km * 1000.0, p.road_end_km * 1000.0));
 }
 
 /// Two zones side by side on a 2 km grid of 4 x 2 squares, the west one dense.

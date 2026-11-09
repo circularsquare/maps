@@ -1,13 +1,12 @@
-//! Street speed by place (T-1577): how fast cars go on local streets where the player draws a bus
-//! route, so a bus runs slower in a dense centre than outside it. The figures are demand's
-//! (`Params::place_min_per_km`, `road_town_kmh`, `road_city_kmh`, `road_dens50`: the car's local
-//! streets fall from 44 km/h in open country towards 16.5 where homes and jobs are dense, half way
-//! at 5,000 a km²), repeated here because the track model is built without the demand module; a test
+//! Street speed by place (T-1577) and the rule for a bus's run time (T-2904). The car's figures are
+//! demand's (`Params::place_min_per_km`, `drive_min_f`: local streets falling from 44 km/h in open
+//! country towards 16.5 where homes and jobs are dense, main roads from 88 the same way, half way at
+//! 5,000 a km²), repeated here because the track model is built without the demand module; a test
 //! under the `demand` feature keeps the two equal.
 //!
 //! A pack gives a raster of its 2 km zones' speeds (`StreetGrid`), fetched by the clock worker with
 //! the pack's water mask and kept in the network beside the terrain. A route outside every raster
-//! runs at the top speed.
+//! runs at open-country car speeds.
 
 use std::sync::Arc;
 
@@ -15,16 +14,29 @@ use super::frame::Frame;
 
 /// The car's speed on local streets in open country, km/h (`Params::road_town_kmh`).
 pub const CAR_TOWN_KMH: f64 = 44.0;
-/// And where homes and jobs are dense (`Params::road_city_kmh`).
+/// And where homes and jobs are dense (`Params::road_city_kmh`), on local streets and main roads alike.
 pub const CAR_CITY_KMH: f64 = 16.5;
 /// Homes and jobs a km² of land at which it is half way between them (`Params::road_dens50`).
 pub const CAR_DENS50: f64 = 5000.0;
+/// The car's speed on main roads in open country, km/h (`Params::road_far_kmh`).
+pub const CAR_FAR_KMH: f64 = 88.0;
+/// And on open highway, past each end's main roads (`Params::road_open_kmh`).
+pub const CAR_OPEN_KMH: f64 = 110.0;
+/// Road metres of local streets at each end of a car's trip, at most half of it (`Params::road_local_km`).
+pub const CAR_LOCAL_M: f64 = 2000.0;
+/// Road metres of main roads after them at each end, at most half the rest (`Params::road_end_km`).
+pub const CAR_END_M: f64 = 8000.0;
 /// Mean area of a resolution 9 H3 cell, km² (`demand::kernel::CELL_KM2`).
 pub const CELL_KM2: f64 = 0.1053;
-/// A bus's share of the car's street speed.
-pub const BUS_SHARE: f64 = 0.7;
-/// The most a bus does, km/h: with no place data, and in open country.
-pub const BUS_TOP_KMH: f64 = 18.0;
+
+/// A bus's moving speed as a share of the car's.
+pub const BUS_SHARE: f64 = 0.9;
+/// Seconds each stop costs a bus: 20 standing, 8 speeding up and slowing down.
+pub const BUS_STOP_S: f64 = 28.0;
+/// The least a bus's moving speed falls to, km/h: its own lane, so the car's traffic does not hold it.
+pub const BUS_LANE_KMH: f64 = 30.0;
+/// The car on a trunk road, whatever the density and however short the bus's hop, km/h.
+pub const CAR_TRUNK_KMH: f64 = CAR_FAR_KMH;
 
 /// The car's speed on local streets at a place with `dens` homes and jobs a km² of land, km/h.
 pub fn car_street_kmh(dens: f64) -> f64 {
@@ -32,10 +44,15 @@ pub fn car_street_kmh(dens: f64) -> f64 {
     CAR_CITY_KMH + (CAR_TOWN_KMH - CAR_CITY_KMH) * f
 }
 
-/// A bus's speed where the car's local streets run at `car_kmh`: its share of that, at most
-/// `BUS_TOP_KMH`.
+/// The car's speed on main roads at a place where its local streets run at `street_kmh`.
+pub fn car_main_kmh(street_kmh: f64) -> f64 {
+    let f = (street_kmh - CAR_CITY_KMH) / (CAR_TOWN_KMH - CAR_CITY_KMH);
+    CAR_CITY_KMH + (CAR_FAR_KMH - CAR_CITY_KMH) * f
+}
+
+/// A bus's moving speed where the car runs at `car_kmh`.
 pub fn bus_kmh(car_kmh: f64) -> f64 {
-    (BUS_SHARE * car_kmh).min(BUS_TOP_KMH)
+    (BUS_SHARE * car_kmh).max(BUS_LANE_KMH)
 }
 
 /// Quarter km/h in a byte (16.5 is 66, 44 is 176); 0 is no zone.

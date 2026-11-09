@@ -6,14 +6,14 @@
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, LINK, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
+import { EXTENT, LINK, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
 import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 
 /** The roads a bus drives: the bus classes, and motorways (T-2469: most long bridges and tunnels are
  * motorways, and their approaches too), which a click lands on only where no street is near. An
  * unnamed-kind service road open to all may be a short link between streets (`LINK`, T-2882). */
 const busRoad: RoadKeep = (cls, brunnel, service, access) =>
-  BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
+  cls === "trunk" ? TRUNK : BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
 
 /** `busRoad` as a MapLibre filter on the basemap's `transportation` lines (T-2883), for drawing the roads
  * a bus may use; built from the same classes, so the two cannot drift apart. */
@@ -64,6 +64,8 @@ export interface Leg {
   ready: boolean;
   /** road metres (the straight line's length when it is straight) */
   m: number;
+  /** per stretch between points of `pts`, on a trunk road (T-2904); absent for none */
+  fast?: boolean[];
   /** ready but with no road: why, and `pts` is the straight line */
   refused?: BusRefusal;
 }
@@ -274,14 +276,16 @@ export class BusRoads {
           const r: number[] = [];
           for (let i = got.pts.length - 2; i >= 0; i -= 2) r.push(got.pts[i], got.pts[i + 1]);
           got.pts = r;
+          got.fast?.reverse();
         }
         path = got;
       }
       if (path) {
-        const pts = thin(path.pts, THIN_M / mpu);
+        const thinned = path.fast ? thinFlagged(path.pts, path.fast, THIN_M / mpu) : { pts: thin(path.pts, THIN_M / mpu), flags: undefined };
+        const pts = thinned.pts;
         const ll: number[] = [];
         for (let i = 0; i < pts.length; i += 2) ll.push(lngOf(pts[i]), latOf(pts[i + 1]));
-        out = { pts: ll, road: true, ready: true, m: path.m };
+        out = { pts: ll, road: true, ready: true, m: path.m, fast: thinned.flags?.some(Boolean) ? thinned.flags : undefined };
       }
     }
     const ms = performance.now() - t0;

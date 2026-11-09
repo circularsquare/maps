@@ -77,8 +77,8 @@ function parseQuote(d: Float64Array): Quote {
   return { road: d[0], cost: d[1], ok: d[2] === 1, stops, street };
 }
 
-/** the sim's `bus::K_CORNER` and `K_ROAD` */
-const K_CORNER = 1, K_ROAD = 2;
+/** the sim's `bus::K_CORNER`, `K_ROAD` and `K_TRUNK` */
+const K_CORNER = 1, K_ROAD = 2, K_TRUNK = 4;
 /** a route point this close (px) to the last drawn one is left out of the drawing */
 const DRAW_PX = 1.2;
 
@@ -302,7 +302,7 @@ export class BusDraw {
       const from = kinds.length - 1;
       for (let k = 2; k < n; k += 2) {
         ll.push(leg.pts[k], leg.pts[k + 1]);
-        kinds.push((leg.road ? K_ROAD : 0) | (k + 2 >= n ? K_CORNER : 0));
+        kinds.push((leg.road ? K_ROAD : 0) | (leg.fast?.[k / 2 - 1] ? K_TRUNK : 0) | (k + 2 >= n ? K_CORNER : 0));
       }
       if (isHover) {
         dim[0] = from;
