@@ -19,7 +19,7 @@ import { MoneyTab } from "./MoneyTab";
 import { StationsTab } from "./StationsTab";
 import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
-import { NewReplyDot } from "./FeedbackPanel";
+import { NewReplyDot, replyTip } from "./FeedbackPanel";
 import { HelpPanel } from "./HelpPanel";
 import { MareyPanel } from "./inspector/MareyChart";
 import { startAccountUi } from "./AccountPanel";
@@ -146,7 +146,7 @@ export function Dock() {
         <button class="tab gear save" data-tip={t("dock.saves")} aria-label={t("dock.saves")} onClick={() => (savesOpen.value = true)}>
           <Icon.save />
         </button>
-        <button class={"tab gear" + (cur === "settings" ? " on" : "")} data-tip={t("dock.settings")} aria-label={t("dock.settings")} aria-pressed={cur === "settings"} onClick={() => (tab.value = "settings")}>
+        <button class={"tab gear" + (cur === "settings" ? " on" : "")} data-tip={[t("dock.settings"), replyTip()].filter(Boolean).join("\n")} aria-label={t("dock.settings")} aria-pressed={cur === "settings"} onClick={() => (tab.value = "settings")}>
           <Icon.gear />
           <NewReplyDot />
         </button>

@@ -72,10 +72,13 @@ export function NewReplyDot() {
   return <span class="fb-dot" role="img" aria-label={t("feedbackPanel.newReply")} />;
 }
 
+/** The hover line for what carries the dot; undefined when no reply is unread. */
+export const replyTip = () => (feedbackUnread.value ? t("feedbackPanel.hasReply") : undefined);
+
 /** The Settings button. */
 export function FeedbackButton() {
   return <div class="pane-foot">
-    <button class={"btn text fb-open" + (feedbackOpen.value ? " on" : "")} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}<NewReplyDot /></button>
+    <button class={"btn text fb-open" + (feedbackOpen.value ? " on" : "")} data-tip={replyTip()} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}<NewReplyDot /></button>
     <a class="btn icon discord-link" href="https://discord.gg/RemhwVcZFw" target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}>
       <Icon.discord />
     </a>

@@ -11,6 +11,7 @@
 // and hangul never come from them: MapLibre draws those in the browser (localIdeographFontFamily).
 
 import * as maplibregl from "maplibre-gl";
+import { signal } from "@preact/signals";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
@@ -197,6 +198,18 @@ function vectorWait(map: maplibregl.Map, z: number, x: number, y: number, signal
   });
 }
 
+/** T-2870: the basemap's vector tiles (or its style) have been missing for BASEMAP_SLOW_MS, counted from when
+ * the current wait began, so a pan whose tiles come quickly shows nothing. The status tag reads it. */
+export const basemapSlow = signal(false);
+const BASEMAP_SLOW_MS = 3000;
+let basemapTimer = 0;
+function checkBasemapWait(map: maplibregl.Map, polled = false) {
+  const waiting = !styleUp(map) || !map.getSource(VECTOR_SOURCE) || !map.isSourceLoaded(VECTOR_SOURCE);
+  if (!waiting) { clearTimeout(basemapTimer); basemapTimer = 0; if (basemapSlow.peek()) basemapSlow.value = false; }
+  else if (polled) basemapSlow.value = true;
+  else if (!basemapTimer && !basemapSlow.peek()) basemapTimer = window.setTimeout(() => { basemapTimer = 0; checkBasemapWait(map, true); }, BASEMAP_SLOW_MS);
+}
+
 let demProtocolAdded = false;
 export const terrainUrl = (z: number, x: number, y: number) => TERRAIN_TILES.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`);
 /** the clock worker loads the class grids of the zones in view below this width (clock.worker.ts VIEW_SPAN_M) */
@@ -227,9 +240,16 @@ export function loadBasemap(map: maplibregl.Map) {
   addDemProtocol();
   onRedraw((tiles) => { if (styleUp(map) && map.getSource(DEM)) map.refreshTiles(DEM, tiles); });
   const key = (c: { z: number; x: number; y: number }) => `${c.z}/${c.x}/${c.y}`;
-  map.on("sourcedataloading", (e) => { if (e.sourceId === VECTOR_SOURCE && e.coord) vectorIn.delete(key(e.coord.canonical)); });
+  map.on("sourcedataloading", (e) => {
+    if (e.sourceId !== VECTOR_SOURCE) return;
+    if (e.coord) vectorIn.delete(key(e.coord.canonical));
+    checkBasemapWait(map);
+  });
+  map.on("idle", () => checkBasemapWait(map));
+  map.on("error", () => checkBasemapWait(map));
   map.on("sourcedata", (e) => {
     if (e.sourceId !== VECTOR_SOURCE) return;
+    checkBasemapWait(map);
     const c = e.tile?.state === "loaded" ? e.coord?.canonical : null;
     if (c) {
       vectorIn.delete(key(c));
@@ -242,6 +262,7 @@ export function loadBasemap(map: maplibregl.Map) {
   // only once such a label is on screen (memory reference_maplibre_rtl_and_name_en).
   if (maplibregl.getRTLTextPluginStatus() === "unavailable") maplibregl.setRTLTextPlugin(new URL(RTL_PLUGIN, document.baseURI).href, true).catch(() => {});
   map.setStyle(POSITRON, { transformStyle: (_previous, next) => restyle(next) });
+  checkBasemapWait(map);
   // T-957: changes that came while there was no style (a lost context) are painted when it is back
   map.on("style.load", () => {
     if (!missed) return;

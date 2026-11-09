@@ -136,7 +136,6 @@ export async function sendFeedback(f: { name: string; contact: string; message: 
  * feedback is sent signed out; the server keeps only its hash. Never in a URL; not the device id. */
 const FB_KEY = "trainworld.feedback-key.v1";
 /** How many of Anita's replies to each thread were already announced, so a reload says nothing twice */
-const FB_SEEN_KEY = "trainworld.feedback-announced.v1";
 const FB_CHECK_MS = 30 * 60_000;
 
 export interface FeedbackRow { id: string; kind: string; created: number; updated: number; first: string; messages: number; unread: number }
@@ -145,9 +144,6 @@ export interface FeedbackThread { id: string; kind: string; created: number; upd
 
 /** Threads with a reply not yet read: the dot on Submit feedback and on the Settings tab. */
 export const feedbackUnread = signal(0);
-let replyListener: (n: number) => void = () => {};
-/** Called with the count of new replies found by a check (the UI shows a passing note each). */
-export function onFeedbackReplies(cb: (n: number) => void) { replyListener = cb; }
 
 /** Whether the server keeps feedback threads; off, nothing here is called. */
 export const feedbackThreadsOn = () => !!BASE && accountConfig.value?.trainworldFeedbackThreads === true;
@@ -191,7 +187,7 @@ async function claimFeedbackKey() {
   } catch { /* the next check tries again */ } finally { claiming = false; }
 }
 
-/** The cheap check, from memory on the server: claims a key if there is one, sets the dot, and tells of new replies. */
+/** The cheap check, from memory on the server: claims a key if there is one and sets the dot. */
 export async function checkFeedback() {
   if (!feedbackThreadsOn()) return;
   await claimFeedbackKey();
@@ -200,11 +196,6 @@ export async function checkFeedback() {
   try { unread = (await api<{ unread?: { id: string; count: number }[] }>("GET", "trainworld/feedback/unread", undefined, { headers: keyHeaders() })).unread ?? []; }
   catch { return; } // offline or rate limited: the dot stays as it was
   feedbackUnread.value = unread.length;
-  const seen = lsGet<Record<string, number>>(FB_SEEN_KEY) ?? {}, now: Record<string, number> = {};
-  let fresh = 0;
-  for (const u of unread) { fresh += Math.max(0, u.count - (seen[u.id] ?? 0)); now[u.id] = Math.max(u.count, seen[u.id] ?? 0); }
-  lsSet(FB_SEEN_KEY, Object.keys(now).length ? now : null);
-  if (fresh > 0) replyListener(fresh);
 }
 
 let watching = false;

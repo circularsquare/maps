@@ -6,11 +6,11 @@ Updated: 2026-11-09 10:32
 
 ## State, 2026-11-09 10:31
 **LIVE = 2026-11-09 (78ca3b4a), website 84912f4.** R2 holds 2026-11-07c, 11-08, 11-09: purge 07c and 11-08 from about 2026-11-11.
-Master and 8800 = 4df8d347 (pushed; 8800 had no smoke, it was a build for Anita to look at). The next release needs one dev smoke, then 8800 light and dark (checks/smoke8800.cmd), then Anita's test and word.
+Master and 8800 = 8497aa0f (not pushed; 8800 had no smoke, it was a build for Anita to look at). The next release needs one dev smoke, then 8800 light and dark (checks/smoke8800.cmd), then Anita's test and word.
 Server shonei-server fc17e49 deployed (not pushed). Feedback threads ON; inbox localhost:8800/twfeedback/, key in her Documents/twfeedback-admin-key.txt. Analytics localhost:8800/twstats/ live.
 
 **Next release so far, on master:** T-2793 fares fix, Discord icon (feedback row, periwinkle), 44 currencies with region default (VERSION 14), autosave wording, feedback report details, phone note once ever, tap for tooltips, no keyboard hints on phones.
-**UNCOMMITTED in the main tree, ship with it (typecheck passes, no smoke yet):** the feedback panel T-2853/T-2865 (ui/FeedbackPanel.tsx, game/account.ts, ui/Dock.tsx, ui/AccountPanel.tsx, ui/style.css, i18n/*, app/public/privacy.html, notes/T-2853.md; T-2866 follow-ups); full currency prefix (A$ in the top bar's hover and the Money panel's Cash row: game/currency.ts, game/format.ts, ui/TopBar.tsx, ui/MoneyTab.tsx, ui/MoneyText.tsx); trainworld/tools/feedback-inbox/ (new, untracked); TASKS, ARCHIVE. Never TODO.md.
+**Committed as 8497aa0f after a dev smoke (27 pass), 8800 rebuild following, ship with it:** the feedback panel T-2853/T-2865 (ui/FeedbackPanel.tsx, game/account.ts, ui/Dock.tsx, ui/AccountPanel.tsx, ui/style.css, i18n/*, app/public/privacy.html, notes/T-2853.md; T-2866 follow-ups); full currency prefix (A$ in the top bar's hover and the Money panel's Cash row: game/currency.ts, game/format.ts, ui/TopBar.tsx, ui/MoneyTab.tsx, ui/MoneyText.tsx); trainworld/tools/feedback-inbox/ (new, untracked); TASKS, ARCHIVE. Never TODO.md.
 Update the changelog (ui/updates.ts) for that release and bump its date at publish.
 
 **Running (maps-8a's children, report to it; if taking over, ask ListAgents or check these trees):**

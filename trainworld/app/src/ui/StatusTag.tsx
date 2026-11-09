@@ -16,6 +16,7 @@ import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
 import { bubblesWaiting, farWaiting } from "../map/commuterView";
 import { groundNet, shadeDownloads } from "../game/terrain";
+import { basemapSlow } from "../map/basemap";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 
@@ -170,7 +171,9 @@ export function StatusTag() {
   const terrain = terrainText();
   // T-757: after startup the alert under the demand buttons says it instead (terrain still shows)
   const stopped = demandStopped.value;
-  const busy = stopped ? (loadingCardShown() ? null : terrain)
+  // T-2870: the basemap's tiles missing for 3 s
+  const mapWait = basemapSlow.value ? t("statusTag.loadingMap") : null;
+  const busy = stopped ? (loadingCardShown() ? null : terrain ?? mapWait)
     : loadFailure.value ? t("statusTag.demandFailed")
     : zoneFailure ? t("statusTag.placeFailed", { name: tPlace(activeCity.value, cityById(activeCity.value).name) })
     // T-180: while the clock waits, the card in the middle of the map says it instead
@@ -179,6 +182,7 @@ export function StatusTag() {
     // T-243: a thin bar after it, not a percentage
     : load ? t("statusTag.loadingData")
     : terrain ? terrain
+    : mapWait ? mapWait
     : !demandView.value ? (demandIdle.value ? null : t("statusTag.loadingDataDots")) // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? t("statusTag.loadingDataDots")
@@ -193,7 +197,8 @@ export function StatusTag() {
     : clock.capped.value ? t("statusTag.calculatingAfterChange") : null;
   if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); return null; }
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
-  const base = onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
+  const onMap = !onTerrain && busy === mapWait;
+  const base = onMap ? "" : onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
     : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
     : !demandView.value ? busy
     : bubblesWaiting.value ? ""
@@ -205,7 +210,8 @@ export function StatusTag() {
   // else the share of the last such wait that has passed
   let kind = "solve", share: number | null = null;
   if (!failed) {
-    if (onTerrain) { kind = "terrain"; const left = groundNet.value.pending + shadeDownloads.value; share = terrainPeak > 1 ? 1 - left / terrainPeak : null; }
+    if (onMap) kind = "map";
+    else if (onTerrain) { kind = "terrain"; const left = groundNet.value.pending + shadeDownloads.value; share = terrainPeak > 1 ? 1 - left / terrainPeak : null; }
     else if (load) { kind = "load"; share = load.fraction; }
     else if (!demandView.value) kind = "data";
     else if (bubblesWaiting.value) { kind = "bubbles"; share = zoneLoads.value.get(activeCity.value) ?? null; }

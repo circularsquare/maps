@@ -7,13 +7,12 @@
 
 import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { accountConfig, accountOpen, accountState, api, deleteAccount, onFeedbackReplies, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
+import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
 import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
 import { t, tRich, tNumber } from "../i18n";
 import { Leaderboard } from "./Leaderboard";
 import { Modal } from "./Modal";
-import { showPassingNote } from "./PassingNote";
 import { Icon } from "./widgets";
 import "./account.css";
 
@@ -216,8 +215,6 @@ let mounted = false;
 /** Start the account (`startAccount`) and mount its panels. Idempotent; the start menu and the dock
  * both call it. */
 export function startAccountUi() {
-  // T-2853: one passing note per new reply from Anita, a few seconds apart (the note holds one line)
-  onFeedbackReplies((n) => { for (let i = 0; i < Math.min(n, 3); i++) setTimeout(() => showPassingNote(t("feedbackPanel.replied")), i * 5200); });
   startAccount();
   watchMerge(); // T-988
   if (mounted || accountState.peek() === "off") return;
