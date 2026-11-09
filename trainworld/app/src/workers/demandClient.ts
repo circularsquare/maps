@@ -67,6 +67,7 @@ import {
   focusZones,
   demandAskTurn,
   editsSettling,
+  lineLoadsFor,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { deviceGB, mobileDevice, smallDevice } from "./deviceMemory";
@@ -2899,7 +2900,7 @@ class DemandClient {
   private refineOver(days: DayDemand[], s: Solve): DayDemand[] {
     const id = this.frefine, f = id ? this.fshown.get(id) : undefined;
     if (!id || !f || !this.asideOver(s)) return days;
-    return this.withZone(days, f.ests, [id], false, new Set(s.layout.map((l) => l.id)));
+    return this.withZone(days, f.ests, [id], false, new Set(s.layout.map((l) => l.id)), true);
   }
 
   /** T-2605: `s`'s coarse zones as shown: the zone refined aside is shown fine over it */
@@ -3136,16 +3137,16 @@ class DemandClient {
       // (the main pool's own solve of the network, sent since, has shown the zone)
       const w = this.cur;
       if (w && w.svc === s.svc && w.version > s.version && (this.cityVersion.get(id) === w.version || w.published >= ROUNDS)) return void this.endFocus();
-      // (only lines the shown figures have none for, new or with their stops changed, as T-324's: on a line shown
-      // already its riders from this zone alone would read lower than the shown ones, however the edit moved them)
-      const dv = demandView.peek(), base = this.log.find((x) => x.version === dv?.version);
+      // (T-2793: only lines the shown figures have none for: on any other, its stops changed or not, its riders from
+      // this zone alone would read far below the shown ones)
+      const dv = demandView.peek(), base = perfOff("keepFigures") ? this.log.find((x) => x.version === dv?.version) : undefined;
       const had = new Map((base?.layout ?? []).map((l) => [l.id, l.stops.join()]));
-      const lines = base?.svc === s.svc ? [] : (s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout).filter((l) => had.get(l.id) !== l.stops.join());
+      const lines = (s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout).filter((l) => (perfOff("keepFigures") ? base?.svc !== s.svc && had.get(l.id) !== l.stops.join() : !dv?.lines.has(l.id)));
       const days = await this.daysOf(s, lines, round, false, res, true);
       if (this.frefine !== id) return;
       const ests = lines.length ? days : days.map((d) => (d.view ? { ...d, view: { ...d.view, lines: new Map(), stations: new Map(), purposes: new Map() } } : d));
       this.fshown.set(id, { s, ests, round });
-      demandByDay.value = this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
+      demandByDay.value = this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)), true);
       focusZones.value = new Map(focusZones.peek()).set(id, final);
       this.askTurn();
       const l = this.flog.find((x) => x.version === s.version);
@@ -3178,24 +3179,28 @@ class DemandClient {
     return days;
   }
 
-  /** `days` with the figures of `ests` put in for `zones` (their views) and for the lines and
-   * stations `ests` has; the market's if `market`. Lines the network no longer has (`ids`) go. */
-  private withZone(days: DayDemand[], ests: DayDemand[], zones: CityId[], market: boolean, ids: Set<string>): DayDemand[] {
+  /** `days` with the figures of `ests` put in for `zones` (their views) and the market's if `market`. Lines the
+   * network no longer has (`ids`) go. T-2793: `ests` is a solve of these zones alone, so its riders on a line are only
+   * theirs (a long line's a few percent of its own): a line goes in only where `days` has none, whatever its stops
+   * were solved on (`lineLoadsFor` carries them). Stations likewise when `aside` (a zone refined aside, T-2605); the
+   * load's focus zones keep their stations' figures. */
+  private withZone(days: DayDemand[], ests: DayDemand[], zones: CityId[], market: boolean, ids: Set<string>, aside = false): DayDemand[] {
+    const keep = perfOff("keepFigures");
     return days.map((d, k) => {
       if (!d.view) return d;
       const est = ests[k];
       const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
       for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
-      for (const [id, l] of est.view!.lines) lines.set(id, l);
-      for (const [id, v] of est.view!.stations) stations.set(id, v);
+      for (const [id, l] of est.view!.lines) if (keep || !lines.has(id)) lines.set(id, l);
+      for (const [id, v] of est.view!.stations) if (keep || !aside || !stations.has(id)) stations.set(id, v);
       let purposes = d.view.purposes;
       if (est.view!.purposes) {
         purposes = new Map(purposes);
         for (const [key, p] of est.view!.purposes) {
           const old = purposes.get(key);
           const pl = new Map(old?.lines), ps = new Map(old?.stations);
-          for (const [id, l] of p.lines) pl.set(id, l);
-          for (const [id, v] of p.stations) ps.set(id, v);
+          for (const [id, l] of p.lines) if (keep || !pl.has(id)) pl.set(id, l);
+          for (const [id, v] of p.stations) if (keep || !aside || !ps.has(id)) ps.set(id, v);
           purposes.set(key, { lines: pl, stations: ps });
         }
       }
@@ -4527,15 +4532,18 @@ class DemandClient {
    * station only the new lines serve gets the estimate too). The view keeps the shown solve's
    * version and round, so queries and the bubbles behave as before; the final round replaces all.
    */
-  private publishNewLines(s: Solve, res: Result[]) {
+  private publishNewLines(s: Solve, res: Result[], cluster?: Uint32Array) {
     this.inOrder(async () => {
       const shown = demandByDay.peek()[0].view;
       const base = this.log.find((x) => x.version === shown?.version);
       if (!base || !shown) return;
       const had = new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
       // a line given early figures by an earlier solve's estimate is still "new" against the base
-      // (T-2793: a rough solve's figures are one zone's riders: only for a line that has no figures yet)
-      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(",") && (!s.rough || !shown.lines.has(l.id) || perfOff("keepFigures")));
+      // (T-2793: a rough solve's figures are one zone's riders, only for a line that has no figures yet; a cluster's round
+      // has only its own lines' (T-1533), so a line outside would read none; any other line with its shown figures carried
+      // onto its new stops keeps them until the final)
+      const inRes = cluster && !perfOff("keepFigures") ? new Set(Array.from(cluster, (k) => s.layout[k]?.id)) : null;
+      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(",") && (!inRes || inRes.has(l.id)) && (perfOff("keepFigures") || !shown.lines.has(l.id) || (!s.rough && !lineLoadsFor(shown, l.id, "all", l.stops))));
       if (!fresh.length) return;
       s.earlyAt = performance.now();
       s.earlyLines = fresh.map((l) => l.id);
@@ -4651,7 +4659,7 @@ class DemandClient {
     const final = round >= ROUNDS;
     if (!final && s.newZones) this.fillNewZones(s, round, res);
     // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
-    if (round === 0 && !final && !s.showEstimates) return this.publishNewLines(s, res);
+    if (round === 0 && !final && !s.showEstimates) return this.publishNewLines(s, res, c.lines);
     // T-1790: the zone in view's cluster solved ahead counts its own rounds
     if (s.barrier && c.cities.includes(activeCity.peek())) demandStep.value = { done: round + 1, of: ROUNDS + 1 };
     // T-2453: its zones' questions now go to its next round

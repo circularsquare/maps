@@ -502,10 +502,12 @@ are the same to the bit.
 solve without the barrier runs (`firm`), anything newer for the zone in view waits for that solve's final: the
 zone gone fine (it covers the zone coarse) or an edit that touches the zone (held, T-1734). On a big game that is
 a minute or more. So a focus pool of one worker is started for that zone alone, solving it as during a load with
-the newest network (fine), each round shown as the zone's figures and bubbles, and as the figures of its lines
-the shown result has none for (new, or their stops changed, as T-324's). Its other lines keep the shown figures:
+the newest network (fine), each round shown as the zone's figures and bubbles, and as the figures of lines
+the shown result has none at all for (T-2793: new ones only; a line whose stops changed keeps its shown figures,
+carried onto the new stops). Every other line and station keeps the shown figures (`withZone`, `aside`):
 from the zone alone their riders read lower than the shown ones (on Anita's day-383 save, Salt Lake City's two
-lines 50,400 a day against 67,800), however the edit moved them.
+lines 50,400 a day against 67,800; a 1,068 km Hikari 36,600 a day against 589,000, fares 98% down, T-2793),
+however the edit moved them.
 Those figures stay over any solve that covers the zone coarse or is of an older network, its final included,
 and the pool ends when a solve of the main pool of that network shows the zone (its local result or final), or
 at a newer edit. They carry the same lie as during a load; the main pool's solves are untouched.
