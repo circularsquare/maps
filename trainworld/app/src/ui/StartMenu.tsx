@@ -81,7 +81,7 @@ function playedBefore(): boolean {
   try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
 }
 
-/** T-2810: the newest update's line under New game, with its changelog and a way to hide it (ui/updates.ts). */
+/** T-2810: the newest update, with its changelog and a way to hide it (ui/updates.ts). */
 function UpdateRow({ onChangelog }: { onChangelog: () => void }) {
   const [update, setUpdate] = useState(updateToShow);
   if (!update) return null;
@@ -175,7 +175,6 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
         <div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div>
       </div>
-      <UpdateRow onChangelog={() => setChangelog(true)} />
       {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
       {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
@@ -200,6 +199,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
         </ul>
       </>}
     </div>}
+    {!sheet && <UpdateRow onChangelog={() => setChangelog(true)} />}
     <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
       {UPDATES.map((u) => <section key={u.version}>
         <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
