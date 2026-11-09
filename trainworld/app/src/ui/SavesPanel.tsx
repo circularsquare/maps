@@ -411,6 +411,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         <button class="btn text" data-tip={t("savesPanel.openFileTip")} onClick={pick}>{t("savesPanel.openFile")}</button>
         {/* a test page's game has no card to copy it from */}
         {!saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip={t("savesPanel.copy")} aria-label={t("savesPanel.copy")} disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
+        {startup.value === "ready" && <MainMenuButton />}
       </div>
       <ul class="save-slots">
         {groups.map((g) => {
@@ -473,9 +474,9 @@ function onAccount(slot: SaveSlot): boolean {
   return !!ctx?.on && tiedTo(slot.cloud, ctx);
 }
 
-/** T-2850: under the close button while a game is open: the game is saved and the page goes to the start menu. */
+/** T-2850: at the right of the New game row while a game is open: the game is saved and the page goes to the start menu. */
 function MainMenuButton() {
-  return <button class="btn icon" data-tip={t("savesPanel.mainMenu")} aria-label={t("savesPanel.mainMenu")}
+  return <button class="btn icon save-main-menu" data-tip={t("savesPanel.mainMenu")} aria-label={t("savesPanel.mainMenu")}
     onClick={() => { savesOpen.value = false; leaveToMenu(() => {}); }}><Icon.leaveGroup /></button>;
 }
 
@@ -487,7 +488,7 @@ export function SavesPanel() {
   useEffect(() => { if (!open) setSheet(false); }, [open]);
   useEffect(() => { if (open) { manageSaveSlot("refresh"); void refreshAccountGames(); } }, [open]);
   return (
-    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <HeadMark />} under={sheet || startup.value !== "ready" ? null : <MainMenuButton />}>
+    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <HeadMark />}>
       {sheet
         ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start, game.mode); savesOpen.value = false; }} />
         : <Saves onNewGame={() => setSheet(true)} />}

@@ -60,12 +60,18 @@ export interface CityNames {
 /** Each block's zone (an index into `zones`, -1 for none): the zone holding most of its stations, ties to a city
  * zone, then to more trips. `zoneOf` per node indexes `zones`. */
 export function blockNames(blocks: Blocks, zoneOf: ArrayLike<number>, zones: (ZoneLabel | undefined)[]): number[] {
-  const nb = blocks.list.length, counts: Map<number, number>[] = Array.from({ length: nb }, () => new Map());
+  // T-2822: a block also holds the lines out of its city, which may run through far more stations of another zone (the
+  // Atlanta block's line to Miami was named Miami, over Atlanta), so the block's own city stations (`core`) vote first
+  // and all its stations only where none of those has a zone
+  const nb = blocks.list.length, counts: Map<number, number>[] = Array.from({ length: nb }, () => new Map()), all: Map<number, number>[] = Array.from({ length: nb }, () => new Map());
   for (let i = 0; i < blocks.of.length; i++) {
     const b = blocks.of[i], z = zoneOf[i];
-    if (b >= 0 && z >= 0 && zones[z]) counts[b].set(z, (counts[b].get(z) ?? 0) + 1);
+    if (b < 0 || z < 0 || !zones[z]) continue;
+    all[b].set(z, (all[b].get(z) ?? 0) + 1);
+    if (blocks.core[i]) counts[b].set(z, (counts[b].get(z) ?? 0) + 1);
   }
-  return counts.map((c) => {
+  return counts.map((c0, b) => {
+    const c = c0.size ? c0 : all[b];
     let best = -1, most = -1;
     for (const [z, k] of c) {
       const l = zones[z]!, o = zones[best];

@@ -1487,7 +1487,7 @@ button.save-add:hover { color: var(--text); }
 .saves-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .saves-head h2 { font-size: 18px; margin: 0; flex: 1; }
 /* T-2850: the close button with the main menu button under it */
-.saves-close-col { display: flex; flex-direction: column; gap: 4px; align-self: flex-start; }
+.save-main-menu { margin-left: auto; }
 /* T-1395: where the games are kept, beside Close */
 .save-head-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; color: var(--muted); }
 .btn.save-head-mark { border-color: transparent; background: transparent; }

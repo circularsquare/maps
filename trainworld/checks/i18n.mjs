@@ -174,7 +174,7 @@ for (const lang of others) {
     for (const name of ph.keys()) if (!src.ph.has(name)) fault(`${lang} ${k}: {${name}} is not in the English`);
     for (const term of enTerms.get(k) ?? []) {
       const want = term[lang] ?? [];
-      if (want.length && !want.some((w) => v.includes(w))) fault(`${lang} ${k}: English says "${term.en}", glossary wants ${want.join(" or ")}`);
+      if (want.length && !want.some((w) => v.toLowerCase().includes(w.toLowerCase()))) fault(`${lang} ${k}: English says "${term.en}", glossary wants ${want.join(" or ")}`);
     }
     if (!(k in sources)) { unrecorded++; if (flag("--stale")) console.log(`  ${lang} ${k}: no English recorded in sources/${lang}.json`); }
     else if (sources[k] !== en[k]) { stale++; if (flag("--stale")) console.log(`  ${lang} ${k}: stale; was "${sources[k]}", now "${en[k]}"`); }

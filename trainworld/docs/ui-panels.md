@@ -854,7 +854,7 @@ keeps what it had and earns no more.
 
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
-- **The head**: "Saved games", one icon, then Close [T-1395], with a door-and-arrow button under Close while a game is open
+- **The head**: "Saved games", one icon, then Close [T-1395]. A door-and-arrow button at the right of the New game row while a game is open
   (hover "Save and quit to main menu"; it saves, lets the game go and reloads to the start page, `leaveToMenu`) [T-2850]. Where accounts are on, signed out a
   crossed cloud (hover "Kept in this browser only. Sign in to keep your games on your account."; a
   click opens Sign in), signed in a cloud (hover "Signed in as anita"; a click opens the account

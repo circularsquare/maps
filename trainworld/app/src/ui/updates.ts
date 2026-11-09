@@ -15,7 +15,7 @@ export interface Update {
 }
 
 /** When v0.1 went out: set at publish. */
-const V0_1_AT = "2026-11-08T22:00:00Z";
+const V0_1_AT = "2026-11-09T15:00:00Z";
 
 export const UPDATES: Update[] = [
   {
@@ -24,18 +24,17 @@ export const UPDATES: Update[] = [
     line: "updates.v01Line",
     changes: [
       "updates.v01Currency",
+      "updates.v01Spanish",
       "updates.v01Curves",
-      "updates.v01DeleteTrack",
       "updates.v01DeleteKeys",
-      "updates.v01Faces",
       "updates.v01StationsApart",
       "updates.v01Rename",
       "updates.v01DeleteBig",
       "updates.v01Cars",
-      "updates.v01Leaderboard",
-      "updates.v01CrossSection",
+      "updates.v01MainMenu",
+      "updates.v01MapDetail",
       "updates.v01Phones",
-      "updates.v01ServerDown",
+      "updates.v01Fixes",
     ],
   },
 ];

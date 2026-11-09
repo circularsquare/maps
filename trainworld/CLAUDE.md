@@ -98,8 +98,8 @@ Briefs carry only the task; these hold for every agent.
   too. Shells started before Rust was installed lack it on PATH: prepend `%USERPROFILE%\.cargo\bin`.
   After any sim/ change run both `cargo test --release` and `cargo test --release --features demand --lib`
   from trainworld/sim: the demand kernel's tests run only with the feature (two broke unseen, T-2250).
-- **CPU**: at most 10 of 16 cores in all, every agent together, while Anita is using the machine;
-  12-15 overnight or while she is away (Anita, 2026-10-22). Long jobs claim their cores in the
+- **CPU**: about 14 of 16 cores in all, every agent together (Anita, 2026-11-09: this game is the priority; don't let
+  core limits slow development). Long jobs claim their cores in the
   shared ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
   A browser load counts its demand workers too (about a core each, plus the page): a headless load
   of a big save took 5 cores on a 4-core claim and starved Anita's game (2026-10-27); cap the
@@ -117,7 +117,7 @@ Briefs carry only the task; these hold for every agent.
 - **Calibration of new cities** (Anita, 2026-10-16): cities added through the world plan need no
   calibration beyond the pipeline's gate. No big calibration at the end either: it happens in
   parts, task by task (Anita, 2026-10-22).
-- **Bash**: one simple command per call (no `&&`, pipes or loops); scripts go in a file in your
+- **Bash**: chaining simple commands is fine (Anita, 2026-11-09); scripts go in a file in your
   scratchpad folder, not heredocs. **Never pass `cmd /c start ... /b /wait /affinity` through Git Bash**: Bash turns
   `/b` into `B:/` and strips the quotes from a `start "title"`, so Windows pops "cannot find" dialogs and probes the B
   drive on Anita's screen (2026-11-06). Pin a process from PowerShell (`cmd /c start '""' /b /wait /affinity F000 node ...`)
@@ -142,10 +142,11 @@ Briefs carry only the task; these hold for every agent.
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,
-  and waking after more than about 5 idle minutes re-caches all of it. Wait for a long job with one
-  background wait on the process ending (not on a log line, which a script may never print), never
-  progress polling, and never wait in the foreground for more than about 4 minutes; do other work
-  meanwhile. Start independent long jobs together and wait once. A task's final checks (smoke and
+  and waking after more than about 5 idle minutes re-caches all of it (T-2831: a poll costs about
+  0.1x the context, a wake 1.25x). A wait under about 4 minutes is one foreground call. A longer one
+  runs in the background, with at most one light check of the process every 4-5 minutes, and a wait
+  on the process ending, not on a log line (a script may never print it). Read a job's log only when it ends; do
+  other work meanwhile. Start independent long jobs together and wait once. A task's final checks (smoke and
   the like, a few minutes) run in the foreground: an agent that ended its turn waiting on them
   stalled for hours (2026-10-27). Write long logs to a file and read
   summaries; read doc sections, not whole files; grep TASKS.md.
