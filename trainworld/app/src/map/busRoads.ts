@@ -6,7 +6,7 @@
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
+import { EXTENT, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
 import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 
 /** The roads a bus drives: the bus classes, and motorways (T-2469: most long bridges and tunnels are
@@ -125,7 +125,7 @@ export class BusRoads {
       const tpl = await this.url();
       if (tpl) {
         const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
-        if (r.status === 200) rl = decodeRoads(await r.arrayBuffer(), busRoad);
+        if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), busRoad));
         else if (r.status === 404 || r.status === 204) rl = { extent: EXTENT, lines: [] };
       }
     } catch {

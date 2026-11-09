@@ -12,6 +12,8 @@ export interface RoadLines {
   lines: Int32Array[];
   /** each line's weight, what `keep` gave it (a plain true is 1) */
   weights?: number[];
+  /** each line's level: 0 on the ground, anything else on a bridge, in a tunnel or on an OSM layer */
+  levels?: number[];
 }
 
 /** A road's `class` and `brunnel` (bridge, tunnel, ford or none) in OpenMapTiles. */
@@ -60,12 +62,13 @@ class Reader {
   }
 }
 
-/** A value message's string (other kinds are not read as classes). */
+/** A value message as a string, an integer's raw varint in decimal. */
 function valueString(r: Reader, end: number): string | null {
   let out: string | null = null;
   while (r.pos < end) {
     const tag = r.varint(), f = tag >> 3, w = tag & 7;
     if (f === 1 && w === 2) out = r.string(r.len());
+    else if (w === 0) out = String(r.varint());
     else r.skip(w);
   }
   return out;
@@ -121,12 +124,12 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
     }
     t.pos = end;
     if (name !== "transportation") continue;
-    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel");
-    const lines: Int32Array[] = [], weights: number[] = [];
+    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer");
+    const lines: Int32Array[] = [], weights: number[] = [], levels: number[] = [];
     for (const [s, e] of feats) {
       const fr = new Reader(b, e);
       fr.pos = s;
-      let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null;
+      let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null, layer = 0;
       while (fr.pos < e) {
         const ft = fr.varint(), ff = ft >> 3, fw = ft & 7;
         if (ff === 2 && fw === 2) {
@@ -135,6 +138,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
             const k = fr.varint(), v = fr.varint();
             if (k === classKey) cls = values[v] ?? null;
             else if (k === brunnelKey) brunnel = values[v] ?? null;
+            else if (k === layerKey) layer = Number(values[v]) || 0;
           }
         } else if (ff === 3 && fw === 0) type = fr.varint();
         else if (ff === 4 && fw === 2) {
@@ -147,6 +151,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
       const kept = keep(cls, brunnel);
       const weight = kept === true ? 1 : kept === false ? 0 : kept;
       if (!(weight > 0)) continue;
+      const level = (brunnel === "bridge" ? 1000 : brunnel === "tunnel" ? 2000 : 0) + layer;
       const g = new Reader(b, geomEnd);
       g.pos = geomStart;
       let x = 0, y = 0, cur: number[] | null = null;
@@ -159,14 +164,14 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
           x += (dx >> 1) ^ -(dx & 1);
           y += (dy >> 1) ^ -(dy & 1);
           if (id === 1) {
-            if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight);
+            if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight), levels.push(level);
             cur = [x, y];
           } else cur?.push(x, y);
         }
       }
-      if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight);
+      if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight), levels.push(level);
     }
-    return { extent, lines, weights };
+    return { extent, lines, weights, levels };
   }
   return { extent: 4096, lines: [], weights: [] };
 }

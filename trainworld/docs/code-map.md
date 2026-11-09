@@ -195,7 +195,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
   points and their handles, drag, delete and the active end (T-1514), the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
   `busRoads.ts` (zoom 14 tiles fetched from the basemap's tile server, the roads and motorways a bus drives (T-2469), snapping, `near` and `leg`, a leg with no road `refused` (T-2451), a free end landing on another reachable road (T-2467)),
-  `roadGraph.ts` (the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
+  `roadGraph.ts` (`joinRoads` putting back the junctions the tiles simplify away (T-2873), the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
 - Ferry routes (T-2192, track-and-service.md 6.8), in `src/ferry/` beside `map/`: `waterTiles.ts` (a zoom 12 tile's water polygons and
   bridge lines), `route.ts` (the water raster with bridges filled, port snapping, the leg search, coarse
   for long legs with fine ends, the line's rounding and speeds, `runSeconds`; pure, shared with the check),

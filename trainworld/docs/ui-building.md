@@ -323,7 +323,10 @@ point. Between two points the route takes the shortest path over the basemap's z
 (`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
 long bridges and tunnels most cities carry on them (T-2469); any direction, length as it is, no turn
 rules; service ways, tracks and paths are left out), at most 3 times the straight line or 1 km more
-than it, whichever is longer. A click within 100 m of a road lands on the nearest one, a motorway
+than it, whichever is longer. Roads join where a road's vertex comes within about 1 m of another road
+at its level, or where two ground-level roads cross, since the tiles drop the junction's vertex from a road
+running straight through it (T-2873; a motorway joins another motorway, and its own ends join any road).
+A click within 100 m of a road lands on the nearest one, a motorway
 counting 3 times as far and 30 m more, so a click by a street lands on the street; where that road
 has no path from the active end, it lands on the nearest other road within 100 m that has one, each
 metre further from the click counting as 3 m of road (T-2467). The point stays where it landed.

@@ -473,6 +473,127 @@ function clipSegment(x0: number, y0: number, x1: number, y1: number, out: number
   return out[0] !== out[2] || out[1] !== out[3];
 }
 
+/** A road's vertex this near another road (tile units, about 1 m at zoom 14) with no vertex of that road
+ * under it is a junction: the tiles' end-to-road gaps stop dead at 2 units (notes/T-2873.md). */
+const JUNCTION_GAP = 2;
+const JOIN_CELL = 128;
+
+/** The road lines with a shared vertex added at every junction. OpenMapTiles simplifies each road on its
+ * own, which drops the junction's vertex from a road that runs straight through it, so the roads meeting
+ * there share none (T-2873). A vertex close to a road or two ground-level roads crossing is taken as a
+ * junction; a motorway takes only another motorway's end, and its own ends (slip roads) join any road
+ * at their level. */
+export function joinRoads(rl: RoadLines): RoadLines {
+  // clipped first: an added vertex on a segment crossing the tile's edge would move where it is cut,
+  // and the two tiles' cut ends would no longer meet
+  const lines: Int32Array[] = [], src: number[] = [];
+  const scale = EXTENT / rl.extent, seg = [0, 0, 0, 0];
+  rl.lines.forEach((line, li) => {
+    let cur: number[] | null = null;
+    const flush = () => {
+      if (cur) lines.push(Int32Array.from(cur)), src.push(li);
+    };
+    for (let i = 2; i + 1 < line.length; i += 2) {
+      if (!clipSegment(line[i - 2] * scale, line[i - 1] * scale, line[i] * scale, line[i + 1] * scale, seg)) continue;
+      if (cur && cur[cur.length - 2] === seg[0] && cur[cur.length - 1] === seg[1]) cur.push(seg[2], seg[3]);
+      else flush(), (cur = [...seg]);
+    }
+    flush();
+  });
+  const level = (l: number) => rl.levels?.[src[l]] ?? 0;
+  const motor = (l: number) => (rl.weights?.[src[l]] ?? 1) >= MOTORWAY;
+  const sLine: number[] = [], sAt: number[] = [];
+  const cells = new Map<number, number[]>();
+  const cellKey = (cx: number, cy: number) => (cx + 8) * 1024 + cy + 8;
+  lines.forEach((l, li) => {
+    for (let i = 0; i + 3 < l.length; i += 2) {
+      const s = sLine.length;
+      sLine.push(li);
+      sAt.push(i);
+      const cx1 = Math.floor((Math.max(l[i], l[i + 2]) + JUNCTION_GAP) / JOIN_CELL), cy1 = Math.floor((Math.max(l[i + 1], l[i + 3]) + JUNCTION_GAP) / JOIN_CELL);
+      for (let cx = Math.floor((Math.min(l[i], l[i + 2]) - JUNCTION_GAP) / JOIN_CELL); cx <= cx1; cx++)
+        for (let cy = Math.floor((Math.min(l[i + 1], l[i + 3]) - JUNCTION_GAP) / JOIN_CELL); cy <= cy1; cy++) {
+          const k = cellKey(cx, cy), c = cells.get(k);
+          if (c) c.push(s);
+          else cells.set(k, [s]);
+        }
+    }
+  });
+  /** per segment, the points to add to it: t along it, x, y, in threes */
+  const adds = new Map<number, number[]>();
+  const add = (s: number, x: number, y: number) => {
+    const l = lines[sLine[s]], i = sAt[s], ax = l[i], ay = l[i + 1], bx = l[i + 2], by = l[i + 3];
+    if ((x === ax && y === ay) || (x === bx && y === by)) return;
+    const dx = bx - ax, dy = by - ay, t = ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy);
+    const a = adds.get(s);
+    if (a) a.push(t, x, y);
+    else adds.set(s, [t, x, y]);
+  };
+  const gap2 = JUNCTION_GAP * JUNCTION_GAP;
+  lines.forEach((l, li) => {
+    for (let i = 0; i < l.length; i += 2) {
+      const x = l[i], y = l[i + 1];
+      if (x === 0 || y === 0 || x === EXTENT || y === EXTENT) continue;
+      const end = i === 0 || i === l.length - 2;
+      if (!end && (level(li) !== 0 || motor(li))) continue;
+      for (const s of cells.get(cellKey(Math.floor(x / JOIN_CELL), Math.floor(y / JOIN_CELL))) ?? []) {
+        const lj = sLine[s];
+        if (lj === li || level(lj) !== level(li) || (motor(lj) && !motor(li))) continue;
+        const m = lines[lj], j = sAt[s], ax = m[j], ay = m[j + 1], dx = m[j + 2] - ax, dy = m[j + 3] - ay;
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+        const ex = ax + t * dx - x, ey = ay + t * dy - y;
+        if (ex * ex + ey * ey <= gap2) add(s, x, y);
+      }
+    }
+  });
+  for (const [k, c] of cells) {
+    for (let p = 0; p < c.length; p++) {
+      const lp = sLine[c[p]];
+      if (level(lp) !== 0 || motor(lp)) continue;
+      const A = lines[lp], i = sAt[c[p]], a0 = A[i], a1 = A[i + 1], ax = A[i + 2] - a0, ay = A[i + 3] - a1;
+      for (let q = p + 1; q < c.length; q++) {
+        const lq = sLine[c[q]];
+        if (lq === lp || level(lq) !== 0 || motor(lq)) continue;
+        const B = lines[lq], j = sAt[c[q]], b0 = B[j], b1 = B[j + 1], bx = B[j + 2] - b0, by = B[j + 3] - b1;
+        const det = ax * by - ay * bx;
+        if (det === 0) continue;
+        const u = ((b0 - a0) * by - (b1 - a1) * bx) / det, v = ((b0 - a0) * ay - (b1 - a1) * ax) / det;
+        if (u <= 0 || u >= 1 || v <= 0 || v >= 1) continue;
+        const px = Math.round(a0 + u * ax), py = Math.round(a1 + u * ay);
+        // one cell handles each crossing
+        if (cellKey(Math.floor(px / JOIN_CELL), Math.floor(py / JOIN_CELL)) !== k) continue;
+        add(c[p], px, py);
+        add(c[q], px, py);
+      }
+    }
+  }
+  const out = lines.slice();
+  const byLine = new Map<number, number[]>();
+  for (const s of adds.keys()) {
+    const b = byLine.get(sLine[s]);
+    if (b) b.push(s);
+    else byLine.set(sLine[s], [s]);
+  }
+  for (const [li, segs] of byLine) {
+    segs.sort((p, q) => sAt[p] - sAt[q]);
+    const l = lines[li], pts: number[] = [];
+    let copied = 0;
+    for (const s of segs) {
+      const upto = sAt[s] + 2;
+      for (let i = copied; i < upto; i++) pts.push(l[i]);
+      copied = upto;
+      const a = adds.get(s)!, order = Array.from({ length: a.length / 3 }, (_, n) => n).sort((p, q) => a[3 * p] - a[3 * q]);
+      for (const n of order) {
+        const x = a[3 * n + 1], y = a[3 * n + 2];
+        if (pts[pts.length - 2] !== x || pts[pts.length - 1] !== y) pts.push(x, y);
+      }
+    }
+    for (let i = copied; i < l.length; i++) pts.push(l[i]);
+    out[li] = Int32Array.from(pts);
+  }
+  return { extent: EXTENT, lines: out, weights: rl.weights && src.map((l) => rl.weights![l]), levels: rl.levels && src.map((l) => rl.levels![l]) };
+}
+
 /** Grid points (flat x, y) thinned to within `tol` units of the line. */
 export function thin(pts: number[], tol: number): number[] {
   const n = pts.length / 2;
