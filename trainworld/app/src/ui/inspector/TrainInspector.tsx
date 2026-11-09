@@ -5,7 +5,7 @@ import { demandView, lineDemand } from "../../game/demand";
 import { loadFailure } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
 import { distanceOf, exact } from "../../game/format";
-import { t } from "../../i18n";
+import { lowerWord, t } from "../../i18n";
 import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
@@ -102,7 +102,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   return (
     <>
       <div class="h">
-        <span>{t("trainInspector.onBoard")}</span><span class="right muted small">{PERIODS[p].name.toLowerCase()}{dm?.estimate && <span data-tip={t("trainInspector.estimateTip")}>{t("trainInspector.estimate")}</span>}</span>
+        <span>{t("trainInspector.onBoard")}</span><span class="right muted small">{lowerWord(PERIODS[p].name)}{dm?.estimate && <span data-tip={t("trainInspector.estimateTip")}>{t("trainInspector.estimate")}</span>}</span>
       </div>
       <ul class="rows">
         <Row label={t("trainInspector.riders")} bold>{exact(aboard)}</Row>

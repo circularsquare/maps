@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { demandView, type LineDemand } from "../../game/demand";
 import { exact } from "../../game/format";
 import { PERIODS } from "../../game/periods";
-import { t } from "../../i18n";
+import { lowerWord, t } from "../../i18n";
 import { asFilter, purposeColour, purposeName, type PurposeKey } from "../../game/purposes";
 import { pickPurpose, pickStops, purposeWeights } from "../../game/riderSample";
 import { stationPoint, tripOpenedFrom, tripPeriod } from "../../game/trip";
@@ -80,11 +80,11 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   const trip = read?.id === id ? read.trip : undefined;
   const total = weights.reduce((s, x) => s + x.w, 0);
   const purposeTip = total > 0
-    ? t("oneRider.drawnFrom", { count: exact(total), period: PERIODS[p].name.toLowerCase() }) + "\n" + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
+    ? t("oneRider.drawnFrom", { count: exact(total), period: lowerWord(PERIODS[p].name) }) + "\n" + [...weights].sort((x, y) => y.w - x.w).slice(0, 4).map((x) => `${purposeName(x.key)} ${pct(x.w / total)}`).join("\n")
     : t("oneRider.noSplit");
   const better = trip && trip.train !== null && trip.car !== null ? (trip.train <= trip.car ? "train" : "car") : null;
   const chances = trip && trip.pTrain !== null && trip.pDrive !== null
-    ? "\n" + t("oneRider.chances", { period: PERIODS[p].name.toLowerCase(), train: pct(trip.pTrain), drive: pct(trip.pDrive) })
+    ? "\n" + t("oneRider.chances", { period: lowerWord(PERIODS[p].name), train: pct(trip.pTrain), drive: pct(trip.pDrive) })
     : "";
   const minutes = (m: number | null | undefined, none: string) =>
     m === undefined ? <span class="muted">…</span> : m === null ? <span class="muted" data-tip={none}>{t("oneRider.none")}</span> : minText(m);

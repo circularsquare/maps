@@ -70,6 +70,9 @@ function render(key: MessageKey, values: RichValues | undefined): string | Compo
   return key;
 }
 
+/** A translated word set inside a sentence, lower-cased. German keeps its capitals: every noun is written with one. */
+export const lowerWord = (s: string): string => (language.value === "de" ? s : s.toLowerCase());
+
 /** The message `key` in the current language with its placeholders filled; English where the
  * language lacks it. Values are already formatted text, except a plural's count. */
 export function t(key: MessageKey, values?: Values): string {

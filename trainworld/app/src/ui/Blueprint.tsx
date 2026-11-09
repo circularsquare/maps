@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { t, tNumber, tSeries, type MessageKey } from "../i18n";
+import { lowerWord, t, tNumber, tSeries, type MessageKey } from "../i18n";
 import { describeIssues } from "../game/issues";
 import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
@@ -30,7 +30,7 @@ const HSR_ROW = 3;
 const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute"];
 /** "3 stations", "2 new cars": a counted noun by its id, the plural chosen in the message */
 const counted = (noun: string, count: number) => t("blueprint.count", { noun, count });
-const levelWords = (r: BlueprintItem) => `${levelName(r.level).toLowerCase()} (${levelLabel(r.level)})`;
+const levelWords = (r: BlueprintItem) => `${lowerWord(levelName(r.level))} (${levelLabel(r.level)})`;
 
 /** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
 function rowName(r: BlueprintItem) {
@@ -88,7 +88,7 @@ function rowTip(r: BlueprintItem) {
     if (r.tracks === HSR_ROW) factors.push([t("blueprint.hsrTrack"), "", HSR_TRACK]);
   } else if (r.kind === 1) {
     const b = STATION_FIXED_M + STATION_M[level];
-    base = t("blueprint.baseCostStation", { price: mil(b), level: levelName(level).toLowerCase() });
+    base = t("blueprint.baseCostStation", { price: mil(b), level: lowerWord(levelName(level)) });
     if (n !== 1) factors.push([t("blueprint.stationsFactor"), String(n), 1]);
     const fixed = n * b * (r.tracks === 1 ? SINGLE_STATION : 1) * water;
     const p = r.cost / 1e6 / fixed;
@@ -220,7 +220,7 @@ export function BlueprintBar() {
   // T-2283: the plain select tool's pick is the blueprint track clicked (game/blueprintPick.ts)
   if ((tool.value !== "blueprint" && tool.value !== "select") || n === 0) return null;
   const piece = t("blueprint.piece", { built: s.built, pieces: pieces(s.edges, s.stations) });
-  const levelTip = (l: Level) => t("blueprint.levelTip", { level: levelName(l).toLowerCase(), label: levelLabel(l) });
+  const levelTip = (l: Level) => t("blueprint.levelTip", { level: lowerWord(levelName(l)), label: levelLabel(l) });
   const canLevel = !s.built && s.edges > 0;
   // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
   const keys = tool.value === "blueprint";

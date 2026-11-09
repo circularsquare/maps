@@ -13,7 +13,7 @@ import { WALK_KMH } from "../../game/walks";
 import { CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
-import { t as tr, tRich, tSeries } from "../../i18n";
+import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
 import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
 import { MarketTrip } from "./MarketTrip";
@@ -411,7 +411,7 @@ export function TripInspector() {
   const n = mix ? mix.rail + mix.walk + mix.drive : 0;
   const day = shownDayPhrase.value;
   const period = PERIODS[q].name;
-  const periodLow = period.toLowerCase();
+  const periodLow = lowerWord(period);
   const of = n >= 0.5 ? tr("tripInspector.ofTrips", { trips: trips(n, filter), day }) : n > 0 ? tr("tripInspector.ofTrips", { trips: tripWords(filter), day }) : tr("tripInspector.ofPeople", { period: periodLow });
   // T-911: the train riders the headline counts, in whole trips, for the route shares (none: the model's)
   const riders = n > 0 ? wholePeople([mix!.rail, mix!.walk, mix!.drive], peopleOf(n))[0] || null : null;

@@ -1,4 +1,4 @@
-import { t } from "../i18n";
+import { lowerWord, t } from "../i18n";
 // Trip purposes as the map's purpose filter (T-158) and the purpose pie (T-143) name and colour
 // them. Plain data: the demand workers import it too.
 //
@@ -64,7 +64,7 @@ export const asFilter = (v: string): PurposeFilter => (FILTER_PURPOSES.some((p) 
 export const purposeName = (key: PurposeFilter): string => (key === "all" ? t("purposes.all") : PURPOSES.find((p) => p.key === key)?.name ?? key);
 
 /** "work", "errands", "airport": the purpose inside a sentence, before "trips". */
-export const purposeWords = (key: PurposeKey): string => (key === "airport" ? t("purposes.airportWord") : purposeName(key).toLowerCase());
+export const purposeWords = (key: PurposeKey): string => (key === "airport" ? t("purposes.airportWord") : lowerWord(purposeName(key)));
 
 // Purpose colours are independent of the UI theme. Green is reserved for future events.
 // School and university (shown as "School") share school's blue-green since T-192; with university's amber gone the

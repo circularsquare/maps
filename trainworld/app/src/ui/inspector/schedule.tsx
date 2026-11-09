@@ -6,7 +6,7 @@
 import type { ComponentChildren } from "preact";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { count, duration, headway, money, speed, trainKind } from "../../game/format";
-import { t, tNumber, tSeries } from "../../i18n";
+import { lowerWord, t, tNumber, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
@@ -306,7 +306,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
           </li>
         ) : hasTrains(l) && <Row label={t("schedule.profit")}><span class="muted">{t("schedule.calculating")}</span></Row>}
         {load !== null && (
-          <li data-tip={t("schedule.loadTip", { day: DAY_KIND_NAME[kind].toLowerCase().replace(/ day$/, "") })}>
+          <li data-tip={t("schedule.loadTip", { day: lowerWord(DAY_KIND_NAME[kind]).replace(/ day$/, "") })}>
             <span class="grow">{t("schedule.averageLoad")}</span>
             <span class="val">{pctWhole(load)}</span>
           </li>

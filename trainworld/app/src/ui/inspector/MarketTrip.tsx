@@ -18,7 +18,7 @@ import { eachCorridor, intercityDemand, intercityPlaceName } from "../../game/de
 import { peopleOf, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
-import { t as tr, tRich, tSeries } from "../../i18n";
+import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
 import { shownPeriod } from "../../map/tripView";
 import { SegBar } from "../widgets";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
@@ -399,7 +399,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const start = m.end === "work" ? one : ends.near;
   const sc = fareScale(start >= 0 ? marketRow(start)?.country : undefined, moneyState.value?.fares.scales);
   const fare = main ? (sc * (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0))) / t.minPerUsd : 0;
-  const periodLow = period.toLowerCase();
+  const periodLow = lowerWord(period);
   const repTip = tr("marketTrip.repTip", { period: periodLow, picked: tripPeriod.value !== null });
   // T-991: an end that is not open has no trips worked out, but the distance and the car are known
   // from the places' centres; with no distance at all, neither is shown
