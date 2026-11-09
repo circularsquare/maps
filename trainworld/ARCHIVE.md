@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2922 (2026-11-09, 2f2104b1): buses mind crowding from 85% of rated (45 aboard), so the capacity rating cost 8.9% of bus riders on a real save instead of 14% (85,883 to 78,231); seats stay at 15.
 - T-2889 (2026-11-09, e91253c2): Portuguese, Turkish, Russian, German, French and Korean added, each with translation, back-translation and review; Korean uses the system's Korean fonts, no hosted font. T-2851 is the wider list. notes/T-2889.md.
 - T-2924 (2026-11-09): Esc places a new bus or ferry line of two points or more, as it ends a chain of track (Anita: "when placing tracks i press 'esc' to finish the placement, but that doesnt work for buses or ferries"); on an edit it still drops the edit. Bus stops' "By hand" is now "Manual" in every language.
 - T-2891 (2026-11-09, f1499d37): By hand step in a bus line's Stop spacing: start and end stay, the player clicks every stop between; save level 9 (LBH1). notes/T-2891.md.
