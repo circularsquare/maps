@@ -87,8 +87,11 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 </main>
 <script>
 "use strict";
-// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server.
-const BASE = (new URLSearchParams(location.search).get("server") || "https://market.anita.garden/").replace(/\/?$/, "/");
+// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server. Only a local address:
+// the page sends the admin key to it (T-2912).
+const LOCAL_SERVER = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/;
+const asked = new URLSearchParams(location.search).get("server");
+const BASE = (asked && LOCAL_SERVER.test(asked) ? asked : "https://market.anita.garden/").replace(/\/?$/, "/");
 const KEY_STORE = "twfeedback.adminKey";
 const TAGS = { language: "Language", error: "Error", feature: "Feature request", feedback: "Feedback" };
 const MAX_ROWS = 300;

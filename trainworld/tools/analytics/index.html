@@ -121,8 +121,11 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 "use strict";
-// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server.
-const BASE = new URLSearchParams(location.search).get("server") || "https://market.anita.garden/";
+// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server. Only a local address:
+// the page sends the admin key to it (T-2912).
+const LOCAL_SERVER = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/;
+const asked = new URLSearchParams(location.search).get("server");
+const BASE = asked && LOCAL_SERVER.test(asked) ? asked : "https://market.anita.garden/";
 const URL_STATS = BASE.replace(/\/?$/, "/") + "trainworld/stats?days=400&starts=all";
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString("en-US");
