@@ -7,7 +7,7 @@ import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
-import { clockTime, dayOf, exact, money, moneyCash, usingUsd } from "../game/format";
+import { clockTime, dayOf, exact, money, moneyCash, usingUsd, withFullSymbol } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway, yearOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
@@ -177,7 +177,7 @@ export function MapSky() {
 function Cash() {
   const live = liveMoney.value, m = moneyState.value;
   const today = live.today;
-  const tip = today ? t("topBar.cashTip", { fares: money(today.fares * 1e6), running: money(-today.running * 1e6), upkeep: money(-(today.upkeep ?? 0) * 1e6) }) : undefined;
+  const tip = today ? t("topBar.cashTip", { fares: withFullSymbol(money(today.fares * 1e6)), running: withFullSymbol(money(-today.running * 1e6)), upkeep: withFullSymbol(money(-(today.upkeep ?? 0) * 1e6)) }) : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={[t("topBar.infiniteMoney"), t("topBar.sinceDay1", { amount: money((live.cash - START_CASH) * 1e6) }), ...(tip ? [tip] : [])].join("\n")}>{t("topBar.sandbox")}</div>;
   // T-1865: after the split, in a box of fixed width (style.css .cash), so nothing beside it moves

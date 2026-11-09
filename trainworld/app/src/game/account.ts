@@ -34,7 +34,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldPing?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -91,10 +91,10 @@ export const boardSetting = signal<BoardSetting | null>(null);
 export const accountOpen = signal(false);
 export const boardsOpen = signal(false);
 
-export class ApiError extends Error { constructor(msg: string, readonly status: number) { super(msg); } }
+export class ApiError extends Error { constructor(msg: string, readonly status: number, readonly code = "") { super(msg); } }
 
-export async function api<T>(method: string, path: string, body?: unknown, opts: { auth?: boolean; keep401?: boolean } = {}): Promise<T> {
-  const headers: Record<string, string> = {};
+export async function api<T>(method: string, path: string, body?: unknown, opts: { auth?: boolean; keep401?: boolean; headers?: Record<string, string> } = {}): Promise<T> {
+  const headers: Record<string, string> = { ...opts.headers };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   const s = session.peek();
   if (opts.auth !== false && s) headers.Authorization = "Bearer " + s.token; // i18n-ignore
@@ -110,19 +110,109 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
     // a dead token means signed out; a wrong current password (keep401) does not
     if (r.status === 401 && opts.auth !== false && !opts.keep401 && s) tokenGone();
     const msg = typeof j?.error === "string" ? j.error : t("account.answered", { status: r.status });
-    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status);
+    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status, typeof j?.code === "string" ? j.code : "");
   }
   return j as T;
 }
 
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
-export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string> }) {
+export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string>; kind?: string }) {
   if (!BASE) throw new ApiError(t("account.noServer"), 0);
   // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
   const cfg = accountConfig.peek();
   if (cfg && !cfg.trainworldFeedback) throw new ApiError(t("account.feedbackNotYet"), 404);
-  await api("POST", "trainworld/feedback", { kind: "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context });
+  // T-2853: only a server that says it keeps threads gets the tag and the browser key (an older one would
+  // refuse the key header in its CORS preflight)
+  const threads = cfg?.trainworldFeedbackThreads === true;
+  if (threads && !session.peek() && !readFeedbackKey()) makeFeedbackKey();
+  await api("POST", "trainworld/feedback", { kind: threads && f.kind ? f.kind : "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context },
+    { headers: threads ? keyHeaders() : undefined });
+}
+
+// ---------------------------------------------------------------- feedback threads (T-2853)
+
+/** The random key a signed-out browser's feedback belongs to (32 bytes, base64url). Made the first time
+ * feedback is sent signed out; the server keeps only its hash. Never in a URL; not the device id. */
+const FB_KEY = "trainworld.feedback-key.v1";
+/** How many of Anita's replies to each thread were already announced, so a reload says nothing twice */
+const FB_SEEN_KEY = "trainworld.feedback-announced.v1";
+const FB_CHECK_MS = 30 * 60_000;
+
+export interface FeedbackRow { id: string; kind: string; created: number; updated: number; first: string; messages: number; unread: number }
+export interface FeedbackMessage { at: number; from: "player" | "anita"; text: string }
+export interface FeedbackThread { id: string; kind: string; created: number; updated: number; unread: number; messages: FeedbackMessage[] }
+
+/** Threads with a reply not yet read: the dot on Submit feedback and on the Settings tab. */
+export const feedbackUnread = signal(0);
+let replyListener: (n: number) => void = () => {};
+/** Called with the count of new replies found by a check (the UI shows a passing note each). */
+export function onFeedbackReplies(cb: (n: number) => void) { replyListener = cb; }
+
+/** Whether the server keeps feedback threads; off, nothing here is called. */
+export const feedbackThreadsOn = () => !!BASE && accountConfig.value?.trainworldFeedbackThreads === true;
+
+export function readFeedbackKey(): string {
+  try { const k = localStorage.getItem(FB_KEY); return k && /^[A-Za-z0-9_-]{32,128}$/.test(k) ? k : ""; } catch { return ""; }
+}
+function makeFeedbackKey(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const k = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  try { localStorage.setItem(FB_KEY, k); } catch { return ""; } // blocked storage: sending works, no list shows
+  return readFeedbackKey();
+}
+const keyHeaders = (): Record<string, string> => { const k = readFeedbackKey(); return k ? { "X-Feedback-Key": k } : {}; };
+/** Whether this browser can have earlier feedback to list: a session or a key. */
+export const canListFeedback = () => feedbackThreadsOn() && !!(session.value || readFeedbackKey());
+
+const fbTrail = (id: string) => `trainworld/feedback/thread/${encodeURIComponent(id)}`;
+export async function listFeedback(): Promise<FeedbackRow[]> {
+  const r = await api<{ threads?: FeedbackRow[] }>("GET", "trainworld/feedback/mine", undefined, { headers: keyHeaders() });
+  const rows = r.threads ?? [];
+  feedbackUnread.value = rows.filter((x) => x.unread > 0).length;
+  return rows;
+}
+export const getFeedbackThread = (id: string) => api<FeedbackThread>("GET", fbTrail(id), undefined, { headers: keyHeaders() });
+export const replyFeedback = (id: string, message: string) => api<FeedbackThread>("POST", fbTrail(id) + "/reply", { message }, { headers: keyHeaders() });
+export const deleteFeedback = (id: string) => api<void>("DELETE", fbTrail(id), undefined, { headers: keyHeaders() });
+export async function markFeedbackRead(id: string) {
+  await api<void>("POST", fbTrail(id) + "/read", undefined, { headers: keyHeaders() });
+}
+
+let claiming = false;
+/** Signed in with a key: the key's threads move to the account and the key goes (on a 200 only). */
+async function claimFeedbackKey() {
+  const k = readFeedbackKey();
+  if (!k || !session.peek() || claiming) return;
+  claiming = true;
+  try {
+    await api("POST", "trainworld/feedback/claim", {}, { headers: { "X-Feedback-Key": k } });
+    try { localStorage.removeItem(FB_KEY); } catch { /* blocked */ }
+  } catch { /* the next check tries again */ } finally { claiming = false; }
+}
+
+/** The cheap check, from memory on the server: claims a key if there is one, sets the dot, and tells of new replies. */
+export async function checkFeedback() {
+  if (!feedbackThreadsOn()) return;
+  await claimFeedbackKey();
+  if (!session.peek() && !readFeedbackKey()) { feedbackUnread.value = 0; return; }
+  let unread: { id: string; count: number }[];
+  try { unread = (await api<{ unread?: { id: string; count: number }[] }>("GET", "trainworld/feedback/unread", undefined, { headers: keyHeaders() })).unread ?? []; }
+  catch { return; } // offline or rate limited: the dot stays as it was
+  feedbackUnread.value = unread.length;
+  const seen = lsGet<Record<string, number>>(FB_SEEN_KEY) ?? {}, now: Record<string, number> = {};
+  let fresh = 0;
+  for (const u of unread) { fresh += Math.max(0, u.count - (seen[u.id] ?? 0)); now[u.id] = Math.max(u.count, seen[u.id] ?? 0); }
+  lsSet(FB_SEEN_KEY, Object.keys(now).length ? now : null);
+  if (fresh > 0) replyListener(fresh);
+}
+
+let watching = false;
+function startFeedbackWatch() {
+  if (watching || !feedbackThreadsOn()) return;
+  watching = true;
+  effect(() => { void session.value; void checkFeedback(); }); // on load, and when a sign-in or sign-out changes whose threads these are
+  setInterval(() => void checkFeedback(), FB_CHECK_MS);
 }
 
 export function storeSession(j: { token: string; account: AccountView }) {
@@ -345,11 +435,12 @@ export function startAccount() {
     });
     // T-1771: plays and playtime, only against a server that says it takes them
     if (accountConfig.peek()?.trainworldPing) startPlaytime((p) => api("POST", "trainworld/ping", p));
-    if (accountState.peek() !== "on") return;
+    if (accountState.peek() !== "on") { startFeedbackWatch(); return; }
     if (session.peek()) {
       try { storeSession(await api("POST", "noritetsu/refresh")); }
       catch { /* a 401 has signed out; offline keeps the token for next time */ }
     }
+    startFeedbackWatch(); // T-2853: after the refresh, so a lapsed session is found out before a claim
     setInterval(() => void sendScores(), 15_000);
     effect(() => { void saveSlotsState.value; void session.value; void dropDeleted(); });
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") void sendScores(true); });

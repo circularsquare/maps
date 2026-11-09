@@ -41,7 +41,7 @@ function vehiclesTip(m: MoneyState): string | undefined {
 
 /** T-284: the cash as fares land, to the dollar, as in the top bar. */
 function LiveCash() {
-  return <Money dollars={liveMoney.value.cash * 1e6} cash />;
+  return <Money dollars={liveMoney.value.cash * 1e6} cash full />;
 }
 
 /** T-284: one figure of today's column as fares land; the network's or a region's (T-531). */

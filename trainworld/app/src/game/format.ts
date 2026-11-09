@@ -53,6 +53,8 @@ export const fromShown = (v: number): number => v / cu().rate;
 export const usingUsd = (): boolean => cu().rate === 1;
 /** The shown currency's symbol: "$", "£", "€", "¥", "₩". */
 export const currencySymbol = (): string => cu().symbol;
+/** A formatted amount with a plain "$" told apart ("A$96.4B"), where the player might not notice it isn't US$. */
+export const withFullSymbol = (s: string): string => { const c = cu(); return c.full ? s.replace(c.symbol, c.full) : s; };
 /** A price the player typed or dragged to, in the shown currency, kept to the currency's smallest
  * step (a cent, a yen, ten won) and given back in US$. */
 export const typedPrice = (shown: number): number => roundTo(shown, cu().grain) / cu().rate;

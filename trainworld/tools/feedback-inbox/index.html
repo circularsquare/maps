@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trainworld feedback inbox</title>
+<style>
+:root {
+  --bg: #0a0a0a; --panel: #111; --fg: #eee; --dim: #999; --faint: #555; --line: #2a2a2a;
+  --unread: #8fd1a0; --mine: #8fb8e8; --bad: #e88;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.4 'Nunito', system-ui, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-size: 15px; font-weight: 600; color: var(--dim); }
+.sub { color: var(--dim); font-size: 13px; }
+#err { color: var(--bad); font-size: 13px; min-height: 18px; margin: 8px 0; }
+button, select, textarea, input { font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); }
+button { padding: 3px 10px; cursor: pointer; }
+button:hover { border-color: var(--faint); }
+button.on { background: #222; border-color: var(--dim); }
+input[type=password] { padding: 4px 8px; width: min(420px, 100%); }
+select { padding: 3px 6px; }
+textarea { display: block; width: 100%; padding: 8px; min-height: 80px; resize: vertical; }
+#unlock { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#filters { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--dim); }
+#filters label { display: inline-flex; align-items: center; gap: 4px; }
+#tags { display: flex; flex-wrap: wrap; gap: 4px; }
+#tags button { font-size: 13px; }
+#panes { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { #panes { grid-template-columns: minmax(0, 1fr); } }
+#list { border-top: 1px solid var(--line); }
+.row { display: block; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 7px 4px; cursor: pointer; }
+.row:hover, .row.sel { background: var(--panel); }
+.row .top { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--dim); }
+.row .who { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .age { margin-left: auto; white-space: nowrap; }
+.row .first { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+.row.closed .first { color: var(--dim); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--unread); flex: none; align-self: center; }
+.tag { font-size: 12px; color: var(--dim); border: 1px solid var(--line); padding: 0 5px; white-space: nowrap; }
+#thread { min-width: 0; }
+#thread .empty { color: var(--faint); padding: 24px 0; }
+.head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 8px; }
+.head .name { font-weight: 600; }
+.head .actions { margin-left: auto; display: flex; gap: 6px; }
+.msg { border-top: 1px solid var(--line); padding: 8px 0; }
+.msg .meta { font-size: 13px; color: var(--dim); }
+.msg.anita .meta b { color: var(--mine); font-weight: 600; }
+.msg .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 12px; font-size: 13px; margin: 10px 0; }
+dt { color: var(--dim); }
+dd { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow-y: auto; }
+a { color: var(--mine); }
+#shot img { display: block; max-width: 100%; border: 1px solid var(--line); margin-top: 8px; }
+.note { font-size: 13px; color: var(--dim); margin: 8px 0; }
+.bad { color: var(--bad); }
+#reply { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>trainworld feedback inbox</h1>
+  <div id="err"></div>
+  <form id="unlock" hidden>
+    <input id="key" type="password" autocomplete="off" placeholder="Admin key" aria-label="Admin key">
+    <button>Unlock</button>
+    <span class="sub" id="keynote"></span>
+  </form>
+  <div id="app" hidden>
+    <div id="filters">
+      <label><input type="checkbox" id="fUnread"> Unread only</label>
+      <label>Status
+        <select id="fStatus"><option value="open">Open</option><option value="closed">Closed</option><option value="all">All</option></select>
+      </label>
+      <div id="tags"></div>
+    </div>
+    <div class="sub" id="count"></div>
+    <div id="panes" style="margin-top:8px">
+      <div id="list"></div>
+      <div id="thread"><div class="empty">Pick a thread.</div></div>
+    </div>
+    <footer>Data from <span id="src"></span>. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
+  </div>
+</main>
+<script>
+"use strict";
+// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server.
+const BASE = (new URLSearchParams(location.search).get("server") || "https://market.anita.garden/").replace(/\/?$/, "/");
+const KEY_STORE = "twfeedback.adminKey";
+const TAGS = { language: "Language", error: "Error", feature: "Feature request", feedback: "Feedback" };
+const MAX_ROWS = 300;
+const $ = (id) => document.getElementById(id);
+
+function storedKey() { try { return localStorage.getItem(KEY_STORE) || ""; } catch { return ""; } }
+function storeKey(k) { try { k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); } catch { /* private window */ } }
+
+// el builds DOM with textContent only: everything the players wrote is hostile input.
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  for (const c of kids) if (c != null) n.append(c);
+  return n;
+}
+
+let key = storedKey(), rows = [], selected = location.hash.slice(1), tag = "all", current = null, shotURL = null;
+
+async function api(method, path, body) {
+  const r = await fetch(BASE + path, {
+    method, cache: "no-store",
+    headers: Object.assign({ Authorization: "Bearer " + key }, body ? { "Content-Type": "application/json" } : {}),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (r.status === 401) { showUnlock(key ? "That key was refused." : ""); throw new Error("key refused"); }
+  if (r.status === 404 && path === "trainworld/inbox/threads") { showUnlock(""); throw new Error("the inbox is off on this server (no admin key set)"); }
+  if (!r.ok) {
+    let msg = "HTTP " + r.status;
+    try { msg = (await r.json()).error || msg; } catch { /* not JSON */ }
+    throw new Error(msg);
+  }
+  return r;
+}
+
+function showUnlock(note) {
+  $("app").hidden = true; $("unlock").hidden = false; $("keynote").textContent = note;
+}
+function fail(e) { $("err").textContent = e.message || String(e); }
+
+$("unlock").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  key = $("key").value.trim();
+  if (!key) return;
+  storeKey(key);
+  $("key").value = "";
+  $("unlock").hidden = true;
+  start();
+});
+$("forget").addEventListener("click", (ev) => { ev.preventDefault(); storeKey(""); key = ""; showUnlock("Key forgotten on this browser."); });
+$("fUnread").addEventListener("change", renderList);
+$("fStatus").addEventListener("change", renderList);
+
+const whoOf = (r) => r.accountName || r.name || "anon";
+function ago(t) {
+  const s = Math.max(0, Date.now() / 1000 - t);
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + " min";
+  if (s < 86400) return Math.round(s / 3600) + " h";
+  if (s < 86400 * 60) return Math.round(s / 86400) + " d";
+  return new Date(t * 1000).toISOString().slice(0, 10);
+}
+const when = (t) => new Date(t * 1000).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+
+function passes(r) {
+  if ($("fUnread").checked && !r.unread) return false;
+  const status = $("fStatus").value;
+  if (status !== "all" && r.status !== status) return false;
+  return tag === "all" || r.kind === tag;
+}
+
+function renderTags() {
+  const seen = new Set(rows.map((r) => r.kind).filter((k) => !TAGS[k]));
+  const names = Object.keys(TAGS).concat([...seen].sort());
+  const box = $("tags");
+  box.replaceChildren(...[["all", "All tags"], ...names.map((k) => [k, TAGS[k] || k])].map(([k, label]) =>
+    el("button", { type: "button", class: k === tag ? "on" : "", text: label, onclick: () => { tag = k; renderTags(); renderList(); } })));
+}
+
+function renderList() {
+  const shown = rows.filter(passes);
+  $("count").textContent = `${shown.length} shown, ${rows.length} in all`;
+  const list = $("list");
+  list.replaceChildren(...shown.slice(0, MAX_ROWS).map((r) => {
+    const top = el("div", { class: "top" },
+      r.unread ? el("span", { class: "dot", title: r.unread + " unread" }) : null,
+      el("span", { class: "tag", text: TAGS[r.kind] || r.kind }),
+      el("span", { class: "who", text: whoOf(r) }),
+      el("span", { class: "age", text: ago(r.updated) }));
+    const first = el("div", { class: "first", text: r.broken ? "(this thread's file cannot be read)" : r.first || "(empty)" });
+    return el("button", { type: "button", class: "row" + (r.id === selected ? " sel" : "") + (r.status === "closed" ? " closed" : ""), onclick: () => open(r.id) }, top, first);
+  }));
+  if (shown.length > MAX_ROWS) list.append(el("div", { class: "note", text: `${shown.length - MAX_ROWS} more. Narrow the filters to see them.` }));
+}
+
+async function loadList() {
+  try {
+    const r = await api("GET", "trainworld/inbox/threads");
+    rows = (await r.json()).threads;
+    $("app").hidden = false; $("unlock").hidden = true;
+    $("err").textContent = "";
+    $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
+    renderTags(); renderList();
+  } catch (e) { fail(e); }
+}
+
+function detail(label, value) { return value ? [el("dt", { text: label }), el("dd", { text: value })] : []; }
+
+function renderThread() {
+  const t = current, box = $("thread");
+  if (!t) { box.replaceChildren(el("div", { class: "empty", text: "Pick a thread." })); return; }
+  const who = t.accountName ? t.accountName + " (account)" : t.name || "anon";
+  const contact = t.contact || "";
+  const mailable = /^\S+@\S+\.\S+$/.test(contact);
+  const dl = el("dl");
+  if (t.accountName && t.name) dl.append(...detail("name", t.name));
+  if (t.account) dl.append(...detail("account id", t.account));
+  if (contact) {
+    dl.append(el("dt", { text: "email" }), el("dd", {},
+      mailable ? el("a", { href: "mailto:" + encodeURIComponent(contact), text: contact }) : contact));
+  }
+  dl.append(...detail("sent", when(t.created)));
+  const ctx = t.context || {};
+  const first = ["version", "browser", "memory", "language", "lastFailure"];
+  for (const k of first) dl.append(...detail(k === "lastFailure" ? "last failure" : k, ctx[k]));
+  for (const k of Object.keys(ctx).sort()) if (!first.includes(k)) dl.append(...detail(k, ctx[k]));
+
+  const actions = el("div", { class: "actions" },
+    el("button", { type: "button", text: t.status === "open" ? "Close" : "Reopen", onclick: () => setStatus(t.id, t.status === "open" ? "closed" : "open") }),
+    el("button", { type: "button", text: "Delete", onclick: askDelete }));
+  const msgs = t.messages.map((m) => el("div", { class: "msg " + m.from },
+    el("div", { class: "meta" }, el("b", { text: m.from === "anita" ? "Anita" : who }), "  " + when(m.at)),
+    el("div", { class: "text", text: m.text })));
+  const reply = el("textarea", { id: "replyText", "aria-label": "Reply" });
+  const send = el("button", { type: "button", text: "Send reply", onclick: () => sendReply(t.id, reply) });
+  box.replaceChildren(...[
+    el("div", { class: "head" }, el("span", { class: "tag", text: TAGS[t.kind] || t.kind }), el("span", { class: "name", text: who }), t.status === "closed" ? el("span", { class: "sub", text: "closed" }) : null, actions),
+    dl, ...msgs,
+    t.owner ? null : el("div", { class: "note", text: "No account or browser key: the player can't see a reply here. Email them if you want to answer." }),
+    el("div", { id: "reply" }, reply, send),
+    el("div", { id: "shot" }),
+  ].filter(Boolean));
+  if (t.shot) loadShot(t.id);
+}
+
+async function loadShot(id) {
+  try {
+    const r = await api("GET", `trainworld/inbox/thread/${id}/shot`);
+    const blob = await r.blob();
+    if (!current || current.id !== id) return;
+    if (shotURL) URL.revokeObjectURL(shotURL);
+    shotURL = URL.createObjectURL(blob);
+    $("shot").replaceChildren(el("div", { class: "note", text: "Screenshot" }), el("img", { src: shotURL, alt: "Screenshot the player attached" }));
+  } catch (e) { fail(e); }
+}
+
+async function open(id) {
+  selected = id;
+  try { history.replaceState(null, "", "#" + id); } catch { /* fine */ }
+  renderList();
+  const row = rows.find((r) => r.id === id);
+  if (row && row.broken) {
+    current = null;
+    $("thread").replaceChildren(el("div", { class: "note bad", text: "This thread's file cannot be read. It is kept on the server until you delete it." }),
+      el("button", { type: "button", text: "Delete", onclick: askDelete }));
+    return;
+  }
+  try {
+    const r = await api("GET", `trainworld/inbox/thread/${id}`);
+    current = await r.json();
+    renderThread();
+    if (current.unread) {
+      await api("POST", `trainworld/inbox/thread/${id}/read`);
+      if (row) row.unread = 0;
+      current.unread = 0;
+      renderList();
+    }
+  } catch (e) { fail(e); }
+}
+
+async function sendReply(id, box) {
+  const text = box.value.trim();
+  if (!text) return;
+  try {
+    const r = await api("POST", `trainworld/inbox/thread/${id}/reply`, { message: text });
+    current = await r.json();
+    renderThread();
+    await loadList();
+  } catch (e) { fail(e); }
+}
+
+async function setStatus(id, status) {
+  try {
+    const r = await api("POST", `trainworld/inbox/thread/${id}/status`, { status });
+    current = await r.json();
+    renderThread();
+    await loadList();
+  } catch (e) { fail(e); }
+}
+
+function askDelete() {
+  const id = selected;
+  const actions = el("div", { class: "note" },
+    "Delete this thread and its screenshot for good? ",
+    el("button", { type: "button", text: "Delete for good", onclick: () => doDelete(id) }), " ",
+    el("button", { type: "button", text: "Keep it", onclick: () => renderOrClear() }));
+  $("thread").prepend(actions);
+}
+function renderOrClear() { if (current) renderThread(); else open(selected); }
+
+async function doDelete(id) {
+  try {
+    await api("DELETE", `trainworld/inbox/thread/${id}`);
+    current = null; selected = "";
+    try { history.replaceState(null, "", location.pathname + location.search); } catch { /* fine */ }
+    renderThread();
+    await loadList();
+  } catch (e) { fail(e); }
+}
+
+async function start() {
+  if (!key) { showUnlock(""); return; }
+  $("src").textContent = BASE.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  await loadList();
+  if (selected && rows.some((r) => r.id === selected)) open(selected);
+}
+start();
+setInterval(() => { if (key && !$("app").hidden) loadList(); }, 60000);
+</script>
+</body>
+</html>

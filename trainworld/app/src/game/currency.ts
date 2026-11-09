@@ -8,6 +8,8 @@ export interface CurrencySpec {
   label: string;
   /** written before the figure; one that ends in a letter carries its space ("CHF 2.90") */
   symbol: string;
+  /** for a currency that locally writes a plain "$": the symbol where it has to be told apart ("A$") */
+  full?: string;
   /** how many of it one US dollar buys: a round figure, never updated */
   rate: number;
   /** decimals in a price (a fare, a car's cost): none where a price is a whole number */
@@ -21,8 +23,8 @@ export interface CurrencySpec {
   rateGrain: number;
 }
 
-const spec = (label: string, symbol: string, rate: number, dp: number, grain: number, fareStep: number, rateGrain: number): CurrencySpec =>
-  ({ label, symbol, rate, dp, grain, fareStep, rateGrain });
+const spec = (label: string, symbol: string, rate: number, dp: number, grain: number, fareStep: number, rateGrain: number, full?: string): CurrencySpec =>
+  ({ label, symbol, rate, dp, grain, fareStep, rateGrain, full });
 
 const TABLE = {
   USD: spec("USD $", "$", 1, 2, 0.01, 0.25, 0.01),
@@ -31,28 +33,28 @@ const TABLE = {
   CNY: spec("RMB ¥", "¥", 7, 2, 0.01, 2, 0.05),
   JPY: spec("JPY ¥", "¥", 150, 0, 1, 50, 1),
   KRW: spec("KRW ₩", "₩", 1300, 0, 10, 500, 10),
-  CAD: spec("CAD $", "$", 1.4, 2, 0.01, 0.25, 0.01),
-  AUD: spec("AUD $", "$", 1.5, 2, 0.01, 0.25, 0.01),
+  CAD: spec("CAD $", "$", 1.4, 2, 0.01, 0.25, 0.01, "C$"),
+  AUD: spec("AUD $", "$", 1.5, 2, 0.01, 0.25, 0.01, "A$"),
   INR: spec("INR ₹", "₹", 90, 0, 1, 20, 0.5),
-  MXN: spec("MXN $", "$", 18, 2, 0.5, 5, 0.1),
+  MXN: spec("MXN $", "$", 18, 2, 0.5, 5, 0.1, "MX$"),
   AED: spec("AED", "AED ", 3.7, 2, 0.01, 1, 0.05),
-  ARS: spec("ARS $", "$", 1400, 0, 10, 500, 10),
+  ARS: spec("ARS $", "$", 1400, 0, 10, 500, 10, "AR$"),
   BDT: spec("BDT ৳", "৳", 120, 0, 1, 20, 0.5),
   BRL: spec("BRL R$", "R$", 5.5, 2, 0.01, 1, 0.05),
   BYN: spec("BYN", "Br ", 3.3, 2, 0.01, 1, 0.05),
   CHF: spec("CHF", "CHF ", 0.8, 2, 0.01, 0.25, 0.01),
-  CLP: spec("CLP $", "$", 950, 0, 10, 250, 10),
-  COP: spec("COP $", "$", 4000, 0, 50, 1000, 50),
+  CLP: spec("CLP $", "$", 950, 0, 10, 250, 10, "CL$"),
+  COP: spec("COP $", "$", 4000, 0, 50, 1000, 50, "CO$"),
   CZK: spec("CZK Kč", "Kč ", 22, 0, 1, 5, 0.1),
   DKK: spec("DKK kr", "kr ", 6.8, 2, 0.01, 2, 0.1),
   EGP: spec("EGP E£", "E£", 50, 0, 1, 10, 0.5),
-  HKD: spec("HKD $", "$", 7.8, 2, 0.01, 2, 0.1),
+  HKD: spec("HKD $", "$", 7.8, 2, 0.01, 2, 0.1, "HK$"),
   HUF: spec("HUF Ft", "Ft ", 360, 0, 5, 100, 5),
   IDR: spec("IDR Rp", "Rp ", 16000, 0, 100, 5000, 100),
   MYR: spec("MYR RM", "RM ", 4.4, 2, 0.01, 1, 0.05),
   NGN: spec("NGN ₦", "₦", 1500, 0, 10, 500, 10),
   NOK: spec("NOK kr", "kr ", 10.5, 2, 0.05, 2, 0.1),
-  NZD: spec("NZD $", "$", 1.7, 2, 0.01, 0.25, 0.01),
+  NZD: spec("NZD $", "$", 1.7, 2, 0.01, 0.25, 0.01, "NZ$"),
   PEN: spec("PEN S/", "S/ ", 3.7, 2, 0.01, 1, 0.05),
   PHP: spec("PHP ₱", "₱", 58, 0, 1, 10, 0.5),
   PKR: spec("PKR Rs", "Rs ", 280, 0, 1, 50, 1),
@@ -62,7 +64,7 @@ const TABLE = {
   RUB: spec("RUB ₽", "₽", 90, 0, 1, 20, 0.5),
   SAR: spec("SAR", "SAR ", 3.75, 2, 0.01, 1, 0.05),
   SEK: spec("SEK kr", "kr ", 10, 2, 0.05, 2, 0.1),
-  SGD: spec("SGD $", "$", 1.3, 2, 0.01, 0.25, 0.01),
+  SGD: spec("SGD $", "$", 1.3, 2, 0.01, 0.25, 0.01, "S$"),
   THB: spec("THB ฿", "฿", 34, 0, 1, 10, 0.5),
   TRY: spec("TRY ₺", "₺", 40, 0, 1, 10, 0.5),
   TWD: spec("TWD NT$", "NT$", 31, 0, 1, 10, 0.5),

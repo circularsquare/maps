@@ -1772,3 +1772,36 @@ html.ui-hidden :is(.marey, #dock, #topbar, #tools, #tool-notes, #debug, .save-no
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
   padding: 3px 8px; border: 1px solid var(--rule); white-space: nowrap; }
 html.ui-hidden .ui-hint.on { display: block; }
+
+/* T-2853: the feedback panel's tags, earlier feedback and reply dot (ui/FeedbackPanel.tsx). No rules between
+   rows; the open thread is set apart by space. */
+.fb-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fb-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); pointer-events: none; }
+.fb-dot.inline { position: static; flex: none; }
+.fb-open { position: relative; }
+.tab.gear { position: relative; }
+.fb-earlier { margin-top: 8px; }
+.fb-earlier .h { margin-top: 12px; }
+.fb-note { margin: 0 0 6px; color: var(--muted); }
+.fb-rows { list-style: none; margin: 0; padding: 0; }
+.fb-rows li { margin: 0 0 2px; }
+.fb-rows li.open { margin-bottom: 10px; }
+.fb-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 4px 6px; border: 0; background: transparent;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.fb-row:hover, .fb-rows li.open > .fb-row { background: var(--shade); }
+.fb-first { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-date { flex: none; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fb-thread { display: flex; flex-direction: column; gap: 6px; padding: 6px 6px 0; }
+.fb-thread textarea { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg);
+  color: var(--text); font: inherit; resize: vertical; }
+.fb-msg { padding: 4px 6px; }
+.fb-msg.anita { background: var(--tint); }
+.fb-who { display: flex; gap: 8px; color: var(--muted); }
+.fb-who span:first-child { font-weight: 700; }
+.fb-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.fb-confirm p { margin: 0 0 6px; }
+.fb-del { border-color: var(--bad); color: var(--bad); }
+@media (pointer: coarse) {
+  .fb-tags .btn, .fb-thread .btn, .fb-confirm .btn { height: 34px; }
+  .fb-row { min-height: 44px; }
+}
