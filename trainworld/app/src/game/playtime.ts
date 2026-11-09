@@ -4,7 +4,8 @@
 // so the server can count distinct browsers (Anita, 2026-11-06); it is never tied to an account, and
 // the server forgets it after 13 months unseen. While a game is open (not the start menu or the new
 // game sheet) and the tab is visible, one ping about every minute carries both ids, the zone the game
-// began in, whether it is a sandbox and the build. Signed in, the ping carries the session like every
+// began in ("map" for a game started by picking a spot on the map), whether it is a sandbox, the build
+// and the browser language (T-2909). Signed in, the ping carries the session like every
 // other call (game/account.ts), so the server counts minutes per account.
 //
 // Nothing is sent: with `notrack` in localStorage (the website's owner opt-out; `?notrack` sets it,
@@ -20,7 +21,7 @@ const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 const PING_MS = 60_000;
 
-export interface Ping { id: string; b?: string; start: string; sandbox: boolean; v: string }
+export interface Ping { id: string; b?: string; start: string; sandbox: boolean; v: string; lang?: string }
 
 const BROWSER_KEY = "trainworld.browser";
 
@@ -76,6 +77,6 @@ export function startPlaytime(send: (ping: Ping) => Promise<unknown>) {
     }
     if (last && now - last < PING_MS) return;
     last = now;
-    void send({ id, b, start: gameStartZone() ?? "", sandbox: moneyState.peek()!.mode === "sandbox", v: BUILD }).catch(() => {});
+    void send({ id, b, start: gameStartZone() ?? "map", sandbox: moneyState.peek()!.mode === "sandbox", v: BUILD, lang: navigator.language }).catch(() => {});
   }, 1000);
 }
