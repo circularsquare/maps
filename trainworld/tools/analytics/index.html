@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trainworld player numbers</title>
+<style>
+:root {
+  --bg: #0a0a0a; --fg: #eee; --dim: #999; --faint: #555; --line: #2a2a2a;
+  --plays: #8fb8e8; --browsers: #e8b36a; --new: #8fd1a0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.4 'Nunito', system-ui, sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-size: 15px; font-weight: 600; color: var(--dim); }
+h2 { font-size: 15px; font-weight: 600; margin: 36px 0 10px; }
+.sub { color: var(--dim); font-size: 13px; }
+#now { font-size: 88px; font-weight: 700; line-height: 1; margin-top: 18px; font-variant-numeric: tabular-nums; }
+#now.off { font-size: 28px; color: var(--dim); font-weight: 600; padding: 28px 0 6px; }
+#nowlabel { color: var(--dim); margin-top: 4px; }
+#err { color: #e88; font-size: 13px; margin-top: 8px; min-height: 18px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 36px; }
+.stat b { display: block; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--dim); font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--dim); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+#chartwrap { position: relative; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--dim); font-size: 11px; font-family: inherit; }
+#tip { position: absolute; pointer-events: none; background: #181818; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; line-height: 1.5; display: none; white-space: nowrap; }
+#tip .d { color: var(--dim); }
+.cols { display: flex; flex-wrap: wrap; gap: 24px 48px; }
+.cols > div { min-width: 200px; flex: 1; }
+.cols h3 { font-size: 13px; font-weight: 600; color: var(--dim); margin-bottom: 6px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+td { padding: 3px 0; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; color: var(--dim); }
+.bar:hover rect:last-of-type { opacity: .8; }
+footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>trainworld player numbers</h1>
+  <div id="now">&nbsp;</div>
+  <div id="nowlabel">playing now</div>
+  <div id="err"></div>
+
+  <h2>Today so far (UTC)</h2>
+  <div class="row" id="today"></div>
+
+  <h2>By day (UTC)</h2>
+  <div class="legend">
+    <span><i style="border-color:var(--plays)"></i>plays</span>
+    <span><i style="border-color:var(--browsers)"></i>browsers</span>
+    <span><i style="border-color:var(--new);border-top-style:dashed"></i>new browsers</span>
+  </div>
+  <div id="chartwrap"><svg id="chart" viewBox="0 0 820 300" role="img" aria-label="Plays, browsers and new browsers per UTC day"></svg><div id="tip"></div></div>
+  <div class="sub" id="chartnote"></div>
+
+  <h2>Total time played per browser</h2>
+  <div id="ptBrowsers"></div>
+  <div class="sub" id="ptNoteB"></div>
+  <h2>Time played in one play</h2>
+  <div id="ptPlays"></div>
+  <div class="sub" id="ptNoteP"></div>
+
+  <h2>Start cities</h2>
+  <div class="cols">
+    <div><h3>Today</h3><table id="citiesToday"></table></div>
+    <div><h3>Since the data starts</h3><table id="citiesAll"></table></div>
+  </div>
+  <div class="sub" style="margin-top:8px">Each day's top 10 only, so the second list is a lower bound. Plays per start zone code.</div>
+
+  <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span></footer>
+</main>
+<script>
+"use strict";
+// ?server=http://127.0.0.1:8083/ points the page at a local build of shonei-server.
+const BASE = new URLSearchParams(location.search).get("server") || "https://market.anita.garden/";
+const URL_STATS = BASE.replace(/\/?$/, "/") + "trainworld/stats?days=400";
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n).toLocaleString("en-US");
+$("src").textContent = BASE.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+let days = [];
+
+function renderNow(data) {
+  const el = $("now");
+  if (typeof data.now === "number") {
+    el.className = ""; el.textContent = fmt(data.now);
+    $("nowlabel").textContent = "playing now (pinged in the last 90 s)";
+  } else {
+    el.className = "off"; el.textContent = "not deployed yet";
+    $("nowlabel").textContent = "playing now: the server has no live count yet";
+  }
+}
+
+function renderToday(data) {
+  const key = new Date().toISOString().slice(0, 10);
+  const d = data.days.find((x) => x.day === key);
+  const items = d
+    ? [["plays", d.plays], ["plays over 5 min", d.plays5min], ["minutes played", d.minutes], ["browsers", d.browsers], ["new browsers", d.newBrowsers]]
+    : [["plays", 0], ["plays over 5 min", 0], ["minutes played", 0], ["browsers", 0], ["new browsers", 0]];
+  $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`).join("");
+}
+
+function cityTable(id, rows) {
+  $(id).innerHTML = rows.length
+    ? rows.map(([c, n]) => `<tr><td>${c}</td><td>${fmt(n)}</td></tr>`).join("")
+    : `<tr><td>none yet</td><td></td></tr>`;
+}
+
+function renderCities(data) {
+  const key = new Date().toISOString().slice(0, 10);
+  const d = data.days.find((x) => x.day === key);
+  cityTable("citiesToday", d ? d.starts.slice(0, 8).map((s) => [s.start, s.plays]) : []);
+  const sum = {};
+  for (const x of data.days) for (const s of x.starts) sum[s.start] = (sum[s.start] || 0) + s.plays;
+  cityTable("citiesAll", Object.entries(sum).sort((a, b) => b[1] - a[1]).slice(0, 8));
+}
+
+// ---- chart: three lines over UTC days, hover guide with a tip
+const W = 820, H = 300, M = { l: 52, r: 12, t: 10, b: 28 };
+const SERIES = [["plays", "plays", "var(--plays)", ""], ["browsers", "browsers", "var(--browsers)", ""], ["newBrowsers", "new browsers", "var(--new)", "5 4"]];
+
+function niceMax(v) {
+  const p = Math.pow(10, Math.floor(Math.log10(Math.max(v, 1))));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+  return 10 * p;
+}
+
+function renderChart(list) {
+  const svg = $("chart");
+  if (!list.length) { svg.innerHTML = ""; return; }
+  const n = list.length;
+  const max = niceMax(Math.max(...list.map((d) => Math.max(d.plays, d.browsers, d.newBrowsers))));
+  const x = (i) => M.l + (n === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (n - 1));
+  const y = (v) => M.t + (1 - v / max) * (H - M.t - M.b);
+  let s = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = (max * k) / 4;
+    s += `<line x1="${M.l}" x2="${W - M.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
+    s += `<text x="${M.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  const step = Math.max(1, Math.ceil(n / 8));
+  list.forEach((d, i) => {
+    if (i % step === 0) {
+      s +=`<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${d.day.slice(5)}</text>`;
+    }
+  });
+  for (const [k, , col, dash] of SERIES) {
+    const pts = list.map((d, i) => `${x(i).toFixed(1)},${y(d[k]).toFixed(1)}`).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`;
+    if (n < 40) list.forEach((d, i) => { s += `<circle cx="${x(i)}" cy="${y(d[k])}" r="2.5" fill="${col}"/>`; });
+  }
+  s += `<line id="guide" y1="${M.t}" y2="${H - M.b}" stroke="#666" style="display:none"/>`;
+  s += `<rect id="hit" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
+  svg.innerHTML = s;
+
+  const tip = $("tip"), guide = $("guide"), wrap = $("chartwrap");
+  const hit = $("hit");
+  function move(ev) {
+    const r = svg.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * W;
+    let i = n === 1 ? 0 : Math.round(((px - M.l) / (W - M.l - M.r)) * (n - 1));
+    i = Math.max(0, Math.min(n - 1, i));
+    const d = list[i];
+    guide.setAttribute("x1", x(i)); guide.setAttribute("x2", x(i)); guide.style.display = "";
+    tip.innerHTML = `<span class="d">${d.day} UTC</span><br>` + SERIES.map(([k, l, col]) => `<span style="color:${col}">${l}</span> ${fmt(d[k])}`).join("<br>");
+    tip.style.display = "block";
+    const wr = wrap.getBoundingClientRect();
+    const left = (x(i) / W) * r.width;
+    tip.style.left = (left > r.width / 2 ? left - tip.offsetWidth - 10 : left + 10) + "px";
+    tip.style.top = (ev.clientY - wr.top - tip.offsetHeight / 2) + "px";
+  }
+  hit.addEventListener("mousemove", move);
+  hit.addEventListener("mouseleave", () => { tip.style.display = "none"; guide.style.display = "none"; });
+  $("chartnote").textContent = `${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Days before 2026-11-07 have no browser counts.`;
+}
+
+// ---- histograms: equal-width bars per bin (the bins themselves are uneven), count on hover
+function renderBars(id, labels, counts, unit, color, h) {
+  const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
+  const max = niceMax(Math.max(...counts, 1));
+  const n = labels.length, bw = (w - m.l - m.r) / n;
+  const y = (v) => m.t + (1 - v / max) * (h - m.t - m.b);
+  let s = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = (max * k) / 4;
+    s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
+    s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  s += `<text x="${m.l - 6}" y="10" text-anchor="end">${unit}</text>`;
+  labels.forEach((lb, i) => {
+    const x0 = m.l + i * bw;
+    const bh = y(0) - y(counts[i]);
+    s += `<g class="bar"><rect x="${x0}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" fill="transparent"/>` +
+      `<rect x="${x0 + 3}" y="${y(counts[i])}" width="${bw - 6}" height="${Math.max(bh, counts[i] ? 1 : 0)}" fill="${color}"/>` +
+      `<title>${lb}: ${fmt(counts[i])} ${unit}</title></g>`;
+    s += `<text x="${x0 + bw / 2}" y="${h - 8}" text-anchor="middle">${lb}</text>`;
+  });
+  $(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${unit} by time played">${s}</svg>`;
+}
+
+function renderPlaytime(data) {
+  const pt = data.playtime;
+  if (!pt || !Array.isArray(pt.bins)) {
+    for (const id of ["ptBrowsers", "ptPlays"]) $(id).innerHTML = `<div class="sub">not deployed yet</div>`;
+    $("ptNoteB").textContent = ""; $("ptNoteP").textContent = "";
+    return;
+  }
+  renderBars("ptBrowsers", pt.bins, pt.browsers, "browsers", "var(--browsers)", 240);
+  $("ptNoteB").textContent = `${fmt(pt.browsers.reduce((a, b) => a + b, 0))} browsers, all time. Bars are equal width; the bins are not.`;
+  // a play is capped at 10 h in the file, so everything from 10-20h up is "10h+"
+  const cut = pt.bins.indexOf("10-20h");
+  let labels = pt.bins.slice(0, cut + 1), counts = pt.plays.slice(0, cut + 1);
+  labels[cut] = "10h+"; counts[cut] = pt.plays.slice(cut).reduce((a, b) => a + b, 0);
+  while (counts.length > 1 && counts[counts.length - 1] === 0) { counts.pop(); labels.pop(); }
+  renderBars("ptPlays", labels, counts, "plays", "var(--plays)", 200);
+  $("ptNoteP").textContent = `${fmt(pt.plays.reduce((a, b) => a + b, 0))} plays over every day kept. A play that crosses midnight UTC counts on each day.`;
+}
+
+async function load() {
+  try {
+    const r = await fetch(URL_STATS, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    $("err").textContent = "";
+    renderNow(data); renderToday(data); renderCities(data); renderPlaytime(data);
+    if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
+    $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
+  } catch (e) {
+    $("err").textContent = "Could not reach the server (" + e.message + "). Trying again in 30 s.";
+  }
+}
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
