@@ -722,7 +722,8 @@ main line is a merge and the way out from it plain shared track. A line whose fl
 alert under its schedule naming the full resource ("Turning on the platform at Nerul Village is
 full") and, per demand level, how many of its trains are held out of service (they wait at the
 ends of the line instead of running), with the resource's limit in trains an hour and what helps on
-hover (`TrackApi.line_held`). Dots sit over the
+hover (`TrackApi.line_held`). Only whole trains count: a fleet that runs all but part of a train
+has no such line, and its dot is not marked as holding trains back (T-2935). Dots sit over the
 network, under station names and the demand views' bubbles (T-099). Like station names, they hide
 below zoom 12; each sits on its resource's point, and where two would touch the larger delay wins,
 then the higher utilisation (T-102); names never move or hide them ([ui-map.md](ui-map.md)

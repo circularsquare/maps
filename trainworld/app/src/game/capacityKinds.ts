@@ -72,8 +72,11 @@ export function fullTip(kind: number, most: number): string {
   return t("capacityKinds.tip", { cause: k.cause, ways: k.ways || "none", most: Math.round(most), help: k.help });
 }
 
+/** Whole trains out of service from `TrackApi.line_held`'s share of a fleet: a part train still runs some of the time (T-2935). */
+export const heldTrains = (wait: number) => Math.floor(wait + 0.01);
+
 /** Trains the line owns but cannot run, in words: "2 trains held out of service". */
-export const heldText = (wait: number) => t("capacityKinds.held", { n: Math.round(wait) });
+export const heldText = (wait: number) => t("capacityKinds.held", { n: heldTrains(wait) });
 
 /** What holding them means, for the hover. */
 export let heldTip = "";

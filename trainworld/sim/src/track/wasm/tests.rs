@@ -569,6 +569,21 @@ fn a_headway_at_the_track_limit_holds_no_train_out() {
     assert!(a.line_held(id)[0] > 0.0, "trains held out at 2:00 against a 4:00 limit");
 }
 
+/// T-2935: the dot marks trains held back only when a whole train is out of service.
+#[test]
+fn a_part_train_is_not_marked_as_held() {
+    let (mut a, id) = four_minute_line();
+    let trip = a.w.svc.lines[id as usize].round_trip[0];
+    let up = auto_trains(trip, 240);
+    let marked = |a: &TrackApi| a.markers(0).chunks(7).any(|m| m[6] > 0.0);
+    assert_eq!(a.set_train_counts(id, up, 1, 1), 0, "{}", a.issues());
+    assert!(a.line_held(id)[0] > 0.0 && a.line_held(id)[0] < 0.99, "part of a train past the limit: {}", a.line_held(id)[0]);
+    assert!(!marked(&a));
+    assert_eq!(a.set_train_counts(id, up + 2, 1, 1), 0, "{}", a.issues());
+    assert!(a.line_held(id)[0] >= 1.0);
+    assert!(marked(&a));
+}
+
 /// T-752: on track another line's fixed rate already overfills, switching between counts and
 /// headways buys and sells no train; the trains that cannot run are held out of service.
 #[test]

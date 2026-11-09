@@ -244,7 +244,8 @@ impl TrackApi {
             .iter()
             .flat_map(|&(r, _, rho, d)| {
                 let res = &cap.res[r];
-                let held = rho >= FULL_RHO && cap.limits(r) && cap.users_of(r).iter().any(|u| self.waiting(u.line, level) > 0.0);
+                // T-2935: a whole train, as the line panel counts them; a part train still runs some of the time
+                let held = rho >= FULL_RHO && cap.limits(r) && cap.users_of(r).iter().any(|u| self.waiting(u.line, level) >= 0.99);
                 [res.x as f32, res.y as f32, rho as f32, d as f32, cap.wire_kind(r) as f32, cap.trains(net, r, level) as f32, held as u8 as f32]
             })
             .collect()

@@ -20,7 +20,7 @@ import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
 import { liveMoney, moneyState } from "../../game/money";
-import { fullParts, fullTip, fullTitle, heldText, heldTip } from "../../game/capacityKinds";
+import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
@@ -903,7 +903,7 @@ function RailLineInspector({ id }: { id: string }) {
             return (
               <Alert tip={h0.tip}>
                 {h0.head}{h0.at ? <span class="place-link" onClick={() => { locateStation(h0.at!.lng, h0.at!.lat); selection.value = { kind: "station", station: h0.at!.id }; }}>{h0.name}</span> : h0.name}{h0.tail}
-                {hs.map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait) })}</div>)}
+                {hs.filter((h) => heldTrains(h.wait) > 0).map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait) })}</div>)}
               </Alert>
             );
           })}
