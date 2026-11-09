@@ -246,6 +246,9 @@ Anita's X account locked (birth date set; under 13 at creation; ID submitted), s
 1,863 browsers on 11-08. Her complaints filed T-2793..2798, T-2793 and T-2794 wait for her next usage window; agent easy (Sonnet, ~40 calls max) on T-2796, 2795, 2798, 2797 (2% left).
 Then smoke, commit, 8800; publish only on her word. Next free id T-2799.
 
+8800 = aac7d7e6 (T-2796, T-2795, smoke 26/26), not live. UNCOMMITTED: app/index.html (data-nosnippet on #game, longer meta
+description, so Google stops quoting the EuroGeographics notice); ships with the next batch.
+
 ## Anita's standing asks
 - **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and
   lean to use sonnets going forward")**: new agents on Sonnet unless a task truly needs Opus; fewer, smaller agents;
