@@ -18,7 +18,13 @@ export interface ScheduleCopy {
   trains: Levels;
   cars: number;
   fast: boolean;
+  /** T-2919: what the line runs; absent in a copy made before it, a train line's */
+  vehicle?: "train" | "bus" | "boat";
 }
+
+const vehicleOf = (st: LineStats) => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
+/** Whether pasting `c` on a line carries its train length and kind: only from a train line to a train line. */
+export const wholeCopy = (c: ScheduleCopy, st: LineStats): boolean => !st.bus && (c.vehicle ?? "train") === "train";
 
 const STORE = "anitabuilder-schedule-copy";
 
@@ -38,12 +44,12 @@ export const scheduleOf = (l: LineInput, st: LineStats): ScheduleCopy => ({
   from: l.name,
   headway: headwayShown(l.id),
   trains: trainsShown(l.id) ?? (st.trainsNeeded as Levels),
-  cars: st.cars,
+  cars: Math.max(1, st.cars),
   fast: st.fast,
+  vehicle: vehicleOf(st),
 });
 
 export function copySchedule(l: LineInput, st: LineStats) {
-  if (st.bus) return; // a bus has no cars or train kind to carry over
   const c = scheduleOf(l, st);
   scheduleCopy.value = c;
   try { localStorage.setItem(STORE, JSON.stringify(c)); } catch { /* storage unavailable: the copy lasts this visit */ }
@@ -63,8 +69,11 @@ export function carsCap(l: LineInput): { cap: number; name: string; m: number } 
 
 const mins = (s: number) => (s > 0 ? t("scheduleCopy.minutes", { n: tNumber(+(s / 60).toFixed(2)) }) : t("format.headwayNone"));
 
-/** "Headways 3 min, 5 min and 10 min, 6 cars, high speed", high, medium and low in order. */
-export function scheduleText(c: ScheduleCopy): string {
+/** "Headways 3 min, 5 min and 10 min, 6 cars, high speed", high, medium and low in order; without
+ * `whole`, what a paste carries to or from a bus or ferry line: "Headways 8 min, 15 min and 30 min" or
+ * "4, 3 and 2 buses". */
+export function scheduleText(c: ScheduleCopy, whole = true): string {
+  if (!whole) return c.headway ? t("scheduleCopy.headwaysOnly", { list: tList(c.headway.map(mins)) }) : t("scheduleCopy.countsOnly", { list: tList(c.trains.map(String)), vehicle: c.vehicle ?? "train" });
   return t(c.headway ? "scheduleCopy.withHeadways" : "scheduleCopy.withTrains", { list: tList((c.headway ? c.headway.map(mins) : c.trains.map(String))), cars: c.cars, fast: c.fast });
 }
 
@@ -72,13 +81,15 @@ export function scheduleText(c: ScheduleCopy): string {
  * trains or headways, each its own edit; a refused edit (cash) stops the rest. */
 export async function pasteSchedule(l: LineInput, st: LineStats) {
   const c = scheduleCopy.peek();
-  if (!c || st.bus) return;
+  if (!c) return;
   clickSound({ op: "lineCars" }); // one sound for the paste, not one for each of its edits
-  if (c.fast !== st.fast && !(await edit({ op: "lineFast", line: l.num, fast: c.fast }, false, true)).ok) return;
-  const fit = carsCap(l);
+  // T-2919: train length and kind only from a train line to a train line
+  const whole = wholeCopy(c, st);
+  if (whole && c.fast !== st.fast && !(await edit({ op: "lineFast", line: l.num, fast: c.fast }, false, true)).ok) return;
+  const fit = whole ? carsCap(l) : null;
   const cap = fit?.cap ?? c.cars;
   const cars = Math.min(c.cars, cap);
-  if (cars !== st.cars && !(await edit({ op: "lineCars", line: l.num, cars: cars >= cap ? 0 : cars }, false, true)).ok) return;
+  if (whole && cars !== st.cars && !(await edit({ op: "lineCars", line: l.num, cars: cars >= cap ? 0 : cars }, false, true)).ok) return;
   if (c.headway) {
     if (!(await edit({ op: "setHeadway", line: l.num, seconds: c.headway }, false, true)).ok) return;
   } else {

@@ -342,7 +342,7 @@ levels:
    trains: an even headway at the period's frequency, riders arriving at each stop by the
    account's shape for the period (fastest mid-period, the busiest hour at the busiest-hour
    factor), each train letting off the stop's alighting share and taking riders up to crush (240
-   a car, 150% of rated; a bus 80; a boat 480), the
+   a car, 150% of rated; a bus a third of a car, 80; a boat two cars, 480), the
    rest waiting a headway more for the next train of the same line and direction. A queue left
    at the period's end clears at the trains' average spare room. The rider-minutes waited
    beyond the first train, over the stop's boardings, are that boarding's average extra wait

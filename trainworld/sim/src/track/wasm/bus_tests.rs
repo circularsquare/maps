@@ -75,6 +75,8 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     assert_eq!(a.construct_line(b), 0, "{}", a.issues());
     let ls = &a.w.svc.lines[b as usize];
     assert!(ls.running);
+    // T-2919: a bus is a third of a train car, 80 at crush and rated at two thirds of it
+    assert!(ls.crush() == 80.0 && (ls.rated() - 160.0 / 3.0).abs() < 1e-9, "{} {}", ls.crush(), ls.rated());
     let buses = ls.trains[0];
     assert!(buses > 0 && a.fleet_bus() == buses && a.buses_needed() == buses);
     assert!((cash - a.cash() - (road / 1000.0 + buses as f64 * BUS_PRICE)).abs() < 1e-6, "{} {}", cash - a.cash(), buses);

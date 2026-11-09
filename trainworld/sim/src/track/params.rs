@@ -164,7 +164,7 @@ pub const BUS_PRICE: f64 = 0.6;
 pub const RUN_COST_BUS_KM: f64 = 6.0;
 /// Upkeep a day per road-km of constructed route, real US$ (US$3k a game day at `ECONOMY`).
 pub const UPKEEP_BUS_KM: f64 = 30.0;
-/// A bus's riders at crush.
+/// A bus's riders at crush: a third of a train car (T-2919; demand's `BUS_CARS`), 53 at the rated load.
 pub const BUS_CRUSH: f64 = 80.0;
 
 // ---- ferries (T-2193, notes/T-2177.md 3.1, 3.4, 3.5) ----

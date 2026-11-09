@@ -132,7 +132,7 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if
   the trains had room comes to the platform, and stays only if the trains due in the next 30
-  minutes have room for them (a train takes up to 150%, 240 a car; a bus 80; a boat 480); going along the
+  minutes have room for them (a train takes up to 150%, 240 a car; a bus 80, 150% of its 53; a boat 480); going along the
   line, riders already aboard keep their places. The
   rest go by car or on foot instead, and pay no fare. A line short of trains so has full
   platforms and full trains all through the peak.
@@ -257,7 +257,8 @@ distance to the route plus 100 m), waits and rides to a station at 90% of what a
 train is free: one fare for the whole trip on the same curve. Every time someone boards a bus,
 including changing from a train to one, it costs them 6 perceived minutes on top of the wait. A home
 1.5 km from a station walks 29 perceived minutes to it, or about 24 by bus. Trips by bus alone count
-as rail.
+as rail. A bus is a third of a train car: riders mind its crowding from 37 aboard, it is at 100% with 53
+and takes 80 at the most, the same shares as a train car's 112, 160 and 240.
 
 A ferry line (since T-2195) is a line like any other: people walk to its ports as to stations, wait
 half its headway, ride at the boats' own speed, change to and from trains as anywhere, and pay the

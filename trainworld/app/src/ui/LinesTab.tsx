@@ -88,11 +88,12 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
  * the period now, graded over its stretches (T-2279) from `v`, its own kind of day's numbers, and
  * hovered with that day's figures for the level now as the line panel's dot is (`crowdLevel`). */
 function TrainsNow({ line, n, period, at, bus, ferry, v, lev, stops, flip, ends }: { line: string; n: number; period: string; at: number; bus?: boolean; ferry?: boolean; v?: Float64Array; lev: Demand; stops: number; flip: boolean; ends?: [string, string] }) {
-  const c = !bus && v && n > 0 ? crowdLevel(v, lev, stops, flip, ends) : null;
+  const c = v && n > 0 ? crowdLevel(v, lev, stops, flip, ends) : null;
   const d = today.value.get(line);
   const load = d && (v ? periodLoad(v, at, stops) ?? d.crowdLoad : d.crowdLoad);
-  const cls = !bus && d && n > 0 ? crowdClass(load!) : "";
-  const tip = bus ? t("linesTab.vehiclesTip", { period, vehicles: ferry ? boatsText(n) : busesText(n) }) : c?.tip;
+  const cls = d && n > 0 ? crowdClass(load!) : "";
+  // T-2919: a bus or boat line's cell is a train line's; until its crowding is in, its vehicles
+  const tip = c?.tip ?? (bus ? t("linesTab.vehiclesTip", { period, vehicles: ferry ? boatsText(n) : busesText(n) }) : undefined);
   return <span class={"val w-trains " + (cls || "muted")} data-tip={tip}>{n}</span>;
 }
 
@@ -150,7 +151,7 @@ export function LinesTab() {
   // T-1677, T-2279: every running train line's crowding by period on its own kind of day, for the
   // trains cells, asked again when the network or the boarding account changes: one ask per kind of
   // day, a fixed six so the hooks hold
-  const crowdLines = (w?.save.lines ?? []).filter((l) => w!.lineStats[l.id]?.status === "running" && !w!.lineStats[l.id].bus);
+  const crowdLines = (w?.save.lines ?? []).filter((l) => w!.lineStats[l.id]?.status === "running");
   const acct = accountVersion.value;
   const kindOf = (l: LineInput) => kindIn(lineCountry(l.stops), Math.floor(lineSeconds(w!.lineStats[l.id]) / 86400));
   const byKind = DAY_KINDS.map((k) => crowdLines.filter((l) => kindOf(l) === k).map((l) => l.num));

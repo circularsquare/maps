@@ -312,7 +312,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
           </li>
         )}
         {d.fullTrains > 0 && <Row label={t("schedule.leavingFull", { vehicle: v })}><span data-tip={t("schedule.departedFull", { full: count(d.fullTrains), all: count(d.trains), vehicle: v })}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
-        {v === "train" && (
+        {v !== "bus" && (
           <li data-tip={t("schedule.leftBehindTip", { left: count(d.leftBehind), all: count(d.riders + d.leftBehind) })}>
             <span class="grow">{t("schedule.leftBehind")}</span>
             <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>

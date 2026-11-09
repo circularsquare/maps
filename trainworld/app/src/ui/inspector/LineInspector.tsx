@@ -15,7 +15,7 @@ import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretc
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { ask, display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool } from "../../game/ui";
+import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
@@ -32,7 +32,7 @@ import { BusInspector } from "./BusInspector";
 import { locateStation } from "../locate";
 import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
-import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText } from "../../game/scheduleCopy";
+import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
 import { MareyButton } from "./MareyChart";
 import { LineProfile } from "./LineProfile";
@@ -151,14 +151,15 @@ function markTip(m: RouteMark): string {
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
-function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: behindAll, waits: waitsAll }, waitSpots }: { st: LineStats; lev: number; stops: number; spots: Spots; waitSpots: Spot[] }) {
+export function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: behindAll, waits: waitsAll } = NO_SPOTS, waitSpots = [], standing }: { st: LineStats; lev: number; stops: number; spots?: Spots; waitSpots?: Spot[]; standing?: number }) {
   // T-798: a loop shows its lap, one way round (the longer way's, half its round trip); a circle
   // stands the dwell at its first stop and turns nowhere, a balloon turns there
   const runs = st.loop ? 1 : 2;
   const total = (st.roundTripByLevel[lev] ?? st.roundTripS) / (st.loop ? 2 : 1);
   // T-797: a stop where trains reverse stands the turnaround both ways, not the dwell
   const reversals = st.reversals?.length ?? 0;
-  const dwell = runs * Math.max(0, stops - 2 - reversals) * st.dwellS + (st.loop === "circle" ? st.dwellS : 0);
+  // T-2919: a bus line gives its own standing time (its dwell is stood at train stations only)
+  const dwell = standing ?? runs * Math.max(0, stops - 2 - reversals) * st.dwellS + (st.loop === "circle" ? st.dwellS : 0);
   const turn = st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS;
   // and so does a bare track end it reverses at (B3), which is no stop
   const reversing = runs * (reversals + (st.endTurns?.length ?? 0)) * st.turnaroundS;
@@ -313,7 +314,7 @@ export function StretchHalf({ s, down }: { s: StretchLook; down: boolean }) {
 const PANEL_MARK_FLOOR = 0.5;
 
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
-function StopToday({ line, i }: { line: string; i: number }) {
+export function StopToday({ line, i }: { line: string; i: number }) {
   const d = today.value.get(line);
   return <span class="n num" data-tip={d ? tr("stationInspector.boardings24", { count: count(d.stops[i] ?? 0) }) : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
 }
@@ -571,18 +572,20 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
   return tr("lineInspector.reach", { speed: speed(s.reached) }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
-/** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts). */
-function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
+/** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts).
+ * T-2919: on a bus or ferry line too, where only the trains or headways are carried. */
+export function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
   const c = scheduleCopy.value;
-  const fit = carsCap(l);
+  const whole = !!c && wholeCopy(c, st);
+  const fit = whole ? carsCap(l) : null;
   const cut = c && fit && c.cars > fit.cap ? "\n" + tr("lineInspector.pasteCut", { name: fit.name, cars: carsText(c.cars), cap: carsText(fit.cap) }) : "";
   return (
     <span class="sched-copy">
-      <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st)) })}
+      <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st), !st.bus) })}
         onClick={() => copySchedule(l, st)}><Icon.copy /></button>
-      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c) }) + cut : tr("lineInspector.pasteNone")}
+      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c, whole) }) + cut : tr("lineInspector.pasteNone")}
         onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
-      <MareyButton st={st} />
+      {!st.bus && <MareyButton st={st} />}
     </span>
   );
 }
@@ -659,19 +662,14 @@ function RailLineInspector({ id }: { id: string }) {
       if (a.ok && now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: now.stops.map(Number) };
     } finally { stopEditing = false; }
   };
-  const removeNow = () => {
-    ask.value = null;
+  // T-2919: no question, since an undo brings the line back (track and stations stay)
+  const remove = () => {
     void edit({ op: "removeLine", line: l.num }).then(a => {
       if (!a.ok) return;
       if (lineDraft.peek().line === l.num) live.tools?.exit();
       const selected = selection.peek();
       if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
     });
-  };
-  const remove = () => {
-    // T-2535: a line with no stops has nothing to lose, so it goes at once
-    if (l.stops.length === 0) return removeNow();
-    ask.value = { text: tr("lineInspector.deleteQuestion", { name: l.name }), yes: tr("busInspector.deleteYes"), no: tr("busInspector.deleteNo"), run: removeNow };
   };
   const copy = async () => {
     if (copying) return;

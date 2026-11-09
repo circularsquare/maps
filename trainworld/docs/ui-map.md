@@ -593,8 +593,8 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   ([track-and-service.md](track-and-service.md) 6.6): this train's riders on the stretch it is
   drawn on, empty at its last stop. Past 100% a second band, the dark shade 65% of the way to the
   warning red, fills from the back again, whole at crush (240 a car, 150%), where the train has a
-  red rim 3.9 px wide (the white rim is 1.7 px). A boat is two cars (480 at crush); a bus half a car,
-  full and red-rimmed at its rated 80 [T-2195].
+  red rim 3.9 px wide (the white rim is 1.7 px). A boat is two cars (480 at crush); a bus a third of a car
+  (53 at the rated load, red-rimmed at its crush of 80) [T-2195, T-2919].
 - **No figures yet** [T-230, T-324]: a running line demand has no riders for (just after an edit
   changed its stops) is drawn striped in the line colour and white, never solid, and its tag says
   "Calculating demand".

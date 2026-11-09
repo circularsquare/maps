@@ -51,12 +51,6 @@ pub const BERTH_TOL_M: f64 = 50.0;
 pub const MIN_ROUTE_M: f64 = 100.0;
 /// The most points a route may have.
 pub const MAX_ROUTE_POINTS: usize = 8000;
-/// What a new ferry line starts with (the app passes them, `NEW_FERRY_*` in the clock worker): dwell
-/// and turnaround, s, and a boat every 20 and 30 minutes at high and medium demand, none at low (T-2273).
-pub const FERRY_DWELL_S: f32 = 60.0;
-pub const FERRY_TURNAROUND_S: f32 = 300.0;
-pub const FERRY_HEADWAYS_S: [u32; 3] = [1200, 1800, 0];
-
 /// A ferry line's route: plane points in the network's frame, each with its `K_*` kind and the most
 /// the boat may do there (m/s, on a mm/s grid so a save keeps it to the bit), and whether it is
 /// constructed (it runs). Its ports are the line's stops.

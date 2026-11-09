@@ -272,7 +272,7 @@ purpose filter the purpose drawn is ringed in the bar.
   two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
   "<name> clone N" (a copy of "X clone 1" is "X clone 2") with the old symbol's first letter and N (t or tm gives t1, then t2), N the lowest
-  not taken, T-1872, `game/cloneNames.ts`), and Delete line (asked first). While stops are being edited the Stops list (with a remove
+  not taken, T-1872, `game/cloneNames.ts`), and Delete line (at once: an undo brings it back, and track and stations stay; only a constructed bus route, which is final, is asked about, T-2919). While stops are being edited the Stops list (with a remove
   button on each stop) follows them there, above Schedule; otherwise it sits after the day's figures.
   Incomplete lines stay planned and run no trains.
 
@@ -374,8 +374,8 @@ Today for a running line:
   on it does not alarm, T-1893 `dayNote` in `game/today.ts`; the running cost is at the trains and cars the fares' demand result was solved with, so after a train count change both move when the new result lands, T-1492), the **Average load** in a percentage [T-820] (rider-seconds
   aboard over the seconds each trip is under way times the riders a vehicle holds at its rated load, 160 a car,
   over every trip of today's kind of day from `linePeriods`, so able to pass 100%, at most crush's 150% [T-2186];
-  one rule for trains, buses and boats [T-2373]: a bus's rated load is its crush, 80, so a bus stops at 100%, and a
-  boat's is 320 of 480 at crush; `averageLoad` in `ui/inspector/schedule.tsx`; the hover says so),
+  one rule for trains, buses and boats [T-2373, T-2919]: a bus's rated load is 53 of 80 at crush and a
+  boat's 320 of 480; `averageLoad` in `ui/inspector/schedule.tsx`; the hover says so),
   how many trains left full as "x/y" of the trips that
   reached a stop in the 24 hours (the fourth number from the end of each `past_day` block) [T-481]
   and the riders left at platform as "x/y", x those a full train left behind and y those who
@@ -631,22 +631,28 @@ line panel's own remove button works as before.
 
 A bus line's panel (T-1464, ui/inspector/BusInspector.tsx) is the line panel cut down: Edit route
 in place of Edit stops (Save route while the route is open, which saves it; T-1514), Copy line (a planned copy) and Delete line (a constructed route refunds
-nothing); while planned, its Construct price with the route and the buses in the hover. Its title,
+nothing, so it is asked about; a planned line goes at once); while planned, its Construct price with the route and the buses in the hover. Its title,
 schedule and counts block are the line panel's own parts (`LineTitle.tsx`, `schedule.tsx`, T-2373), in
-buses: buses or a headway per demand level with the same hovers, the waiting spinner on a level with buses
-while demand loads, and the average speed; no crowding dots, copy buttons or track limits. Stops: the ends and the
-train stations met, the street stops between folded into one row each, minutes from the start.
-The counts block, headingless as the line panel's: riders, Changing to trains (riders a day changing between this bus and any rail
-line at the stations it meets; hidden while the riders are worked out again, as the line panel's purposes), the one-figure profit,
-average load (against 80 a bus, its rated load and crush) and Buses leaving full; no riders left at
-platform. No train kind, length, stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
+buses: buses or a headway per demand level with the same hovers, the crowding dots, the schedule's copy and
+paste buttons (between a bus or ferry line and any other line only the buses or headways are carried, the
+hovers saying so: "Headways 8 min, 15 min and 30 min", "4, 3 and 2 buses"; no timetable chart), the waiting
+spinner on a level with buses while demand loads, and the average speed; no track limits (T-2919). Stops: the ends and the
+train stations met, the street stops between folded into one row each, in the line panel's order (north or
+west end on top) with its stop times (the time from the stop on top after each name, "12m30s").
+The counts block, headingless as the line panel's: riders by purpose, Changing to trains (riders a day changing between this bus and any rail
+line at the stations it meets; hidden while the riders are worked out again, as the purposes), the one-figure profit,
+average load (against 53 a bus, its rated load) and Buses leaving full; no riders left at
+platform, since a street stop keeps no crowd. Under the stops the line panel's round trip block: running,
+dwell at stops (the line's dwell at each train station between the ends and 20 s at each other stop, both ways)
+and turning at the ends. No train kind, length, stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
 the Build tab's quote has rows for bus routes and new buses.
 
 **A ferry line's panel** (T-2194) is the same panel in boats: Edit route opens the ferry tool on its
 ports (ui-building.md, "Drawing a ferry line"); Delete line removes it at once (its ports stay, its
 boats go to the depot, and it is undoable); while planned, Construct's hover gives the ports and the
 boats. Schedule in boats. The ports list, headed Ports, is a rail line's stops strip (T-2275): a
-port's dot, a time from the first, the bullets met; in the Traffic view each stretch as wide as its
+port's dot, its name and the time from the port on top (north or west end on top), the bullets met and its
+boardings today (T-2919); in the Traffic view each stretch as wide as its
 riders against the line's busiest, its hover "A to B" and the riders a day, as a rail line's (T-2274).
 With three ports or more, a click on a port's dot takes it out of the line (hover "Click to remove
 the stop at X"; the port stays) and dragging a port's row moves it, a line between rows marking where;
@@ -655,7 +661,8 @@ path found between A and B." where a leg finds no water. Not while the ferry too
 bus line's stops follow its route (its stations met and street stops), so its list has no editing:
 the route is edited on the map. Its counts block is the bus line's
 (T-2195): riders, Changing to trains (between this boat and any rail line at its ports' complexes),
-profit, average load (against 320 a boat at the rated load, so up to 150% at crush's 480) and Boats leaving full. A boat's panel is a train's,
+profit, average load (against 320 a boat at the rated load, so up to 150% at crush's 480), Boats leaving full
+and Riders left at platform (a port keeps a waiting crowd, T-2919); then the round trip block. A boat's panel is a train's,
 named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
 boat this hour" (a bus's "Typical bus this hour"). A port's panel is a station's: "Port" under its
 name, no platform length or upgrades, its upkeep a port's (US$10k a game day), Construct port and
@@ -670,7 +677,7 @@ has rows for ports, new boats and the ferry route (free).
   against seats and crush: a bar running to crush (240 a car, 150%), with a tick at the seats and
   one at the rated load (160 a car, 100%), filled in the accent to 100% and in the warning orange (`--warn`)
   past it, and a state ("Empty", "Seats free", "Standing", "Crowded" past 100%, "Full" at crush)
-  [T-2186]; a bus's bar runs to its 80, with no 100% tick. Beside it the typical train this hour (the mean of its line's trains in the same
+  [T-2186]; a bus's bar runs to its 80, its 100% tick at 53 (T-2919). Beside it the typical train this hour (the mean of its line's trains in the same
   direction drawn this hour, on the same stretch). A train is never over full: whoever does not fit
   waits on the platform. A line with no figures yet says "Calculating" [T-324].
 - **Next stops** [T-868, `ui/inspector/TrainStops.tsx`]: under On board, the train's next four stops

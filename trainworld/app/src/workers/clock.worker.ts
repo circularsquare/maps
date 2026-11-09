@@ -13,6 +13,7 @@ import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01,
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
+import { NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
@@ -49,13 +50,6 @@ import { loadFailKey } from "../game/loadText";
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
 const SNAPSHOT_DEBOUNCE_MS = 500;
-/** Whole trains on a new line across both directions, high/medium/low demand. */
-const NEW_LINE_TRAINS: [number, number, number] = [0, 0, 0];
-/** T-1464: a new bus line's headways, s, high/medium/low demand: a bus every 8, 10 and 20 minutes. */
-const NEW_BUS_HEADWAYS: [number, number, number] = [480, 600, 1200];
-/** T-2273: a new ferry line's headways, s (a boat every 20 and 30 minutes, none at low demand), dwell and turnaround, s (`ferry::FERRY_*`) */
-const NEW_FERRY_HEADWAYS: [number, number, number] = [1200, 1800, 0];
-const NEW_FERRY_DWELL_S = 60, NEW_FERRY_TURNAROUND_S = 300;
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
 /** T-1906: a new game's fares, round ones where it starts (`spec.start`, else the home city); every
  * other country charges them by its income over that country's until the player sets a scale. */
@@ -3242,8 +3236,9 @@ function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64Array {
   return Float64Array.from(out);
 }
 
-/** T-1464: a bus as demand's cars: 0.5 of a 160-rider car, its 80 at crush. */
-const BUS_DEMAND_CARS = 0.5;
+/** T-2919: a bus as demand's cars: a third of a car, 53 at the rated load and 80 at crush (`BUS_CARS`
+ * in sim/src/demand/network.rs, which knows a bus line by this figure). */
+const BUS_DEMAND_CARS = 1 / 3;
 /** T-2195: a boat as demand's cars, two train cars (`BOAT_CRUSH`, sim/src/track/params.rs). */
 const BOAT_DEMAND_CARS = 2;
 
@@ -3420,8 +3415,8 @@ function apply(op: EditOp): Applied {
       return { r: a.construct_line(op.line) };
     case "addBusLine": {
       const id = a.new_line_id();
-      const [h, m, l] = NEW_BUS_HEADWAYS;
-      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, 30, 120, colourInt(op.colour), op.name || nextBusName(a)), line: id };
+      const { headwayS: [h, m, l], dwellS, turnaroundS } = NEW_LINE.bus;
+      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), line: id };
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
@@ -3431,8 +3426,8 @@ function apply(op: EditOp): Applied {
       const ports = addPorts(a, op.ports);
       if (!ports) return { r: 1 };
       const id = a.new_line_id();
-      const [h, m, l] = NEW_FERRY_HEADWAYS;
-      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, NEW_FERRY_DWELL_S, NEW_FERRY_TURNAROUND_S, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id }; // i18n-ignore: a line's saved name
+      const { headwayS: [h, m, l], dwellS, turnaroundS } = NEW_LINE.ferry;
+      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id }; // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);
@@ -3440,8 +3435,8 @@ function apply(op: EditOp): Applied {
     }
     case "addLine": {
       const id = a.new_line_id();
-      const [h, m, l] = NEW_LINE_TRAINS;
-      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, 30, 180, newLineCars, colourInt(op.colour), op.name || a.next_line_name());
+      const { trains: [h, m, l], dwellS, turnaroundS } = NEW_LINE.train;
+      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, dwellS, turnaroundS, newLineCars, colourInt(op.colour), op.name || a.next_line_name());
       // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
       if (r !== 0 || !op.autoFast || hsrShare(a, id) <= 0.5) return { r, line: id };
       const charge = a.last_charge(), trainCharge = a.last_train_charge();

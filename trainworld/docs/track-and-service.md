@@ -1544,9 +1544,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   accelerating drawn, no capacity, no holds.
 - **Trunk roads**: the route tool marks each stretch of route that lies on an OpenMapTiles `trunk` road
   (`K_TRUNK` in the point's kind, saved with it); a route from before T-2904 has no marks until it is redrawn.
-- **Riders**: 80, rated and at crush alike (demand: 0.5 of a car's seats and rated 160, 22 seats;
-  a bus takes nobody past its 80, T-2186); the boarding account keeps no
-  platform crowd at its stops that are no station.
+- **Riders**: a third of a train car (T-2919; Anita, 2026-11-09): 53 at the rated load, 80 at crush,
+  15 seats, so crowding is counted and shown as a train's (`BUS_CRUSH`, demand's `BUS_CARS`); the
+  boarding account keeps no platform crowd at its stops that are no station.
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
   squares and land, which the clock worker fetches as ranges of the `.bin` with the zone's mask (and
   for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into a grid of
@@ -1559,7 +1559,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 - **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
   shared between bus lines; running US$6 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
-  nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
+  nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09), 30 s dwell at
+  train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
+  line of each mode starts with). A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own; without it, stops place themselves.
@@ -1637,8 +1639,8 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
   ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
   metres (free) as kind 14. A new ferry line starts at a boat every 20 and 30 minutes at high and
-  medium demand and none at low (T-2273; `NEW_FERRY_HEADWAYS` in the clock worker), 60 s dwell, 300 s
-  turnaround (`ferry::FERRY_DWELL_S`, `FERRY_TURNAROUND_S`, which the app passes).
+  medium demand and none at low (T-2273), 60 s dwell, 300 s
+  turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
 - **Saves**: a trailing `LFR2` block (save level 5) holds the ports' berths (as mm deltas from their
   landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
   without it has no ports or ferries and loads as before. An `LFR1` block (level 3) is the same with

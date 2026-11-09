@@ -198,18 +198,18 @@ export function platformRoom(lengthM: number): number {
 export const SEATS_PER_CAR = 44;
 export const RATED_PER_CAR = 160;
 export const CRUSH_PER_CAR = 240;
-/** T-1464: a bus holds half a car's riders, 22 seated and 80 at crush (`BUS_CRUSH` in
- * sim/src/track/params.rs). */
-export const BUS_CARS = 0.5;
+/** T-2919: a bus holds a third of a car's riders, 53 at the rated load and 80 at crush (`BUS_CRUSH`
+ * in sim/src/track/params.rs), so its crowding reads as a train's. */
+export const BUS_CARS = 1 / 3;
 /** T-2195: a boat holds two train cars' riders (`BOAT_CRUSH` in sim/src/track/params.rs). */
 export const BOAT_CARS = 2;
 /** A car's length, m. */
 export const CAR_M = 20;
 
-/** Seats, riders at the rated load and at crush of a train of `cars` cars, or of a bus
- * (`BUS_CARS`), which is full at its rated load (T-2186). */
+/** Seats, riders at the rated load and at crush of a train of `cars` cars, or of a bus (`BUS_CARS`)
+ * or boat (`BOAT_CARS`). */
 export function capacity(cars: number): { seats: number; rated: number; crush: number } {
-  return { seats: SEATS_PER_CAR * cars, rated: RATED_PER_CAR * cars, crush: (cars === BUS_CARS ? RATED_PER_CAR : CRUSH_PER_CAR) * cars };
+  return { seats: SEATS_PER_CAR * cars, rated: RATED_PER_CAR * cars, crush: CRUSH_PER_CAR * cars };
 }
 
 /** The train gauge (T-2186): half full when every seat is taken, 1 at the rated load, then a

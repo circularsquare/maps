@@ -56,7 +56,7 @@ fn a_bus_line_costs_minutes_to_board() {
 fn a_short_bus_between_two_train_stations_is_a_bus() {
     let p = common_test_params();
     let mut net = common_test_net(&[&[0, 2], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
-    net.line_crush[1] = network::BUS_CARS * crate::demand::api::RATED_PER_CAR;
+    net.line_crush[1] = network::BUS_CARS * crate::demand::api::CRUSH_PER_CAR;
     assert!(net.st_bus.is_empty() && net.bus_line(1) && !net.bus_line(0));
     let g = build_graph(&net, &p);
     let nr = g.rn_line.len();
@@ -66,7 +66,7 @@ fn a_short_bus_between_two_train_stations_is_a_bus() {
     }
     // both its stations have the train line too; a bus alone would give them none
     assert_eq!(on_train(&net), vec![true, false, true, false]);
-    net.line_crush[0] = network::BUS_CARS * crate::demand::api::RATED_PER_CAR;
+    net.line_crush[0] = network::BUS_CARS * crate::demand::api::CRUSH_PER_CAR;
     assert_eq!(on_train(&net), vec![false; 4]);
 }
 

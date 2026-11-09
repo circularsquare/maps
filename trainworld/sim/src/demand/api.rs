@@ -21,7 +21,7 @@ use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
 use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
-use super::network::{Network, BUS_CARS, PERIODS};
+use super::network::{Network, PERIODS};
 use super::pack::{self, City};
 use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
 use std::sync::Arc;
@@ -37,7 +37,7 @@ pub const PEAK_HOUR_FACTOR: [f32; PERIODS] = crate::track::params::PEAK_HOUR_FAC
 /// A 20 m car (T-2186, notes/T-2147.md): its seats; its rated load, 100%, which crowding is
 /// counted against (a New York car at its planning guideline, Japan's 定員); and its crush load,
 /// 150% of rated, the most it takes (the queue, the wait for room, the boarding account). A bus
-/// is half a car, seats and rated load, and is full at its rated load (`network::BUS_CARS`).
+/// is a third of a car in all three (`network::BUS_CARS`, T-2919).
 pub const SEATS_PER_CAR: f32 = 44.0;
 pub const RATED_PER_CAR: f32 = 160.0;
 pub const CRUSH_PER_CAR: f32 = 240.0;
@@ -632,7 +632,7 @@ impl DemandApi {
             line_headway_min: vec![],
             line_seats: svc.cars.iter().map(|&c| c * SEATS_PER_CAR).collect(),
             line_rated: svc.cars.iter().map(|&c| c * RATED_PER_CAR).collect(),
-            line_crush: svc.cars.iter().map(|&c| c * if c == BUS_CARS { RATED_PER_CAR } else { CRUSH_PER_CAR }).collect(),
+            line_crush: svc.cars.iter().map(|&c| c * CRUSH_PER_CAR).collect(),
             st_group: svc.group.clone(),
             stop_x: svc.stop_xy.iter().step_by(2).copied().collect(),
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),

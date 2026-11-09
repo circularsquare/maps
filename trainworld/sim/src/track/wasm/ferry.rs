@@ -54,7 +54,7 @@ impl TrackApi {
 
     /// Add a planned ferry line over `ports` (in route order) and a route (x, y, kind, m/s per point
     /// in the network frame), its boats following a headway in seconds per demand level (0: none).
-    /// A new line takes `ferry::FERRY_HEADWAYS_S`, `FERRY_DWELL_S` and `FERRY_TURNAROUND_S`.
+    /// What a new line starts with is the app's (`NEW_LINE` in app/src/game/newLine.ts).
     #[allow(clippy::too_many_arguments)]
     pub fn set_ferry_line(&mut self, id: u32, ports: &[u32], points: &[f64], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, colour: u32, name: String) -> u32 {
         let r = route_from(points);

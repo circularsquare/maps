@@ -699,6 +699,7 @@ rect.now { fill-opacity: .45; }
 .bus-stops li.street { min-height: 22px; font-size: 12px; }
 .bus-stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bus-stops .n { width: 40px; text-align: right; flex: none; }
+.bus-stops .t { margin-left: 8px; }
 .bus-stops .bs-mk { flex: none; box-sizing: border-box; width: 12px; height: 12px; margin: 0; border: 2px solid var(--net-ink); border-radius: 50%; background: #fff; }
 .bus-stops .bs-mk.end { border: 2px solid var(--c); border-radius: 2px; }
 .bus-stops li.street .bs-mk { width: 7px; height: 7px; margin: 0 2.5px; border-width: 1.5px; border-color: var(--c); }
