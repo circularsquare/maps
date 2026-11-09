@@ -1,85 +1,70 @@
 # Orchestrator handoff, isochrone
 
 Orchestrator: session 4a6a5ff2-cbc0-46a5-8b33-b531ae60e4e9, name maps-b5, since 2026-11-05 13:06
-Updated: 2026-11-06 23:30 (T-011 served; T-092 and T-039 agents running)
+Updated: 2026-11-09 (PAUSED by Anita: trainworld's urgent fixes take this week's usage; "will have to come back to isochrones later")
 
-Read isochrone/CLAUDE.md and TASKS.md first.
+Read isochrone/CLAUDE.md and TASKS.md first. To resume: `/takeover isochrone`, then ask Anita the
+questions in notes/for-anita.md before starting T-007 stage 2.
 
-## State
-- All landed work is committed; smoke 18/18 and corridors 7/7 on the served map after T-011's
-  swap. 8800 serves this folder live (`localhost:8800/isochrone/`), no build step.
-- **T-011 is served** (2026-11-06 ~23:15): walking directed from 90 m GLO-90, L3/L10 by crossing
-  L1. Rollback: data/tiles_pre_t011/ (`build_tiles.py swap` the other way). Older backups:
-  data/tiles_map2020, data/hazard_map2020. Numbers and shots: notes/T-011.md "Stage 2 run and the
-  world build". data/tiles is 735 MB now (T-016).
-- Also on the page since 2026-11-06: our own surface with OSM roads (T-028, T-084), 100 m town and
-  water-country tiles (T-057, T-086), canoe on our mask (T-085), coarse canoe rivers and lake
-  pieces (T-082, T-088), corridor count fix (T-090).
-- C: ~130 GB free at 22:22 after Anita's cleanup; her floor is ~40 GB.
+## State at the pause
+- Nothing is running: no agents, no builds, no isochrone claims in the cores ledger. All work is
+  committed to master. Smoke 18/18 on the served page at the pause. The map's data isn't
+  published anywhere yet (T-016).
+- `localhost:8800/isochrone/` serves this folder live, no build step. Checks from the maps root:
+  `node isochrone/checks/smoke.mjs` (18), `node isochrone/checks/corridors.mjs` (10),
+  `node isochrone/checks/levels.mjs`, `node isochrone/checks/fine.mjs`,
+  `node isochrone/checks/ktrips.mjs trips 1000` (and `ONLY=rivers`, `ONLY=lakes`). Canoe level
+  agreement: notes/T-102/ (`measure.mjs`, `cmp.mjs`, `excess.mjs`); rerun after any canoe data change.
+- TASKS.md "Where things stand" is the summary of what the map is now. Detail per area: SPEC.md and
+  docs/; each task's numbers: notes/T-###.md; choices: DECISIONS.md (newest first).
 
-## In flight
-- T-092 done and committed (5469ab95): cfg.access kept at 0.5.
-- T-094 done and committed (66ee3fda): ktrips walks directed; walks 1-6% faster, canoe unchanged.
-- T-039 done and committed (86b67450): 100 m tiles carry GLO-90 heights, L0.1 walks walk.py's
-  slope rule; seam round the start 1.23 -> 1.04; data/fine is 1.48 GB; old fine tiles deleted.
-- T-057 done and committed (fa86aa62): 796 mountain tiles, data/fine 2.15 GB in 5,350 tiles;
-  backup deleted. Agent a98f3d32b23d45d3b idle (~400k), retire.
-- T-091 done and committed (677e6c58). Open with Anita: L0.1 lines are straighter now (Kathmandu
-  27% of km in straight runs, was 20%); if too spoky, loosen NEAR/SPREAD per level (DECISIONS).
-- T-007 stage 1 (design) done and committed (6640c94e): split coarse cells into L1 land pieces;
-  prototype Sogndal 1.32 -> 1.01, Coari 1.39 -> 1.01, ~5 MB, speed unchanged. Stage 2 waits on
-  Anita's go (asked; notes/for-anita.md). Agent a3da9fe09ce9819fc (~370k) knows it; resume it
-  for stage 2 if context allows, else brief fresh from notes/T-007.md section 7.
-- T-043 done and committed (4b3ff126): every lake its own ERA5 summer temperature; T-096 filed
-  (check FLake against ESA CCI Lakes).
-- T-078 M2 doc tidy done and committed (3482bb83): T-006, T-051 closed; T-097 to T-099 filed.
-- T-097, T-098, T-099 done and committed (eb35c7d6): hazard band rebuilt on the T-011 tiles,
-  page text current, dead code gone.
-- T-031 + T-083 river rebuild done and committed (6c4068a1): GMTED gradient everywhere plus a
-  big-river stream-power rule (Livingstone Falls portaged), GIRES dries hot-desert reaches
-  (Cooper, Diamantina). Backups deleted.
-- T-073 done and committed (6ce2a9be): upstream through rapids 2.5 km/h on every river.
-- T-100 + T-101 done and committed (f2406ef1): small rivers lengthened, tropical-forest gradients
-  from Hydrography90m (CC BY-NC; licence asked of Anita in for-anita.md), coarse river steps count
-  the main river only. Backup deleted.
-- T-102 done and committed (8acbee22): canoe L1/L10 1.07 after T-100; cfg.access raised to 1.0
-  on its sweep (1.05). Harness kept in notes/T-102/.
-- T-035 closed without a code change (95ab0610); T-103 filed; 8 vs 16 sea moves asked of Anita.
-- T-014 done and committed (1e42de07): windows fade into the coarser level over 3 cells; the
-  edge line is gone. `drawnAt` reads MapLibre 5.24.0 internals (T-104 notes it).
-- T-104 first part done and committed (3b5ef041): corridor lines join at window edges.
-- T-105 done and committed (92a4f86d). Nothing in flight now (2026-11-07). Left unblocked and
-  low value: T-096 (FLake vs satellite), T-015 (big screens), T-016 (publishing encoding; wait
-  for T-007 since both touch build_tiles.py and tiles.js). Holding: Anita wants isochrone slow
-  and the big next steps wait on her answers.
-- Waiting on Anita (notes/for-anita.md): T-007 stage 2 go (then T-075, T-103), Hydrography90m
-  NC licence, 8 or 16 sea moves, and her look at mountains, corridors, rivers.
-- T-093 done and committed (228cbd20): bucket queue, same weights as the heap, L0.1 at the cap
-  1.38x faster in Chrome. T-095 filed to re-time SPEC's solve times on a quiet machine.
-- Holding at one agent while the machine is over-full (other projects, 16-19 cores claimed
-  2026-11-07) and Anita wants isochrone slow.
-- Idle agents, retire: a3e69e0de8c33f136 (T-011 stage 3), a0fa8e1aa1250534e (T-011 stage 1),
-  a615cd2144584c81f (T-090), a5b92d38b9ad284d8, a53d87b2fa263c8db, a2e305ad8c2b66a43,
-  a754c1f8965d2be43, a9b36a2c84531c427, a75105d4c451ffaf1.
+## What the last stretch landed (2026-11-06 and 07, all served and committed)
+- Walking: 90 m terrain and directed speeds at every level (T-011), the same slope rule at 100 m
+  and mountain tiles (T-039, T-057), corridors costed as the search walks (T-091), bucket queue
+  (T-093).
+- Canoe: lakes' own ERA5 temperature (T-043); river gradient from GMTED everywhere, big-river
+  stream-power closure, GIRES desert no-flow (T-031, T-083); up rapids 2.5 km/h from travel
+  records (T-073); small-river length factors, Hydrography90m gradient in tropical forest, coarse
+  river steps count the main river only (T-100, T-101); `cfg.access` 1.0 (T-102). T-035 closed
+  with no code change.
+- Look: windows fade into the coarser level (T-014); corridor lines join across windows (T-104,
+  T-105). Upkeep: M2 doc tidy (T-078), T-097 to T-099.
 
-## Next
-1. On Anita's go: T-007 stage 2. Then T-075 islands (measure first; after T-007, which touches
-   coarse nodes too), T-078 M2 doc tidy once T-043 lands, T-095 when the machine is quiet.
-2. Open: T-083, T-065, T-073, T-031 (fold into the next river rebuild), T-075, T-007 (fjord and
-   river country too fast at L3/L10: Sogndal, Coari 1.3-1.4).
-3. Anita has not yet seen T-011 served; shots in the State line's notes.
+## Where to pick up
+1. Anita's answers (notes/for-anita.md). The one that unblocks the most is T-007 stage 2.
+2. T-007 stage 2: split coarse cells into L1 land pieces. Design, file list and prototype numbers:
+   notes/T-007.md (section 7 lists the files; scripts in notes/T-007/). Its agent's context is
+   gone: brief a new Opus agent from that note. The prototype ran on js/ as of 677e6c58, before
+   T-093's bucket queue, so its search patch must be redone on today's js/search.js; the one move
+   mask per cell is what keeps the click as fast (a per-move piece lookup was 30-35% slower).
+3. After T-007: T-075 islands (measure first), T-103 bigger canoe speed-ups, T-016 publishing
+   encoding (T-007 and T-016 both touch build_tiles.py and js/tiles.js).
+4. Any time: T-095 re-time on a quiet machine, T-096 lake temperatures against satellite, T-015
+   big screens, T-065 once Anita has looked at upstream Amazon routes.
+
+## Before publishing (T-016)
+- Hydrography90m is CC BY-NC; the river step files carry that until Anita decides (for-anita.md).
+- GLO-90 heights are inside the 100 m `.land` tiles: its notice and no-liability sentence are in
+  the info panel and must travel with any redistribution (research/friction.md).
+- Sizes: data/tiles ~750 MB, data/fine 2.15 GB.
+
+## Data worth knowing about (gitignored, on this machine only)
+- Rebuilding walking tiles: `python isochrone/tools/build_tiles.py 3 --out <name>` from the maps
+  root (claim cores first; ~20 min on 3), then `build_tiles.py swap <backup> --from <name>`, then
+  rerun the land hazard's `tiles` stage (docs/hazard.md 6).
+- data/terrain/l1/ (1.3 GB) is the 90 m world run's output, 11 h to remake and ~100 GB streamed:
+  keep it. data/terrain/elev/ (1.8 GB) holds heights for the 100 m tiles.
+- data/raw/rivers_work/ holds the only copies of river build intermediates, including
+  `gires.npz` and `merit.npz` (their downloads were deleted; docs/code-map.md says how to refetch).
+- Rollbacks still on disk: data/tiles_pre_t011 (243 MB; can go once Anita has judged the mountain
+  walks), data/tiles_map2020 and data/hazard_map2020 (old MAP surface, superseded, can go).
 
 ## Anita's standing asks
-- 2026-11-06 14:15: trainworld is the higher priority; keep ~40 GB free on C:. The terrain run
-  restarted 14:17 as `launch.py 3 --min-free 40 --ahead 1` (launcher PID 35848); with C: at
-  ~17 GB it computes what it holds and then waits for free space. MAP's friction raster deleted.
-- 2026-11-06 afternoon: don't raise the shared core cap; isochrone proceeds slowly within its 4
-  while she works on other things.
-- 2026-11-06: page text needs no sign-off for now (in CLAUDE.md); 90 m downloads go ahead,
-  keeping ~20 GB free on C:; tell her if room would need cleanup outside isochrone (not needed:
-  peak ~6 GB).
-- 2026-11-05: roads go ahead (rotating, she lacks 84 GB free); T-047's 2.8 GB rule approved;
-  10,000 BC later (T-012 P3); 90 m terrain after roads.
+- 2026-11-09: paused, come back later. Don't start isochrone work until she says.
+- 2026-11-06: trainworld is the higher priority; keep ~40 GB free on C:; don't raise the shared
+  core cap (isochrone's limit is 4 cores in all); page text needs no sign-off for now (in CLAUDE.md).
+- 2026-11-05: roads, T-047's 2.8 GB tile rule and 90 m terrain approved and done; 10,000 BC later
+  (T-012).
 - Corridor colour = speed along the stretch, width = trips, the red end not dark; hover a line
   for its mode and speed; smooth lines, no staircases.
 - Rivers faint; water paler than land; hovers instant; a globe; hex cells by default.

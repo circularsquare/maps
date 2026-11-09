@@ -3,6 +3,9 @@
 Open agent work. Format and rules in `CLAUDE.md`. P1 = now or blocking, P2 = this milestone,
 P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
 
+**Paused 2026-11-09** at Anita's word, for trainworld. Nothing is running and everything is
+committed; `notes/handoff.md` says how to pick it up.
+
 **Where things stand (2026-11-07).** Walking and canoe both work worldwide (L10 world, L3 and L1
 view windows, 100 m for towns, water country and mountains: 5,350 tiles), on a globe, with hex
 cells. Walking is on our own surface with OSM roads and directed from 90 m GLO-90 terrain at every

@@ -9,7 +9,10 @@ DECISIONS.md and leave here.
   window covers it. notes/T-007.md "In short".
 - 2026-11-07, T-091: are the straighter 100 m corridor lines (Kathmandu 27% of km in straight
   runs, was 20%) acceptable, or loosen NEAR/SPREAD?
-- 2026-11-07, T-011: do mountain walks now look too fast?
+- 2026-11-07, T-011: do mountain walks now look too fast? (Kathmandu, Brig, Cusco; zoom into
+  Zermatt or Innsbruck. Shots: artifacts/isochrone/t011w_kathmandu_z6_before.png and _after.png.)
+- 2026-11-07, T-031, T-083, T-101: do canoe starts at Kinshasa (falls portaged), Windorah (Cooper
+  Creek dry) and Manaus (small streams paddled) look right? The same look decides T-065.
 - 2026-11-07, T-035: open sea with 8 moves (today; eight-sided bands, corridors in straight 45
   degree runs) or 16 (round bands, curving corridors, canoe clicks 10-25% slower, ~1 s in Chrome
   on a busy machine)? Shots: artifacts/isochrone/t035_blacksea_live.png and _sea16.png.
