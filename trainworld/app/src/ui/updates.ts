@@ -1,5 +1,6 @@
 // T-2810: what each published update brought, newest first, for the start menu's row and its changelog.
-// Adding an update is one entry here, with its strings in i18n/messages/en.json and context.json.
+// Adding an update is one entry here, with its strings in i18n/messages/en.json and context.json. The row's line is
+// at most 80 characters in English (checks/i18n.mjs).
 // The row shows the newest entry for two days from its `at`, unless this browser has dismissed that version.
 
 import type { MessageKey } from "../i18n";

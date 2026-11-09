@@ -28,7 +28,8 @@ import { DATA_BASE } from "../game/dataBase";
 import { tPlace } from "../i18n/places";
 import { t } from "../i18n";
 import { perfOff } from "../perfFlags";
-import { FADE_ALPHA, paint, pickAt, WATER_SHARE, type DiagramFocus, type Drawing } from "./draw";
+import { FADE_ALPHA, paint, pickAt, WATER_SHARE, WIDTH_MAX, WIDTH_MIN, widened, type DiagramFocus, type Drawing } from "./draw";
+import { clock } from "../game/clock";
 import { mixOklab } from "../game/palette";
 import { nameAt, paintNames, pickName, placedBox, splitName, type NamePlan } from "./names";
 import { paintCityNames } from "./cityNames";
@@ -64,6 +65,14 @@ export const diagramReady = signal(false);
 /** T-2565: whether the water is worked out and drawn; experimental, so off until the player turns it on, and kept per browser */
 const WATER_STORE = "anitabuilder-diagram-water";
 export const diagramWater = signal((() => { try { return localStorage.getItem(WATER_STORE) === "1"; } catch { return false; } })());
+/** T-2888: the lines' width as a multiple of the drawn one, with the stations' marks (draw.ts `widened`); kept per browser */
+const WIDTH_STORE = "anitabuilder-diagram-width";
+export const diagramWidth = signal((() => {
+  try {
+    const v = Number(localStorage.getItem(WIDTH_STORE));
+    return Number.isFinite(v) && v >= WIDTH_MIN && v <= WIDTH_MAX ? v : WIDTH_MIN;
+  } catch { return WIDTH_MIN; }
+})());
 /** a pitch this many CSS px when the diagram first opens */
 const START_PITCH_PX = 7;
 /** a pointer within this many CSS px of a pill or line is on it */
@@ -489,12 +498,12 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     const f = focusNow();
-    const cn = shown.names.cities, d = shown.d;
+    const cn = shown.names.cities, d = widened(shown.d, diagramWidth.peek());
     // the city and zone names under the lines (T-2438, T-2521, T-2640)
     paint(ctx, d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f, cn && ((c) => paintCityNames(c, cn, d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, font: t.font }, { d, plan: shown!.names })));
     // the map's station names: its ink with a halo of the background
     const st = f?.stations;
-    paintNames(ctx, shown.names, shown.d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
+    paintNames(ctx, shown.names, d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
   };
   new ResizeObserver(() => draw()).observe(canvas);
   effect(() => {
@@ -513,7 +522,21 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!on) return void draw();
     if (shown && !shown.d.water && lastGraph) send(lastGraph);
   });
+  effect(() => {
+    const m = diagramWidth.value;
+    try { localStorage.setItem(WIDTH_STORE, String(m)); } catch { /* this visit only */ }
+    if (diagramShown.peek()) draw();
+  });
+  // T-2888: the game is paused while the diagram is up. Only a pause made here is undone on the way out, and
+  // not if the player has already started the clock again; the speed is the clock's own and is untouched.
+  let pausedHere = false;
   diagramShown.subscribe((on) => {
+    if (on) {
+      if (clock.running.peek()) (pausedHere = true), clock.setRunning(false);
+    } else if (pausedHere) {
+      pausedHere = false;
+      if (!clock.running.peek()) clock.setRunning(true);
+    }
     canvas.style.display = on ? "block" : "none";
     client.post({ kind: "diagram", on });
     if (on) {
@@ -540,7 +563,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!s || !scale) return null;
     const ox = px - canvas.clientWidth / 2, oy = py - canvas.clientHeight / 2;
     const x = cx + ox / scale, y = cy - oy / scale;
-    const hit = pickAt(s.d, x, y, scale, PICK_SLOP_PX);
+    const hit = pickAt(widened(s.d, diagramWidth.peek()), x, y, scale, PICK_SLOP_PX);
     if (hit && "station" in hit) return hit;
     const named = nameAt(s.names, s.d, ox, oy, cx, cy, scale);
     return named >= 0 ? { station: named } : hit;
@@ -667,7 +690,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 /** The whole diagram on a canvas of its own, unselected, at the largest names' level of at most
  * PICTURE_PITCH_PX a pitch that keeps it within PICTURE_MAX_SIDE and PICTURE_MAX_AREA. */
 function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; place: string; font: string; edge?: string; border?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
-  const d = s.d, levels = s.names.levels;
+  const d = widened(s.d, diagramWidth.peek()), levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));
   if (!(x1 > x0) || !(y1 > y0)) return null;

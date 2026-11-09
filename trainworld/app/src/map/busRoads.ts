@@ -15,6 +15,14 @@ import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadT
 const busRoad: RoadKeep = (cls, brunnel, service, access) =>
   BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
 
+/** `busRoad` as a MapLibre filter on the basemap's `transportation` lines (T-2883), for drawing the roads
+ * a bus may use; built from the same classes, so the two cannot drift apart. */
+export const busRoadFilter = (): unknown[] => [
+  "any",
+  ["in", ["get", "class"], ["literal", [...BUS_CLASSES, "motorway"]]],
+  ["all", ["==", ["get", "class"], "service"], ["!", ["has", "service"]], ["!", ["has", "access"]], ["!", ["has", "brunnel"]]],
+];
+
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
 /** A road path longer than this many times the straight line, and `DETOUR_M` more than it, is not used:

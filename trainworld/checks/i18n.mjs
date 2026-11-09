@@ -118,6 +118,8 @@ for (const [k, v] of Object.entries(en)) {
   if (!(k in context)) fault(`en ${k}: no note in context.json`);
 }
 for (const k of Object.keys(context)) if (!(k in en)) fault(`context.json ${k}: no such key in en.json`);
+const UPDATE_LINE_MAX = 80; // the start menu's update row; English only, translations may run longer (Anita, 2026-11-09)
+for (const [k, v] of Object.entries(en)) if (/^updates\.v\d+Line$/.test(k) && v.length > UPDATE_LINE_MAX) fault(`${k}: ${v.length} characters, the update row's limit is ${UPDATE_LINE_MAX}`);
 
 // --- glossary --------------------------------------------------------------------------------
 

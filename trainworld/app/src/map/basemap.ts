@@ -15,6 +15,7 @@ import { signal } from "@preact/signals";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
+import { busRoadFilter } from "./busRoads";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
@@ -269,6 +270,7 @@ export function loadBasemap(map: maplibregl.Map) {
     missed = false;
     setBasemapShade(map, ...shadeAs);
     applyLite(map);
+    if (busHintOn) setBusRoadHint(map, true);
   });
 }
 
@@ -343,6 +345,7 @@ export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number)
   shadeAs = [s, contrast];
   if (!styleUp(map)) return void (missed = true);
   const land = SHADES[s].land;
+  if (busHintOn) setBusRoadHint(map, true);
   for (const t of themed) {
     if (!map.getLayer(t.id)) continue;
     const v = s === "dark" ? t.dark : t.light;
@@ -371,6 +374,36 @@ export function setHillshade(map: maplibregl.Map, on: boolean) {
   if (map.getLayer(WATER_OVER_SHADE)) map.setLayoutProperty(WATER_OVER_SHADE, "visibility", on ? "visible" : "none");
 }
 let hillshadeOn = false;
+
+/** T-2883: in bus placing mode, the roads a bus may drive are tinted faintly over the basemap's own roads. */
+const BUS_HINT = "bus_roads_hint";
+const BUS_HINT_MINZOOM = 12;
+let busHintOn = false;
+export function setBusRoadHint(map: maplibregl.Map, on: boolean) {
+  busHintOn = on;
+  if (!styleUp(map)) return;
+  const dark = shadeAs[0] === "dark";
+  if (!on) {
+    if (map.getLayer(BUS_HINT)) map.removeLayer(BUS_HINT);
+    return;
+  }
+  const style = map.getStyle();
+  if (!style || !map.getLayer("highway_minor") || !map.getSource(VECTOR_SOURCE)) return;
+  const colour = dark ? "#3fd0c4" : "#1a9e94";
+  const opacity = dark ? 0.3 : 0.45;
+  if (map.getLayer(BUS_HINT)) {
+    map.setPaintProperty(BUS_HINT, "line-color", colour);
+    map.setPaintProperty(BUS_HINT, "line-opacity", opacity);
+    return;
+  }
+  const before = style.layers.find((l) => l.type === "symbol")?.id;
+  map.addLayer({
+    id: BUS_HINT, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: BUS_HINT_MINZOOM,
+    filter: busRoadFilter() as maplibregl.FilterSpecification,
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": colour, "line-opacity": opacity, "line-width": zoomWidth(12, 0.5, 14, 1, 16, 2.5, 20, 10) as maplibregl.ExpressionSpecification },
+  }, before);
+}
 
 /** `noCities`: the names of cities, towns and villages hidden whatever `on` says (the start menu's map, T-974). */
 export function setBasemapLabels(map: maplibregl.Map, on: boolean, noCities = false) {

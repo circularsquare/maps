@@ -2,7 +2,7 @@
 // them. Pure functions, used by the bubble worker for whole-city views and on the main thread for
 // the small sets (a selection's own bubbles and far end).
 
-import { bubbleColour } from "../game/palette";
+import { bubbleColour, purposeColour3, purposeSchemeOn } from "../game/palette";
 import { DISC, type Grouping } from "../workers/commutersProtocol";
 import { kAtY, type Anchor } from "./geo";
 
@@ -78,14 +78,18 @@ export function reorder(g: Groups, order: Uint32Array): Groups {
 }
 
 type Modes = { train: Float32Array; walk: Float32Array; drive: Float32Array; none?: Float32Array };
+/** A level's trips by purpose per disc, in the disc order (T-2886): work, errands and leisure, everything else. */
+type Purposes = { work: Float32Array; errands: Float32Array; other: Float32Array };
 /** Colour built discs again under the scheme now chosen (T-804), in place: `levels` carry each
  * disc's trips by mode in the discs' order, and their smoothed `shade` where there is one (T-900). */
-export function recolour(levels: (Modes & { discs: Float32Array; shade?: Modes })[]) {
+export function recolour(levels: (Modes & { discs: Float32Array; shade?: Modes; purp?: Purposes & { shade?: Purposes } })[]) {
+  const byPurpose = purposeSchemeOn();
   for (const l of levels) {
     const m = l.shade ?? l;
+    const p = byPurpose && l.purp ? l.purp.shade ?? l.purp : null;
     const n = m.train.length;
     for (let i = 0; i < n; i++) {
-      const c = bubbleColour(m.train[i], m.walk[i], m.drive[i], m.none?.[i] ?? 0);
+      const c = p ? purposeColour3(p.work[i], p.other[i], p.errands[i]) : bubbleColour(m.train[i], m.walk[i], m.drive[i], m.none?.[i] ?? 0);
       l.discs[i * DISC + 3] = c[0] / 255;
       l.discs[i * DISC + 4] = c[1] / 255;
       l.discs[i * DISC + 5] = c[2] / 255;

@@ -41,6 +41,8 @@ export interface Drawing {
   /** a pitch, stroke width, layout units */
   pitch: number;
   stroke: number;
+  /** the casings' width where it is not the pitch (`widened`) */
+  casing?: number;
   /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
    * on the page when first painted */
   lines: { colour: string; fast: boolean; cmds: Float64Array; path?: Path2D }[];
@@ -121,6 +123,13 @@ export function localStops(g: DiagramGraph): Uint8Array {
   const small = new Uint8Array(n);
   for (let k = 0; k < n; k++) small[k] = stops[k] > 0 && !end[k] && (stops[k] === 1 || (passed[k] && !many[k])) ? 1 : 0;
   return small;
+}
+
+/** T-2888: the player's line width, a multiple of the drawn one; a stroke of the largest still leaves a sliver between neighbours */
+export const WIDTH_MIN = 1, WIDTH_MAX = 1.2;
+/** the drawing with its strokes `m` times as wide: the pills, passages and picking follow `stroke`, the casings grow by as much */
+export function widened(d: Drawing, m: number): Drawing {
+  return m === 1 ? d : { ...d, stroke: d.stroke * m, casing: d.pitch + d.stroke * (m - 1) };
 }
 
 /** a station's pill: its fill's half width and its outline, layout units */
@@ -646,7 +655,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     const l = d.lines[i];
     if (casing) {
       ctx.strokeStyle = theme.bg;
-      ctx.lineWidth = d.pitch;
+      ctx.lineWidth = d.casing ?? d.pitch;
       ctx.stroke((l.path ??= toPath(l.cmds)));
     }
     ctx.strokeStyle = l.colour;
@@ -669,7 +678,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     return px < 1;
   };
   ctx.strokeStyle = theme.bg;
-  ctx.lineWidth = d.pitch;
+  ctx.lineWidth = d.casing ?? d.pitch;
   for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
   if (focus?.lines) {
     width(d.stroke * MUTE_WIDTH, MUTE_ALPHA);

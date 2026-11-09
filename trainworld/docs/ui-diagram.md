@@ -17,6 +17,7 @@ achievements' medal at its right (`ui/DiagramButton.tsx`, placed by `Achievement
 nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
 the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map", T-2416), the
+water button, the line width slider (hover "Line width", T-2888), the
 save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
@@ -39,6 +40,12 @@ Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` 
   its pills outlined in the accent colour, half again as thick. Pills and names of stations off the
   full lines fade to 0.35. A line under the pointer is drawn full over the rest.
 - **Build keys** (1 to 4, N, S, C, G, U, O, T) and any build tool picked go back to the map first.
+- **Paused while up** (T-2888): opening the diagram pauses the game clock; closing it, by any way back, starts it
+  again at the speed it had, unless it was paused already or the player started it while the diagram was up.
+- **Line width** (T-2888): a slider from the drawn width (1x) to 1.2x, kept in localStorage as
+  `anitabuilder-diagram-width`. It scales the strokes, the stations' pills and passages and the casings
+  (`widened` in draw.ts), at paint time only: the layout, the names' places and the pitch do not change, so the
+  gap between neighbouring lines shrinks from 0.22 to 0.04 of a pitch at the largest. The saved picture follows it.
 - **Save picture**: an icon button (download) with the hover "Save picture" saves the whole diagram,
   unselected, in the current theme, as "<game name> diagram.png" ("Network diagram.png" without a
   name), the busy tag saying "Saving picture" meanwhile. Its pitch is the largest names level of at

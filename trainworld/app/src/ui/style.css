@@ -822,6 +822,7 @@ rect.now { fill-opacity: .45; }
   max-width: 360px; background: var(--bg); border: 1px solid var(--rule); white-space: nowrap;
   font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); }
 .map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.slider.diagram-width { margin: 0; width: 84px; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
 .bar { display: flex; width: 100%; height: 10px; border: 1px solid var(--rule); background: var(--bg); }
@@ -977,7 +978,8 @@ a.btn { text-decoration: none; }
 .start-update .btn.icon { width: 24px; min-width: 24px; padding: 0; }
 .changelog-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; font-size: 14px; }
 .changelog-head span { font-weight: 400; }
-.changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+section + section > .changelog-head { margin-top: 16px; }
+.changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
   background: var(--bg); border: 1px solid var(--rule); cursor: pointer; }

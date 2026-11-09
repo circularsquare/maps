@@ -124,14 +124,19 @@ let lastScheme: [BubbleScheme, string, string] = ["mode", "", ""];
 let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
-/** How the demand bubbles are coloured (T-804): the mode mix above, or a ramp by train share from
- * one colour at 0% to another at 100%. */
-export type BubbleScheme = "mode" | "ramp";
+/** How the demand bubbles are coloured (T-804): the mode mix above, a ramp by train share from
+ * one colour at 0% to another at 100%, or (T-2886) by trip purpose: work blue, errands and leisure red,
+ * everything else green, the same three colours blended by share as the mode mix. Until a bubble's
+ * purposes are in, it is painted as the mix or ramp chosen before. */
+export type BubbleScheme = "mode" | "ramp" | "purpose";
 export const DEFAULT_RAMP = { from: SHARE_MODE_COLOURS.drive, to: SHARE_MODE_COLOURS.train } as const;
 /** The ramp's position is the train share to this power, so a 30% share sits halfway (Anita, T-812:
  * 30% purple, 70% clearly blue; 0.3^K = 0.5, and 70% lands at 81%). */
 const RAMP_SKEW = Math.log(0.5) / Math.log(0.3);
 let schemeKey = "mode";
+/** the mix or ramp that bubbles without their purposes are painted in under the purpose scheme */
+let baseScheme: "mode" | "ramp" = "mode";
+let purposeOn = false;
 /** the ramp as 256 rgb triples */
 let rampLut: Uint8ClampedArray | null = null;
 
@@ -139,12 +144,15 @@ let rampLut: Uint8ClampedArray | null = null;
  * swatches); the same arguments again change nothing. */
 export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
   lastScheme = [s, from, to];
+  if (s !== "purpose") baseScheme = s;
+  purposeOn = s === "purpose";
+  const ramp = baseScheme === "ramp";
   // the shade is in the key under either scheme: the No route grey (T-2215) follows it
-  const key = (s === "ramp" ? `ramp${from}${to}` : "mode") + (lightMap ? "-light" : "");
-  modeScheme.value = s === "ramp" ? "ramp" : "mode";
+  const key = (purposeOn ? "purpose-" : "") + (ramp ? `ramp${from}${to}` : "mode") + (lightMap ? "-light" : "");
+  modeScheme.value = ramp ? "ramp" : "mode";
   if (key === schemeKey) return;
   schemeKey = key;
-  rampLut = s === "ramp" ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;
+  rampLut = ramp ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;
 }
 /** T-1450: the mode mix's grey is darker on the light map; views call this with the shade beside
  * `setBubbleColours`, and a changed shade is a changed scheme key, so built discs are painted again. */
@@ -156,6 +164,18 @@ export function setBubbleShade(shade: "light" | "dark") {
 }
 /** Names the scheme set now ("mode", or "ramp" with its two colours), to tell built discs apart. */
 export const bubbleSchemeKey = () => schemeKey;
+/** Whether the purpose scheme is in force (bubbles with their purposes use `purposeColour3`). */
+export const purposeSchemeOn = () => purposeOn;
+/** A bubble's colour by trips for work, for everything but work, errands and leisure, and for errands and leisure. */
+export function purposeColour3(work: number, other: number, errands: number): [number, number, number] {
+  const all = work + other + errands;
+  if (all <= 0) return [163, 155, 143];
+  const [t, w, d] = MIX ?? (MIX = [rgb(MODE_COLOURS.train), rgb(MODE_COLOURS.walk), rgb(MODE_COLOURS.drive)]);
+  // no pull to grey (the mode mix has one for an even split): most bubbles hold all three, and a grey would wash them out
+  const r = (t[0] * work + w[0] * other + d[0] * errands) / all, g = (t[1] * work + w[1] * other + d[1] * errands) / all, b = (t[2] * work + w[2] * other + d[2] * errands) / all;
+  const k = MIX_TOP / Math.max(r, g, b, 1);
+  return [Math.round(r * k), Math.round(g * k), Math.round(b * k)];
+}
 const HEX =/^#[0-9a-f]{6}$/i;
 
 /** A bubble's colour under the chosen scheme: `modeMix`, or the ramp at the train share; then, with

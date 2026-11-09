@@ -85,6 +85,9 @@ export interface BubbleLevel {
   none: Float32Array;
   /** per disc, the same smoothed among nearby cells (T-900): its colour only */
   shade?: { train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array };
+  /** T-2886: per disc, trips for work, errands and leisure, and the rest (and the same smoothed), only
+   * while bubbles are coloured by purpose; the main thread puts it there */
+  purp?: { work: Float32Array; errands: Float32Array; other: Float32Array; shade?: { work: Float32Array; errands: Float32Array; other: Float32Array } };
 }
 
 export interface Bubbles {

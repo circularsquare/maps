@@ -1,4 +1,5 @@
-import { diagramProgress, diagramReady, diagramShown, diagramWater, saveDiagramPicture } from "../diagram/view";
+import { diagramProgress, diagramReady, diagramShown, diagramWater, diagramWidth, saveDiagramPicture } from "../diagram/view";
+import { WIDTH_MAX, WIDTH_MIN } from "../diagram/draw";
 import { t } from "../i18n";
 import { BusyTag } from "./BusyTag";
 import { LoadBar } from "./LoadingScreen";
@@ -25,6 +26,10 @@ export function DiagramTopLeft() {
     <div class="map-top-row">
       <button type="button" class="btn icon diagram-exit" data-tip={t("diagramButton.showMap")} aria-label={t("diagramButton.showMap")} onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
       <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip={t("diagramButton.showWater")} aria-label={t("diagramButton.showWater")} aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
+      <label class="slider diagram-width" data-tip={t("diagramButton.lineWidth")}>
+        <input type="range" min={WIDTH_MIN} max={WIDTH_MAX} step={0.01} value={diagramWidth.value} aria-label={t("diagramButton.lineWidth")}
+          onInput={(e) => (diagramWidth.value = Number((e.target as HTMLInputElement).value))} />
+      </label>
       {diagramReady.value && <button type="button" class="btn icon diagram-save" data-tip={t("diagramButton.savePicture")} aria-label={t("diagramButton.savePicture")} onClick={saveDiagramPicture}><Icon.download /></button>}
       {share !== null && <div class="status-tag" role="status">
         <span class="demand-busy">{t("diagramButton.calculating")}</span>

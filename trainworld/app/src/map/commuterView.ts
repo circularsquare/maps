@@ -19,7 +19,7 @@ import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
 import { cellModes, cityCells, demandUpdating, demandView, flows, legsKey, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
-import { BUBBLE_ALPHA, bubbleSchemeKey, setBubbleColours, setBubbleShade } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleSchemeKey, purposeSchemeOn, setBubbleColours, setBubbleShade } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
@@ -88,6 +88,16 @@ const endModes = (m: CellModes, end: BubbleEnd): Float32Array[] => {
   }
   return s;
 };
+/** One end's trips per cell, all modes together. */
+const endTotal = (m: CellModes, end: BubbleEnd): Float32Array => {
+  const [a, b, c, d] = endModes(m, end);
+  const o = new Float32Array(a.length);
+  for (let i = 0; i < o.length; i++) o[i] = a[i] + b[i] + c[i] + d[i];
+  return o;
+};
+/** The purposes a bubble is coloured by (T-2886): work, errands and leisure, and the rest. */
+const PURPOSE_CLASS: Partial<Record<PurposeFilter, "work" | "errands">> = { work: "work", shopping: "errands", social: "errands" };
+
 /** The far end of a selection at `end`: Total's far end is both ends too. */
 const otherEnd = (end: BubbleEnd): BubbleEnd => (end === "home" ? "work" : end === "work" ? "home" : "both");
 
@@ -158,7 +168,7 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
   /** T-2756, dev server: the last focus change's kept legs against the result shown */
   kept: "",
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
-  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array }[] } | null),
+  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array; purp: boolean }[] } | null),
   farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
 
 
@@ -282,7 +292,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** T-2756: zones focused before, newest last: their legs and bubbles of a final result, and the solve the legs came from */
   const keptBuilt = new Map<CityId, { built: Built; src: string }>();
   const KEPT_ZONES = 6;
-  commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group })) } : null);
+  commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group, purp: !!l.purp })) } : null);
   let wanted = 0;
   // T-1493: an ask that ended without bubbles, and is still the newest, is made again after a wait
   // that doubles up to RETRY_MAX_MS, so the zone in view's bubbles always arrive
@@ -306,7 +316,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // its zone, which takes over its worker and bubbles.
   /** The worker builds the mode mix; bubbles are painted in the chosen scheme here (T-804). */
   const painted = (b: Bubbles): Bubbles => {
-    const key = bubbleSchemeKey();
+    const key = bubbleSchemeKey() + (purposeSchemeOn() && b.levels[0]?.purp ? "+p" : "");
     if ((b.coloured ?? "mode") !== key) {
       recolour(b.levels);
       b.coloured = key;
@@ -502,6 +512,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         if (st && st.anchor.version === anchor().version) {
           z.shown = { ...s, end, bubbles: st };
           view.setNearbyBubbles(id, painted(st).levels.map((l) => l.discs), st.anchor);
+          ensurePurp();
         } else {
           z.shown = null;
           view.setNearbyBubbles(id, null);
@@ -538,6 +549,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
         buildRest(mine, w, () => zones.get(id) === entry && entry.built === mine && entry.worker === w);
         entry.shown = { dv, end, purpose, bubbles: b, modes, src };
         view.setNearbyBubbles(id, painted(b).levels.map((l) => l.discs), b.anchor);
+        ensurePurp();
         commuterStats.nearbyMs = performance.now() - t0;
         commuterStats.nearbyBuilds++;
         commuterStats.nearbyShown[id] = performance.now();
@@ -557,6 +569,73 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     tries = 0;
     view.setBubbles(painted(s.bubbles).levels.map((l) => l.discs), s.bubbles.anchor);
     commuterStats.uploadMs = view.uploadMs;
+    ensurePurp();
+  };
+
+  // ---- colour by purpose (T-2886) ----
+  // Only while the setting is on: the purposes' legs are asked for, one more build is made in the bubble worker
+  // with work, the rest and errands and leisure as its three channels, and each disc takes its figures by group.
+  // Bubbles keep their look until those are in. Turned off, every bubble drops them.
+  const purpInflight = new WeakMap<Bubbles, Promise<boolean>>();
+  const attachPurp = (b: Bubbles, end: BubbleEnd, purpose: PurposeFilter, all: CellModes, w: Worker, zone?: CityId): Promise<boolean> => {
+    const had = purpInflight.get(b);
+    if (had) return had;
+    if (b.levels[0]?.purp) return Promise.resolve(false);
+    const run = (async () => {
+      const total = endTotal(all, end);
+      const n = total.length;
+      let work: Float32Array = new Float32Array(n);
+      const errands = new Float32Array(n);
+      const cls = PURPOSE_CLASS[purpose];
+      if (purpose === "all") {
+        const [mw, ms, ml] = await Promise.all([cellModes("work", zone), cellModes("shopping", zone), cellModes("social", zone)]);
+        if (!mw || !ms || !ml) return false;
+        work = endTotal(mw, end);
+        const s = endTotal(ms, end), l = endTotal(ml, end);
+        for (let i = 0; i < n; i++) errands[i] = s[i] + l[i];
+      } else if (cls === "work") work.set(total);
+      else if (cls === "errands") errands.set(total);
+      const other = new Float32Array(n);
+      for (let i = 0; i < n; i++) other[i] = Math.max(0, total[i] - work[i] - errands[i]);
+      const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)]);
+      if (!purposeSchemeOn() || pb.anchor.version !== b.anchor.version || pb.levels.length !== b.levels.length) return false;
+      b.levels.forEach((l, li) => {
+        const q = pb.levels[li], at = new Map<number, number>();
+        q.group.forEach((g, j) => at.set(g, j));
+        const take = (src: { train: Float32Array; walk: Float32Array; drive: Float32Array }) => {
+          const o = { work: new Float32Array(l.group.length), other: new Float32Array(l.group.length), errands: new Float32Array(l.group.length) };
+          l.group.forEach((g, i) => {
+            const j = at.get(g);
+            if (j === undefined) return;
+            o.work[i] = src.train[j];
+            o.other[i] = src.walk[j];
+            o.errands[i] = src.drive[j];
+          });
+          return o;
+        };
+        l.purp = { ...take(q), ...(q.shade ? { shade: take(q.shade) } : {}) };
+      });
+      return true;
+    })().catch(() => false).finally(() => purpInflight.delete(b));
+    purpInflight.set(b, run);
+    return run;
+  };
+  const ensurePurp = () => {
+    if (!purposeSchemeOn()) return;
+    const done = (ok: boolean) => ok && purposeSchemeOn() && repaint();
+    if (shown && worker) void attachPurp(shown.bubbles, shown.end, shown.purpose, shown.modes, worker).then(done);
+    for (const [id, z] of zones) if (z.shown && z.worker) void attachPurp(z.shown.bubbles, z.shown.end, z.shown.purpose, z.shown.modes, z.worker, id).then(done);
+  };
+  const dropPurp = () => {
+    const bubbles = new Set<Bubbles>();
+    const add = (x: { built?: Built | null; shown?: { bubbles: Bubbles } | null }) => {
+      if (x.shown) bubbles.add(x.shown.bubbles);
+      for (const b of x.built?.done.values() ?? []) bubbles.add(b);
+    };
+    add({ built, shown });
+    for (const z of zones.values()) add(z);
+    for (const k of keptBuilt.values()) add({ built: k.built });
+    for (const b of bubbles) for (const l of b.levels) delete l.purp;
   };
 
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
@@ -572,11 +651,17 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const d = display.peek();
     setBubbleShade(shade.value);
     setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
+    if (!purposeSchemeOn()) dropPurp();
+    repaint();
+    ensurePurp();
+  });
+  function repaint() {
     for (const [id, z] of zones) if (z.shown) view.setNearbyBubbles(id, painted(z.shown.bubbles).levels.map((l) => l.discs), z.shown.bubbles.anchor);
-    if (!shown) return;
+    if (!shown) return false;
     view.setBubbles(painted(shown.bubbles).levels.map((l) => l.discs), shown.bubbles.anchor);
     drawPick();
-  });
+    return true;
+  }
 
   // ---- hover ----
   // T-2271: the bar's width says the count's size too, on a log scale, never under a quarter

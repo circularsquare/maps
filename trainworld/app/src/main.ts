@@ -35,7 +35,7 @@ import { lineRunFactor } from "./game/regionMoney";
 import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade, setHillshade } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setBusRoadHint, setHillshade } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startLite } from "./map/lite";
 import { startRealNetwork } from "./map/realNetwork";
@@ -447,6 +447,7 @@ map.on("load", () => {
   const contrast = computed(() => display.value.basemapContrast);
   effect(() => setBasemapShade(map, shade.value, contrast.value));
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
+  effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883
   startTerrainTint(map); // T-1270 stage 3
   startLite(map); // T-1207
   startRealNetwork(map); // T-682
