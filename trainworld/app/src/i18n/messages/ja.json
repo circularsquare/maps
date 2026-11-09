@@ -1619,6 +1619,8 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, other {#編成}}} bus {{count, plural, other {バス#台}}} other {{count, plural, other {船#隻}}}}",
   "schedule.waitingDemand": "需要の読み込み待ち",
   "scheduleCopy.copied": "{line}のダイヤをコピーしました。",
+  "scheduleCopy.countsOnly": "{list}{vehicle, select, train {本の列車} bus {台のバス} other {隻の船}}",
+  "scheduleCopy.headwaysOnly": "運転間隔 {list}",
   "scheduleCopy.minutes": "{n}分",
   "scheduleCopy.tooShort": "{station}のホームは{wanted, plural, other {#両}}には短いため、{line}は{kept, plural, other {#両}}のままです。",
   "scheduleCopy.withHeadways": "運転間隔{list}、{cars, plural, other {#両}}、{fast, select, true {高速} other {普通}}",

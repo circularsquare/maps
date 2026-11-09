@@ -1619,6 +1619,8 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# train} other {# trains}}} bus {{count, plural, one {# bus} other {# buses}}} other {{count, plural, one {# boat} other {# boats}}}}",
   "schedule.waitingDemand": "Waiting for demand to load",
   "scheduleCopy.copied": "Schedule of {line} copied.",
+  "scheduleCopy.countsOnly": "{list} {vehicle, select, train {trains} bus {buses} other {boats}}",
+  "scheduleCopy.headwaysOnly": "Headways {list}",
   "scheduleCopy.minutes": "{n} min",
   "scheduleCopy.tooShort": "The platform at {station} is too short for {wanted, plural, one {# car} other {# cars}}. {line}'s trains stay at {kept, plural, one {# car} other {# cars}}.",
   "scheduleCopy.withHeadways": "Headways {list}, {cars, plural, one {# car} other {# cars}}, {fast, select, true {high speed} other {ordinary}}",

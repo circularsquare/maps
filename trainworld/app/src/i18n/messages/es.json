@@ -1619,6 +1619,8 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# tren} other {# trenes}}} bus {{count, plural, one {# autobús} other {# autobuses}}} other {{count, plural, one {# barco} other {# barcos}}}}",
   "schedule.waitingDemand": "Esperando a que cargue la demanda",
   "scheduleCopy.copied": "Horario de {line} copiado.",
+  "scheduleCopy.countsOnly": "{list} {vehicle, select, train {trenes} bus {autobuses} other {barcos}}",
+  "scheduleCopy.headwaysOnly": "Intervalos: {list}",
   "scheduleCopy.minutes": "{n} min",
   "scheduleCopy.tooShort": "El andén de {station} es demasiado corto para {wanted, plural, one {# vagón} other {# vagones}}. Los trenes de {line} se quedan en {kept, plural, one {# vagón} other {# vagones}}.",
   "scheduleCopy.withHeadways": "Intervalos {list}, {cars, plural, one {# vagón} other {# vagones}}, {fast, select, true {alta velocidad} other {normal}}",

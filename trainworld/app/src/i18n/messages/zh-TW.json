@@ -1619,6 +1619,8 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, other {列車#列}}} bus {{count, plural, other {公車#輛}}} other {{count, plural, other {船#艘}}}}",
   "schedule.waitingDemand": "正在等候需求載入",
   "scheduleCopy.copied": "已複製{line}的時刻表。",
+  "scheduleCopy.countsOnly": "{list}{vehicle, select, train {列列車} bus {輛公車} other {艘船}}",
+  "scheduleCopy.headwaysOnly": "班距 {list}",
   "scheduleCopy.minutes": "{n}分鐘",
   "scheduleCopy.tooShort": "{station}的月台停不下{wanted, plural, other {#節車廂}}，{line}的列車維持{kept, plural, other {#節}}。",
   "scheduleCopy.withHeadways": "班距{list}，{cars, plural, other {#節}}，{fast, select, true {高速} other {一般}}",

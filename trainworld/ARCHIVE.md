@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2919, T-2460 (2026-11-09, 45b6061c): bus and ferry panels get crowding dots, riders by purpose, round trip, schedule copy; ferries boardings per port and riders left; one stop-time format; delete asks only when it can't be undone; bus rated 53 of crush 80, boat 320 of 480 (two thirds, as a car's 160 of 240; bus seats 22 to 15); new bus lines 8/15/30. Riders on a real save: buses -14%, ferries and rail unchanged. notes/T-2919.md, T-2915.md.
 - T-2895 stage 1 (2026-11-09, 2293ad17): train stop rows drag to a kept order, Sort stops goes back; save level 8. Designed and built by Fable 5.2, notes/T-2895.md.
 - T-2911 (2026-11-09, 4c865d04): Purpose bubbles paint from their own figures, not the smoothed ones, so colour and hover agree.
 - T-2916 (2026-11-09, 0dc89a4e): attribution review; four about-page credit edits applied in the website working tree; research/release-legal.md status block.

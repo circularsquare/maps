@@ -1619,6 +1619,8 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# tren} other {# tren}}} bus {{count, plural, one {# otobüs} other {# otobüs}}} other {{count, plural, one {# vapur} other {# vapur}}}}",
   "schedule.waitingDemand": "Talebin yüklenmesi bekleniyor",
   "scheduleCopy.copied": "{line} sefer planı kopyalandı.",
+  "scheduleCopy.countsOnly": "{list} {vehicle, select, train {tren} bus {otobüs} other {vapur}}",
+  "scheduleCopy.headwaysOnly": "Sefer aralıkları: {list}",
   "scheduleCopy.minutes": "{n} dk",
   "scheduleCopy.tooShort": "{station} peronu {wanted, plural, one {# vagon} other {# vagon}} için kısa. {line} trenleri {kept, plural, one {# vagonda} other {# vagonda}} kalır.",
   "scheduleCopy.withHeadways": "Sefer aralığı {list}, {cars, plural, one {# vagon} other {# vagon}}, {fast, select, true {yüksek hızlı} other {normal}}",
