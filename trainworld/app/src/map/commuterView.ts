@@ -19,11 +19,11 @@ import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
 import { cellModes, cityCells, demandUpdating, demandView, flows, legsKey, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
-import { BUBBLE_ALPHA, bubbleSchemeKey, purposeSchemeOn, setBubbleColours, setBubbleShade } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleSchemeKey, purposeColour3, purposeSchemeOn, setBubbleColours, setBubbleShade } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
 import { GROUP_SAMPLE_SIDE, openFarTrip, tripOpenedFrom, type TripPlaces } from "../game/trip";
 import { compass, stationNameNear } from "../game/places";
-import type { PurposeFilter } from "../game/purposes";
+import { PURPOSE_CLASS, type PurposeFilter } from "../game/purposes";
 import { tripWords } from "../ui/inspector/tripText";
 import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
 import { display, purposeFilter, selection, shade, shownDayPhrase, tool } from "../game/ui";
@@ -95,8 +95,6 @@ const endTotal = (m: CellModes, end: BubbleEnd): Float32Array => {
   for (let i = 0; i < o.length; i++) o[i] = a[i] + b[i] + c[i] + d[i];
   return o;
 };
-/** The purposes a bubble is coloured by (T-2886): work, errands and leisure, and the rest. */
-const PURPOSE_CLASS: Partial<Record<PurposeFilter, "work" | "errands">> = { work: "work", shopping: "errands", social: "errands" };
 
 /** The far end of a selection at `end`: Total's far end is both ends too. */
 const otherEnd = (end: BubbleEnd): BubbleEnd => (end === "home" ? "work" : end === "work" ? "home" : "both");
@@ -160,6 +158,39 @@ function farOf(f: Flows, purpose: PurposeFilter): FarEnd | null {
   return purpose === "all" ? f : f.byPurpose?.get(purpose) ?? null;
 }
 
+/** T-2892: `fe`'s trips per far cell, in `fe`'s order, for work, the rest, and errands and leisure.
+ * `f` is the far end as dealt, so every purpose's cells line up with `fe`'s (game/farChunks.ts). */
+function farPurposes(f: Flows, fe: FarEnd, purpose: PurposeFilter) {
+  const n = fe.cells.length, work = new Float32Array(n), errands = new Float32Array(n), other = new Float32Array(n);
+  const total = Float32Array.from({ length: n }, (_, k) => fe.farRail[k] + fe.farWalk[k] + fe.farDrive[k]);
+  if (purpose === "all") {
+    const at = new Map<number, number>();
+    fe.cells.forEach((c, k) => at.set(c, k));
+    const add = (part: FarEnd | undefined, into: Float32Array) => {
+      if (part) part.cells.forEach((c, k) => { const i = at.get(c); if (i !== undefined) into[i] += part.farRail[k] + part.farWalk[k] + part.farDrive[k]; });
+    };
+    add(f.byPurpose?.get("work"), work);
+    add(f.byPurpose?.get("shopping"), errands);
+    add(f.byPurpose?.get("social"), errands);
+  } else if (PURPOSE_CLASS[purpose] === "work") work.set(total);
+  else if (PURPOSE_CLASS[purpose] === "errands") errands.set(total);
+  for (let k = 0; k < n; k++) other[k] = Math.max(0, total[k] - work[k] - errands[k]);
+  return { work, other, errands };
+}
+
+/** T-2892: paint `d`, the discs of `g`, by purpose; `p` is the same trips summed as work (`train`), the
+ * rest (`walk`), and errands and leisure (`drive`). A group `p` lacks keeps its colour. */
+function tintByPurpose(d: Float32Array, g: Groups, p: Groups) {
+  const at = new Map<number, number>();
+  p.group.forEach((q, j) => at.set(q, j));
+  g.group.forEach((q, i) => {
+    const j = at.get(q);
+    if (j === undefined) return;
+    const c = purposeColour3(p.train[j], p.walk[j], p.drive[j]);
+    (d[i * DISC + 3] = c[0] / 255), (d[i * DISC + 4] = c[1] / 255), (d[i * DISC + 5] = c[2] / 255);
+  });
+}
+
 
 export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as Record<string, number>, cellsMs: 0, workerMs: 0, roundTripMs: 0, builds: 0, uploadMs: 0, selectMs: 0, flowsMs: 0, farMs: 0, farCells: 0, sumMs: 0,
   /** T-285: performance.now() when a selection's far end was asked for, its answer came, the
@@ -169,7 +200,7 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
   kept: "",
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
   probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array; purp: boolean }[] } | null),
-  farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
+  farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; near: Float32Array | null; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
 
 
 export function startCommuterView(map: MlMap, view: DemandOverlay) {
@@ -577,6 +608,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   // with work, the rest and errands and leisure as its three channels, and each disc takes its figures by group.
   // Bubbles keep their look until those are in. Turned off, every bubble drops them.
   const purpInflight = new WeakMap<Bubbles, Promise<boolean>>();
+  /** the per-cell figures behind each bubbles' `purp`, for the selection's near discs (T-2892) */
+  const cellPurp = new WeakMap<Bubbles, { end: BubbleEnd; work: Float32Array; other: Float32Array; errands: Float32Array }>();
   const attachPurp = (b: Bubbles, end: BubbleEnd, purpose: PurposeFilter, all: CellModes, w: Worker, zone?: CityId): Promise<boolean> => {
     const had = purpInflight.get(b);
     if (had) return had;
@@ -597,8 +630,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       else if (cls === "errands") errands.set(total);
       const other = new Float32Array(n);
       for (let i = 0; i < n; i++) other[i] = Math.max(0, total[i] - work[i] - errands[i]);
+      const perCell = { end, work: work.slice(), other: other.slice(), errands: errands.slice() }; // `buildOn` hands its arrays to the worker
       const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)]);
       if (!purposeSchemeOn() || pb.anchor.version !== b.anchor.version || pb.levels.length !== b.levels.length) return false;
+      cellPurp.set(b, perCell);
       b.levels.forEach((l, li) => {
         const q = pb.levels[li], at = new Map<number, number>();
         q.group.forEach((g, j) => at.set(g, j));
@@ -625,6 +660,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const done = (ok: boolean) => ok && purposeSchemeOn() && repaint();
     if (shown && worker) void attachPurp(shown.bubbles, shown.end, shown.purpose, shown.modes, worker).then(done);
     for (const [id, z] of zones) if (z.shown && z.worker) void attachPurp(z.shown.bubbles, z.shown.end, z.shown.purpose, z.shown.modes, z.worker, id).then(done);
+    if (shown) ensureFarPurp();
   };
   const dropPurp = () => {
     const bubbles = new Set<Bubbles>();
@@ -635,7 +671,10 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     add({ built, shown });
     for (const z of zones.values()) add(z);
     for (const k of keptBuilt.values()) add({ built: k.built });
-    for (const b of bubbles) for (const l of b.levels) delete l.purp;
+    for (const b of bubbles) {
+      cellPurp.delete(b);
+      for (const l of b.levels) delete l.purp;
+    }
   };
 
   // the size slider in the settings pane scales every commuter bubble on the GPU (T-099)
@@ -987,6 +1026,28 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let lastFlowKey: unknown = null;
   /** the selection's last far-end answer, every purpose in it (T-158) */
   let lastFlows: { sel: Selection; dv: DemandView | null; f: Flows; parts?: { home: Flows; work: Flows } } | null = null;
+  /** what `farCells` was summed from */
+  let farSource: { f: Flows; purpose: PurposeFilter } | null = null;
+  /** T-2892: `of`, a `farCells`, summed again by purpose; only under the Purpose scheme */
+  let farPurp: { of: Groups[]; levels: Groups[] } | null = null;
+  let farPurpAsked: Groups[] | null = null;
+  function ensureFarPurp() {
+    const of = farCells;
+    if (!purposeSchemeOn() || !of || !farSource || !worker || farPurp?.of === of || farPurpAsked === of) return;
+    const fe = farOf(farSource.f, farSource.purpose);
+    if (!fe) return;
+    farPurpAsked = of;
+    const split = farPurposes(farSource.f, fe, farSource.purpose);
+    const id = nextId++;
+    pending.set(id, (m: Summed) => {
+      if (farPurpAsked === of) farPurpAsked = null;
+      if (of !== farCells || !purposeSchemeOn()) return;
+      farPurp = { of, levels: m.levels };
+      drawPick();
+    });
+    const msg: ToCommuters = { kind: "sum", id, cells: fe.cells, train: split.work, walk: split.other, drive: split.errands };
+    worker.postMessage(msg);
+  }
 
   /** Near and far discs at the level on screen. */
   const drawPick = () => {
@@ -1007,6 +1068,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     near = aggregate(g, city.cellX, city.cellY, sel.cells, t, w, d, u);
     nearAnchor = city.anchor;
     nearDiscs = discs(near, 1 / BUBBLE_DENSITY[sel.end], BUBBLE_ALPHA, 2, nearAnchor);
+    const nearPurp = purposeSchemeOn() ? cellPurp.get(shown.bubbles) : undefined;
+    if (nearPurp && nearPurp.end === sel.end) {
+      const of = (a: Float32Array) => Float32Array.from(sel.cells, (c) => a[c]);
+      tintByPurpose(nearDiscs, near, aggregate(g, city.cellX, city.cellY, sel.cells, of(nearPurp.work), of(nearPurp.other), of(nearPurp.errands)));
+    }
     view.setDiscs("near", nearDiscs, nearAnchor);
     if (farCells) {
       far = farCells[level];
@@ -1015,6 +1081,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       for (let i = 0; i < far.group.length; i++) max = Math.max(max, far.train[i] + far.walk[i] + far.drive[i]);
       const perTrip = max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0;
       farDiscs = discs(far, perTrip, BUBBLE_ALPHA, 0, farAnchor);
+      if (purposeSchemeOn() && farPurp?.of === farCells) tintByPurpose(farDiscs, far, farPurp.levels[level]);
       view.setDiscs("far", farDiscs, farAnchor);
       farAreaPerTrip.value = perTrip;
     } else {
@@ -1026,7 +1093,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   };
   view.onLevel = () => drawPick();
   // ?debug=1 (T-586's check): the selection's far-end bubbles as drawn, with the anchor
-  commuterStats.farProbe = () => (far && farDiscs ? { anchor: farAnchor, discs: farDiscs, group: far.group, train: far.train, walk: far.walk, drive: far.drive } : null);
+  commuterStats.farProbe = () => (far && farDiscs ? { anchor: farAnchor, discs: farDiscs, near: nearDiscs, group: far.group, train: far.train, walk: far.walk, drive: far.drive } : null);
 
   /** The far end's places, named by the station nearest them. */
   const places = (fc: Groups[], A: Anchor): Place[] => {
@@ -1126,9 +1193,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const t2 = performance.now();
       commuterStats.summedAt = t2;
       farCells = summed.levels;
+      farSource = { f: dealtOf(f, purpose), purpose };
       farAnchor = summed.anchor;
       commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells, farAnchor) }, purpose, at };
       drawPick();
+      ensureFarPurp();
       commuterStats.farAt = performance.now();
       commuterStats.farMs = commuterStats.farAt - t2;
       commuterStats.sumMs = summed.ms;

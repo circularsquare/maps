@@ -34,10 +34,10 @@ import { lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, type Corridors, type CorridorTable, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { count } from "../game/format";
-import { BUBBLE_ALPHA, bubbleColour, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
+import { BUBBLE_ALPHA, bubbleColour, purposeColour3, purposeSchemeOn, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
 import { lineSetUp, startTier, type StartTier } from "../game/startDifficulty";
-import { purposeWords, type PurposeKey } from "../game/purposes";
+import { PURPOSE_CLASS, purposeWords, type PurposeKey } from "../game/purposes";
 import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
 import type { CommutersOneWay, Selection } from "../game/types";
 import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
@@ -475,11 +475,28 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const n = points.length;
     const discs = new Float32Array(n * DISC);
     const tags: string[][] = [];
+    // T-2892, Purpose scheme: errands and leisure among these trips from `current.by`, and the longer trips the rest;
+    // commutes are not in this far end
+    const byPurpose = purposeSchemeOn();
+    const errandsAt = new Map<string, number>();
+    if (byPurpose && shown) {
+      const dir = current.end === "work" ? "ends" : "starts";
+      for (const k of ["shopping", "social"] as const) {
+        const part = current.by?.get(k)?.[dir];
+        if (!part) continue;
+        for (const q of regional ? part.places : part.zones) {
+          const key = `${q.place}:${"gid" in q ? q.gid : -1}`;
+          errandsAt.set(key, (errandsAt.get(key) ?? 0) + q.all);
+        }
+      }
+    }
+    const cls = PURPOSE_CLASS[filter];
     points.forEach((z, i) => {
       const [lng, lat] = z.ll;
       const [x, y] = toLocal(lng, lat, a);
       const walk = z.walk ?? 0, rest = Math.max(0, z.all - z.rail - walk);
-      const c = bubbleColour(z.rail, walk, rest);
+      const e = shown ? Math.min(z.all, errandsAt.get(`${z.place}:${z.gid}`) ?? 0) : cls === "errands" ? z.all : 0, w = cls === "work" ? z.all : 0;
+      const c = byPurpose ? purposeColour3(w, z.all - w - e, e) : bubbleColour(z.rail, walk, rest);
       const r = FAR_RADIUS * Math.sqrt((perTrip * z.all) / Math.PI) * kAtLat(lat);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 0], i * DISC);
       const place = z.name || tr("intercityView.here");

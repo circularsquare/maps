@@ -284,7 +284,7 @@
   "busInspector.saveTip": "経路を保存（Enter）",
   "busInspector.spacing": "停留所の間隔",
   "busInspector.spacingAuto": "自動",
-  "busInspector.spacingTip": "{auto, select, true {通る駅すべてに停まり、その間は約{distance}ごとに停まります。} other {バスはおおよそこの間隔で停まり、近くに駅があれば駅に停まります。停留所が少ないほど速くなりますが、停留所の近くに住む人は減ります。}}",
+  "busInspector.spacingTip": "{auto, select, true {通る駅すべてに停まり、その間は約{distance}ごとに停まります。} other {バスはおおよそこの間隔で停まり、近くに乗り換え地点があればそこに停まります。}}",
   "busInspector.station": "駅",
   "busInspector.stops": "停留所",
   "busInspector.streetBetween": "{from}と{to}の間の{count, plural, other {停留所#か所}}",

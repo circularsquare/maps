@@ -125,8 +125,8 @@ export function localStops(g: DiagramGraph): Uint8Array {
   return small;
 }
 
-/** T-2888: the player's line width, a multiple of the drawn one; a stroke of the largest still leaves a sliver between neighbours */
-export const WIDTH_MIN = 1, WIDTH_MAX = 1.2;
+/** T-2888, T-2903: the player's line width, a multiple of the drawn one; past about 1.2 neighbours in a bundle overlap, accepted at the top end */
+export const WIDTH_MIN = 1, WIDTH_MAX = 2;
 /** the drawing with its strokes `m` times as wide: the pills, passages and picking follow `stroke`, the casings grow by as much */
 export function widened(d: Drawing, m: number): Drawing {
   return m === 1 ? d : { ...d, stroke: d.stroke * m, casing: d.pitch + d.stroke * (m - 1) };

@@ -42,7 +42,7 @@ Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` 
 - **Build keys** (1 to 4, N, S, C, G, U, O, T) and any build tool picked go back to the map first.
 - **Paused while up** (T-2888): opening the diagram pauses the game clock; closing it, by any way back, starts it
   again at the speed it had, unless it was paused already or the player started it while the diagram was up.
-- **Line width** (T-2888): a slider from the drawn width (1x) to 1.2x, kept in localStorage as
+- **Line width** (T-2888): a slider from the drawn width (1x) to 2x, kept in localStorage as
   `anitabuilder-diagram-width`. It scales the strokes, the stations' pills and passages and the casings
   (`widened` in draw.ts), at paint time only: the layout, the names' places and the pitch do not change, so the
   gap between neighbouring lines shrinks from 0.22 to 0.04 of a pitch at the largest. The saved picture follows it.

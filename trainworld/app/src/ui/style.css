@@ -129,6 +129,7 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .swap-label > * { grid-area: 1 / 1; text-align: center; }
 .swap-label > .off { visibility: hidden; }
 .group { display: inline-flex; }
+.group > .btn { white-space: nowrap; flex: none; }
 .group > .btn + .btn { margin-left: -1px; }
 /* T-1664: the speed slider opens under the fastest button; a slider speed shows on that button as text.
    T-1665: the chosen speed is dimmed while the clock is held at the demand cap. */
@@ -407,6 +408,7 @@ body.resizing, body.resizing * { user-select: none; }
 
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.slider:has(> .group) { flex-wrap: wrap; }
 .slider span { min-width: 3.6em; }
 .slider .slider-pct { flex: none; width: 4ch; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .slider input { flex: 1; min-width: 0; appearance: none; height: calc(15 * var(--px)); background: transparent; margin: 0; }
@@ -1463,6 +1465,10 @@ button.save-add:hover { color: var(--text); }
   .tool-pick .tool-label { display: none; }
   .lines-box .w-near, .lines-box .sort-btn.near-off { display: none; }
   .pane .group { flex-wrap: wrap; }
+  .game-mode { flex-wrap: wrap; }
+  .game-mode .btn.text { white-space: normal; height: auto; min-height: 28px; }
+  .slider .slider-pct { width: 5ch; }
+  .slider .purpose-filter, .slider .purpose-filter select { min-width: 0; max-width: 100%; }
   /* T-1885: the money ledger in a narrow column: each row's name on its own line, yesterday and
      today under it */
   table.ledger { display: block; }

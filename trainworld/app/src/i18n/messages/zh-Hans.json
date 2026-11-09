@@ -284,7 +284,7 @@
   "busInspector.saveTip": "保存路线（Enter）",
   "busInspector.spacing": "站距",
   "busInspector.spacingAuto": "自动",
-  "busInspector.spacingTip": "{auto, select, true {经过的车站都停，其间约每{distance}停一站。} other {公交大约隔这么远停一站，附近有车站就停在车站。停靠站越少车越快，但住在站旁的人也越少。}}",
+  "busInspector.spacingTip": "{auto, select, true {经过的车站都停，其间约每{distance}停一站。} other {公交大约隔这么远停一站，附近有换乘点就停在换乘点。}}",
   "busInspector.station": "车站",
   "busInspector.stops": "停靠站",
   "busInspector.streetBetween": "{count, plural, other {{from}和{to}之间有#个路边站}}",

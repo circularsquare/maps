@@ -17,9 +17,8 @@ const ID = "terrain-tint";
 const MIN_ZOOM = 7;
 /** the image covers the view and this much of its size again on each side, so a pan shows it */
 const MARGIN = 0.5;
-/** canvas pixels at most a side, and at least this many to a lattice cell's width */
+/** canvas pixels at most a side */
 const MAX_PX = 2048;
-const PX_PER_CELL = 24;
 /** RGB and the alpha of rolling, hilly and mountain ground, in each theme */
 const WASH = {
   light: { rgb: [150, 88, 30], alpha: [0, 0.08, 0.15, 0.24] },
@@ -49,7 +48,7 @@ export function startTerrainTint(map: MlMap): () => void {
       const before = ["water_over_shade", "waterway"].find((id) => map.getLayer(id)) ?? firstSymbolId(map);
       map.addLayer({
         id: ID, type: "raster", source: ID, layout: { visibility: "none" },
-        paint: { "raster-resampling": "nearest", "raster-fade-duration": 0, "raster-opacity": 1 },
+        paint: { "raster-resampling": "linear", "raster-fade-duration": 0, "raster-opacity": 1 },
       }, before);
     }
   };
@@ -70,9 +69,8 @@ export function startTerrainTint(map: MlMap): () => void {
     const top = maplibregl.MercatorCoordinate.fromLngLat([0, 85]).y, bottom = maplibregl.MercatorCoordinate.fromLngLat([0, -85]).y;
     const x0 = nw.x - dx, x1 = se.x + dx, y0 = Math.max(top, nw.y - dy), y1 = Math.min(bottom, se.y + dy);
     const lonW = x0 * 360 - 180, lonE = x1 * 360 - 180;
-    const perDeg = terrainGrids.values().next().value!.perDeg;
-    const cssW = box.clientWidth * (1 + 2 * MARGIN);
-    const fine = Math.min(MAX_PX, cssW / 2, (lonE - lonW) * perDeg * PX_PER_CELL);
+    // about a screen pixel to an image pixel, so with linear resampling a hex's edge is a smooth diagonal at any zoom (T-2902)
+    const fine = Math.min(MAX_PX, box.clientWidth * (1 + 2 * MARGIN));
     // a hex under a pixel of the image has no shape to show: half the image, a quarter of the work
     const W = Math.max(1, Math.round(fine * HEX_WIDTH / (x1 - x0) < 1 ? fine / 2 : fine));
     const H = Math.max(1, Math.round(Math.min(MAX_PX, W * (y1 - y0) / (x1 - x0))));
