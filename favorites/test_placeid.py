@@ -4,7 +4,7 @@ import os
 import struct
 import base64
 
-API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyCiCzcGcB58rZ-OwK4GSvUiokMGyUjKxcE')
+API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'REMOVED_GOOGLE_API_KEY')
 
 test_url = 'https://www.google.com/maps/place/Ocean+Avenue+Pedestrian+Bridge/data=!4m2!3m1!1s0x89c24465689496b9:0xcba0063c7138d9e2'
 

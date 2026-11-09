@@ -6,7 +6,7 @@ import struct
 import base64
 import time
 
-API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'AIzaSyCiCzcGcB58rZ-OwK4GSvUiokMGyUjKxcE')
+API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', 'REMOVED_GOOGLE_API_KEY')
 INPUT_FILE = 'favorites.csv'
 OUTPUT_FILE = 'coords.csv'
 
