@@ -209,14 +209,14 @@ async function lintOrDiff() {
   const toSimp = CC && lang === "zh-Hans" ? CC.Converter({ from: "tw", to: "cn" }) : null;
   const KEEP = new Set(["km", "mi", "ft", "mph", "AI", "US", "MB", "GB", "CPU", "OK"]);
   // half-width CJK text measures about 0.55 of a full-width character
-  const width = (s) => [...s].reduce((w, c) => w + (cjk.test(c) || /[　-〿＀-￯]/.test(c) ? 1 : c === " " ? 0.3 : c === "\u0001" ? 2.5 : c === "\u0002" ? 0 : 0.55), 0);
+  const width = (s) => [...s].reduce((w, c) => w + (cjk.test(c) || /[가-힣]/.test(c) || /[　-〿＀-￯]/.test(c) ? 1 : c === " " ? 0.3 : c === "\u0001" ? 2.5 : c === "\u0002" ? 0 : 0.55), 0);
   const longest = (s) => s.split(" \u0002 ").reduce((a, b) => (width(b) > width(a) ? b : a), "");
   let count = 0;
   for (const k of scopeKeys()) {
     if (!(k in m)) continue;
     const text = m[k], w = words(lang, text), note = context[k] ?? "";
     const warn = (msg) => { count++; console.log(`${k}: ${msg}\n    ${text}`); };
-    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "fr" && lang !== "tr" && lang !== "ru") {
+    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "fr" && lang !== "tr" && lang !== "ru" && lang !== "ko") {
       if (new RegExp(`[${CJK}][,.!?:;]|[,!?:;][${CJK}]`).test(w)) warn("half-width punctuation beside CJK; use 、。，！？：；");
       if (new RegExp(`\\([^)]*[${CJK}]`).test(w)) warn("half-width parentheses around CJK; use （）");
       if (new RegExp(`[${CJK}] +[A-Za-z0-9\\u0001]|[A-Za-z0-9\\u0001] +[${CJK}]`).test(w)) warn("a space between CJK and Latin, a digit or a placeholder; the page adds that gap itself (text-autospace)");
@@ -238,6 +238,15 @@ async function lintOrDiff() {
       const changed = (conv) => { const a = [...w], b = [...conv(w)]; return a.length !== b.length ? ["?"] : [...new Set(a.filter((c, i) => c !== b[i] && !"台占".includes(c)))]; };
       if (toTrad && changed(toTrad).length) warn(`simplified characters? ${changed(toTrad).join(" ")} (OpenCC cn->tw changes them)`);
       if (toSimp && changed(toSimp).length) warn(`traditional characters? ${changed(toSimp).join(" ")} (OpenCC tw->cn changes them)`);
+    }
+    if (lang === "ko") {
+      const latin = (w.match(/[A-Za-z]{2,}/g) ?? []).filter((x) => !KEEP.has(x));
+      if (latin.length) warn(`English left: ${latin.join(", ")} (fine only for a name the data or the game gives)`);
+      if (/\u0001(은|는|이|가|을|를|과|와|으로|로)(?![가-힣])/.test(w)) warn("a particle straight after a placeholder: its form depends on the value's last sound; put a noun or a label and colon before the value");
+      if (/습니다|ㅂ니다|십시오|세요/.test(w)) warn("formal 합쇼체 ending; the voice is 해요체 (or plain nouns for labels)");
+      if (/[ㄱ-ㅎㅏ-ㅣ]/.test(w)) warn("a bare jamo (ㅋㅋ, ㅠㅠ)");
+      if (/[一-鿿]/.test(w)) warn("hanja; write hangul");
+      if (/ [.,!?]|[.!?](?=[가-힣])/.test(w)) warn("a space before or no space after punctuation");
     }
     if (lang === "fr") {
       if (w.includes("'")) warn("a straight apostrophe; French uses ’ (U+2019)");

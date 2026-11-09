@@ -50,6 +50,9 @@
    rounded Huninn (i18n/huninn.css); Simplified the system's Chinese face. */
 :root:lang(zh-Hans) { --font: "Nunito", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", system-ui, sans-serif; }
 :root:lang(zh-TW) { --font: "Nunito", "Huninn", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif; }
+/* T-2889: Korean takes the system's hangul face after Nunito; lines break between words, not inside one */
+:root:lang(ko) { --font: "Nunito", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif; }
+:root:lang(ko) body { word-break: keep-all; }
 /* T-2680: Huninn has no bold, and the browser's made-up bold fills in dense hanzi (圓圈, 顯); a system bold face
    came out lighter than Huninn's regular. So no bold hanzi in zh-TW (Nunito's Latin and digits keep theirs),
    and a heading is told apart by size */
