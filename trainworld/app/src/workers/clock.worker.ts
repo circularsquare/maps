@@ -841,7 +841,7 @@ async function rebuildModel(fromKept: boolean) {
   api!.set_fleet_ferry(k.fleetFerry);
   api!.set_cash(k.cash);
   setMode(mode);
-  restart(gameNow(), "autosave");
+  restart(gameNow(), "autosave", "rebuilt");
   dirty = true;
 }
 
@@ -2606,7 +2606,7 @@ async function newGame(spec?: NewGameSpec) {
 }
 
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
-function restart(t: number, from: "autosave" | "file" | "new") {
+function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt") {
   clk = { t, rate: clk.rate, at: wallNow() };
   game++;
   edited = false;
@@ -2628,7 +2628,7 @@ function restart(t: number, from: "autosave" | "file" | "new") {
   sendOpened();
   sendHome();
   send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
-  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: loadingInto ?? activeSlot });
+  send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: loadingInto ?? activeSlot, reason });
   convertedOnLoad = false;
   sendState();
   clearTimeout(snapTimer);

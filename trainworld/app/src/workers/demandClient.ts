@@ -3448,6 +3448,8 @@ class DemandClient {
     // T-2658: the world as it is now is in this network (a world's state comes before the snapshot made after it)
     const wv = world.peek()?.version ?? -1;
     networkWorld.value = wv;
+    // T-2849: demand that failed will solve nothing, so no edit waits on it
+    if (this.failed) { finalWorld.value = wv; return; }
     if (key === this.lastKey) {
       const same = this.latest();
       if (same) this.netWorld.set(same, wv);

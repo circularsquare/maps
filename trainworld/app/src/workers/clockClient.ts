@@ -625,10 +625,13 @@ export class ClockClient {
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
     // One table per kind of day (T-260): the worker settles each hour by its own day's.
     let lastIncome = "";
+    // T-2848: bumped after a rebuild, which cleared the worker's figures for a network that gets no new solve
+    const resend = signal(0);
     // T-2773: a line whose riders are being worked out again is paid what it last earned settled, not a
     // half-done answer's (a local solve reads a long line far low): its entries stand in for the new ones
     const settledIncome = new Map<string, { perHour: number[]; rides: number[] }[]>();
     effect(() => {
+      void resend.value;
       const inc = incomeByDay.value, pend = linesPending.value;
       const days = inc.map((i) => ({ ...i, perHour: [...i.perHour], rides: [...i.rides], lines: new Map(i.lines) }));
       const live = new Set(days.flatMap((i) => [...i.lines.keys()]));
@@ -686,6 +689,7 @@ export class ClockClient {
     // T-684: each line's points by region, whenever riders, lines or zone boundaries change them
     let lastPoints = "";
     effect(() => {
+      void resend.value;
       const lines = linePoints.value;
       const key = JSON.stringify(lines);
       if (key !== lastPoints) {
@@ -716,6 +720,7 @@ export class ClockClient {
     effect(() => {
       // T-264, T-1373: a superholiday's days only while one is soon; an empty message clears them,
       // so the account reads the ordinary day's (track/boarding.rs `kind`)
+      void resend.value;
       const soon = awaySoon.value, rush = rushSoon.value;
       demandByDay.value.slice(0, DAY_KINDS.length).forEach((d0, day) => {
         const own = day === AWAY_DAY ? soon : day === OUT_DAY || day === BACK_DAY ? rush : null;
@@ -752,8 +757,10 @@ export class ClockClient {
       });
     };
     effect(() => {
+      void resend.value;
       if (demandView.value) askTransfers();
     });
+    this.resendFigures = () => { xferAsked = null; resend.value++; };
     // Hidden or closing: write the autosave now (T-029).
     document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && this.post({ kind: "flush" }));
     addEventListener("pagehide", () => this.post({ kind: "flush" }));
@@ -777,6 +784,7 @@ export class ClockClient {
   /** the worker's game the clock messages are for (`loaded`'s `game`, T-715) */
   private game = 0;
   private forgetSent = () => {};
+  private resendFigures = () => {};
   /** T-895: the next game loaded was opened by the player, so the camera fits its network (`fitView`) */
   private fitNext = false;
   private fitState = false;
@@ -1057,6 +1065,7 @@ export class ClockClient {
         // T-715: the clock the hold above sent is the old game's, which the worker ignores
         this.game = msg.game;
         this.forgetSent();
+        if (msg.reason === "rebuilt") this.resendFigures(); // T-2848: only here; a real load would send the last game's
         gamesLoaded.value++;
         clock.set(msg.clock);
         if (msg.from === "file") say(t("clockClient.loaded", { day: Math.floor(msg.clock / 86400) }));

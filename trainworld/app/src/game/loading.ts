@@ -223,7 +223,8 @@ export function loadFailed(why: string) {
   // after startup; at a failed startup the player's choice releases it (every worker may report)
   else if (startup.peek() === "ready") {
     clock?.setHeld(false);
-    if (!demandStopped.peek()) {
+    // (T-2849: a real failure replaces the graphics notice, which goes away when the context returns)
+    if (!demandStopped.peek() || demandStopped.peek() === "graphics") {
       demandStopped.value = isMemoryFailure(why) ? "memory" : "error";
       clock?.setRunning(false); // T-2657: paused once; the player may run it again
     }
