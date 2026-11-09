@@ -2,7 +2,7 @@
 
 How the game's text is kept by language. The plan and its reasons are in `research/localization.md`;
 this file is the rules. The languages are English (the source), Japanese (`ja`), Simplified Chinese
-(`zh-Hans`), Traditional Chinese as written in Taiwan (`zh-TW`), then Spanish (`es`) and German (`de`).
+(`zh-Hans`), Traditional Chinese as written in Taiwan (`zh-TW`), then Spanish (`es`), Portuguese (`pt`, Brazilian) and German (`de`).
 
 ## Files
 
