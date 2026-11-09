@@ -20,4 +20,5 @@ Weekends and public holidays have their own demand, with less commuting and more
 
 The trips themselves are in [[who-travels]].
 
-In the code: `sim/src/track/params.rs` `sim/src/demand/api.rs` `sim/src/demand/days.rs`
+Exact rule: `docs/demand-timing.md` "Time of day". The commute shares here are commutes only. Everyday trips have a table for each purpose.
+In the code: `sim/src/track/params.rs` `PERIOD_HOURS`, `PERIOD_LEVEL`, `PEAK_HOUR_FACTOR` `sim/src/demand/api.rs` `TO_WORK`, `TO_HOME` `sim/src/demand/days.rs` `day_rate` `sim/src/demand/everyday.rs` `OUTWARD`

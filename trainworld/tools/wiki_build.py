@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Build trainworld/wiki/*.md into trainworld/wiki/html/, filling figures from the source.
 
-    python trainworld/tools/wiki_build.py           build (nothing is written if anything is wrong)
-    python trainworld/tools/wiki_build.py --check   only check, exit 1 on any problem
+    python trainworld/tools/wiki_build.py           write read/ (tracked, figures filled) and html/
+    python trainworld/tools/wiki_build.py --check   write nothing, exit 1 on any problem or a stale read/
+    python trainworld/tools/wiki_build.py --html    write html/ only (snapbuild; leaves tracked files alone)
+
+Nothing is written if anything is wrong.
 
 A marker is {{path:EXPR}} or {{path:EXPR|decimals}}, path relative to trainworld/. EXPR is arithmetic
 over the file's names: CONST, CONST[2], Struct.field (the field's value in `impl Default for Struct`)
@@ -24,6 +27,8 @@ SKIP = {"RULES.md"}
 MARK = re.compile(r"\{\{([^{}:]+):([^{}|]+?)(?:\|(\d+))?\}\}")
 LINK = re.compile(r"\[\[([a-z0-9-]+)(?:\|([^\]]+))?\]\]")
 CODE_LINE = "In the code:"
+EXACT_LINE = "Exact rule:"
+READ = WIKI / "read"
 
 
 class Bad(Exception):
@@ -246,15 +251,46 @@ def expand(body, page, problems):
     return MARK.sub(one, body)
 
 
+def check_refs(line, page, problems):
+    """A code span with a / is a path; one without must appear in the path named before it."""
+    current = None
+    for span in re.findall(r"`([^`]+)`", line):
+        if "/" in span:
+            if not (ROOT / span).exists():
+                problems.append(f"{page}: {span} does not exist")
+                current = None
+            else:
+                current = span
+        elif current:
+            ident = span.split("::")[-1]
+            if not re.search(r"\b" + re.escape(ident) + r"\b", (ROOT / current).read_text(encoding="utf-8")):
+                problems.append(f"{page}: `{span}` is not in {current}")
+        else:
+            problems.append(f"{page}: `{span}` comes before any file")
+
+
+def check_headings(line, page, problems):
+    """Each "quoted heading" after a doc path must be a heading of that doc."""
+    for path, rest in re.findall(r"`(docs/[^`]+)`((?:\s*\"[^\"]+\")+)", line):
+        f = ROOT / path
+        if not f.is_file():
+            continue
+        heads = [l for l in f.read_text(encoding="utf-8").split("\n") if l.startswith("#")]
+        for head in re.findall(r"\"([^\"]+)\"", rest):
+            if not any(head in h for h in heads):
+                problems.append(f"{page}: {path} has no heading \"{head}\"")
+
+
 def lint(body, page, pages, problems):
     lines = body.split("\n")
-    code = [l for l in lines if l.startswith(CODE_LINE)]
-    if len(code) != 1:
-        problems.append(f"{page}: needs exactly one '{CODE_LINE}' line, has {len(code)}")
-    for l in code:
-        for p in re.findall(r"`([^`]+)`", l):
-            if not (ROOT / p).exists():
-                problems.append(f"{page}: {CODE_LINE} {p} does not exist")
+    if page != "index.md":
+        for prefix in (EXACT_LINE, CODE_LINE):
+            found = [l for l in lines if l.startswith(prefix)]
+            if len(found) != 1:
+                problems.append(f"{page}: needs exactly one '{prefix}' line, has {len(found)}")
+            for l in found:
+                check_refs(l, page, problems)
+                check_headings(l, page, problems)
     if not lines[0].startswith("# "):
         problems.append(f"{page}: first line must be a # title")
     for target, _ in LINK.findall(body):
@@ -265,6 +301,8 @@ def lint(body, page, pages, problems):
             continue
         rest = MARK.sub("", l)
         rest = re.sub(r"`[^`]*`", "", rest)
+        if l.startswith(EXACT_LINE):
+            rest = re.sub(r"\"[^\"]*\"", "", rest)
         rest = LINK.sub("", rest)
         for d in re.findall(r"\S*\d\S*", rest):
             problems.append(f"{page}:{i}: hand-written number '{d}': use a marker or say it in words")
@@ -322,7 +360,7 @@ def render(md):
             table.append(s)
         elif not s:
             flush()
-        elif s.startswith(CODE_LINE):
+        elif s.startswith((CODE_LINE, EXACT_LINE)):
             flush()
             out.append(f'<p class="code">{inline(s)}</p>')
         elif items:
@@ -360,6 +398,35 @@ code {{ font: .85em Consolas, monospace; }}
 """
 
 
+def read_markdown(md):
+    """A page as agents read it: figures already filled, links as ordinary markdown."""
+    def link(m):
+        name = m.group(1)
+        return f"[{m.group(2) or name.replace('-', ' ')}]({name}.md)"
+    return LINK.sub(link, md)
+
+
+def stale_read(read):
+    """Files in read/ that differ from what a build would write, or should not be there."""
+    have = {p.name for p in READ.glob("*.md")} if READ.is_dir() else set()
+    stale = sorted(have ^ set(read))
+    for name in sorted(have & set(read)):
+        if (READ / name).read_text(encoding="utf-8").replace("\r\n", "\n") != read[name]:
+            stale.append(name)
+    return stale
+
+
+def write_read(read):
+    READ.mkdir(exist_ok=True)
+    for p in READ.glob("*.md"):
+        if p.name not in read:
+            p.unlink()
+    for name in stale_read(read):
+        if name in read:
+            with open(READ / name, "w", encoding="utf-8", newline="\n") as f:
+                f.write(read[name])
+
+
 def main():
     check_only = "--check" in sys.argv[1:]
     files = sorted(p for p in WIKI.glob("*.md") if p.name not in SKIP)
@@ -382,9 +449,16 @@ def main():
         for pr in problems:
             print("  " + pr, file=sys.stderr)
         sys.exit(1)
+    read = {f"{name}.md": read_markdown(md) for name, md in built.items()}
     if check_only:
+        stale = stale_read(read)
+        if stale:
+            print("wiki_build: FAILED, wiki/read/ is out of date (run python trainworld/tools/wiki_build.py): " + ", ".join(stale), file=sys.stderr)
+            sys.exit(1)
         print(f"wiki_build: OK, {len(files)} pages, {markers} figures")
         return
+    if "--html" not in sys.argv[1:]:
+        write_read(read)
     tmp = WIKI / "html.new"
     if tmp.exists():
         shutil.rmtree(tmp)

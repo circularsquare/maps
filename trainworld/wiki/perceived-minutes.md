@@ -18,4 +18,5 @@ Riding gets heavier as the train fills up: see [[full-trains]].
 
 Some things are a fixed price in minutes wherever they happen, like [[parking]] and changing trains ([[waiting-and-changing]]).
 
-In the code: `sim/src/demand/kernel.rs` `sim/src/demand/api.rs` `app/src/game/income.ts`
+Exact rule: `docs/demand-mode.md` "Weights, ferry fans, driving and parking". Between cities a dollar counts less, and differently for each income group: `docs/demand-plain.md` "Between cities (the car and the plane against the train)".
+In the code: `sim/src/demand/kernel.rs` `access_cost_min`, `car_drive` `sim/src/demand/kernel/search.rs` `board_cost` `sim/src/demand/api.rs` `FARE_MIN_PER_USD` `app/src/game/income.ts` `fareWeight`

@@ -19,4 +19,5 @@ A tunnel costs more to keep up as well as more to [[levels-and-tunnels|build]]. 
 
 Your lines share the bill by how many trains they run on each stretch, so a line's profit already has its share taken out. [[terrain|Terrain]] and [[water]] don't change upkeep.
 
-In the code: `sim/src/track/cost.rs` `sim/src/track/params.rs` `sim/src/track/wasm.rs`
+Exact rule: `docs/track-and-service.md` "Blueprint, trains and running costs", the Upkeep item, which also has how it splits by line and region.
+In the code: `sim/src/track/cost.rs` `track_upkeep_km`, `station_upkeep` `sim/src/track/wasm.rs` `edge_upkeep_km` `sim/src/track/wasm/money.rs` `upkeep`, `line_upkeep` `sim/src/track/params.rs` `UPKEEP_GROUND_KM`, `ECONOMY`

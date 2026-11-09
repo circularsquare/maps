@@ -15,4 +15,6 @@ if not exist dist-new\index.html exit /b 1
 if exist dist move dist dist-old || exit /b 1
 move dist-new dist || (move dist-old dist & exit /b 1)
 if exist dist-old rmdir /s /q dist-old
+rem localhost:8800/twwiki/ (T-2854); a failure here leaves the old pages up and the game swapped
+python "%MAPS%\trainworld\tools\wiki_build.py" --html
 echo swapped

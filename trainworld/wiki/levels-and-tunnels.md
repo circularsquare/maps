@@ -22,4 +22,5 @@ High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track 
 
 What the ground is like adds more: see [[terrain]]. Water does too: see [[water]]. Then the track costs money every day: see [[upkeep]].
 
-In the code: `sim/src/track/params.rs` `sim/src/track/cost.rs` `sim/src/track/roads.rs`
+Exact rule: `docs/track-and-service.md` "Construction prices", and "Placing stations, curve speed and levels" for how levels and ramps fit.
+In the code: `sim/src/track/params.rs` `LEVEL_MULT`, `level_mult`, `ROAD_CROSSING_COST` `sim/src/track/cost.rs` `track_cost_parts_t`, `track_factor` `sim/src/track/roads.rs` `charge`

@@ -16,4 +16,5 @@ People have places to be. Every trip in the game starts as a person who wants to
 
 How often people go out comes from each country's travel survey. How far they go is one rule for the whole world. Some of these trips happen more at certain hours: see [[rush-hours]].
 
-In the code: `sim/src/demand/everyday.rs` `sim/src/demand/kernel/gravity.rs`
+Exact rule: `docs/demand-kernel.md` "Gravity between zones" for commutes, `docs/demand-plain.md` "Who travels, and where to" for everyday trips and attractions, `docs/regional.md` "The total travel market" for trips between cities. Each kind has its own rule.
+In the code: `sim/src/demand/everyday.rs` `DECAY`, `RATE`, `CENTRAL_SHARE` `sim/src/demand/kernel/gravity.rs` `gravity`, `PULL_CAP`

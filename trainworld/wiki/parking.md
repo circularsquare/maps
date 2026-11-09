@@ -14,4 +14,5 @@ Parking is what makes people give up the car in a dense city. Every drive pays f
 
 If you drive to a station instead, see [[walking-to-stations]].
 
-In the code: `sim/src/demand/kernel.rs`
+Exact rule: `docs/demand-mode.md` "Weights, ferry fans, driving and parking". Parking where you arrive applies to commutes, everyday trips and trips between cities. Parking at home applies to commutes and everyday trips only.
+In the code: `sim/src/demand/kernel.rs` `park_parts`, `home_park_at`, `park_income_of`, `ride_station_end`

@@ -16,4 +16,5 @@ Past {{sim/src/demand/kernel.rs:Params.ratio_fade_lo|0}} times as dear, the trai
 
 Parts of the cost live in [[walking-to-stations]], [[waiting-and-changing]], [[full-trains]], [[driving]] and [[parking]].
 
-In the code: `sim/src/demand/kernel.rs` `sim/src/demand/kernel/mode.rs`
+Exact rule: `docs/demand-mode.md` "Cost and the rail-against-car curve" "Walking and land parts". This page is commutes and everyday trips. Between cities the plane joins in and walking is out: `docs/regional.md` "Mode choice".
+In the code: `sim/src/demand/kernel.rs` `ratio_share`, `car_choice`, `walk_trip_cost`, `bound_share` `sim/src/demand/kernel/mode.rs` `mode_choice_part`

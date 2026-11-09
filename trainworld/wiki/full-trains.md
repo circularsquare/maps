@@ -12,4 +12,5 @@ People already on board keep their places, so the squeeze falls on the stops dow
 
 How busy it gets depends on the hour: see [[rush-hours]]. This all feeds into [[perceived-minutes]].
 
-In the code: `sim/src/demand/kernel/assign.rs` `sim/src/demand/kernel/stalls.rs`
+Exact rule: `docs/demand-kernel.md` "Loading and crowding". These are train cars. A bus or a boat holds its own number.
+In the code: `sim/src/demand/kernel/assign.rs` `crowd_factors` `sim/src/demand/kernel/stalls.rs` `left_behind`, `capacity_fit` `sim/src/demand/api.rs` `RATED_PER_CAR`, `CRUSH_PER_CAR`

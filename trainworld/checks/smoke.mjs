@@ -13,7 +13,7 @@
 // bubbles in the bare new game and on the real save (T-994); a click on a station
 // and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor), and the others in the list
 // below; t2022-loan-schedule runs with --experimental-strip-types (it imports app .ts).
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -283,6 +283,11 @@ try {
     const [file, ...rest] = [f].flat();
     const r = await runNode(file, rest.filter((x) => !x.startsWith('args:')), rest.filter((x) => x.startsWith('args:')).map((x) => x.slice(5)));
     report(file.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
+  }
+  if (!served) {
+    // T-2854: a wiki figure whose constant changed or went
+    const w = spawnSync('python', [join(HERE, '..', 'tools', 'wiki_build.py'), '--check'], { cwd: MAPS, encoding: 'utf8' });
+    report('wiki figures', w.status === 0, w.status === 0 ? '' : (w.stderr || w.error?.message || '').slice(0, 400));
   }
   if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));
   const base = given ?? vite.url;
