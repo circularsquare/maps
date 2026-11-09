@@ -257,8 +257,8 @@ distance to the route plus 100 m), waits and rides to a station at 90% of what a
 train is free: one fare for the whole trip on the same curve. Every time someone boards a bus,
 including changing from a train to one, it costs them 6 perceived minutes on top of the wait. A home
 1.5 km from a station walks 29 perceived minutes to it, or about 24 by bus. Trips by bus alone count
-as rail. A bus is a third of a train car: riders mind its crowding from 37 aboard, it is at 100% with 53
-and takes 80 at the most, the same shares as a train car's 112, 160 and 240.
+as rail. A bus is a third of a train car: riders mind its crowding from 45 aboard, it is at 100% with 53
+and takes 80 at the most (a train car: 112, 160 and 240).
 
 A ferry line (since T-2195) is a line like any other: people walk to its ports as to stations, wait
 half its headway, ride at the boats' own speed, change to and from trains as anywhere, and pay the

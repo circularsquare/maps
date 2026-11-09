@@ -10,6 +10,12 @@ pub const PERIODS: usize = crate::track::params::PERIOD_HOURS.len();
 /// 53 at the rated load, crowding counted as on a train (T-2919; the snapshot's `BUS_DEMAND_CARS`,
 /// app/src/workers/clock.worker.ts).
 pub const BUS_CARS: f32 = 1.0 / 3.0;
+/// Where riders start to mind a crowded bus, as a share of its rated load (T-2922; 45 aboard). A
+/// train's is `Params::crowd_start`, 0.7. A bus's is higher so that making it a third of a car
+/// (T-2919) moves its riders little (weekday bus riders -8.9%, not -14%): players tuned their bus
+/// lines to the old bus, minded from 56 and full at 80. The penalty then rises over the same share
+/// of the rated load as a train's.
+pub const BUS_CROWD_START: f32 = 0.85;
 
 #[derive(Clone)]
 pub struct Network {

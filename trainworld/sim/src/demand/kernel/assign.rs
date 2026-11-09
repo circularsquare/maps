@@ -367,7 +367,8 @@ pub struct CrowdStats {
 }
 
 /// Penalty per segment: 1 + alpha x(1+x)/2, x = max(load - start, 0) / (rated - start), per hour
-/// at the peak hour, start the larger of the seats and `crowd_start` x the rated load (T-710:
+/// at the peak hour, start the larger of the seats and `crowd_start` x the rated load (a bus's start
+/// is `network::BUS_CROWD_START`, over the span a train's has, T-2922) (T-710:
 /// riders mind crowding only near full). The same curve runs on past the rated load to crush,
 /// 1.5 times rated (T-2186): 3 at rated, about 10.8 at crush at the default start. Never saturates
 /// (memory note on crowding).
@@ -386,9 +387,15 @@ pub fn crowd_factors(g: &Graph, net: &Network, loads: &Loads, p: &Params) -> (Ve
         let seats = tph * net.line_seats[l];
         let crush = tph * net.line_crush[l];
         let rated = tph * net.rated(l);
-        let start = seats.max(p.crowd_start * rated);
+        // a bus is minded from `BUS_CROWD_START` of its rated load, over the same span as a train's
+        let (start, span) = if net.bus_line(l) {
+            (seats.max(crate::demand::network::BUS_CROWD_START * rated), (1.0 - p.crowd_start) * rated)
+        } else {
+            let start = seats.max(p.crowd_start * rated);
+            (start, rated - start)
+        };
         let hour = loads.seg[r] / p.period_hours * p.peak_hour_factor;
-        let x = ((hour - start) / (rated - start)).max(0.0);
+        let x = ((hour - start) / span).max(0.0);
         fac[r] = 1.0 + p.crowd_alpha * x * (1.0 + x) / 2.0;
         if hour > seats {
             st.segs_over_seats += 1;

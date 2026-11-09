@@ -325,7 +325,8 @@ levels:
    and averaging is what stops it ringing. It is 1 + 2x(1+x)/2, x from the larger of the seats and
    **70% of the rated load** (112 a car) to the rated load (160, 100%), running on past it to
    crush (240, 150%; T-2186): 3 at 100%, 5.4 at 120%, 10.8 at 150% (Anita, T-710: riders mind
-   crowding only near full; `crowd_start`, `Network::line_rated`). **At most three rounds**
+   crowding only near full; `crowd_start`, `Network::line_rated`). A bus is minded from 85% of its rated
+   load (45 aboard, `BUS_CROWD_START`, T-2922) over the same 30% of it a train's penalty rises across. **At most three rounds**
    (T-022; one round leaves the segment that takes the overflow at its worst, notes/T-022.md).
    After them the riders are held to the trains' room (below). **Each period stops early once settled**
    (T-434, `kernel::settled`): a round is skipped when the round before moved the period's summed
