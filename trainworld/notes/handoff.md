@@ -1,32 +1,40 @@
 # Orchestrator handoff, trainworld
 
-## Latest instruction, 2026-11-08 23:32 EST
+## Candidate ready for Anita, 2026-11-08 23:51 America/New_York
 
 Anita: "lets also try to keep changes conservative in general. we are mostly just looking to fix bugs this round. make sure that the bugs are real, and we don't introduce any new issues. additional features are not a priority, though we should also add the changelog / update indicator thing. i will test before we deploy"
 
-**HOLD DEPLOY until Anita has tested the candidate.** This supersedes the earlier publish-after-round go below.
-No new features. Scope answered: include currencies, update/changelog, tighter curves and bug fixes; exclude line money
-history and trip-purpose graphs. These features are preserved in c18d2fa1 and b167196a for later.
-Their removal is in progress in the main tree, including changelog and localization cleanup.
-Integration so far: c18d2fa1 main batch, 309ff65b mobile, b167196a tripkinds; the last landing's WASM build finished. Tripkinds is now reverted without commit, and line history removed from source.
-Curve has NOT landed. No website change, upload, push, or production deploy has happened.
+**HOLD DEPLOY until Anita has tested the candidate.** This supersedes all earlier publish-after-round go below.
+She selected currencies, update/changelog, tighter curves and bug fixes; NO line money history or trip-purpose graph.
+Those two implementations remain preserved in c18d2fa1 and b167196a and are held tasks T-2787/T-2790.
 
-## Codex takeover, 2026-11-08 night
+Current code/candidate: **917c738a**. Main batch c18d2fa1, mobile 309ff65b, scope reduction 967be7b6,
+curve/deletion 917c738a. Tripkinds b167196a was landed then reverted by the scope reduction; no purpose export/UI remains.
+Main WASM rebuilt. Snapshot built separately, local deploy preflight PASS (3,785 zones, 22,839 data files, no warnings).
+**8800 now serves 917c738a**. Previous local build retained at `.tw-snap/trainworld/app/dist-before-codex-aac7d7e6/`.
+No website change, R2 upload/purge, push, or production deploy. Production remains 2026-11-08 / 4f1b6fc8 per prior handoff.
 
-Anita asked Codex to finish the interrupted deploy, favoring safety, confirmed all Claude agents stopped,
-and explicitly welcomed subagents. Original changed files from main/curve/mobile/tripkinds are backed up in
-`artifacts/trainworld/codex-takeover/original-work.zip` (including TODO.md; do not commit TODO.md).
-No integration, commit, upload, push, or production change yet. HEAD 2c872c03; 8800 snapshot aac7d7e6;
-latest published release per the handoff below is 2026-11-08 (4f1b6fc8). Retain its old R2 data for open tabs.
-All four trees pass TypeScript checking. Main smoke reached the expected real-save counts and 12,521,264 trips/day,
-but its Homes rendering check failed; a diagnostic confirmed `net::ERR_NETWORK_ACCESS_DENIED` for OpenFreeMap
-inside the sandbox. Network-enabled main smoke PASSED 26/26, log `artifacts/trainworld/codex-takeover-network-smoke.log`.
-Currency check 31/31 and ordinary history export/reimport 5/5 passed; cash and history unchanged.
-Review fixed mobile shade-worker fetch/parse failure racing a successful empty result (in mobile tree);
-valid data/network failure/invalid JSON injected checks pass. Two Chinese phone-notice glossary fixes pass i18n.
-The only main-tree test correction is the currency check expecting equivalent won notation Q rather than 1950T.
-Original sandbox smoke logs: `artifacts/trainworld/codex-{takeover,curve,mobile,tripkinds}-smoke.log`.
-T-2793 remains unverified/open; mobile's real-phone validation remains open. Review subagents are read-only.
+Checks: integrated dev smoke **26/26 PASS** (12,521,264 NYC trips/day); currency **31/31 PASS**;
+TypeScript and localization pass. Update UI visibility/open/dismiss/reload/2-day expiry pass; no held features in its list.
+Graphics-loss/memory notice injection passes. Emulated phone tutorial controls pass without crash/console errors;
+short test line reaches 0.5% of the final 1% goal, so real phone/full tutorial validation stays open.
+Original history reload check passed 5/5, then that feature was removed per Anita's scope.
+Rust tests **368 track + 544 demand passed**; production smoke **26/26 light + 26/26 dark PASS** on 8800.
+North America fare replay (158 lines, read-only Downloads save day-476) PASSED dropStop and openZone, both
+actually settled with no pending lines. Daily fares stayed >=99.68% in the stop edit and 100% on opening a zone;
+no >10% transient dips or browser errors. T-2793/T-2773 remain open for the broader complaint/rough-path limits.
+All test processes and owned temporary servers ended; the CPU ledger has no claims. No more checks are running.
+
+Logs/artifacts: `artifacts/trainworld/codex-candidate-{dev,light,dark}-smoke.log`,
+`codex-candidate-rust-{track,demand}.log`, `codex-candidate-build.log`, and
+`artifacts/trainworld/codex-takeover/{integrated-fares.log,mobile-update-suite.log,text-review.md,changelog-review.png}`.
+Original pre-takeover files are backed up in `artifacts/trainworld/codex-takeover/original-work.zip`.
+Exact changed English strings: `artifacts/trainworld/codex-takeover/text-review.md`; preview image:
+`artifacts/trainworld/review/changelog.png`. User TODO.md was never edited or staged by Codex.
+The update timestamp in `ui/updates.ts` is still the preview's old 2026-11-08T22:00Z; **bump at the actual publish**.
+Do not publish before Anita tests; do not claim real-phone crash resolution or all fare-drop paths solved.
+
+## Earlier Claude handoff (historical context)
 
 Orchestrator: session 70947ac4-74ea-441a-b6e5-c704eedaf536, name maps-68 [224d6e], since 2026-11-07 12:32
 Updated: 2026-11-07 12:37 (Get-Date; maps-b9's clock ran ~15 min ahead). Anita 12:37: at the computer but idle,
