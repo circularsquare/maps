@@ -437,6 +437,7 @@
   "clockWorker.browserCouldNotSave": "瀏覽器無法儲存這局遊戲。請下載成檔案來保留你的變更。",
   "clockWorker.couldNotSave": "這局遊戲無法儲存。請下載成檔案來保留。",
   "clockWorker.modelDown": "列車模擬停止運作了。請重新載入頁面來繼續。你最後的自動存檔會保留。",
+  "clockWorker.savePanic": "無法開啟這個存檔（{why}）。",
   "clockWorker.modelRestored": "列車模擬出錯，已還原到你最後一次編輯後的狀態。",
   "clockWorker.newer": "這局遊戲是用較新的遊戲版本儲存的。請重新載入頁面來更新。",
   "clockWorker.noLocks": "這個瀏覽器無法保護存檔欄位。請把這局遊戲下載成檔案來保留。",

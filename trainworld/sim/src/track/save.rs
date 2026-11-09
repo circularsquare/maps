@@ -194,14 +194,15 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(d.stops.len() as u64);
         let mut prev = 0i64;
         for &s in &d.stops {
-            let v = node_id[s as usize] as i64;
+            let v = node_id.get(s as usize).copied().unwrap_or(u32::MAX) as i64;
             w.i(v - prev);
             prev = v;
         }
         w.u(d.path.len() as u64);
         let mut prev = 0i64;
         for &p in &d.path {
-            let v = edge_id[(p >> 1) as usize] as i64;
+            // T-2820: a broken line's deleted edge is written as none (`edge_id`'s u32::MAX)
+            let v = edge_id.get((p >> 1) as usize).copied().unwrap_or(u32::MAX) as i64;
             w.i(((v - prev) << 1) | (p & 1) as i64);
             prev = v;
         }
@@ -507,8 +508,12 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         unknown += (tb >> 8 != 0) as usize;
         let (tracks, built, off, crossover, hsr, sep) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0, tb & 64 != 0, tb & 128 != 0);
         let n = r.u()? as usize;
+        // T-2820: ends and sizes that cannot be are a damaged save, not a panic
+        if a < 0 || b < 0 || a as usize >= n_nodes || b as usize >= n_nodes {
+            return Err("bad edge".into());
+        }
         let (mut px, mut py) = (net.node_x[a as usize], net.node_y[a as usize]);
-        let mut pis = Vec::with_capacity(n);
+        let mut pis = Vec::with_capacity(n.min(bytes.len()));
         for _ in 0..n {
             let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
             (px, py) = (x, y);
@@ -528,6 +533,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, hsr, sep })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
+    let (mut dead_node, mut dead_edge) = (None, None);
     for _ in 0..n_lines {
         let id = net.alloc_line();
         let name = r.s()?;
@@ -536,18 +542,23 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         let trains = if r.u()? != 0 { Some([r.u()? as u32, r.u()? as u32, r.u()? as u32]) } else { None };
         let (dwell_s, turnaround_s) = (r.tenth()?, r.tenth()?);
         let cars = r.u()? as u8;
+        // T-2820: a broken line keeps what was deleted under it, written as an id past the dense
+        // ones. Those point at one dead slot, in range and never reused, as in the game that saved it
         let mut stops = vec![];
         let mut prev = 0i64;
         for _ in 0..r.u()? {
             prev += r.i()?;
-            stops.push(prev as u32);
+            let s = prev as u32;
+            stops.push(if (s as usize) < n_nodes { s } else { *dead_node.get_or_insert_with(|| net.alloc_node()) });
         }
         let mut path = vec![];
         let mut prev = 0i64;
         for _ in 0..r.u()? {
             let v = r.i()?;
             prev += v >> 1;
-            path.push((prev as u32) << 1 | (v & 1) as u32);
+            let e = prev as u32;
+            let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
+            path.push(e << 1 | (v & 1) as u32);
         }
         net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).map_err(|e| format!("{e:?}"))?;
     }
@@ -727,6 +738,23 @@ mod tests {
         let l = net.alloc_line();
         net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default() })).unwrap();
         encode(&net)
+    }
+
+    /// T-2820: a line whose track was deleted with no way round keeps its path on the dead edge (a
+    /// broken line). The save writes that edge as "none", which reads back as an id past the edges.
+    #[test]
+    fn a_broken_line_saves_and_loads_again_and_again() {
+        let mut net = decode(&sample()).unwrap();
+        net.set_edge(0, None).unwrap();
+        let first = encode(&net);
+        let mut w = crate::track::world::TrackWorld::new(decode(&first).unwrap());
+        assert!(w.net.line_ok(0), "the line is kept");
+        assert!(w.net.check_line(0).is_err(), "and is broken");
+        assert!(w.net.line_path(0).iter().all(|&p| ((p >> 1) as usize) < w.net.edge_count()), "its path stays in range");
+        let second = encode(&w.net);
+        let w2 = crate::track::world::TrackWorld::new(decode(&second).unwrap());
+        assert!(w2.net.line_ok(0) && w2.net.check_line(0).is_err(), "still there and still broken on the next load");
+        encode(&w2.net);
     }
 
     #[test]

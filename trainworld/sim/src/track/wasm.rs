@@ -118,6 +118,30 @@ pub struct TrackApi {
     run_factor: Vec<f64>,
 }
 
+// T-2820: the last panic's message, as the demand module's (`demand::wasm`), for the clock worker's
+// error. Not in a build with the demand module's own start function.
+#[cfg(all(target_arch = "wasm32", not(feature = "demand")))]
+thread_local! {
+    static LAST_PANIC: std::cell::RefCell<String> = const { std::cell::RefCell::new(String::new()) };
+}
+
+#[cfg(all(target_arch = "wasm32", not(feature = "demand")))]
+#[wasm_bindgen(start)]
+fn start() {
+    std::panic::set_hook(Box::new(|info| {
+        let text = info.to_string();
+        LAST_PANIC.with(|p| if let Ok(mut p) = p.try_borrow_mut() { *p = text; });
+    }));
+}
+
+/// T-2820: the last panic's message, empty if none. Borrows no exported object, so it can be called
+/// after a panic has left a `TrackApi` unusable.
+#[cfg(all(target_arch = "wasm32", not(feature = "demand")))]
+#[wasm_bindgen]
+pub fn last_panic() -> String {
+    LAST_PANIC.with(|p| p.try_borrow().map(|p| p.clone()).unwrap_or_default())
+}
+
 /// T-1071: the end of a track save that carries the service's eras (`Service::encode_eras`):
 /// the eras, their length as a u32, then this tag. The network's decoder stops before them.
 /// `ERA2` (T-1925) eras carry departure phases; `ERA1`, older saves', do not.

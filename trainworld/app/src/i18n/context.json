@@ -443,6 +443,7 @@
   "clockWorker.noLocks": "Reason shown in the saves list and save menu when the browser lacks the feature that stops two tabs overwriting a save.",
   "clockWorker.modelRestored": "Notice after the train simulation hit an internal error and was rebuilt from the last edit.",
   "clockWorker.modelDown": "Notice after the train simulation hit internal errors it could not recover from.",
+  "clockWorker.savePanic": "Notice when opening a save stopped the train simulation with an internal error. The game carries on without that save. why: the simulation's error text, in English.",
   "clockWorker.browserCouldNotSave": "Error shown when the browser refused to write an autosave.",
   "clockWorker.couldNotSave": "Error shown when saving by hand failed and no reason is known.",
   "closestStations.noWalk": "Value of a Closest stations row when the station cannot be reached on foot (water in the way).",

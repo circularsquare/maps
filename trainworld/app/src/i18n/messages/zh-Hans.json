@@ -437,6 +437,7 @@
   "clockWorker.browserCouldNotSave": "浏览器无法保存这个游戏。请把它下载为文件，以保留你的改动。",
   "clockWorker.couldNotSave": "无法保存这个游戏。请把它下载为文件来保留。",
   "clockWorker.modelDown": "列车模拟停止工作了。刷新页面即可继续。你上次的自动保存会保留。",
+  "clockWorker.savePanic": "无法打开这个存档（{why}）。",
   "clockWorker.modelRestored": "列车模拟出错，已恢复到你上一次编辑后的状态。",
   "clockWorker.newer": "这个游戏是用较新版本的游戏保存的。刷新页面即可更新。",
   "clockWorker.noLocks": "这个浏览器无法保护存档位。请把这个游戏下载为文件来保留。",

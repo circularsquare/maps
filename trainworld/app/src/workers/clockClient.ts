@@ -1043,7 +1043,9 @@ export class ClockClient {
         this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
         this.fitNext = false;
         if (msg.error) {
-          say(workerText(msg.error), true);
+          // T-2820: a panic's message goes in the notice and the console
+          if (msg.why) console.error("clock worker: a game did not open:", msg.why); // i18n-ignore
+          say(msg.why ? t(msg.error as MessageKey, { why: msg.why }) : workerText(msg.error), true);
           if (msg.from === "file") break;
         }
         // a different game: its clock waits for its demand (T-149); the snapshot follows

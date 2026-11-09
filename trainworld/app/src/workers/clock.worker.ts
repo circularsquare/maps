@@ -7,7 +7,7 @@
 // Every edit answers with an "edited" message and, if it applied, a new "state".
 
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
-import init, { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
+import init, { last_panic, TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { initWasm } from "./wasmInit";
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
@@ -748,6 +748,7 @@ function anchorSpec() {
 const EDIT_UNDONE: MessageKey = "issues.internal";
 const MODEL_RESTORED: MessageKey = "clockWorker.modelRestored";
 const MODEL_DOWN: MessageKey = "clockWorker.modelDown";
+const SAVE_PANIC: MessageKey = "clockWorker.savePanic";
 /** more panics than this in a minute, or in all, and the model is left down: it is failing for a reason a rebuild does not cure */
 const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
@@ -776,6 +777,14 @@ function isPanic(err: unknown): boolean {
   return err instanceof WebAssembly.RuntimeError || (err instanceof Error && /recursive use of an object|null pointer passed to rust/.test(err.message));
 }
 
+/** T-2820: a panic's real message. "recursive use of an object" is only the error of the next call on
+ * a model a panic has already stopped, so the Rust panic's own text comes first when there is one. */
+function panicWhy(err: unknown): string {
+  let rust = "";
+  try { rust = last_panic(); } catch { /* the module did not start */ }
+  return (rust || (err instanceof Error ? err.message : String(err))).replace(/\s+/g, " ").trim();
+}
+
 /** Panic from a call that panics: an id no model has (a `&mut self` call, so the borrow stays held). */
 function panicNow() {
   api!.set_node(0xffffffff, 0, 0, 0, false);
@@ -799,6 +808,24 @@ function newModel(): TrackApi {
   return a;
 }
 
+/** A new, empty model in place of one a panic left unusable. */
+function replaceModel() {
+  (api as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
+  newModel();
+  masksIn.clear();
+  streetsIn.clear();
+  holidaysSent = "";
+}
+
+/** T-2820: a panic while a game opens: nothing more is asked of the stopped model, and what comes
+ * next (the slot it was opened over, a new game, the failure screen) starts on a new one. */
+function afterLoadPanic(err: unknown): string {
+  const why = panicWhy(err);
+  console.error("Rust panic while opening a game:", why); // i18n-ignore
+  replaceModel();
+  return why;
+}
+
 async function rebuildModel(fromKept: boolean) {
   const old = api!;
   let k = kept;
@@ -806,11 +833,7 @@ async function rebuildModel(fromKept: boolean) {
     try { k = modelNow(old); } catch { /* held: use what was kept */ }
   }
   if (!k) throw new Error("no network was kept");
-  (old as unknown as { __destroy_into_raw(): number }).__destroy_into_raw();
-  newModel();
-  masksIn.clear();
-  streetsIn.clear();
-  holidaysSent = "";
+  replaceModel();
   await openNetwork(k.net);
   api!.set_fleet(k.fleet);
   api!.set_fleet_fast(k.fleetFast);
@@ -830,7 +853,7 @@ async function recover(err: unknown, what: string, notice: string, at: number, f
   panicTimes.push(now);
   while (panicTimes[0] < now - 60_000) panicTimes.shift();
   panicCount++;
-  const detail = `Rust panic in ${what}: ${err instanceof Error ? err.stack || err.message : String(err)}`; // i18n-ignore
+  const detail = `Rust panic in ${what}: ${panicWhy(err)}${err instanceof Error && err.stack ? `\n${err.stack}` : ""}`; // i18n-ignore
   try {
     if (panicTimes.length > MAX_PANICS_PER_MINUTE || panicCount > MAX_PANICS) throw new Error("too many panics");
     await rebuildModel(fromKept);
@@ -3678,7 +3701,8 @@ async function processMessage(msg: ToClock) {
           await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true, g.version);
           return;
         } catch (err) {
-          send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
+          if (isPanic(err)) send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: SAVE_PANIC, why: afterLoadPanic(err), game });
+          else send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
         }
       }
       if (!msg.fresh && !msg.newSlot) await stampAll(null).catch(() => {}); // T-2037
@@ -3694,7 +3718,8 @@ async function processMessage(msg: ToClock) {
             void autosave();
             return;
           } catch (err) {
-            send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("real network did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
+            if (isPanic(err)) send({ kind: "loaded", from: "new", clock: START_CLOCK, error: SAVE_PANIC, why: afterLoadPanic(err), frame: frameSpec(), game });
+            else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("real network did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
           }
         }
         const empty = msg.game && { ...msg.game, real: undefined };
@@ -3708,6 +3733,8 @@ async function processMessage(msg: ToClock) {
           if (newer) await publishSlots();
           return;
         } catch (err) {
+          // T-2820: first, so a panic's stopped model is out of the way of everything below
+          const panicked = isPanic(err) ? afterLoadPanic(err) : null;
           // Keep the unreadable save aside, and its slot as it is: the new game gets a slot of its own (T-743).
           await writeStored("unreadable-" + stored.at, stored);
           if (activeLease) {
@@ -3719,7 +3746,8 @@ async function processMessage(msg: ToClock) {
             hold(await leaseSlot(activeSlot));
             await publishSlots();
           }
-          send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
+          if (panicked !== null) send({ kind: "loaded", from: "new", clock: START_CLOCK, error: SAVE_PANIC, why: panicked, frame: frameSpec(), game });
+          else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
         }
       }
       keep();
@@ -3735,7 +3763,9 @@ async function processMessage(msg: ToClock) {
       unwritten = null;
       newSlotName = null;
       const storage = err instanceof StorageReadError;
-      send({ kind: "failed", error: storage ? err.message : String(err), storage });
+      // T-2820: after a panic nothing more is asked of the model, and the error is the first one
+      if (isPanic(err)) modelDown = true;
+      send({ kind: "failed", error: storage ? err.message : isPanic(err) ? panicWhy(err) : String(err), storage });
     });
     // T-988: the game in hand claimed on the account, the other slots settled
     void ready.then(() => { initDone = true; void cloudKick(); });
@@ -3833,7 +3863,13 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
         await intoNewSlot(name || newGameName(await listSlots().catch(() => []), spec ?? { mode: "normal" }), () => newGame(spec), !!spec?.real);
       }
     } catch (err) {
-      if (isPanic(err)) throw err;
+      if (isPanic(err)) {
+        if (msg.kind !== "import") throw err;
+        // T-2820: rebuilt on the game the player had, then the reason this file did not open
+        await recover(err, msg.kind, MODEL_RESTORED, performance.now(), true);
+        send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: SAVE_PANIC, why: panicWhy(err), game });
+        return;
+      }
       // "file": the main thread keeps the game it has
       send({ kind: "loaded", from: "file", clock: gameNow(), frame: frameSpec(), error: (err as Error).message, game });
     }

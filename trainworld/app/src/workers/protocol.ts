@@ -663,7 +663,7 @@ export type FromClock =
    * `frame`: the game now in the worker; `converted`: its save was in an older frame and was
    * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock"; `slot`, the
    * slot the game goes into (a file's new slot is made active only after this message, T-2552) */
-  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; converted?: boolean; game: number; slot?: string }
+  | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; why?: string; converted?: boolean; game: number; slot?: string }
   /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
   | { kind: "left"; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out;

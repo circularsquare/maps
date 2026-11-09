@@ -319,7 +319,10 @@ Web first, so it can be shared as a link.
   can still be read), then the main thread logs the panic and says so in the notice area. Undo
   history and the draft in hand are gone, as after a load. A fourth panic in a minute, or a ninth in all, leaves it down
   with a notice to reload (the autosave holds the game). `?debug=1` on the dev server has
-  `tw.client.debugPanic("now" | "read" | "afterEdit")`.
+  `tw.client.debugPanic("now" | "read" | "afterEdit")`. The first panic's own message comes from
+  `last_panic()` (T-2820), since "recursive use of an object" is only the next call on the stopped model. A panic while
+  a game opens replaces the model before anything else runs: the player gets `clockWorker.savePanic` with
+  that message, and the game they had, or a new one, goes on.
 - **A Rust panic in a demand worker** [T-1174] (out of memory aborts the same way) leaves the
   objects it was in borrowed, so the worker posts `dead` with `last_panic()`'s text (the panic
   message, or the allocation that failed) and does nothing more; a pack that fails to open with a
