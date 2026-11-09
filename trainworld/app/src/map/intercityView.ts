@@ -42,7 +42,7 @@ import { display, purposeFilter, selection, shade, shownDayPhrase } from "../gam
 import type { CommutersOneWay, Selection } from "../game/types";
 import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
-import { localModes, modeBar } from "./modeBar";
+import { localModes, modeBar, purposeLines } from "./modeBar";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import { BUBBLE_BASE, bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
@@ -475,18 +475,18 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const n = points.length;
     const discs = new Float32Array(n * DISC);
     const tags: string[][] = [];
-    // T-2892, Purpose scheme: errands and leisure among these trips from `current.by`, and the longer trips the rest;
-    // commutes are not in this far end
-    const byPurpose = purposeSchemeOn();
-    const errandsAt = new Map<string, number>();
+    // T-2892, Purpose scheme: school, and errands and leisure, among these trips from `current.by`, and the longer trips
+    // the rest; commutes are not in this far end. With no `by`, mode colours and a mode bar.
+    const byPurpose = purposeSchemeOn() && (!shown || !!current.by);
+    const schoolAt = new Map<string, number>(), errandsAt = new Map<string, number>();
     if (byPurpose && shown) {
       const dir = current.end === "work" ? "ends" : "starts";
-      for (const k of ["shopping", "social"] as const) {
+      for (const [k, into] of [["school", schoolAt], ["shopping", errandsAt], ["social", errandsAt]] as const) {
         const part = current.by?.get(k)?.[dir];
         if (!part) continue;
         for (const q of regional ? part.places : part.zones) {
           const key = `${q.place}:${"gid" in q ? q.gid : -1}`;
-          errandsAt.set(key, (errandsAt.get(key) ?? 0) + q.all);
+          into.set(key, (into.get(key) ?? 0) + q.all);
         }
       }
     }
@@ -495,12 +495,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const [lng, lat] = z.ll;
       const [x, y] = toLocal(lng, lat, a);
       const walk = z.walk ?? 0, rest = Math.max(0, z.all - z.rail - walk);
-      const e = shown ? Math.min(z.all, errandsAt.get(`${z.place}:${z.gid}`) ?? 0) : cls === "errands" ? z.all : 0, w = cls === "work" ? z.all : 0;
+      const at = `${z.place}:${z.gid}`;
+      const w = shown ? Math.min(z.all, schoolAt.get(at) ?? 0) : cls === "work" ? z.all : 0;
+      const e = shown ? Math.min(z.all - w, errandsAt.get(at) ?? 0) : cls === "errands" ? z.all : 0;
       const c = byPurpose ? purposeColour3(w, z.all - w - e, e) : bubbleColour(z.rail, walk, rest);
       const r = FAR_RADIUS * Math.sqrt((perTrip * z.all) / Math.PI) * kAtLat(lat);
       discs.set([x, y, r, c[0] / 255, c[1] / 255, c[2] / 255, BUBBLE_ALPHA, 0], i * DISC);
       const place = z.name || tr("intercityView.here");
-      tags.push([tr("intercityView.farTag", { verb, count: count(z.all), trips, when: shownDayPhrase.peek(), place }), modeBar(z.rail, walk, rest), tr("intercityView.explore")]);
+      const split = byPurpose ? purposeLines({ work: w, other: z.all - w - e, errands: e }) : [modeBar(z.rail, walk, rest)];
+      tags.push([tr("intercityView.farTag", { verb, count: count(z.all), trips, when: shownDayPhrase.peek(), place }), ...split, tr("intercityView.explore")]);
       if (regional) label(tr("intercityView.label", { name: z.name, count: count(z.all) }));
     });
     const far = points.map((z) => { const p = lngLatToPack(z.ll[0], z.ll[1]); return { place: z.place, gid: z.gid, at: [p.x, p.y] as [number, number] }; });

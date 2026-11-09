@@ -125,7 +125,7 @@ let MIX: [number, number, number][] | null = null;
 const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), ...rgb(MODE_COLOURS.drive));
 
 /** How the demand bubbles are coloured (T-804): the mode mix above, a ramp by train share from
- * one colour at 0% to another at 100%, or (T-2886) by trip purpose: work blue, errands and leisure red,
+ * one colour at 0% to another at 100%, or (T-2886) by trip purpose: work and school blue, errands and leisure red,
  * everything else green, the same three colours blended by share as the mode mix. Until a bubble's
  * purposes are in, it is painted as the mix or ramp chosen before. */
 export type BubbleScheme = "mode" | "ramp" | "purpose";

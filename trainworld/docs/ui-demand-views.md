@@ -174,9 +174,9 @@ hover and clicks. They do not enlarge the station's click target.
   skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
   the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **3-color** (the old Mode mix)
   blends the mode colours by share. **Purpose** (T-2886) colours by what the trips are for, the same three colours blended by
-  share with no grey pull: work blue, errands and leisure red, everything else green (school, medical, airports, attractions);
-  the purposes' legs are asked for only while it is on (`commuterView.ts` `attachPurp`), and until they are in, and for a
-  selection's own and far-end bubbles, the mix or ramp chosen before is used. Any of the three colours the local
+  share with no grey pull: work and school blue, errands and leisure red, everything else green (medical, airports, attractions, longer trips);
+  the purposes' legs are asked for only while it is on (`commuterView.ts` `attachPurp`), and until they are in,
+  the mix or ramp chosen before is used. A selection's own and far-end bubbles are coloured the same way (T-2892). The hover on a bubble so coloured has its bar and a row per group by purpose, not by mode (T-2908). Any of the three colours the local
   bubbles, the zone bubbles zoomed out and the zone inspector's mark; bars, swatches by mode and
   the hovers use the mode colours of the scheme (Colours, above) and state the shares. Drawn at 80% opacity times the Opacity
   setting (90% by default, T-470), biggest bubbles under smaller ones. While a bubble (local or

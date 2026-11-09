@@ -33,7 +33,7 @@ import { aggregate, discs, recolour, type Groups } from "./bubbles";
 import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercityView";
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
-import { logShare, modeBar } from "./modeBar";
+import { logShare, modeBar, purposeLines, type PurposeSplit } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
@@ -158,7 +158,9 @@ function farOf(f: Flows, purpose: PurposeFilter): FarEnd | null {
   return purpose === "all" ? f : f.byPurpose?.get(purpose) ?? null;
 }
 
-/** T-2892: `fe`'s trips per far cell, in `fe`'s order, for work, the rest, and errands and leisure.
+type PurposeSplitArrays = { work: Float32Array; other: Float32Array; errands: Float32Array };
+
+/** T-2892: `fe`'s trips per far cell, in `fe`'s order, for work and school, the rest, and errands and leisure.
  * `f` is the far end as dealt, so every purpose's cells line up with `fe`'s (game/farChunks.ts). */
 function farPurposes(f: Flows, fe: FarEnd, purpose: PurposeFilter) {
   const n = fe.cells.length, work = new Float32Array(n), errands = new Float32Array(n), other = new Float32Array(n);
@@ -170,6 +172,7 @@ function farPurposes(f: Flows, fe: FarEnd, purpose: PurposeFilter) {
       if (part) part.cells.forEach((c, k) => { const i = at.get(c); if (i !== undefined) into[i] += part.farRail[k] + part.farWalk[k] + part.farDrive[k]; });
     };
     add(f.byPurpose?.get("work"), work);
+    add(f.byPurpose?.get("school"), work);
     add(f.byPurpose?.get("shopping"), errands);
     add(f.byPurpose?.get("social"), errands);
   } else if (PURPOSE_CLASS[purpose] === "work") work.set(total);
@@ -621,11 +624,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const errands = new Float32Array(n);
       const cls = PURPOSE_CLASS[purpose];
       if (purpose === "all") {
-        const [mw, ms, ml] = await Promise.all([cellModes("work", zone), cellModes("shopping", zone), cellModes("social", zone)]);
-        if (!mw || !ms || !ml) return false;
+        const [mw, mc, ms, ml] = await Promise.all([cellModes("work", zone), cellModes("school", zone), cellModes("shopping", zone), cellModes("social", zone)]);
+        if (!mw || !mc || !ms || !ml) return false;
         work = endTotal(mw, end);
-        const s = endTotal(ms, end), l = endTotal(ml, end);
-        for (let i = 0; i < n; i++) errands[i] = s[i] + l[i];
+        const c = endTotal(mc, end), s = endTotal(ms, end), l = endTotal(ml, end);
+        for (let i = 0; i < n; i++) (work[i] += c[i]), (errands[i] = s[i] + l[i]);
       } else if (cls === "work") work.set(total);
       else if (cls === "errands") errands.set(total);
       const other = new Float32Array(n);
@@ -704,22 +707,35 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
 
   // ---- hover ----
   // T-2271: the bar's width says the count's size too, on a log scale, never under a quarter
-  const bubbleTag = (end: BubbleEnd, tr: number, w: number, d: number, u: number, ...rest: string[]) =>
-    [t("commuterView.bubble", { end, count: count(tr + w + d + u), words: tripWords(purposeFilter.peek()), when: shownDayPhrase.peek() }), modeBar(tr, w, d, u, BAR_FLOOR + (1 - BAR_FLOOR) * logShare(tr + w + d + u, BAR_LO, BAR_HI)), ...rest];
+  // T-2908: `purp`, the bubble's trips by purpose where its colour is by purpose; without it the bar is by mode, as the colour is
+  const bubbleTag = (end: BubbleEnd, tr: number, w: number, d: number, u: number, purp: PurposeSplit | null, ...rest: string[]) => {
+    const width = BAR_FLOOR + (1 - BAR_FLOOR) * logShare(tr + w + d + u, BAR_LO, BAR_HI);
+    const split = purp && purp.work + purp.other + purp.errands > 0 ? purposeLines(purp, width) : [modeBar(tr, w, d, u, width)];
+    return [t("commuterView.bubble", { end, count: count(tr + w + d + u), words: tripWords(purposeFilter.peek()), when: shownDayPhrase.peek() }), ...split, ...rest];
+  };
+  /** disc `i` of a bubble level's figures by purpose, under the Purpose scheme */
+  const levelPurp = (L: { purp?: PurposeSplitArrays }, i: number): PurposeSplit | null =>
+    purposeSchemeOn() && L.purp ? { work: L.purp.work[i], other: L.purp.other[i], errands: L.purp.errands[i] } : null;
+  /** group `g.group[i]`'s figures in `p`, summed as `tintByPurpose` takes them */
+  const groupPurp = (g: Groups, i: number, p: Groups | null): PurposeSplit | null => {
+    if (!p || !purposeSchemeOn()) return null;
+    const j = p.group.indexOf(g.group[i]);
+    return j < 0 ? null : { work: p.train[j], other: p.walk[j], errands: p.drive[j] };
+  };
   addFinder(10, (p) => {
     if (!shown || !display.peek().commuters || cityOverview.peek()) return null;
     const sel = selection.peek();
     if (sel?.kind === "commuters") {
       let i = discAt(nearDiscs, p, nearAnchor, view.bubbleSize);
-      if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i], near.none[i]);
+      if (i >= 0 && near) return bubbleTag(sel.end, near.train[i], near.walk[i], near.drive[i], near.none[i], groupPurp(near, i, nearByPurpose));
       i = discAt(farDiscs, p, farAnchor, view.bubbleSize);
-      if (i >= 0 && far) return bubbleTag(otherEnd(sel.end), far.train[i], far.walk[i], far.drive[i], far.none[i], t("commuterView.exploreTrip"));
+      if (i >= 0 && far) return bubbleTag(otherEnd(sel.end), far.train[i], far.walk[i], far.drive[i], far.none[i], groupPurp(far, i, farByPurpose), t("commuterView.exploreTrip"));
       return null;
     }
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     if (i < 0) return null;
-    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i], L.none[i], ...cityHint());
+    return bubbleTag(shown.end, L.train[i], L.walk[i], L.drive[i], L.none[i], levelPurp(L, i), ...cityHint());
   });
   /** T-885: with a city selected, a bubble in another place opens the trips between them. */
   const cityHint = (): string[] => {
@@ -744,7 +760,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const hit = nearbyAt(p);
     if (!hit) return null;
     const L = hit.s.bubbles.levels[bubbleLevel(map.getZoom())], i = hit.i;
-    return bubbleTag(hit.s.end, L.train[i], L.walk[i], L.drive[i], L.none[i], ...cityHint());
+    return bubbleTag(hit.s.end, L.train[i], L.walk[i], L.drive[i], L.none[i], levelPurp(L, i), ...cityHint());
   });
 
   // ---- selecting bubbles ----
@@ -1030,6 +1046,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   let farSource: { f: Flows; purpose: PurposeFilter } | null = null;
   /** T-2892: `of`, a `farCells`, summed again by purpose; only under the Purpose scheme */
   let farPurp: { of: Groups[]; levels: Groups[] } | null = null;
+  /** the near and far discs' trips by purpose as drawn, for their hover (T-2908); null: they are in mode colours */
+  let nearByPurpose: Groups | null = null, farByPurpose: Groups | null = null;
   let farPurpAsked: Groups[] | null = null;
   function ensureFarPurp() {
     const of = farCells;
@@ -1069,9 +1087,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     nearAnchor = city.anchor;
     nearDiscs = discs(near, 1 / BUBBLE_DENSITY[sel.end], BUBBLE_ALPHA, 2, nearAnchor);
     const nearPurp = purposeSchemeOn() ? cellPurp.get(shown.bubbles) : undefined;
+    nearByPurpose = null;
     if (nearPurp && nearPurp.end === sel.end) {
       const of = (a: Float32Array) => Float32Array.from(sel.cells, (c) => a[c]);
-      tintByPurpose(nearDiscs, near, aggregate(g, city.cellX, city.cellY, sel.cells, of(nearPurp.work), of(nearPurp.other), of(nearPurp.errands)));
+      nearByPurpose = aggregate(g, city.cellX, city.cellY, sel.cells, of(nearPurp.work), of(nearPurp.other), of(nearPurp.errands));
+      tintByPurpose(nearDiscs, near, nearByPurpose);
     }
     view.setDiscs("near", nearDiscs, nearAnchor);
     if (farCells) {
@@ -1081,7 +1101,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       for (let i = 0; i < far.group.length; i++) max = Math.max(max, far.train[i] + far.walk[i] + far.drive[i]);
       const perTrip = max > 0 ? (0.6 * RES_AREA_M2[level]) / max : 0;
       farDiscs = discs(far, perTrip, BUBBLE_ALPHA, 0, farAnchor);
-      if (purposeSchemeOn() && farPurp?.of === farCells) tintByPurpose(farDiscs, far, farPurp.levels[level]);
+      farByPurpose = purposeSchemeOn() && farPurp?.of === farCells ? farPurp.levels[level] : null;
+      if (farByPurpose) tintByPurpose(farDiscs, far, farByPurpose);
       view.setDiscs("far", farDiscs, farAnchor);
       farAreaPerTrip.value = perTrip;
     } else {

@@ -9,8 +9,8 @@ import { t } from "../i18n";
 export type PurposeKey = "work" | "school" | "university" | "shopping" | "social" | "airport" | "medical" | "attractions" | "longer";
 /** The map's filter: one purpose, or every purpose together. */
 export type PurposeFilter = PurposeKey | "all";
-/** The purposes a bubble is coloured by under the Purpose scheme (T-2886): work, errands and leisure, and the rest. */
-export const PURPOSE_CLASS: Partial<Record<PurposeFilter, "work" | "errands">> = { work: "work", shopping: "errands", social: "errands" };
+/** The purposes a bubble is coloured by under the Purpose scheme (T-2886): work and school, errands and leisure, and the rest. */
+export const PURPOSE_CLASS: Partial<Record<PurposeFilter, "work" | "errands">> = { work: "work", school: "work", university: "work", shopping: "errands", social: "errands" };
 
 /** `EverydayApi`'s purpose kinds in its own order (sim/src/demand/everyday.rs `RATE`). */
 export const EVERYDAY_KEYS: PurposeKey[] = ["shopping", "social", "school", "university", "airport", "medical", "attractions"];
