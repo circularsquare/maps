@@ -732,7 +732,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   from its ink box (measured on a canvas at 240 px and scaled), its baseline on a whole device pixel
   for the device pixel ratio and CSS zoom it is drawn at, and the circle moved with it, so the ink,
   not the font's line box, is centred in the circle at any font, UI scale and pixel ratio, within
-  half a device pixel (`checks/t745-bullets.mjs` measures it on the rendered pixels).
+  half a device pixel (`checks/old/t745-bullets.mjs` measures it on the rendered pixels).
   A one-character bullet is a 16 px circle (a wide letter such as W a little wider), a longer one a
   pill of the same height, 4 px each side of its text. Bullets in a row are 2 px apart whatever their
   widths, wherever they are listed (`.bullets` in style.css, or the row's own 2 px gap); in two rows

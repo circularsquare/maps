@@ -300,15 +300,6 @@ verified (Anita, 2026-10-15: disk is the limit at hundreds of cities; a full reb
 extract again). Keep the small derived tables the build reads. Delete `data/work/pre-T###/` once
 a later state is checked clean, without asking (Anita, 2026-10-22).
 
-## 12. Retrospective
-
-Hundreds of cities will go through this list, so each one ends with a short review in its task
-notes (`notes/T-###.md`, "Retrospective", under 30 lines): the parts of the work in order, with
-wall time and tokens for each (`python trainworld/checks/token_usage.py --timeline <your
-transcript>`; the orchestrator gives the path), what was not worth its cost, and proposed changes
-to this list, the tools or the briefs. The orchestrator judges each proposal, adopts or declines
-it with a reason, and passes edge cases to Anita.
-
 ## Outside the US
 
 A country needs adapters for every input before its first city. They live in one module per

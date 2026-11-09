@@ -41,7 +41,8 @@ is the shared ledger (`cores.json`, cap 10 in all while Anita is using the machi
 - **Any long job** (a build, a batch or a sweep using more than 2 cores) claims first:
   `python cores.py claim <n> <name> --pid <pid> "what it is"`. The last line printed is the number
   of cores you may use; size `--jobs` or workers to it. It never refuses, but under a full cap it
-  grants 1.
+  grants 1. The claim prints what you got, so no `list` first. Trainworld's Playwright checks (through
+  `launchChrome`) claim for themselves: do not claim by hand for those (T-2831).
 - **Release when done**: `python cores.py release <name>`. A claim whose `--pid` has died is
   dropped on the next call, so a crashed job cleans up after itself.
 - `python cores.py list` shows each claim, the total, and how many cores are free under the cap.

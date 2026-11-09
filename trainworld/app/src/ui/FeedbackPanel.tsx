@@ -5,6 +5,7 @@
 import { signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { ApiError, sendFeedback } from "../game/account";
+import { loadFailure } from "../game/loading";
 import { t } from "../i18n";
 import { Modal } from "./Modal";
 import { showPassingNote } from "./PassingNote";
@@ -14,6 +15,30 @@ declare const __TW_BUILD__: string | undefined;
 const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 export const feedbackOpen = signal(false);
+
+/** T-2826: the browser and version from the user agent ("Firefox 159", "Chrome 131"); Edge and Opera
+ * say Chrome too, so they are looked for first. Anything unknown is sent as the agent's own text. */
+export function browserOf(ua: string): string {
+  const m = /(Edg|OPR|Firefox|FxiOS|CriOS|Chrome|Version)\/(\d+)/.exec(ua);
+  if (!m) return ua.slice(0, 120);
+  const name = ({ Edg: "Edge", OPR: "Opera", FxiOS: "Firefox", CriOS: "Chrome", Version: /Safari/.test(ua) ? "Safari" : "Browser" } as Record<string, string>)[m[1]] ?? m[1];
+  return name + " " + m[2];
+}
+
+/** T-2826: what a report carries beside the message: the game version, the browser, whether the device
+ * reports its memory (Chrome and Edge do, Firefox and Safari do not) and how much, and why demand last
+ * failed to load, if it did. */
+function reportContext(): Record<string, string> {
+  const dm = typeof navigator === "undefined" ? undefined : (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const ctx: Record<string, string> = {
+    version: BUILD,
+    browser: typeof navigator === "undefined" ? "unknown" : browserOf(navigator.userAgent),
+    memory: typeof dm === "number" ? dm + " GB" : "not reported",
+  };
+  const failure = loadFailure.peek();
+  if (failure) ctx.lastFailure = failure.slice(0, 1000);
+  return ctx;
+}
 
 function failText(e: unknown): string {
   if (e instanceof ApiError) {
@@ -42,7 +67,7 @@ export function FeedbackPanel() {
     if (!message.trim()) { setMsg(t("feedbackPanel.empty")); return; }
     setState("sending"); setMsg("");
     try {
-      await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), version: BUILD });
+      await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), context: reportContext() });
       setMessage(""); setState("");
       close();
       showPassingNote(t("feedbackPanel.thanks"));

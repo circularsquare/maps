@@ -117,12 +117,12 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
 
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
-export async function sendFeedback(f: { name: string; contact: string; message: string; version: string }) {
+export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string> }) {
   if (!BASE) throw new ApiError(t("account.noServer"), 0);
   // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
   const cfg = accountConfig.peek();
   if (cfg && !cfg.trainworldFeedback) throw new ApiError(t("account.feedbackNotYet"), 404);
-  await api("POST", "trainworld/feedback", { kind: "feedback", message: f.message, name: f.name, contact: f.contact, context: { version: f.version } });
+  await api("POST", "trainworld/feedback", { kind: "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context });
 }
 
 export function storeSession(j: { token: string; account: AccountView }) {

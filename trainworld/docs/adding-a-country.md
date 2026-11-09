@@ -285,12 +285,6 @@ Done when: `world_run.py status` shows the country's gated rows shipped.
 - A join unit's solve passing two hours, or a choice that changes what the game is: hand back with the
   question. Rail facts, zone shapes and names are yours to decide.
 
-## 10. Retrospective (in the notes, at most 10 lines)
-
-Parts in order with wall time; runs and joins (how many, why more than one each); parks by reason; what
-the preflight missed, as a proposed new line for this file; anything not worth its cost. Tokens and wakes
-are the orchestrator's (`checks/token_usage.py`), added to notes/city-costs.md.
-
 ## Notes template
 
     # T-###: <country> (<date>)
@@ -300,4 +294,3 @@ are the orchestrator's (`checks/token_usage.py`), added to notes/city-costs.md.
     ## Runs           per run: .cmd, batch, log, PIDs, liveness, restart; result (gated, parked with reasons)
     ## Join           the same; shipped
     ## Checks         the section 8 lines with their figures
-    ## Retrospective

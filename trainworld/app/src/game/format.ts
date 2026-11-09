@@ -70,11 +70,16 @@ export function money(n: number): string {
  * to the dollar under a million. */
 export function moneyCash(n: number): string {
   const a = Math.abs(n) * cu().rate, s = (n < 0 ? "−" : "") + cu().symbol;
-  if (a < 999.95e3) return moneyExact(n);
-  const sig = (v: number) => String(Number(v.toPrecision(4)));
-  if (a >= 999.95e12) return s + compactOf(sig(a / 1e15), 1e15, "Q");
-  if (a >= 999.95e9) return s + compactOf(sig(a / 1e12), 1e12, "T");
-  return a >= 999.95e6 ? s + compactOf(sig(a / 1e9), 1e9, "B") : s + compactOf(sig(a / 1e6), 1e6, "M");
+  const make = (p: number): string => {
+    const sig = (v: number) => String(Number(v.toPrecision(p)));
+    if (a < 999.95e3) return p === 4 ? moneyExact(n) : s + compactOf(sig(a / 1e3), 1e3, "k");
+    if (a >= 999.95e12) return s + compactOf(sig(a / 1e15), 1e15, "Q");
+    if (a >= 999.95e9) return s + compactOf(sig(a / 1e12), 1e12, "T");
+    return a >= 999.95e6 ? s + compactOf(sig(a / 1e9), 1e9, "B") : s + compactOf(sig(a / 1e6), 1e6, "M");
+  };
+  // T-2860: a long symbol ("−CHF 714.9M", "−AED 45,677") would not fit the top bar's box: one figure fewer, then thousands
+  const out = make(4);
+  return out.length > 10 ? make(3) : out;
 }
 
 /** A price in millions of US$, to a tenth, as the Build tab quotes it: 90 -> "$90M", 1.5 -> "$1.5M"; "$150万" in
@@ -113,7 +118,7 @@ export const moneyWhole = (usd: number): string => cu().symbol + exact(usd * cu(
 /** A price to the currency's own decimals (none for yen and won, ten won at a time): 2.9 -> "$2.90", "¥435". */
 export function price(usd: number): string {
   const c = cu(), v = usd * c.rate;
-  return c.symbol + tNumber(c.grain >= 1 ? roundTo(v, c.grain) : v, { minimumFractionDigits: c.dp, maximumFractionDigits: c.dp });
+  return c.symbol + tNumber(roundTo(v, c.grain), { minimumFractionDigits: c.dp, maximumFractionDigits: c.dp });
 }
 
 /** A small amount, for rates per km and the like: 0.15 -> "$0.15", "¥22"; a whole figure drops its decimals ("$9"). */

@@ -166,6 +166,7 @@ svg .stroke2 { stroke-width: 2; }
 .tab.on svg .bg { fill: var(--bg); }
 .tab.gear { flex: none; width: 36px; min-width: 0; border-right: 0; border-left: 1px solid var(--rule); }
 .settings-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.settings-top .discord-link { text-decoration: none; }
 .lang-row { margin: 0 0 4px; }
 .lang-row { display: flex; align-items: center; gap: 4px; }
 .lang-row .lang-icon { display: inline-flex; }
@@ -835,7 +836,7 @@ rect.now { fill-opacity: .45; }
    (4.7em: the widest it writes, "−$893.6M", the usual 7 characters leaving a little room) so the bar
    before it does not change width as it changes. After the train share, before the clock. T-2798: in
    another currency up to "−₩999,950" and a wider symbol. */
-.cash.cash-wide { width: 5.6em; }
+.cash.cash-wide { width: 6em; }
 .cash { flex: none; width: 4.7em; font-variant-numeric: tabular-nums; }
 /* T-832, T-861, T-1853, T-1868: the clock (the time and date on one line) sits right of the cash, behind a
    thin divider, and left of the speed buttons, in a box of fixed width (the widest date, "Wed May 28", fits)

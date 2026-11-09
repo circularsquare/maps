@@ -63,7 +63,8 @@ try {
   report('a range keeps one unit: "¥1.5-8.25B", "£8-44M"', T('en JPY').range === '¥1.5-8.25B' && T('en GBP').range === '£8-44M', JSON.stringify([T('en JPY').range, T('en GBP').range]));
 
   // every output short enough for the top bar and the map tags
-  const longest = Object.entries(table).flatMap(([k, v]) => [...v.cash, ...v.short, ...v.money].map((s) => [k, s])).filter(([, s]) => [...s].length > 10);
+  // (the last amount, -US$1.5 trillion, is left out: in a currency of rate 16000 it is past any game)
+  const longest = Object.entries(table).flatMap(([k, v]) => [...v.cash.slice(0, 12), ...v.short.slice(0, 12), ...v.money.slice(0, 12)].map((s) => [k, s])).filter(([, s]) => [...s].length > 10);
   report('no cash, tag or panel figure is longer than 10 characters', longest.length === 0, JSON.stringify(longest.slice(0, 5)));
 
   // the red follows the text: a loss that shows as zero is not red, in every currency
@@ -106,7 +107,28 @@ try {
   const fares0 = await faresNow();
   await page.click('button.tab[aria-label="Settings"]');
   const sel = page.locator('select[aria-label="Currency"]');
-  report('Settings has a Currency select with six choices, USD first and chosen', (await sel.count()) === 1 && eq(await sel.locator('option').allTextContents(), ['USD $', 'GBP £', 'EUR €', 'RMB ¥', 'JPY ¥', 'KRW ₩']) && (await sel.inputValue()) === 'USD', '');
+  // T-2860: ten first in relevance order, the rest by code; the default is the browser's region (en-US here)
+  const opts = await sel.locator('option').evaluateAll((os) => os.map((o) => o.value));
+  const rest = opts.slice(10);
+  report('Settings has one Currency select: USD EUR GBP JPY CNY KRW CAD AUD INR MXN first, the rest by code, USD chosen', (await sel.count()) === 1 && eq(opts.slice(0, 10), ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'KRW', 'CAD', 'AUD', 'INR', 'MXN']) && rest.length >= 25 && eq(rest, [...rest].sort()) && (await sel.inputValue()) === 'USD', JSON.stringify(opts));
+  const labels = await sel.locator('option').allTextContents();
+  report('picker rows show code and symbol', labels[0] === 'USD $' && labels[3] === 'JPY ¥' && labels.every((s, i) => opts[i] === 'CNY' || s.startsWith(opts[i])), JSON.stringify(labels.slice(0, 12)));
+  const dflt = await page.evaluate(async () => {
+    const { defaultCurrency } = await import('/src/game/currency.ts');
+    return ['es-MX', 'en-GB', 'de-DE', 'es', 'en-US', 'zh-Hant-TW', 'fr-CH', 'pt-BR', 'xx-ZZ'].map((l) => defaultCurrency([l])).concat(defaultCurrency(['es', 'en-AU']), defaultCurrency([]));
+  });
+  report('default currency from the browser region (es-MX MXN, en-GB GBP, de-DE EUR, plain es USD, zh-Hant-TW TWD, unknown USD)', eq(dflt, ['MXN', 'GBP', 'EUR', 'USD', 'USD', 'TWD', 'CHF', 'BRL', 'USD', 'AUD', 'USD']), JSON.stringify(dflt));
+  // a high-rate currency: compact money, a fare and its step
+  const big = await page.evaluate(async () => {
+    const f = await import('/src/game/format.ts');
+    const { setDisplay } = await import('/src/game/ui.ts');
+    const { CURRENCY } = await import('/src/game/currency.ts');
+    const out = {};
+    for (const c of ['VND', 'IDR', 'HUF', 'MXN', 'CHF']) { setDisplay('currency', c); out[c] = { short: f.moneyShort(22.43e6), cash: f.moneyCash(1.153e9), price: f.price(2.9), step: CURRENCY[c].fareStep }; }
+    setDisplay('currency', 'USD');
+    return out;
+  });
+  report('high-rate currencies: VND ₫73,000 fare and ₫561B for $22.4M, HUF Ft 1,045 fare, MXN MX$52.00 (to its 0.5 grain), CHF CHF 2.32', big.VND.price === '₫73,000' && /^₫5\d\dB$/.test(big.VND.short) && big.HUF.price === 'Ft 1,045' && big.MXN.price === 'MX$52.00' && big.CHF.price === 'CHF 2.32' && big.IDR.step === 5000, JSON.stringify(big));
   const topCash = () => page.$eval('.cash', (e) => e.textContent);
   const usdCash = await topCash();
   await sel.selectOption('JPY');

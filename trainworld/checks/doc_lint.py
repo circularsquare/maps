@@ -8,8 +8,8 @@ Kinds:
   stages-done   a TASKS line whose named stages (stages T-x to T-y, built as ...) are all archived: archive the parent
   unblocked     a TASKS line whose waits on / after / once ids are all archived
   for-anita     a line of notes/for-anita.md that opens with an archived id, outside a heading or a section of finished work
-  long-task     a TASKS line over 400 characters
-  long-entry    an ARCHIVE entry over 60 words or a DECISIONS line over 80 words, dated on or after --since
+  long-task     a TASKS line over 400 characters (only with --long or --kind)
+  long-entry    an ARCHIVE entry over 60 words or a DECISIONS line over 80 words, dated on or after --since (only with --long or --kind)
   empty-heading a heading in TASKS.md with nothing under it
   update        an "Update:" paragraph in SPEC.md or docs/
   long-section  a leaf section of SPEC.md or docs/ over 150 lines
@@ -391,10 +391,13 @@ def main():
     ap.add_argument("--since", default=SIZE_CHECK_SINCE, help="size checks on ARCHIVE and DECISIONS cover entries dated on or after this (default %(default)s)")
     ap.add_argument("--all-links", action="store_true", help="also check notes/ links in SPEC, CLAUDE.md, docs and code comments")
     ap.add_argument("--kind", action="append", help="only these kinds")
+    ap.add_argument("--long", action="store_true", help="also report long-task and long-entry (off by default: the caps are not followed and cost nothing when files are grepped, T-2831)")
     args = ap.parse_args()
     run_size_checks(args.since)
     run_link_checks(args.all_links)
     out = findings
+    if not args.long and not args.kind:
+        out = [f for f in out if f[2] not in ("long-task", "long-entry")]
     if args.kind:
         out = [f for f in out if f[2] in args.kind]
     out = sorted(out, key=lambda f: (f[0], f[1], f[2]))

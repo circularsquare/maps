@@ -1,7 +1,7 @@
 # trainworld — notes for agents
 
-Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where code lives is
-`docs/code-map.md`.
+Read this, then `SPEC.md`. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand;
+where code lives is `docs/code-map.md`.
 
 ## What each file is for
 
@@ -21,9 +21,11 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
 
 ## Doc rules
 
-- **The spec says what is true now.** When a decision changes, rewrite the affected text to state
-  the new design; never append "Update:" paragraphs or leave a section a later one contradicts.
+- **The spec says what is true now.** When a rule or behaviour changes, rewrite the affected text to
+  state the new design; never append "Update:" paragraphs or leave a section a later one contradicts.
   A spec section past ~150 lines moves to `docs/<area>.md`, leaving a summary and link.
+  A small UI tweak (a label, spacing, a colour) updates a doc only if a rule changed; the code is the
+  reference for those details (Anita, 2026-11-09).
 - **Touch only the section your change touches**, in the spec, docs and code-map alike.
 - **Docs hold current rules only** (Anita, 2026-10-14): the rule and the numbers that decide it, in
   the present tense. Measurements, how a figure was reached and before/after tables go in notes/.
@@ -38,8 +40,8 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   in the live file (they hold everything dated before 2026-10-20; new entries still go in the live files).
 - **A DECISIONS line** only for a choice someone might reasonably revisit: date, one or two
   sentences, the task id. Not for what the spec already says.
-- **An ARCHIVE entry** is at most two lines (about 40 words): id, title, date, the outcome only,
-  and a notes/ link for detail. Old long entries stay as they are.
+- **An ARCHIVE entry** is short: id, title, date, the outcome only, and a notes/ link for detail.
+  Old long entries stay as they are.
 - **Tasks.** One line each in `TASKS.md`:
   `- T-012 [P2] short title. State, owner if taken, link to notes/T-012.md if any.`
   Ids are never reused (next after the highest in TASKS.md and ARCHIVE.md). With several agents
@@ -55,8 +57,6 @@ Read this, then `SPEC.md`, then `TASKS.md`. Everything else on demand; where cod
   naming it; if it was a parent's last open stage, archive the parent in the same edit; and name in
   your report any older open task your work also did (an audit on 2026-11-04 closed 13 lines left open
   these ways). New work found on the way goes in TASKS.md; do not silently widen the task.
-- **Each milestone ends with a doc tidy task**: spec against code, prune TASKS.md, fold finished
-  notes into the spec or archive, flag anything stale.
 - **Shared files.** Several agents work here at once: re-read a doc right before editing it, make
   small targeted edits, never rewrite TASKS.md, DECISIONS.md or ARCHIVE.md wholesale.
 - **notes/ is the agents'** (Anita, 2026-10-13): move, merge or delete freely. One-off scripts go
@@ -99,8 +99,10 @@ Briefs carry only the task; these hold for every agent.
   After any sim/ change run both `cargo test --release` and `cargo test --release --features demand --lib`
   from trainworld/sim: the demand kernel's tests run only with the feature (two broke unseen, T-2250).
 - **CPU**: about 14 of 16 cores in all, every agent together (Anita, 2026-11-09: this game is the priority; don't let
-  core limits slow development). Long jobs claim their cores in the
-  shared ledger first: `python cores.py claim <n> <name> --pid <pid>` at the maps root (see maps/CLAUDE.md).
+  core limits slow development). Playwright checks (anything through `launchChrome`) claim their cores
+  themselves when `TW_CORES` is unset, so do not claim by hand for them; `TW_CORES_WANT=n` asks for more. Hand claims are for the
+  pipeline, Rust and scripts that launch their own browser: `python cores.py claim <n> <name> --pid <pid>`
+  at the maps root (see maps/CLAUDE.md); the claim prints what you got, so no `list` first (T-2831).
   A browser load counts its demand workers too (about a core each, plus the page): a headless load
   of a big save took 5 cores on a 4-core claim and starved Anita's game (2026-10-27); cap the
   page's solving workers to fit the claim. Playwright checks do this themselves (`checks/cores.mjs`, through
@@ -172,16 +174,23 @@ Briefs carry only the task; these hold for every agent.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root: Node checks, then a new game and the
 real save in headless Chrome (counts, demand final, station and train clicks, no console or GL
-errors); about half a minute, one PASS or FAIL line per check. In order:
-1. Smoke on the dev server.
+errors); about 3 minutes, one PASS or FAIL line per check. In order:
+1. Smoke on the dev server. Rounds smoke on dev only (Anita, 2026-11-09).
 2. Commit explicit paths only; check the staged diff right before committing, since agents edit shared
    files while you stage.
-3. Rebuild 8800: `git -C maps/.tw-snap checkout --detach <commit>`, then in `.tw-snap` with
-   `CARGO_TARGET_DIR=maps/.tw-snap-target`, `CARGO_BUILD_JOBS=2` and `%USERPROFILE%\.cargo\bin` on PATH,
-   `npm run build` through `cmd /c` (PowerShell treats wasm-pack's stderr as an error).
-4. Smoke against `http://localhost:8800/trainworld/`, then again with `SMOKE_SHADE=dark`: a
+3. Rebuild 8800 with `checks/snapbuild.cmd <commit>` (`snapbuild-frozen.cmd <commit> <freeze>` while a
+   country run owns `data/packs`): it checks out `.tw-snap` at the commit, builds into `dist-new` and
+   swaps it in. Run it through `cmd /c`, its output to a log (PowerShell treats wasm-pack's stderr as an
+   error). Rebuilding 8800 for Anita to look at needs no smoke.
+4. Smoke 8800 once in light and once in dark, only before a publish: `checks/smoke8800.cmd` (logs in
+   `artifacts/trainworld/smoke8800-*.log`; it skips the Node checks, which read the working tree). A
    production build copies only the pack files `vite.config.ts` lists, while the dev server serves
    everything (T-377).
+5. Landing a tree or a batch: skip your own smoke when the agent's smoke ran on the final state; run
+   one smoke on master after a batch lands (Anita, 2026-11-09; a failure is then fixed or reverted).
+
+`notes/handoff.md` is edited when the plan changes, folded into that turn's other bookkeeping, not once
+per message (Anita, 2026-11-09).
 
 Several agents at once work well when each owns named files; give every brief the others' files to
 leave alone.
@@ -251,6 +260,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   on migrations until she says.
 - **Task size** (2026-10-13): split big tasks into stages, each its own id and report. A big
   task's design goes to Anita before it is built; small, quick, isolated work needs no review.
+  The orchestrator defaults to Sonnet for a brief with known files and an easy check; Opus is for
+  design and hard debugging (Anita, 2026-11-09).
   Treat subagents well by substance: a brief they can act on (goal, decisions made, scope, done
   looks like), leave to stop or push back, problems relayed without blame; no formulaic thanks on
   briefs, but a short thanks when an agent's work is done (Anita, 2026-10-21), said in the
@@ -261,9 +272,8 @@ packs, `..\venv\Scripts\python.exe`). Details and build orders: `docs/code-map.m
   orchestrator and its agents may run past that point and keep going rather than hand over (Anita,
   2026-11-05: "keep going after the normal context handover cap overnight as usual"); the cores go to
   12-15 then too ("CPU" above).
-- **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters. Every city
-  task ends with a retrospective (docs/adding-a-country.md 10); the orchestrator records each task's
-  tokens with `checks/token_usage.py` and judges the proposed changes, passing edge cases to Anita.
+- **Token counts** (2026-10-14): hundreds of metros are planned, so cost per city matters.
+  `checks/token_usage.py` reports a task's tokens when asked; city tasks no longer end with a retrospective (T-2831).
 - **Asks for Anita** go in the "For you" block of the final message, never in `TODO.md` (Anita,
   2026-10-15). If there are many, or they outlive the session, put them in `notes/for-anita.md` and
   link it. Subagents are welcome (standing go-ahead).

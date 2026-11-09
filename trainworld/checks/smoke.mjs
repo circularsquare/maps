@@ -31,9 +31,9 @@ const report = (name, ok, detail = '') => {
 const t0 = Date.now();
 const secs = () => ((Date.now() - t0) / 1000).toFixed(0) + ' s';
 
-function runNode(file, flags = []) {
+function runNode(file, flags = [], args = []) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [...flags, join(HERE, file)], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [...flags, join(HERE, file), ...args], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
@@ -275,9 +275,13 @@ try {
   // T-1213: Chrome profiles an older check left in the temp folder (23.9 GB once filled the disk)
   const stale = await staleTempProfiles();
   if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
-  for (const f of ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', 't1380-complexes.mjs', 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types']]) {
-    const [file, ...flags] = [f].flat();
-    const r = await runNode(file, flags);
+  // T-2831: the Node checks read the working tree, not the build under test, so on 8800 they only repeat the dev pass
+  const served = /:8800\b/.test(given ?? '');
+  if (served) console.log('      Node checks skipped: they read the working tree, not the build on 8800');
+  for (const f of served ? [] : ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', ['t1380-complexes.mjs', 'args:5'], 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types']]) {
+    // 'args:x' entries go after the file (t1380-complexes gets 5 seeds here; its default is 30)
+    const [file, ...rest] = [f].flat();
+    const r = await runNode(file, rest.filter((x) => !x.startsWith('args:')), rest.filter((x) => x.startsWith('args:')).map((x) => x.slice(5)));
     report(file.replace('.mjs', ''), r.code === 0, r.code === 0 ? '' : tail(r.out));
   }
   if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));

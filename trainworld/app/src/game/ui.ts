@@ -5,7 +5,7 @@
 import { t } from "../i18n";
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, whenAway, whenBack, whenOut, type DemandDay } from "./days";
-import type { Currency } from "./currency";
+import { defaultCurrency, type Currency } from "./currency";
 import { loadNunito } from "./fonts";
 import { mobileDevice } from "../workers/deviceMemory";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
@@ -145,7 +145,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   uiScale: 0.9,
   dayShown: "average",
   usUnits: false,
-  currency: "USD",
+  currency: defaultCurrency(),
   moreCores: false,
   runInBackground: false,
   projection: "flat",
@@ -172,8 +172,8 @@ export interface DockLayout {
 
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
  * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
- * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840). */
-const VERSION = 13;
+ * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
+const VERSION = 14;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
   try {
@@ -209,6 +209,8 @@ if ((saved.v ?? 1) < 11) delete migratedDisplay.stationUse;
 if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
 // T-2840: Anita wants High for everyone who played before, a stored Low included; choosing Low after this sticks
 if ((saved.v ?? 1) < 13) delete migratedDisplay.lighterMap;
+// T-2860: the currency now starts from the browser's region; every earlier player has USD stored, chosen or not, so it is dropped once (a stored other currency stays)
+if ((saved.v ?? 1) < 14 && migratedDisplay.currency === "USD") delete migratedDisplay.currency;
 // T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
 const trackColour = (saved.v ?? 1) < 10
   ? oldDisplay?.trackColour === "height" || oldDisplay?.trackColour === "speed" ? oldDisplay.trackColour : DEFAULT_DISPLAY.trackColour
