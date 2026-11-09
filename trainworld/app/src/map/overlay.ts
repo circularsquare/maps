@@ -14,6 +14,7 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
+import { watchGraphics } from "../game/loading";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { anchor, EARTH_C, toLocal } from "./geo";
 import { cameraFrom, clipToCss, mercToCss, sizeCanvasLike, type Camera } from "./gl";
@@ -118,6 +119,7 @@ export class Overlay {
     // Phones drop WebGL contexts (a tab in the background, memory short, a GPU reset): taking the
     // loss lets the browser hand the canvas a new context, which the renderer rebuilds into (T-953).
     this.canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
+    watchGraphics(this.canvas);
     this.canvas.addEventListener("webglcontextrestored", () => {
       renderer.restore();
       this.invalidate();

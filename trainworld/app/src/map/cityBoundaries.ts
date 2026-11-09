@@ -15,6 +15,7 @@ import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { shade } from "../game/ui";
 import { cityGeometry, footprintRings, OutlineEdges, outsideCity, outsideOutline, unionOutline } from "./boundaryGeometry";
 import { coarseOutlines, coarseWater } from "./coarseOutlines";
+import { smallDevice } from "../workers/deviceMemory";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { shownRealms, zoneShown } from "../game/realms";
@@ -69,7 +70,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   const ready = new Map<string, { city: MultiPolygon; outside: MultiPolygon }>();
   // T-1145: a coastal zone's sea is clear of the shade like its land, once the coarse file is in. That
   // shade comes from a worker; the one with the sea shaded stands until it arrives.
-  let sea = new Map<string, MultiPolygon>();
+  let sea: ReadonlyMap<string, MultiPolygon> = new Map();
   let seaWorker: Worker | null | undefined;
   const seaReady = (id: string, outline: Float64Array[]) => {
     const r = ready.get(id);
@@ -177,7 +178,25 @@ export function startCityBoundaries(map: MlMap): () => void {
   const redrawSoon = () => {
     if (!pending) pending = window.setTimeout(() => { pending = 0; redraw(); }, 60);
   };
+  // T-2794: a small device holds only the coarse outlines near the view, and none zoomed out past
+  // OUTLINE_MIN_ZOOM: every zone's segment keys took 54 MB of a phone's page (notes/T-2794.md)
+  const lean = smallDevice();
+  let coarseZones: Awaited<ReturnType<typeof coarseOutlines>> | null = null;
+  const fillAround = () => {
+    if (!coarseZones) return;
+    const wanted = map.getZoom() > OUTLINE_MIN_ZOOM ? around : new Set<string>();
+    for (const id of [...coarse]) if (!wanted.has(id)) { coarse.delete(id); edges.remove(id); }
+    for (const id of wanted) {
+      const g = edges.has(id) ? undefined : coarseZones.get(id);
+      if (g) { edges.add(id, g); coarse.add(id); }
+    }
+  };
   void coarseOutlines().then(async (zones) => {
+    if (lean) {
+      coarseZones = zones;
+      if (alive) follow();
+      return;
+    }
     let n = 0;
     // in slices of about 30 ms, so startup never waits on one long task
     for (const [id, g] of zones) {
@@ -200,6 +219,7 @@ export function startCityBoundaries(map: MlMap): () => void {
       around = next;
       redrawSoon();
     }
+    if (lean) fillAround();
     const z = map.getZoom();
     if (z <= OUTLINE_MIN_ZOOM) return;
     for (const id of near()) {

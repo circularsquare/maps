@@ -528,6 +528,8 @@ table.sched .bad { color: var(--bad); }
 .crowd-dot { display: inline-block; position: relative; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 3px; vertical-align: 1px; outline: 1px solid transparent; outline-offset: 1px; }
 /* T-2271: the hover reaches 6 px round the dot (to the row's left edge, short of the level's name) */
 .crowd-dot::before { content: ""; position: absolute; inset: -6px -5px -6px -6px; }
+/* T-2794: a finger on the dot landed on the pane's resize strip beside it, so the tutorial's crowding step would not tick */
+@media (pointer: coarse) { .crowd-dot { z-index: 5; } .crowd-dot::before { inset: -11px; } }
 .rows.sub-rows > li { padding-left: 12px; color: var(--muted); min-height: 24px; }
 svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 112px; stroke-width: initial; }
 .complex-map { margin: 8px 0 4px; }
@@ -885,6 +887,10 @@ rect.now { fill-opacity: .45; }
 @container map-column (max-width: 1350px) { .demand-stopped-note { top: 46px; } }
 @container map-column (max-width: 1000px) { .demand-stopped-note { top: 80px; } }
 @container map-column (max-width: 680px) { .demand-stopped-note { top: 148px; } }
+/* T-2802: low on the map and clear of the tutorial's card; taps go through the words, only the close button takes them */
+.no-market-note { position: absolute; left: 8px; right: 8px; bottom: 26px; z-index: 5; zoom: var(--ui, 1); display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 4px 4px 4px 10px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); font-size: 13px; pointer-events: none; }
+.no-market-note .btn { flex: none; pointer-events: auto; }
 .dsn-row { display: flex; align-items: center; gap: 10px; }
 .dsn-row span { min-width: 0; }
 .dsn-row .btn { flex: none; border-color: var(--bad); color: var(--bad); }

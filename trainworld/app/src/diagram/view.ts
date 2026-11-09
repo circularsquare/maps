@@ -305,7 +305,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water, ...sheet } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
-  let outlineMap: Map<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
+  let outlineMap: ReadonlyMap<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
   const zonesSent = new Set<string>();
   const newZones = (box: [number, number, number, number]): ZoneOutlines => {
     lastBox = box;

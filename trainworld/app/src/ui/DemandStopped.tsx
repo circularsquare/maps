@@ -13,7 +13,7 @@ export function DemandStopped({ save }: { save: () => Promise<void> }) {
   const reload = () => { void save().finally(() => location.reload()); };
   return <div class="demand-stopped-note" role="alert">
     <div class="dsn-row">
-      <span>{t("demandStopped.note", { memory: why === "memory" })}</span>
+      <span>{why === "graphics" ? t("demandStopped.graphics") : t("demandStopped.note", { memory: why === "memory" })}</span>
       <button class="btn" onClick={reload}>{t("demandStopped.reload")}</button>
     </div>
     {why === "error" && error && <div class="dsn-detail muted" data-tip={error}>{error}</div>}

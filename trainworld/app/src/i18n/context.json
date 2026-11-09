@@ -592,6 +592,8 @@
   "demandSelector.purpose": "Screen-reader label of the drop-down that narrows the map's demand to one trip purpose.",
   "demandSelector.allPurposes": "First option of the trip purpose drop-down on the map.",
   "demandStopped.note": "Notice at the top centre of the map when the demand model (the part that works out where people travel) has stopped for good; the game is paused when it appears. memory: true when it ran out of memory, otherwise it stopped on an error. The Reload page button sits beside it.",
+  "demandStopped.graphics": "Same notice at the top centre of the map, shown when the browser took away the map's graphics (usually memory short on a phone) and did not give them back. The game is paused when it appears. The Reload page button sits beside it.",
+  "noMarketNote.text": "Short note at the bottom of the map on a phone, once each time a game loads, with a close button. Phones do not work out trips that go from one city to another, to save memory.",
   "demandStopped.reload": "Button in the demand stopped notice. Reloads the web page; the game is saved first.",
   "diagramButton.showMap": "Hover and screen-reader label of buttons that return from the network diagram to the map.",
   "diagramButton.showDiagram": "Hover and screen-reader label of the button at the top of the Cities tab that replaces the map with a schematic diagram of the player's network.",

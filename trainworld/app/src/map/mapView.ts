@@ -9,8 +9,10 @@ import { loadBasemap } from "./basemap";
 import { styleUp } from "./styleReady";
 import { cityById, cityWithin, hashView } from "../game/cities";
 import { display, tool } from "../game/ui";
+import { watchGraphics } from "../game/loading";
 import { effect } from "@preact/signals";
 import { mapBearing } from "./live";
+import { cappedPixelRatio } from "../workers/deviceMemory";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -44,6 +46,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     dragRotate: false,
     pitchWithRotate: false,
     maxPitch: 0,
+    // T-2794: a DPR 3 phone holds nearly twice the canvas memory of DPR 2 in every context
+    ...(cappedPixelRatio() !== null ? { pixelRatio: cappedPixelRatio()! } : {}),
   });
   // T-1907, T-2031: only a mouse drag turns the map (followRotation); fingers and keys neither turn
   // nor tilt it
@@ -52,6 +56,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   map.touchPitch.disable();
   followRotation(map);
   warnOnNetworkFailure(map);
+  watchGraphics(map.getCanvas()); // T-2794
   wheelGapsByEventTime(map);
   loadBasemap(map);
   map.on("load", () => {

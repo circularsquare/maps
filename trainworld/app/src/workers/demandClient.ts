@@ -762,7 +762,8 @@ class DemandClient {
   private cacheSolve: Service | null = null;
 
   // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
-  private cacheOn = cacheAvailable() && !TEST;
+  /** T-2794: not on a small device, which has no memory for the copies a write makes or a worker to write them */
+  private cacheOn = cacheAvailable() && !TEST && !smallDevice();
   /** off: no cache is written (a check turns it off to leave a network uncached) */
   cacheWrites = true;
   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
@@ -916,7 +917,7 @@ class DemandClient {
         this.fetchCity(id, "full");
       };
       for (const id of zones) if (rank(id) < firsts.length) fetchZone(id);
-      for (const id of new Set([...reached, ...this.nearOf(svc).markets])) {
+      for (const id of smallDevice() ? [] : new Set([...reached, ...this.nearOf(svc).markets])) {
         const item = marketItem(id);
         if (this.fetching.has(item) || this.broken.has(item)) continue;
         a.markets.add(id);
@@ -1107,6 +1108,8 @@ class DemandClient {
    * city pack does (`sweep`). */
   private marketWanted: CityId[] = [];
   private marketZones(svc: Service | null): Set<CityId> {
+    // T-2802: a small device opens no market: the world's rows and a zone's pack took its one solving worker from 33 to 184 MB on a first line
+    if (smallDevice()) return new Set();
     const sel = selection.peek();
     // T-979: a trip with an end in another zone is read from the market too
     const leaves = sel?.kind === "trip" && !!sel.to && (!!sel.far || [sel.from, sel.to].some(([x, y]) => zoneAt(...packToLngLat(x, y)) !== activeCity.peek()));

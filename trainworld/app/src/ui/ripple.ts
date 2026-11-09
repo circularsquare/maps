@@ -11,6 +11,7 @@ import { GUIDE_SPLIT, guideShown, guideSteps, guideTicks, type GuideId } from ".
 import { moneyState } from "../game/money";
 import { stopEditing, tab } from "../game/ui";
 import { world } from "../game/world";
+import { cappedPixelRatio } from "../workers/deviceMemory";
 
 /** What a pulse points at: a step's control, or "end", the card's Continue or Done! once every step
  * is ticked (T-2263). */
@@ -114,7 +115,7 @@ function ensureCanvas(): HTMLCanvasElement {
 
 function frame(now: number) {
   const cv = ensureCanvas();
-  const dpr = devicePixelRatio || 1, w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
+  const dpr = cappedPixelRatio() ?? (devicePixelRatio || 1), w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
   if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
   // T-2795: 100vw/100vh is the large viewport on a phone (its address bar hidden), taller than innerHeight, which
   // stretched the drawing and put rings an inch off; the box is the drawing's own size so one unit is one css px

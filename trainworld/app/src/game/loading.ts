@@ -64,7 +64,17 @@ export const zoneFailures = signal<ReadonlyMap<CityId, string>>(new Map());
 
 /** T-1051: the game in hand has been loaded and its first demand is in (the moment the clock is let go,
  * or demand failed or was given up on). False from the start menu's pick and from every whole-game load. */
-const gameReady = signal(false);
+export const gameReady = signal(false);
+/** T-2794: resolves once the game in hand's load is over */
+export function whenGameReady(): Promise<void> {
+  return new Promise((done) => {
+    const stop = effect(() => {
+      if (!gameReady.value) return;
+      queueMicrotask(() => stop());
+      done();
+    });
+  });
+}
 /** T-1051: the map shows only the basemap: behind the start menu, and while a game loads (the loading
  * card's span, from the pick to the clock's release). Nothing is drawn over it then, so what comes at
  * the end (hidden realms shaded, circles, cities for the shown realms) arrives in one step. Not while
@@ -141,7 +151,30 @@ export function loadComplete() {
 
 /** T-757: demand stopped after startup (a worker failed mid-game: out of memory, an error), as the
  * player is told it in the notice at the top centre (ui/DemandStopped.tsx); the figures shown stay. */
-export const demandStopped = signal<"memory" | "error" | null>(null);
+export const demandStopped = signal<"memory" | "error" | "graphics" | null>(null);
+
+/** T-2794: how long a lost WebGL context may stay lost before the player is told (phones lose one when
+ * memory is short and often get it back within a second or two) */
+const GRAPHICS_BACK_MS = 6000;
+const lostCanvases = new Set<HTMLCanvasElement>();
+let graphicsTimer = 0;
+/** T-2794: tell the player, and pause, when `canvas`'s context is lost and does not come back. */
+export function watchGraphics(canvas: HTMLCanvasElement) {
+  canvas.addEventListener("webglcontextlost", () => {
+    lostCanvases.add(canvas);
+    if (graphicsTimer) return;
+    graphicsTimer = window.setTimeout(() => {
+      graphicsTimer = 0;
+      if (!lostCanvases.size || demandStopped.peek()) return;
+      demandStopped.value = "graphics";
+      clock?.setRunning(false);
+    }, GRAPHICS_BACK_MS);
+  });
+  canvas.addEventListener("webglcontextrestored", () => {
+    lostCanvases.delete(canvas);
+    if (!lostCanvases.size && graphicsTimer) { clearTimeout(graphicsTimer); graphicsTimer = 0; }
+  });
+}
 
 /** T-2545: iOS may reload a page that ran out of memory without a word. A flag in sessionStorage is set
  * when a game starts loading and cleared when the load ends (or fails, or the page is left on purpose);

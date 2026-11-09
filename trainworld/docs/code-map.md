@@ -558,6 +558,7 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   server in the page, pictures of the start menu and saves panel light and dark, collapsed and
   open, into artifacts/trainworld/t2037/; about three minutes),
   `t2684-years.mjs [url]` (no year in year 1's date, a forged two-year ledger's Year 1, Year 2, Year 3 labels under the Money tab's history, where the year turns; about a minute),
+  `t2794-mobile-memory.mjs [url]` (T-2794: an emulated phone's new game, the tutorial's line built: Chrome's private bytes by process, JS heap, the demand workers' WASM, tiles and canvases per stage and the peak; `DUMP=1` adds Chrome's memory-infra per allocator, `LOWEND=1` low-end mode, `DESKTOP=1` the desktop page; run it on a scratch production build, the dev server's own weight is several hundred MB; about 3 minutes), `t2794-phone-tutorial.mjs [url]` (the tutorial walked by touch on an emulated phone, against your own Vite; about 5 minutes), `t2794-lost-context.mjs [url]` (a lost WebGL context and an out-of-memory failure on an emulated phone show their notices; about 2 minutes),
   `t2123-tutorial.mjs [url]` (the tutorial in a fresh profile: New York by default, the folded view
   rows, the ripple repeating until its control is pressed and following the tabs, the close
   confirmation, card 1 in its order (split, bubble and trip from the Homes the game opens on, Destinations, then track to stops) with its notes and

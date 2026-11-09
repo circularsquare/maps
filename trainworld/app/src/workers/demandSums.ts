@@ -502,7 +502,8 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const ip = r.intercityParts;
   // T-276: longer trips by their factor, commutes between zones by work's
   if (ip && ip.length >= 4) { intercitySummary[1] = ip[0] * fl + ip[2] * fw; intercitySummary[2] = ip[1] * fl + ip[3] * fw; }
-  else { intercitySummary[1] *= fl; intercitySummary[2] *= fl; }
+  // T-2802: no market open (a small device, or a pack that failed) leaves the summary empty: NaN here reached the day's totals
+  else if (intercitySummary.length) { intercitySummary[1] *= fl; intercitySummary[2] *= fl; }
   // T-1175, T-1229: everyday outings across a zone line, each purpose's by its own factor
   const intercityParts = ip && marketPartsOn(ip, fl, fw, factor);
   if (intercityParts && intercityParts.length >= 7) { intercitySummary[1] += intercityParts[4]; intercitySummary[2] += intercityParts[5]; intercitySummary[3] = intercityParts[6]; }
@@ -629,7 +630,7 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
   let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
   const elsewhere = Array.from({ length: input.places }, () => 0);
   for (const r of res) {
-    interTrips += r.intercitySummary[1]; interRail += r.intercitySummary[2];
+    interTrips += r.intercitySummary[1] ?? 0; interRail += r.intercitySummary[2] ?? 0;
     if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
     r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
   }

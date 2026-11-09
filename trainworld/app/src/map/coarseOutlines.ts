@@ -6,22 +6,72 @@ import { dataUrl } from "../game/dataBase";
 import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
 import { M_PER_DEG } from "../game/frame";
 import { atZero, cellSays, cellsSayInside, distanceTo, type Footprint } from "../workers/cityReach";
+import { smallDevice } from "../workers/deviceMemory";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
 
-let read: Promise<{ zones: Map<string, MultiPolygon>; water: Map<string, MultiPolygon> }> | null = null;
+type Outlines = ReadonlyMap<string, MultiPolygon>;
+let read: Promise<{ zones: Outlines; water: Outlines }> | null = null;
 let text: string | null = null;
 
 /** The coarse footprint of each zone in the file, by zone id; empty when the file is unavailable. */
-export function coarseOutlines(): Promise<Map<string, MultiPolygon>> {
+export function coarseOutlines(): Promise<Outlines> {
   return (read ??= load()).then((r) => r.zones);
 }
 
 /** The sea each coastal zone's coarse outline takes (T-1145), by zone id. */
-export function coarseWater(): Promise<Map<string, MultiPolygon>> {
+export function coarseWater(): Promise<Outlines> {
   return (read ??= load()).then((r) => r.water);
 }
+
+/** One zone's rings of the file as a MultiPolygon, each ring closed. */
+function polygons(rings: ArrayLike<number>[], q: number): MultiPolygon {
+  return {
+    type: "MultiPolygon",
+    coordinates: rings.map((flat) => {
+      const d = decodeRing(flat, q), ring: number[][] = [];
+      for (let i = 0; i < d.length; i += 2) ring.push([d[i], d[i + 1]]);
+      ring.push([...ring[0]]);
+      return [ring];
+    }),
+  };
+}
+
+/** T-2794: the outlines on a small device. Every zone's rings stay as the file's deltas in typed arrays (about
+ * 8 MB in all) and become a MultiPolygon when asked for, the last few kept, where the decoded polygons of the
+ * whole world take over 50 MB of a phone's page. */
+class CompactOutlines implements Outlines {
+  private recent = new Map<string, MultiPolygon>();
+  constructor(private rings: Map<string, Int32Array[]>, private q: number) {}
+  get size() { return this.rings.size; }
+  has(id: string) { return this.rings.has(id); }
+  get(id: string) {
+    let g = this.recent.get(id);
+    if (g) {
+      this.recent.delete(id);
+      this.recent.set(id, g);
+      return g;
+    }
+    const r = this.rings.get(id);
+    if (!r) return undefined;
+    g = polygons(r, this.q);
+    this.recent.set(id, g);
+    if (this.recent.size > 16) this.recent.delete(this.recent.keys().next().value as string);
+    return g;
+  }
+  keys() { return this.rings.keys(); }
+  *values(): MapIterator<MultiPolygon> { for (const r of this.rings.values()) yield polygons(r, this.q); }
+  *entries(): MapIterator<[string, MultiPolygon]> { for (const [id, r] of this.rings) yield [id, polygons(r, this.q)]; }
+  [Symbol.iterator]() { return this.entries(); }
+  forEach(f: (g: MultiPolygon, id: string, m: Outlines) => void) { for (const [id, g] of this.entries()) f(g, id, this); }
+}
+
+const compact = (from: Record<string, number[][]> | undefined, q: number) =>
+  new CompactOutlines(new Map(Object.entries(from ?? {}).map(([id, rings]) => [id, rings.map((r) => Int32Array.from(r))])), q);
+
+/** T-2794: where the outlines' file is, for the small device's shade worker */
+export const outlinesUrl = () => dataUrl("outlines.json");
 
 /** The file as fetched, once (the shade's worker reads its own copy, T-1026); null after that, or
  * before the file is in. */
@@ -32,7 +82,7 @@ export function takeOutlineText(): string | null {
 }
 
 /** One ring of the file as lon, lat pairs, flat and open. */
-export function decodeRing(flat: number[], q: number): Float64Array {
+export function decodeRing(flat: ArrayLike<number>, q: number): Float64Array {
   const out = new Float64Array(flat.length);
   let x = 0, y = 0;
   for (let i = 0; i < flat.length; i += 2) { out[i] = (x += flat[i]) / q; out[i + 1] = (y += flat[i + 1]) / q; }
@@ -56,23 +106,20 @@ async function fetchText(url: string): Promise<string> {
   }
 }
 
-async function load() {
-  const out = { zones: new Map<string, MultiPolygon>(), water: new Map<string, MultiPolygon>() };
+async function load(): Promise<{ zones: Outlines; water: Outlines }> {
+  const out: { zones: Outlines; water: Outlines } = { zones: new Map(), water: new Map() };
   try {
     const body = await fetchText(dataUrl("outlines.json"));
     const { q, zones, water } = JSON.parse(body) as OutlineFile;
-    const polygons = (rings: number[][]): MultiPolygon => ({
-      type: "MultiPolygon",
-      coordinates: rings.map((flat) => {
-        const d = decodeRing(flat, q), ring: number[][] = [];
-        for (let i = 0; i < d.length; i += 2) ring.push([d[i], d[i + 1]]);
-        ring.push([...ring[0]]);
-        return [ring];
-      }),
-    });
-    for (const id in zones) out.zones.set(id, polygons(zones[id]));
-    for (const id in water ?? {}) out.water.set(id, polygons(water![id]));
-    text = body;
+    if (smallDevice()) {
+      out.zones = compact(zones, q);
+      out.water = compact(water, q);
+    } else {
+      out.zones = new Map(Object.entries(zones).map(([id, rings]) => [id, polygons(rings, q)]));
+      out.water = new Map(Object.entries(water ?? {}).map(([id, rings]) => [id, polygons(rings, q)]));
+    }
+    // T-2794: a small device's shade worker fetches the file itself each cut (`outlinesUrl`)
+    if (!smallDevice()) text = body;
     placeBy((id) => out.zones.get(id)?.coordinates.flatMap((p) => p.map((r) => Float64Array.from(r.flat()))));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);
@@ -128,7 +175,9 @@ function placeBy(rings: (id: string) => Float64Array[] | undefined) {
 export async function readOutlinesForPlaces(url: string): Promise<void> {
   try {
     const { q, zones } = JSON.parse(await fetchText(url)) as OutlineFile;
-    placeBy((id) => zones[id]?.map((flat) => decodeRing(flat, q)));
+    // T-2794: as typed arrays, which take a quarter of what the parsed file's arrays do
+    const packed = new Map(Object.entries(zones).map(([id, rings]) => [id, rings.map((r) => Int32Array.from(r))]));
+    placeBy((id) => packed.get(id)?.map((flat) => decodeRing(flat, q)));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);
   }

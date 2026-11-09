@@ -21,8 +21,16 @@ export function deviceGB(): number | undefined {
   return dm ?? (mobileDevice() ? 4 : undefined);
 }
 
-/** A phone or tablet, or a device of 4 GB or less: one solving worker and no focus pool */
+/** A phone or tablet, or a device of 4 GB or less: one solving worker and no focus pool, and the map's lean
+ * ways (T-2794: its pixel ratio capped, the outlines kept compact) */
 export function smallDevice(): boolean {
   const gb = deviceGB();
   return mobileDevice() || (gb !== undefined && gb <= 4);
+}
+
+/** T-2794: the most a small device draws the map and overlays at (DECISIONS.md 2026-11-08, notes/T-2794.md) */
+const SMALL_MAX_RATIO = 2;
+/** The pixel ratio the map is capped to here, null where the device's own is used. */
+export function cappedPixelRatio(): number | null {
+  return smallDevice() ? Math.min(SMALL_MAX_RATIO, window.devicePixelRatio || 1) : null;
 }

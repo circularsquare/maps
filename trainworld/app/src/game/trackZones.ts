@@ -26,7 +26,7 @@ export interface TrackZones {
 }
 export const trackZones = signal<TrackZones>({ built: new Set(), planned: new Set() });
 
-let outlines: Map<string, MultiPolygon> | null = null;
+let outlines: ReadonlyMap<string, MultiPolygon> | null = null;
 let waiting: { net: NetworkBuffers; w: WorldView } | null = null;
 /** per edge id: the shape its zones were worked out for (points, length, which counts the same to
  * 0.1 m, end positions), and the zones */

@@ -24,7 +24,9 @@ import { selection, shade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
-import { takeOutlineText } from "./coarseOutlines";
+import { outlinesUrl, takeOutlineText } from "./coarseOutlines";
+import { smallDevice } from "../workers/deviceMemory";
+import { whenGameReady } from "../game/loading";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
 import { hiddenOnGlobe } from "./live";
@@ -200,18 +202,26 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
     busy = true;
     worker!.postMessage({ kind: "cut", gen, ids } satisfies ShadeIn);
   };
+  // T-2794: a small device starts a worker per cut and ends it with its answer (the worker holds every zone's rings)
+  const lean = smallDevice();
+  let loaded = false, waiting = false;
   const start = () => {
-    const text = takeOutlineText();
-    if (!text) return null;
+    const text = lean ? null : takeOutlineText();
+    if (!lean && !text) return null;
     try {
       const w = new Worker(new URL("../workers/shade.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<ShadeOut>) => {
         busy = false;
-        if (queued) { const q = queued; queued = null; send(q); }
-        else if (e.data.gen === gen) apply(e.data.tri);
+        if (lean) { w.terminate(); worker = undefined; }
+        if (queued) {
+          const q = queued;
+          queued = null;
+          if (worker === undefined) worker = start();
+          if (worker) send(q); else onMain();
+        } else if (e.data.gen === gen) apply(e.data.tri);
       };
       w.onerror = (e) => { console.warn("Shade worker failed", e.message); onMain(); };
-      w.postMessage({ kind: "outlines", text } satisfies ShadeIn);
+      w.postMessage((lean ? { kind: "fetch", url: outlinesUrl() } : { kind: "outlines", text: text! }) satisfies ShadeIn);
       return w;
     } catch (error) {
       console.warn("Shade worker unavailable", error);
@@ -222,6 +232,14 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
     cut(ids: string[], outlines: ReadonlyMap<string, MultiPolygon>) {
       gen++;
       last = { ids, outlines };
+      // T-2794: the worker's parse of the outlines waits for the load to end, the loading card still up
+      if (lean && !loaded) {
+        if (!waiting) {
+          waiting = true;
+          void whenGameReady().then(() => { loaded = true; if (last) this.cut(last.ids, last.outlines); });
+        }
+        return;
+      }
       if (worker === undefined) worker = start();
       if (!worker) return onMain();
       if (busy) queued = ids;

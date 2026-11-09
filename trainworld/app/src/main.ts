@@ -80,6 +80,8 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { DemandStopped } from "./ui/DemandStopped";
+import { NoMarketNote } from "./ui/NoMarketNote";
+import { smallDevice } from "./workers/deviceMemory";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { diagramShown, startDiagramView } from "./diagram/view";
@@ -168,6 +170,12 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const demandStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(demandStoppedRoot);
 render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
+// T-2802: a small device has no trips between cities, and says so once per game load
+if (smallDevice()) {
+  const noMarketRoot = document.createElement("div");
+  map.getContainer().appendChild(noMarketRoot);
+  render(h(NoMarketNote, null), noMarketRoot);
+}
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
 render(h(BlueprintBar, null), blueprintBarRoot); // T-353: the Select tool's Disable and Enable at the top centre

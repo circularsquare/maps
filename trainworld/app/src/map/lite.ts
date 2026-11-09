@@ -9,6 +9,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
 import { display } from "../game/ui";
 import { setBasemapLite } from "./basemap";
+import { cappedPixelRatio } from "../workers/deviceMemory";
 import type { Overlay } from "./overlay";
 
 /** Under 25 frames a second while the camera moves: New York at 4x CPU throttling pans at about 34
@@ -34,11 +35,13 @@ export function startLite(map: MlMap, overlay: Overlay) {
     if (gaps.length > SAMPLE) gaps.shift();
     if (gaps.length === SAMPLE && median(gaps) > SLOW_FRAME_MS) liteDetected.value = true;
   };
-  let ratio: number | null = null;
+  // T-2794: a small device's capped ratio is its normal one
+  const normal = cappedPixelRatio();
+  let ratio: number | null = normal;
   effect(() => {
     const on = liteOn.value;
     setBasemapLite(map, on);
-    const want = on ? Math.min(1, window.devicePixelRatio || 1) : null;
+    const want = on ? Math.min(1, window.devicePixelRatio || 1) : normal;
     if (want !== ratio) {
       ratio = want;
       // null goes back to the device's own ratio
