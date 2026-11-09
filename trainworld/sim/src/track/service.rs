@@ -594,7 +594,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
     let make = |s: Vec<f64>, dw: &[f64], street: &[f64], pace: &super::bus::Pace| {
-        let p = if r.spacing > 0 { super::bus::spaced_profile(&s, dw, pace) } else { super::bus::profile(&s, dw, street, pace) };
+        let p = if r.rule() != super::bus::StopRule::Auto { super::bus::spaced_profile(&s, dw, pace) } else { super::bus::profile(&s, dw, street, pace) };
         let top = p.phases.iter().map(|x| x.v).fold(0.0, f64::max);
         Run {
             len,

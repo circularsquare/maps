@@ -160,6 +160,8 @@ export function editFerryRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */
 export function toggleEditStops(l: LineInput) {
+  const bus = world.peek()?.lineStats[l.id]?.bus;
+  if (bus && !bus.hand) return;
   if (tool.peek() === "line" && lineDraft.peek().line === l.num) { live.tools?.exit(); return; }
   live.tools?.exit();
   lineDraft.value = { line: l.num, stops: l.stops.map(Number) };

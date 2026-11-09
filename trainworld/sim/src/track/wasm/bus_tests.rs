@@ -220,6 +220,97 @@ fn stop_spacing_is_one_undoable_edit_kept_through_a_redraw_and_a_save() {
 }
 
 #[test]
+fn stops_by_hand_clear_the_automatic_ones_and_keep_through_undo_a_redraw_and_a_save() {
+    let bits = |a: &TrackApi, b: u32| stops(a, b).iter().flatten().map(|v| v.to_bits()).collect::<Vec<_>>();
+    let kinds = |a: &TrackApi, b: u32| stops(a, b).iter().map(|c| c[4] as u8).collect::<Vec<_>>();
+    let mut a = api();
+    let (_, st) = rail(&mut a, 20, 2000.0);
+    let b = a.new_line_id();
+    let route = [-500.0, 100.0, 1.0, 20_500.0, 100.0, 3.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0, "Hand".into()), 0, "{}", a.issues());
+    let auto_bits = bits(&a, b);
+    let auto_trip = a.stop_times(b, 0, 0);
+    let plain_save = a.save();
+    assert!(!plain_save.windows(4).any(|w| w == b"LBH1"), "nobody placed stops: no block");
+
+    // the ends alone, one long hop, running fast
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert!(a.bus_hand(b));
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_END]);
+    assert!(a.bus_street(b).is_empty());
+    let one_hop = *a.stop_times(b, 0, 0).last().unwrap();
+    assert!(one_hop < 0.5 * auto_trip.last().unwrap(), "{one_hop} against {auto_trip:?}");
+    assert_eq!(a.bus_reach(b).len() / 3, st.len(), "every station stays in reach");
+
+    // near a station is the station; elsewhere it is a stop where the click was, 400 m of route each way
+    assert_eq!(a.set_bus_stop(b, 6120.0, 90.0, true), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 9000.0, 50.0, true), 0, "{}", a.issues());
+    let s = stops(&a, b);
+    assert_eq!(s.iter().map(|c| c[4] as u8).collect::<Vec<_>>(), vec![KIND_END, KIND_STATION, KIND_MIDDLE, KIND_END], "{s:?}");
+    assert_eq!(s[1][5], st[3] as f64);
+    assert!((s[2][1] - 9000.0).abs() < 1e-6 && (s[2][2] - 100.0).abs() < 1e-6, "on the route: {s:?}");
+    assert!((s[2][6] - 9100.0).abs() < 1e-6 && (s[2][7] - 9900.0).abs() < 1e-6, "{s:?}");
+    assert!(s[0][6] == 0.0 && (s[0][7] - 400.0).abs() < 1e-6, "{s:?}");
+    let two = bits(&a, b);
+
+    // on top of a stop or an end, nothing changes and no undo step is made
+    assert_eq!(a.set_bus_stop(b, 9020.0, 100.0, true), 0);
+    assert_eq!(a.set_bus_stop(b, -480.0, 100.0, true), 0);
+    assert_eq!(a.set_bus_stop(b, -500.0, 100.0, false), 0);
+    assert_eq!(bits(&a, b), two);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(stops(&a, b).len(), 3, "the last real edit went");
+    assert_eq!(a.redo(), 0);
+    assert_eq!(bits(&a, b), two);
+
+    // a click on a stop takes it out, and all of a station's points with it
+    let at = s[1].clone();
+    assert_eq!(a.set_bus_stop(b, at[1], at[2], false), 0, "{}", a.issues());
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_MIDDLE, KIND_END]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(bits(&a, b), two);
+
+    // a copy has them; a redraw keeps those it still passes, on the new route
+    let copy = a.new_line_id();
+    assert_eq!(a.copy_line(b, copy, "Copy".into()), 0, "{}", a.issues());
+    assert_eq!(bits(&a, copy).len(), bits(&a, b).len());
+    assert!(a.bus_hand(copy));
+    assert_eq!(a.remove_line(copy), 0);
+    assert_eq!(a.set_bus_route(b, &[-500.0, 150.0, 1.0, 10_500.0, 150.0, 3.0]), 0, "{}", a.issues());
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_STATION, KIND_MIDDLE, KIND_END]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.set_bus_route(b, &[-500.0, 100.0, 1.0, 7000.0, 100.0, 3.0]), 0, "{}", a.issues());
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_STATION, KIND_END], "the stop at 9 km is off the new road");
+    assert_eq!(a.undo(), 0);
+    assert_eq!(bits(&a, b), two);
+
+    // a save keeps them
+    let bytes = a.save();
+    assert!(bytes.windows(4).any(|w| w == b"LBH1"));
+    let mut c = api();
+    assert!(c.load(&bytes));
+    assert!(c.bus_hand(b));
+    assert_eq!(bits(&c, b), two);
+    assert_eq!(c.save(), bytes, "bit for bit");
+
+    // a save from before has none, and loads as it did
+    assert!(c.load(&plain_save));
+    assert!(!c.bus_hand(b));
+    assert_eq!(bits(&c, b), auto_bits);
+    assert_eq!(c.save(), plain_save);
+
+    // leaving goes back to the automatic stops; a spacing is another way out
+    assert_eq!(a.set_bus_spacing(b, 0.0), 0, "{}", a.issues());
+    assert!(!a.bus_hand(b));
+    assert_eq!(bits(&a, b), auto_bits);
+    assert_eq!(a.set_bus_hand(b), 0);
+    assert_eq!(a.set_bus_spacing(b, 5000.0), 0);
+    assert!(!a.bus_hand(b) && a.bus_spacing(b) == 5000.0);
+    // only a by-hand line takes a placed stop
+    assert_eq!(a.set_bus_stop(b, 9000.0, 100.0, true), 1);
+}
+
+#[test]
 fn a_route_laid_along_roads_counts_its_drawn_length_and_keeps_its_corners() {
     let mut a = api();
     let b = a.new_line_id();

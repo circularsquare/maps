@@ -51,6 +51,7 @@ import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, wa
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
+import type { BusStopMarkers } from "./busStops";
 import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
@@ -195,6 +196,7 @@ export class Tools {
   private editingLine: number | null = null;
   /** the toggle markers on every station while a line's stops are edited (T-233); set by main.ts */
   stops: StopMarkers | null = null;
+  busStops: BusStopMarkers | null = null;
   private stopClicks: Promise<void> = Promise.resolve();
   /** T-1260, on touch: the tap whose preview waits to be confirmed (the track's end, a station's
    * spot, what the delete tool would remove) */
@@ -301,7 +303,9 @@ export class Tools {
       }
       if (active === null || !w) return;
       const line = w.save.lines.find((l) => Number(l.id) === active);
-      if (!line) {
+      const bus = line && w.lineStats[line.id]?.bus;
+      // T-2891: a bus line's stops are edited only while it is by hand
+      if (!line || (bus && !bus.hand)) {
         this.exit();
         return;
       }
@@ -483,7 +487,7 @@ export class Tools {
     if (t === "bus") return this.bus.move(e);
     if (t === "ferry") return this.ferry.move(e);
     if (t === "building") return this.building.move(e);
-    if (t === "line") this.stops?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
+    if (t === "line") (this.busStops?.active ? this.busStops : this.stops)?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
@@ -1294,6 +1298,7 @@ export class Tools {
   // ---------------------------------------------------------------- lines
 
   private lineClick(e: MapMouseEvent) {
+    if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y);
     const n = this.overlay.renderer.net;
     if (!n) return;
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station

@@ -3155,7 +3155,15 @@ function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
   const same = had && had.route.length === route.length && had.route.every((v, i) => v === route[i]);
   const routeLL = same ? had.ll : ll(route);
   if (!same) busRouteLL.set(id, { route, ll: routeLL });
-  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), routeLL, streetLL: ll(street) };
+  const hand = a.bus_hand(id), reach: ClockBus["reach"] = [];
+  if (hand) {
+    const rs = a.bus_reach(id);
+    for (let k = 0; k + 2 < rs.length; k += 3) {
+      const [lng, lat] = packLngLat(rs[k + 1], rs[k + 2]);
+      reach.push({ node: rs[k], x: rs[k + 1], y: rs[k + 2], lng, lat });
+    }
+  }
+  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), hand, reach, routeLL, streetLL: ll(street) };
 }
 /** a bus route's longitude, latitude pairs by line, until the route changes */
 const busRouteLL = new Map<number, { route: number[]; ll: number[] }>();
@@ -3192,7 +3200,7 @@ function ferryRow(a: TrackApi, id: number): ClockBus {
     const berth: [number, number] = [routeLL[2 * i], routeLL[2 * i + 1]];
     ports.push({ node, landing: s && s.id === node ? [s.lng, s.lat] : berth, berth });
   });
-  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, routeLL, streetLL: [], ferry: { speeds, ports } };
+  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, reach: [], routeLL, streetLL: [], ferry: { speeds, ports } };
 }
 
 /** T-2194: a ferry line's ports as the network's nodes, new ones added first as blueprint ports; null
@@ -3422,6 +3430,10 @@ function apply(op: EditOp): Applied {
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
     case "busSpacing":
       return { r: a.set_bus_spacing(op.line, op.spacing) };
+    case "busHand":
+      return { r: a.set_bus_hand(op.line) };
+    case "busHandStop":
+      return { r: a.set_bus_stop(op.line, op.x, op.y, op.on) };
     case "addFerryLine": {
       const ports = addPorts(a, op.ports);
       if (!ports) return { r: 1 };

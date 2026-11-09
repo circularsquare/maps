@@ -57,6 +57,7 @@ import { Tools } from "./map/tools";
 import { touchInput, watchInput } from "./map/touch";
 import { TouchBar } from "./ui/TouchBar";
 import { StopMarkers } from "./map/stopMarkers";
+import { BusStopMarkers } from "./map/busStops";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
 import { bpPicked, clearBpPicked, levelPicked, pickedState } from "./game/blueprintPick";
@@ -344,6 +345,7 @@ const blueprintBox = new BlueprintBox(map, overlay, client);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
 tools.stops = new StopMarkers(map, overlay, (station, tier) => tools.toggleStop(station, tier));
+tools.busStops = new BusStopMarkers(map, overlay);
 // T-797: a large icon over every station where a line reverses partway
 if (!SYNTH) new ReversalMarks(map, overlay);
 // The trip explorer (T-195): its clicks, its query and its drawing over the demand views.

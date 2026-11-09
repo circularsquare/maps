@@ -88,6 +88,10 @@ export type EditOp =
   | { op: "busRoute"; line: number; route: number[] }
   /** T-2885: how far apart a bus line's stops are, m; 0 leaves them to place themselves */
   | { op: "busSpacing"; line: number; spacing: number }
+  /** T-2891: the player places a bus line's stops, from none between its ends; `busSpacing` leaves it */
+  | { op: "busHand"; line: number }
+  /** T-2891: a stop on a by-hand bus line put where the route is nearest (x, y), or (`on` false) the stop there taken out */
+  | { op: "busHandStop"; line: number; x: number; y: number; on: boolean }
   /** T-2194: a planned ferry line over its ports in route order (a port's node, or a new one added
    * first) and its route (world metres, x, y, kind, m/s per point, flat: notes/T-2177.md "F2 -> F3");
    * answered with its `line` */
@@ -495,6 +499,10 @@ export interface ClockBus {
   street: number[];
   /** T-2885: how far apart the player set the stops, m; 0: they place themselves */
   spacing: number;
+  /** T-2891: the player places the stops */
+  hand: boolean;
+  /** T-2891: while `hand`, the stations the route can stop at, a stop or not */
+  reach: { node: number; x: number; y: number; lng: number; lat: number }[];
   /** `route` and `street` as longitude, latitude pairs, flat */
   routeLL: number[];
   streetLL: number[];

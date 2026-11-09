@@ -80,7 +80,9 @@ function Notice() {
   const sel = selection.value;
   // T-1260: a finger taps, and has no Enter key
   const touch = touchInput.value;
-  const hint = tl === "line" && draft.stops.length === 1 ? t("toolNotes.lineNext", { touch })
+  const draftLine = tl === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
+  const hint = draftLine && world.value?.lineStats[draftLine.id]?.bus ? t("toolNotes.busHandHint", { touch })
+    : tl === "line" && draft.stops.length === 1 ? t("toolNotes.lineNext", { touch })
     : tl === "trip" && sel?.kind === "trip" && !sel.to ? t("toolNotes.tripEnd", { touch })
     : tl === "line" ? t("toolNotes.lineHint", { touch })
     : tl === "trip" ? t("toolNotes.tripHint", { touch })

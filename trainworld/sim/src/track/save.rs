@@ -32,6 +32,9 @@ use super::params::*;
 /// then index and metres); without it every bus line's stops place themselves.
 /// A trailing `LHO1` block (T-2895) lists the lines whose stop order the player set by hand (count,
 /// then indices); without it none is.
+/// A trailing `LBH1` block (T-2891) gives the bus lines whose stops the player places those stops
+/// (count, then per line its index, its stop count and the stops like PIs, no radius); without it
+/// no line's are.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -44,12 +47,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 17] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1"];
+pub const BLOCKS: [&[u8; 4]; 18] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LBH1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 8;
+pub const LEVEL: u32 = 9;
 
 struct W(Vec<u8>);
 impl W {
@@ -432,6 +435,21 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(hand.len() as u64);
         for i in hand { w.u(i as u64); }
     }
+    let by_hand: Vec<(usize, &[[f64; 2]])> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().and_then(|r| r.hand.as_deref()).map(|h| (i, h))).collect();
+    if !by_hand.is_empty() {
+        w.0.extend_from_slice(b"LBH1");
+        w.u(by_hand.len() as u64);
+        for (i, stops) in by_hand {
+            w.u(i as u64);
+            w.u(stops.len() as u64);
+            let (mut px, mut py) = (0.0, 0.0);
+            for p in stops {
+                w.mm(p[0] - px);
+                w.mm(p[1] - py);
+                (px, py) = (p[0], p[1]);
+            }
+        }
+    }
     w.0
 }
 
@@ -809,6 +827,20 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines && net.line_bus[i].is_none() && net.line_ferry[i].is_none() { net.line_hand[i] = true; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBH1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let mut stops = vec![];
+            let (mut px, mut py) = (0.0, 0.0);
+            for _ in 0..r.u()? {
+                let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+                (px, py) = (x, y);
+                stops.push([x, y]);
+            }
+            if let Some(Some(b)) = net.line_bus.get_mut(i) { b.hand = Some(stops); }
+        }
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -919,7 +951,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (8, 17), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (9, 18), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

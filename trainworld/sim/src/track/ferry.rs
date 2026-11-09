@@ -279,7 +279,7 @@ pub fn plan(net: &Network, ports: &[u32], r: &FerryRoute) -> Plan {
         .zip(ports)
         .map(|(&i, &p)| BusStop { id: p, s: cum[i], x: net.node_x[p as usize], y: net.node_y[p as usize], kind: KIND_STATION, station: Some(p), cover: None })
         .collect();
-    Plan { stops, street: vec![], len: cum.last().copied().unwrap_or(0.0), cum }
+    Plan { stops, street: vec![], len: cum.last().copied().unwrap_or(0.0), cum, reach: vec![] }
 }
 
 #[cfg(test)]

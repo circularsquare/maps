@@ -39,9 +39,18 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let (built, spacing) = (r.built, r.spacing);
+        let (built, spacing, hand) = (r.built, r.spacing, r.hand.take());
         *r = BusRoute::new(pts, kinds, built);
         r.spacing = spacing;
+        // T-2891: stops the new route still passes go onto it; the rest are gone with the old road
+        let net = &self.w.net;
+        let poly = bus::Poly::new(net, &r.points, &r.kinds);
+        let onto = |p: &[f64; 2]| {
+            let (s, d) = poly.project(net, p[0], p[1]);
+            (d <= bus::STATION_REACH_M).then(|| { let (x, y) = poly.at_road(s); [quant(x), quant(y)] })
+        };
+        let hand = hand.map(|h| h.iter().filter_map(onto).collect());
+        r.hand = hand;
         if built { self.run_charged(Op::Line { id, data: Some(d) }) } else { self.run(Op::Line { id, data: Some(d) }) }
     }
     /// Set how far apart a bus line's stops are, m (T-2885); 0 leaves them to place themselves. Free,
@@ -50,15 +59,69 @@ impl TrackApi {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
         let spacing = bus::spacing_from(metres);
-        if r.spacing == spacing {
+        if r.spacing == spacing && r.hand.is_none() {
             return 0;
         }
         r.spacing = spacing;
+        r.hand = None;
         self.run(Op::Line { id, data: Some(d) })
     }
-    /// A bus line's stop spacing, m (0: its stops place themselves, or any other line).
+    /// A bus line's stop spacing, m (0: its stops place themselves or are placed by hand, or any other line).
     pub fn bus_spacing(&self, line: u32) -> f64 {
         self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(0.0, |r| r.spacing as f64)
+    }
+    /// T-2891: the player places this bus line's stops, starting from none between its ends. Free and
+    /// one undo step, as `set_bus_spacing`; that function leaves the state.
+    pub fn set_bus_hand(&mut self, id: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
+        if r.hand.is_some() {
+            return 0;
+        }
+        r.spacing = 0;
+        r.hand = Some(vec![]);
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// Whether the player places a bus line's stops (T-2891).
+    pub fn bus_hand(&self, line: u32) -> bool {
+        self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.hand.is_some())
+    }
+    /// T-2891: put a stop on a by-hand bus line where the route is nearest (x, y) (`on`), or take out
+    /// the stop nearest (x, y). The ends stay, and a click that changes no stop is no edit.
+    pub fn set_bus_stop(&mut self, id: u32, x: f64, y: f64, on: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(r) = d.bus.as_mut().filter(|r| r.hand.is_some()) else { return self.refuse(Issue::LinePath { line: id }) };
+        let net = &self.w.net;
+        let plan = bus::plan_route(net, id, r, r.built);
+        let poly = bus::Poly::new(net, &r.points, &r.kinds);
+        let mut hand = r.hand.clone().unwrap_or_default();
+        if on {
+            if hand.len() >= bus::HAND_MAX_STOPS {
+                return 0;
+            }
+            let (px, py) = poly.at_road(poly.project(net, x, y).0);
+            hand.push([quant(px), quant(py)]);
+        } else {
+            let n = plan.stops.len();
+            let far = |k: usize| (plan.stops[k].x - x).hypot(plan.stops[k].y - y);
+            let Some(k) = (0..n).min_by(|&a, &b| far(a).total_cmp(&far(b))) else { return 0 };
+            if k == 0 || k + 1 == n {
+                return 0;
+            }
+            // every point that made this stop goes, or a stop two points landed on would stay
+            let nearest = |s: f64| (0..n).min_by(|&a, &b| (plan.stops[a].s - s).abs().total_cmp(&(plan.stops[b].s - s).abs()));
+            hand.retain(|p| nearest(poly.project(net, p[0], p[1]).0) != Some(k));
+        }
+        r.hand = Some(hand);
+        if bus::plan_route(net, id, r, r.built).stops.len() == plan.stops.len() {
+            return 0;
+        }
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-2891: the stations a bus line's route can stop at, a stop or not, 3 numbers each: node, x, y.
+    pub fn bus_reach(&self, line: u32) -> Vec<f64> {
+        let Some(plan) = self.w.svc.lines.get(line as usize).and_then(|l| l.bus.as_ref()) else { return vec![] };
+        plan.reach.iter().flat_map(|&n| [n as f64, self.w.net.node_x[n as usize], self.w.net.node_y[n as usize]]).collect()
     }
     /// A bus line's road length, m (0 for any other line).
     pub fn bus_road_m(&self, line: u32) -> f64 {
@@ -123,8 +186,8 @@ impl TrackApi {
         let ok = bus::route_ok(net, &pts, &kinds);
         let poly = bus::Poly::new(net, &pts, &kinds);
         let road = if pts.len() >= 2 { poly.road_len() } else { 0.0 };
-        let spacing = net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(0, |r| r.spacing);
-        let plan = bus::plan_spaced(net, line, &pts, &kinds, false, spacing);
+        let rule = net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(bus::StopRule::Auto, |r| r.rule());
+        let plan = bus::plan_by(net, line, &pts, &kinds, false, rule);
         let mut out = vec![road, road / 1000.0 * BUS_ROUTE_COST_PER_KM, (ok && plan.stops.len() >= 2) as u8 as f64, plan.stops.len() as f64];
         for s in &plan.stops {
             out.extend([s.x, s.y, s.kind as f64]);

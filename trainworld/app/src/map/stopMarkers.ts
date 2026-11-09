@@ -45,11 +45,11 @@ export type StopTier =
 const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
 /** Reachable stations on the route are this much of a stop's marker (T-239), the ones behind them
  * this much (style.css repeats both). */
-const NEAR_SCALE = 0.8;
+export const NEAR_SCALE = 0.8;
 const FAR_SCALE = 0.65;
 const REASON_MS = 4000;
 
-function sizeAt(zoom: number): number {
+export function sizeAt(zoom: number): number {
   if (zoom <= SIZE[0][0]) return SIZE[0][1];
   for (let i = 1; i < SIZE.length; i++) {
     if (zoom <= SIZE[i][0]) {
@@ -191,7 +191,7 @@ export class StopMarkers {
       this.seenWorld = w;
       this.seenLine = id;
       this.line = w.save.lines.find((l) => l.num === id) ?? null;
-      if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's stops are worked out, not picked (T-1464)
+      if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's are map/busStops.ts's (T-2891)
       if (!this.line) return;
       this.colour = this.line.colour;
       this.box.style.setProperty("--c", this.colour);

@@ -1527,6 +1527,13 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   stops at most 800 m apart leave no gap). The bus stands 20 s at each plain stop inside the hop's time
   (`bus::spaced_profile`). The Save keeps it (`LBP1`); a redraw keeps it. Free, on a constructed line
   too: a stop costs nothing by itself.
+- **Stops by hand** (T-2891; `BusRoute::hand`, points on the route; the spacing is then 0). The route's ends
+  stay stops; between them the bus stops only where the player placed a stop (at most 1,000), taken along
+  the road. A placed stop within 200 m along the road of a station the route reaches is that station's
+  (a constructed route: constructed stations only); no two come closer than 50 m. It stops at nothing else, crossings and
+  other stations included. In all other ways it is a line with its own spacing: no street stops, 400 m of
+  `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
+  it. The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
   down). The moving speed is 90% of the car's (`BUS_SHARE`), never under 30 km/h (`BUS_LANE_KMH`, its own
@@ -1564,7 +1571,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   line of each mode starts with). A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
-  (T-2885) lists the lines with a stop spacing of their own; without it, stops place themselves.
+  (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops
+  placed by hand and the stops; without them, stops place themselves.
 
 ### 6.8 Ferry routes
 

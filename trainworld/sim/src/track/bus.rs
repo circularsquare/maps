@@ -50,6 +50,10 @@ pub const SPACING_MIN_M: u32 = 400;
 pub const SPACING_MAX_M: u32 = 100_000;
 /// The most stops `plan` gives a line with its own spacing: stop ids hold 1,024 a line.
 const SPACED_MAX_STOPS: f64 = 1000.0;
+/// The most stops a player may place on a line (T-2891): stop ids hold 1,024 a line.
+pub const HAND_MAX_STOPS: usize = 1000;
+/// No two stops placed by hand come closer than this along the road, m.
+const HAND_GAP_M: f64 = 50.0;
 /// A bus's length, m.
 pub const BUS_LEN_M: f64 = 12.0;
 /// The shortest route, ground m.
@@ -67,22 +71,41 @@ pub fn is_stop_id(id: u32) -> bool {
 }
 
 /// A bus line's route: plane points in the network's frame, each with its `K_*` bits (`kinds`, as
-/// long as `points`), whether it is constructed (paid for; it runs), and how far apart the player
-/// set its stops, m (`spacing`, 0: they place themselves, T-2885).
+/// long as `points`), whether it is constructed (paid for; it runs), how far apart the player set
+/// its stops, m (`spacing`, 0: they place themselves, T-2885), and the stops the player placed
+/// between its ends (`hand`, T-2891: points on the route, in the order placed; `spacing` is then 0).
 #[derive(Clone, Debug, PartialEq)]
 pub struct BusRoute {
     pub points: Vec<[f64; 2]>,
     pub kinds: Vec<u8>,
     pub built: bool,
     pub spacing: u32,
+    pub hand: Option<Vec<[f64; 2]>>,
 }
 
 impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0 }
+        BusRoute { points, kinds, built, spacing: 0, hand: None }
     }
+    pub fn rule(&self) -> StopRule<'_> {
+        match &self.hand {
+            Some(h) => StopRule::Hand(h),
+            None if self.spacing > 0 => StopRule::Spaced(self.spacing),
+            None => StopRule::Auto,
+        }
+    }
+}
+
+/// How a line's stops are placed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum StopRule<'a> {
+    Auto,
+    /// About this many metres apart (T-2885).
+    Spaced(u32),
+    /// At these points between the route's ends (T-2891).
+    Hand(&'a [[f64; 2]]),
 }
 
 /// `m` as a line's stop spacing: 0 stays 0 (automatic), anything else inside the limits.
@@ -120,6 +143,8 @@ pub struct Plan {
     pub len: f64,
     /// Road metres from the start at each of the route's points.
     pub cum: Vec<f64>,
+    /// The stations the route can stop at, in road order, a stop or not.
+    pub reach: Vec<u32>,
 }
 
 /// A route's points with their ground and road metres from the start.
@@ -317,20 +342,50 @@ fn spaced_stops(fixed: &[(f64, u8, Option<u32>)], sp: f64) -> Vec<(f64, u8, Opti
     out
 }
 
+/// The route's ends (`first`, `last`) and the stops at `points` between them (T-2891), in road order:
+/// a point within `STATION_REACH_M` along the road of a station the route reaches (`kept`) is that
+/// station's stop, and a stop on top of an end or the stop before it is dropped.
+fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]]) -> Vec<(f64, u8, Option<u32>)> {
+    let mut inner: Vec<(f64, u8, Option<u32>)> = points
+        .iter()
+        .map(|p| {
+            let s = poly.project(net, p[0], p[1]).0;
+            let station = kept.iter().filter(|k| (k.0 - s).abs() <= STATION_REACH_M).min_by(|a, b| (a.0 - s).abs().total_cmp(&(b.0 - s).abs()));
+            station.map_or((s, KIND_MIDDLE, None), |k| (k.0, KIND_STATION, Some(k.1)))
+        })
+        .collect();
+    inner.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut out = vec![first];
+    for c in inner {
+        let prev = out[out.len() - 1];
+        let same_station = c.2.is_some() && (c.2 == first.2 || c.2 == last.2 || c.2 == prev.2);
+        if !same_station && c.0 - prev.0 >= HAND_GAP_M && last.0 - c.0 >= HAND_GAP_M {
+            out.push(c);
+        }
+    }
+    out.push(last);
+    out
+}
+
 /// Line `l`'s stops over route `pts`, placed by themselves. `built_only`: a constructed route stops
 /// only at constructed stations and crosses only constructed routes; a planned one previews them all.
 pub fn plan(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only: bool) -> Plan {
-    plan_spaced(net, l, pts, kinds, built_only, 0)
+    plan_by(net, l, pts, kinds, built_only, StopRule::Auto)
 }
 
-/// A route's stops by its own spacing (`BusRoute::spacing`).
+/// A route's stops by its own rule (`BusRoute::rule`).
 pub fn plan_route(net: &Network, l: u32, r: &BusRoute, built_only: bool) -> Plan {
-    plan_spaced(net, l, &r.points, &r.kinds, built_only, r.spacing)
+    plan_by(net, l, &r.points, &r.kinds, built_only, r.rule())
 }
 
-/// As `plan`, the stops `spacing` metres or so apart unless that is 0 (T-2885): then every stop is one
-/// demand sees, there are no street stops, and each stop serves `SPACED_COVER_M` of the route each way.
+/// As `plan`, the stops `spacing` metres or so apart unless that is 0.
 pub fn plan_spaced(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only: bool, spacing: u32) -> Plan {
+    plan_by(net, l, pts, kinds, built_only, if spacing > 0 { StopRule::Spaced(spacing) } else { StopRule::Auto })
+}
+
+/// The stops by `rule`. Under any rule but `Auto` (T-2885) every stop is one demand sees, there are no
+/// street stops, and each stop serves `SPACED_COVER_M` of the route each way.
+pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only: bool, rule: StopRule) -> Plan {
     if !route_ok(net, pts, kinds) {
         return Plan::default();
     }
@@ -380,7 +435,7 @@ pub fn plan_spaced(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_
     let near_fixed = |s: f64, fixed: &[(f64, u8, Option<u32>)]| fixed.iter().any(|f| (f.0 - s).abs() < STATION_REACH_M);
     let mut cross: Vec<f64> = vec![];
     for o in 0..net.line_count() as u32 {
-        if o == l || !net.line_ok(o) {
+        if o == l || !net.line_ok(o) || matches!(rule, StopRule::Hand(_)) {
             continue;
         }
         let Some(r) = net.line_bus[o as usize].as_ref() else { continue };
@@ -399,9 +454,11 @@ pub fn plan_spaced(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_
     // the street grid and the middles, gap by gap
     let mut street = vec![];
     let mut middles: Vec<f64> = vec![];
-    let spaced = spacing > 0;
-    if spaced {
-        fixed = spaced_stops(&fixed, (spacing as f64).max(len / SPACED_MAX_STOPS));
+    let spaced = rule != StopRule::Auto;
+    match rule {
+        StopRule::Spaced(sp) => fixed = spaced_stops(&fixed, (sp as f64).max(len / SPACED_MAX_STOPS)),
+        StopRule::Hand(points) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points),
+        StopRule::Auto => {}
     }
     let auto_gaps: &[(f64, u8, Option<u32>)] = if spaced { &[] } else { &fixed };
     for w in auto_gaps.windows(2) {
@@ -454,7 +511,7 @@ pub fn plan_spaced(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_
         let b = if j + 1 == open.len() { len } else { 0.5 * (g + stops[open[j + 1]].s) };
         stops[k].cover = Some(if spaced { [a.max(g - SPACED_COVER_M), b.min(g + SPACED_COVER_M)] } else { [a, b] });
     }
-    Plan { stops, street, len, cum: poly.road.clone() }
+    Plan { stops, street, len, cum: poly.road.clone(), reach: kept.iter().map(|k| k.1).collect() }
 }
 
 /// What a route's road is like along it: per `step` road metres the car's local street speed there,

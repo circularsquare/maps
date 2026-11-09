@@ -380,9 +380,15 @@ the tag by the pointer gives the road length and the price.
   mouse.
 - **Stop spacing** (T-2885; `StopSpacing` in `ui/inspector/BusInspector.tsx`): a stepper at the top of the bus
   panel's Stops list, on any bus line, planned or constructed, not on a ferry. Auto is the first step (the
-  stops place themselves, track-and-service.md 6.7), then 400 m to 100 km; a click on the value takes a
-  typed distance in the shown unit (0 is Auto). Each step is one undoable edit, the map's stops and the
-  list following at once, and the route tool's preview uses the line's spacing.
+  stops place themselves, track-and-service.md 6.7), By hand the next (below), then 400 m to 100 km; a click
+  on the value takes a typed distance in the shown unit (0 is Auto). Each step is one undoable edit, the
+  map's stops and the list following at once, and the route tool's preview uses the line's stops.
+- **By hand** (T-2891; `map/busStops.ts`): choosing it clears the stops down to the route's two ends and opens
+  stop editing, the train mode's look and its keys (S or the panel's Edit stops button, shown while the line is
+  by hand; Enter or Stop editing ends it). A stop is the train editor's disc, a station the route can stop at
+  (`STATION_REACH_M`) its hollow marker, and a hollow marker follows the pointer along the route. A click on
+  the route or a station adds a stop, a click on a stop takes it out, each one edit and one undo; the two
+  ends stay. Any other step of the stepper leaves By hand, and the placed stops go with it.
 
 ## Drawing a ferry line
 
