@@ -9,7 +9,7 @@ import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
-import { count, distance, money } from "../../game/format";
+import { count, distance, metresFromShown, metresToShown, money, shortDistance } from "../../game/format";
 import { t } from "../../i18n";
 import { useToday } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../../game/types";
@@ -19,7 +19,7 @@ import { editBusRoute, editFerryRoute } from "../../game/lineActions";
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
 import { edit, linesById, say, stationNames, world } from "../../game/world";
-import { Icon } from "../widgets";
+import { Icon, Row, Stepper } from "../widgets";
 import { demandView, complexTransfers } from "../../game/demand";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
@@ -188,6 +188,34 @@ function FerryPorts({ l, st, bus, colour, editable, time }: { l: LineInput; st: 
   );
 }
 
+/** T-2885: the steps of a bus line's stop spacing, m; 0 is automatic, below them all. A typed distance
+ * may fall between. */
+const SPACING_STEPS = [0, 400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000, 15_000, 20_000, 30_000, 50_000, 100_000];
+
+function StopSpacing({ l, bus }: { l: LineInput; bus: ClockBus }) {
+  // what was asked for, shown at once and counted from until the edit lands
+  const [asked, setAsked] = useState<number | null>(null);
+  const spacing = asked ?? bus.spacing;
+  const set = (m: number) => {
+    setAsked(m);
+    return edit({ op: "busSpacing", line: l.num, spacing: m }).then((a) => { setAsked(null); return a.ok; });
+  };
+  const step = (d: number) => {
+    const at = SPACING_STEPS.reduce((best, s, i) => (s <= spacing ? i : best), 0);
+    const to = Math.max(0, Math.min(SPACING_STEPS.length - 1, d > 0 || SPACING_STEPS[at] === spacing ? at + d : at + d + 1));
+    return SPACING_STEPS[to] === spacing ? false : set(SPACING_STEPS[to]);
+  };
+  const typed = (v: number) => void set(v > 0 ? metresFromShown(v) : 0);
+  return (
+    <ul class="rows">
+      <Row label={<span data-tip={t("busInspector.spacingTip", { auto: spacing === 0, distance: shortDistance(2000) })}>{t("busInspector.spacing")}</span>}>
+        <Stepper wide label={t("busInspector.spacing")} value={spacing ? shortDistance(spacing) : t("busInspector.spacingAuto")} onStep={step}
+          type={{ text: spacing ? String(+metresToShown(spacing).toFixed(2)) : "0", set: typed }} />
+      </Row>
+    </ul>
+  );
+}
+
 // ---------------------------------------------------------------- the past 24 hours
 
 /** The riders a day changing between this bus and a rail line, from demand's transfer pairs at the
@@ -316,6 +344,7 @@ export function BusInspector({ id }: { id: string }) {
       </ul>
 
       <div class="h divided">{ferry ? t("busInspector.ports") : t("busInspector.stops")}</div>
+      {!ferry && <StopSpacing l={l} bus={bus} />}
       {ferry ? <FerryPorts l={l} st={st} bus={bus} colour={shown} editable={!drawing} time={stopTime} /> : <ul class="bus-stops" style={{ "--c": shown }}>
         {rows.map((r) => r.kind === "street" ? (
           <li class="street" data-tip={between(r)}>

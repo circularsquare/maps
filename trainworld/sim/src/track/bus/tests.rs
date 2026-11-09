@@ -32,6 +32,57 @@ fn plan_on_an_empty_network() {
 }
 
 #[test]
+fn a_spaced_plan_has_no_street_stops_and_stops_serve_only_near_them() {
+    let net = Network::new(-73.985, 40.758, true);
+    let pts = [[0.0, 0.0], [10_000.0, 0.0]];
+    let kinds = [K_CORNER, K_ROAD | K_CORNER];
+    let p = plan_spaced(&net, 2, &pts, &kinds, false, 2000);
+    assert_eq!(p.stops.iter().map(|s| s.s.round() as i64).collect::<Vec<_>>(), vec![0, 2000, 4000, 6000, 8000, 10_000]);
+    assert!(p.street.is_empty());
+    assert_eq!(p.stops[1].kind, KIND_MIDDLE);
+    assert_eq!(p.stops[0].cover, Some([0.0, 400.0]));
+    assert_eq!(p.stops[1].cover, Some([1600.0, 2400.0]));
+    assert_eq!(p.stops[5].cover, Some([9600.0, 10_000.0]));
+    // the last hop is never under half the spacing
+    let p = plan_spaced(&net, 2, &pts, &kinds, false, 4500);
+    assert_eq!(p.stops.iter().map(|s| s.s.round() as i64).collect::<Vec<_>>(), vec![0, 4500, 10_000]);
+    // 0 is the automatic plan exactly
+    assert_eq!(plan_spaced(&net, 2, &pts, &kinds, false, 0), plan(&net, 2, &pts, &kinds, false));
+}
+
+#[test]
+fn spaced_stops_prefer_stations_near_their_place_and_pass_the_rest() {
+    let st = |s: f64, n: u32| (s, KIND_STATION, Some(n));
+    let ends = |mid: Vec<(f64, u8, Option<u32>)>| {
+        let mut v = vec![(0.0, KIND_END, None)];
+        v.extend(mid);
+        v.push((10_000.0, KIND_END, None));
+        v
+    };
+    // every 5 km: the station at 4,000 is nearer 5,000 than the one at 3,000, and a crossing nearer still loses to it
+    let got = spaced_stops(&ends(vec![st(3000.0, 1), st(4000.0, 2), (4900.0, KIND_CROSSING, None)]), 5000.0);
+    assert_eq!(got.iter().map(|c| (c.0.round() as i64, c.2)).collect::<Vec<_>>(), vec![(0, None), (4000, Some(2)), (10_000, None)]);
+    // no station in the window: a crossing there, else the place itself
+    let got = spaced_stops(&ends(vec![(4000.0, KIND_CROSSING, None)]), 5000.0);
+    assert_eq!(got[1], (4000.0, KIND_CROSSING, None));
+    let got = spaced_stops(&ends(vec![st(1000.0, 1)]), 5000.0);
+    assert_eq!(got[1], (5000.0, KIND_MIDDLE, None));
+}
+
+#[test]
+fn a_spaced_trip_drops_the_stands_it_no_longer_makes() {
+    // 5 m/s flat: 2 km is 400 s, of which 4 stands of 20 s are gone; the stop between stands 20 s inside its hop
+    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 0.0, 0.0], &Pace::default());
+    assert!((p.arr[1] - 300.0).abs() < 1e-9 && (p.dep[1] - 320.0).abs() < 1e-9 && (p.duration - 640.0).abs() < 1e-9, "{p:?}");
+    // a station keeps its own dwell and no extra stand
+    let p = spaced_profile(&[0.0, 2000.0, 4000.0], &[0.0, 30.0, 0.0], &Pace::default());
+    assert!((p.arr[1] - 320.0).abs() < 1e-9 && (p.dep[1] - 350.0).abs() < 1e-9, "{p:?}");
+    // a 400 m hop is a street stop's own: nothing to drop
+    let p = spaced_profile(&[0.0, 400.0], &[0.0, 0.0], &Pace::default());
+    assert!((p.duration - 80.0).abs() < 1e-9, "{p:?}");
+}
+
+#[test]
 fn a_road_stretch_counts_at_its_drawn_length() {
     let net = Network::new(-73.985, 40.758, true);
     let pts = [[0.0, 0.0], [1000.0, 0.0], [1000.0, 1000.0]];

@@ -378,6 +378,11 @@ the tag by the pointer gives the road length and the price.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
   nothing waiting finishes, on the other end makes it active. Dragging and deleting points take a
   mouse.
+- **Stop spacing** (T-2885; `StopSpacing` in `ui/inspector/BusInspector.tsx`): a stepper at the top of the bus
+  panel's Stops list, on any bus line, planned or constructed, not on a ferry. Auto is the first step (the
+  stops place themselves, track-and-service.md 6.7), then 400 m to 100 km; a click on the value takes a
+  typed distance in the shown unit (0 is Auto). Each step is one undoable edit, the map's stops and the
+  list following at once, and the route tool's preview uses the line's spacing.
 
 ## Drawing a ferry line
 

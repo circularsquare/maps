@@ -28,6 +28,8 @@ use super::params::*;
 /// A trailing `BLD1` block (T-2217) carries the station buildings; without it there are none.
 /// A trailing `LBD1` block (T-2871) carries the day each constructed station, edge and line was
 /// first built; without it, or where it is damaged, they read as built before recording began.
+/// A trailing `LBP1` block (T-2885) gives the bus lines with a stop spacing of their own theirs (count,
+/// then index and metres); without it every bus line's stops place themselves.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -40,12 +42,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 15] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1"];
+pub const BLOCKS: [&[u8; 4]; 16] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 6;
+pub const LEVEL: u32 = 7;
 
 struct W(Vec<u8>);
 impl W {
@@ -413,6 +415,15 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    let spaced: Vec<(usize, u32)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().filter(|r| r.spacing > 0).map(|r| (i, r.spacing))).collect();
+    if !spaced.is_empty() {
+        w.0.extend_from_slice(b"LBP1");
+        w.u(spaced.len() as u64);
+        for (i, m) in spaced {
+            w.u(i as u64);
+            w.u(m as u64);
+        }
+    }
     w.0
 }
 
@@ -776,6 +787,13 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             None => r.1 = bytes.len(),
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBP1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, m) = (r.u()? as usize, r.u()?);
+            if let Some(Some(b)) = net.line_bus.get_mut(i) { b.spacing = super::bus::spacing_from(m as f64); }
+        }
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
 }
@@ -886,7 +904,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (6, 15), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (7, 16), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

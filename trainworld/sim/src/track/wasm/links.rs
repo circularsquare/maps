@@ -186,7 +186,7 @@ impl TrackApi {
         }
         if net.is_bus(line) {
             let r = net.line_bus[line as usize].as_ref().unwrap();
-            let stops = crate::track::bus::plan(net, line, &r.points, &r.kinds, false).stops.iter().filter_map(|s| s.station).collect();
+            let stops = crate::track::bus::plan_route(net, line, r, false).stops.iter().filter_map(|s| s.station).collect();
             return Some((vec![], stops, vec![line]));
         }
         // a ferry line: its route (free) and its ports (T-2193)

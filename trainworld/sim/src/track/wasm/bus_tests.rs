@@ -170,6 +170,54 @@ fn a_bus_route_needs_length_and_lines_without_buses_save_as_before() {
 }
 
 #[test]
+fn stop_spacing_is_one_undoable_edit_kept_through_a_redraw_and_a_save() {
+    let bits = |a: &TrackApi, b: u32| stops(a, b).iter().flatten().map(|v| v.to_bits()).collect::<Vec<_>>();
+    let mut a = api();
+    let (_, st) = rail(&mut a, 20, 2000.0);
+    let b = a.new_line_id();
+    // along the rail line, 100 m from its 11 stations
+    let route = [-500.0, 100.0, 1.0, 20_500.0, 100.0, 3.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0, "Far".into()), 0, "{}", a.issues());
+    let auto = stops(&a, b);
+    let auto_bits = bits(&a, b);
+    assert_eq!(auto.iter().filter(|c| c[4] == KIND_STATION as f64).count(), st.len());
+    assert!(!a.save().windows(4).any(|w| w == b"LBP1"), "no spacing set: no block");
+    assert_eq!(a.bus_spacing(b), 0.0);
+    let auto_trip = a.stop_times(b, 0, 0);
+
+    assert_eq!(a.set_bus_spacing(b, 5000.0), 0, "{}", a.issues());
+    assert_eq!(a.bus_spacing(b), 5000.0);
+    let far = stops(&a, b);
+    let far_bits = bits(&a, b);
+    assert!(far.len() < auto.len() && far.iter().filter(|c| c[4] == KIND_STATION as f64).count() >= 3, "{far:?}");
+    assert!(a.bus_street(b).is_empty());
+    assert!(far.windows(2).all(|w| w[1][3] - w[0][3] >= 2500.0 - 1e-6), "{far:?}");
+    assert!(a.stop_times(b, 0, 0).last() < auto_trip.last(), "fewer stops, a shorter trip");
+
+    assert_eq!(a.undo(), 0);
+    assert_eq!((a.bus_spacing(b), bits(&a, b)), (0.0, auto_bits.clone()));
+    assert_eq!(a.redo(), 0);
+    assert_eq!((a.bus_spacing(b), bits(&a, b)), (5000.0, far_bits.clone()));
+
+    // a redraw keeps it, and so does a save
+    assert_eq!(a.set_bus_route(b, &route), 0, "{}", a.issues());
+    assert_eq!(a.bus_spacing(b), 5000.0);
+    let bytes = a.save();
+    assert!(bytes.windows(4).any(|w| w == b"LBP1"));
+    let mut c = api();
+    assert!(c.load(&bytes));
+    assert_eq!((c.bus_spacing(b), bits(&c, b)), (5000.0, far_bits));
+
+    // back to automatic
+    assert_eq!(a.set_bus_spacing(b, 0.0), 0, "{}", a.issues());
+    assert_eq!(bits(&a, b), auto_bits);
+    assert!(!a.save().windows(4).any(|w| w == b"LBP1"));
+    // limits
+    assert_eq!(a.set_bus_spacing(b, 1.0), 0);
+    assert_eq!(a.bus_spacing(b), bus::SPACING_MIN_M as f64);
+}
+
+#[test]
 fn a_route_laid_along_roads_counts_its_drawn_length_and_keeps_its_corners() {
     let mut a = api();
     let b = a.new_line_id();

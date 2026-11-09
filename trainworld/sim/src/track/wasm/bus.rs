@@ -39,9 +39,26 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let built = r.built;
+        let (built, spacing) = (r.built, r.spacing);
         *r = BusRoute::new(pts, kinds, built);
+        r.spacing = spacing;
         if built { self.run_charged(Op::Line { id, data: Some(d) }) } else { self.run(Op::Line { id, data: Some(d) }) }
+    }
+    /// Set how far apart a bus line's stops are, m (T-2885); 0 leaves them to place themselves. Free,
+    /// on a constructed line too, and one undo step like any edit of a line.
+    pub fn set_bus_spacing(&mut self, id: u32, metres: f64) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
+        let spacing = bus::spacing_from(metres);
+        if r.spacing == spacing {
+            return 0;
+        }
+        r.spacing = spacing;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// A bus line's stop spacing, m (0: its stops place themselves, or any other line).
+    pub fn bus_spacing(&self, line: u32) -> f64 {
+        self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(0.0, |r| r.spacing as f64)
     }
     /// A bus line's road length, m (0 for any other line).
     pub fn bus_road_m(&self, line: u32) -> f64 {
@@ -106,7 +123,8 @@ impl TrackApi {
         let ok = bus::route_ok(net, &pts, &kinds);
         let poly = bus::Poly::new(net, &pts, &kinds);
         let road = if pts.len() >= 2 { poly.road_len() } else { 0.0 };
-        let plan = bus::plan(net, line, &pts, &kinds, false);
+        let spacing = net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(0, |r| r.spacing);
+        let plan = bus::plan_spaced(net, line, &pts, &kinds, false, spacing);
         let mut out = vec![road, road / 1000.0 * BUS_ROUTE_COST_PER_KM, (ok && plan.stops.len() >= 2) as u8 as f64, plan.stops.len() as f64];
         for s in &plan.stops {
             out.extend([s.x, s.y, s.kind as f64]);

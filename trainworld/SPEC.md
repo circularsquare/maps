@@ -282,7 +282,7 @@ top of the Cities tab opens them. A sandbox earns none [T-2124; docs/ui-panels.m
 
 Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between
 clicks (a point the roads do not reach is refused, T-2451), stops place themselves at the train
-stations it passes and about every 2 km, buses run at 70% of the car's street speed where they are, at
+stations it passes and about every 2 km (or the player sets a line's stops about a distance apart, T-2885), buses run at 70% of the car's street speed where they are, at
 most 18 km/h (11.5 in a dense centre), and homes within 300 m of the route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
 bus and US$9 a bus-km to run. Trips by bus count as rail.
 

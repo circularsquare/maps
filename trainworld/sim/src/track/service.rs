@@ -579,7 +579,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
 /// stand at each street stop (T-1798), with no capacity holds.
 fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let mut ls = LineSvc::default();
-    let plan = super::bus::plan(net, l, &r.points, &r.kinds, r.built);
+    let plan = super::bus::plan_route(net, l, r, r.built);
     if plan.stops.len() < 2 {
         return ls;
     }
@@ -594,7 +594,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let top = pace.top();
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
     let make = |s: Vec<f64>, dw: &[f64], street: &[f64], pace: &super::bus::Pace| {
-        let p = super::bus::profile(&s, dw, street, pace);
+        let p = if r.spacing > 0 { super::bus::spaced_profile(&s, dw, pace) } else { super::bus::profile(&s, dw, street, pace) };
         Run {
             len,
             turn: vec![false; n],

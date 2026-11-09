@@ -1512,6 +1512,16 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
   route stops at constructed stations and crosses constructed routes; a planned one previews all.
   Any edit to a station or a line places every bus line's stops again.
+- **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).
+  Set from 400 m to 100 km in the bus panel. The stops then run from end to end about that far apart
+  along the road: each lands on the station nearest its place within half the spacing, else a crossing,
+  else the place itself, and no two come closer than half the spacing, so a line passes the stations
+  it does not stop at. There are no street stops: every stop is one demand sees. Its stretch of route
+  (`cover`) reaches at most 400 m each way, so homes between far apart stops have no bus (kept
+  stops at most 800 m apart leave no gap). A hop drops the 20 s stand of each 400 m it no longer stops
+  (`bus::spaced_profile`, at most 40% of the hop), so a 2 km spacing runs about a quarter faster than
+  automatic stops, and the bus stands 20 s at each plain stop inside the hop's time. The Save keeps it
+  (`LBP1`); a redraw keeps it. Free, on a constructed line too: a stop costs nothing by itself.
 - **Run**: door to door (street stops and traffic included) at 70% of the car's speed on local streets
   where the bus is, at most 18 km/h (`streets.rs`, T-1577): the car's speed is demand's, 44 km/h in
   open country falling to 16.5 where homes and jobs are dense (half way at 5,000 a km² in the 2 km zone,
@@ -1539,7 +1549,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 10 and 20 minutes by level. A copy is planned.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
-  is constructed; an `LBS1` block (T-1464) loads with every stretch straight.
+  is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
+  (T-2885) lists the lines with a stop spacing of their own; without it, stops place themselves.
 
 ### 6.8 Ferry routes
 
