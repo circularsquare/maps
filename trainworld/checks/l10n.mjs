@@ -216,7 +216,7 @@ async function lintOrDiff() {
     if (!(k in m)) continue;
     const text = m[k], w = words(lang, text), note = context[k] ?? "";
     const warn = (msg) => { count++; console.log(`${k}: ${msg}\n    ${text}`); };
-    if (lang !== "es" && lang !== "pt" && lang !== "de") {
+    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "tr") {
       if (new RegExp(`[${CJK}][,.!?:;]|[,!?:;][${CJK}]`).test(w)) warn("half-width punctuation beside CJK; use 、。，！？：；");
       if (new RegExp(`\\([^)]*[${CJK}]`).test(w)) warn("half-width parentheses around CJK; use （）");
       if (new RegExp(`[${CJK}] +[A-Za-z0-9\\u0001]|[A-Za-z0-9\\u0001] +[${CJK}]`).test(w)) warn("a space between CJK and Latin, a digit or a placeholder; the page adds that gap itself (text-autospace)");

@@ -121,6 +121,9 @@ for (const k of Object.keys(context)) if (!(k in en)) fault(`context.json ${k}: 
 const UPDATE_LINE_MAX = 80; // the start menu's update row; English only, translations may run longer (Anita, 2026-11-09)
 for (const [k, v] of Object.entries(en)) if (/^updates\.v\d+Line$/.test(k) && v.length > UPDATE_LINE_MAX) fault(`${k}: ${v.length} characters, the update row's limit is ${UPDATE_LINE_MAX}`);
 
+// a Turkish capital İ lower-cases to i + U+0307; drop the dot so "İstasyon" meets the glossary's "istasyon"
+const fold = (s) => s.toLowerCase().replace(/̇/g, "");
+
 // --- glossary --------------------------------------------------------------------------------
 
 const terms = glossary.terms ?? [];
@@ -176,7 +179,7 @@ for (const lang of others) {
     for (const name of ph.keys()) if (!src.ph.has(name)) fault(`${lang} ${k}: {${name}} is not in the English`);
     for (const term of enTerms.get(k) ?? []) {
       const want = term[lang] ?? [];
-      if (want.length && !want.some((w) => v.toLowerCase().includes(w.toLowerCase()))) fault(`${lang} ${k}: English says "${term.en}", glossary wants ${want.join(" or ")}`);
+      if (want.length && !want.some((w) => fold(v).includes(fold(w)))) fault(`${lang} ${k}: English says "${term.en}", glossary wants ${want.join(" or ")}`);
     }
     if (!(k in sources)) { unrecorded++; if (flag("--stale")) console.log(`  ${lang} ${k}: no English recorded in sources/${lang}.json`); }
     else if (sources[k] !== en[k]) { stale++; if (flag("--stale")) console.log(`  ${lang} ${k}: stale; was "${sources[k]}", now "${en[k]}"`); }
