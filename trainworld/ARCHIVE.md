@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2895 stage 1 (2026-11-09, 2293ad17): train stop rows drag to a kept order, Sort stops goes back; save level 8. Designed and built by Fable 5.2, notes/T-2895.md.
+- T-2911 (2026-11-09, 4c865d04): Purpose bubbles paint from their own figures, not the smoothed ones, so colour and hover agree.
+- T-2916 (2026-11-09, 0dc89a4e): attribution review; four about-page credit edits applied in the website working tree; research/release-legal.md status block.
+- T-2917 (2026-11-09; shonei-server d569afa, trainworld e39c915e): password or fresh Google check for email and account changes, reports gated at 60 minutes, secret required, timeouts, Go update, SRI on website and tools pages.
 - T-2904 (2026-11-09, agent busspeed, 342cea70): a bus hop takes the car's time at max(0.9 x car, 30 km/h) plus 28 s a stop; trunk stretches count the car at 88 km/h; ferries unchanged. notes/T-2904.md.
 - T-2908 (2026-11-09, agent purposetip, 74808bda): under Purpose, bubble hovers show the bar and dot rows by work/school, leisure/errands, other; school and university moved to blue. Turkish strings a7009e89.
 - T-2905, T-2909 (2026-11-09, agent twstats2; a8695fcc, bb9f9b9a; shonei-server c7e5885 deployed 20:57Z with her approval): twstats start city map, toggles, longer lists, land and water, browser language counts, label `map` for map starts (needs the next game publish to fill).

@@ -1069,7 +1069,7 @@
   "lineInspector.normal": "Обычный",
   "lineInspector.normalTip": "Обычные поезда идут до 160 km/h",
   "lineInspector.openLoop": "Разомкнуть кольцо",
-  "lineInspector.orderJunction": "Поезд не проедет между {a} и {b}, не разворачиваясь на развязке.",
+  "lineInspector.orderJunction": "Поезд не проедет между {a} и {b}, не разворачиваясь на развилке.",
   "lineInspector.orderNoTrack": "Нет пути между: {a} и {b}.",
   "lineInspector.parkingAdded": "Парковки добавлены в проект: {stations}.",
   "lineInspector.parkingAllButton": "Добавить парковку на всех станциях",
