@@ -62,7 +62,7 @@ export class RoadGraph {
   eb = new Int32Array(1024);
   /** ground metres */
   elen = new Float32Array(1024);
-  /** 1 for a motorway (its line's weight 2 or more), else 0 */
+  /** 1 for a motorway (its line's weight 2 or more), 2 for a link (`LINK`), which a bus may drive and a click does not land on, else 0 */
   emotor = new Uint8Array(1024);
   private arcNext = new Int32Array(2048);
   private inner = new Map<number, number>();
@@ -159,14 +159,14 @@ export class RoadGraph {
     return found;
   }
 
-  private addEdge(a: number, b: number, m: number, motor: boolean) {
+  private addEdge(a: number, b: number, m: number, kind: number) {
     if (a === b) return;
     if (this.edges === this.ea.length) this.growEdges();
     const e = this.edges++;
     this.ea[e] = a;
     this.eb[e] = b;
     this.elen[e] = m;
-    this.emotor[e] = motor ? 1 : 0;
+    this.emotor[e] = kind;
     this.arcNext[2 * e] = this.head[a];
     this.head[a] = 2 * e;
     this.arcNext[2 * e + 1] = this.head[b];
@@ -183,14 +183,14 @@ export class RoadGraph {
     const mpu = metresPerUnit(y0 + EXTENT / 2);
     const seg: number[] = [0, 0, 0, 0];
     rl.lines.forEach((line, li) => {
-      const motor = (rl.weights?.[li] ?? 1) >= MOTORWAY;
+      const w = rl.weights?.[li] ?? 1, kind = w >= MOTORWAY ? 1 : w === LINK ? 2 : 0;
       let pa = -1, pax = NaN, pay = NaN;
       for (let i = 2; i + 1 < line.length; i += 2) {
         if (!clipSegment(line[i - 2] * scale, line[i - 1] * scale, line[i] * scale, line[i + 1] * scale, seg)) continue;
         const [ax, ay, bx, by] = seg;
         const a = pa >= 0 && pax === ax && pay === ay ? pa : this.node(x0 + ax, y0 + ay, ax === 0 || ax === EXTENT, ay === 0 || ay === EXTENT);
         const b = this.node(x0 + bx, y0 + by, bx === 0 || bx === EXTENT, by === 0 || by === EXTENT);
-        this.addEdge(a, b, Math.hypot(bx - ax, by - ay) * mpu, motor);
+        this.addEdge(a, b, Math.hypot(bx - ax, by - ay) * mpu, kind);
         pa = b;
         pax = bx;
         pay = by;
@@ -210,6 +210,7 @@ export class RoadGraph {
         const r = this.tiles.get(RoadGraph.tileKey(tx, ty));
         if (!r) continue;
         for (let e = r[0]; e < r[1]; e++) {
+          if (this.emotor[e] === 2) continue;
           const a = this.ea[e], b = this.eb[e];
           const ax = this.gx[a], ay = this.gy[a], dx = this.gx[b] - ax, dy = this.gy[b] - ay;
           const l2 = dx * dx + dy * dy;
@@ -224,7 +225,7 @@ export class RoadGraph {
   /** How far a click is taken as being from a road, grid units: a motorway counts 3 times as far and
    * `MOTOR_EXTRA_M` more (T-2469), so a click by a street lands on the street, not the motorway over it. */
   snapCost(s: Snap): number {
-    return this.emotor[s.edge] ? 3 * s.d + MOTOR_EXTRA_M / metresPerUnit(s.y) : s.d;
+    return this.emotor[s.edge] === 1 ? 3 * s.d + MOTOR_EXTRA_M / metresPerUnit(s.y) : s.d;
   }
 
   /** The road a click lands on within `maxUnits` of a grid point (the least `snapCost`), or null. */
@@ -306,7 +307,7 @@ export class RoadGraph {
         const r = this.tiles.get(RoadGraph.tileKey(tx, ty));
         if (!r) continue;
         for (let e = r[0]; e < r[1]; e++) {
-          if (e === s.edge) continue;
+          if (e === s.edge || this.emotor[e] === 2) continue;
           const p = this.ea[e], q = this.eb[e];
           const ex = this.gx[q] - this.gx[p], ey = this.gy[q] - this.gy[p], l2 = ex * ex + ey * ey;
           if (l2 === 0) continue;
@@ -477,13 +478,17 @@ function clipSegment(x0: number, y0: number, x1: number, y1: number, out: number
  * under it is a junction: the tiles' end-to-road gaps stop dead at 2 units (notes/T-2873.md). */
 const JUNCTION_GAP = 2;
 const JOIN_CELL = 128;
+/** A line of this weight (`RoadLines.weights`) is kept only as a link: at most `LINK_MAX_M` long, each end
+ * on a street (T-2882). Service roads as a class stay out, so a bus does not cut through car parks. */
+export const LINK = 0.5;
+const LINK_MAX_M = 60;
 
 /** The road lines with a shared vertex added at every junction. OpenMapTiles simplifies each road on its
  * own, which drops the junction's vertex from a road that runs straight through it, so the roads meeting
  * there share none (T-2873). A vertex close to a road or two ground-level roads crossing is taken as a
  * junction; a motorway takes only another motorway's end, and its own ends (slip roads) join any road
- * at their level. */
-export function joinRoads(rl: RoadLines): RoadLines {
+ * at their level. `mpu` is ground metres per unit in this tile. */
+export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
   // clipped first: an added vertex on a segment crossing the tile's edge would move where it is cut,
   // and the two tiles' cut ends would no longer meet
   const lines: Int32Array[] = [], src: number[] = [];
@@ -519,6 +524,28 @@ export function joinRoads(rl: RoadLines): RoadLines {
         }
     }
   });
+  const isLink = (l: number) => rl.weights?.[src[l]] === LINK;
+  const gap2 = JUNCTION_GAP * JUNCTION_GAP;
+  const onStreet = (li: number, x: number, y: number) => {
+    // a link cut by the tile's edge is judged by its end inside this tile
+    if (x === 0 || y === 0 || x === EXTENT || y === EXTENT) return true;
+    for (const s of cells.get(cellKey(Math.floor(x / JOIN_CELL), Math.floor(y / JOIN_CELL))) ?? []) {
+      const lj = sLine[s];
+      if (lj === li || isLink(lj) || motor(lj) || level(lj) !== 0) continue;
+      const m = lines[lj], j = sAt[s], ax = m[j], ay = m[j + 1], dx = m[j + 2] - ax, dy = m[j + 3] - ay;
+      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+      const ex = ax + t * dx - x, ey = ay + t * dy - y;
+      if (ex * ex + ey * ey <= gap2) return true;
+    }
+    return false;
+  };
+  const dropped = new Set<number>();
+  lines.forEach((l, li) => {
+    if (!isLink(li)) return;
+    let units = 0;
+    for (let i = 0; i + 3 < l.length; i += 2) units += Math.hypot(l[i + 2] - l[i], l[i + 3] - l[i + 1]);
+    if (units * mpu > LINK_MAX_M || !onStreet(li, l[0], l[1]) || !onStreet(li, l[l.length - 2], l[l.length - 1])) dropped.add(li);
+  });
   /** per segment, the points to add to it: t along it, x, y, in threes */
   const adds = new Map<number, number[]>();
   const add = (s: number, x: number, y: number) => {
@@ -529,8 +556,8 @@ export function joinRoads(rl: RoadLines): RoadLines {
     if (a) a.push(t, x, y);
     else adds.set(s, [t, x, y]);
   };
-  const gap2 = JUNCTION_GAP * JUNCTION_GAP;
   lines.forEach((l, li) => {
+    if (dropped.has(li)) return;
     for (let i = 0; i < l.length; i += 2) {
       const x = l[i], y = l[i + 1];
       if (x === 0 || y === 0 || x === EXTENT || y === EXTENT) continue;
@@ -538,7 +565,7 @@ export function joinRoads(rl: RoadLines): RoadLines {
       if (!end && (level(li) !== 0 || motor(li))) continue;
       for (const s of cells.get(cellKey(Math.floor(x / JOIN_CELL), Math.floor(y / JOIN_CELL))) ?? []) {
         const lj = sLine[s];
-        if (lj === li || level(lj) !== level(li) || (motor(lj) && !motor(li))) continue;
+        if (lj === li || dropped.has(lj) || level(lj) !== level(li) || (motor(lj) && !motor(li))) continue;
         const m = lines[lj], j = sAt[s], ax = m[j], ay = m[j + 1], dx = m[j + 2] - ax, dy = m[j + 3] - ay;
         const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
         const ex = ax + t * dx - x, ey = ay + t * dy - y;
@@ -549,11 +576,11 @@ export function joinRoads(rl: RoadLines): RoadLines {
   for (const [k, c] of cells) {
     for (let p = 0; p < c.length; p++) {
       const lp = sLine[c[p]];
-      if (level(lp) !== 0 || motor(lp)) continue;
+      if (level(lp) !== 0 || motor(lp) || dropped.has(lp)) continue;
       const A = lines[lp], i = sAt[c[p]], a0 = A[i], a1 = A[i + 1], ax = A[i + 2] - a0, ay = A[i + 3] - a1;
       for (let q = p + 1; q < c.length; q++) {
         const lq = sLine[c[q]];
-        if (lq === lp || level(lq) !== 0 || motor(lq)) continue;
+        if (lq === lp || level(lq) !== 0 || motor(lq) || dropped.has(lq)) continue;
         const B = lines[lq], j = sAt[c[q]], b0 = B[j], b1 = B[j + 1], bx = B[j + 2] - b0, by = B[j + 3] - b1;
         const det = ax * by - ay * bx;
         if (det === 0) continue;
@@ -591,7 +618,13 @@ export function joinRoads(rl: RoadLines): RoadLines {
     for (let i = copied; i < l.length; i++) pts.push(l[i]);
     out[li] = Int32Array.from(pts);
   }
-  return { extent: EXTENT, lines: out, weights: rl.weights && src.map((l) => rl.weights![l]), levels: rl.levels && src.map((l) => rl.levels![l]) };
+  const kept = out.map((_, li) => li).filter((li) => !dropped.has(li));
+  return {
+    extent: EXTENT,
+    lines: kept.map((li) => out[li]),
+    weights: rl.weights && kept.map((li) => rl.weights![src[li]]),
+    levels: rl.levels && kept.map((li) => rl.levels![src[li]]),
+  };
 }
 
 /** Grid points (flat x, y) thinned to within `tol` units of the line. */

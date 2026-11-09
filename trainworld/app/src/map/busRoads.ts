@@ -6,12 +6,14 @@
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
+import { EXTENT, LINK, MOTORWAY, RoadGraph, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, type Snap } from "./roadGraph";
 import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 
 /** The roads a bus drives: the bus classes, and motorways (T-2469: most long bridges and tunnels are
- * motorways, and their approaches too), which a click lands on only where no street is near. */
-const busRoad: RoadKeep = (cls) => (BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : 0);
+ * motorways, and their approaches too), which a click lands on only where no street is near. An
+ * unnamed-kind service road open to all may be a short link between streets (`LINK`, T-2882). */
+const busRoad: RoadKeep = (cls, brunnel, service, access) =>
+  BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
 
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
@@ -125,7 +127,7 @@ export class BusRoads {
       const tpl = await this.url();
       if (tpl) {
         const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
-        if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), busRoad));
+        if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), busRoad), metresPerUnit((ty + 0.5) * EXTENT));
         else if (r.status === 404 || r.status === 204) rl = { extent: EXTENT, lines: [] };
       }
     } catch {

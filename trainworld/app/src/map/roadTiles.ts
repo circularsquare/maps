@@ -16,8 +16,8 @@ export interface RoadLines {
   levels?: number[];
 }
 
-/** A road's `class` and `brunnel` (bridge, tunnel, ford or none) in OpenMapTiles. */
-export type RoadKeep = (cls: string, brunnel: string | null) => boolean | number;
+/** A road's `class`, `brunnel` (bridge, tunnel, ford or none), `service` and `access` in OpenMapTiles. */
+export type RoadKeep = (cls: string, brunnel: string | null, service: string | null, access: string | null) => boolean | number;
 
 /** What a road counts for where track at ground level crosses it (T-1929): the bus classes 1, a
  * motorway 3; a road on a bridge or in a tunnel is already out of the way, 0. */
@@ -124,12 +124,13 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
     }
     t.pos = end;
     if (name !== "transportation") continue;
-    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer");
+    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer"), serviceKey = keys.indexOf("service"), accessKey = keys.indexOf("access");
     const lines: Int32Array[] = [], weights: number[] = [], levels: number[] = [];
     for (const [s, e] of feats) {
       const fr = new Reader(b, e);
       fr.pos = s;
       let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null, layer = 0;
+      let service: string | null = null, access: string | null = null;
       while (fr.pos < e) {
         const ft = fr.varint(), ff = ft >> 3, fw = ft & 7;
         if (ff === 2 && fw === 2) {
@@ -139,6 +140,8 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
             if (k === classKey) cls = values[v] ?? null;
             else if (k === brunnelKey) brunnel = values[v] ?? null;
             else if (k === layerKey) layer = Number(values[v]) || 0;
+            else if (k === serviceKey) service = values[v] ?? null;
+            else if (k === accessKey) access = values[v] ?? null;
           }
         } else if (ff === 3 && fw === 0) type = fr.varint();
         else if (ff === 4 && fw === 2) {
@@ -148,7 +151,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
         } else fr.skip(fw);
       }
       if (type !== 2 || geomStart < 0 || cls === null) continue;
-      const kept = keep(cls, brunnel);
+      const kept = keep(cls, brunnel, service, access);
       const weight = kept === true ? 1 : kept === false ? 0 : kept;
       if (!(weight > 0)) continue;
       const level = (brunnel === "bridge" ? 1000 : brunnel === "tunnel" ? 2000 : 0) + layer;

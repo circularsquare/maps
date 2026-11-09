@@ -322,7 +322,7 @@ new line; the Build tab's button again, while it is on, leaves it. Each click ad
 point. Between two points the route takes the shortest path over the basemap's zoom 14 roads
 (`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
 long bridges and tunnels most cities carry on them (T-2469); any direction, length as it is, no turn
-rules; service ways, tracks and paths are left out), at most 3 times the straight line or 1 km more
+rules; service ways, tracks and paths are left out, except that a plain service road (no driveway, alley or parking aisle tag, open to all, at ground level) at most 60 m long with each end on a street can be driven, and is never landed on (T-2882)), at most 3 times the straight line or 1 km more
 than it, whichever is longer. Roads join where a road's vertex comes within about 1 m of another road
 at its level, or where two ground-level roads cross, since the tiles drop the junction's vertex from a road
 running straight through it (T-2873; a motorway joins another motorway, and its own ends join any road).
