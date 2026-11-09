@@ -8,6 +8,7 @@
 // it can be read in the inspector, until the selection is cleared.
 
 import { t as tr, tNumber } from "../i18n";
+import { escapeHtml } from "./hoverHtml";
 import { computed, effect } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { clock } from "../game/clock";
@@ -293,7 +294,7 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
       if (!p) continue;
       const [x, y] = loc(p);
       const name = stationName(st);
-      if (Math.hypot(x - lx, y - ly) <= tol * 1.5) return [name ? tr(at, { name }) : tr(tip)];
+      if (Math.hypot(x - lx, y - ly) <= tol * 1.5) return [name ? tr(at, { name: escapeHtml(name) }) : tr(tip)];
     }
     const parts = drawn?.parts ?? [];
     for (const s of drawn?.stops ?? []) {
@@ -596,6 +597,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     return s ? toLocal(s.lng, s.lat) : null;
   };
   const name = (id: string) => names.get(id) ?? tr("tripView.aStation");
+  const tipName = (id: string) => escapeHtml(name(id));
   const from = packLocal(fromPack), to = packLocal(toPack);
   const segs = strokesByLine(net);
   const track = (l: TripLeg) => rideTrack(net, segs.get(Number(l.line)), l.k0, l.k1, pos(l.from), pos(l.to), l.wrapN ?? 0);
@@ -620,12 +622,12 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
     // T-865: an averaged trip's pair walks from its own cells
     const start = pair?.from ? packLocal(pair.from) : from, end = pair?.to ? packLocal(pair.to) : to;
     if (a && pair) out.parts.push({ pts: [start, a], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [tr("tripView.to", { name: name(first.from) }), tr("tripView.accessArea", { time: minutes(pair.accessPerceived) })]
-      : [tr("tripView.access", { drive: !!pair.accessRide, distance: distance(pair.accessM), name: name(first.from), time: minutes(pair.accessMin) }), tr(pair.accessRide ? "tripView.straightHomes" : "tripView.straightHome")] });
-    for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, name, share(r), track, !!w.lineStats[l.line]?.bus));
+      ? [tr("tripView.to", { name: tipName(first.from) }), tr("tripView.accessArea", { time: minutes(pair.accessPerceived) })]
+      : [tr("tripView.access", { drive: !!pair.accessRide, distance: distance(pair.accessM), name: tipName(first.from), time: minutes(pair.accessMin) }), tr(pair.accessRide ? "tripView.straightHomes" : "tripView.straightHome")] });
+    for (const l of legs) out.parts.push(legPart(l, main, alpha, width, ln, pos, tipName, share(r), track, !!w.lineStats[l.line]?.bus));
     if (b && pair) out.parts.push({ pts: [b, end], colour: NET_INK, width: main ? 2.5 : 1.5, dash: true, alpha, tip: area
-      ? [tr("tripView.from", { name: name(last.to) }), tr("tripView.egressArea", { time: minutes(pair.egressPerceived) })]
-      : [tr("tripView.egress", { distance: distance(pair.egressM), name: name(last.to), time: minutes(pair.egressMin) }), tr("tripView.straightPlace")] });
+      ? [tr("tripView.from", { name: tipName(last.to) }), tr("tripView.egressArea", { time: minutes(pair.egressPerceived) })]
+      : [tr("tripView.egress", { distance: distance(pair.egressM), name: tipName(last.to), time: minutes(pair.egressMin) }), tr("tripView.straightPlace")] });
     if (main) {
       for (const l of legs) {
         if (l.kind !== "ride") continue;
@@ -636,7 +638,7 @@ function build(t: Pick<TripPeriod, "routes" | "pairs"> | MarketPeriod, fromPack:
           // T-1902: the main route's boardings, changes and last stop named on the map, as in the inspector's rows
           const label = ends && r === t.routes[0] && !labelled.has(name(id)) ? name(id) : undefined;
           if (label) labelled.add(label);
-          if (p) out.stops.push({ at: p, big: ends, tip: [name(id), k === 0 ? tr("tripView.board", { line }) : k === l.stations.length - 1 ? tr("tripView.leave", { line }) : tr("tripView.stopsHere", { line })], label });
+          if (p) out.stops.push({ at: p, big: ends, tip: [tipName(id), k === 0 ? tr("tripView.board", { line: escapeHtml(line) }) : k === l.stations.length - 1 ? tr("tripView.leave", { line: escapeHtml(line) }) : tr("tripView.stopsHere", { line: escapeHtml(line) })], label });
         });
       }
     }
@@ -655,7 +657,7 @@ function legPart(l: TripLeg, main: boolean, alpha: number, width: number, ln: Ma
   return {
     pts, colour: line?.colour ?? NET_INK, width, dash: false, alpha,
     tip: [
-      tr("tripView.ride", { line: line?.name ?? tr("tripView.aLine"), from: name(l.from), to: name(l.to) }),
+      tr("tripView.ride", { line: escapeHtml(line?.name ?? tr("tripView.aLine")), from: name(l.from), to: name(l.to) }),
       tr("tripView.rideDetail", { stops: l.stops, time: minutes(l.min), bus, wait: minutes(l.waitMin), crowded: crowd >= 0.5, perceived: minutes(l.perceived) }),
       share,
     ],

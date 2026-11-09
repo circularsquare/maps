@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { loadApp } from './lib.mjs';
 class Element {
-  style = {}; children = []; listeners = {}; offsetWidth = 40; offsetHeight = 20;
+  style = {}; children = []; childNodes = []; content = { childNodes: [] }; listeners = {}; offsetWidth = 40; offsetHeight = 20;
   classList = { add() {}, remove() {}, toggle() {} };
   appendChild(el) { this.children.push(el); }
   replaceChildren(...els) { this.children = els; }
@@ -11,7 +11,7 @@ class Element {
   addEventListener(type, f) { (this.listeners[type] ??= []).push(f); }
 }
 globalThis.location = { search: '' };
-globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {}, createElement: () => new Element(), fonts: { ready: Promise.resolve() } };
+globalThis.document = { visibilityState: 'visible', documentElement: { dataset: {}, style: { setProperty() {}, removeProperty() {} } }, addEventListener() {}, createElement: () => new Element(), createDocumentFragment: () => new Element(), fonts: { ready: Promise.resolve() } };
 const { NetworkRenderer, pick, discAt, startClock, CapacityMarkers, selection, tool, addFinder, startHover, HOME_ANCHOR, toLngLat } = await loadApp(`
   export { NetworkRenderer } from '@app/src/map/renderer.ts';
   export { pick } from '@app/src/map/pick.ts';

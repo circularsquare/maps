@@ -32,6 +32,7 @@ import type { FerryPortIn } from "../workers/protocol";
 import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
 import { touchInput, type TouchCtl } from "./touch";
+import { safeColour } from "./safeColour";
 
 interface Pt { lng: number; lat: number }
 
@@ -541,7 +542,7 @@ export class FerryDraw {
       return;
     }
     const xy = (p: Pt) => this.map.project([p.lng, p.lat]);
-    const col = this.colour;
+    const col = safeColour(this.colour);
     const parts: string[] = [];
     const path = (ll: number[], from: number, to: number) => {
       let d = "";

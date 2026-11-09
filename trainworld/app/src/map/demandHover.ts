@@ -8,6 +8,7 @@ import { hoverHeld } from "../ui/blurHold";
 import { restHolds } from "./hoverRest";
 import { bubblePad, setPointerDisc, type DiscHit } from "./hovered";
 import { TAG_OFFSET_PX } from "./labelLayout";
+import { safeHoverHtml } from "./hoverHtml";
 
 /** Where the pointer is on the ground. Each disc set is in the local units of its own draw anchor
  * (T-317, map/geo.ts), so a finder turns the pointer into those (`discAt`). */
@@ -122,7 +123,7 @@ export function startHover(map: MlMap) {
     setPointerDisc(hoverDisc());
     const html = t.filter(Boolean).map((s) => (s.startsWith("<div") ? s : `<div>${s}</div>`)).join(""); // i18n-ignore
     if (html !== last) {
-      tag.innerHTML = html;
+      tag.replaceChildren(safeHoverHtml(html));
       last = html;
     }
     tag.style.display = "";

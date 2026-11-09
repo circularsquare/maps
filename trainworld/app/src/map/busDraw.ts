@@ -34,6 +34,7 @@ import { SAME_TAP_PX, touchInput, type TouchCtl } from "./touch";
 import type { Overlay } from "./overlay";
 import { BusRoads, SNAP_M, type BusRefusal, type Leg } from "./busRoads";
 import { setGrabbing } from "./nodeDrag";
+import { safeColour } from "./safeColour";
 
 /** the sim's `bus::MIN_ROUTE_M` */
 const MIN_ROUTE_M = 100;
@@ -805,7 +806,7 @@ export class BusDraw {
     const n = b.kinds.length;
     const q = this.quote && n >= 2 ? this.quote : null;
     const xy = (p: Pt) => this.map.project([p.lng, p.lat]);
-    const col = this.colour;
+    const col = safeColour(this.colour);
     const parts: string[] = [];
     // the route's points on the screen, leaving out those within a pixel of the last one kept
     const line = (from: number, to: number) => {
