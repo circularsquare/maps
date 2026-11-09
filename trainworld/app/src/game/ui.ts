@@ -7,6 +7,7 @@ import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, whenAway, whenBack, whenOut, type DemandDay } from "./days";
 import type { Currency } from "./currency";
 import { loadNunito } from "./fonts";
+import { mobileDevice } from "../workers/deviceMemory";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type BubbleEnd, type Level, type Selection } from "./types";
@@ -98,13 +99,16 @@ export interface DisplaySettings {
   basemapContrast: number;
   /** T-1270: hills and mountains shaded on the basemap (map/basemap.ts `setHillshade`) */
   hillshade: boolean;
-  /** T-1207: the lighter map (fewer basemap layers, pixel ratio 1): on, off, or on by itself once
-   * frames run slow while the camera moves (map/lite.ts) */
-  lighterMap: "auto" | "on" | "off";
+  /** T-1207: the lighter map (fewer basemap layers, pixel ratio 1): on is Low, off is High (map/lite.ts).
+   * T-2840: there was an "auto" too; one stored reads as off. */
+  lighterMap: "on" | "off";
   /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
   rotateMap: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
   chartOtherLines: boolean;
+  /** T-2838: a phone or tablet calculates trips between cities too (the market opens); per browser, since it is
+   * about the device. Read at each solve, so it applies from the next one. */
+  mobileIntercity: boolean;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -148,9 +152,10 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   lineWidth: 1,
   basemapContrast: 1,
   hillshade: false,
-  lighterMap: "auto",
+  lighterMap: "off",
   rotateMap: false,
   chartOtherLines: true,
+  mobileIntercity: false,
 };
 
 const STORE = "trainworld-ui";
@@ -218,7 +223,9 @@ const VIDEO_DISPLAY: Partial<DisplaySettings> = {
   stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true, lighterMap: "off",
 };
 
-export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour, ...(VIDEO ? VIDEO_DISPLAY : {}) });
+export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour, lighterMap: (migratedDisplay.lighterMap as string) === "on" ? "on" : "off", ...(VIDEO ? VIDEO_DISPLAY : {}) });
+/** T-2802, T-2838: no market (no trips between cities) on a phone or tablet, unless the player turned it on */
+export const marketOff = () => mobileDevice() && !display.peek().mobileIntercity;
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));

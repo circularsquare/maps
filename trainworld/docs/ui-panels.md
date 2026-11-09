@@ -623,10 +623,10 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
 hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
-[architecture.md](architecture.md) "A hidden page") [T-826]. "Map detail" (Auto, Low, High; Auto by
-default; Low is the old lighter map's On and High its Off, the saved `lighterMap` values unchanged; hover "Show fewer roads and other details" [T-1838]) draws the basemap with fewer layers at a lower resolution when Low; Auto picks Low when frames run
-slow while the map moves ([architecture.md](architecture.md)
-"While the camera moves") [T-1207].
+[architecture.md](architecture.md) "A hidden page") [T-826]. "Map detail" (Low, High; High by
+default; Low is the old lighter map's On and High its Off, the saved `lighterMap` values unchanged; hover "Show fewer roads and other details" [T-1838]) draws the basemap with fewer layers at a lower resolution when Low [T-1207].
+There is no Auto: it switched to Low for the rest of the page on one slow zoom, and a stored "auto" now reads
+as High [T-2840]. Low saves no resident memory (notes/T-2840.md).
 
 **Game** [T-728], last before the account section: the game's mode, "Normal" or "Sandbox" (hover: what
 it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then
@@ -854,7 +854,8 @@ keeps what it had and earns no more.
 
 - The floppy disk button left of the gear, or the top bar's Autosave off notice, opens a centred
   panel over a dimmed page, closed by Esc, its close button or a click outside.
-- **The head**: "Saved games", one icon, then Close [T-1395]. Where accounts are on, signed out a
+- **The head**: "Saved games", one icon, then Close [T-1395], with a door-and-arrow button under Close while a game is open
+  (hover "Save and quit to main menu"; it saves, lets the game go and reloads to the start page, `leaveToMenu`) [T-2850]. Where accounts are on, signed out a
   crossed cloud (hover "Kept in this browser only. Sign in to keep your games on your account."; a
   click opens Sign in), signed in a cloud (hover "Signed in as anita"; a click opens the account
   panel over this one). Where they are not (a localhost page, or no answer), no icon, except a

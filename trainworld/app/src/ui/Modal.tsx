@@ -24,7 +24,7 @@ export function useModalDialog(ref: RefObject<HTMLDialogElement | null>, open: b
 /** A centred modal: Esc, the close button or a click outside its box closes it. Keys stop at the
  * dialog, since the map clears its selection on Esc. `cls` adds to the panel's classes; `head` goes
  * before the close button. */
-export function Modal({ open, onClose, title, cls = "", head, children }: { open: boolean; onClose: () => void; title: string; cls?: string; head?: ComponentChildren; children: ComponentChildren }) {
+export function Modal({ open, onClose, title, cls = "", head, under, children }: { open: boolean; onClose: () => void; title: string; cls?: string; head?: ComponentChildren; under?: ComponentChildren; children: ComponentChildren }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, open);
   if (!open) return null;
@@ -36,7 +36,12 @@ export function Modal({ open, onClose, title, cls = "", head, children }: { open
       <div class="saves-head">
         <h2>{title}</h2>
         {head}
-        <button class="btn icon" autofocus aria-label={t("modal.close")} data-tip={t("modal.closeTip")} onClick={onClose}><Icon.cross /></button>
+        {under
+          ? <div class="saves-close-col">
+            <button class="btn icon" autofocus aria-label={t("modal.close")} data-tip={t("modal.closeTip")} onClick={onClose}><Icon.cross /></button>
+            {under}
+          </div>
+          : <button class="btn icon" autofocus aria-label={t("modal.close")} data-tip={t("modal.closeTip")} onClick={onClose}><Icon.cross /></button>}
       </div>
       {children}
     </div>

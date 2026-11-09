@@ -96,8 +96,8 @@ departure before it). The profit's fares are each line's hourly fare over its lo
 running cost is each hour's trains over 24 hours, the same for any 24 of them. Asked four times a wall second
 while a panel shows them and the clock runs (`game/today.ts`); only the components showing them
 re-render. While the boarding account works through new riders the last whole answer stands, and a
-running line it has no account for keeps its last counts, so a line's day never reads as today so
-far [T-2793]. A line's fares after a stop edit, until its riders land, are its figures carried onto its stops
+running line it has no account for keeps its last counts while its riders are pending or demand has an entry for it, so a line's day never reads as today so
+far [T-2793]; a line left with no riders shows none [T-2834]. A line's fares after a stop edit, until its riders land, are its figures carried onto its stops
 (`incomeFor` in game/money.ts). The map's demand views stay demand's whole-day picture.
 
 **Riders by purpose** [T-165, `ui/inspector/PurposeSplit.tsx`]: under a line's riders and a

@@ -11,6 +11,7 @@ import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
+import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
@@ -29,8 +30,8 @@ const DAY_OPTIONS: [DayShown, MessageKey][] = [["average", "settingsTab.average"
 type Projection = "flat" | "globe";
 const PROJECTION_OPTIONS: [Projection, MessageKey][] = [["flat", "settingsTab.flat"], ["globe", "settingsTab.globe"]];
 // Map detail (the saved key is still `lighterMap`): Low is the lighter map that was "on", High is "off"
-type LighterMap = "auto" | "on" | "off";
-const LIGHTER_OPTIONS: [LighterMap, MessageKey][] = [["auto", "settingsTab.auto"], ["on", "settingsTab.low"], ["off", "settingsTab.high"]];
+type LighterMap = "on" | "off";
+const LIGHTER_OPTIONS: [LighterMap, MessageKey][] = [["on", "settingsTab.low"], ["off", "settingsTab.high"]];
 /** Options worded in the current language, at render. */
 const worded = <T,>(opts: [T, MessageKey][]): [T, string][] => opts.map(([v, k]) => [v, t(k)]);
 const percent = (v: number) => tNumber(v, { style: "percent", maximumFractionDigits: 0 });
@@ -173,11 +174,16 @@ export function SettingsTab() {
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           {t("settingsTab.runInBackground")}
         </Check>
+        {mobileDevice() && (
+          <Check checked={d.mobileIntercity} onChange={(v) => setDisplay("mobileIntercity", v)}>
+            <span data-tip={t("settingsTab.mobileIntercityTip")}>{t("settingsTab.mobileIntercity")}</span>
+          </Check>
+        )}
       </div>
       <CurrencyRow />
       <div class="slider" data-tip={t("settingsTab.mapDetailTip")}>
         <span>{t("settingsTab.mapDetail")}</span>
-        <Segmented<LighterMap> options={worded(LIGHTER_OPTIONS)} value={d.lighterMap ?? "auto"} onChange={(v) => setDisplay("lighterMap", v)} />
+        <Segmented<LighterMap> options={worded(LIGHTER_OPTIONS)} value={d.lighterMap} onChange={(v) => setDisplay("lighterMap", v)} />
       </div>
       <GameMode />
       <AccountSection />

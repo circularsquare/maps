@@ -80,8 +80,7 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { DemandStopped } from "./ui/DemandStopped";
-import { NoMarketNote } from "./ui/NoMarketNote";
-import { smallDevice } from "./workers/deviceMemory";
+import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { diagramShown, startDiagramView } from "./diagram/view";
@@ -170,11 +169,11 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const demandStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(demandStoppedRoot);
 render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
-// T-2802: a small device has no trips between cities, and says so once per game load
-if (smallDevice()) {
+// T-2802, T-2839: a phone has no trips between cities, and a device reporting 4 GB or less may not run well; said once per game load
+if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
   map.getContainer().appendChild(noMarketRoot);
-  render(h(NoMarketNote, null), noMarketRoot);
+  render(h(DeviceNote, null), noMarketRoot);
 }
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);
@@ -449,7 +448,7 @@ map.on("load", () => {
   effect(() => setBasemapShade(map, shade.value, contrast.value));
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   startTerrainTint(map); // T-1270 stage 3
-  startLite(map, overlay); // T-1207
+  startLite(map); // T-1207
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)

@@ -162,17 +162,38 @@ let graphicsTimer = 0;
 export function watchGraphics(canvas: HTMLCanvasElement) {
   canvas.addEventListener("webglcontextlost", () => {
     lostCanvases.add(canvas);
-    if (graphicsTimer) return;
-    graphicsTimer = window.setTimeout(() => {
-      graphicsTimer = 0;
-      if (!lostCanvases.size || demandStopped.peek()) return;
-      demandStopped.value = "graphics";
-      clock?.setRunning(false);
-    }, GRAPHICS_BACK_MS);
+    armGraphicsTimer();
   });
   canvas.addEventListener("webglcontextrestored", () => {
     lostCanvases.delete(canvas);
-    if (!lostCanvases.size && graphicsTimer) { clearTimeout(graphicsTimer); graphicsTimer = 0; }
+    if (lostCanvases.size) return;
+    if (graphicsTimer) { clearTimeout(graphicsTimer); graphicsTimer = 0; }
+    // the notice was for a context that never came back: this one did, so undo what the notice did
+    if (demandStopped.peek() === "graphics") {
+      demandStopped.value = null;
+      if (graphicsPaused) clock?.setRunning(true);
+    }
+    graphicsPaused = false;
+  });
+}
+/** whether the graphics notice itself stopped the clock (a player who had paused stays paused) */
+let graphicsPaused = false;
+/** The 6 s count only runs while the page is visible: a hidden page loses its context as a matter of course. */
+function armGraphicsTimer() {
+  if (graphicsTimer || !lostCanvases.size || typeof document === "undefined" || document.visibilityState === "hidden") return;
+  graphicsTimer = window.setTimeout(() => {
+    graphicsTimer = 0;
+    if (!lostCanvases.size || demandStopped.peek()) return;
+    demandStopped.value = "graphics";
+    graphicsPaused = !!clock?.running.peek();
+    clock?.setRunning(false);
+  }, GRAPHICS_BACK_MS);
+}
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      if (graphicsTimer) { clearTimeout(graphicsTimer); graphicsTimer = 0; }
+    } else armGraphicsTimer();
   });
 }
 

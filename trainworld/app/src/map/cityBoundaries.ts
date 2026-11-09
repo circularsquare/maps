@@ -183,13 +183,15 @@ export function startCityBoundaries(map: MlMap): () => void {
   const lean = smallDevice();
   let coarseZones: Awaited<ReturnType<typeof coarseOutlines>> | null = null;
   const fillAround = () => {
-    if (!coarseZones) return;
+    if (!coarseZones) return false;
+    let changed = false;
     const wanted = map.getZoom() > OUTLINE_MIN_ZOOM ? around : new Set<string>();
-    for (const id of [...coarse]) if (!wanted.has(id)) { coarse.delete(id); edges.remove(id); }
+    for (const id of [...coarse]) if (!wanted.has(id)) { coarse.delete(id); edges.remove(id); changed = true; }
     for (const id of wanted) {
       const g = edges.has(id) ? undefined : coarseZones.get(id);
-      if (g) { edges.add(id, g); coarse.add(id); }
+      if (g) { edges.add(id, g); coarse.add(id); changed = true; }
     }
+    return changed;
   };
   void coarseOutlines().then(async (zones) => {
     if (lean) {
@@ -219,7 +221,7 @@ export function startCityBoundaries(map: MlMap): () => void {
       around = next;
       redrawSoon();
     }
-    if (lean) fillAround();
+    if (lean && fillAround()) redrawSoon();
     const z = map.getZoom();
     if (z <= OUTLINE_MIN_ZOOM) return;
     for (const id of near()) {

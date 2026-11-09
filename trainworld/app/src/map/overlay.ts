@@ -94,7 +94,7 @@ export class Overlay {
   /** The camera is moving (MapLibre's movestart to moveend): DOM placers re-place at most every
    * `MOVING_PLACE_MS` meanwhile (`placeDue`), and once more on the frame after it stops (T-1207). */
   moving = false;
-  /** MapLibre frames drawn while the camera moves: their gaps, ms (the lighter map's auto switch). */
+  /** MapLibre frames drawn while the camera moves: their gaps, ms (unused since the lighter map's Auto went, T-2840). */
   onMovingFrame: ((gapMs: number) => void) | null = null;
   private lastMapFrame = 0;
   private lastOpt: DrawOptions | null = null;

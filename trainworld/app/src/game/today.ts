@@ -292,19 +292,20 @@ function ask(force = false) {
     const next = readToday(d), prev = today.peek();
     // A line's account is worked out again a while after its stops change (new riders, T-164);
     // until then its counts may be per the old stops. The ones moved to the new stops stand meanwhile.
+    const pend = linesPending.peek();
     for (const l of w?.save.lines ?? []) {
       const t = next.get(l.id), p = prev.get(l.id);
       if (t && t.stops.length !== l.stops.length && p?.stops.length === l.stops.length) next.set(l.id, { ...t, stops: p.stops });
       // T-1419: no account at all for a running line yet (new riders being solved, or solved and not
       // yet counted, T-2793): the last counts stand, moved onto its stops above
-      else if (!t && p && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
+      // (only while they can still be replaced: a line left with no riders has neither a pending mark nor a demand entry)
+      else if (!t && p && w?.lineStats[l.id]?.status === "running" && (pend.has(l.id) || dv?.lines.has(l.id))) next.set(l.id, p);
     }
     // T-2773: a line whose riders are being worked out again keeps its last settled counts and fares, not the
     // half-done answer's (a local solve reads a long line far low); the final one replaces them when it lands
-    const pend = linesPending.peek();
     for (const [id, x] of next) {
       const s = settled.get(id);
-      if (pend.has(id) && s) next.set(id, { ...x, riders: s.riders, fullTrains: s.fullTrains, leftBehind: s.leftBehind, fares: s.fares, dayFares: s.dayFares, stops: s.stops.length === x.stops.length ? s.stops : x.stops });
+      if (pend.get(id) === "change" && s) next.set(id, { ...x, riders: s.riders, fullTrains: s.fullTrains, leftBehind: s.leftBehind, fares: s.fares, dayFares: s.dayFares, stops: s.stops.length === x.stops.length ? s.stops : x.stops });
       else settled.set(id, x);
     }
     for (const id of settled.keys()) if (!next.has(id) && !pend.has(id)) settled.delete(id);

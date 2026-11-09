@@ -192,9 +192,8 @@ Web first, so it can be shared as a link.
   T-1614, T-1657, T-1621; zone loading bars are placed on every move, so they hold their spot through a zoom, T-1804); the platform crowds; the station sounds and faces sample
   half as often; the Lines tab's live counts wait. The lighter map (`map/lite.ts`): the basemap
   without buildings, the residential tint, minor roads, airfields, small rivers and minor names, no
-  hillshade, and a pixel ratio of at most 1; Settings has it Auto (the default), On or Off. Auto turns
-  it on for the rest of the page load once the median gap between frames drawn while the camera moves,
-  over the last 40 (gaps over 250 ms and frames while a game loads left out), is over 40 ms.
+  hillshade, and a pixel ratio of at most 1; Settings has it as Map detail, Low (on) or High (off, the default). It had an
+  Auto, removed in T-2840: it went Low for the page on one slow zoom, and Low saves no resident memory; a stored "auto" reads as High.
 - **A hidden page** [T-826; notes/T-826.md]: the browser stops animation frames and slows the main
   thread's timers to once a second (once a minute after five hidden minutes); worker timers run on
   at nearly full rate. With "Run in background" off (the default) the clock freezes while hidden, so
@@ -222,7 +221,7 @@ Web first, so it can be shared as a link.
   when a newer route is asked or the pointer leaves real track.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
-  of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, compact outlines, no demand cache, no market packs (so no trips between zones); notes/T-2794.md) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
+  of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, compact outlines; notes/T-2794.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache and no market packs, so no trips between zones, unless Settings "Calculate intercity trips" is on, T-2833, T-2838; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
   less than the phone, an iPhone's killed near 2 GB), and unreported memory (desktop Firefox, Safari)
   at most 2; a big game may then drop some by memory [T-1205, below]. Such a small device runs no
   focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). The Settings "Use more cores" restores half the threads less one, 1 to 5

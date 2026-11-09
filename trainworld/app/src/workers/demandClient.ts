@@ -32,7 +32,7 @@ import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_
 import type { FrameSpec } from "../game/frame";
 import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
-import { display, selection, shownDay, tool } from "../game/ui";
+import { display, marketOff, selection, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -69,7 +69,7 @@ import {
   editsSettling,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { deviceGB, smallDevice } from "./deviceMemory";
+import { deviceGB, mobileDevice, smallDevice } from "./deviceMemory";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
@@ -763,7 +763,7 @@ class DemandClient {
 
   // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
   /** T-2794: not on a small device, which has no memory for the copies a write makes or a worker to write them */
-  private cacheOn = cacheAvailable() && !TEST && !smallDevice();
+  private cacheOn = cacheAvailable() && !TEST && !mobileDevice();
   /** off: no cache is written (a check turns it off to leave a network uncached) */
   cacheWrites = true;
   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
@@ -917,7 +917,7 @@ class DemandClient {
         this.fetchCity(id, "full");
       };
       for (const id of zones) if (rank(id) < firsts.length) fetchZone(id);
-      for (const id of smallDevice() ? [] : new Set([...reached, ...this.nearOf(svc).markets])) {
+      for (const id of marketOff() ? [] : new Set([...reached, ...this.nearOf(svc).markets])) {
         const item = marketItem(id);
         if (this.fetching.has(item) || this.broken.has(item)) continue;
         a.markets.add(id);
@@ -1109,7 +1109,7 @@ class DemandClient {
   private marketWanted: CityId[] = [];
   private marketZones(svc: Service | null): Set<CityId> {
     // T-2802: a small device opens no market: the world's rows and a zone's pack took its one solving worker from 33 to 184 MB on a first line
-    if (smallDevice()) return new Set();
+    if (marketOff()) return new Set();
     const sel = selection.peek();
     // T-979: a trip with an end in another zone is read from the market too
     const leaves = sel?.kind === "trip" && !!sel.to && (!!sel.far || [sel.from, sel.to].some(([x, y]) => zoneAt(...packToLngLat(x, y)) !== activeCity.peek()));
