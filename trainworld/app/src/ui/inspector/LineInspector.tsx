@@ -35,7 +35,6 @@ import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, schedul
 import { drawnReversed } from "../../game/northUp";
 import { MareyButton } from "./MareyChart";
 import { LineProfile } from "./LineProfile";
-import { LineMoney } from "./LineMoney";
 import type { EditOp } from "../../workers/protocol";
 import { hasUpgrade, UPGRADE } from "../../game/upgrades";
 import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
@@ -843,8 +842,6 @@ function RailLineInspector({ id }: { id: string }) {
       )}
 
       {st.status === "running" && <div class="line-day"><PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit={tr("lineInspector.ridersUnit")} />} /></div>}
-
-      {st.status === "running" && <LineMoney num={l.num} />}
 
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}

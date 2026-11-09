@@ -352,9 +352,6 @@ export interface MoneyState {
   hours: HourLedger[];
   /** T-531: the same per region (a zone id; "" outside every zone) */
   regions: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
-  /** T-2787: each line's recent days, by line id: [day, fares, running cost] flattened, US$M, oldest
-   * first, the day now last (as of the last whole hour) */
-  lineDays: Record<string, number[]>;
   /** T-685: stars earned, per region the game second it was earned */
   stars: Record<string, number>;
   /** T-1437: the higher goals reached, per region and share (%) the game second it was reached */

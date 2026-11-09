@@ -27,8 +27,6 @@ export const UPDATES: Update[] = [
       "updates.v01Curves",
       "updates.v01DeleteTrack",
       "updates.v01DeleteKeys",
-      "updates.v01LineMoney",
-      "updates.v01TripPurpose",
       "updates.v01Faces",
       "updates.v01StationsApart",
       "updates.v01Rename",

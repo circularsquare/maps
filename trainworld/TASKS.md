@@ -251,6 +251,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1072 [P3] Changing a line's stops at an end (a stop added past the last, the first removed) moves the other direction's running trains by the length added or removed: flights are kept as offsets along the run; match them by place on the ground instead. Open; notes/T-1071.md "Limits".
 - T-1073 [P3] Undo or redo of a train count takes effect at once, without T-1071's lead, so at a fast clock its departures hop a little; tell the worker the step was a service edit. Open.
 
+## Held features
+- T-2787 [P3] Per-line money history. Built in c18d2fa1, held out of the release at Anita's request (2026-11-08); implementation preserved in that commit. Follow-up T-2809.
+- T-2790 [P3] Trip lengths by purpose. Built in b167196a, held out of the release at Anita's request (2026-11-08); implementation preserved in that commit and worktree.
+
 ## Code health
 - T-2359 [P2] Code and documentation cleanup (Anita 2026-11-04). Surveys done (T-2360/61/62); stages below, their order and waits in notes/T-2359.md (A = notes/T-2360.md app, E = T-2361.md engine, D = T-2362.md docs). Open while any stage is.
 - T-2575 [P3] T-2512's item 26 step two: the realRoute worker's `cover` message carries the boxes the page needs, so regions.json (1.5 MB) is fetched once, not twice; changes the realRoute protocol and when the file is fetched. notes/T-2512.md. Open.

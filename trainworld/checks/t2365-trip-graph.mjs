@@ -10,8 +10,6 @@
 // 3. The panel: "Trips within New York", the graph with its five layers and axis labels, and the graph's hover
 //    at 10 km names the 10-15 km band.
 // 4. The top bar's hover: "Per day in New York", Trip count and Distance rows, the share table.
-// 5. T-2790: the Mode / Purpose switch: the purposes add up to the trips at each distance, and to the drawn modes
-//    over all distances within 0.2%; the purpose hover at 10 km names them.
 // --shots: the city view light and dark and the top bar's hover, in artifacts/trainworld/tripui/.
 // Uses the Vite on the url (dev-nowatch.mjs); 2 demand workers, claim 4 cores. About 3 minutes.
 import { mkdir, readFile } from 'node:fs/promises';
@@ -19,7 +17,6 @@ import { join } from 'node:path';
 import { ARTIFACTS, collectErrors, demandFinal, importSave, launchChrome, REAL_SAVE } from './lib.mjs';
 
 const OUT = join(ARTIFACTS, 'tripui');
-const SHOT2 = join(ARTIFACTS, 'tripkinds');
 const SHOTS = process.argv.includes('--shots');
 if (SHOTS) await mkdir(OUT, { recursive: true });
 const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6184/';
@@ -55,21 +52,7 @@ const figures = (page) => page.evaluate(async (zone) => {
     return [l, s];
   }));
   const t = v.tripsPerDay, s = v.split;
-  // T-2790: the purpose layers' total at each distance against the trips there, and against the mode layers'
-  const P = tl.purposeLayers(local, far);
-  const perBin = (l, i) => l.keys.reduce((a, k) => a + l.n[k][i], 0);
-  const nb = L.edges.length + 1;
-  let worstKernel = 0, worstModes = 0, modesGap = 0;
-  for (let i = 0; i < nb; i++) {
-    const p = perBin(P, i), m = perBin(L, i), trips = (i < local.n.trips.length ? local.n.trips[i] : 0) + L.far[i];
-    worstKernel = Math.max(worstKernel, Math.abs(p - trips));
-    worstModes = Math.max(worstModes, Math.abs(p - m));
-    modesGap += Math.abs(p - m);
-  }
-  const purposeTotals = Object.fromEntries(P.keys.map((k) => [k, sum(P.n[k])]));
-  const purposes = { worstKernel, worstModes, modesGap, totals: purposeTotals, all: sum(Array.from({ length: nb }, (_, i) => perBin(P, i))) };
   return {
-    purposes,
     want: { train: (t * s.train) / 100 + rail, walk: (t * s.walk) / 100, driveNone: (t * (s.drive + (s.none ?? 0))) / 100 + (all - rail - air), plane: air, far: all },
     bins, farBins: sum(L.far), area, noKm: far.filter((f) => !Number.isFinite(f.km)).length, corridors: far.length,
     axis: [Math.pow(10, u0), Math.pow(10, u1)], localTrips: t, kmShare: (100 * sum(local.km.rail)) / (sum(local.km.rail) + sum(local.km.walk) + sum(local.km.drive) + sum(local.km.none)),
@@ -93,12 +76,6 @@ async function run(label, page) {
   const worstArea = Math.max(...Object.keys(f.bins).map((l) => (f.bins[l] > 0 ? rel(f.area[l], f.bins[l]) : 0)));
   check(worstArea < 0.01, `${label}: each layer's drawn area is its trips`, Object.keys(f.bins).map((l) => `${l} ${M(f.area[l])} of ${M(f.bins[l])}`).join(', '));
 
-  // T-2790: the purposes add up to the trips at each distance
-  const pu = f.purposes;
-  console.log(`  ${label}: purposes ${Object.entries(pu.totals).map(([k, v]) => `${k} ${M(v)}`).join(', ')}; against the drawn modes, worst bin ${pu.worstModes.toFixed(1)}, all bins ${pu.modesGap.toFixed(1)} of ${M(pu.all)}`);
-  check(pu.worstKernel <= 1e-6 * Math.max(1, pu.all), `${label}: the purposes add up to the trips at each distance`, `worst bin off by ${pu.worstKernel.toExponential(2)}`);
-  check(pu.modesGap <= 2e-3 * Math.max(1, pu.all), `${label}: the purposes' total matches the drawn modes' total`, `${pu.modesGap.toFixed(1)} over all bins`);
-
   const panel = await page.evaluate(() => {
     const g = document.querySelector('svg.trip-graph');
     return { text: document.querySelector('#inspector')?.innerText ?? '', areas: g.querySelectorAll('.tg-area').length, labels: [...g.querySelectorAll('.tg-label')].map((t) => t.textContent) };
@@ -115,25 +92,6 @@ async function run(label, page) {
   const tag = await page.evaluate(() => [...document.querySelectorAll('.ui-tag')].find((t) => t.style.display !== 'none')?.innerText ?? '');
   check(/Trips of 10-15 km per day/.test(tag) && /Train/.test(tag) && /All/.test(tag), `${label}: the graph's hover at 10 km`, tag.replace(/\n/g, ' | '));
   if (SHOTS) await page.screenshot({ path: join(OUT, `${label}-graph-hover.png`), clip: { x: Math.max(0, box.left - 40), y: Math.max(0, box.top - 260), width: 520, height: 520 } });
-
-  // T-2790: the switch to purposes: its layers, and the hover at 10 km naming them
-  const buttons = () => page.evaluate(() => [...document.querySelector('svg.trip-graph').previousElementSibling.querySelectorAll('.btn')].map((b) => b.textContent));
-  check((await buttons()).join() === 'Mode,Purpose', `${label}: the graph's switch`, (await buttons()).join());
-  await page.mouse.move(5, 600);
-  await page.evaluate(() => document.querySelector('svg.trip-graph').previousElementSibling.querySelectorAll('.btn')[1].click());
-  await page.waitForTimeout(300);
-  await page.mouse.move(at - 20, box.top + box.height / 2);
-  await page.mouse.move(at, box.top + box.height / 2);
-  await page.waitForTimeout(400);
-  const ptag = await page.evaluate(() => [...document.querySelectorAll('.ui-tag')].find((t) => t.style.display !== 'none')?.innerText ?? '');
-  check(/Trips of 10-15 km per day/.test(ptag) && /Work/.test(ptag) && /Leisure/.test(ptag) && /Errands/.test(ptag) && /All/.test(ptag) && !/Driving/.test(ptag), `${label}: the purpose hover at 10 km`, ptag.replace(/\n/g, ' | '));
-  if (SHOTS) {
-    await mkdir(SHOT2, { recursive: true });
-    await page.screenshot({ path: join(SHOT2, `${label}-purposes-hover.png`), clip: { x: Math.max(0, box.left - 40), y: Math.max(0, box.top - 260), width: 520, height: 520 } });
-  }
-  await page.mouse.move(5, 600);
-  await page.evaluate(() => document.querySelector('svg.trip-graph').previousElementSibling.querySelectorAll('.btn')[0].click());
-  await page.waitForTimeout(200);
 
   // the top bar's hover
   const split = await page.evaluate(() => document.querySelector('.split-row').getBoundingClientRect().toJSON());

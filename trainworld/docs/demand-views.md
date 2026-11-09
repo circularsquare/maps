@@ -107,9 +107,5 @@ distances between points spread evenly over its two squares (out to 24 km, then 
 distance), the zone's own pair keeping its 0.52 of a side; their trips, walking with no rail and
 no route are summed once per zone on the first ask, the rail in each pass (`ModeOut::len`).
 Everyday outings take each sample's own distance, their rail its subzone pair's mean distance. The
-everyday layer's `trip_lengths_kinds_day(day, mask)` (T-2790) answers the trips again per purpose, one
-block of bins per purpose in `RATE`'s order, adding up to the trips block bin by bin; it reads the
-sums made once per zone, so it costs the same in any zone. The
 client's `tripLengths(zone?)` adds every solving worker's answer (a zone open bare: the aux
-worker's), cached per zone, solve, round and day (`game/tripLengths.ts`); `purposes` there holds each
-purpose as shown, work being the commutes' trips and university counted with school.
+worker's), cached per zone, solve, round and day (`game/tripLengths.ts`).

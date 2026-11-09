@@ -1694,41 +1694,6 @@ function regionEntries(zone: string, day: number, hour: number): [DayLedger, Hou
   ];
 }
 
-/** T-2787: each line's recent days of money, US$M: [day, fares, running cost] per day, oldest first,
- * the day now last. A forecast is not kept, these are what settling paid. Saved in `SaveHeader.lineDays`. */
-let lineDays = new Map<number, [number, number, number][]>();
-/** Days kept per line: a week of closed days and the day now. */
-const LINE_DAYS = 8;
-
-function lineDayEntry(id: number, day: number): [number, number, number] {
-  let l = lineDays.get(id);
-  if (!l) lineDays.set(id, (l = []));
-  let i = l.length;
-  while (i > 0 && l[i - 1][0] > day) i--;
-  if (i > 0 && l[i - 1][0] === day) return l[i - 1];
-  const e: [number, number, number] = [day, 0, 0];
-  l.splice(i, 0, e);
-  if (l.length > LINE_DAYS) l.splice(0, l.length - LINE_DAYS);
-  return e;
-}
-
-/** The lines' days as the save and the panels read them: per line id, [day, fares, running] flattened;
- * `round` keeps $100 (the charts cannot tell). */
-function savedLineDays(round = false): Record<string, number[]> {
-  const r = (v: number) => (round ? Math.round(v * 1e4) / 1e4 : v);
-  return Object.fromEntries([...lineDays].filter(([, l]) => l.length).map(([id, l]) => [id, l.flatMap(([d, f, c]) => [d, r(f), r(c)])]));
-}
-
-/** Days after `last` are the ones settling pays again on a load. */
-function loadLineDays(saved: SaveHeader["lineDays"], last: number) {
-  lineDays = new Map();
-  for (const [id, v] of Object.entries(saved ?? {})) {
-    const l: [number, number, number][] = [];
-    for (let i = 0; i + 2 < v.length; i += 3) if (v[i] <= last) l.push([v[i], v[i + 1], v[i + 2]]);
-    if (l.length) lineDays.set(Number(id), l.slice(-LINE_DAYS));
-  }
-}
-
 /** T-531: every region's today and this hour that has an entry today. */
 function regionNow(): RegionNow {
   const day = ledgerDay(moneyNow()), hour = Math.floor(moneyNow() / 3600), out: RegionNow = {};
@@ -1752,7 +1717,7 @@ function regionLines() {
     const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit * f);
     costs.push({ id, shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
-  const fares = [...lineIncome].map(([id, per]) => ({ id, shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
+  const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
   const rides = [...lineRides].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.ride ?? [] }));
   return { costs, fares, rides };
 }
@@ -1895,7 +1860,6 @@ function moneyState(): MoneyState {
     ledger: ledger.map((d) => ({ ...d })),
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
-    lineDays: savedLineDays(),
     stars: Object.fromEntries(stars),
     goals: Object.fromEntries(goals),
     notes: Object.fromEntries(lineNotes),
@@ -2016,10 +1980,6 @@ function settle(): boolean {
     for (const [z, [f, c, n]] of regionHour(t, rl)) {
       for (const r of regionEntries(z, d.day, h)) { r.fares += f * df; r.running += c * dc; r.rides = (r.rides ?? 0) + n * df; }
     }
-    if (d.day > ledgerDay(now) - LINE_DAYS) { // T-2787: each line's own, for its panel's history
-      for (const f of rl.fares) { const v = fareHour(f.per, t + f.shift, f.kindOf) * df; if (v) lineDayEntry(f.id, d.day)[1] += v; }
-      for (const c of rl.costs) { const v = costHour(c.run, t + c.shift, c.tail) * dc; if (v) lineDayEntry(c.id, d.day)[2] += v; }
-    }
     if (up * dc > 0) for (const [z, s] of upShares) {
       for (const r of regionEntries(z, d.day, h)) r.upkeep = (r.upkeep ?? 0) + up * dc * s;
     }
@@ -2035,11 +1995,6 @@ function settle(): boolean {
     }
     settledT = full ? t + 3600 : end;
     if (full) { ended = true; hourShape.delete(h); }
-  }
-  if (ended && lineDays.size) { // T-2787: a deleted line's days go with it
-    const li = api.lines_info(), have = new Set<number>();
-    for (let i = 0; i < li.length; i += 22) have.add(li[i]);
-    for (const id of [...lineDays.keys()]) if (!have.has(id)) lineDays.delete(id);
   }
   api.set_cash(cash);
   if (kept) kept.cash = cash;
@@ -2176,7 +2131,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2514,7 +2469,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, lineDays: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isThisWorld(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -2544,7 +2499,6 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
-  loadLineDays(h.lineDays, ledgerDay(h.clock));
   stars = new Map(Object.entries(h.stars ?? {}));
   goals = new Map(Object.entries(h.goals ?? {}));
   achievements = h.achievements ? new Map(Object.entries(h.achievements)) : null;
@@ -2620,7 +2574,6 @@ async function newGame(spec?: NewGameSpec) {
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);
-  loadLineDays(undefined, 0);
   stars = new Map();
   goals = new Map();
   achievements = new Map();

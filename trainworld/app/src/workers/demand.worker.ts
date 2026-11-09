@@ -1200,8 +1200,7 @@ function query(msg: Query) {
       const mask = !ok ? 0 : b ? (1 << PERIODS.length) - 1 : a!.solved_mask();
       const commute = ok ? api!.trip_lengths_day(day, mask) : null;
       const ev = ok && layer ? layer.trip_lengths_day(day, mask) : null;
-      const kinds = ok && layer ? layer.trip_lengths_kinds_day(day, mask) : null;
-      sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask, edges: trip_length_edges(), commute, everyday: ev, kinds }, [...(commute ? [commute.buffer] : []), ...(ev ? [ev.buffer] : []), ...(kinds ? [kinds.buffer] : [])]);
+      sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask, edges: trip_length_edges(), commute, everyday: ev }, [...(commute ? [commute.buffer] : []), ...(ev ? [ev.buffer] : [])]);
     }
   } catch (err) {
     // a failed query answers with nothing; the pool itself carries on (after a panic, with this
@@ -1221,7 +1220,7 @@ function query(msg: Query) {
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
-    else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null, kinds: null });
+    else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null });
   }
 }
 

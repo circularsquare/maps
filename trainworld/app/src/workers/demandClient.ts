@@ -3863,23 +3863,16 @@ class DemandClient {
       const replies = bare
         ? await this.ask((id) => ({ kind: "tripLengths", id, version: 0, bare: true }), [this.computeN], [], city)
         : byMask(await this.ask((id) => ({ kind: "tripLengths", id, version: at.version }), undefined, [], city, at));
-      let mask = 0, sum: Float64Array | null = null, edges: Float32Array | null = null, work: Float64Array | null = null, kinds: Float64Array | null = null;
+      let mask = 0, sum: Float64Array | null = null, edges: Float32Array | null = null;
       for (const r of replies) {
         if (r?.kind !== "tripLengths" || !r.commute) return null;
         mask |= r.mask;
         edges = r.edges;
         sum ??= new Float64Array(r.commute.length);
         for (const v of [r.commute, r.everyday]) if (v?.length === sum.length) addInto(sum, v);
-        // T-2790: the commutes' trips are the commute answer's first block
-        work ??= new Float64Array(edges.length + 1);
-        addInto(work, r.commute);
-        if (r.kinds) {
-          kinds ??= new Float64Array(r.kinds.length);
-          if (r.kinds.length === kinds.length) addInto(kinds, r.kinds);
-        }
       }
-      if (mask !== ALL_PERIODS || !sum || !edges || !work || shownDay.peek() !== day) return null;
-      return tripLengthsOf(version, day, edges, sum, work, kinds ?? new Float64Array(0));
+      if (mask !== ALL_PERIODS || !sum || !edges || shownDay.peek() !== day) return null;
+      return tripLengthsOf(version, day, edges, sum);
     })();
   }
 

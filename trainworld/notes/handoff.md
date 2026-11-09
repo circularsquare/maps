@@ -1,5 +1,16 @@
 # Orchestrator handoff, trainworld
 
+## Latest instruction, 2026-11-08 23:32 EST
+
+Anita: "lets also try to keep changes conservative in general. we are mostly just looking to fix bugs this round. make sure that the bugs are real, and we don't introduce any new issues. additional features are not a priority, though we should also add the changelog / update indicator thing. i will test before we deploy"
+
+**HOLD DEPLOY until Anita has tested the candidate.** This supersedes the earlier publish-after-round go below.
+No new features. Scope answered: include currencies, update/changelog, tighter curves and bug fixes; exclude line money
+history and trip-purpose graphs. These features are preserved in c18d2fa1 and b167196a for later.
+Their removal is in progress in the main tree, including changelog and localization cleanup.
+Integration so far: c18d2fa1 main batch, 309ff65b mobile, b167196a tripkinds; the last landing's WASM build finished. Tripkinds is now reverted without commit, and line history removed from source.
+Curve has NOT landed. No website change, upload, push, or production deploy has happened.
+
 ## Codex takeover, 2026-11-08 night
 
 Anita asked Codex to finish the interrupted deploy, favoring safety, confirmed all Claude agents stopped,

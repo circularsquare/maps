@@ -1,26 +1,18 @@
 // The city view's trips by length (T-2365): trip length along a log axis, each mode's trips a day
 // per decade of length stacked, so a colour's area is its trips; the trips to other places with
 // them at their places' distance, planes on top. Under it a strip of each length's mode shares.
-// Hover: the length band under the pointer, its trips by mode. A switch draws the same trips by
-// purpose instead (T-2790).
+// Hover: the length band under the pointer, its trips by mode.
 
-import { signal } from "@preact/signals";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { City } from "../../game/cities";
 import { demandAskTurn, demandView, intercityDemand } from "../../game/demand";
 import { count } from "../../game/format";
 import { t, tNumber, type MessageKey } from "../../i18n";
-import { purposeColour, purposeName, type PurposeKey } from "../../game/purposes";
-import { axisSpan, bandAt, binSums, LAYERS, layerCurves, lengthLayers, purposeLayers, type Layer, type LengthLayers } from "../../game/tripLengths";
+import { axisSpan, bandAt, binSums, LAYERS, layerCurves, lengthLayers, type Layer, type LengthLayers } from "../../game/tripLengths";
 import { shownDay } from "../../game/ui";
 import { farTrips, lengthsOf, wantLengths } from "../../game/zoneLengths";
 import { tipBullet, tipGrid } from "../tip";
-import { Segmented } from "../widgets";
 import { pct1 } from "./tripText";
-
-/** What the graph's layers are; kept from one zone to the next. */
-type LayersBy = "mode" | "purpose";
-const layersBy = signal<LayersBy>("mode");
 
 const W = 300, L = 1, R = 299, T = 4, B = 86;
 /** the share strip under the plot, and the labels under it */
@@ -40,7 +32,7 @@ const bandTitle = (lo: number, hi: number) =>
   lo === 0 ? t("tripGraph.under", { km: fmt(hi) }) : hi === Infinity ? t("tripGraph.over", { km: fmt(lo) }) : t("tripGraph.between", { from: fmt(lo), to: fmt(hi) });
 
 /** The band's hover: each mode's share and trips, all of them, and those to other places. */
-function modeTip(Ls: LengthLayers, km: number): string {
+function bandTip(Ls: LengthLayers, km: number): string {
   const b = bandAt(Ls.edges, km);
   const s = binSums(Ls, b.from, b.to);
   // train, walking and driving always; planes where the band has some, No route where it shows as 0.1% or more
@@ -49,17 +41,6 @@ function modeTip(Ls: LengthLayers, km: number): string {
   ]);
   rows.push([""], [t("tripGraph.all"), "", count(s.all)]);
   if (s.far > 0) rows.push([t("tripGraph.toOther"), "", count(s.far)]);
-  return `${bandTitle(b.lo, b.hi)}\n${tipGrid(rows)}`;
-}
-
-/** The band's hover by purpose: each purpose that shows as 0.1% or more, then all of them. */
-function purposeTip(Ls: LengthLayers<PurposeKey>, km: number): string {
-  const b = bandAt(Ls.edges, km);
-  const s = binSums(Ls, b.from, b.to);
-  const rows: string[][] = Ls.keys.filter((k) => s[k] > 0 && s[k] >= 5e-4 * s.all).map((k) => [
-    `${tipBullet("", purposeColour(k))}${purposeName(k)}`, pct1(s[k] / s.all), count(s[k]),
-  ]);
-  rows.push([""], [t("tripGraph.all"), "", count(s.all)]);
   return `${bandTitle(b.lo, b.hi)}\n${tipGrid(rows)}`;
 }
 
@@ -83,8 +64,8 @@ function edge(xs: number[], ys: number[], keep: (k: number) => boolean): string 
 
 /** What the pointer does not change: the curves, the strip, the labels and their drawing (kept as one
  * element, so a hover re-renders only the band and the hover rect, T-2439). */
-function drawGraph<K extends string>(Ls: LengthLayers<K>, colour: (l: K) => string, tip: (km: number) => string) {
-  const keys = Ls.keys;
+function drawGraph(local: NonNullable<ReturnType<typeof lengthsOf>>, market: ReturnType<typeof intercityDemand.peek>, place: City["place"]) {
+  const Ls = lengthLayers(local, market ? farTrips(place, market.corridors) : []);
   const [u0, u1] = axisSpan(Ls);
   const { u, y } = layerCurves(Ls, u0, u1, N);
   const x = (v: number) => L + ((v - u0) / (u1 - u0)) * (R - L);
@@ -92,7 +73,7 @@ function drawGraph<K extends string>(Ls: LengthLayers<K>, colour: (l: K) => stri
   // stacked tops, in trips per decade, and the scale that puts the highest at the plot's top
   const tops: number[][] = [];
   let acc = new Array<number>(N).fill(0);
-  for (const l of keys) {
+  for (const l of LAYERS) {
     acc = acc.map((a, k) => a + y[l][k]);
     tops.push(acc);
   }
@@ -121,33 +102,31 @@ function drawGraph<K extends string>(Ls: LengthLayers<K>, colour: (l: K) => stri
   const drawn = (
     <>
       {labels.map((l) => <line class="tg-grid" x1={l.x} x2={l.x} y1={T} y2={B} />)}
-      {keys.map((l, j) => (
-        <path class="tg-area" style={{ fill: colour(l) }} d={band(xs, tops[j].map(py), (j ? tops[j - 1] : total.map(() => 0)).map(py))} />
+      {LAYERS.map((l, j) => (
+        <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(xs, tops[j].map(py), (j ? tops[j - 1] : total.map(() => 0)).map(py))} />
       ))}
       {/* each layer's top: a gap in the panel's colour, then a line in its own */}
-      {keys.map((l, j) => {
+      {LAYERS.map((l, j) => {
         const d = edge(xs, tops[j].map(py), (k) => (y[l][k] / peak) * (B - T) > EDGE_MIN);
         return d && <>
           <path class="tg-gap" d={d} />
-          <path class="tg-edge" style={{ stroke: colour(l) }} d={d} />
+          <path class="tg-edge" style={{ stroke: `var(--mode-${COLOUR_KEY[l]})` }} d={d} />
         </>;
       })}
       <line class="tg-axis" x1={L} x2={R} y1={B + 0.5} y2={B + 0.5} />
       {runs.map(([a, b]) => {
         const rx = xs.slice(a, b + 1);
-        return keys.map((l, j) => {
-          const f =(k: number) => tops[j][k] / total[k], g = (k: number) => (j ? tops[j - 1][k] / total[k] : 0);
+        return LAYERS.map((l, j) => {
+          const f = (k: number) => tops[j][k] / total[k], g = (k: number) => (j ? tops[j - 1][k] / total[k] : 0);
           const top = rx.map((_, i) => sy(f(a + i))), bot = rx.map((_, i) => sy(g(a + i)));
-          return top.some((t, i) => bot[i] - t > 0.05) && <path class="tg-area" style={{ fill: colour(l) }} d={band(rx, top, bot)} />;
+          return top.some((t, i) => bot[i] - t > 0.05) && <path class="tg-area" style={{ fill: `var(--mode-${COLOUR_KEY[l]})` }} d={band(rx, top, bot)} />;
         });
       })}
       {labels.map((l) => <text class="tg-label" x={l.x} y={LABEL_Y} text-anchor={l.end ? "end" : "middle"}>{l.text}</text>)}
     </>
   );
-  return { edges: Ls.edges, u0, u1, hx, drawn, tip };
+  return { Ls, u0, u1, hx, drawn };
 }
-
-const modeColour = (l: Layer) => `var(--mode-${COLOUR_KEY[l]})`;
 
 export function TripGraph({ city }: { city: City }) {
   const dv = demandView.value, day = shownDay.value;
@@ -157,25 +136,15 @@ export function TripGraph({ city }: { city: City }) {
   const band0 = useRef<number | null>(null);
   const local = lengthsOf(city.id);
   const market = intercityDemand.value;
-  const by = layersBy.value;
-  const g = useMemo(() => {
-    if (!local) return null;
-    const far = market ? farTrips(city.place, market.corridors) : [];
-    if (by === "purpose") {
-      const Ls = purposeLayers(local, far);
-      return drawGraph(Ls, purposeColour, (km) => purposeTip(Ls, km));
-    }
-    const Ls = lengthLayers(local, far);
-    return drawGraph(Ls, modeColour, (km) => modeTip(Ls, km));
-  }, [local, market, city.place, by]);
+  const g = useMemo(() => (local ? drawGraph(local, market, city.place) : null), [local, market, city.place]);
   if (!g) return null;
-  const { edges, u0, u1, hx, drawn, tip } = g;
-  const hb = hoverKm === null ? null : bandAt(edges, hoverKm);
+  const { Ls, u0, u1, hx, drawn } = g;
+  const hb = hoverKm === null ? null : bandAt(Ls.edges, hoverKm);
   const pointer = (e: PointerEvent) => {
     const r = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect();
     const px = Math.max(L, Math.min(R, ((e.clientX - r.left) * W) / r.width));
     const km = Math.pow(10, u0 + ((px - L) / (R - L)) * (u1 - u0));
-    const b = bandAt(edges, km);
+    const b = bandAt(Ls.edges, km);
     if (band0.current === b.lo) return;
     band0.current = b.lo;
     setHoverKm(km);
@@ -184,14 +153,11 @@ export function TripGraph({ city }: { city: City }) {
 
   return (
     <>
-      <div class="h">
-        {t("tripGraph.title")}
-        <span class="right"><Segmented<LayersBy> options={[["mode", t("tripGraph.byMode")], ["purpose", t("tripGraph.byPurpose")]]} value={by} onChange={(v) => (layersBy.value = v)} /></span>
-      </div>
+      <div class="h">{t("tripGraph.title")}</div>
       <svg class="trip-graph" viewBox={`0 0 ${W} ${H}`}>
         {drawn}
         {hb && <rect class="tg-band" x={hx(hb.lo)} y={T} width={Math.max(1, hx(hb.hi) - hx(hb.lo))} height={S1 - T} />}
-        <rect class="tg-hover" x={L} y={T} width={R - L} height={S1 - T} data-tip={hoverKm === null ? undefined : tip(hoverKm)}
+        <rect class="tg-hover" x={L} y={T} width={R - L} height={S1 - T} data-tip={hoverKm === null ? undefined : bandTip(Ls, hoverKm)}
           onPointerMove={pointer} onPointerDown={pointer} onPointerLeave={leave} />
       </svg>
     </>
