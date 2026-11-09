@@ -70,8 +70,9 @@ blueprint), hills (both classes) and mountains get a faint brown wash, stronger 
 brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
 the grids the clock worker put in the track model (a "terrain" message per zone, `game/terrain.ts`),
 so it shows exactly what is charged and nothing for a zone not loaded. `map/terrainTint.ts` draws
-one image over the view and half its size again round it, rows even in mercator, each cell its
-lattice class (nearest, no smoothing), redrawn when the camera stops; above the hillshade, under the
+one image over the view and half its size again round it, rows even in mercator, each hex (T-2890,
+the hexes track is charged by, track-and-service.md 6.4) the class of the lattice cell at its centre
+(nearest, no smoothing; halved in size once a hex is under an image pixel), redrawn when the camera stops; above the hillshade, under the
 water, roads and labels; hidden below zoom 7. The lighter map hides the hillshade but keeps
 `water_over_shade` while Terrain is on, so the tint stays off the water there too. Washed ground
 has no hover of its own; the track tool's tag names the class and its factor [T-1797].

@@ -1,14 +1,14 @@
 // T-1270 stage 3: the terrain classes as a faint brown wash while a build tool is on and Terrain is
-// shown, drawn from the grids the clock worker put in the track model (game/terrain.ts), so what is
-// shown is what is charged. One image over the view and a margin around it, redrawn when the camera
-// stops: its rows are even in mercator, each looking up the class at its latitude, since the grids
-// are on a degree lattice and a degree box is no mercator quad. Flat ground is left bare.
+// shown, drawn from the grids the clock worker put in the track model (game/terrain.ts), hex by hex
+// as the price reads them (T-2890), so what is shown is what is charged. One image over the view and
+// a margin around it, redrawn when the camera stops: its rows are even in mercator, the plane the
+// hexes are regular on. Flat ground is left bare.
 
 import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { computed, effect } from "@preact/signals";
 import { display, isBuildTool, shade, tool } from "../game/ui";
-import { classAt, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
+import { HEX_ROW, HEX_SHIFT, HEX_WIDTH, mercLat, terrainGrids, terrainVersion } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 
@@ -19,7 +19,7 @@ const MIN_ZOOM = 7;
 const MARGIN = 0.5;
 /** canvas pixels at most a side, and at least this many to a lattice cell's width */
 const MAX_PX = 2048;
-const PX_PER_CELL = 12;
+const PX_PER_CELL = 24;
 /** RGB and the alpha of rolling, hilly and mountain ground, in each theme */
 const WASH = {
   light: { rgb: [150, 88, 30], alpha: [0, 0.08, 0.15, 0.24] },
@@ -72,7 +72,9 @@ export function startTerrainTint(map: MlMap): () => void {
     const lonW = x0 * 360 - 180, lonE = x1 * 360 - 180;
     const perDeg = terrainGrids.values().next().value!.perDeg;
     const cssW = box.clientWidth * (1 + 2 * MARGIN);
-    const W = Math.max(1, Math.round(Math.min(MAX_PX, cssW / 2, (lonE - lonW) * perDeg * PX_PER_CELL)));
+    const fine = Math.min(MAX_PX, cssW / 2, (lonE - lonW) * perDeg * PX_PER_CELL);
+    // a hex under a pixel of the image has no shape to show: half the image, a quarter of the work
+    const W = Math.max(1, Math.round(fine * HEX_WIDTH / (x1 - x0) < 1 ? fine / 2 : fine));
     const H = Math.max(1, Math.round(Math.min(MAX_PX, W * (y1 - y0) / (x1 - x0))));
     const s = shade.peek();
     const key = [x0, y0, x1, y1, W, H, s, terrainVersion.peek()].join();
@@ -80,42 +82,64 @@ export function startTerrainTint(map: MlMap): () => void {
     if (key === drawn) return;
     drawn = key;
 
-    const wash = WASH[s];
-    const rgbOf = (_k: number) => wash.rgb;
+    const [red, green, blue] = WASH[s].rgb;
+    const alpha = WASH[s].alpha.map((a) => Math.round(a * 255));
     const px = new Uint8ClampedArray(W * H * 4);
     const grids = [...terrainGrids.values()];
-    // per grid, the lattice column of each canvas column (-1 outside it)
-    const cols = grids.map((g) => {
-      const out = new Int32Array(W);
-      for (let x = 0; x < W; x++) {
-        const c = Math.floor((lonW + (lonE - lonW) * (x + 0.5) / W + 180) * g.perDeg) - g.col0;
-        out[x] = c >= 0 && c < g.w ? c : -1;
+    // the hex rows the image can reach, and per grid the lattice row of each (-1 outside it), so a
+    // pixel asks for a row's latitude by index
+    const rMin = Math.floor(y0 / HEX_ROW) - 1, rows = Math.ceil(y1 / HEX_ROW) + 1 - rMin + 1;
+    const rowLat = new Float64Array(rows);
+    for (let j = 0; j < rows; j++) rowLat[j] = mercLat((rMin + j) * HEX_ROW);
+    const gridRow = grids.map((g) => {
+      const out = new Int32Array(rows);
+      for (let j = 0; j < rows; j++) {
+        const r = Math.floor((rowLat[j] + 90) * g.perDeg) - g.row0;
+        out[j] = r >= 0 && r < g.h ? r * g.w : -1;
       }
       return out;
     });
-    const rows: { g: ClassGrid; cols: Int32Array; base: number }[] = [];
+    const colScale = grids.map((g) => HEX_WIDTH * 180 * g.perDeg), colShift = grids.map((g) => HEX_SHIFT * 360 * g.perDeg);
+    // each pixel wears the class of its hex's centre, as track there is charged
+    const xScale = (x1 - x0) / W / HEX_WIDTH, xStart = (x0 - HEX_SHIFT) / HEX_WIDTH + xScale * 0.5;
+    const cand: number[] = [];
     let any = false;
     for (let y = 0; y < H; y++) {
-      const my = y0 + (y1 - y0) * (y + 0.5) / H;
-      const lat = mercLat(my);
-      rows.length = 0;
-      grids.forEach((g, k) => {
-        const r = Math.floor((lat + 90) * g.perDeg) - g.row0;
-        if (r >= 0 && r < g.h) rows.push({ g, cols: cols[k], base: r * g.w });
-      });
-      if (!rows.length) continue;
+      const rf = (y0 + (y1 - y0) * (y + 0.5) / H) / HEX_ROW;
+      const near = Math.round(rf) - rMin;
+      cand.length = 0;
+      for (let k = 0; k < grids.length; k++) {
+        const row = gridRow[k];
+        if (row[near] >= 0 || row[Math.max(0, near - 1)] >= 0 || row[Math.min(rows - 1, near + 1)] >= 0) cand.push(k);
+      }
+      if (!cand.length) continue;
+      let lastQ = NaN, lastR = NaN, lastK = 0;
+      const half = rf / 2;
       for (let x = 0; x < W; x++) {
-        for (const { g, cols: cc, base } of rows) {
-          const c = cc[x];
-          if (c < 0) continue;
-          const k = classAt(g, base + c);
-          if (k) {
-            const i = (y * W + x) * 4;
-            const c3 = rgbOf(k);
-            px[i] = c3[0], px[i + 1] = c3[1], px[i + 2] = c3[2], px[i + 3] = Math.round(wash.alpha[k] * 255);
-            any = true;
+        const qf = xStart + x * xScale - half, sf = -qf - rf;
+        let q = Math.floor(qf + 0.5), r = Math.floor(rf + 0.5);
+        const s = Math.floor(sf + 0.5), dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s - sf);
+        if (dq > dr && dq > ds) q = -r - s;
+        else if (dr > ds) r = -q - s;
+        let k = lastK;
+        if (q !== lastQ || r !== lastR) {
+          k = 0;
+          const j = r - rMin, c2 = 2 * q + r;
+          for (let n = 0; n < cand.length; n++) {
+            const m = cand[n], base = gridRow[m][j];
+            if (base < 0) continue;
+            const g = grids[m], c = Math.floor(c2 * colScale[m] + colShift[m]) - g.col0;
+            if (c < 0 || c >= g.w) continue;
+            const i = base + c;
+            k = (g.cls[i >> 2] >> ((i & 3) << 1)) & 3;
+            break;
           }
-          break;
+          lastQ = q, lastR = r, lastK = k;
+        }
+        if (k) {
+          const i = (y * W + x) * 4;
+          px[i] = red, px[i + 1] = green, px[i + 2] = blue, px[i + 3] = alpha[k];
+          any = true;
         }
       }
     }
@@ -154,4 +178,3 @@ export function startTerrainTint(map: MlMap): () => void {
   };
 }
 
-const mercLat = (y: number) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;

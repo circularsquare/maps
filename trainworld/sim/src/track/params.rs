@@ -108,6 +108,13 @@ pub const WATER_SPAN_MAX: f64 = 30_000.0;
 pub const TERRAIN_MIN_LEVEL: i8 = -1;
 /// Terrain sampling step along track, m: under a quarter of the class grid's ~115 m cell (T-1854).
 pub const TERRAIN_STEP: f64 = 25.0;
+/// Width of a terrain hex across its flats, in world widths on the mercator plane (T-2890): 1/768 of
+/// a degree of longitude, about 110 m at 40 N. The app draws the same lattice (`game/terrain.ts`).
+pub const TERRAIN_HEX: f64 = 1.0 / (360.0 * 768.0);
+/// How far east the hex lattice is shifted, world widths: 1/16 of a class grid cell at 960 a degree,
+/// so no hex centre falls exactly on a cell edge, where rounding could pick different cells here and
+/// in the app.
+pub const TERRAIN_HEX_SHIFT: f64 = 1.0 / (360.0 * 15360.0);
 /// Per road that track at ground level crosses, US$M (T-1929; 10 since T-2732, Anita, standing in for
 /// the buildings cleared: a viaduct is cheaper to build from about 3.75 crossings a km, open country's
 /// under 1 a km stays cheapest at grade). Each road comes with its weight, a motorway's 3 (app `roadTiles.ts`).

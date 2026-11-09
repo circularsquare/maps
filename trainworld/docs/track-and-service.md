@@ -1022,7 +1022,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   ("The terrain here did not load. Try again.") while one of them could not be fetched, so nothing is
   paid on a guess (T-2613; a 404 counts as no file, flat). A download gives up after 60 s; a failed one
   still needed by the view or the blueprint is fetched again 2 s later, doubling to 30 s (the status tag
-  says so, ui-panels.md). Each edge keeps
+  says so, ui-panels.md). Track is charged by hex (T-2890): a point takes the class of the lattice cell
+  under the centre of its hex (`cost::hex_centre`), pointy-topped hexes regular on the mercator plane, 1/768
+  of a degree of longitude across (`TERRAIN_HEX`, about 110 m at 40 N), the same hexes the build tools'
+  wash draws, so a hex that looks like hills is charged as hills. Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
