@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "Create account",
   "accountPanel.currentPassword": "Current password",
   "accountPanel.deleteAccount": "Delete account",
+  "accountPanel.deleteConfirmGoogle": "Confirm with Google to delete it.",
   "accountPanel.deleteQuestion": "Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.",
   "accountPanel.devLabel": "Made-up id",
   "accountPanel.devPlaceholder": "Made-up id (dev server)",

@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "Создать аккаунт",
   "accountPanel.currentPassword": "Текущий пароль",
   "accountPanel.deleteAccount": "Удалить аккаунт",
+  "accountPanel.deleteConfirmGoogle": "Подтвердите через Google, чтобы удалить.",
   "accountPanel.deleteQuestion": "Удалить аккаунт? Его игры, записи в таблицах лидеров и проезды в noritetsu тоже удалятся. Игры в этом браузере останутся.",
   "accountPanel.devLabel": "Выдуманный id",
   "accountPanel.devPlaceholder": "Выдуманный id (сервер разработки)",

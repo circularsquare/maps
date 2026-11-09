@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "Criar conta",
   "accountPanel.currentPassword": "Senha atual",
   "accountPanel.deleteAccount": "Excluir conta",
+  "accountPanel.deleteConfirmGoogle": "Confirme com o Google para excluí-la.",
   "accountPanel.deleteQuestion": "Excluir sua conta? Os jogos, as entradas no ranking e as viagens do noritetsu vão junto. Os jogos deste navegador ficam.",
   "accountPanel.devLabel": "ID inventado",
   "accountPanel.devPlaceholder": "ID inventado (servidor de dev)",

@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "建立帳號",
   "accountPanel.currentPassword": "目前的密碼",
   "accountPanel.deleteAccount": "刪除帳號",
+  "accountPanel.deleteConfirmGoogle": "請透過 Google 確認後刪除。",
   "accountPanel.deleteQuestion": "要刪除你的帳號嗎？帳號裡的存檔、排行榜紀錄和noritetsu的搭乘紀錄都會一起刪除。這個瀏覽器裡的存檔會留著。",
   "accountPanel.devLabel": "自訂ID",
   "accountPanel.devPlaceholder": "自訂ID（開發伺服器）",

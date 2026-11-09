@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "Hesap oluştur",
   "accountPanel.currentPassword": "Mevcut şifre",
   "accountPanel.deleteAccount": "Hesabı sil",
+  "accountPanel.deleteConfirmGoogle": "Silmek için Google ile onaylayın.",
   "accountPanel.deleteQuestion": "Hesabın silinsin mi? Hesaptaki oyunlar, skor tablosu kayıtları ve noritetsu biniş kayıtları da gider. Bu tarayıcıdaki oyunlar kalır.",
   "accountPanel.devLabel": "Uydurma kimlik",
   "accountPanel.devPlaceholder": "Uydurma kimlik (geliştirme sunucusu)",

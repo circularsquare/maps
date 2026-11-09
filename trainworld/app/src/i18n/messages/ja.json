@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "アカウントを作成",
   "accountPanel.currentPassword": "現在のパスワード",
   "accountPanel.deleteAccount": "アカウントを削除",
+  "accountPanel.deleteConfirmGoogle": "削除するにはGoogleで確認してください。",
   "accountPanel.deleteQuestion": "アカウントを削除しますか？アカウントのゲーム、ランキングの記録、noritetsuの乗車記録も削除されます。このブラウザにあるゲームは残ります。",
   "accountPanel.devLabel": "仮のID",
   "accountPanel.devPlaceholder": "仮のID（開発サーバー）",

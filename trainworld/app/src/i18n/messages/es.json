@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "Crea una cuenta",
   "accountPanel.currentPassword": "Contraseña actual",
   "accountPanel.deleteAccount": "Elimina la cuenta",
+  "accountPanel.deleteConfirmGoogle": "Confirma con Google para borrarla.",
   "accountPanel.deleteQuestion": "¿Eliminar tu cuenta? También se eliminan sus partidas, sus puestos en la clasificación y sus viajes de noritetsu. Las partidas de este navegador se conservan.",
   "accountPanel.devLabel": "Id inventado",
   "accountPanel.devPlaceholder": "Id inventado (servidor de desarrollo)",

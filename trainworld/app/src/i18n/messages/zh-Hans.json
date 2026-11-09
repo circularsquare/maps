@@ -15,6 +15,7 @@
   "accountPanel.createAccount": "注册账号",
   "accountPanel.currentPassword": "当前密码",
   "accountPanel.deleteAccount": "删除账号",
+  "accountPanel.deleteConfirmGoogle": "请通过 Google 确认后删除。",
   "accountPanel.deleteQuestion": "删除你的账号？账号里的游戏、排行榜记录和noritetsu乘车记录也会一起删除。这个浏览器里的游戏会保留。",
   "accountPanel.devLabel": "任意ID",
   "accountPanel.devPlaceholder": "任意ID（开发服务器）",
