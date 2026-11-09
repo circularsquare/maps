@@ -29,6 +29,39 @@ what the published game does:
    apart. Probably fine for a free hobby game, but it is the one name clash I found.
 5. **Credits miss several sources**, one with a required wording: TfL's licence requires "Powered by TfL Open Data".
 
+## Status 2026-11-09 (T-2916)
+
+The list above was written 2026-10-29; most of it has since been done. Credits live on the about page
+(`website/pages/projects/abouttrainsworld.md`, "sources"; Settings only links to it), not in `Credits.tsx`.
+
+Done: TfL ("Powered by TfL Open Data"), Network Rail (OGL v3), MTA with the non-endorsement sentence, IDFM (ODbL),
+ASPECT, GEDTM30, GHSL, Kontur and the OFL line are on the about page. Zen Maru Gothic, Huninn and the RTL plugin
+are self-hosted (T-1825, T-2636); a dev load in four languages made no request to Google or unpkg. The trainsworld
+page has no analytics include (`tools/deploy.py`). The privacy page (9 November) covers play counts, feedback, the
+sign-in script, retention, the server's place, Do Not Track and 13 and over. `track.wav` is gone. No NUTS polygon ships
+in a pack (T-925); the `nocar` layer is T-926.
+
+Open, all in the website repo, not this tree (the edit is four
+changes to the sources section): Huninn named with the other fonts; NJ Transit named beside the MTA and Port Authority
+and in the no-endorsement sentence (its developer terms are behind a login and unread); "Contains information licensed
+under the Open Government Licence – Toronto." (the licence's own wording, checked on toronto.ca) with TTC, GO Transit
+and UP Express (Metrolinx) named; "Great Britain National Rail timetables via aubin.app" (its terms unread).
+
+Sounds (Pixabay Content Licence): free to use and change in the game, credit optional; what it forbids is selling or
+giving away the files on their own. Shipping them inside the game is fine. A public repo that holds the `.wav` files is
+handing them out by themselves, and the repo's AGPL could not cover them anyway. Plan: the public copy leaves out
+`app/public/sounds/` (the sync allowlist, T-2913), the README says the four building sounds are not included, and the
+game already plays on without them (`map/samples.ts` treats a missing file as silent). Keep each sound's Pixabay page URL
+with the originals. Re-recording or synthesising them would let them join the repo.
+
+What the public repo's licence files need (T-2913): `LICENSE` (AGPL-3 for the code); a `NOTICE` or `DATA.md` saying the
+data files fetched from data.anita.garden are under ODbL (OpenStreetMap) with the per-source credits copied from the
+about page (TfL, OGL v3, Network Rail, MTA, IDFM, ASPECT, GEDTM30, GHSL, Kontur, geoBoundaries, Toronto and Ontario OGL,
+StatCan, ABS, Destatis/BKG and the rest), and that the packs are not under the code licence; the four OFL texts already in
+`app/public/fonts/` (Zen Maru Gothic, Huninn, Noto Sans, Nunito) stay with the fonts; `app/public/rtl/LICENSE-mapbox-gl-rtl-text.txt`
+stays; a line that the name "trainsworld" and the sounds are not covered by the code licence; MapLibre, pmtiles, Preact
+and earcut come in through npm with their own notices.
+
 ## 1. Data, maps, fonts, sounds
 
 "Done" means checked against the app: `app/src/ui/Credits.tsx` (Settings, Data sources, closed by default),
