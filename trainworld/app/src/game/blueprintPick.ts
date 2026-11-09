@@ -282,6 +282,7 @@ export async function removePicked() {
     ask.value = null;
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });
     if (a.ok) say(t("remove.done", { what }));
+    else if (!a.issues.length) say(t("remove.failed"), true);
   };
   const lines = await lineEffects(p.edges, p.stations);
   if (!p.built && !lines.length && !big) return void go();

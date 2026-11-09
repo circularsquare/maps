@@ -555,8 +555,12 @@ flyover ringed, its name by the cursor. The red goes with the pointer leaving th
 changing by any route, and a delete's late reply does not draw it again under another tool [T-1872;
 `clearDelHover` in `map/tools.ts`]. The track under a station takes the station [T-2412; `stationUnder` in
 `map/tools.ts`]: the pointer snapped to its node, or on its platform's stretch of track (half the platform
-and 4 m either side), rings and removes the station, with its own question, and the track stays; not
-zoomed out where stations are hidden. A piece beside a through station is drawn red, and named by its
+and 4 m either side, all of a terminus's), rings and removes the station, with its own question, and the track stays; not
+zoomed out where stations are hidden. A station's short end piece [T-2797; `stationStub` in `game/remove.ts`, `holds_station` in the track
+model], from the station to a bare end and at most 11 m past the platform, also takes the station under the delete tool, bare end included, since
+removing that piece would only lay it back; zoomed out, or from the track inspector or the Select tool's Remove with only such pieces picked, it is refused
+("A station needs this track. Remove the station first."). **Keys** [T-2797]: with the Select tool's pick, Delete or Backspace removes it; with track or a station selected and no tool on,
+Delete or Backspace is its Remove button; with nothing selected, Delete picks the delete tool; while drawing, Delete takes the last segment back like Backspace. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
 removed at once (undoable; [T-2763] a piece no line runs over and no station touches leaves the screen at the click, `hideEdge` in `map/renderer.ts`, and the line-effects question to the clock worker is skipped; the model follows when the worker answers); anything constructed only after a yes in the confirmation dialog
@@ -637,7 +641,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
   one undoable edit a run, so it covers each run whole, junction to junction, even where only part
   is picked; its hover gives the summed price and the runs' count, or the first refusal, greyed
-  when none can; then Remove (key Delete) and Clear. E and Delete act on the pick with the Select tool
+  when none can; then Remove (key Delete or Backspace) and Clear. E and Delete act on the pick with the Select tool
   only, so while plain selecting the hovers name no key but Clear's Esc [T-2397]. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
   disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable

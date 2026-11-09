@@ -577,8 +577,10 @@ mod tests {
     #[test]
     fn manual_radius_too_small_or_too_big() {
         let mut v = [pi(0.0, 0.0), pi(1000.0, 0.0), pi(1000.0, 1000.0)];
-        v[1].radius = 80.0;
+        v[1].radius = 40.0;
         assert!(fit(&v).issues.contains(&GeomIssue::RadiusTooSmall(1)));
+        v[1].radius = MIN_RADIUS;
+        assert!(fit(&v).issues.is_empty());
         // tangent 1500 > 1000 m leg: the curve takes the whole leg instead (T-1895)
         v[1].radius = 1500.0;
         let f = fit(&v);
@@ -595,7 +597,7 @@ mod tests {
         let f = fit(&w);
         assert!(f.clamped == [1] && (f.tangent[1] + f.tangent[2] - 600.0).abs() < 1e-9);
         // narrowed under the minimum is still too tight
-        let mut t = [pi(0.0, 0.0), pi(50.0, 0.0), pi(50.0, 50.0)];
+        let mut t = [pi(0.0, 0.0), pi(40.0, 0.0), pi(40.0, 40.0)];
         t[1].radius = 300.0;
         assert!(fit(&t).issues.contains(&GeomIssue::RadiusTooSmall(1)));
         v[1].radius = 400.0;

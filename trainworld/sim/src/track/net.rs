@@ -263,6 +263,8 @@ pub enum Issue {
     Crossing { e1: u32, e2: u32, x: f64, y: f64, overlap: bool },
     NoSuchNode { node: u32 },
     NoSuchEdge { edge: u32 },
+    /// T-2797: the piece is only the track a station stands on; removing it would lay it back.
+    StationTrack { edge: u32 },
     NoSuchLine { line: u32 },
     EdgeLoop { edge: u32 },
     Tracks { edge: u32 },

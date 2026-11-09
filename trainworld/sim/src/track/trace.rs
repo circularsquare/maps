@@ -547,7 +547,7 @@ mod tests {
 
     #[test]
     fn a_bend_within_tolerance() {
-        let t = trace(&bend(), false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
+        let t = trace(&bend(), false, 25.0, TRACE_MIN_RADIUS, R_CAP, 0).unwrap();
         assert!(t.worst <= 25.0, "worst {}", t.worst);
         assert!(t.pis.len() <= 6, "{} corners", t.pis.len());
         let mut v = vec![Pi::new(0.0, 0.0, 0.0, 0)];
@@ -569,8 +569,8 @@ mod tests {
             let a = i as f64 * 10.0 / r;
             l.push((3000.0 + r * a.sin(), r - r * a.cos()));
         }
-        let at160 = trace(&l, false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
-        let at320 = trace(&l, false, 25.0, MIN_RADIUS, design_radius(320.0), 0).unwrap();
+        let at160 = trace(&l, false, 25.0, TRACE_MIN_RADIUS, R_CAP, 0).unwrap();
+        let at320 = trace(&l, false, 25.0, TRACE_MIN_RADIUS, design_radius(320.0), 0).unwrap();
         assert!(at160.pis.iter().all(|p| p.radius == 0.0));
         assert!(at320.worst <= 25.0, "worst {}", at320.worst);
         let (e0, e1) = (l[0], *l.last().unwrap());
@@ -589,7 +589,7 @@ mod tests {
         let mut l: Vec<(f64, f64)> = (0..=100).map(|i| (i as f64 * 10.0, 0.0)).collect();
         l.push((1015.0, 4.0));
         l.extend((1..=100).map(|i| (1015.0 + i as f64 * 10.0, 4.0)));
-        let t = trace(&l, false, 25.0, MIN_RADIUS, R_CAP, 0).unwrap();
+        let t = trace(&l, false, 25.0, TRACE_MIN_RADIUS, R_CAP, 0).unwrap();
         let mut v = vec![Pi::new(0.0, 0.0, 0.0, 0)];
         v.extend(t.pis.iter().cloned());
         v.push(Pi::new(2015.0, 4.0, 0.0, 0));

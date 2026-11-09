@@ -670,7 +670,7 @@ impl TrackApi {
     pub fn trace_start(&self, lonlat: &[f64], tol: f64, tracks: u8, level: i8) -> RouteTrace {
         let f = self.w.net.frame();
         let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
-        let r_min = if tracks == 4 { MIN_RADIUS + QUAD_SPACING } else { MIN_RADIUS };
+        let r_min = if tracks == 4 { TRACE_MIN_RADIUS + QUAD_SPACING } else { TRACE_MIN_RADIUS };
         RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, r_min, self.route_cap, level) }
     }
 

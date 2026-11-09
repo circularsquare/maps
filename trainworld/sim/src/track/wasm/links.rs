@@ -52,6 +52,9 @@ impl TrackApi {
         if !self.w.net.edge_ok(id) {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
+        if self.holds_station(id) {
+            return self.refuse(Issue::StationTrack { edge: id });
+        }
         // a station the removal would leave at a bare end keeps its place (T-1161); where the
         // trimmed removal is refused, the whole edge goes as before
         if let Some((ops, nodes, edges)) = self.station_trim_ops(id) {
@@ -477,6 +480,9 @@ impl TrackApi {
     /// a removed station loses that stop and is routed again through the rest (T-859), else left
     /// broken, as removed track leaves it.
     pub fn delete_pieces(&mut self, edges: &[u32], stations: &[u32]) -> u32 {
+        if stations.is_empty() && !edges.is_empty() && edges.iter().all(|&e| self.w.net.edge_ok(e) && self.holds_station(e)) {
+            return self.refuse(Issue::StationTrack { edge: edges[0] });
+        }
         // T-1895: a removal is never refused for what the track it keeps or joins would be (a
         // curve, a crossing): refused that way, it goes without them
         for plain in [false, true] {
@@ -619,6 +625,9 @@ impl TrackApi {
 /// Track kept past a trimmed station's platform end (T-1161): `split_plan` may snap a split up to
 /// 2 m toward a piece boundary, and `check_station` wants 1 m clear of the platform.
 pub(super) const STATION_TRIM_MARGIN_M: f64 = 4.0;
+/// The longest piece past a platform's end that a removal only lays back: the trim's margin plus
+/// the 7 m `station_trim_ops` needs to split.
+const STATION_STUB_M: f64 = STATION_TRIM_MARGIN_M + 7.0;
 
 impl TrackApi {
     /// A passage's price between two stations, US$M (T-1281), paid at once when both are
@@ -626,6 +635,21 @@ impl TrackApi {
     pub fn passage_cost(&self, a: u32, b: u32) -> f64 {
         let net = &self.w.net;
         if a == b || !net.is_station(a) || !net.is_station(b) { 0.0 } else { upgrades::passage_price(net.passage_m(a, b)) }
+    }
+
+    /// T-2797: the edge runs from a station to a bare end and is no longer than what removing it
+    /// would keep there (`STATION_STUB_M` past the platform), so a removal would change nothing.
+    /// The app's `stationStub` is the same rule.
+    fn holds_station(&self, id: u32) -> bool {
+        let net = &self.w.net;
+        let i = id as usize;
+        if net.edge_crossover[i] {
+            return false;
+        }
+        let bare = |n: u32| net.node_ports[n as usize].n == 1 && net.node_platform[n as usize] == 0;
+        let (a, b) = (net.edge_a[i], net.edge_b[i]);
+        let st = if bare(b) { a } else if bare(a) { b } else { return false };
+        net.node_platform[st as usize] > 0 && net.edge_len[i] <= net.platform_reach(st) + STATION_STUB_M
     }
 
     /// `delete_edge` for an edge with a station at an end that has track on both sides (T-1161):

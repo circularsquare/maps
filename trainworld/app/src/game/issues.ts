@@ -7,7 +7,7 @@ import { t } from "../i18n";
 const TEXT: Record<string, () => string> = {
   "Geom:ZeroLeg": () => t("issues.zeroLeg"),
   "Geom:Reversal": () => t("issues.reversal"),
-  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(100) }),
+  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(50) }),
   "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(200) }),
   "Geom:LevelRange": () => t("issues.levelRange"),
   NodeLevel: () => t("issues.levelRange"),
@@ -41,6 +41,7 @@ const TEXT: Record<string, () => string> = {
   SplitPoint: () => t("issues.splitPoint"),
   NodeInUse: () => t("issues.nodeInUse"),
   NoSuchEdge: () => t("issues.noSuchEdge"),
+  StationTrack: () => t("issues.stationTrack"),
   NoSuchNode: () => t("issues.noSuchNode"),
   NoSuchLine: () => t("issues.noSuchLine"),
   EdgeLoop: () => t("issues.edgeLoop"),

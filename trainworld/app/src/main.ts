@@ -27,7 +27,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
-import { setTrackHider } from "./game/remove";
+import { removeThing, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
@@ -600,6 +600,22 @@ window.addEventListener("keydown", (e) => {
   if (tools.key(e)) {
     e.preventDefault();
     return;
+  }
+  // T-2797: the key a player guesses (a Mac's delete is Backspace): what is selected goes as by its
+  // Remove button; with nothing selected, Delete picks the delete tool
+  if ((e.key === "Delete" || e.key === "Backspace") && tool.peek() === "select" && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !ask.peek()) {
+    const s = selection.peek();
+    if (s?.kind === "track" || (s?.kind === "station" && !inComplexView(s.station))) {
+      e.preventDefault();
+      void removeThing(s.kind === "track" ? { kind: "track", edge: s.edge } : { kind: "station", node: Number(s.station) });
+      return;
+    }
+    if (!s && e.key === "Delete") {
+      e.preventDefault();
+      pickTool("delete");
+      tab.value = "build";
+      return;
+    }
   }
   // Undo and redo (blueprint edits, and fare changes while they are the last, T-1130; constructing is final, SPEC 6.4).
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {

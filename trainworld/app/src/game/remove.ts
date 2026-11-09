@@ -30,6 +30,21 @@ export function stationTrim(edge: number): [number, number] {
   return ka + kb + 7 > e.lengthM ? [0, 0] : [ka, kb];
 }
 
+/** T-2797: the station whose short end piece this is, or null: a piece from a station to a bare end
+ * that a removal would only lay back. The track model's `holds_station` (links.rs) is the same rule. */
+export function stationStub(edge: number): number | null {
+  const w = world.peek();
+  const e = w?.edges.find((x) => x.id === edge);
+  if (!w || !e || e.crossover || e.a === e.b) return null;
+  const bare = (id: number) => {
+    const n = w.nodes.get(id);
+    return n?.ports === 1 && !(n.platform > 0);
+  };
+  const id = bare(e.b) ? e.a : bare(e.a) ? e.b : -1, st = w.nodes.get(id);
+  if (!st || !(st.platform > 0) || st.bus || st.port) return null;
+  return e.lengthM <= (st.ports <= 1 ? st.platform : st.platform / 2) + 11 ? id : null;
+}
+
 /** T-1649: a delete of more than this much track, or more than a tenth of the network's, whichever
  * is less, asks first, blueprint or built. The floor keeps a young network's small deletes quiet. */
 const BIG_DELETE_M = 50_000, BIG_DELETE_SHARE = 0.1, BIG_DELETE_FLOOR_M = 5_000;
@@ -134,6 +149,7 @@ export async function removeThing(r: Removable) {
     const a = await edit(opOf(r));
     if (!a.ok) {
       hider?.show();
+      if (!a.issues.length) say(t("remove.failed"), true);
       return;
     }
     if (wasSelected) selection.value = null;

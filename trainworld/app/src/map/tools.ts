@@ -33,7 +33,7 @@ import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
 import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, snapBeside, snapping, tool } from "../game/ui";
-import { describeRemovable, removeThing, stationTrim, type Removable } from "../game/remove";
+import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
 import { pointerLocal } from "./pick";
@@ -723,7 +723,7 @@ export class Tools {
       return true;
     }
     if (t === "track" && this.start) {
-      if (e.key === "Backspace") {
+      if (e.key === "Backspace" || e.key === "Delete") {
         void this.takeBackSegment();
         return true;
       }
@@ -1213,8 +1213,10 @@ export class Tools {
   }
 
   /** T-2412: the delete tool on a station's node or its platform's stretch of track (half the platform
-   * and 4 m either side, what `stationTrim` keeps) takes the station, whose own mark is small zoomed
-   * out; the track stays, as when the station is clicked. Not where stations are hidden (T-205). */
+   * and 4 m either side, what `stationTrim` keeps; all of a terminus's platform) takes the station,
+   * whose own mark is small zoomed out; the track stays, as when the station is clicked. So does a
+   * station's short end piece, bare end included, which a removal could only lay back (T-2797). Not
+   * where stations are hidden (T-205). */
   private stationUnder(s: Snap): (Removable & { lx: number; ly: number }) | null {
     const w = world.peek(), n = this.overlay.renderer.net;
     if (!w || !n || this.overlay.renderer.stationStyle.hidden || (s.kind !== "node" && s.kind !== "edge")) return null;
@@ -1226,13 +1228,22 @@ export class Tools {
       const node = w.nodes.get(id)!, [lx, ly] = toLocal(node.lng, node.lat);
       return { kind: "station" as const, node: id, lx, ly };
     };
-    if (s.kind === "node") return station(s.node) ? hit(s.node) : null;
+    const stub = (edge: number | undefined) => {
+      const id = edge === undefined ? null : stationStub(edge);
+      return id !== null && station(id) ? hit(id) : null;
+    };
+    if (s.kind === "node") {
+      if (station(s.node)) return hit(s.node);
+      return w.nodes.get(s.node)?.ports === 1 ? stub(w.edges.find((x) => x.a === s.node || x.b === s.node)?.id) : null;
+    }
+    const held = stub(s.edge);
+    if (held) return held;
     const e = w.edges.find((x) => x.id === s.edge), pts = n.edgePts.get(s.edge);
     if (!e || !pts || e.crossover) return null;
     const along = fractionAlong(pts, s.lx, s.ly) * e.lengthM;
     const reach = (id: number, d: number) => {
       const node = station(id);
-      return node ? node.platform / 2 + 4 - d : -Infinity;
+      return node ? (node.ports <= 1 ? node.platform : node.platform / 2) + 4 - d : -Infinity;
     };
     const ra = reach(e.a, along), rb = reach(e.b, e.lengthM - along);
     if (ra < 0 && rb < 0) return null;

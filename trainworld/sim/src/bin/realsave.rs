@@ -112,7 +112,7 @@ fn main() {
                 line.extend(inner.iter().copied());
                 line.push(lb);
                 let t = std::time::Instant::now();
-                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, R_CAP, -1) };
+                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, R_CAP, -1) };
                 trace_s += t.elapsed().as_secs_f64();
                 match r {
                     Some(t) => {
@@ -245,7 +245,7 @@ fn main() {
                 line.push(lead_b);
                 let t = std::time::Instant::now();
                 // the design radius at 160 km/h, or at 320 for high-speed track (T-1290)
-                let r = trace::trace(&line, false, TRACE_TOL_M, MIN_RADIUS, design, level);
+                let r = trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, design, level);
                 trace_s += t.elapsed().as_secs_f64();
                 r
             });

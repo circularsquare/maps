@@ -66,7 +66,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   segment from a loose quad end (the other pair's end within 4-12 m beside it, level with it and
   facing the same way) carries both pairs on with no swing-out or junction: the drawn pair from the
   end clicked is the tangent arc, the other pair from the end beside it, on whichever side that
-  is, concentric (so a curve on the inside needs 108 m on the drawn pair). A first segment from a
+  is, concentric (so a curve on the inside needs 58 m on the drawn pair). A first segment from a
   free point is two straights side by side. From other track or a node the express pair swings
   out as below, which needs a straight, so that segment keeps the lead-in shape (curve then
   straight); one ending on track or a node has both pairs meet there.
@@ -99,7 +99,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
   as squares on the map; dragging one previews the new shape with each curve's radius and speed
   (or why it cannot be built), letting go applies it as one undoable edit, Escape puts it back. The
-  track inspector lists the corners with each curve's speed and a radius stepper (100 to 1,796 m,
+  track inspector lists the corners with each curve's speed and a radius stepper (50 to 1,796 m,
   then auto), a level stepper and Remove for each corner. Add corner inserts an auto-radius
   point midway along the selected interval between an end and a corner, or two corners; the
   new square can then be dragged. Removing the last corner restores a straight stretch.
@@ -177,7 +177,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
   disagree, cash included.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
-  100 m: 38 km/h, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius 100 m.**
+  50 m: 27 km/h, 100 m: 38, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius 50 m**
+  (`MIN_RADIUS`, T-2799); a route snapped to a real line keeps its curves at 100 m or wider (`TRACE_MIN_RADIUS`).
   Each piece of track runs at the **lowest of its curve speed, its track's cap and the line's
   trains' top speed** (T-817): track caps at **160 km/h**, high-speed track at **320**, a crossover
   at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). Grades do not change speed.
@@ -205,7 +206,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
   short leg), and between them runs parallel, each corner concentric with the drawn one (radius
   8 m smaller on the inside of the turn, 8 m larger outside; where that inside radius would be
-  under 100 m on a drawn curve of 100-108 m it is 100 m instead if that brings the curve's middle
+  under 50 m on a drawn curve of 50-58 m it is 50 m instead if that brings the curve's middle
   at most `QUAD_EASE_TOL` (0.5 m) nearer the drawn track, a slight turn, and is otherwise too
   tight for quad, T-1678; a corner whose concentric radius would overrun its legs, as the capped curve of a
   nearly straight segment can once the millimetre grid tilts its metre-long legs, takes the auto radius
@@ -243,7 +244,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
   on: through plain joints and stations into more double track, stopping each way at a junction,
   a track end, single track, a crossover or track that has a pair beside it already, and short of
-  a piece with a curve the pair cannot follow (under 100 m beside it, quad's rule above; T-1678),
+  a piece with a curve the pair cannot follow (under 50 m beside it, quad's rule above; T-1678),
   where the pair has its own loose end; the selected piece having one is refused
   (`RadiusTooSmall`). The pair runs 8 m to the left of the selected piece's direction, or to the
   right where the left is refused (crossing other track, water) or would stop short where the right would not, every

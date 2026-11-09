@@ -4,8 +4,10 @@
 
 /// Lateral acceleration allowed in curves, m/s² (LGV design: 7,000 m for 320 km/h).
 pub const A_LAT: f64 = 1.1;
-/// Smallest radius a player may build, m (38 km/h).
-pub const MIN_RADIUS: f64 = 100.0;
+/// Smallest radius a player may build, m (27 km/h; T-2799: about the tightest metro curves in use).
+pub const MIN_RADIUS: f64 = 50.0;
+/// Smallest radius a traced real line takes, m (38 km/h): a jagged source must not slow its trains.
+pub const TRACE_MIN_RADIUS: f64 = 100.0;
 /// Top speed of an ordinary train, m/s (160 km/h), and the cap on track other than high speed.
 pub const V_TOP: f64 = 160.0 / 3.6;
 /// Top speed of a high-speed train and the cap on high-speed track, m/s (T-817).

@@ -476,7 +476,7 @@ export class BlueprintBox {
   /** The E key: switch the pick on, or off when all of it is on (T-2338); Delete removes it (T-829). True if used. */
   key(e: KeyboardEvent): boolean {
     if (tool.peek() !== "blueprint" || e.ctrlKey || e.metaKey || e.altKey) return false;
-    if (e.key === "Delete") {
+    if (e.key === "Delete" || e.key === "Backspace") {
       void removePicked();
       return true;
     }
