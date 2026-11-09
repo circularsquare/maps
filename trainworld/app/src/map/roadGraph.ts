@@ -163,12 +163,17 @@ export class RoadGraph {
     return found;
   }
 
-  /** Whether the shortest edge between two joined nodes is a trunk road. */
+  /** Whether a bus runs edge `e` at highway speed: a trunk road or a motorway (links are not). */
+  private fastEdge(e: number): boolean {
+    return this.emotor[e] === 3 || this.emotor[e] === 1;
+  }
+
+  /** Whether the shortest edge between two joined nodes is a highway-speed road. */
   private edgeTrunk(a: number, b: number): boolean {
     let best = Infinity, trunk = false;
     for (let arc = this.head[a]; arc >= 0; arc = this.arcNext[arc]) {
       const e = arc >> 1, m = (arc & 1) === 0 ? this.eb[e] : this.ea[e];
-      if (m === b && this.elen[e] < best) (best = this.elen[e]), (trunk = this.emotor[e] === 3);
+      if (m === b && this.elen[e] < best) (best = this.elen[e]), (trunk = this.fastEdge(e));
     }
     return trunk;
   }
@@ -348,7 +353,7 @@ export class RoadGraph {
   path(s: Snap, d: Snap, capM: number, alts: Snap[] = [], penM: (c: Snap) => number = () => 0): RoadPath | null {
     const mpu = metresPerUnit(d.y);
     if (s.edge === d.edge) {
-      return { pts: [s.x, s.y, d.x, d.y], m: Math.abs(d.t - s.t) * this.elen[s.edge], to: d, fast: [this.emotor[s.edge] === 3] };
+      return { pts: [s.x, s.y, d.x, d.y], m: Math.abs(d.t - s.t) * this.elen[s.edge], to: d, fast: [this.fastEdge(s.edge)] };
     }
     if (this.g.length < this.nodes) {
       const n = Math.max(this.nodes, this.g.length * 2);
@@ -443,12 +448,12 @@ export class RoadGraph {
     if (sv) pts.push(sv[0], sv[1]), fast.push(false);
     for (let i = chain.length - 1; i >= 0; i--) {
       pts.push(this.gx[chain[i]], this.gy[chain[i]]);
-      fast.push(i === chain.length - 1 ? this.emotor[s.edge] === 3 : this.edgeTrunk(chain[i + 1], chain[i]));
+      fast.push(i === chain.length - 1 ? this.fastEdge(s.edge) : this.edgeTrunk(chain[i + 1], chain[i]));
     }
     const e = ends.get(end)!;
     if (e.via) pts.push(e.via[0], e.via[1]), fast.push(false);
     pts.push(e.to.x, e.to.y);
-    fast.push(this.emotor[e.to.edge] === 3);
+    fast.push(this.fastEdge(e.to.edge));
     return { pts, m: best - e.pen, to: e.to, fast };
   }
 }
