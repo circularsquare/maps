@@ -1,5 +1,6 @@
 // Number and time formatting for the UI. "−" (U+2212) for negatives, as in the mock.
 
+import { CURRENCY, isCurrency, roundTo, type CurrencySpec } from "./currency";
 import type { Level } from "./types";
 import { display } from "./ui";
 import { language, t, tCompact, tDuration, tList, tNumber } from "../i18n";
@@ -37,37 +38,90 @@ export function count(n: number): string {
   return String(Math.round(n));
 }
 
+// Money (T-2798). Every amount the game holds is US$; these turn one into the player's currency
+// (`display.currency`, game/currency.ts) at a fixed rate, and the two `typed` helpers turn what the
+// player types or steps back. The thresholds below are in the shown currency, so "$0" under $500 is
+// "¥0" under ¥500, and the red for a loss (`moneyNegative`) follows the same line as the text.
+const cu = (): CurrencySpec => CURRENCY[isCurrency(display.value.currency) ? display.value.currency : "USD"];
+/** The shown currency's rate, symbol and steps (game/currency.ts). */
+export const currencySpec = cu;
+/** US$ in the shown currency. */
+export const toShown = (usd: number): number => usd * cu().rate;
+/** What the player typed or stepped to in the shown currency, in US$. */
+export const fromShown = (v: number): number => v / cu().rate;
+/** Whether money is shown in US$, as the game counts it. */
+export const usingUsd = (): boolean => cu().rate === 1;
+/** The shown currency's symbol: "$", "£", "€", "¥", "₩". */
+export const currencySymbol = (): string => cu().symbol;
+/** A price the player typed or dragged to, in the shown currency, kept to the currency's smallest
+ * step (a cent, a yen, ten won) and given back in US$. */
+export const typedPrice = (shown: number): number => roundTo(shown, cu().grain) / cu().rate;
+/** A price as its typing box starts: "2.90", "435". */
+export const priceTyped = (usd: number): string => roundTo(usd * cu().rate, cu().grain).toFixed(cu().dp);
+
 /** Three significant figures from a million up (T-722): 22430000 -> "$22.4M", 1.153e9 -> "$1.15B",
  * 233e6 -> "$233M"; thousands to the k; under $500 "$0". */
 export function money(n: number): string {
-  const a = Math.abs(n);
-  if (a < 500) return "$0";
+  if (Math.abs(n) * cu().rate < 500) return cu().symbol + "0";
   return moneyShort(n);
 }
 
 /** Four significant figures, for the cash (T-722): "$11.36B", "$893.6M", trailing zeros dropped ("$6B");
  * to the dollar under a million. */
 export function moneyCash(n: number): string {
-  const a = Math.abs(n), s = n < 0 ? "−" : "";
+  const a = Math.abs(n) * cu().rate, s = (n < 0 ? "−" : "") + cu().symbol;
   if (a < 999.95e3) return moneyExact(n);
   const sig = (v: number) => String(Number(v.toPrecision(4)));
-  return a >= 999.95e6 ? s + "$" + compactOf(sig(a / 1e9), 1e9, "B") : s + "$" + compactOf(sig(a / 1e6), 1e6, "M");
+  if (a >= 999.95e12) return s + compactOf(sig(a / 1e15), 1e15, "Q");
+  if (a >= 999.95e9) return s + compactOf(sig(a / 1e12), 1e12, "T");
+  return a >= 999.95e6 ? s + compactOf(sig(a / 1e9), 1e9, "B") : s + compactOf(sig(a / 1e6), 1e6, "M");
 }
 
-/** A price in millions, to a tenth, as the Build tab quotes it: 90 -> "$90M", 1.5 -> "$1.5M"; "$150万" in Japanese. */
-export const millions = (v: number): string =>
-  "$" + (language.value === "en" ? tNumber(v, { maximumFractionDigits: 1 }) + "M" : compactOf(String(Number(v.toFixed(1))), 1e6, "M"));
+/** A price in millions of US$, to a tenth, as the Build tab quotes it: 90 -> "$90M", 1.5 -> "$1.5M"; "$150万" in
+ * Japanese. In a currency worth less, three significant figures, and billions from 1000M: "¥13.5B". */
+export function millions(v: number): string {
+  const R = cu().rate, d = v * R, y = cu().symbol;
+  const dec = R === 1 ? 1 : d < 10 ? 2 : d < 100 ? 1 : 0;
+  if (d >= 999.5) {
+    const b = String(Number((d / 1000).toPrecision(3)));
+    return y + (language.value === "en" ? tNumber(Number(b), { maximumFractionDigits: 2 }) + "B" : compactOf(b, 1e9, "B"));
+  }
+  return y + (language.value === "en" ? tNumber(d, { maximumFractionDigits: dec }) + "M" : compactOf(String(Number(d.toFixed(dec))), 1e6, "M"));
+}
 
-/** A range of whole millions: 10, 55 -> "$10-55M"; "$1000万-5500万" in Japanese. */
-export const millionsRange = (lo: number, hi: number): string =>
-  language.value === "en" ? `$${lo}-${hi}M` : `$${compactOf(String(lo), 1e6, "M")}-${compactOf(String(hi), 1e6, "M")}`;
+/** A range of whole millions of US$: 10, 55 -> "$10-55M"; "$1000万-5500万" in Japanese. */
+export function millionsRange(lo: number, hi: number): string {
+  const R = cu().rate, y = cu().symbol, big = hi * R >= 999.5, u = big ? 1e3 : 1;
+  const f = (x: number) => String(Number(((x * R) / u).toPrecision(3)));
+  if (language.value === "en") return `${y}${f(lo)}-${f(hi)}${big ? "B" : "M"}`;
+  return `${y}${compactOf(f(lo), u * 1e6, big ? "B" : "M")}-${compactOf(f(hi), u * 1e6, big ? "B" : "M")}`;
+}
 
+/** Whether `money(n)` shows more than zero (T-2798: $500 in dollars, 500 of the shown currency). */
+export const moneyShows = (n: number): boolean => Math.abs(n) * cu().rate >= 500;
 /** Whether `money(n)` shows a minus, for the panels' red (T-722). */
-export const moneyNegative = (n: number): boolean => n < 0 && Math.abs(n) >= 500;
+export const moneyNegative = (n: number): boolean => n < 0 && moneyShows(n);
 
 /** To the dollar, for the cash (T-284: it moves as fares land): 5834215320 -> "$5,834,215,320". */
 export function moneyExact(n: number): string {
-  return (n < 0 ? "−" : "") + "$" + exact(Math.abs(n));
+  return (n < 0 ? "−" : "") + cu().symbol + exact(Math.abs(n) * cu().rate);
+}
+
+/** A whole amount with no compact unit, for a round figure in a rule: 150 -> "$150", "¥22,500". */
+export const moneyWhole = (usd: number): string => cu().symbol + exact(usd * cu().rate);
+
+/** A price to the currency's own decimals (none for yen and won, ten won at a time): 2.9 -> "$2.90", "¥435". */
+export function price(usd: number): string {
+  const c = cu(), v = usd * c.rate;
+  return c.symbol + tNumber(c.grain >= 1 ? roundTo(v, c.grain) : v, { minimumFractionDigits: c.dp, maximumFractionDigits: c.dp });
+}
+
+/** A small amount, for rates per km and the like: 0.15 -> "$0.15", "¥22"; a whole figure drops its decimals ("$9"). */
+export function smallMoney(usd: number): string {
+  const c = cu(), v = usd * c.rate;
+  if (c.dp === 0) return c.symbol + (v >= 10 ? exact(v) : String(Number(v.toFixed(1))));
+  const r = +v.toFixed(2);
+  return c.symbol + (Number.isInteger(r) ? r : r.toFixed(2));
 }
 
 /** Three significant figures: 25.5, 133, 1.33. */
@@ -78,11 +132,13 @@ export const sig3 = (v: number): string => {
 
 /** Three significant figures, for the drawing tag (T-085): "$25.5M", "$133M", "$1.33B". */
 export function moneyShort(n: number): string {
-  const a = Math.abs(n), s = n < 0 ? "−" : "";
+  const a = Math.abs(n) * cu().rate, s = (n < 0 ? "−" : "") + cu().symbol;
   // a figure that rounds up to the next unit (999.6k, 999.7M) is written in that unit
-  if (a >= 999.5e6) return s + "$" + compactOf(sig3(a / 1e9), 1e9, "B");
-  if (a >= 999.5e3) return s + "$" + compactOf(sig3(a / 1e6), 1e6, "M");
-  return s + "$" + compactOf(String(Math.round(a / 1000)), 1e3, "k");
+  if (a >= 999.5e12) return s + compactOf(sig3(a / 1e15), 1e15, "Q");
+  if (a >= 999.5e9) return s + compactOf(sig3(a / 1e12), 1e12, "T");
+  if (a >= 999.5e6) return s + compactOf(sig3(a / 1e9), 1e9, "B");
+  if (a >= 999.5e3) return s + compactOf(sig3(a / 1e6), 1e6, "M");
+  return s + compactOf(String(Math.round(a / 1000)), 1e3, "k");
 }
 
 // Distances, lengths and speeds shown to the player (T-381). Every figure in the game is metric;
@@ -140,7 +196,7 @@ export function area(m2: number): string {
 
 /** A price per area, US$ a m²: 2000 -> "$2,000 per m²" or "$186 per sq ft". */
 export function perArea(usdPerM2: number): string {
-  return us() ? t("format.perSqFt", { amount: "$" + exact(usdPerM2 / (FT_PER_M * FT_PER_M)) }) : t("format.perM2", { amount: "$" + exact(usdPerM2) });
+  return us() ? t("format.perSqFt", { amount: moneyWhole(usdPerM2 / (FT_PER_M * FT_PER_M)) }) : t("format.perM2", { amount: moneyWhole(usdPerM2) });
 }
 
 /** A distance from here: metres to the nearest 10, then kilometres; feet, then miles. */
@@ -175,10 +231,7 @@ export function perDistance(perKm: number): number {
   return us() ? perKm * (M_PER_MILE / 1000) : perKm;
 }
 
-const perUnitText = (perKm: number) => {
-  const v = +perDistance(perKm).toFixed(2);
-  return "$" + (Number.isInteger(v) ? v : v.toFixed(2));
-};
+const perUnitText = (perKm: number) => smallMoney(perDistance(perKm));
 /** T-807: "$9 per train-km plus $2 per car-km", in the shown unit. */
 export function runCostRule(m: { runCostTrainKm: number; runCostCarKm: number }): string {
   return t("format.runCostRule", { train: perUnitText(m.runCostTrainKm), car: perUnitText(m.runCostCarKm), unit: distUnit() });

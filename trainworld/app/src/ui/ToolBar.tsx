@@ -4,7 +4,7 @@
 
 import { computed } from "@preact/signals";
 import { useState } from "preact/hooks";
-import { distUnit, length, levelLabel, levelName, speed } from "../game/format";
+import { distUnit, length, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
 import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
@@ -15,7 +15,7 @@ import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPl
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
-import { t, tNumber, tRich } from "../i18n";
+import { t, tRich } from "../i18n";
 
 export type ClickMode = keyof typeof CLICK_MODE_COLOURS | "select";
 /** What a click on the map does now: the tool, or picking a passage's other station (T-197). */
@@ -66,7 +66,7 @@ function TrackBar() {
             data-tip={t("toolBar.rampTip")}
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
           <p class="muted small price tb-wide" data-tip={t("toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr" }) + (upkeep ? "\n" + upkeep : "")}>
-            {tRich("toolBar.price", { price: tNumber(unitPrice(lv, tt)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt) })}</span> })}
+            {tRich("toolBar.price", { price: millions(unitPrice(lv, tt)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt) })}</span> })}
           </p>
         </div>
         <div class="tb-row">

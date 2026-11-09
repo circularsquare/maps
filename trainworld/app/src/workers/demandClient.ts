@@ -365,6 +365,11 @@ interface Solve {
   /** T-232: its estimates before the final round are shown (startup, a game load, a city with no
    * figures yet); otherwise the last final result stays shown until this one's final round */
   showEstimates: boolean;
+  /** T-2793: a final result is shown and this solve covers zones with no figures: its rounds give those zones their
+   * figures alone (`fillNewZones`), and the lines stay as shown */
+  newZones?: boolean;
+  /** T-2793: the zones `fillNewZones` has given this solve's figures */
+  filled?: Set<CityId>;
   /** T-1533: a rough solve of the zone in view alone, sent while a whole solve waits for packs; never final */
   rough?: boolean;
   /** T-326: the last worker's clusters kept and solved */
@@ -1880,7 +1885,9 @@ class DemandClient {
     const version = ++this.version;
     this.pushed.clear();
     const now = performance.now();
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], coarse: this.coarseOf([id]), showEstimates: !shown, rough: true };
+    // T-2793: its figures are this zone's riders alone: over a final result they are for the zone's own view, no line's
+    const onFinal = !!demandView.peek()?.final && !perfOff("keepFigures");
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], coarse: this.coarseOf([id]), showEstimates: !shown && !onFinal, newZones: !shown && onFinal, rough: true };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     demandUpdating.value = true;
@@ -3554,13 +3561,16 @@ class DemandClient {
     this.pushed.clear();
     // T-232: a re-solve after an edit keeps the last final result shown until its own final round,
     // so the figures never step through the rounds; estimates show only where nothing final is
-    // shown yet: before the first final result, after a whole-game load, or for a city just opened
+    // shown yet: before the first final result or after a whole-game load. T-2793: a zone just opened
+    // (`newZones`) takes the rounds' figures for itself alone, and every line keeps its final figures.
     const shown = cityDemandViews.peek();
-    const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || cities.some((id) => !shown.has(id));
+    const unshown = cities.some((id) => !shown.has(id));
+    const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || (unshown && perfOff("keepFigures"));
+    const newZones = !showEstimates && unshown;
     // (T-2560: a cached result's network solved again after its card went, as under the card)
-    const barrier = showEstimates || !!this.hold || svc === this.cacheSolve;
+    const barrier = showEstimates || newZones || !!this.hold || svc === this.cacheSolve;
     const markets = [...this.opened].filter(isMarket).map(marketZone);
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, barrier };
+    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     if (this.cacheShown()) this.retireFocus(); // (T-2533)
@@ -4451,6 +4461,7 @@ class DemandClient {
     const final = round >= ROUNDS && !s.rough;
     const res = s.results as Result[];
     if (!final && !s.showEstimates) {
+      if (s.newZones) this.fillNewZones(s, round, res);
       // T-324: lines new or changed since the shown result have no figures; theirs come from the
       // first estimate at once, every other figure waits for the final round as above
       if (round === 0 && s === this.cur) this.publishNewLines(s, res);
@@ -4518,7 +4529,8 @@ class DemandClient {
       if (!base || !shown) return;
       const had = new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
       // a line given early figures by an earlier solve's estimate is still "new" against the base
-      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(","));
+      // (T-2793: a rough solve's figures are one zone's riders: only for a line that has no figures yet)
+      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(",") && (!s.rough || !shown.lines.has(l.id) || perfOff("keepFigures")));
       if (!fresh.length) return;
       s.earlyAt = performance.now();
       s.earlyLines = fresh.map((l) => l.id);
@@ -4545,6 +4557,33 @@ class DemandClient {
         }
         return { ...d, view: { ...d.view, lines, stations, purposes } };
       });
+    });
+  }
+
+  /** T-2793: this solve's round for the zones with no figures shown: their views only. A round's riders per line are
+   * partial, and over a final result they would take every line's figures down with them. */
+  private fillNewZones(s: Solve, round: number, res: Result[]) {
+    this.inOrder(async () => {
+      const ests = await this.daysOf(s, [], round, false, res, true);
+      if (s !== this.cur) return;
+      const filled = (s.filled ??= new Set());
+      let any = false;
+      const next = demandByDay.peek().map((d, k) => {
+        if (!d.view) return d;
+        let cities = d.cities;
+        for (const id of s.cities) {
+          const v = ests[k]?.cities.get(id);
+          if (!v || (d.cities.has(id) && !filled.has(id))) continue;
+          if (cities === d.cities) cities = new Map(d.cities);
+          cities.set(id, { ...d.view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+          filled.add(id);
+          any = true;
+        }
+        return cities === d.cities ? d : { ...d, cities };
+      });
+      if (!any) return;
+      demandByDay.value = next;
+      this.lodShown([...filled], s.coarse);
     });
   }
 
@@ -4605,6 +4644,7 @@ class DemandClient {
   private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean }, round: number) {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;
+    if (!final && s.newZones) this.fillNewZones(s, round, res);
     // T-1533: after an edit, the zone in view's cluster's free-flow round gives new lines their figures
     if (round === 0 && !final && !s.showEstimates) return this.publishNewLines(s, res);
     // T-1790: the zone in view's cluster solved ahead counts its own rounds

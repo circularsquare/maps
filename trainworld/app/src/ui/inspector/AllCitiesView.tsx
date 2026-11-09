@@ -1,7 +1,7 @@
 // T-2395: the all cities view, opened from the Cities tab's first row: that row's sums laid out as a
 // city view's figures (CityDetails.tsx), with its home and go-to buttons. Totals only (Anita).
 
-import { count, exact, money } from "../../game/format";
+import { count, exact, money, moneyNegative } from "../../game/format";
 import { t as tr } from "../../i18n";
 import { pointsShort } from "../../game/points";
 import { splitTip } from "../../game/splitTip";
@@ -59,7 +59,7 @@ export function AllCitiesView() {
         </li>
         <li>
           <span class="grow">{tr("cityDetails.profit")}</span>
-          <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(tr("allCitiesView.allCities"), f) : undefined}>{f ? tr("inspector.perDay", { value: money(net(f.d) * 1e6) }) : "–"}</span>
+          <span class={"val" + (f && moneyNegative(net(f.d) * 1e6) ? " money-neg" : "")} data-tip={f ? moneyTip(tr("allCitiesView.allCities"), f) : undefined}>{f ? tr("inspector.perDay", { value: money(net(f.d) * 1e6) }) : "–"}</span>
         </li>
       </ul>
     </>

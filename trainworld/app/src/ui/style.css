@@ -831,7 +831,9 @@ rect.now { fill-opacity: .45; }
 .sw { display: inline-block; width: 10px; height: 10px; flex: none; }
 /* T-305, T-1865: the cash moves as fares land, in tabular figures, in a box of fixed width
    (4.7em: the widest it writes, "−$893.6M", the usual 7 characters leaving a little room) so the bar
-   before it does not change width as it changes. After the train share, before the clock. */
+   before it does not change width as it changes. After the train share, before the clock. T-2798: in
+   another currency up to "−₩999,950" and a wider symbol. */
+.cash.cash-wide { width: 5.6em; }
 .cash { flex: none; width: 4.7em; font-variant-numeric: tabular-nums; }
 /* T-832, T-861, T-1853, T-1868: the clock (the time and date on one line) sits right of the cash, behind a
    thin divider, and left of the speed buttons, in a box of fixed width (the widest date, "Wed May 28", fits)
@@ -957,6 +959,13 @@ a.btn { text-decoration: none; }
 .start-new { align-self: flex-start; border-color: var(--accent); }
 .start-new:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .start-head { font-size: 14px; font-weight: 700; margin: 6px 0 0; }
+/* T-2810: the newest update's line, under New game; the changelog is a Modal */
+.start-update { display: flex; align-items: center; gap: 6px; padding: 3px 3px 3px 8px; border: 1px solid var(--accent); }
+.start-update-line { flex: 1; min-width: 0; }
+.start-update .btn { flex: none; }
+.changelog-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; font-size: 14px; }
+.changelog-head span { font-weight: 400; }
+.changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
   background: var(--bg); border: 1px solid var(--rule); cursor: pointer; }

@@ -253,8 +253,10 @@ Web first, so it can be shared as a link.
   notes/demand-measurements.md, notes/demand-kernel-history.md.
 - **Only final results replace final results** [T-232, T-324]: after an edit every figure keeps the
   last finished forecast until the new solve's last round lands; earlier rounds are shown only where
-  nothing final is (startup, a whole-game load, a city just opened), and for lines new or changed by
-  the edit, which take the free-flow estimate's riders as soon as it lands. A cluster solved ahead
+  nothing final is (startup, a whole-game load), for a zone just opened (its own view alone, never a
+  line's figures: `fillNewZones`, T-2793), and for lines new or changed by the edit, which take the
+  free-flow estimate's riders as soon as it lands (from a rough solve, which is one zone's riders, only
+  lines with no figures at all). A cluster solved ahead
   of the rest of its solve replaces its own figures with its final as soon as it is done [T-392].
   What the player sees:
   [ui-panels.md](ui-panels.md) "Loading".
@@ -417,7 +419,10 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   like any other line's. Every zone's track, service and money is in the one
   network [T-116]. The header's `ledger`, `hours` and `regions` (per zone id, "" for outside every
   zone) hold the history charts' data, loaded back as they were, so a reload keeps the charts; money
-  is saved to the dollar and rides to a tenth. Ledger entries' `points` are whole points; the
+  is saved to the dollar and rides to a tenth. The header's `lineDays` [T-2787] keeps each line's last 8 days
+  of fares and running cost, by line id as flat `[day, fares, running]` triples to $100 (a line's panel
+  plots the 7 whole days; a deleted line's go with it at the next hour; absent in older saves, which
+  start empty; days after the save's clock are dropped on load, as settling pays them again). Ledger entries' `points` are whole points; the
   header's `stars` keeps each region's star, the game second it was earned; `achievements` each
   achievement step earned, by key, with its game second and what earned it (T-2124,
   [ui-panels.md](ui-panels.md) "Achievements"); `home` where the game opens, a zone id or `world` for all

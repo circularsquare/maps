@@ -98,6 +98,9 @@ export interface SaveHeader {
   hours?: HourLedger[];
   /** T-531: the same two per region (a zone id; "" outside every zone); absent in older saves */
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
+  /** T-2787: each line's recent days of money, by line id: [day, fares, running cost] flattened, US$M,
+   * oldest first (the last 8 days); absent in older saves, which start with no history */
+  lineDays?: Record<string, number[]>;
   /** T-685: each region's star, the game second it was earned; absent in older saves */
   stars?: Record<string, number>;
   /** T-1437: each region's higher goals by share (%), the game second each was reached; absent in older saves */
@@ -147,7 +150,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
-  fleetBus: true, fleetFerry: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
+  fleetBus: true, fleetFerry: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, mode: true, start: true,
   opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true,
 };
 

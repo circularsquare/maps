@@ -6,7 +6,7 @@
 
 import { activeCity, cityById, viewedZone, type City, type CityId } from "../game/cities";
 import { cityDemandViews, ridesOf, type DemandView } from "../game/demand";
-import { count, exact, money } from "../game/format";
+import { count, exact, money, moneyNegative } from "../game/format";
 import { AVERAGE_DAY } from "../game/days";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsPerDay, pointsShort, STAR_SHARE } from "../game/points";
@@ -159,7 +159,7 @@ function TotalRow({ on }: { on: boolean }) {
         </span>
       </span>
       <span class="val w-riders c-cities" data-tip={seen ? t("cities.tripsTip", { count: count(rides), where: tot.where.trim() }) : undefined}>{seen ? count(rides) : "–"}</span>
-      <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(t("cities.allLower"), f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
+      <span class={"val w-money c-cities c-money" + (f && moneyNegative(net(f.d) * 1e6) ? " neg" : "")} data-tip={f ? moneyTip(t("cities.allLower"), f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
       <span class="val w-points c-cities" data-tip={tot.pointsTip}>{pointsShort(tot.pointsPast)}</span>
     </li>
   );
@@ -223,7 +223,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
                 </span>
               </span>
               <span class="val w-riders c-cities" data-tip={v ? t("cities.tripsTip", { count: count(v.railTripsPerDay), where: where.trim() }) : undefined}>{v ? count(v.railTripsPerDay) : "–"}</span>
-              <span class={"val w-money c-cities c-money" + (f && net(f.d) * 1e6 <= -500 ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
+              <span class={"val w-money c-cities c-money" + (f && moneyNegative(net(f.d) * 1e6) ? " neg" : "")} data-tip={f ? moneyTip(r.name, f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
               <PointsCell id={r.id} name={r.name} />
             </li>
           );

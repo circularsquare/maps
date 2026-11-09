@@ -24,7 +24,8 @@
 .acct-start { position: absolute; top: 10px; right: 10px; }
 .start-box:has(.acct-start) h1 { padding-right: 32px; }
 /* the leaderboards */
-.lb-pick { margin-bottom: 8px; }
+.lb-find { margin-bottom: 8px; }
+.lb-hits { margin-top: 2px; }
 .lb-rows { list-style: none; margin: 0; padding: 0; }
 /* T-1237: no rules between rows; the gap before the player's own row is space */
 .lb-rows li { display: flex; gap: 10px; padding: 5px 0; font-variant-numeric: tabular-nums; }

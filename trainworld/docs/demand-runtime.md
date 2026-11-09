@@ -425,7 +425,9 @@ between. While a whole solve waits for packs still downloading or opening, the z
 open in every worker and with no figures yet, is solved alone with no market (`solve.only`, a
 **rough solve**, `?perfOff=rough` off): it starts ahead of the opens waiting, which wait for its
 free-flow round, and its rounds show as estimates (never final: the card, the held clock and the
-cache wait for the whole solve, whose figures replace them). A cached result shown beats it. During
+cache wait for the whole solve, whose figures replace them): over the whole view while nothing final
+is shown, and over a final result in that zone's own view alone, no line's figures (T-2793: its riders
+per line are that one zone's, so a long line would read near zero). A cached result shown beats it. During
 a game load the focus pool (below) does this instead, to the zone's last round. After
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
 lines their first figures (T-324) without waiting for its last round.

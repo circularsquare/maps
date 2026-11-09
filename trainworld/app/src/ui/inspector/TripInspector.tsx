@@ -49,6 +49,7 @@ function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
     real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
     weight: x.weight,
     perceived: x.perceived,
+    ...(x.unit === "usd" ? { usd: true } : {}),
   }));
   if (!pooled) return equation(terms);
   const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
@@ -478,7 +479,7 @@ export function TripInspector() {
         <li data-tip={equation([
           { label: termLabel("drive"), real: num1(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
           { label: termLabel("parking"), real: "", weight: 1, perceived: t.parkPerceived },
-          ...(t.carOwnPerceived > 0 ? [{ label: termLabel("ownership"), real: usd(t.carOwnPerceived / CAR_MIN_PER_USD), weight: CAR_MIN_PER_USD, perceived: t.carOwnPerceived }] : []),
+          ...(t.carOwnPerceived > 0 ? [{ label: termLabel("ownership"), real: usd(t.carOwnPerceived / CAR_MIN_PER_USD), weight: CAR_MIN_PER_USD, perceived: t.carOwnPerceived, usd: true }] : []),
         ], avg ? t.roadPerceived : undefined) + (avg ? `\n${avgTip}` : "")}>
           <span class="grow">{tr("tripText.effectiveTime")}</span>
           <span class="val">{minText(t.roadPerceived)}</span>

@@ -2,6 +2,9 @@
 // their own panel (ui/SavesPanel.tsx).
 
 import type { ComponentChildren } from "preact";
+import { useState } from "preact/hooks";
+import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
+import { exact } from "../game/format";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
 import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
@@ -171,6 +174,7 @@ export function SettingsTab() {
           {t("settingsTab.runInBackground")}
         </Check>
       </div>
+      <CurrencyRow />
       <div class="slider" data-tip={t("settingsTab.mapDetailTip")}>
         <span>{t("settingsTab.mapDetail")}</span>
         <Segmented<LighterMap> options={worded(LIGHTER_OPTIONS)} value={d.lighterMap ?? "auto"} onChange={(v) => setDisplay("lighterMap", v)} />
@@ -181,6 +185,25 @@ export function SettingsTab() {
       <FeedbackPanel />
       <Credits />
     </>
+  );
+}
+
+/** T-2798: the currency money is shown in, a select as the purpose's; the game counts US$ whatever it says. */
+function CurrencyRow() {
+  const [mouse, setMouse] = useState(false);
+  const cur = isCurrency(display.value.currency) ? display.value.currency : "USD";
+  const spec = CURRENCY[cur];
+  return (
+    <div class="slider" data-tip={cur === "USD" ? undefined : t("settingsTab.currencyTip", { rate: spec.rate >= 100 ? exact(spec.rate) : String(spec.rate), code: spec.label.split(" ")[0] })}>
+      <span>{t("settingsTab.currency")}</span>
+      <label class={"purpose-filter" + (mouse ? " mouse" : "")}>
+        <select aria-label={t("settingsTab.currency")} value={cur}
+          onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
+          onChange={(e) => { const v = (e.currentTarget as HTMLSelectElement).value; if (isCurrency(v)) setDisplay("currency", v); }}>
+          {CURRENCIES.map((c) => <option key={c} value={c}>{CURRENCY[c].label}</option>)}
+        </select>
+      </label>
+    </div>
   );
 }
 

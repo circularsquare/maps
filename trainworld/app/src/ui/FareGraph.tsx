@@ -11,7 +11,8 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
-import { unitMetres, unitShort } from "../game/format";
+import { currencySpec, fromShown, price, priceTyped, toShown, typedPrice, unitMetres, unitShort } from "../game/format";
+import { roundTo } from "../game/currency";
 import { canUndoFares, changeFares, undo } from "../game/fareUndo";
 import { playBuild } from "../map/buildSound";
 import { t, tNumber, tRich } from "../i18n";
@@ -50,7 +51,8 @@ function niceDown(v: number): number {
 const snap = (v: number, step: number) => Math.round(v / step) * step;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const usd = (v: number) => "$" + tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// T-2798: fares are US$ underneath and read in the shown currency (game/format.ts `price`)
+const usd = price;
 const distText = (u: number) => (u < 10 ? tNumber(Math.round(u * 10) / 10, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : tNumber(Math.round(u)));
 const maxSpan = (kpu: number) => MAX_KM / kpu;
 const clampSpan = (s: number, kpu: number) => clamp(s, MIN_SPAN, maxSpan(kpu));
@@ -104,13 +106,16 @@ function limits(nodes: FareNode[], i: number, gap = NODE_GAP_KM) {
   };
 }
 
-const cents = (v: number) => Math.round(v * 100) / 100;
+/** US$ to the shown currency's finest step (a cent, a yen, ten won), as US$ */
+const cents = (v: number) => typedPrice(toShown(v));
 // T-1277: a rate scaled from the curve is whole cents to within a hundredth of a cent
-const wholeCents = (r: number) => Math.abs(r * 100 - Math.round(r * 100)) < 0.01;
-/** a rate in whole cents reads as cents, a typed or dragged one to a tenth of a cent */
-const rateTyped = (r: number) => r.toFixed(wholeCents(r) ? 2 : 3);
-const rateNum = (r: number) => tNumber(r, { minimumFractionDigits: wholeCents(r) ? 2 : 3, maximumFractionDigits: wholeCents(r) ? 2 : 3 });
-const rateText = (r: number) => "$" + rateNum(r);
+// (T-2798: whole steps of the shown currency's rate grain, a cent in dollars)
+const wholeCents = (r: number) => { const g = currencySpec().rateGrain, x = (r * currencySpec().rate) / g; return Math.abs(x - Math.round(x)) < 0.01; };
+const rateDp = (whole: boolean) => { const g = currencySpec().rateGrain; return whole ? (g >= 1 ? 0 : 2) : g >= 10 ? 0 : g >= 1 ? 1 : 3; };
+/** a rate in whole steps reads as them (cents), a typed or dragged one to a tenth of a step */
+const rateTyped = (r: number) => (r * currencySpec().rate).toFixed(rateDp(wholeCents(r)));
+const rateNum = (r: number) => { const dp = rateDp(wholeCents(r)); return tNumber(r * currencySpec().rate, { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
+const rateText = (r: number) => currencySpec().symbol + rateNum(r);
 
 /** The rate per km of the stretch ending at node `i` (from 1), US$. */
 const rateOf = (nodes: FareNode[], i: number) => (nodes[i][1] - nodes[i - 1][1]) / (nodes[i][0] - nodes[i - 1][0]);
@@ -142,8 +147,9 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
     <ul class="rows fare-rows">
       <li>
         <span class="fr-what">{t("fareGraph.baseFare")}</span>
-        <Stepper value={usd(base)} wide label={t("fareGraph.baseFareLabel")} onStep={(s) => setBase(cents(base + s * 0.25))}
-          type={{ text: base.toFixed(2), set: setBase, tip: t("fareGraph.baseFareTip") }} />
+        {/* steps from the figure shown, in the shown currency (T-2798), so a step never lands on a drifted one */}
+        <Stepper value={usd(base)} wide label={t("fareGraph.baseFareLabel")} onStep={(s) => setBase(fromShown(roundTo(toShown(base), currencySpec().grain) + s * currencySpec().fareStep))}
+          type={{ text: priceTyped(base), set: (v) => setBase(fromShown(v)), tip: t("fareGraph.baseFareTip") }} />
         <span />
       </li>
       {stretches.map(([km, rate], j) => {
@@ -155,14 +161,17 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
         const last = i === nodes.length - 1;
         const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
         const withRate = (r: number) => fromRows(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, r) / kpu] : s)));
-        const setRate = (v: number) => void setFares(withRate(Math.round(v * 1000) / 1000));
-        // a step goes to the next whole cent above or below
+        // typed to a tenth of a step of the shown currency (a tenth of a cent in dollars), then back to US$
+        const sp = currencySpec(), rg = sp.rateGrain;
+        const setRate = (v: number) => void setFares(withRate(fromShown(roundTo(v, rg / 10))));
+        // a step goes to the next whole step (a cent) of the shown currency above or below
         const stepRate = (s: number) => {
-          const at = rateU * 100;
-          const next = withRate((s > 0 ? Math.floor(at + 0.01) + 1 : Math.ceil(at - 0.01) - 1) / 100);
+          const at = (rateU * sp.rate) / rg;
+          const k = s > 0 ? Math.floor(at + 0.01) + 1 : Math.ceil(at - 0.01) - 1;
+          const next = withRate(fromShown(rg < 1 ? k / Math.round(1 / rg) : k * rg));
           // a stretch too short for the step to move its fare a cent moves it a cent
           if (next[i][1] === nodes[i][1] && (s > 0 || nodes[i][1] > nodes[i - 1][1])) {
-            const dc = s > 0 ? 0.01 : -0.01;
+            const dc = (s > 0 ? 1 : -1) * fromShown(sp.grain);
             for (let k = i; k < next.length; k++) next[k][1] = cents(nodes[k][1] + dc);
           }
           if (JSON.stringify(next) !== JSON.stringify(nodes)) void setFares(next);
@@ -254,7 +263,9 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       const hi = Math.min(d.span, lim.kHi / kpu), lo = lim.kLo / kpu;
       ns[d.i][0] = (lo > hi ? d.u0 : clamp(snap(d.u0 + (dx / (R - L)) * d.span, niceUp(d.span / 200)), lo, hi)) * kpu;
     } else {
-      const raw = snap(d.f0 - (dy / (B - T)) * d.h, Math.max(0.01, niceUp(d.h / 250)));
+      // snapped in the shown currency (T-2798): its own finest step at least, else a nice step of the plot's height
+      const rate = currencySpec().rate;
+      const raw = snap((d.f0 - (dy / (B - T)) * d.h) * rate, Math.max(currencySpec().grain, niceUp((d.h * rate) / 250))) / rate;
       ns[d.i][1] = clamp(raw, lim.fLo, Math.min(lim.fHi, d.y0 + d.h));
     }
     farePreview.value = ns;
@@ -308,11 +319,13 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   const hoverTip = hoverU === null ? undefined : t("fareGraph.hoverTip", { distance: distText(hoverU), unit, fare: usd(fareU(hoverU)) });
   const xStep = niceUp(span / 5);
   const xTicks = Array.from({ length: Math.floor(span / xStep + 1e-9) }, (_, i) => (i + 1) * xStep);
-  const fStep = niceUp(h / 4);
+  // the fare axis in the shown currency (T-2798): ticks `yTicks` are in it, and drawn at their US$ height
+  const rate = currencySpec().rate;
+  const fStep = niceUp((h * rate) / 4);
   const yTicks: number[] = [];
-  for (let v = Math.floor(y0 / fStep + 1) * fStep; v <= y0 + h + 1e-9; v += fStep) yTicks.push(v);
+  for (let v = Math.floor((y0 * rate) / fStep + 1) * fStep; v <= (y0 + h) * rate + 1e-9; v += fStep) yTicks.push(v);
   const tickText = (v: number) => (xStep < 1 ? tNumber(v, { minimumFractionDigits: xStep < 0.1 ? 2 : 1, maximumFractionDigits: xStep < 0.1 ? 2 : 1 }) : tNumber(v));
-  const fareText = (v: number) => "$" + (fStep < 1 ? tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tNumber(v));
+  const fareText = (v: number) => currencySpec().symbol + (fStep < 1 ? tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tNumber(v));
   const lastX = xTicks.length - 1;
 
   // the ways a hovered or dragged node moves, as small arrows around it
@@ -330,7 +343,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
     <svg class={"fare-graph" + (d?.axis ? ` fg-drag-${d.axis}` : "")} ref={svg} viewBox={`0 0 ${W} ${H}`} onWheel={onWheel}>
       <defs><clipPath id="fare-clip"><rect x={L} y={T} width={R - L} height={B - T} /></clipPath></defs>
       {xTicks.map((tk) => <line class="fg-grid" x1={x(tk)} x2={x(tk)} y1={T} y2={B} />)}
-      {yTicks.map((v) => <line class="fg-grid" x1={L} x2={R} y1={y(v)} y2={y(v)} />)}
+      {yTicks.map((v) => <line class="fg-grid" x1={L} x2={R} y1={y(v / rate)} y2={y(v / rate)} />)}
       <line class="fg-axis" x1={L} x2={R} y1={B} y2={B} />
       <line class="fg-axis" x1={L} x2={L} y1={T} y2={B} />
       <text class="fg-label" x={L} y={B + 12} text-anchor="middle">0</text>
@@ -338,7 +351,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
         <text class="fg-label" x={x(tk)} y={B + 12} text-anchor={i === lastX && x(tk) > R - 30 ? "end" : "middle"}>{i === lastX ? t("fareGraph.tickUnit", { value: tickText(tk), unit }) : tickText(tk)}</text>
       ))}
       {/* a label the base fare's node would cover is left out */}
-      {yTicks.filter((v) => Math.abs(y(v) - y(shown[0][1])) > 12).map((v) => <text class="fg-label" x={L + 3} y={y(v) - 2}>{fareText(v)}</text>)}
+      {yTicks.filter((v) => Math.abs(y(v / rate) - y(shown[0][1])) > 12).map((v) => <text class="fg-label" x={L + 3} y={y(v / rate) - 2}>{fareText(v)}</text>)}
       <path class="fg-curve" d={curve} clip-path="url(#fare-clip)" />
       <rect class="fg-hover" x={L} y={T} width={R - L} height={B - T} data-tip={hoverTip}
         onPointerDown={plotDown} onPointerMove={(e) => { if (drag.current) move(e); else plotMove(e); }}

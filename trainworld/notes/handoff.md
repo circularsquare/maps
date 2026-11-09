@@ -1,5 +1,22 @@
 # Orchestrator handoff, trainworld
 
+## Codex takeover, 2026-11-08 night
+
+Anita asked Codex to finish the interrupted deploy, favoring safety, confirmed all Claude agents stopped,
+and explicitly welcomed subagents. Original changed files from main/curve/mobile/tripkinds are backed up in
+`artifacts/trainworld/codex-takeover/original-work.zip` (including TODO.md; do not commit TODO.md).
+No integration, commit, upload, push, or production change yet. HEAD 2c872c03; 8800 snapshot aac7d7e6;
+latest published release per the handoff below is 2026-11-08 (4f1b6fc8). Retain its old R2 data for open tabs.
+All four trees pass TypeScript checking. Main smoke reached the expected real-save counts and 12,521,264 trips/day,
+but its Homes rendering check failed; a diagnostic confirmed `net::ERR_NETWORK_ACCESS_DENIED` for OpenFreeMap
+inside the sandbox. Network-enabled main smoke PASSED 26/26, log `artifacts/trainworld/codex-takeover-network-smoke.log`.
+Currency check 31/31 and ordinary history export/reimport 5/5 passed; cash and history unchanged.
+Review fixed mobile shade-worker fetch/parse failure racing a successful empty result (in mobile tree);
+valid data/network failure/invalid JSON injected checks pass. Two Chinese phone-notice glossary fixes pass i18n.
+The only main-tree test correction is the currency check expecting equivalent won notation Q rather than 1950T.
+Original sandbox smoke logs: `artifacts/trainworld/codex-{takeover,curve,mobile,tripkinds}-smoke.log`.
+T-2793 remains unverified/open; mobile's real-phone validation remains open. Review subagents are read-only.
+
 Orchestrator: session 70947ac4-74ea-441a-b6e5-c704eedaf536, name maps-68 [224d6e], since 2026-11-07 12:32
 Updated: 2026-11-07 12:37 (Get-Date; maps-b9's clock ran ~15 min ahead). Anita 12:37: at the computer but idle,
 keep cap 15; ja/zh review is ours (she reads neither). l10nreview DONE: 17 keys x 3 languages reviewed, one fix,
@@ -248,6 +265,29 @@ Then smoke, commit, 8800; publish only on her word. Next free id T-2799.
 
 8800 = aac7d7e6 (T-2796, T-2795, smoke 26/26), not live. UNCOMMITTED: app/index.html (data-nosnippet on #game, longer meta
 description, so Google stops quoting the EuroGeographics notice); ships with the next batch.
+
+## 2026-11-08 night round (Anita: "continue on some work without worrying about credit usage... if we get interrupted we can juts resume tomorrow"; hold publish until the whole round is done, tomorrow is fine)
+Agents (each ends with its own archive; ids of follow-ups in parens): fareszero T-2793 Opus main tree (T-2800, 2801); mobile T-2794
+Opus tree .tw-trees/mobile (T-2802-4); tripkinds T-2790 Opus tree .tw-trees/tripkinds, Rust (T-2805); curve T-2799 + T-2797 Opus tree
+.tw-trees/curve (T-2806-7); currency T-2798 Sonnet main tree (T-2808); linemoney T-2787 Sonnet main tree (T-2809). Next free id T-2810.
+Land: smoke each tree, `agent-tree.mjs land <name> "<sentence>"`, remove, main WASM rebuild if sim changed; commit main tree by path
+(not TODO.md); snapbuild 8800, smoke light/dark. Publish only after the whole round, on her word (she's given it for after the round).
+linemoney DONE T-2787 (archived; smoke 26/26): rail lines only, 8 days of fares and running cost, UNCOMMITTED in main tree: clock.worker.ts,
+saveFile.ts, protocol.ts, ui/inspector/LineMoney.tsx (new), LineInspector.tsx, i18n, docs. Strings lineMoney.* not yet shown... shown 11-08 night.
+tripkinds DONE T-2790 (archived; smoke 26/26, cargo 367+543; strings "Mode", "Purpose" shown): in tree tripkinds, NOT landed: land after
+fareszero and currency finish (the land rebuilds main WASM under their running pages).
+currency DONE T-2798 (archived; check t2798 passes; smoke 25/26, demand final timed out at 1 core: rerun in the batch smoke). UNCOMMITTED, main
+tree: game/currency.ts (new), format.ts, ui.ts, FareGraph, MoneyTab, SettingsTab, ToolBar, trackPrice, TopBar, EditNote, Cities, tripText, MarketTrip,
+TripInspector, AllCitiesView, CityDetails, style.css, i18n, checks/t2798-currency.mjs, docs. Strings shown to Anita 11-08 night.
+curve DONE T-2799 (min radius 50 m, real-track snap keeps 100 m) + T-2797 (a station's end piece "removed" and re-laid: delete tool now takes the station,
+refusals say why, Delete/Backspace keys work), cargo 368+544, smoke 26/26, in tree curve, NOT landed; land after fareszero with tripkinds, rebuild main WASM.
+mobile first pass in tree mobile (phone load 950-1050 -> 610-840 MB settled, lost-context notice, tutorial tap fix; smoke 26/26), resumed on T-2802
+(first line ~1,010 MB) + ja/zh. T-2802 pass DONE in tree mobile (first line 640-650 MB low-end; phones open no market = no trips between zones; demandSums NaN fix;
+smoke 26/26); not landed, T-2794/T-2802 stay open. Land all three trees after fareszero.
+Phone note wording set by Anita in tree mobile ("Intercity trips cannot be computed on mobile. Please try using a computer for bigger games."; ja/zh not re-translated).
+Added to the round: changelog (Opus, T-2810 start-menu update row + changelog, main tree), boards (Sonnet, T-2811 points wording, T-2812 Marey crowding, T-2813 leaderboard city picker, main tree).
+Next free id T-2814. Publish after: fareszero, changelog, boards, landing of trees mobile, tripkinds, curve; her go was "yes publish after the round" (she said "before we publish lets also...").
+Not in the round: T-2796's ping (needs an outside health check), T-2757, T-2766.
 
 ## Anita's standing asks
 - **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and

@@ -20,8 +20,10 @@ import { AccountButton, startAccountUi } from "./AccountPanel";
 import { LanguageSelect } from "./LanguageSelect";
 import { DeleteAsk, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
+import { Modal } from "./Modal";
+import { dismissUpdate, UPDATES, updateToShow } from "./updates";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
-import { t } from "../i18n";
+import { t, tDate } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
 /** The build's commit count (vite.config.ts), "dev" on a dev server. */
@@ -79,8 +81,22 @@ function playedBefore(): boolean {
   try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
 }
 
+/** T-2810: the newest update's line under New game, with its changelog and a way to hide it (ui/updates.ts). */
+function UpdateRow({ onChangelog }: { onChangelog: () => void }) {
+  const [update, setUpdate] = useState(updateToShow);
+  if (!update) return null;
+  const hide = () => { dismissUpdate(update.version); setUpdate(null); };
+  return <div class="start-update">
+    <span class="start-update-line">{t(update.line)}</span>
+    <button class="btn" onClick={onChangelog}>{t("startMenu.changelog")}</button>
+    <button class="btn icon mini" aria-label={t("startMenu.hideUpdate")} data-tip={t("startMenu.hideUpdate")} onClick={hide}><Icon.cross /></button>
+  </div>;
+}
+
 function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveSlot[]; unread: boolean; pick: (c: GameChoice) => void; settling: Promise<void> }) {
   const first = useRef<HTMLButtonElement>(null);
+  // T-2810: out in the menu's own element, away from the card's zoom
+  const [changelog, setChangelog] = useState(false);
   // T-1612: Load from file is for someone who has played here: a saved game, or a game played before
   // (the slot opened last is remembered even once its save is deleted)
   const [returning] = useState(() => first0.length + accountOnly(first0).length > 0 || playedBefore() || unread0);
@@ -159,6 +175,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
         <div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div>
       </div>
+      <UpdateRow onChangelog={() => setChangelog(true)} />
       {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
       {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
@@ -183,6 +200,12 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
         </ul>
       </>}
     </div>}
+    <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
+      {UPDATES.map((u) => <section key={u.version}>
+        <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
+        <ul class="changelog-list">{u.changes.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+      </section>)}
+    </Modal>
   </div>;
 }
 

@@ -13,7 +13,7 @@ import { clock, lineSeconds } from "./clock";
 import { stationsById, world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
-import { demandView, lineFiguresIn } from "./demand";
+import { demandView } from "./demand";
 import { linesPending, type PendingKind } from "./lineFigures";
 import { moneyState } from "./money";
 import { lineRunFactor } from "./regionMoney";
@@ -295,9 +295,9 @@ function ask(force = false) {
     for (const l of w?.save.lines ?? []) {
       const t = next.get(l.id), p = prev.get(l.id);
       if (t && t.stops.length !== l.stops.length && p?.stops.length === l.stops.length) next.set(l.id, { ...t, stops: p.stops });
-      // T-1419: no account at all for a running line yet (new riders for its new stops are being
-      // solved): the last counts stand, moved onto its stops above
-      else if (!t && p && !lineFiguresIn(demandView.peek(), l.id, l.stops.length) && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
+      // T-1419: no account at all for a running line yet (new riders being solved, or solved and not
+      // yet counted, T-2793): the last counts stand, moved onto its stops above
+      else if (!t && p && w?.lineStats[l.id]?.status === "running") next.set(l.id, p);
     }
     // T-2773: a line whose riders are being worked out again keeps its last settled counts and fares, not the
     // half-done answer's (a local solve reads a long line far low); the final one replaces them when it lands

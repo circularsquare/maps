@@ -1,6 +1,6 @@
 // Small text helpers shared by the trip and demand panels.
 
-import { capitalise } from "../../game/format";
+import { capitalise, price, toShown } from "../../game/format";
 import { t, tNumber, type MessageKey } from "../../i18n";
 import { purposeWords, type PurposeFilter } from "../../game/purposes";
 import type { TripLeg } from "../../game/trip";
@@ -16,8 +16,8 @@ export const num1 = (v: number): string => fixed(v, 0, 1);
 /** To one decimal place always: "3.0". */
 export const fix1 = (v: number): string => fixed(v, 1, 1);
 
-/** A dollar figure to the cent: "$2.90". */
-export const usd = (v: number): string => "$" + fixed(v, 2, 2);
+/** A US$ figure in the shown currency, to the cent or the currency's own step (T-2798): "$2.90", "¥435". */
+export const usd = (v: number): string => price(v);
 
 /** A share of 0 to 1 as a percent to one decimal: "12.3%". */
 export const pct1 = (share: number): string => tNumber(share, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -100,6 +100,15 @@ export interface Term {
   real: string;
   weight: number;
   perceived: number;
+  /** T-2798: `real` is money, and `weight` the minutes a US$ counts as; the equation writes the weight per unit of the shown currency */
+  usd?: boolean;
+}
+
+/** A term's weight as written: for money, minutes per unit of the shown currency ("¥435 × 0.021"). */
+function weightOf(x: Term): [number, string] {
+  const r = x.usd ? toShown(1) : 1;
+  const w = x.weight / r;
+  return [w, r !== 1 && w < 0.1 ? fixed(Number(w.toPrecision(2)), 0, 6) : weight(w)];
 }
 
 /** "Walk 8 + wait 3 + ride 6 = 17 min": the terms' text and the total. */
@@ -110,7 +119,8 @@ export const sumLine = (terms: string, total: number): string => t("tripText.equ
 export function equation(terms: Term[], total = terms.reduce((s, x) => s + x.perceived, 0)): string {
   const text = terms.map((x, i) => {
     const minus = x.perceived < 0;
-    const body = `${x.label}${x.real ? " " + x.real : " " + num1(Math.abs(x.perceived))}${x.real && Math.abs(x.weight - 1) >= 0.005 ? ` × ${weight(x.weight)}` : ""}`;
+    const [w, wText] = weightOf(x);
+    const body = `${x.label}${x.real ? " " + x.real : " " + num1(Math.abs(x.perceived))}${x.real && Math.abs(w - 1) >= 0.005 ? ` × ${wText}` : ""}`;
     return i === 0 ? body : `${minus ? "−" : "+"} ${body}`;
   }).join(" ");
   return sumLine(text, total);

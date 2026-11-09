@@ -20,7 +20,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
-import { demandByDay, type DemandView } from "./demand";
+import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { roundedDefault } from "./fareDefault";
@@ -153,13 +153,13 @@ export const incomeByDay = computed<Income[]>(() => {
   const views = demandByDay.value.slice(0, DAY_KINDS.length).map((d, k) => (kindMade(k, near, rush) ? d.view : null));
   const was = incomeMemo, same = !!was && was.w === w && was.t === t && was.zl === zl;
   if (same && sameList(views, was.views)) return was.out;
-  const own = views.map((v, k) => (!kindMade(k, near, rush) ? null : same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v)));
+  const own = views.map((v, k) => (!kindMade(k, near, rush) ? null : same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v, was?.out[k])));
   const out = own.map((x, k) => x ?? own[PLAIN_KIND[k]]!);
   incomeMemo = { w, t, zl, views, out };
   return out;
 });
 
-function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | null): Income {
+function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | null, prev?: Income): Income {
   const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
@@ -175,6 +175,16 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
     const linePer = PERIODS.map(() => 0), lineRides = PERIODS.map(() => 0);
     const dm = dv?.lines.get(l.id);
     const n = l.stops.length;
+    // T-2793: figures solved for other stops (a stop edit, until its riders land) are carried onto the stops as they
+    // are now, so the line earns as it did; without carried figures (a cached result) it keeps its last income
+    const loads = dv ? lineLoadsFor(dv, l.id, "all", l.stops) : undefined;
+    const old = dm && !loads?.every((p) => p.length === 2 * (n - 1)) ? prev?.lines.get(l.id) : undefined;
+    if (old) {
+      lines.set(l.id, old);
+      old.perHour.forEach((v, p) => { perPeriod[p] += v * PERIOD_HOURS[p] * 1e6; });
+      old.rides.forEach((v, p) => { ridesPeriod[p] += v * PERIOD_HOURS[p]; });
+      continue;
+    }
     if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
       const g = lineGeo(w, l, byId), km = g.km;
       // T-1277: a stretch pays its starting stop's fare scale (the base its boarding stop's, in `baseOf`)
@@ -184,7 +194,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       if (!fares) curves.set(lf, (fares = faresOf(lf, lf)));
       const { from } = scalesOf(g, l, byId, lf);
       const pkm: number[] = [], pkmPaid: number[] = [];
-      for (const seg of dm.loads) {
+      for (const seg of loads ?? dm.loads) {
         let a = 0, b = 0;
         if (seg.length === km.length) for (let k = 0; k < seg.length; k++) { a += seg[k] * km[k]; b += seg[k] * km[k] * from[k]; }
         pkm.push(a);
@@ -241,7 +251,7 @@ export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms
     const g = lineGeo(w, l, byId), km = g.km;
     const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lineFares(dm, fares as Fares)).sc);
     let pk = 0;
-    for (const seg of dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
+    for (const seg of lineLoadsFor(dv, l.id, "all", l.stops) ?? dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
     // a line with no passenger-km takes no fare in `incomeFor`, so none of the pool either
     if (!(pk > 0)) continue;
     const b = dm.ridersPerDay * sc;

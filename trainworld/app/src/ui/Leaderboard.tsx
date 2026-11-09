@@ -4,7 +4,10 @@
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
 // leaderboards. Each person once per board, with their best normal game (shonei-server's trainworld.go).
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
+import { normalise } from "../game/search";
+import { tPlace } from "../i18n/places";
+import { findStart } from "./NewGame";
 import { CITIES } from "../game/cities";
 import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, session, setBoard, type BoardRow } from "../game/account";
 import { exact } from "../game/format";
@@ -46,6 +49,47 @@ function Join() {
   </div>;
 }
 
+const MAX_SHOWN = 8;
+const shownName = (id: string) => tPlace(id, cityName(id));
+
+/** T-2813: the board picker works as the new game's city search does: type, and every matching
+ * board is listed (arrows and Enter to choose); with nothing typed it lists the world and this game's cities. */
+function CityPick({ boardKey, mine, all }: { boardKey: string; mine: string[]; all: ReadonlySet<string> }) {
+  const [text, setText] = useState<string | null>(null);
+  const [cursor, setCursor] = useState(0);
+  const current = boardKey === WORLD ? t("leaderboard.world") : shownName(boardKey.slice(WORLD.length + 1));
+  const q = text?.trim() ?? "";
+  const items = useMemo(() => {
+    if (text === null) return [];
+    const world = { key: WORLD, label: t("leaderboard.world"), sub: "" };
+    const city = (id: string) => ({ key: `${WORLD}_${id}`, label: shownName(id), sub: "" });
+    if (!q) return [world, ...mine.slice(0, MAX_SHOWN - 1).map(city)];
+    const hits = findStart(q, all).map(({ city: c, matched }) => ({ key: `${WORLD}_${c.id}`, label: shownName(c.id), sub: matched ? t("newGame.matched", { alias: matched }) : "" }));
+    return (normalise(t("leaderboard.world")).startsWith(normalise(q)) ? [world] : []).concat(hits).slice(0, MAX_SHOWN);
+  }, [text, mine, all]);
+  const pick = (key: string) => { setText(null); void fetchBoards(key); (document.activeElement as HTMLElement | null)?.blur(); };
+  return <div class="lb-find">
+    <input type="text" class="new-game-find lb-pick" aria-label={t("leaderboard.pick")} placeholder={t("newGame.findCity")} maxLength={60}
+      value={text ?? current}
+      onFocus={(e) => { setText(""); setCursor(0); (e.target as HTMLInputElement).select(); }}
+      onBlur={() => setText(null)}
+      onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowDown" && items.length) { e.preventDefault(); setCursor((cursor + 1) % items.length); }
+        else if (e.key === "ArrowUp" && items.length) { e.preventDefault(); setCursor((cursor + items.length - 1) % items.length); }
+        else if (e.key === "Enter" && items.length) { e.preventDefault(); pick(items[Math.min(cursor, items.length - 1)].key); }
+        else if (e.key === "Escape" && text !== null) { e.preventDefault(); e.stopPropagation(); setText(null); (e.target as HTMLInputElement).blur(); }
+      }} />
+    {items.length > 0 && <ul class="new-game-hits lb-hits" role="listbox">
+      {items.map((it, i) => (
+        <li role="option" aria-selected={i === cursor} class={i === cursor ? "on" : ""} onMouseDown={(e) => { e.preventDefault(); pick(it.key); }}>
+          <span>{it.label}{it.sub && <span class="muted small">{it.sub}</span>}</span>
+        </li>
+      ))}
+    </ul>}
+  </div>;
+}
+
 function Boards() {
   const st = boards.value;
   useEffect(() => { if (!st.at || Date.now() - st.at > 60_000) void fetchBoards(); }, [st.at]);
@@ -54,14 +98,9 @@ function Boards() {
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const others = Object.keys(st.list).filter((k) => k.startsWith(WORLD + "_")).map((k) => k.slice(WORLD.length + 1))
     .filter((id) => !mine.includes(id)).sort((a, b) => collate(cityName(a), cityName(b)));
-  const opt = (id: string) => <option value={`${WORLD}_${id}`} selected={key === `${WORLD}_${id}`}>{cityName(id)}</option>;
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
-    <select class="lb-pick" aria-label={t("leaderboard.pick")} onChange={(e) => void fetchBoards((e.target as HTMLSelectElement).value)}>
-      <option value={WORLD} selected={key === WORLD}>{t("leaderboard.world")}</option>
-      {mine.length > 0 && <optgroup label={t("leaderboard.thisGame")}>{mine.map(opt)}</optgroup>}
-      {others.length > 0 && <optgroup label={t("leaderboard.otherCities")}>{others.map(opt)}</optgroup>}
-    </select>
+    <CityPick boardKey={key} mine={mine} all={new Set([...mine, ...others])} />
     {!d ? <p class="small muted">{st.error || t("leaderboard.loading")}</p>
       : <ol class="lb-rows">
         {d.rows.length === 0 && <li class="muted">{t("leaderboard.nobody")}</li>}

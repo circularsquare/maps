@@ -5,6 +5,7 @@
 import { t } from "../i18n";
 import { batch, computed, effect, signal } from "@preact/signals";
 import { AVERAGE_DAY, AWAY_DAY, awayNear, BACK_DAY, DEMAND_DAY_ON, DEMAND_DAY_PHRASE, OUT_DAY, rushRun, whenAway, whenBack, whenOut, type DemandDay } from "./days";
+import type { Currency } from "./currency";
 import { loadNunito } from "./fonts";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
@@ -82,6 +83,8 @@ export interface DisplaySettings {
   dayShown: "average" | "weekday" | "saturday" | "sunday" | "away" | "out" | "back";
   /** T-381: miles, mph and feet instead of kilometres, km/h and metres (the game itself is metric) */
   usUnits: boolean;
+  /** T-2798: the currency money is shown in (game/currency.ts); the game itself counts US$ */
+  currency: Currency;
   /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
   moreCores: boolean;
   /** T-826: the clock keeps running while the page is hidden (game/clock.ts) */
@@ -138,6 +141,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   uiScale: 0.9,
   dayShown: "average",
   usUnits: false,
+  currency: "USD",
   moreCores: false,
   runInBackground: false,
   projection: "flat",

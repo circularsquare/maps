@@ -8,7 +8,7 @@ import { t as tr, tSpaced } from "../../i18n";
 import { complexes } from "../../game/complexView";
 import { membersOf } from "../../game/complexes";
 import { cityDemandViews, demandView, ridesOf } from "../../game/demand";
-import { count, exact, money } from "../../game/format";
+import { count, exact, money, moneyNegative } from "../../game/format";
 import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
 import { GOAL_SHARES, goalsReached, pointsPast24h, pointsShort, STAR_SHARE } from "../../game/points";
@@ -78,7 +78,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
           </li>
           <li>
             <span class="grow">{tr("cityDetails.profit")}</span>
-            <span class={"val" + (f && net(f.d) * 1e6 <= -500 ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? tr("inspector.perDay", { value: money(net(f.d) * 1e6) }) : "–"}</span>
+            <span class={"val" + (f && moneyNegative(net(f.d) * 1e6) ? " money-neg" : "")} data-tip={f ? moneyTip(city.name, f) : undefined}>{f ? tr("inspector.perDay", { value: money(net(f.d) * 1e6) }) : "–"}</span>
           </li>
           <li>
             <span class="grow">{tr("cityDetails.goalsReached")}</span>

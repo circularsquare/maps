@@ -1101,6 +1101,7 @@ registry centre and zoom, or over New York with none [T-310].
   menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
   one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"
   and only city, town and village names are hidden.
+- **Update row** [T-2810; `ui/updates.ts` is the one list of updates, newest first]: between New game's row and the saved games, a small row framed in the theme colour with the newest update's one line, a Changelog button (a Modal listing each update's version, date and changes) and an x that hides it for good in this browser. It shows for 2 days from the update's `at` (bumped at publish), not on the new game sheet.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has

@@ -34,10 +34,10 @@ const shown = (c: City) => tPlace(c.id, c.name);
 /** Registry cities and zones with a word of their name or of an alias starting with the text,
  * ignoring case and accents ("hague" finds Rotterdam through The Hague, T-825): best match first
  * (search.ts cityMatch): an exact match first, then by name before by alias, then biggest. */
-function findStart(text: string): { city: City; matched?: string }[] {
+export function findStart(text: string, within?: ReadonlySet<string>): { city: City; matched?: string }[] {
   const q = normalise(text);
   if (!q) return [];
-  return CITIES.flatMap((city) => {
+  return CITIES.filter((c) => !within || within.has(c.id)).flatMap((city) => {
     const own = shown(city);
     // a name in Japanese or Chinese is found as the Latin name is
     const loc = own !== city.name ? matchScore(normalise(own), q) : -1;

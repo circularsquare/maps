@@ -4,7 +4,7 @@
 // the lines whose riders moved most (T-2390). game/editNote.ts says when and what the figures are.
 
 import { useEffect, useState } from "preact/hooks";
-import { count, exact, money, moneyNegative } from "../game/format";
+import { count, exact, money, moneyNegative, moneyShows } from "../game/format";
 import { editNote, holdNote, NOTE_COUNT_MS, shownChange, type FromTo } from "../game/editNote";
 import type { ProfitEstimate } from "../game/profitEstimate";
 import { world } from "../game/world";
@@ -21,7 +21,7 @@ const signed = (n: number, text: string) => (n > 0 ? "+" : n < 0 ? "−" : "") +
 
 /** T-2626: the estimate's hover, its two parts; a part under $500 is left out. */
 const estimateTip = (e: ProfitEstimate, day: string) =>
-  ([[e.running, "editNote.runningTip"], [e.fares, "editNote.faresTip"]] as const).filter(([v]) => Math.abs(v) >= 500)
+  ([[e.running, "editNote.runningTip"], [e.fares, "editNote.faresTip"]] as const).filter(([v]) => moneyShows(v))
     .map(([v, key]) => t(key, { change: signed(v, money(Math.abs(v))), day })).join("\n");
 
 export function EditNote() {
@@ -55,7 +55,7 @@ export function EditNote() {
           <span>{t("editNote.trips", { change: tripsText })}</span>
         </div>
       )}
-      {Math.abs(dm) >= 500 && (
+      {moneyShows(dm) && (
         <div class={"edit-row" + (n.estimating ? " estimating" : moneyNegative(dm) ? " money-neg" : "")} data-tip={n.est ? estimateTip(n.est, n.day) : tip("editNote.profitTip", n.money, "editNote.lineProfitTip", n.line?.money, money)}>
           <Arrow up={dm > 0} />
           <span>{t("editNote.profit", { estimating: !!n.estimating, change: signed(dm, money(m)) })}</span>

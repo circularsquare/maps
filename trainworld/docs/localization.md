@@ -66,7 +66,9 @@ Chinese take theirs, as Intl (ICU) writes them for the locale.
   rounding) to as many significant digits, in `Intl.NumberFormat(lang, { notation: "compact" })`
   (`i18n/intl.ts` `formatCompact`, through `compactOf`): 76.3万, 117万, $7400万, $60億 in Japanese; 万 and 亿 in
   zh-Hans (1.2万亿 above 1万亿); 萬 and 億 in zh-TW. Money is "$" before the figure in every language, a minus
-  "−" before that. Exact sums (`moneyExact`, `exact`) keep en-US's commas in every language.
+  "−" before that. Exact sums (`moneyExact`, `exact`) keep en-US's commas in every language. T-2798: the symbol is
+  the player's currency's ("£", "€", "¥", "₩"; `game/currency.ts` has the rates), and a T (trillion, 兆) follows B
+  for yen and won.
 - **Durations** (`duration`, `i18n/intl.ts` `formatDuration`): English "4m08s", "1h01m", "42s". Japanese 4分8秒,
   1時間1分, 42秒; zh-Hans 4分8秒, 1小时1分; zh-TW 4分8秒, 1小時1分. A zero last part is left off (1時間, and a
   whole minute 2分, 2分钟, 2分鐘). A language with no words in `DURATION_UNITS` writes English's.

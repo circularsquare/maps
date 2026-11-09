@@ -1,6 +1,7 @@
 // The Money tab: cash, the ledger, the fare curve and the fleet.
 
-import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, money, moneyCash, runCostHere, runCostLine, runCostRule, upkeepLines } from "../game/format";
+import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, currencySpec, fromShown, money, moneyCash, price, priceTyped, runCostHere, runCostLine, runCostRule, toShown, upkeepLines } from "../game/format";
+import { roundTo } from "../game/currency";
 import { borrow, repay, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
@@ -166,8 +167,9 @@ function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
   return (
     <li>
       <span class="fr-what">{t("moneyTab.transferFare")}</span>
-      <Stepper value={`$${fix2(shown)}`} wide label={t("moneyTab.transferFareLabel")} onStep={(d) => set(Math.round(shown * 100) / 100 + d * 0.25)}
-        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.transferTip") }} />
+      {/* T-2798: in the shown currency, stepped from the figure shown, back to US$ for the game */}
+      <Stepper value={price(shown)} wide label={t("moneyTab.transferFareLabel")} onStep={(d) => set(fromShown(roundTo(toShown(shown), currencySpec().grain) + d * currencySpec().fareStep))}
+        type={{ text: priceTyped(shown), set: (v) => set(fromShown(v)), tip: t("moneyTab.transferTip") }} />
       <span />
     </li>
   );
@@ -335,7 +337,7 @@ export function MoneyTab() {
 /** T-1906: why a loan of `amount` US$M is refused, null if it is not. */
 function loanRefusal(amount: number, profit: ReturnType<typeof loanProfit>): string | null {
   if (loanAllowed(amount, profit)) return null;
-  if (!profit) return t("moneyTab.loanFirst", { amount: tNumber(LOAN_AMOUNTS[0] / 1000) });
+  if (!profit) return t("moneyTab.loanFirst", { amount: money(LOAN_AMOUNTS[0] * 1e6) });
   return t("moneyTab.loanRefused", { payment: money(loanPayment(amount) * 1e6), yesterday: profit.days === 1, days: profit.days, profit: money(profit.perDay * 1e6) });
 }
 

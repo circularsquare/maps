@@ -16,7 +16,7 @@ hour and the clock's own day ([ui-map.md](ui-map.md)).
 
 **Data is asked for, not pushed** ([demand-views.md](demand-views.md)): each view asks again when the demand
 result changes and keeps its last answer meanwhile. After an edit only the final round is shown
-[T-232], so views rebuild once; at startup, a game load or a city just opened each estimate shows.
+[T-232], so views rebuild once; at startup or a game load each estimate shows, and a zone just opened shows its own estimates in its view while the lines keep their final figures [T-2793].
 
 **Scope.** Bubbles and selections cover the focused zone's modelled local trips; a station
 inspector's commuters are its commuters. Line widths, station totals and train fill include every open zone

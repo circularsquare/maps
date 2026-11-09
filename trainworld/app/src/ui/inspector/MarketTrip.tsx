@@ -5,7 +5,7 @@
 // stations are known only as felt minutes, averaged over the area.
 
 import { activeCity, cityById } from "../../game/cities";
-import { count, distance, distUnit, exact, perDistance, roughDistance, speed } from "../../game/format";
+import { count, distance, distUnit, exact, moneyWhole, perDistance, roughDistance, smallMoney, speed, usingUsd } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, carPartsOf, corridorOf,
   crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, pairCarUsd, ROAD_DETOUR, travelWeight, type CarCost, type Crossing, type Drive, type FlightCost,
@@ -24,12 +24,15 @@ import { SegBar } from "../widgets";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
 import { equation, minNum1, minRound, minText, modeName, num1, pct1, pctShare, rideTip, roundTo, termLabel, usd, type ModeId, type Term } from "./tripText";
 
-const perKm = (usdPerKm: number) => tr("marketTrip.centsPer", { cents: Math.round(100 * perDistance(usdPerKm)), unit: distUnit() });
+// T-2798: cents in dollars, as ever; another currency says the price
+const perKm = (usdPerKm: number) => usingUsd()
+  ? tr("marketTrip.centsPer", { cents: Math.round(100 * perDistance(usdPerKm)), unit: distUnit() })
+  : tr("marketTrip.pricePer", { amount: smallMoney(perDistance(usdPerKm)), unit: distUnit() });
 
 /** T-1148: the crossings' rows. */
 const crossingLabel = (c: Crossing) => tr("marketTrip.crossingLabel", { kind: c.kind });
 const crossingTip = (c: Crossing) => tr("marketTrip.crossingTip", {
-  kind: c.kind, usd: "$" + (c.kind === "ferry" ? Math.round(c.usd) : c.usd), people: CAR_SHARED_BY, min: c.min, hours: c.min / 60,
+  kind: c.kind, usd: moneyWhole(c.kind === "ferry" ? Math.round(c.usd) : c.usd), people: CAR_SHARED_BY, min: c.min, hours: c.min / 60,
   distance: distance(1000 * (c.km ?? 0)), wait: minText(c.min),
 });
 
@@ -37,17 +40,17 @@ const crossingTip = (c: Crossing) => tr("marketTrip.crossingTip", {
 function carEquation(c: CarCost): string {
   const terms: Term[] = [
     { label: termLabel("drive"), real: num1(c.driveMin), weight: 1, perceived: c.driveMin },
-    { label: termLabel("running"), real: usd(c.runUsd), weight: c.w, perceived: c.runUsd * c.w },
+    { label: termLabel("running"), real: usd(c.runUsd), weight: c.w, perceived: c.runUsd * c.w, usd: true },
     ...(c.parkMin >= 0.05 ? [{ label: termLabel("parking"), real: "", weight: 1, perceived: c.parkMin }] : []),
     // i18n-ignore: term ids
     ...c.crossings.flatMap((x) => [
       // i18n-ignore: term id
-      { label: termLabel("crossing fare"), real: usd(x.usd / CAR_SHARED_BY), weight: c.w, perceived: (x.usd / CAR_SHARED_BY) * c.w },
+      { label: termLabel("crossing fare"), real: usd(x.usd / CAR_SHARED_BY), weight: c.w, perceived: (x.usd / CAR_SHARED_BY) * c.w, usd: true },
       // i18n-ignore: term id
       { label: termLabel("crossing time"), real: num1(x.min), weight: 1, perceived: x.min },
     ]),
   ];
-  return `${equation(terms, c.total)}\n${tr("marketTrip.dollarWeight", { w: num1(c.w) })}`;
+  return `${equation(terms, c.total)}\n${tr("marketTrip.dollarWeight", { amount: smallMoney(1), w: num1(c.w) })}`;
 }
 
 /** By car: the drive, its running costs, parking, any crossing, and the effective time. `parts`
@@ -104,7 +107,7 @@ function PlaneRows({ f: f0, km, w }: { f: FlightCost; km: number; w: number }) {
     // i18n-ignore: term id
     { label: termLabel("until the flight"), real: num1(AIR_WAIT_MIN), weight: 1, perceived: AIR_WAIT_MIN },
     { label: termLabel("flight"), real: num1(f.flightMin), weight: 1, perceived: f.flightMin },
-    { label: termLabel("fare"), real: usd(f.fareUsd), weight: Math.round(f.fw * 10) / 10, perceived: f.fareUsd * f.fw },
+    { label: termLabel("fare"), real: usd(f.fareUsd), weight: Math.round(f.fw * 10) / 10, perceived: f.fareUsd * f.fw, usd: true },
   ];
   return (
     <ul class="rows">
@@ -124,11 +127,11 @@ function PlaneRows({ f: f0, km, w }: { f: FlightCost; km: number; w: number }) {
         <span class="grow">{tr("marketTrip.flight")}</span>
         <span class="val">{minText(f.flightMin)}</span>
       </li>
-      <li data-tip={tr("marketTrip.airFareTip", { fare: "$" + AIR_FARE_USD, rate: perKm(AIR_USD_PER_KM) })}>
+      <li data-tip={tr("marketTrip.airFareTip", { fare: moneyWhole(AIR_FARE_USD), rate: perKm(AIR_USD_PER_KM) })}>
         <span class="grow">{tr("tripText.fare")}</span>
         <span class="val">{usd(f.fareUsd)}</span>
       </li>
-      <li data-tip={`${equation(terms, f.total)}\n${tr("marketTrip.airDollarWeight", { w: num1(f.fw) })}`}>
+      <li data-tip={`${equation(terms, f.total)}\n${tr("marketTrip.airDollarWeight", { amount: smallMoney(1), w: num1(f.fw) })}`}>
         <span class="grow">{tr("tripText.effectiveTime")}</span>
         <span class="val">{minText(f.total)}</span>
       </li>

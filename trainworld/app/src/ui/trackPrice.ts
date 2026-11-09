@@ -1,6 +1,6 @@
 // The track tool's price at a level and its level buttons' hovers (T-2271), for the track bar (T-2282).
 
-import { distUnit, levelName, levelUpkeepLine, perDistance } from "../game/format";
+import { distUnit, levelName, levelUpkeepLine, millions, perDistance } from "../game/format";
 import type { MoneyState } from "../workers/protocol";
 import { edgeUpkeep } from "../game/regionMoney";
 import type { Level } from "../game/types";
@@ -37,5 +37,5 @@ export function upkeepAt(l: Level, t: TrackType, m: MoneyState | null): string {
 
 /** A level button's hover: "Viaduct (Shift+3)", "1.0x cost, $75M per km", "1.0x upkeep". */
 export function levelTip(l: Level, tt: TrackType, m: MoneyState | null): string {
-  return [`${levelName(l)} (${levelKeyName(l)})`, t("trackPrice.cost", { mult: multText(l, tt), price: tNumber(unitPrice(l, tt)), unit: distUnit() }), upkeepAt(l, tt, m)].filter(Boolean).join("\n");
+  return [`${levelName(l)} (${levelKeyName(l)})`, t("trackPrice.cost", { mult: multText(l, tt), price: millions(unitPrice(l, tt)), unit: distUnit() }), upkeepAt(l, tt, m)].filter(Boolean).join("\n");
 }
