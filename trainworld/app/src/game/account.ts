@@ -223,9 +223,10 @@ export async function signIn(path: "signin" | "login" | "register", body: unknow
   storeSession(await api<{ token: string; account: AccountView }>("POST", "noritetsu/" + path, body, { auth: false }));
 }
 
-export async function deleteAccount() {
+/** Deleting asks again: the password, or a fresh Google credential for an account with none (shonei-server's checkReauth). */
+export async function deleteAccount(proof: { password: string } | { credential: string } = { password: "" }) {
   const acct = session.peek()?.account.id;
-  await api("DELETE", "noritetsu/account");
+  await api("DELETE", "noritetsu/account", proof);
   tokenGone();
   lsSet(GAMES_KEY, null);
   // T-988: the games stay in this browser, tied to no account

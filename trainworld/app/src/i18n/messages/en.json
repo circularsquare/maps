@@ -36,6 +36,7 @@
   "accountPanel.signOut": "Sign out",
   "accountPanel.deleteAccount": "Delete account",
   "accountPanel.deleteQuestion": "Delete your account? Its games, its leaderboard entries and its noritetsu rides go too. Games in this browser stay.",
+  "accountPanel.deleteConfirmGoogle": "Confirm with Google to delete it.",
   "accountPanel.keepIt": "Keep it",
   "accountPanel.gamesTip": "{max, plural, one {Your account keeps up to # game} other {Your account keeps up to # games}}",
   "accountPanel.gamesCount": "{count, plural, one {# game} other {# games}} on your account",

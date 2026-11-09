@@ -33,9 +33,12 @@ function loadGis(): Promise<void> {
   return gis;
 }
 let gisFor = "";
+/** Where the button that is showing sends its credential; initialize is once per page, so it reads this. */
+let onGoogle: (credential: string) => void = () => {};
 
-function GoogleButton({ onMsg }: { onMsg: (m: string) => void }) {
+function GoogleButton({ onMsg, onCredential, text = "signin_with" }: { onMsg: (m: string) => void; onCredential: (credential: string) => void; text?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  onGoogle = onCredential;
   useEffect(() => {
     const id = accountConfig.peek()?.googleClientId;
     if (!id) return;
@@ -45,10 +48,10 @@ function GoogleButton({ onMsg }: { onMsg: (m: string) => void }) {
       if (!live || !el || typeof google === "undefined") return;
       if (gisFor !== id) {
         // the credential goes straight to the server: it holds the person's email and name
-        google.accounts.id.initialize({ client_id: id, callback: (r: { credential: string }) => signIn("signin", { provider: "google", credential: r.credential }).catch((e) => onMsg(e.message)) });
+        google.accounts.id.initialize({ client_id: id, callback: (r: { credential: string }) => onGoogle(r.credential) });
         gisFor = id;
       }
-      google.accounts.id.renderButton(el, { type: "standard", size: "medium", text: "signin_with", theme: shade.peek() === "dark" ? "filled_black" : "outline" });
+      google.accounts.id.renderButton(el, { type: "standard", size: "medium", text, theme: shade.peek() === "dark" ? "filled_black" : "outline" });
     }).catch((e) => onMsg(e.message));
     return () => { live = false; };
   }, []);
@@ -64,7 +67,7 @@ function SignInForms() {
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().catch((e) => setMsg(e.message)); };
   if (!cfg?.signIn) return <p>{t("accountPanel.unavailable")}</p>;
   return <>
-    {cfg.googleClientId && <GoogleButton onMsg={setMsg} />}
+    {cfg.googleClientId && <GoogleButton onMsg={setMsg} onCredential={(credential) => { signIn("signin", { provider: "google", credential }).catch((e) => setMsg(e.message)); }} />}
     {cfg.dev && <form class="acct-row" onSubmit={(e) => { e.preventDefault(); const sub = val(e.currentTarget, "sub").trim(); if (sub) run(() => signIn("signin", { provider: "dev", sub })); }}>
       <input name="sub" placeholder={t("accountPanel.devPlaceholder")} aria-label={t("accountPanel.devLabel")} />
       <button class="btn text" type="submit">{t("accountPanel.signIn")}</button>
@@ -102,6 +105,9 @@ function SignedIn({ a }: { a: AccountView }) {
   const password = a.logins.includes("password");
   const who = a.username ? tRich("accountPanel.signedInAs", { name: <b>{a.username}</b> }) : a.logins.includes("google") ? t("accountPanel.signedInGoogle") : t("accountPanel.signedIn");
   const setAccount = (account: AccountView) => { const s = session.peek(); if (s) storeSession({ token: s.token, account }); };
+  const google = a.logins.includes("google");
+  const saveEmail = (form: HTMLFormElement, email: string) => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email, password: val(form, "emailPassword") })).account));
+  const remove = (proof: { password: string } | { credential: string }) => run(async () => { await deleteAccount(proof); accountOpen.value = false; });
   if (panel === "password") return <form class="acct-form" onSubmit={(e) => {
     e.preventDefault();
     const f = e.currentTarget, o = val(f, "old"), n = val(f, "new");
@@ -116,13 +122,14 @@ function SignedIn({ a }: { a: AccountView }) {
     <p>{who}</p>
     <AccountGames />
     <MergeQuestion />
-    {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email").trim(); run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email })).account)); }}>
-      <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" value={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
+    {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); saveEmail(e.currentTarget, val(e.currentTarget, "email").trim()); }}>
+      <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" defaultValue={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
+      <input name="emailPassword" type="password" placeholder={t("accountPanel.currentPassword")} aria-label={t("accountPanel.currentPassword")} autocomplete="current-password" />
       {a.pendingEmail ? <p class="small muted">{t("accountPanel.confirmEmail", { email: a.pendingEmail })}</p>
         : !a.email && <p class="small acct-warn">{t("accountPanel.noRecoveryEmail")}</p>}
       <div class="acct-btns">
         <button class="btn text" type="submit">{t("accountPanel.saveEmail")}</button>
-        {(a.email || a.pendingEmail) && <button class="btn text" type="button" onClick={() => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email: "" })).account))}>{t("accountPanel.remove")}</button>}
+        {(a.email || a.pendingEmail) && <button class="btn text" type="button" onClick={(e) => saveEmail((e.currentTarget as HTMLButtonElement).form!, "")}>{t("accountPanel.remove")}</button>}
         <button class="btn text" type="button" onClick={() => { setPanel("password"); setMsg(""); }}>{t("accountPanel.changePassword")}</button>
       </div>
     </form>}
@@ -135,10 +142,12 @@ function SignedIn({ a }: { a: AccountView }) {
       }}>{t("accountPanel.signOut")}</button>
       <button class="btn text danger" onClick={() => setPanel("delete")}>{t("accountPanel.deleteAccount")}</button>
     </div>
-    {panel === "delete" && <div class="callout bad">
+    {panel === "delete" && <form class="callout bad acct-form" onSubmit={(e) => { e.preventDefault(); remove({ password: val(e.currentTarget, "deletePassword") }); }}>
       <p>{t("accountPanel.deleteQuestion")}</p>
-      <div class="pane-foot"><button class="btn text danger" onClick={() => run(async () => { await deleteAccount(); accountOpen.value = false; })}>{t("accountPanel.deleteAccount")}</button><button class="btn text" onClick={() => setPanel("")}>{t("accountPanel.keepIt")}</button></div>
-    </div>}
+      {password && <input name="deletePassword" type="password" placeholder={t("accountPanel.currentPassword")} aria-label={t("accountPanel.currentPassword")} autocomplete="current-password" />}
+      {google && <><p>{t("accountPanel.deleteConfirmGoogle")}</p><GoogleButton onMsg={setMsg} onCredential={(credential) => remove({ credential })} text="continue_with" /></>}
+      <div class="pane-foot">{!google && <button class="btn text danger" type="submit">{t("accountPanel.deleteAccount")}</button>}<button class="btn text" type="button" onClick={() => { setPanel(""); setMsg(""); }}>{t("accountPanel.keepIt")}</button></div>
+    </form>}
     {msg && <p class="acct-msg">{msg}</p>}
   </>;
 }

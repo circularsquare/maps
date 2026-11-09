@@ -1044,7 +1044,8 @@ registry centre and zoom, or over New York with none [T-310].
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
   Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
   noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
-  account).
+  account). Saving or removing the recovery email and deleting ask for the current password, and a
+  Google account deletes through Google's button instead ("Confirm with Google to delete it.") [T-2917].
 - **Signing out** [T-988 stage 3, T-1851] signs out at once; the account's games stay in the browser,
   tied to it, and sync again at the next sign-in. The "Remove games" choice (`signOutRemoving` in
   `game/accountGames.ts`) is no longer offered (Anita, 2026-10-30).

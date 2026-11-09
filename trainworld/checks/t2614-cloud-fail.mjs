@@ -46,7 +46,7 @@ if (OWN_SERVER) {
   const b = spawnSync(go, ['build', '-o', join(dir, 'shonei.exe'), '.'], { cwd: src, encoding: 'utf8' });
   if (b.status !== 0) throw new Error(`go build failed: ${b.stderr ?? b.error}`);
   for (const f of ['traders.json', 'traderstock.json']) if (existsSync(join(src, f))) copyFileSync(join(src, f), join(dir, f));
-  server = spawn(join(dir, 'shonei.exe'), [], { cwd: dir, stdio: 'ignore', env: { ...process.env, SHONEI_SECRET: '' } });
+  server = spawn(join(dir, 'shonei.exe'), [], { cwd: dir, stdio: 'ignore', env: { ...process.env, SHONEI_SECRET: 'local-check', SHONEI_DEV: '1' } });
   if (!await until(() => fetch(SERVER + 'noritetsu/config').then((r) => r.ok), 30000)) throw new Error('the local server did not start');
 }
 const signin = await (await fetch(SERVER + 'noritetsu/signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: 'dev', sub: SUB }) })).json();

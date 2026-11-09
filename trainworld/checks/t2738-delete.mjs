@@ -8,7 +8,7 @@
 // start menu's sync. Also the confirm's buttons, "Delete" (red) and "Keep".
 //   node trainworld/checks/t2738-delete.mjs [app url] [--server]     (from the maps root; default localhost:6190)
 // Without --server it builds ../shonei-server and runs it on 127.0.0.1:8083 in a temp folder (the
-// page's `?acct=local`); with --server one is already running there in dev mode (no SHONEI_SECRET).
+// page's `?acct=local`); with --server one is already running there in dev mode (SHONEI_SECRET set, SHONEI_DEV=1).
 // Prints PASS or FAIL lines and exits 1 on a failure. About two minutes.
 import { spawn, spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -37,7 +37,7 @@ async function until(f, ms = 30000, step = 400) {
 // ---- the server
 let server = null, serverDir = '';
 async function startServer() {
-  server = spawn(join(serverDir, 'shonei.exe'), [], { cwd: serverDir, stdio: 'ignore', env: { ...process.env, SHONEI_SECRET: '' } });
+  server = spawn(join(serverDir, 'shonei.exe'), [], { cwd: serverDir, stdio: 'ignore', env: { ...process.env, SHONEI_SECRET: 'local-check', SHONEI_DEV: '1' } });
   if (!await until(() => fetch(SERVER + 'noritetsu/config').then((r) => r.ok), 30000)) throw new Error('the local server did not start');
 }
 if (OWN_SERVER) {
