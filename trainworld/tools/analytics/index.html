@@ -51,6 +51,11 @@ td:last-child { text-align: right; color: var(--dim); }
 .seg button.on { background: #2a2a2a; color: var(--fg); }
 #map { height: 440px; border: 1px solid var(--line); background: #0a0a0a; }
 #maptip { position: fixed; z-index: 10; pointer-events: none; background: #181818; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; line-height: 1.5; display: none; white-space: nowrap; }
+.lrow { display: flex; align-items: center; gap: 10px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+.lrow .n { width: 150px; flex: none; }
+.lrow .b { flex: 1; height: 14px; }
+.lrow .b i { display: block; height: 100%; background: var(--new); }
+.lrow .v { width: 120px; flex: none; text-align: right; color: var(--dim); }
 .more { background: none; border: 0; color: var(--dim); font: inherit; font-size: 13px; cursor: pointer; padding: 6px 0 0; text-decoration: underline; }
 .maplibregl-ctrl-attrib { background: rgba(10,10,10,.7) !important; color: var(--dim) !important; }
 .maplibregl-ctrl-attrib a { color: var(--dim) !important; }
@@ -91,8 +96,8 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 
   <h2>Where games start</h2>
   <div class="toggles">
-    <div class="seg" id="segWeight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
-    <div class="seg" id="segGroup"><button data-v="city" class="on">Start cities</button><button data-v="country">Countries</button></div>
+    <div class="seg" data-k="weight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
+    <div class="seg" data-k="group"><button data-v="city" class="on">Start cities</button><button data-v="country">Countries</button></div>
   </div>
   <div id="map"></div>
   <div class="sub" id="mapnote" style="margin-top:6px"></div>
@@ -102,6 +107,13 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
     <div><h3>Since the data starts</h3><table id="citiesAll"></table><button class="more" id="moreAll" hidden></button></div>
   </div>
   <div class="sub" id="citynote" style="margin-top:8px"></div>
+
+  <h2>Browser language</h2>
+  <div class="toggles">
+    <div class="seg" data-k="weight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
+  </div>
+  <div id="langs"></div>
+  <div class="sub" id="langnote" style="margin-top:8px"></div>
 
   <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
   </div>
@@ -164,6 +176,7 @@ const expanded = { Today: false, All: false };
 const SHORT = 10, LONG = 40;
 
 function place(start) {
+  if (start === "map") return { name: "Started on the map", cc: "" };
   if (start === "other") return { name: "other", cc: "" };
   const c = CITY[start];
   if (!c) return { name: "unknown", cc: "" };
@@ -202,14 +215,53 @@ function renderCities(data) {
   renderMap(data);
 }
 for (const w of ["Today", "All"]) $("more" + w).addEventListener("click", () => { expanded[w] = !expanded[w]; renderCities(lastData); });
-for (const [id, k] of [["segWeight", "weight"], ["segGroup", "group"]]) {
-  $(id).addEventListener("click", (ev) => {
+for (const seg of document.querySelectorAll(".seg[data-k]")) {
+  seg.addEventListener("click", (ev) => {
     const b = ev.target.closest("button"); if (!b || !lastData) return;
-    view[k] = b.dataset.v;
-    for (const x of $(id).children) x.classList.toggle("on", x === b);
-    renderCities(lastData);
+    view[seg.dataset.k] = b.dataset.v;
+    for (const x of document.querySelectorAll(`.seg[data-k="${seg.dataset.k}"] button`)) x.classList.toggle("on", x.dataset.v === b.dataset.v);
+    renderCities(lastData); renderLangs(lastData);
   });
 }
+
+// ---- browser language: the primary subtag groups pt-BR and pt-PT; the full tags are in the hover
+const langNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "language" }); } catch (e) { return null; } })();
+const langName = (code) => { try { return langNames.of(code) || code; } catch (e) { return code; } };
+const LANG_ROWS = 20;
+function renderLangs(data) {
+  const w = view.weight === "plays" ? "plays" : "minutes";
+  const by = {};
+  for (const d of data.days) for (const l of d.langs || []) {
+    const g = l.lang.split("-")[0];
+    const e = by[g] || (by[g] = { v: 0, tags: {} });
+    e.v += l[w]; e.tags[l.lang] = (e.tags[l.lang] || 0) + l[w];
+  }
+  const rows = Object.entries(by).filter(([, e]) => e.v > 0).sort((a, b) => b[1].v - a[1].v);
+  const total = rows.reduce((t, [, e]) => t + e.v, 0);
+  const named = rows.filter(([g]) => g !== "unknown" && g !== "other");
+  if (!named.length) {
+    $("langs").innerHTML = `<div class="sub">No language counts yet. The game sends them from its next build, and the server has to be deployed to keep them.</div>`;
+    $("langnote").textContent = "";
+    return;
+  }
+  const max = rows[0][1].v;
+  $("langs").innerHTML = rows.slice(0, LANG_ROWS).map(([g, e]) => {
+    const tags = Object.entries(e.tags).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${fmt(n)}`).join(", ");
+    const label = g === "unknown" || g === "other" ? g : langName(g);
+    return `<div class="lrow bar" data-tip="${label}: ${tags}"><span class="n">${label}</span><span class="b"><i style="width:${(100 * e.v / max).toFixed(1)}%"></i></span><span class="v">${fmt(e.v)} (${(100 * e.v / total).toFixed(1)}%)</span></div>`;
+  }).join("");
+  $("langnote").textContent = `${w === "plays" ? "Plays" : "Minutes played"} by the language the browser is set to, all days kept. Older plays and older game versions count as unknown.` +
+    (rows.length > LANG_ROWS ? ` The top ${LANG_ROWS} of ${rows.length} languages.` : "");
+}
+$("langs").onmousemove = (ev) => {
+  const bar = ev.target.closest(".bar");
+  if (!bar) { barTip.style.display = "none"; return; }
+  barTip.textContent = bar.dataset.tip;
+  barTip.style.display = "block";
+  barTip.style.left = Math.min(ev.clientX + 12, window.innerWidth - barTip.offsetWidth - 8) + "px";
+  barTip.style.top = (ev.clientY + 12) + "px";
+};
+$("langs").onmouseleave = () => { barTip.style.display = "none"; };
 
 // ---- map: one bubble per start city, or per country, area by the chosen weight
 let map = null, mapReady = false;
@@ -217,10 +269,10 @@ const SKIP = new Set(["transportation", "transportation_name", "building", "poi"
 function darken(m) {
   for (const l of m.getStyle().layers) {
     const sl = l["source-layer"];
-    if (l.type === "background") m.setPaintProperty(l.id, "background-color", "#0a0a0a");
+    if (l.type === "background") m.setPaintProperty(l.id, "background-color", "#262626");
     else if (sl && SKIP.has(sl)) m.setLayoutProperty(l.id, "visibility", "none");
-    else if (l.type === "fill") m.setPaintProperty(l.id, "fill-color", sl === "water" ? "#0a0a0a" : "#1c1c1c");
-    else if (l.type === "line") m.setPaintProperty(l.id, "line-color", "#3a3a3a");
+    else if (l.type === "fill") m.setPaintProperty(l.id, "fill-color", sl === "water" ? "#0a0a0a" : "#262626");
+    else if (l.type === "line") m.setPaintProperty(l.id, "line-color", "#444");
     else if (l.type === "symbol") {
       if (/country|continent|state|ocean/.test(l.id)) { m.setPaintProperty(l.id, "text-color", "#5a5a5a"); m.setPaintProperty(l.id, "text-halo-color", "#0a0a0a"); }
       else m.setLayoutProperty(l.id, "visibility", "none");
@@ -233,6 +285,7 @@ function bubbles(data) {
   let missing = 0;
   for (const s of data.days.flatMap((x) => x.starts)) {
     const c = CITY[s.start];
+    if (s.start === "map") continue;
     if (!c) { missing += s[weight]; continue; }
     const k = group === "city" ? s.start : c[3];
     const e = by[k] || (by[k] = { w: 0, x: 0, y: 0, name: group === "city" ? `${c[2]}, ${c[3]}` : countryName(c[3]) });
@@ -278,7 +331,7 @@ function renderMap(data) {
   const unit = view.weight === "plays" ? "plays" : "minutes";
   $("mapnote").textContent = `${fmt(feats.length)} ${view.group === "city" ? "cities" : "countries"}, bubble area is ${unit}, all days kept.` +
     (view.group === "country" ? " A country's bubble sits at the average of its start cities." : "") +
-    (missing ? ` ${fmt(missing)} ${unit} have no city to place (other or unknown).` : "");
+    (missing ? ` ${fmt(missing)} ${unit} have no city to place (other or unknown). Games started on the map have no bubble.` : "");
 }
 
 // ---- chart: three lines over UTC days, hover guide with a tip
@@ -402,7 +455,7 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
-    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderPlaytime(data);
+    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderLangs(data); renderPlaytime(data);
     if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
     $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
   } catch (e) {
