@@ -86,8 +86,8 @@ try {
   const editing = await page.evaluate(() => [window.tw.tool?.value ?? null, document.documentElement.classList.contains('stop-editing')]);
   check(editing[1], 'and opens the stop editing', JSON.stringify(editing));
   await page.waitForTimeout(500);
-  const panel = await page.locator('.stepper .v, .stepper').filter({ hasText: 'By hand' }).count();
-  check(panel > 0, 'the stepper reads By hand');
+  const panel = await page.locator('.stepper .v, .stepper').filter({ hasText: 'Manual' }).count();
+  check(panel > 0, 'the stepper reads Manual');
 
   // a click along the route adds, twice
   const route = await page.evaluate((id) => { const b = window.tw.world.value.lineStats[id].bus; return b.routeLL; }, auto.id);

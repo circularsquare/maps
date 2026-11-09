@@ -284,7 +284,7 @@
   "busInspector.saveTip": "Enregistrer le tracé (Entrée)",
   "busInspector.spacing": "Espacement des arrêts",
   "busInspector.spacingAuto": "Auto",
-  "busInspector.spacingHand": "À la main",
+  "busInspector.spacingHand": "Manuel",
   "busInspector.spacingHandTip": "Le bus s’arrête seulement là où vous placez un arrêt.",
   "busInspector.spacingTip": "{auto, select, true {Un arrêt à chaque station rencontrée, et un environ tous les {distance} entre deux.} other {Le bus s’arrête à peu près à cet espacement, près d’une correspondance s’il y en a une.}}",
   "busInspector.station": "Station",

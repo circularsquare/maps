@@ -13,7 +13,7 @@
 // active end (either end; a click on the other one switches), a drag moves a point and re-searches
 // the legs either side, a right click on one deletes it (a finger: drag, and hold to delete,
 // T-1517). A click on the active end, a double click,
-// Enter or the Save/Make button finishes; Escape drops a new route's points or an edit as a whole.
+// Enter, Escape or the Save/Make button finishes a new route; Escape drops an edit as a whole.
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
@@ -662,8 +662,9 @@ export class BusDraw {
   key(e: KeyboardEvent): boolean {
     if (e.key === "Escape") {
       if (this.cancelDrag()) return true;
-      // an edited route goes back as it was; a new line's points are dropped, and the next Esc leaves
-      if (this.line !== null || this.pts.length === 0) this.host.exit();
+      // Esc places a new line, as it ends a track chain (T-2924); an edited route goes back as it was
+      if (this.line === null && this.pts.length >= 2) void this.finish();
+      else if (this.line !== null || this.pts.length === 0) this.host.exit();
       else {
         this.pts = [];
         this.legs = [];

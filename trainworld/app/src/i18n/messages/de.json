@@ -284,7 +284,7 @@
   "busInspector.saveTip": "Route speichern (Enter)",
   "busInspector.spacing": "Haltestellenabstand",
   "busInspector.spacingAuto": "Auto",
-  "busInspector.spacingHand": "Von Hand",
+  "busInspector.spacingHand": "Manuell",
   "busInspector.spacingHandTip": "Der Bus hält nur dort, wo du eine Haltestelle setzt.",
   "busInspector.spacingTip": "{auto, select, true {Eine Haltestelle an jeder Station auf dem Weg, dazwischen etwa alle {distance}.} other {Der Bus hält etwa in diesem Abstand, möglichst an einem Umstiegspunkt.}}",
   "busInspector.station": "Station",

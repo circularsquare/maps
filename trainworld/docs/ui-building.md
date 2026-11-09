@@ -156,7 +156,8 @@ while no line is picked yet), trip explorer `#268769`, station building `#a15b7b
   stations", "Exploring a trip" (its hint under it), "New passage from Bedford Av", each with a cross
   after it to leave the mode (hover "Stop (Esc)", for a phone, which has no Esc). The bus, ferry,
   stop editing and station building tools' rows are their descriptors, the square before their words
-  ("New bus line: 3 points" with Cancel and Make line, and so on).
+  ("New bus line: 3 points" with Cancel and Make line, and so on). Esc places a new bus or ferry line of
+  two points or more, as it ends a chain of track; on an edit of a built one it drops the edit (T-2924).
 
 ## Building by touch
 
@@ -380,15 +381,15 @@ the tag by the pointer gives the road length and the price.
   mouse.
 - **Stop spacing** (T-2885; `StopSpacing` in `ui/inspector/BusInspector.tsx`): a stepper at the top of the bus
   panel's Stops list, on any bus line, planned or constructed, not on a ferry. Auto is the first step (the
-  stops place themselves, track-and-service.md 6.7), By hand the next (below), then 400 m to 100 km; a click
+  stops place themselves, track-and-service.md 6.7), Manual the next (below), then 400 m to 100 km; a click
   on the value takes a typed distance in the shown unit (0 is Auto). Each step is one undoable edit, the
   map's stops and the list following at once, and the route tool's preview uses the line's stops.
-- **By hand** (T-2891; `map/busStops.ts`): choosing it clears the stops down to the route's two ends and opens
+- **Manual** (T-2891; `map/busStops.ts`): choosing it clears the stops down to the route's two ends and opens
   stop editing, the train mode's look and its keys (S or the panel's Edit stops button, shown while the line is
-  by hand; Enter or Stop editing ends it). A stop is the train editor's disc, a station the route can stop at
+  manual; Enter or Stop editing ends it). A stop is the train editor's disc, a station the route can stop at
   (`STATION_REACH_M`) its hollow marker, and a hollow marker follows the pointer along the route. A click on
   the route or a station adds a stop, a click on a stop takes it out, each one edit and one undo; the two
-  ends stay. Any other step of the stepper leaves By hand, and the placed stops go with it.
+  ends stay. Any other step of the stepper leaves Manual, and the placed stops go with it.
 
 ## Drawing a ferry line
 

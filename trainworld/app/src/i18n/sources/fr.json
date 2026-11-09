@@ -284,7 +284,7 @@
   "busInspector.saveTip": "Save the route (Enter)",
   "busInspector.spacing": "Stop spacing",
   "busInspector.spacingAuto": "Auto",
-  "busInspector.spacingHand": "By hand",
+  "busInspector.spacingHand": "Manual",
   "busInspector.spacingHandTip": "The bus stops only where you put a stop.",
   "busInspector.spacingTip": "{auto, select, true {A stop at every station it meets, and one about every {distance} between.} other {The bus stops about this often, at a transfer point if one is near.}}",
   "busInspector.station": "Station",

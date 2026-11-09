@@ -8,7 +8,7 @@
 //
 // The bus tool's handling where it fits (busDraw.ts): new ports go on at the active end (a click on the
 // other end switches), a right click on a port takes it out, a click on the active end, a double click,
-// Enter or the Make line button finishes, Escape drops a new line's ports or an edit as a whole. A
+// Enter, Escape or the Make line button finishes a new line, Escape drops an edit as a whole. A
 // finger's tap places at once (a port is a place, not a point to adjust). No dragging: a port is moved
 // by taking it out and placing another.
 //
@@ -383,7 +383,8 @@ export class FerryDraw {
   /** Keys: true if used. */
   key(e: KeyboardEvent): boolean {
     if (e.key === "Escape") {
-      if (this.line !== null || this.ports.length === 0) this.host.exit();
+      if (this.line === null && this.ports.length >= 2) void this.finish();
+      else if (this.line !== null || this.ports.length === 0) this.host.exit();
       else {
         this.ports = [];
         this.changed();

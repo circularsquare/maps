@@ -284,7 +284,7 @@
   "busInspector.saveTip": "Salvar a rota (Enter)",
   "busInspector.spacing": "Espaçamento das paradas",
   "busInspector.spacingAuto": "Auto",
-  "busInspector.spacingHand": "À mão",
+  "busInspector.spacingHand": "Manual",
   "busInspector.spacingHandTip": "O ônibus para só onde você colocar uma parada.",
   "busInspector.spacingTip": "{auto, select, true {Uma parada em cada estação que encontra e, entre elas, uma a cada {distance} mais ou menos.} other {O ônibus para mais ou menos nesta distância, em um ponto de baldeação se houver um perto.}}",
   "busInspector.station": "Estação",
