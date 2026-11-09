@@ -32,7 +32,8 @@ footer a { color: inherit; }
 #chartwrap { position: relative; }
 svg { display: block; width: 100%; height: auto; overflow: visible; }
 svg text { fill: var(--dim); font-size: 11px; font-family: inherit; }
-#tip { position: absolute; pointer-events: none; background: #181818; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; line-height: 1.5; display: none; white-space: nowrap; }
+#tip, #bartip { position: absolute; pointer-events: none; background: #181818; border: 1px solid var(--line); padding: 6px 9px; font-size: 13px; line-height: 1.5; display: none; white-space: nowrap; }
+#bartip { position: fixed; z-index: 10; }
 #tip .d { color: var(--dim); }
 .cols { display: flex; flex-wrap: wrap; gap: 24px 48px; }
 .cols > div { min-width: 200px; flex: 1; }
@@ -222,6 +223,7 @@ function renderChart(list) {
 
 // ---- histograms: equal-width bars per bin (the bins themselves are uneven), height is total time played
 const hrs = (m) => (m >= 600 ? fmt(Math.round(m / 60)) : (m / 60).toFixed(1)) + " h";
+const barTip = document.body.appendChild(Object.assign(document.createElement("div"), { id: "bartip" }));
 function renderBars(id, labels, counts, minutes, noun, color, h) {
   const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
   const hours = minutes.map((v) => v / 60);
@@ -238,12 +240,21 @@ function renderBars(id, labels, counts, minutes, noun, color, h) {
   labels.forEach((lb, i) => {
     const x0 = m.l + i * bw;
     const bh = y(0) - y(hours[i]);
-    s += `<g class="bar"><rect x="${x0}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" fill="transparent"/>` +
-      `<rect x="${x0 + 3}" y="${y(hours[i])}" width="${bw - 6}" height="${Math.max(bh, minutes[i] ? 1 : 0)}" fill="${color}"/>` +
-      `<title>${lb}: ${fmt(counts[i])} ${noun}, ${hrs(minutes[i])} played in all</title></g>`;
+    s += `<g class="bar" data-tip="${lb}: ${fmt(counts[i])} ${noun}, ${hrs(minutes[i])} played in all"><rect x="${x0}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" fill="transparent"/>` +
+      `<rect x="${x0 + 3}" y="${y(hours[i])}" width="${bw - 6}" height="${Math.max(bh, minutes[i] ? 1 : 0)}" fill="${color}"/></g>`;
     s += `<text x="${x0 + bw / 2}" y="${h - 8}" text-anchor="middle">${lb}</text>`;
   });
-  $(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Hours played by ${noun}, grouped by each one's total time played">${s}</svg>`;
+  const box = $(id);
+  box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Hours played by ${noun}, grouped by each one's total time played">${s}</svg>`;
+  box.onmousemove = (ev) => {
+    const bar = ev.target.closest(".bar");
+    if (!bar) { barTip.style.display = "none"; return; }
+    barTip.textContent = bar.dataset.tip;
+    barTip.style.display = "block";
+    barTip.style.left = Math.min(ev.clientX + 12, window.innerWidth - barTip.offsetWidth - 8) + "px";
+    barTip.style.top = (ev.clientY + 12) + "px";
+  };
+  box.onmouseleave = () => { barTip.style.display = "none"; };
 }
 
 function renderPlaytime(data) {
