@@ -399,11 +399,11 @@ The stops (above Schedule while being edited [T-670]),
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
   "Open the loop") [T-1391]; a line **turned round a loop** (T-3021) shows one row per station, (with related lines too, the side bend drawn over its columns): the stem straight, the first pass's time on each row, the loop's stations after it, the loop as a bend at the side leaving the turning station and coming back in at its last one with a white chevron, a hook past an end whose loop has no station; a stem with a loop past each end, each with stations, reads from the stop order alone and shows a bend above and one below (T-3050); no self-transfer bullet; boardings summed over the passes; a stop served one way has its dot filled on one half only (the loop side) [T-3025, T-3040, T-3041]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
   a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; the plain list's bar and dots are painted half a pixel off the pixel grid (`--soft` in `style.css`) as the related view's SVG is, so both views have the same soft edges and ring weight [T-2623]; **while stops are
-  edited** a toggle above the list, "Edit every stop in order", puts a rail line in manual mode (6.3): the list shows every
+  edited** a toggle above the list, "Exact edits", puts a rail line in manual mode (6.3): the list shows every
   visit, numbered, each row dragging as now, with a cross that skips that visit only (none on the ends or a turning
   stop), a "+" that opens a "Pick a station on the map" row after it (the next station click on the map puts the stop in
-  there, through `orderStops`, refusing like a drag), and no Direction row; the toggle switches back only when the list
-  is a plain out-and-back [T-3024]; a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
+  there, through `orderStops`, refusing like a drag), and no Direction row; the list runs in order (never flipped) with no related-lines side drawing; the toggle always switches back,
+  keeping the stops as a normal line unless the list folds [T-3024, T-3079]; a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
   and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove
   the stop at 225 St", "Shift-click to end the line here"; none on a stop the line needs: a line of
   two, a loop's ends, where trains turn back), beside the remove button [T-1894]; **flat junctions and

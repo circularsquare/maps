@@ -726,8 +726,8 @@ function RailLineInspector({ id }: { id: string }) {
   // while a hand-ordered line's stops are edited, where each pass is its own row
   const byId = stationsById(w);
   const turned = !(editingStops && st.hand) ? turnedLine(l.stops, st, (a, b) => !drawnReversed(byId.get(a), byId.get(b))) : null;
-  // T-1894: north (or for an east-west line, west) end on top; a loop as built
-  const flip = !turned && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
+  // T-1894: north (or for an east-west line, west) end on top; a loop as built. T-3079: Exact edits lists the visits in running order, never flipped
+  const flip = !turned && !(editingStops && st.manual) && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
   // T-2895: while stops are edited a row drags to a new place in the list (not by touch; in related lines the
   // line's own rows); a loop keeps its first and closing stop where they are. The line then keeps the order.
   const loopEnds = st.loop ? 1 : 0;
@@ -882,7 +882,9 @@ function RailLineInspector({ id }: { id: string }) {
       </li>
     );
   };
-  const related = relatedLines.value && l.stops.length >= 2;
+  // T-3079: Exact edits is a plain numbered list: no side lines, so no loop or crossing drawn beside it
+  const exact = editingStops && st.manual;
+  const related = relatedLines.value && l.stops.length >= 2 && !exact;
   // T-1391: a loop shows each station once, its bar going on past both ends; while its stops are
   // edited the last row stays, holding the button that opens the loop
   const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
@@ -923,7 +925,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <div class="h divided">
         {tr("lineInspector.stops")}
-        {l.stops.length >= 2 && (
+        {l.stops.length >= 2 && !exact && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
@@ -936,8 +938,7 @@ function RailLineInspector({ id }: { id: string }) {
       </div>
       {editingStops && l.stops.length >= 2 && (EXACT_EDITS || st.manual) && (
         <div class="manual-row">
-          <button class={"btn text mini" + (st.manual ? " on" : "")} aria-pressed={st.manual} disabled={st.manual && !st.manualFolds}
-            data-tip={st.manual ? (st.manualFolds ? undefined : tr("lineInspector.manualBackTip")) : tr("lineInspector.manualTip")}
+          <button class={"btn text mini" + (st.manual ? " on" : "")} aria-pressed={st.manual} data-tip={st.manual ? undefined : tr("lineInspector.manualTip")}
             onClick={() => void stopEdit({ op: "setManual", line: l.num, on: !st.manual })}>{tr("lineInspector.manualMode")}</button>
         </div>
       )}

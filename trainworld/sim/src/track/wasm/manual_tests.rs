@@ -68,7 +68,11 @@ fn a_manual_line_writes_the_whole_cycle_and_folds_back() {
     assert_eq!(a.drop_stop(id, 4), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s3, s1, s0]);
     assert!(a.line_manual(id) && !a.manual_folds(id));
-    assert_ne!(a.set_manual(id, false), 0, "no fold");
+    // switching off a list that does not fold keeps its stops as a normal line (T-3079)
+    assert_eq!(a.set_manual(id, false), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s3, s1, s0]);
+    assert!(!a.line_manual(id));
+    assert_eq!(a.undo(), 0);
     assert_ne!(a.drop_stop(id, 3), 0, "a reversal's stop stays");
     // a visit in after row 3 through order_stops keeps the manual list as given
     assert_eq!(a.order_stops(id, &[s0, s1, s2, s3, s2, s1, s0]), 0, "{}", a.issues());
@@ -150,4 +154,18 @@ fn a_long_manual_line_edits_in_a_blink() {
     assert_eq!(a.order_stops(id, &stops), 0, "{}", a.issues());
     eprintln!("set_manual {:?}, one order_stops {:?}", t2 - t, t2.elapsed());
     assert_eq!(a.w.net.line_stops(id).len(), 58);
+}
+
+/// T-3079: a leg that ends where the next begins at a listed stop turns there for nothing, so a loop
+/// of track past the stop is not taken to turn round.
+#[test]
+fn a_listed_stop_turns_the_train_with_no_detour_round_a_loop() {
+    use super::turn_tests::teardrop;
+    let (w, [a0, b, m, _, k]) = teardrop(false);
+    let mut a = api(w);
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_manual(id, true), 0, "{}", a.issues());
+    assert_eq!(a.line_reversals(id), [3.0], "the train turns at K, the listed stop");
+    assert_eq!(a.order_fault_line(id, &[a0, b, m, k, m, b, a0]), Vec::<f64>::new());
 }

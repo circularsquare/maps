@@ -2661,13 +2661,19 @@ impl Network {
     /// `find_path` arriving at `to` on the side `want` when given (T-798: a loop's closing hop
     /// arrives so the train carries on round).
     pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>) -> Option<(Vec<u32>, u8)> {
+        self.find_path_turn(from, to, arrived, want, REVERSAL_SEARCH_S)
+    }
+
+    /// `find_path_side` with the cost of turning back at `from` given: 0 on a manual line (T-3079), where
+    /// the player listed the stop and a reversal there is a terminus.
+    pub fn find_path_turn(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, turn_s: f64) -> Option<(Vec<u32>, u8)> {
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
         let mut heap = BinaryHeap::new();
         let p = &self.node_ports[from as usize];
         for (k, &c) in p.ends().iter().enumerate() {
-            let turn = if arrived == Some(p.side[k]) { REVERSAL_SEARCH_S } else { 0.0 };
+            let turn = if arrived == Some(p.side[k]) { turn_s } else { 0.0 };
             let (e, which) = (c >> 1, c & 1);
             let st = e << 1 | which; // leaving from end a = direction 0
             dist[st as usize] = self.edge_time[e as usize] + turn;
@@ -2717,13 +2723,19 @@ impl Network {
     /// `route` over stops that are all stations, or the first hop with no path (T-2895: hop k runs
     /// from stop k to stop k + 1).
     pub fn route_hops(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
+        self.route_hops_turn(stops, REVERSAL_SEARCH_S)
+    }
+
+    /// `route_hops` with a reversal at a stop costing `turn_s`; a manual line's (T-3079) costs nothing and
+    /// its closing hop takes the quickest way, no carrying on round.
+    pub fn route_hops_turn(&self, stops: &[u32], turn_s: f64) -> Result<Vec<u32>, usize> {
         let mut path: Vec<u32> = vec![];
         let mut side = None;
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
         for (k, w) in stops.windows(2).enumerate() {
-            let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
-            let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want));
-            let plain = self.find_path(w[0], w[1], side);
+            let want = if closes && k + 2 == stops.len() && turn_s > 0.0 { self.carry_on_side(&path) } else { None };
+            let carry = want.and_then(|_| self.find_path_turn(w[0], w[1], side, want, turn_s));
+            let plain = self.find_path_turn(w[0], w[1], side, None, turn_s);
             let (p, s) = match (carry, plain) {
                 (Some(c), Some(p)) => if self.carry_worth(&c.0, &p.0) { c } else { p },
                 (c, p) => c.or(p).ok_or(k)?,

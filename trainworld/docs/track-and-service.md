@@ -900,8 +900,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   where `edited_stops` would fold an out-and-back list into an open line. Skipping a visit is `drop_stop` with
   its refusals (a reversal's stop stays, the ends stay). A reversal at a listed stop is a terminus: the
   platform and turnback of a line end, with no reversal limiter (`build_nodes` skips `limiter`), and the
-  app draws no U-turn icon on the line. `set_manual(false)` is refused unless the list is a plain out-and-back
-  (`folded`: it reads the same both ways), which it folds into the open line, both ways again. The marker
+  app draws no U-turn icon on the line. `set_manual(false)` folds a plain out-and-back list (`folded`: it reads the same both ways)
+  into the open line, both ways again; any other list stays as it is, a normal line with those stops (a turned line keeps its loop). The
+  route between consecutive stops of a manual line turns back at a listed stop at no cost (`route_hops_turn`, 0 s; the search's
+  600 s penalty is for a line whose reversals are accidents), so a leg never runs on round a loop to turn. The marker
   tiers 5, 6 and 8 are not offered on a manual line; tier 7 still writes a loop into it. Trains enter service at
   the first stop only, so the far end waits one run at the start of the day.
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same

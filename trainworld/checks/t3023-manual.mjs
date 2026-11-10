@@ -86,7 +86,7 @@ try {
 
   // the toggle
   const p0 = await panel();
-  check(p0.toggle && p0.toggle.text === 'Edit every stop in order' && !p0.toggle.on, 'the toggle is at the top of the list, off', JSON.stringify(p0.toggle));
+  check(p0.toggle && p0.toggle.text === 'Exact edits' && !p0.toggle.on, 'the toggle is at the top of the list, off', JSON.stringify(p0.toggle));
   await page.locator('.manual-row button').click();
   await page.waitForTimeout(1500);
   const s1 = await info();
@@ -106,7 +106,15 @@ try {
   const s2 = await info();
   check(JSON.stringify(s2.stops) === JSON.stringify([N.A, N.B, N.C, N.D, N.B, N.A]) && s2.manual, 'the cross takes that one visit out', s2.stops.join());
   const p2 = await panel();
-  check(p2.toggle?.on && p2.toggle.disabled, 'the toggle cannot switch back while the list is not a plain out-and-back', JSON.stringify(p2.toggle));
+  check(p2.toggle?.on && !p2.toggle.disabled, 'the toggle can always switch back', JSON.stringify(p2.toggle));
+  // T-3079: a list that does not fold goes back to a normal line with the same stops; undo returns to exact
+  await page.locator('.manual-row button').click();
+  await page.waitForTimeout(1500);
+  const sOff = await info();
+  check(!sOff.manual && JSON.stringify(sOff.stops) === JSON.stringify(s2.stops), 'switching back keeps the stops as a normal line', JSON.stringify(sOff));
+  await edit({ op: 'undo' });
+  await page.waitForTimeout(1200);
+  check((await info()).manual, 'undo puts exact edits back');
 
   // a visit in: + on C, then a click on E's marker
   const markerAt = (n) => page.evaluate((n) => {

@@ -83,6 +83,21 @@ impl TrackApi {
             Err(k) => vec![if net.joined(stops[k], stops[k + 1]) { 1.0 } else { 0.0 }, stops[k] as f64, stops[k + 1] as f64],
         }
     }
+    /// T-3079: `order_fault` for a line in manual mode, where a reversal at a listed stop costs nothing.
+    pub fn order_fault_line(&self, line: u32, stops: &[u32]) -> Vec<f64> {
+        if !self.line_manual(line) {
+            return self.order_fault(stops);
+        }
+        let net = &self.w.net;
+        let stops = distinct_stops(stops);
+        if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
+            return vec![];
+        }
+        match net.route_hops_turn(&stops, 0.0) {
+            Ok(_) => vec![],
+            Err(k) => vec![if net.joined(stops[k], stops[k + 1]) { 1.0 } else { 0.0 }, stops[k] as f64, stops[k + 1] as f64],
+        }
+    }
     /// T-1791: take stop `i` out and keep the path: a stop between the ends leaves the track as it
     /// is (`set_stops` would find the route again, and could move a local onto faster track); an
     /// end stop's removal cuts the path back to the new end. Refused if a train turns back there
@@ -380,8 +395,8 @@ impl TrackApi {
     }
     /// T-3023: switch a line into manual mode (`on`) or back. An open line becomes its whole cycle,
     /// out and back (`[A, B, C]` is `[A, B, C, B, A]`), hand ordered and one way, each row one visit;
-    /// a loop line keeps its stops. Back to an open line is refused unless the stops are a plain
-    /// out-and-back (`manual_folds`). One edit, one undo.
+    /// a loop line keeps its stops. Back: a plain out-and-back (`manual_folds`) folds into an open line,
+    /// any other list stays as it is, a normal line with those stops. One edit, one undo.
     pub fn set_manual(&mut self, id: u32, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         if d.bus.is_some() || d.ferry.is_some() || d.manual == on {
@@ -401,12 +416,15 @@ impl TrackApi {
             d.hand = true;
             d.one_way = true;
         } else {
-            let Some(open) = folded(&d.stops) else { return self.refuse(Issue::LinePath { line: id }) };
-            let Some((stops, path)) = edited_stops(&self.w.net, &open, false) else { return self.refuse(Issue::LinePath { line: id }) };
-            d.stops = stops;
-            d.path = path;
-            d.hand = false;
-            d.one_way = false;
+            // a plain out-and-back folds into its open line, both ways; any other list stays as it is, a
+            // normal line with those stops (a turned line keeps its loop), T-3079
+            if let Some(open) = folded(&d.stops) {
+                let Some((stops, path)) = edited_stops(&self.w.net, &open, false) else { return self.refuse(Issue::LinePath { line: id }) };
+                d.stops = stops;
+                d.path = path;
+                d.hand = false;
+                d.one_way = false;
+            }
         }
         d.manual = on;
         self.run(Op::Line { id, data: Some(d) })
@@ -576,7 +594,10 @@ fn manual_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
     if stops.len() < 2 {
         return None;
     }
-    let path = net.route(&stops)?;
+    if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
+        return None;
+    }
+    let path = net.route_hops_turn(&stops, 0.0).ok()?;
     Some((stops, path))
 }
 

@@ -3654,7 +3654,7 @@ function apply(op: EditOp): Applied {
       return { r: r === 0 ? 0 : DROP_REFUSED };
     }
     case "orderStops": {
-      const fault = [...a.order_fault(new Uint32Array(op.stops))];
+      const fault = [...a.order_fault_line(op.line, new Uint32Array(op.stops))];
       if (fault.length === 3) return { r: ORDER_REFUSED, fault };
       return { r: a.order_stops(op.line, new Uint32Array(op.stops)) };
     }
