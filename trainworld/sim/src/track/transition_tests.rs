@@ -143,6 +143,7 @@ fn corridor(n: usize) -> (TrackWorld, Vec<u32>) {
     for &n in &ns {
         station(&mut w, n, 200);
     }
+    crate::track::tests::terminals_at_dead_ends(&mut w);
     (w, ns)
 }
 

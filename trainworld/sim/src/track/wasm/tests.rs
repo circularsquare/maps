@@ -538,7 +538,7 @@ fn clamp_auto_binds_only_at_the_limit() {
     assert_eq!(clamp_auto(0, 2000.0, 0, 15.0), 0);
 }
 
-/// A 6 km double-track line between two dead-end termini, turning in 420 s: each terminus
+/// A 6 km double-track line between two dead-end termini with terminals, turning in 420 s: each terminus
 /// pools its two platform tracks, (420 + 60) / 2 = 240 s a train, so the line's limit is 4:00.
 fn four_minute_line() -> (TrackApi, u32) {
     let mut a = api();
@@ -549,6 +549,7 @@ fn four_minute_line() -> (TrackApi, u32) {
     let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
     assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
     assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+    crate::track::tests::terminals_at_dead_ends(&mut a.w); // both platforms at each end (T-2986)
     let id = a.new_line_id();
     assert_eq!(a.set_line_with_trains(id, &[n0, n1], 2, 2, 2, 30.0, 420.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
@@ -566,6 +567,7 @@ fn full_track_lists_the_edges_of_full_sections() {
     let (n0, n1) = (nodes[0] as u32, nodes[10] as u32);
     assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
     assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+    crate::track::tests::terminals_at_dead_ends(&mut a.w); // both platforms at each end (T-2986)
     let id = a.new_line_id();
     assert_eq!(a.set_line_with_trains(id, &[n0, n1], 60, 2, 2, 30.0, 0.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
@@ -663,6 +665,7 @@ fn headway_lines_follow_their_round_trip() {
     let e = a.edges_info()[0] as u32;
     assert_eq!(a.add_station(1, n0, 0.0, 0.0, 200, "West".into()), 0);
     assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
+    crate::track::tests::terminals_at_dead_ends(&mut a.w); // both platforms at each end (T-2986)
     assert_eq!(a.add_station(2, e, 3000.0, 30.0, 200, "Middle".into()), 0, "{}", a.issues());
     let mid = a.nodes_info().chunks(10).find(|c| (c[1] - 3000.0).abs() < 1.0).unwrap()[0] as u32;
     let id = a.new_line_id();

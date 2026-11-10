@@ -2,7 +2,7 @@
 
 A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. They have no [upkeep](upkeep.md). Taking one away refunds nothing.
 
-**Terminal.** Turnback sidings past the platform. A line that turns round here holds its platform only for the dwell, and turns in two sidings. It costs 1 km of double track at the station's level, which is US$37.5M on the ground ([levels and tunnels](levels-and-tunnels.md)). See [line capacity](line-capacity.md) for what it does to trains an hour.
+**Terminal.** Trains ending here use both platforms. Without one they use a single platform, and the next train waits for the one there to leave. At a station with track past it, the terminal also adds two turnback sidings: a line that turns round here holds its platforms only for the dwell, and turns in the sidings. It costs 1 km of double track at the station's level, which is US$37.5M on the ground ([levels and tunnels](levels-and-tunnels.md)). See [line capacity](line-capacity.md) for what it does to trains an hour.
 
 **Passing tracks.** A second platform track each way. Trains that stop use the outer one, and trains that don't use the inner one, or a second train can stop. A slower line that stops here waits for faster ones to pass, so an express can overtake a local ([slower trains](slower-trains.md)). It costs the platform plus 0.4 km of double track at the station's level, more on high-speed track and over water. It only works on double track.
 

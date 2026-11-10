@@ -66,7 +66,7 @@ function spotsFrom(d: Float64Array): Spots {
     const text =
       kind === 11
         ? ahead ? tr("lineInspector.behindLine", { line: ahead }) : tr("lineInspector.behindSlower")
-        : (kind === 2 || kind === 3 || kind === 6 || kind === 8) && at
+        : (kind === 2 || kind === 3 || kind === 6 || kind === 8 || kind === 9 || kind === 10 || kind === 14) && at
           ? tr("lineInspector.spotAt", { name: at })
           : tr("lineInspector.spotPlace", { kind: kind === 4 ? "junction" : kind === 5 ? "crossing" : kind === 12 ? "merge" : "track", hasNear: !!near, near: near ?? "" });
     const out = kind === 11 ? following : busy;

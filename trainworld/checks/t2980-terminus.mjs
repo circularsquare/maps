@@ -7,7 +7,12 @@
 // (their lag grew in the last 600 m); trains drawn in M's sidings. With `?perfOff=bays` (the second
 // argument `before`) the old drawing: every train at the end of its arrival track. Then zoom 18 shots
 // of T with two trains standing and of M with one in a siding, light and dark, in
-// artifacts/trainworld/t2980-*.png. From the maps root:
+// artifacts/trainworld/t2980-*.png.
+// T-2986: a dead end turns on both platforms only with a terminal. First, T without one: the count
+// lines for an hour, no two trains standing at T at once, T's terminus dot of kind 14 (one platform)
+// and its trains an hour; a shot of T with one train standing and the next waiting
+// (t2986-one-platform-*.png). Then T gets a terminal and the T-2980 runs follow (shots also as
+// t2986-both-platforms-*.png and t2986-terminal-*.png; `ONLY_ONE=1` stops after T without one). From the maps root:
 //   node trainworld/checks/t2980-terminus.mjs [url] [before]
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -141,13 +146,87 @@ try {
   // T in view, close enough for the guard to hold trains there
   await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 14 }), [T[0] + 1 * KM, T[1]]);
   await page.waitForTimeout(1500);
+  /** the termini by T (within 300 m) at high demand: kind, utilisation, trains an hour */
+  const terminiAtT = () => page.evaluate(([lng, lat]) => {
+    const tw = window.tw, w = tw.world.value;
+    return (w.capacity[0] ?? []).filter((m) => m.kind === 3 || m.kind === 14).map((m) => {
+      const [x, y] = tw.toLngLat(m.x, m.y);
+      return { kind: m.kind, rho: +m.rho.toFixed(3), tph: +m.tph.toFixed(1), m: Math.round(Math.hypot((x - lng) * 111320 * Math.cos((lat * Math.PI) / 180), (y - lat) * 110570)) };
+    }).filter((m) => m.m < 300);
+  }, T);
+  let one = null;
+  if (!BEFORE) {
+    // T-2986: T without a terminal turns on one platform
+    one = measure(await sample(1, 9), `no terminal at T, count ${COUNT}+${COUNT}`);
+    const dots = await terminiAtT();
+    console.log('termini at T without a terminal', JSON.stringify(dots));
+    check(one.gameH >= 0.95, `${one.tag}: ${one.gameH} game hours`);
+    check(one.pairsAtT === 0, `${one.tag}: one train at a time stands at T (${one.pairsAtT} frame pairs with two)`);
+    check(one.arrivals > 0 && one.held > 0, `${one.tag}: arrivals wait for the platform: ${one.held} of ${one.arrivals} held (mean ${one.heldMeanS} s)`);
+    check(dots.some((d) => d.kind === 14) && !dots.some((d) => d.kind === 3), `${one.tag}: T's terminus is the one-platform kind (${JSON.stringify(dots)})`);
+    // a shot of T with one train standing and the next held short of the crossover
+    const found = await page.evaluate(async ([LINES]) => {
+      const tw = window.tw, r = tw.renderer, c = tw.clock;
+      c.setSpeed(0);
+      c.setRunning(true);
+      const w0 = performance.now();
+      const arrive = (n, p) => { const k = (n.meta[p * 4] + n.meta[p * 4 + 1] - 1) * 4; return n.phases[k + 3] < 0 ? n.phases[k] + n.phases[k + 2] / -n.phases[k + 3] : n.phases[k]; };
+      return await new Promise((done) => {
+        const step = () => {
+          if (performance.now() - w0 > 120000) { c.setRunning(false); return done(false); }
+          const n = r.net, t = r.guard.lastTime;
+          let stand = 0, waiting = 0;
+          for (let i = 0; i < r.tripCount; i++) {
+            const prof = r.trips[i * 2], lag = r.tripLag(i), dep = r.trips[i * 2 + 1] + r.tripsEpoch + lag;
+            const at = tw.tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, 0, 0, undefined, 0, 0, r.tripBays ?? undefined, i * 4);
+            if (!at || !LINES.includes(at.line) || at.run !== 1) continue;
+            const L = n.meta[prof * 4 + 3];
+            if (t - dep > arrive(n, prof)) stand++;
+            else if (L - at.s < 450 && lag > 10) waiting++;
+          }
+          if (stand >= 1 && waiting >= 1) { c.setRunning(false); return done(true); }
+          requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    }, [[built.a, built.b]]);
+    check(found, 'one-platform: the moment came (one standing at T, the next waiting)');
+    await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 16.5 }), [T[0] + 0.27 * KM, T[1]]);
+    await page.waitForTimeout(1500);
+    for (const sh of ['light', 'dark']) {
+      await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, sh);
+      await page.waitForTimeout(1200);
+      await page.screenshot({ path: join(ARTIFACTS, `t2986-one-platform-${sh}.png`), clip: { x: 200, y: 250, width: 1000, height: 400 } });
+    }
+    await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, 'light');
+    await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 14 }), [T[0] + 1 * KM, T[1]]);
+  }
+  // ONLY_ONE=1: the one-platform part alone
+  if (process.env.ONLY_ONE && !BEFORE) {
+    check(errors.length === 0, `no console errors${errors.length ? ": " + errors.slice(0, 3).join(" | ") : ""}`);
+    await chrome.close();
+    process.exit(fail ? 1 : 0);
+  }
+  // T-2986: the T-2980 runs below are of T with a terminal
+  const up = await page.evaluate(async (t) => {
+    const ok = (await window.tw.client.edit({ op: 'stationUpgrade', nodes: [t], bit: 1, on: true }))?.ok;
+    await new Promise((d) => setTimeout(d, 2500));
+    return ok;
+  }, built.t);
+  check(up, 'a terminal built at T');
+  await page.waitForTimeout(1500);
+  if (!BEFORE) {
+    const dots = await terminiAtT();
+    console.log('termini at T with a terminal', JSON.stringify(dots));
+    check(!dots.some((d) => d.kind === 14), `with a terminal T's terminus is no longer the one-platform kind (${JSON.stringify(dots)})`);
+  }
   const count = measure(await sample(Number(process.env.SAMPLE_H ?? 1), 9), `count ${COUNT}+${COUNT}`);
   await page.evaluate(async ([a, b]) => {
     for (const l of [a, b]) await window.tw.client.edit({ op: 'setHeadway', line: l, seconds: [300, 300, 300] });
     await new Promise((d) => setTimeout(d, 2500));
   }, [built.a, built.b]);
   const hw = measure(await sample(1, 13), 'headway 5 min');
-  await writeFile(join(ARTIFACTS, `t2980-terminus${BEFORE ? '-before' : ''}.json`), JSON.stringify({ count, hw }));
+  await writeFile(join(ARTIFACTS, `t2980-terminus${BEFORE ? '-before' : ''}.json`), JSON.stringify({ one, count, hw }));
   for (const r of [count, hw]) {
     check(r.gameH >= 0.95, `${r.tag}: ${r.gameH} game hours over ${r.frames} frames`);
     if (!BEFORE) {
@@ -192,6 +271,7 @@ try {
       await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, sh);
       await page.waitForTimeout(1200);
       await page.screenshot({ path: join(ARTIFACTS, `t2980-${name}${BEFORE ? '-before' : ''}-${sh}.png`), clip: { x: 200, y: 250, width: 1000, height: 400 } });
+      if (!BEFORE) await page.screenshot({ path: join(ARTIFACTS, `t2986-${name === 'dead-end' ? 'both-platforms' : name}-${sh}.png`), clip: { x: 200, y: 250, width: 1000, height: 400 } });
     }
     await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, 'light');
     await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 14 }), [T[0] + 1 * KM, T[1]]);

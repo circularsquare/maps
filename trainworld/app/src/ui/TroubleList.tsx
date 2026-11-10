@@ -26,8 +26,8 @@ import { t, tNumber } from "../i18n";
 
 const STORE = "anitabuilder-trouble-open";
 const DEMAND_WORD = ["high", "medium", "low"];   // i18n-ignore (codes for troubleList.waits)
-/** capacity kinds tied to one station (`CAPACITY_KINDS`): platform, terminus, turning, reversing, sidings */
-const AT_STATION = new Set([2, 3, 6, 8, 9, 10]);
+/** capacity kinds tied to one station (`CAPACITY_KINDS`): platform, terminus, turning, reversing, sidings, a terminus on one platform */
+const AT_STATION = new Set([2, 3, 6, 8, 9, 10, 14]);
 /** a line is listed for crowding past these: riders left at the platform as a share of those who
  * wanted its trains, or trains that left full as a share of those that ran, in the past 24 hours */
 const LEFT_SHARE = 0.03, LEFT_MIN = 10, FULL_SHARE = 0.25;

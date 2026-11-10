@@ -22,7 +22,7 @@ export interface CapacityKindText {
   readonly fix: string;
 }
 
-type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge";
+type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge" | "terminusOne";
 // the texts read their messages when read, so the list follows the language
 const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | ""): CapacityKindText => ({
   get name() { return t(`capacityKinds.${base}Name` as MessageKey); }, // i18n-ignore
@@ -37,7 +37,8 @@ const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | ""): 
 /** Indexed by kind: 0 track, 1 single track, 2 platform, 3 terminus, 4 junction, 5 flat crossing,
  * 6 a line turning on a through station's platform, 7 track shared by several lines, 8 a line
  * turning across the other track at a through station, 9 lines reversing partway at a station (T-797),
- * 10 a terminal's sidings (T-1281), 12 shared track from where lines join it, a merge (T-2185).
+ * 10 a terminal's sidings (T-1281), 12 shared track from where lines join it, a merge (T-2185),
+ * 14 a double-track dead end with no terminal, turning on one platform (T-2986).
  * 11, behind slower trains, and 13, waiting at passing tracks for faster ones (T-2231), are never a
  * dot or a limit. */
 export const CAPACITY_KINDS: CapacityKindText[] = [
@@ -54,6 +55,7 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
   kind("sidings", "at", ""),
 ];
 CAPACITY_KINDS[12] = kind("merge", "near", "");
+CAPACITY_KINDS[14] = kind("terminusOne", "at", "");
 
 const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
 

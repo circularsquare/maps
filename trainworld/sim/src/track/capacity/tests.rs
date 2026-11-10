@@ -77,6 +77,8 @@ fn turnback_fixture(single: bool, pass: bool) -> (TrackWorld, u32, u32, u32) {
     let stops = if pass { vec![a, c] } else { vec![a, b, c] };
     let through = line(&mut w, &stops, [12.0, 8.0, 4.0]);
     let short = line(&mut w, &[a, b], [8.0, 0.0, 0.0]);
+    // the ends turn on both platforms (T-2986), so only b limits
+    super::super::tests::terminals_at_dead_ends(&mut w);
     (w, b, through, short)
 }
 
@@ -155,14 +157,41 @@ fn short_turn_conflicts_include_trains_passing_the_station() {
     }
 }
 
+/// A dead end pools its turns over both platforms with a terminal, and over one without (T-2986,
+/// Anita 2026-11-10), where its terminus has wire kind 14; single track has one platform either way.
 #[test]
 fn true_dead_end_keeps_pooled_platform_turnaround_capacity() {
-    let (w, b, _, _) = turnback_fixture(false, false);
+    let (mut w, b, _, _) = turnback_fixture(false, false);
+    let ends = |w: &TrackWorld| -> Vec<(u32, f64, u8)> {
+        let cap = &w.svc.cap;
+        cap.res.iter().enumerate().filter(|(_, x)| x.kind == ResKind::Terminus && x.node != b)
+            .filter(|(r, _)| matches!(cap.wire_kind(*r), 3 | 14))
+            .map(|(r, x)| {
+                assert_eq!(w.net.node_ports[x.node as usize].n, 1);
+                let occ = cap.users_of(r)[0].occ;
+                assert!(cap.users_of(r).iter().all(|u| u.occ == occ));
+                (x.node, occ, cap.wire_kind(r))
+            }).collect()
+    };
+    let with = ends(&w);
+    assert_eq!(with.len(), 2);
+    assert!(with.iter().all(|&(_, occ, k)| occ == (180.0 + TERMINUS_MARGIN_S) / 2.0 && k == 3), "{with:?}");
+    let a = with[0].0;
+    set_terminal(&mut w, a, false);
+    same_as_global(&w, "dead end without a terminal");
+    let without = ends(&w);
+    let at_a = without.iter().find(|x| x.0 == a).unwrap();
+    assert_eq!((at_a.1, at_a.2), (180.0 + TERMINUS_MARGIN_S, 14), "one platform, and the alert says to build a terminal");
+    w.undo().unwrap().unwrap();
+    same_as_global(&w, "terminal back");
+    assert_eq!(ends(&w).iter().find(|x| x.0 == a).unwrap().1, (180.0 + TERMINUS_MARGIN_S) / 2.0);
+    // single track: one platform, with a terminal or without, and the plain terminus kind
+    let (w, b, _, _) = turnback_fixture(true, false);
     let cap = &w.svc.cap;
-    for (r, resource) in cap.res.iter().enumerate().filter(|(_, x)| x.kind == ResKind::Terminus && x.node != b) {
-        assert!(cap.users_of(r).iter().all(|u| u.occ == (180.0 + TERMINUS_MARGIN_S) / 2.0));
-        assert_eq!(w.net.node_ports[resource.node as usize].n, 1);
+    for r in (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Terminus && cap.res[r].node != b && cap.wire_kind(r) == 3) {
+        assert!(cap.users_of(r).iter().all(|u| u.occ == 180.0 + TERMINUS_MARGIN_S));
     }
+    assert!(!(0..cap.res.len()).any(|r| cap.wire_kind(r) == 14));
 }
 
 #[test]
@@ -174,6 +203,7 @@ fn blueprint_extension_does_not_change_dead_end_turnaround_capacity() {
     edge(&mut w, a, b, &[], 0).unwrap();
     station(&mut w, a, 200); station(&mut w, b, 200);
     line(&mut w, &[a, b], [12.0, 8.0, 4.0]);
+    super::super::tests::terminals_at_dead_ends(&mut w);
     let c = node(&mut w, 6000.0, 0.0, 0);
     let id = w.net.alloc_edge();
     w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) }).unwrap();
@@ -599,6 +629,7 @@ fn twenty_km() -> (TrackWorld, Vec<u32>, [u32; 2]) {
     let q = [node(&mut w, 0.0, 400.0, 0), node(&mut w, 20000.0, 400.0, 0)];
     edge(&mut w, q[0], q[1], &[], 0).unwrap();
     for &x in &q { station(&mut w, x, 200); }
+    super::super::tests::terminals_at_dead_ends(&mut w);
     (w, n, q)
 }
 

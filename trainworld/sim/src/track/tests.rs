@@ -29,6 +29,19 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
     w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 }) }).unwrap();
 }
 
+/// T-2986: a terminal at every station that is a dead end, so its lines turn on both platforms (a
+/// test about something else keeps the capacity it was written with).
+pub fn terminals_at_dead_ends(w: &mut TrackWorld) {
+    let ends: Vec<u32> = (0..w.net.node_count() as u32).filter(|&n| w.net.node_ok(n) && w.net.is_station(n) && w.net.built_ports(n) <= 1).collect();
+    for n in ends {
+        let mut d = w.net.station_data(n).unwrap();
+        if d.upgrades & super::upgrades::TERMINAL == 0 {
+            d.upgrades |= super::upgrades::TERMINAL;
+            w.apply(Op::Station { node: n, data: Some(d) }).unwrap();
+        }
+    }
+}
+
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
@@ -597,6 +610,7 @@ fn write_bench_save() {
 #[test]
 fn whole_line_counts_survive_route_changes_save_and_undo() {
     let (mut w, nodes, _, id) = simple();
+    terminals_at_dead_ends(&mut w);
     let tph = w.net.line_tph[id as usize];
     w.apply(Op::TrainCounts { id, trains: Some([5, 3, 0]), tph }).unwrap();
     for lev in 0..LEVELS {
@@ -717,6 +731,7 @@ fn whole_line_count_edit_timing() {
 /// Seven stations 2 km apart (room for 14 trains, T-517) with a whole-line fleet of `n` at every level.
 fn fleet_line(n: u32) -> (TrackWorld, u32) {
     let (mut w, ns) = corridor(7);
+    terminals_at_dead_ends(&mut w);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
     let tph = w.net.line_tph[id as usize];
     w.apply(Op::TrainCounts { id, trains: Some([n, n, n]), tph }).unwrap();
@@ -1067,7 +1082,7 @@ fn a_station_stopped_at_twice_around_a_dead_end_reversal() {
         .map(|r| cap.users_of(r).iter().filter(|u| u.line == l && u.stop >= 0).count()).sum();
     assert_eq!(at_t, 4);
     assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.wire_kind(r) == 9));
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == ResKind::Terminus as u8));
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == 14), "X turns on one platform: no terminal (T-2986)");
     // matching skips an earlier pass of a stop when a reversal needs it later
     let nodes = [1, 2, 1, 3, 1, 4];
     assert_eq!(super::net::match_stops(&nodes, &[1, 3, 1, 4], &[]), Some(vec![0, 3, 4, 5]));
@@ -1544,6 +1559,7 @@ pub fn balloon_fixture() -> (TrackWorld, [u32; 4]) {
     for n in [a, m, k] {
         station(&mut w, n, 200);
     }
+    terminals_at_dead_ends(&mut w);
     (w, [a, m, j, k])
 }
 

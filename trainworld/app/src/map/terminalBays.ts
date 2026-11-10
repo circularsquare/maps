@@ -1,6 +1,8 @@
 // T-2980 (notes/T-2974.md 5): where a train stands at the end of its run. A double-track dead end
-// has two platforms and a terminal (T-1281) two sidings, and the capacity sums count both, so the
-// drawing does too: each train arriving takes the place there that frees first. The pick is worked
+// with a terminal (T-1281) turns on both platforms, a through station with one in two sidings, and
+// the capacity sums count both, so the drawing does too: each train arriving takes the place there
+// that frees first. A dead end without a terminal turns on one platform (T-2986): the train ahead
+// holds it, and the next waits short of the crossover until it leaves. The pick is worked
 // out in the clock worker from the timetable (an hour of trips before the window as well), so every
 // window draws the same; the renderer moves the train across to it (`TRAIN_VS`), and the train guard
 // holds one whose place is still taken.
@@ -32,8 +34,9 @@ export const BAY_LOOKBACK_S = 3600;
 /** A line end's places: `group` is shared by the lines arriving there along the same track. */
 export interface TerminalEnd {
   group: number;
-  /** 0 one place (no pick), 1 two platforms, 2 two sidings */
-  kind: 0 | 1 | 2;
+  /** 0 one place at a through station (no pick), 1 two platforms, 2 two sidings, 3 a dead end's
+   * one platform (no terminal, T-2986: the arrival track's, held as a place) */
+  kind: 0 | 1 | 2 | 3;
   /** m from the stop to the crossover (a dead end's platform, half a through station's) */
   p: number;
   /** a train turning on a through platform with no terminal leaves over the crossover behind it */
@@ -66,8 +69,10 @@ export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockN
       const key = `${node.id}|${edge.id}`;
       let group = groups.get(key);
       if (group === undefined) groups.set(key, (group = groups.size));
-      if (dead) return { group, kind: 1, p: node.platform, cross: false };
-      if (hasUpgrade(node.upgrades, UPGRADE.terminal)) return { group, kind: 2, p: node.platform / 2, cross: false };
+      const terminal = hasUpgrade(node.upgrades, UPGRADE.terminal);
+      // (both platforms of a dead end only with a terminal, as the sim's `dead_end_places`)
+      if (dead) return { group, kind: terminal ? 1 : 3, p: node.platform, cross: false };
+      if (terminal) return { group, kind: 2, p: node.platform / 2, cross: false };
       return { group, kind: 0, p: node.platform / 2, cross: true };
     };
     const ends: [TerminalEnd | null, TerminalEnd | null] = [at(0), at(1)];
@@ -164,11 +169,11 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
     let f = free.get(end.group);
     if (!f) free.set(end.group, (f = [-Infinity, -Infinity]));
     // (wanted from when it comes up to the crossover, some 30 s before it stops)
-    const k = f[0] <= at - 30 ? 0 : f[1] <= at - 30 ? 1 : f[0] <= f[1] ? 0 : 1;
+    const k = end.kind === 3 || f[0] <= at - 30 ? 0 : f[1] <= at - 30 ? 1 : f[0] <= f[1] ? 0 : 1;
     // taken until its train on its next trip is off the platform (a hold there first included)
     const nt = nextOf(t), nx = nt && times(nt.profile);
     f[k] = Math.max(at, nt && nx ? nt.draw + nx.at(end.p + CLEAR_M) : t.end + CLEAR_S);
-    endCode.set(t, (end.kind === 1 ? BAY_OWN : BAY_SIDING) + k);
+    endCode.set(t, (end.kind === 2 ? BAY_SIDING : BAY_OWN) + k);
   }
   for (const t of trips) {
     const line = Math.floor(t.profile / 6), run = Math.floor(t.profile / 3) % 2;
@@ -185,7 +190,7 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
     const start = code === undefined ? (end.cross ? BAY_OTHER : -1) : code === BAY_OWN ? BAY_OTHER : code === BAY_OTHER ? BAY_OWN : BAY_OWN;
     if (start < 0) continue;
     // (a dead end's group goes with it: the guard keeps the platform it leaves from taken until it is clear)
-    out[nt.i * BAY_STRIDE] = start + (code !== undefined && end.kind === 1 ? 4 * (end.group + 1) : 0);
+    out[nt.i * BAY_STRIDE] = start + (code !== undefined && end.kind !== 2 ? 4 * (end.group + 1) : 0);
     out[nt.i * BAY_STRIDE + 1] = end.p;
   }
   return out;

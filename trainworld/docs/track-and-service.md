@@ -482,8 +482,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   final and refunds nothing. Saved as bits 4 to 7 of the station's node flags (old readers ignore
   them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
   changes keep them. No upkeep.
-  - **Terminal** (turnback sidings): a line turning there holds its platforms only for the dwell
-    and turns in two sidings past the platform (6.2): 30 an hour at the default turnaround. The
+  - **Terminal** (turnback sidings): trains ending there use both platforms (T-2986, Anita
+    2026-11-10: without one a line's end turns on one platform, 6.2). At a dead end that is the
+    whole effect; at a station with track past it a line turning there holds its platforms only
+    for the dwell and turns in two sidings past the platform (6.2): 30 an hour at the default
+    turnaround either way. The
     map draws the two sidings between the running tracks past each platform end with track
     beyond, from where the tracks part (zoom 14), and the box's two ends as thick dark bars
     reaching a little past its sides, like buffer stops (T-1416).
@@ -580,14 +583,19 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train
   holds one of two platform tracks, (dwell + 60 s) / 2 pooled, and a train that does not stop
   holds none.
-- dead-end terminus: max(layover + 60 s, 200 s) / constructed platform tracks (a two-track
+- dead-end terminus: max(layover + 60 s, 200 s) / the platform tracks it turns on (a two-track
   terminus with 3 min turnaround: 30/h; never more than 18 an hour on one track or 36 on two,
-  the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Unused
+  the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Both
+  constructed platform tracks only at a station with a **terminal**, otherwise one, so one train
+  stands there at a time (T-2986, `capacity::dead_end_places`, Anita 2026-11-10: players took the
+  terminal to mean both platforms): 15/h at 3 minutes. A double-track station dead end without one
+  is its own kind (14, "Try: build a terminal"). A bare track end has no station, so one. Unused
   blueprint extensions add no active platform capacity.
 - a station with a **terminal** (T-1281): a line turning there (ending, or reversing partway)
   holds its arrival and departure platforms for dwell + 60 s each, and the terminal's sidings
   for max(turnaround + 60 s, 200 s) / 2, pooled: 30 an hour at 3 minutes, 36 at 2. It still
-  crosses the other track (the 90 s move below). A dead end keeps its pooled rule.
+  crosses the other track (the 90 s move below). A dead end keeps its pooled rule, over both
+  platforms with the terminal.
 - double-track station reversal: 90 s per crossing move. Reversals share their arrival
   platform with same-direction traffic and cross opposite-direction through trains or reversals.
   Each move receives only the extra queue from crossing traffic, subtracting its own-move
@@ -746,7 +754,8 @@ turning on the platform": the line ends there and holds the platform for its tur
 helped by building a terminal there), track several lines run over ("shared track"), a turn across
 the other track at a through station ("trains turning across the track"), the limiter on reversing
 partway ("trains reversing"; "Reversing at Nerul Village is full" in the line panel), a
-terminal's sidings (T-1281), and a **merge** (T-2185, wire kind 12, "merge"): shared double track
+terminal's sidings (T-1281), a dead end with no terminal turning on one platform (T-2986, kind 14,
+"terminus", whose fix is the terminal), and a **merge** (T-2185, wire kind 12, "merge"): shared double track
 whose lines come onto it from two or more edges at one node (a line turning back there, or starting
 there, joins nothing). Its trains wait for it at that node, so its point is the node, where they
 stand; other track sits midway along its first edge. On a Y two lines run, the way towards the

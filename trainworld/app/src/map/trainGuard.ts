@@ -99,6 +99,10 @@ export class TrainGuard {
   private guardedTrack = new Uint8Array(0);
   private guardedAll = new Uint8Array(0);
   private guarded = new Uint8Array(0);
+  /** the two above from the network alone, before `placeLines` adds to them, and the places they were added for */
+  private trackBase = new Uint8Array(0);
+  private allBase = new Uint8Array(0);
+  private baysFor: Float32Array | null = null;
   /** per edge: its flat crossings, (crossing, metres... as a share of the edge from node a) pairs */
   private crossOn = new Map<number, number[]>();
   /** per move through a junction (in entry * MOVE_KEY + out entry): its index */
@@ -209,9 +213,13 @@ export class TrainGuard {
         if (this.crossOn.has(E[k] >> 1) || (k + 1 < f + c && (this.moveIdx.has(E[k] * MOVE_KEY + E[k + 1]) || this.moveIdx.has((E[k + 1] ^ 1) * MOVE_KEY + (E[k] ^ 1))))) this.guardedAll[l] = 1;
       }
     }
+    this.trackBase = this.guardedTrack.slice();
+    this.allBase = this.guardedAll.slice();
+    this.baysFor = null;
+    // (every rail line's: one with places at its ends is guarded too, `placeLines`)
     const box = (this.boxes = new Float32Array(lines * 4));
     for (let l = 0; l < lines; l++) {
-      if (!this.guardedAll[l]) continue;
+      if ((n.lineCars?.[l] ?? 8) < 1) continue;
       const first = n.lineTable[l * 4], count = n.lineTable[l * 4 + 1];
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (let k = first; k < first + count; k++) {
@@ -262,6 +270,27 @@ export class TrainGuard {
     }
   }
 
+  /**
+   * T-2986: a line with places at its ends (`assignBays`) is guarded even alone on its track, so a
+   * train due at a place still taken waits for it (a dead end without a terminal has one place, and a
+   * stand longer than the headway would otherwise draw two trains on it).
+   */
+  private placeLines(f: GuardFrame): boolean {
+    const B = f.bays ?? null;
+    if (B === this.baysFor || this.trackBase.length !== this.guardedTrack.length) return false;
+    this.baysFor = B;
+    this.guardedTrack.set(this.trackBase);
+    this.guardedAll.set(this.allBase);
+    if (!B) return true;
+    const lines = this.guardedTrack.length, cars = this.net?.lineCars;
+    for (let i = 0; i < f.trips.length / 2; i++) {
+      if (B[i * BAY_STRIDE + 2] < 4) continue;
+      const l = Math.floor(f.trips[i * 2] / 6);
+      if (l < lines && (cars?.[l] ?? 8) >= 1) this.guardedTrack[l] = this.guardedAll[l] = 1;
+    }
+    return true;
+  }
+
   /** The trip buffer changed: each trip keeps its lag and last place by its profile and departure. */
   private remap(f: GuardFrame) {
     const n = f.trips.length / 2;
@@ -303,7 +332,8 @@ export class TrainGuard {
     if (!n || !n.pathTable || !n.pathEntry || !n.pathFrom || !n.pathLen) return false;
     const conflicts = this.crossings && f.close !== false;
     this.guarded = conflicts ? this.guardedAll : this.guardedTrack;
-    if (f.trips !== this.trips || f.epoch !== this.epoch) this.remap(f);
+    const placed = this.placeLines(f);
+    if (placed || f.trips !== this.trips || f.epoch !== this.epoch) this.remap(f);
     if (!conflicts && this.waiting) { this.waitRes.fill(-1); this.waiting = false; }
     this.waiting = conflicts;
     const dt = f.time - this.lastTime;

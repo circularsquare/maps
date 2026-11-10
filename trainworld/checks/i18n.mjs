@@ -177,7 +177,8 @@ for (const lang of others) {
       else if (p.kind === "select") for (const o of p.options) if (!q.options.has(o)) fault(`${lang} ${k}: select {${name}} has no ${o}`);
     }
     for (const name of ph.keys()) if (!src.ph.has(name)) fault(`${lang} ${k}: {${name}} is not in the English`);
-    for (const term of enTerms.get(k) ?? []) {
+    // (a stale translation was made from older English, so the new English's terms wait for its next batch)
+    if (!(k in sources && sources[k] !== en[k])) for (const term of enTerms.get(k) ?? []) {
       const want = term[lang] ?? [];
       if (want.length && !want.some((w) => fold(v).includes(fold(w)))) fault(`${lang} ${k}: English says "${term.en}", glossary wants ${want.join(" or ")}`);
     }

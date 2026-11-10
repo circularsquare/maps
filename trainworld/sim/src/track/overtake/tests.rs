@@ -20,7 +20,8 @@ fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
     for &x in &n {
         station(&mut w, x, 400);
     }
-    let fast = |w: &mut TrackWorld, l: u32| {
+    crate::track::tests::terminals_at_dead_ends(&mut w);
+    let fast =|w: &mut TrackWorld, l: u32| {
         let mut d = w.net.line_data(l).unwrap();
         d.fast = true;
         w.apply(Op::Line { id: l, data: Some(d) }).unwrap();

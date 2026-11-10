@@ -318,6 +318,7 @@ mod tests {
         let q = [node(&mut w, 0.0, 600.0, 0), node(&mut w, 6000.0, 600.0, 0)];
         edge(&mut w, q[0], q[1], &[], 0).unwrap();
         for &x in &q { station(&mut w, x, 200); }
+        crate::track::tests::terminals_at_dead_ends(&mut w);
         let a = line(&mut w, &n, [6.0, 4.0, 2.0]);
         let alone = line(&mut w, &q, [6.0, 4.0, 2.0]);
         let b = line(&mut w, &n, [6.0, 4.0, 2.0]);
@@ -362,6 +363,7 @@ mod tests {
             edge(&mut w, j, m, &[], 0).unwrap();
             edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
             for x in [t, m, br] { station(&mut w, x, 200); }
+            crate::track::tests::terminals_at_dead_ends(&mut w);
             if flying {
                 w.apply(Op::Node { id: j, data: Some(NodeData { x: 3000.0, y: 0.0, level: 0, flying: true }) }).unwrap();
             }
@@ -421,6 +423,7 @@ mod tests {
             edge(&mut w, j, m, &[], 0).unwrap();
             edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
             for x in [t, m, br] { station(&mut w, x, 200); }
+            crate::track::tests::terminals_at_dead_ends(&mut w);
             let mut ls = vec![];
             for end in [br, m] {
                 let l = line(&mut w, &[t, end], [0.0; 3]);
