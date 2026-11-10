@@ -241,6 +241,11 @@ export function dropMarket() {
   droppedHere = true;
   try { sessionStorage.setItem(MARKET_DROPPED, "1"); } catch { /* this page only */ }
 }
+/** A game opened from the start menu without "Load without inter-city trips" has them again (Anita, 2026-11-10) */
+export function keepMarket() {
+  droppedHere = false;
+  try { sessionStorage.removeItem(MARKET_DROPPED); } catch { /* this page only */ }
+}
 /** T-2802, T-2838: no market (no trips between cities) on a phone or tablet, unless the player turned it on;
  * T-2867: or after `dropMarket` */
 export const marketOff = () => droppedHere || (mobileDevice() && !display.peek().mobileIntercity);

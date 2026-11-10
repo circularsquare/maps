@@ -8,7 +8,7 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
-import { dropMarket } from "../game/ui";
+import { dropMarket, keepMarket } from "../game/ui";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
@@ -95,7 +95,9 @@ function UpdateRow({ onChangelog }: { onChangelog: () => void }) {
   </div>;
 }
 
-function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveSlot[]; unread: boolean; pick: (c: GameChoice) => void; settling: Promise<void> }) {
+function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { slots: SaveSlot[]; unread: boolean; pick: (c: GameChoice) => void; settling: Promise<void> }) {
+  // T-3073: every game opened here has inter-city trips unless the warning's lite button asked otherwise
+  const pick = (c: GameChoice, lite = false) => { if (lite) dropMarket(); else keepMarket(); pickGame(c); };
   const first = useRef<HTMLButtonElement>(null);
   // T-2810: out in the menu's own element, away from the card's zoom
   const [changelog, setChangelog] = useState(false);
@@ -115,7 +117,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
   // T-1197: a saved game too big for this device is refused with the reason
   const [refused, setRefused] = useState<string | null>(null);
   // T-3061: the device check is a guess (browsers round a device's memory down), so it warns and offers to load anyway
-  // T-3073: `go(true)` loads it without inter-city trips (`dropMarket`: this tab only)
+  // T-3073: `go(true)` loads it without inter-city trips; any other pick here has them again
   const [warned, setWarned] = useState<{ text: string; go: (lite?: boolean) => void } | null>(null);
   const open = async (key: string) => {
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
@@ -128,7 +130,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
     }
     const why = await saveRefusal({ key }, true);
     setRefused(why && !why.soft ? why.text : null);
-    setWarned(why?.soft ? { text: why.text, go: (lite) => { if (lite) dropMarket(); pick({ slot: key }); } } : null);
+    setWarned(why?.soft ? { text: why.text, go: (lite) => pick({ slot: key }, lite) } : null);
     if (!why) pick({ slot: key });
   };
   // T-1612: the card whose delete is being asked about
@@ -146,7 +148,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
     const c = await fileChoice(file, undefined, true);
     setWarned(null);
     if (typeof c === "string") setRefused(c);
-    else if ("warn" in c) setWarned({ text: c.warn, go: async (lite) => { const d = await fileChoice(file); if (typeof d === "string") setRefused(d); else if (!("warn" in d)) { if (lite) dropMarket(); pick(d); } } });
+    else if ("warn" in c) setWarned({ text: c.warn, go: async (lite) => { const d = await fileChoice(file); if (typeof d === "string") setRefused(d); else if (!("warn" in d)) pick(d, lite); } });
     else pick(c);
   });
   const now = Date.now();
