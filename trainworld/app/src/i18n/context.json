@@ -1675,7 +1675,7 @@
   "settingsTab.faces": "Settings, Stations up close: checkbox for drawing the little faces of riders waiting at stations when zoomed in.",
   "settingsTab.flat": "Settings, Map: the flat map projection, a segmented button beside Globe.",
   "settingsTab.flatMarks": "Settings, Show: checkbox for marks where tracks cross or join on the same level (no flyover), which slow trains.",
-  "settingsTab.rampMarks": "Settings, Show: checkbox for the triangle and semicircle marks where track climbs or drops to another level (a ramp up, a portal down).",
+  "settingsTab.rampMarks": "Settings, Show: checkbox for the triangle and semicircle marks where track ramps up or down to another level. One word, a plural noun like the other items.",
   "settingsTab.game": "Settings: section heading for the game's mode (normal or sandbox) and the tutorial.",
   "settingsTab.globe": "Settings, Map: the globe projection, a segmented button beside Flat.",
   "settingsTab.green": "Settings, Theme: the green colour theme.",

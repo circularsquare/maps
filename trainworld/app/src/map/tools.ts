@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, snapBeside, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -286,7 +286,7 @@ export class Tools {
       this.place();
     }, () => this.place(), () => this.freeLevel());
     effect(() => { tool.value; tramTrack.value; snapStreets.value; this.streetSwitch(); });
-    effect(() => { snapBeside.value; this.place(); });
+    effect(() => { besideOn.value; this.place(); });
     // T-1260: the touch control bar and the handle that drags the point being previewed
     this.touchHost = document.createElement("div");
     this.touchHost.className = "touch-bar-host";
@@ -464,7 +464,7 @@ export class Tools {
   private besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
     const n = this.overlay.renderer.net;
     const at = pointerLocal(this.overlay, px, py);
-    if (!snapBeside.peek() || !n || !at || this.freeClick) return null;
+    if (!besideOn.peek() || !n || !at || this.freeClick) return null;
     let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
     const w = world.peek(), tramOf = w ? this.tramEdgeSet(w) : null, fam = tramTrack.peek();
     for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
@@ -1812,7 +1812,7 @@ export class Tools {
   private bandKey = "";
   private drawBand() {
     const n = this.overlay.renderer.net;
-    const on = tool.peek() === "track" && snapBeside.peek() && !!n;
+    const on = tool.peek() === "track" && besideOn.peek() && !!n;
     if (!on) {
       if (this.bandEl) this.bandEl.style.display = "none";
       this.bandKey = "";

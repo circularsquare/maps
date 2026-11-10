@@ -1747,6 +1747,7 @@
   "settingsTab.purpose": "Purpose",
   "settingsTab.ramp0": "0% train",
   "settingsTab.ramp100": "100% train",
+  "settingsTab.rampMarks": "Ramps",
   "settingsTab.realNetwork": "Real world network",
   "settingsTab.riders": "Riders on trains and platforms",
   "settingsTab.rotate": "Rotate map with right drag",

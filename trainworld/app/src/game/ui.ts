@@ -384,6 +384,8 @@ export function setTrackType(t: TrackType) {
   });
 }
 /** the real network is being snapped to: the switch on and the track tool in hand */
+/** T-3049: Snap beside is moot while tram track follows the streets, so its switch is hidden and the stored choice kept */
+export const besideOn = computed(() => snapBeside.value && !(tramTrack.value && snapStreets.value));
 export const snapping = computed(() => snapReal.value && tool.value === "track" && !tramTrack.value);
 
 /** The day every demand view shows (T-260, T-464): the setting, the average day by default. Away,

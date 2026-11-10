@@ -1750,6 +1750,7 @@
   "settingsTab.purpose": "목적",
   "settingsTab.ramp0": "철도 0%",
   "settingsTab.ramp100": "철도 100%",
+  "settingsTab.rampMarks": "경사로",
   "settingsTab.realNetwork": "실제 철도망",
   "settingsTab.riders": "열차와 승강장의 승객",
   "settingsTab.rotate": "우클릭 드래그로 지도 회전",
