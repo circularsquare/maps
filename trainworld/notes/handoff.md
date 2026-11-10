@@ -1,41 +1,39 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 6f38e27c-5131-4ca5-81d2-160b4694f258, name maps-c4 [3f93f3], since 2026-11-10 09:06
-Updated: 2026-11-10 13:45 (maps-c4 is past 600k tokens; Anita will start a fresh orchestrator)
+Orchestrator: session d455ee97-22bd-4dd5-a487-a2a4e1449db1, name maps-15 [bf4395], since 2026-11-10 13:48
+Updated: 2026-11-10 14:15
 
 ## Now
 
-**LIVE = 2026-11-10b** (silent update after v0.2; built from 97c11df7; Pages 5e68055 verified 13:40, 7 PASS). v0.2 (trams)
-went out as 2026-11-10 earlier the same day. Previous: 2026-11-09c. Due: purge R2 prefixes 2026-11-07c and 11-08 from
-2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10 and 11-10b.
-**Master = 1976e339** (last pushed 20a6f601; push again soon). **8800 = 97c11df7.** Master smoke PASSED 27 at 12241ef1;
-cargo 436/616 at 8c02a9a3 (sim unchanged since except as noted in agents' reports).
-Website: game thumbnail and featured strip pushed 70db5ff (Anita's OK); her `pages/projects/abouttrainsworld.md` edit is
-uncommitted and hers. `noritetsu/build_tiles.py` (T-3043's `mark_track_of_lines`) is uncommitted: noritetsu is Anita's to commit.
+**LIVE = 2026-11-10b** (built from 97c11df7; Pages 5e68055 verified 13:40). v0.2 (trams) went out as 2026-11-10 the same
+day. Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 11-10b.
+**8800 = 97c11df7.** maps-c4 finished 14:12 (no agents of its own left). Website: Anita's `pages/projects/abouttrainsworld.md`
+edit is uncommitted and hers; `noritetsu/build_tiles.py` is uncommitted and hers.
 
-**Running (Sonnet, main tree), all for a second silent update 2026-11-10c:**
-- termstop (id ae10bb7caf0dbd50f, Vite 6167): T-3053 [P1] trains stop halfway into a terminal's platform; with a terminal
-  the line drew past the station. Anita's rule: "it should be able to go either on the left track and stay parked in the
-  station for a bit before heading back, or on the right track. i dont ever want them to visually go past the last station".
-- vehname (id a817414493b9f21f0, Vite 6168): T-3054 [P1] buses/trams called trains; "Bus 53 bus" -> "53 bus"; check a bus
-  hover's 1/240 capacity. Strings to show Anita.
-- greenmatch (id a95798ce10c36b6cb, Vite 6169): T-3055 green tram hint shows roads the snap can't use (Arakawa water pools).
-- Already committed for 10c: T-3050 two-loop line view (1976e339).
-**10c is pre-approved** (Anita: silent updates "good to publish once it passes checks"): commit the three, snapbuild,
-smoke8800 light+dark, `deploy.py --version 2026-11-10c --smoked` (add `--skip-data` only if no data changed), website
-`git add trainsworld/ trainworld/` only, commit "anitabuilder", push, `pages_verify.sh <website sha> 2026-11-10c`. Use
-`scratchpad\silent.cmd` as the pattern (cd back to the maps root after each called script).
+**In progress: silent update 2026-11-10c** (pre-approved: "good to publish once it passes checks"). Contents: T-3050
+1976e339, T-3055 34da31c3, T-3054 9003c8db, T-3053 6168e1aa, plus maps-15's commit of T-3051, T-3061, T-3062 (staged by
+hunks with `keep_hunks.py`: the main tree's i18n files also hold wording's unfinished T-3064, so never commit them whole
+until T-3064 is done). Steps: commit the index, snapbuild, `npm run check` in .tw-snap, smoke8800 light+dark,
+`deploy.py --version 2026-11-10c --smoked` (`--skip-data` if no data changed), website `git add trainsworld/ trainworld/`,
+commit "anitabuilder", push, `pages_verify.sh <website sha> 2026-11-10c` (maps-c4's scratch has pages_verify.sh and
+silent.cmd as patterns). Set the updates.ts entry if 10c has one.
+For Anita to test after 10c: a line ending at a through station, with and without a terminal (T-3053).
 
-**Next for the new orchestrator (lean Sonnet, prefer compute over tokens):**
-- **T-3023/T-3024 manual stop sequence ("exact mode"), P2**, Anita: "i do want an explicit like "show me all the stops in
-  order, both ways, so i can fine tune exactly as i want"". Design and cost in notes/T-2988.md (2a sim, 2b app, most of a
-  day); own tree (WASM interface).
-- T-3051 Select tool hint after 4 height changes (small). T-3052 rebuild built track with new height or type through a
-  blueprint (design first; her description in TASKS.md).
-- T-3033 rebuild the 37 split zones (notes/T-3012.md; ~4 core-hours, 18 joins; plan unit-list edits only, never `zones --replan`).
-- P3s: T-3042 one flat-junction mark per spot, T-3036 road gaps overlay, T-3027 slopes slow trains (design first),
-  T-3002/T-3003 tram ramps and road bridges, T-3019 buses in the diagram, T-3011 Cairo border.
-Next free id **T-3056**.
+**Running:**
+- manualstop (Sonnet, id a12d21a5d48b357d5, tree `.tw-trees/manualstop` from 52fa18bf): T-3023 + T-3024 exact mode, 2a then
+  2b; may stop after 2a. Ids T-3056-3058. Land after 10c.
+- rebuild (Sonnet, id a2b5ad8262d71e795, tree `.tw-trees/rebuild` from 9003c8db): T-3059 rebuild built track in place; Anita
+  approved full new price, price+confirm, no undo, refused pieces drawn. Ids T-3065-3066. Lands after manualstop.
+- wording (Sonnet, id a16cca6d4db1e5159, main tree, Vite 6190): T-3064 tram/bus train-words sweep (en done, translations
+  next). Ids T-3067-3068. Told not to touch the git index. Its strings go to Anita.
+
+**Queued:** T-3063 bus loops partway along a route (after manualstop lands: bus.rs). T-3033 rebuild the 37 split zones after
+10c is published (writes data/packs; notes/T-3012.md; ~4 core-hours, 18 joins; unit-list edits only, never
+`zones --replan`). T-3060 rebuild preview after T-3059. T-3069 trams on real rail + new street-snap icon. T-3070
+non-home-based trips (P3, design, a demand change: Anita decides whether to scope now; I suggested after this round).
+P3s: T-3042 one flat-junction mark per spot, T-3036 road gaps overlay, T-3027 slopes slow trains (design first),
+T-3002/T-3003 tram ramps and road bridges, T-3019 buses in the diagram, T-3011 Cairo border.
+Next free id **T-3071**.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,

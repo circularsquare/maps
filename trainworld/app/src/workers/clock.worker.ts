@@ -30,6 +30,7 @@ import { networkFromState, newNetCache, runsTrains, shiftNetCache, type NetworkB
 import { assignBays, BAY_LOOKBACK_S, profileTimes, terminalEnds } from "../map/terminalBays";
 import { setBandCheck, setBandMode } from "../map/lineBands";
 import { besideSamples } from "../map/corridors";
+import { packCross } from "../map/markData";
 import { bandEdges, diagramGraph } from "../diagram/graph";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces } from "../map/coarseOutlines";
@@ -1733,8 +1734,16 @@ function buildState(): ClockState {
     }
     return out;
   });
-  const crossings = markPoints(a.crossings_info(), 5);
   const conflicts = a.guard_conflicts();
+  const crossings = markPoints(a.crossings_info(), 5);
+  // T-3062: a flat crossing's level carries which modes cross, for the mark's drawing (markData.ts)
+  for (let k = 0, f = 0; k + 4 < crossings.length; k += 5) {
+    if (crossings[k + 2] !== 0) continue;
+    const e1 = conflicts[1 + f * 4], e2 = conflicts[3 + f * 4];
+    f++;
+    const tram = (a.edge_kind(e1) >= 2 ? 1 : 0) + (a.edge_kind(e2) >= 2 ? 1 : 0);
+    crossings[k + 3] = packCross(crossings[k + 3], tram);
+  }
   const tq4 = performance.now(); timing.sRest = tq4 - tq3;
   const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;

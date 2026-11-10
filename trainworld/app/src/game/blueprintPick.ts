@@ -6,6 +6,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { bigDistance, distance, levelLabel } from "./format";
 import { describeIssues } from "./issues";
+import { heightRunLength, noteHeight } from "./deleteHint";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge } from "./types";
 import { ask, buildLevel, selection, setTrackType, tool } from "./ui";
@@ -249,8 +250,10 @@ export async function enableAll() {
 export async function levelPicked(level: Level) {
   const p = bpPicked.peek();
   if (p.built || !p.edges.length) return;
+  const row = heightRunLength();
   const a = await edit({ op: "edgesLevel", edges: p.edges, level }, true);
   const n = p.edges.length, skipped = a.skipped ?? 0, to = t("blueprintPick.levelTo", { level: levelLabel(level) });
+  if (a.ok && skipped < n) noteHeight(row, n);
   // T-2474: the track tool lays new track the way the player just set this
   if (a.ok) buildLevel.value = level;
   if (!a.ok) say(t("blueprintPick.cannotGo", { n, to }), true);

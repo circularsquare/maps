@@ -16,6 +16,13 @@ export const M_PORTAL = 3;
 /** a crossing the track model refuses: heights differ by less than a level, or one is on a ramp */
 export const M_BAD = 4;
 
+/** T-3062: a flat crossing's modes ride in its level slot as a tenth per tram track: level + 0.1 for a
+ * tram over rail track (the tram yields), + 0.2 for two tram tracks. Whole levels still round to
+ * themselves, so every reader of the level is unaffected. */
+export const packCross = (level: number, trams: number) => level + 0.1 * trams;
+/** The tram tracks (0 to 2) of a crossing's packed level. */
+export const crossTrams = (packed: number) => Math.round((packed - Math.round(packed)) * 10);
+
 /** Height of one level, m (sim `LEVEL_H`). */
 const LEVEL_M = 8;
 /** A step between two samples that changes the height by more than this is on a ramp, m. */

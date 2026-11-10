@@ -17,7 +17,7 @@ import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
 import { compile, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
-import { M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
+import { crossTrams, M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
@@ -136,7 +136,20 @@ void main() {
     vec2 hub = vec2(0.0, 0.1 * r);
     glyph = cov(min(seg(v_p, vec2(0.0, 0.55 * r), hub), min(seg(v_p, hub, vec2(-0.42 * r, -0.55 * r)), seg(v_p, hub, vec2(0.42 * r, -0.55 * r)))) - g);
   } else {
-    glyph = cov(min(seg(v_p, vec2(-k, -k), vec2(k, k)), seg(v_p, vec2(-k, k), vec2(k, -k))) - g);
+    float over = cov(seg(v_p, vec2(-k, -k), vec2(k, k)) - g);
+    float under = cov(seg(v_p, vec2(-k, k), vec2(k, -k)) - g);
+    // T-3062: trams crossing: the train's stroke is whole and the tram's is cut short of it, a gap each
+    // side; two tram tracks: both strokes cut short of the centre
+    int trams = int(round((v_s.y - round(v_s.y)) * 10.0));
+    float gap = max(1.3 * u_dpr, 0.16 * r);
+    if (trams == 1) {
+      under *= clamp(abs(v_p.x - v_p.y) * 0.7071 - (g + gap) + 0.5, 0.0, 1.0);
+    } else if (trams == 2) {
+      float hole = clamp(length(v_p) - (g + gap) * 1.05 + 0.5, 0.0, 1.0);
+      over *= hole;
+      under *= hole;
+    }
+    glyph = max(over, under);
   }
   ink = shape == ${M_BAD} ? u_bad : u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
   vec3 col = mix(u_fill, ink, max(ring, glyph));
@@ -270,6 +283,7 @@ export function markTip(marks: Float32Array, i: number): TipLine[] {
   else if (shape === M_BAD) out.push(t("gradeMarks.badCross"));
   else {
     out.push(t(shape === M_JUNCTION ? "gradeMarks.junction" : "gradeMarks.crossing"));
+    if (shape === M_CROSSING && crossTrams(marks[i + 5]) === 1) out.push(t("gradeMarks.tramYields"));
     out.push(elevationFact(level));
   }
   if (blueprint && shape !== M_BAD) out.push(t("gradeMarks.blueprint"));

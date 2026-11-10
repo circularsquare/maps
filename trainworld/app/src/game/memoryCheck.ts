@@ -40,12 +40,16 @@ export function memoryNeed(zones: readonly string[]): MemoryNeed {
 }
 
 const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));
-/** Why a game reaching `zones` will not fit here, in a sentence; null if it will. */
-export function memoryRefusal(zones: readonly string[]): string | null {
+/** `soft`: a warning the player may load past. The browser rounds a device's memory down and stops at 8,
+ * so the device check is a guess; the worker cap is not (T-3061). */
+export interface Refusal { text: string; soft: boolean }
+/** Why a game reaching `zones` will not fit here; null if it will. The device's guess is judged only when
+ * `soft` (a caller that can offer to load anyway). */
+export function memoryRefusal(zones: readonly string[], soft = false): Refusal | null {
   const need = memoryNeed(zones);
-  if (need.wasmGB > WORKER_CAP_GB) return t("memoryCheck.zones", { zones: need.zones, gb: gb(need.wasmGB) });
+  if (need.wasmGB > WORKER_CAP_GB) return { text: t("memoryCheck.zones", { zones: need.zones, gb: gb(need.wasmGB) }), soft: false };
   const device = deviceGB();
-  if (device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return t("memoryCheck.device", { need: gb(need.totalGB), have: gb(device) });
+  if (soft && device !== undefined && device < 8 && need.totalGB > DEVICE_SHARE * device) return { text: t("memoryCheck.device", { need: gb(need.totalGB) }), soft: true };
   return null;
 }
 
@@ -56,12 +60,12 @@ export function zonesOf(header: SaveHeader | null, cities?: string[]): string[] 
 }
 
 /** T-1197: why the save in `bytes` (a file) or slot `key` will not fit here; null if it will or cannot be read. */
-export async function saveRefusal(src: { bytes: Uint8Array } | { key: string }): Promise<string | null> {
+export async function saveRefusal(src: { bytes: Uint8Array } | { key: string }, soft = false): Promise<Refusal | null> {
   try {
     const stored = "key" in src ? await readStored(src.key) : null;
     const bytes = "bytes" in src ? src.bytes : stored?.bytes;
     if (!bytes) return null;
     const { header } = await decodeSave(bytes);
-    return memoryRefusal(zonesOf(header, stored?.cities));
+    return memoryRefusal(zonesOf(header, stored?.cities), soft);
   } catch { return null; }
 }

@@ -86,9 +86,11 @@ function toastsFor(keys: string[], got: Record<string, Achieved>): Toast[] {
 }
 
 // T-3026: a hint rides the same toasts (a help mark, and a click only dismisses it); sandbox games get it too
-setHintShower(() => {
+setHintShower((h) => {
   const select = TOOLS.find(([id]) => id === "blueprint")![3];
-  const line = touchInput.peek() ? t("deleteHint.selectTouch") : tRich("deleteHint.select", { key: <span class="key">{select}</span> });
+  const name = h === "height" ? "deleteHint.heightSelect" : "deleteHint.select";
+  // the height hint names the box drag, so it has no tool key
+  const line = touchInput.peek() ? t(`${name}Touch`) : h === "height" ? t(name) : tRich(name, { key: <span class="key">{select}</span> });
   waiting.value = [...waiting.peek(), { id: nextId++, title: t("deleteHint.title"), line, hint: true }];
 });
 

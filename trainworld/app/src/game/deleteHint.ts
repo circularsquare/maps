@@ -11,16 +11,25 @@ const STORE = "anitabuilder-hint-select";
 const seenBefore = () => { try { return localStorage.getItem(STORE) === "1"; } catch { return false; } };
 const markSeen = () => { try { localStorage.setItem(STORE, "1"); } catch { /* this page load only */ } };
 
-let run = 0, shower: (() => void) | null = null;
-let done = seenBefore();
+// T-3051: the same for height. Four height changes in a row, each to one piece picked alone, point at the
+// Select tool's box drag (a hold then drag on touch), which picks many pieces to re-height at once
+// (blueprintPick.ts `levelPicked`). Its own once-only flag.
+const HEIGHT_STORE = "anitabuilder-hint-height";
+const heightSeenBefore = () => { try { return localStorage.getItem(HEIGHT_STORE) === "1"; } catch { return false; } };
 
-export function setHintShower(f: () => void) {
+export type Hint = "delete" | "height";
+
+let run = 0, heightRun = 0, shower: ((h: Hint) => void) | null = null;
+let done = seenBefore(), heightDone = heightSeenBefore();
+
+export function setHintShower(f: (h: Hint) => void) {
   shower = f;
 }
 
-/** Any edit but a removal, or another tool picked, ends the row (world.ts `edit`; the removal counts itself after). */
+/** Any edit but a removal or a height change ends that row (world.ts `edit`; the removal or the change counts itself after). */
 export function breakDeleteRun() {
   run = 0;
+  heightRun = 0;
 }
 effect(() => { if (tool.value !== "delete") run = 0; });
 
@@ -35,5 +44,20 @@ export function noteDelete(before: number) {
   done = true;
   run = 0;
   markSeen();
-  shower?.();
+  shower?.("delete");
+}
+
+/** The height row's length before a height change's edit goes out, which breaks it. */
+export const heightRunLength = () => heightRun;
+
+/** A height change landed on `pieces` pieces; `before` is `heightRunLength()` from just before its edit. Several
+ * pieces at once is the Select tool's job already, so it ends the row. */
+export function noteHeight(before: number, pieces: number) {
+  if (heightDone || pieces !== 1) { heightRun = 0; return; }
+  heightRun = before + 1;
+  if (heightRun < ROW || guideVerbose.peek()) return;
+  heightDone = true;
+  heightRun = 0;
+  try { localStorage.setItem(HEIGHT_STORE, "1"); } catch { /* this page load only */ }
+  shower?.("height");
 }

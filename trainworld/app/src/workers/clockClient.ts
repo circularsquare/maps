@@ -357,18 +357,18 @@ export async function importGame(file: File, version?: { origin: string; edit: n
 /** T-1612: a save file picked on the start menu, where no game is in hand to reload from: its game is
  * left in storage as after `switchGame`, and the menu's pick is `{ pending: true }`. A reason (to show)
  * when the file cannot open. */
-export async function fileChoice(file: File, version?: { origin: string; edit: number }): Promise<GameChoice | string> {
+export async function fileChoice(file: File, version?: { origin: string; edit: number }, warn?: boolean): Promise<GameChoice | string | { warn: string }> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   try { await decodeSave(bytes); } catch { return t("clockClient.notSave"); }
-  const why = await saveRefusal({ bytes });
-  if (why) return why;
+  const why = await saveRefusal({ bytes }, warn);
+  if (why) return why.soft ? { warn: why.text } : why.text;
   if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "", ...version })) return t("clockClient.noStorage");
   return { pending: true };
 }
 /** T-2037: a backup of slot `from` opened from the start menu, as `fileChoice` does a file. */
 export async function backupChoice(key: string, from: string): Promise<GameChoice | string> {
   const why = await saveRefusal({ key });
-  if (why) return why;
+  if (why) return why.text;
   if (!await writePending({ kind: "restore", key, from })) return t("clockClient.noStorage");
   return { pending: true };
 }
@@ -411,7 +411,7 @@ export function leaveToMenu(then: () => void) {
 /** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
 async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () => void): Promise<boolean> {
   const why = await saveRefusal(src);
-  if (why) say(why, true);
+  if (why) say(why.text, true);
   else then?.();
   return !why;
 }
