@@ -494,8 +494,7 @@ Full design, numbers and sources: `notes/T-008.md`.
     whole effect; at a station with track past it a line turning there holds its platforms only
     for the dwell and turns in two sidings past the platform (6.2): 30 an hour at the default
     turnaround either way. The
-    map draws the two sidings between the running tracks past each platform end with track
-    beyond, from where the tracks part (zoom 14), and the box's two ends as thick dark bars
+    map draws no sidings and no train past the platform (T-3053); it draws the box's two ends as thick dark bars
     reaching a little past its sides, like buffer stops (T-1416).
   - **Passing tracks** (T-2231, notes/T-2228.md; bit 8): a second platform track each way, the
     outer one for trains that stop, the inner one for trains that pass and a second train stopping.

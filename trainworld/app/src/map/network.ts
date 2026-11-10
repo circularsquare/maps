@@ -16,7 +16,7 @@ import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { acrossAt, BAY_SIDING, bayCode, SIDING_LANE, SIDING_LEAD_M, SIDING_M, sidingMove, TURNBACK_M } from "./terminalBays";
+import { acrossAt, endClear, TURNBACK_M } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { trainChevrons } from "./oneWayMarks";
@@ -722,38 +722,6 @@ function speedPhases(id: number, r: ClockState["render"]): Float32Array {
 
 
 /**
- * A terminal's two sidings past each end of its platform where track runs on (T-1281), between the
- * running tracks and drawn like the turn-back crossovers. `ways`: the track leaving each station
- * along each of its edges, from the node at the platform's middle.
- */
-function terminalSidings(b: StrokeBuilder, s: ClockState, ways: (node: number) => [number, Float32Array][]) {
-  for (const n of s.nodes) {
-    if (!n.platform || !hasUpgrade(n.upgrades, UPGRADE.terminal)) continue;
-    const ws = ways(n.id);
-    if (ws.length < 2) continue;
-    const perM = 1 / Math.cos(n.lat * Math.PI / 180);
-    const flags = n.stationBuilt ? 0 : F_FADED;
-    const d0 = n.platform / 2 * perM, d1 = d0 + SIDING_LEAD_M * perM, d2 = d0 + SIDING_M * perM;
-    for (const [edge, p] of ws) {
-      const pts: number[] = [], at: number[] = [];
-      let d = 0;
-      const cut = (k: number, t: number) => { for (let j = 0; j < 3; j++) pts.push(p[k * 3 + j] + (p[k * 3 + 3 + j] - p[k * 3 + j]) * t); };
-      for (let k = 0; k + 1 < p.length / 3 && d < d2; k++) {
-        const len = Math.hypot(p[k * 3 + 3] - p[k * 3], p[k * 3 + 4] - p[k * 3 + 1]);
-        for (const c of [d0, d1, d2]) if (len > 0 && c >= d && c < d + len) { cut(k, (c - d) / len); at.push(c); }
-        d += len;
-        if (d > d0 && d < d2) { cut(k, 1); at.push(d); }
-      }
-      if (at.length < 2) continue;
-      for (const side of [-1, 1]) {
-        const lane = at.map((x) => Math.round(127.5 * (1 + side * (x >= d1 ? SIDING_LANE : 1 - (1 - SIDING_LANE) * (x - d0) / (d1 - d0)))));
-        b.add(pts, TRACK, edge, flags | F_TURNBACK, false, 0, undefined, lane);
-      }
-    }
-  }
-}
-
-/**
  * Passing tracks' outer pair (T-2233): at each station in `at`, each of its ways from the node, a
  * track either side along the platform that bows back onto the running track over PASS_LEAD_M past
  * its end. The renderer sets how far out the outer track is (`passingState`); lane values say how
@@ -1396,7 +1364,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   };
   const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => {
     const ways = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => [id, way(n, id)]);
-    terminalSidings(b, s, ways);
     // a passing station's ways, carried on as far as `passWay` goes
     const waysOut = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => {
       const parts: Float32Array[] = [];
@@ -1647,7 +1614,7 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
  * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
  * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). `passM`: metres out to a
  * passing station's outer track, where its trains stop (T-2233, `NetworkRenderer.passShiftM`). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0, bay?: ArrayLike<number>, bayAt = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number; ex: number; across: (x: number) => number } | null {
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0, bay?: ArrayLike<number>, bayAt = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number; ex: number; lo: number; hi: number; across: (x: number) => number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -1655,17 +1622,13 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
-  let d = run === 0 ? s : len - s;
-  // T-2980: where it stands at its ends, as the train shader draws it
-  let ex = 0, out = false;
   const trainM = trainLengthM(n, line);
-  const arrive = bay && bayCode(bay[bayAt + 2]) >= BAY_SIDING ? arriveS(n, profile) : Infinity;
-  if (tau > arrive) {
-    ({ ex, out } = sidingMove(bay![bayAt + 3], tau - arrive, Math.max(0, Math.max(end, dep + tripS) - dep - arrive), trainM));
-    d += run === 0 ? ex : -ex;
-  }
-  const across = (x: number) => (bay ? acrossAt(bay, bayAt, run, len, x, trainM, out) : 1);
-  return { ...pointAt(n, line, d, run, shiftM * across(d), bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM, ex: run === 0 ? ex : -ex, across };
+  const across = (x: number) => (bay ? acrossAt(bay, bayAt, run, len, x, trainM) : 1);
+  const [pa, pb] = bay ? [bay[bayAt + 1], bay[bayAt + 3]] : [-1, -1];
+  // the nearest its middle may come to either end of run 0 (T-3053), as the train shader clamps it
+  const lo = endClear(run === 0 ? pa : pb, trainM), hi = len - endClear(run === 0 ? pb : pa, trainM);
+  const d = run === 0 ? s : len - s;
+  return { ...pointAt(n, line, d, run, shiftM * across(d), bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM, ex: 0, lo, hi, across };
 }
 
 /** A line's train as drawn, m: its cars at 20 m, a bus or boat as the train shader has it. */
@@ -1727,7 +1690,7 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const raw = n.lineCars?.[at.line] ?? 8, cars = Math.max(1, raw);
   const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), len);
   const d = at.run === 0 ? at.s : len - at.s;
-  const centre = Math.max(total / 2, Math.min(len - total / 2, d)) + at.ex;
+  const centre = Math.max(at.lo, Math.min(Math.max(at.lo, at.hi), d)) + at.ex;
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
   const p = pointAt(n, at.line, carD, at.run, at.shiftM * at.across(carD), at.bandM, at.band, at.bandOn, at.passM);

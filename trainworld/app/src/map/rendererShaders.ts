@@ -6,7 +6,7 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
-import { SIDING_LANE, SIDING_LEAD_M, TURNBACK_M } from "./terminalBays";
+import { TURNBACK_M } from "./terminalBays";
 import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
@@ -886,10 +886,14 @@ float shiftAt(vec4 lb, float side, float across) {
   return mix(base, side * u_passing.x, u_passing.y * (1.0 - smoothstep(0.0, ${PASS_LEAD_M.toFixed(1)}, lb.w)));
 }
 
-// T-2980, set in main: its run and that run's length, m; m past its last stop into a siding, and
-// whether it is coming back out
+// T-2980, set in main: its run and that run's length, m
 int g_run = 0;
-float g_len = 0.0, g_ex = 0.0, g_out = 0.0;
+float g_len = 0.0;
+
+/** A place distance of a_bay (terminalBays.ts bayP): below 0 is a through end's, \`-p - 1\` m. */
+float bayP(float v) { return v < 0.0 ? -v - 1.0 : v; }
+/** The nearest its middle may be to a run's end (terminalBays.ts endClear, T-3053). */
+float endClear(float v, float trainM) { return v < 0.0 ? max(0.0, trainM * 0.5 + v + 1.0) : trainM * 0.5; }
 
 /** The point \`d\` m along run 0, carried on straight past either end (into a terminal's siding). */
 vec2 lineAtX(vec4 L, float d) {
@@ -908,27 +912,14 @@ float acrossAt(float x, float trainM) {
   float sc = a_bay.x < 0.0 ? -1.0 : mod(a_bay.x, 4.0), ec = a_bay.z < 0.0 ? -1.0 : mod(a_bay.z, 4.0);
   if (r < q) {
     if (sc < 0.5 || sc > 1.5) return 1.0;
-    float p = max(a_bay.y, trainM + 5.0);
+    float p = max(bayP(a_bay.y), trainM + 5.0);
     return mix(-1.0, 1.0, smoothstep(p, p + ${TURNBACK_M.toFixed(1)}, r));
   }
   if (ec > 0.5 && ec < 1.5) {
-    float p = max(a_bay.w, trainM + 5.0);
+    float p = max(bayP(a_bay.w), trainM + 5.0);
     return mix(-1.0, 1.0, smoothstep(p, p + ${TURNBACK_M.toFixed(1)}, q));
   }
-  if (ec > 1.5) {
-    float lane = ec < 2.5 ? ${SIDING_LANE.toFixed(2)} : -${SIDING_LANE.toFixed(2)};
-    return mix(g_out > 0.5 ? -1.0 : 1.0, lane, smoothstep(a_bay.w, a_bay.w + ${SIDING_LEAD_M.toFixed(1)}, -q));
-  }
   return 1.0;
-}
-
-/** T-2980: a train standing out its turn at a terminal with sidings: 30 s at the platform, 40 s into
- * a siding, its stand there, 40 s out to the other platform and 30 s there, all shortened together
- * when the stand is short (s from arriving, the stand's length). Sets g_ex and g_out. */
-void sidingMove(float st, float stand, float trainM) {
-  float k = min(1.0, stand / 140.0), dw = 30.0 * k, mv = 40.0 * k;
-  g_ex = (a_bay.w + ${SIDING_LEAD_M.toFixed(1)} + trainM) * (smoothstep(dw, dw + mv, st) - smoothstep(stand - dw - mv, stand - dw, st));
-  g_out = st > 0.5 * stand ? 1.0 : 0.0;
 }
 
 void main() {
@@ -955,24 +946,14 @@ void main() {
   if (float(car) >= cars) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float totalM = min(cars * carM, L.z);
   float pitchM = totalM / cars;
-  float centre = clamp(d, totalM * 0.5, max(totalM * 0.5, L.z - totalM * 0.5));
   int prof = int(a_trip.x + 0.5);
   vec4 M = texelFetch(u_meta, tc(prof, ${TEX_W}), 0);
   g_run = (prof / 3) % 2;
   g_len = M.w;
-  float tau = u_time - a_trip.y - a_lag;
-  float arrive = M.z;
-  if (a_bay.z >= 0.0 && mod(a_bay.z, 4.0) > 1.5) {
-    // its last stop: the end of its last phase, braking to a stand (its turnaround is stood after it)
-    vec4 lp = texelFetch(u_phases, tc(int(M.x + M.y) - 1, ${TEX_W}), 0);
-    arrive = lp.w < 0.0 ? lp.x + lp.z / -lp.w : lp.x;
-  }
-  if (a_bay.z >= 0.0 && mod(a_bay.z, 4.0) > 1.5 && tau > arrive) {
-    sidingMove(tau - arrive, max(max(a_end, a_trip.y + M.z) - a_trip.y - a_lag - arrive, 0.0), totalM);
-    float ex = g_run == 0 ? g_ex : -g_ex;
-    centre += ex;
-    d += ex;
-  }
+  // T-3053: at a through end it stands with its middle at the stop, so up to half its length past the line's end
+  float cLo = endClear(g_run == 0 ? a_bay.y : a_bay.w, totalM);
+  float centre = clamp(d, cLo, max(cLo, L.z - endClear(g_run == 0 ? a_bay.w : a_bay.y, totalM)));
+  d = centre;
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
   vec2 p = lineAtX(L, carD);

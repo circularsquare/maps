@@ -581,8 +581,11 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   its timetable. Clicks, hover tags, the train panel and following a selected train use the drawn
   place. `?perfOff=follow` or `renderer.follow` turns it off.
 - **Places at a line's end** [T-2980, T-2986, `map/terminalBays.ts`]: where a line ends on double
-  track at a dead end with a terminal (T-1281), its trains use both platforms, and at a through
-  station with one both sidings, as the capacity sums do (track-and-service.md 6.2). A dead end
+  track at a dead end with a terminal (T-1281), its trains use both platforms, and so do those at a through
+  station with one (track-and-service.md 6.2). Nothing is drawn past a line's last station (T-3053): a
+  train stands whole on its platform, its middle at a dead end's platform middle or at a through
+  station's stop, over the line's end by up to half its length less half the platform (`endClear`;
+  the place distances are sent as `-p - 1` at a through end). A dead end
   without a terminal has one place, its arrival track's platform (`kind` 3): the next train waits
   short of the crossover until the one there has left, and each leaves over the crossover. Lines arriving at one end along the
   same track share its places. Each arriving train takes the place that frees first (its own track
@@ -592,11 +595,7 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   train for a dead end's other platform crosses the scissors on the way in, over the 50 m past the
   platform (or past its own length, if longer), and a train leaving from the arrival side's
   platform crosses on the way out; a train ending at a through platform without a terminal leaves
-  over the diagonal behind it instead of jumping across. At a terminal a train stands 30 s at the
-  arrival platform, runs 40 s forward into its siding (40 m lead off its track to halfway between
-  the tracks, carried on straight past the line's end), stands there, runs 40 s back to the other
-  platform and stands 30 s there before its next trip; all shortened together when its stand is
-  under 140 s. A train standing at such an end holds no one on its track; one due at a place still
+  over the diagonal behind it instead of jumping across. A train standing at such an end holds no one on its track; one due at a place still
   taken (its train standing there, or leaving and not yet off the platform) stands short of
   the crossover, 30 m before it, until it is free. One place only (a through platform without a
   terminal, single track): the train ahead holds it, as above. A line with places at its ends is guarded

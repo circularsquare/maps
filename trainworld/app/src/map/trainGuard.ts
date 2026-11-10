@@ -23,7 +23,7 @@
 // track may change. A faster line stopping there stops on the running track beside it (T-2248).
 
 import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
-import { BAY_STRIDE, TURNBACK_M } from "./terminalBays";
+import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";
 
 /** T-2980: the place a trip leaving a dead end starts from, as arriving trains number them (its own
  * code counts from its own run, whose other track is theirs), -1 none. */
@@ -545,7 +545,7 @@ export class TrainGuard {
     for (let c = 0; c < cand.length; c++) {
       const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE;
       if (stand[c] && B[o + 2] >= 4) taken.add(B[o + 2]);
-      else if (B[o] >= 4 && cs[c] - half[c] < Math.max(B[o + 1], 2 * half[c] + 5)) taken.add(leftFrom(B[o]));
+      else if (B[o] >= 4 && cs[c] - half[c] < Math.max(bayP(B[o + 1]), 2 * half[c] + 5)) taken.add(leftFrom(B[o]));
     }
     if (!taken.size) return;
     for (let c = 0; c < cand.length; c++) {
@@ -556,10 +556,10 @@ export class TrainGuard {
       for (let x = 0; x < cand.length && !other; x++) {
         if (x === c) continue;
         const j = cand[x], q = f.trips[j * 2], ox = j * BAY_STRIDE;
-        other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(B[ox + 1], 2 * half[x] + 5));
+        other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(bayP(B[ox + 1]), 2 * half[x] + 5));
       }
       if (!other) continue;
-      const L = meta[p * 4 + 3], hold = L - Math.max(B[o + 3], 2 * half[c] + 5) - TURNBACK_M - GUARD_GAP_M - half[c];
+      const L = meta[p * 4 + 3], hold = L - Math.max(bayP(B[o + 3]), 2 * half[c] + 5) - TURNBACK_M - GUARD_GAP_M - half[c];
       const was = Number.isNaN(prevS[i]) ? cs[c] : prevS[i];
       // already over the crossover: it goes on
       if (was > hold + 1) continue;

@@ -1,7 +1,7 @@
 // T-2980 (notes/T-2974.md 5): where a train stands at the end of its run. A double-track dead end
-// with a terminal (T-1281) turns on both platforms, a through station with one in two sidings, and
-// the capacity sums count both, so the drawing does too: each train arriving takes the place there
-// that frees first. A dead end without a terminal turns on one platform (T-2986): the train ahead
+// or a through station with a terminal (T-1281) turns on both platforms, and the capacity sums count
+// both, so the drawing does too: each train arriving takes the platform there that frees first, and
+// stands on it whole (T-3053: nothing is drawn past a line's last station). A dead end without a terminal turns on one platform (T-2986): the train ahead
 // holds it, and the next waits short of the crossover until it leaves. The pick is worked
 // out in the clock worker from the timetable (an hour of trips before the window as well), so every
 // window draws the same; the renderer moves the train across to it (`TRAIN_VS`), and the train guard
@@ -11,17 +11,21 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 
 /** Length of a turn-back crossover's diagonal, m (T-658d). */
 export const TURNBACK_M = 50;
-/** A terminal's sidings: how far they run past the platform's end, and over how much of that each
- * leaves its running track, m (T-1281). */
-export const SIDING_M = 160, SIDING_LEAD_M = 40;
-/** Where the two sidings lie between the running tracks (-1 and 1 the tracks). */
-export const SIDING_LANE = 0.5;
-/** Places at a line's end. The arriving train's own track; the other track of a dead end (it crosses
- * the scissors on the way in); a terminal's siding on its own side or the other. */
-export const BAY_OWN = 0, BAY_OTHER = 1, BAY_SIDING = 2, BAY_SIDING_OTHER = 3;
+/** Places at a line's end: the arriving train's own track, or the other track (it crosses the
+ * scissors on the way in). */
+export const BAY_OWN = 0, BAY_OTHER = 1;
+/** A trip's place distance (the 2nd and 4th number of its `BAY_STRIDE`) at a through station is
+ * written as `-p - 1`, so below 0 marks an end the track runs on past, where the train stands with
+ * its middle at the stop and may be drawn that far over the line's end (T-3053). */
+export const bayThru = (v: number) => v < 0;
+/** The metres a place distance stands for. */
+export const bayP = (v: number) => (v < 0 ? -v - 1 : v);
+/** The nearest a train's middle may be to a run's end (T-3053): half its length, less the half
+ * platform of a through end it may overhang. */
+export const endClear = (v: number, trainM: number) => (v < 0 ? Math.max(0, trainM / 2 + v + 1) : trainM / 2);
 /** Floats per trip in `assignBays`'s result: where it starts (code + 4 x (group + 1), -1 for no
  * place), the metres from its first stop to where it crosses over, where it ends (the same), and
- * the metres from its last stop to the crossing or the siding's lead. */
+ * the metres from its last stop to the crossing (each of the two distances `bayThru` at a through end). */
 export const BAY_STRIDE = 4;
 /** A place is free once the train leaving it is this far past the platform's end, m (its own length,
  * a long train's, and the crossover), or, where its next trip is not known, this long after it
@@ -34,11 +38,13 @@ export const BAY_LOOKBACK_S = 3600;
 /** A line end's places: `group` is shared by the lines arriving there along the same track. */
 export interface TerminalEnd {
   group: number;
-  /** 0 one place at a through station (no pick), 1 two platforms, 2 two sidings, 3 a dead end's
-   * one platform (no terminal, T-2986: the arrival track's, held as a place) */
-  kind: 0 | 1 | 2 | 3;
+  /** 0 one place at a through station (no pick), 1 two platforms, 3 a dead end's one platform (no
+   * terminal, T-2986: the arrival track's, held as a place) */
+  kind: 0 | 1 | 3;
   /** m from the stop to the crossover (a dead end's platform, half a through station's) */
   p: number;
+  /** the track runs on past the stop, which stands mid-platform */
+  thru: boolean;
   /** a train turning on a through platform with no terminal leaves over the crossover behind it */
   cross: boolean;
 }
@@ -64,16 +70,17 @@ export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockN
       const node = nodeOf.get(run === 0 ? l.stops[last] : l.stops[0]);
       const entry = run === 0 ? l.path[l.path.length - 1] : l.path[0];
       const edge = edgeOf.get(entry >> 1);
-      if (!node || !node.platform || !edge || edge.tracks !== 2) return null;
+      if (!node || !node.platform || !edge) return null;
       const dead = endCount.get(node.id) === 1;
+      if (edge.tracks !== 2) return dead ? null : { group: -1, kind: 0, p: node.platform / 2, thru: true, cross: false };
       const key = `${node.id}|${edge.id}`;
       let group = groups.get(key);
       if (group === undefined) groups.set(key, (group = groups.size));
       const terminal = hasUpgrade(node.upgrades, UPGRADE.terminal);
       // (both platforms of a dead end only with a terminal, as the sim's `dead_end_places`)
-      if (dead) return { group, kind: terminal ? 1 : 3, p: node.platform, cross: false };
-      if (terminal) return { group, kind: 2, p: node.platform / 2, cross: false };
-      return { group, kind: 0, p: node.platform / 2, cross: true };
+      if (dead) return { group, kind: terminal ? 1 : 3, p: node.platform, thru: false, cross: false };
+      if (terminal) return { group, kind: 1, p: node.platform / 2, thru: true, cross: false };
+      return { group, kind: 0, p: node.platform / 2, thru: true, cross: true };
     };
     const ends: [TerminalEnd | null, TerminalEnd | null] = [at(0), at(1)];
     if (ends[0] || ends[1]) out.set(l.id, ends);
@@ -173,25 +180,26 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
     // taken until its train on its next trip is off the platform (a hold there first included)
     const nt = nextOf(t), nx = nt && times(nt.profile);
     f[k] = Math.max(at, nt && nx ? nt.draw + nx.at(end.p + CLEAR_M) : t.end + CLEAR_S);
-    endCode.set(t, (end.kind === 2 ? BAY_SIDING : BAY_OWN) + k);
+    endCode.set(t, BAY_OWN + k);
   }
   for (const t of trips) {
     const line = Math.floor(t.profile / 6), run = Math.floor(t.profile / 3) % 2;
     const end = ends.get(line)![run];
     if (!end) continue;
     const code = endCode.get(t);
-    if (t.i >= 0 && code !== undefined) {
-      out[t.i * BAY_STRIDE + 2] = code + 4 * (end.group + 1);
-      out[t.i * BAY_STRIDE + 3] = end.p;
+    const pEnc = end.thru ? -end.p - 1 : end.p;
+    if (t.i >= 0) {
+      if (code !== undefined) out[t.i * BAY_STRIDE + 2] = code + 4 * (end.group + 1);
+      out[t.i * BAY_STRIDE + 3] = pEnc;
     }
     // its train's next trip leaves from where it stood: the arriving track is that trip's other one
     const nt = nextOf(t);
     if (!nt || nt.i < 0) continue;
-    const start = code === undefined ? (end.cross ? BAY_OTHER : -1) : code === BAY_OWN ? BAY_OTHER : code === BAY_OTHER ? BAY_OWN : BAY_OWN;
+    out[nt.i * BAY_STRIDE + 1] = pEnc;
+    const start = code === undefined ? (end.cross ? BAY_OTHER : -1) : code === BAY_OWN ? BAY_OTHER : BAY_OWN;
     if (start < 0) continue;
-    // (a dead end's group goes with it: the guard keeps the platform it leaves from taken until it is clear)
-    out[nt.i * BAY_STRIDE] = start + (code !== undefined && end.kind !== 2 ? 4 * (end.group + 1) : 0);
-    out[nt.i * BAY_STRIDE + 1] = end.p;
+    // (the group goes with it: the guard keeps the platform it leaves from taken until it is clear)
+    out[nt.i * BAY_STRIDE] = start + (code !== undefined ? 4 * (end.group + 1) : 0);
   }
   return out;
 }
@@ -206,30 +214,19 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/** The train shader's `sidingMove` (rendererShaders.ts): m past its last stop into a siding at `st`
- * s into a stand of `stand` s, and whether it is coming back out. */
-export function sidingMove(endP: number, st: number, stand: number, trainM: number): { ex: number; out: boolean } {
-  const k = Math.min(1, stand / 140), dw = 30 * k, mv = 40 * k;
-  return { ex: (endP + SIDING_LEAD_M + trainM) * (smooth(dw, dw + mv, st) - smooth(stand - dw - mv, stand - dw, st)), out: st > 0.5 * stand };
-}
-
 /** The train shader's `acrossAt`: how far across to its own track the point `x` m along run 0 is
  * drawn, for a trip with places `bay` (BAY_STRIDE numbers from `o`) on run `run` of length `len`. */
-export function acrossAt(bay: ArrayLike<number>, o: number, run: number, len: number, x: number, trainM: number, out: boolean): number {
+export function acrossAt(bay: ArrayLike<number>, o: number, run: number, len: number, x: number, trainM: number): number {
   const q = run === 0 ? len - x : x, r = run === 0 ? x : len - x;
   const sc = bayCode(bay[o]), ec = bayCode(bay[o + 2]);
   if (r < q) {
     if (sc !== BAY_OTHER) return 1;
-    const p = Math.max(bay[o + 1], trainM + 5);
+    const p = Math.max(bayP(bay[o + 1]), trainM + 5);
     return -1 + 2 * smooth(p, p + TURNBACK_M, r);
   }
   if (ec === BAY_OTHER) {
-    const p = Math.max(bay[o + 3], trainM + 5);
+    const p = Math.max(bayP(bay[o + 3]), trainM + 5);
     return -1 + 2 * smooth(p, p + TURNBACK_M, q);
-  }
-  if (ec >= BAY_SIDING) {
-    const lane = ec === BAY_SIDING ? SIDING_LANE : -SIDING_LANE, from = out ? -1 : 1;
-    return from + (lane - from) * smooth(bay[o + 3], bay[o + 3] + SIDING_LEAD_M, -q);
   }
   return 1;
 }
