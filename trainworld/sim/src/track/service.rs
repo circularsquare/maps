@@ -917,6 +917,21 @@ impl Service {
         self.update(net, &all, &all, true)
     }
 
+    /// T-2607: the time a headway line's round trip leaves its trains at `lev`, stood at its ends
+    /// (1e-3 trains: what a settle leaves of a round trip that is whole headways), and a count line's
+    /// kept in step at a merge (T-2973); 0 for any other fleet set by count and a loop.
+    pub fn spare(&self, net: &Network, l: usize, lev: usize) -> f64 {
+        let Some(ls) = self.lines.get(l) else { return 0.0 };
+        let t = net.line_tph.get(l).map_or(0.0, |x| x[lev] as f64);
+        let paced = net.line_auto.get(l).copied().flatten().is_some_and(|a| a[lev] > 0) || net.line_pace_of(l as u32)[lev] > 0.0;
+        if t <= 0.0 || ls.is_loop() || !paced {
+            return 0.0;
+        }
+        let h = 3600.0 / t;
+        let trip = ls.trip_len(net, l as u32, 0, lev) + ls.trip_len(net, l as u32, 1, lev);
+        ((trip / h - 1e-3).ceil() * h - trip).clamp(0.0, h)
+    }
+
     /// A running line's departure pattern now (None when it is not running).
     pub fn lattice(&self, net: &Network, l: usize) -> Option<Lattice> {
         let ls = self.lines.get(l)?;
@@ -935,15 +950,9 @@ impl Service {
                 return 0.0;
             }
             let (h, there) = (3600.0 / t, ls.trip_len(net, l as u32, 0, lev));
-            // T-2607: a headway line's trains wait out the time its round trip leaves them, half at
-            // each end (1e-3 trains: what a settle leaves of a round trip that is whole headways)
-            let wait = if net.line_auto[l].is_some_and(|a| a[lev] > 0) {
-                let trip = there + ls.trip_len(net, l as u32, 1, lev);
-                ((trip / h - 1e-3).ceil() * h - trip).clamp(0.0, h)
-            } else {
-                0.0
-            };
-            (there + 0.5 * wait) % h
+            // T-2607, T-2972: a headway line's trains wait out the time its round trip leaves them,
+            // the share the spacing chose at its last stop, the rest at its first
+            (there + net.line_split_of(l as u32)[lev] as f64 * self.spare(net, l, lev)) % h
         });
         // a loop's middle is half a lap from its first stop (T-798): the same figure
         let lead = (0.25 * (ls.runs[0].prof[1].duration + ls.runs[1].prof[1].duration)).clamp(0.0, LEAD_MAX_S);

@@ -4,7 +4,8 @@
 //! together (and are drawn on top of each other). Real timetabling, done greedily: only the lines
 //! an edit changed are placed, against every other line as it runs, so the rest keep their times.
 //! Waits are by headway, so demand does not move. A merge, where trains queue in sight, comes
-//! first; one phase serves both runs, so it cannot always even out the other direction too (T-2960).
+//! first (T-2960). A headway line's reverse departures also move with where it stands its spare
+//! time, which is placed with the phase, so both directions can take even turns (T-2972).
 
 use super::capacity::ResKind;
 use super::net::Network;
@@ -21,6 +22,9 @@ const MAX_TRAINS: usize = 60;
 /// A merge's weight against other meetings (T-2960): so large that they only choose among phases
 /// nearly as good at the merge (its trains off by at most 1/26 of what the others pull).
 const MERGE_FIRST: f64 = 25.0;
+/// T-2972: shares of a headway line's spare time stood at its last stop tried, in this many steps
+/// from none to all (half is one of them).
+const SPLITS: usize = 8;
 
 /// Where one direction of the line meets one direction of another line: when its trains get
 /// there after its pattern's own times (`a`, without its phase), when the other line's do (`b`,
@@ -38,16 +42,20 @@ struct Meet {
     /// how far apart its trains are clear of each other, s: a flat junction's crossing time, or
     /// infinite (half the smaller headway)
     clear: f64,
+    /// this line's run there: run 1's departures move with where its spare time stands (T-2972)
+    run: u8,
 }
 
 /// How crowded a phase leaves the line's meetings: per train, how far it is short of half the
 /// smaller headway (or of `clear`) from the nearest train of the other line there, squared, as a
 /// share, times the meeting's weight. For a following pair timetabled together, how far each
 /// following train is from its place after a leading one, as a share of the same half headway, squared.
-fn crowding(meets: &[Meet], h: f64, phase: f64) -> f64 {
+fn crowding(meets: &[Meet], h: f64, phase: f64, shift: f64) -> f64 {
     let n = ((3600.0 / h).ceil() as usize).clamp(1, MAX_TRAINS);
     let mut sum = 0.0;
     for m in meets {
+        // run 1's departures `shift` later than the pattern's (T-2972)
+        let phase = if m.run == 1 { phase + shift } else { phase };
         let g = 0.5 * h.min(m.hb);
         if m.behind > 0.0 {
             for k in 0..n {
@@ -78,10 +86,79 @@ fn crowding(meets: &[Meet], h: f64, phase: f64) -> f64 {
 }
 
 /// Place the departures of `lines` (any order; placed in id order, each against the phases as
-/// they then stand) into `phase` (by line id, grown as needed). Returns the lines whose phase moved.
-pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; LEVELS]>) -> Vec<u32> {
-    let cap = &svc.cap;
+/// they then stand) into `phase` and where their spare time stands into `split` (by line id, grown
+/// as needed). The lines they meet with spare time then move only where theirs stands, against them,
+/// and `lines` are placed once more (T-2972: two branches into one terminus both stand theirs at
+/// the far ends, which neither reaches alone). Returns the lines whose phase or split moved.
+pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; LEVELS]>, split: &mut Vec<[f32; LEVELS]>) -> Vec<u32> {
     phase.resize(phase.len().max(net.line_count()), [0.0; LEVELS]);
+    split.resize(split.len().max(net.line_count()), [0.5; LEVELS]);
+    // where its spare time would stand with nothing else known: at the end it does not share
+    for &l in lines {
+        seed_split(net, svc, l, split);
+    }
+    let mut moved = place_pass(net, svc, lines, phase, split, false);
+    let cap = &svc.cap;
+    let mut mine = vec![false; net.line_count()];
+    for &l in lines {
+        if let Some(m) = mine.get_mut(l as usize) { *m = true; }
+    }
+    let mut others: Vec<u32> = vec![];
+    for r in 0..cap.res.len() {
+        let us = cap.users_of(r);
+        if !us.iter().any(|u| mine.get(u.line as usize).copied().unwrap_or(false)) {
+            continue;
+        }
+        for u in us {
+            if !mine[u.line as usize] && (0..LEVELS).any(|lev| svc.spare(net, u.line as usize, lev) >= 1.0) {
+                others.push(u.line);
+            }
+        }
+    }
+    others.sort_unstable();
+    others.dedup();
+    for &o in &others {
+        if seed_split(net, svc, o, split) {
+            moved.push(o);
+        }
+    }
+    if !others.is_empty() {
+        let o = place_pass(net, svc, &others, phase, split, true);
+        if !o.is_empty() {
+            moved.extend(o);
+            moved.extend(place_pass(net, svc, lines, phase, split, false));
+        }
+    }
+    moved.sort_unstable();
+    moved.dedup();
+    moved
+}
+
+/// T-2972: a line with spare time whose track is shared at one end only stands it at the other (a
+/// branch into a shared terminus waits out at its own far end, so the order its trains leave the
+/// terminus in is the order they come back in). True when its split moved.
+fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; LEVELS]]) -> bool {
+    let path = net.line_path(l);
+    let (Some(&a), Some(&b)) = (path.first(), path.last()) else { return false };
+    let shared = |e: u32| net.lines_on_edge(e).iter().any(|&o| o != l && svc.lines.get(o as usize).is_some_and(|x| x.running && !x.is_bus()));
+    let want = match (shared(a >> 1), shared(b >> 1)) {
+        (true, false) => 1.0,
+        (false, true) => 0.0,
+        _ => return false,
+    };
+    let mut moved = false;
+    for lev in 0..LEVELS {
+        if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want {
+            split[l as usize][lev] = want;
+            moved = true;
+        }
+    }
+    moved
+}
+
+/// One pass of `place`; `split_only`: each line keeps its phase.
+fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; LEVELS]>, split: &mut Vec<[f32; LEVELS]>, split_only: bool) -> Vec<u32> {
+    let cap = &svc.cap;
     let mut todo: Vec<u32> = lines.iter().copied().filter(|&l| svc.lines.get(l as usize).is_some_and(|x| x.running && !x.is_bus())).collect();
     todo.sort_unstable();
     todo.dedup();
@@ -139,13 +216,19 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
     for &l in &todo {
         let Some(Some(lat)) = lats[l as usize] else { continue };
         let mut p = phase[l as usize];
+        let mut x = split[l as usize];
         for lev in 0..LEVELS {
             let tph = lat.tph[lev] as f64;
             if tph <= 0.0 {
                 continue;
             }
             let h = 3600.0 / tph;
-            let base = |lat: &super::service::Lattice, run: u8| -lat.lead - lat.shift + if run == 1 { lat.off[lev] } else { 0.0 };
+            // (the lattices were made with every line's spare time half at each end: `split` is out
+            // of the network while it is placed, as `phase` is)
+            let base = |lat: &super::service::Lattice, line: u32, run: u8| {
+                let share = if line == l { x[lev] } else { split[line as usize][lev] } as f64;
+                -lat.lead - lat.shift + if run == 1 { lat.off[lev] + (share - 0.5) * svc.spare(net, line as usize, lev) } else { 0.0 }
+            };
             // per pair of directions, the first place they meet along this line's run
             first.clear();
             for &r in &by_line[l as usize] {
@@ -160,8 +243,8 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
                         }
                         let key = (v.line, v.run, u.run);
                         let Some(Some(other)) = &lats[v.line as usize] else { continue };
-                        let b = base(other, v.run) + phase[v.line as usize][lev] as f64 + time(v.line, v.run, lev, v.at);
-                        let a = base(&lat, u.run) + tu;
+                        let b = base(other, v.line, v.run) + phase[v.line as usize][lev] as f64 + time(v.line, v.run, lev, v.at);
+                        let a = base(&lat, l, u.run) + tu;
                         let clear = if junction { u.occ.max(v.occ) } else { f64::INFINITY };
                         match first.iter_mut().find(|x| x.0 == key) {
                             Some(x) if x.1 <= tu => {}
@@ -174,23 +257,31 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             if first.is_empty() {
                 continue;
             }
-            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1), weight: x.4, clear: x.5 }).collect();
+            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1), weight: x.4, clear: x.5, run: x.0 .2 }).collect();
             let cur = (p[lev] as f64).rem_euclid(h);
-            let now = crowding(&meets, h, cur);
-            let (mut best, mut at) = (now, cur);
-            for k in 0..STEPS {
-                let c = h * k as f64 / STEPS as f64;
-                let x = crowding(&meets, h, c);
-                if x < best - 1e-9 {
-                    (best, at) = (x, c);
+            // T-2972: with spare time, the share stood at the last stop is tried too: run 1 leaves
+            // (share - its share now) x spare later
+            let (spare, xs) = (svc.spare(net, l as usize, lev), x[lev] as f64);
+            let shares: Vec<f64> = if spare >= 1.0 { (0..=SPLITS).map(|j| j as f64 / SPLITS as f64).collect() } else { vec![xs] };
+            let now = crowding(&meets, h, cur, 0.0);
+            let (mut best, mut at, mut share) = (now, cur, xs);
+            for k in 0..if split_only { 1 } else { STEPS } {
+                let c = if split_only { cur } else { h * k as f64 / STEPS as f64 };
+                for &sh in &shares {
+                    let v = crowding(&meets, h, c, (sh - xs) * spare);
+                    if v < best - 1e-9 {
+                        (best, at, share) = (v, c, sh);
+                    }
                 }
             }
             if best < KEEP * now - 1e-9 {
                 p[lev] = at as f32;
+                x[lev] = share as f32;
             }
         }
-        if p != phase[l as usize] {
+        if p != phase[l as usize] || x != split[l as usize] {
             phase[l as usize] = p;
+            split[l as usize] = x;
             moved.push(l);
         }
     }
@@ -295,7 +386,68 @@ mod tests {
             let gaps: Vec<f64> = at_j.windows(2).map(|p| p[1].0 - p[0].0).collect();
             assert!(at_j.windows(2).all(|p| p[0].1 != p[1].1), "the lines take turns: {at_j:?}");
             let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
-            assert!(hi / lo < 1.25, "headway {headway}, flying {flying}: gaps at J {gaps:.0?}");
+            assert!(hi / lo < 1.25, "headway {headway}, flying {flying}: gaps at J {gaps:.0?}, phases {:?} shares {:?} spare {:?}", ls.iter().map(|&l| w.net.line_phase_of(l)).collect::<Vec<_>>(), ls.iter().map(|&l| w.net.line_split_of(l)).collect::<Vec<_>>(), ls.iter().map(|&l| w.svc.spare(&w.net, l as usize, HIGH)).collect::<Vec<_>>());
+            // T-2972: and leaving T the other way, the spare time stood at the branch ends (was 1.3:1
+            // and 8:1 in these two)
+            let mut from_t: Vec<(f64, u32)> = w.svc.trips(&w.net, t0, t0 + 3600.0).into_iter().filter(|tr| tr.run == 0 && tr.dep >= t0).map(|tr| (tr.dep, tr.line)).collect();
+            from_t.sort_by(|x, y| x.0.total_cmp(&y.0));
+            let gaps: Vec<f64> = from_t.windows(2).map(|p| p[1].0 - p[0].0).collect();
+            let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
+            // (on a flat junction the crossing's 90 s weighs against it too)
+            assert!(hi / lo < if flying { 1.25 } else { 1.5 }, "headway {headway}, flying {flying}: gaps leaving T {gaps:.0?}, shares {:?}", ls.iter().map(|&l| w.net.line_split_of(l)).collect::<Vec<_>>());
+            // kept through a save and a load
+            let back = TrackWorld::new(super::super::save::decode(&super::super::save::encode(&w.net)).unwrap());
+            for &l in &ls {
+                assert_eq!(back.net.line_split_of(l), w.net.line_split_of(l));
+            }
+        }
+    }
+
+    /// T-2973: two lines set by train count on branches of different lengths, 4 trains each, run
+    /// one headway when theirs are within 3% (5.1 and 6.0 km branches: 301.2 and 302.3 s, whose
+    /// gaps at J drifted from 1.6:1 at 09h to 30:1 at 17h), and take even turns at J all day; 3.8%
+    /// apart (4.8 and 7.0 km) they keep their own.
+    #[test]
+    fn count_lines_at_a_merge_run_in_step() {
+        use super::super::params::HIGH;
+        use super::super::profile;
+        for (m_x, br_x, in_step) in [(6000.0, 4400.0, true), (7000.0, 3700.0, false)] {
+            let mut w = world();
+            let t = node(&mut w, 0.0, 0.0, 0);
+            let j = node(&mut w, 3000.0, 0.0, 0);
+            let m = node(&mut w, m_x, 0.0, 0);
+            let br = node(&mut w, br_x, 1500.0, 0);
+            edge(&mut w, t, j, &[], 0).unwrap();
+            edge(&mut w, j, m, &[], 0).unwrap();
+            edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
+            for x in [t, m, br] { station(&mut w, x, 200); }
+            let mut ls = vec![];
+            for end in [br, m] {
+                let l = line(&mut w, &[t, end], [0.0; 3]);
+                w.apply(Op::TrainCounts { id: l, trains: Some([4, 2, 0]), tph: [6.0, 3.0, 0.0] }).unwrap();
+                ls.push(l);
+            }
+            let hw: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph[l as usize][HIGH] as f64).collect();
+            let natural: Vec<f64> = ls.iter().map(|&l| w.svc.lines[l as usize].round_trip[HIGH] / 4.0).collect();
+            if !in_step {
+                assert!((hw[0] - hw[1]).abs() > 5.0 && ls.iter().all(|&l| w.net.line_pace_of(l)[HIGH] == 0.0), "3.8% apart, each its own: {hw:?}");
+                continue;
+            }
+            assert!((hw[0] - hw[1]).abs() < 0.01, "one headway: {hw:?} (round trip over trains {natural:?})");
+            for h0 in [9.0, 13.0, 17.0] {
+                let t0 = 86400.0 + h0 * 3600.0;
+                let mut at_j: Vec<(f64, u32)> = vec![];
+                for tr in w.svc.trips(&w.net, t0 - 7200.0, t0 + 3600.0).into_iter().filter(|tr| tr.run == 1) {
+                    let run = &w.svc.lines[tr.line as usize].runs[1];
+                    let i = run.nodes.iter().position(|&x| x == j).unwrap();
+                    let s = tr.draw + profile::time_at(&run.prof[tr.level as usize].phases, run.node_s[i]);
+                    if s >= t0 && s < t0 + 3600.0 { at_j.push((s, tr.line)); }
+                }
+                at_j.sort_by(|x, y| x.0.total_cmp(&y.0));
+                let gaps: Vec<f64> = at_j.windows(2).map(|p| p[1].0 - p[0].0).collect();
+                let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
+                assert!(hi / lo < 1.25, "{h0}h: gaps at J {gaps:.0?}");
+            }
         }
     }
 }

@@ -505,7 +505,7 @@ export class ClockClient {
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
   onDiagram: (g: DiagramGraph) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
-  onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) => void = () => {};
+  onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
    * before it and the ms that took in steps (all, longest), bytes; newest last, at most 40
    * (`?debug=1`, notes/T-164.md) */
@@ -1137,7 +1137,7 @@ export class ClockClient {
           if (this.boardLog.length > 40) this.boardLog.shift();
           accountVersion.value++;
         }
-        this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts);
+        this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
         break;
       case "edited": {
         const f = this.pending.get(msg.seq);

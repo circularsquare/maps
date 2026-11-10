@@ -21,7 +21,12 @@
 // does not on the running track beside it, so there neither holds the other: the one place order on a
 // track may change. A faster line stopping there stops on the running track beside it (T-2248).
 
-import { PASS_OUTER, PASS_STRIDE, carsOf, profileS, type NetworkBuffers } from "./network";
+import { PASS_OUTER, PASS_STRIDE, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
+import { BAY_STRIDE, TURNBACK_M } from "./terminalBays";
+
+/** T-2980: the place a trip leaving a dead end starts from, as arriving trains number them (its own
+ * code counts from its own run, whose other track is theirs), -1 none. */
+const leftFrom = (v: number) => (v < 4 ? -1 : v - (v % 4) + 1 - (v % 4));
 import { perfOff } from "../perfFlags";
 
 /** Room left between a held train's front and the back of the train ahead, m. */
@@ -64,6 +69,8 @@ export interface GuardFrame {
   ends: Float32Array | null;
   /** per trip, the departure - epoch its train takes next, NaN none (T-245) */
   nexts: Float32Array | null;
+  /** per trip, BAY_STRIDE numbers: where it stands at its ends (T-2980, `assignBays`), or null */
+  bays?: Float32Array | null;
   /** CSS px of a point (local units; the answer may be reused by the next call), null to guard every
    * train wherever it is */
   project: ((x: number, y: number) => readonly [number, number]) | null;
@@ -125,6 +132,8 @@ export class TrainGuard {
   private boxes: Float32Array | null = null;
   /** per line, this frame: 1 its box is in or near the view, 0 not, 2 not looked at yet */
   private seen = new Uint8Array(0);
+  /** checks: when an array, each hold for a place at a line's end is noted in it (T-2980) */
+  placeLog: unknown[] | null = null;
   /** checks: when an array, each train let over at CONFLICT_WAIT_MAX is noted in it */
   log: unknown[] | null = null;
   /** T-2233, per line: the passing stations where it stands on the outer track (offset along run 0,
@@ -392,6 +401,9 @@ export class TrainGuard {
       // at the end of its run holds no one: the next one, late from a wait, would queue behind it
       // there and pass its lateness on to the one after, and so on (lags to the 20-minute cap)
       if (!this.guardedTrack[line] && tauOf[c] >= meta[p * 4 + 2]) continue;
+      // T-2980: nor one standing at an end with two places: it is on its own platform or siding,
+      // and a train due at its place waits for it below
+      if (f.bays && f.bays[i * BAY_STRIDE + 2] >= 0 && tauOf[c] >= arriveS(n, p)) continue;
       const L = meta[p * 4 + 3], first = T[line * 2], count = T[line * 2 + 1];
       const was = prevS[i];
       const a = Math.min(cs[c], Number.isNaN(was) ? cs[c] : was) - half[c], b = cs[c] + half[c] + gapM + 10;
@@ -466,6 +478,7 @@ export class TrainGuard {
       });
       if (!moved) break;
     }
+    if (f.bays) this.holdForPlaces(f, cand, cs, half, tauOf, sNew);
     // a held candidate's lag: the time in its run when it was at its new place
     for (let c = 0; c < cand.length; c++) {
       const i = cand[c], p = f.trips[i * 2];
@@ -486,6 +499,44 @@ export class TrainGuard {
       }
     }
     return changed;
+  }
+
+  /**
+   * T-2980: a train due at a place at the end of its run (`assignBays`: a dead end's platform, a
+   * terminal's siding) that another train still holds (standing there, or leaving from it and not yet
+   * off the platform) stands short of the crossover until it is free. Caps `sNew`.
+   */
+  private holdForPlaces(f: GuardFrame, cand: number[], cs: number[], half: number[], tauOf: number[], sNew: number[]) {
+    const B = f.bays!, n = this.net!, meta = n.meta, prevS = this.prevS;
+    // each candidate standing at its last stop (its turnaround inside its trip, T-2980)
+    const stand = cand.map((c, k) => tauOf[k] >= arriveS(n, f.trips[c * 2]));
+    const taken = new Set<number>();
+    for (let c = 0; c < cand.length; c++) {
+      const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE;
+      if (stand[c] && B[o + 2] >= 4) taken.add(B[o + 2]);
+      else if (B[o] >= 4 && cs[c] - half[c] < Math.max(B[o + 1], 2 * half[c] + 5)) taken.add(leftFrom(B[o]));
+    }
+    if (!taken.size) return;
+    for (let c = 0; c < cand.length; c++) {
+      const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE, place = B[o + 2];
+      if (place < 4 || !taken.has(place) || stand[c]) continue;
+      // standing there itself, or leaving from it, is not taking it from itself
+      let other = false;
+      for (let x = 0; x < cand.length && !other; x++) {
+        if (x === c) continue;
+        const j = cand[x], q = f.trips[j * 2], ox = j * BAY_STRIDE;
+        other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(B[ox + 1], 2 * half[x] + 5));
+      }
+      if (!other) continue;
+      const L = meta[p * 4 + 3], hold = L - Math.max(B[o + 3], 2 * half[c] + 5) - TURNBACK_M - GUARD_GAP_M - half[c];
+      const was = Number.isNaN(prevS[i]) ? cs[c] : prevS[i];
+      // already over the crossover: it goes on
+      if (was > hold + 1) continue;
+      if (sNew[c] > hold) {
+        if (this.placeLog && this.placeLog.length < 40) this.placeLog.push({ t: f.time, i, place, s: +cs[c].toFixed(0), L: meta[p * 4 + 3], lag: this.lag[i], who: cand.map((j, x) => [j, B[j * BAY_STRIDE], B[j * BAY_STRIDE + 2], stand[x] ? 1 : 0, +(cs[x] - half[x]).toFixed(0), +tauOf[x].toFixed(0), +this.lag[j].toFixed(0), f.trips[j * 2]]).filter((w) => leftFrom(w[1] as number) === place || w[2] === place) });
+        sNew[c] = Math.max(0, hold);
+      }
+    }
   }
 
   /**

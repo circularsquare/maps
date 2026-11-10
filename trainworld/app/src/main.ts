@@ -321,8 +321,8 @@ if (SYNTH) {
     }
   };
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
-  client.onTrips = (epoch, version, trips, board, ends, nexts) => {
-    renderer.setTrips(epoch, version, trips, board, ends, nexts);
+  client.onTrips = (epoch, version, trips, board, ends, nexts, bays) => {
+    renderer.setTrips(epoch, version, trips, board, ends, nexts, bays);
     overlay.invalidate();
   };
   renderer.onEpoch = (e) => client.setEpoch(e);

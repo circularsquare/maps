@@ -16,6 +16,7 @@ import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
+import { acrossAt, BAY_SIDING, bayCode, SIDING_LANE, SIDING_LEAD_M, SIDING_M, sidingMove, TURNBACK_M } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
@@ -578,8 +579,6 @@ function lanePoints(pts: Float32Array, lanes: number): LanePoints {
   return { lpts: new Float32Array(out), lane: new Uint8Array(lane), src };
 }
 
-/** Length of a turn-back crossover's diagonal, m (T-658d). */
-const TURNBACK_M = 50;
 
 /**
  * The crossovers the game assumes where a line turns back on double track (T-658d; SPEC 6.2: a
@@ -718,11 +717,6 @@ function speedPhases(id: number, r: ClockState["render"]): Float32Array {
   return out;
 }
 
-/** A terminal's sidings (T-1281), m: how far they run past the platform's end, and over how much of
- * that each leaves its running track. */
-const SIDING_M = 160, SIDING_LEAD_M = 40;
-/** Where the two sidings lie between the running tracks (`F_TURNBACK` lanes, -1 and 1 the tracks). */
-const SIDING_LANE = 0.5;
 
 /**
  * A terminal's two sidings past each end of its platform where track runs on (T-1281), between the
@@ -1570,6 +1564,15 @@ export function profileS(n: NetworkBuffers, profile: number, tau: number): numbe
   return s + v * tt + 0.5 * a * tt * tt;
 }
 
+/** T-2980: seconds into a profile's trip when it reaches its last stop (its turnaround is stood after
+ * it, inside the trip's seconds): its last phase's stop, as the train shader's `arriveAt`. */
+export function arriveS(n: NetworkBuffers, profile: number): number {
+  const first = n.meta[profile * 4], count = n.meta[profile * 4 + 1];
+  if (!count) return n.meta[profile * 4 + 2];
+  const k = (first + count - 1) * 4, t = n.phases[k], v = n.phases[k + 2], a = n.phases[k + 3];
+  return a < 0 ? t + v / -a : t;
+}
+
 const stationIndexes = new WeakMap<NetworkBuffers, Map<string, number>>();
 /** A station id's place in the network's station buffers (`stationIds`), -1 for none. */
 export function stationIndexOf(n: NetworkBuffers, id: string): number {
@@ -1603,6 +1606,17 @@ export function lineAt(n: NetworkBuffers, line: number, d: number): [number, num
   return [n.samples[si * 2] + (n.samples[si * 2 + 2] - n.samples[si * 2]) * f, n.samples[si * 2 + 1] + (n.samples[si * 2 + 3] - n.samples[si * 2 + 1]) * f];
 }
 
+/** `lineAt`, carried on straight past either end (the train shader's `lineAtX`, T-2980). */
+function lineAtX(n: NetworkBuffers, line: number, d: number): [number, number] {
+  const len = n.lineTable[line * 4 + 2], k = Math.min(20, len);
+  if (k > 1e-3 && (d > len || d < 0)) {
+    const at = d > len ? len : 0, [ax, ay] = lineAt(n, line, at), [bx, by] = lineAt(n, line, d > len ? len - k : k);
+    const f = (d > len ? d - len : -d) / k;
+    return [ax + (ax - bx) * f, ay + (ay - by) * f];
+  }
+  return lineAt(n, line, d);
+}
+
 /** How far apart the two tracks are at offset `d` along run 0 of a line, 0-1 (`sampleLane`). */
 function laneAt(n: NetworkBuffers, line: number, d: number): number {
   if (!n.sampleLane) return 1;
@@ -1619,7 +1633,7 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
  * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
  * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). `passM`: metres out to a
  * passing station's outer track, where its trains stop (T-2233, `NetworkRenderer.passShiftM`). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number } | null {
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0, bay?: ArrayLike<number>, bayAt = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number; ex: number; across: (x: number) => number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -1627,14 +1641,29 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
-  const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d, run, shiftM, bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM };
+  let d = run === 0 ? s : len - s;
+  // T-2980: where it stands at its ends, as the train shader draws it
+  let ex = 0, out = false;
+  const trainM = trainLengthM(n, line);
+  const arrive = bay && bayCode(bay[bayAt + 2]) >= BAY_SIDING ? arriveS(n, profile) : Infinity;
+  if (tau > arrive) {
+    ({ ex, out } = sidingMove(bay![bayAt + 3], tau - arrive, Math.max(0, Math.max(end, dep + tripS) - dep - arrive), trainM));
+    d += run === 0 ? ex : -ex;
+  }
+  const across = (x: number) => (bay ? acrossAt(bay, bayAt, run, len, x, trainM, out) : 1);
+  return { ...pointAt(n, line, d, run, shiftM * across(d), bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM, ex: run === 0 ? ex : -ex, across };
+}
+
+/** A line's train as drawn, m: its cars at 20 m, a bus or boat as the train shader has it. */
+function trainLengthM(n: NetworkBuffers, line: number): number {
+  const raw = n.lineCars?.[line] ?? 8, cars = Math.max(1, raw);
+  return Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), n.lineTable[line * 4 + 2]);
 }
 
 /** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
 function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0) {
-  const [x, y] = lineAt(n, line, d);
-  const [bx, by] = lineAt(n, line, d - 5), [fx, fy] = lineAt(n, line, d + 5);
+  const [x, y] = lineAtX(n, line, d);
+  const [bx, by] = lineAtX(n, line, d - 5), [fx, fy] = lineAtX(n, line, d + 5);
   const dx = fx - bx, dy = fy - by;
   let [ox, oy] = rightOf(n, line, d, y, dx, dy, run, shiftM);
   const len = Math.hypot(dx, dy);
@@ -1684,11 +1713,11 @@ export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof 
   const raw = n.lineCars?.[at.line] ?? 8, cars = Math.max(1, raw);
   const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), len);
   const d = at.run === 0 ? at.s : len - at.s;
-  const centre = Math.max(total / 2, Math.min(len - total / 2, d));
+  const centre = Math.max(total / 2, Math.min(len - total / 2, d)) + at.ex;
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  const p = pointAt(n, at.line, carD, at.run, at.shiftM, at.bandM, at.band, at.bandOn, at.passM);
-  const [cx, cy] = lineAt(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
-  const [bx, by] = lineAt(n, at.line, carD - half), [fx, fy] = lineAt(n, at.line, carD + half);
+  const p = pointAt(n, at.line, carD, at.run, at.shiftM * at.across(carD), at.bandM, at.band, at.bandOn, at.passM);
+  const [cx, cy] = lineAtX(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
+  const [bx, by] = lineAtX(n, at.line, carD - half), [fx, fy] = lineAtX(n, at.line, carD + half);
   return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };
 }

@@ -575,6 +575,25 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   behind (past that it is let through), and a clock jump of over 15 minutes starts every train on
   its timetable. Clicks, hover tags, the train panel and following a selected train use the drawn
   place. `?perfOff=follow` or `renderer.follow` turns it off.
+- **Places at a line's end** [T-2980, `map/terminalBays.ts`]: where a line ends on double track at
+  a dead end, its trains use both platforms, and at a station with a terminal (T-1281) both
+  sidings, as the capacity sums do (track-and-service.md 6.2). Lines arriving at one end along the
+  same track share its places. Each arriving train takes the place that frees first (its own track
+  on a tie); a place is free 60 s after its train leaves. The pick is worked out in the clock
+  worker from the timetable, with the hour before the window, so every window draws the same
+  (`assignBays`, four numbers per trip sent with the trips; `?perfOff=bays` turns it off). Drawn: a
+  train for a dead end's other platform crosses the scissors on the way in, over the 50 m past the
+  platform (or past its own length, if longer), and a train leaving from the arrival side's
+  platform crosses on the way out; a train ending at a through platform without a terminal leaves
+  over the diagonal behind it instead of jumping across. At a terminal a train stands 30 s at the
+  arrival platform, runs 40 s forward into its siding (40 m lead off its track to halfway between
+  the tracks, carried on straight past the line's end), stands there, runs 40 s back to the other
+  platform and stands 30 s there before its next trip; all shortened together when its stand is
+  under 140 s. A train standing at such an end holds no one on its track; one due at a place still
+  taken (its train standing there, or leaving and not yet off the platform) stands short of
+  the crossover, 30 m before it, until it is free. One place only (a through platform without a
+  terminal, single track): the train ahead holds it, as above. Clicks and the train panel use the
+  drawn place.
 - **Waiting at flat crossings** [T-1966, `map/trainGuard.ts`]: zoomed in to `CONFLICT_ZOOM` (14,
   where trains are drawn as cars at about their true length), trains in or near the view wait for
   each other at flat crossings and at junction moves that cross (the track model's conflicting

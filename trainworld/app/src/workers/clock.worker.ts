@@ -27,6 +27,7 @@ import { kindOfIn, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
 import { networkFromState, newNetCache, runsTrains, shiftNetCache, type NetworkBuffers } from "../map/network";
+import { assignBays, BAY_LOOKBACK_S, profileTimes, terminalEnds } from "../map/terminalBays";
 import { setBandCheck, setBandMode } from "../map/lineBands";
 import { besideSamples } from "../map/corridors";
 import { bandEdges, diagramGraph } from "../diagram/graph";
@@ -160,6 +161,8 @@ let holidayData: HolidayData | null = null;
 let lineCountries = new Map<number, string>();
 /** each line's first stop, lng and lat (null with none), as the last state was built */
 let lineFirstStops = new Map<number, [number, number] | null>();
+/** T-2980: the places at each line's ends, as the last state was built */
+let termEnds: ReturnType<typeof terminalEnds> = new Map();
 function placeLineCountries() {
   lineCountries = new Map([...lineFirstStops].map(([id, p]) => {
     const z = p ? cityWithin(p[0], p[1]) : null;
@@ -1698,6 +1701,7 @@ function buildState(): ClockState {
     return [l.id, n ? [n.lng, n.lat] : null];
   }));
   placeLineCountries();
+  termEnds = terminalEnds(edges, nodes, lines);
   let first: ClockNode | null = null;
   for (let k = 0; k < stationCount; k++) if (nodes[k].stationBuilt && (!first || nodes[k].id < first.id)) first = nodes[k];
   firstBuiltAt = first ? [first.lng, first.lat] : null;
@@ -3115,11 +3119,20 @@ function sendTrips(split = false, hours?: number[]) {
       if (api && e === epoch && !api.boarding_step(0)) sendTrips(false, [e + 3600]);
     }, 0) as unknown as number;
   }
+  // T-2980: the trips of the hour before each one too, for where trains stand at the ends
+  const raws = new Map<number, Float32Array>();
+  const rawAt = (e: number) => {
+    let r = raws.get(e);
+    if (!r) raws.set(e, (r = api!.trips(e)));
+    return r;
+  };
+  const times = termEnds.size ? profileTimes(api.profile_meta(), termEnds.keys(), (l) => api!.line_phases(l)) : null;
   for (const e of hours ?? (split ? [epoch] : [epoch, epoch + 3600])) {
     // per trip: profile, departure, end and the departure its train takes next, relative to the
     // epoch; the end (T-206) and the next (T-245) go apart
     const tT = performance.now();
-    const raw = api.trips(e), n = raw.length / 4;
+    const raw = rawAt(e), n = raw.length / 4;
+    const bays = assignBays(raw, e, times ? rawAt(e - BAY_LOOKBACK_S) : null, termEnds, (p) => times?.get(p));
     timing.trips += performance.now() - tT;
     const trips = new Float32Array(n * 2), ends = new Float32Array(n), nexts = new Float32Array(n);
     for (let i = 0; i < n; i++) {
@@ -3136,9 +3149,9 @@ function sendTrips(split = false, hours?: number[]) {
       const board = api.boarding_hour(e);
       shapeHour(e, board); // T-284: when this hour's fares land, read before the slice is sent
       timing.board += performance.now() - t0;
-      send({ kind: "trips", version, epoch: e, trips, ends, nexts, board, boardMs: performance.now() - t0, redone: api.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, board.buffer]);
+      send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays, board, boardMs: performance.now() - t0, redone: api.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer, board.buffer]);
       prep = { ms: 0, max: 0 };
-    } else send({ kind: "trips", version, epoch: e, trips, ends, nexts }, [trips.buffer, ends.buffer, nexts.buffer]);
+    } else send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer]);
   }
 }
 

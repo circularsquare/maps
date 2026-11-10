@@ -11,6 +11,7 @@ import { clock } from "../game/clock";
 import { world } from "../game/world";
 import type { Selection } from "../game/types";
 import { carsOf, F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
+import { BAY_STRIDE } from "./terminalBays";
 import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -396,7 +397,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       // drawn where the guard holds it (T-1965)
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i);
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
-      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM);
+      const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM, r.tripBays ?? undefined, i * BAY_STRIDE);
       if (!at) continue;
       if (r.detailedTrains) {
         const cars = Math.max(1, carsOf(n.lineCars?.[at.line] ?? 8));

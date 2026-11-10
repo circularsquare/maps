@@ -877,6 +877,16 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   spare and stays so while its rate and round trip are unchanged, T-1283);
   extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
+  **In step at a merge** (T-2973, `TrackWorld::pace_merges`, Anita 2026-11-10): lines set by count
+  that meet at a merge (directly or through other merges) and whose headways (round trip over
+  trains) are within 3% of the longest of them all run that longest one, 0.2% over it
+  (`PACE_SLACK`), so a round trip drifting by a second keeps them together; their trains stand the
+  time over at their ends as a headway line's do (`Network::line_pace`, derived on every settle, not
+  saved; the spacing places where it stands, 6.3 "Departures"). A headway line there counts with its
+  set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
+  it evenly: each that could run more often keeps the even share of their trains an hour together,
+  so the queue is no one line's. So two branches of different lengths take even turns at the merge
+  all day, for at most 3% fewer trains an hour on the faster.
   A loop's lap is a run and its closing stand; its round trip is twice the longer lap, and its count
   is even, half each way (the stepper moves by 2, headway mode doubles each way's count, an odd
   count from a save or an edit rounds up), so each way's trains keep the headway over their lap.
@@ -891,8 +901,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   the real headway may run 0.5% over the chosen one, so a few seconds of drift in the round trip
   buy no train). **The headway set is the headway run** (T-2607, `Network::running_trains`): where
   the fleet's round trip leaves time over at that headway (one train an hour on a 38 minute round
-  trip, say), its trains wait it out at the ends, half at each, standing at the terminal platform
-  (6.3 "Departures"), so the departures, the drawn trains, demand's rates and the running cost are
+  trip, say), its trains wait it out at the ends, as much at each as the spacing chose (half at each where
+  nothing decides it), standing at the terminal platform (6.3 "Departures"), so the departures, the drawn trains, demand's rates and the running cost are
   the headway set's; the waits are not counted as terminal occupancy (6.2). Only a fleet short of
   the headway (the 0.5% above, or held by the track below) runs at its round trip over its trains.
   At the track's limit the count is clamped (T-679, `clamp_auto`): when the headway
@@ -926,8 +936,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   without trains, high demand before an empty evening) departs until its own end, so the line's last
   trains are not pulled early; it runs half a run longer at its level. Trains still run end to end.
   A whole-line fleet's reverse departures are offset by the forward trip so
-  each train turns straight back; a headway line's by the forward trip and half the time its trains
-  wait out (Headway mode above), so they stand that long at each end (T-2607). **Spaced from other lines** (T-1925, notes/T-1900.md D1): every
+  each train turns straight back; a headway line's by the forward trip and a share of the time its trains
+  wait out (Headway mode above, `Service::spare`), so they stand that share at the last stop and the
+  rest at the first (T-2607; the share is `Network::line_split`, below, 0.5 where none is set). **Spaced from other lines** (T-1925, notes/T-1900.md D1): every
   departure of a level, both runs, leaves a phase after those times, under a headway
   (`Network::line_phase`, `Lattice::phase`), picked so the line's trains and those of each line it
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
@@ -936,8 +947,15 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   junction move the trains need only the crossing's own time apart (90 s), not half a headway. A
   merge comes first (T-2960): it counts 25 times any other meeting (`MERGE_FIRST`), so lines joining
   one track take even turns there and the other meetings choose only among phases nearly as good at
-  the merge. One phase serves both runs, so where the branches' run times differ the same lines
-  leaving the shared track the other way can run unevenly (no train waits there). A pair
+  the merge. **Where the spare time stands** (T-2972): a headway line's share of its spare time at its
+  last stop sets its reverse departures without a train more or less, so it is placed with the phase:
+  9 shares from none to all for each of the 24 phases. It starts at the end the line does not share
+  (all of it at the far end of a branch whose first stop's track another line runs on, none where only
+  its last stop's is shared), since there two branches into one terminus leave it in the order they
+  come back. After an edit's lines are placed, the lines they meet that have spare time move only their
+  share against them, and the edit's lines are placed once more. So both directions take even turns
+  through a merge; a flat junction's crossing still weighs against the direction leaving it (up to
+  about 1.4:1). A fleet set by count has no spare time and one phase serves both its runs. A pair
 timetabled together (6.2, "Behind slower trains", T-2419) is placed the other way: each of the
 faster line's trains as near as it can be to its place after one of the slower line's (the share of
 half the smaller headway it is off, squared): `s` before the next slower train, or for a pair that
@@ -945,8 +963,8 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   edits: only the lines an edit changes directly are placed, in id order, against the others as they
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
-  history (a refused or trial edit puts the phases back), saved in a trailing `LPH1` block and in the
-  eras (`ERA2`); a save without them has every line placed once, in id order, on load. Riders' waits
+  history (a refused or trial edit puts the phases back), saved in trailing `LPH1` and `LSP1` (the
+  shares) blocks and in the eras (`ERA2`, whose reverse offset carries the share); a save without them has every line placed once, in id order, on load. Riders' waits
   are by headway, so demand does not move; it cannot keep an express from catching a local far down a
   long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains

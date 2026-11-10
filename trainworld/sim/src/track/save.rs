@@ -49,12 +49,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 19] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LBH1", b"LOW1"];
+pub const BLOCKS: [&[u8; 4]; 20] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LBH1", b"LOW1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 11;
+pub const LEVEL: u32 = 12;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -360,6 +360,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.0.extend_from_slice(b"LPH1");
         w.u(phased.len() as u64);
         for (i, p) in phased {
+            w.u(i as u64);
+            for x in p { w.u(x.to_bits() as u64); }
+        }
+    }
+    // T-2972: where the lines' spare time stands, after LPH1 and only when some line's is not half at
+    // each end: count, then per line its index and three f32 bits
+    let split: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_split_of(l))).filter(|x| x.1 != [0.5; 3]).collect();
+    if !split.is_empty() {
+        w.0.extend_from_slice(b"LSP1");
+        w.u(split.len() as u64);
+        for (i, p) in split {
             w.u(i as u64);
             for x in p { w.u(x.to_bits() as u64); }
         }
@@ -776,6 +787,16 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         net.line_phase = phase;
         net.phases_placed = true;
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LSP1") {
+        r.1 += 4;
+        let mut split = vec![[0.5f32; 3]; n_lines];
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
+            if i < n_lines { split[i] = p; }
+        }
+        net.line_split = split;
+    }
     let fr = r.0.get(r.1..r.1 + 4);
     if fr == Some(b"LFR1") || fr == Some(b"LFR2") {
         let old = fr == Some(b"LFR1");
@@ -1018,7 +1039,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (11, 19), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (12, 20), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

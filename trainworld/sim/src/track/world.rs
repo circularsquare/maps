@@ -44,6 +44,15 @@ const SWING_TURNS: u8 = 3;
 
 /// Most rounds of "count from round trip, settle" a headway line's counts get per edit (T-625).
 const AUTO_ROUNDS: usize = 5;
+/// T-2973: count lines at a merge run one headway when theirs are within this share of the longest
+/// (Anita, 2026-11-10: "3% seems like a reasonable cap"), and the pacing settles in at most this
+/// many rounds.
+const PACE_SHARE: f64 = 0.03;
+/// T-2973: and keep the longest's headway this much over it (as a headway line may run 0.5% over).
+const PACE_SLACK: f64 = 0.002;
+/// T-2973: a merge this full is shared out evenly.
+const PACE_FULL_RHO: f64 = 0.98;
+const PACE_ROUNDS: usize = 3;
 
 /// How far over the chosen headway the real one may run: a line's round trip moves a little with
 /// its own train count, and a train more for a few seconds would be noise (T-625).
@@ -138,11 +147,14 @@ impl TrackWorld {
         }
     }
 
-    /// T-1925: place `lines`' departures (`spacing::place`) into `Network::line_phase`.
+    /// T-1925: place `lines`' departures (`spacing::place`) into `Network::line_phase`, and where
+    /// their spare time stands into `line_split` (T-2972).
     fn place_departures(&mut self, lines: &[u32]) {
         let mut phase = std::mem::take(&mut self.net.line_phase);
-        super::spacing::place(&self.net, &self.svc, lines, &mut phase);
+        let mut split = std::mem::take(&mut self.net.line_split);
+        super::spacing::place(&self.net, &self.svc, lines, &mut phase, &mut split);
         self.net.line_phase = phase;
+        self.net.line_split = split;
     }
 
     /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
@@ -177,8 +189,138 @@ impl TrackWorld {
     }
 
     /// `full`: every line of an unsettled level is stepped, as a load without saved rates needs;
-    /// otherwise (an edit) only the lines off their fleet are (T-1787).
+    /// otherwise (an edit) only the lines off their fleet are (T-1787). Then count lines meeting at
+    /// a merge are put in step (T-2973) and settled again, until they hold.
     fn settle_train_counts(&mut self, full: bool) -> Vec<u32> {
+        let mut affected = self.settle_unpaced(full);
+        for _ in 0..PACE_ROUNDS {
+            if !self.pace_merges() {
+                break;
+            }
+            affected.extend(self.settle_unpaced(full));
+        }
+        affected.sort_unstable();
+        affected.dedup();
+        affected
+    }
+
+    /// T-2973: count lines (a whole-line fleet) meeting at a merge, with or through each other,
+    /// whose headways (round trip over trains) are within `PACE_SHARE` of the longest of them, all
+    /// run that one: the faster stand the difference at their ends, as a headway line does, so the
+    /// lines take even turns at the merge all day instead of drifting past each other. A headway
+    /// line there counts with its set headway and is never moved. Into `Network::line_pace`; true
+    /// when it changed.
+    fn pace_merges(&mut self) -> bool {
+        let n = self.net.line_count();
+        let mut root: Vec<usize> = (0..n).collect();
+        fn top(root: &mut [usize], mut x: usize) -> usize {
+            while root[x] != x {
+                root[x] = root[root[x]];
+                x = root[x];
+            }
+            x
+        }
+        let cap = &self.svc.cap;
+        let mut met = vec![false; n];
+        for r in 0..cap.res.len() {
+            if cap.wire_kind(r) != 12 {
+                continue;
+            }
+            let us = cap.users_of(r);
+            let Some(first) = us.first() else { continue };
+            for u in us {
+                if u.line != first.line && (u.line as usize) < n && (first.line as usize) < n {
+                    let (a, b) = (top(&mut root, first.line as usize), top(&mut root, u.line as usize));
+                    root[a] = b;
+                    met[u.line as usize] = true;
+                    met[first.line as usize] = true;
+                }
+            }
+        }
+        // the groups with a full merge, by level
+        let mut full: Vec<(usize, usize)> = vec![];
+        for r in 0..cap.res.len() {
+            if cap.wire_kind(r) != 12 {
+                continue;
+            }
+            if let Some(u) = cap.users_of(r).first().filter(|u| (u.line as usize) < n) {
+                for lev in (0..LEVELS).filter(|&lev| cap.rho[r][lev] >= PACE_FULL_RHO) {
+                    full.push((top(&mut root, u.line as usize), lev));
+                }
+            }
+        }
+        let mut pace = vec![[0.0f32; LEVELS]; n];
+        let mut groups: std::collections::BTreeMap<usize, Vec<usize>> = Default::default();
+        for l in (0..n).filter(|&l| met[l]) {
+            let g = top(&mut root, l);
+            groups.entry(g).or_default().push(l);
+        }
+        for lines in groups.values() {
+            for lev in 0..LEVELS {
+                // (headway, line, set by the player)
+                let mut hs: Vec<(f64, usize, bool)> = vec![];
+                for &l in lines {
+                    let ls = &self.svc.lines[l];
+                    if !self.net.line_ok(l as u32) || !ls.ok || !ls.running || ls.is_loop() || ls.is_bus() {
+                        continue;
+                    }
+                    if let Some(a) = self.net.line_auto[l] {
+                        if a[lev] > 0 {
+                            hs.push((a[lev] as f64, l, true));
+                        }
+                        continue;
+                    }
+                    let Some(c) = self.net.line_trains[l] else { continue };
+                    if c[lev] > 0 && ls.round_trip[lev] > 0.0 {
+                        hs.push((ls.round_trip[lev] / c[lev] as f64, l, false));
+                    }
+                }
+                hs.sort_by(|a, b| b.0.total_cmp(&a.0));
+                let mut i = 0;
+                while i < hs.len() {
+                    let top_h = hs[i].0;
+                    let mut j = i + 1;
+                    while j < hs.len() && hs[j].0 * (1.0 + PACE_SHARE) >= top_h {
+                        j += 1;
+                    }
+                    // every count line of the set, the slowest too, a little over the longest, so a
+                    // round trip drifting by a second as the others' holds move keeps them in step
+                    let keep = if hs[i].2 { top_h } else { top_h * (1.0 + PACE_SLACK) };
+                    for k in i..j {
+                        if !hs[k].2 && j - i > 1 {
+                            pace[hs[k].1][lev] = keep as f32;
+                        }
+                    }
+                    i = j;
+                }
+                // a full merge is shared out evenly between the count lines through it: each that
+                // could run more often runs the even share of what they run together, so the full
+                // track's queue is not all one line's (T-2960 saw 3:39 and 7:02 for two alike)
+                let g = top(&mut root, lines[0]);
+                if full.contains(&(g, lev)) {
+                    let count: Vec<(usize, f64)> = hs.iter().filter(|x| !x.2).map(|x| (x.1, x.0)).collect();
+                    let rate: f64 = count.iter().map(|&(l, _)| self.net.line_tph[l][lev] as f64).sum();
+                    if count.len() > 1 && rate > 0.0 {
+                        let even = 3600.0 * count.len() as f64 / rate;
+                        for &(l, h) in &count {
+                            if h < even * (1.0 - PACE_SLACK) {
+                                pace[l][lev] = pace[l][lev].max(even as f32);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let was: Vec<[f32; LEVELS]> = (0..n).map(|l| self.net.line_pace_of(l as u32)).collect();
+        if was == pace {
+            return false;
+        }
+        self.net.line_pace = pace;
+        true
+    }
+
+    /// The settle without `pace_merges`.
+    fn settle_unpaced(&mut self, full: bool) -> Vec<u32> {
         if !self.net.line_auto.iter().any(|a| a.is_some()) {
             return self.settle_counts(full);
         }
@@ -386,14 +528,14 @@ impl TrackWorld {
     /// a network in debt can still be edited. `final_` edits clear the undo history (SPEC 6.4);
     /// the others go on the undo stack. Returns the result and what `extra` came to.
     pub fn apply_paid(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<(EditResult, f64), ChargeError> {
-        let phases = self.net.line_phase.clone();
+        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
         let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         let x = extra(self);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
             let _ = self.restore(inv);
             // T-1925: and the departures as they were
-            self.net.line_phase = phases;
+            (self.net.line_phase, self.net.line_split) = phases;
             return Err(ChargeError::Money { need, have: cash });
         }
         if final_ {
@@ -410,7 +552,7 @@ impl TrackWorld {
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
         let op = if redo { self.redo.pop()? } else { self.undo.pop()? };
         let back = |w: &mut TrackWorld, op: Op| if redo { w.redo.push(op) } else { w.undo.push(op) };
-        let phases = self.net.line_phase.clone();
+        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
         Some(match self.restore(op.clone()) {
             Ok((mut r, inv)) => {
                 // what an undo or redo restores was paid for or removed before: only the trains
@@ -418,7 +560,7 @@ impl TrackWorld {
                 let need = extra(self);
                 if need > 1e-9 && need > cash + 1e-6 {
                     let _ = self.restore(inv);
-                    self.net.line_phase = phases;
+                    (self.net.line_phase, self.net.line_split) = phases;
                     back(self, op);
                     Err(ChargeError::Money { need, have: cash })
                 } else {
@@ -452,11 +594,11 @@ impl TrackWorld {
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
-        let phases = self.net.line_phase.clone();
+        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
         let (r, inv) = self.commit(op)?;
         let value = inspect(self);
         let _ = self.restore(inv);
-        self.net.line_phase = phases;
+        (self.net.line_phase, self.net.line_split) = phases;
         Ok((r, value))
     }
 

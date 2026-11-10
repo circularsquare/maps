@@ -31,6 +31,7 @@ import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
+import { BAY_STRIDE } from "./terminalBays";
 import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
 
@@ -38,7 +39,7 @@ import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_F
 export const EPOCH_S = 3600;
 /** The longest a staged state waits for its trips, wall ms (T-1071). */
 const STAGE_WAIT_MS = 2000;
-type TripArgs = [epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array];
+type TripArgs = [epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array];
 const TRACK_RGB = rgbf("#77746f");
 const BAD_RGB = rgbf(BAD_RED);
 /** Blueprint track (T-322): a light blue middle as wide as a line, with a dark blue rail this
@@ -64,6 +65,8 @@ const HSR_STRIPE_PX = [3, 5] as const;
 /** The Speed view's value per segment (T-1271): the trains' speed where a line with trains runs,
  * else the limit. */
 const selSetBuf = new Int32Array(SEL_SET_MAX);
+/** T-2980: per trip, no place at either end */
+const noBays = (n: number) => new Float32Array(Math.max(1, n) * BAY_STRIDE).fill(-1);
 /** T-1812: the lines of a selected group, for the stroke and train shaders' `u_sel_set` */
 function setSelLines(gl: WebGL2RenderingContext, u: Record<string, WebGLUniformLocation | null>, ls: readonly number[] | undefined) {
   const n = Math.min(ls?.length ?? 0, SEL_SET_MAX);
@@ -97,6 +100,8 @@ const BAND_FOLD_PX = [1.25, 1.75] as const;
 const MUTE: readonly [number, number] | null = perfOff("muteThin") ? null : [0.45, 0.5];
 /** T-2126: bands side by side with a pixel between (`?perfOff=bandGap`: touching, as before) */
 const BAND_GAP = !perfOff("bandGap");
+/** T-2980: trains take a place at their line's ends (`?perfOff=bays`: all at the end of the arrival track, as before) */
+const BAYS = !perfOff("bays");
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -305,6 +310,8 @@ export class NetworkRenderer {
   private standBuf: WebGLBuffer | null = null;
   /** per trip in the trip buffer: seconds it is drawn behind its timetable (T-1965, `guard.lag`) */
   private lagBuf: WebGLBuffer | null = null;
+  /** per trip in the trip buffer: where it stands at its ends (T-2980, `assignBays`) */
+  private bayBuf: WebGLBuffer | null = null;
   private lagDirty = false;
   /** T-1965: trains on the same track drawn one behind the other, never through each other; off
    * with `?perfOff=follow` or live */
@@ -596,7 +603,7 @@ export class NetworkRenderer {
   /** the canvas has a stencil buffer: the track is drawn through station boxes (T-236) */
   private hasStencil = false;
   /** trips per epoch from the worker, newest version kept, with the boarding account's hour */
-  private tripsBy = new Map<number, { version: number; data: Float32Array; ends?: Float32Array; nexts?: Float32Array; board?: BoardHour }>();
+  private tripsBy = new Map<number, { version: number; data: Float32Array; ends?: Float32Array; nexts?: Float32Array; bays?: Float32Array; board?: BoardHour }>();
   /** what the trip buffer holds */
   private tripEpoch = NaN;
   private tripVersion = -1;
@@ -607,6 +614,8 @@ export class NetworkRenderer {
   tripEnds: Float32Array | null = null;
   /** per trip in `trips`, the departure - epoch its train takes next, NaN leaving service (T-245) */
   tripNexts: Float32Array | null = null;
+  /** per trip in `trips`, BAY_STRIDE numbers: where it stands at its ends (T-2980), or null */
+  tripBays: Float32Array | null = null;
   net: NetworkBuffers | null = null;
   /** riders changing trains on their walk (T-1124) */
   readonly bubbles = new TransferBubbles();
@@ -704,6 +713,9 @@ export class NetworkRenderer {
     this.lagBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.lagBuf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(1), gl.DYNAMIC_DRAW);
+    this.bayBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bayBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, noBays(1), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.loadTex =this.texture(new Float32Array(1), "r32f", TEX_W, []);
   }
@@ -1304,6 +1316,7 @@ export class NetworkRenderer {
     this.attrib(this.trainProg, "a_load", this.loadBuf!, 2, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_stand", this.standBuf!, 4, gl.FLOAT, 1);
     this.attrib(this.trainProg, "a_lag", this.lagBuf!, 1, gl.FLOAT, 1);
+    this.attrib(this.trainProg, "a_bay", this.bayBuf!, 4, gl.FLOAT, 1);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
@@ -1474,11 +1487,11 @@ export class NetworkRenderer {
     this.putTrips(...t);
   }
 
-  private putTrips(epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array) {
+  private putTrips(epoch: number, version: number, data: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) {
     const old = this.tripsBy.get(epoch);
     if (old && old.version > version) return;
     const hour = board ? readBoardHour(epoch, board) : undefined;
-    this.tripsBy.set(epoch, { version, data, ends: ends && ends.length === data.length / 2 ? ends : undefined, nexts: nexts && nexts.length === data.length / 2 ? nexts : undefined, board: hour && hour.trips === data.length / 2 ? hour : undefined });
+    this.tripsBy.set(epoch, { version, data, ends: ends && ends.length === data.length / 2 ? ends : undefined, nexts: nexts && nexts.length === data.length / 2 ? nexts : undefined, bays: BAYS && bays && bays.length === (data.length / 2) * BAY_STRIDE ? bays : undefined, board: hour && hour.trips === data.length / 2 ? hour : undefined });
     if (epoch === this.tripEpoch) this.tripVersion = -1; // re-upload on the next draw
   }
 
@@ -1505,6 +1518,9 @@ export class NetworkRenderer {
       gl.bufferData(gl.ARRAY_BUFFER, offs.length ? offs : new Float32Array([-1, 0]), gl.DYNAMIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.standBuf);
       gl.bufferData(gl.ARRAY_BUFFER, t.board ? trainStands(t.board, t.data, t.nexts ?? null) : new Float32Array(Math.max(1, t.data.length / 2) * 4).fill(-1), gl.DYNAMIC_DRAW);
+      // where each stands at its ends (T-2980), -1 none
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bayBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, t.bays?.length ? t.bays : noBays(t.data.length / 2), gl.DYNAMIC_DRAW);
       // every train on its timetable until the guard says otherwise (it keeps each trip's lag)
       gl.bindBuffer(gl.ARRAY_BUFFER, this.lagBuf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(Math.max(1, t.data.length / 2)), gl.DYNAMIC_DRAW);
@@ -1522,6 +1538,7 @@ export class NetworkRenderer {
       this.trips = t.data;
       this.tripEnds = t.ends ?? null;
       this.tripNexts = t.nexts ?? null;
+      this.tripBays = t.bays ?? null;
     }
     // Until the new hour's trips arrive, the last hour's keep running on their own epoch.
     return time - this.tripEpoch;
@@ -2117,7 +2134,7 @@ export class NetworkRenderer {
       // the flat map's projection without an array a call (`projector` makes one each)
       const m = cam.globe ? null : mul4(cam.merc, localToMercMatrix(a)), out = this.guardOut;
       const project = m ? (x: number, y: number) => { clipToCss(m, x, y, w, h, out); return out; } : globeProject;
-      changed = this.guard.update({ time, epoch: this.tripEpoch, trips: this.trips, ends: this.tripEnds, nexts: this.tripNexts, project, w, h, close }) || changed;
+      changed = this.guard.update({ time, epoch: this.tripEpoch, trips: this.trips, ends: this.tripEnds, nexts: this.tripNexts, bays: this.tripBays, project, w, h, close }) || changed;
     } else if (this.guard.lag.some((v) => v !== 0)) {
       this.guard.lag.fill(0);
       changed = true;

@@ -496,6 +496,15 @@ pub struct Network {
     /// leave, so lines sharing track or a flat junction do not leave together (`spacing::place`);
     /// shorter than a missing entry is 0. Outside the undo history; saved in `LPH1`.
     pub line_phase: Vec<[f32; 3]>,
+    /// T-2972: by line id, the share of a headway line's spare time (`Service::spare`) its trains
+    /// stand at the end of run 0 (its last stop) per level, the rest at its first: where it stands
+    /// times the reverse departures (`spacing::place`); 0.5 where none is set. Outside the undo
+    /// history; saved in `LSP1`.
+    pub line_split: Vec<[f32; 3]>,
+    /// T-2973: derived, by line id and level: the headway a line set by train count keeps so it runs
+    /// in step with the lines it meets at a merge (`TrackWorld::pace_merges`), s; 0 none. Its trains
+    /// stand the time over at its ends, as a headway line's do. Not saved: every settle works it out.
+    pub line_pace: Vec<[f32; 3]>,
     /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
     /// reload keeps it rather than placing every line
     pub phases_placed: bool,
@@ -653,13 +662,25 @@ impl Network {
         let n = self.line_trains.get(l).copied().flatten().map_or(0.0, |c| c[lev] as f64);
         match self.line_auto.get(l).copied().flatten() {
             Some(a) if a[lev] > 0 && trip_s > 0.0 => n.min(trip_s / a[lev] as f64),
-            _ => n,
+            _ => {
+                // T-2973: a count line in step with others at a merge
+                let p = self.line_pace_of(l as u32)[lev];
+                if p > 0.0 && trip_s > 0.0 { n.min(trip_s / p as f64) } else { n }
+            }
         }
     }
 
     /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
     pub fn line_phase_of(&self, l: u32) -> [f32; 3] {
         self.line_phase.get(l as usize).copied().unwrap_or([0.0; 3])
+    }
+    /// T-2973: the headway a count line keeps to run in step at a merge per level (`line_pace`).
+    pub fn line_pace_of(&self, l: u32) -> [f32; 3] {
+        self.line_pace.get(l as usize).copied().unwrap_or([0.0; 3])
+    }
+    /// T-2972: the share of a line's spare time stood at its last stop per level (`line_split`).
+    pub fn line_split_of(&self, l: u32) -> [f32; 3] {
+        self.line_split.get(l as usize).copied().unwrap_or([0.5; 3])
     }
     /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
     /// stop's. 0 without a time zone table or stops.
@@ -792,6 +813,8 @@ impl Network {
             line_rank: vec![],
             node_rank: vec![],
             line_phase: vec![],
+            line_split: vec![],
+            line_pace: vec![],
             phases_placed: false,
             line_broken: vec![],
             line_free: vec![],

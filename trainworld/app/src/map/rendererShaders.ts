@@ -6,6 +6,7 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
+import { SIDING_LANE, SIDING_LEAD_M, TURNBACK_M } from "./terminalBays";
 import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
@@ -853,6 +854,7 @@ out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
                               // trip's first load in u_loads or -1, else its riders leaving or -1
+in vec4 a_bay;                // where it stands at its ends (T-2980, terminalBays.ts \`assignBays\`)
 ${SEL_GLSL}
 ${POS_GLSL}
 out vec2 v_uv;
@@ -876,11 +878,57 @@ vec4 laneAt(vec4 L, float d) {
   int si = int(L.x + i0);
   return mix(texelFetch(u_lane_tex, tc(si, ${TEX_W}), 0), texelFetch(u_lane_tex, tc(si + (L.y > 1.5 ? 1 : 0), ${TEX_W}), 0), f);
 }
-/** A train's shift across, px: on its own track (T-658), its band (T-1799, T-2132), and onto a passing
- * station's outer track where it stops (T-2233, network.ts \`passingTracks\`). */
-float shiftAt(vec4 lb, float side) {
-  float base = side * u_lane.y * lb.x * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
+/** A train's shift across, px: on its own track (T-658), or \`across\` of the way to it (-1 the other
+ * track, T-2980), its band (T-1799, T-2132), and onto a passing station's outer track where it stops
+ * (T-2233, network.ts \`passingTracks\`). */
+float shiftAt(vec4 lb, float side, float across) {
+  float base = side * across * u_lane.y * lb.x * u_lane.x + lb.y * u_bands + lb.z * u_bands_m;
   return mix(base, side * u_passing.x, u_passing.y * (1.0 - smoothstep(0.0, ${PASS_LEAD_M.toFixed(1)}, lb.w)));
+}
+
+// T-2980, set in main: its run and that run's length, m; m past its last stop into a siding, and
+// whether it is coming back out
+int g_run = 0;
+float g_len = 0.0, g_ex = 0.0, g_out = 0.0;
+
+/** The point \`d\` m along run 0, carried on straight past either end (into a terminal's siding). */
+vec2 lineAtX(vec4 L, float d) {
+  float k = min(20.0, L.z);
+  if (d > L.z && k > 1e-3) { vec2 a = lineAt(L, L.z); return a + (a - lineAt(L, L.z - k)) * (d - L.z) / k; }
+  if (d < 0.0 && k > 1e-3) { vec2 a = lineAt(L, 0.0); return a + (a - lineAt(L, k)) * -d / k; }
+  return lineAt(L, d);
+}
+
+/** T-2980: how far across to its own track the point \`x\` m along run 0 of a train \`trainM\` long is
+ * drawn (1 its own, -1 the other, between on a crossover or a siding's lead): crossing the scissors
+ * into a dead end's other platform or out of it, leaving a through platform over the crossover
+ * behind it, or into a terminal's siding and out to the other platform. */
+float acrossAt(float x, float trainM) {
+  float q = g_run == 0 ? g_len - x : x, r = g_run == 0 ? x : g_len - x;
+  float sc = a_bay.x < 0.0 ? -1.0 : mod(a_bay.x, 4.0), ec = a_bay.z < 0.0 ? -1.0 : mod(a_bay.z, 4.0);
+  if (r < q) {
+    if (sc < 0.5 || sc > 1.5) return 1.0;
+    float p = max(a_bay.y, trainM + 5.0);
+    return mix(-1.0, 1.0, smoothstep(p, p + ${TURNBACK_M.toFixed(1)}, r));
+  }
+  if (ec > 0.5 && ec < 1.5) {
+    float p = max(a_bay.w, trainM + 5.0);
+    return mix(-1.0, 1.0, smoothstep(p, p + ${TURNBACK_M.toFixed(1)}, q));
+  }
+  if (ec > 1.5) {
+    float lane = ec < 2.5 ? ${SIDING_LANE.toFixed(2)} : -${SIDING_LANE.toFixed(2)};
+    return mix(g_out > 0.5 ? -1.0 : 1.0, lane, smoothstep(a_bay.w, a_bay.w + ${SIDING_LEAD_M.toFixed(1)}, -q));
+  }
+  return 1.0;
+}
+
+/** T-2980: a train standing out its turn at a terminal with sidings: 30 s at the platform, 40 s into
+ * a siding, its stand there, 40 s out to the other platform and 30 s there, all shortened together
+ * when the stand is short (s from arriving, the stand's length). Sets g_ex and g_out. */
+void sidingMove(float st, float stand, float trainM) {
+  float k = min(1.0, stand / 140.0), dw = 30.0 * k, mv = 40.0 * k;
+  g_ex = (a_bay.w + ${SIDING_LEAD_M.toFixed(1)} + trainM) * (smoothstep(dw, dw + mv, st) - smoothstep(stand - dw - mv, stand - dw, st));
+  g_out = st > 0.5 * stand ? 1.0 : 0.0;
 }
 
 void main() {
@@ -908,9 +956,26 @@ void main() {
   float totalM = min(cars * carM, L.z);
   float pitchM = totalM / cars;
   float centre = clamp(d, totalM * 0.5, max(totalM * 0.5, L.z - totalM * 0.5));
+  int prof = int(a_trip.x + 0.5);
+  vec4 M = texelFetch(u_meta, tc(prof, ${TEX_W}), 0);
+  g_run = (prof / 3) % 2;
+  g_len = M.w;
+  float tau = u_time - a_trip.y - a_lag;
+  float arrive = M.z;
+  if (a_bay.z >= 0.0 && mod(a_bay.z, 4.0) > 1.5) {
+    // its last stop: the end of its last phase, braking to a stand (its turnaround is stood after it)
+    vec4 lp = texelFetch(u_phases, tc(int(M.x + M.y) - 1, ${TEX_W}), 0);
+    arrive = lp.w < 0.0 ? lp.x + lp.z / -lp.w : lp.x;
+  }
+  if (a_bay.z >= 0.0 && mod(a_bay.z, 4.0) > 1.5 && tau > arrive) {
+    sidingMove(tau - arrive, max(max(a_end, a_trip.y + M.z) - a_trip.y - a_lag - arrive, 0.0), totalM);
+    float ex = g_run == 0 ? g_ex : -g_ex;
+    centre += ex;
+    d += ex;
+  }
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
-  vec2 p = lineAt(L, carD);
+  vec2 p = lineAtX(L, carD);
   // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
@@ -925,7 +990,7 @@ void main() {
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / kM, 1.0);
-  vec2 back = lineAt(L, carD - h), front = lineAt(L, carD + h);
+  vec2 back = lineAtX(L, carD - h), front = lineAtX(L, carD + h);
   vec4 c = project(p);
   vec4 cb = project(back);
   vec4 cf = project(front);
@@ -939,7 +1004,7 @@ void main() {
   // turns with it rather than sliding crabwise
   float side = (int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0;
   vec4 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
-  float shB = shiftAt(lbb, side), shF = shiftAt(lbf, side);
+  float shB = shiftAt(lbb, side, acrossAt(carD - h, totalM)), shF = shiftAt(lbf, side, acrossAt(carD + h, totalM));
   if (shB != shF) {
     bs += nrm * shB;
     fs += nrm * shF;
@@ -951,7 +1016,7 @@ void main() {
       sl = sl2;
     }
     // (the ends back in the frame of the train's own centre, unshifted, for the bend below)
-    float shC0 = shiftAt(lb, side);
+    float shC0 = shiftAt(lb, side, acrossAt(carD, totalM));
     bs -= nrm * shC0;
     fs -= nrm * shC0;
   }
@@ -978,7 +1043,7 @@ void main() {
     k = clamp(k, -0.8 / halfq.y, 0.8 / halfq.y);
   }
   vec2 q = vec2(corner.x * halfq.x * (1.0 + halfq.y * abs(k)), corner.y < 0.0 ? min(0.0, ends) - halfq.y : max(0.0, ends) + halfq.y);
-  float shift = shiftAt(lb, side);
+  float shift = shiftAt(lb, side, acrossAt(carD, totalM));
   c.xy += (sdir * q.x + nrm * (q.y + shift)) / half_vp * c.w;
   gl_Position = c;
   v_uv = q;

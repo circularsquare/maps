@@ -409,7 +409,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (each grouped line's index and group number, then each named group's number and name) [T-1791],
   `LGL1` group bullets set by hand (group number, text, colour + 1 or 0) and `LOR1` the Lines and
   Stations tabs' hand order (line indices, then node indices, first first) [T-1813], `LPH1` the
-  lines' departure phases [T-1925], `BLD1` the station buildings (count, then per building
+  lines' departure phases [T-1925], `LSP1` the share of a headway line's spare time stood at its last
+  stop where not half (count, then per line its index and three f32 bits) [T-2972], `BLD1` the station buildings (count, then per building
   its name, corner count and corners as mm deltas from the previous) [T-2217] and last `LBD1` the
   build day of each constructed station, edge and line in dense order, as deltas (0 is never
   written: 1 is before recording began, otherwise the game day + 2), written only when some day is

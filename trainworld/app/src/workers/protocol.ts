@@ -684,7 +684,7 @@ export type FromClock =
    * takes next (the other run's trip drawn from then), NaN when it leaves service (T-245); `board`, once demand's riders are known: that hour of the boarding account, lined up with
    * `trips` (`TrackApi.boarding_hour`, game/boarding.ts reads it; T-164), the ms it took, the
    * lines worked out again since the last, and the ms spent stepping through them (all, longest) */
-  | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
+  | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; bays?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
   /** T-2159: the network diagram's graph, after a network state while the diagram is shown */
   | { kind: "diagramGraph"; graph: DiagramGraph; ms: number }
