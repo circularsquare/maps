@@ -1,50 +1,35 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d455ee97-22bd-4dd5-a487-a2a4e1449db1, name maps-15 [bf4395], since 2026-11-10 13:48
-Updated: 2026-11-10 14:45
+Updated: 2026-11-10 15:15
 
 ## Now
 
-**LIVE = 2026-11-10c** (built from 33a8ccec; website 4b39208 pushed with Anita's word 14:40; Pages verified 14:48, all PASS). Before
-it: 10b (97c11df7), v0.2 = 2026-11-10. Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b,
-11-09c a few days after; keep 11-10, 10b, 10c.
-**Master = daac649f** (pushed 52fa18bf; push again soon). **8800 = 2cd98bb6** (exact mode, tram/transit words; not smoked).
-Since 10c on master: T-3064, T-3067, T-3068 (tram/bus words, Fleet, "transit"), T-3074 (picker row), T-3023/3024 exact mode.
-Website: Anita's `pages/projects/abouttrainsworld.md` edit is uncommitted and hers. The website push needs her word each
-time (the classifier refuses it otherwise; she said yes for 10c).
-
-**v0.2.1 ON HOLD** (Anita 15:25: "we should not ship exact mode unless it is good. lets hold off until its tested. no need
-to rush it, i think the high speed rail station bug can be circumvented so its ok to leav ein for a bit"). The publish run
-was stopped during smoke8800, before any upload; 8800 = a6c15a52. Publish once T-3079 lands and Anita has tested exact
-mode on 8800 (then rebuild V0_2_1_AT and re-run). Old plan, from a6c15a52: `scratchpad\publish021.cmd` (snapbuild, tsc+i18n in .tw-snap, smoke8800, deploy
-2026-11-10d), log `scratchpad\publish021.log`; then website `git add trainsworld/ trainworld/`, commit, push (Anita said
-yes), `pages_verify.sh <sha> 2026-11-10d`. `V0_2_1_AT` set to 20:45Z.
-**Earlier plan, v0.2.1** (Anita 15:00: "lets push next hotfix as v2.1", read as v0.2.1; R2 version 2026-11-10d): master at
-51fd1c61 (T-3078 fixed) + the notes. Agent notes021 writes the v0.2.1 entry and strings (uncommitted; stage with
-`keep_hunks.py` marker `updates.v021`, since lightload/oomfall have i18n edits in the same files). Needs an `updates.ts` entry "v0.2.1" with notes (strings to Anita), smoke8800 light+dark, deploy, then
-the website push (she has said yes to this one).
-- oomfall (Sonnet, main tree, Vite 6198): T-3072 fall back to fewer workers on out-of-memory + refit memoryCheck estimate.
+**LIVE = 2026-11-10c** (33a8ccec, website 4b39208, verified 14:48). Due: purge R2 prefixes 2026-11-07c and 11-08 from
+2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b, 10c and the next.
+**v0.2.1 PUBLISHING** as R2 version 2026-11-10d from **f5a2b979** on branch `tw/release-021` (worktree `.tw-trees/hotfix`):
+= 2e2adc09 (master before T-3059 landed) + the hide commit (3172bd30 on master). Anita 15:10: "ok actually i think probably
+best to just hide "exact edits" and ship the fixes." So exact mode's toggle is hidden (`EXACT_EDITS = false` in
+LineInspector.tsx) and T-3059 rebuild is left out (landed on master after, untested by her). Run:
+`scratchpad\publish021.cmd` (snapbuild f5a2b979, tsc+i18n in .tw-snap, smoke8800 light+dark, deploy --version 2026-11-10d),
+log `scratchpad\publish021.log`. Then website `git add trainsworld/ trainworld/`, commit "anitabuilder", push (Anita said
+yes to this hotfix), `sh <c4 scratch>/pages_verify.sh <sha> 2026-11-10d`. Then snapbuild master again for 8800.
+`.tw-trees/hotfix` and branches tw/hotfix-10d (ed09d682, abandoned) and tw/release-021 can go after the publish.
+**Master = 3172bd30 + T-3059 archive** (pushed 52fa18bf; push soon). 8800 will be the release build until rebuilt.
+Anita's player report "All my high speed lines turned in tram lines": app-side only (state edge kind 1 read as tram: drawn
+as tram track, track panel "Tram track", 4-car stations, tram upkeep figure in the app); the sim and saves were never
+changed. Fixed by T-3078, in v0.2.1.
 
 **Running:**
-- hsrplat (Sonnet, id a571dac7d31b93d0b, main tree, Vite 6196): T-3078 [P1] stations over 4 cars refused on HSR. Lead:
-  `tools.ts` `tramEdgeSet` filters `e.kind` truthy, HSR is TrackKind 1. Anita's rule: accept or refuse by the track kind
-  at the spot, not the tool setting.
-- lightload (Sonnet, id ac88d88c5e02c9f62, main tree, Vite 6197): T-3073 "Load without inter-city trips" at the memory
-  warning (Anita approved).
-- rebuild READY TO LAND (tree `.tw-trees/rebuild`, on daac649f, uncommitted, all checks pass, T-3051 hint counting in).
-  Land blocks while lightload/oomfall have i18n files dirty in the main tree: land right after they're committed.
-- manualstop resumed (id a12d21a5d48b357d5, tree `.tw-trees/exact2` from a6c15a52, Vite 6171): T-3079 [P1] exact mode
-  fixes from Anita's 8800 try ("Exact edits", toggle back, every visit a row, 1a turning round line 1's loop, strip crossing).
-  T-3080 (numbers on map stations + drag) after. Tram long length: Anita OK with today's behaviour (tram length used).
+- manualstop (id a12d21a5d48b357d5, tree `.tw-trees/exact2` from a6c15a52, Vite 6171): T-3079 [P1] exact mode fixes.
+  Land it, flip `EXACT_EDITS` to true on 8800 for Anita to test; ship only once she's happy. T-3080 (map numbers + drag) after.
 
-**Open with Anita now:** a standalone (desktop) version "for performance": answered 15:00 that a plain wrapper gains
-little; only worth it with shared memory between workers or native threads (weeks). She decides whether to scope it.
-
-**Queued:** T-3070 non-home-based trips design agent once this round is done (Anita: "can wait then start a design
-agent"). T-3063 bus loops partway along a route (manualstop landed; can start). T-3033 split zones rebuild + T-3077
-precomputed inter-city figure (one data batch). T-3060 rebuild preview after T-3059. T-3069 trams on real rail + street-snap
-icon. P3s: T-3042, T-3036, T-3027, T-3002/T-3003, T-3019, T-3011.
-Next free id **T-3079**.
+**Queued:** T-3070 non-home-based trips design agent (Anita: "can wait then start a design agent"); T-3063 bus loops partway
+(can start); T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch); T-3060 rebuild preview;
+T-3069 trams on real rail + street-snap icon. P3s: T-3042, T-3036, T-3027, T-3002/T-3003, T-3019, T-3011.
+Open with Anita: standalone version (answered: wrapper alone gains little); lightload's question whether "Load without
+inter-city trips" should clear when the start menu opens (today it lasts the tab).
+Next free id **T-3081** (T-3081/3082 reserved for manualstop).
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
