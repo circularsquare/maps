@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { loadBasemap } from "./basemap";
 import { styleUp } from "./styleReady";
-import { cityById, cityWithin, hashView } from "../game/cities";
+import { cityById, cityWithin, hashView, rememberView } from "../game/cities";
 import { display, tool } from "../game/ui";
 import { watchGraphics } from "../game/loading";
 import { effect } from "@preact/signals";
@@ -16,14 +16,16 @@ import { cappedPixelRatio } from "../workers/deviceMemory";
 
 maplibregl.setWorkerUrl(workerUrl);
 
-/** T-310: a reload does not restore the exact view in the URL hash. If the hash holds a view, the
- * map starts at the registry centre and zoom of the city or zone it is in; with no hash (a new
- * game, a first visit) it starts at the default. A hash over dead space (T-318) is kept as it is.
- * The hash is cleared so MapLibre writes the new one. */
+/** T-310, T-3044: a reload does not restore the exact view. If there is a remembered view (or an old
+ * link's hash), the map starts at the registry centre and zoom of the city or zone it is in; with
+ * none (a first visit) it starts at the default. A view over dead space (T-318) is kept as it is.
+ * An incoming hash is removed from the address bar; the view is kept in sessionStorage instead. */
 function startView(): { center: [number, number]; zoom: number } {
   const v = hashView();
+  if (location.hash) {
+    try { history.replaceState(history.state, "", location.pathname + location.search); } catch { /* the hash stays */ }
+  }
   if (!v) return { center: [-73.96, 40.75], zoom: 11.2 };
-  try { history.replaceState(null, "", location.pathname + location.search); } catch { /* the hash stays; MapLibre then restores it */ }
   const id = cityWithin(v.lng, v.lat);
   if (!id) return { center: [v.lng, v.lat], zoom: v.zoom };
   const c = cityById(id);
@@ -34,7 +36,6 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
     ...startView(),
-    hash: true,
     // T-924: GISCO's terms want the EuroGeographics notice on the map itself (European zone units)
     attributionControl: {
       compact: true,
@@ -63,6 +64,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
   });
   followProjection(map);
+  map.on("moveend", () => { const c = map.getCenter(); rememberView(c.lng, c.lat, map.getZoom()); });
   return map;
 }
 

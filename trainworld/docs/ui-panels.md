@@ -1009,8 +1009,10 @@ start city's registry centre and zoom, or on the world map (centre 20° E 30° N
 Americas, Europe and East Asia) with no start city; a start from the player's location is centred on
 it (below). Opening the page shows the start menu (below), with "build 786" muted at its bottom left: the
 commit count of the build (`__TW_VERSION__`, vite.config.ts), "dev" on a dev server.
-For a loaded game the URL's view says only which city or zone; the map starts at that city's
-registry centre and zoom, or over New York with none [T-310].
+The address bar never carries the map position. The tab remembers its last view (sessionStorage), and
+a reload starts the map at the registry centre and zoom of the city or zone that view is in, or over
+New York with none. An incoming link with a `#zoom/lat/lng` hash starts the same way and the hash is
+then removed from the address bar; other URL parameters are untouched [T-310, T-3044].
 
 **The new game sheet** [T-728, T-731; `ui/NewGame.tsx`], the start menu's and the saves panel's:
 - **Mode**: Normal (lit to begin with) or Sandbox, two buttons, each with a hover saying what it

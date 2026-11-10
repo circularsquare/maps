@@ -321,11 +321,20 @@ export function zonesTouching(w: number, s: number, e: number, n: number, margin
   return out;
 }
 
-/** The view in the URL hash (`#zoom/lat/lng`), before MapLibre reads it. */
+const VIEW_KEY = "tw-view";
+
+/** The view a page starts from: an incoming link's hash (`#zoom/lat/lng`, an old shared link), else the
+ * last view of this tab. sessionStorage, so a reload returns to the same city and a new tab starts at
+ * the default as a first visit does. The address bar never carries it (T-3044). */
 export function hashView(): { lng: number; lat: number; zoom: number } | null {
-  const m = /^#(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)/.exec(location.hash);
+  let m = /^#(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)/.exec(location.hash);
+  if (!m) { try { m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(sessionStorage.getItem(VIEW_KEY) ?? ""); } catch { /* no storage */ } }
   const zoom = m ? Number(m[1]) : NaN, lat = m ? Number(m[2]) : NaN, lng = m ? Number(m[3]) : NaN;
   return Number.isFinite(zoom) && Number.isFinite(lat) && Number.isFinite(lng) ? { lng, lat, zoom } : null;
+}
+
+export function rememberView(lng: number, lat: number, zoom: number) {
+  try { sessionStorage.setItem(VIEW_KEY, `${zoom.toFixed(2)}/${lat.toFixed(5)}/${lng.toFixed(5)}`); } catch { /* no storage */ }
 }
 
 /** T-318: the zone the view is in or within reach of; null over dead space. It decides the top bar's
