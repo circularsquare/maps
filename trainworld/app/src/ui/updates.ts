@@ -19,7 +19,7 @@ export interface Update {
 const V0_1_AT = "2026-11-09T15:00:00Z";
 
 /** When v0.2 went out: the orchestrator sets this at publish (placeholder, 2026-11-10 in the evening). */
-const V0_2_AT = "2026-11-10T20:00:00Z";
+const V0_2_AT = "2026-11-10T17:30:00Z";
 
 export const UPDATES: Update[] = [
   {
@@ -35,8 +35,14 @@ export const UPDATES: Update[] = [
       "updates.v02Limit",
       "updates.v02BusFare",
       "updates.v02Places",
+      "updates.v02Languages",
       "updates.v02Hidden",
       "updates.v02ColorBlind",
+      "updates.v02BusManual",
+      "updates.v02Crowding",
+      "updates.v02Purpose",
+      "updates.v02StopOrder",
+      "updates.v02Terrain",
       "updates.v02Fixes",
     ],
   },
