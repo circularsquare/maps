@@ -6,13 +6,16 @@
 // red, and the line cannot be made until it is moved. With an existing line's ports loaded
 // (`begin(line, ...)`) finishing redraws it (`ferryRoute`), else it makes the line (`addFerryLine`).
 //
-// The bus tool's handling where it fits (busDraw.ts): new ports go on at the active end (a click on the
-// other end switches), a right click on a port takes it out, a click on the active end, a double click,
-// Enter, Escape or the Make line button finishes a new line, Escape drops an edit as a whole. A
-// finger's tap places at once (a port is a place, not a point to adjust). No dragging: a port is moved
-// by taking it out and placing another. A click on the other end, with three ports or more, closes the line
-// into a loop and finishes it (T-2899): its last port is then the first again. A closed line has no active
-// end; a right click on its first port opens it again.
+// The bus tool's handling where it fits (busDraw.ts, T-3118): new ports go on at the active end, a click on a port
+// takes it out, a click on the active end, a double click, Enter, Escape or the Make line button finishes a new line,
+// Escape drops an edit as a whole. A finger's tap places at once (a port is a place, not a point to adjust); the
+// Loop button makes the next tap a right click (`loopTap`). No dragging: a port is moved by taking it out and placing
+// another. A right click loops: on the other end, with three ports or more, it closes the line into a loop and
+// finishes it (T-2899): its last port is then the first again; on a port partway along it joins the active end back
+// to it and finishes, the boats running out, round and back: sent as the ports out, round and back again
+// (`runPorts`), folded back here (`begin`). A looped line has no active end; a right click on any port of a loop
+// opens it there (the leg leaving the port goes), on any port of a line that loops back it stops looping, and on the
+// active end it takes that port out.
 //
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
@@ -24,7 +27,7 @@ import { lngLatToPack } from "../game/coords";
 import { distance, moneyShort } from "../game/format";
 import { newFerryLine, nextFreeColour } from "../game/lineActions";
 import { moneyState } from "../game/money";
-import { ask, renameLinePrompt, selection, tool } from "../game/ui";
+import { ask, loopTap, renameLinePrompt, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import { metresBetween } from "../game/walks";
 import { keyIsTheirs } from "../ui/keys";
@@ -113,7 +116,7 @@ export class FerryDraw {
       e.originalEvent.preventDefault();
       if (touchInput.peek()) return;
       const i = this.handleAt(e.point.x, e.point.y);
-      if (i >= 0) this.remove(i);
+      if (i >= 0) this.rightClick(i);
       else this.back();
     });
     // O (FERRY_KEY): a new ferry line, from any tab, before main.ts's key handler
@@ -148,6 +151,13 @@ export class FerryDraw {
       }
       // the saved route stands until a port changes (routes are never searched again on their own)
       this.route = { ok: true, ll: st.routeLL, kinds: st.kinds, speeds: st.ferry.speeds, m: st.roadM, legs: [] };
+      // T-3118: a line that loops back is drawn with its way out once, its last port the one the loop comes back to
+      const last = this.ports.length - 1, ps = this.ports;
+      if (last >= 4 && ps[0].node === ps[last].node) {
+        let k = 0;
+        while (2 * (k + 1) < last && ps[k + 1].node === ps[last - k - 1].node) k++;
+        if (k >= 1 && last - 2 * k >= 3) this.ports = ps.slice(0, last - k).concat([ps[k]]);
+      }
       this.routeKey = this.berthKey();
     }
     this.head = false;
@@ -174,7 +184,13 @@ export class FerryDraw {
   }
 
   private berthKey() {
-    return this.ports.map((p) => `${p.berth.lng},${p.berth.lat}`).join("|");
+    return this.runPorts().map((p) => `${p.berth.lng},${p.berth.lat}`).join("|");
+  }
+
+  /** T-3118: the ports the boats call at in order: a line that loops back runs its way out again backward. */
+  private runPorts(): DraftPort[] {
+    const k = this.joinAt();
+    return k < 0 ? this.ports : this.ports.concat(this.ports.slice(0, k).reverse());
   }
 
   /** The ports changed (`edited`: by the player): the route is searched again. */
@@ -182,7 +198,7 @@ export class FerryDraw {
     if (edited) this.dirty = true;
     if (this.ports.length < 2) this.head = false;
     const d = ferryDraft.peek();
-    const points = this.ports.length - (this.closed() ? 1 : 0);
+    const points = this.ports.length - (this.looped() ? 1 : 0);
     if (!d || d.line !== this.line || d.points !== points) ferryDraft.value = { line: this.line, points };
     this.reroute();
     this.place();
@@ -196,7 +212,7 @@ export class FerryDraw {
       this.routeKey = key;
       return;
     }
-    const pts = this.ports.map((p) => ({ at: [p.berth.lng, p.berth.lat] as [number, number], kind: 1 as const }));
+    const pts = this.runPorts().map((p) => ({ at: [p.berth.lng, p.berth.lat] as [number, number], kind: 1 as const }));
     const run = this.water.line(pts, "draft").then((r) => {
       if (!r || key !== this.berthKey()) return;
       this.route = r.route;
@@ -215,8 +231,20 @@ export class FerryDraw {
 
   /** The line is a loop: its last port is its first (T-2899). */
   private closed(): boolean {
-    const n = this.ports.length, a = this.ports[0], b = this.ports[n - 1];
-    return n >= 4 && (a === b || (a.node !== null && a.node === b.node));
+    const n = this.ports.length;
+    return n >= 4 && samePort(this.ports[0], this.ports[n - 1]);
+  }
+
+  /** T-3118: the line loops back: its last port is its port `k` partway along, three legs or more past it; -1 for none. */
+  private joinAt(): number {
+    const n = this.ports.length, z = this.ports[n - 1];
+    for (let k = 1; k <= n - 4; k++) if (samePort(this.ports[k], z)) return k;
+    return -1;
+  }
+
+  /** a loop, or a line that loops back: no end to add ports at */
+  private looped(): boolean {
+    return this.closed() || this.joinAt() >= 0;
   }
 
   /** The placed port whose circle is under a screen point, -1 for none; the active end first. */
@@ -327,7 +355,7 @@ export class FerryDraw {
   private async press(px: number, py: number, at: Pt, touch = false) {
     const u = this.underAt(px, py, at, touch);
     if (u.kind === "handle") return this.handleClick(u.i);
-    if (this.closed()) return void say(t("ferryDraw.loopClosed"), true);
+    if (this.looped()) return void say(t("ferryDraw.loopClosed"), true);
     if (u.kind === "port") {
       if (this.ports.some((p) => p.node === u.node)) return;
       return this.add({ node: u.node, landing: u.landing, berth: u.berth, name: u.name });
@@ -354,18 +382,73 @@ export class FerryDraw {
     }
   }
 
-  /** A click on a placed port: the active end finishes; the other end closes the loop, or with two ports
-   * becomes the active one. */
+  /** A click on a placed port (T-3118): the active end, or where a loop closes, finishes; any other port goes. With
+   * the touch Loop button on, a right click's work instead. */
   private handleClick(i: number) {
     const n = this.ports.length;
     if (n < 2) return;
-    if (this.closed() && (i === 0 || i === n - 1)) return void this.finish();
-    if (i === this.endIndex()) return void this.finish();
-    if (i === 0 || i === n - 1) {
-      if (n >= 3) return this.closeLoop();
-      this.head = i === 0;
-      this.changed();
+    if (loopTap.peek()) {
+      loopTap.value = false;
+      return this.rightClick(i);
     }
+    if (this.isSeam(i) || (!this.looped() && i === this.endIndex())) return void this.finish();
+    this.remove(i);
+  }
+
+  /** where a looped line closes: its last port and, for one that loops back, that port partway along */
+  private isSeam(i: number): boolean {
+    const n = this.ports.length;
+    if (this.closed()) return i === 0 || i === n - 1;
+    const k = this.joinAt();
+    return k >= 0 && (i === k || i === n - 1);
+  }
+
+  /** What a right click on port `i` does (T-3118), null for nothing; as the bus tool's. */
+  private rightAction(i: number): "open" | "stop" | "delete" | "close" | "loopBack" | null {
+    const n = this.ports.length;
+    if (n < 2) return null;
+    if (this.closed()) return "open";
+    if (this.looped()) return "stop";
+    const end = this.endIndex();
+    if (i === end) return "delete";
+    if (i === 0 || i === n - 1) return n >= 3 ? "close" : null;
+    return Math.abs(end - i) >= 2 ? "loopBack" : null;
+  }
+
+  private rightClick(i: number) {
+    const a = this.rightAction(i);
+    if (a === "open") this.openAt(i);
+    else if (a === "stop") this.remove(this.ports.length - 1);
+    else if (a === "delete") this.remove(i);
+    else if (a === "close") this.closeLoop();
+    else if (a === "loopBack") this.loopBack(i);
+  }
+
+  /** T-3118: a loop opened at port `i`: the leg leaving it goes, so the line runs on round from the next port and
+   * ends there, its active end. */
+  private openAt(i: number) {
+    if (this.busy || !this.closed()) return;
+    const m = this.ports.length - 1, c = this.ports.slice(0, m);
+    this.ports = Array.from({ length: m }, (_, j) => c[((i % m) + 1 + j) % m]);
+    this.head = false;
+    playBuild("pop");
+    this.reunder();
+    this.changed(true);
+  }
+
+  /** T-3118: join the active end back to port `i` and make the line: the boats run out, round and back. */
+  private loopBack(i: number) {
+    if (this.busy) return;
+    if (this.head) {
+      this.ports.reverse();
+      i = this.ports.length - 1 - i;
+      this.head = false;
+    }
+    playBuild("station");
+    this.ports.push(this.ports[i]);
+    this.reunder();
+    this.changed(true);
+    void this.finish();
   }
 
   /** Add the first port again at the end and make the line (T-2899). */
@@ -388,12 +471,13 @@ export class FerryDraw {
   private remove(i: number) {
     if (this.busy || i < 0 || i >= this.ports.length) return;
     playBuild("pop");
-    // a loop's first port is also its last: taking it out opens the loop; a ring of three is no loop without one
-    const wasClosed = this.closed();
-    if (wasClosed && (i === 0 || i === this.ports.length - 1)) this.ports.pop();
+    // where a loop closes its port is there twice: taking it out opens the loop; a ring of three, or a loop of three
+    // past where a line loops back, is no loop without one
+    const wasClosed = this.closed(), wasLooped = this.looped();
+    if (this.isSeam(i)) this.ports.pop();
     else {
       this.ports.splice(i, 1);
-      if (wasClosed && this.ports.length <= 3) this.ports.pop();
+      if ((wasClosed && this.ports.length <= 3) || (wasLooped && !this.looped())) this.ports.pop();
     }
     this.reunder();
     this.changed(true);
@@ -482,7 +566,7 @@ export class FerryDraw {
     if (!r || this.routeKey !== this.berthKey()) return null;
     const k = r.legs.findIndex((l) => l.reason);
     if (k < 0) return null;
-    const a = this.ports[k]?.name, b = this.ports[k + 1]?.name;
+    const run = this.runPorts(), a = run[k]?.name, b = run[k + 1]?.name;
     return a && b ? t("ferryDraw.pathBetween", { a, b }) : t("ferryDraw.sayPath");
   }
 
@@ -499,6 +583,7 @@ export class FerryDraw {
     try {
       while (this.routing) await this.routing;
       await Promise.all(this.ports.map((p) => p.naming));
+      const run = this.runPorts();
       if (tool.peek() !== "ferry") return;
       const r = this.route;
       if (!r || this.routeKey !== this.berthKey()) return;
@@ -508,10 +593,10 @@ export class FerryDraw {
         return;
       }
       const route = routeArray(r);
-      const ports: FerryPortIn[] = this.ports.map((p, i) => {
+      const ports: FerryPortIn[] = run.map((p, i) => {
         if (p.node !== null) return { node: p.node };
-        // a new port closing a loop is the one placed first
-        if (this.ports.indexOf(p) < i) return { again: this.ports.indexOf(p) };
+        // a new port closing a loop, or called at again, is the one placed first
+        if (run.indexOf(p) < i) return { again: run.indexOf(p) };
         const a = lngLatToPack(p.landing.lng, p.landing.lat), b = lngLatToPack(p.berth.lng, p.berth.lat);
         return { x: a.x, y: a.y, bx: b.x, by: b.y, name: p.name };
       });
@@ -639,10 +724,11 @@ export class FerryDraw {
     const u = this.under, rows: HTMLElement[] = [];
     let bad = false;
     if (u.kind === "handle") {
-      const ends = this.ports.length >= 2 && (u.i === 0 || u.i === this.ports.length - 1);
-      const loop = ends && this.closed();
-      if (ends) rows.push(row(loop || u.i === this.endIndex() ? (this.line === null ? t("ferryDraw.clickMake") : t("ferryDraw.clickSave")) : this.ports.length >= 3 ? t("ferryDraw.clickClose") : t("ferryDraw.clickFrom")));
-      rows.push(row(loop ? t("ferryDraw.rightOpen") : t("ferryDraw.rightDelete")));
+      const finishes = this.ports.length >= 2 && (this.isSeam(u.i) || (!this.looped() && u.i === this.endIndex()));
+      if (this.ports.length >= 2) rows.push(row(finishes ? t(this.line === null ? "ferryDraw.clickMake" : "ferryDraw.clickSave") : t("ferryDraw.clickDelete")));
+      const right = { open: "ferryDraw.rightOpen", stop: "ferryDraw.rightStopLooping", delete: "ferryDraw.rightDelete", close: "ferryDraw.rightClose", loopBack: "ferryDraw.rightLoopBack" } as const;
+      const a = this.rightAction(u.i);
+      if (a) rows.push(row(t(right[a])));
     } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : t("ferryDraw.stopAt", { name: u.name })));
     else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
     else if (u.kind === "water") (rows.push(row(onWater(), true)), (bad = true));
@@ -652,7 +738,7 @@ export class FerryDraw {
       else if (r) {
         const p = this.price();
         rows.push(row(`${distance(r.m)}, ${moneyShort(p.cost * 1e6)}${this.built ? " more" : ""}`));
-        rows.push(row(t("ferryDraw.ports", { count: this.ports.length - (this.closed() ? 1 : 0) })));
+        rows.push(row(t("ferryDraw.ports", { count: this.ports.length - (this.looped() ? 1 : 0) })));
       }
     }
     if (!rows.length) {
@@ -666,4 +752,9 @@ export class FerryDraw {
     const s = this.map.project([at.lng, at.lat]);
     tag.style.transform = `translate(${Math.round(s.x + 14)}px, ${Math.round(s.y + 12)}px)`;
   }
+}
+
+/** Two draft ports are one port: the same placed port, or the network's same port. */
+function samePort(a: DraftPort, b: DraftPort): boolean {
+  return a === b || (a.node !== null && a.node === b.node);
 }

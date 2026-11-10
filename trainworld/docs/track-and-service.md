@@ -363,13 +363,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   the other direction's track at the same level: cheaper, trains may wait for each other).
 - **Flyovers** (T-3092, `wasm/flyover.rs`): with the ramp switch on, a double-track regular route
   that makes a new junction J1 on double rail track (a split, or a plain two-end node) lays it as
-  a flying junction of real track. The route's first stretch, J1 to **J3** (a new node on the route,
-  the first point 300 m or more out whose tangent back toward J1 meets the main at least 270 m away),
+  a flying junction of real track. The route's first stretch, J1 to **J3** (a new node on the route),
   is one-way single track for the direction that crosses nothing; the route stays double past J3.
-  The other direction gets a **crossing leg**, one-way single track from J3 straight on along that
-  tangent, over the main (the route's own ramp pass: a level up, or down from -1; the leads where it
+  The other direction gets a **crossing leg**, one-way single track from J3: 40 m along the route's
+  tangent back toward J1, easing 12 m toward the main by 160 m out (so the two legs part and never run
+  together, T-3117), then straight on parallel to that tangent, over the main (the route's own ramp pass: a level up, or down from -1; the leads where it
   leaves J3 and joins J2 are no crossing), 270 m beyond it, then back in to **J2**, a new split on
-  the main behind it at a slope of 1 in 4 across over along, with an 80 m lead along the main. Which
+  the main behind it at a slope of 1 in 4 across over along, with an 80 m lead along the main. J3 is
+  the first point 300 m or more out from which that straight meets the main at least 270 m on. Which
   direction crosses comes from the running side: the move toward the branch crosses when the branch
   leaves on the side away from it. At J1, J2 and J3 every move then merges or diverges, so no
   crossing resource is made, and each direction routes over its own leg (one-way track, below). The

@@ -381,19 +381,24 @@ lighter; at most 16 of each.
   adds a copy of the first point at the end, and makes the line or saves the route as a click on the active end does;
   the tag over that point says "Right click to close the loop". A road that does not reach is refused as a click's
   is. A closed route has no active end and no leg follows the pointer: a click on empty ground says "The loop is
-  closed. Right click the point where it closes to open it."; a click on the first point (also the last) finishes;
-  dragging it moves both and searches the legs into and out of it; a right click on it, deleting it, or Backspace
-  takes the closing point off and opens the route, and its tag says "Right click to open the loop". Taking out a
-  point of a ring of three leaves an open route of two. The tag's stop count leaves the closing stop out. A closed
+  closed. Right click any point to open it."; a click on the first point (also the last) finishes; dragging it moves
+  both and searches the legs into and out of it; deleting it or Backspace takes the closing point off and opens the
+  route. A right click on any point opens the loop there (T-3118; tag "Right click to open the loop"): the leg leaving
+  that point goes, so the route runs on round from the next point and ends at the one clicked, its active end.
+  Taking out a point of a ring of three leaves an open route of two. The tag's stop count leaves the closing stop out. A closed
   route is a loop line (track-and-service.md 6.7); Edit route on one reopens it closed.
 - **Loop back** (T-3109, T-3063): a right click on a point partway along, two points or more from the active end,
   joins the active end back to it by road and makes the line or saves the route ("Right click to loop back here"):
   the bus runs out, round the loop one way and back the way it came. The route is sent as a loop whose last legs are
   its first ones run backward (`bus::loop_back_at`, track-and-service.md 6.7); Edit route folds it back to the way
   out and the loop, its last point a copy of the one it joins. The joining point acts as a closed route's first
-  point: a click finishes, a drag moves both copies, and a right click ("Right click to stop looping back here"),
-  deleting it, or Backspace takes the closing leg off. Taking out a point that leaves the loop under three legs
-  opens it too.
+  point: a click finishes, a drag moves both copies, and deleting it or Backspace takes the closing leg off. A right
+  click on any point of it stops it looping back ("Right click to stop looping back", T-3118): the closing leg goes.
+  Taking out a point that leaves the loop under three legs opens it too.
+- **The Loop button** (T-3118): on touch the bar at the map's bottom left has a Loop button once the route has two
+  points (also while a train or tram line's stops are edited, and in the ferry tool). Pressed, the hint says "Tap a
+  point to loop there" ("stop", "port") and the next tap on a point does a right click's work, then it goes off; it
+  also goes off when the tool changes. Holding a finger still works.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
@@ -461,17 +466,22 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   searched, red and straight where no water joins two ports. The tag gives the route's length and the
   price of the ports not yet constructed (US$10M each; the route is free), and how many ports; a leg
   with no route says "No water path found", and the line cannot be made until a port is taken out.
-- **Ports as handles**: new ports join at the active end; with two ports a click on the other end makes
-  it the active one; a right click on a port or Backspace takes one out. No dragging: a port is moved by
-  taking it out and placing another.
-- **Loop** (T-2899): with three ports or more, a click on the first port (the tail active) or the last
-  (the head active) puts the first port again at the end and makes the line, as for a bus line; the tag
-  says "Click to close the loop". A new port closing the loop is sent as `again`, the one placed first
-  (`FerryPortIn`), so it is added once. A closed line takes no new port (a click says "The loop is
-  closed. Right click its first port to open it."), a click on the first port finishes, and a right click
-  on it or Backspace takes the closing port off ("Right click to open the loop"), and taking out a port
-  of a ring of three leaves an open line of two. The tag's port count and the price count the first port
-  once. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
+- **Ports as handles** (T-3118, the bus tool's gestures): new ports join at the active end; a click on a port takes
+  it out ("Click to delete"; on the active end, or where a loop closes, a click finishes); a right click on the active
+  end or Backspace takes that one out. No dragging: a port is moved by taking it out and placing another.
+- **Loop** (T-2899): with three ports or more, a right click on the other end puts the first port again at the end
+  and makes the line, as for a bus line; the tag says "Right click to close the loop". A new port closing the loop is
+  sent as `again`, the one placed first (`FerryPortIn`), so it is added once. A closed line takes no new port (a click
+  says "The loop is closed. Right click any port to open it."), a click on the first port finishes, and deleting it or
+  Backspace takes the closing port off; a right click on any port opens the loop there, the leg leaving it going so
+  the line ends at that port ("Right click to open the loop"); taking out a port of a ring of three leaves an open
+  line of two. The tag's port count and the price count the first port once.
+- **Loop back** (T-3118): a right click on a port partway along, two ports or more from the active end, joins the
+  active end back to it and makes the line ("Right click to loop back here"): the boats run out, round the loop and
+  back. The ports are sent out, round and back again (`[A, B, C, D, B, A]`, a loop calling at the way out's ports
+  twice; the sim takes it as any loop), and Edit route folds them back to `[A, B, C, D, B]`. A right click on any
+  port of it stops it looping back ("Right click to stop looping back"). The touch Loop button works here as in the
+  bus tool. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
   opens it, and one of a ring of three leaves a line of two.
 - **Finishing** as the bus tool: a click on the active end, a double click, Enter, or Make line (Save
   route) in the tool's bar; fewer than two ports is refused, and so is a leg with no route ("No water
@@ -901,7 +911,8 @@ running line's trains stop at then wins over one they do; then the nearest.
   A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
   or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
   says "Can't loop back here" for four seconds. The strip at the bottom says "Click a circle to add or remove a
-  stop. Right click one to loop back there." ("Tap ... Hold one to loop back there." by touch).
+  stop. Right click one to loop back there." ("Tap ... Hold one to loop back there." by touch). On touch it also has
+  a Loop button (T-3118; "Loop back" in the bus tool above): pressed, the next tap on a marker is a right click.
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to add a
   stop. Trains reverse at <station>" (`stop_tiers` gives tier 4 with the station; "at the end of
   the track" for a bare track end), "Click to remove
@@ -920,8 +931,11 @@ running line's trains stop at then wins over one they do; then the nearest.
 - **Loops** (T-798): the first stop's marker says "Right click to close the loop" (tier 5, under "Click
   to remove the stop") while the line has two or more stops and track leads round from the last stop back to it
   without the train going back the way it came or back over the line's own track (a ring, a circle; T-3021); the
-  right click appends the first stop (`setStops`). On a loop it says "Right click to open the loop" (tier 6) and the
-  right click opens it (`openLoop`: a circle's closing stop off, a turned line's way back). The closing stop's cross
+  right click appends the first stop (`setStops`). On a loop every stop says "Right click to open the loop" (the
+  first stop's tier 6, and any stop of it with no other loop offer, T-3118) and the right click opens it there: a
+  circle that calls at each station once ends at the stop clicked (the stretch leaving it goes, `setStops` with the
+  stops rotated: `[A, B, C, D, A]` opened at C is `[D, A, B, C]`); any other loop, a turned line, loses its way
+  back (`openLoop`). The closing stop's cross
   in the stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
   closing one (`best_insert`); on a turned line's stem, on both passes.
 - **Loops at an end** (T-3021; track-and-service.md 6.3 "Turning round a loop at an end"): the stop

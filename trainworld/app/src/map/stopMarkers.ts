@@ -18,7 +18,7 @@ import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
-import { lineDraft, newLine, stopEditing } from "../game/ui";
+import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { turnedLine } from "../game/turnedLine";
 import { queryClock } from "../workers/clockClient";
@@ -395,7 +395,7 @@ export class StopMarkers {
   private words(id: string): string[] {
     const name = this.names.get(id) ?? t("stopMarkers.station");
     switch (this.tierOf(id)) {
-      case "on": return [name, t("stopMarkers.remove")];
+      case "on": return [name, t("stopMarkers.remove"), ...(this.closedLine() ? [t("stopMarkers.rightOpen")] : [])];
       case "close": return [name, t("stopMarkers.remove"), t("stopMarkers.rightClose")];
       case "open": return [name, t("stopMarkers.remove"), t("stopMarkers.rightOpen")];
       case "turn": return [name, t("stopMarkers.remove"), t("stopMarkers.rightLoopBack")];
@@ -438,6 +438,11 @@ export class StopMarkers {
   /** A click on the marker of station `id`: the stop added or taken out. */
   activate(id: string, px: number, py: number) {
     if (this.swallow) return void (this.swallow = false);
+    // T-3118: the touch Loop button was on
+    if (loopTap.peek()) {
+      loopTap.value = false;
+      return this.loopAt(id, px, py);
+    }
     if (this.tierOf(id) === "cut") {
       const name = this.names.get(id) ?? t("stopMarkers.thatStation");
       this.hideTag();
@@ -457,9 +462,17 @@ export class StopMarkers {
     const tier = this.tierOf(id);
     this.hideTag();
     if (LOOP_TIERS.has(tier)) return this.loop(Number(id), tier);
+    // T-3118: any stop of a loop opens it there
+    if (tier === "on" && this.closedLine()) return this.loop(Number(id), "open");
     this.reasonFor = id;
     this.showTag([this.names.get(id) ?? t("stopMarkers.station"), t("stopMarkers.noLoop")], px, py, true);
     this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
+  }
+
+  /** the line being edited is a loop: its last stop is its first */
+  private closedLine(): boolean {
+    const s = this.line?.stops ?? [];
+    return s.length >= 3 && s[0] === s[s.length - 1];
   }
 
   private pressDown(e: PointerEvent) {

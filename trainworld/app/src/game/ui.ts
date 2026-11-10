@@ -282,6 +282,10 @@ export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand
  * views, dims the other lines and puts a toggle marker on every station (map/stopMarkers.ts). */
 export const stopEditing = computed(() => tool.value === "line" && lineDraft.value.line !== null);
+/** T-3118: the touch Loop button is on: the next tap on a stop, a route point or a port does a right click's work
+ * (close, loop back or open a loop there), then it goes off. Off whenever the tool changes. */
+export const loopTap = signal(false);
+effect(() => { tool.value; lineDraft.value.line; loopTap.value = false; });
 /** T-1899: the line whose first stops are being picked, from New line until its stop editing ends,
  * and the train type the stops last gave it: its clicks pick high-speed or ordinary trains by the
  * track and prefer stations no trains stop at. Null once the player sets the type by hand. */

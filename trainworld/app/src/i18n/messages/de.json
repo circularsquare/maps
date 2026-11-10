@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Abbrechen",
   "ferryDraw.changeFailed": "Die Route ließ sich nicht ändern. Probier andere Häfen.",
   "ferryDraw.changed": "Route geändert: {distance}.",
-  "ferryDraw.clickClose": "Schleife schließen",
-  "ferryDraw.clickFrom": "Klicke, um von diesem Ende zu zeichnen",
   "ferryDraw.clickMake": "Klicke, um die Linie zu erstellen",
   "ferryDraw.clickSave": "Klicke, um die Route zu speichern",
   "ferryDraw.loopClosed": "Die Schleife ist geschlossen. Rechtsklick auf den ersten Hafen öffnet sie.",

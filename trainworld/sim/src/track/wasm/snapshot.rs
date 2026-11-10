@@ -187,6 +187,16 @@ impl TrackApi {
             vec![]
         }
     }
+    /// T-3117: the path of the line's return run, last stop to first, where it is not its path run
+    /// backward (round one-way track, T-3094); else empty.
+    pub fn line_back_path(&self, id: u32) -> Vec<u32> {
+        let n = &self.w.net;
+        let rail = n.line_bus.get(id as usize).map_or(true, |b| b.is_none()) && n.line_ferry.get(id as usize).map_or(true, |f| f.is_none());
+        if !n.line_ok(id) || !rail || n.line_runs_once(id) || n.line_path(id).iter().all(|&p| n.dir_ok(p ^ 1)) {
+            return vec![];
+        }
+        n.back_path(id).unwrap_or_default()
+    }
     /// Where each stop is along a run's path, m (the train's middle when standing).
     pub fn line_stop_s(&self, line: u32, run: usize) -> Vec<f64> {
         self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.runs[run].stop_s.clone())

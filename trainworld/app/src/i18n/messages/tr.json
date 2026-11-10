@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Vazgeç",
   "ferryDraw.changeFailed": "Güzergâh değiştirilemedi. Başka iskeleler dene.",
   "ferryDraw.changed": "Güzergâh değişti: {distance}.",
-  "ferryDraw.clickClose": "Döngüyü kapatmak için tıkla",
-  "ferryDraw.clickFrom": "Bu uçtan çizmek için tıkla",
   "ferryDraw.clickMake": "Hattı oluşturmak için tıkla",
   "ferryDraw.clickSave": "Güzergâhı kaydetmek için tıkla",
   "ferryDraw.loopClosed": "Döngü kapalı. Açmak için ilk iskelesine sağ tıkla.",

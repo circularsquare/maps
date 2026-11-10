@@ -3,19 +3,19 @@
 
 /** The game's languages, as BCP 47 tags; `en` is the source and the fallback (docs/localization.md).
  * Traditional Chinese is Taiwan's (zh-TW: 捷運, 公車), Simplified the mainland's. */
-export const LANGS = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko"] as const;
+export const LANGS = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko", "ca"] as const;
 export type Lang = (typeof LANGS)[number];
 export const isLang = (s: string): s is Lang => (LANGS as readonly string[]).includes(s);
 
 /** The languages a player is offered: the Language row's list, and what a first visit may pick from the
  * browser. A language joins once its translation is complete and reviewed (docs/localization.md
  * "Releasing a language"); `?lang=<code>` opens any language and lists all of `PICKER` (T-2636). */
-export const OFFERED: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko"];
+export const OFFERED: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko", "ca"];
 /** The Language row's list when previewing, in this order. */
-export const PICKER: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko"];
+export const PICKER: readonly Lang[] = ["en", "ja", "zh-Hans", "zh-TW", "es", "pt", "de", "fr", "tr", "ru", "ko", "ca"];
 
 /** Each language's name in itself, as the Language row lists it; never translated. */
-export const LANG_NAMES: Record<Lang, string> = { en: "English", ja: "日本語", "zh-Hans": "简体中文", "zh-TW": "繁體中文 (台灣)", es: "Español", pt: "Português", de: "Deutsch", fr: "Français", tr: "Türkçe", ru: "Русский", ko: "한국어" };
+export const LANG_NAMES: Record<Lang, string> = { en: "English", ja: "日本語", "zh-Hans": "简体中文", "zh-TW": "繁體中文 (台灣)", es: "Español", pt: "Português", de: "Deutsch", fr: "Français", tr: "Türkçe", ru: "Русский", ko: "한국어", ca: "Català" };
 
 /** The game's language for a BCP 47 tag from the browser ("zh-HK" -> zh-TW, "zh-CN" -> zh-Hans), or null. */
 export function langOfTag(tag: string): Lang | null {
@@ -54,7 +54,7 @@ function locale(lang: Lang, purpose: "number" | "list" | "date"): string {
 
 /** Whether a language puts spaces between words. Japanese and Chinese do not: the page adds the small
  * gap beside Latin letters and digits (docs/localization.md "Fonts"). */
-const SPACED: Record<Lang, boolean> = { en: true, ja: false, "zh-Hans": false, "zh-TW": false, es: true, pt: true, de: true, fr: true, tr: true, ru: true, ko: true };
+const SPACED: Record<Lang, boolean> = { en: true, ja: false, "zh-Hans": false, "zh-TW": false, es: true, pt: true, de: true, fr: true, tr: true, ru: true, ko: true, ca: true };
 
 /** A phrase a message puts straight after a word ("Trips per day{where}"): " in Osaka" in English,
  * "大阪" in Japanese; empty stays empty. */
@@ -124,7 +124,7 @@ export function formatDate(lang: Lang, d: Date | number, opts: Intl.DateTimeForm
 
 /** Names Intl words longer than the game wants ("Palestinian Territories"), by code then language. */
 const COUNTRY_NAMES: Record<string, Partial<Record<Lang, string>>> = {
-  PS: { en: "Palestine", ja: "パレスチナ", "zh-Hans": "巴勒斯坦", "zh-TW": "巴勒斯坦", es: "Palestina", pt: "Palestina", tr: "Filistin", ru: "Палестина", de: "Palästina", fr: "Palestine", ko: "팔레스타인" },
+  PS: { en: "Palestine", ja: "パレスチナ", "zh-Hans": "巴勒斯坦", "zh-TW": "巴勒斯坦", es: "Palestina", pt: "Palestina", tr: "Filistin", ru: "Палестина", de: "Palästina", fr: "Palestine", ko: "팔레스타인", ca: "Palestina" },
 };
 
 /** A country's name from its ISO code ("JP" -> "Japan", "日本"); the code itself if Intl has none. */

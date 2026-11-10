@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "취소",
   "ferryDraw.changeFailed": "항로를 바꾸지 못했어요. 다른 항구로 해 보세요.",
   "ferryDraw.changed": "항로 변경: {distance}.",
-  "ferryDraw.clickClose": "클릭해서 순환 연결",
-  "ferryDraw.clickFrom": "클릭해서 이 끝부터 그리기",
   "ferryDraw.clickMake": "클릭해서 노선 만들기",
   "ferryDraw.clickSave": "클릭해서 항로 저장",
   "ferryDraw.loopClosed": "순환으로 이어져 있어요. 첫 번째 항구를 우클릭하면 풀려요.",

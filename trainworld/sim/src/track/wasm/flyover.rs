@@ -10,6 +10,11 @@ const PLAIN_MIN: f64 = 300.0;
 /// The leg's track from J3 to where it crosses the main and from there to J2: a level's ramp, the
 /// clearance at the node and at the crossing, and a margin, m.
 const LEG_RAMP_ROOM: f64 = SHARED_NODE_CLEAR + RAMP_PER_LEVEL + 15.0 + 30.0;
+/// T-3117: at J3 the leg leaves along the route for SPLIT_LEAD, then eases SPLIT_GAP toward the main
+/// by SPLIT_LEN, so the two legs part like the double track's two tracks and never overlap, m.
+const SPLIT_LEAD: f64 = 40.0;
+const SPLIT_LEN: f64 = 160.0;
+const SPLIT_GAP: f64 = 12.0;
 /// Each leg end's lead along the track it leaves, m.
 const LEAD: f64 = 80.0;
 /// Plain track kept clear past J2 and round a station's platform, m.
@@ -199,12 +204,12 @@ impl TrackApi {
             Some((_, d)) => d - 50.0,
             None => route.len - 50.0,
         };
-        // J3: the first point PLAIN_MIN or more out whose tangent back toward J1 reaches the main
-        // far enough off for a ramp. The leg runs straight on along it, so it stays on the main's
-        // side of the plain leg (a curve away from the main lies off its tangents), and as far again
-        // past the main for the ramp down.
+        // J3: the first point PLAIN_MIN or more out from which the leg, eased SPLIT_GAP toward the
+        // main off its tangent back toward J1, reaches the main far enough off for a ramp. It stays on
+        // the main's side of the plain leg (a curve away from the main lies off its tangents), and
+        // runs as far again past the main for the ramp down.
         let mut d3 = PLAIN_MIN;
-        let (e3, t3, fwd3, b3, reach) = loop {
+        let (e3, t3, fwd3, b3, p2, reach) = loop {
             if d3 > limit {
                 return None;
             }
@@ -213,8 +218,11 @@ impl TrackApi {
                     let (x, y, th) = at(net, &route, d3)?;
                     let b = (-th.cos(), -th.sin());
                     let rate = -(b.0 * nrm.0 + b.1 * nrm.1);
-                    if rate > 0.05 && lat(x, y) / rate >= LEG_RAMP_ROOM {
-                        break (e, t, f, b, lat(x, y) / rate);
+                    // the leg's own line, SPLIT_GAP toward the main from J3's tangent
+                    let m = if b.1 * nrm.0 - b.0 * nrm.1 < 0.0 { (b.1, -b.0) } else { (-b.1, b.0) };
+                    let p2 = (x + (b.0 * SPLIT_LEN + m.0 * SPLIT_GAP) * k, y + (b.1 * SPLIT_LEN + m.1 * SPLIT_GAP) * k);
+                    if rate > 0.05 && lat(p2.0, p2.1) / rate >= LEG_RAMP_ROOM {
+                        break (e, t, f, b, p2, lat(p2.0, p2.1) / rate);
                     }
                 }
             }
@@ -225,8 +233,14 @@ impl TrackApi {
             return None;
         }
         let far = (reach + LEG_RAMP_ROOM) * k;
-        let c = (nd3.x + b3.0 * far, nd3.y + b3.1 * far);
-        let mut v = vec![Pi::new(nd3.x, nd3.y, 0.0, level), Pi::new(quant(c.0), quant(c.1), 0.0, level)];
+        let c = (p2.0 + b3.0 * far, p2.1 + b3.1 * far);
+        let p1 = (nd3.x + b3.0 * SPLIT_LEAD * k, nd3.y + b3.1 * SPLIT_LEAD * k);
+        let mut v = vec![
+            Pi::new(nd3.x, nd3.y, 0.0, level),
+            Pi::new(quant(p1.0), quant(p1.1), 0.0, level),
+            Pi::new(quant(p2.0), quant(p2.1), 0.0, level),
+            Pi::new(quant(c.0), quant(c.1), 0.0, level),
+        ];
         // J2 on the main, far enough back that the leg comes in to it at a gentle angle
         let mut x2 = along(c.0, c.1) - (-lat(c.0, c.1) / BACK_SLOPE).max(150.0) - LEAD;
         if x2.abs() < J2_MIN {

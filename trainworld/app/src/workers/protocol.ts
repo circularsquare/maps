@@ -482,6 +482,9 @@ export interface ClockLine {
   stops: number[];
   /** `edge << 1 | direction`, first stop to last */
   path: number[];
+  /** T-3117: the return run's path, last stop to first, where it is not `path` run backward (round
+   * one-way track: a flyover's other leg) */
+  back?: number[];
   /** run 0, per demand level: arrival at each stop from the start, s */
   fromStart: number[][];
   stopS: [number[], number[]];

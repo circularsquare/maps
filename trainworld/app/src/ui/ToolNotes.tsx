@@ -1,7 +1,7 @@
 // Tool hints/messages at the map's bottom left; confirmations in a centered modal.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { ask, lineDraft, selection, tool } from "../game/ui";
+import { ask, lineDraft, loopTap, selection, tool } from "../game/ui";
 import { linesByNum, notice, stationsById, world } from "../game/world";
 import { cancelLink, linking } from "../game/links";
 import { live } from "../map/live";
@@ -81,7 +81,10 @@ function Notice() {
   // T-1260: a finger taps, and has no Enter key
   const touch = touchInput.value;
   const draftLine = tl === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
-  const hint = draftLine && world.value?.lineStats[draftLine.id]?.bus ? t("toolNotes.busHandHint", { touch })
+  // T-3118: with the Loop button on, what the next tap does
+  const looping = loopTap.value;
+  const hint = looping ? t("toolNotes.loopTap", { what: tl === "bus" ? "point" : tl === "ferry" ? "port" : "stop" }) // i18n-ignore (select values)
+    : draftLine && world.value?.lineStats[draftLine.id]?.bus ? t("toolNotes.busHandHint", { touch })
     : tl === "line" && draft.stops.length === 1 ? t("toolNotes.lineNext", { touch })
     : tl === "trip" && sel?.kind === "trip" && !sel.to ? t("toolNotes.tripEnd", { touch })
     : tl === "line" ? t("toolNotes.lineHint", { touch })
@@ -104,6 +107,10 @@ function Notice() {
   // stop editing (T-233): which line, how many stops, and the way out
   const editing = tl === "line" && draft.line !== null && world.value ? linesByNum(world.value).get(draft.line) : undefined;
   const sq = mode !== "select" && <span class="mode-sq" style={{ background: clickColour(mode) }} />;
+  // T-3118: on touch a Loop button stands in for the right click (a held finger works too)
+  const loopButton = (on: boolean) => touch && on && (
+    <button class={"btn text" + (looping ? " on" : "")} aria-pressed={looping} onClick={() => (loopTap.value = !looping)}>{t("toolNotes.loop")}</button>
+  );
   return (
     <div id="tool-notes">
       {simple && (
@@ -116,6 +123,7 @@ function Notice() {
         <p class="stop-edit-head">
           <span>{sq}{t("toolNotes.busHead", { route: !!busLine, name: busLine?.name, points: bus.points })}</span>
           <span class="bus-acts">
+            {loopButton(bus.points >= 2)}
             <button class="btn text" data-tip={KEY_ESC} onClick={() => live.tools?.exit()}>{t("toolNotes.cancel")}</button>
             <button class="btn text" data-tip={KEY_ENTER} disabled={bus.points < 2} onClick={() => void live.tools?.bus.finish()}>{busLine ? t("toolNotes.saveRoute") : t("toolNotes.makeLine")}</button>
           </span>
@@ -125,6 +133,7 @@ function Notice() {
         <p class="stop-edit-head">
           <span>{sq}{t("toolNotes.ferryHead", { route: !!ferryLine, name: ferryLine?.name, ports: ferry.points })}</span>
           <span class="bus-acts">
+            {loopButton(ferry.points >= 2)}
             <button class="btn text" data-tip={KEY_ESC} onClick={() => live.tools?.exit()}>{t("toolNotes.cancel")}</button>
             <button class="btn text" data-tip={KEY_ENTER} disabled={ferry.points < 2} onClick={() => void live.tools?.ferry.finish()}>{ferryLine ? t("toolNotes.saveRoute") : t("toolNotes.makeLine")}</button>
           </span>
@@ -142,7 +151,10 @@ function Notice() {
       {editing && (
         <p class="stop-edit-head">
           <span>{sq}{t("toolNotes.editing", { name: editing.name, stops: editing.stops.length })}</span>
-          <button class="btn text" onClick={() => live.tools?.exit()}>{t("toolNotes.done")}</button>
+          <span class="bus-acts">
+            {loopButton(editing.stops.length >= 2 && !world.value?.lineStats[editing.id]?.bus)}
+            <button class="btn text" onClick={() => live.tools?.exit()}>{t("toolNotes.done")}</button>
+          </span>
         </p>
       )}
       {hint && <p class="muted">{hint}</p>}

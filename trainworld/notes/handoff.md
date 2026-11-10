@@ -13,8 +13,8 @@ tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees
 Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
 **No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
 **Website push needs her word each time** (the classifier refuses it otherwise).
-**Master = f7ed49e9** (pushed through 74558ad4: push again soon). **8800 = f7ed49e9** (built 18:10). Batch smoke
-on master after the flyover landing PASSED 28, both cargo suites OK (18:01).
+**Master = d4e4d318** (pushed). **8800 = d4e4d318**: both cargo suites in .tw-snap OK (465, 645), smoke against 8800
+PASSED (13 browser checks). Script: maps-dc scratch master_check.cmd <hash> [nobuild].
 **Landed today since the takeover (archived):** maps-15's Exact edits round 2 (41202320; being dropped by T-3109), one-way
 single track T-3094 (97564abe), rebuild fix + rebuild as tram T-3087/3088 (90e97d88), Line 1a T-3099/3081 (8846f377),
 single track in Build T-3093 (40af0202). maps-dc's: T-3104/3105 account mails name the game + quota message (shonei-server
@@ -23,14 +23,25 @@ turning alike at every station, 15/h or 30/h with a terminal, hints name only a 
 T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `set_edges_kind`); T-3092 + T-3103 real
 flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
 **Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
-**Release:** Anita wanted no release until flyovers land; they have. Ask her whether to publish tonight (v0.2.2?):
-needs an updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, and her word for the website push.
+**Release:** Anita 18:20: "flyovers + right-click loops is a good place to release" (no rush about tonight). So the next
+release = T-3117 flyover drawing fixes + T-3109/3110 landed (+ T-3112, T-3108 already in). Then: Catalan batch if it is
+in, a translation batch for stale keys, updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, her word
+for the website push.
+- flyover (Opus, af64c7f0ed83c00b5) RESUMED in the MAIN tree (its tree is removed), Vite 6181: T-3117 flyover drawing
+  (smooth divergence at J3, no flat mark there, line colour on the return leg = T-3102 for flyovers).
+**Landed since:** T-3112 single track 240 s (93d77674); T-3109/T-3110/T-3063 right-click loops, Exact edits gone
+(d762b813); T-3116 country boards game part (d4e4d318; server 4cd43f0 + fc98bb8 not deployed: deploy with
+community preview, her word).
 **Running:**
-- loopclick (Opus, a2a9a1fb062be2b58, tree `.tw-trees/loopclick` from 3a0a8ee3, Vite 6183): T-3109 drop Exact edits,
+- loopclick RESUMED in the MAIN tree (Vite 6183): T-3118 loop gestures round 2 (right click any point of a closed loop
+  opens it, ferries to right click, a loop button on touch). Anita approved T-3109's strings ("text good") and the
+  country picker default (2 countries). T-3119 margin review filed (P3, to her before any change). Next free id T-3120.
+- (landed) loopclick (Opus, a2a9a1fb062be2b58, tree `.tw-trees/loopclick` from 3a0a8ee3, Vite 6183): T-3109 drop Exact edits,
   right click loops back, left click add/remove, bus partial loops (T-3063 folded in), + T-3110 strip while editing.
-- singlemargin (Sonnet, a9b84b10633a94c97, main tree): T-3112 single-track margin 240 s.
-- catalan (Sonnet coordinator, adcc19e6d8b045139, main tree; starts Opus translators, Sonnet back-translators per unit):
-  T-3113 Catalan, then release (OFFERED).
+- catalan (adcc19e6d8b045139) DONE, uncommitted: T-3113 Catalan translated (7 units x 3 passes), released in OFFERED;
+  files intl.ts, glossary.json, messages/ca.json, sources/ca.json, checks/l10n.mjs, notes/T-3113.md. ca.json holds
+  `community.errPreview`, which only communitycheck's uncommitted en.json has: commit Catalan WITH T-3114 (or after),
+  never before. Points for a Catalan speaker in notes/T-3113.md "done". Run a stale batch before the release.
 - communitycheck (Sonnet, a91f2b0e73e677d8e, main tree + shonei-server, Vite 6185): T-3114 re-test community stage 1
   (T-2887, dormant behind SHONEI_COMMUNITY=1) on today's master, fix, launch steps + all strings into notes/T-2887.md.
   Anita 2026-11-10: community is the next major push after the track work; "first version can be pretty minimal, but
@@ -38,7 +49,6 @@ needs an updates.ts entry (strings to her), smoke8800 light and dark, deploy.py,
   shows Community only with ?community) so Anita can share her own maps from 8800 on the real server; deploy that with
   her word. Her answers: share link and open a copy (ON by default) in the first version = T-3115 (after T-3114, same
   files); country leaderboards same push = T-3116.
-- countryboards (Sonnet, a46d383838482c455, main tree + shonei-server, Vite 6186): T-3116 country leaderboards.
 **Queued:** T-3111 one-way stop chevron (after loopclick lands; same hover and editing view). T-3100 likely moot after T-3109.
 `.tw-trees/hotfix` (tw/release-021, live v0.2.1's source) kept until the next release in case live needs a hotfix.
 Next free id **T-3117**.

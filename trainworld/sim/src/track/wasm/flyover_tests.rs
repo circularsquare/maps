@@ -96,22 +96,23 @@ fn dead_ends(a: &TrackApi) -> Vec<u32> {
 
 /// A double main from (-3000, y) to (5000, y), and a double branch drawn with ramps on and real
 /// flyovers from x = 1000 for (3500, y + side 1500).
-fn flyover_y(a: &mut TrackApi, y: f64, side: f64) -> u32 {
+fn flyover_y(a: &mut TrackApi, y: f64, side: f64, to: (f64, f64)) -> u32 {
     assert_eq!(a.add_route(&ends(free(-3000.0, y), free(5000.0, y)), &[], 2, false), 0, "{}", a.issues());
     let e = *alive(a).iter().find(|&&e| a.w.net.project(e, 1000.0, y).1 < 1.0).unwrap();
     a.set_route_ramp(true);
-    let r = a.add_route(&ends([2.0, e as f64, 1000.0, y, 0.0], free(3500.0, y + side * 1500.0)), &[], 2, true);
+    let r = a.add_route(&ends([2.0, e as f64, 1000.0, y, 0.0], free(to.0, y + side * to.1)), &[], 2, true);
     a.set_route_ramp(false);
     r
 }
 
 #[test]
 fn t3092_flyover_lays_two_one_way_legs() {
-    for (right_hand, side) in [(true, 1.0), (true, -1.0), (false, 1.0)] {
+    // T-3117: also long straight branches, J3 on the straight
+    for (right_hand, side, to) in [(true, 1.0, (3500.0, 1500.0)), (true, -1.0, (3500.0, 1500.0)), (false, 1.0, (3500.0, 1500.0)), (true, 1.0, (9000.0, 2500.0)), (true, -1.0, (4000.0, 4000.0))] {
         let mut a = TrackApi::new(-73.985, 40.758, right_hand);
         a.set_cash(1e9);
-        assert_eq!(flyover_y(&mut a, 0.0, side), 0, "{}", a.issues());
-        assert_eq!(a.route_flyovers_flat(), 0, "right hand {right_hand}, side {side}");
+        assert_eq!(flyover_y(&mut a, 0.0, side, to), 0, "{}", a.issues());
+        assert_eq!(a.route_flyovers_flat(), 0, "right hand {right_hand}, side {side}, to {to:?}");
         let net = &a.w.net;
         let js = junctions(&a);
         assert_eq!(js.len(), 3, "J1, J2 and J3");
@@ -124,7 +125,15 @@ fn t3092_flyover_lays_two_one_way_legs() {
         // the leg goes a level up over the main
         let up = singles.iter().any(|&e| net.edge_vert(e).iter().any(|v| v[1] >= LEVEL_H - 0.01));
         assert!(up, "the crossing leg is ramped");
-        assert_eq!(net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_) | CrossKind::Bad)).count(), 0);
+        // T-3117: past J3 the leg runs apart from the plain leg, never along it
+        let leg = *singles.iter().find(|&&e| net.edge_vert(e).iter().any(|v| v[1] >= LEVEL_H - 0.01)).unwrap();
+        for s in [150.0, 200.0, 300.0] {
+            let (x, y, _) = geom::pos_at(net.edge_pieces(leg), s);
+            for &e in singles.iter().filter(|&&e| e != leg) {
+                assert!(net.project(e, x, y).1 > 8.0, "to {to:?}: the leg {s} m from J3 is {} m from the plain leg", net.project(e, x, y).1);
+            }
+        }
+        assert_eq!(net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_) | CrossKind::Bad)).count(), 0, "to {to:?}: {:?}", net.crossings);
         // a line from the main's west end to the branch runs out and back on different legs, and a
         // line along the main meets it at no crossing move
         let ends_ = dead_ends(&a);
@@ -132,7 +141,7 @@ fn t3092_flyover_lays_two_one_way_legs() {
             let d = |k: u32| (a.w.net.node_x[k as usize] - x).hypot(a.w.net.node_y[k as usize] - y);
             d(p).total_cmp(&d(q))
         }).unwrap();
-        let (w, e, b) = (at(-3000.0, 0.0), at(5000.0, 0.0), at(3500.0, side * 1500.0));
+        let (w, e, b) = (at(-3000.0, 0.0), at(5000.0, 0.0), at(to.0, side * to.1));
         for (n, name) in [(w, "W"), (e, "E"), (b, "B")] {
             let (x, y) = (a.w.net.node_x[n as usize], a.w.net.node_y[n as usize]);
             assert_eq!(a.add_station(1, n, x, y, 200, name.into()), 0, "{}", a.issues());

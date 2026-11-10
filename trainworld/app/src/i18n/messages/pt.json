@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Cancelar",
   "ferryDraw.changeFailed": "Não foi possível mudar a rota. Tente outros portos.",
   "ferryDraw.changed": "Rota alterada: {distance}.",
-  "ferryDraw.clickClose": "Clique para fechar o circuito",
-  "ferryDraw.clickFrom": "Clique para desenhar a partir desta ponta",
   "ferryDraw.clickMake": "Clique para criar a linha",
   "ferryDraw.clickSave": "Clique para salvar a rota",
   "ferryDraw.loopClosed": "O circuito está fechado. Clique com o botão direito no primeiro porto para abri-lo.",

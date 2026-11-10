@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "取消",
   "ferryDraw.changeFailed": "无法修改路线。换几座码头试试。",
   "ferryDraw.changed": "路线已修改：{distance}。",
-  "ferryDraw.clickClose": "点击闭合环线",
-  "ferryDraw.clickFrom": "点击从这一端开始画",
   "ferryDraw.clickMake": "点击创建线路",
   "ferryDraw.clickSave": "点击保存路线",
   "ferryDraw.loopClosed": "环线已闭合。右键点击第一个码头可以断开。",

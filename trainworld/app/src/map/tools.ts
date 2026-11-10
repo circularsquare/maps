@@ -1450,8 +1450,12 @@ export class Tools {
     if (tier === "turn") {
       // T-3021: the end past this stop turned round its loop
       change = { op: "turnEnd", line: id, station };
+    } else if (tier === "open" && closedLoop && new Set(before).size === n - 1 && before.includes(station)) {
+      // T-3118: a ring opened at any of its stops ends there: the stretch on from it goes
+      const cyc = before.slice(0, n - 1), k = cyc.indexOf(station);
+      change = { op: "setStops", line: id, stops: [...cyc.slice(k + 1), ...cyc.slice(0, k + 1)], autoFast: this.autoFast(id) };
     } else if (tier === "unturn" || tier === "open") {
-      // a loop opened: a circle less its closing stop, a turned line less its way back
+      // a loop opened: a turned line less its way back (from any of its stops, T-3118)
       change = { op: "openLoop", line: id };
     } else if (tier === "close") {
       if (station !== before[0] || closedLoop) return;

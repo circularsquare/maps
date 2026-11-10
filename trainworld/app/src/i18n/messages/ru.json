@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Отмена",
   "ferryDraw.changeFailed": "Не удалось изменить маршрут. Попробуйте другие причалы.",
   "ferryDraw.changed": "Маршрут изменён: {distance}.",
-  "ferryDraw.clickClose": "Нажмите, чтобы замкнуть кольцо",
-  "ferryDraw.clickFrom": "Нажмите, чтобы рисовать от этого конца",
   "ferryDraw.clickMake": "Нажмите, чтобы создать линию",
   "ferryDraw.clickSave": "Нажмите, чтобы сохранить маршрут",
   "ferryDraw.loopClosed": "Кольцо замкнуто. Щёлкните правой кнопкой по первому порту, чтобы разомкнуть его.",

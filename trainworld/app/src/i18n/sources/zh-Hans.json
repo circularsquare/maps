@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Cancel",
   "ferryDraw.changeFailed": "The route could not be changed. Try other ports.",
   "ferryDraw.changed": "Route changed: {distance}.",
-  "ferryDraw.clickClose": "Click to close the loop",
-  "ferryDraw.clickFrom": "Click to draw from this end",
   "ferryDraw.clickMake": "Click to make the line",
   "ferryDraw.clickSave": "Click to save the route",
   "ferryDraw.loopClosed": "The loop is closed. Right click its first port to open it.",

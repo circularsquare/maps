@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "キャンセル",
   "ferryDraw.changeFailed": "経路を変更できませんでした。別の港を試してください。",
   "ferryDraw.changed": "経路を変更しました：{distance}。",
-  "ferryDraw.clickClose": "クリックで環状にする",
-  "ferryDraw.clickFrom": "クリックでこの端から描く",
   "ferryDraw.clickMake": "クリックで航路を作成",
   "ferryDraw.clickSave": "クリックで経路を保存",
   "ferryDraw.loopClosed": "環状になっています。最初の港を右クリックすると解除できます。",

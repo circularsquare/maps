@@ -216,7 +216,7 @@ async function lintOrDiff() {
     if (!(k in m)) continue;
     const text = m[k], w = words(lang, text), note = context[k] ?? "";
     const warn = (msg) => { count++; console.log(`${k}: ${msg}\n    ${text}`); };
-    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "fr" && lang !== "tr" && lang !== "ru" && lang !== "ko") {
+    if (lang !== "es" && lang !== "pt" && lang !== "de" && lang !== "fr" && lang !== "tr" && lang !== "ru" && lang !== "ko" && lang !== "ca") {
       if (new RegExp(`[${CJK}][,.!?:;]|[,!?:;][${CJK}]`).test(w)) warn("half-width punctuation beside CJK; use 、。，！？：；");
       if (new RegExp(`\\([^)]*[${CJK}]`).test(w)) warn("half-width parentheses around CJK; use （）");
       if (new RegExp(`[${CJK}] +[A-Za-z0-9\\u0001]|[A-Za-z0-9\\u0001] +[${CJK}]`).test(w)) warn("a space between CJK and Latin, a digit or a placeholder; the page adds that gap itself (text-autospace)");
@@ -255,6 +255,13 @@ async function lintOrDiff() {
       if (/«(?! )|(?<! )»/.test(w)) warn("guillemets need a no-break space inside");
       if (/\b(tu|ton|ta|tes|toi)\b/i.test(w)) warn("tu: the voice is vous");
       if (/(?<![\p{L}])(de|du|le|la|que|si|ce|ne|je|me|te|se) ?\u0001|(?<![\p{L}])(l|d|j|m|t|s|n|c|qu)’\u0001/iu.test(w)) warn("an article, preposition or elision directly before a placeholder: reword so the value stands alone (fine before a number or price)");
+    }
+    if (lang === "ca") {
+      if (w.includes("'")) warn("a straight apostrophe; Catalan uses ’ (U+2019)");
+      if (/l\.l|L\.L/.test(w)) warn("l.l written with a full stop; the middle dot is · (U+00B7)");
+      if (/\b(vostè|vosaltres|vós|vostre|vostra)\b/i.test(w)) warn("vostè/vós: the voice is tu");
+      if (/ [:;?!]/.test(w)) warn("a space before : ; ? or !; Catalan has none");
+      if (/(?<![\p{L}])(de|del|el|la|al|pel|que|ho|hi) ?\u0001|(?<![\p{L}])(l|d|m|t|s|n|qu)’\u0001/iu.test(w)) warn("an article, contraction or elision directly before a placeholder: reword so the value stands alone (fine before a number or price)");
     }
     // a width check counts only a real difference: a full character or two more than the English
     const tw = width(longest(w)), ew = Math.max(1, width(longest(words("en", en[k]))));

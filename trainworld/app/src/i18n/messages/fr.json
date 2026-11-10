@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "Annuler",
   "ferryDraw.changeFailed": "L’itinéraire n’a pas pu être modifié. Essayez d’autres ports.",
   "ferryDraw.changed": "Itinéraire modifié : {distance}.",
-  "ferryDraw.clickClose": "Cliquer pour fermer la boucle",
-  "ferryDraw.clickFrom": "Cliquer pour tracer depuis cette extrémité",
   "ferryDraw.clickMake": "Cliquer pour créer la ligne",
   "ferryDraw.clickSave": "Cliquer pour enregistrer l’itinéraire",
   "ferryDraw.loopClosed": "La boucle est fermée. Faites un clic droit sur son premier port pour l'ouvrir.",

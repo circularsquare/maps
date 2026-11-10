@@ -118,15 +118,49 @@ try {
     await undo();
     await page.waitForTimeout(2000);
   }
-  // a right click on a plain stop: no edit, a word why
+  // T-3118: any stop of a loop line opens it, by a right click or, on touch, the Loop button and a tap
   const plain = l1.stops.find((s) => s !== 'Bankwerkerij' && !(s in tiers) && s !== l1.stops[0]);
   await centre(plain, 14.5);
   await page.waitForTimeout(2500);
   mk = await markerOf(plain);
+  await page.mouse.move(mk.x, mk.y);
+  await page.waitForTimeout(500);
+  const t4 = await tagText();
+  check(/Right click to open the loop/.test(t4), `${plain}'s hover offers to open the loop`, t4.replace(/\n/g, ' / '));
+  await page.mouse.click(mk.x, mk.y, { button: 'right' });
+  await page.waitForTimeout(2500);
+  const opened = await info('Line 1');
+  out.openedAtPlain = opened;
+  check(!opened.loop && opened.stops[0] !== opened.stops.at(-1), `a right click on ${plain} opens Line 1`, JSON.stringify(opened.stops));
+  await undo();
+  await page.waitForTimeout(2000);
+  await page.evaluate(async () => { const m = await import('/src/map/touch.ts'); m.touchInput.value = true; });
+  await page.waitForTimeout(500);
+  const loopBtn = page.locator('#tool-notes button', { hasText: /^Loop$/ });
+  check(await loopBtn.count() === 1, 'on touch the bar has a Loop button');
+  await page.screenshot({ path: join(ARTIFACTS, 't3109-touch-loop-button.png') });
+  await page.evaluate(() => [...document.querySelectorAll('#tool-notes button')].find((b) => b.textContent === 'Loop')?.click());
+  await page.waitForTimeout(300);
+  const hintOn = await page.evaluate(() => document.querySelector('#tool-notes')?.innerText ?? '');
+  check(/Tap a stop to loop there/.test(hintOn), 'pressed, the hint says what a tap does', hintOn.replace(/\n/g, ' / '));
+  mk = await markerOf(plain);
+  await page.mouse.click(mk.x, mk.y);
+  await page.waitForTimeout(2500);
+  const tapped = await info('Line 1');
+  check(!tapped.loop && !(await page.evaluate(async () => (await import('/src/game/ui.ts')).loopTap.value)), 'a tap then opens the loop and the button goes off', JSON.stringify(tapped.stops));
+  await undo();
+  await page.waitForTimeout(2000);
+  await page.evaluate(async () => { const m = await import('/src/map/touch.ts'); m.touchInput.value = false; });
+  // a right click on a stop of an open line: no edit, a word why
+  const l1aOpen = await info('Line 1a');
+  await editStops(l1aOpen.num);
+  await centre('Museumstraat', 14.5);
+  await page.waitForTimeout(2500);
+  mk = await markerOf('Museumstraat');
   await page.mouse.click(mk.x, mk.y, { button: 'right' });
   await page.waitForTimeout(1200);
   const t3 = await tagText();
-  check(/Can't loop back here/.test(t3) && JSON.stringify((await info('Line 1')).stops) === JSON.stringify(l1.stops), `a right click on ${plain} changes nothing and says why`, t3.replace(/\n/g, ' / '));
+  check(/Can't loop back here/.test(t3) && JSON.stringify((await info('Line 1a')).stops) === JSON.stringify(l1aOpen.stops), 'a right click on Museumstraat (Line 1a, open) changes nothing and says why', t3.replace(/\n/g, ' / '));
 
   // ---- T-3110: each line's related-lines strip, its stops edited and not: the other line's column runs beside it
   await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.relatedLines.value = true; });
@@ -210,6 +244,35 @@ try {
     const again = await page.evaluate(() => window.tw.tools.bus.pts.length);
     check(again === 6, 'editing it again shows its five points and the join', String(again));
     await page.screenshot({ path: join(ARTIFACTS, 't3109-bus-loopback.png') });
+    // T-3118: a right click on a point of the loop (not where it joins) stops looping
+    const screenOf = (i) => page.evaluate((i) => { const b = window.tw.tools.bus, p = b.pts[i], s = window.tw.map.project([p.lng, p.lat]), r = window.tw.map.getContainer().getBoundingClientRect(); return [r.left + s.x, r.top + s.y]; }, i);
+    let q = await screenOf(3);
+    await page.mouse.move(q[0], q[1]);
+    await page.waitForTimeout(500);
+    const stopTag = await page.evaluate(() => { const t = document.querySelector('.build-tag'); return t && t.style.display !== 'none' ? t.innerText : ''; });
+    check(/Right click to stop looping back/.test(stopTag), 'a loop point of the route offers to stop looping', stopTag.replace(/\n/g, ' / '));
+    await page.mouse.click(q[0], q[1], { button: 'right' });
+    await page.waitForTimeout(800);
+    const open = await page.evaluate(() => ({ n: window.tw.tools.bus.pts.length, join: window.tw.tools.bus.joinAt(), closed: window.tw.tools.bus.closed() }));
+    check(open.n === 5 && open.join < 0 && !open.closed, 'the right click stops it looping back', JSON.stringify(open));
+    // closed round into a ring at its first point, then opened at a point partway round: the route ends there
+    const p2 = await page.evaluate(() => { const p = window.tw.tools.bus.pts[2]; return [p.lng, p.lat]; });
+    q = await screenOf(0);
+    await page.mouse.click(q[0], q[1], { button: 'right' });
+    await page.waitForFunction(() => !window.tw.tools.bus.active, undefined, { timeout: 30000 }).catch(() => null);
+    await page.waitForTimeout(1500);
+    await page.evaluate(async (num) => {
+      const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num), st = w.lineStats[l.id];
+      window.tw.tools.bus.begin(num, Array.from(st.bus.routeLL), l.colour, Array.from(st.bus.kinds ?? []));
+    }, bus.num);
+    await page.waitForTimeout(800);
+    const ring = await page.evaluate(() => ({ n: window.tw.tools.bus.pts.length, closed: window.tw.tools.bus.closed() }));
+    check(ring.closed && ring.n === 6, 'a right click on the other end closes it into a ring', JSON.stringify(ring));
+    q = await screenOf(2);
+    await page.mouse.click(q[0], q[1], { button: 'right' });
+    await page.waitForTimeout(800);
+    const cut = await page.evaluate(() => { const b = window.tw.tools.bus, z = b.pts[b.pts.length - 1]; return { n: b.pts.length, closed: b.closed(), last: [z.lng, z.lat] }; });
+    check(!cut.closed && cut.n === 5 && cut.last[0] === p2[0] && cut.last[1] === p2[1], 'a right click on any point of the ring opens it there, the route ending at it', JSON.stringify(cut));
     await page.keyboard.press('Escape');
   }
 } catch (e) {

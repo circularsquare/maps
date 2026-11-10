@@ -19,8 +19,10 @@
 // of a loop (`bus::is_closed`). On a point partway along it joins the active end back to that point and finishes:
 // the bus runs out, round the loop and back the way it came, kept as a loop whose last legs are its first ones
 // backward (`bus::loop_back_at`), folded back to the way out and the loop here (`begin`). A looped route has no
-// active end; a right click where it closes opens it again, as does deleting that point, and taking out a point
-// of a loop of three leaves it open. A right click on the active end deletes it.
+// active end; a right click on any point of a loop opens it there (T-3118: the leg leaving the point goes, so the
+// route ends at it), and on any point of a route that loops back it stops looping; deleting the point where it
+// closes opens it too, and taking out a point of a loop of three leaves it open. A right click on the active end
+// deletes it. On touch the Loop button makes the next tap a right click (`loopTap`).
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
@@ -31,7 +33,7 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { distance, length, moneyShort } from "../game/format";
 import { editBusRoute, newBusLine, nextFreeColour } from "../game/lineActions";
-import { ask, renameLinePrompt, selection, tool } from "../game/ui";
+import { ask, loopTap, renameLinePrompt, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import { keyIsTheirs } from "../ui/keys";
 import { BUS_KEY } from "../ui/toolKeys";
@@ -869,16 +871,21 @@ export class BusDraw {
   private handleClick(i: number) {
     const n = this.pts.length;
     if (n < 2) return;
+    if (loopTap.peek()) {
+      loopTap.value = false;
+      return this.rightClick(i);
+    }
     if (this.isSeam(i) || (!this.looped() && i === this.endIndex())) return void this.finish();
     void this.remove(i);
   }
 
   /** What a right click on point `i` does (T-3109), null for nothing: open a loop where it closes, delete the active
    * end, close the loop at the other end, or loop back to a point partway along. */
-  private rightAction(i: number): "open" | "delete" | "close" | "loopBack" | null {
+  private rightAction(i: number): "open" | "stop" | "delete" | "close" | "loopBack" | null {
     const n = this.pts.length;
     if (n < 2) return null;
-    if (this.looped()) return this.isSeam(i) ? "open" : null;
+    if (this.closed()) return "open";
+    if (this.looped()) return "stop";
     const end = this.endIndex();
     if (i === end) return "delete";
     if (i === 0 || i === n - 1) return n >= 3 ? "close" : null;
@@ -888,9 +895,26 @@ export class BusDraw {
 
   private rightClick(i: number) {
     const a = this.rightAction(i);
-    if (a === "open" || a === "delete") void this.remove(i);
+    if (a === "open") this.openAt(i);
+    else if (a === "stop") void this.remove(this.pts.length - 1);
+    else if (a === "delete") void this.remove(i);
     else if (a === "close") void this.closeLoop();
     else if (a === "loopBack") void this.loopBack(i);
+  }
+
+  /** T-3118: a loop opened at point `i`: the leg leaving it goes, so the route runs on round from the next point
+   * and ends there, its active end. */
+  private openAt(i: number) {
+    if (this.busy || !this.closed()) return;
+    const m = this.pts.length - 1, c = this.pts.slice(0, m), legs = this.legs.slice(0, m);
+    const order = Array.from({ length: m }, (_, j) => (((i % m) + 1 + j) % m));
+    this.pts = order.map((j) => c[j]);
+    this.legs = order.slice(0, m - 1).map((j) => legs[j]);
+    this.head = false;
+    playBuild("pop");
+    this.over = -1;
+    this.rev++;
+    this.changed(true);
   }
 
   /** T-3109: join the active end back to point `i` by road and make the line: the bus runs out, round the loop and
@@ -1044,8 +1068,9 @@ export class BusDraw {
       return Math.hypot(s.x - e.point.x, s.y - e.point.y) < SAME_TAP_PX;
     };
     if (near(this.touchAt)) return this.confirm();
-    if (!this.touchAt && this.pts.length >= 2) {
-      // a point tapped, with nothing waiting: as a click on it (the active end finishes, another is deleted)
+    if ((!this.touchAt || loopTap.peek()) && this.pts.length >= 2) {
+      // a point tapped, with nothing waiting (or the Loop button on): as a click on it (the active end finishes,
+      // another is deleted)
       const i = this.handleAt(e.point.x, e.point.y, SAME_TAP_PX);
       if (i >= 0) return this.handleClick(i);
     }
@@ -1236,7 +1261,7 @@ export class BusDraw {
     if (h >= 0 && at && !touchInput.peek()) {
       const finishes = this.pts.length >= 2 && (this.isSeam(h) || (!this.looped() && h === this.endIndex()));
       const first = row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"));
-      const right = { open: this.closed() ? "busDraw.rightOpen" : "busDraw.rightStopLooping", delete: "busDraw.rightDelete", close: "busDraw.rightClose", loopBack: "busDraw.rightLoopBack" } as const;
+      const right = { open: "busDraw.rightOpen", stop: "busDraw.rightStopLooping", delete: "busDraw.rightDelete", close: "busDraw.rightClose", loopBack: "busDraw.rightLoopBack" } as const;
       const a = this.rightAction(h);
       return show([first, row(t("busDraw.dragMove")), ...(a ? [row(t(right[a]))] : [])]);
     }

@@ -774,8 +774,6 @@
   "ferryDraw.cancel": "取消",
   "ferryDraw.changeFailed": "無法變更路線。請試試別的碼頭。",
   "ferryDraw.changed": "路線已變更：{distance}。",
-  "ferryDraw.clickClose": "按一下接成環線",
-  "ferryDraw.clickFrom": "按一下從這一端開始畫",
   "ferryDraw.clickMake": "按一下建立路線",
   "ferryDraw.clickSave": "按一下儲存路線",
   "ferryDraw.loopClosed": "環線已接上。在第一個碼頭按右鍵可以解開。",

@@ -9,7 +9,7 @@
 import { rgb } from "../game/palette";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { PreviewAnswer } from "../workers/clockClient";
-import type { ClockState } from "../workers/protocol";
+import type { ClockEdge, ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
@@ -547,6 +547,107 @@ const sameBand = (a: Float32Array, b: Float32Array) => {
   return true;
 };
 
+/** Half the gap between double track's two tracks when drawn apart, m (renderer.ts `LANE_M`). */
+const HALF_GAP_M = 2;
+/** How far a one-way leg eases from its own track's line in to its centre line, m (T-3117). */
+const LEG_EASE_M = 60;
+
+/**
+ * T-3117: where one-way single track meets double track at a junction (a flyover's J1, J2 and J3),
+ * which way its end is drawn off its centre line, so it carries on from its own track of the double:
+ * away from the nearest other track leaving the node its way. Per edge, [a end, b end]: +1 left of
+ * a to b, -1 right, 0 none. `parts`: each edge's points, in `edges` order.
+ */
+function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number>[]): Map<number, [number, number]> {
+  const out = new Map<number, [number, number]>();
+  if (!edges.some((e) => e.tracks === 1 && e.oneWay)) return out;
+  // per node, each end there: its edge's index and the way it leaves (unit x, y)
+  const at = new Map<number, { i: number; dx: number; dy: number }[]>();
+  const dir = (pts: ArrayLike<number>, fromA: boolean) => {
+    const n = pts.length / 3;
+    if (n < 2) return null;
+    const x0 = fromA ? pts[0] : pts[(n - 1) * 3], y0 = fromA ? pts[1] : pts[(n - 1) * 3 + 1];
+    const reach = 20 * kAtY(y0);
+    let x1 = x0, y1 = y0;
+    for (let k = 1; k < n; k++) {
+      const j = fromA ? k : n - 1 - k;
+      [x1, y1] = [pts[j * 3], pts[j * 3 + 1]];
+      if (Math.hypot(x1 - x0, y1 - y0) >= reach) break;
+    }
+    const d = Math.hypot(x1 - x0, y1 - y0);
+    return d > 1e-9 ? { dx: (x1 - x0) / d, dy: (y1 - y0) / d } : null;
+  };
+  edges.forEach((e, i) => {
+    for (const [node, fromA] of [[e.a, true], [e.b, false]] as const) {
+      const d = dir(parts[i], fromA);
+      if (!d) continue;
+      const v = at.get(node) ?? [];
+      v.push({ i, ...d });
+      at.set(node, v);
+    }
+  });
+  edges.forEach((e, i) => {
+    if (e.tracks !== 1 || !e.oneWay) return;
+    const shift: [number, number] = [0, 0];
+    [e.a, e.b].forEach((node, end) => {
+      const ends = at.get(node) ?? [];
+      if (ends.length < 3 || !ends.some((x) => edges[x.i].tracks === 2)) return;
+      const me = ends.find((x) => x.i === i && (end === 0 ? edges[x.i].a === node : edges[x.i].b === node));
+      if (!me) return;
+      let best: (typeof ends)[number] | null = null, cos = Math.cos(Math.PI / 3);
+      for (const o of ends) {
+        const c = o.dx * me.dx + o.dy * me.dy;
+        if (o !== me && c > cos) [best, cos] = [o, c];
+      }
+      if (!best) return;
+      const otherLeft = me.dx * best.dy - me.dy * best.dx > 0;
+      // leaving from b runs b to a, so its right is a to b's left
+      shift[end] = (otherLeft ? -1 : 1) * (end === 0 ? 1 : -1);
+    });
+    if (shift[0] || shift[1]) out.set(e.id, shift);
+  });
+  return out;
+}
+
+/** `pts` (x, y, z triples) with each end moved `shift` (as `legShifts`) half the track gap off to its
+ * side, easing back to the line over LEG_EASE_M, points added every few metres there; and per
+ * segment, the segment of `pts` it lies on. */
+function shiftedEnds(pts: Float32Array, shift: [number, number]): { pts: Float32Array; src: number[] } {
+  const n = pts.length / 3;
+  if (n < 2) return { pts, src: [] };
+  const at = new Float64Array(n);
+  for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(pts[k * 3] - pts[k * 3 - 3], pts[k * 3 + 1] - pts[k * 3 - 2]);
+  const len = at[n - 1], kk = kAtY(pts[1]), L = Math.min(LEG_EASE_M * kk, len / 2), step = 5 * kk;
+  const ease = (d: number) => {
+    const t = Math.max(0, Math.min(1, d / L));
+    return 1 - t * t * (3 - 2 * t);
+  };
+  const off = (s: number) => HALF_GAP_M * kk * (shift[0] * ease(s) + shift[1] * ease(len - s));
+  const out: number[] = [], seg: number[] = [];
+  const put = (k: number, f: number) => {
+    seg.push(k);
+    const x = pts[k * 3] + (pts[k * 3 + 3] - pts[k * 3]) * f, y = pts[k * 3 + 1] + (pts[k * 3 + 4] - pts[k * 3 + 1]) * f;
+    const z = pts[k * 3 + 2] + (pts[k * 3 + 5] - pts[k * 3 + 2]) * f;
+    const dx = pts[k * 3 + 3] - pts[k * 3], dy = pts[k * 3 + 4] - pts[k * 3 + 1], d = Math.hypot(dx, dy) || 1;
+    const o = off(at[k] + (at[k + 1] - at[k]) * f);
+    out.push(x - (dy / d) * o, y + (dx / d) * o, z);
+  };
+  for (let k = 0; k < n - 1; k++) {
+    const seg = at[k + 1] - at[k];
+    put(k, 0);
+    // points every `step` where either end eases
+    if (seg > step && (at[k] < L || at[k + 1] > len - L)) {
+      for (let d = step; d < seg - 1e-6; d += step) {
+        const s0 = at[k] + d;
+        if (s0 < L || s0 > len - L) put(k, d / seg);
+      }
+    }
+  }
+  put(n - 2, 1);
+  // each segment drawn: the segment of \`pts\` it lies on
+  return { pts: new Float32Array(out), src: seg.slice(0, -1) };
+}
+
 /** Where double track narrows to single, m (T-658). */
 const TAPER_M = 40;
 
@@ -917,6 +1018,8 @@ interface EdgeEntry extends LanePoints {
   b: number;
   flags: number;
   lanes: number;
+  /** T-3117: `legShifts` for it, or null */
+  shift: [number, number] | null;
   strokes: Strokes;
   ramps: number[];
   /** the edge speeds given, and per segment of `strokes` its speed limit (`Strokes.speed`) */
@@ -928,6 +1031,8 @@ interface EdgeEntry extends LanePoints {
 }
 interface LineEntry {
   path: number[];
+  /** T-3117: `ClockLine.back`, empty for none */
+  back: number[];
   stops: number[];
   running: boolean;
   /** high-speed trains: only such a line is drawn in the high-speed look (T-1494) */
@@ -1124,6 +1229,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     if (e.tracks === 1) singleAt.add(e.a).add(e.b);
   }
   const taperAt = (node: number) => singleAt.has(node) && endCount.get(node) === 2;
+  const shifts = legShifts(s.edges, r.edgeParts!);
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();
   // blueprint track after built, so drawn over it and picked first where they overlap, as the
@@ -1137,20 +1243,23 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
-    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && (c.given === given || sameFloats(c.pts, given))) {
+    const shift = shifts.get(e.id) ?? null;
+    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && c.shift?.[0] === shift?.[0] && c.shift?.[1] === shift?.[1] && (c.given === given || sameFloats(c.pts, given))) {
       kept.add(e.id);
       if (c.given !== given) c = { ...c, given };
     } else {
       const own = given.slice();
-      const lp = lanePoints(own, lanes);
+      const sh = shift ? shiftedEnds(own, shift) : null;
+      const lp = lanePoints(sh ? sh.pts : own, lanes);
       const b = new StrokeBuilder(false, MIN_SEG_M), from: number[] = [];
       b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane, undefined, undefined, from);
       const ramps: number[] = [];
       rampMarks(own, e.built ? 0 : 1, ramps);
       const strokes = b.build();
       // each stroke segment's segment of the edge's given points, for its speed
-      const src = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
-      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, ...lp, src, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
+      const srcL = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
+      const src = sh ? Array.from({ length: strokes.count }, (_, j) => sh.src[srcL ? srcL[j] : j] ?? 0) : srcL;
+      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, shift, ...lp, src, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
     }
     if (c.speedGiven !== sg || (!sg && c.vmin !== e.vminKmh) || c.speed.length !== c.strokes.count) {
       const n = c.strokes.count, speed = new Float32Array(n), src = c.src;
@@ -1225,7 +1334,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
-    if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
+    if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || !sameArray(c.path, l.path) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || !(l.back ?? []).every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
       const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -1252,7 +1361,24 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           next++;
         }
       });
-      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke };
+      // T-3117: track only the return run takes (a flyover's other leg), its stretch counted from the far end
+      if (l.back?.length) {
+        const own = new Set(l.path.map((p) => p >> 1)), last = Math.max(0, l.stops.length - 2);
+        let bd = 0, back = 0, nextBack = l.stops.length - 2;
+        for (const p of l.back) {
+          const e = p >> 1, dr = drawn.get(e), ends = edgeEnds.get(e);
+          if (dr && !own.has(e)) {
+            const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.tram && tramEdge.has(e) ? F_TRAM : 0);
+            bd = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, bd, Math.max(0, Math.min(last, last - back)), dr.lane);
+          }
+          const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
+          if (nextBack >= 0 && to === l.stops[nextBack]) {
+            back++;
+            nextBack--;
+          }
+        }
+      }
+      c = { path: l.path.slice(), back: (l.back ?? []).slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);
@@ -1451,7 +1577,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   // T-3094: chevrons along one-way single track, clear of stations
   const oneWayTrack: number[] = [];
   if (s.edges.some((e) => e.oneWay)) {
-    const stationAt = s.nodes.filter((n) => n.platform > 0).map((n) => nodeLocal.get(n.id)).filter((p) => p !== undefined);
+    // T-3117: clear of junctions too, where two legs leaving one node would put their arrows side by side
+    const stationAt = s.nodes.filter((n) => n.platform > 0 || n.ports >= 3).map((n) => nodeLocal.get(n.id)).filter((p) => p !== undefined);
     for (const e of s.edges) {
       const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
       if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, stationAt, oneWayTrack);

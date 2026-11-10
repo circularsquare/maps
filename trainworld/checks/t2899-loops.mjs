@@ -2,7 +2,7 @@
 // tool (four points, then a right click on the first closes it and makes the line, T-3109), its tag "Right click to
 // close the loop", the panel's lap, constructed and run with buses going round one way (T-2981), riders from a demand solve,
 // an out-and-back bus line beside it unchanged, undo and redo, and a save that reloads with the loop. Then
-// a ferry loop over three ports of the harbour the same way. Pictures in artifacts/trainworld/busloop/.
+// a ferry loop over three ports of the harbour the same way (a right click, T-3118). Pictures in artifacts/trainworld/busloop/.
 // From the maps root, on a Vite of your own:
 //   node trainworld/checks/t2899-loops.mjs [dev url]
 // About 4 minutes.
@@ -222,10 +222,10 @@ try {
   await page.mouse.move(w0.x, w0.y, { steps: 3 });
   await page.waitForTimeout(900);
   const ft = await tags();
-  check(/Click to close the loop/.test(ft), 'the tag over the first port says Click to close the loop', ft);
+  check(/Right click to close the loop/.test(ft), 'the tag over the first port says Right click to close the loop (T-3118)', ft);
   await page.screenshot({ path: join(OUT, `ferry-draw-${SHADE}.png`) });
   const fcash = await page.evaluate(() => window.tw.world.value.save.cash);
-  await page.mouse.click(w0.x, w0.y);
+  await page.mouse.click(w0.x, w0.y, { button: 'right' });
   await page.waitForFunction(() => window.tw.world.value.save.lines.length >= 2 && !window.tw.tools.ferry.active, undefined, { timeout: 90000 }).catch(() => {});
   const all = await lines();
   const fnum = all.at(-1);
