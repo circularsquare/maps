@@ -55,6 +55,8 @@ import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
 import { makeSynth } from "./map/synth";
 import { Tools } from "./map/tools";
+import { busDraft } from "./map/busDraw";
+import { ferryDraft } from "./map/ferryDraw";
 import { touchInput, watchInput } from "./map/touch";
 import { TouchBar } from "./ui/TouchBar";
 import { StopMarkers } from "./map/stopMarkers";
@@ -405,6 +407,10 @@ const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || net
 // Bus lines are drawn from the world's routes (T-1464, map/busLayer.ts)
 effect(() => {
   if (renderer.buses.set(world.value)) overlay.invalidate();
+});
+// T-3084: while a bus line's route is redrawn, its current route is drawn muted under the draft
+effect(() => {
+  if (renderer.buses.setMuted(busDraft.value?.line ?? ferryDraft.value?.line ?? -1)) overlay.invalidate();
 });
 
 // Selection and display settings change what the overlay draws.

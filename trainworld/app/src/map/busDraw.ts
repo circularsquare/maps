@@ -28,7 +28,7 @@ import { signal } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { distance, length, moneyShort } from "../game/format";
-import { newBusLine, nextFreeColour } from "../game/lineActions";
+import { editBusRoute, newBusLine, nextFreeColour } from "../game/lineActions";
 import { ask, renameLinePrompt, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import { keyIsTheirs } from "../ui/keys";
@@ -54,6 +54,8 @@ const STREET_ZOOM = 12.5;
 const SAME_PX = 4;
 /** a press this close (px) to a clicked point is on its handle */
 const HANDLE_PX = 8;
+/** a stop this close (m) to a clicked point is that point, squared */
+const NEAR_POINT_SQ_M = 12 * 12;
 /** a press on a handle becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
 const DRAG_PX = 3;
 /** a finger's reach to a handle, and how far it may wander (px) before the press is a drag, not a hold */
@@ -69,6 +71,9 @@ const refusalSay = (r: BusRefusal) =>
   r === "far" ? t("busDraw.sayFar", { distance: length(SNAP_M) }) : r === "path" ? t("busDraw.sayPath") : t("busDraw.sayLong");
 
 interface Pt { lng: number; lat: number }
+/** the draft as it was after an edit, for Ctrl+Z */
+interface Snap { pts: Pt[]; legs: Leg[] }
+const samePts = (a: Pt[], b: Pt[]) => a.length === b.length && a.every((p, i) => p.lng === b[i].lng && p.lat === b[i].lat);
 interface Stop { x: number; y: number; kind: number; lng: number; lat: number }
 interface Quote { road: number; cost: number; ok: boolean; stops: Stop[]; street: Pt[] }
 
@@ -131,6 +136,13 @@ export class BusDraw {
   private press: { i: number; x: number; y: number; timer?: number } | null = null;
   private drag: { i: number; pts: Pt[]; legs: Leg[] } | null = null;
   private dragEnded = false;
+  /** T-3084: a press on a point of the selected bus line while no tool is on; it opens Edit route once it moves */
+  private pre: { line: number; at: Pt; x: number; y: number } | null = null;
+  /** the draft after its last edit, the steps back from it and the steps forward again; `orig` the route as opened */
+  private base: Snap = { pts: [], legs: [] };
+  private undos: Snap[] = [];
+  private redos: Snap[] = [];
+  private orig: Pt[] = [];
   /** the fingers down, and whether the tap that ends a drag or a long press is to be ignored */
   private fingers = new Set<number>();
   private noTap = false;
@@ -167,7 +179,7 @@ export class BusDraw {
     });
     // capture: before MapLibre's own handlers, so a press on a handle does not pan the map
     map.getContainer().addEventListener("mousedown", (e) => this.onDown(e), true);
-    addEventListener("mousemove", (e) => this.onDrag(e));
+    addEventListener("mousemove", (e) => (this.openOnDrag(e), this.onDrag(e)));
     addEventListener("mouseup", () => this.onUp());
     // a finger does the same through pointer events: drag a point, or hold it to delete it (T-1517)
     map.getContainer().addEventListener("pointerdown", (e) => this.onTouchDown(e), true);
@@ -216,6 +228,10 @@ export class BusDraw {
     this.head = false;
     this.line = line;
     this.dirty = false;
+    this.orig = [...this.pts];
+    this.base = this.snap();
+    this.undos = [];
+    this.redos = [];
     this.at = this.touchAt = null;
     this.over = -1;
     this.setQuote(null);
@@ -244,7 +260,10 @@ export class BusDraw {
 
   /** The points or legs changed (`edited`: by the player, so an edit has something to save). */
   private changed(edited = false) {
-    if (edited) this.dirty = true;
+    if (edited) {
+      this.dirty = true;
+      if (!this.drag) this.commit();
+    }
     if (this.pts.length < 2) this.head = false;
     const d = busDraft.peek();
     const points = this.pts.length - (this.closed() ? 1 : 0);
@@ -418,8 +437,126 @@ export class BusDraw {
     return hit;
   }
 
+  // ---------------------------------------------------------------- undo (T-3084)
+
+  private snap(): Snap {
+    return { pts: [...this.pts], legs: [...this.legs] };
+  }
+
+  /** An edit is done: the draft before it becomes a step back. A drag that ended where it began is none. */
+  private commit() {
+    if (samePts(this.base.pts, this.pts) && this.base.legs.length === this.legs.length) return;
+    this.undos.push(this.base);
+    this.redos = [];
+    this.base = this.snap();
+  }
+
+  private restore(s: Snap) {
+    this.pts = [...s.pts];
+    this.legs = [...s.legs];
+    this.base = this.snap();
+    this.dirty = !samePts(this.pts, this.orig);
+    this.touchAt = null;
+    this.over = -1;
+    this.rev++;
+    this.changed();
+  }
+
+  /** Ctrl+Z: the draft's last edit goes back; the game's own undo is left alone while the tool is open. */
+  private undo(): boolean {
+    if (this.busy || this.drag) return true;
+    const s = this.undos.pop();
+    if (!s) return true;
+    this.redos.push(this.snap());
+    this.restore(s);
+    return true;
+  }
+
+  private redo(): boolean {
+    if (this.busy || this.drag) return true;
+    const s = this.redos.pop();
+    if (!s) return true;
+    this.undos.push(this.snap());
+    this.restore(s);
+    return true;
+  }
+
+  // ---------------------------------------------------------------- a drag that opens Edit route (T-3084)
+
+  /** What a press at a screen point could drag on the selected bus line while no tool is on: one of its
+   * clicked points, or one of its stops (which becomes a point of the route where it stands). */
+  private preHit(px: number, py: number): { line: number; at: Pt } | null {
+    const w = world.peek(), sel = selection.peek();
+    if (!w || sel?.kind !== "line") return null;
+    const l = w.save.lines.find((x) => x.id === sel.line), b = l && w.lineStats[l.id]?.bus;
+    if (!l || !b || b.ferry || b.routeLL.length < 4) return null;
+    const r2 = HANDLE_PX * HANDLE_PX;
+    const hit = (lng: number, lat: number) => {
+      const s = this.map.project([lng, lat]);
+      return (s.x - px) ** 2 + (s.y - py) ** 2 <= r2;
+    };
+    const n = b.routeLL.length >> 1;
+    for (let i = 0; i < n; i++) {
+      if (i > 0 && i < n - 1 && !((b.kinds[i] ?? K_CORNER) & K_CORNER)) continue;
+      if (hit(b.routeLL[2 * i], b.routeLL[2 * i + 1])) return { line: l.num, at: { lng: b.routeLL[2 * i], lat: b.routeLL[2 * i + 1] } };
+    }
+    for (const st of b.stops) if (hit(st.lng, st.lat)) return { line: l.num, at: { lng: st.lng, lat: st.lat } };
+    return null;
+  }
+
+  private preDown(e: MouseEvent) {
+    if (tool.peek() !== "select" || this.busy || e.button !== 0 || e.target !== this.map.getCanvas() || touchInput.peek()) return;
+    if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || ask.peek()) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const h = this.preHit(px, py);
+    if (!h) return;
+    // a press without a drag still reaches MapLibre as a click
+    this.map.dragPan.disable();
+    this.pre = { ...h, x: px, y: py };
+  }
+
+  /** The press moved: Edit route opens on the line and the drag carries on in it, on the draft. */
+  private openOnDrag(e: MouseEvent) {
+    const p = this.pre;
+    if (!p) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    if (Math.hypot(e.clientX - r.left - p.x, e.clientY - r.top - p.y) < DRAG_PX) return;
+    this.pre = null;
+    const w = world.peek(), l = w?.save.lines.find((x) => x.num === p.line);
+    if (!l) return void this.map.dragPan.enable();
+    editBusRoute(l);
+    if (tool.peek() !== "bus" || this.line !== p.line) return void this.map.dragPan.enable();
+    // the nearest clicked point, else the stop becomes one
+    let i = -1, best = NEAR_POINT_SQ_M;
+    this.pts.forEach((c, k) => {
+      const d = metresBetween(c.lng, c.lat, p.at.lng, p.at.lat) ** 2;
+      if (d < best) [best, i] = [d, k];
+    });
+    if (i < 0) i = this.insertPoint(p.at);
+    if (i < 0) return void this.map.dragPan.enable();
+    this.press = { i, x: p.x, y: p.y };
+  }
+
+  /** Put a point on the draft where a stop stands, in the leg nearest to it; its index, -1 for none. */
+  private insertPoint(q: Pt): number {
+    let k = -1, best = Infinity;
+    this.legs.forEach((leg, j) => {
+      for (let m = 0; m + 1 < leg.pts.length >> 1; m++) {
+        const d = segM(leg.pts[2 * m], leg.pts[2 * m + 1], leg.pts[2 * m + 2], leg.pts[2 * m + 3], q);
+        if (d < best) [best, k] = [d, j];
+      }
+    });
+    if (k < 0) return -1;
+    this.pts.splice(k + 1, 0, q);
+    this.legs.splice(k, 1, this.roads.leg(this.pts[k], q), this.roads.leg(q, this.pts[k + 2]));
+    this.rev++;
+    return k + 1;
+  }
+
   private onDown(e: MouseEvent) {
-    if (tool.peek() !== "bus" || this.busy || e.button !== 0 || e.target !== this.map.getCanvas() || touchInput.peek()) return;
+    if (tool.peek() !== "bus") return this.preDown(e);
+    if ( this.busy || e.button !== 0 || e.target !== this.map.getCanvas() || touchInput.peek()) return;
     if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
     const r = this.map.getContainer().getBoundingClientRect();
     const px = e.clientX - r.left, py = e.clientY - r.top;
@@ -538,6 +675,10 @@ export class BusDraw {
   }
 
   private onUp() {
+    if (this.pre) {
+      this.pre = null;
+      this.map.dragPan.enable();
+    }
     const was = this.drag;
     clearTimeout(this.press?.timer);
     this.press = null;
@@ -550,7 +691,7 @@ export class BusDraw {
     setTimeout(() => (this.dragEnded = false));
     playBuild("snap");
     this.place();
-    void this.checkDrop(was);
+    void this.checkDrop(was).then(() => this.commit());
   }
 
   /** Dropped where the roads do not reach: back where it was, unless its legs had no road before either. */
@@ -769,6 +910,11 @@ export class BusDraw {
         this.changed();
       }
       return true;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) return this.undo();
+      if (k === "y" || (k === "z" && e.shiftKey)) return this.redo();
     }
     if (this.drag) return true;
     if (e.key === "Backspace") {
@@ -1007,4 +1153,11 @@ export class BusDraw {
     if (red) rows.unshift(row(refusalTag(red), true));
     show(rows);
   }
+}
+
+/** metres from `q` to the segment (x0, y0)-(x1, y1), longitude and latitude */
+function segM(x0: number, y0: number, x1: number, y1: number, q: Pt): number {
+  const k = Math.cos((q.lat * Math.PI) / 180), ax = (x1 - x0) * k, ay = y1 - y0, bx = (q.lng - x0) * k, by = q.lat - y0;
+  const l2 = ax * ax + ay * ay, f = l2 > 0 ? Math.max(0, Math.min(1, (ax * bx + ay * by) / l2)) : 0;
+  return Math.hypot(bx - f * ax, by - f * ay) * 111000;
 }

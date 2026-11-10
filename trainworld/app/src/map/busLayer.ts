@@ -63,6 +63,9 @@ const DASH_WIDTHS = 3.2, DASH_ON = 0.6;
 /** T-2982: a stop's dashed line to the train station it changes at; its width, CSS px, its dash and
  * gap in its widths, and how opaque the map's ink is in it */
 const FLAG_TRANSFER = 8;
+/** T-3084: the route a bus line's Edit route is replacing, drawn muted under the draft */
+const FLAG_MUTE = 16;
+const MUTE_ALPHA = 0.5;
 const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
 /** T-2991: an arrow's direction is taken over this many ground metres either side, so one at a
  * corner leans with the turn; how far its barbs reach past the route each side, device px at least
@@ -171,15 +174,16 @@ void main() {
   int id = int(a_info.x + 0.5);
   int flags = int(a_info.y + 0.5);
   bool bp = (flags & ${FLAG_BLUEPRINT}) != 0;
-  bool sel = id == u_sel;
+  bool mute = (flags & ${FLAG_MUTE}) != 0;
+  bool sel = id == u_sel && !mute;
   bool lit = false;
   for (int k = 0; k < ${LIT_MAX}; k++) if (k < u_lit_n && u_lit[k] == id) lit = true;
   bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
-  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER}) != 0)
+  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE}) != 0)
       || (xfer && (u_pass != 1 || u_xfer < 0.5))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  bool paint = u_pass == 1 && !bp && !xfer;
+  bool paint = u_pass == 1 && !bp && !xfer && !mute;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
-  vec3 col = paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
+  vec3 col = mute ? u_xfer_rgb : paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
   float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
@@ -207,7 +211,7 @@ void main() {
   v_cap = vec4(ua, len - ua, side * w * 0.5, w * 0.5);
   v_period = xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
   v_dash = u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0 ? a_info.w * u_px_per_unit + ua : -1.0;
-  v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
+  v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : mute ? ${MUTE_ALPHA} : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
   if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
   else if (xfer) v_color = u_xfer_rgb;
   else {
@@ -428,6 +432,18 @@ export class BusLayer {
     this.onGpu = null;
   }
 
+  /** T-3084: the bus line whose route is being redrawn (its number), -1 for none: drawn muted, with no stops */
+  private muted = -1;
+
+  /** Mute a line's route while Edit route replaces it; true when that changed what is drawn. */
+  setMuted(line: number): boolean {
+    if (line === this.muted) return false;
+    this.muted = line;
+    this.built = null;
+    this.version++;
+    return true;
+  }
+
   /** Take the world's bus lines; true when what is drawn changed. */
   set(w: WorldView | null): boolean {
     const next: BusSource[] = [];
@@ -490,7 +506,8 @@ export class BusLayer {
     const cum = new Float64Array(nSeg), range = new Map<number, [number, number]>();
     let at = 0;
     for (const l of this.lines) {
-      const col = pack(l.colour), flags = (l.built ? 0 : FLAG_BLUEPRINT) | (l.ferry ? FLAG_FERRY : 0), code = l.built ? 0 : 2;
+      const muted = l.id === this.muted;
+      const col = pack(l.colour), flags = muted ? FLAG_MUTE | (l.ferry ? FLAG_FERRY : 0) : (l.built ? 0 : FLAG_BLUEPRINT) | (l.ferry ? FLAG_FERRY : 0), code = l.built ? 0 : 2;
       let px = NaN, py = NaN, sumY = 0, run = 0;
       const first = at;
       for (let i = 0; i + 1 < l.route.length; i += 2) {
@@ -507,19 +524,19 @@ export class BusLayer {
         py = y;
       }
       range.set(l.id, [first, at - first]);
-      for (let i = 0; i + 3 < l.spurs.length; i += 4) {
+      for (let i = 0; !muted && i + 3 < l.spurs.length; i += 4) {
         const [x0, y0] = toLocal(l.spurs[i], l.spurs[i + 1], a), [x1, y1] = toLocal(l.spurs[i + 2], l.spurs[i + 3], a);
         seg.set([x0, y0, x1, y1], at * 4);
         info.set([l.id, (flags & ~FLAG_FERRY) | FLAG_SPUR, col, 0], at * 4);
         at++;
       }
       k.set(l.id, kAtY(sumY / (l.route.length / 2), a));
-      for (let i = 0; i + 1 < l.street.length; i += 2) {
+      for (let i = 0; !muted && i + 1 < l.street.length; i += 2) {
         const [x, y] = toLocal(l.street[i], l.street[i + 1], a);
         rings.push(x, y, 1 + code, col);
         ringLine.push(l.id);
       }
-      for (let i = 0; i + 2 < l.stops.length; i += 3) {
+      for (let i = 0; !muted && i + 2 < l.stops.length; i += 3) {
         const kind = l.stops[i + 2];
         // T-2938, T-2948: a line's two ends are drawn as ends, and its stops at a train station as stops, over it
         const end = kind === 0 || (kind === 1 && (i === 0 || i + 3 >= l.stops.length));
@@ -531,7 +548,7 @@ export class BusLayer {
     // T-2982: the transfer lines last, out of the picking, each dashed from its stop
     const pickCount = at;
     for (const l of this.lines) {
-      for (let i = 0; i + 3 < l.transfers.length; i += 4) {
+      for (let i = 0; l.id !== this.muted && i + 3 < l.transfers.length; i += 4) {
         const [x0, y0] = toLocal(l.transfers[i], l.transfers[i + 1], a), [x1, y1] = toLocal(l.transfers[i + 2], l.transfers[i + 3], a);
         seg.set([x0, y0, x1, y1], at * 4);
         info.set([l.id, FLAG_TRANSFER, 0, 0], at * 4);
@@ -542,7 +559,7 @@ export class BusLayer {
     const arrows: number[] = [];
     for (const l of this.lines) {
       const r = range.get(l.id);
-      if (!l.oneWay || !r || !r[1]) continue;
+      if (!l.oneWay || !r || !r[1] || l.id === this.muted) continue;
       const kl = k.get(l.id) ?? 1, step = ONE_WAY_STEP_M * ARROW_SPREAD * kl, col = pack(l.colour), last = r[0] + r[1] - 1;
       const len = cum[last] + Math.hypot(seg[last * 4 + 2] - seg[last * 4], seg[last * 4 + 3] - seg[last * 4 + 1]);
       const near: [number, number][] = [];
@@ -673,7 +690,7 @@ export class BusLayer {
     // corridor widened by half the outline and 0 inside it narrowed by half, so what stays 1 is a ring
     // along the edge, however the segments and caps overlap; the colour pass then draws the ring once
     // (the stencil goes to 0 where it draws).
-    if (this.byId.has(s.sel) && !this.byId.get(s.sel)!.ferry && (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0) {
+    if (this.byId.has(s.sel) && s.sel !== this.muted && !this.byId.get(s.sel)!.ferry && (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0) {
       const edge = 2 * CORRIDOR_M * (b.k.get(s.sel) ?? 1) * pxPerUnitAt(zoom) * dpr, half = 0.5 * OUTLINE_PX * dpr;
       gl.uniform1i(u.u_pass, 2);
       gl.uniform1i(u.u_only, s.sel);

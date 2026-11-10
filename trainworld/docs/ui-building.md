@@ -392,7 +392,13 @@ lighter; at most 16 of each.
   red if it still finds no road), the last point active; the same button, now **Save
   route**, saves it. Finishing an edit that changed nothing closes it untouched; otherwise it redraws
   the route (final for a constructed route, which pays any longer road). A new bus line is planned
-  until Construct.
+  until Construct. While the tool is open on a line, that line's current route is drawn muted (the map
+  ink at half strength, no stops) under the draft, so the draft reads as the new one (T-3084;
+  `BusLayer.setMuted`). A press on one of the selected bus line's clicked points or stops that moves
+  3 px with no tool on opens Edit route and carries on as a drag of the draft (a stop becomes a point
+  of the route where it stands); the game's route changes only when the edit is saved, as one undo step
+  (none for a constructed route). Ctrl+Z and Ctrl+Y (or Ctrl+Shift+Z) in the tool step the draft's
+  points back and forward and leave the game's own undo alone.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
   nothing waiting finishes, on the other end makes it active (or closes the loop, with three points). Dragging and deleting points take a
   mouse.
