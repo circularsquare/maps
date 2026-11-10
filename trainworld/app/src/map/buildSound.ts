@@ -29,6 +29,7 @@ function soundOf(i: Intent): BuildSound | null {
     }
     case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast":
     case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "orderStops": case "sortStops": case "removeLine": case "copyLine": case "lineGroup":
+    case "busSpacing": case "busHand": case "busHandStop": // T-2940: a bus line's stops, as a train line's
     case "doubleUp": case "edgeLevel": case "edgesLevel": case "edgesHsr": case "flying":
       return "pop";
     default:
@@ -95,7 +96,12 @@ const STATION_RATE = 2 ** (-3 / 12);
 const GAP_S: Record<BuildSound, number> = { chime: 1, snap: 0.15, station: 0.15, pop: 0.05, knock: 0.25, construct: 0.3 };
 const last: Record<BuildSound, number> = { chime: -1, snap: -1, station: -1, pop: -1, knock: -1, construct: -1 };
 
+/** The last sounds asked for, whether or not they were heard (checks read it as `tw.soundLog`). */
+export const soundLog: BuildSound[] = [];
+
 export function playBuild(kind: BuildSound) {
+  soundLog.push(kind);
+  if (soundLog.length > 100) soundLog.shift();
   const d = display.peek();
   if (!d.sound || d.soundVolume <= 0) return;
   const o = audioOut();

@@ -39,7 +39,7 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let (built, spacing, hand) = (r.built, r.spacing, r.hand.take());
+        let (built, spacing, hand, kept) = (r.built, r.spacing, r.hand.take(), std::mem::take(&mut r.hand_kept));
         *r = BusRoute::new(pts, kinds, built);
         r.spacing = spacing;
         // T-2891: stops the new route still passes go onto it; the rest are gone with the old road
@@ -49,8 +49,8 @@ impl TrackApi {
             let (s, d) = poly.project(net, p[0], p[1]);
             (d <= bus::STATION_REACH_M).then(|| { let (x, y) = poly.at_road(s); [quant(x), quant(y)] })
         };
-        let hand = hand.map(|h| h.iter().filter_map(onto).collect());
-        r.hand = hand;
+        r.hand = hand.map(|h| h.iter().filter_map(onto).collect());
+        r.hand_kept = kept.iter().filter_map(onto).collect();
         if built { self.run_charged(Op::Line { id, data: Some(d) }) } else { self.run(Op::Line { id, data: Some(d) }) }
     }
     /// Set how far apart a bus line's stops are, m (T-2885); 0 leaves them to place themselves. Free,
@@ -63,15 +63,18 @@ impl TrackApi {
             return 0;
         }
         r.spacing = spacing;
-        r.hand = None;
+        if let Some(h) = r.hand.take().filter(|h| !h.is_empty()) {
+            r.hand_kept = h;
+        }
         self.run(Op::Line { id, data: Some(d) })
     }
     /// A bus line's stop spacing, m (0: its stops place themselves or are placed by hand, or any other line).
     pub fn bus_spacing(&self, line: u32) -> f64 {
         self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(0.0, |r| r.spacing as f64)
     }
-    /// T-2891: the player places this bus line's stops, starting from none between its ends. Free and
-    /// one undo step, as `set_bus_spacing`; that function leaves the state.
+    /// T-2891: the player places this bus line's stops, starting from those of its last time by hand
+    /// (T-2939), else none between its ends. Free and one undo step, as `set_bus_spacing`; that function
+    /// leaves the state.
     pub fn set_bus_hand(&mut self, id: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
@@ -79,7 +82,7 @@ impl TrackApi {
             return 0;
         }
         r.spacing = 0;
-        r.hand = Some(vec![]);
+        r.hand = Some(std::mem::take(&mut r.hand_kept));
         self.run(Op::Line { id, data: Some(d) })
     }
     /// Whether the player places a bus line's stops (T-2891).

@@ -34,6 +34,7 @@ import { SAME_TAP_PX, touchInput, type TouchCtl } from "./touch";
 import type { Overlay } from "./overlay";
 import { BusRoads, SNAP_M, type BusRefusal, type Leg } from "./busRoads";
 import { setGrabbing } from "./nodeDrag";
+import { playBuild } from "./buildSound";
 import { safeColour } from "./safeColour";
 
 /** the sim's `bus::MIN_ROUTE_M` */
@@ -500,6 +501,7 @@ export class BusDraw {
     // MapLibre may still call a press that came back to its start a click
     this.dragEnded = true;
     setTimeout(() => (this.dragEnded = false));
+    playBuild("snap");
     this.place();
     void this.checkDrop(was);
   }
@@ -569,6 +571,7 @@ export class BusDraw {
       this.legs.splice(i - 1, 2, leg);
     } else if (i === 0) this.legs.shift();
     else this.legs.pop();
+    playBuild("pop"); // T-2940
     this.pts.splice(i, 1);
     this.over = -1;
     this.rev++;
@@ -647,6 +650,7 @@ export class BusDraw {
       this.pts.push(at);
       if (leg) this.legs.push(leg);
     }
+    playBuild("snap"); // T-2940: a point placed sounds as track placed does
     this.rev++;
     this.changed(true);
   }

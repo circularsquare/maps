@@ -33,6 +33,7 @@ import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
 import { touchInput, type TouchCtl } from "./touch";
 import { safeColour } from "./safeColour";
+import { playBuild } from "./buildSound";
 
 interface Pt { lng: number; lat: number }
 
@@ -355,6 +356,7 @@ export class FerryDraw {
   }
 
   private add(p: DraftPort) {
+    playBuild("station"); // T-2940: a port placed sounds as a station placed does
     if (this.head) this.ports.unshift(p);
     else this.ports.push(p);
     this.reunder();
@@ -363,6 +365,7 @@ export class FerryDraw {
 
   private remove(i: number) {
     if (this.busy || i < 0 || i >= this.ports.length) return;
+    playBuild("pop");
     this.ports.splice(i, 1);
     this.reunder();
     this.changed(true);
@@ -531,6 +534,7 @@ export class FerryDraw {
     }
     const a = await edit({ op: "ferryRoute", line, ports: ports.map((p) => ({ node: p.node })), route: routeArray(r) }, true);
     if (!a.ok) say(t("ferryDraw.changeFailed"), true);
+    else playBuild("pop");
     return a.ok;
   }
 

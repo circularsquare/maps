@@ -20,7 +20,7 @@ import { editBusRoute, editFerryRoute, toggleEditStops } from "../../game/lineAc
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
 import { edit, linesById, say, stationNames, world } from "../../game/world";
-import { Icon, Row, Stepper, SwapLabel } from "../widgets";
+import { Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
 import { demandView, complexTransfers } from "../../game/demand";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
@@ -200,38 +200,49 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
   );
 }
 
-/** T-2891: the By hand step, as a spacing below every real one */
-const BY_HAND = 1;
-/** T-2885: the steps of a bus line's stop spacing, m; 0 is automatic, below them all. A typed distance
- * may fall between. */
-const SPACING_STEPS = [0, BY_HAND, 400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000, 15_000, 20_000, 30_000, 50_000, 100_000];
+/** T-2885: the steps of a bus line's stop spacing under Auto, m; 0 is the stops placing themselves,
+ * below them all. A typed distance may fall between. */
+const SPACING_STEPS = [0, 400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000, 15_000, 20_000, 30_000, 50_000, 100_000];
 
-function StopSpacing({ l, bus }: { l: LineInput; bus: ClockBus }) {
+/** T-2937: the Stops heading with its Auto and Manual buttons, and under Auto the Stop spacing row.
+ * Manual (T-2891) opens the stop editing; any spacing, 0 included, leaves it. */
+function StopsHead({ l, bus }: { l: LineInput; bus: ClockBus }) {
   // what was asked for, shown at once and counted from until the edit lands
-  const [asked, setAsked] = useState<number | null>(null);
-  const spacing = asked ?? (bus.hand ? BY_HAND : bus.spacing);
-  const hand = spacing === BY_HAND;
-  const set = (m: number) => {
-    setAsked(m);
-    return edit(m === BY_HAND ? { op: "busHand", line: l.num } : { op: "busSpacing", line: l.num, spacing: m }).then((a) => {
+  const [asked, setAsked] = useState<{ hand: boolean; spacing: number } | null>(null);
+  const hand = asked?.hand ?? bus.hand;
+  const spacing = asked ? asked.spacing : bus.spacing;
+  const send = (to: { hand: boolean; spacing: number }) => {
+    setAsked(to);
+    return edit(to.hand ? { op: "busHand", line: l.num } : { op: "busSpacing", line: l.num, spacing: to.spacing }).then((a) => {
       setAsked(null);
-      if (a.ok && m === BY_HAND) toggleEditStops(l);
+      if (a.ok && to.hand) toggleEditStops(l);
       return a.ok;
     });
   };
+  const choose = (manual: boolean) => { if (manual !== hand) void send({ hand: manual, spacing: 0 }); };
   const step = (d: number) => {
     const at = SPACING_STEPS.reduce((best, s, i) => (s <= spacing ? i : best), 0);
     const to = Math.max(0, Math.min(SPACING_STEPS.length - 1, d > 0 || SPACING_STEPS[at] === spacing ? at + d : at + d + 1));
-    return SPACING_STEPS[to] === spacing ? false : set(SPACING_STEPS[to]);
+    return SPACING_STEPS[to] === spacing ? false : send({ hand: false, spacing: SPACING_STEPS[to] });
   };
-  const typed = (v: number) => void set(v > 0 ? Math.max(SPACING_STEPS[2], metresFromShown(v)) : 0);
+  const typed = (v: number) => void send({ hand: false, spacing: v > 0 ? Math.max(SPACING_STEPS[1], metresFromShown(v)) : 0 });
   return (
-    <ul class="rows">
-      <Row label={<span data-tip={hand ? t("busInspector.spacingHandTip") : t("busInspector.spacingTip", { auto: spacing === 0, distance: shortDistance(2000) })}>{t("busInspector.spacing")}</span>}>
-        <Stepper wide label={t("busInspector.spacing")} value={hand ? t("busInspector.spacingHand") : spacing ? shortDistance(spacing) : t("busInspector.spacingAuto")} onStep={step}
-          type={{ text: spacing && !hand ? String(+metresToShown(spacing).toFixed(2)) : "0", set: typed }} />
-      </Row>
-    </ul>
+    <>
+      <div class="h divided">
+        {t("busInspector.stops")}
+        <span class="right" data-tip={hand ? t("busInspector.spacingHandTip") : undefined}>
+          <Segmented<boolean> options={[[false, t("busInspector.spacingAuto")], [true, t("busInspector.spacingHand")]]} value={hand} onChange={choose} />
+        </span>
+      </div>
+      {!hand && (
+        <ul class="rows">
+          <Row label={<span data-tip={t("busInspector.spacingTip", { auto: spacing === 0, distance: shortDistance(2000) })}>{t("busInspector.spacing")}</span>}>
+            <Stepper wide label={t("busInspector.spacing")} value={spacing ? shortDistance(spacing) : t("busInspector.spacingAuto")} onStep={step}
+              type={{ text: spacing ? String(+metresToShown(spacing).toFixed(2)) : "0", set: typed }} />
+          </Row>
+        </ul>
+      )}
+    </>
   );
 }
 
@@ -376,11 +387,12 @@ export function BusInspector({ id }: { id: string }) {
 
       {st.status === "running" && <div class="line-day"><PastDay l={l} st={st} periods={periods} kind={kind} extra={<><PurposeSplit scope={[{ line: l.id }]} unit={t("lineInspector.ridersUnit")} /><ChangingToTrains l={l} bus={bus} /></>} /></div>}
 
-      <div class="h divided">
-        {ferry ? t("busInspector.ports") : t("busInspector.stops")}
-        {ferry && <span class="right muted small">{t("cityDetails.boardingsToday")}</span>}
-      </div>
-      {!ferry && <StopSpacing l={l} bus={bus} />}
+      {ferry ? (
+        <div class="h divided">
+          {t("busInspector.ports")}
+          <span class="right muted small">{t("cityDetails.boardingsToday")}</span>
+        </div>
+      ) : <StopsHead l={l} bus={bus} />}
       {ferry ? <FerryPorts l={l} st={st} bus={bus} colour={shown} editable={!drawing} flip={flip} time={stopTime} /> : <ul class="bus-stops" style={{ "--c": shown }}>
         {(flip ? rows.slice().reverse() : rows).map((r) => r.kind === "street" ? (
           <li class="street" data-tip={between(r)}>

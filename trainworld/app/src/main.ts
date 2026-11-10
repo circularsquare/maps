@@ -71,7 +71,7 @@ import { lineSizeAt, startTrackHover } from "./map/trackHover";
 import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
 import { startStationLife } from "./map/stationLife";
-import { startBuildSounds } from "./map/buildSound";
+import { soundLog, startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
 import { startLineFigures } from "./game/lineFigures";
 import { startEditNote } from "./game/editNote";
@@ -766,7 +766,7 @@ if (DEBUG) {
 
   (window as any).tw = {
     failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
-    map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
+    soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,

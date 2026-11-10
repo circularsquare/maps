@@ -303,7 +303,16 @@ fn stops_by_hand_clear_the_automatic_ones_and_keep_through_undo_a_redraw_and_a_s
     assert_eq!(a.set_bus_spacing(b, 0.0), 0, "{}", a.issues());
     assert!(!a.bus_hand(b));
     assert_eq!(bits(&a, b), auto_bits);
+    // T-2939: choosing By hand again gives the stops back; a redraw in between keeps those still on the route
     assert_eq!(a.set_bus_hand(b), 0);
+    assert_eq!(bits(&a, b), two, "the placed stops came back");
+    assert_eq!(a.set_bus_spacing(b, 0.0), 0);
+    assert_eq!(a.set_bus_route(b, &[-500.0, 100.0, 1.0, 7000.0, 100.0, 3.0]), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0);
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_STATION, KIND_END], "the stop at 9 km is off the new road");
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.undo(), 0);
     assert_eq!(a.set_bus_spacing(b, 5000.0), 0);
     assert!(!a.bus_hand(b) && a.bus_spacing(b) == 5000.0);
     // only a by-hand line takes a placed stop

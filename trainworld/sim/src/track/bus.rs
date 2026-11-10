@@ -81,13 +81,16 @@ pub struct BusRoute {
     pub built: bool,
     pub spacing: u32,
     pub hand: Option<Vec<[f64; 2]>>,
+    /// T-2939: the hand-placed stops of the last time this line was by hand, given back when it is chosen
+    /// again. Not saved: it lasts as long as the session.
+    pub hand_kept: Vec<[f64; 2]>,
 }
 
 impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0, hand: None }
+        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![] }
     }
     pub fn rule(&self) -> StopRule<'_> {
         match &self.hand {

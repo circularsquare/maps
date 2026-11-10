@@ -391,10 +391,12 @@ export class BusLayer {
       }
       for (let i = 0; i + 2 < l.stops.length; i += 3) {
         const kind = l.stops[i + 2];
-        // a station's own circle stands for a stop at a station
-        if (kind === 1) continue;
+        // T-2938: a line's two ends are drawn as ends even where they are at a station; the station's own
+        // circle stands for any other stop at a station
+        const end = kind === 0 || (kind === 1 && (i === 0 || i + 3 >= l.stops.length));
+        if (kind === 1 && !end) continue;
         const [x, y] = toLocal(l.stops[i], l.stops[i + 1], a);
-        if (kind === 0) (ends.push(x, y, code, col), endLine.push(l.id));
+        if (end) (ends.push(x, y, code, col), endLine.push(l.id));
         else (rings.push(x, y, 1 + code, col), ringLine.push(l.id));
       }
     }

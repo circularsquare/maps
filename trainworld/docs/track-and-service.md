@@ -1534,7 +1534,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (a constructed route: constructed stations only); no two come closer than 50 m. It stops at nothing else, crossings and
   other stations included. In all other ways it is a line with its own spacing: no street stops, 400 m of
   `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
-  it. The Save keeps them (`LBH1`).
+  it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
   down). The moving speed is 90% of the car's (`BUS_SHARE`), never under 30 km/h (`BUS_LANE_KMH`, its own

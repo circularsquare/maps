@@ -1,5 +1,6 @@
-// T-2891: a bus line's stops placed by hand. On the real save: By hand clears the automatic stops down
-// to the two ends and opens the stop editing, a click along the route adds a stop, a click on a stop
+// T-2891, T-2937, T-2938, T-2939, T-2940: a bus line's stops placed by hand, chosen with the Auto and
+// Manual buttons. On the real save: Manual clears the automatic stops down
+// to the two ends and opens the stop editing, Auto and back gives the placed stops back, the pop sounds, a click along the route adds a stop, a click on a stop
 // takes it out, undo and redo carry it, a save round-trips it, and leaving goes back to the automatic
 // stops. The real save has no line by hand (`save.rs` tests check the bytes).
 // From the maps root, on a Vite of your own:
@@ -30,6 +31,11 @@ const until = async (num, test) => { for (let k = 0; k < 150; k++) { const s = a
 const point = (lng, lat) => page.evaluate(([lng, lat]) => { const p = window.tw.map.project([lng, lat]); const r = window.tw.map.getContainer().getBoundingClientRect(); return [p.x + r.left, p.y + r.top]; }, [lng, lat]);
 const click = async (lng, lat) => { const [x, y] = await point(lng, lat); await page.mouse.move(x, y); await wait(150); await page.mouse.click(x, y); };
 const stepper = (dir) => page.locator('.stepper').filter({ has: page.locator(`button[aria-label*="Stop spacing"]`) }).locator('button')[dir < 0 ? 'first' : 'last']();
+// T-2937: the Auto and Manual buttons in the Stops heading
+const mode = (name) => page.locator('.h .group button').filter({ hasText: new RegExp(`^${name}$`) });
+const modeOn = async (name) => /\bon\b/.test((await mode(name).getAttribute('class')) ?? '');
+const sounds = () => page.evaluate(() => [...window.tw.soundLog]);
+const quiet = () => page.evaluate(() => { window.tw.soundLog.length = 0; });
 const exported = async () => {
   const dl = page.waitForEvent('download', { timeout: 60000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'export' }));
@@ -76,18 +82,32 @@ try {
   }, [auto.id, stops]);
   await wait(2500);
 
-  // By hand: one step up from Auto
+  // T-2937: Auto is selected and has a Stop spacing stepper; a step up is a distance, a step down Auto again
   const toAuto = auto.spacing === 0;
   check(toAuto, 'the line starts on Auto');
+  check((await modeOn('Auto')) && !(await modeOn('Manual')), 'the Auto button is on');
+  check((await stepper(1).count()) === 1, 'and the Stop spacing stepper is there');
+  await quiet();
   await stepper(1).click();
-  let s = await until(num, (x) => x.hand);
+  let s = await until(num, (x) => x.spacing === 400);
+  check(s.spacing === 400, 'a step up from Auto is 400 m', `${s.spacing}`);
+  check((await sounds()).includes('pop'), 'and sounds the pop', (await sounds()).join());
+  await stepper(-1).click();
+  s = await until(num, (x) => x.spacing === 0);
+  check(s.spacing === 0 && !s.hand, 'a step down is Auto again');
+  await page.screenshot({ path: join(OUT, 'auto.png'), clip: { x: 0, y: 620, width: 302, height: 280 } });
+
+  // Manual
+  await quiet();
+  await mode('Manual').click();
+  s = await until(num, (x) => x.hand);
   check(s.hand && s.kinds.length === 2 && s.street === 0, 'By hand leaves the two ends', `${s.kinds} ${s.street}`);
   await wait(800);
   const editing = await page.evaluate(() => [window.tw.tool?.value ?? null, document.documentElement.classList.contains('stop-editing')]);
   check(editing[1], 'and opens the stop editing', JSON.stringify(editing));
   await page.waitForTimeout(500);
-  const panel = await page.locator('.stepper .v, .stepper').filter({ hasText: 'Manual' }).count();
-  check(panel > 0, 'the stepper reads Manual');
+  check((await modeOn('Manual')) && (await stepper(1).count()) === 0, 'the Manual button is on and the stepper is gone');
+  check((await sounds()).includes('pop'), 'choosing Manual sounds the pop', (await sounds()).join());
 
   // a click along the route adds, twice
   const route = await page.evaluate((id) => { const b = window.tw.world.value.lineStats[id].bus; return b.routeLL; }, auto.id);
@@ -97,8 +117,10 @@ try {
   const offBy = (f) => { const [lng, lat] = along(f); return Math.min(...reach.map((r) => Math.hypot((r.lng - lng) * 84000, (r.lat - lat) * 111000))); };
   const open = [...Array(19).keys()].map((k) => (k + 1) / 20).reduce((a, b) => (offBy(b) > offBy(a) ? b : a));
   console.log(`farthest from a station along the spur: ${offBy(open).toFixed(0)} m at ${open}`);
+  await quiet();
   await click(...along(open));
   s = await until(num, (x) => x.kinds.length === 3);
+  check((await sounds()).includes('pop'), 'a stop clicked in sounds the pop', (await sounds()).join());
   check(s.kinds.length === 3 && s.kinds[1] === 2, 'a click on the open road adds a plain stop', `${s.kinds}`);
   await click(route[4], route[5]);
   s = await until(num, (x) => x.kinds.length === 4);
@@ -109,6 +131,22 @@ try {
   await wait(400);
   await page.screenshot({ path: join(OUT, 'placed.png') });
   const placedKinds = s.kinds;
+  await page.screenshot({ path: join(OUT, 'manual-ends.png') });
+  // T-2938: with the editing done, the line's two end stops are drawn like the others
+  await page.evaluate((id) => { window.tw.tools.exit(); window.tw.selection.value = { kind: 'line', line: id }; }, auto.id);
+  await page.mouse.move(700, 880);
+  await wait(1200);
+  await page.screenshot({ path: join(OUT, 'manual-done.png') });
+
+  // T-2939: Auto and back to Manual gives the placed stops back
+  await mode('Auto').click();
+  s = await until(num, (x) => !x.hand);
+  check(!s.hand && JSON.stringify(s.kinds) === JSON.stringify(auto.kinds), 'Auto goes back to the automatic stops', `${s.kinds}`);
+  await mode('Manual').click();
+  s = await until(num, (x) => x.hand);
+  check(s.hand && JSON.stringify(s.kinds) === JSON.stringify(placedKinds), 'and Manual again has the stops placed before', `${s.kinds}`);
+  const stillEditing = await page.evaluate(() => document.documentElement.classList.contains('stop-editing'));
+  check(stillEditing, 'with the stop editing open');
 
   // a click on a stop removes it, and undo brings it back
   const victim = s.stops[1];
@@ -137,13 +175,24 @@ try {
   // leaving: one step down is Auto
   await page.evaluate((id) => { window.tw.tools.exit(); window.tw.selection.value = { kind: 'line', line: id }; }, back.id);
   await wait(800);
-  await stepper(-1).click();
+  await mode('Auto').click();
   s = await until(num, (x) => !x.hand);
   await wait(500);
   check(!s.hand && JSON.stringify(s.kinds) === JSON.stringify(auto.kinds) && s.street === auto.street, 'leaving goes back to the automatic stops', `${s.kinds.length} stops, ${s.street} street`);
   const toolOut = await page.evaluate(() => document.documentElement.classList.contains('stop-editing'));
   check(!toolOut, 'and the editing is over');
   check(before.kinds.length === auto.kinds.length, 'the line was the same before and after');
+
+  // T-2940: the route tool: taking a point back sounds the pop (placing one the snap, as track placed)
+  await page.evaluate((id) => { window.tw.selection.value = { kind: 'line', line: id }; }, back.id);
+  await wait(500);
+  await page.getByRole('button', { name: /Edit route/ }).click();
+  await wait(800);
+  await quiet();
+  await page.keyboard.press('Backspace');
+  await wait(600);
+  check((await sounds()).includes('pop'), 'taking a route point back sounds the pop', (await sounds()).join());
+  await page.evaluate(() => window.tw.tools.exit());
   check(errors.length === 0, 'no console errors', errors.slice(0, 3).join(' | '));
 } catch (e) {
   await page.screenshot({ path: join(OUT, 'died.png') }).catch(() => {});

@@ -380,17 +380,22 @@ the tag by the pointer gives the road length and the price.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
   nothing waiting finishes, on the other end makes it active. Dragging and deleting points take a
   mouse.
-- **Stop spacing** (T-2885; `StopSpacing` in `ui/inspector/BusInspector.tsx`): a stepper at the top of the bus
-  panel's Stops list, on any bus line, planned or constructed, not on a ferry. Auto is the first step (the
-  stops place themselves, track-and-service.md 6.7), Manual the next (below), then 400 m to 100 km; a click
-  on the value takes a typed distance in the shown unit (0 is Auto). Each step is one undoable edit, the
-  map's stops and the list following at once, and the route tool's preview uses the line's stops.
-- **Manual** (T-2891; `map/busStops.ts`): choosing it clears the stops down to the route's two ends and opens
-  stop editing, the train mode's look and its keys (S or the panel's Edit stops button, shown while the line is
-  manual; Enter or Stop editing ends it). A stop is the train editor's disc, a station the route can stop at
-  (`STATION_REACH_M`) its hollow marker, and a hollow marker follows the pointer along the route. A click on
-  the route or a station adds a stop, a click on a stop takes it out, each one edit and one undo; the two
-  ends stay. Any other step of the stepper leaves Manual, and the placed stops go with it.
+- **Stop spacing** (T-2885, T-2937; `StopsHead` in `ui/inspector/BusInspector.tsx`): the bus panel's Stops heading
+  carries two buttons, Auto and Manual, as the schedule's Buses and Headway pair does; not on a ferry. Under Auto
+  (planned or constructed line) a Stop spacing row follows with a stepper: its first step reads "Auto" (the
+  stops place themselves, track-and-service.md 6.7; no single distance describes that), then 400 m to 100 km;
+  a click on the value takes a typed distance in the shown unit (0 is Auto). Under Manual there is no row.
+  Each step is one undoable edit, the map's stops and the list following at once, and the route tool's
+  preview uses the line's stops.
+- **Manual** (T-2891, T-2939; `map/busStops.ts`): choosing it opens stop editing, the train mode's look and its
+  keys (S or the panel's Edit stops button, shown while the line is manual; Enter or Stop editing ends it).
+  The first time it starts from the route's two ends. A stop is the train editor's disc, a station the route
+  can stop at (`STATION_REACH_M`) its hollow marker, and a hollow marker follows the pointer along the route. A
+  click on the route or a station adds a stop, a click on a stop takes it out, each one edit and one undo; the
+  two ends stay. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
+  session (`BusRoute::hand_kept`, not saved): choosing Manual again gives them back, and a redraw in between
+  keeps those within 200 m of the new route. A line's two end stops are drawn like its other stops in Auto
+  and Manual alike (T-2938).
 
 ## Drawing a ferry line
 
