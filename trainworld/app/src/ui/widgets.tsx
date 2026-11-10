@@ -110,7 +110,7 @@ export const Icon = {
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
   // an alert's mark, a circled exclamation point, coloured by its severity
-  alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v3.2" /><circle class="solid" stroke="none" cx="8" cy="11.1" r="1" /></svg>,
+  alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v3.2" /><circle class="solid" stroke="none" cx="8" cy="11.1" r="1.4" /></svg>,
   // the Cities tab, a skyline
   cities: () => <svg viewBox="0 0 16 16"><path d="M1.5 14h13M3 14V7h3.5v7M6.5 14V2.5h3.5V14M10 14V8h3v6" /></svg>,
   // T-2395: the game's home, filled where it is this place
