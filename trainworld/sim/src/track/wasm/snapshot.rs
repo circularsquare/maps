@@ -85,8 +85,9 @@ impl TrackApi {
         geom::sample(self.w.net.edge_pieces(e), 50.0, 0.05, lateral, &mut pts);
         pts.iter().flat_map(|p| [p[0] as f32, p[1] as f32]).collect()
     }
-    /// Per live node, 10 numbers: id, x, y, level, edge ends, constructed edge ends, flying,
-    /// platform length (0 = no station), station constructed, heading (rad).
+    /// Per live node, 10 numbers: id, x, y, level, edge ends, constructed edge ends, flags (1
+    /// flying, 2 moves through it can cross, T-3103), platform length (0 = no station), station
+    /// constructed, heading (rad).
     pub fn nodes_info(&self) -> Vec<f64> {
         let n = &self.w.net;
         let mut out = vec![];
@@ -95,7 +96,8 @@ impl TrackApi {
                 continue;
             }
             let i = k as usize;
-            out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, n.node_flying[i] as u8 as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
+            let flags = n.node_flying[i] as u8 | (crate::track::capacity::junction_crosses(n, k) as u8) << 1;
+            out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, flags as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
         }
         out
     }

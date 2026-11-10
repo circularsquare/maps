@@ -359,11 +359,33 @@ Full design, numbers and sources: `notes/T-008.md`.
   junction or a station. A crossover keeps its shape: no corners to drag, no level change, its end
   nodes cannot be moved or made a flyover, no station or junction on a diagonal. Deleting either
   diagonal deletes both (the four nodes stay as plain joints); constructing either builds both.
-- **Junctions** (T-080): a new junction is built flat (the branch crosses the other direction's
-  track at the same level: cheaper, trains may wait for each other); there is no setting while
-  drawing. A flyover is bought from the junction inspector ([ui-building.md](ui-building.md)), which
-  gives its price and the waiting it saves per train at the demand level in force: paid at once on
-  a constructed junction, else added to the blueprint, where it can be removed again.
+- **Junctions** (T-080): with the ramp switch off, a new junction is built flat (the branch crosses
+  the other direction's track at the same level: cheaper, trains may wait for each other).
+- **Flyovers** (T-3092, `wasm/flyover.rs`): with the ramp switch on, a double-track regular route
+  that makes a new junction J1 on double rail track (a split, or a plain two-end node) lays it as
+  a flying junction of real track. The route's first stretch, J1 to **J3** (a new node on the route,
+  the first point 300 m or more out whose tangent back toward J1 meets the main at least 270 m away),
+  is one-way single track for the direction that crosses nothing; the route stays double past J3.
+  The other direction gets a **crossing leg**, one-way single track from J3 straight on along that
+  tangent, over the main (the route's own ramp pass: a level up, or down from -1; the leads where it
+  leaves J3 and joins J2 are no crossing), 270 m beyond it, then back in to **J2**, a new split on
+  the main behind it at a slope of 1 in 4 across over along, with an 80 m lead along the main. Which
+  direction crosses comes from the running side: the move toward the branch crosses when the branch
+  leaves on the side away from it. At J1, J2 and J3 every move then merges or diverges, so no
+  crossing resource is made, and each direction routes over its own leg (one-way track, below). The
+  legs are ordinary track, priced as such; J2 and J3 are junctions and priced as junctions. The leg
+  is drawn in the preview after a gap (`preview_route`), and undo takes the whole route. **No room:**
+  the junction stays flat and the drawing tag says "No room for a flyover here"
+  (`route_flyovers_flat`): no such J3 before 50 m from the route's far end (or a station's platform
+  less 40 m), J2's split refused (a station's platform within 40 m, a junction, crossover or track
+  end before 40 m past it, a ramp there), the leg's ramps with no room either way, or the edit's
+  checks failing with the leg. A route the checks refuse anyway gets no note; single, quad,
+  high-speed and tram routes and junctions on single track stay flat with none. Each end of a
+  route that makes a junction gets its own flyover where it fits. The junction inspector's
+  flyover flag stays as the fix for a junction already built: bought there
+  ([ui-building.md](ui-building.md)), which gives its price and the waiting it saves per train at
+  the demand level in force, paid at once on a constructed junction, else added to the blueprint,
+  where it can be removed again.
 - **Branching from a station** (T-1155, `branch_end` in `wasm/draw.rs`): a station's node takes
   no junction (`StationPorts`) and no junction may sit in a platform, so a route starting or
   ending on a through station's node, or on track within any station's platform, leaves the track
@@ -453,7 +475,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   fail (a ramp across other track, ground over water). Quad's express pair ramps on its own the
   same way. The drawing tool sends the switch with each route (`ramp`); an edit API route
   without it crosses flat, a station placed on open ground never ramps, and saved track is never
-  reshaped. The preview and the edit share the code.
+  reshaped. The preview and the edit share the code. With the switch on, new junctions on double
+  track are also laid as flyovers ("Flyovers" above).
 
 #### Stations
 
@@ -594,8 +617,11 @@ At a node, every edge end leaves along the node's heading or its reverse; a move
 ends on opposite sides. A line's path turns back (arrives and leaves on the same side) only at a
 station it stops at or at a bare track end, one with no station (T-797, 6.3). In a **junction**, two moves conflict when their paths cross at the same
 level (track positions in opposite order on the two sides); merges and diverges do not, as track
-capacity counts them. A plain double-track Y has one crossing pair. A **flyover** (a flying
-junction) removes it, for its price (6.1, 6.4). A **flat crossing** makes every move on one
+capacity counts them. A plain double-track Y has one crossing pair. A **flyover** removes it: real
+one-way legs that send the crossing move over the main (T-3092, 6.1 "Flyovers"), or the junction
+inspector's flying flag, for its price (6.4). The map's flat-junction badge marks a junction only
+where two moves its ports and one-way track allow could cross, run by a line or not
+(`capacity::junction_crosses`, T-3103). A **flat crossing** makes every move on one
 route conflict with every move on the other; one with no train on its other route (blueprint, or
 constructed track no line runs on) holds nothing. A **tram** crossing a train route at a flat
 crossing yields (T-3032): the train route's crossing resource is loaded by trains only, so tram passes

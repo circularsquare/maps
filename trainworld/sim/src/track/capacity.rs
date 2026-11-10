@@ -324,6 +324,30 @@ fn track_pos(net: &Network, node: u32, e: u32, which: u32, plus_h: bool) -> f64 
     }
 }
 
+/// T-3103: whether two moves through junction `n` could cross at its level, by the rule
+/// `build_nodes` holds them to, over every move its ports and one-way track allow (run by a line
+/// or not). The map's flat-junction badge; a flying junction has none.
+pub fn junction_crosses(net: &Network, n: u32) -> bool {
+    let p = &net.node_ports[n as usize];
+    if p.n < 3 || net.node_flying[n as usize] {
+        return false;
+    }
+    // port codes are `edge << 1 | end`: arriving there is entry `code ^ 1`, leaving it entry `code`
+    let mut moves: Vec<(f64, f64)> = vec![];
+    for i in (0..p.n as usize).filter(|&i| p.side[i] == 0) {
+        for j in (0..p.n as usize).filter(|&j| p.side[j] == 1) {
+            let (a, b) = (p.end[i], p.end[j]);
+            for plus in [true, false] {
+                let ok = if plus { net.dir_ok(a ^ 1) && net.dir_ok(b) } else { net.dir_ok(b ^ 1) && net.dir_ok(a) };
+                if ok {
+                    moves.push((track_pos(net, n, a >> 1, a & 1, plus), track_pos(net, n, b >> 1, b & 1, plus)));
+                }
+            }
+        }
+    }
+    moves.iter().enumerate().any(|(k, x)| moves[k + 1..].iter().any(|y| (x.0 - y.0) * (x.1 - y.1) < 0.0))
+}
+
 /// Trains on the edge hold only their own direction's track: double track, or one-way single track (T-3094).
 fn directed(net: &Network, e: u32) -> bool {
     net.edge_tracks[e as usize] != 1 || net.edge_oneway[e as usize] != 0

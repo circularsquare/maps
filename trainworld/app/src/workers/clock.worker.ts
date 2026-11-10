@@ -3514,7 +3514,7 @@ function apply(op: EditOp): Applied {
   a.set_game_day(Math.floor(gameNow() / 86400)); // T-2871: what this edit constructs is dated today
   switch (op.op) {
     case "route": {
-      const r = a.add_route(...routeArgs(a, op), false);
+      const r = a.add_route(...routeArgs(a, op));
       return { r, node: r === 0 ? a.route_end() : undefined };
     }
     case "edgePis":
@@ -4011,7 +4011,7 @@ const besideOf = (r: { beside?: [number, number] }): [number, number] => r.besid
 const designOf = (r: { design?: number }) => r.design ?? 160;
 /** `r`'s settings set on the track model, and its ends, points and tracks as `TrackApi.add_route`
  * and `preview_route` take them. */
-function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, number] {
+function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, number, boolean] {
   a.set_route_tangent(!!r.through);
   a.set_design_speed(designOf(r));
   a.set_route_kind(r.tram ? (r.street ? 2 : 3) : 0);
@@ -4019,7 +4019,8 @@ function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, numbe
   a.set_route_hsr(!!r.hsr);
   a.set_route_ramp(!!r.ramp);
   a.set_route_beside(...besideOf(r));
-  return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.single ? 1 : r.quad ? 4 : 2];
+  // T-3092: with ramps on, new junctions on double track are laid as flyovers
+  return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.single ? 1 : r.quad ? 4 : 2, !!r.ramp];
 }
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
@@ -4081,7 +4082,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
 async function masksFor(op: EditOp) {
   const a = api!;
   if (op.op === "route" && maskedRoute === routeKey(op)) return;
-  if (op.op === "route") await withMasks(() => a.preview_route(...routeArgs(a, op), false), routePoints);
+  if (op.op === "route") await withMasks(() => a.preview_route(...routeArgs(a, op)), routePoints);
   else if (op.op === "edgePis") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_edge(op.edge, pisArr(op.pis))), routePoints);
   else if (op.op === "moveNode") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_move_node(op.node, op.x, op.y)), nodePoints);
   else if (op.op === "moveNodes") await withMasks(() => (a.set_design_speed(designOf(op)), a.preview_move_nodes(new Uint32Array(op.nodes), op.dx, op.dy)), nodePoints);
@@ -4395,7 +4396,7 @@ async function handle(msg: ToClock) {
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
     const out = await withMasks(() => msg.kind === "preview"
-      ? a.preview_route(...routeArgs(a, msg), false)
+      ? a.preview_route(...routeArgs(a, msg))
       : (a.set_design_speed(designOf(msg)), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq);
     if (!out) return sendStale(msg.seq);
     void roadsUnder(routePoints(out));
@@ -4422,7 +4423,8 @@ async function handle(msg: ToClock) {
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
     const marks = markPoints(a.preview_marks(), 3);
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
+    const flatJunctions = msg.kind === "preview" ? a.route_flyovers_flat() : 0;
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks, ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

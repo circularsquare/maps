@@ -229,7 +229,7 @@ export class StateRows {
     for (let i = 0; i < ni.length; i += 10) {
       const id = ni[i];
       const platform = ni[i + 7];
-      const stationBuilt = ni[i + 8] === 1, stationOff = offStations.has(id), upgrades = ups.get(id) ?? 0, flying = ni[i + 6] === 1;
+      const stationBuilt = ni[i + 8] === 1, stationOff = offStations.has(id), upgrades = ups.get(id) ?? 0, flying = (ni[i + 6] & 1) === 1, crosses = (ni[i + 6] & 2) === 2;
       const name = platform > 0 ? this.name(a, id) : "";
       const named = platform > 0 && namedStations.has(id);
       // T-2194: a port has no track, so no platform line
@@ -237,11 +237,11 @@ export class StateRows {
       const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
       const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
-      if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || r.platform !== platform
+      if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || !!r.crosses !== crosses || r.platform !== platform
         || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
         const berth = port ? a.port_berth(id) : null;
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
+        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
           ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
       }

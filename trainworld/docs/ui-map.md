@@ -364,7 +364,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   renderer over the track and under stations and trains, from zoom 9 (blueprint and drawing) or 11
   (built):
   - A **flat crossing** (an X) and a **flat junction** (a fork, a node with three or more track ends
-    and no station, not a flyover) in a round badge with a thin ring. On blueprint track and in the
+    and no station, not a flyover, where two moves through it can cross at its level by the rule of
+    track-and-service.md 6.2: T-3103, `capacity::junction_crosses`, so no badge where every move merges or diverges) in a round badge with a thin ring. On blueprint track and in the
     drawing tool's preview (the crossings and junctions the new track would make, from the track
     model) the badge is big: radius 7 px at zoom 9, 11 at 12, 15 at 15. On built track it is small
     and quiet from zoom 11, at 85% opacity: 7.5 px at zoom 14, following the square root of the

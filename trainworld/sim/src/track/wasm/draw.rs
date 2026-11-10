@@ -12,13 +12,22 @@ impl TrackApi {
     /// existing track gets a lead-in PI on that track's heading, so it leaves like a turnout.
     /// T-1615: with `route_ramp`, a route crossing track at its own level ramps over or under it,
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
+    /// T-3092: `flying` lays each new junction on double track as a flyover of real track where it
+    /// has room (`with_flyovers`).
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+        self.route_legs.clear();
+        self.flyover_fell_back = 0;
+        let r = self.route_op_plain(ends, pis, tracks)?;
+        Ok(if flying { self.with_flyovers(r, tracks) } else { r })
+    }
+
+    fn route_op_plain(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
         if let Some(eb) = self.route_beside.take() {
             if let Some((b_ends, b_pis, on_line, run)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
                 // a start on the line leaves along it; one coming in keeps its lead-in
                 self.beside_on = on_line;
-                let r = self.route_op_ramped(&b_ends, &b_pis, tracks, flying);
+                let r = self.route_op_ramped(&b_ends, &b_pis, tracks);
                 self.beside_on = false;
                 // T-1895: never across the track followed, lead-ins included; the plain route
                 // instead (a start on that track meets it there)
@@ -37,15 +46,15 @@ impl TrackApi {
                 }
             }
         }
-        self.route_op_ramped(ends, pis, tracks, flying)
+        self.route_op_ramped(ends, pis, tracks)
     }
 
-    fn route_op_ramped(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+    fn route_op_ramped(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         if self.route_ramp {
             for t in [Ramp::First, Ramp::Second] {
                 self.ramp_try = t;
                 (self.ramp_found, self.ramp_failed) = (false, false);
-                let r = self.route_op_as(ends, pis, tracks, flying);
+                let r = self.route_op_as(ends, pis, tracks);
                 if !self.ramp_found {
                     self.ramp_try = Ramp::Flat;
                     return r;
@@ -64,10 +73,10 @@ impl TrackApi {
             }
         }
         self.ramp_try = Ramp::Flat;
-        self.route_op_as(ends, pis, tracks, flying)
+        self.route_op_as(ends, pis, tracks)
     }
 
-    fn route_op_as(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+    fn route_op_as(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         let mut pis = pis_from(pis);
         let scaled = self.w.net.frame().scaled();
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
@@ -286,14 +295,10 @@ impl TrackApi {
             self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex_bridged.unwrap_or(ex);
         }
-        // A junction this route makes (it had two edge ends, or it splits track) is flying if
-        // the build setting says so; never one that already stands.
         self.route_junctions.clear();
         for r in [&ra, &rb] {
-            if flying && r.new_junction {
-                ops.push(Op::Node { id: r.node, data: Some(NodeData { x: r.x, y: r.y, level: r.level, flying: true }) });
-            } else if r.new_junction {
-                self.route_junctions.push([r.x, r.y]);
+            if r.new_junction {
+                self.route_junctions.push((r.node, [r.x, r.y]));
             }
         }
         self.route_express = express;
@@ -609,13 +614,18 @@ impl TrackApi {
                 return vec![0.0; 5];
             }
         };
-        let r = self.w.trial(op);
+        // T-3103: a junction's flat badge only where two moves through it can cross; on a refused
+        // edit, every junction it would make
+        let js: Vec<u32> = self.route_junctions.iter().map(|j| j.0).collect();
+        let r = self.w.trial_light(op, |w| js.iter().map(|&n| crate::track::capacity::junction_crosses(&w.net, n)).collect::<Vec<_>>());
+        let crosses = r.as_ref().map_or_else(|_| vec![true; js.len()], |v| v.1.clone());
+        let r = r.map(|v| v.0);
         self.release(&nn, &ne);
         let r = if self.bridge_refused { r.map_err(|i| bridge_refusal(i, &self.bridge_short)) } else { r };
         let shape = std::mem::take(&mut self.route_bridged);
         let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_kind_of(tracks));
-        for j in &self.route_junctions {
-            self.preview_marks.extend([j[0], j[1], 1.0]);
+        for (j, _) in self.route_junctions.iter().zip(&crosses).filter(|c| *c.1) {
+            self.preview_marks.extend([j.1[0], j.1[1], 1.0]);
         }
         if !self.route_express.is_empty() && out.len() > 5 {
             // T-711: the multiplier over both pairs' track, as the price is
@@ -634,8 +644,23 @@ impl TrackApi {
             render_samples(&f.pieces, &f.vert, &mut out);
             self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
         }
+        // T-3092: each flyover's crossing leg, after a step with no track
+        if out.len() > 5 {
+            for leg in &self.route_legs {
+                let f = self.w.net.fit(leg);
+                self.preview_speeds.push(-1.0);
+                render_samples(&f.pieces, &f.vert, &mut out);
+                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
+            }
+        }
         self.route_vertices = verts;
         out
+    }
+
+    /// T-3092: how many of the junctions the last route asked about makes fell back to flat ones
+    /// for want of room for a flyover (with `flying` set).
+    pub fn route_flyovers_flat(&self) -> u32 {
+        self.flyover_fell_back
     }
 
     /// T-418: whether routes after this are drawn through their end (`tangent_arc`): a route with
@@ -1056,7 +1081,7 @@ pub(super) enum Ramp {
 
 /// Where alignment `f`, at height `own` there, crosses other track flat at level `base`, as spans
 /// of no length; none within `SHARED_NODE_CLEAR` of its ends, where it meets the track it leaves.
-fn flat_spans(net: &Network, f: &geom::Fit, base: i8, own: f64) -> Vec<[f64; 2]> {
+pub(super) fn flat_spans(net: &Network, f: &geom::Fit, base: i8, own: f64) -> Vec<[f64; 2]> {
     let z = base as f64 * LEVEL_H;
     let (mut out, mut hits) = (vec![], vec![]);
     for e in net.grid.near(&f.pieces) {

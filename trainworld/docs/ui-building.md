@@ -97,8 +97,9 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   any tab, by key code, 4 being 0 [T-1701, T-1834], except that while the selection bar shows a blueprint pick
   with its level buttons they put the pick at that level, as the buttons do, and leave the drawing level alone [T-2285]; every segment's open-ground end takes the level
   picked (`Tools.freeLevel`). Then the **ramp switch** (track humping over a line seen side on; hover
-  "Automatically try to ramp over crossed tracks at the same level."; on by default) [T-1615,
-  [track-and-service.md](track-and-service.md) 6.1 "Ramping over track"], then the price: the picked
+  "Try to ramp over track you cross at the same level and build new junctions as flyovers"; on by
+  default) [T-1615, T-3092, [track-and-service.md](track-and-service.md) 6.1 "Ramping over track",
+  "Flyovers"], then the price: the picked
   level's price per km and multiplier, "$99M per km (1.1x cost)" (with High speed picked,
   high-speed track's: 1.5x, so 0.75x at ground), the multiplier on the track tool's tag colours:
   light yellow at 1x [T-2271], yellow growing above it, light green growing below it to 0.5 strong
@@ -285,7 +286,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   green below 1x [T-2271]. It is the level's multiplier
   (6.4: 0.5x at ground, 1.0x at +1) plus terrain's and water's surcharges, averaged over the track
   priced, both pairs on quad, whose price is two double tracks' [T-711]. Where the segment could not be
-  built ending at the cursor, the reason comes first, in red, and the cost line is left out. The
+  built ending at the cursor, the reason comes first, in red, and the cost line is left out. With the
+  ramp switch on, a junction the segment makes that has no room for a flyover adds "No room for a
+  flyover here" after the cost line [T-3092]. The
   build tools' tags are drawn over the bubbles' tags; the track tag shows above the pointer when
   it is on existing track. A third line names the roughest terrain class charged with its
   surcharge ("Mountains +3.0x", "Hills +1.2x", "Hills +0.5x") and "Water +2.5x" when the segment

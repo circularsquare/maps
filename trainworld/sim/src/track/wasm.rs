@@ -56,6 +56,10 @@ pub struct TrackApi {
     route_vertices: Vec<Pi>,
     /// The express pair of the last quad route asked about (T-255), else empty.
     route_express: Vec<Pi>,
+    /// T-3092: the crossing legs of the flyovers the last route asked about lays, each J3 to J2.
+    route_legs: Vec<Vec<Pi>>,
+    /// T-3092: how many junctions of the last route asked about fell back to flat for want of room.
+    flyover_fell_back: u32,
     /// T-656: the last route's alignment once bridged over water (what is built and drawn), else
     /// empty; `route_vertices` stays the shape the player drew.
     route_bridged: Vec<Pi>,
@@ -94,8 +98,8 @@ pub struct TrackApi {
     /// Where the last preview's track makes a crossing or a flat junction (T-629): x, y, kind (0
     /// crossing, 1 junction) per mark.
     preview_marks: Vec<f64>,
-    /// The flat junctions the last route asked about makes: x, y per junction.
-    route_junctions: Vec<[f64; 2]>,
+    /// The junctions the last route asked about makes: node, x, y per junction.
+    route_junctions: Vec<(u32, [f64; 2])>,
     /// What the last station trial added to the blueprint, US$M (`station_cost`).
     station_cost: f64,
     /// The building the last `add_building` made (`u32::MAX` if none) and what the last add or
@@ -322,6 +326,8 @@ impl TrackApi {
             last_trains: 0.0,
             route_vertices: vec![],
             route_express: vec![],
+            route_legs: vec![],
+            flyover_fell_back: 0,
             route_bridged: vec![],
             bridge_refused: false,
             bridge_short: Issue::BridgeNoRoom,
@@ -745,6 +751,7 @@ impl TrackApi {
 mod money;
 mod edits;
 mod draw;
+mod flyover;
 use draw::Ramp;
 mod beside;
 mod crossings;
@@ -2036,6 +2043,9 @@ mod stop_order_tests;
 mod manual_tests;
 #[cfg(test)]
 mod oneway_tests;
+/// T-3103, T-3092: flat-junction badges and real flyovers.
+#[cfg(test)]
+mod flyover_tests;
 
 #[cfg(test)]
 mod related_tests;

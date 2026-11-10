@@ -1460,10 +1460,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
-  // the marks (T-629): a junction at ground level (a flyover is not one) is built once three of its
-  // tracks are; a crossing once both of its are
+  // the marks (T-629): a junction where moves cross at one level (T-3103) is built once three of
+  // its tracks are; a crossing once both of its are
   jn.forEach((n, i) => {
-    if (!n.flying) marks.push(junctions[i * 2], junctions[i * 2 + 1], M_JUNCTION, 0, n.builtPorts >= 3 ? 0 : 1, n.level);
+    if (n.crosses) marks.push(junctions[i * 2], junctions[i * 2 + 1], M_JUNCTION, 0, n.builtPorts >= 3 ? 0 : 1, n.level);
   });
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);

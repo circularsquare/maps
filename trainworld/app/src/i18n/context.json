@@ -2103,6 +2103,7 @@
   "trackTagRows.waterAdds": "Chip in the track tool's tag: the cost multiplier water adds. mult: 0.5.",
   "trackTagRows.roadsAdd": "Chip in the track tool's tag: roads crossed at ground level and what they add. verbose: true during the tutorial (longer wording); count: 2; cost: money, \"$1.2M\".",
   "trackTagRows.cannotPlace": "Red row at the top of the track tool's tag when the segment is refused with no reason given.",
+  "trackTagRows.noFlyover": "Row in the track tool's tag when a junction the new track makes stays flat: with the auto ramp switch on it would be built as a flyover, but there is no room.",
   "trackTagRows.lengthCost": "First row of the track tool's tag. length: \"1.2 km\"; mult: a coloured chip with the cost multiplier, \"1.40x\"; cost: money, \"$12M\".",
   "trainInspector.along": "Row label in a train view: how far along its run the train is, as a share of the run.",
   "trainInspector.barTip": "Hover on the load bar of a train view. aboard: riders now, \"320\"; crush: the most the train holds, \"480\".",

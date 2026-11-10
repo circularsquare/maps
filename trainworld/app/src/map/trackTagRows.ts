@@ -244,6 +244,7 @@ export function placementTag(pv: PreviewAnswer, level: number, share: { terrain:
     const tint = costTint(pv.mult);
     out.push(div(...kids(tRich("trackTagRows.lengthCost", { length: distance(pv.lengthM), mult: chip(`${pv.mult.toFixed(2)}x`, tint?.[0] ?? null, tint?.[1]) as unknown as ComponentChild, cost: moneyShort(pv.cost * 1e6) }))));
   }
+  if (pv.ok && pv.noFlyover) out.push(div(t("trackTagRows.noFlyover")));
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
   const ground = [terrainFact(pv.ground, share.terrain), waterFact(pv.ground, share.water), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);

@@ -431,6 +431,8 @@ export interface ClockNode {
   ports: number;
   builtPorts: number;
   flying: boolean;
+  /** two moves through it can cross at its level (T-3103): the flat-junction badge */
+  crosses?: true;
   platform: number;
   stationBuilt: boolean;
   /** a blueprint station switched off (T-333) */
@@ -692,6 +694,8 @@ export type FromClock =
       parts?: Uint32Array;
       /** a tangent route's circle (T-418): centre x, y (local units), ground radius m, 0 */
       arc?: Float64Array;
+      /** T-3092: a junction the route makes stays flat for want of room for a flyover */
+      noFlyover?: true;
       /** the draw anchor version `verts`, `pts`, `arc` and `marks` are relative to (T-307) */
       anchor?: number;
       /** where the track makes a crossing or a flat junction (T-629): x, y (local units), kind (0
