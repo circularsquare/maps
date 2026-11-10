@@ -91,8 +91,9 @@ enum Tag {
     Sidings,
     /// A double-track dead-end station with no terminal, turning on one platform (T-2986).
     OnePlatform,
-    /// A flat crossing of `Resource::edge` with `other`.
-    Crossing { other: u32 },
+    /// A flat crossing of `Resource::edge` with `other`. `yields`: a tram route crossing a train route
+    /// (T-3032): its non-owners, the train passes, load it but are never limited by it.
+    Crossing { other: u32, yields: bool },
     /// T-1924: line `line`'s following loss on one stretch (`build_follow`); rebuilt whenever any
     /// edge the line runs over is.
     Follow { line: u32 },
@@ -133,9 +134,16 @@ impl Capacity {
     pub fn track_edges(&self, r: usize) -> Vec<u32> {
         match self.tag[r] {
             Tag::Section { first, count } => self.keys[first as usize..(first + count) as usize].iter().map(|k| k / 2).collect(),
-            Tag::Crossing { other } => vec![self.res[r].edge, other],
+            Tag::Crossing { yields: true, .. } => vec![self.res[r].edge],
+            Tag::Crossing { other, .. } => vec![self.res[r].edge, other],
             _ => vec![],
         }
+    }
+
+    /// Whether the resource can hold back user `u`'s line: not the trains at a tram's flat crossing
+    /// of their track (T-3032), which only take its room.
+    pub fn caps(&self, r: usize, u: &User) -> bool {
+        u.owner || !matches!(self.tag[r], Tag::Crossing { yields: true, .. })
     }
 
     /// Whether the resource caps throughput (T-517). A station crossover's load counts through
@@ -191,7 +199,7 @@ impl Capacity {
     pub fn bottlenecks(&self, lines: usize) -> Vec<[(f64, u32); 3]> {
         let mut out = vec![[(0.0, u32::MAX); 3]; lines];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
-            for u in self.users_of(r) {
+            for u in self.users_of(r).iter().filter(|u| self.caps(r, u)) {
                 let b = &mut out[u.line as usize];
                 for lev in 0..LEVELS {
                     if self.rho[r][lev] > b[lev].0 {
@@ -208,18 +216,18 @@ impl Capacity {
     /// (infinity, MAX) where nothing limits it. `fill` cuts a line at the same rate.
     pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); 3]> {
         let mut out = vec![[(f64::INFINITY, u32::MAX); 3]; net.line_count()];
-        let mut own: Vec<(u32, f64)> = vec![];
+        let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             own.clear();
             for u in self.users_of(r) {
                 match own.iter_mut().find(|o| o.0 == u.line) {
                     Some(o) => o.1 += u.occ / 3600.0,
-                    None => own.push((u.line, u.occ / 3600.0)),
+                    None => own.push((u.line, u.occ / 3600.0, self.caps(r, u))),
                 }
             }
             for lev in 0..LEVELS {
-                let load: f64 = own.iter().map(|&(l, a)| net.line_tph[l as usize][lev] as f64 * a).sum();
-                for &(l, a) in own.iter().filter(|o| o.1 > 0.0) {
+                let load: f64 = own.iter().map(|&(l, a, _)| net.line_tph[l as usize][lev] as f64 * a).sum();
+                for &(l, a, _) in own.iter().filter(|o| o.1 > 0.0 && o.2) {
                     let most = (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0);
                     let b = &mut out[l as usize][lev];
                     if most < b.0 {
@@ -245,7 +253,7 @@ impl Capacity {
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             let (mut fixed, mut coef) = (0.0, vec![]);
             for u in self.users_of(r) {
-                match slot[u.line as usize] {
+                match if self.caps(r, u) { slot[u.line as usize] } else { u32::MAX } {
                     u32::MAX => fixed += net.line_tph[u.line as usize][lev] as f64 * u.occ / 3600.0,
                     s => match coef.iter_mut().find(|c: &&mut (u32, f64)| c.0 == s) {
                         Some(c) => c.1 += u.occ / 3600.0,
@@ -758,8 +766,10 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
     }
 }
 
-/// Flat crossings `sel` accepts: each direction of each route, loaded by the other route. `cand`
-/// must hold every running line on both edges of those crossings.
+/// Flat crossings `sel` accepts: each direction of each route, loaded by the other route. A train
+/// route crossed by a tram route has none: the tram route's holds the tram passes at the tram's
+/// figure and the train passes at the train's (T-3032). `cand` must hold every running line on
+/// both edges of those crossings.
 fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(&Crossing) -> bool, cap: &mut Capacity) {
     let mut on_edge: Vec<(u32, u32, u32, u8, u32)> = vec![]; // edge, dir, line, run, seg index
     for &l in cand {
@@ -784,8 +794,16 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
         if !matches!(c.kind, CrossKind::Flat(_)) || !sel(c) {
             continue;
         }
-        let conflict = net.edge_conflict_s(c.e1).max(net.edge_conflict_s(c.e2));
         for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
+            // T-3032: a tram yields to a train at a flat crossing. The train's resource is not loaded by
+            // trams (none is built if only trams cross it); the tram's is loaded by every train pass at
+            // the train's own figure, on top of its own passes at the tram's.
+            let (fam_own, fam_other) = (net.edge_kind[own as usize].spec().family, net.edge_kind[other as usize].spec().family);
+            if fam_own == 0 && fam_other != 0 {
+                continue;
+            }
+            let yields = fam_own != 0 && fam_other == 0;
+            let (conflict, other_conflict) = (net.edge_conflict_s(own), net.edge_conflict_s(other));
             // T-1805: a crossing no train runs over the other way holds nothing (blueprint, or
             // constructed track no line uses); the lines on its own track already share their section
             if on(other).is_empty() {
@@ -803,9 +821,9 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
                     continue;
                 }
                 for o in on(other) {
-                    users.push(User { line: o.2, run: o.3, owner: false, occ: conflict, at: 0.0, stop: -1 });
+                    users.push(User { line: o.2, run: o.3, owner: false, occ: other_conflict, at: 0.0, stop: -1 });
                 }
-                push_res(cap, ResKind::Crossing, c.x, c.y, u32::MAX, own, &users, Tag::Crossing { other });
+                push_res(cap, ResKind::Crossing, c.x, c.y, u32::MAX, own, &users, Tag::Crossing { other, yields });
             }
         }
     }
@@ -1352,7 +1370,7 @@ impl Capacity {
                     }
                 }
                 Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal | Tag::Sidings | Tag::OnePlatform => flag(&dn, self.res[r].node),
-                Tag::Crossing { other } => flag(&de, self.res[r].edge) || flag(&de, other),
+                Tag::Crossing { other, .. } => flag(&de, self.res[r].edge) || flag(&de, other),
                 Tag::Follow { line } | Tag::Wait { line, .. } => flag(&follow, line) || !lines.get(line as usize).is_some_and(|l| l.running),
             };
             if dead {

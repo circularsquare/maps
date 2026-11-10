@@ -87,7 +87,7 @@ export const lineShares = computed(() => {
       // a bent curve's extra goes with the per-km part, as it is counted on the km ridden (T-1516)
       const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rate times its multiplier (its extra came so from demand)
-      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, lf);
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
       const base = lf.base * (baseOf.get(l.id) ?? 0), perKm = Math.max(0, mul * lf.perKm * pkmAll + fx);
       if (base + perKm > 0) {
         const mix = new Map<string, number>();

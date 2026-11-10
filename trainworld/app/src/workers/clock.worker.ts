@@ -80,12 +80,13 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
   const ferry = typeof f.ferry === "number" && Number.isFinite(f.ferry) ? { ferry: tidyHsr(f.ferry) } : {};
+  const bus = typeof f.bus === "number" && Number.isFinite(f.bus) ? { bus: tidyHsr(f.bus) } : {};
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
   const curve = faresOf(g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...(transfer > 0 ? { transfer } : {}), ...ref };
+  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref };
 }
 /** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
 function demandFares(): Fares {
@@ -3685,7 +3686,7 @@ function apply(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}) };
       return { r: 0 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
@@ -3694,6 +3695,10 @@ function apply(op: EditOp): Applied {
     case "fareFerry":
       if (!Number.isFinite(op.mul)) return { r: 1 };
       fares = { ...fares, ferry: tidyHsr(op.mul) };
+      return { r: 0 };
+    case "fareBus":
+      if (!Number.isFinite(op.mul)) return { r: 1 };
+      fares = { ...fares, bus: tidyHsr(op.mul) };
       return { r: 0 };
     case "fareTransfer": {
       if (!Number.isFinite(op.usd)) return { r: 1 };
@@ -4086,7 +4091,7 @@ async function handle(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareTransfer") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer") {
       apply(msg.op);
       dirty = edited = true; editAt = Date.now();
       sendMoney();

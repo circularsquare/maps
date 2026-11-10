@@ -2,11 +2,11 @@
 
 import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, currencySpec, fromShown, money, moneyCash, price, priceTyped, runCostHere, runCostLine, runCostRule, toShown, upkeepLines } from "../game/format";
 import { roundTo } from "../game/currency";
-import { borrow, repay, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
+import { borrow, repay, setFareBus, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
+import { BUS_FARE, busFare, FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
 import { defaultScale, FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
@@ -143,6 +143,22 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   );
 }
 
+/** T-3028: the fare multiplier on bus lines, as the ferry one. */
+function BusFareRow({ mul }: { mul: number }) {
+  const set = (v: number) => void setFareBus(tidyHsr(v));
+  const text = (v: number) => `${fix2(v)}x`;
+  return (
+    <li>
+      <span class="fr-what" data-tip={t("moneyTab.busFareTip")}>{t("moneyTab.busFareRow")}</span>
+      <Stepper value={text(mul)} wide label={t("moneyTab.busFare")} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip: t("moneyTab.busFareTip") }} />
+      {mul !== BUS_FARE
+        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(BUS_FARE) })} onClick={() => set(BUS_FARE)}><Icon.undo /></button>
+        : <span />}
+    </li>
+  );
+}
+
 /** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7). */
 function FerryFareRow({ mul }: { mul: number }) {
   const set = (v: number) => void setFareFerry(tidyHsr(v));
@@ -215,6 +231,8 @@ export function MoneyTab() {
   const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
   // T-2194: shown once a ferry line exists
   const ferry = w.save.lines.some((l) => w.lineStats[l.id]?.bus?.ferry) ? ferryFare(m.fares) : null;
+  // T-3028: shown once a bus line exists
+  const busLine = w.save.lines.some((l) => { const b = w.lineStats[l.id]?.bus; return !!b && !b.ferry; }) ? busFare(m.fares) : null;
   return (
     <>
       <ul class="rows">
@@ -272,6 +290,7 @@ export function MoneyTab() {
       <FareNodeRows nodes={f} scale={scale}
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
+          {busLine !== null && <BusFareRow mul={busLine} />}
           {ferry !== null && <FerryFareRow mul={ferry} />}
           <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
           <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} refCountry={fareRef(m.fares)} />

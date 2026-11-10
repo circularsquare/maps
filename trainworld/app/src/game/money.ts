@@ -205,7 +205,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       const rides = dm.ridersPerDay * tripsPerBoarding;
       const based = baseOf.get(l.id) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rides pay its multiplier on the rate; demand's extra has it already
-      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, lf);
+      const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
         const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;

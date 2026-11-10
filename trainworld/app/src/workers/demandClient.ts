@@ -209,7 +209,7 @@ export function poolSize(): number {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; transfer?: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
@@ -585,8 +585,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     // T-2926: tram lines, only where there are any (`DemandApi.set_tram_lines`)
     ...(lines.some((l) => l.tram) ? { tram: Uint8Array.from(lines, (l) => (l.tram ? 1 : 0)) } : {}),
   };
-  // T-1626, T-2195: a high-speed or ferry line's route nodes charge its multiplier, only where one is not 1
-  const muls = lines.map((l) => lineFareMul(l, svc.fare));
+  // T-1626, T-2195: a high-speed, ferry or bus line's route nodes charge its multiplier, only where one is not 1
+  const muls = lines.map((l) => lineFareMul({ fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
   if (muls.some((m) => m !== 1)) {
     const w = new Float32Array(2 * nStops).fill(1);
     let o = 0;

@@ -113,10 +113,8 @@ fn a_tram_line_has_its_own_fleet_and_defaults() {
     assert!(a.w.net.set_line(l, Some(d)).is_err());
 }
 
-/// The flat crossing of a train line and a tram line is a resource both lines use, held for the
-/// train's 90 s.
-#[test]
-fn a_tram_crossing_a_train_holds_both_for_the_train_figure() {
+/// A tram line across a train line at a flat crossing, built (the tram line's id, the train line's).
+fn tram_over_train(tram_line: bool) -> (TrackApi, u32, u32) {
     let mut a = api();
     a.set_route_kind(3);
     assert_eq!(route(&mut a, (0.0, 0.0), (2000.0, 0.0), 2), 0);
@@ -129,17 +127,45 @@ fn a_tram_crossing_a_train_holds_both_for_the_train_figure() {
         let net = &a.w.net;
         stops.push((0..net.node_count() as u32).find(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && (net.node_x[n as usize] - x).abs() < 30.0 && (net.node_y[n as usize] - y).abs() < 30.0).unwrap());
     }
-    for (stops, cars, name) in [(&stops[..2], 2u8, "Tram"), (&stops[2..], 4, "Train")] {
+    let mut ids = [u32::MAX; 2];
+    for (k, (stops, cars, name)) in [(&stops[..2], 2u8, "Tram"), (&stops[2..], 4, "Train")].into_iter().enumerate() {
+        if k == 0 && !tram_line {
+            continue;
+        }
         let l = a.new_line_id();
         assert_eq!(a.set_line_with_trains(l, stops, 6, 3, 1, 20.0, 120.0, cars, 0x00ff00, name.into()), 0, "{}", a.issues());
+        ids[k] = l;
     }
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
-    let cap = &a.w.svc.cap;
-    let crossing: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].kind == crate::track::capacity::ResKind::Crossing).collect();
-    assert!(!crossing.is_empty(), "no crossing resource");
-    for r in crossing {
-        assert!(cap.users_of(r).iter().all(|u| u.occ == 90.0), "{:?}", cap.users_of(r).iter().map(|u| u.occ).collect::<Vec<_>>());
-        assert!(cap.users_of(r).len() >= 2);
+    (a, ids[0], ids[1])
+}
+
+/// T-3032: at a flat crossing a tram yields. The train's capacity through it is what it would be
+/// with no crossing, whatever the tram frequency; the tram's resource holds each tram pass at the
+/// tram's 30 s and each train pass at the train's 90 s.
+#[test]
+fn a_tram_yields_to_a_train_at_a_flat_crossing() {
+    use crate::track::capacity::ResKind;
+    let (alone, _, train_alone) = tram_over_train(false);
+    let limit = |a: &TrackApi, l: u32| a.w.svc.cap.line_limits(&a.w.net)[l as usize][0];
+    let base = limit(&alone, train_alone);
+    for trams in [(1, 1, 1), (6, 3, 1), (40, 20, 10)] {
+        let (mut a, tram, train) = tram_over_train(true);
+        assert_eq!(a.set_train_counts(tram, trams.0, trams.1, trams.2), 0, "{}", a.issues());
+        let cap = &a.w.svc.cap;
+        assert_eq!(limit(&a, train).0, base.0, "train capacity with {trams:?} trams");
+        assert!(cap.wire_kind(limit(&a, train).1 as usize) != 4, "the crossing limits the train");
+        let crossing: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Crossing).collect();
+        assert!(!crossing.is_empty(), "no crossing resource");
+        for r in crossing {
+            let us = cap.users_of(r);
+            assert!(us.iter().all(|u| u.line == tram || !u.owner), "a train owns a crossing a tram crosses");
+            assert!(us.iter().filter(|u| u.owner).all(|u| u.occ == 30.0));
+            assert!(us.iter().filter(|u| !u.owner).all(|u| u.occ == 90.0 && u.line == train));
+            let tph = |l: u32| a.w.net.line_tph[l as usize][0] as f64;
+            // one direction of the tram line: its trams at 30 s, the train line's passes at 90 s
+            assert!((cap.rho[r][0] - (tph(tram) * 30.0 + 2.0 * tph(train) * 90.0) / 3600.0).abs() < 1e-9, "{}", cap.rho[r][0]);
+        }
     }
 }
 

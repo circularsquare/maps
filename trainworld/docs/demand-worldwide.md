@@ -649,7 +649,7 @@ notes/T-420.md has the tables.
   and China's high-speed fares sit at a similar premium over conventional ones. Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
-  Ferry lines take the player's Ferry multiplier the same way (default 1.00, T-2195; "Ferries as lines" below).
+  Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (default 1.00, T-2195; "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line, times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At
   $0 it is a free change everywhere; a player who sets one models a system that charges each

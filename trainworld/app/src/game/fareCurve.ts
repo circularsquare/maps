@@ -33,6 +33,8 @@ export interface Fares {
   hsr?: number;
   /** T-2194: the fare multiplier on ferry lines; absent for `FERRY_FARE` */
   ferry?: number;
+  /** T-3028: the fare multiplier on bus lines; absent for `BUS_FARE` */
+  bus?: number;
   /** T-1801: the transfer fare, paid on each boarding after a trip's first, in the curve's units
    * (times a country's scale where charged); absent for 0 */
   transfer?: number;
@@ -77,10 +79,18 @@ export function ferryFare(f: { ferry?: number } | undefined): number {
   const v = f?.ferry;
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : FERRY_FARE;
 }
+/** T-3028: a bus line's fares are the curve's part above the base times this; 0 to `HSR_FARE_MAX`
+ * as the others, so a long bus can be made as cheap as the player likes. */
+export const BUS_FARE = 1;
+/** The bus multiplier of `f`, or the default. */
+export function busFare(f: { bus?: number } | undefined): number {
+  const v = f?.bus;
+  return v !== undefined && Number.isFinite(v) && v >= 0 ? v : BUS_FARE;
+}
 /** The multiplier a line's rides pay on the part of the fare above the base: a ferry's, a
- * high-speed line's, else 1. */
-export function lineFareMul(line: { fast?: boolean; ferry?: boolean }, f: { hsr?: number; ferry?: number } | undefined): number {
-  return line.ferry ? ferryFare(f) : line.fast ? hsrFare(f) : 1;
+ * bus's, a high-speed line's, else 1. */
+export function lineFareMul(line: { fast?: boolean; ferry?: boolean; bus?: boolean }, f: { hsr?: number; ferry?: number; bus?: number } | undefined): number {
+  return line.ferry ? ferryFare(f) : line.bus ? busFare(f) : line.fast ? hsrFare(f) : 1;
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */

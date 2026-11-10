@@ -15,13 +15,14 @@
 // is due over it first, stands short of it until that train has cleared. Only zoomed in (the
 // renderer's `CONFLICT_ZOOM`), where two trains at a crossing read apart; further out they are drawn
 // through each other. The timetable already carries the average wait (track-and-service.md 6.2);
-// this only draws one.
+// this only draws one. T-3032: a tram yields to a train there: a train never waits for a tram, and a
+// tram waits for any train whose time over the crossing overlaps its own.
 //
 // T-2233: at a station with passing tracks a train that stops is drawn on the outer track and one that
 // does not on the running track beside it, so there neither holds the other: the one place order on a
 // track may change. A faster line stopping there stops on the running track beside it (T-2248).
 
-import { PASS_OUTER, PASS_STRIDE, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
+import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
 import { BAY_STRIDE, TURNBACK_M } from "./terminalBays";
 
 /** T-2980: the place a trip leaving a dead end starts from, as arriving trains number them (its own
@@ -583,6 +584,8 @@ export class TrainGuard {
     const lag = this.lag, prevS = this.prevS, waitRes = this.waitRes, waitFrom = this.waitFrom;
     if (this.tauPhases !== n.phases) { this.tauCache.clear(); this.tauPhases = n.phases; }
     const uTime = f.time - f.epoch;
+    // per candidate: on a tram line (T-3032), which yields to trains at a flat crossing
+    const tram = cand.map((i) => ((n.lineCars?.[Math.floor(f.trips[i * 2] / 6)] ?? 8) % 1) === TRAM_MARK);
     // per conflict: candidate, its route there (the edge at a crossing, the move at a junction), its
     // offset along its run
     const regs = new Map<number, number[]>();
@@ -674,7 +677,9 @@ export class TrainGuard {
         if (!asks.length) continue;
         const order = Array.from({ length: asks.length / 2 }, (_, q) => q);
         const first = (q: number) => (over.has(v[asks[q * 2]]) ? 0 : 1);
-        order.sort((x, y) => first(x) - first(y) || asks[x * 2 + 1] - asks[y * 2 + 1] || asks[x * 2] - asks[y * 2]);
+        // trams last: they take the room the trains leave
+        const yielding = (q: number) => (tram[v[asks[q * 2]]] ? 1 : 0);
+        order.sort((x, y) => yielding(x) - yielding(y) || first(x) - first(y) || asks[x * 2 + 1] - asks[y * 2 + 1] || asks[x * 2] - asks[y * 2]);
         for (const q of order) {
           const j = asks[q * 2], c = v[j], route = v[j + 1], sx = v[j + 2], i = cand[c], p = f.trips[i * 2];
           const [A, B] = span(c, sx), occ = B - A;
@@ -694,8 +699,20 @@ export class TrainGuard {
           // it goes once every train on a crossing route ahead of it in the order has cleared (none
           // slips in before one waiting, even where it would clear in time)
           let go = A;
-          for (let g = 0; g < grants.length; g += 4) {
-            if (grants[g + 3] > go && grants[g] !== c && conflict(route, grants[g + 1])) go = grants[g + 3];
+          for (let again = true, rounds = 0; again && rounds < 8; rounds++) {
+            again = false;
+            for (let g = 0; g < grants.length; g += 4) {
+              if (grants[g + 3] <= go || grants[g] === c || !conflict(route, grants[g + 1])) continue;
+              if (!tram[c]) {
+                if (!tram[grants[g]]) go = grants[g + 3];
+              } else if (tram[grants[g]]) {
+                go = grants[g + 3];
+              } else if (grants[g + 2] < go + occ) {
+                // a train due over it while it would be: the tram waits for that train to clear
+                go = grants[g + 3];
+                again = true;
+              }
+            }
           }
           if (go <= A + 1e-6) {
             grants.push(c, route, A, A + occ);

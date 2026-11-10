@@ -389,6 +389,10 @@ export function setFareHsr(mul: number) {
 export function setFareFerry(mul: number) {
   return edit({ op: "fareFerry", mul });
 }
+/** T-3028: the fare multiplier on bus lines. */
+export function setFareBus(mul: number) {
+  return edit({ op: "fareBus", mul });
+}
 /** T-1801: the transfer fare, in the curve's units. */
 export function setFareTransfer(usd: number) {
   return edit({ op: "fareTransfer", usd });

@@ -148,6 +148,7 @@ export type EditOp =
   | { op: "fareHsr"; mul: number }
   /** T-2194: the fare multiplier on ferry lines */
   | { op: "fareFerry"; mul: number }
+  | { op: "fareBus"; mul: number }
   | { op: "fareTransfer"; usd: number }
   /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or pay off what is left of it; refused otherwise */
   | { op: "borrow"; amount: number }
@@ -361,7 +362,7 @@ export interface MoneyState {
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; transfer?: number };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number };
   /** running cost per game hour at high, medium, low demand */
   runningPerHour: [number, number, number];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the

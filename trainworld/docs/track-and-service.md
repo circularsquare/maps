@@ -572,7 +572,13 @@ level (track positions in opposite order on the two sides); merges and diverges 
 capacity counts them. A plain double-track Y has one crossing pair. A **flyover** (a flying
 junction) removes it, for its price (6.1, 6.4). A **flat crossing** makes every move on one
 route conflict with every move on the other; one with no train on its other route (blueprint, or
-constructed track no line runs on) holds nothing. A node where only two edge ends carry running
+constructed track no line runs on) holds nothing. A **tram** crossing a train route at a flat
+crossing yields (T-3032): the train route's crossing resource is loaded by trains only, so tram passes
+never count against a train's capacity, delay or warnings. The tram route's resource holds each tram
+pass for 30 s and each train pass for 90 s: a tram's capacity through the crossing is what the trains
+leave, `(3600 - 90 x trains an hour) / 30`, and the trains over it are never cut back for the tram.
+On the map a train never waits for a tram there and a tram waits for any train due over the
+crossing while it would be. A node where only two edge ends carry running
 lines is plain track for capacity: a branch no train uses yet does not cut the section through it
 (T-1805).
 
@@ -623,7 +629,8 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   it); the hold there to the headway is not counted. A balloon's first stop is a terminus as any
   line's end (short turn or pooled dead end), with no reversing limiter. The loop itself is plain
   track, so a balloon has no turnback limit (about 34 an hour at 80 km/h).
-- junction move, with the moves it crosses; flat crossing, all moves: 90 s
+- junction move, with the moves it crosses; flat crossing, all moves: 90 s (30 s for a tram's own
+  passes, and a tram's crossing of a train route loads only that tram's resource, above)
 
 #### Delay and slower trains
 
@@ -1335,7 +1342,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   line with high-speed trains charges its rate and its share of the curve's extra times the
   high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.5, 0 to 5, saved in the header; a save
   without one charges 1.5); the base stays once a trip; a ferry line likewise with the Ferry multiplier
-  (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195). So a trip pays base + (curve(km) - base) x
+  (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195) and a bus line with the Bus multiplier
+  (`Fares.bus`, default `BUS_FARE` 1.00, 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists). So a trip pays base + (curve(km) - base) x
   (1 + (m - 1) x its share of km on high-speed lines). Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,

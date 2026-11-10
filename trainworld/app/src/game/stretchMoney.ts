@@ -154,7 +154,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     for (const v of pk) pkAll += v;
     if (!(pkAll > 0)) continue;
     const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
-    const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry }, lf);
+    const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
     const base = E * f.base * (based.get(l.id) ?? 0);
     for (let s = 0; s < n - 1; s++) {
       const share = pk[s] / pkAll;
