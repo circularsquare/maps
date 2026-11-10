@@ -313,9 +313,17 @@ export const snapBeside = signal(saved.build?.beside === true);
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
 export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
-/** T-817: the track tool lays high-speed track, else regular double track. Quad left the choice
- * (T-2282; old quad track is two doubles side by side), so a remembered quad starts on regular. */
+/** T-817: the track tool lays high-speed track, else regular. High-speed track is double only. */
 export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4);
+/** T-2931: the track tool lays quad track (two pairs) instead of double; never high-speed. */
+export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.hsr !== true);
+export function setQuadTrack(on: boolean) {
+  if (on === quadTrack.peek()) return;
+  batch(() => {
+    quadTrack.value = on;
+    if (on && highSpeed.peek()) setTrackType(2);
+  });
+}
 /** The design speed before High speed was picked, put back when Regular is picked again. */
 let designBeforeHsr: DesignSpeed | null = null;
 export type TrackType = 2 | "hsr";
@@ -328,6 +336,7 @@ export function setTrackType(t: TrackType) {
   if (t === "hsr" && was) return;
   batch(() => {
     if (t === "hsr") {
+      quadTrack.value = false;
       designBeforeHsr = designSpeed.peek();
       highSpeed.value = true;
       designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
@@ -388,7 +397,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

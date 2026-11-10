@@ -331,10 +331,10 @@ past 24 hours' riders and the panels' Today counts always follow the clock.
 
 ## Trouble list
 
-[T-1433, `ui/TroubleList.tsx`] What is wrong on the network, in one list at the map's lower right,
+[T-1433, `ui/TroubleList.tsx`; shown as the "Issues list", hovers "Show issues list" and "Hide issues list"] What is wrong on the network, in one list at the map's lower right,
 10 px in from the bottom and the right, with the map's attribution button just left of it on the same baseline
-(the attribution opens leftward). Shut, it is a small square button in the muted colour with an
-alert mark and the count; open, the list stands above it (300 px wide, scrolling past 260 px or half
+(the attribution opens leftward, kept clear of the button's measured width) [T-2932]. Shut, it is a square button with a red
+alert mark (20 px) and the count in red, 15 px bold; open, the list stands above it (300 px wide, scrolling past 260 px or half
 the window), and the button shows as on. Open or shut is remembered per browser
 (`anitabuilder-trouble-open`); it never opens by itself and makes no sound. With nothing on the list
 the button is gone.
@@ -344,11 +344,14 @@ the button is gone.
   amber U-turn disc, the station or "Track end", up to three of the lines' chips); orange and red
   capacity tags, the map's tags at 90% and up (`NEAR_RHO`) at the demand level in force, one row per
   kind by one station with the worst delay, red ones first ("Flat crossing near 14 St/6 Av", then
-  the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count) where
+  the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count, both red) [T-2934] where
   at least 3% of those who wanted their trains and 10 riders were left in the past 24 hours; lines
   whose trains left full at least a quarter of the time with fewer left behind (a train and
   "26/81"); last, lines with no stations (its chip, an alert mark, the hover "No stations"; a click
-  selects the line). Within a kind the bigger figure goes first.
+  selects the line). Within a kind the bigger figure goes first. A row's hover ends with a line starting
+  "Try: " that names what to do about it (a few words per kind of capacity limit, `fix` in
+  `game/capacityKinds.ts`; more trains for crowding; stations for a line with none; rebuilding the track
+  for a broken line) [T-2933].
 - **A click** moves the camera as search does: a line to its stops, a place to zoom 14 or closer.
   With the select tool it also selects the line, the reversal's first line, a capacity tag's
   junction or station (a tag on plain track selects nothing).

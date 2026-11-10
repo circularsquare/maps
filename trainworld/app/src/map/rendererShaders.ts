@@ -625,7 +625,11 @@ flat in float v_hot;
 ${qVars("in")}
 out vec4 o;
 ${SHAPE_GLSL}
+// blueprint track's colours (renderer.ts BP_RAIL_RGB, BP_MID_RGB); a blueprint station is drawn at alpha 0.6
+#define BP_RIM vec3(0.184, 0.384, 0.702)
+#define BP_FILL vec3(0.663, 0.804, 0.953)
 void main() {
+  bool bp = v_alpha > 0.45 && v_alpha < 0.99;
   // along and across the platform's own centre line (T-254); a dot's own frame
   ${qUnpack("v_q")}
   vec2 f = v_dot > 0.0 ? v_p : polyFrame(v_p, q);
@@ -642,10 +646,10 @@ void main() {
   }
   float outer = clamp(0.5 - d, 0.0, 1.0);
   if (u_layer == 0) {
-    // the whole shape dark, painted white inside the rim next; a faded (blueprint) one only its
-    // rim, so its see-through white stays as light as before
-    float a = (v_alpha < 0.99 ? outer - inner : outer) * v_alpha;
-    o = vec4(mix(u_ink, vec3(1.0), ${HOT_RIM_MIX} * v_hot) * a, a);
+    // the whole shape dark, painted white inside the rim next; a blueprint (faded to 0.6, T-2930)
+    // is blueprint track's blue: a dark blue rim round a light blue fill
+    float a = (v_alpha < 0.99 && !bp ? outer - inner : outer) * (bp ? 1.0 : v_alpha);
+    o = vec4(mix(bp ? BP_RIM : u_ink, vec3(1.0), ${HOT_RIM_MIX} * v_hot) * a, a);
   } else if (u_layer == 1) {
     // marking where the track is drawn over the station (T-236): the white's inside, no colour
     if (u_mask > 0.5) {
@@ -653,10 +657,10 @@ void main() {
       o = vec4(0.0);
       return;
     }
-    float a = inner * v_alpha;
+    float a = inner * (bp ? 1.0 : v_alpha);
     // a dot (zoomed out) shows its platforms' crowd as a pie (T-228, T-553): the white fills
     // clockwise from 12 o'clock with the crowd grey by the fullest side's share, red once full
-    vec3 col = vec3(1.0);
+    vec3 col = bp ? BP_FILL : vec3(1.0);
     float share = clamp(v_crowd.x, 0.0, 1.0);    if (v_dot > 0.0 && u_tint > 0.5 && share > 0.0) {
       vec2 s = vec2(dot(v_p, v_scr.xy), dot(v_p, v_scr.zw));
       float turn = atan(s.x, s.y);

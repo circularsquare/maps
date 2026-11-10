@@ -1,11 +1,10 @@
-// The trouble list (T-1433, docs/ui-panels.md "Trouble list"): one list of what is wrong on the
-// network, at the map's lower right. Collapsed it is a quiet icon with a count (some players will
-// not see these as real problems); open, a short list, worst first, each row a click from the place.
+// The Issues list (T-1433, docs/ui-panels.md "Trouble list"): one list of what is wrong on the
+// network, at the map's lower right. Collapsed it is a red alert icon with a count (T-2932); open, a short list, worst first, each row a click from the place.
 // It reads what the map and the line panel already have: the world's capacity tags and reversals
 // (redrawn with the world) and the past 24 hours' counts, asked once a game hour.
 
 import { h, render, type ComponentChildren } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { accountVersion } from "../game/boarding";
 import { CAPACITY_KINDS } from "../game/capacityKinds";
 import { clock } from "../game/clock";
@@ -55,14 +54,14 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
   for (const l of w.save.lines) {
     if (!l.stops.length) {
       out.push({ key: "n" + l.id, tier: 6, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="trouble-fig"><Icon.alert /></span>, tip: t("troubleList.noStations"), go: goLine(l) });
+        value: <span class="trouble-fig"><Icon.alert /></span>, tip: t("troubleList.noStations") + "\n" + t("troubleList.fixNoStations"), go: goLine(l) });
       continue;
     }
     const st = w.lineStats[l.id];
     if (!st) continue;
     if (st.status === "broken") {
       out.push({ key: "b" + l.id, tier: 0, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="crowd-bad"><Icon.alert /></span>, tip: t("troubleList.broken"), go: goLine(l) });
+        value: <span class="crowd-bad"><Icon.alert /></span>, tip: t("troubleList.broken") + "\n" + t("troubleList.fixBroken"), go: goLine(l) });
       continue;
     }
     const d = st.status === "running" ? day.get(l.id) : undefined;
@@ -70,13 +69,13 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const wanted = d.riders + d.leftBehind;
     if (d.leftBehind >= LEFT_MIN && d.leftBehind >= LEFT_SHARE * wanted) {
       out.push({ key: "l" + l.id, tier: 3, size: d.leftBehind, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="trouble-fig"><Icon.person />{count(d.leftBehind)}</span>,
-        tip: t("troubleList.leftBehind", { left: count(d.leftBehind), wanted: count(wanted), full: count(d.fullTrains), trains: count(d.trains) }),
+        value: <span class="trouble-fig bad"><Icon.person />{count(d.leftBehind)}</span>,
+        tip: t("troubleList.leftBehind", { left: count(d.leftBehind), wanted: count(wanted), full: count(d.fullTrains), trains: count(d.trains) }) + "\n" + t("troubleList.fixCrowded"),
         go: goLine(l) });
     } else if (d.trains > 0 && d.fullTrains >= FULL_SHARE * d.trains) {
       out.push({ key: "f" + l.id, tier: 5, size: d.fullTrains / d.trains, lead: <Chip line={l} size="sm" plain />, label: l.name,
         value: <span class="trouble-fig"><Icon.train />{count(d.fullTrains)}/{count(d.trains)}</span>,
-        tip: t("troubleList.full", { full: count(d.fullTrains), trains: count(d.trains) }), go: goLine(l) });
+        tip: t("troubleList.full", { full: count(d.fullTrains), trains: count(d.trains) }) + "\n" + t("troubleList.fixCrowded"), go: goLine(l) });
     }
   }
   const lines = new Map(w.save.lines.map((l) => [l.id, l]));
@@ -84,7 +83,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const ls = r.lines.map((x) => lines.get(x.id)).filter((x): x is LineInput => !!x);
     out.push({ key: "r" + r.station, tier: 1, size: ls.length, lead: <i class="trouble-rev"><Icon.uturn /></i>, label: r.name,
       value: <span class="trouble-chips">{ls.slice(0, 3).map((l) => <Chip line={l} size="sm" plain />)}</span>,
-      tip: r.lines.map((x) => t("troubleList.reverses", { name: x.name })).join("\n"),
+      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), CAPACITY_KINDS[9].fix].join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
   // the orange and red tags only (90% and up); a kind's tags by one station are one row, the worst
@@ -103,6 +102,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const tip = [t("troubleList.capacity", { name: k.name, pct: tNumber(Math.round(m.rho * 100)) })];
     if (m.held) tip.push(t("troubleList.held"));
     if (d >= 2) tip.push(t("troubleList.waits", { time: duration(d), level: DEMAND_WORD[level] ?? "other" }));
+    tip.push(k.fix); // T-2933: the last line of a hover is what to try
     spots.set(key, { key, tier: over ? 2 : 4, size: d + m.rho, lead: <i class={"trouble-mark " + cls}><Icon.alert /></i>,
       label: place ? t("troubleList.spot", { name: k.name, prep: k.prep, place }) : k.name,
       value: <span class={"trouble-tag " + cls}>{d >= 2 ? `+${Math.floor(d / 60)}:${String(d % 60).padStart(2, "0")}` : `${Math.round(m.rho * 100)}%`}</span>,
@@ -140,6 +140,18 @@ function Trouble({ w }: { w: WorldView }) {
     return () => { live = false; };
   }, [hour, acct]);
   const items = useMemo(() => itemsOf(w, level, day), [w, level, day]);
+  // the map's attribution sits left of the button, whatever its width (a count of 10+ is wider)
+  const btn = useRef<HTMLButtonElement>(null);
+  const shown = items.length > 0;
+  useEffect(() => {
+    const el = btn.current;
+    if (!el || !shown) return;
+    const set = () => document.documentElement.style.setProperty("--trouble-px", el.getBoundingClientRect().width + "px");
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [shown, items.length]);
   if (!items.length) return null;
   const toggle = () => {
     setOpen(!open);
@@ -158,7 +170,7 @@ function Trouble({ w }: { w: WorldView }) {
           ))}
         </ul>
       )}
-      <button class={"btn trouble-btn" + (open ? " on" : "")} aria-expanded={open} aria-label={t("troubleList.label")}
+      <button ref={btn} class={"btn trouble-btn" + (open ? " on" : "")} aria-expanded={open} aria-label={t("troubleList.label")}
         data-tip={open ? t("troubleList.hide") : t("troubleList.show")} onClick={toggle}>
         <Icon.alert />{count(items.length)}
       </button>

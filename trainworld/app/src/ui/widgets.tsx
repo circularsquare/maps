@@ -49,6 +49,9 @@ export const Icon = {
   autoLevel: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5h3M4.5 13.5l3-6h7M12 5l2.5 2.5L12 10" /><path d="M7.5 10.5v3M11 10.5v3" /></svg>,
   // track ramping up over another line, seen side on (T-1615)
   autoRamp: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5h2.5l3-6h2l3 6h2.5" /><circle class="solid" cx="8" cy="12.5" r="1.6" /></svg>,
+  // the track tool's two or four tracks, side on to their direction (T-2931)
+  tracks2: () => <svg viewBox="0 0 16 16"><path d="M5.5 2v12M10.5 2v12" /></svg>,
+  tracks4: () => <svg viewBox="0 0 16 16"><path d="M2.5 2v12M6 2v12M10 2v12M13.5 2v12" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,
   // T-2679: make a country the reference for fares
   anchor: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="3.2" r="1.6" /><path d="M8 4.8v9.7M5.2 7.2h5.6M2.7 9.6c.4 2.9 2.6 4.9 5.3 4.9s4.9-2 5.3-4.9" /></svg>,
@@ -364,7 +367,7 @@ export function SwapLabel({ on, off, onText }: { on: boolean; off: string; onTex
 
 /** A "Blueprint" note under an inspector's header until what it shows is constructed. */
 export function Built({ built }: { built: boolean }) {
-  return built ? null : <p class="muted">{t("widgets.blueprint")}</p>;
+  return built ? null : <p class="blueprint-tag">{t("widgets.blueprint")}</p>;
 }
 
 /** Construct (while a blueprint) on the left and Remove on the right of one row. */

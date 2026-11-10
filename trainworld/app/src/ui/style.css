@@ -96,6 +96,9 @@ body {
 @media (prefers-reduced-motion: reduce) { .bunny-train * { animation-play-state: paused !important; } }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .muted { color: var(--muted); }
+/* T-2930: "Blueprint" on a blueprint's panel in the blueprint track's blue */
+.blueprint-tag { color: #2f62b3; font-weight: 600; }
+:root[data-shade="dark"] .blueprint-tag { color: #8fb6ec; }
 .big { font-size: 18px; font-weight: 700; }
 .small { font-size: 12px; }
 b, .b { font-weight: 700; }
@@ -1396,7 +1399,7 @@ button.save-add:hover { color: var(--text); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 !important; }
 /* T-2571: with the trouble button in the corner the attribution sits just left of it, on its baseline */
-#map:has(.trouble) .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-right: calc(10px + 48px * var(--ui, 1)) !important; }
+#map:has(.trouble) .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-right: calc(18px + var(--trouble-px, 56px)) !important; }
 
 /* The dock is resizable, so adapt to the map column rather than the browser width. */
 @container map-column (max-width: 1000px) {
@@ -1690,9 +1693,9 @@ button.save-add:hover { color: var(--text); }
   filter: drop-shadow(0 0 1px var(--bg)) drop-shadow(0 0 1.5px var(--bg)) drop-shadow(0 0 2px var(--bg)); }
 .edit-arrow.up { stroke: var(--good); }
 .edit-arrow.down { stroke: var(--bad); }
-.trouble-btn { grid-auto-flow: column; gap: 4px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.trouble-btn svg { width: 14px; height: 14px; }
-.trouble-btn.on { color: var(--text); }
+.trouble-btn { grid-auto-flow: column; gap: 5px; color: var(--bad); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.trouble-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
+.trouble-fig.bad { color: var(--bad); }
 .rows.pick.trouble-list { width: 300px; max-width: 100%; max-height: min(260px, 50vh); overflow-y: auto; margin: 0 0 -1px;
   padding: 2px 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
 .rows.pick.trouble-list > li { margin: 0 -6px; }
@@ -1744,7 +1747,7 @@ button.save-add:hover { color: var(--text); }
   .tool-bar .btn.tb-type, .tool-bar .btn.tb-speed-btn { padding: 0 8px; }
   .tool-bar .build-toggles { gap: 4px; }
   .tool-bar .tb-level { order: 0; }
-  .tool-bar .tb-type { order: 1; }
+  .tool-bar .tb-type, .tool-bar .tb-count { order: 1; }
   .tool-bar .tb-ramp { order: 2; }
   .tool-bar .build-toggles { order: 3; }
   .tool-bar .tb-speed-btn { order: 4; }

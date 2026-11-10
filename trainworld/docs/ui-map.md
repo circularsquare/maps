@@ -419,7 +419,7 @@ number) and shows n as its symbol.
   of an ordinary dot's white radius either side of its middle, drawn in the same passes, so dots
   and connectors are one white shape. Connectors join the stations the complex distance rule groups
   (`dotGroups` in `game/complexView.ts`) by the shortest set of joins, and each player link between
-  two groups [T-225]. A connector is faded when either station is a blueprint.
+  two groups [T-225]. A connector is blue like a blueprint station when either station is a blueprint.
 - **Each dot is its own station** [T-249, T-305]: a click picks the dot whose centre is nearest
   among those under the pointer and selects its complex; the delete and line tools take that
   station, and its tag lists its own lines.
@@ -440,9 +440,10 @@ number) and shows n as its symbol.
   stations (T-1821). Everything that draws or
   tests a platform (box, crowd fill, track stencil, picking, placement ghost, selection
   outline, the cut-out in the bubbles) uses that one line (`polyFrame` in the shaders,
-  `stationShape`, `stationPath`). Blueprint stations are faded.
+  `stationShape`, `stationPath`). Blueprint stations are drawn as blueprint track is (T-2930): a light blue
+  fill (#a9cdf3) in a dark blue rim (#2f62b3), so they read as blueprint beside white built ones.
 - **Overlapping platforms are one shape** [T-217]: every dark shape first, then every white inside
-  its rim, so one outline runs round the whole (a faded blueprint draws only its rim).
+  its rim, so one outline runs round the whole (a blueprint's rim and fill are its blue).
 - **Inside the white** [T-236], over the crowd fill: the track and line strokes run through the
   box (drawn where a stencil marks the white, no wider than 30% of it, without casing). No platform
   edges are drawn [T-1121].

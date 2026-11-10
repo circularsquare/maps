@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, selection, snapBeside, snapping, tool } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, snapBeside, snapping, tool } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -244,7 +244,7 @@ export class Tools {
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; quadTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
     // asked again when more of them land
     let roadsSent = false;
@@ -907,7 +907,7 @@ export class Tools {
 
   private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: false, quad: false, through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek(), ...beside };
+    return { from: this.start!.end, to, pis: [], single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek(), ...beside };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first
@@ -915,7 +915,7 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: false, through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek() };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek() };
   }
 
   private requestPreview() {

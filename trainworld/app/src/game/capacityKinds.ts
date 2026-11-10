@@ -18,6 +18,8 @@ export interface CapacityKindText {
   readonly cause: string;
   /** what to do about it, one sentence of advice */
   readonly help: string;
+  /** the same advice in a few words, for the Issues list's hover (T-2933) */
+  readonly fix: string;
 }
 
 type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge";
@@ -29,6 +31,7 @@ const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | ""): 
   prep, ways, // i18n-ignore
   get cause() { return t(`capacityKinds.${base}Cause` as MessageKey); }, // i18n-ignore
   get help() { return t(`capacityKinds.${base}Help` as MessageKey); }, // i18n-ignore
+  get fix() { return t(`capacityKinds.${base}Fix` as MessageKey); }, // i18n-ignore
 });
 
 /** Indexed by kind: 0 track, 1 single track, 2 platform, 3 terminus, 4 junction, 5 flat crossing,
