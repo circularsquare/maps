@@ -185,3 +185,32 @@ fn a_listed_stop_turns_the_train_with_no_detour_round_a_loop() {
     assert_eq!(a.line_reversals(id), [3.0], "the train turns at K, the listed stop");
     assert_eq!(a.order_fault_line(id, &[a0, b, m, k, m, b, a0]), Vec::<f64>::new());
 }
+
+/// T-3099: Exact edits on and off gives back the same line: a loop line keeps the route it runs (a stop on
+/// its loop is not turned at), and a turned line whose loop has one station, whose stops read the same
+/// both ways, stays turned rather than folding into its open line.
+#[test]
+fn exact_edits_on_and_off_keeps_a_turned_line() {
+    use super::turn_tests::teardrop;
+    let (w, [a0, b, m, _, k]) = teardrop(false);
+    let mut a = api(w);
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.turn_end(id, m), 0, "{}", a.issues());
+    let (stops, path) = (a.w.net.line_stops(id).to_vec(), a.w.net.line_path(id).to_vec());
+    assert_eq!(stops, [a0, b, m, k, m, b, a0]);
+    assert!(a.line_reversals(id).is_empty());
+    assert_eq!(a.set_manual(id, true), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_path(id), &path[..], "Exact edits on keeps the route round the loop");
+    assert!(!a.manual_folds(id), "a list that goes round a loop does not fold");
+    assert_eq!(a.set_manual(id, false), 0, "{}", a.issues());
+    assert_eq!((a.w.net.line_stops(id), a.w.net.line_path(id)), (&stops[..], &path[..]), "Exact edits off gives the turned line back");
+    assert_eq!((a.line_loop(id), a.line_one_way(id)), (2, true));
+    // an open line still goes out and back and folds to the open line
+    let id2 = a.new_line_id();
+    assert_eq!(a.set_line(id2, &[a0, b, m], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "M".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_manual(id2, true), 0, "{}", a.issues());
+    assert!(a.manual_folds(id2));
+    assert_eq!(a.set_manual(id2, false), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id2), &[a0, b, m]);
+}

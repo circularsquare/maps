@@ -39,22 +39,25 @@ export interface TurnedLine {
  * taken round) turns straight back at the stem's end. Null for any other line (an open line, a
  * ring, a loop run both ways) and for a walk that does not read that way.
  */
-export function turnedLine(stops: readonly string[], st: Pick<LineStats, "loop" | "oneWay">, topFirst?: (a: string, b: string) => boolean): TurnedLine | null {
+export function turnedLine(stops: readonly string[], st: Pick<LineStats, "loop" | "oneWay"> & Partial<Pick<LineStats, "reversals">>, topFirst?: (a: string, b: string) => boolean): TurnedLine | null {
   const n = stops.length;
   if (!st.loop || !st.oneWay || n < 4 || stops[0] !== stops[n - 1]) return null;
   const c = stops.slice(0, n - 1), m = c.length;
-  const both = loopsBothEnds(stops, c, topFirst);
+  // T-3099: the stops alone can't tell a loop past a station from a turn back there (an out-and-back
+  // list in Exact edits reads as a loop at each end); a station where the trains reverse is never on a loop.
+  // The walk's closing stop is its first: a circle goes on round there, a balloon turns back.
+  const turnsAt = (i: number) => (i === 0 ? st.loop !== "circle" : !!st.reversals?.includes(i));
+  const both = loopsBothEnds(stops, c, turnsAt, topFirst);
   if (both) return both;
   const at = (k: number) => c[((k % m) + m) % m];
   const backs: number[] = [];
   for (let k = 0; k < m; k++) if (at(k - 1) === at(k + 1)) backs.push(k);
   if (!backs.length || backs.length > 2) return null;
-  // the walk's closing stop is its first: a circle goes on round there, a balloon turns back
-  const loopAt = (k: number) => k !== 0 || st.loop === "circle";
+  const loopAt = (k: number) => !turnsAt(((k % m) + m) % m);
   const row = (k: number, first: boolean, last: boolean): TurnRow => {
     const i = ((k % m) + m) % m;
     const occ = stops.flatMap((s, j) => (s === c[i] ? [j] : []));
-    return { i, occ, first, last, once: occ.length === 1 };
+    return { i, occ, first, last, once: occ.length === 1 && !turnsAt(i) };
   };
   let rows: TurnRow[];
   let tipTop = false, tipBottom = false;
@@ -79,7 +82,7 @@ export function turnedLine(stops: readonly string[], st: Pick<LineStats, "loop" 
     tipTop = loopAt(t);
   }
   if (new Set(rows.map((r) => c[r.i])).size !== rows.length) return null;
-  if (backs.length === 2) rows[rows.length - 1].turn = true;
+  if (backs.length === 2 && tipBottom) rows[rows.length - 1].turn = true;
   return { rows, tipTop, tipBottom };
 }
 
@@ -90,7 +93,7 @@ export function turnedLine(stops: readonly string[], st: Pick<LineStats, "loop" 
  * order. `topFirst(a, b)` says which of the stem's two ends goes on top (true: a); without it the reading
  * found first, which starts where the line's stops do.
  */
-function loopsBothEnds(stops: readonly string[], c: string[], topFirst?: (a: string, b: string) => boolean): TurnedLine | null {
+function loopsBothEnds(stops: readonly string[], c: string[], turnsAt: (i: number) => boolean, topFirst?: (a: string, b: string) => boolean): TurnedLine | null {
   const m = c.length, n = stops.length;
   if (m < 8) return null;
   const count = new Map<string, number>();
@@ -121,6 +124,7 @@ function loopsBothEnds(stops: readonly string[], c: string[], topFirst?: (a: str
         const idx: number[] = [];
         for (let u = 0; u < r; u++) idx.push((s0 + u) % m);
         for (let u = 0; u < k + q; u++) idx.push((p + u) % m);
+        if (idx.some((i, u) => (u < r || u >= r + k) && turnsAt(i))) continue;
         const rows = idx.map((i, u): TurnRow => {
           const stem = u >= r && u < r + k;
           const occ = stem || i !== 0 ? stops.flatMap((s, j) => (s === c[i] ? [j] : [])) : [0, n - 1];

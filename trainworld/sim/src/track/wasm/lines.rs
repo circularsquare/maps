@@ -434,22 +434,23 @@ impl TrackApi {
             return self.refuse(Issue::LinePath { line: id });
         }
         if on {
+            // a loop line keeps the route it runs: routed again, a stop on its loop would become a turn (T-3099)
             if !closed(&d.stops) {
                 if d.stops.len() < 2 {
                     return self.refuse(Issue::LinePath { line: id });
                 }
                 let back: Vec<u32> = d.stops[..d.stops.len() - 1].iter().rev().copied().collect();
                 d.stops.extend(back);
+                let Some((stops, path)) = manual_stops(&self.w.net, &d.stops) else { return self.refuse(Issue::LinePath { line: id }) };
+                d.stops = stops;
+                d.path = path;
             }
-            let Some((stops, path)) = manual_stops(&self.w.net, &d.stops) else { return self.refuse(Issue::LinePath { line: id }) };
-            d.stops = stops;
-            d.path = path;
             d.hand = true;
             d.one_way = true;
         } else {
             // a plain out-and-back folds into its open line, both ways; any other list stays as it is, a
             // normal line with those stops (a turned line keeps its loop), T-3079
-            if let Some(open) = folded(&d.stops) {
+            if let Some(open) = folded(&d.stops, &d.path) {
                 let Some((stops, path)) = edited_stops(&self.w.net, &open, false) else { return self.refuse(Issue::LinePath { line: id }) };
                 d.stops = stops;
                 d.path = path;
@@ -467,7 +468,7 @@ impl TrackApi {
     /// T-3023: whether a manual line's stops are a plain out-and-back that `set_manual(false)` folds
     /// into an open line.
     pub fn manual_folds(&self, line: u32) -> bool {
-        self.line_manual(line) && folded(self.w.net.line_stops(line)).is_some()
+        self.line_manual(line) && folded(self.w.net.line_stops(line), self.w.net.line_path(line)).is_some()
     }
     /// T-2981: whether a line is a loop that runs one way, round in the direction it was drawn.
     pub fn line_one_way(&self, line: u32) -> bool {
@@ -632,10 +633,12 @@ fn manual_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
     Some((stops, path))
 }
 
-/// The open line a plain out-and-back list folds into: `[A, B, C, B, A]` is `[A, B, C]`.
-fn folded(stops: &[u32]) -> Option<Vec<u32>> {
-    let n = stops.len();
-    if n < 3 || n % 2 == 0 || (0..n).any(|i| stops[i] != stops[n - 1 - i]) {
+/// The open line a plain out-and-back list folds into: `[A, B, C, B, A]` is `[A, B, C]`, when its path
+/// also comes back the way it went (T-3099: a line turned round a loop with one station, C, reads the
+/// same both ways but goes round).
+fn folded(stops: &[u32], path: &[u32]) -> Option<Vec<u32>> {
+    let (n, m) = (stops.len(), path.len());
+    if n < 3 || n % 2 == 0 || (0..n).any(|i| stops[i] != stops[n - 1 - i]) || (0..m).any(|i| path[i] != path[m - 1 - i] ^ 1) {
         return None;
     }
     Some(stops[..=n / 2].to_vec())
