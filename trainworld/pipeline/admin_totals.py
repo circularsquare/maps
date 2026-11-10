@@ -151,6 +151,33 @@ CONFIGS = {
         "national": "0",
         "mode": "shares",
     },
+    # T-2964: GHS-POP against the 2022 census in the dry plan's rows: Jerusalem's west 1.69, HaSharon and Ramla 1.30.
+    # Inside the Green Line with the Golan; the 85,690 people of CBS rows with no polygon (the Negev's Bedouin
+    # localities without one, among others) keep GHSL's cells
+    "IL": {
+        "source": "CBS 2022 census by statistical area on CBS's statistical-area polygons, inside the Green Line "
+                  "(COD-AB PSE's line)",
+        "polygons": {"file": "IL/il_statareas_2022.gpkg", "made_by": "tools/country/israel_census.py",
+                     "layer": "units", "code": "code", "name": "name"},
+        "totals": {"file": "IL/il_statareas_2022.gpkg", "made_by": "tools/country/israel_census.py",
+                   "layer": "units", "code": "code", "pop": "pop"},
+        "parent": None,
+        "national_total": (8_418_600, 0.0001),  # the census's 9,601,720 less the units beyond the line and with no polygon
+        "mode": "factor",
+    },
+    # T-2964: PCBS by governorate (GHS-POP 0.47-0.75 of it in the north of the West Bank, 1.3-1.5 in Ramallah and
+    # Jericho with the settlements out); the settlements' own units hold 0 people until Anita decides (notes/T-2964.md)
+    "PS": {
+        "source": "PCBS mid-2025 estimates by governorate (2017 census base; the Gaza Strip at PCBS's end-2025 figure) on "
+                  "COD-AB PSE governorates (HDX, CC BY-IGO), CBS 2022 census units of the settlements cut out",
+        "polygons": {"file": "PS/ps_units_2025.gpkg", "made_by": "tools/country/palestine_census.py",
+                     "layer": "units", "code": "code", "name": "name"},
+        "totals": {"file": "PS/ps_units_2025.gpkg", "made_by": "tools/country/palestine_census.py",
+                   "layer": "units", "code": "code", "pop": "pop"},
+        "parent": None,
+        "national_total": (5_522_294, 0.0001),  # West Bank 3,395,260 (mid-2025) and the Gaza Strip 2,127,034 (end-2025)
+        "mode": "factor",
+    },
 }
 
 

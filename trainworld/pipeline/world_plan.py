@@ -242,7 +242,12 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Lesotho's community councils by district (two zones, the south and the north; council by council the same
               # two, named Maseru twice; with Maseru's FUA kept whole the other 74 councils were one zone of 2.0M). Maseru's
               # northern councils lie in Berea district, so the north's origin is in Maseru's edge, 4.7 km from the south's
-              "LSO": {"group_level": 0, "contiguous": True, "task": "T-2696"}}
+              "LSO": {"group_level": 0, "contiguous": True, "task": "T-2696"},
+              # Israel's subdistricts and Palestine's governorates on the default rule, held to touching units (the Gaza
+              # Strip and the West Bank never one zone); people from CBS's 2022 census by statistical area and PCBS's
+              # governorates, with the settlements cut out of the latter (T-2964, notes/T-2964.md)
+              **{iso: {"contiguous": True, "plan_units": True, "module": "admin_totals", "task": "T-2964"}
+                 for iso in ("ISR", "PSE")}}
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -324,7 +329,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
              "NZL": ("C", "admin_totals"),
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
-             "EGY": ("C", "admin_totals")}
+             "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
