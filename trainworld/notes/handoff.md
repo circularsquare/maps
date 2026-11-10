@@ -18,8 +18,8 @@ Since 8800: T-3083 build tools close views (223a24dd), T-3082 curves 25 m (f6918
 (16be9d0f, c4ae8f9e), T-3085 design (e95f1970). Rebuild 8800 (`checks/snapbuild.cmd <hash>`) after the running agents land;
 one smoke on master after the batch.
 
-**Running (all report to maps-15; a new orchestrator: they finish and report to whoever is orchestrating? No: subagents
-report to the session that spawned them. If maps-15 is closed they stop. Check their trees/files and adopt):**
+**Running** (subagents of maps-15: they report to maps-15, which lands their work while it winds down; if maps-15 is gone,
+check each one's tree or files and adopt the work):
 - exactmap (Sonnet, a3896fc2d95771b05, tree `.tw-trees/exact3`, Vite 6176): T-3089 + T-3080 Exact edits round 2 (hover
   highlights a station, ends removable, half dot for one-way stops, visit numbers and empty circles on the map, x and station
   click do the same). Ids T-3097-98. Land with `agent-tree.mjs land exact3`.
