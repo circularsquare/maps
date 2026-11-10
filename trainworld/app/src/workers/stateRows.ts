@@ -201,7 +201,7 @@ export class StateRows {
     const seen = new Set<number>();
     for (let i = 0; i < ei.length; i += 10) {
       const id = ei[i];
-      const off = offEdges.has(id), hsr = hsrEdges.has(id), kind = a.edge_kind(id), crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
+      const off = offEdges.has(id), hsr = hsrEdges.has(id), kind = a.edge_kind(id) >= 2 ? a.edge_kind(id) : 0 /* T-3078: 1 is high speed, which is rail */, crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
       const tracks = ei[i + 3] as 1 | 2, built = ei[i + 4] === 1;
       let r = kept.get(id);
       if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.kind !== kind || r.crossover !== crossover || r.partner !== partner
