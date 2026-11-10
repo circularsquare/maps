@@ -13,6 +13,7 @@ or Obj.key (a key of a TS `const Obj = {...}`), with + - * / ** ( ) numbers, ln(
 Rules for pages: wiki/RULES.md.
 """
 import ast
+import json
 import math
 import re
 import shutil
@@ -162,7 +163,35 @@ def to_python(src):
     return re.sub(r"\b((?:(?:crate|super|self|[a-z_][a-z0-9_]*)::)*(?:crate|super|self|[a-z_][a-z0-9_]*))::([A-Za-z_][A-Za-z0-9_]*)", path_ref, s)
 
 
+_json = {}
+
+
+def json_value(path, dotted):
+    """A number or list of numbers in a JSON file, by dotted key path (list indexes are [i] in the marker)."""
+    if path not in _json:
+        f = ROOT / path
+        if not f.is_file():
+            raise Bad(f"no such file: {path}")
+        _json[path] = json.loads(f.read_text(encoding="utf-8"))
+    v = _json[path]
+    for k in dotted.split("."):
+        if not isinstance(v, dict) or k not in v:
+            raise Bad(f"no key {dotted} in {path}")
+        v = v[k]
+    if isinstance(v, bool) or not (isinstance(v, (int, float)) or (isinstance(v, list) and all(isinstance(x, (int, float)) for x in v))):
+        raise Bad(f"{dotted} in {path} is not a number or a list of numbers")
+    return v
+
+
 def evaluate(expr, path, stack=()):
+    if path.endswith(".json"):
+        def key(m):
+            if m.group(0) in ("ln", "sqrt", "max", "min") and expr[m.end():m.end() + 1] == "(":
+                return m.group(0)
+            token = f"__ref{len(_refs)}"
+            _refs[token] = ("json", m.group(0))
+            return token
+        expr = re.sub(r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", key, expr)
     try:
         tree = ast.parse(to_python(expr), mode="eval").body
     except SyntaxError:
@@ -174,6 +203,8 @@ def name_value(name, path, stack):
     target = path
     if name in _refs:
         ref, name = _refs[name]
+        if ref == "json":
+            return json_value(path, name)
         target = module_file(path, ref)
         if target is None:
             target, v = global_const(name, path)

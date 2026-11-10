@@ -1349,7 +1349,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 - **Stars** (T-685): a region earns a star the first time a final solve's train share for it, on
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
-  earned (`stars`), and it stays if the share falls. Drawn stamps come later.
+  earned (`stars`), and it stays if the share falls. The star is the first of a region's goals,
+  10, 20, 30 and 40% (`GOAL_SHARES` in `game/points.ts`, T-1437), each reached and kept the same way
+  (the higher ones in the header's `goals`); the top bar draws ticks for 10 and 20% only (T-2145), and
+  the city view's Goals reached row lists them all.
 
 #### Starting money, loan and the economy's scale
 

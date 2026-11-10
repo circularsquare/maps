@@ -44,9 +44,7 @@
       "Zamboanga Peninsula", "Northern Mindanao", "Davao Region", "Soccsksargen", "Caraga", "ARMM"] } },
     { "id": "luzon", "name": "Luzon", "units": { "PH": "*" } },
     { "id": "australia", "name": "Australia", "countries": ["AU"] },
-    { "id": "nz-south", "name": "South Island", "units": { "NZ": [
-      "Tasman", "Nelson", "Marlborough", "West Coast", "Canterbury", "Otago", "Southland", "Chatham Islands"] } },
-    { "id": "nz-north", "name": "North Island", "units": { "NZ": "*" } },
+    { "id": "new-zealand", "name": "New Zealand", "countries": ["NZ"] },
     { "id": "cn-north", "name": "China north", "units": { "CN": ["Beijing", "Tianjin", "Hebei", "Shanxi", "Inner Mongolia"] } },
     { "id": "cn-northeast", "name": "China northeast", "units": { "CN": ["Liaoning", "Jilin", "Heilongjiang"] } },
     { "id": "cn-east", "name": "China east", "units": { "CN": ["Shanghai", "Jiangsu", "Zhejiang", "Anhui", "Fujian", "Jiangxi", "Shandong"] } },

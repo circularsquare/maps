@@ -11,6 +11,8 @@ Rough ground adds to the [[levels-and-tunnels|level's price multiplier]]:
 | High hills | {{sim/src/track/params.rs:TERRAIN_SURCHARGE[2]}} |
 | Mountains | {{sim/src/track/params.rs:TERRAIN_SURCHARGE[3]}} |
 
+The stretch's price is its length, times the base price, times the level's multiplier plus that surcharge.
+
 A bored tunnel doesn't care. It costs the same under flat fields and under mountains. So in the mountains a tunnel is the cheapest way through, then ground track, then a viaduct.
 
 Stations, junctions and crossings pay nothing extra for the ground, and [[upkeep]] doesn't change. Steep ground never refuses track, and trains don't slow for it.
@@ -20,4 +22,4 @@ Over [[water]] the ground underneath doesn't count: only the water does.
 A hex that looks like hills on the map is charged as hills.
 
 Exact rule: `docs/track-and-service.md` "Construction prices", the Terrain item, which also has how the hills are measured.
-In the code: `sim/src/track/cost.rs` `terrain_surcharge`, `hex_centre`, `terrain_spans` `sim/src/track/params.rs` `TERRAIN_SURCHARGE`, `TERRAIN_MIN_LEVEL`
+In the code: **main** `sim/src/track/cost.rs` `terrain_surcharge`, also `hex_centre`, `terrain_spans` `sim/src/track/params.rs` `TERRAIN_SURCHARGE`, `TERRAIN_MIN_LEVEL`

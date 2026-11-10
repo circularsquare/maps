@@ -149,6 +149,9 @@ svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width:
 svg .solid { fill: currentColor; }
 svg .bg { fill: var(--bg); }
 svg .stroke2 { stroke-width: 2; }
+/* T-2959: the track-count icons are 20 px (even inside a 26 px button, so no half pixel) with 2-unit lines
+   4 units apart, which land on whole device pixels at 1, 1.25 and 1.5 */
+.tool-bar .btn.icon svg.tracks { width: 20px; height: 20px; stroke-width: 2; stroke-linecap: butt; }
 
 /* ---------- dock ---------- */
 

@@ -11,7 +11,7 @@ hyphen ("Altai" holds Altai Krai and Altai Republic); the US matches postal code
 
 Writes `realm` on every registry row (from its country, or for a split country from where its centre
 lies), and for each realm holding a zone its land: Natural Earth admin 0 (de facto borders) for whole
-countries, cut along geoBoundaries ADM1 (China, Russia, Malaysia, Indonesia, the Philippines, New Zealand, India) or the Census states (US) for split ones;
+countries, cut along geoBoundaries ADM1 (China, Russia, Malaysia, Indonesia, the Philippines, India) or the Census states (US) for split ones;
 parts farther than KEEP_KM from every one of the realm's zones left out (France's overseas
 departments), rings simplified to TOL_M with borders between realms simplified once
 (zone_outlines' shared runs), and a label point, the point deepest inside the largest part.

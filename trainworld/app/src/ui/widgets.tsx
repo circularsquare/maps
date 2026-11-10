@@ -50,8 +50,8 @@ export const Icon = {
   // track ramping up over another line, seen side on (T-1615)
   autoRamp: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5h2.5l3-6h2l3 6h2.5" /><circle class="solid" cx="8" cy="12.5" r="1.6" /></svg>,
   // the track tool's two or four tracks, side on to their direction (T-2931)
-  tracks2: () => <svg viewBox="0 0 16 16"><path d="M5.5 2v12M10.5 2v12" /></svg>,
-  tracks4: () => <svg viewBox="0 0 16 16"><path d="M2.5 2v12M6 2v12M10 2v12M13.5 2v12" /></svg>,
+  tracks2: () => <svg class="tracks" viewBox="0 0 20 20"><path d="M6 3v14M14 3v14" /></svg>,
+  tracks4: () => <svg class="tracks" viewBox="0 0 20 20"><path d="M4 3v14M8 3v14M12 3v14M16 3v14" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,
   // T-2679: make a country the reference for fares
   anchor: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="3.2" r="1.6" /><path d="M8 4.8v9.7M5.2 7.2h5.6M2.7 9.6c.4 2.9 2.6 4.9 5.3 4.9s4.9-2 5.3-4.9" /></svg>,
@@ -110,7 +110,7 @@ export const Icon = {
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
   // an alert's mark, a circled exclamation point, coloured by its severity
-  alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v4" /><circle class="solid" cx="8" cy="11.1" r="0.5" /></svg>,
+  alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v3.2" /><circle class="solid" stroke="none" cx="8" cy="11.1" r="1" /></svg>,
   // the Cities tab, a skyline
   cities: () => <svg viewBox="0 0 16 16"><path d="M1.5 14h13M3 14V7h3.5v7M6.5 14V2.5h3.5V14M10 14V8h3v6" /></svg>,
   // T-2395: the game's home, filled where it is this place

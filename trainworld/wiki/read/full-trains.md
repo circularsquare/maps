@@ -2,7 +2,7 @@
 
 A car holds 160 people at its rated load and 240 when it's as packed as it gets.
 
-A ride counts one minute a minute until the train is 70% of the way to its rated load. After that each minute feels longer. At the rated load a minute counts 3, and at crush it counts far more than that. So a crowded line pushes people to other lines, or back to the car.
+A ride counts one minute a minute until the train is 70% of the way to its rated load. After that each minute feels longer. At the rated load a minute counts 3, and at crush it counts far more than that. The extra is a curve that bends upward: take how far along the stretch from the start to the rated load the train is, multiply it by one plus itself, halve it, and scale it. It keeps climbing past the rated load and never flattens. So a crowded line pushes people to other lines, or back to the car.
 
 **Waiting for room.** If the train arriving has no space, the wait for one with room counts too, up to 60 minutes.
 
@@ -13,4 +13,4 @@ People already on board keep their places, so the squeeze falls on the stops dow
 How busy it gets depends on the hour: see [rush hours](rush-hours.md). This all feeds into [perceived minutes](perceived-minutes.md).
 
 Exact rule: `docs/demand-kernel.md` "Loading and crowding". These are train cars. A bus or a boat holds its own number.
-In the code: `sim/src/demand/kernel/assign.rs` `crowd_factors` `sim/src/demand/kernel/stalls.rs` `left_behind`, `capacity_fit` `sim/src/demand/api.rs` `RATED_PER_CAR`, `CRUSH_PER_CAR`
+In the code: **main** `sim/src/demand/kernel/assign.rs` `crowd_factors`; also `sim/src/demand/kernel/stalls.rs` `left_behind`, `capacity_fit` `sim/src/demand/api.rs` `RATED_PER_CAR`, `CRUSH_PER_CAR`

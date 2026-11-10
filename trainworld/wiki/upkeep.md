@@ -11,6 +11,8 @@ A km of double track costs this much a game day:
 | Cut and cover | ${{sim/src/track/params.rs:UPKEEP_CUT_KM*ECONOMY/1000|0}}k |
 | Bored tunnel | ${{sim/src/track/params.rs:UPKEEP_BORED_KM*ECONOMY/1000|0}}k |
 
+A piece's upkeep is its length, times the rate of the dearest structure on it, times the track kind's factor, scaled to game money.
+
 A piece of track pays the dearest thing it touches, so a ramp down into a tunnel makes the whole piece a tunnel. High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track pays twice.
 
 A station costs ${{sim/src/track/params.rs:UPKEEP_STATION*ECONOMY/1000|0}}k a day at ground level or above, and ${{sim/src/track/params.rs:UPKEEP_STATION_UNDER*ECONOMY/1000|0}}k underground. Junctions and flyovers cost nothing on top.
@@ -20,4 +22,4 @@ A tunnel costs more to keep up as well as more to [[levels-and-tunnels|build]]. 
 Your lines share the bill by how many trains they run on each stretch, so a line's profit already has its share taken out. [[terrain|Terrain]] and [[water]] don't change upkeep.
 
 Exact rule: `docs/track-and-service.md` "Blueprint, trains and running costs", the Upkeep item, which also has how it splits by line and region.
-In the code: `sim/src/track/cost.rs` `track_upkeep_km`, `station_upkeep` `sim/src/track/wasm.rs` `edge_upkeep_km` `sim/src/track/wasm/money.rs` `upkeep`, `line_upkeep` `sim/src/track/params.rs` `UPKEEP_GROUND_KM`, `ECONOMY`
+In the code: **main** `sim/src/track/cost.rs` `track_upkeep_km`, also `station_upkeep` `sim/src/track/wasm.rs` `edge_upkeep_km` `sim/src/track/wasm/money.rs` `upkeep`, `line_upkeep` `sim/src/track/params.rs` `UPKEEP_GROUND_KM`, `ECONOMY`

@@ -11,7 +11,7 @@ then run `python trainworld/tools/wiki_build.py` from the maps root and commit `
 - **Figures come from the code.** Write a marker, never the number: `{{sim/src/track/params.rs:LEVEL_MULT[3]}}`,
   `{{sim/src/demand/kernel.rs:Params.road_city_kmh}}` (from `impl Default for Params`), TS the same. A worked-out
   figure is arithmetic in the marker, over one file's names: `{{sim/src/track/params.rs:UPKEEP_BORED_KM * ECONOMY / 1000}}`.
-  Add `|0` to round. A build fails if a name has gone.
+  Add `|0` to round. A JSON file works too, with a dotted key path: `{{pipeline/longhaul.json:tail_onset_km[0]|0}}`. A build fails if a name or key has gone.
 - **No figure can be pulled? Leave it out.** A number buried inside a function gets words: "slower in dense
   places". Don't spell a tuned number out to get past the check. Shapes are fine: "half the gap between trains".
 - **Each page ends with two lines**, the only place paths appear, and the build checks them.

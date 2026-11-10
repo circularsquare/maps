@@ -8,7 +8,9 @@ Water replaces [[terrain]]: what the ground would have been under it adds nothin
 
 Viaducts and cut and cover tunnels stop at {{sim/src/track/params.rs:WATER_SPAN_MAX/1000|0}} km of unbroken water. Bored tunnels have no limit, and a stretch of bored tunnel starts the count over.
 
+A water stretch's price is the level's multiplier plus the water surcharge, in place of the ground's, times length and base price.
+
 Small creeks and ditches aren't on the water map, so track crosses them at ground level.
 
 Exact rule: `docs/track-and-service.md` "Water, bridges and ramps" for how a bridge gets made, "Construction prices" for the price and the longest span.
-In the code: `sim/src/track/bridge.rs` `bridge_long` `sim/src/track/cost.rs` `track_cost_parts_t` `sim/src/track/net.rs` `bridged_water_through` `sim/src/track/params.rs` `WATER_SURCHARGE`, `WATER_COST`, `WATER_SPAN_MAX`
+In the code: **main** `sim/src/track/bridge.rs` `bridge_long`, also `sim/src/track/cost.rs` `track_cost_parts_t` `sim/src/track/net.rs` `bridged_water_through` `sim/src/track/params.rs` `WATER_SURCHARGE`, `WATER_COST`, `WATER_SPAN_MAX`
