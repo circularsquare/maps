@@ -814,7 +814,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   i)` drops the stops past `i` toward the nearer end (the later end when level) the same way.
   `stop_passed(line, station)` makes a station the path passes a stop, path untouched. Each is
   one ordinary service edit and one undo. `drop_stop` and `end_line_at` are refused where a train
-  turns back at the stop, at a loop's ends, below two stops, and for a bus line.
+  turns back at the stop, at a loop's ends, below two stops, and for a bus line (a bus or ferry loop is 6.7).
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
   bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.
@@ -1609,6 +1609,18 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.
+- **Loops** (T-2899; `bus::is_closed`): a route of four points or more whose last point is its first is a loop.
+  Nothing else stores it, so no save field and no save level. A loop is a circle (T-798): its service kind is
+  `LoopKind::Circle`, so everything a train circle does follows: both ways, a bus each way on an even fleet
+  (the stepper moves by 2), a lap with the line's dwell standing at the first stop, the round trip twice the
+  longer lap, demand riding on round through the first stop (`wrapS`) and the boarding account carrying who
+  stays aboard. Run 1 is the same ring the other way. Its stops are placed as an open route's with these
+  changes: the first and the closing stop are one stop (the same id, at road metres 0 and the full length),
+  the station nearest the closing point within `STATION_REACH_M` if there is one (else a plain stop, kind
+  end), no other stop merges into the ends, and a ring with no stop between gets one at half its length. The
+  stop's `cover` is two stretches, the first and last of the ring. A drawn route out and back along one road
+  and closed is a loop all the same. One-way loops are T-798 L3 (notes/someday.md), for trains and buses and
+  boats alike.
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops
@@ -1689,6 +1701,10 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   metres (free) as kind 14. A new ferry line starts at a boat every 20 and 30 minutes at high and
   medium demand and none at low (T-2273), 60 s dwell, 300 s
   turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
+- **Loops** (T-2899; `ferry::is_closed`): a line of four stops or more whose last port is its first is a loop,
+  as for a bus line (6.7): a circle in the service, both ways, nothing stored. The route runs from the first
+  port's berth round to it again, so its first and last `K_PORT` points are that berth. The port is named
+  twice in the stop list and is built, paid for and kept once.
 - **Saves**: a trailing `LFR2` block (save level 5) holds the ports' berths (as mm deltas from their
   landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
   without it has no ports or ferries and loads as before. An `LFR1` block (level 3) is the same with

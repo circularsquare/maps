@@ -157,7 +157,7 @@ export const networkFigures = computed(() => {
     const top = Math.max(0, ...st.stretches.map((x) => x.reached));
     if (top >= BULLET_KMH && (!bullet || top > bullet.v!)) bullet = { of: l.name, v: top };
     const stops = l.stops.length - 1;
-    if (st.loop === "circle" && stops >= CIRCLE_STOPS && (!circle || stops > circle.v!)) circle = { of: l.name, v: stops };
+    if (st.loop === "circle" && !st.bus && stops >= CIRCLE_STOPS && (!circle || stops > circle.v!)) circle = { of: l.name, v: stops };
   }
   if (long) firsts.set("long", long);
   if (bullet) firsts.set("bullet", bullet);

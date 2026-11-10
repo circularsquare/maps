@@ -356,8 +356,8 @@ the tag by the pointer gives the road length and the price.
 
 - **Points**: each clicked point shows as a handle in the line's colour (only while the tool is
   on): a dot with a ring of the map's land colour, larger under the pointer; the **active end**, where
-  new points join, is a ring instead. A click on the other end makes it the active end, so a route
-  grows from either end. A press on any point dragged more than 3 px moves it (the map does not
+  new points join, is a ring instead. With two points a click on the other end makes it the active end,
+  so a route grows from either end; with three or more it closes a **loop** (below). A press on any point dragged more than 3 px moves it (the map does not
   pan), and the legs either side are searched again on every move; Escape during the drag puts it
   back. A right click on a point deletes it, its neighbours joined by a new leg; a right click
   elsewhere or Backspace takes back the active end. Over a point the tag says "Drag to move" and
@@ -366,6 +366,16 @@ the tag by the pointer gives the road length and the price.
   not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
   deletes it (the phone buzzes) and the lift adds nothing. A press that does not move and is lifted
   sooner is a tap, as in Building by touch.
+- **Loop** (T-2899): with three points or more, a click on the first point (the tail active) or on the last
+  (the head active) joins the other end to it by road, adds a copy of the first point at the end, and makes
+  the line or saves the route as a click on the active end does; the tag over that point says "Click to
+  close the loop". A road that does not reach is refused as a click's is. A closed route has no active end
+  and no leg follows the pointer: a click on empty ground says "The loop is closed. Right click its first
+  point to open it."; a click on the first point (also the last) finishes; dragging it moves both and
+  searches the legs into and out of it; a right click on it or Backspace takes the closing point off and
+  opens the route, and its tag says "Right click to open the loop". Taking out a point of a ring of three
+  leaves an open route of two. The tag's stop count leaves the closing stop out. A closed route is a loop line (track-and-service.md
+  6.7); Edit route on one reopens it closed.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
@@ -378,7 +388,7 @@ the tag by the pointer gives the road length and the price.
   the route (final for a constructed route, which pays any longer road). A new bus line is planned
   until Construct.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
-  nothing waiting finishes, on the other end makes it active. Dragging and deleting points take a
+  nothing waiting finishes, on the other end makes it active (or closes the loop, with three points). Dragging and deleting points take a
   mouse.
 - **Stop spacing** (T-2885, T-2937; `StopsHead` in `ui/inspector/BusInspector.tsx`): the bus panel's Stops heading
   carries two buttons, Auto and Manual, as the schedule's Buses and Headway pair does; not on a ferry. Under Auto
@@ -422,9 +432,18 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   searched, red and straight where no water joins two ports. The tag gives the route's length and the
   price of the ports not yet constructed (US$10M each; the route is free), and how many ports; a leg
   with no route says "No water path found", and the line cannot be made until a port is taken out.
-- **Ports as handles**: new ports join at the active end; a click on the other end makes it the
-  active one; a right click on a port or Backspace takes one out. No dragging: a port is moved by
+- **Ports as handles**: new ports join at the active end; with two ports a click on the other end makes
+  it the active one; a right click on a port or Backspace takes one out. No dragging: a port is moved by
   taking it out and placing another.
+- **Loop** (T-2899): with three ports or more, a click on the first port (the tail active) or the last
+  (the head active) puts the first port again at the end and makes the line, as for a bus line; the tag
+  says "Click to close the loop". A new port closing the loop is sent as `again`, the one placed first
+  (`FerryPortIn`), so it is added once. A closed line takes no new port (a click says "The loop is
+  closed. Right click its first port to open it."), a click on the first port finishes, and a right click
+  on it or Backspace takes the closing port off ("Right click to open the loop"), and taking out a port
+  of a ring of three leaves an open line of two. The tag's port count and the price count the first port
+  once. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
+  opens it, and one of a ring of three leaves a line of two.
 - **Finishing** as the bus tool: a click on the active end, a double click, Enter, or Make line (Save
   route) in the tool's bar; fewer than two ports is refused, and so is a leg with no route ("No water
   path found between A and B."). New ports are added with the line as blueprint ports. Escape drops a

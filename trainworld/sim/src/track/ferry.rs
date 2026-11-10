@@ -112,6 +112,11 @@ pub fn berth_ok(net: &Network, landing: [f64; 2], berth: [f64; 2]) -> bool {
     berth.iter().all(|v| v.is_finite()) && net.inside_world(berth[0], berth[1]) && ground_m(net, landing, berth) <= BERTH_MAX_M
 }
 
+/// A loop (T-2899): four stops or more, the last port the first. Nothing else stores it.
+pub fn is_closed(ports: &[u32]) -> bool {
+    ports.len() >= 4 && ports.first() == ports.last()
+}
+
 /// Whether a ferry line's stops (`ports`) and route make a line: two ports or more, no port twice in a
 /// row, a route of 2 to `MAX_ROUTE_POINTS` points inside the world and `MIN_ROUTE_M` long, starting and
 /// ending at a port, with one `K_PORT` point per stop within `BERTH_TOL_M` of that port's berth.

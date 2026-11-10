@@ -3326,6 +3326,7 @@ function addPorts(a: TrackApi, ports: FerryPortIn[]): Uint32Array | null {
   let added = 0;
   for (const p of ports) {
     if ("node" in p) { out.push(p.node); continue; }
+    if ("again" in p) { out.push(out[p.again]); continue; }
     if (a.add_port(p.x, p.y, p.bx, p.by, p.name) !== 0) {
       for (; added > 0; added--) a.undo();
       return null;

@@ -1787,6 +1787,8 @@ mod tests;
 #[cfg(test)]
 mod bus_tests;
 #[cfg(test)]
+mod loop_tests;
+#[cfg(test)]
 mod ferry_tests;
 /// T-656: ground track across water becomes a bridge by itself.
 #[cfg(test)]

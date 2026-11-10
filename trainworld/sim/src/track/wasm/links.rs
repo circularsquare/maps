@@ -191,7 +191,11 @@ impl TrackApi {
         }
         // a ferry line: its route (free) and its ports (T-2193)
         if net.is_ferry(line) {
-            return Some((vec![], net.line_stops(line).to_vec(), vec![line]));
+            // a loop names its first port twice (T-2899)
+            let mut ports = net.line_stops(line).to_vec();
+            ports.sort_unstable();
+            ports.dedup();
+            return Some((vec![], ports, vec![line]));
         }
         Some((net.line_path(line).iter().map(|&p| p >> 1).collect(), net.line_stops(line).to_vec(), vec![]))
     }

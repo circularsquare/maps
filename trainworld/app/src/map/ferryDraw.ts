@@ -10,7 +10,9 @@
 // other end switches), a right click on a port takes it out, a click on the active end, a double click,
 // Enter, Escape or the Make line button finishes a new line, Escape drops an edit as a whole. A
 // finger's tap places at once (a port is a place, not a point to adjust). No dragging: a port is moved
-// by taking it out and placing another.
+// by taking it out and placing another. A click on the other end, with three ports or more, closes the line
+// into a loop and finishes it (T-2899): its last port is then the first again. A closed line has no active
+// end; a right click on its first port opens it again.
 //
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
@@ -180,7 +182,8 @@ export class FerryDraw {
     if (edited) this.dirty = true;
     if (this.ports.length < 2) this.head = false;
     const d = ferryDraft.peek();
-    if (!d || d.line !== this.line || d.points !== this.ports.length) ferryDraft.value = { line: this.line, points: this.ports.length };
+    const points = this.ports.length - (this.closed() ? 1 : 0);
+    if (!d || d.line !== this.line || d.points !== points) ferryDraft.value = { line: this.line, points };
     this.reroute();
     this.place();
   }
@@ -208,6 +211,12 @@ export class FerryDraw {
 
   private endIndex(): number {
     return this.head ? 0 : this.ports.length - 1;
+  }
+
+  /** The line is a loop: its last port is its first (T-2899). */
+  private closed(): boolean {
+    const n = this.ports.length, a = this.ports[0], b = this.ports[n - 1];
+    return n >= 4 && (a === b || (a.node !== null && a.node === b.node));
   }
 
   /** The placed port whose circle is under a screen point, -1 for none; the active end first. */
@@ -318,6 +327,7 @@ export class FerryDraw {
   private async press(px: number, py: number, at: Pt, touch = false) {
     const u = this.underAt(px, py, at, touch);
     if (u.kind === "handle") return this.handleClick(u.i);
+    if (this.closed()) return void say(t("ferryDraw.loopClosed"), true);
     if (u.kind === "port") {
       if (this.ports.some((p) => p.node === u.node)) return;
       return this.add({ node: u.node, landing: u.landing, berth: u.berth, name: u.name });
@@ -344,15 +354,27 @@ export class FerryDraw {
     }
   }
 
-  /** A click on a placed port: the active end finishes, the other end becomes the active one. */
+  /** A click on a placed port: the active end finishes; the other end closes the loop, or with two ports
+   * becomes the active one. */
   private handleClick(i: number) {
     const n = this.ports.length;
     if (n < 2) return;
+    if (this.closed() && (i === 0 || i === n - 1)) return void this.finish();
     if (i === this.endIndex()) return void this.finish();
     if (i === 0 || i === n - 1) {
+      if (n >= 3) return this.closeLoop();
       this.head = i === 0;
       this.changed();
     }
+  }
+
+  /** Add the first port again at the end and make the line (T-2899). */
+  private closeLoop() {
+    playBuild("station");
+    this.ports.push(this.ports[0]);
+    this.reunder();
+    this.changed(true);
+    void this.finish();
   }
 
   private add(p: DraftPort) {
@@ -366,7 +388,13 @@ export class FerryDraw {
   private remove(i: number) {
     if (this.busy || i < 0 || i >= this.ports.length) return;
     playBuild("pop");
-    this.ports.splice(i, 1);
+    // a loop's first port is also its last: taking it out opens the loop; a ring of three is no loop without one
+    const wasClosed = this.closed();
+    if (wasClosed && (i === 0 || i === this.ports.length - 1)) this.ports.pop();
+    else {
+      this.ports.splice(i, 1);
+      if (wasClosed && this.ports.length <= 3) this.ports.pop();
+    }
     this.reunder();
     this.changed(true);
   }
@@ -438,7 +466,7 @@ export class FerryDraw {
     const built = new Set((w?.save.stations ?? []).filter((s) => s.built).map((s) => s.num));
     const nodes = new Set<number>();
     let count = 0;
-    for (const p of this.ports) {
+    for (const p of new Set(this.ports)) {
       if (p.node === null) count++;
       else if (!built.has(p.node) && !nodes.has(p.node)) {
         nodes.add(p.node);
@@ -480,8 +508,10 @@ export class FerryDraw {
         return;
       }
       const route = routeArray(r);
-      const ports: FerryPortIn[] = this.ports.map((p) => {
+      const ports: FerryPortIn[] = this.ports.map((p, i) => {
         if (p.node !== null) return { node: p.node };
+        // a new port closing a loop is the one placed first
+        if (this.ports.indexOf(p) < i) return { again: this.ports.indexOf(p) };
         const a = lngLatToPack(p.landing.lng, p.landing.lat), b = lngLatToPack(p.berth.lng, p.berth.lat);
         return { x: a.x, y: a.y, bx: b.x, by: b.y, name: p.name };
       });
@@ -610,8 +640,9 @@ export class FerryDraw {
     let bad = false;
     if (u.kind === "handle") {
       const ends = this.ports.length >= 2 && (u.i === 0 || u.i === this.ports.length - 1);
-      if (ends) rows.push(row(u.i === this.endIndex() ? (this.line === null ? t("ferryDraw.clickMake") : t("ferryDraw.clickSave")) : t("ferryDraw.clickFrom")));
-      rows.push(row(t("ferryDraw.rightDelete")));
+      const loop = ends && this.closed();
+      if (ends) rows.push(row(loop || u.i === this.endIndex() ? (this.line === null ? t("ferryDraw.clickMake") : t("ferryDraw.clickSave")) : this.ports.length >= 3 ? t("ferryDraw.clickClose") : t("ferryDraw.clickFrom")));
+      rows.push(row(loop ? t("ferryDraw.rightOpen") : t("ferryDraw.rightDelete")));
     } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : t("ferryDraw.stopAt", { name: u.name })));
     else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
     else if (u.kind === "water") (rows.push(row(onWater(), true)), (bad = true));
@@ -621,7 +652,7 @@ export class FerryDraw {
       else if (r) {
         const p = this.price();
         rows.push(row(`${distance(r.m)}, ${moneyShort(p.cost * 1e6)}${this.built ? " more" : ""}`));
-        rows.push(row(t("ferryDraw.ports", { count: this.ports.length })));
+        rows.push(row(t("ferryDraw.ports", { count: this.ports.length - (this.closed() ? 1 : 0) })));
       }
     }
     if (!rows.length) {

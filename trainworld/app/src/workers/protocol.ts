@@ -534,8 +534,9 @@ export interface FerryRow {
 }
 
 /** T-2194: a ferry line's port as the tool sends it: a port the network has, or a new one (its landing
- * on the shore and its berth in the water, world metres) added before the line */
-export type FerryPortIn = { node: number } | { x: number; y: number; bx: number; by: number; name: string };
+ * on the shore and its berth in the water, world metres) added before the line; `again`: the port at that
+ * index of the list once more, a loop's closing port (T-2899) */
+export type FerryPortIn = { node: number } | { x: number; y: number; bx: number; by: number; name: string } | { again: number };
 
 /** Everything drawn, in local units (map/geo.ts). */
 export interface ClockRender {

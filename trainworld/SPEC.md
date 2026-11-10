@@ -285,6 +285,8 @@ clicks (a point the roads do not reach is refused, T-2451), stops place themselv
 stations it passes and about every 2 km (or the player sets a line's stops about a distance apart, T-2885), a hop takes the car's time over its road at 90% of the car's speed (never under 30 km/h, a bus lane) plus 28 s for the stop (T-2904),
 and homes within 300 m of the route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
 bus and US$6 a bus-km to run. A bus is a third of a train car (53 riders at the rated load, 80 at crush, T-2919), so its crowding reads as a train's. Trips by bus count as rail.
+A route that ends where it starts is a loop (T-2899), and so is a ferry line whose last port is its first: it runs round and round, both ways, as a train circle does.
+
 
 Ferry lines (T-2193, design notes/T-2177.md) run on water between ports, stations of their own kind
 with a landing on the shore and a berth in the water. The route is free, found in the app over the

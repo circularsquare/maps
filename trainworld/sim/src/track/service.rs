@@ -610,6 +610,10 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
         }
     };
     ls.stops = plan.stops.iter().map(|s| s.id).collect();
+    // T-2899: a route that ends where it starts is a circle
+    if super::bus::is_closed(&r.points) {
+        ls.kind = LoopKind::Circle;
+    }
     ls.runs = [make(fwd_s, &fwd_dw, &plan.street, &pace), make(rev_s, &rev_dw, &rev_street, &pace.reversed())];
     ls.cars = 1;
     ls.train_len = super::bus::BUS_LEN_M;
@@ -654,6 +658,9 @@ fn build_ferry(net: &Network, l: u32, r: &super::ferry::FerryRoute) -> LineSvc {
         }
     };
     ls.stops = ports.to_vec();
+    if ferry::is_closed(ports) {
+        ls.kind = LoopKind::Circle;
+    }
     ls.runs = [make(fwd_s, &fwd), make(rev_s, &rev)];
     ls.cars = 1;
     ls.train_len = ferry::BOAT_LEN_M;

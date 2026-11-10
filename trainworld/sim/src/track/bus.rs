@@ -311,6 +311,11 @@ pub fn simplify(pts: &[(f64, f64)], tol: f64) -> Vec<(f64, f64)> {
     pts.iter().zip(keep).filter(|(_, k)| *k).map(|(p, _)| *p).collect()
 }
 
+/// A loop (T-2899): a route of four points or more that ends where it starts. Nothing else stores it.
+pub fn is_closed(pts: &[[f64; 2]]) -> bool {
+    pts.len() >= 4 && pts[0] == pts[pts.len() - 1]
+}
+
 /// Whether a route's points make a route at all: two or more, finite, inside the world, not too
 /// many, and at least `MIN_ROUTE_M` long.
 pub fn route_ok(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> bool {
@@ -427,14 +432,28 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     }
     // fixed stops: (road s, kind, station)
     let mut fixed: Vec<(f64, u8, Option<u32>)> = vec![];
-    let start_merged = kept.first().filter(|k| k.0 <= STATION_REACH_M).map(|k| k.1);
-    let end_merged = kept.last().filter(|k| k.0 >= len - STATION_REACH_M && Some(k.1) != start_merged).map(|k| k.1);
-    if start_merged.is_none() {
-        fixed.push((0.0, KIND_END, None));
-    }
-    fixed.extend(kept.iter().map(|k| (k.0, KIND_STATION, Some(k.1))));
-    if end_merged.is_none() {
-        fixed.push((len, KIND_END, None));
+    let closed = is_closed(pts);
+    if closed {
+        // T-2899: a loop starts and ends at one stop at its closing point: the station within reach of
+        // it (the nearest), else a plain stop
+        let (x0, y0) = (pts[0][0], pts[0][1]);
+        let at_start = |n: u32| (net.node_x[n as usize] - x0).hypot(net.node_y[n as usize] - y0) / net.k_at(y0);
+        let anchor = kept.iter().map(|k| k.1).map(|n| (n, at_start(n))).filter(|c| c.1 <= STATION_REACH_M).min_by(|a, b| a.1.total_cmp(&b.1)).map(|c| c.0);
+        kept.retain(|k| Some(k.1) != anchor);
+        let kind = if anchor.is_some() { KIND_STATION } else { KIND_END };
+        fixed.push((0.0, kind, anchor));
+        fixed.extend(kept.iter().map(|k| (k.0, KIND_STATION, Some(k.1))));
+        fixed.push((len, kind, anchor));
+    } else {
+        let start_merged = kept.first().filter(|k| k.0 <= STATION_REACH_M).map(|k| k.1);
+        let end_merged = kept.last().filter(|k| k.0 >= len - STATION_REACH_M && Some(k.1) != start_merged).map(|k| k.1);
+        if start_merged.is_none() {
+            fixed.push((0.0, KIND_END, None));
+        }
+        fixed.extend(kept.iter().map(|k| (k.0, KIND_STATION, Some(k.1))));
+        if end_merged.is_none() {
+            fixed.push((len, KIND_END, None));
+        }
     }
     let near_fixed = |s: f64, fixed: &[(f64, u8, Option<u32>)]| fixed.iter().any(|f| (f.0 - s).abs() < STATION_REACH_M);
     let mut cross: Vec<f64> = vec![];
@@ -497,6 +516,10 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     let mut all: Vec<(f64, u8, Option<u32>)> = fixed;
     all.extend(middles.into_iter().map(|s| (s, KIND_MIDDLE, None)));
     all.sort_by(|a, b| a.0.total_cmp(&b.0));
+    // a loop needs a stop between its first and its closing one
+    if closed && all.len() < 3 {
+        all.insert(1, (0.5 * len, KIND_MIDDLE, None));
+    }
     let mut stops: Vec<BusStop> = all
         .iter()
         .enumerate()
@@ -508,6 +531,12 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
             BusStop { id: station.unwrap_or_else(|| stop_id(l, k)), s, x, y, kind, station, cover: None }
         })
         .collect();
+    if closed {
+        let id = stops[0].id;
+        if let Some(last) = stops.last_mut() {
+            last.id = id;
+        }
+    }
     let open: Vec<usize> = (0..stops.len()).filter(|&k| stops[k].station.is_none()).collect();
     for (j, &k) in open.iter().enumerate() {
         let g = stops[k].s;

@@ -79,8 +79,8 @@ function stopRows(bus: ClockBus): StopRow[] {
   return rows;
 }
 
-/** Every stop of a route, the street stops included. */
-const stopCount = (bus: ClockBus) => bus.stops.length + (bus.street.length >> 1);
+/** Every stop of a route, the street stops included; a loop's first stop once. */
+const stopCount = (bus: ClockBus, loop: boolean) => bus.stops.length + (bus.street.length >> 1) - (loop ? 1 : 0);
 
 const endNames = new Map<string, string>();
 const endKey = (lng: number, lat: number) => `${lng.toFixed(4)},${lat.toFixed(4)}`;
@@ -121,7 +121,8 @@ const DRAG_PX = 4;
 /** T-2275: a ferry line's ports drawn as a rail line's stops strip, the Traffic view's stretch widths
  * included (T-2274). A click on a port's dot takes it out of the line and a drag of its row moves it,
  * the route searched again through the ports (`FerryDraw.setPorts`); not while the ferry tool has the
- * line, nor with only two ports. */
+ * line, nor with only two ports. A loop (T-2899) keeps its order: taking out its first or last port opens
+ * it, and a ring of three with one taken out is a line of two. */
 function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput; st: LineStats; bus: ClockBus; colour: string; editable: boolean; flip: boolean; time: (i: number) => ComponentChildren }) {
   const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -131,7 +132,9 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
   const names = new Map((world.value?.save.stations ?? []).map((s) => [s.num, s.name]));
   const nameOf = (i: number) => names.get(ports[i]?.node ?? -1) ?? t("busInspector.port");
   const looks = display.value.trackColour === "traffic" && st.status === "running" && l.stops.length === n ? stretchLooks(l, ports.map((_, i) => nameOf(i)), []) : null;
+  const loop = n >= 4 && ports[0].node === ports[n - 1].node;
   const canEdit = editable && !busy && n > 2;
+  const canMove = canEdit && !loop;
   const apply = async (order: number[]) => {
     const f = live.tools?.ferry;
     if (!f || busy) return;
@@ -141,9 +144,9 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
   const all = ports.map((_, i) => i);
   // T-2919: the rows north end on top as a rail line's; a row's place in the list to its port
   const shown = flip ? all.slice().reverse() : all;
-  const remove = (i: number) => void apply(all.filter((k) => k !== i));
+  const remove = (i: number) => void apply(loop ? (i === 0 || i === n - 1 ? all.slice(0, -1) : all.filter((k) => k !== i && !(n <= 4 && k === n - 1))) : all.filter((k) => k !== i));
   const pointerDown = (e: PointerEvent, from: number) => {
-    if (!canEdit || e.button !== 0 || e.pointerType === "touch" || (e.target as Element | null)?.closest?.(".stop-hit, button")) return;
+    if (!canMove || e.button !== 0 || e.pointerType === "touch" || (e.target as Element | null)?.closest?.(".stop-hit, button")) return;
     const x0 = e.clientX, y0 = e.clientY;
     let on = false, gap = from;
     const move = (m: PointerEvent) => {
@@ -176,7 +179,7 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
   };
   const moving = drag && drag.gap !== drag.from && drag.gap !== drag.from + 1 ? drag : null;
   return (
-    <ul class={"stops ferry-ports" + (looks ? " traffic" : "") + (canEdit ? " movable" : "") + (drag ? " dragging" : "")} style={{ "--c": colour }}>
+    <ul class={"stops ferry-ports" + (looks ? " traffic" : "") + (canMove ? " movable" : "") + (drag ? " dragging" : "")} style={{ "--c": colour }}>
       {shown.map((i, at) => {
         const p = ports[i];
         // the stretches above and below the row
@@ -343,7 +346,7 @@ export function BusInspector({ id }: { id: string }) {
   // T-2919: the rail panel's order and stop times: the north (or west) end on top, each stop's time
   // from the one on top after its name
   const first = bus.stops[0], last = bus.stops[bus.stops.length - 1];
-  const flip = drawnReversed(first, last);
+  const flip = drawnReversed(first, last, !!st.loop);
   const total = times[times.length - 1] ?? 0;
   const stopTime = (i: number) => {
     const top = flip ? i === bus.stops.length - 1 : i === 0;
@@ -351,7 +354,8 @@ export function BusInspector({ id }: { id: string }) {
   };
   // a bus stands the line's dwell at train stations and a short stand at its other stops; a boat the dwell at each port
   const mid = bus.stops.slice(1, -1);
-  const standing = ferry ? undefined : 2 * (mid.filter((s) => s.station >= 0).length * st.dwellS + (mid.filter((s) => s.station < 0).length + (bus.street.length >> 1)) * STREET_STAND_S);
+  const lap = mid.filter((s) => s.station >= 0).length * st.dwellS + (mid.filter((s) => s.station < 0).length + (bus.street.length >> 1)) * STREET_STAND_S;
+  const standing = ferry ? undefined : st.loop ? lap + st.dwellS : 2 * lap;
   const between = (r: StopRow & { kind: "street" }) => {
     const from = rows.filter((x) => x.kind !== "street")[r.from] as StopRow & { kind: "end" | "station" } | undefined;
     const to = rows.filter((x) => x.kind !== "street")[r.from + 1] as StopRow & { kind: "end" | "station" } | undefined;
@@ -362,7 +366,7 @@ export function BusInspector({ id }: { id: string }) {
     <>
       <LineTitle l={l} t={title} />
       <div class="sub muted">
-        {t("busInspector.sub", { count: stopCount(bus), ferry, distance: distance(bus.roadM) })}
+        {t("busInspector.sub", { count: stopCount(bus, !!st.loop), ferry, distance: distance(bus.roadM) })}
       </div>
       {st.status === "planned" && (
         <div class="callout">

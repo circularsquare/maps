@@ -79,7 +79,11 @@ impl TrackApi {
         }
         d.stops = ports.to_vec();
         d.ferry = Some(r);
-        let mut ops = if built { self.construct_ops(&[], ports, &[]) } else { vec![] };
+        // a loop names its first port twice (T-2899)
+        let mut once = ports.to_vec();
+        once.sort_unstable();
+        once.dedup();
+        let mut ops = if built { self.construct_ops(&[], &once, &[]) } else { vec![] };
         if ops.is_empty() {
             return self.run(Op::Line { id, data: Some(d) });
         }
