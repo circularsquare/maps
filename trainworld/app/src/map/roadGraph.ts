@@ -267,7 +267,7 @@ export class RoadGraph {
    * straight distance to the first end; null if none is under `capM`. `turns` counts the turns paid
    * for; `from` and `to` are the ends taken. `startDir` (a unit grid vector), where the route carries on
    * from track: leaving a start against it is a turn there, so never back the way the track came (T-2997). */
-  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number, startDir: [number, number] | null = null): (RoadPath & { from: Snap; turns: number; states: number }) | null {
+  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number, startDir: [number, number] | null = null, hardTurn = maxTurn): (RoadPath & { from: Snap; turns: number; states: number }) | null {
     if (!starts.length || !ends.length) return null;
     let direct: { m: number; s: Snap; d: Snap } | null = null;
     const cosBack = Math.cos(maxTurn);
@@ -294,7 +294,7 @@ export class RoadGraph {
     const stamp = ++this.tstamp;
     this.hs = 0;
     const mpu = metresPerUnit(d.y);
-    const cosMin = Math.cos(minTurn), cosMax = Math.cos(maxTurn);
+    const cosMin = Math.cos(minTurn), cosMax = Math.cos(maxTurn), cosHard = Math.cos(hardTurn);
     // arc 2e runs ea to eb, 2e + 1 eb to ea; its head node and unit heading there
     const head = (a: number) => ((a & 1) === 0 ? this.eb[a >> 1] : this.ea[a >> 1]);
     const tail = (a: number) => ((a & 1) === 0 ? this.ea[a >> 1] : this.eb[a >> 1]);
@@ -306,18 +306,22 @@ export class RoadGraph {
     let slack = 0;
     for (const c of ends) slack = Math.max(slack, Math.hypot(c.x - d.x, c.y - d.y));
     const h = (n: number) => Math.max(0, Math.hypot(this.gx[n] - d.x, this.gy[n] - d.y) - slack) * mpu;
-    /** what turning from heading `u` onto heading `v` costs: Infinity if it turns back too far */
-    const turnCost = (u: [number, number], v: [number, number]) => {
+    /** what turning from heading `u` onto heading `v` costs: Infinity if it turns back more than `hardTurn`
+     * (`strict`: more than `maxTurn`); between `maxTurn` and `hardTurn` (T-3035) the cost climbs from
+     * `turnM` to twice it, a tram taking the sharp corner slowly rather than a long way round */
+    const turnCost = (u: [number, number], v: [number, number], strict = false) => {
       const c = u[0] * v[0] + u[1] * v[1];
-      return c < cosMax ? Infinity : c < cosMin ? turnM : 0;
+      if (c < (strict ? cosMax : cosHard)) return Infinity;
+      if (c < cosMax) return turnM * (1 + (Math.acos(Math.max(-1, Math.min(1, c))) - maxTurn) / (hardTurn - maxTurn));
+      return c < cosMin ? turnM : 0;
     };
-    /** whether heading `v` after done arc `a` turns back more than `maxTurn` from a heading run within
+    /** whether heading `v` after done arc `a` turns back more than `hardTurn` from a heading run within
      * `backM` before `a`'s head: a U-turn in steps (across a divided road's median, round a traffic island) */
     const doubles = (a: number, v: [number, number]) => {
       let m = this.elen[a >> 1];
       for (let p = this.tfrom[a]; p >= 0 && m < backM; p = this.tfrom[p]) {
         const u = dir(p);
-        if (u[0] * v[0] + u[1] * v[1] < cosMax) return true;
+        if (u[0] * v[0] + u[1] * v[1] < cosHard) return true;
         m += this.elen[p >> 1];
       }
       return false;
@@ -333,7 +337,7 @@ export class RoadGraph {
     starts.forEach((s, i) => {
       const l0 = this.elen[s.edge], p = pen(s);
       for (const [a, m] of [[2 * s.edge, (1 - s.t) * l0], [2 * s.edge + 1, s.t * l0]]) {
-        const tc = startDir ? turnCost(startDir, dir(a)) : 0;
+        const tc = startDir ? turnCost(startDir, dir(a), true) : 0;
         if (tc !== Infinity) open(a, p + m + tc, -1 - i);
       }
     });

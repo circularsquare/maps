@@ -260,8 +260,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   tram tool Ctrl means nothing else) lays it, the streets a tram may follow tinted green over the map while it is on
   (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to
   the pointer follows the basemap's streets (no motorways), shortest with 200 m added for each turn over 30
-  degrees, never turning back over 135 degrees at a junction or within 60 m of street (no U-turn across a divided
-  road's median), from and to the 12 nearest streets by each end; carrying on from the street route placed last, it
+  degrees, a turn back of 135 to 165 degrees costing 200 m rising to 400 m (T-3035) and none over 165 (nor any over 135
+  at a chained start), never turning back within 60 m of street (no U-turn across a divided road's median), from and to the 12 nearest streets by each end; carrying on from the street route placed last, it
   leaves its start as a junction turn from the way that route came, so never back along it (T-2997). The street graph
   joins the end of a street's bridge or tunnel to a ground street it meets (T-3000). The street line is
   fitted as corners (`TrackApi::trace_kind`: curves 18 to 253 m, each passing at most 10 m from its junction) within

@@ -1,5 +1,5 @@
 // T-2927: the track tool's snap to streets with Tram picked (notes/T-2921.md 6), called from tools.ts
-// while it is on (the switch, flipped while Ctrl is held). With the pointer resting for REST_MS, the
+// while it is on (the switch, flipped while Ctrl is held). After each pointer move (REST_MS), the
 // streets between the segment's start and the pointer are searched with a cost for each turn
 // (`BusRoads.tramLeg`, `RoadGraph.turnPath`), drawn as the ghost, and fitted as tram corners in the
 // router worker (`TrackApi.trace_kind`) at the first tolerance of TOLS that fits; the fitted track's
@@ -20,8 +20,8 @@ import { strokesFromPreview } from "./network";
 import { toLocal, unitPerPxAt } from "./geo";
 import { BusRoads, type BusRefusal } from "./busRoads";
 
-/** the pointer's rest before the streets are searched, ms */
-const REST_MS = 60;
+/** the wait after the pointer moves before the streets are searched, ms; the search and fit take a few ms (notes/T-3016.md) and the workers drop stale asks */
+const REST_MS = 0;
 /** a pointer this far from the spot asked about is a new spot, px */
 const SAME_PX = 4;
 /** a search or fit taking longer shows the spinner in the tag, ms */
@@ -39,6 +39,8 @@ const WORST_M = 45;
 export const TURN_M = 200;
 const TURN_DEG = 30;
 const BACK_DEG = 135;
+/** a turn between BACK_DEG and this costs TURN_M to twice that, more the sharper (T-3035); past it, refused */
+const HARD_DEG = 165;
 const BACK_M = 60;
 /** how far back along the last route's street its end's heading is taken from, ground m */
 const COME_M = 15;
@@ -291,7 +293,7 @@ export class StreetSnap {
       setTimeout(() => this.spot === s && this.redraw(), SLOW_MS + 20);
     }
     const c = this.came;
-    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, TURN_M, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] });
+    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, TURN_M, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] }, (HARD_DEG * Math.PI) / 180);
     // tiles still landing: asked again when they have (`landed`)
     if (!leg.ready) {
       setTimeout(() => this.redraw(), SLOW_MS + 20);

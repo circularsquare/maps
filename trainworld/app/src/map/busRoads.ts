@@ -240,7 +240,7 @@ export class BusRoads {
   /** T-2927: the streets a tram follows between two points (`RoadGraph.turnPath`), as lng, lat pairs
    * from the street point by `a` to the one by `b`. `refused` as a bus leg's; not `ready` while tiles load.
    * `from`: a point the track ran from to reach `a`, where the route carries on from it (T-2997). */
-  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number, from: Pt | null = null): Leg & { turns: number; states: number; ms: number } {
+  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number, from: Pt | null = null, hardTurn = maxTurn): Leg & { turns: number; states: number; ms: number } {
     const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
     const mpu = metresPerUnit((ay + by) / 2);
     const straight = Math.hypot(ax - bx, ay - by) * mpu;
@@ -273,7 +273,7 @@ export class BusRoads {
       const dx = ax - gxOf(from.lng), dy = ay - gyOf(from.lat), l = Math.hypot(dx, dy);
       if (l > 0) dir = [dx / l, dy / l];
     }
-    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM, dir);
+    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM, dir, hardTurn);
     const ms = performance.now() - t0;
     if (!path) return { ...none(true, "path"), ms };
     const pts = thin(path.pts, 1 / mpu), ll: number[] = [];
