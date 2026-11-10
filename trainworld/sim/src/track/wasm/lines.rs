@@ -293,9 +293,11 @@ impl TrackApi {
     /// path (a station on it, or past an end on track the path can carry on over: the path is
     /// extended), 2 adding it changes the path, 3 it cannot be added, 4 adding it makes trains
     /// reverse at the station `reversal` where they did not (T-797; -1 for the other tiers), 5 the
-    /// first stop, where a click closes the line into a loop, 6 a loop's first stop, where a click
-    /// opens it (T-798). Worked out with `insert_stop`'s own search, so the markers say what a click does. Empty
-    /// if the line is not there.
+    /// first stop, where a click closes the line into a circle, 6 a loop's first stop, where a click
+    /// opens it (T-798), 7 the stop before a loop at an end of the line, where a click turns the
+    /// line round it (`turn_end`), 8 that stop on a line so turned, where a click opens it again
+    /// (`open_loop`, T-3021). Worked out with `insert_stop`'s own search, so the markers say what a
+    /// click does. Empty if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         if !net.line_ok(line) {
@@ -306,15 +308,23 @@ impl TrackApi {
         let old_turns = turn_nodes(net, old);
         let reach = reachable_from(net, stops);
         let mut memo = HopMemo::new();
+        let turn_at: Vec<u32> = turns(net, line, &mut memo).into_iter().map(|t| t.branch).collect();
+        let unturn_at = unturn_branch(net, line, &mut memo);
         let mut out = vec![];
         for n in 0..net.node_count() as u32 {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
                 continue;
             }
-            let (tier, at) = if stops.first() == Some(&n) && closed(stops) {
+            let (tier, at) = if turn_at.contains(&n) && (stops.first() != Some(&n) || closed(stops)) {
+                (7.0, -1.0)
+            } else if stops.first() == Some(&n) && closed(stops) {
                 (6.0, -1.0)
             } else if stops.first() == Some(&n) && close_path(net, line, &mut memo).is_some() {
                 (5.0, -1.0)
+            } else if turn_at.contains(&n) {
+                (7.0, -1.0)
+            } else if unturn_at == Some(n) {
+                (8.0, -1.0)
             } else if stops.contains(&n) {
                 (0.0, -1.0)
             } else if !stops.is_empty() && !reach[n as usize] {
@@ -341,6 +351,31 @@ impl TrackApi {
             Some(LoopKind::Balloon) => 2,
             _ => 0,
         }
+    }
+    /// T-3021: turn the end of a line whose stop before the branch is `station` round the loop
+    /// there (`stop_tiers`' tier 7), run one way: one edit, one undo.
+    pub fn turn_end(&mut self, id: u32, station: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(t) = turns(&self.w.net, id, &mut HopMemo::new()).into_iter().find(|t| t.branch == station) else {
+            return self.refuse(Issue::LinePath { line: id });
+        };
+        d.stops = t.stops;
+        d.path = t.path;
+        d.one_way = true;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3021: a loop line back to the open line it was made from: its stops up to where they start
+    /// coming back (a circle's closing stop off, a turned line's way back).
+    pub fn open_loop(&mut self, id: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if !closed(&d.stops) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        let open = d.stops[..=open_prefix(&d.stops)].to_vec();
+        let Some((stops, path)) = edited_stops(&self.w.net, &open, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
+        d.path = path;
+        self.run(Op::Line { id, data: Some(d) })
     }
     /// T-2981: whether a line is a loop that runs one way, round in the direction it was drawn.
     pub fn line_one_way(&self, line: u32) -> bool {

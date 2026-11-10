@@ -391,6 +391,13 @@ pub const REVERSAL_LIMIT_S: f64 = 300.0;
 /// a longer route, `order_cost`), so a route without one wins unless it is much longer (T-797).
 pub const REVERSAL_SEARCH_S: f64 = 600.0;
 pub const REVERSAL_INSERT_M: f64 = 5000.0;
+/// How much more track time a loop's closing hop may take to carry on round rather than turn back
+/// at the first stop (T-3021): about the turnaround it saves and two minutes, the slack a turn
+/// round a loop at a line's end is allowed (`turn_allowance`).
+pub const CARRY_SLACK_S: f64 = 300.0;
+/// A turn round a loop at a line's end may make its round trip this much longer, s, or 10%
+/// (T-3021).
+pub const TURN_SLACK_S: f64 = 120.0;
 /// How far short of a bare track end a reversing train's tail stops, m (T-797 B3).
 pub const BARE_END_CLEAR_M: f64 = 20.0;
 pub const KINGMAN_C0: f64 = 0.2;

@@ -1851,6 +1851,8 @@
   "stopMarkers.remove": "Click to remove the stop",
   "stopMarkers.closeLoop": "Click to close the loop",
   "stopMarkers.openLoop": "Click to open the loop",
+  "stopMarkers.loopBack": "Click to loop back here",
+  "stopMarkers.stopLooping": "Click to stop looping back here",
   "stopMarkers.add": "Click to add a stop",
   "stopMarkers.addReroute": "Click to add a stop and change the route",
   "stopMarkers.reverseEnd": "Click to add a stop. Trains reverse at the end of the track",

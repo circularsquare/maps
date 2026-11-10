@@ -870,10 +870,17 @@ running line's trains stop at then wins over one they do; then the nearest.
   fits the gap with 90 px of room, never zooming in.
 - **Loops** (T-798): the first stop's marker says "Click to close the loop" (tier 5) while the line
   has two or more stops and track leads round from the last stop back to it without the train going
-  back the way it came; the click appends the first stop (`setStops`). On a loop it says "Click to
-  open the loop" (tier 6) and the click takes the closing stop off. The closing stop's cross in the
-  stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
-  closing one (`best_insert`). The markers take no pointer events (the map's pick handles clicks), so the wheel
+  back the way it came or back over the line's own track (a ring, a circle; T-3021); the click appends
+  the first stop (`setStops`). On a loop it says "Click to open the loop" (tier 6) and the click opens
+  it (`openLoop`: a circle's closing stop off, a turned line's way back). The closing stop's cross in
+  the stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
+  closing one (`best_insert`); on a turned line's stem, on both passes.
+- **Loops at an end** (T-3021; track-and-service.md 6.3 "Turning round a loop at an end"): the stop
+  before a loop of track at an end of the line (the last stop at or before where the loop rejoins
+  the line; the end stop itself when the loop has no stop of its line) says "Click to loop back here"
+  (tier 7) and the click turns the line round it, one way (`turnEnd`). On a line so turned the same
+  stop says "Click to stop looping back here" (tier 8) and the click opens it (`openLoop`). Every
+  pass is its own row in the stop list. The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

@@ -3647,6 +3647,10 @@ function apply(op: EditOp): Applied {
     }
     case "sortStops":
       return { r: a.sort_stops(op.line) };
+    case "turnEnd":
+      return { r: a.turn_end(op.line, op.station) };
+    case "openLoop":
+      return { r: a.open_loop(op.line) };
     case "stopPassed": {
       const r = a.stop_passed(op.line, op.station);
       return { r: r === 0 ? 0 : INSERT_REFUSED };

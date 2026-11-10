@@ -39,7 +39,11 @@ export type StopTier =
   /** the first stop, where a click closes the line into a loop (T-798) */
   | "close"
   /** a loop's first stop, where a click opens it */
-  | "open";
+  | "open"
+  /** the stop before a loop of track at an end of the line, where a click turns the line round it (T-3021) */
+  | "turn"
+  /** that stop on a line so turned, where a click opens it again */
+  | "unturn";
 
 /** Marker diameter by zoom, CSS px. */
 const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
@@ -62,12 +66,12 @@ export function sizeAt(zoom: number): number {
 
 /**
  * The tiers as the clock worker works them out (`TrackApi::stop_tiers`, T-237): per station node
- * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, and for 4 the station
- * trains would reverse at (T-797), from the same search a click makes, so a station past an end
- * that the line can carry on to is on route.
+ * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, 7 turn, 8 unturn, and for 4
+ * the station trains would reverse at (T-797), from the same search a click makes, so a station past
+ * an end that the line can carry on to is on route.
  */
 function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): Map<string, StopTier> {
-  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open"];
+  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open", "turn", "unturn"];
   const byNum = new Map(w.save.stations.map((s) => [s.num, s.id]));
   const out = new Map<string, StopTier>();
   revAt.clear();
@@ -131,7 +135,7 @@ interface Mark {
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
-const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
+const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, turn: 3, unturn: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
 
 export class StopMarkers {
   private box: HTMLDivElement;
@@ -266,8 +270,8 @@ export class StopMarkers {
         this.marks.set(id, m);
         this.box.appendChild(el);
       }
-      // the first stop that closes or opens a loop is drawn as the stop it is
-      const stop = tier === "on" || tier === "close" || tier === "open";
+      // a stop that closes, opens or turns a loop is drawn as the stop it is
+      const stop = tier === "on" || tier === "close" || tier === "open" || tier === "turn" || tier === "unturn";
       const cls = "stop-mark " + (stop ? "on" : tier);
       if (m.cls !== cls) {
         m.cls = cls;
@@ -330,6 +334,8 @@ export class StopMarkers {
       case "on": return [name, t("stopMarkers.remove")];
       case "close": return [name, t("stopMarkers.closeLoop")];
       case "open": return [name, t("stopMarkers.openLoop")];
+      case "turn": return [name, t("stopMarkers.loopBack")];
+      case "unturn": return [name, t("stopMarkers.stopLooping")];
       case "route": return [name, t("stopMarkers.add")];
       case "reroute": return [name, t("stopMarkers.addReroute")];
       case "reverse": {

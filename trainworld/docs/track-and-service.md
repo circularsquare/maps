@@ -864,9 +864,23 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   **Loops** (T-798, notes/T-797.md): a line whose last stop is its first (three stops or more) is a
   loop; nothing else stores it. A **circle** carries straight on through its first stop A (its last
   path entry and first are a through move); a **balloon** turns back there (e.g. out along a stem,
-  round a loop, back down the stem). The route search's closing hop asks to arrive on the side that
-  carries on round, and only without such a path arrives on the other (a balloon); a reroute after
-  a deletion never turns a circle into a balloon (the closing turn counts as a reversal). Run 0 goes
+  round a loop, back down the stem). The route search's closing hop arrives on the side that carries
+  on round when that takes at most `CARRY_SLACK_S` (300 s) more track time than the quickest way in,
+  else the quickest way (a balloon, T-3021); a reroute after a deletion never turns a circle into a
+  balloon (the closing turn counts as a reversal).
+  **Turning round a loop at an end** (T-3021, notes/T-2988.md): where track leads on from an end
+  stop, never turning back, round and onto the line's own path headed back toward the other end, the
+  line can be turned round it (`TrackApi::turn_end`, one edit): its stops become the way out, then
+  the stops at or before the point it rejoins again in reverse (the end stop not repeated), closing
+  at the first stop, set one way. So the loop runs one way and the stem both ways, every stem
+  station a stop on both passes; a station later put in on the stem goes in on both
+  (`best_insert`). From an open line either end may be turned (the line is reversed for its first
+  end); the closing hop may then carry on round a loop at the other end too, a circle; a balloon's
+  first stop's end can be turned later the same way, its stops from the first after the rejoin.
+  Offered only when a rough round trip (track time, dwells and turnarounds) comes out at most
+  `TURN_SLACK_S` (120 s) or 10% longer than the line's now, with no more reversals; the search is one
+  Dijkstra per end, cut off at that budget. `open_loop` takes a loop back to the stops up to where
+  they start coming back (a circle's closing stop off, a turned line's way back). Run 0 goes
   round one way and run 1 the other, each from A to A with its own trains; a circle stands the dwell
   at A between laps, a balloon the turnaround. **One way** (T-2981, `LineData::one_way`, toggled in the line
   panel, `TrackApi::set_line_one_way`): run 1 carries no trains. Its lattice's `off` is infinite, so it has

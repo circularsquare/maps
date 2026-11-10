@@ -78,6 +78,8 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
     case "endLineAt":
     case "orderStops":
     case "sortStops":
+    case "turnEnd":
+    case "openLoop":
     case "stopPassed": {
       const l = w.save.lines.find((x) => x.num === op.line);
       if (!l) return false;

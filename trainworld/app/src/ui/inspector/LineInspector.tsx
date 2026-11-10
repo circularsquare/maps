@@ -666,7 +666,8 @@ function RailLineInspector({ id }: { id: string }) {
   };
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => tr("inspector.stations", { count: n });
-  const removeStop = (i: number) => setStops(l.stops.filter((_, k) => k !== i).map(Number));
+  // a loop's closing row opens it: a turned line goes back to its way out (T-3021)
+  const removeStop = (i: number) => st.loop && i > 0 && i === l.stops.length - 1 ? stopEdit({ op: "openLoop", line: l.num }) : setStops(l.stops.filter((_, k) => k !== i).map(Number));
   const stopEdit = async (op: EditOp) => {
     if (stopEditing) return;
     stopEditing = true;

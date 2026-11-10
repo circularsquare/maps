@@ -2709,7 +2709,12 @@ impl Network {
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
         for (k, w) in stops.windows(2).enumerate() {
             let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
-            let (p, s) = want.and_then(|_| self.find_path_side(w[0], w[1], side, want)).or_else(|| self.find_path(w[0], w[1], side)).ok_or(k)?;
+            let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want));
+            let plain = self.find_path(w[0], w[1], side);
+            let (p, s) = match (carry, plain) {
+                (Some(c), Some(p)) => if self.carry_worth(&c.0, &p.0) { c } else { p },
+                (c, p) => c.or(p).ok_or(k)?,
+            };
             path.extend(p);
             side = Some(s);
         }
@@ -2741,6 +2746,88 @@ impl Network {
     pub fn carry_on_side(&self, path: &[u32]) -> Option<u8> {
         let &p0 = path.first()?;
         self.port_side(path_edge(p0), path_dir(p0)).map(|s| 1 - s)
+    }
+
+    /// Whether a loop's closing hop that carries on round (`carry`) is taken over the plain one,
+    /// which may turn back at the first stop (`plain`): when it is at most `CARRY_SLACK_S` slower,
+    /// so a closing never runs a long way round the network to avoid a turn (T-3021).
+    pub fn carry_worth(&self, carry: &[u32], plain: &[u32]) -> bool {
+        let t = |p: &[u32]| p.iter().map(|&x| self.edge_time[path_edge(x) as usize]).sum::<f64>();
+        t(carry) <= t(plain) + CARRY_SLACK_S
+    }
+
+    /// T-3021: the quickest way on from a path's last node, round a loop of track and back onto the
+    /// path itself, never turning back, within `budget` s of track time: its entries and the index k
+    /// into the path's node list where it rejoins. `back`: headed back toward the path's start (the
+    /// train leaves node k over `path[k - 1]` the other way, k >= 1, the latest k where several
+    /// fit); else carrying on along `path[k]` (a balloon's first pass, k <= `limit`, the earliest).
+    pub fn loop_back(&self, path: &[u32], back: bool, limit: usize, budget: f64) -> Option<(Vec<u32>, usize)> {
+        let &last = path.last()?;
+        let mut nodes = vec![self.path_nodes(path[0]).0];
+        nodes.extend(path.iter().map(|&p| self.path_nodes(p).1));
+        let arrived = self.port_side(path_edge(last), 1 - path_dir(last))?;
+        // per node of the path, the rejoins there: (k, the side a train must not arrive on)
+        let mut want: std::collections::HashMap<u32, Vec<(usize, u8)>> = Default::default();
+        for k in 0..nodes.len().min(limit + 1) {
+            let side = if back {
+                if k == 0 { continue; }
+                self.port_side(path_edge(path[k - 1]), 1 - path_dir(path[k - 1]))
+            } else if k < path.len() {
+                self.port_side(path_edge(path[k]), path_dir(path[k]))
+            } else {
+                None
+            };
+            if let Some(s) = side {
+                want.entry(nodes[k]).or_default().push((k, s));
+            }
+        }
+        let ne = self.edge_count();
+        let mut dist = vec![f64::INFINITY; 2 * ne];
+        let mut prev = vec![u32::MAX; 2 * ne];
+        let mut heap = BinaryHeap::new();
+        let p = &self.node_ports[nodes[nodes.len() - 1] as usize];
+        for (i, &c) in p.ends().iter().enumerate() {
+            if p.side[i] != arrived {
+                dist[c as usize] = self.edge_time[(c >> 1) as usize];
+                heap.push(Key(dist[c as usize], c));
+            }
+        }
+        while let Some(Key(d, st)) = heap.pop() {
+            if d > budget {
+                return None;
+            }
+            if d > dist[st as usize] {
+                continue;
+            }
+            let (_, node) = self.path_nodes(st);
+            let arr = self.port_side(path_edge(st), 1 - path_dir(st)).unwrap_or(0);
+            if let Some(ks) = want.get(&node) {
+                let hit = if back { ks.iter().rev().find(|x| x.1 != arr) } else { ks.iter().find(|x| x.1 != arr) };
+                if let Some(&(k, _)) = hit {
+                    let mut out = vec![st];
+                    let mut cur = st;
+                    while prev[cur as usize] != u32::MAX {
+                        cur = prev[cur as usize];
+                        out.push(cur);
+                    }
+                    out.reverse();
+                    return Some((out, k));
+                }
+            }
+            let p = &self.node_ports[node as usize];
+            for (i, &c) in p.ends().iter().enumerate() {
+                if p.side[i] == arr {
+                    continue;
+                }
+                let nd = d + self.edge_time[(c >> 1) as usize];
+                if nd < dist[c as usize] {
+                    dist[c as usize] = nd;
+                    prev[c as usize] = st;
+                    heap.push(Key(nd, c));
+                }
+            }
+        }
+        None
     }
 
     /// Where to split an edge at chainage `s` without changing its geometry (notes/T-008.md 4.1):

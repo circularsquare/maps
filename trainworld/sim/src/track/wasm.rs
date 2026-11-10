@@ -825,8 +825,8 @@ fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64) {
 type HopMemo = std::collections::HashMap<(u32, u32, u8, u8), Option<(Vec<u32>, u8)>>;
 
 /// `Network::route`, with each hop's search kept in `memo`: the same answer, but trying a stop in
-/// every slot searches each hop once. A loop's closing hop asks for the side that carries on round
-/// first (T-798), as `route` does.
+/// every slot searches each hop once. A loop's closing hop takes the side that carries on round
+/// (T-798) when that is worth it (`Network::carry_worth`), as `route` does.
 fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
     if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
         return None;
@@ -837,7 +837,8 @@ fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u3
     for (k, w) in stops.windows(2).enumerate() {
         let want = if closes && k + 2 == stops.len() { net.carry_on_side(&path) } else { None };
         let found = |memo: &mut HopMemo, x: Option<u8>| memo.entry((w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))).or_insert_with(|| net.find_path_side(w[0], w[1], side, x)).is_some();
-        let x = if want.is_some() && found(memo, want) { want } else { None };
+        let key = |x: Option<u8>| (w[0], w[1], side.unwrap_or(2), x.unwrap_or(2));
+        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&memo[&key(want)].as_ref().unwrap().0, &memo[&key(None)].as_ref().unwrap().0)) { want } else { None };
         found(memo, x);
         let (p, s) = memo[&(w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))].as_ref()?;
         path.extend_from_slice(p);
@@ -851,9 +852,11 @@ fn closed(stops: &[u32]) -> bool {
     stops.len() >= 3 && stops[0] == stops[stops.len() - 1]
 }
 
-/// The path a line would take closed into a loop at its first stop (T-798), when track leads
+/// The path a line would take closed into a circle at its first stop (T-798), when track leads
 /// round from its last stop without turning back there (a train that has to go back the way it
-/// came makes no loop).
+/// came makes no loop). A closing that turns back at the first stop, or runs back over the line's
+/// own track (past its stations without stopping), is not offered: a loop at an end is `turns`
+/// (T-3021).
 fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> {
     let stops = net.line_stops(line);
     if stops.len() < 2 || closed(stops) || stops.len() == 2 && stops[0] == stops[1] {
@@ -862,7 +865,152 @@ fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> 
     let mut s = stops.to_vec();
     s.push(stops[0]);
     let path = route_memo(net, &s, memo)?;
-    (net.path_reversals(&path).len() == net.path_reversals(net.line_path(line)).len()).then_some(path)
+    let open = net.line_path(line);
+    let back_over = path.len() < open.len() || path[open.len()..].iter().any(|&p| open.iter().any(|&q| q >> 1 == p >> 1));
+    (!back_over && net.path_reversals(&path).len() == net.path_reversals(open).len() && net.loop_kind(&s, &path) == LoopKind::Circle).then_some(path)
+}
+
+/// T-3021: a line's end turned round a loop of track: the line's new stops and path, and the stop
+/// before the branch, whose marker offers it.
+#[derive(Debug, PartialEq)]
+struct Turn {
+    stops: Vec<u32>,
+    path: Vec<u32>,
+    branch: u32,
+}
+
+/// A path's node list, `path.len() + 1` nodes.
+fn nodes_of(net: &Network, path: &[u32]) -> Vec<u32> {
+    path.first().map_or(vec![], |&f| std::iter::once(net.path_nodes(f).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect())
+}
+
+/// A rough round trip of `line` run over `stops` and `path` (track time, dwells, turnarounds; a
+/// loop one way), to compare a turn with what it replaces.
+fn round_guess(net: &Network, line: u32, stops: &[u32], path: &[u32]) -> f64 {
+    let t: f64 = path.iter().map(|&p| net.edge_time[(p >> 1) as usize]).sum();
+    let (dwell, turn) = (net.line_dwell[line as usize] as f64, net.line_turn[line as usize] as f64);
+    let n = stops.len() as f64;
+    let rev = net.path_reversals(path).len() as f64 * turn;
+    match net.loop_kind(stops, path) {
+        LoopKind::None => 2.0 * (t + (n - 2.0).max(0.0) * dwell + rev + turn),
+        LoopKind::Balloon => t + (n - 2.0) * dwell + rev + turn,
+        LoopKind::Circle => t + (n - 1.0) * dwell + rev,
+    }
+}
+
+/// How much longer a turn's round trip may be than the line's now (T-3021).
+fn turn_allowance(old: f64) -> f64 {
+    (0.1 * old).max(TURN_SLACK_S)
+}
+
+/// The open line `stops`/`path` turned round a loop past its last stop: out to the end, round the
+/// loop, and back over the stops before the point it rejoins, closing at the first stop.
+fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut HopMemo) -> Option<Turn> {
+    let n = stops.len();
+    if n < 2 || path.is_empty() {
+        return None;
+    }
+    let old = round_guess(net, line, stops, path);
+    let nodes = nodes_of(net, path);
+    let (_, k) = net.loop_back(path, true, nodes.len(), old + turn_allowance(old))?;
+    let at = super::net::match_stops(&nodes, stops, &net.stop_reversals(path))?;
+    let branch = (0..n).rev().find(|&i| at[i] <= k)?;
+    let mut new = stops.to_vec();
+    new.extend((0..n - 1).rev().filter(|&i| at[i] <= k).map(|i| stops[i]));
+    turned(net, line, new, stops[branch], old, net.path_reversals(path).len(), memo)
+}
+
+/// A balloon turned round a loop past its first stop too, a circle: from the first stop after
+/// the point it rejoins, round both loops.
+fn turn_first(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut HopMemo) -> Option<Turn> {
+    let n = stops.len();
+    let nodes = nodes_of(net, path);
+    let at = super::net::match_stops(&nodes, stops, &net.stop_reversals(path))?;
+    let old = round_guess(net, line, stops, path);
+    let (_, k) = net.loop_back(path, false, at[open_prefix(stops)], old + turn_allowance(old))?;
+    let mut new: Vec<u32> = (1..n).filter(|&i| at[i] > k).map(|i| stops[i]).collect();
+    let &first = new.first()?;
+    new.push(first);
+    turned(net, line, new, first, old, net.path_reversals(path).len(), memo)
+}
+
+/// A turn's stops routed, kept when they make a loop with no more reversals than before and a round
+/// trip within the allowance.
+fn turned(net: &Network, line: u32, stops: Vec<u32>, branch: u32, old: f64, turns: usize, memo: &mut HopMemo) -> Option<Turn> {
+    if !closed(&stops) || stops.windows(2).any(|w| w[0] == w[1]) {
+        return None;
+    }
+    let ok = |path: &Vec<u32>| net.path_reversals(path).len() == turns && net.loop_kind(&stops, path) != LoopKind::None && round_guess(net, line, &stops, path) <= old + turn_allowance(old);
+    // the closing hop may carry on round a loop at the first stop's end too; if that is too long,
+    // the turn alone (a balloon) is offered
+    let path = route_memo(net, &stops, memo).filter(&ok).or_else(|| route_plain_close(net, &stops, memo).filter(&ok))?;
+    Some(Turn { stops, path, branch })
+}
+
+/// `route_memo` for a loop's stops with the closing hop the quickest way, turning back at the
+/// first stop if that is it.
+fn route_plain_close(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
+    let n = stops.len();
+    let mut path = route_memo(net, &stops[..n - 1], memo)?;
+    let &last = path.last()?;
+    let side = net.port_side(last >> 1, 1 - (last & 1));
+    let hop = memo.entry((stops[n - 2], stops[n - 1], side.unwrap_or(2), 2)).or_insert_with(|| net.find_path_side(stops[n - 2], stops[n - 1], side, None));
+    path.extend_from_slice(&hop.as_ref()?.0);
+    Some(path)
+}
+
+/// The turns a line's ends can take (T-3021): either end of an open line, or the first stop's end
+/// of a balloon. Bus and ferry lines take none.
+fn turns(net: &Network, line: u32, memo: &mut HopMemo) -> Vec<Turn> {
+    if !net.line_ok(line) || net.line_bus.get(line as usize).is_some_and(|b| b.is_some()) || net.line_ferry.get(line as usize).is_some_and(|f| f.is_some()) {
+        return vec![];
+    }
+    let (stops, path) = (net.line_stops(line), net.line_path(line));
+    if closed(stops) {
+        return if net.loop_kind(stops, path) == LoopKind::Balloon { turn_first(net, line, stops, path, memo).into_iter().collect() } else { vec![] };
+    }
+    let back: Vec<u32> = stops.iter().rev().copied().collect();
+    let back_path: Vec<u32> = path.iter().rev().map(|&p| p ^ 1).collect();
+    let mut out: Vec<Turn> = turn_last(net, line, stops, path, memo).into_iter().collect();
+    out.extend(turn_last(net, line, &back, &back_path, memo).filter(|t| out.iter().all(|o| o.branch != t.branch)));
+    out
+}
+
+/// Where a loop's stops start coming back (T-3021): the least index i whose later stops all come
+/// before it too, so `stops[..=i]` is the open line it was turned from (a circle less its closing
+/// stop).
+fn open_prefix(stops: &[u32]) -> usize {
+    (0..stops.len()).find(|&i| stops[i + 1..].iter().all(|s| stops[..=i].contains(s))).unwrap_or(stops.len() - 1)
+}
+
+/// The stop of a balloon whose marker turns it back into the open line it was turned from, when
+/// turning that line gives this balloon again (T-3021).
+fn unturn_branch(net: &Network, line: u32, memo: &mut HopMemo) -> Option<u32> {
+    let stops = net.line_stops(line);
+    if !closed(stops) || net.line_loop(line) != LoopKind::Balloon {
+        return None;
+    }
+    let open = &stops[..=open_prefix(stops)];
+    let path = route_memo(net, open, memo)?;
+    let t = turn_last(net, line, open, &path, memo)?;
+    (t.stops == stops).then_some(t.branch)
+}
+
+/// A second visit for a station just put in a loop line whose path passes it again (T-3021: a
+/// turned line's stem is run out and back), when stopping there too keeps the path.
+fn second_visit(net: &Network, stops: &[u32], path: &[u32], station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+    let nodes = nodes_of(net, path);
+    let at = super::net::match_stops(&nodes, stops, &net.stop_reversals(path))?;
+    let k0 = at[stops.iter().position(|&s| s == station)?];
+    let k = (0..nodes.len()).find(|&k| nodes[k] == station && k != k0)?;
+    let j = at.iter().position(|&a| a > k)?;
+    let mut s = stops.to_vec();
+    s.insert(j, station);
+    if s.windows(2).any(|w| w[0] == w[1]) {
+        return None;
+    }
+    let p = route_memo(net, &s, memo)?;
+    (p == path).then_some((s, p))
 }
 
 /// What a path costs the stop insertion search: its length, and per reversal twice that length, at
@@ -880,7 +1028,13 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
     if !net.line_ok(line) {
         return None;
     }
-    best_slot(net, net.line_stops(line), station, memo)
+    let (stops, path) = best_slot(net, net.line_stops(line), station, memo)?;
+    if closed(&stops) {
+        if let Some(both) = second_visit(net, &stops, &path, station, memo) {
+            return Some(both);
+        }
+    }
+    Some((stops, path))
 }
 
 /// `old` with `station` inserted where the path costs least, and that path: every slot tried with
@@ -1870,6 +2024,9 @@ mod branch_tests;
 /// T-1273: stop edits leave a line's ends as termini.
 #[cfg(test)]
 mod stop_edit_tests;
+/// T-3021: turning a line's end round a loop.
+#[cfg(test)]
+mod turn_tests;
 #[cfg(test)]
 mod stop_order_tests;
 

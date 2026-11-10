@@ -1851,6 +1851,8 @@
   "stopMarkers.remove": "Hover tag row over a marker of a station that is on the line being edited.",
   "stopMarkers.closeLoop": "Hover tag row over the first stop of the line being edited.",
   "stopMarkers.openLoop": "Hover tag row over the stop that closes a loop line.",
+  "stopMarkers.loopBack": "Hover tag row over the stop just before the place a loop of track leaves the line near its end. A click makes the line run out past this stop, round the loop one way, and back over the stops it came by.",
+  "stopMarkers.stopLooping": "Hover tag row over the same stop once the line runs round that loop. A click ends the line at the loop again, running back the way it came.",
   "stopMarkers.add": "Hover tag row over a station the line can add as a stop.",
   "stopMarkers.addReroute": "Hover tag row over a station the line can reach only by a different route.",
   "stopMarkers.reverseEnd": "Hover tag row over a station that adds a stop where trains would turn round at the end of the track.",

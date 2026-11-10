@@ -82,7 +82,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early = fa
   return a;
 }
 
-const TRAIN_OPS = new Set(["setStops", "insertStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "setTrainCount", "setHeadway", "lineCars", "copyLine", "undo", "redo"]);
+const TRAIN_OPS = new Set(["setStops", "insertStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "lineCars", "copyLine", "undo", "redo"]);
 const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "crossover", "doubleUp", "stationUpgrade"]);
 /** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
 function buysOf(op: EditOp): Buys | undefined {
