@@ -19,7 +19,7 @@ import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/
 import { acrossAt, endClear, TURNBACK_M } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
-import { trainChevrons } from "./oneWayMarks";
+import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -152,6 +152,8 @@ export interface NetworkBuffers {
   turnbacks?: Strokes;
   /** T-2991: one-way loops' chevrons, `CHEVRON_STRIDE` numbers each (map/oneWayMarks.ts) */
   oneWay?: Float32Array;
+  /** T-3094: chevrons along one-way single track, the same layout */
+  oneWayTrack?: Float32Array;
   /** T-2233: per train sample, m past the nearest end of a platform with passing tracks where its line
    * stops on the outer track (below 0 along the platform), where its trains move out to it (`passBow`
    * over PASS_LEAD_M; past the end scaled by PASS_LEAD_M over that side's lead, T-2248); absent or
@@ -1446,6 +1448,15 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const at = l.stops.map((id) => nodeLocal.get(id)).filter((p) => p !== undefined);
     trainChevrons(c.strokes, l.id, uses, at, l.tram ? 0.75 : 1, F_BLUEPRINT, oneWay);
   }
+  // T-3094: chevrons along one-way single track, clear of stations
+  const oneWayTrack: number[] = [];
+  if (s.edges.some((e) => e.oneWay)) {
+    const stationAt = s.nodes.filter((n) => n.platform > 0).map((n) => nodeLocal.get(n.id)).filter((p) => p !== undefined);
+    for (const e of s.edges) {
+      const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
+      if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, stationAt, oneWayTrack);
+    }
+  }
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
@@ -1519,6 +1530,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     conflicts: s.conflicts,
     turnbacks,
     ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
+    ...(oneWayTrack.length ? { oneWayTrack: new Float32Array(oneWayTrack) } : {}),
     ...(passingAt.size ? { samplePass, passing: new Float32Array(passing) } : {}),
     edgePts,
     anchor: anchor(),

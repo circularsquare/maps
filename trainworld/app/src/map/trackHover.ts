@@ -304,6 +304,7 @@ function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: num
     const tram = edgeVehicles(world.peek(), edge) === "trams";
     rows.unshift(v >= 0 ? factRow(trainSpeedFact(v, tram ? "tram" : "train")) : t("trackHover.noVehicles", { vehicles: tram ? "trams" : "trains" }));
   }
+  if (world.peek()?.edges.find((x) => x.id === edge)?.oneWay) rows.push(t("trackHover.oneWay"));
   return rows;
 }
 

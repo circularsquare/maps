@@ -195,7 +195,7 @@ impl TrackApi {
             let id = self.w.net.alloc_edge();
             ne.push(id);
             let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) });
         }
         Ok((Op::Batch(ops), nn, ne))
     }
@@ -371,7 +371,7 @@ impl TrackApi {
             ];
             let id = self.w.net.alloc_edge();
             new_edges.push(id);
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, kind: TrackKind::Regular, sep: false, day: 0 }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) });
             let mut v = vec![Pi::new(px, py, 0.0, pl)];
             v.extend(pis);
             v.push(Pi::new(qx, qy, 0.0, ql));

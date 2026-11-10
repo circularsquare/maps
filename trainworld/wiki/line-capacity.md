@@ -4,7 +4,7 @@ A line can only run as many trains as its tightest spot allows. Every shared pie
 
 **Track.** Behind each train, the next one needs room to stop, and the faster the track, the more room. A train holds a stretch of double track for about {{sim/src/track/params.rs:SECTION_BASE_S|0}} seconds plus its top speed over {{sim/src/track/params.rs:SIGNAL_BRAKE}} m/s². At an ordinary train's top speed of {{sim/src/track/params.rs:V_TOP*3.6|0}} km/h that is {{sim/src/track/params.rs:3600/(SECTION_BASE_S+V_TOP/SIGNAL_BRAKE)|0}} trains an hour each way, and at a high-speed train's {{sim/src/track/params.rs:V_HSR*3.6|0}} km/h it is {{sim/src/track/params.rs:3600/(SECTION_BASE_S+V_HSR/SIGNAL_BRAKE)|0}}. Fast track carries fewer trains.
 
-**Single track.** One track serves both ways. A train holds the whole stretch between passing points for its run time plus {{sim/src/track/params.rs:SINGLE_TRACK_MARGIN_S|0}} seconds, trains from both directions together.
+**Single track.** One track serves both ways. A train holds the whole stretch between passing points for its run time plus {{sim/src/track/params.rs:SINGLE_TRACK_MARGIN_S|0}} seconds, trains from both directions together. Single track set to run one way is counted like double track: trains only go one way over it, so it takes the track rule above.
 
 **Platforms.** Each stopping train holds its platform for its dwell time plus {{sim/src/track/params.rs:PLATFORM_MARGIN_S|0}} seconds. With the default stop of {{sim/src/track/params.rs:DEFAULT_DWELL_S|0}} seconds that is {{sim/src/track/params.rs:3600/(DEFAULT_DWELL_S+PLATFORM_MARGIN_S)|0}} trains an hour on one platform track. A train that doesn't stop holds it for {{sim/src/track/params.rs:PASSING_S|0}} seconds.
 

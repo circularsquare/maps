@@ -529,7 +529,7 @@ mod kind_tests {
         }
         for (k, kind) in kinds.into_iter().enumerate() {
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0 })).unwrap();
+            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0 })).unwrap();
         }
         net
     }

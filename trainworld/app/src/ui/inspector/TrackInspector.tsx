@@ -11,7 +11,8 @@ import { describeIssues } from "../../game/issues";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
 import { TRACK_SPECS } from "../../game/trackKinds";
-import { Built, Chip, ConstructRemove, Icon, Row } from "../widgets";
+import { Actions, Built, Check, Chip, ConstructRemove, Icon, Row } from "../widgets";
+import { setOneWay } from "../../game/oneWay";
 import { useClockQuery } from "../useClockQuery";
 
 /** Double up: an express pair beside this double track as far as its run goes, as
@@ -62,6 +63,12 @@ export function TrackInspector({ edge }: { edge: number }) {
         removeLabel={t("trackInspector.remove", { kind: e.crossover ? "crossover" : e.built ? "track" : "blueprint" })} removeTip="" />
       <Built built={e.built} />
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
+      {e.tracks === 1 && !e.crossover && !e.hsr && !e.kind && (
+        <Actions>
+          <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? 1 : 0)}>{t("trackInspector.oneWay")}</Check>
+          {e.oneWay && <button class="btn text" onClick={() => void setOneWay(e.id, e.oneWay === 1 ? 2 : 1, true)}>{t("trackInspector.reverse")}</button>}
+        </Actions>
+      )}
       <ul class="rows">
         {!e.crossover && (
           <li data-tip={e.kind ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal")}>

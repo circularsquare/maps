@@ -6,6 +6,7 @@ import { t } from "../i18n";
 import type { Vehicle } from "./vehicle";
 import { TRACK_SPECS } from "./trackKinds";
 import { highSpeed, stationOnTram, tool, tramTrack, TRAM_PLATFORM } from "./ui";
+import { linesByNum, world } from "./world";
 
 /** T-2926: the track kind the player is working on, for the text of a limit that differs by kind */
 const onTram = () => (tool.peek() === "station" ? stationOnTram.peek() : tramTrack.peek());
@@ -72,6 +73,12 @@ const TEXT: Record<string, () => string> = {
   NoSuchBuilding: () => t("issues.noSuchBuilding"),
 };
 
+/** T-3094: one-way track a line cannot go round; `line` is the line's number */
+export function noWay(line: number): string {
+  const w = world.peek();
+  return t("issues.oneWayNoWay", { line: (w && linesByNum(w).get(line)?.name) ?? "" });
+}
+
 /** What a refused edit would have bought (T-1696): the money refusal names it. */
 export type Buys = "trains" | "construction";
 
@@ -83,6 +90,8 @@ export function describeIssue(kind: string, buys?: Buys, vehicle: Vehicle = "tra
     if (buys === "construction") return t("issues.moneyBuild", { cost });
     return t("issues.moneyOther", { cost });
   }
+  // T-3094: the line that has no other way round one-way track, by its number
+  if (kind.startsWith("OneWayNoWay:")) return noWay(Number(kind.split(":")[1]));
   const text = TEXT[kind];
   return text ? text() : t("issues.fallback");
 }

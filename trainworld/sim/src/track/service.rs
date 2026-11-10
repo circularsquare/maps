@@ -415,7 +415,7 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     let path = net.line_path(l);
     let running = net.line_constructed(l);
     let mut run = Run::default();
-    run.segs = if rev { path.iter().rev().map(|p| p ^ 1).collect() } else { path.to_vec() };
+    run.segs = if rev { net.back_path(l)? } else { path.to_vec() };
     let mut s = 0.0;
     run.nodes.push(net.path_nodes(run.segs[0]).0);
     run.node_s.push(0.0);
@@ -579,7 +579,10 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     ls.cars = if want == 0 { fit } else { want.min(fit) };
     ls.train_len = ls.cars as f64 * CAR_LEN;
     let dwell = net.line_dwell[l as usize] as f64;
-    match (build_run(net, l, false, ls.train_len, dwell), build_run(net, l, true, ls.train_len, dwell)) {
+    let first = build_run(net, l, false, ls.train_len, dwell);
+    // a loop that runs one way has no return run to build, whatever one-way track it goes round (T-3094)
+    let second = build_run(net, l, true, ls.train_len, dwell).or_else(|| if ls.one_way { first.clone() } else { None });
+    match (first, second) {
         (Some(a), Some(b)) => {
             ls.runs = [a, b];
             ls.ok = true;

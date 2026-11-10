@@ -290,6 +290,8 @@ export class NetworkRenderer {
   /** crossings, flat junctions, ramps and portals (T-629, T-655) */
   readonly marks = new GradeMarks();
   readonly oneWay = new OneWayChevrons();
+  /** T-3094: along one-way single track */
+  readonly oneWayTrack = new OneWayChevrons();
   /** the complexes' car parks (T-1528) */
   readonly lots = new ParkingLots();
   /** the station buildings' floors (T-2218) */
@@ -694,6 +696,7 @@ export class NetworkRenderer {
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
     this.oneWay.init(gl);
+    this.oneWayTrack.init(gl);
     this.lots.init(gl);
     this.floors.init(gl);
     this.bubbles.init(gl);
@@ -1219,6 +1222,7 @@ export class NetworkRenderer {
     this.guard.setNetwork(n);
     this.marks.setNetwork(n.marks);
     this.oneWay.setNetwork(n.oneWay);
+    this.oneWayTrack.setNetwork(n.oneWayTrack);
     this.lots.setNetwork(n.lots);
     this.floors.setNetwork(n.buildings);
     const oldTrack = this.track, oldLines = this.lines;
@@ -1848,6 +1852,7 @@ export class NetworkRenderer {
     // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
     if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !this.trafficWidths)
       this.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });
+    this.oneWayTrack.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
     }
     if (cache) {
       if (redraw) {

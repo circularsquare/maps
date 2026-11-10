@@ -203,6 +203,25 @@ Full design, numbers and sources: `notes/T-008.md`.
   it may come back for rural or regional lines): saves and imports that have it load and run.
   It is cheaper, both directions share it, with sections split at stations; a single-track
   station has one shared platform track and gets no passing loop.
+- **One-way single track** (T-3094): single track can run one way (`EdgeData.oneway`: 0 both ways,
+  1 a to b only, 2 b to a only; saves hold it in edge flag bits 11-12, older saves read 0; never set on double
+  track, a crossover, high-speed or tram track, and cleared when the piece stops being single). The track
+  inspector's "Run trains one way" switch sets it, a-to-b first, and "Reverse direction" turns it round
+  (`TrackApi::set_edge_oneway`, free, one undo step; `edge_oneway` and `oneway_edges` give the flags to the
+  app). Route searches (`find_path_turn`, `loop_back`) and `check_line` skip an entry against it
+  (`Network::dir_ok`). A line's return run is its path backward, so a line that goes both ways over a
+  one-way piece takes **its own way back**: `Network::back_path_of` routes the stops in reverse order
+  when the reversed path runs against a one-way piece, and `build_run` builds the return run from it (a
+  loop that runs one way has no return run and needs none). A line with no way back is broken
+  (`check_line`), and `Network::back_lines` has every line with such a return rebuilt and checked after any
+  edit, because its way back is not on `lines_on_edge`. Setting the flag also moves the **forward** path of
+  every line that ran against it, through its same stops (`route_hops_turn`), in the same edit (a Batch);
+  the app asks first, listing the lines whose way changes ("{line} takes another way", `oneway_effects`),
+  and the edit is refused (`OneWayNoWay`) when a line has no other way. A line already on its way keeps it.
+  Splitting a piece keeps the flag on both halves; pieces join only with the same way along the joined
+  piece. Capacity: one-way single track is a directed track like double (section = `edge_section_s` +
+  v / `SIGNAL_BRAKE`, per direction, `capacity::directed`), not shared. Platforms and stations on it
+  are unchanged. The map draws chevrons along it (`oneWayTrackChevrons`), the hover says "One way".
 - **Quad track** (T-255): the other setting. The stroke draws the double track as usual and an
   express double track beside it, 8 m to the left of the drawn direction (centre to centre, so
   4 m between every pair of neighbouring tracks), from the same start node to the same end node:
@@ -591,7 +610,8 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 - track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
   160, 16 at 320 (T-517)
-- single-track section between passing points: run time + 60 s, counting both directions
+- single-track section between passing points: run time + 60 s, counting both directions; one-way
+  single track takes the track-section rule above, per direction (T-3094)
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
   single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train

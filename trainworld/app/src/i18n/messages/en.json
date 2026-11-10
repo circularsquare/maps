@@ -2432,5 +2432,13 @@
   "community.errNoGame": "Save this game first.",
   "community.errDraw": "The diagram could not be drawn. Try again.",
   "community.errLoad": "Could not load this network",
-  "vehicle.noun": "{vehicle, select, train {train} tram {tram} bus {bus} other {boat}}"
+  "vehicle.noun": "{vehicle, select, train {train} tram {tram} bus {bus} other {boat}}",
+  "trackInspector.oneWay": "Run trains one way",
+  "trackInspector.reverse": "Reverse direction",
+  "trackHover.oneWay": "One way",
+  "oneWay.question": "{reverse, select, true {Reverse this track?} other {Run trains one way on this track?}}",
+  "oneWay.yes": "{reverse, select, true {Reverse} other {Run one way}}",
+  "oneWay.no": "Cancel",
+  "oneWay.reroutes": "{line} takes another way",
+  "issues.oneWayNoWay": "{line} has no other way between its stations."
 }

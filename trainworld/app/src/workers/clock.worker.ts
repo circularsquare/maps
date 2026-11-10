@@ -3560,6 +3560,8 @@ function apply(op: EditOp): Applied {
       return { r: a.add_crossover(op.edge, op.x, op.y) };
     case "doubleUp":
       return { r: a.double_up(op.edge) };
+    case "oneWay":
+      return { r: a.set_edge_oneway(op.edge, op.dir) };
     case "stationProps":
       return { r: a.set_station_props(op.node, op.platform, op.name) };
     case "removeStation":
@@ -4344,6 +4346,7 @@ async function handle(msg: ToClock) {
       : q.what === "upgradeCost" ?new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "platformCost" ? new Float64Array([api.platform_cost(new Uint32Array(q.nodes), q.platform)])
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
+      : q.what === "oneWay" ? new Float64Array(api.oneway_effects(q.edge, q.dir))
       : q.what === "lineAccount" ? api.line_account(q.line, q.day)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)

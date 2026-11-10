@@ -2432,5 +2432,13 @@
   "community.errNoGame": "Error: the game is not stored yet, so it cannot be shared",
   "community.errDraw": "Error: the schematic layout failed",
   "community.errLoad": "Over a card or the viewer when its drawing cannot be read",
-  "vehicle.noun": "A line's vehicle as a singular noun, lower case: train, tram, bus or boat. Used to spot a line name that starts with its own mode's word (\"Bus 53\") so a title can say \"53 bus\"; never shown. Give the word a player would put at the start of a line name."
+  "vehicle.noun": "A line's vehicle as a singular noun, lower case: train, tram, bus or boat. Used to spot a line name that starts with its own mode's word (\"Bus 53\") so a title can say \"53 bus\"; never shown. Give the word a player would put at the start of a line name.",
+  "trackInspector.oneWay": "Checkbox label in the track inspector of a single-track piece: trains then run through it one way only.",
+  "trackInspector.reverse": "Button in the track inspector, shown while the track runs one way: turns the way trains run round.",
+  "trackHover.oneWay": "A row in the hover tag over track that runs one way.",
+  "oneWay.question": "Question in the confirmation that appears when making a piece of track one way (or reversing it) sends lines another way. reverse: true when the track already runs one way and is being turned round.",
+  "oneWay.yes": "Button that confirms the question above. reverse: true when the track is being turned round.",
+  "oneWay.no": "Button that closes the one-way confirmation and changes nothing.",
+  "oneWay.reroutes": "A row under the one-way question, one per line whose route changes. line: the line's name, \"Line 4\".",
+  "issues.oneWayNoWay": "Notice when track cannot be made one way because a line has no other route between its stations. line: the line's name, \"Line 4\"."
 }

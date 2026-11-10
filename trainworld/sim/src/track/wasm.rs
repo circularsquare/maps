@@ -749,6 +749,7 @@ use draw::Ramp;
 mod beside;
 mod crossings;
 mod links;
+mod oneway;
 mod rebuild;
 mod lines;
 mod gap;
@@ -1834,6 +1835,7 @@ fn issue_kind(i: &Issue) -> String {
             }
         ),
         Issue::Crossing { overlap: true, .. } => "CrossingOverlap".into(),
+        Issue::OneWayNoWay { line } => format!("OneWayNoWay:{line}"),
         other => {
             let d = format!("{other:?}");
             d.split(|c: char| c == ' ' || c == '{' || c == '(').next().unwrap_or("").to_string()
@@ -1918,7 +1920,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 }) })
@@ -2032,6 +2034,8 @@ mod turn_tests;
 mod stop_order_tests;
 #[cfg(test)]
 mod manual_tests;
+#[cfg(test)]
+mod oneway_tests;
 
 #[cfg(test)]
 mod related_tests;

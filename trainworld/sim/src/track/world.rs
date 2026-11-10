@@ -764,6 +764,7 @@ impl TrackWorld {
         for &e in &der.edges {
             lines.extend_from_slice(self.net.lines_on_edge(e));
         }
+        lines.extend(self.net.back_lines());
         if !t.stations.is_empty() {
             for l in 0..self.net.line_count() as u32 {
                 if self.net.line_ok(l) && self.net.line_stops(l).iter().any(|s| t.stations.binary_search(s).is_ok()) {

@@ -341,10 +341,15 @@ fn track_pos(net: &Network, node: u32, e: u32, which: u32, plus_h: bool) -> f64 
     }
 }
 
-/// The directed track a path entry runs on (shared by both directions on single track).
+/// Trains on the edge hold only their own direction's track: double track, or one-way single track (T-3094).
+fn directed(net: &Network, e: u32) -> bool {
+    net.edge_tracks[e as usize] != 1 || net.edge_oneway[e as usize] != 0
+}
+
+/// The directed track a path entry runs on (shared by both directions on two-way single track).
 fn key_of(net: &Network, p: u32) -> u32 {
     let e = path_edge(p);
-    if net.edge_tracks[e as usize] == 1 {
+    if !directed(net, e) {
         e * 2
     } else {
         e * 2 + path_dir(p)
@@ -441,8 +446,8 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
                     continue;
                 }
                 let (Some(a), Some(b)) = (kidx(key_of(net, p)), kidx(key_of(net, q))) else { continue };
-                let (te, tf) = (net.edge_tracks[path_edge(p) as usize], net.edge_tracks[path_edge(q) as usize]);
-                let join = if te == 2 && tf == 2 { sig[a as usize] == sig[b as usize] } else { te == 1 && tf == 1 && net.node_platform[node] == 0 };
+                let (te, tf) = (directed(net, path_edge(p)), directed(net, path_edge(q)));
+                let join = if te && tf { sig[a as usize] == sig[b as usize] } else { !te && !tf && net.node_platform[node] == 0 };
                 if join {
                     uf.union(a, b);
                 }
@@ -462,7 +467,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
         let root = grouped[g].0;
         let end = grouped[g..].partition_point(|x| x.0 == root) + g;
         let first_edge = keys[root as usize] / 2;
-        let single = net.edge_tracks[first_edge as usize] == 1;
+        let single = !directed(net, first_edge);
         users.clear();
         joins.clear();
         let mut u = g;

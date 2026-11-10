@@ -4,7 +4,7 @@ A line can only run as many trains as its tightest spot allows. Every shared pie
 
 **Track.** Behind each train, the next one needs room to stop, and the faster the track, the more room. A train holds a stretch of double track for about 70 seconds plus its top speed over 0.6 m/s². At an ordinary train's top speed of 160 km/h that is 25 trains an hour each way, and at a high-speed train's 320 km/h it is 17. Fast track carries fewer trains.
 
-**Single track.** One track serves both ways. A train holds the whole stretch between passing points for its run time plus 60 seconds, trains from both directions together.
+**Single track.** One track serves both ways. A train holds the whole stretch between passing points for its run time plus 60 seconds, trains from both directions together. Single track set to run one way is counted like double track: trains only go one way over it, so it takes the track rule above.
 
 **Platforms.** Each stopping train holds its platform for its dwell time plus 60 seconds. With the default stop of 30 seconds that is 40 trains an hour on one platform track. A train that doesn't stop holds it for 40 seconds.
 

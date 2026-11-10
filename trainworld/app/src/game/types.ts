@@ -93,6 +93,8 @@ export interface TrackEdge {
   hsr?: boolean;
   /** `TrackApi.edge_kind`: 2 street tram, 3 tram (T-2926); absent for rail */
   kind?: number;
+  /** one-way single track (T-3094): 1 trains run a to b only, 2 b to a only; absent both ways */
+  oneWay?: 1 | 2;
   /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
   crossover?: boolean;
   /** a crossover diagonal's other diagonal, -1 if none */

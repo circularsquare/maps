@@ -345,7 +345,10 @@ impl TrackApi {
             let mut cur = e;
             while gap < reach {
                 let Some((o, which, od)) = self.plain_joint(node, cur) else { break };
-                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover {
+                // a one-way piece joins only one that runs the same way along the joined edge (T-3094)
+                let flip = if k == 0 { which == 0 } else { which == 1 };
+                let sense = if flip && od.oneway != 0 { 3 - od.oneway } else { od.oneway };
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover || sense != d.oneway {
                     break;
                 }
                 seen.push(o);
@@ -402,7 +405,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, oneway: d.oneway, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));

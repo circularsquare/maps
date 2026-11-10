@@ -223,7 +223,7 @@ function edgesOf(s: ClockState): TrackEdge[] {
     const v = j >= 0 ? lastViews[j] : undefined;
     if (v && sameObjects(v.lines, ls)) return v;
     return {
-      id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, kind: e.kind || undefined, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+      id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, kind: e.kind || undefined, oneWay: e.oneWay || undefined, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
       levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: ls === none ? [] : ls,
     };
   });

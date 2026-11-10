@@ -1502,7 +1502,7 @@ fn t079_track_keeps_its_shape_until_reshaped() {
     // as T-079 stored it: fitted PIs with set radii, and the point clicked
     let fitted = vec![Pi::new(1200.0, 380.0, 1500.0, 0), Pi::new(2800.0, 380.0, 1500.0, 0)];
     let clicks = vec![Pi::new(2000.0, 300.0, 0.0, 0)];
-    let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone(), crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) };
+    let op = Op::Edge { id: e, data: Some(EdgeData { a: n0, b: n1, tracks: 2, pis: fitted.clone(), built: false, off: false, thru: clicks.clone(), crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) };
     assert!(a.w.apply(op).is_ok());
     let bytes = a.save();
     assert_eq!(&bytes[..4], b"TWT4");

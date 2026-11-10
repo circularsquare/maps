@@ -62,6 +62,26 @@ export function trainChevrons(s: Strokes, line: number, edgeUses: ReadonlyMap<nu
   }
 }
 
+/** One-way single track's chevrons (T-3094): one edge's strokes, which run a to b; `way` 2 points them
+ * the other way. A mark takes the line field -1, no band shift and the whole width. */
+export function oneWayTrackChevrons(s: Strokes, way: 1 | 2, stops: readonly (readonly [number, number])[], out: number[]) {
+  if (!s.count) return;
+  const k = kAtY(s.seg[1]), step = ONE_WAY_STEP_M * k, sign = way === 2 ? -1 : 1;
+  for (let i = 0; i < s.count; i++) {
+    const x0 = s.seg[i * 4], y0 = s.seg[i * 4 + 1], dx = s.seg[i * 4 + 2] - x0, dy = s.seg[i * 4 + 3] - y0;
+    const len = Math.hypot(dx, dy), d0 = s.dist[i];
+    if (!(len > 0)) continue;
+    for (let m = Math.ceil(d0 / step - 0.5); (m + 0.5) * step < d0 + len; m++) {
+      const t = ((m + 0.5) * step - d0) / len;
+      if (t < 0) continue;
+      const x = x0 + t * dx, y = y0 + t * dy;
+      let near = Infinity;
+      for (const p of stops) near = Math.min(near, Math.hypot(p[0] - x, p[1] - y));
+      out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, near / k, 1);
+    }
+  }
+}
+
 const VS = `#version 300 es
 precision highp float;
 ${PROJECT_GLSL}
@@ -130,6 +150,8 @@ export interface ChevronStyle {
   mPx: number;
   /** the line kept at full strength while the others are muted (stop editing), -1 none */
   sel: number;
+  /** the chevrons' colour, white where absent */
+  rgb?: Float32List;
 }
 
 /** The train lines' chevrons, drawn by the renderer over the line strokes. */
@@ -198,7 +220,7 @@ export class OneWayChevrons {
     gl.uniform1f(u.u_min, CHEVRON_MIN_PX * dpr);
     gl.uniform1f(u.u_dpr, dpr);
     gl.uniform1i(u.u_sel, s.sel);
-    gl.uniform3f(u.u_rgb, 1, 1, 1);
+    gl.uniform3fv(u.u_rgb, s.rgb ?? [1, 1, 1]);
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.count);
     gl.bindVertexArray(null);

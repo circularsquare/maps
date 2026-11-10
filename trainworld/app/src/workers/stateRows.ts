@@ -196,17 +196,19 @@ export class StateRows {
     const hsrEdges = new Set<number>(a.hsr_edges());
     const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
     const crossovers = new Map<number, number>(Array.from(crossoverIds, (id, k) => [id, crossoverPartners[k] === 0xffffffff ? -1 : crossoverPartners[k]]));
+    const ow = a.oneway_edges(), oneWays = new Map<number, 1 | 2>();
+    for (let k = 0; k + 1 < ow.length; k += 2) oneWays.set(ow[k], ow[k + 1] as 1 | 2);
     const out: ClockEdge[] = [];
     const kept = this.edgeRows;
     const seen = new Set<number>();
     for (let i = 0; i < ei.length; i += 10) {
       const id = ei[i];
       const off = offEdges.has(id), hsr = hsrEdges.has(id), kind = a.edge_kind(id) >= 2 ? a.edge_kind(id) : 0 /* T-3078: 1 is high speed, which is rail */, crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
-      const tracks = ei[i + 3] as 1 | 2, built = ei[i + 4] === 1;
+      const tracks = ei[i + 3] as 1 | 2, built = ei[i + 4] === 1, oneWay = oneWays.get(id) ?? 0;
       let r = kept.get(id);
-      if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.kind !== kind || r.crossover !== crossover || r.partner !== partner
+      if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.kind !== kind || r.oneWay !== oneWay || r.crossover !== crossover || r.partner !== partner
         || !Object.is(r.lengthM, ei[i + 5]) || !Object.is(r.cost, ei[i + 6]) || !Object.is(r.vminKmh, ei[i + 7]) || r.levelMin !== ei[i + 8] || r.levelMax !== ei[i + 9]) {
-        r = { id, a: ei[i + 1], b: ei[i + 2], tracks, built, off, hsr, kind, crossover, partner, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9] };
+        r = { id, a: ei[i + 1], b: ei[i + 2], tracks, built, off, hsr, kind, oneWay, crossover, partner, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9] };
         kept.set(id, r);
       }
       seen.add(id);

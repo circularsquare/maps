@@ -84,6 +84,8 @@ export type EditOp =
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
   /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */
   | { op: "doubleUp"; edge: EdgeId }
+  /** single track run one way (`dir` 1 a to b, 2 b to a) or both (0), the lines that ran against it taking another way in the same edit (T-3094); refused with "OneWayNoWay:<line>" */
+  | { op: "oneWay"; edge: EdgeId; dir: 0 | 1 | 2 }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   | { op: "removeStation"; node: NodeId }
   /** `buses` (T-1464): bus lines whose routes to construct */
@@ -305,7 +307,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWay"; edge: number; dir: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -405,6 +407,8 @@ export interface ClockEdge {
   hsr: boolean;
   /** `TrackApi.edge_kind`: 0 rail, 1 high speed, 2 street tram, 3 tram (T-2926) */
   kind: number;
+  /** one-way single track (T-3094): 0 both ways, 1 a to b only, 2 b to a only */
+  oneWay: 0 | 1 | 2;
   /** one diagonal of a crossover (T-338) */
   crossover: boolean;
   /** the crossover's other diagonal, -1 if none */
