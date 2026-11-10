@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Auto",
   "busInspector.spacingHand": "Manual",
   "busInspector.spacingHandTip": "O ônibus para só onde você colocar uma parada.",
-  "busInspector.spacingTip": "{auto, select, true {Uma parada em cada estação que encontra e, entre elas, uma a cada {distance} mais ou menos.} other {O ônibus para mais ou menos nesta distância, em um ponto de baldeação se houver um perto.}}",
+  "busInspector.spacingTip": "{auto, select, true {Também para em cada estação e em cada cruzamento com outra linha de ônibus.} other {O ônibus para mais ou menos nesta distância, em um ponto de baldeação se houver um perto.}}",
   "busInspector.station": "Estação",
   "busInspector.stops": "Paradas",
   "busInspector.streetBetween": "{count, plural, one {# parada de rua} other {# paradas de rua}} entre {from} e {to}",

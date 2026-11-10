@@ -2024,6 +2024,9 @@ export class NetworkRenderer {
       }
     }
 
+    // a bus line's stops at train stations, over the stations (T-2948)
+    if (buses) this.buses.drawStationStops(lc, vp, dpr);
+
     // No trains zoomed far out (T-205).
     this.trainsHidden = zoom < TRAINS_ZOOM;
     if (opt.showTrains && this.tripCount && !this.trainsHidden) {

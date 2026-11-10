@@ -82,15 +82,16 @@ try {
   }, [auto.id, stops]);
   await wait(2500);
 
-  // T-2937: Auto is selected and has a Stop spacing stepper; a step up is a distance, a step down Auto again
+  // T-2937, T-2947: Auto is selected and has a Stop spacing stepper reading 400 m; a step up is 600 m, a step down Auto again
   const toAuto = auto.spacing === 0;
   check(toAuto, 'the line starts on Auto');
   check((await modeOn('Auto')) && !(await modeOn('Manual')), 'the Auto button is on');
   check((await stepper(1).count()) === 1, 'and the Stop spacing stepper is there');
+  check(/400 m/.test(await page.locator('.stepper').filter({ has: page.locator('button[aria-label*="Stop spacing"]') }).innerText()), 'Auto reads 400 m');
   await quiet();
   await stepper(1).click();
-  let s = await until(num, (x) => x.spacing === 400);
-  check(s.spacing === 400, 'a step up from Auto is 400 m', `${s.spacing}`);
+  let s = await until(num, (x) => x.spacing === 600);
+  check(s.spacing === 600, 'a step up from Auto is 600 m', `${s.spacing}`);
   check((await sounds()).includes('pop'), 'and sounds the pop', (await sounds()).join());
   await stepper(-1).click();
   s = await until(num, (x) => x.spacing === 0);

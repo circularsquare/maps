@@ -111,9 +111,10 @@ pub enum StopRule<'a> {
     Hand(&'a [[f64; 2]]),
 }
 
-/// `m` as a line's stop spacing: 0 stays 0 (automatic), anything else inside the limits.
+/// `m` as a line's stop spacing: the least spacing, `SPACING_MIN_M`, is the automatic rule and stored
+/// as 0 (T-2947); anything wider stays inside the limits.
 pub fn spacing_from(m: f64) -> u32 {
-    if m > 0.0 { (m.round() as u32).clamp(SPACING_MIN_M, SPACING_MAX_M) } else { 0 }
+    if m > SPACING_MIN_M as f64 { (m.round() as u32).clamp(SPACING_MIN_M + 1, SPACING_MAX_M) } else { 0 }
 }
 
 pub const KIND_END: u8 = 0;

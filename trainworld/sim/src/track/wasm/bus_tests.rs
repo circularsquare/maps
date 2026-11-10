@@ -216,7 +216,11 @@ fn stop_spacing_is_one_undoable_edit_kept_through_a_redraw_and_a_save() {
     assert!(!a.save().windows(4).any(|w| w == b"LBP1"));
     // limits
     assert_eq!(a.set_bus_spacing(b, 1.0), 0);
-    assert_eq!(a.bus_spacing(b), bus::SPACING_MIN_M as f64);
+    assert_eq!(a.bus_spacing(b), 0.0);
+    assert_eq!(a.set_bus_spacing(b, bus::SPACING_MIN_M as f64), 0);
+    assert_eq!(a.bus_spacing(b), 0.0);
+    assert_eq!(a.set_bus_spacing(b, 1e9), 0);
+    assert_eq!(a.bus_spacing(b), bus::SPACING_MAX_M as f64);
 }
 
 #[test]

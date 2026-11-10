@@ -394,8 +394,9 @@ colour on a casing (white in light, dark in the dark theme), a planned one as ra
 In the Traffic view a running bus or ferry line is drawn as wide as a rail line with as many riders,
 stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
 (`demandLayers.ts` `busWidths`, T-2274).
-Street stops are small rings from zoom 14, ends small rounded squares from zoom 12; where it meets
-a train station the station's own circle stands for the stop. Selecting the line draws its 300 m
+Street stops are small rings from zoom 13, ends small rounded squares from zoom 11 (T-2950). A stop at a train
+station is drawn like any other, ring or end square, over the station's own mark in a pass after the stations
+(`BusLayer.drawStationStops`, T-2948). Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],
@@ -403,7 +404,10 @@ the riders on the stretch between the stops under the pointer (a ferry's between
 "Fastest bus 16 km/h" ("Fastest boat" on a ferry) on its colour, or "No buses run here" ("No boats"), and in
 Profit before the riders the track's money rows for that stretch with "Running buses" ("Running boats") in
 place of "Running trains", or "No buses run here" while none run [T-2452]; "Bus stop" or "End of the
-line" on a stop. A click selects the line; rail wins where both are under the pointer. A bus is one
+line" on a stop. A click selects the line; rail wins where both are under the pointer. A click on a stop where
+two or more bus lines have a stop (marks drawn on top of each other) selects the stop instead (T-2949): its
+panel names it (the nearest station's, else "Bus stop") and lists the lines that stop there, a click on one
+selecting that line; the map draws nothing selected. A bus is one
 short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the
 map's end squares too), a rail line's a circle. A new bus line is named "Bus n" (the next free

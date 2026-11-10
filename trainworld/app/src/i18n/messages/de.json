@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Auto",
   "busInspector.spacingHand": "Manuell",
   "busInspector.spacingHandTip": "Der Bus hält nur dort, wo du eine Haltestelle setzt.",
-  "busInspector.spacingTip": "{auto, select, true {Eine Haltestelle an jeder Station auf dem Weg, dazwischen etwa alle {distance}.} other {Der Bus hält etwa in diesem Abstand, möglichst an einem Umstiegspunkt.}}",
+  "busInspector.spacingTip": "{auto, select, true {Hält außerdem an jeder Station und an jeder Kreuzung mit einer anderen Buslinie.} other {Der Bus hält etwa in diesem Abstand, möglichst an einem Umstiegspunkt.}}",
   "busInspector.station": "Station",
   "busInspector.stops": "Haltestellen",
   "busInspector.streetBetween": "{count, plural, one {# Straßenhaltestelle} other {# Straßenhaltestellen}} zwischen {from} und {to}",

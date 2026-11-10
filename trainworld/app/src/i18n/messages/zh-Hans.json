@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "自动",
   "busInspector.spacingHand": "手动",
   "busInspector.spacingHandTip": "公交车只停你放置的站点。",
-  "busInspector.spacingTip": "{auto, select, true {经过的车站都停，其间约每{distance}停一站。} other {公交大约隔这么远停一站，附近有换乘点就停在换乘点。}}",
+  "busInspector.spacingTip": "{auto, select, true {每个车站和与其他公交线路的交叉处也会停。} other {公交大约隔这么远停一站，附近有换乘点就停在换乘点。}}",
   "busInspector.station": "车站",
   "busInspector.stops": "停靠站",
   "busInspector.streetBetween": "{count, plural, other {{from}和{to}之间有#个路边站}}",

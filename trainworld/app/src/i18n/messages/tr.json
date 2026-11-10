@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Oto",
   "busInspector.spacingHand": "Manuel",
   "busInspector.spacingHandTip": "Otobüs yalnızca senin koyduğun duraklarda durur.",
-  "busInspector.spacingTip": "{auto, select, true {Karşılaştığı her istasyonda bir durak, arada yaklaşık her {distance} bir durak daha.} other {Otobüs yaklaşık bu sıklıkta durur, yakında bir aktarma noktası varsa orada.}}",
+  "busInspector.spacingTip": "{auto, select, true {Ayrıca her istasyonda ve başka bir otobüs hattıyla kesiştiği her yerde durur.} other {Otobüs yaklaşık bu sıklıkta durur, yakında bir aktarma noktası varsa orada.}}",
   "busInspector.station": "İstasyon",
   "busInspector.stops": "Duraklar",
   "busInspector.streetBetween": "{from} ile {to} arasında {count, plural, one {# sokak durağı} other {# sokak durağı}}",

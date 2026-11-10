@@ -3,8 +3,9 @@
 // route from `lineStats[id].bus` instead, in the renderer's own pass (renderer.ts calls `draw` before
 // the track): half a rail line's width in the line's colour on the casing, a planned route as rail
 // blueprint is, the 300 m corridor of the selected line as a thin outline under everything, small
-// rings for its street stops from zoom 14 and rounded squares for its ends. A stop at a train station
-// draws nothing: the station's own circle is there.
+// rings for its street stops from zoom 13 and rounded squares for its ends. A stop at a train station
+// is drawn like any other, in a second pass after the stations (`drawStationStops`), so it reads over
+// the station's own mark (T-2948).
 //
 // A ferry line (T-2194) has a bus line's row, so it is drawn here too: its route dashed on a continuous
 // casing, a solid stroke from each port's landing to its berth, no stops (its ports are stations) and
@@ -31,9 +32,9 @@ import { topSeg } from "./pick";
 import { factRow, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 
-/** Street stops are drawn from this zoom, ends from `END_ZOOM`. */
-export const BUS_RING_ZOOM = 14;
-export const BUS_END_ZOOM = 12;
+/** Street stops are drawn from this zoom, ends from `END_ZOOM` (T-2950). */
+export const BUS_RING_ZOOM = 13;
+export const BUS_END_ZOOM = 11;
 /** A bus line is this share of a rail line's width, its casing this share of a rail line's. */
 const WIDTH_SHARE = 0.5;
 const CASING_SHARE = 0.6;
@@ -62,6 +63,8 @@ interface BusSource {
   street: number[];
   /** the stops demand sees, as lng, lat, kind */
   stops: number[];
+  /** their ids, a train station's node or a stop's (`stationNames` has the names) */
+  stopIds: number[];
   /** T-2194: a ferry line, and each port's landing and berth (lng, lat, lng, lat) */
   ferry: boolean;
   spurs: number[];
@@ -84,6 +87,8 @@ interface Built {
   /** per stop: x, y, 1 a ring + 2 a blueprint's, its colour packed as `info` */
   stops: Float32Array;
   stopCount: number;
+  /** the first stops, in the pass under the stations; the rest are at a train station, drawn over it */
+  plainCount: number;
   stopLine: Int32Array;
   /** per stop 1 for an end */
   stopEnd: Uint8Array;
@@ -286,6 +291,7 @@ export class BusLayer {
   private pu: Record<string, WebGLUniformLocation | null> = {};
   private segVao: WebGLVertexArrayObject | null = null;
   private stopVao: WebGLVertexArrayObject | null = null;
+  private stationStopVao: WebGLVertexArrayObject | null = null;
   private bufs: WebGLBuffer[] = [];
   private lines: BusSource[] = [];
   /** counts `set`s that changed the lines (the renderer's stroke cache, T-1638) */
@@ -304,6 +310,7 @@ export class BusLayer {
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
+    this.stationStopVao = gl.createVertexArray();
     this.bufs = [];
     this.onGpu = null;
   }
@@ -315,14 +322,14 @@ export class BusLayer {
       for (const l of w.save.lines) {
         const b = w.lineStats[l.id]?.bus;
         if (!b || b.routeLL.length < 4) continue;
-        const stops: number[] = [], spurs: number[] = [];
+        const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [];
         // a ferry's stops are its ports, drawn as the stations they are
-        if (!b.ferry) for (const s of b.stops) stops.push(s.lng, s.lat, s.kind);
+        if (!b.ferry) for (const s of b.stops) (stops.push(s.lng, s.lat, s.kind), stopIds.push(s.id));
         for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
       }
     }
     const was = this.lines;
@@ -356,6 +363,7 @@ export class BusLayer {
     }
     const seg = new Float32Array(nSeg * 4), info = new Float32Array(nSeg * 4);
     const rings: number[] = [], ends: number[] = [], ringLine: number[] = [], endLine: number[] = [];
+    const sRings: number[] = [], sEnds: number[] = [], sRingLine: number[] = [], sEndLine: number[] = [];
     const k = new Map<number, number>();
     const cum = new Float64Array(nSeg), range = new Map<number, [number, number]>();
     let at = 0;
@@ -391,20 +399,19 @@ export class BusLayer {
       }
       for (let i = 0; i + 2 < l.stops.length; i += 3) {
         const kind = l.stops[i + 2];
-        // T-2938: a line's two ends are drawn as ends even where they are at a station; the station's own
-        // circle stands for any other stop at a station
+        // T-2938, T-2948: a line's two ends are drawn as ends, and its stops at a train station as stops, over it
         const end = kind === 0 || (kind === 1 && (i === 0 || i + 3 >= l.stops.length));
-        if (kind === 1 && !end) continue;
         const [x, y] = toLocal(l.stops[i], l.stops[i + 1], a);
-        if (end) (ends.push(x, y, code, col), endLine.push(l.id));
-        else (rings.push(x, y, 1 + code, col), ringLine.push(l.id));
+        if (end) (kind === 1 ? sEnds : ends).push(x, y, code, col), (kind === 1 ? sEndLine : endLine).push(l.id);
+        else (kind === 1 ? sRings : rings).push(x, y, 1 + code, col), (kind === 1 ? sRingLine : ringLine).push(l.id);
       }
     }
-    const stopCount = (rings.length + ends.length) / 4;
+    const stopCount = (rings.length + ends.length + sRings.length + sEnds.length) / 4;
     this.built = {
-      a, seg, info, count: at, stops: Float32Array.from([...rings, ...ends]), stopCount,
-      stopLine: Int32Array.from([...ringLine, ...endLine]),
-      stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1)]),
+      a, seg, info, count: at, stops: Float32Array.from([...rings, ...ends, ...sRings, ...sEnds]), stopCount,
+      plainCount: (rings.length + ends.length) / 4,
+      stopLine: Int32Array.from([...ringLine, ...endLine, ...sRingLine, ...sEndLine]),
+      stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1), ...sRingLine.map(() => 0), ...sEndLine.map(() => 1)]),
       k, cum, range, stopAlong: new Map(),
     };
     return this.built;
@@ -436,6 +443,15 @@ export class BusLayer {
     this.coloursFor = [b];
     gl.bindVertexArray(this.stopVao);
     put(b.stops, "a_stop", 4, this.stopProg!);
+    // the stops at train stations: the same buffer from their first, drawn in a pass of their own
+    const loc = gl.getAttribLocation(this.stopProg!, "a_stop");
+    gl.bindVertexArray(this.stationStopVao);
+    if (loc >= 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufs[this.bufs.length - 1]);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, b.plainCount * 16);
+      gl.vertexAttribDivisor(loc, 1);
+    }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.onGpu = b;
@@ -520,23 +536,59 @@ export class BusLayer {
     if (this.byId.has(s.sel)) body(-2);
     gl.bindVertexArray(null);
 
+    this.style = s;
     const rings = zoom >= BUS_RING_ZOOM, ends = zoom >= BUS_END_ZOOM;
     if (ends && b.stopCount) {
       const ringR = Math.max(MIN_RING_PX * dpr, bus * RING_SHARE), endR = Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE);
-      const p = this.pu;
-      gl.useProgram(this.stopProg);
-      setCamera(gl, p, lc);
-      gl.uniform2f(p.u_viewport, vp[0], vp[1]);
-      gl.uniform2f(p.u_r, ringR, endR);
-      gl.uniform3fv(p.u_rail_rgb, s.rail);
-      gl.uniform3fv(p.u_fill, s.fill);
-      gl.uniform1f(p.u_rim, Math.max(1, 0.45 * bus));
-      gl.bindVertexArray(this.stopVao);
-      gl.uniform1f(p.u_rings, rings ? 1 : 0);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.stopCount);
-      gl.bindVertexArray(null);
+      this.stopPass(lc, vp, s, bus, ringR, endR, rings, this.stopVao, b.plainCount);
       this.last = { rings, ends, ringR: ringR / dpr, endR: endR / dpr };
     }
+  }
+
+  private style: BusStyle | null = null;
+
+  /** T-2948: the stops at train stations, over the stations the renderer has drawn since `draw`, so
+   * the station's mark and the line's stop both read. Nothing when `draw` drew no stops. */
+  drawStationStops(lc: LocalCamera, vp: readonly [number, number], dpr: number) {
+    const b = this.built, s = this.style, L = this.last;
+    if (!this.gl || !this.stopProg || !b || !s || !L || b.stopCount === b.plainCount || this.onGpu !== b) return;
+    this.stopPass(lc, vp, s, s.wLine * WIDTH_SHARE, L.ringR * dpr, L.endR * dpr, L.rings, this.stationStopVao, b.stopCount - b.plainCount);
+  }
+
+  private stopPass(lc: LocalCamera, vp: readonly [number, number], s: BusStyle, bus: number, ringR: number, endR: number, rings: boolean, vao: WebGLVertexArrayObject | null, count: number) {
+    if (!count) return;
+    const gl = this.gl!, p = this.pu;
+    gl.useProgram(this.stopProg);
+    setCamera(gl, p, lc);
+    gl.uniform2f(p.u_viewport, vp[0], vp[1]);
+    gl.uniform2f(p.u_r, ringR, endR);
+    gl.uniform3fv(p.u_rail_rgb, s.rail);
+    gl.uniform3fv(p.u_fill, s.fill);
+    gl.uniform1f(p.u_rim, Math.max(1, 0.45 * bus));
+    gl.bindVertexArray(vao);
+    gl.uniform1f(p.u_rings, rings ? 1 : 0);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+    gl.bindVertexArray(null);
+  }
+
+  /** T-2949: the lines with a stop under the pointer (CSS px), in line order: the stop drawn there and
+   * any other line's stop drawn on top of it. Empty where no stop is. */
+  linesStoppingAt(ov: Overlay, px: number, py: number): { lines: number[]; stop: number } {
+    const L = this.last, b = this.built, out = { lines: [] as number[], stop: -1 };
+    if (!L || !b || !this.stopAt(ov, px, py)) return out;
+    const r = Math.max(L.ringR, L.endR) + 3, p = SCRATCH;
+    for (const l of this.lines) {
+      for (let i = 0; i + 2 < l.stops.length; i += 3) {
+        const [x, y] = toLocal(l.stops[i], l.stops[i + 1], b.a);
+        ov.toScreenInto(x, y, p, 0);
+        if ((p[0] - px) ** 2 + (p[1] - py) ** 2 <= r * r) {
+          out.lines.push(l.id);
+          if (out.stop < 0) out.stop = l.stopIds[i / 3];
+          break;
+        }
+      }
+    }
+    return out;
   }
 
   /** The bus line under the pointer (CSS px), or -1. */

@@ -382,9 +382,10 @@ the tag by the pointer gives the road length and the price.
   mouse.
 - **Stop spacing** (T-2885, T-2937; `StopsHead` in `ui/inspector/BusInspector.tsx`): the bus panel's Stops heading
   carries two buttons, Auto and Manual, as the schedule's Buses and Headway pair does; not on a ferry. Under Auto
-  (planned or constructed line) a Stop spacing row follows with a stepper: its first step reads "Auto" (the
-  stops place themselves, track-and-service.md 6.7; no single distance describes that), then 400 m to 100 km;
-  a click on the value takes a typed distance in the shown unit (0 is Auto). Under Manual there is no row.
+  (planned or constructed line) a Stop spacing row follows with a stepper from 400 m to 100 km. Its first step,
+  400 m, is the automatic placing (track-and-service.md 6.7, T-2947): the stops are about that far apart and
+  every station and crossing is one. A click on the value takes a typed distance in the shown unit (anything
+  under 400 m is 400). Under Manual there is no row.
   Each step is one undoable edit, the map's stops and the list following at once, and the route tool's
   preview uses the line's stops.
 - **Manual** (T-2891, T-2939; `map/busStops.ts`): choosing it opens stop editing, the train mode's look and its

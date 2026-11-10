@@ -200,9 +200,9 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
   );
 }
 
-/** T-2885: the steps of a bus line's stop spacing under Auto, m; 0 is the stops placing themselves,
- * below them all. A typed distance may fall between. */
-const SPACING_STEPS = [0, 400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000, 15_000, 20_000, 30_000, 50_000, 100_000];
+/** T-2885: the steps of a bus line's stop spacing under Auto, m. The first, 400, is the stops placing
+ * themselves (the sim stores it as 0, T-2947). A typed distance may fall between. */
+const SPACING_STEPS = [400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000, 15_000, 20_000, 30_000, 50_000, 100_000];
 
 /** T-2937: the Stops heading with its Auto and Manual buttons, and under Auto the Stop spacing row.
  * Manual (T-2891) opens the stop editing; any spacing, 0 included, leaves it. */
@@ -210,7 +210,7 @@ function StopsHead({ l, bus }: { l: LineInput; bus: ClockBus }) {
   // what was asked for, shown at once and counted from until the edit lands
   const [asked, setAsked] = useState<{ hand: boolean; spacing: number } | null>(null);
   const hand = asked?.hand ?? bus.hand;
-  const spacing = asked ? asked.spacing : bus.spacing;
+  const spacing = Math.max(SPACING_STEPS[0], asked ? asked.spacing : bus.spacing);
   const send = (to: { hand: boolean; spacing: number }) => {
     setAsked(to);
     return edit(to.hand ? { op: "busHand", line: l.num } : { op: "busSpacing", line: l.num, spacing: to.spacing }).then((a) => {
@@ -225,7 +225,7 @@ function StopsHead({ l, bus }: { l: LineInput; bus: ClockBus }) {
     const to = Math.max(0, Math.min(SPACING_STEPS.length - 1, d > 0 || SPACING_STEPS[at] === spacing ? at + d : at + d + 1));
     return SPACING_STEPS[to] === spacing ? false : send({ hand: false, spacing: SPACING_STEPS[to] });
   };
-  const typed = (v: number) => void send({ hand: false, spacing: v > 0 ? Math.max(SPACING_STEPS[1], metresFromShown(v)) : 0 });
+  const typed = (v: number) => void send({ hand: false, spacing: Math.max(SPACING_STEPS[0], metresFromShown(v)) });
   return (
     <>
       <div class="h divided">
@@ -236,9 +236,9 @@ function StopsHead({ l, bus }: { l: LineInput; bus: ClockBus }) {
       </div>
       {!hand && (
         <ul class="rows">
-          <Row label={<span data-tip={t("busInspector.spacingTip", { auto: spacing === 0, distance: shortDistance(2000) })}>{t("busInspector.spacing")}</span>}>
-            <Stepper wide label={t("busInspector.spacing")} value={spacing ? shortDistance(spacing) : t("busInspector.spacingAuto")} onStep={step}
-              type={{ text: spacing ? String(+metresToShown(spacing).toFixed(2)) : "0", set: typed }} />
+          <Row label={<span data-tip={t("busInspector.spacingTip", { auto: spacing === SPACING_STEPS[0] })}>{t("busInspector.spacing")}</span>}>
+            <Stepper wide label={t("busInspector.spacing")} value={shortDistance(spacing)} onStep={step}
+              type={{ text: String(+metresToShown(spacing).toFixed(2)), set: typed }} />
           </Row>
         </ul>
       )}

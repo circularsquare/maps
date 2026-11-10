@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "自動",
   "busInspector.spacingHand": "手動",
   "busInspector.spacingHandTip": "バスは自分で置いた停留所にだけ停まります。",
-  "busInspector.spacingTip": "{auto, select, true {通る駅すべてに停まり、その間は約{distance}ごとに停まります。} other {バスはおおよそこの間隔で停まり、近くに乗り換え地点があればそこに停まります。}}",
+  "busInspector.spacingTip": "{auto, select, true {すべての駅と、ほかのバス路線と交わる場所にも停まります。} other {バスはおおよそこの間隔で停まり、近くに乗り換え地点があればそこに停まります。}}",
   "busInspector.station": "駅",
   "busInspector.stops": "停留所",
   "busInspector.streetBetween": "{from}と{to}の間の{count, plural, other {停留所#か所}}",

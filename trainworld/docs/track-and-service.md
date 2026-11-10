@@ -1520,7 +1520,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   route stops at constructed stations and crosses constructed routes; a planned one previews all.
   Any edit to a station or a line places every bus line's stops again.
 - **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).
-  Set from 400 m to 100 km in the bus panel. The stops then run from end to end about that far apart
+  Set from 400 m to 100 km in the bus panel, where 400 m, the least, is the placing above (`spacing_from`
+  stores it as 0, T-2947: the placing has a stop about every 400 m, so the panel reads it as that distance).
+  From 600 m up the stops then run from end to end about that far apart
   along the road: each lands on the station nearest its place within half the spacing, else a crossing,
   else the place itself, and no two come closer than half the spacing, so a line passes the stations
   it does not stop at. There are no street stops: every stop is one demand sees. Its stretch of route

@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Авто",
   "busInspector.spacingHand": "Вручную",
   "busInspector.spacingHandTip": "Автобус останавливается только там, где вы поставили остановку.",
-  "busInspector.spacingTip": "{auto, select, true {Остановка у каждой станции по пути, а между ними примерно через каждые {distance}.} other {Автобус останавливается примерно так часто, а если рядом есть пересадка, то у неё.}}",
+  "busInspector.spacingTip": "{auto, select, true {Останавливается также у каждой станции и на каждом пересечении с другой автобусной линией.} other {Автобус останавливается примерно так часто, а если рядом есть пересадка, то у неё.}}",
   "busInspector.station": "Станция",
   "busInspector.stops": "Остановки",
   "busInspector.streetBetween": "Между остановками {from} и {to}: {count, plural, one {# уличная остановка} few {# уличные остановки} many {# уличных остановок} other {# уличной остановки}}",

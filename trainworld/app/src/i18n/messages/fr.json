@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Auto",
   "busInspector.spacingHand": "Manuel",
   "busInspector.spacingHandTip": "Le bus s’arrête seulement là où vous placez un arrêt.",
-  "busInspector.spacingTip": "{auto, select, true {Un arrêt à chaque station rencontrée, et un environ tous les {distance} entre deux.} other {Le bus s’arrête à peu près à cet espacement, près d’une correspondance s’il y en a une.}}",
+  "busInspector.spacingTip": "{auto, select, true {S’arrête aussi à chaque station et à chaque croisement avec une autre ligne de bus.} other {Le bus s’arrête à peu près à cet espacement, près d’une correspondance s’il y en a une.}}",
   "busInspector.station": "Station",
   "busInspector.stops": "Arrêts",
   "busInspector.streetBetween": "{count, plural, one {# arrêt de rue} other {# arrêts de rue}} entre {from} et {to}",

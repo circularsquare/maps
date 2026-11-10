@@ -8,6 +8,7 @@
 // those near the pointer in local units (T-180, T-724), so a pick costs well under a millisecond.
 
 import { clock } from "../game/clock";
+import { world } from "../game/world";
 import type { Selection } from "../game/types";
 import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
@@ -465,6 +466,13 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
   // a bus line has no strokes in the buffers (map/busLayer.ts); drawn under the track, so picked after it
   if (ov.renderer.busesShown) {
+    // T-2949: a stop that several bus lines share shows them together
+    const shared = ov.renderer.buses.linesStoppingAt(ov, px, py);
+    if (shared.lines.length > 1) {
+      const w = world.peek();
+      const ids = shared.lines.flatMap((num) => w?.save.lines.find((l) => l.num === num)?.id ?? []);
+      if (ids.length > 1) return { kind: "busStop", lines: ids, stop: String(shared.stop) };
+    }
     const bus = ov.renderer.buses.lineAt(ov, px, py);
     if (bus >= 0) return { kind: "line", line: String(bus) };
   }

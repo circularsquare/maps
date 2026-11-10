@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "Auto",
   "busInspector.spacingHand": "Manual",
   "busInspector.spacingHandTip": "The bus stops only where you put a stop.",
-  "busInspector.spacingTip": "{auto, select, true {A stop at every station it meets, and one about every {distance} between.} other {The bus stops about this often, at a transfer point if one is near.}}",
+  "busInspector.spacingTip": "{auto, select, true {Also stops at every station and every crossing with another bus line.} other {The bus stops about this often, at a transfer point if one is near.}}",
   "busInspector.station": "Station",
   "busInspector.stops": "Stops",
   "busInspector.streetBetween": "{count, plural, one {# street stop} other {# street stops}} between {from} and {to}",

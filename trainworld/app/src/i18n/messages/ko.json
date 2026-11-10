@@ -286,7 +286,7 @@
   "busInspector.spacingAuto": "자동",
   "busInspector.spacingHand": "수동",
   "busInspector.spacingHandTip": "직접 놓은 정류장에만 버스가 서요.",
-  "busInspector.spacingTip": "{auto, select, true {만나는 역마다 정류장을 두고, 그 사이에는 약 {distance}마다 하나씩 둬요.} other {버스는 대략 이 간격으로 서요. 근처에 환승 지점이 있으면 거기에 서요.}}",
+  "busInspector.spacingTip": "{auto, select, true {모든 역과 다른 버스 노선과 만나는 곳에도 서요.} other {버스는 대략 이 간격으로 서요. 근처에 환승 지점이 있으면 거기에 서요.}}",
   "busInspector.station": "역",
   "busInspector.stops": "정류장",
   "busInspector.streetBetween": "{from}에서 {to}까지 {count, plural, other {길가 정류장 #개}}",

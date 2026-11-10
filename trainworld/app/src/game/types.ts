@@ -269,6 +269,8 @@ export type Selection =
   | { kind: "line"; line: LineId }
   /** a line group's view (T-1791): its group number */
   | { kind: "group"; group: number }
+  /** T-2949: a stop that two or more bus lines share: their ids, and the id of one of its stops (its name) */
+  | { kind: "busStop"; lines: LineId[]; stop: string }
   | { kind: "station"; station: StationId }
   | { kind: "track"; edge: EdgeId }
   | { kind: "junction"; node: NodeId }
