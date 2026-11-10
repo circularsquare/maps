@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "依序編輯路線的每個站點，雙向都行，可以單向跳過一個站點或加一個",
   "updates.v021Fixes": "各種錯誤修正",
   "updates.v021Hsr": "超過 4 節車廂的車站又可以蓋在高速軌道上了",
-  "updates.v021Line": "v0.2.1 更新！長車站又能蓋在高速軌道上了，所有站點依序編輯……",
+  "updates.v021Line": "v0.2.1 更新！長車站又能蓋在高速軌道上了……",
   "updates.v021Memory": "可能裝不進記憶體的存檔也可以嘗試讀取",
   "updates.v021Terminals": "列車在路線終點會完全停進月台內",
   "updates.v021TramCrossing": "路面電車穿過鐵路軌道的地方有了新標記",

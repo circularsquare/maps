@@ -2383,7 +2383,7 @@
   "updates.v021ExactStops": "edit every stop of a line in order, both ways, to skip a stop one way or add one",
   "updates.v021Fixes": "various bug fixes",
   "updates.v021Hsr": "stations longer than 4 cars can go on high-speed track again",
-  "updates.v021Line": "update v0.2.1! long stations on high-speed track again, every stop in order...",
+  "updates.v021Line": "update v0.2.1! long stations on high-speed track again...",
   "updates.v021Memory": "a save that may not fit in memory can still try to load",
   "updates.v021Terminals": "trains stop fully inside the platform at the end of a line",
   "updates.v021TramCrossing": "a new mark where trams cross train track",

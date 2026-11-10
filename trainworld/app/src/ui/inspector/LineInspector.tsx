@@ -218,6 +218,8 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
 const STOP_CHIPS = 2;
+/** T-3079: the Exact edits toggle stays hidden until its fixes are tested (Anita, 2026-11-10); a line already in it keeps the toggle to leave */
+const EXACT_EDITS = false;
 
 /** T-1391: the line stops at stop `i`'s complex again further along or before (not the next or
  * previous stop, nor a loop's first stop at its end), so it is a transfer to itself there. */
@@ -932,7 +934,7 @@ function RailLineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
-      {editingStops && l.stops.length >= 2 && (
+      {editingStops && l.stops.length >= 2 && (EXACT_EDITS || st.manual) && (
         <div class="manual-row">
           <button class={"btn text mini" + (st.manual ? " on" : "")} aria-pressed={st.manual} disabled={st.manual && !st.manualFolds}
             data-tip={st.manual ? (st.manualFolds ? undefined : tr("lineInspector.manualBackTip")) : tr("lineInspector.manualTip")}

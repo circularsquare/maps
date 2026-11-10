@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "按顺序编辑线路的每个站点，双向都行，可以单向跳过一个站点或加一个",
   "updates.v021Fixes": "各种错误修复",
   "updates.v021Hsr": "超过 4 节车厢的车站又可以建在高速轨道上了",
-  "updates.v021Line": "v0.2.1 更新！长车站又能建在高速轨道上了，所有站点按顺序编辑……",
+  "updates.v021Line": "v0.2.1 更新！长车站又能建在高速轨道上了……",
   "updates.v021Memory": "可能装不进内存的存档也可以尝试读取",
   "updates.v021Terminals": "列车在线路终点会完全停进站台内",
   "updates.v021TramCrossing": "有轨电车穿过铁路轨道的地方有了新标记",

@@ -22,7 +22,7 @@ const V0_1_AT = "2026-11-09T15:00:00Z";
 const V0_2_AT = "2026-11-10T17:30:00Z";
 
 /** When v0.2.1 went out: set at publish. */
-const V0_2_1_AT = "2026-11-10T20:45:00Z";
+const V0_2_1_AT = "2026-11-10T20:50:00Z";
 
 export const UPDATES: Update[] = [
   {
@@ -31,7 +31,6 @@ export const UPDATES: Update[] = [
     line: "updates.v021Line",
     changes: [
       "updates.v021Hsr",
-      "updates.v021ExactStops",
       "updates.v021Terminals",
       "updates.v021VehicleNames",
       "updates.v021Transit",

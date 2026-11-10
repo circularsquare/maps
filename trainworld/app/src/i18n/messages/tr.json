@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "bir hattın tüm duraklarını sırayla, iki yönde de düzenle; bir durağı tek yönde atla ya da ekle",
   "updates.v021Fixes": "çeşitli hata düzeltmeleri",
   "updates.v021Hsr": "4 vagondan uzun istasyonlar yine yüksek hızlı rayda kurulabilir",
-  "updates.v021Line": "güncelleme v0.2.1! uzun istasyonlar yine hızlı hatta, tüm duraklar sırayla...",
+  "updates.v021Line": "güncelleme v0.2.1! hızlı tren raylarında yine uzun istasyonlar...",
   "updates.v021Memory": "belleğe sığmayabilecek bir kayıt yine de yüklenmeyi deneyebilir",
   "updates.v021Terminals": "trenler hattın sonunda peronun tam içinde durur",
   "updates.v021TramCrossing": "tramvayların tren rayını kestiği yerde yeni bir işaret",

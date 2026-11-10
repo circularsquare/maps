@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "modifie tous les arrêts d’une ligne dans l’ordre, dans les deux sens, pour sauter un arrêt dans un sens ou en ajouter un",
   "updates.v021Fixes": "divers correctifs",
   "updates.v021Hsr": "les gares de plus de 4 voitures peuvent de nouveau aller sur une voie à grande vitesse",
-  "updates.v021Line": "mise à jour v0.2.1 ! longues gares sur voie à grande vitesse, tous les arrêts dans l’ordre...",
+  "updates.v021Line": "mise à jour v0.2.1 ! longues gares sur voie à grande vitesse...",
   "updates.v021Memory": "une sauvegarde qui risque de ne pas tenir en mémoire peut quand même essayer de se charger",
   "updates.v021Terminals": "les trains s’arrêtent entièrement dans le quai au bout d’une ligne",
   "updates.v021TramCrossing": "un nouveau repère là où les tramways croisent une voie ferrée",

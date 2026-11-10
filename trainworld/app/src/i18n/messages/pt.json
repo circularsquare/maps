@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "edite todas as paradas de uma linha em ordem, nos dois sentidos, para pular uma parada em um sentido ou adicionar uma",
   "updates.v021Fixes": "várias correções de bugs",
   "updates.v021Hsr": "estações com mais de 4 vagões podem voltar a ficar na via de alta velocidade",
-  "updates.v021Line": "atualização v0.2.1! estações longas na via de alta velocidade de novo, todas as paradas em ordem...",
+  "updates.v021Line": "atualização v0.2.1! estações longas na via de alta velocidade de novo...",
   "updates.v021Memory": "um jogo salvo que talvez não caiba na memória ainda pode tentar carregar",
   "updates.v021Terminals": "os trens param totalmente dentro da plataforma no fim de uma linha",
   "updates.v021TramCrossing": "uma marca nova onde os bondes cruzam a via do trem",

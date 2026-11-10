@@ -2386,7 +2386,7 @@
   "updates.v021ExactStops": "Bearbeite alle Halte einer Linie der Reihe nach, in beide Richtungen, um einen Halt in einer Richtung zu überspringen oder hinzuzufügen",
   "updates.v021Fixes": "Verschiedene Fehlerbehebungen",
   "updates.v021Hsr": "Stationen mit mehr als 4 Wagen können wieder auf Schnellfahrgleisen stehen",
-  "updates.v021Line": "Update v0.2.1! Lange Stationen auf Schnellfahrgleisen, Halte der Reihe nach...",
+  "updates.v021Line": "Update v0.2.1! Lange Stationen auf Schnellfahrgleisen...",
   "updates.v021Memory": "Ein Spielstand, der vielleicht nicht in den Speicher passt, kann trotzdem versuchen zu laden",
   "updates.v021Terminals": "Züge halten am Linienende ganz innerhalb des Bahnsteigs",
   "updates.v021TramCrossing": "Neue Markierung dort, wo Straßenbahnen Bahngleise kreuzen",
