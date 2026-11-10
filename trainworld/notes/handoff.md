@@ -13,8 +13,8 @@ tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees
 Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
 **No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
 **Website push needs her word each time** (the classifier refuses it otherwise).
-**Master = 8846f377 + maps-dc's later commits** (maps-15 pushed through 8846f377). **8800 = 8846f377**: batch smoke on master
-PASSED 27 (16:50). Exact edits shows with `?exact` (or whenever a line is already manual).
+**Master = 1719028f** (T-3107 turning alike, T-3106 street tram over water, T-3104 client; dev smoke PASSED 28, 17:22;
+pushed through 74558ad4). **8800 = 1719028f** (snapbuild started 17:23). Exact edits shows with `?exact` (or whenever a line is already manual).
 **maps-15 landed after the takeover (all its agents are done; nothing of maps-15's is in flight):**
 - T-3089 + T-3080 Exact edits round 2 (41202320): row hover lights the station, every visit removable (`drop_visit`), half
   dot, visit numbers and add circles on the map. Strings "Click to remove this stop", "Click to add a stop here".
@@ -38,28 +38,16 @@ hopefully tonight (Anita 16:40). T-3070 non-home-based trips design waits ("can 
 T-3060 rebuild preview; T-3069 trams on real rail + street-snap icon; Anita's plan: community tab, shared maps, country
 leaderboards (11/13), better schematic with timetables, open source (next week). P3s: T-3042, T-3036, T-3027, T-3002/3003,
 T-3019, T-3011.
-**maps-dc:** T-3104/T-3105 server done by mailname (shonei-server e1ac732, 7b68d01). Client `?site=trainsworld` in app/src/game/account.ts + ui/AccountPanel.tsx is maps-dc's,
-uncommitted, tsc clean: commit it with the next batch. Strings approved (mail wording, quota message untranslated).
-Server DEPLOYED 2026-11-10 16:20 and pushed by Anita.
-**Running (maps-dc's, launched ~16:55):**
+**Done today by maps-dc (archived):** T-3104/T-3105 account mails name the game + mail quota message (shonei-server
+e1ac732, 7b68d01, deployed and pushed; client in 1719028f); T-3106 street tram at ground level over water; T-3107 turning
+alike at every station, 15/h or 30/h with a terminal, hints name only a terminal (1719028f). Kind 3 renamed "Turning"
+(asked Anita to check the word).
+**Running:**
 - flyover (Opus, af64c7f0ed83c00b5, tree `.tw-trees/flyover` from 74558ad4, Vite 6181): T-3103 flat badge only where
-  moves cross, then T-3092 real flyovers (Anita hopes tonight; no release until then). Land with `agent-tree.mjs land flyover`.
-- deadend (Sonnet, a79eb44b3fb6bfdbf, main tree): T-3107 round 2 (rule + hints, below), resumed after the landings.
-- tramwater (Sonnet, a68aa3b7f51cb1054) DONE, uncommitted: T-3106 (net.rs check_edge, draw.rs bridged/shaped/raise_end,
-  bridge_tests.rs, track-and-service.md, wiki/water.md + read/, DECISIONS). All StreetTram edges exempt (no bridge flags
-  in the sim's street data). Its new test passes; 12 capacity/turnback tests fail = deadend's WIP. Commit with T-3107
-  once deadend reports and both cargo suites + smoke pass; archive T-3106 then.
+  moves cross, then T-3092 real flyovers (Anita hopes tonight; no release until then). Land with `agent-tree.mjs land
+  flyover`; it merges with 1719028f's capacity.rs and draw.rs changes.
 `.tw-trees/hotfix` (tw/release-021, live v0.2.1's source) kept until the next release in case live needs a hotfix.
-- T-3107: Anita decided 16:50: dead ends and through stations identical, hints only "build a terminal" (terminal =
-  30 tph) or, with one built, more track; never mention a dead end; drop "Add more platform tracks at the terminus".
-  My rule: turning = 15/h without a terminal, 30/h with, per track pair, any station, ending or reversing partway; no
-  90 s crossing for turns, no dead-end pooling, no REVERSAL_LIMIT_S. deadend (Sonnet, a79eb44b3fb6bfdbf) was briefed
-  for that (round 2), then STOPPED before editing so maps-15 can land oneway + rebuild2 (both edit en.json, and oneway
-  capacity.rs). Round-1 work parked at <maps-dc scratch>\deadend\t3107-round1.patch, files restored to HEAD. After
-  both land: resume deadend (SendMessage) to reapply the patch and do round 2 on top. Anita 16:55: no "more track /
-  platform tracks" hint either (one line arrives on one pair, so a quad station can't help it): with a terminal built
-  and still full, the hint is to turn some trains at another station. Tell deadend this on resume.
-Next free id **T-3108**.
+Next free id **T-3112**.
 Anita's TODO "do trams have shorter dwell times?": yes, 15 s against 30 s for trains (T-2926), answered 2026-11-10.
 
 **Open with Anita:**
