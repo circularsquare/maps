@@ -3,7 +3,8 @@
 // L and K back into J; past A a second, smaller loop with no station. A line A, B, M, L, K: in stop
 // editing M's marker says "Click to loop back here"; a click on it turns the line (stops out and back
 // over the stem, one way); undo takes it back; the marker then opens it again; and the far end turns
-// too. Times the worker's stop tiers. Screenshots artifacts/trainworld/t3021-*.png.
+// too. T-3050: a line with a station-bearing loop at each end (entered stop by stop) is one row per station
+// with a bend above and below, in the plain and the related-lines view. Times the worker's stop tiers. Screenshots artifacts/trainworld/t3021-*.png.
 // From the maps root, on a Vite of your own:
 //   node trainworld/checks/t3021-loopback.mjs [dev url]
 // About a minute.
@@ -184,6 +185,113 @@ try {
     const s6 = await info();
     check(JSON.stringify(s6.stops) === JSON.stringify(s0.stops), 'the click opens it again', JSON.stringify(s6));
   }
+
+  // T-3050: a stem with a loop past each end, each loop with stations of its own, stops entered in order
+  // (not turned with the click): the panel shows the stem once, a bend above and a bend below
+  const C2 = [-73.86, 40.74];
+  const two = await page.evaluate(async (c) => {
+    const tw = window.tw, cl = tw.client, o = tw.lngLatToPack(c[0], c[1]);
+    const P = (dx, dy) => ({ x: o.x + dx, y: o.y + dy });
+    const pause = (ms) => new Promise((d) => setTimeout(d, ms));
+    const near = (p) => { let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < bd) { bd = d; best = n.id; } } return best; };
+    const lv = -1, pis = (...ps) => ps.map((p) => ({ x: p.x, y: p.y, level: lv }));
+    const free = (p) => ({ kind: 'free', x: p.x, y: p.y, level: lv });
+    const at = (n) => ({ kind: 'node', node: n });
+    const res = [];
+    const go = async (from, to, ps) => { res.push(await cl.edit({ op: 'route', from, to, pis: ps, single: false })); await pause(300); };
+    const A = P(-4000, 0), B = P(-2000, 0), M = P(0, 0), J = P(1000, 0), L = P(2000, 750), K = P(3150, 375);
+    await go(free(A), free(B), []);
+    const nA = near(A), nB = near(B);
+    await go(at(nB), free(M), []);
+    const nM = near(M);
+    await go(at(nM), free(J), []);
+    const nJ = near(J);
+    await go(at(nJ), free(L), pis(P(1200, 0)));
+    const nL = near(L);
+    await go(at(nL), free(K), pis(P(2800, 1500)));
+    const nK = near(K);
+    await go(at(nK), at(nJ), pis(P(3500, -750), P(1600, -150)));
+    const Jw = P(-5000, 0), X1 = P(-5800, 600), X2 = P(-6700, -100);
+    await go(at(nA), free(Jw), []);
+    const nJw = near(Jw);
+    await go(at(nJw), free(X1), pis(P(-5200, 0)));
+    const nX1 = near(X1);
+    await go(at(nX1), free(X2), pis(P(-6400, 1050)));
+    const nX2 = near(X2);
+    await go(at(nX2), at(nJw), pis(P(-6200, -800), P(-5600, -150)));
+    const nm = ['Ash', 'Birch', 'Cedar', 'Larch', 'Kauri', 'Xylia', 'Yew'];
+    for (const [k, n] of [nA, nB, nM, nL, nK, nX1, nX2].entries()) { res.push(await cl.edit({ op: 'addStation', at: at(n), platform: 160, name: nm[k] })); await pause(200); }
+    res.push(await cl.edit({ op: 'constructAll' }));
+    await pause(500);
+    const line = await cl.edit({ op: 'addLine', stops: [nA, nB, nM, nL, nK], name: 'Two loops', colour: '#1d5fb8' });
+    await pause(800);
+    const stops = [nA, nB, nM, nL, nK, nM, nB, nA, nX1, nX2, nA];
+    const set = await cl.edit({ op: 'setStops', line: line.line, stops });
+    await pause(500);
+    const one = await cl.edit({ op: 'lineOneWay', line: line.line, oneWay: true });
+    await pause(1000);
+    return { n: { A: nA, B: nB, M: nM, L: nL, K: nK, X1: nX1, X2: nX2 }, line: line.line, stops, ok: line.ok && set.ok && one.ok, refused: res.filter((r) => !r.ok).map((r) => JSON.stringify(r.issues ?? r).slice(0, 140)) };
+  }, C2);
+  check(two.ok && !two.refused.length, 'the two-loop layout and its stops are built', two.refused.join(' | '));
+  const T = two.n;
+  const panel = () => page.evaluate(() => {
+    const ul = document.querySelector('.stops'), rows = [...(ul?.querySelectorAll(':scope > li:not(.loop-end)') ?? [])];
+    return { turned: !!ul?.classList.contains('turned'), rows: rows.map((li) => ({ name: li.querySelector('.stop-name')?.textContent ?? '', arc: (li.querySelector('.arc')?.className ?? '').replace('arc', '').trim(), once: li.classList.contains('oneway') })) };
+  });
+  const showLine = (num, center, zoom) => page.evaluate(async ([num, c, z]) => {
+    const tw = window.tw, ui = await import('/src/game/ui.ts');
+    ui.tool.value = null;
+    const l = tw.world.value.save.lines.find((x) => x.num === num);
+    tw.selection.value = { kind: 'line', line: l.id };
+    tw.map.jumpTo({ center: c, zoom: z });
+  }, [num, center, zoom]);
+  await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.relatedLines.value = false; });
+  await showLine(two.line, [C2[0] - 0.012, C2[1] + 0.002], 12.4);
+  await page.waitForTimeout(2500);
+  const p2 = await panel();
+  console.log('two loops panel', JSON.stringify(p2));
+  const rowNames = p2.rows.map((r) => r.name);
+  check(p2.turned && rowNames.length === 7 && new Set(rowNames).size === 7, 'the two-loop line is one row per station (7 rows)', rowNames.join(', '));
+  check(p2.rows.filter((r) => r.arc === 'start').length === 2 && p2.rows.filter((r) => r.arc === 'end').length === 2, 'a bend above and a bend below', p2.rows.map((r) => r.arc || '-').join(' '));
+  check(p2.rows.filter((r) => r.once).length === 4, 'each loop station is half-filled (one way), the stem stations full', String(p2.rows.filter((r) => r.once).length));
+  await page.evaluate(() => document.querySelector('.stops')?.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(ARTIFACTS, 't3050-two-loops.png') });
+  // the related-lines view draws it too, with lines that meet it on the stem and on a loop
+  await edit({ op: 'addLine', stops: [T.B, T.M], name: 'Stem cross', colour: '#d9531e' });
+  await edit({ op: 'addLine', stops: [T.X2, T.A], name: 'Top cross', colour: '#2a9d5c' });
+  await page.waitForTimeout(1200);
+  // the related-lines view draws it too
+  await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.relatedLines.value = true; });
+  await page.waitForTimeout(1500);
+  const rel = await page.evaluate(() => document.querySelectorAll('.stops.related-rows > li[data-r]').length);
+  check(rel === 7, 'the related-lines view has the same seven rows', String(rel));
+  await page.evaluate(() => document.querySelector('.stops')?.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(ARTIFACTS, 't3050-two-loops-related.png') });
+  await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.relatedLines.value = false; });
+  // a stem station comes out of both passes, a loop station once (the closing stop moves with its first)
+  const infoOf = (num) => page.evaluate((num) => { const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num); return l.stops.map(Number); }, num);
+  const lenBefore = (await infoOf(two.line)).length;
+  await edit({ op: 'setStops', line: two.line, stops: two.stops.filter((s) => s !== T.B).concat([]) });
+  const afterStem = await infoOf(two.line);
+  check(afterStem.length === lenBefore - 2 && !afterStem.includes(T.B), 'taking the stem station out of the stops takes both passes', afterStem.join(','));
+  await edit({ op: 'undo' });
+  await page.waitForTimeout(800);
+  // Anita's own order: the line starts on a loop station (Amsterdam's first stop sat past the stem's end)
+  await edit({ op: 'setStops', line: two.line, stops: [T.X1, T.X2, T.A, T.B, T.M, T.L, T.K, T.M, T.B, T.A, T.X1] });
+  await page.waitForTimeout(1500);
+  const p3 = await panel();
+  check(p3.turned && p3.rows.length === 7 && p3.rows.filter((r) => r.once).length === 4, 'the same shape read from a line that starts on a loop station', p3.rows.map((r) => r.name).join(', '));
+  await page.getByRole('button', { name: /Edit stops/ }).click();
+  await page.waitForTimeout(800);
+  await page.locator('.stops > li:not(.loop-end)').first().locator('button.danger').click();
+  await page.waitForTimeout(1500);
+  const s7 = await infoOf(two.line);
+  check(s7[0] === s7[s7.length - 1] && !s7.includes(T.X1) && s7.length === 10, 'a loop station comes out once and the line closes on its new first stop', s7.join(','));
+  await page.getByRole('button', { name: /Stop editing/ }).click().catch(() => {});
+  await edit({ op: 'undo' });
+  await page.waitForTimeout(800);
   for (let k = 0; k < 4; k++) out.tiersMs.push((await tiers()).ms);
   console.log('stop tiers ms', out.tiersMs.map(Math.round).join(' '));
   check(errors.length === 0, 'no console errors', errors.slice(0, 3).join(' | '));

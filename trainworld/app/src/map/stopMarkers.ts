@@ -203,7 +203,8 @@ export class StopMarkers {
       this.colour = this.line.colour;
       this.oneWay = new Map();
       const turned = turnedLine(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
-      for (const r of turned?.rows ?? []) if (r.occ.length === 1 && r.occ[0] > 0) this.oneWay.set(this.line.stops[r.occ[0]], [this.line.stops[r.occ[0] - 1], this.line.stops[r.occ[0] + 1]]);
+      const ls = this.line.stops, lm = ls.length - 1;
+      for (const r of turned?.rows ?? []) if (r.once && r.occ[0] >= 0) this.oneWay.set(ls[r.i], [ls[(r.i + lm - 1) % lm], ls[(r.i + 1) % lm]]);
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only

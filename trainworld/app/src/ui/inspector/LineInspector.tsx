@@ -716,9 +716,9 @@ function RailLineInspector({ id }: { id: string }) {
   const nStops = l.stops.length;
   // T-3025: a line turned round a loop is one row per station (the plain list, with no side lines drawn), except
   // while a hand-ordered line's stops are edited, where each pass is its own row
-  const turned = !(editingStops && st.hand) ? turnedLine(l.stops, st) : null;
-  // T-1894: north (or for an east-west line, west) end on top; a loop as built
   const byId = stationsById(w);
+  const turned = !(editingStops && st.hand) ? turnedLine(l.stops, st, (a, b) => !drawnReversed(byId.get(a), byId.get(b))) : null;
+  // T-1894: north (or for an east-west line, west) end on top; a loop as built
   const flip = !turned && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
   // T-2895: while stops are edited a row drags to a new place in the list (not by touch; in related lines the
   // line's own rows); a loop keeps its first and closing stop where they are. The line then keeps the order.
@@ -785,7 +785,12 @@ function RailLineInspector({ id }: { id: string }) {
   const sortStops = () => void stopEdit({ op: "sortStops", line: l.num });
   // T-1894: while stops are edited a click on a stop's dot takes it out keeping the path, Shift-click
   // ends the line there, as in the group view; a stop the line needs has no click
-  const takeOut = (row: TurnRow) => setStops(l.stops.filter((_, k) => !row.occ.includes(k)).map(Number));
+  const takeOut = (row: TurnRow) => {
+    const left = l.stops.filter((_, k) => !row.occ.includes(k));
+    // T-3050: a loop's first station going takes the closing stop too; the line closes again on its new first stop
+    if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
+    return setStops(left.map(Number));
+  };
   const dotClick = (i: number, row?: TurnRow): { tip: string; click: (e: MouseEvent) => void } | null => {
     if (row) {
       if (!editingStops || turned!.rows.length <= 2 || st.reversals?.some((k) => row.occ.includes(k))) return null;
@@ -819,10 +824,16 @@ function RailLineInspector({ id }: { id: string }) {
       above = row.first ? -1 : i > 0 ? i - 1 : nStops - 2;
       below = row.last ? -1 : i;
       t = i > 0 ? times[i] : undefined;
+      // T-3050: a loop above the stem puts the walk's start partway down the list: times run from the top row
+      if (turned?.start !== undefined) {
+        const at = (k: number) => (k <= nStops - 1 ? times[k] : total + (times[k - nStops + 1] ?? 0)) ?? 0;
+        const pos = (k: number) => (k >= turned.start! ? k : k + nStops - 1);
+        t = row.first ? undefined : at(pos(i)) - at(turned.start);
+      }
     }
     const dot = dotClick(i, row);
     return (
-      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (row && row.occ.length === 1 ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (row?.once ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
         data-stop={i} onPointerDown={(e) => rowDown(e, i)}>
         {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
         {row?.arc === "end" && <i class="dir" aria-hidden="true" />}

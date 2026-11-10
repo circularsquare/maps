@@ -44,7 +44,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   l: LineInput;
   /** T-3040: a turned line is drawn as one row per station: each row's first stop index on the line; the rows' stops
    * stand for every pass of the station, and what the other lines meet on the way back is left out */
-  rows?: { i: number; occ: number[] }[];
+  rows?: { i: number; occ: number[]; lead?: boolean }[];
   stopS: number[];
   colour: string;
   /** the line is a loop drawn once round */
@@ -69,11 +69,17 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   const rowOf = new Map<number, number>();
   turnRows?.forEach((r, k) => r.occ.forEach((j) => rowOf.set(j, k)));
   const lastS = turnRows ? stopS[turnRows[turnRows.length - 1].i] : Infinity;
+  // T-3050: rows listed before the walk's first stop (a loop above the stem) lie a lap earlier along the line
+  const lap = stopS[stopS.length - 1] ?? 0;
+  const leadS = turnRows?.find((r) => r.lead) ? stopS[turnRows.find((r) => r.lead)!.i] : Infinity;
+  const shift = (s: number) => (s <= lastS + 1 ? s : s >= leadS - 1 ? s - lap : null);
   const groups: RelatedGroup[] = (answer?.line === l.num ? answer.groups : []).flatMap((g) => {
     if (!turnRows) return [g];
-    if (g.sL0 > lastS + 1) return [];
-    const meetings = g.meetings.filter((m) => m.sL <= lastS + 1).map((m) => ({ ...m, stopL: rowOf.get(m.stopL) ?? -1 }));
-    return [{ ...g, meetings, own: g.own.filter((o) => o.sL <= lastS + 1) }];
+    const s0 = shift(g.sL0);
+    if (s0 === null) return [];
+    const back = s0 !== g.sL0 ? -lap : 0;
+    const meetings = g.meetings.flatMap((m) => { const sL = shift(m.sL); return sL === null ? [] : [{ ...m, sL, stopL: rowOf.get(m.stopL) ?? -1 }]; });
+    return [{ ...g, sL0: s0, sL1: g.sL1 + back, meetings, own: g.own.flatMap((o) => { const sL = shift(o.sL); return sL === null ? [] : [{ ...o, sL }]; }), gaps: g.gaps.map((x) => ({ ...x, sL0: x.sL0 + back, sL1: x.sL1 + back })) }];
   });
   const nStops = turnRows ? turnRows.length : l.stops.length;
   const ul = useRef<HTMLUListElement>(null);
@@ -84,7 +90,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   const stopName = (line: number, stop: number) => names.get(byNum.get(line)?.stops[line === l.num && turnRows ? turnRows[stop]?.i ?? -1 : stop] ?? "") ?? "";
   const addAt = (line: number, stop: number) => { const s = byNum.get(line)?.stops[stop]; return s && adder ? adder(s) : null; };
   const lay = relatedLayout(groups, {
-    line: l.num, stopS: turnRows ? turnRows.map((r) => stopS[r.i]) : stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
+    line: l.num, stopS: turnRows ? turnRows.map((r) => stopS[r.i] - (r.lead ? lap : 0)) : stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
     rowY: (i) => geo.ys[i] ?? i * 25 + 12.5,
     lineName: (n) => byNum.get(n)?.name ?? "",
     stopName,
