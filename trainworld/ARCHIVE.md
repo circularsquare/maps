@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2947 to T-2950 (2026-11-09, tree busstops2): bus Auto spacing is 400 m and reads so (a saved 400 m or less loads as Auto, still stopping at every station and crossing); bus stops at train stations drawn over the station's mark; a click on a stop several bus lines share opens a Bus stop panel listing them; stop rings from zoom 13, end squares from 11.
 - T-2946 (2026-11-09, tree greyfade): the grey outside the zones stays while a zone's box is in view or within 25 km, fading only with none near (Morocco); the rule is in DECISIONS.md and ui-map.md.
 - T-2937 to T-2940 (2026-11-09, tree busmanual): a bus line's Stops heading has Auto and Manual buttons, Stop spacing shows under Auto; a line's two ends are always drawn as end stops; manual stops are kept for the session when switching away and back; pop, snap and station sounds for bus and ferry edits, where trains have them.
 - T-2941 to T-2945 (2026-11-09, tree uinotes2): the issues list says buses and boats on those lines; crowded lines' rows read {name} crowding; a capacity row shows only when over capacity or with a wait of 2 s or more; smaller gap between the day rows; the note about line traffic is on the Crowded trains hover, where it is true (track at capacity dots show in every view).
