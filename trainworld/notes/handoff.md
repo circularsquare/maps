@@ -1,55 +1,50 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d455ee97-22bd-4dd5-a487-a2a4e1449db1, name maps-15 [bf4395], since 2026-11-10 13:48
-Updated: 2026-11-10 15:15
+Updated: 2026-11-10 16:05 (maps-15 is past 500k tokens; ready for a fresh orchestrator)
 
 ## Now
 
-**LIVE = v0.2.1 = 2026-11-10d** (f5a2b979 on tw/release-021, website eff496a, verified ~15:45, all PASS). Before: 10c
-(33a8ccec). Due: purge R2 prefixes 2026-11-07c and 11-08 from
-2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b, 10c and the next.
-**v0.2.1 PUBLISHING** as R2 version 2026-11-10d from **f5a2b979** on branch `tw/release-021` (worktree `.tw-trees/hotfix`):
-= 2e2adc09 (master before T-3059 landed) + the hide commit (3172bd30 on master). Anita 15:10: "ok actually i think probably
-best to just hide "exact edits" and ship the fixes." So exact mode's toggle is hidden (`EXACT_EDITS = false` in
-LineInspector.tsx) and T-3059 rebuild is left out (landed on master after, untested by her). Run:
-`scratchpad\publish021.cmd` (snapbuild f5a2b979, tsc+i18n in .tw-snap, smoke8800 light+dark, deploy --version 2026-11-10d),
-log `scratchpad\publish021.log`. Then website `git add trainsworld/ trainworld/`, commit "anitabuilder", push (Anita said
-yes to this hotfix), `sh <c4 scratch>/pages_verify.sh <sha> 2026-11-10d`. Then snapbuild master again for 8800.
-`.tw-trees/hotfix` and branches tw/hotfix-10d (ed09d682, abandoned) and tw/release-021 can go after the publish.
-**Master = 3172bd30 + T-3059 archive** (pushed 52fa18bf; push soon). 8800 will be the release build until rebuilt.
-Anita's player report "All my high speed lines turned in tram lines": app-side only (state edge kind 1 read as tram: drawn
-as tram track, track panel "Tram track", 4-car stations, tram upkeep figure in the app); the sim and saves were never
-changed. Fixed by T-3078, in v0.2.1.
+**LIVE = v0.2.1 = R2 2026-11-10d**, built from f5a2b979 on branch `tw/release-021` (= 2e2adc09 + the Exact edits hide),
+website eff496a, verified all PASS. It has: HSR-as-tram fix (T-3078), tram/bus/transit wording (T-3064/3067/3068), picker
+inter-city row (T-3074), Load without inter-city trips + OOM fallback (T-3072/3073), 10c's work. Not in it: track rebuild
+(T-3059), Exact edits (hidden). `.tw-trees/hotfix` holds tw/release-021; branches tw/hotfix-10d (abandoned) and
+tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees/hotfix`).
+Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
+**No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
+**Website push needs her word each time** (the classifier refuses it otherwise).
+**Master = c4ae8f9e** (pushed 16992b65; push again soon). **8800 = 16992b65** (Exact edits via ?exact=1, track rebuild).
+Since 8800: T-3083 build tools close views (223a24dd), T-3082 curves 25 m (f6918f65), T-3084 bus/ferry edit route
+(16be9d0f, c4ae8f9e), T-3085 design (e95f1970). Rebuild 8800 (`checks/snapbuild.cmd <hash>`) after the running agents land;
+one smoke on master after the batch.
 
-v0.2.1 smoke8800 passed light+dark (f5a2b979), uploaded as 2026-11-10d, website eff496a pushed; pages_verify running.
-Master pushed at 16992b65. 8800 rebuilding at 16992b65.
-**Master = 16992b65**: T-3079 landed (ee29c42c); Exact edits shows only with `?exact` in the address
-(`EXACT_EDITS` in LineInspector.tsx): Anita tests on 8800 at localhost:8800/trainworld/?exact=1, then make it always on.
-After the v0.2.1 publish: snapbuild 16992b65 for 8800, one smoke on master (batch rule), push master.
-**8800 = 16992b65** (Exact edits with ?exact=1, track rebuild). **No silent updates any more** (Anita 15:50): every
-publish gets a version and an updates.ts entry.
-**Running (Sonnet, main tree):** curve25 (id a390bcca8c970904e, Vite 6172) T-3082 curves to 25 m; buildexit (id
-a950b264ff9052c93, Vite 6173) T-3083 build tools close line/station views; busedit (id af518479c4c4684d3, Vite 6174)
-T-3084 bus edit route: old route muted, node drags go through Edit route and undo. T-3086 reserved for busedit.
-Started 16:10: flyover (Opus, read-only, id a8360dea8512f2827) T-3085 design, aim to ship 11/11 ("start design tonight");
-rebuildfix (Opus, id a321fbe3706c5ae16, tree `.tw-trees/rebuild2`, Vite 6175) T-3087 [P1] rebuild-to-level bug + T-3088
-rebuild as tram and back; exactmap (Sonnet, id a3896fc2d95771b05, tree `.tw-trees/exact3`, Vite 6176) T-3089 + T-3080
-(hover highlight, ends removable, half dot, numbers and circles on the map; x and station click do the same). busedit also
-does ferries. Anita on Exact edits: "exact edits looks better".
-line1a (Opus, id ae2330e4f40883a14, main tree, diagnose first): T-3099 [P1] Line 1a (plain, interlined with Line 1) drawn
-with end loops, turning round Line 1's loop, strip crossing perpendicular (T-3081 folded in). Suspect: her Exact edits
-on/off left 1a a one-way closed list. Fix patches touching LineInspector/lines.rs come to me to route (exact3 owns them).
-Ids: flyover T-3092-94, rebuildfix T-3095-96, exactmap T-3097-98, line1a T-3100. Next free **T-3101**.
+**Running (all report to maps-15; a new orchestrator: they finish and report to whoever is orchestrating? No: subagents
+report to the session that spawned them. If maps-15 is closed they stop. Check their trees/files and adopt):**
+- exactmap (Sonnet, a3896fc2d95771b05, tree `.tw-trees/exact3`, Vite 6176): T-3089 + T-3080 Exact edits round 2 (hover
+  highlights a station, ends removable, half dot for one-way stops, visit numbers and empty circles on the map, x and station
+  click do the same). Ids T-3097-98. Land with `agent-tree.mjs land exact3`.
+- rebuildfix (Opus, a321fbe3706c5ae16, tree `.tw-trees/rebuild2`, Vite 6175): T-3087 [P1] rebuild-to-level bug (0/+1 to -1
+  gave 0 over water, -1 on land, many refused) + T-3088 rebuild as tram and back. Ids T-3095-96.
+- line1a (Opus, ae2330e4f40883a14, main tree, diagnose first): T-3099 [P1] Line 1a drawn with end loops, turning round Line 1's
+  loop, strip crossing perpendicular (T-3081 folded in). Anita's save: artifacts/trainworld/t3099-anita-amsterdam.save.
+  Patches touching LineInspector/lines.rs come back to route (exact3 owns those). Id T-3100.
+- flyauto (Sonnet, af6facdb45895347b, main tree, Vite 6177): told to DROP T-3092 (faked flyover) and revert its edits, finish
+  T-3093 (Single track back in the Build tab). Main tree tsc currently fails on its WIP `toolBar.singleTrack` key.
+- oneway (Sonnet, a40677ad25982f9ba, tree `.tw-trees/oneway`, Vite 6178): T-3094 one-way single track (edge flag, routing,
+  inspector switch, arrows, re-route opposing lines). Ids T-3101-02.
+- flyover design (Opus, a8360dea8512f2827, read-only): extending notes/T-3085.md with "Real flyovers" (Anita: real ramped
+  track that blocks the other level, ramp marks, no badge; auto with ramps on; built on T-3094).
 
-**Queued:** T-3070 non-home-based trips design agent (Anita: "can wait then start a design agent"); T-3063 bus loops partway
-(can start); T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch); T-3060 rebuild preview;
-T-3069 trams on real rail + street-snap icon. P3s: T-3042, T-3036, T-3027, T-3002/T-3003, T-3019, T-3011.
-Open with Anita: standalone version (answered: wrapper alone gains little). Master 0cc01142: a start-menu pick without the
-lite button clears the no-inter-city flag (Anita OK'd), not in v0.2.1.
-Next free id **T-3087**.
-Anita's priority plan (TODO.md, 2026-11-10): bug fixes; exact station mode; single track / flyover junctions (11/11);
-community tab, shared maps, country leaderboards (11/13); better schematic with generated timetables (next week); open source
-(next week).
+**Anita's answers today (for the record):** tram stop length on tram track = last tram length (as built); rebuild = full new
+price, price + confirm, final, refused pieces visible; "transit" for the whole system; Exact edits ship only once good;
+flyover cost fine; one-way on single track only; muted route = own colour at 40% + a little grey (done).
+**Open with Anita:** standalone version (answered: a wrapper alone gains little); Resend at 200% of 100/day today from
+account confirm/reset mails (feedback mail already off): wait and watch the 3,000/month cap, or paid plan, or confirm on
+request. T-3070 non-home-based trips design waits ("can wait then start a design agent").
+**Queued:** T-3063 bus loops partway; T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch);
+T-3060 rebuild preview; T-3069 trams on real rail + street-snap icon; Anita's plan: community tab, shared maps, country
+leaderboards (11/13), better schematic with timetables, open source (next week). P3s: T-3042, T-3036, T-3027, T-3002/3003,
+T-3019, T-3011. Next free id **T-3103**.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
