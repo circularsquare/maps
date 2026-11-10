@@ -296,6 +296,27 @@ body.resizing, body.resizing * { user-select: none; }
 @container lines (max-width: 308px) { .lines-box.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 374px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
 @container lines (max-width: 312px) { .lines-box.with-city.near-on .w-city { display: none; } }
+/* T-3020: the long words for million and billion make the figure columns wider (German, Russian and
+   Turkish by about 18 px each, French, Spanish and Portuguese by 8), and the drops come at a wider list */
+:root:lang(de), :root:lang(ru), :root:lang(tr) { --dock-w: clamp(344px, 26vw, 396px); }
+:root:lang(de) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(ru) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(tr) :is(.lines-box, .lines-box.with-city) .w-riders { width: 58px; }
+:root:lang(de) .lines-box .w-linemoney, :root:lang(ru) .lines-box .w-linemoney, :root:lang(tr) .lines-box .w-linemoney { width: 72px; }
+:root:lang(de) .w-num, :root:lang(ru) .w-num, :root:lang(tr) .w-num { width: 58px; }
+:root:lang(ru) .lines-box .w-trains { width: 44px; }
+:root:lang(ja) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(ko) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(zh) :is(.lines-box, .lines-box.with-city) .w-riders { width: 48px; }
+:root:lang(ja) .lines-box .w-linemoney, :root:lang(ko) .lines-box .w-linemoney, :root:lang(zh) .lines-box .w-linemoney { width: 62px; }
+:root:lang(ja) .w-num, :root:lang(ko) .w-num, :root:lang(zh) .w-num { width: 48px; }
+:root:lang(fr) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(es) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(pt) :is(.lines-box, .lines-box.with-city) .w-riders { width: 48px; }
+:root:lang(fr) .lines-box .w-linemoney, :root:lang(es) .lines-box .w-linemoney, :root:lang(pt) .lines-box .w-linemoney { width: 64px; }
+:root:lang(fr) .w-num, :root:lang(es) .w-num, :root:lang(pt) .w-num { width: 48px; }
+@container lines (max-width: 278px) { :root:lang(de) .lines-box .w-linemoney, :root:lang(ru) .lines-box .w-linemoney, :root:lang(tr) .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 344px) { :root:lang(de) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(ru) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(tr) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
+@container lines (max-width: 410px) { :root:lang(de) .lines-box.with-city.near-on .w-linemoney, :root:lang(ru) .lines-box.with-city.near-on .w-linemoney, :root:lang(tr) .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 348px) { :root:lang(de) .lines-box.with-city.near-on .w-city, :root:lang(ru) .lines-box.with-city.near-on .w-city, :root:lang(tr) .lines-box.with-city.near-on .w-city { display: none; } }
+@container lines (max-width: 262px) { :root:lang(fr) .lines-box .w-linemoney, :root:lang(es) .lines-box .w-linemoney, :root:lang(pt) .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 328px) { :root:lang(fr) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(es) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(pt) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
+@container lines (max-width: 394px) { :root:lang(fr) .lines-box.with-city.near-on .w-linemoney, :root:lang(es) .lines-box.with-city.near-on .w-linemoney, :root:lang(pt) .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 332px) { :root:lang(fr) .lines-box.with-city.near-on .w-city, :root:lang(es) .lines-box.with-city.near-on .w-city, :root:lang(pt) .lines-box.with-city.near-on .w-city { display: none; } }
 /* T-1791: a line group's row (chevron, its lines' chips, its name) and its lines indented under it;
    a dragged row's target outlined */
 /* T-1818: the figure columns never shrink, and a group's row has the same gaps as a line's, so the
@@ -387,6 +408,13 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-693: about six characters of a name kept (60 px with the ellipsis); a narrower list drops the
    star, then the money (each width: the columns, their 8 px gaps and that name) */
 .cities-box { container-type: inline-size; container-name: cities; }
+/* T-3020: the long words for million and billion widen the figure columns, so the same drops come at
+   a wider list. The bar goes first (350 px in German, Russian and Turkish, 330 in French, Spanish and
+   Portuguese), then the star and the money 20 px earlier. */
+@container cities (max-width: 296px) { :root:lang(de) .cities-box .rows.cities .city-star, :root:lang(ru) .cities-box .rows.cities .city-star, :root:lang(tr) .cities-box .rows.cities .city-star { display: none; } }
+@container cities (max-width: 275px) { :root:lang(de) .cities-box .c-money, :root:lang(ru) .cities-box .c-money, :root:lang(tr) .cities-box .c-money { display: none; } }
+@container cities (max-width: 350px) { :root:lang(de) .cities-box :is(.w-citybar, .city-bar), :root:lang(ru) .cities-box :is(.w-citybar, .city-bar), :root:lang(tr) .cities-box :is(.w-citybar, .city-bar) { display: none; } }
+@container cities (max-width: 330px) { :root:lang(fr) .cities-box :is(.w-citybar, .city-bar), :root:lang(es) .cities-box :is(.w-citybar, .city-bar), :root:lang(pt) .cities-box :is(.w-citybar, .city-bar) { display: none; } }
 @container cities (max-width: 276px) { .cities-box .rows.cities .city-star { display: none; } }
 @container cities (max-width: 255px) { .cities-box .c-money { display: none; } }
 /* T-1438: beside the city view on a phone, then the points and the bar */
@@ -576,8 +604,10 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .rows.waiting .bad, .rows.waiting .val { color: var(--bad); }
 table.ledger { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
 table.ledger th { font-weight: 400; color: var(--muted); font-size: 12px; text-align: right; padding: 0 0 2px; }
-table.ledger td { text-align: right; padding: 2px 0; white-space: nowrap; }
-table.ledger td:first-child { text-align: left; }
+table.ledger td { text-align: right; padding: 2px 0 2px 8px; white-space: nowrap; }
+table.ledger th:not(:first-child) { padding-left: 8px; }
+/* T-3020: a long label wraps so the figures keep their room */
+table.ledger td:first-child { text-align: left; padding-left: 0; white-space: normal; }
 table.ledger tr.b td { font-weight: 700; }
 /* T-447: the money history charts; T-1111: revenue blue, expenses red, in every theme */
 :root { --revenue: #3a78c9; --expense: #c8423b; }
@@ -864,6 +894,9 @@ rect.now { fill-opacity: .45; }
    another currency up to "−₩999,950" and a wider symbol. */
 .cash.cash-wide { width: 6em; }
 .cash { flex: none; width: 4.7em; font-variant-numeric: tabular-nums; }
+/* T-3020: the long words for million and billion ("−$893,6 Mio.", "$2,97 млрд") need a wider box */
+:root:lang(de) .cash, :root:lang(ru) .cash, :root:lang(tr) .cash, :root:lang(fr) .cash, :root:lang(es) .cash, :root:lang(pt) .cash { min-width: 5.8em; }
+:root:lang(ja) .cash, :root:lang(ko) .cash, :root:lang(zh) .cash { min-width: 5.2em; }
 /* T-832, T-861, T-1853, T-1868: the clock (the time and date on one line) sits right of the cash, behind a
    thin divider, and left of the speed buttons, in a box of fixed width (the widest date, "Wed May 28", fits)
    so nothing else moves day to day. The day and night picture is on the map (.map-sky). */
