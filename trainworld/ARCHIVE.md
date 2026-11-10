@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2937 to T-2940 (2026-11-09, tree busmanual): a bus line's Stops heading has Auto and Manual buttons, Stop spacing shows under Auto; a line's two ends are always drawn as end stops; manual stops are kept for the session when switching away and back; pop, snap and station sounds for bus and ferry edits, where trains have them.
 - T-2941 to T-2945 (2026-11-09, tree uinotes2): the issues list says buses and boats on those lines; crowded lines' rows read {name} crowding; a capacity row shows only when over capacity or with a wait of 2 s or more; smaller gap between the day rows; the note about line traffic is on the Crowded trains hover, where it is true (track at capacity dots show in every view).
 - T-2936 (2026-11-09, tree simpfont): Simplified Chinese uses Chill Round M, Zen Maru completed for GB2312 (Anita: "yup i love it. lets use chili"), hosted as 12 slices named Hanzi Round because of the Reserved Font Name, 1.53 MB. Credit line for the website's about page goes with the publish. notes/T-2936.md.
 - T-2930 to T-2934 (2026-11-09, tree uinotes): blueprint stations are blue like blueprint track (improvements on them already work, as planned); quad track back as a small two-icon control beside the track type; issues list button a red alert icon and number, clear of the attribution; "Try:" suggestion on issue hovers; riders-left-behind count in red.
