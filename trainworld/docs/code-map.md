@@ -941,10 +941,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
 - `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
-  extract and `ways.json` (read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
-  docstring; 0.01-6.6 MB, 1-32 s a region) and `index.json` (the regions built, which the track
+  extract, `ways.json` and `track_extra.json` (the ways tiles flag `x`, T-3043; read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
+  docstring; 0.01-7.5 MB, 1-32 s a region) and `index.json` (the regions built, which the track
   tool snaps inside, T-913; no regions given rewrites only it). Built for all 118 noritetsu regions
-  with drawn track (39.6 MB, about 5 min at 2 cores; T-727e), copied into the build. Rerun after
+  with drawn track (44.2 MB, about 5 min on 1 core; T-727e, T-3043), copied into the build. Rerun after
   noritetsu rebuilds a region.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib

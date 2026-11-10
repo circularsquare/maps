@@ -8,8 +8,7 @@
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
 line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps exactly the ways the
 game's real-network layer draws (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
-build_tiles.py, then SHOWN): subway, and rail that is main line or that a passenger route runs
-over, each with some line in ways.json running over it. The track tool snaps only to these
+build_tiles.py, then SHOWN): subway and rail, each with some line in ways.json running over it (T-3043). The track tool snaps only to these
 (DECISIONS 2026-10-19, T-727). Short groups of other track that join drawn track at two points or
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
 `gap_fillers`); they are not drawn, so a click never starts on one.
@@ -204,6 +203,9 @@ def build(cc, boxes):
     cid, cx, cy = c["id"], c["x"], c["y"]
     with open(NORI / "dist" / "data" / cc / "ways.json", encoding="utf-8") as f:
         on_line = {int(w) for w in json.load(f)["ways"]}
+    extra = NORI / "dist" / "data" / cc / "track_extra.json"
+    if extra.exists():  # track of a named line no section covers (T-3043), flagged x in the tiles
+        on_line |= set(json.loads(extra.read_text(encoding="utf-8")))
     on_route = set()
     for tags, members in rels.values():
         if tags.get("type") == "route":
@@ -222,8 +224,8 @@ def build(cc, boxes):
         shown = wid in on_line
         if rank >= 2 and pax:
             rank = 1
-        if rank >= 2 or (rw == "rail" and rank == 1 and not pax):
-            shown = False  # the layer draws other rail only where a passenger route runs
+        if rank >= 2:
+            shown = False
         # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
         if not shown and (tags.get("service") not in (None, "crossover") or tags.get("usage") in SPARE_USAGE):
             continue
