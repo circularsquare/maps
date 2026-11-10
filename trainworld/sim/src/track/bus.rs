@@ -40,6 +40,10 @@ pub const DEMAND_STOP_M: f64 = 2000.0;
 pub const STREET_DWELL_S: f64 = 20.0;
 /// Two stations closer than this along the road: the bus stops at the one nearer the route.
 const STATION_GAP_M: f64 = 100.0;
+/// A stop of the line this near a crossing (ground m, from where riders change: a station's own place)
+/// is its stop there (T-2952): half demand's `station_merge_m`, so two lines' stops at one crossing are
+/// always within its merge of each other.
+const CROSS_NEAR_M: f64 = 50.0;
 /// Two stations this far apart along the road get a stop between them even under `DEMAND_STOP_M`.
 const STATION_PAIR_GAP_M: f64 = 800.0;
 /// A stop on a line with its own spacing (`BusRoute::spacing`) serves this far of the route each
@@ -248,9 +252,9 @@ fn boxes_meet(a: &[f64; 4], b: &[f64; 4]) -> bool {
     a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3]
 }
 
-/// Where two routes cross: road metres along `a` of each crossing. Runs of segments are compared by
-/// their boxes first, so two long road-following routes cost little.
-fn crossings(a: &Poly, b: &Poly) -> Vec<f64> {
+/// Where two routes cross: road metres along `a` and along `b` of each crossing, in `a`'s order. Runs of
+/// segments are compared by their boxes first, so two long road-following routes cost little.
+fn crossings(a: &Poly, b: &Poly) -> Vec<(f64, f64)> {
     let mut out = vec![];
     let (ca, cb) = (chunk_boxes(a.pts), chunk_boxes(b.pts));
     for (ia, ba) in ca.iter().enumerate() {
@@ -270,14 +274,50 @@ fn crossings(a: &Poly, b: &Poly) -> Vec<f64> {
                     let t = ((r[0] - p[0]) * d2y - (r[1] - p[1]) * d2x) / den;
                     let u = ((r[0] - p[0]) * d1y - (r[1] - p[1]) * d1x) / den;
                     if (0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u) {
-                        out.push(a.road[i - 1] + t * (a.road[i] - a.road[i - 1]));
+                        out.push((a.road[i - 1] + t * (a.road[i] - a.road[i - 1]), b.road[j - 1] + u * (b.road[j] - b.road[j - 1])));
                     }
                 }
             }
         }
     }
-    out.sort_by(f64::total_cmp);
+    out.sort_by(|x, y| x.0.total_cmp(&y.0));
     out
+}
+
+/// The stations within `STATION_REACH_M` of a route, as (road m along it, node, ground m off it), in
+/// road order; of two within `STATION_GAP_M` along the road, the one nearer the route. `built_only`:
+/// constructed stations only.
+fn reach(net: &Network, poly: &Poly, built_only: bool) -> Vec<(f64, u32, f64)> {
+    let bb = poly.bbox();
+    let pad = STATION_REACH_M * net.k_at(0.5 * (bb[1] + bb[3])) * 1.1 + 1.0;
+    let mut st: Vec<(f64, u32, f64)> = vec![];
+    for n in 0..net.node_count() as u32 {
+        let i = n as usize;
+        if !net.is_station(n) || (built_only && !net.node_built[i]) {
+            continue;
+        }
+        let (x, y) = (net.node_x[i], net.node_y[i]);
+        if x < bb[0] - pad || x > bb[2] + pad || y < bb[1] - pad || y > bb[3] + pad {
+            continue;
+        }
+        let (g, d) = poly.project(net, x, y);
+        if d <= STATION_REACH_M {
+            st.push((g, n, d));
+        }
+    }
+    st.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+    let mut kept: Vec<(f64, u32, f64)> = vec![];
+    for c in st {
+        match kept.last_mut() {
+            Some(k) if c.0 - k.0 < STATION_GAP_M => {
+                if c.2 < k.2 {
+                    *k = c;
+                }
+            }
+            _ => kept.push(c),
+        }
+    }
+    kept
 }
 
 /// A line of points thinned to within `tol` (plane units) of the original.
@@ -401,36 +441,8 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     }
     let poly = Poly::new(net, pts, kinds);
     let len = poly.road_len();
-    let bb = poly.bbox();
-    let pad = STATION_REACH_M * net.k_at(0.5 * (bb[1] + bb[3])) * 1.1 + 1.0;
-    // stations within reach: (road s, node, distance)
-    let mut st: Vec<(f64, u32, f64)> = vec![];
-    for n in 0..net.node_count() as u32 {
-        let i = n as usize;
-        if !net.is_station(n) || (built_only && !net.node_built[i]) {
-            continue;
-        }
-        let (x, y) = (net.node_x[i], net.node_y[i]);
-        if x < bb[0] - pad || x > bb[2] + pad || y < bb[1] - pad || y > bb[3] + pad {
-            continue;
-        }
-        let (g, d) = poly.project(net, x, y);
-        if d <= STATION_REACH_M {
-            st.push((g, n, d));
-        }
-    }
-    st.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
-    let mut kept: Vec<(f64, u32, f64)> = vec![];
-    for c in st {
-        match kept.last_mut() {
-            Some(k) if c.0 - k.0 < STATION_GAP_M => {
-                if c.2 < k.2 {
-                    *k = c;
-                }
-            }
-            _ => kept.push(c),
-        }
-    }
+    let stations = reach(net, &poly, built_only);
+    let mut kept = stations.clone();
     // fixed stops: (road s, kind, station)
     let mut fixed: Vec<(f64, u8, Option<u32>)> = vec![];
     let closed = is_closed(pts);
@@ -456,7 +468,10 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
             fixed.push((len, KIND_END, None));
         }
     }
-    let near_fixed = |s: f64, fixed: &[(f64, u8, Option<u32>)]| fixed.iter().any(|f| (f.0 - s).abs() < STATION_REACH_M);
+    // T-2952: a crossing is decided alike from both lines' sides. Two crossings of the same two lines within
+    // STATION_REACH_M of each other along both are one, the first in the lower-numbered line's order. Where
+    // one station is a stop of both within STATION_REACH_M of the crossing along each, they change there and
+    // neither stops at the crossing; else each stops at it unless a stop of its own is within CROSS_NEAR_M.
     let mut cross: Vec<f64> = vec![];
     for o in 0..net.line_count() as u32 {
         if o == l || !net.line_ok(o) || matches!(rule, StopRule::Hand(_)) {
@@ -466,11 +481,38 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
         if built_only && !r.built {
             continue;
         }
-        cross.extend(crossings(&poly, &Poly::new(net, &r.points, &r.kinds)));
+        let other = Poly::new(net, &r.points, &r.kinds);
+        let mut all = crossings(&poly, &other);
+        if o < l {
+            all.sort_by(|x, y| x.1.total_cmp(&y.1));
+        }
+        let mut xs: Vec<(f64, f64)> = vec![];
+        for x in all {
+            if !xs.iter().any(|k| (k.0 - x.0).abs() < STATION_REACH_M && (k.1 - x.1).abs() < STATION_REACH_M) {
+                xs.push(x);
+            }
+        }
+        let near_station = |s: f64| stations.iter().any(|k| (k.0 - s).abs() < STATION_REACH_M);
+        let theirs = if rule == StopRule::Auto && r.rule() == StopRule::Auto && xs.iter().any(|x| near_station(x.0)) { reach(net, &other, r.built) } else { vec![] };
+        for (sa, sb) in xs {
+            let shared = stations.iter().any(|k| (k.0 - sa).abs() < STATION_REACH_M && theirs.iter().any(|t| t.1 == k.1 && (t.0 - sb).abs() < STATION_REACH_M));
+            if !shared {
+                cross.push(sa);
+            }
+        }
     }
     cross.sort_by(f64::total_cmp);
+    let place = |f: &(f64, u8, Option<u32>)| match f.2 {
+        Some(n) => (net.node_x[n as usize], net.node_y[n as usize]),
+        None => poly.at_road(f.0),
+    };
     for s in cross {
-        if !near_fixed(s, &fixed) {
+        let (x, y) = poly.at_road(s);
+        let near = |f: &(f64, u8, Option<u32>)| {
+            let (px, py) = place(f);
+            (px - x).hypot(py - y) / net.k_at(y) <= CROSS_NEAR_M
+        };
+        if !fixed.iter().any(near) {
             fixed.push((s, KIND_CROSSING, None));
         }
     }

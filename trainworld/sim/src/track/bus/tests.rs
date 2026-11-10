@@ -176,8 +176,10 @@ fn crossings_of_long_routes_are_found_in_road_metres() {
     let (pa, pb) = (Poly::new(&net, &a, &kinds), Poly::new(&net, &b, &[]));
     let x = crossings(&pa, &pb);
     assert_eq!(x.len(), 1);
-    let (cx, _) = pa.at_road(x[0]);
+    let (cx, _) = pa.at_road(x[0].0);
     assert!((cx - 3275.0).abs() < 1e-6);
+    // and along b: 510 m of straight route to y = 10, in road metres
+    assert!((x[0].1 - 510.0 * ROAD_FACTOR).abs() < 1e-6, "{x:?}");
     assert!(crossings(&pb, &pa).len() == 1);
 }
 

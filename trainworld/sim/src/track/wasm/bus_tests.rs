@@ -152,6 +152,39 @@ fn stops_follow_stations_built_near_the_route_and_crossings() {
     assert!(stops(&a, b).iter().any(|c| c[5] == n1 as f64), "a planned bus previews planned stations");
 }
 
+/// T-2952 (found in T-2949): two bus lines crossing near a station only one of them reaches.
+#[test]
+fn crossing_bus_lines_share_one_stop_or_a_station() {
+    let mut a = api();
+    let (_, st) = rail(&mut a, 4, 2000.0);
+    let s1 = st[1] as f64;
+    // A runs 150 m north of the rail line: its stop for the station at x = 2000 is 150 m along from where B crosses
+    let ln = a.new_line_id();
+    assert_eq!(a.set_bus_line(ln, &[-1000.0, 150.0, 1.0, 5000.0, 150.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "A".into()), 0, "{}", a.issues());
+    // B crosses A at (2150, 150) square to the line from the station, so it passes no nearer than 212 m: out of reach
+    let (cx, cy, d) = (2150.0, 150.0, std::f64::consts::FRAC_1_SQRT_2);
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[cx - 2000.0 * d, cy + 2000.0 * d, 1.0, cx + 2000.0 * d, cy - 2000.0 * d, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    let cross = |a: &TrackApi, l: u32| stops(a, l).into_iter().filter(|c| c[4] == KIND_CROSSING as f64).collect::<Vec<_>>();
+    let (p, q) = (cross(&a, ln), cross(&a, b));
+    assert_eq!((p.len(), q.len()), (1, 1), "both stop at the crossing: {p:?} {q:?}");
+    assert!((p[0][1] - cx).abs() < 1e-6 && (p[0][2] - cy).abs() < 1e-6 && (q[0][1] - cx).abs() < 1e-6 && (q[0][2] - cy).abs() < 1e-6, "{p:?} {q:?}");
+    assert!(stops(&a, ln).iter().any(|c| c[5] == s1), "A still stops at the station");
+    assert!(!stops(&a, b).iter().any(|c| c[5] == s1), "B is out of its reach");
+    // C crosses A 100 m east of the station and reaches it too: the two change there, and neither stops at the crossing
+    let c = a.new_line_id();
+    assert_eq!(a.set_bus_line(c, &[2100.0, 2000.0, 1.0, 2100.0, -2000.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "C".into()), 0, "{}", a.issues());
+    assert!(stops(&a, c).iter().any(|x| x[5] == s1), "C stops at the station");
+    let at_c = |a: &TrackApi, l: u32| cross(a, l).into_iter().filter(|x| (x[1] - 2100.0).abs() < 1.0 && (x[2] - 150.0).abs() < 1.0).count();
+    assert_eq!((at_c(&a, ln), at_c(&a, c)), (0, 0), "{:?} {:?}", cross(&a, ln), cross(&a, c));
+    // B and C cross far from any station: both stop there
+    assert_eq!((cross(&a, b).len(), cross(&a, c).len()), (2, 1), "{:?} {:?}", cross(&a, b), cross(&a, c));
+    // by hand, B keeps only its own stops; A still stops where B crosses
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert!(cross(&a, b).is_empty());
+    assert_eq!(cross(&a, ln).len(), 1);
+}
+
 #[test]
 fn a_bus_route_needs_length_and_lines_without_buses_save_as_before() {
     let mut a = api();

@@ -1587,6 +1587,14 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   every 2 km of road between (`k = ceil(gap / 2 km) - 1`, at least one between two stations 800 m
   or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
   route stops at constructed stations and crosses constructed routes; a planned one previews all.
+- **Crossings** (T-2952) are decided alike from both lines, so two crossing lines always have one place
+  to change at. Where one station is a stop of both within 200 m of the crossing along each, they change
+  there and neither stops at the crossing. Otherwise both stop at the crossing, except a line with a stop
+  of its own within 50 m of it (`CROSS_NEAR_M`; a station's from its own place), which stops there only:
+  half demand's 100 m merge, so the two lines' stops are always one place for demand. Two crossings of
+  the same two lines within 200 m of each other along both are one, the first along the lower-numbered
+  line. A line with its own spacing or stops by hand keeps its own stops (below); a line crossing it
+  still stops at the crossing, where a hand stop placed at it is shared.
   Any edit to a station or a line places every bus line's stops again. Every stop is on the route
   (T-2982): a station's stop where the route passes nearest the station, never on the station's
   centre (`BusStop::x`, `y`). Its id is still the station's node, so riders change between bus and
