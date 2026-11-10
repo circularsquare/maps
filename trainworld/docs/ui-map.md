@@ -953,7 +953,7 @@ boundary replaces its coarse outline when it loads for a view between zoom 5 and
 zones share is drawn once, as a line of the first zone loaded, so every edge has the same weight
 (`OutlineEdges`; the coarse file keeps shared runs identical in both zones). The focused zone keeps
 a thin boundary at closer zooms (darker outside stroke at 36%, lighter inside at 14%), and draws
-the borders it shares itself, so a neighbour's outline leaves those out. A subtle shade darkens the basemap outside its exact footprint (with no zone in view, it fades out between z8 and z10, T-2900),
+the borders it shares itself, so a neighbour's outline leaves those out. A subtle shade darkens the basemap outside its exact footprint (with no zone in view or within 25 km of its box, it fades out between z8 and z10, T-2900, T-2946; a zone near keeps it at every zoom, so the edge of the data shows),
 enclaves included, with its sea (the coarse file's `water`) left clear like its land [T-1145]: that
 union of footprint and sea is made in a worker (`workers/focusShade.worker.ts`), the shade over the
 sea standing until it arrives. These are demand areas, not municipal limits. They sit under labels and game

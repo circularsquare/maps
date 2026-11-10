@@ -33,9 +33,12 @@ const OUTLINE_MAX_ZOOM = 10.5;
 const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
 /** zones' outlines sent to the map in one task (T-1026) */
 const OUTLINES_A_TASK = 100;
-/** T-2900: with no zone in view, the outside shade fades out between these zooms (a player building
- * where there is no data sees the plain basemap); a zone in view keeps it at every zoom */
+/** T-2900, T-2946: with no zone in view or just off it, the outside shade fades out between these zooms
+ * (a player building where there is no data sees the plain basemap); with one near, it stays at every zoom,
+ * so the edge of the data is always to be seen */
 const SHADE_FADE_ZOOM = [8, 10] as const;
+/** how far past a zone's box the shade stays, m: a pan across the edge does not toggle it */
+const SHADE_STAY_M = 25000;
 /** how long the shade takes to come back or go when a zone enters or leaves the view, ms */
 const SHADE_FADE_MS = 300;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -228,7 +231,7 @@ export function startCityBoundaries(map: MlMap): () => void {
   };
   const follow = () => {
     // every registered zone counts, a realm not shown too: its ground has data, and keeps its look
-    const b = map.getBounds(), none = !zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).length;
+    const b = map.getBounds(), none = !zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth(), SHADE_STAY_M).length;
     if (none !== noZoneInView) {
       noZoneInView = none;
       paintFade();
