@@ -65,7 +65,9 @@ const DASH_WIDTHS = 3.2, DASH_ON = 0.6;
 const FLAG_TRANSFER = 8;
 /** T-3084: the route a bus line's Edit route is replacing, drawn muted under the draft */
 const FLAG_MUTE = 16;
-const MUTE_ALPHA = 0.5;
+/** Anita 2026-11-10: the line's own colour at 40% strength with a little grey mixed in, not plain grey */
+const MUTE_ALPHA = 0.4;
+const MUTE_GREY = "0.3";
 const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
 /** T-2991: an arrow's direction is taken over this many ground metres either side, so one at a
  * corner leans with the turn; how far its barbs reach past the route each side, device px at least
@@ -183,7 +185,8 @@ void main() {
       || (xfer && (u_pass != 1 || u_xfer < 0.5))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool paint = u_pass == 1 && !bp && !xfer && !mute;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
-  vec3 col = mute ? u_xfer_rgb : paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
+  vec3 own = vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
+  vec3 col = mute ? mix(own, u_xfer_rgb, ${MUTE_GREY}) : paint && a_col < -1.5 ? u_track_rgb : own;
   float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
