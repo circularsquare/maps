@@ -370,8 +370,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         const inter = !own || isOwn ? total(c.place) : t;
         const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: tPlace(c.id, c.name) });
         const interBar = modeBar(inter.rail, 0, Math.max(0, inter.all - inter.rail));
+        // T-3074: before any market result the inter-city figure is unknown, not 0: leave its row out
         return !own
-          ? [localLine, localBar, interLine, interBar, ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
+          ? [localLine, localBar, ...(pairsIn ? [interLine, interBar] : []), ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
           : isOwn
             ? [interLine, interBar, `(${localLine})`]
             : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
