@@ -18,7 +18,7 @@ export interface Update {
 /** When v0.1 went out: set at publish. */
 const V0_1_AT = "2026-11-09T15:00:00Z";
 
-/** When v0.2 went out: the orchestrator sets this at publish (placeholder, 2026-11-10 in the evening). */
+/** When v0.2 went out: set at publish. */
 const V0_2_AT = "2026-11-10T17:30:00Z";
 
 export const UPDATES: Update[] = [
