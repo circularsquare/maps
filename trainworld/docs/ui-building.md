@@ -882,7 +882,7 @@ running line's trains stop at then wins over one they do; then the nearest.
   stop says "Click to stop looping back here" (tier 8) and the click opens it (`openLoop`). The stop
   list shows a turned line one row per station (`game/turnedLine.ts`, T-3025; ui-inspectors.md): a
   cross takes a station out on every pass, the turn's row has a button that opens the loop, and rows
-  do not drag. A hand-ordered line's rows stay one per pass while its stops are edited. The markers take no pointer events (the map's pick handles clicks), so the wheel
+  do not drag. Adding passed stations on a turned line goes through `insertStop`, as a map click does (T-3039). A one-way stop's marker is filled on the half to the right of the way the train goes (T-3041). A hand-ordered line's rows stay one per pass while its stops are edited. The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

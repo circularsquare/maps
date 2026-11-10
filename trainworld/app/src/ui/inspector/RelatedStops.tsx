@@ -40,8 +40,11 @@ export function useTightTimes(ref: RefObject<HTMLElement | null>) {
   }, [ref.current]);
 }
 
-export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder, onAdd, transfers }: {
+export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder, onAdd, transfers, rows: turnRows }: {
   l: LineInput;
+  /** T-3040: a turned line is drawn as one row per station: each row's first stop index on the line; the rows' stops
+   * stand for every pass of the station, and what the other lines meet on the way back is left out */
+  rows?: { i: number; occ: number[] }[];
   stopS: number[];
   colour: string;
   /** the line is a loop drawn once round */
@@ -63,16 +66,25 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
 }) {
   const w = world.value!;
   const answer = useClockQuery({ what: "lineRelated", line: l.num }, [l.num, w.version], (d) => ({ line: l.num, groups: decodeRelated(d) }));
-  const groups: RelatedGroup[] = answer?.line === l.num ? answer.groups : [];
+  const rowOf = new Map<number, number>();
+  turnRows?.forEach((r, k) => r.occ.forEach((j) => rowOf.set(j, k)));
+  const lastS = turnRows ? stopS[turnRows[turnRows.length - 1].i] : Infinity;
+  const groups: RelatedGroup[] = (answer?.line === l.num ? answer.groups : []).flatMap((g) => {
+    if (!turnRows) return [g];
+    if (g.sL0 > lastS + 1) return [];
+    const meetings = g.meetings.filter((m) => m.sL <= lastS + 1).map((m) => ({ ...m, stopL: rowOf.get(m.stopL) ?? -1 }));
+    return [{ ...g, meetings, own: g.own.filter((o) => o.sL <= lastS + 1) }];
+  });
+  const nStops = turnRows ? turnRows.length : l.stops.length;
   const ul = useRef<HTMLUListElement>(null);
   useTightTimes(ul);
   // the rows' centres in the list, and the room kept above and below it for ends past the rows
   const [geo, setGeo] = useState<{ ys: number[]; width: number; pad: [number, number] }>({ ys: [], width: 340, pad: [0, 0] });
   const byNum = linesByNum(w), names = stationNames(w);
-  const stopName = (line: number, stop: number) => names.get(byNum.get(line)?.stops[stop] ?? "") ?? "";
+  const stopName = (line: number, stop: number) => names.get(byNum.get(line)?.stops[line === l.num && turnRows ? turnRows[stop]?.i ?? -1 : stop] ?? "") ?? "";
   const addAt = (line: number, stop: number) => { const s = byNum.get(line)?.stops[stop]; return s && adder ? adder(s) : null; };
   const lay = relatedLayout(groups, {
-    line: l.num, stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
+    line: l.num, stopS: turnRows ? turnRows.map((r) => stopS[r.i]) : stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
     rowY: (i) => geo.ys[i] ?? i * 25 + 12.5,
     lineName: (n) => byNum.get(n)?.name ?? "",
     stopName,
@@ -100,7 +112,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   });
   const W = lay.width;
   const rows: ComponentChildren[] = [];
-  const n = l.stops.length;
+  const n = nStops;
   lay.rows.forEach((r) => {
     // the stations passed between two stops go between their rows, whichever way up
     if (after && (flip ? r.lStop >= 0 && r.lStop < n - 1 : r.lStop > 0)) rows.push(after(flip ? r.lStop : r.lStop - 1));
@@ -118,7 +130,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
     );
   });
   return (
-    <div class="related" style={{ "--gw": W + "px", "--spine": lay.spineX + "px", paddingTop: geo.pad[0] + "px", paddingBottom: geo.pad[1] + "px" }}>
+    <div class="related" style={{ "--c": colour, "--gw": W + "px", "--spine": lay.spineX + "px", paddingTop: geo.pad[0] + "px", paddingBottom: geo.pad[1] + "px" }}>
       <svg class="related-draw" width={W} height={listH + geo.pad[0] + geo.pad[1]}>
         <g transform={`translate(0 ${geo.pad[0]})`}>
         {lay.rows.map((r, i) => bars[i].map((n, k) => (

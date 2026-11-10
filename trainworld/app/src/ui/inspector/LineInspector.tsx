@@ -662,17 +662,19 @@ function RailLineInspector({ id }: { id: string }) {
   };
   const addGaps = (gs: number[]) => {
     const add = passed.filter((p) => gs.includes(p.gap));
-    // a turned line's stem is passed twice: a station added on the way out is added on the way back too
-    if (turned) {
-      for (const p of [...add].reverse()) {
-        const a = l.stops[p.gap], b = l.stops[p.gap + 1];
-        const back = l.stops.findIndex((x, k) => k !== p.gap && x === b && l.stops[k + 1] === a);
-        if (back >= 0) add.push({ gap: back, node: p.node });
-      }
-    }
-    const stops = l.stops.flatMap((s, i) => [Number(s), ...add.filter((p) => p.gap === i).map((p) => p.node)]);
+    const build = (list: { gap: number; node: number }[]) => l.stops.flatMap((s, i) => [Number(s), ...list.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
-    return setStops(stops);
+    // T-3039: on a turned line each station goes in as the map click puts it in (`insertStop`: both passes of the
+    // stem, and the turn moves to it where it lies between the turn station and the loop)
+    if (turned) {
+      return (async () => {
+        const nodes = [...new Set([...add].sort((a, b) => a.gap - b.gap).map((p) => p.node))];
+        for (let k = 0; k < nodes.length; k++) if (!(await edit({ op: "insertStop", line: l.num, station: nodes[k] }, false, k > 0)).ok) break;
+        const now = world.peek()?.save.lines.find((x) => x.num === l.num);
+        if (now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: now.stops.map(Number) };
+      })();
+    }
+    return setStops(build(add));
   };
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => tr("inspector.stations", { count: n });
@@ -818,7 +820,7 @@ function RailLineInspector({ id }: { id: string }) {
     }
     const dot = dotClick(i, row);
     return (
-      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + dropClass(i)} data-r={drawn ? true : undefined}
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (row && row.occ.length === 1 ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
         data-stop={i} onPointerDown={(e) => rowDown(e, i)}>
         {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
         {row?.arc === "end" && <i class="dir" aria-hidden="true" />}
@@ -890,7 +892,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <div class="h divided">
         {tr("lineInspector.stops")}
-        {l.stops.length >= 2 && !turned && (
+        {l.stops.length >= 2 && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
@@ -901,10 +903,13 @@ function RailLineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
-      {related && !turned ? (
-        <div class={orderClass} onDblClick={onListDblClick}>
-          <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} flip={flip} lRow={stopRow} after={editingStops ? afterStop : undefined}
-            adder={editingStops ? adder : undefined} onAdd={(node) => void stopEdit({ op: "stopPassed", line: l.num, station: node })} transfers={(i, drawn) => transferLines(l, i, drawn)} />
+      {related ? (
+        <div class={orderClass + (turned ? " turned-rel" : "")} onDblClick={onListDblClick}>
+          <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce && !turned} flip={flip} rows={turned?.rows}
+            lRow={turned ? (k, drawn, marks) => stopRow(turned.rows[k].i, drawn, marks, turned.rows[k]) : stopRow}
+            after={editingStops ? (turned ? (k) => afterStop(turned.rows[k].i, turned.rows[k].arc === "start" || turned.rows[k].arc === "mid") : afterStop) : undefined}
+            adder={editingStops ? adder : undefined} onAdd={(node) => void stopEdit({ op: "stopPassed", line: l.num, station: node })}
+            transfers={(i, drawn) => (turned ? transferLines(l, turned.rows[i].i, drawn, true) : transferLines(l, i, drawn))} />
         </div>
       ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce && !turned} ends={turned ? [turned.tipTop, turned.tipBottom] : undefined} order={orderClass} onDblClick={onListDblClick}>
         {turned

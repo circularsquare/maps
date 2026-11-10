@@ -713,6 +713,8 @@ rect.now { fill-opacity: .45; }
 .stops li::after { content: ""; position: absolute; left: 10px; top: 50%; transform: translate(calc(-50% + var(--soft)), -50%); box-sizing: content-box;
                    width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .stops li.xfer::after { width: 10px; height: 10px; }
+/* T-3041: a stop served one way is filled on the loop's side only */
+.stops li.oneway::after { background: linear-gradient(90deg, var(--c) 50%, #fff 50%); }
 /* T-646: the stations a line passes, offered as stops (no dot), and those about to be added (faint dot) */
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
@@ -800,7 +802,10 @@ rect.now { fill-opacity: .45; }
 .stops.traffic li.loop-end::before { display: block; }
 /* T-3025: a turned line's loop, a bend at the side of the straight strip, leaving the station it turns at and
    coming back in at the loop's last station; the strip is shifted right to make room for it */
-.stops.turned { margin-left: 12px; }
+.stops.turned, .turned-rel { margin-left: 12px; }
+.stops.related-rows .arc { left: calc(var(--spine) - 17px); }
+.stops.related-rows .arc.start, .stops.related-rows .arc.end { width: 17px; }
+.stops.related-rows .dir { left: calc(var(--spine) - 16.5px); }
 .stops .arc { position: absolute; left: -7px; top: 0; bottom: 0; width: 0; border-left: 6px solid var(--c); pointer-events: none; }
 .stops .arc.start { top: calc(50% - 3px); width: 17px; border-top: 6px solid var(--c); border-top-left-radius: 12px; }
 .stops .arc.end { bottom: calc(50% - 3px); width: 17px; border-bottom: 6px solid var(--c); border-bottom-left-radius: 12px; }

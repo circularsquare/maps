@@ -19,6 +19,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
+import { turnedLine } from "../game/turnedLine";
 import { queryClock } from "../workers/clockClient";
 import { GapFlash } from "./gapFlash";
 import { tagLines } from "./labelLayout";
@@ -145,6 +146,8 @@ export class StopMarkers {
   private names = new Map<string, string>();
   private line: LineInput | null = null;
   private colour = "#888";
+  /** T-3041: the stops of a turned line served one way, with the stops either side of them on the walk */
+  private oneWay = new Map<string, [string, string]>();
   private index = new Map<string, number>();
   private netSeen: unknown = null;
   private size = 0;
@@ -198,6 +201,9 @@ export class StopMarkers {
       if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's are map/busStops.ts's (T-2891)
       if (!this.line) return;
       this.colour = this.line.colour;
+      this.oneWay = new Map();
+      const turned = turnedLine(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
+      for (const r of turned?.rows ?? []) if (r.occ.length === 1 && r.occ[0] > 0) this.oneWay.set(this.line.stops[r.occ[0]], [this.line.stops[r.occ[0] - 1], this.line.stops[r.occ[0] + 1]]);
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
@@ -285,6 +291,7 @@ export class StopMarkers {
       m.y = y;
       m.d = stop ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      m.el.style.background = stop ? this.halfFill(id, n, x, y) : "";
     }
     // stations that left the list (an undo): their markers go
     for (const [id, m] of this.marks)
@@ -292,6 +299,24 @@ export class StopMarkers {
         m.el.remove();
         this.marks.delete(id);
       }
+  }
+
+  /** T-3041: a stop served one way is filled on one half only, split along the track, the half on the right
+   * of the way the train goes (from the stop before to the stop after); "" for any other marker. */
+  private halfFill(id: string, n: NonNullable<Overlay["renderer"]["net"]>, x: number, y: number): string {
+    const nb = this.oneWay.get(id);
+    if (!nb) return "";
+    const at = (s: string): [number, number] | null => {
+      const i = this.index.get(s);
+      return i === undefined ? null : this.overlay.toScreen(n.stations[i * 3], n.stations[i * 3 + 1]);
+    };
+    const a = at(nb[0]), b = at(nb[1]);
+    if (!a || !b) return "";
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    if (!dx && !dy) return "";
+    // the right-hand normal on screen (y down) is (-dy, dx); a CSS gradient angle points (sin, -cos)
+    const deg = (Math.atan2(-dy, -dx) * 180) / Math.PI;
+    return `linear-gradient(${deg.toFixed(1)}deg, #fff 50%, var(--c) 50%)`;
   }
 
   /** The station whose marker is under a map point (CSS px), preferring stops, then the ones that
