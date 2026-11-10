@@ -629,7 +629,7 @@
   "days.shortTuesday": "вт",
   "days.shortWednesday": "ср",
   "days.withYear": "{date}, год {year}",
-  "deleteHint.select": "Чтобы удалить много объектов сразу, используйте инструмент «Выбрать» ({key}).",
+  "deleteHint.select": "Чтобы удалить много объектов сразу, используйте инструмент «Выбрать» {key}.",
   "deleteHint.selectTouch": "Чтобы удалить много объектов сразу, используйте инструмент «Выбрать».",
   "deleteHint.title": "Подсказка",
   "demand.otherPlaces": "Остальные места: {name}",

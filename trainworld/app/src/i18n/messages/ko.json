@@ -629,7 +629,7 @@
   "days.shortTuesday": "화",
   "days.shortWednesday": "수",
   "days.withYear": "{year}년차 {date}",
-  "deleteHint.select": "많은 것을 한 번에 지우려면 선택 도구({key})를 사용하세요.",
+  "deleteHint.select": "많은 것을 한 번에 지우려면 선택 도구 {key}를 사용하세요.",
   "deleteHint.selectTouch": "많은 것을 한 번에 지우려면 선택 도구를 사용하세요.",
   "deleteHint.title": "힌트",
   "demand.otherPlaces": "{name}의 다른 지역",

@@ -629,7 +629,7 @@
   "days.shortTuesday": "Di",
   "days.shortWednesday": "Mi",
   "days.withYear": "{date}, Jahr {year}",
-  "deleteHint.select": "Um viele Dinge auf einmal zu löschen, nutze das Werkzeug Auswählen ({key}).",
+  "deleteHint.select": "Um viele Dinge auf einmal zu löschen, nutze das Werkzeug Auswählen {key}.",
   "deleteHint.selectTouch": "Um viele Dinge auf einmal zu löschen, nutze das Werkzeug Auswählen.",
   "deleteHint.title": "Tipp",
   "demand.otherPlaces": "Andere Orte in {name}",

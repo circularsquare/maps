@@ -521,7 +521,7 @@
   "continents.southAmerica": "South America",
   "continents.oceania": "Oceania",
   "deleteHint.title": "Hint",
-  "deleteHint.select": "To delete lots of things at once, use the Select tool ({key}).",
+  "deleteHint.select": "To delete lots of things at once, use the Select tool {key}.",
   "deleteHint.selectTouch": "To delete lots of things at once, use the Select tool.",
   "days.kindWeekday": "Weekday",
   "days.perWeekday": "per weekday",

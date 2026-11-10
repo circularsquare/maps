@@ -15,7 +15,8 @@ import { moneyState } from "../game/money";
 import { touchInput } from "../map/touch";
 import { TOOLS } from "./toolKeys";
 import { ask, selection, tab } from "../game/ui";
-import { t } from "../i18n";
+import type { ComponentChildren } from "preact";
+import { t, tRich } from "../i18n";
 import { gamesLoaded } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 import { LeaderboardButton } from "./Leaderboard";
@@ -65,7 +66,7 @@ export function Medal({ metal, of }: { metal: Metal; of: RibbonOf }) {
   );
 }
 
-interface Toast { id: number; title: string; line?: string; medal?: { metal: Metal; of: RibbonOf }; hint?: boolean }
+interface Toast { id: number; title: string; line?: ComponentChildren; medal?: { metal: Metal; of: RibbonOf }; hint?: boolean }
 const HOLD_MS = 5000, FADE_MS = 1200, GAP_MS = 1000, MAX_SHOWN = 3;
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
@@ -87,7 +88,7 @@ function toastsFor(keys: string[], got: Record<string, Achieved>): Toast[] {
 // T-3026: a hint rides the same toasts (a help mark, and a click only dismisses it); sandbox games get it too
 setHintShower(() => {
   const select = TOOLS.find(([id]) => id === "blueprint")![3];
-  const line = touchInput.peek() ? t("deleteHint.selectTouch") : t("deleteHint.select", { key: select });
+  const line = touchInput.peek() ? t("deleteHint.selectTouch") : tRich("deleteHint.select", { key: <span class="key">{select}</span> });
   waiting.value = [...waiting.peek(), { id: nextId++, title: t("deleteHint.title"), line, hint: true }];
 });
 

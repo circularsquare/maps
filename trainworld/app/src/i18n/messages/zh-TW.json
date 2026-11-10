@@ -629,7 +629,7 @@
   "days.shortTuesday": "週二",
   "days.shortWednesday": "週三",
   "days.withYear": "第{year}年{date}",
-  "deleteHint.select": "要一次刪除很多東西，可以用選取工具（{key}）。",
+  "deleteHint.select": "要一次刪除很多東西，可以用選取工具 {key}。",
   "deleteHint.selectTouch": "要一次刪除很多東西，可以用選取工具。",
   "deleteHint.title": "提示",
   "demand.otherPlaces": "{name}的其他地方",

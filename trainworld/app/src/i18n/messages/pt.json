@@ -629,7 +629,7 @@
   "days.shortTuesday": "ter",
   "days.shortWednesday": "qua",
   "days.withYear": "{date}, ano {year}",
-  "deleteHint.select": "Para excluir muitas coisas de uma vez, use a ferramenta Selecionar ({key}).",
+  "deleteHint.select": "Para excluir muitas coisas de uma vez, use a ferramenta Selecionar {key}.",
   "deleteHint.selectTouch": "Para excluir muitas coisas de uma vez, use a ferramenta Selecionar.",
   "deleteHint.title": "Dica",
   "demand.otherPlaces": "Outros lugares de {name}",

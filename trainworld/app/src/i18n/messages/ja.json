@@ -629,7 +629,7 @@
   "days.shortTuesday": "火",
   "days.shortWednesday": "水",
   "days.withYear": "{date}、{year}年目",
-  "deleteHint.select": "たくさんのものを一度に削除するには、選択ツール({key})を使います。",
+  "deleteHint.select": "たくさんのものを一度に削除するには、選択ツール {key} を使います。",
   "deleteHint.selectTouch": "たくさんのものを一度に削除するには、選択ツールを使います。",
   "deleteHint.title": "ヒント",
   "demand.otherPlaces": "{name}のほかの場所",

@@ -629,7 +629,7 @@
   "days.shortTuesday": "mar.",
   "days.shortWednesday": "mer.",
   "days.withYear": "{date}, année {year}",
-  "deleteHint.select": "Pour supprimer beaucoup d'éléments d'un coup, utilise l'outil Sélectionner ({key}).",
+  "deleteHint.select": "Pour supprimer beaucoup d'éléments d'un coup, utilise l'outil Sélectionner {key}.",
   "deleteHint.selectTouch": "Pour supprimer beaucoup d'éléments d'un coup, utilise l'outil Sélectionner.",
   "deleteHint.title": "Astuce",
   "demand.otherPlaces": "Autres lieux : {name}",
