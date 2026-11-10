@@ -26,8 +26,7 @@ const TRAM_W = 0.75;
 /** a tram's two wires, as on the map (rendererShaders.ts): each this share of the tram's width across, its middle
  * this share either side of the centre; none drawn where the tram is under TRAM_WIRE_MIN_PX wide */
 const WIRE_OFF = 0.17, WIRE_SHARE = 0.11, TRAM_WIRE_MIN_PX = 5;
-/** the wires' colour: the map's ink, as the map draws them (T-2927) */
-const tramWire = (theme: DiagramTheme): string => theme.ink;
+const tramWire = (theme: DiagramTheme): string => theme.wire ?? theme.ink;
 /** a one-way loop's chevrons (T-2991, the map's white ones), one every CHEVRON_GAP strokes along its ribbon, its
  * arms CHEVRON_ARM strokes long, drawn from CHEVRON_MIN_PX a stroke wide */
 const CHEVRON_GAP = 5, CHEVRON_ARM = 0.34, CHEVRON_LINE = 0.15, CHEVRON_MIN_PX = 4.5, CHEVRON_COLOUR = "#ffffff";
@@ -592,6 +591,8 @@ export interface DiagramTheme {
   border?: string;
   /** the water's colour: the map's, WATER_SHARE of the way from the background */
   water?: string;
+  /** a tram's wires, the map's `tramWire` (T-3006) */
+  wire?: string;
 }
 /** the water is drawn this share of the way from the background to the map's water, so a river or coast drawn a little
  * wrong shows less (T-2516) */

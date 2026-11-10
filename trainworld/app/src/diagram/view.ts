@@ -108,7 +108,7 @@ export function diagramTheme() {
   // the panels' white pills with the ink outline, in both themes, as the line diagrams draw them; on a
   // dark background a thin edge of the map's ink round the outline, so the ring shows (T-2272)
   const bg = v("--bg", "#fbf5ef"), text = v("--map-ink", "#2b2b2b");
-  return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
+  return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, wire: SHADES[shade.peek()].tramWire, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
 }
 
 /** the graph node nearest a place on the ground, of `among` if given */
