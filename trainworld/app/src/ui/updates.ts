@@ -21,7 +21,25 @@ const V0_1_AT = "2026-11-09T15:00:00Z";
 /** When v0.2 went out: set at publish. */
 const V0_2_AT = "2026-11-10T17:30:00Z";
 
+/** When v0.2.1 went out: set at publish. */
+const V0_2_1_AT = "2026-11-10T20:45:00Z";
+
 export const UPDATES: Update[] = [
+  {
+    version: "v0.2.1",
+    at: V0_2_1_AT,
+    line: "updates.v021Line",
+    changes: [
+      "updates.v021Hsr",
+      "updates.v021ExactStops",
+      "updates.v021Terminals",
+      "updates.v021VehicleNames",
+      "updates.v021Transit",
+      "updates.v021TramCrossing",
+      "updates.v021Memory",
+      "updates.v021Fixes",
+    ],
+  },
   {
     version: "v0.2",
     at: V0_2_AT,
