@@ -8,6 +8,7 @@ import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
+import { dropMarket } from "../game/ui";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
@@ -114,7 +115,8 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
   // T-1197: a saved game too big for this device is refused with the reason
   const [refused, setRefused] = useState<string | null>(null);
   // T-3061: the device check is a guess (browsers round a device's memory down), so it warns and offers to load anyway
-  const [warned, setWarned] = useState<{ text: string; go: () => void } | null>(null);
+  // T-3073: `go(true)` loads it without inter-city trips (`dropMarket`: this tab only)
+  const [warned, setWarned] = useState<{ text: string; go: (lite?: boolean) => void } | null>(null);
   const open = async (key: string) => {
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
     // T-988: an account game is downloaded into a new slot first
@@ -126,7 +128,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
     }
     const why = await saveRefusal({ key }, true);
     setRefused(why && !why.soft ? why.text : null);
-    setWarned(why?.soft ? { text: why.text, go: () => pick({ slot: key }) } : null);
+    setWarned(why?.soft ? { text: why.text, go: (lite) => { if (lite) dropMarket(); pick({ slot: key }); } } : null);
     if (!why) pick({ slot: key });
   };
   // T-1612: the card whose delete is being asked about
@@ -144,7 +146,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
     const c = await fileChoice(file, undefined, true);
     setWarned(null);
     if (typeof c === "string") setRefused(c);
-    else if ("warn" in c) setWarned({ text: c.warn, go: async () => { const d = await fileChoice(file); if (typeof d === "string") setRefused(d); else if (!("warn" in d)) pick(d); } });
+    else if ("warn" in c) setWarned({ text: c.warn, go: async (lite) => { const d = await fileChoice(file); if (typeof d === "string") setRefused(d); else if (!("warn" in d)) { if (lite) dropMarket(); pick(d); } } });
     else pick(c);
   });
   const now = Date.now();
@@ -182,7 +184,7 @@ function Menu({ slots: first0, unread: unread0, pick, settling }: { slots: SaveS
         <div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div>
       </div>
       {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
-      {warned && !refused && <p class="muted small start-refused" role="alert">{warned.text} <button class="btn" onClick={() => { setWarned(null); warned.go(); }}>{t("startMenu.loadAnyway")}</button></p>}
+      {warned && !refused && <p class="muted small start-refused" role="alert">{warned.text} <button class="btn" onClick={() => { setWarned(null); warned.go(); }}>{t("startMenu.loadAnyway")}</button> <button class="btn" onClick={() => { setWarned(null); warned.go(true); }}>{t("startMenu.loadWithoutIntercity")}</button></p>}
       {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
         <h2 class="start-head">{t("startMenu.savedGames")}</h2>

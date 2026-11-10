@@ -14,12 +14,15 @@ import { deviceGB } from "../workers/deviceMemory";
 import { COARSE_SHARE, GB_PER_MTRIPS } from "../workers/demandLod";
 
 
-/** GB a solving worker takes outside its WebAssembly memory (its JS heap, T-1205); the browser's 4 GB
- * is on the WebAssembly memory alone, which is GB_PER_MTRIPS per million local trips a day held fine */
-const WORKER_BASE_GB = 0.7;
+/** GB a solving worker takes outside its WebAssembly memory: its JS heap (0.1) and the allocator and
+ * peak slack that come with each extra worker. Fitted to the peaks of T-3071's runs (notes/T-3071.md) */
+const WORKER_BASE_GB = 0.2;
+/** GB of a solving worker's WebAssembly memory that no zone adds (the market and the network's set-up),
+ * then `GB_PER_MTRIPS` per million local trips a day held fine: 0.38 on New York, 1.29 on all of China */
+const WASM_BASE_GB = 0.29;
 /** GB the page takes besides the solving workers (map, network, the clock worker, the aux worker),
- * and per zone (New York's real save 4.1-4.4 GB in all, all of China 11.5) */
-const PAGE_GB = 1.5, PAGE_GB_PER_ZONE = 0.015;
+ * and per zone (T-3071: New York's real save peaks 2.4 GB at one worker, all of China 4.5) */
+const PAGE_GB = 1.8, PAGE_GB_PER_ZONE = 0.005;
 /** a browser worker's memory cannot pass 4 GB; past this a solve stops partway */
 const WORKER_CAP_GB = 3.5;
 /** of a device reporting under 8 GB (`navigator.deviceMemory`, which never reports more than 8), the
@@ -33,7 +36,7 @@ export interface MemoryNeed { zones: number; wasmGB: number; workerGB: number; w
 export function memoryNeed(zones: readonly string[]): MemoryNeed {
   let trips = 0, most = 0;
   for (const id of zones) if (isCity(id)) { const t = cityById(id).localTrips ?? 0; trips += t; most = Math.max(most, t); }
-  const wasmGB = GB_PER_MTRIPS * (most + COARSE_SHARE * (trips - most)) / 1e6;
+  const wasmGB = WASM_BASE_GB + GB_PER_MTRIPS * (most + COARSE_SHARE * (trips - most)) / 1e6;
   const workerGB = WORKER_BASE_GB + wasmGB;
   const workers = poolSize();
   return { zones: zones.length, wasmGB, workerGB, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + workers * workerGB };

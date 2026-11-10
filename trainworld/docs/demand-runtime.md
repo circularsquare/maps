@@ -166,7 +166,11 @@ page's workers, so they all open on optimised code. Timings in
 notes/T-174.md and notes/demand-measurements.md.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
-5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). Periods go to workers
+5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). A solving worker that runs out of memory
+(a failed WASM grow; `memoryShort`) halves the pool, the focus pool ends, and the same solve is sent again to the rest with
+no figure changed; the smaller count is kept for the tab's session (`sessionStorage`, so the reload of "Play without
+intercity trips" keeps it) and caps every later pool unless `?demandWorkers` says (T-2867, T-3072). Only the last solving
+worker running out shows the out of memory notice. Periods go to workers
 by index (worker i of n: periods q with q mod n = i), so five workers solve a stage of all five periods at once, unless
 that puts two periods of a demand level on one worker (2 workers: high demand's three periods), when they are dealt
 out level by level (high, then medium, then low: 0, 1, 2, 3 and 4 in that order, to workers 0, 1, 0, 1, 0), so an edit to one level's trains

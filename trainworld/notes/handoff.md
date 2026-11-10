@@ -13,8 +13,15 @@ Since 10c on master: T-3064, T-3067, T-3068 (tram/bus words, Fleet, "transit"), 
 Website: Anita's `pages/projects/abouttrainsworld.md` edit is uncommitted and hers. The website push needs her word each
 time (the classifier refuses it otherwise; she said yes for 10c).
 
-**Next publish = v0.2.1** (Anita 15:00: "lets push next hotfix as v2.1", read as v0.2.1; R2 version 2026-11-10d): master +
-T-3078 once fixed. Needs an `updates.ts` entry "v0.2.1" with notes (strings to Anita), smoke8800 light+dark, deploy, then
+**v0.2.1 ON HOLD** (Anita 15:25: "we should not ship exact mode unless it is good. lets hold off until its tested. no need
+to rush it, i think the high speed rail station bug can be circumvented so its ok to leav ein for a bit"). The publish run
+was stopped during smoke8800, before any upload; 8800 = a6c15a52. Publish once T-3079 lands and Anita has tested exact
+mode on 8800 (then rebuild V0_2_1_AT and re-run). Old plan, from a6c15a52: `scratchpad\publish021.cmd` (snapbuild, tsc+i18n in .tw-snap, smoke8800, deploy
+2026-11-10d), log `scratchpad\publish021.log`; then website `git add trainsworld/ trainworld/`, commit, push (Anita said
+yes), `pages_verify.sh <sha> 2026-11-10d`. `V0_2_1_AT` set to 20:45Z.
+**Earlier plan, v0.2.1** (Anita 15:00: "lets push next hotfix as v2.1", read as v0.2.1; R2 version 2026-11-10d): master at
+51fd1c61 (T-3078 fixed) + the notes. Agent notes021 writes the v0.2.1 entry and strings (uncommitted; stage with
+`keep_hunks.py` marker `updates.v021`, since lightload/oomfall have i18n edits in the same files). Needs an `updates.ts` entry "v0.2.1" with notes (strings to Anita), smoke8800 light+dark, deploy, then
 the website push (she has said yes to this one).
 - oomfall (Sonnet, main tree, Vite 6198): T-3072 fall back to fewer workers on out-of-memory + refit memoryCheck estimate.
 
@@ -24,8 +31,11 @@ the website push (she has said yes to this one).
   at the spot, not the tool setting.
 - lightload (Sonnet, id ac88d88c5e02c9f62, main tree, Vite 6197): T-3073 "Load without inter-city trips" at the memory
   warning (Anita approved).
-- rebuild (Sonnet, id a2b5ad8262d71e795, tree `.tw-trees/rebuild`): T-3059 done; resumed to rebase onto master, add the
-  T-3051 hint counting, re-check. Then I land it (`agent-tree.mjs land rebuild`, wasm rebuild comes with it).
+- rebuild READY TO LAND (tree `.tw-trees/rebuild`, on daac649f, uncommitted, all checks pass, T-3051 hint counting in).
+  Land blocks while lightload/oomfall have i18n files dirty in the main tree: land right after they're committed.
+- manualstop resumed (id a12d21a5d48b357d5, tree `.tw-trees/exact2` from a6c15a52, Vite 6171): T-3079 [P1] exact mode
+  fixes from Anita's 8800 try ("Exact edits", toggle back, every visit a row, 1a turning round line 1's loop, strip crossing).
+  T-3080 (numbers on map stations + drag) after. Tram long length: Anita OK with today's behaviour (tram length used).
 
 **Open with Anita now:** a standalone (desktop) version "for performance": answered 15:00 that a plain wrapper gains
 little; only worth it with shared memory between workers or native threads (weeks). She decides whether to scope it.

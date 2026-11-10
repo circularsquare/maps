@@ -193,17 +193,32 @@ export function marketsOfWorkers(n: number): number[][] {
  * cores" setting restores the older rule, half the threads minus one, 1 to 5 (one per period).
  * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
  * the next load. T-2867: a 32-bit browser gets 1 whatever the setting (in 32-bit Firefox New York
- * reaches its final with 1 and runs out of memory with 2, notes/T-2867.md).
+ * reaches its final with 1 and runs out of memory with 2, notes/T-2867.md). T-3072: a pool that lost workers
+ * to running out of memory stays that size for the tab's session (`rememberedPoolCap`).
  */
 export function poolSize(): number {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
   if (addressLimited()) return 1;
+  return Math.min(poolBySetup(), rememberedPoolCap());
+}
+function poolBySetup(): number {
   const hc = navigator.hardwareConcurrency || 4;
   if (display.peek().moreCores) return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
   if (smallDevice()) return 1;
   const byThreads = hc >= 12 ? 3 : hc >= 6 ? 2 : 1;
   return deviceGB() === undefined ? Math.min(byThreads, 2) : byThreads;
+}
+
+/** T-3072: the solving workers a worker's running out of memory left this tab with. Kept for the tab's
+ * session (it survives the reload that "Play without intercity trips" does) and not for the browser:
+ * what memory is free depends on what else is open, and a stale low count would slow the game for good. */
+const POOL_CAP_KEY = "anitabuilder-pool-cap";
+function rememberedPoolCap(): number {
+  try { const n = Number(sessionStorage.getItem(POOL_CAP_KEY)); return Number.isInteger(n) && n >= 1 ? n : Infinity; } catch { return Infinity; }
+}
+function rememberPoolCap(n: number) {
+  try { sessionStorage.setItem(POOL_CAP_KEY, String(Math.min(n, rememberedPoolCap()))); } catch { /* storage blocked */ }
 }
 
 /** The service demand reads, with the UI's ids. */
@@ -2619,6 +2634,7 @@ class DemandClient {
     const aux = this.computeN, n = Math.max(1, Math.floor(aux / 2));
     console.warn(`demand: worker ${i} ran out of memory, ${aux} solving workers to ${n}: ${why}`); // i18n-ignore
     this.endFocus();
+    rememberPoolCap(n);
     const again = new Set([...this.respawn.keys(), i]);
     this.respawn.clear();
     this.shrink(n, why);
@@ -4850,7 +4866,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, poolSize, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;
 }
 
