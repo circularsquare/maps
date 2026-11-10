@@ -25,6 +25,10 @@ maps-8e lands levant's round itself (smoke, commit, 8800, push, archive, delete 
 - TODO.md short-term filed 11:30: T-3027 slopes slow trains (P3, design first, not started), T-3028 bus fare multiple + T-3029 price-strict group proposal (agent busfare, Sonnet, Vite 6156, id a94114787799d6caa), T-3030 twstats changes + T-3031 twfeedback translation (agent twtools, Sonnet, id a53098e7b7acf93a3; may commit in shonei-server, never deploy). Next free id T-3032.
 - numfit done, committed c94292aa, T-3020 archived (CSS only; billions in the Lines Money column still overflow ~11 px in de/ru/fr, asked). Next 8800 rebuild should include c94292aa.
 - numfit follow-up committed 52a8801a (billions fit). **8800 = 52a8801a** (~12:00). twtools done, committed 4f97cddb, archived T-3030/T-3031; shonei-server 46876ae deployed 10:20 (15:20 UTC, Anita "ok yes, please deploy", service active) and pushed. Anita: German change, translate and stats "look good". Toasts 5 -> 10 s (d5e854cd, her ask), not yet on 8800: batch with tramyield/busfare.
+- 11:45: hiddenach done, committed 12241ef1 (8 corridor + Grand Tour + 14 national hidden achievements; counts client). **8800 = 12241ef1.** Master smoke PASSED 27 (11:40). shonei-server e9c9e1a (achievement counts) deployed 11:46 and pushed (Anita "can deploy shonei-server yes"). 6754f61d: share to one significant digit under 1%, KR/TW 10%, CN 2% (Anita). Not on 8800 yet. Bus cost stays (Anita: "people can build trams if they really want"). Trans-Siberian stays at 104E ("irkutsk seems fine").
+- loopview done, committed b6fcb9cc (T-3039/40/41 archived; map's general station dots not half-filled, only the stop-editing markers and the list). 8800 rebuild to b6fcb9cc started ~12:00.
+- relnotes done, committed 22752fb5 (updates.ts v0.2 entry, 13 items, `V0_2_AT` placeholder 2026-11-10T20:00Z: set at publish; notes/v0.2-post.md). Strings shown to Anita. 8800 = 22752fb5, smoke8800 light 12 PASS, dark 12 PASS (12:15). Anita: drop "bus lines that cross share a stop" and "the m key..." lines; hidden achievements stays; post to cover v0.1, v0.1.1 and the silent 11-09c update; relnotes resumed for that (then commit, one 8800 rebuild, publish). T-3042 flat junction mark twice (P3, after release). Publish go: not yet given explicitly.
+- **Release plan v0.2:** relnotes (Sonnet, id abc408d2dff3a66f2) drafts the in-game `updates.ts` v0.2 entry + notes/v0.2-post.md for her; when loopview lands: commit, 8800, smoke8800 light+dark, show her strings, then publish with her word (notes/T-924.md "Commands": deploy.py --dry-run, --smoked, website commit/push, --verify --page). Set the v0.2 `at` at publish. Asked: Trans-Siberian east end 104E vs ~130E (`EAST_RUSSIA_LNG`); national thresholds guessed except US/JP/KR. T-3029 closed (Anita). loopview resumed (id afb842dd76db819fe) for T-3039 re-added stop at the turn both ways, T-3040 related lines view for turned lines, T-3041 half-filled one-way stops (map + list). Next free id T-3042.
 - Anita 11:15: "tram track feels way way nicer" (T-3016/T-3035 confirmed).
 - hiddenach (Sonnet, main tree, Vite 6161, id afbfd22ea7cc5b723): T-3037 hidden corridor achievements (her six + 3-4 of its own), then T-3038 achievement counts (anonymous, shonei-server commit allowed, no deploy). Next free id T-3039.
 - Wiki first: trainworld/CLAUDE.md now sends agents to wiki/index.md before the docs (Anita "ok lets try having agents use wiki as first stop"). Watch whether the next agents get it right.
@@ -87,9 +91,11 @@ Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09 and 11-09b a
 - Agents that leave a background wait re-notify: TaskStop them after their report.
 
 ## Anita's standing asks
-- **Token-conservative (Anita 2026-11-07 ~13:00: "we're running close to weekly limit. lets be token conservative and
-  lean to use sonnets going forward")**: new agents on Sonnet unless a task truly needs Opus; fewer, smaller agents;
-  let the running Opus agents (worldfix, sparse, tokyoload) finish rather than restart them.
+- **Usage this week (Anita 2026-11-10 11:50):** "at this rate we are gonna run out of usage fairly early in the week. thats
+  okay, its good to front load work this week so that we can get this important update out some time today. after we get
+  v0.2 out though we can return to leaning slightly to use sonnets, and prioritize the token-cheap compute-expensive approach
+  if we have a choice. the remaining work is also just not super urgent i think." So: push v0.2 out today; afterwards
+  Sonnet by default, fewer agents, and prefer approaches that spend compute rather than tokens.
 - Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
   her. Zone, region and realm names need no review.
 - TODO.md short-term = prompts: copy her words verbatim into briefs.
