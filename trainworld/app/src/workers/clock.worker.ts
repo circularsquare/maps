@@ -11,6 +11,7 @@ import init, { last_panic, TrackApi } from "../wasm/track/sim"; // the track mod
 import { initWasm } from "./wasmInit";
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
+import { blockFile, blocksTouching, indexHas, parseBlockIndex, type BlockIndex } from "../game/terrainBlocks";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { NEW_LINE } from "../game/newLine";
@@ -792,6 +793,8 @@ function newModel(): TrackApi {
   api = a;
   xferSet = null;
   worldWaterIn = false;
+  terrainIndexIn = false;
+  blocksIn.clear();
   roadFeed.reset();
   // T-309: each region's local time, kept across loads
   a.set_time_zones(timeZoneTable());
@@ -930,8 +933,6 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
  * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). */
 async function ensureMasks(ids: Iterable<string>): Promise<void> {
   const all = [...new Set(ids)];
-  // T-1270: each zone's terrain comes with its mask, but nothing waits for it
-  void ensureTerrain(all);
   void ensureStreets(all);
   const todo = all.filter((id) => !masksIn.has(id));
   if (!todo.length) return;
@@ -945,24 +946,72 @@ async function ensureMasks(ids: Iterable<string>): Promise<void> {
   });
 }
 
-// ---------------------------------------------------------------- terrain classes (T-1270)
+// ---------------------------------------------------------------- terrain classes (T-1270, T-2901)
 //
-// A zone's terrain grid (`terrain/<id>.terrain` among the packs, pipeline/zone_terrain.py) is
-// fetched with its water mask. It only prices track, so no preview or edit waits for it: track drawn
-// before it lands is priced on flat ground and priced again when it does. Construct waits for the
-// grids under what it builds, and is refused while one of them could not be had (T-2613), so nothing
-// is paid on a guess.
+// One file per degree block of land (`terrain-world/<la>_<lo>.terrain`, pipeline/world_terrain.py), listed
+// in the folder's `index.bin`: a block not listed is sea, known flat, with nothing to fetch. A listed block
+// that cannot be had is a failure (retried, the status tag says so), never flat ground. Blocks are fetched
+// under what the track model prices (the blocks it asks for, `take_terrain_wanted`) and what the camera
+// reaches. Terrain only prices track, so no preview or edit waits for it: track drawn before a block
+// lands is priced on flat ground and priced again when it does. Construct waits for the blocks under what
+// it builds, and is refused while one of them could not be had (T-2613), so nothing is paid on a guess.
 
-const terrainFetches = new Map<string, Promise<ArrayBuffer | null>>();
-/** zones whose terrain is in the track model (or that have none) */
-const terrainIn = new Set<string>();
+/** where the blocks are (the init message's, game/dataBase.ts) */
+let terrainBase = "";
+/** the tint's copies live on the page; it keeps at most this many blocks, the camera's newest */
+const TINT_BLOCKS = 200;
+/** the blocks kept in the track model beyond those an edge stands on or the view has (230 KB each) */
+const MODEL_BLOCKS = 300;
+/** a game opens without waiting longer than this for its terrain; what is late reprices when it lands */
+const LOAD_TERRAIN_WAIT_MS = 15_000;
 
-function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
-  let p = terrainFetches.get(id);
+let terrainIndexFetch: Promise<ArrayBuffer> | null = null;
+/** the current track model has the index */
+let terrainIndexIn = false;
+let terrainIndex: BlockIndex | null = null;
+const blockFetches = new Map<number, Promise<ArrayBuffer>>();
+/** blocks in the track model, oldest wanted first */
+const blocksIn = new Set<number>();
+/** blocks the page has for the tint, oldest wanted first */
+const tintSent = new Set<number>();
+/** the blocks the view reaches (the camera's rule, as for masks: only near its centre when it is wide) */
+let viewBlocks = new Set<number>();
+
+const blockListed = (key: number) => !!terrainIndex && indexHas(terrainIndex, key);
+
+function terrainIndexIntoModel(): Promise<void> {
+  if (terrainIndexIn) return Promise.resolve();
+  if (!terrainIndexFetch) {
+    const p = (async () => {
+      const res = await fetch(new URL("index.bin", terrainBase).href, { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return await res.arrayBuffer();
+    })();
+    terrainIndexFetch = p;
+    watchGround("index", p);
+    // tried again by the next need for it or by `retryGround`; Construct waits for it
+    p.catch(() => {
+      if (terrainIndexFetch === p) terrainIndexFetch = null;
+    });
+  }
+  return terrainIndexFetch.then((b) => {
+    if (terrainIndexIn || !api) return;
+    const bytes = new Uint8Array(b);
+    if (!api.set_terrain_index(bytes)) return;
+    terrainIndex = parseBlockIndex(bytes);
+    terrainIndexIn = true;
+    send({ kind: "terrainIndex", bytes: b.slice(0) });
+    void ensureBlocks(viewBlocks);
+    pumpBlocks();
+  }, () => {});
+}
+
+function fetchBlock(key: number): Promise<ArrayBuffer> {
+  let p = blockFetches.get(key);
   if (!p) {
     p = (async () => {
-      const res = await fetch(new URL(`terrain/${id}.terrain`, packBase).href, { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
-      if (res.status === 404) return null;
+      const res = await fetch(new URL(blockFile(key), terrainBase).href, { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
+      // only listed blocks are asked for, so a missing file is a fault, never flat ground
       if (!res.ok) throw new Error(`${res.status}`);
       const b = await res.arrayBuffer();
       // T-1854: the files are gzip (a server may already have unzipped them on the way)
@@ -970,26 +1019,90 @@ function fetchTerrain(id: string): Promise<ArrayBuffer | null> {
       if (gz[0] !== 0x1f || gz[1] !== 0x8b) return b;
       return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
     })();
-    terrainFetches.set(id, p);
-    watchGround("t:" + id, p);
-    // a failed fetch is tried again by the next view or edit that needs it, or by `retryGround`
-    p.catch(() => {
-      if (terrainFetches.get(id) === p) terrainFetches.delete(id);
-    });
+    blockFetches.set(key, p);
+    watchGround("t:" + key, p);
+    // the bytes are not kept; a failed fetch is tried again by what needs it, or by `retryGround`
+    const done = () => { if (blockFetches.get(key) === p) blockFetches.delete(key); };
+    p.then(done, done);
   }
   return p;
 }
 
+/** Install these blocks (fetching those not fetched) and give the tint the ones the view reaches;
+ * resolves once each is in or failed. A block that reprices the blueprint sends the new state, so the
+ * quote follows. */
+async function ensureBlocks(keys: Iterable<number>): Promise<void> {
+  if (!api || !terrainIndex) return;
+  const todo = [...new Set(keys)].filter((k) => blockListed(k) && (!blocksIn.has(k) || (viewBlocks.has(k) && !tintSent.has(k))));
+  if (!todo.length) return;
+  const got = await Promise.all(todo.map((k) => fetchBlock(k).then((b) => ({ b }), () => null)));
+  const a = api;
+  if (!a) return;
+  const before = a.blueprint_cost();
+  todo.forEach((k, n) => {
+    const g = got[n];
+    if (!g) return;
+    if (!blocksIn.has(k)) {
+      // a file that is not a block (a server's page, a damaged upload) is a failure as well
+      if (!a.add_terrain(new Uint8Array(g.b))) {
+        groundFailed.add("t:" + k);
+        retryGroundLater();
+        sendGround();
+        return;
+      }
+      blocksIn.add(k);
+    }
+    if (viewBlocks.has(k) && !tintSent.has(k)) {
+      tintSent.add(k);
+      send({ kind: "terrain", key: k, bytes: g.b }, [g.b]);
+    }
+  });
+  trimBlocks();
+  if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+}
+
+/** Keep the blocks in memory in hand: a roaming player would otherwise fill WASM's memory block by block. */
+function trimBlocks() {
+  for (const k of blocksIn) {
+    if (blocksIn.size <= MODEL_BLOCKS) break;
+    if (!viewBlocks.has(k) && api!.drop_terrain(k)) blocksIn.delete(k);
+  }
+  if (tintSent.size > TINT_BLOCKS) {
+    const keys: number[] = [];
+    for (const k of tintSent) {
+      if (tintSent.size - keys.length <= TINT_BLOCKS) break;
+      if (!viewBlocks.has(k)) keys.push(k);
+    }
+    for (const k of keys) tintSent.delete(k);
+    if (keys.length) send({ kind: "terrainDrop", keys });
+  }
+}
+
+/** The blocks the track model has asked for since last time, on their way. */
+function pumpBlocks() {
+  if (!api || !terrainIndexIn) return;
+  const w = api.take_terrain_wanted();
+  if (w.length) void ensureBlocks(w);
+}
+
+/** After a network is opened: the blocks it stands on, waited for (within a limit) so its Built figure
+ * is right from the first state. */
+async function terrainForLoaded() {
+  if (!api || !terrainIndexIn) return;
+  const w = api.take_terrain_wanted();
+  if (w.length) await Promise.race([ensureBlocks(w), new Promise((r) => setTimeout(r, LOAD_TERRAIN_WAIT_MS))]);
+}
+
 // ---------------------------------------------------------------- ground downloads (T-2613)
 //
-// The terrain grids, the zones' water masks and the world's water price track and say where it may
+// The terrain blocks, the zones' water masks and the world's water price track and say where it may
 // go. The page is told how many are on their way and how many failed (the status tag), and a failed
 // one still needed by the view or the blueprint is fetched again, 2 s after the failure doubling to 30 s.
 
 /** a download given up after this long (a stalled connection would hold Construct for minutes) */
 const GROUND_TIMEOUT_MS = 60_000;
 const GROUND_RETRY_MS = [2_000, 30_000];
-/** keys ("t:<zone>", "w:<zone>", "world") on their way, and those whose last fetch failed */
+/** keys ("t:<block>", "index", "w:<zone>", "world") on their way, and those whose last fetch failed */
 const groundPending = new Set<string>(), groundFailed = new Set<string>();
 let groundSent = "";
 let groundTimer: ReturnType<typeof setTimeout> | 0 = 0;
@@ -1022,32 +1135,19 @@ function retryGroundLater() {
 /** Fetch again what failed and is still needed; the rest is forgotten until something needs it. */
 function retryGround() {
   if (!api) return;
-  const wanted = new Set([...viewZones, ...zonesOfPoints(blueprintPolylines().flat())]);
-  for (const k of [...groundFailed]) if (k !== "world" && !wanted.has(k.slice(2))) groundFailed.delete(k);
+  const wantedZones = new Set([...viewZones, ...zonesOfPoints(blueprintPolylines().flat())]);
+  // a block under any live edge is still needed, not just the blueprint's: its Built figure waits for it
+  const wantedBlocks = new Set<number>([...viewBlocks, ...api.terrain_blocks_under(false)]);
+  const needed = (k: string) => (k[0] === "t" ? wantedBlocks.has(Number(k.slice(2))) : k[0] === "w" && k[1] === ":" ? wantedZones.has(k.slice(2)) : true);
+  for (const k of [...groundFailed]) if (!needed(k)) groundFailed.delete(k);
   sendGround();
   if (!groundFailed.size) { groundWait = 0; return; }
   if (groundFailed.has("world")) void worldWaterIntoModel();
-  const zones = [...new Set([...groundFailed].filter((k) => k !== "world").map((k) => k.slice(2)))];
-  void ensureMasks(zones);
-}
-
-/** Install the terrain of `ids` (fetching those not fetched); resolves once each is in or failed. A
- * grid that reprices the blueprint sends the new state, so the quote follows. */
-async function ensureTerrain(ids: Iterable<string>): Promise<void> {
-  const todo = [...new Set(ids)].filter((id) => !terrainIn.has(id));
-  if (!todo.length || !api) return;
-  const got = await Promise.all(todo.map((id) => fetchTerrain(id).then((b) => ({ b }), () => null)));
-  const a = api;
-  if (!a) return;
-  const before = a.blueprint_cost();
-  todo.forEach((id, k) => {
-    const g = got[k];
-    if (!g || terrainIn.has(id)) return;
-    terrainIn.add(id);
-    // a server that answers a missing file with a page instead of a 404 gives no grid either
-    if (g.b && a.add_terrain(new Uint8Array(g.b))) send({ kind: "terrain", id, bytes: g.b.slice(0) }); // the tint (T-1270)
-  });
-  if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendState();
+  if (groundFailed.has("index")) void terrainIndexIntoModel();
+  const failedBlocks = [...groundFailed].filter((k) => k[0] === "t").map((k) => Number(k.slice(2)));
+  if (failedBlocks.length) void ensureBlocks(failedBlocks);
+  const zones = [...new Set([...groundFailed].filter((k) => k[0] === "w" && k[1] === ":").map((k) => k.slice(2)))];
+  if (zones.length) void ensureMasks(zones);
 }
 
 // ---------------------------------------------------------------- street speeds (T-1577)
@@ -1171,10 +1271,15 @@ function blueprintPolylines(): number[][] {
 async function groundForBlueprint(): Promise<string | null> {
   const lines = blueprintPolylines();
   const zones = zonesOfPoints(lines.flat());
-  const need = zones.filter((id) => !terrainIn.has(id) || !masksIn.has(id));
+  const need = zones.filter((id) => !masksIn.has(id));
   const roads = roadKeys(lines);
-  await Promise.all([worldWaterIntoModel(), need.length ? ensureMasks(need) : null, need.length ? ensureTerrain(need) : null, roadFeed.ensure(roads)]);
-  if (!worldWaterIn || zones.some((id) => !terrainIn.has(id) || !masksIn.has(id))) return "TerrainMissing";
+  await Promise.all([worldWaterIntoModel(), terrainIndexIntoModel(), need.length ? ensureMasks(need) : null, roadFeed.ensure(roads)]);
+  if (!worldWaterIn || !terrainIndexIn || zones.some((id) => !masksIn.has(id))) return "TerrainMissing";
+  // walked by the track model along each edge at its own sample spacing, so a long straight piece counts
+  // every block it crosses, after the index has made listed blocks known
+  const blocks = api!.terrain_blocks_under(true);
+  await ensureBlocks(blocks);
+  if (blocks.some((k) => !blocksIn.has(k))) return "TerrainMissing";
   return roadFeed.missing(roads) ? "RoadsMissing" : null;
 }
 
@@ -1424,9 +1529,11 @@ async function masksBeforeLoad(net: Uint8Array) {
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
 async function openNetwork(net: Uint8Array) {
   await worldWaterIntoModel();
+  await terrainIndexIntoModel();
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
+  await terrainForLoaded();
   // T-1929: the roads under the blueprint, so its quote has them before Construct waits for them
   void roadsUnder(...blueprintPolylines());
 }
@@ -3623,6 +3730,7 @@ let ready: Promise<void> | null = null;
 /** the zones whose masks the view fetches ahead (T-302) */
 let viewZones: string[] = [];
 function viewMasks(): Promise<void> {
+  if (api && viewBlocks.size) void ensureBlocks(viewBlocks);
   return api && viewZones.length ? ensureMasks(viewZones) : Promise.resolve();
 }
 
@@ -3635,6 +3743,12 @@ onmessage = (e: MessageEvent<ToClock>) => {
     const cx = (msg.w + msg.e) / 2;
     const skip = new Set(msg.skip);
     viewZones = (wide ? zonesTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : zonesTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M)).map((c) => c.id).filter((id) => !skip.has(id));
+    viewBlocks = new Set(wide ? blocksTouching(cx, midLat, cx, midLat, VIEW_MARGIN_M) : blocksTouching(msg.w, msg.s, msg.e, msg.n, VIEW_MARGIN_M));
+    // the view's blocks are the newest wanted, so the ones the camera left go first
+    for (const k of viewBlocks) {
+      if (blocksIn.delete(k)) blocksIn.add(k);
+      if (tintSent.delete(k)) tintSent.add(k);
+    }
     for (const id of viewZones) if (!masksIn.has(id)) void fetchWater(id).catch(() => {});
     void viewMasks();
     return;
@@ -3660,7 +3774,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
     return;
   }
   if (isPreview(msg)) previewAt = performance.now();
-  messages =messages.then(() => processMessage(msg)).catch(err => send({ kind: "error", message: String(err) }));
+  messages = messages.then(() => processMessage(msg)).then(pumpBlocks).catch(err => send({ kind: "error", message: String(err) }));
 };
 async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
@@ -3668,6 +3782,7 @@ async function processMessage(msg: ToClock) {
     setBandCheck(patchMode === "check");
     if (msg.bandMode !== undefined) setBandMode(msg.bandMode);
     packBase = msg.pack;
+    terrainBase = msg.terrain;
     outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
       if (!api) return;
       placeLineCountries();
@@ -3683,6 +3798,7 @@ async function processMessage(msg: ToClock) {
       prices = pricesOf(model.money_params());
       void viewMasks(); // the view sent before the track model was up
       void worldWaterIntoModel();
+      void terrainIndexIntoModel();
       send({ kind: "ready", initMs: performance.now() - t0, frame: frameSpec() });
       // The last game, unless the page asked for a new one (T-029).
       testPage = !!(msg.fresh || msg.testPage);

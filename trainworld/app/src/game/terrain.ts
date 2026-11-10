@@ -3,6 +3,9 @@
 
 import { lazyTexts } from "./lazyText";
 import { signal } from "@preact/signals";
+import { BLOCK_CELLS, blockKey, indexHas, parseBlockIndex, type BlockIndex } from "./terrainBlocks";
+
+export { BLOCK_CELLS, blockKey, blocksTouching } from "./terrainBlocks";
 
 // T-1547: classes 1 and 2 are both "Hills"; the surcharge shown beside the name tells them apart
 export const TERRAIN_NAMES = lazyTexts(["terrain.flat", "terrain.hills", "terrain.hills", "terrain.mountains"]);
@@ -12,7 +15,7 @@ export const TERRAIN_SURCHARGES = [0, 0.5, 1.2, 3] as const;
 export const WATER_SURCHARGE = 2.5;
 export const TERRAIN_COLOURS = ["#d8d4c8", "#d9c08a", "#c99a5b", "#a8703e"] as const;
 
-/** A zone's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world
+/** A block's terrain grid as the track model holds it (sim `cost::ClassGrid`): classes on the world
  * lattice of `perDeg` cells a degree, row-major from the south-west cell at `col0`, `row0`, two bits a
  * cell, the first in the low bits (`classAt`). */
 export interface ClassGrid { perDeg: number; col0: number; row0: number; w: number; h: number; cls: Uint8Array }
@@ -51,16 +54,24 @@ export function hexCentre(lon: number, lat: number): [number, number] {
 /** The class charged at a point: that of its hex's centre (sim `Terrain::class_at`). */
 export function hexClass(lon: number, lat: number): number {
   const [hl, ha] = hexCentre(lon, lat);
-  for (const g of terrainGrids.values()) {
-    const c = Math.floor((hl + 180) * g.perDeg) - g.col0, r = Math.floor((ha + 90) * g.perDeg) - g.row0;
-    if (c >= 0 && r >= 0 && c < g.w && r < g.h) return classAt(g, r * g.w + c);
-  }
-  return 0;
+  const g = terrainGrids.get(blockKey(hl, ha));
+  if (!g) return 0;
+  const c = Math.floor((hl + 180) * g.perDeg) - g.col0, r = Math.floor((ha + 90) * g.perDeg) - g.row0;
+  return c >= 0 && r >= 0 && c < g.w && r < g.h ? classAt(g, r * g.w + c) : 0;
 }
 
-/** The grids the clock worker has put in the track model, by zone (its "terrain" message), so the
- * map's tint shows what the price reads. Kept across games: the lattice is the world's. */
-export const terrainGrids = new Map<string, ClassGrid>();
+/** The blocks the clock worker sent, by `blockKey` (its "terrain" message), so the map's tint and
+ * hillshade show what the price reads. Kept across games: the lattice is the world's. */
+export const terrainGrids = new Map<number, ClassGrid>();
+
+/** `index.bin`, once the worker has it: which blocks have a file; null until then. */
+let terrainIndex: BlockIndex | null = null;
+export function setTerrainIndex(bytes: ArrayBuffer) {
+  terrainIndex = parseBlockIndex(new Uint8Array(bytes));
+  terrainVersion.value++;
+}
+/** Whether a block has terrain data: false only when the index says so (open sea). */
+export const blockListed = (key: number) => !terrainIndex || indexHas(terrainIndex, key);
 /** Bumped whenever a grid arrives. */
 export const terrainVersion = signal(0);
 
@@ -70,12 +81,17 @@ export const groundNet = signal({ pending: 0, failed: 0 });
 /** T-2613: the hillshade's tiles being downloaded now (`map/demFlat.ts`) */
 export const shadeDownloads = signal(0);
 
-export function addTerrainGrid(id: string, bytes: ArrayBuffer) {
-  if (terrainGrids.has(id)) return;
+export function addTerrainGrid(key: number, bytes: ArrayBuffer) {
+  if (terrainGrids.has(key)) return;
   const g = decodeClassGrid(new Uint8Array(bytes));
-  if (!g) return;
-  terrainGrids.set(id, g);
+  if (!g || g.perDeg !== BLOCK_CELLS || g.w !== BLOCK_CELLS || g.h !== BLOCK_CELLS) return;
+  terrainGrids.set(key, g);
   terrainVersion.value++;
+}
+
+/** Blocks the camera has left, past what the page keeps. */
+export function dropTerrainGrids(keys: number[]) {
+  for (const k of keys) terrainGrids.delete(k);
 }
 
 /** A `.terrain` file (`TWT1`, u32 w, h, i32 col0, row0, u32 cells a degree, then class u8 and

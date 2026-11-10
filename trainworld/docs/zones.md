@@ -586,10 +586,12 @@ is known without its files (T-302, T-400):
   it is. It decides wherever no installed pack mask covers the point (inside a pack's raster the pack
   decides, land or water). Fetched once at start; previews, edits and loads wait for it as for a
   zone's mask. Without it (a 404) the sea outside the zones is land.
-- **Terrain classes** (clock worker, T-1270, T-1854): a zone's `packs/terrain/<id>.terrain` (published with the
-  packs, gzip, unzipped by the worker; a median of 43 KB, at most 5.3 MB) is asked for whenever its mask is, by the same rules, but nothing waits for it except
-  Construct: track priced before it lands is priced again when it does (track-and-service.md 6.4).
-  A zone without a file (a 404) prices its track on flat ground.
+- **Terrain classes** (clock worker, T-1270, T-2901): worldwide, not by zone: one gzip file per degree block of land,
+  `packs/terrain-world/<la>_<lo>.terrain` and `index.bin` (a fixed prefix on R2 once published, `tools/deploy.py --terrain-world`;
+  unzipped by the worker; 19,341 files, 0.7 GB; a mean of 36 KB). The worker fetches the blocks the track model asks for
+  (whatever it prices) and the ones the view reaches (the view's own, near its centre only when it is over 400 km
+  wide); nothing waits for them except Construct and a game being opened (track-and-service.md 6.4). A block `index.bin` does
+  not list is sea, known flat; one it lists that cannot be had is a failure, retried, never read as flat.
 - **Street speeds** (clock worker, T-1577): for a bus's speed, a zone's own pack is asked for ranges of its `.bin`
   (people and jobs per cell, the cell's zone, the zones' squares and land) whenever its mask is and where a bus route
   is drawn or loaded; nothing waits for it, and bus lines are timed again when it lands. A pack without those arrays

@@ -169,7 +169,7 @@ export type ToClock =
    * `backupMs`: wall ms of the first backup step, 10 minutes, the others scaled with it (T-744, T-1826; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
-  | { kind: "init"; pack: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
+  | { kind: "init"; pack: string; terrain: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
       /** T-2058: how lines side by side are worked out (`bandTry` in perfFlags.ts) */
       bandMode?: string;
       /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
@@ -693,8 +693,12 @@ export type FromClock =
   | { kind: "stationsAhead"; frame: FrameSpec; xy: Float64Array; fine: string[] | null; built: string[][] | null; home?: string }
   /** T-1539: the save being loaded: the key of its network's inputs (demandCache.ts `saveNetKey`) */
   | { kind: "netAhead"; key: string }
-  /** T-1270: a zone's terrain grid just put in the track model (a `.terrain` file), for the map's tint */
-  | { kind: "terrain"; id: string; bytes: ArrayBuffer }
+  /** T-2901: a terrain block in the view (a `.terrain` file), for the map's tint and hillshade */
+  | { kind: "terrain"; key: number; bytes: ArrayBuffer }
+  /** blocks the page need no longer hold */
+  | { kind: "terrainDrop"; keys: number[] }
+  /** `index.bin`: which blocks have a file */
+  | { kind: "terrainIndex"; bytes: ArrayBuffer }
   /** T-2613: terrain grids and water masks on their way, and those whose last fetch failed */
   | { kind: "ground"; pending: number; failed: number }
   /** T-1929: road tiles just put in the track model: a preview asked before them is out of date */

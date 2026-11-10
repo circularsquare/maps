@@ -15,6 +15,11 @@ const meta = doc?.querySelector?.<HTMLMetaElement>('meta[name="tw-data"]')?.cont
  * with no baseURI. */
 export const DATA_BASE = new URL(meta || "packs/", doc?.baseURI || "http://localhost/").href;
 
+/** T-2901: the terrain blocks' folder: `terrain-world/` beside the packs, published the fixed prefix on R2 that
+ * tools/deploy.py names in the `tw-terrain` meta (one upload shared by every release). */
+const terrainMeta = doc?.querySelector?.<HTMLMetaElement>('meta[name="tw-terrain"]')?.content;
+export const TERRAIN_BASE = new URL(terrainMeta || "terrain-world/", DATA_BASE).href;
+
 /** Whether this is the published page (its index.html has the tw-data meta): data from other maps, such as
  * noritetsu's real rail, is then on R2 rather than beside the page (T-941). */
 export const PUBLISHED = !!meta;

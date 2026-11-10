@@ -32,12 +32,12 @@ import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type
 import { decodeSave, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
-import { dataUrl } from "../game/dataBase";
+import { dataUrl, TERRAIN_BASE } from "../game/dataBase";
 import { markDownloaded } from "../game/keepState";
 import { saveRefusal } from "../game/memoryCheck";
 import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
-import { addTerrainGrid, groundNet } from "../game/terrain";
+import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "../game/terrain";
 import { letterOf } from "../game/lineLetter";
 
 /** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
@@ -573,7 +573,7 @@ export class ClockClient {
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
-    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
   }
 
   /** T-2710: the worker's script loaded (its `booted`): until then every message waits here, its
@@ -1037,7 +1037,13 @@ export class ClockClient {
         netAheadSink?.(msg.key);
         break;
       case "terrain":
-        addTerrainGrid(msg.id, msg.bytes);
+        addTerrainGrid(msg.key, msg.bytes);
+        break;
+      case "terrainDrop":
+        dropTerrainGrids(msg.keys);
+        break;
+      case "terrainIndex":
+        setTerrainIndex(msg.bytes);
         break;
       case "ground":
         groundNet.value = { pending: msg.pending, failed: msg.failed };

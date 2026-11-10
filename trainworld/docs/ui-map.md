@@ -53,13 +53,13 @@ There is no time limit; it gives up only when the basemap has stopped loading (a
 leaves bare ground, water or not). So the sea floor, lake beds and river channels in the tiles never
 show: by the time a tile is drawn, `water_over_shade` covers them. Pricing never reads the shade. **Flat ground is drawn flat** [T-1881]: the Terrain Tiles are a surface model in
 much of the world (SRTM in Asia: towers, raised roads and radar speckle read as hills in dense
-centres), so from tile zoom 10 (`FLAT_MIN_Z`) a tile that meets loaded class grids goes to a worker
+centres), so from tile zoom 10 (`FLAT_MIN_Z`) a tile that meets loaded terrain blocks goes to a worker
 (`map/demFlat.ts`, `workers/demFlat.worker.ts`) and comes back with its heights over flat-class ground
 blurred (sigma 400 m, the 3 x 3 tiles round it giving the blur its reach), blended by how flat the
 ground is: each class cell the share of flat cells within two cells of it, bilinear between cell
 centres, so a lone hilly cell in flat ground is mostly drawn flat. What the shade shows as relief is
-then what the track pays for. A tile waits up to 1.5 s for the grids of the zones under it (zones in
-the game's realms only) and is drawn again when a late grid comes; a tile where no grid is loaded is
+then what the track pays for. A tile waits up to 1.5 s for the terrain blocks under it (only blocks with a
+file, so open sea does not wait) and is drawn again when a late block comes; a tile where no block is loaded is
 drawn as it comes. `?rawdem=1` draws every tile as it comes. Off, no layer draws and no tile is fetched. Its hover in Settings gives the
 terrain price factors (track-and-service.md 6.4). Mapterhorn's hosted tiles were left aside: no terms
 for use by an app are stated; for a published game the fallback is our own Terrarium tiles on R2
@@ -68,12 +68,12 @@ cut from GEDTM30 (notes/T-1270.md).
 **The class tint** [T-1270 stage 3]: with Terrain on and a build tool on (track, station, delete,
 blueprint), hills (both classes) and mountains get a faint brown wash, stronger by class (light:
 brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
-the grids the clock worker put in the track model (a "terrain" message per zone, `game/terrain.ts`),
-so it shows exactly what is charged and nothing for a zone not loaded. `map/terrainTint.ts` draws
+the terrain blocks the clock worker sends the page (track-and-service.md 6.4), one "terrain" message a block
+(`game/terrain.ts`), so it shows exactly what is charged, and nothing where no block is loaded. `map/terrainTint.ts` draws
 one image over the view and half its size again round it, rows even in mercator, each hex (T-2890,
 the hexes track is charged by, track-and-service.md 6.4) the class of the lattice cell at its centre
 (nearest, no smoothing; halved in size once a hex is under an image pixel), redrawn when the camera stops; above the hillshade, under the
-water, roads and labels; hidden below zoom 7. The lighter map hides the hillshade but keeps
+water, roads and labels; hidden below zoom 9, where a view is wider than the blocks the view brings in. The lighter map hides the hillshade but keeps
 `water_over_shade` while Terrain is on, so the tint stays off the water there too. Washed ground
 has no hover of its own; the track tool's tag names the class and its factor [T-1797].
 

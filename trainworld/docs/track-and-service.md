@@ -1018,20 +1018,25 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   on ground whose low envelope (an opening of 600 m half-width, smoothed) slopes under 3-6°, takes
   that envelope's height. Midtown Manhattan stood 50-100 m above its streets in GEDTM30 and Chicago's
   Loop the same; built hillsides (San Francisco, Seoul, Wellington) are smooth or steep and keep
-  their ground. One gzip file per zone
-  (`data/terrain/<id>.terrain`, a median of 43 KB, 299 MB for all 1,988 zones, the largest 5.3 MB;
-  `cost::ClassGrid`, two bits a cell in memory, at most about 23 MB). The clock worker fetches a zone's
-  file with its water mask (zones.md 6), but no preview or edit waits for it: track drawn before it
-  lands is priced on flat ground and priced again when it lands, the blueprint quote following;
-  Construct waits for the files, water masks and world water under the blueprint, and is refused
-  ("The terrain here did not load. Try again.") while one of them could not be fetched, so nothing is
-  paid on a guess (T-2613; a 404 counts as no file, flat). A download gives up after 60 s; a failed one
-  still needed by the view or the blueprint is fetched again 2 s later, doubling to 30 s (the status tag
-  says so, ui-panels.md). Track is charged by hex (T-2890): a point takes the class of the lattice cell
+  their ground. Worldwide, by degree block (T-2901): one gzip file per block of land
+  (`data/terrain-world/<la>_<lo>.terrain`, `pipeline/world_terrain.py`; 19,341 blocks, 0.7 GB, 960 x 960
+  cells, `cost::ClassGrid`, 230 KB a block in memory) and `index.bin`, the list of which blocks have a
+  file. A block not listed is open sea or Antarctica, flat, with nothing to fetch. The clock worker
+  fetches the blocks under what the track model prices and what the view reaches (zones.md 6). No
+  preview or edit waits for one: track drawn before its block lands is priced on flat ground and priced
+  again when it lands, the blueprint quote following. A game being opened waits for the blocks under
+  it, within 15 s, so its Built figure is right from the first state; one later than that reprices its
+  stretch when it lands (Built moves, no cash). Construct waits for the blocks, water masks and world
+  water under the blueprint, and is refused ("The terrain here did not load. Try again.") while one of
+  them could not be had, so nothing is paid on a guess (T-2613). A listed block that answers 404, or
+  bytes that are not a block, is a failure like any other, never flat. A download gives up after 60 s; a
+  failed one still needed by the view or by track on the map is fetched again 2 s later, doubling to
+  30 s (the status tag says so, ui-panels.md). Blocks stay in the track model while an edge stands on
+  them or the view has them; the rest beyond the newest 300 are dropped. Track is charged by hex (T-2890): a point takes the class of the lattice cell
   under the centre of its hex (`cost::hex_centre`), pointy-topped hexes regular on the mercator plane, 1/768
   of a degree of longitude across (`TERRAIN_HEX`, about 110 m at 40 N), the same hexes the build tools'
   wash draws, so a hex that looks like hills is charged as hills. Each edge keeps
-  its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a file
+  its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a block
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
   "Water +2.5x" when it crosses water (T-1887); its multiplier includes both, and the blueprint breakdown has a

@@ -29,7 +29,8 @@ tests natively.
 - `src/track/ferry.rs`: ferry lines (T-2193): ports (stations with a berth), the route the app searched (`FerryRoute`: points with a kind and a speed), its check, the boat's speed limits and its trip with acceleration (`limits`, `profile`), its stops as a bus `Plan`; `wasm/ferry.rs` its exports, tests in `ferry/tests.rs` and `wasm/ferry_tests.rs`; Node check `checks/t2193-ferry.mjs`; docs/track-and-service.md 6.8.
 - `src/track/streets.rs`: the car's street speed by place (demand's `place_min_per_km`, kept equal by a test), a pack's grid of its zones' speeds (`StreetGrid`, `Streets` in the network, installed with `TrackApi::add_pack_streets`, T-1577), for a bus's speed.
 - `src/track/cost.rs`: prices (SPEC 6.4), the water mask types and the terrain classes
-  (`ClassGrid`, `Terrain`, `terrain_spans`, T-1270), installed with `TrackApi::add_terrain`.
+  (`ClassGrid`, `Terrain`, `terrain_spans`, T-1270, T-2901: one grid per degree block, by `block_key`; `BlockIndex`,
+  `take_wanted` for what was asked for and not installed), installed with `TrackApi::add_terrain`.
 - `src/track/trace.rs`: a real railway's line as corners within a tolerance (T-727c), for
   `TrackApi::trace_route` and the real-network snap; `Tracer` runs it in steps (`RouteTrace` in
   WASM, T-754); notes/T-727.md.
@@ -343,8 +344,9 @@ pings on or off, `game/playtime.ts`), and the start menu's `?city=<zone id>` and
 app` rebuilds only the WASM. `npm run check --prefix app` type-checks.
 
 Every fetch of a `packs/` file goes through `game/dataBase.ts` (`dataUrl`): `packs/` beside the page,
-or the R2 prefix a published index.html names in its `tw-data` meta. `tools/deploy.py` publishes a
-build: `packs/` to R2 `trainworld/<version>/`, the rest of dist to the website repo (T-924,
+or the R2 prefix a published index.html names in its `tw-data` meta; the terrain blocks go through
+`TERRAIN_BASE`, `packs/terrain-world/` locally or the fixed prefix in its `tw-terrain` meta (T-2901). `tools/deploy.py` publishes a
+build: `packs/` (without the terrain blocks: `--terrain-world` uploads those once, and a release is refused until they are complete) to R2 `trainworld/<version>/`, the rest of dist to the website repo (T-924,
 notes/T-924.md has the commands). During a batch, publish a build on the last freeze
 (`pipeline/freeze.py build`, then `deploy.py --dist` that build; T-928), never one that copied
 data/packs mid-batch.
@@ -467,6 +469,7 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   `t1277-fare-scale.mjs` (Node, no browser: a rider in New York and one in Mumbai on a small fixture line, set up as the demand worker sets up each zone, pay the starting curve times their own scale, a player's scale replaces the income's, and a fare weighs about the same at the default scales; seconds; run after any change to fare weights or scales),
   `t1148-market-rule.mjs` (Node, no browser: `game/marketRule.ts`, the main thread's copy of the market's place-pair rule, against the sim's on about 2,000 pairs of places, near, far, across the Channel, to Hokkaido and across seas: distance, car minutes, reference minutes, plane and car shares, trips; and the longer trips' period shares on every kind of day; about 20 s; run after any change to the market's car, plane, crossing or trip rule on either side),
   `t1177-cross-everyday.mjs` (Node, the real demand worker: Boston and Providence with made-up everyday pairs across their zone line written into Boston's market pack in memory (`t1177-data.mjs`), and a line joining the zones; the per-purpose parts, nothing counted twice, loads under their own purposes, a selection's blocks by purpose and far zone with a Saturday's own factors, the trip explorer's legs, rail and walking, and the weekend scaling (`workers/marketParts.ts`); `IDS=gua,fos` runs the market-pack checks on registered neighbours whose packs carry the pairs; about 40 s) and `old/t1177-cross-everyday-page.mjs` (the same pairs in a new game on `BASE` through a Playwright route: the page's selection, explorer figures and panel with its walking row, the walking column, the far-end labels under each purpose filter, and the days; about 3 minutes; screenshots in `artifacts/trainworld/t1177/`),
+  `t2901-terrain-world.mjs [url]` (terrain by degree block: Atlas track prices as mountain, the tint at zoom 10 and not below 9, the hillshade flattened there, no block or 404 over open sea, a block that fails or is not a block never priced flat; about a minute, port 6240 by default),
   `t2890-hex.mjs [url]` (dev server only, a new game: track charges the class of the hexes drawn under it, and the wash's pixels show their hex's class),
   `old/t1854-valley.mjs <label> [url] [spots]` (the terrain tint over Wuppertal, Innsbruck and the centres of Tokyo, Nagoya and Shanghai, screenshots to `artifacts/trainworld/t1854/`), `t1881-shade.mjs <label> [url] [spots]` (the hillshade, the relief alone and the tint in a new game in Tokyo, Nagoya, Shanghai, Midtown, Hong Kong, San Francisco and Seoul; `?rawdem=1` for the shade as it comes; screenshots to `artifacts/trainworld/t1881/`), `t1270-terrain.mjs` (a new game: track on flat ground in Brooklyn at 45 US$M a km, on mountain ground above Innsbruck at 112.5 and a bored tunnel there at 99, spots found in the zones' terrain files; Construct charges the quote; the hillshade in both themes and the track tool's terrain chip, screenshots in `artifacts/trainworld/t1270/`; about a minute, port 6184 by default), `t2613-terrain-net.mjs` (terrain on a bad connection, Playwright routes blocking or slowing the `.terrain` files and the hillshade tiles: the status tag's "Terrain could not load" and "Downloading terrain…", Construct refused on a failed download and charging the mountain quote once it lands; about two minutes), `t2628-shade-water.mjs` (T-2628: with the basemap's vector tiles held 12 s, no hill shading on what becomes water, off New England and on Lake Superior, the shade there under the water once it lands, and the land shade at Innsbruck against a `before` run; about two minutes), `t2614-cloud-fail.mjs` (a local shonei-server with the account's game routes cut: the change kept in the browser, the "Not on your account yet" dot, the minute's retry and the dot's click sending it),
   `old/t1161-copy-delete.mjs` (a new game: a copied line starts with no trains, removing the piece past a station or between two keeps each station in place with track to its platform's end, and auto elevation draws on from +2 track at +2 by real clicks; about a minute, port 6125 by default),
@@ -797,6 +800,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `run`, `check` (a block against rasterio's read). `zone_terrain.py` reads a test run's tars before
   the intermediate's with `TW_FINE_OVER=<dir>`, and the dev server serves `.terrain` files from
   `TW_TERRAIN=<dir>` before `data/terrain` (`vite.config.ts`).
+- `world_terrain.py` (T-2901): the world's terrain classes, one gzip file per degree block with data
+  (`build <fine> <out> [--jobs n]`, into `data/terrain-world/`) and `index.bin` (which blocks have a file), read by
+  the game (`game/terrainBlocks.ts`, the terrain section of `workers/clock.worker.ts`) and published by `tools/deploy.py --terrain-world`.
 - `zone_terrain.py` (T-1270, T-1854): each registered zone's terrain classes from that intermediate
   (thresholds, filter and cap in its docstring), written gzip to `data/terrain/<id>.terrain` (never
   `data/packs`, so joins do not see them); `build [ids] [--force] [--jobs n]` skips files already made

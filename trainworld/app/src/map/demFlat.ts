@@ -1,21 +1,21 @@
 // T-1881: the hillshade drawn flat where the track is priced flat. The public Terrain Tiles are a
 // surface model in much of the world (towers, raised roads and SRTM's speckle read as hills in dense
 // centres); the terrain classes (game/terrain.ts) are the ground the price reads. A height tile from
-// zoom FLAT_MIN_Z up, where it meets loaded class grids, goes to workers/demFlat.worker.ts with how
+// zoom FLAT_MIN_Z up, where it meets loaded terrain blocks, goes to workers/demFlat.worker.ts with how
 // flat each pixel's ground is, and comes back with the relief over flat ground taken out. Where no
-// grid is loaded the tile is drawn as it comes.
+// block is loaded the tile is drawn as it comes.
 
 import type { DemFlatIn, DemFlatOut } from "../workers/demFlat.worker";
-import { zonesTouching } from "../game/cities";
-import { zoneShown } from "../game/realms";
-import { terrainGrids, terrainVersion, classAt, shadeDownloads, type ClassGrid } from "../game/terrain";
+import { terrainGrids, terrainVersion, classAt, shadeDownloads, blockListed, blocksTouching, BLOCK_CELLS, type ClassGrid } from "../game/terrain";
 
 /** below this tile zoom (pixels 150 m and more) a tower block is a pixel or two and the classes are not
  * loaded for the whole view */
 export const FLAT_MIN_Z = 10;
-/** how long a tile waits for the class grids of the zones under it (ms); a zone with none never comes,
- * and one that comes later has the tile drawn again (`onRedraw`) */
+/** how long a tile waits for the terrain blocks under it (ms); one that comes later has the tile drawn
+ * again (`onRedraw`) */
 const GRID_WAIT_MS = 1500;
+/** a tile reads its blocks this far beyond its edge: the cells round a pixel at MASK_REACH */
+const BLOCK_MARGIN_M = 500;
 const TILE_CACHE = 400;
 /** `?rawdem=1`: the tiles as they come, for comparing */
 const RAW = new URLSearchParams(location.search).has("rawdem");
@@ -55,9 +55,9 @@ function tileBox(z: number, x: number, y: number): [number, number, number, numb
   return [x / n * 360 - 180, mercLat((y + 1) / n), (x + 1) / n * 360 - 180, mercLat(y / n)];
 }
 
-/** Resolves once every zone in `ids` has a grid, or after GRID_WAIT_MS, or on abort. */
-function gridsFor(ids: string[], signal: AbortSignal): Promise<void> {
-  const ready = () => ids.every((id) => terrainGrids.has(id));
+/** Resolves once every block in `keys` has a grid, or after GRID_WAIT_MS, or on abort. */
+function gridsFor(keys: number[], signal: AbortSignal): Promise<void> {
+  const ready = () => keys.every((k) => terrainGrids.has(k));
   if (ready()) return Promise.resolve();
   return new Promise((resolve) => {
     let stop = () => {};
@@ -73,18 +73,21 @@ function gridsFor(ids: string[], signal: AbortSignal): Promise<void> {
 const MASK_REACH = 2;
 
 /** How flat each pixel of the tile is (0-255): bilinear between the class cells' centres, each cell the
- * share of flat cells round it (MASK_REACH; cells no grid covers count as not flat); null when none of
+ * share of flat cells round it (MASK_REACH; cells of a block not loaded count as not flat); null when none of
  * the tile is flat. A function of the cells alone, so tiles agree at their edges. */
-function flatMask(z: number, x: number, y: number, grids: ClassGrid[]): Uint8Array | null {
+function flatMask(z: number, x: number, y: number): Uint8Array | null {
   const N = 256, n = 2 ** z;
   const out = new Uint8Array(N * N);
   let any = false;
+  const worldCols = 360 * BLOCK_CELLS, worldRows = 180 * BLOCK_CELLS;
+  let lastKey = -1, lastGrid: ClassGrid | undefined;
   const isFlat = (c: number, r: number) => {
-    for (const g of grids) {
-      const cc = c - g.col0, rr = r - g.row0;
-      if (cc >= 0 && rr >= 0 && cc < g.w && rr < g.h) return classAt(g, rr * g.w + cc) === 0 ? 1 : 0;
-    }
-    return 0;
+    if (r < 0 || r >= worldRows) return 0;
+    const col = ((c % worldCols) + worldCols) % worldCols;
+    const lo = Math.floor(col / BLOCK_CELLS), la = Math.floor(r / BLOCK_CELLS), key = la * 360 + lo;
+    if (key !== lastKey) lastKey = key, lastGrid = terrainGrids.get(key);
+    if (!lastGrid) return 0;
+    return classAt(lastGrid, (r - la * BLOCK_CELLS) * BLOCK_CELLS + col - lo * BLOCK_CELLS) === 0 ? 1 : 0;
   };
   const seen = new Map<number, number>();
   const side = 2 * MASK_REACH + 1;
@@ -99,7 +102,7 @@ function flatMask(z: number, x: number, y: number, grids: ClassGrid[]): Uint8Arr
     }
     return v;
   };
-  const per = grids[0].perDeg;
+  const per = BLOCK_CELLS;
   const cols = new Float64Array(N);
   for (let i = 0; i < N; i++) cols[i] = ((x + (i + 0.5) / N) / n * 360) * per - 0.5; // from 180 W, cell centres at .5
   for (let j = 0; j < N; j++) {
@@ -120,8 +123,8 @@ function flatMask(z: number, x: number, y: number, grids: ClassGrid[]): Uint8Arr
   return any ? out : null;
 }
 
-/** tiles drawn before every zone under them had its grid: "z/x/y" to the zones missing */
-const provisional = new Map<string, string[]>();
+/** tiles drawn before every block under them had come: "z/x/y" to the blocks missing */
+const provisional = new Map<string, number[]>();
 let redraw: ((tiles: { z: number; x: number; y: number }[]) => void) | null = null;
 let redrawSoon = 0;
 
@@ -136,7 +139,7 @@ terrainVersion.subscribe(() => {
   redrawSoon = window.setTimeout(() => {
     const again: { z: number; x: number; y: number }[] = [];
     for (const [key, missing] of provisional)
-      if (missing.some((id) => terrainGrids.has(id))) {
+      if (missing.some((k) => terrainGrids.has(k))) {
         provisional.delete(key);
         const [z, x, y] = key.split("/").map(Number);
         again.push({ z, x, y });
@@ -165,36 +168,35 @@ function post(m: DemFlatIn): Promise<DemFlatOut> {
 }
 
 /** The tile's PNG bytes as they come, or an ImageBitmap of its heights with the relief over flat ground
- * taken out. `view`: whether the clock worker is loading the class grids of the zones in view. */
+ * taken out. `view`: whether the clock worker is loading the terrain blocks in view. */
 export async function flattenDem(url: (z: number, x: number, y: number) => string, z: number, x: number, y: number,
   own: ArrayBuffer, signal: AbortSignal, view: boolean): Promise<ArrayBuffer | ImageBitmap> {
   if (z < FLAT_MIN_Z || RAW) return demFlatStats.lowZoom++, own;
   const [w, s, e, nn] = tileBox(z, x, y);
-  // a zone outside the game's realms has no grid loaded (and no track)
-  const ids = zonesTouching(w, s, e, nn).filter((c) => zoneShown(c.id)).map((c) => c.id as string);
-  if (!ids.length) return demFlatStats.noZone++, own;
-  if (view) await gridsFor(ids, signal);
-  const missing = ids.filter((id) => !terrainGrids.has(id));
+  // a block with no file is open sea, with no flat ground to draw and nothing to wait for
+  const keys = blocksTouching(w, s, e, nn, BLOCK_MARGIN_M).filter(blockListed);
+  if (!keys.length) return demFlatStats.noZone++, own;
+  if (view) await gridsFor(keys, signal);
+  const missing = keys.filter((k) => !terrainGrids.has(k));
   if (missing.length && view) {
     provisional.set(`${z}/${x}/${y}`, missing);
     if (provisional.size > 2000) provisional.delete(provisional.keys().next().value!);
   } else provisional.delete(`${z}/${x}/${y}`);
-  const grids = ids.map((id) => terrainGrids.get(id)).filter((g): g is ClassGrid => !!g);
-  if (!grids.length || signal.aborted) return demFlatStats.noGrid++, own;
-  const mask = flatMask(z, x, y, grids);
+  if (missing.length === keys.length || signal.aborted) return demFlatStats.noGrid++, own;
+  const mask = flatMask(z, x, y);
   if (!mask) return demFlatStats.noFlat++, own;
-  const keys: string[] = [], bytes: (ArrayBuffer | null)[] = [];
+  const tileKeys: string[] = [], bytes: (ArrayBuffer | null)[] = [];
   const n = 2 ** z;
   const got = await Promise.all([-1, 0, 1].flatMap((dy) => [-1, 0, 1].map((dx) => (dx || dy ? demBytes(url, z, x + dx, y + dy).catch(() => null) : Promise.resolve(own)))));
   for (let k = 0; k < 9; k++) {
     const dx = (k % 3) - 1, dy = Math.floor(k / 3) - 1;
-    keys.push(`${z}/${(((x + dx) % n) + n) % n}/${y + dy}`);
+    tileKeys.push(`${z}/${(((x + dx) % n) + n) % n}/${y + dy}`);
     bytes.push(got[k]);
   }
   if (signal.aborted) return own;
   const lat = (s + nn) / 2;
   const pxM = 40075016.686 / n / 256 * Math.cos((lat * Math.PI) / 180);
-  const r = await post({ id: nextId++, keys, bytes, mask, pxM });
+  const r = await post({ id: nextId++, keys: tileKeys, bytes, mask, pxM });
   if (r.bitmap) demFlatStats.flattened++;
   else demFlatStats.failed++, console.warn(`terrain tile ${z}/${x}/${y} not flattened: ${r.error}`);
   return r.bitmap ?? own;

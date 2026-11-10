@@ -7,15 +7,15 @@ fn free(x: f64, y: f64) -> [f64; 5] {
     [0.0, 0.0, x, y, 0.0]
 }
 
-/// A terrain file (`cost::ClassGrid`) of one class over the lattice cells round a point.
-fn terrain_round(lon: f64, lat: f64, cells: u32, class: u8) -> Vec<u8> {
-    let (c0, r0) = (((lon + 180.0) * 240.0).floor() as i32 - cells as i32 / 2, ((lat + 90.0) * 240.0).floor() as i32 - cells as i32 / 2);
+/// A terrain file (`cost::ClassGrid`) of one class over the whole degree block round a point.
+fn terrain_block(lon: f64, lat: f64, class: u8) -> Vec<u8> {
+    let (c0, r0) = (((lon + 180.0).floor() as i32) * 240, ((lat + 90.0).floor() as i32) * 240);
     let mut b = crate::track::cost::TERRAIN_MAGIC.to_vec();
-    for v in [cells, cells, c0 as u32, r0 as u32, 240] {
+    for v in [240u32, 240, c0 as u32, r0 as u32, 240] {
         b.extend(v.to_le_bytes());
     }
     b.push(class);
-    let mut n = (cells * cells) as usize;
+    let mut n = 240 * 240usize;
     loop {
         let x = (n & 0x7f) as u8;
         n >>= 7;
@@ -37,7 +37,7 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     assert!((before - (3.0 * 37.5 + 3.0 * 120.0)).abs() < 1e-6, "{before}");
     let ll = a.to_lonlat(1500.0, 1000.0);
     assert!(!a.add_terrain(b"TWT1"));
-    assert!(a.add_terrain(&terrain_round(ll[0], ll[1], 120, 3)));
+    assert!(a.add_terrain(&terrain_block(ll[0], ll[1], 3)));
     let after = a.blueprint_cost();
     assert!((after - (3.0 * 262.5 + 3.0 * 120.0)).abs() < 1e-6, "{after}");
     let rows = a.blueprint_cost_items();
@@ -57,6 +57,43 @@ fn terrain_reprices_blueprints_and_spares_bored_tunnels() {
     let saved = a.save();
     assert!(a.load(&saved));
     assert!((a.blueprint_cost() - after).abs() < 1e-6);
+}
+
+#[test]
+fn terrain_blocks_under_and_drop_keep_what_edges_stand_on() {
+    // T-2901: a blueprint across two blocks reports both; a block under it cannot be dropped, and one
+    // not under it can
+    let mut a = api();
+    let ll = a.to_lonlat(0.0, 0.0);
+    let block = |lon: f64, lat: f64| crate::track::cost::block_key(lon, lat);
+    let k0 = block(ll[0], ll[1]);
+    // from the origin to the next block east: well over the 0.015 degrees left to 74 W's east side
+    let east = a.w.net.frame().from_lonlat(ll[0].floor() + 1.2, ll[1]);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(east.0, east.1).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let k1 = block(ll[0].floor() + 1.2, ll[1]);
+    assert!(k0 != k1);
+    let under = a.terrain_blocks_under(true);
+    assert!(under.contains(&k0) && under.contains(&k1), "{under:?}");
+    assert!(a.add_terrain(&terrain_block(ll[0], ll[1], 3)));
+    assert!(a.add_terrain(&terrain_block(ll[0], ll[1] + 5.0, 3)));
+    assert!(!a.drop_terrain(k0), "an edge stands on it");
+    assert!(a.drop_terrain(block(ll[0], ll[1] + 5.0)), "nothing stands on it");
+    // what a blueprint wanted is reported when the index lists it, and nothing else; a built edge counts for neither list's blueprint
+    let mut idx = b"TWI1".to_vec();
+    idx.extend((-65i16).to_le_bytes());
+    idx.extend(150u16.to_le_bytes());
+    idx.extend((-180i16).to_le_bytes());
+    idx.extend(360u16.to_le_bytes());
+    idx.extend(1u32.to_le_bytes());
+    let mut bits = vec![0u8; 6750];
+    let bit = (k1.div_euclid(360) - 90 + 65) * 360 + k1.rem_euclid(360);
+    bits[(bit >> 3) as usize] |= 1 << (bit & 7);
+    idx.extend(bits);
+    assert!(a.set_terrain_index(&idx));
+    assert!(!a.set_terrain_index(b"TWI"));
+    assert_eq!(a.take_terrain_wanted(), vec![k1], "k0 is installed, k1 is listed and not");
+    assert_eq!(a.terrain_blocks_under(true), vec![k1], "k0 is not listed in this index");
 }
 
 /// Road tiles over the box of network points `(x0, y0)`-`(x1, y1)`: a road running north-south every

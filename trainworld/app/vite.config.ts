@@ -1,4 +1,4 @@
-import { copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, createReadStream, existsSync, linkSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +14,10 @@ const CITIES = REGISTRY.cities.map((c) => c.id);
 const TERRAIN = resolve(here, "../data/terrain");
 /** TW_TERRAIN: a folder of test `.terrain` files the dev server serves before data/terrain's. */
 const TERRAIN_OVER = process.env.TW_TERRAIN ? resolve(process.env.TW_TERRAIN) : null;
+/** T-2901: the terrain classes of the world's land, one file per degree block (pipeline/world_terrain.py), at
+ * `packs/terrain-world/`; TW_TERRAIN_WORLD: another copy. A build holds them as hard links (0.7 GB, 19k files), and
+ * tools/deploy.py publishes them on their own, not with each release. */
+const TERRAIN_WORLD = process.env.TW_TERRAIN_WORLD ? resolve(process.env.TW_TERRAIN_WORLD) : resolve(here, "../data/terrain-world");
 /** T-1285: the world's coarse water (pipeline/world_water.py), served at `packs/world.water`; TW_WORLD_WATER: another copy. */
 const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
 /** T-279: the market's routed drives (pipeline/market_drives.py), served at `packs/market-drives.bin`; TW_MARKET_DRIVES: another copy. */
@@ -40,6 +44,18 @@ function packs(): Plugin {
         res.setHeader("Content-Type", "application/octet-stream");
         res.setHeader("Content-Length", statSync(MARKET_DRIVES).size);
         createReadStream(MARKET_DRIVES).pipe(res);
+      });
+      server.middlewares.use("/packs/terrain-world", (req, res) => {
+        const file = join(TERRAIN_WORLD, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
+        // never a 200 with the page for a file that is not there: the clock worker reads a failure as a failure
+        if (!file.startsWith(TERRAIN_WORLD) || !existsSync(file) || !statSync(file).isFile()) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Length", statSync(file).size);
+        createReadStream(file).pipe(res);
       });
       server.middlewares.use("/packs", (req, res, next) => {
         const file = join(PACKS, (req.url ?? "").split("?")[0].replace(/^\/+/, ""));
@@ -106,6 +122,15 @@ function packs(): Plugin {
         else noTerrain++;
       }
       if (noTerrain) this.warn(`${noTerrain} zones have no terrain file: run pipeline/zone_terrain.py build`);
+      if (existsSync(join(TERRAIN_WORLD, "index.bin"))) {
+        const world = join(out, "terrain-world");
+        mkdirSync(world, { recursive: true });
+        for (const f of readdirSync(TERRAIN_WORLD)) {
+          const dst = join(world, f);
+          if (existsSync(dst)) continue;
+          try { linkSync(join(TERRAIN_WORLD, f), dst); } catch { copyFileSync(join(TERRAIN_WORLD, f), dst); }
+        }
+      } else this.warn("terrain blocks missing: run pipeline/world_terrain.py build");
       if (existsSync(WORLD_WATER)) copyFileSync(WORLD_WATER, join(out, "world.water"));
       else this.warn("world water mask missing: run pipeline/world_water.py build");
       if (existsSync(MARKET_DRIVES)) copyFileSync(MARKET_DRIVES, join(out, "market-drives.bin"));

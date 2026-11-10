@@ -12,7 +12,7 @@
 
 use super::boarding::Boarding;
 use super::bridge;
-use super::cost::{ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
+use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
 use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData};
@@ -501,11 +501,17 @@ impl TrackApi {
         self.w.net.add_water(Box::new(set), b);
     }
 
-    /// Add a zone's terrain grid (T-1270, a `.terrain` file's bytes, `cost::ClassGrid`): the
-    /// blueprint and built track it reaches is priced again. False if the bytes are not one.
-    pub fn add_terrain(&mut self, bytes: &[u8]) -> bool {
-        let Some(g) = ClassGrid::decode(bytes) else { return false };
-        let [w, s, e, n] = g.bounds();
+    /// `index.bin` of the terrain blocks (T-2901, `cost::BlockIndex`): which blocks have a file. False
+    /// if the bytes are not one.
+    pub fn set_terrain_index(&mut self, bytes: &[u8]) -> bool {
+        let Some(i) = BlockIndex::decode(bytes) else { return false };
+        self.w.net.terrain.set_index(i);
+        true
+    }
+
+    /// `[west, south, east, north]` degrees of a block in the network frame, with a margin the sampled
+    /// curve never leaves.
+    fn terrain_box(&self, [w, s, e, n]: [f64; 4]) -> [f64; 4] {
         let frame = self.w.net.frame();
         let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
         const STEPS: usize = 32;
@@ -519,8 +525,41 @@ impl TrackApi {
         }
         // the boundary's sampled curve bows inward by far less than this between samples
         let m = 0.01 * (b[2] - b[0]).max(b[3] - b[1]) + 1000.0;
-        self.w.net.add_terrain(Arc::new(g), [b[0] - m, b[1] - m, b[2] + m, b[3] + m]);
+        [b[0] - m, b[1] - m, b[2] + m, b[3] + m]
+    }
+
+    /// Add a terrain block (T-1270, T-2901: a `.terrain` file's bytes, `cost::ClassGrid`, inside one
+    /// degree block): the blueprint and built track it reaches is priced again. False if the bytes are
+    /// not one.
+    pub fn add_terrain(&mut self, bytes: &[u8]) -> bool {
+        let Some(g) = ClassGrid::decode(bytes) else { return false };
+        let [w, s, e, n] = g.bounds();
+        if e > w.floor() + 1.0 + 1e-9 || n > s.floor() + 1.0 + 1e-9 {
+            return false;
+        }
+        let b = self.terrain_box([w, s, e, n]);
+        self.w.net.add_terrain(Arc::new(g), b);
         true
+    }
+
+    /// Take a terrain block out of the model, to free its memory (T-2901). False if an edge reaches
+    /// into it: it stays, so the edge prices the same at its next re-derive.
+    pub fn drop_terrain(&mut self, key: i32) -> bool {
+        let (la, lo) = (key.div_euclid(360) - 90, key.rem_euclid(360) - 180);
+        let b = self.terrain_box([lo as f64, la as f64, lo as f64 + 1.0, la as f64 + 1.0]);
+        self.w.net.drop_terrain(key, b)
+    }
+
+    /// The blocks asked for by a price since the last call and not installed, by `cost::block_key`;
+    /// nothing until the index is in.
+    pub fn take_terrain_wanted(&self) -> Vec<i32> {
+        self.w.net.terrain.take_wanted()
+    }
+
+    /// The blocks with a file under the live edges, only the blueprint's with `blueprint` (T-2901: what
+    /// Construct must have).
+    pub fn terrain_blocks_under(&self, blueprint: bool) -> Vec<i32> {
+        self.w.net.terrain_blocks_under(blueprint)
     }
 
     /// Add a pack's street speeds (T-1577, `streets::StreetGrid::from_zones`): a bus runs at its

@@ -4,6 +4,7 @@
     python trainworld/tools/deploy.py --version 2026-10-22 --smoked  do it, then stop before git
     python trainworld/tools/deploy.py --verify --version 2026-10-22  check the published copy
     python trainworld/tools/deploy.py --stage DIR --data-base URL    the website half into DIR, for a local test
+    python trainworld/tools/deploy.py --terrain-world [--dry-run]   the terrain blocks to R2 (T-2901), once per data version
 
 Run from the maps root. Nothing here commits or pushes; it prints the git commands.
 
@@ -19,6 +20,11 @@ about 15 MB) goes to the website repo's `trainsworld/` (T-1707; its old `trainwo
 redirect pages there, written in the same publish), since module workers and WASM must be
 same-origin with the page. The page finds its data with game/dataBase.ts: the `tw-data` meta this
 script writes into the published index.html, else `packs/` beside the page (every local build).
+
+The terrain blocks (T-2901). 19k small files, about 0.7 GB, under one fixed prefix on R2 that is not the
+release's (`r2:anitamaps/trainworld/terrain-world/v1/`), so they go up once and not with every release. The build
+holds them as hard links in `packs/terrain-world/`; a release leaves them out, the page finds them through the
+`tw-terrain` meta, and a release is refused while the prefix on R2 is not complete.
 
 Versioned prefix. Every object is uploaded `immutable` for a year, so a later upload goes to a new
 version and never mixes with a browser's cached old files; the script refuses a version already on
@@ -59,6 +65,8 @@ STAGE = os.path.join(MAPS, "artifacts", "trainworld", "publish")
 # the data keeps its trainworld/ prefix on R2: old versions stay where they are, and nobody sees it
 REMOTE = "r2:anitamaps/trainworld"
 PUBLIC = "https://data.anita.garden/trainworld"
+# T-2901: the terrain blocks' fixed prefix, shared by every release; a new data version gets a new vN
+TERRAIN_PREFIX = "terrain-world/v1"
 # T-1707: the game lives at /trainsworld/; the old /trainworld/ folder keeps only redirect pages
 SITE_DIR = "trainsworld"
 OLD_DIR = "trainworld"
@@ -83,6 +91,18 @@ def files_under(root):
             yield os.path.relpath(p, root).replace("\\", "/"), p
 
 
+def terrain_world_files(dist):
+    """The build's terrain blocks: (published name, path) pairs."""
+    root = os.path.join(dist, "packs", "terrain-world")
+    return list(files_under(root)) if os.path.isdir(root) else []
+
+
+def r2_terrain_count():
+    """Objects under the terrain prefix on R2, or None if it cannot be listed."""
+    r = subprocess.run(["rclone", "lsf", "-R", "--files-only", "--s3-no-check-bucket", f"{REMOTE}/{TERRAIN_PREFIX}/"], capture_output=True, text=True)
+    return None if r.returncode else len(r.stdout.split())
+
+
 def is_gz(rel):
     """JSON goes up gzipped, except the realgraph index the page also probes for locally (tiny)."""
     return rel.endswith(GZ_EXT) and not rel.startswith("realgraph/")
@@ -90,6 +110,13 @@ def is_gz(rel):
 
 def git(*args, cwd):
     return subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True).stdout.strip()
+
+
+def blocks_listed(terrain):
+    """How many blocks `index.bin` says have a file (its u32 at byte 12)."""
+    path = dict(terrain)["index.bin"]
+    with open(path, "rb") as f:
+        return int.from_bytes(f.read(16)[12:16], "little")
 
 
 def preflight(dist, allow_dirty, app=None):
@@ -152,7 +179,12 @@ def preflight(dist, allow_dirty, app=None):
         problems.append(f"{len(missing)} files the registry needs are not in the build: {', '.join(missing[:12])}{' ...' if len(missing) > 12 else ''}")
 
     site = [(r, os.path.getsize(p)) for r, p in files_under(dist) if not r.startswith("packs/")]
-    data = [(r, os.path.getsize(p)) for r, p in files_under(packs)]
+    data = [(r, os.path.getsize(p)) for r, p in files_under(packs) if not r.startswith("terrain-world/")]
+    terrain = terrain_world_files(dist)
+    if not any(r == "index.bin" for r, _ in terrain):
+        problems.append("the build has no packs/terrain-world/index.bin: run pipeline/world_terrain.py build, and rebuild")
+    if terrain and len(terrain) != blocks_listed(terrain) + 1:
+        problems.append(f"packs/terrain-world has {len(terrain) - 1} blocks and its index.bin lists {blocks_listed(terrain)}")
     for r, s in site:
         if s > 100 * MB:
             problems.append(f"{r} is {s / MB:.0f} MB: over GitHub's 100 MB file limit")
@@ -242,7 +274,8 @@ def page_html(dist, base):
     anchor = '<meta charset="utf-8" />'
     if anchor not in src:
         raise SystemExit("index.html has no <meta charset> to put the tw-data meta after")
-    return src.replace(anchor, anchor + f'\n    <meta name="tw-data" content="{base}" />', 1)
+    terrain = f"{PUBLIC}/{TERRAIN_PREFIX}/"
+    return src.replace(anchor, anchor + f'\n    <meta name="tw-data" content="{base}" />\n    <meta name="tw-terrain" content="{terrain}" />', 1)
 
 
 def copy_site(dist, dest, base, dry):
@@ -315,7 +348,10 @@ def fetch(url, headers):
 def verify(version, page):
     ok = True
     base = f"{PUBLIC}/{version}/"
+    terrain = f"{PUBLIC}/{TERRAIN_PREFIX}/index.bin"
     checks = [
+        ("the terrain blocks' index is on R2, immutable, with CORS", terrain, {"Origin": "https://anita.garden"},
+         lambda c, h: c == 200 and not h.get("Content-Encoding") and "immutable" in (h.get("Cache-Control") or "") and h.get("Access-Control-Allow-Origin")),
         ("a .bin answers a Range request raw", base + "nyc.bin", {"Range": "bytes=0-99", "Origin": "https://anita.garden"},
          lambda c, h: c == 206 and not h.get("Content-Encoding") and h.get("Access-Control-Allow-Origin")),
         ("a pack header is gzipped and immutable", base + "nyc.json", {"Accept-Encoding": "gzip", "Origin": "https://anita.garden"},
@@ -357,6 +393,24 @@ def verify(version, page):
     return ok
 
 
+def upload_terrain_world(dist, dry):
+    """T-2901: the blocks to their fixed prefix. rclone skips what is already there, so a rerun finishes a cut-off upload."""
+    files = terrain_world_files(dist)
+    if not any(r == "index.bin" for r, _ in files) or blocks_listed(files) != len(files) - 1:
+        print(f"no complete terrain blocks in {dist}: rebuild with pipeline/world_terrain.py done")
+        return 1
+    size = sum(os.path.getsize(p) for _, p in files)
+    dest = f"{REMOTE}/{TERRAIN_PREFIX}"
+    print(f"{len(files)} files, {size / 1e9:.2f} GB -> {dest}")
+    # .terrain files are gzip the game inflates itself, so no Content-Encoding (as .rgr)
+    rc = run(RCLONE + ["copy", os.path.join(dist, "packs", "terrain-world"), dest], dry)
+    if rc:
+        print(f"rclone exited {rc}")
+    elif not dry:
+        print(f"on R2 now: {r2_terrain_count()} files")
+    return rc
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
@@ -371,8 +425,12 @@ def main():
     ap.add_argument("--page", action="store_true", help="with --verify: also check the pushed page")
     ap.add_argument("--stage", help="write the website half into this folder instead (local test), nothing uploaded")
     ap.add_argument("--data-base", help="with --stage: the data URL the page reads")
+    ap.add_argument("--terrain-world", action="store_true", help="upload the terrain blocks to their fixed prefix (T-2901), then stop")
     a = ap.parse_args()
     v = a.version
+
+    if a.terrain_world:
+        sys.exit(upload_terrain_world(a.dist, a.dry_run))
 
     if a.verify:
         sys.exit(0 if verify(v, a.page) else 1)
@@ -412,12 +470,20 @@ def main():
             if not a.dry_run:
                 sys.exit(1)
 
+    terrain_on_r2 = r2_terrain_count()
+    terrain_here = len(terrain_world_files(a.dist))
+    print(f"terrain blocks on R2 ({TERRAIN_PREFIX}): {terrain_on_r2}, in the build: {terrain_here}")
+    if terrain_on_r2 != terrain_here:
+        print("the terrain blocks are not on R2 in full: python trainworld/tools/deploy.py --terrain-world")
+        if not a.dry_run:
+            sys.exit(1)
+
     packs = os.path.join(a.dist, "packs")
     dest = f"{REMOTE}/{v}"
     if not a.skip_data:
         print(f"\ndata -> {dest}")
-        # the raw half: .bin, .rgr, .save and the realgraph index (see is_gz)
-        rc = run(RCLONE + ["copy", packs, dest, "--filter", "+ realgraph/index.json", "--filter", "- *.json", "--filter", "- *.geojson"], a.dry_run)
+        # the raw half: .bin, .rgr, .save and the realgraph index (see is_gz); the terrain blocks have their own prefix
+        rc = run(RCLONE + ["copy", packs, dest, "--filter", "- terrain-world/**", "--filter", "+ realgraph/index.json", "--filter", "- *.json", "--filter", "- *.geojson"], a.dry_run)
         if rc:
             sys.exit(f"rclone exited {rc}: a 403 naming CreateBucket is a missing --s3-no-check-bucket, SignatureDoesNotMatch a bad secret")
         if a.dry_run:

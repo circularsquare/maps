@@ -55,7 +55,7 @@ const hold = (ms) => new Promise((d) => setTimeout(d, ms));
 
 const { ctx, close } = await launchChrome({ prefix: 'tw-t2613-', size: [1300, 900] });
 try {
-  await ctx.route(/\/terrain\/[a-z0-9_-]+\.terrain/, async (route) => {
+  await ctx.route(/\/terrain-world\/[0-9_-]+\.terrain/, async (route) => {
     try {
       if (net.terrain === 'block') return await route.abort('internetdisconnected');
       if (net.terrain === 'slow') await hold(6000);
@@ -85,8 +85,6 @@ try {
   const shot = (name) => page.screenshot({ path: join(OUT, name), clip: { x: 0, y: 0, width: 1300, height: 220 } });
 
   // 1. terrain blocked
-  // (Innsbruck's realm is not shown in a game started in New York, so the view fetches nothing
-  // there ahead: the blueprint is what needs its terrain)
   await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 13 }), [(mtn.a[0] + mtn.b[0]) / 2, mtn.a[1]]);
   await hold(3000);
   const segment = () => page.evaluate(async ([a, b]) => {

@@ -1509,12 +1509,41 @@ impl Network {
         self.rework_ground(b, Ground::Water);
     }
 
-    /// T-1270: a terrain grid added to those in use, its bounds `b` in the network frame: only the
-    /// edges reaching into `b` have their terrain and price worked out again, as for water. Nothing
+    /// T-1270, T-2901: a terrain block added to those in use, its bounds `b` in the network frame: only
+    /// the edges reaching into `b` have their terrain and price worked out again, as for water. Nothing
     /// but the price depends on terrain.
     pub fn add_terrain(&mut self, grid: std::sync::Arc<cost::ClassGrid>, b: [f64; 4]) {
-        self.terrain.grids.push(grid);
+        self.terrain.add(grid);
         self.rework_ground(b, Ground::Terrain);
+    }
+
+    /// A terrain block taken out of those in use, unless an edge reaches into its bounds `b`: such a
+    /// block's cells price that edge at its next re-derive (T-2901).
+    pub fn drop_terrain(&mut self, key: i32, b: [f64; 4]) -> bool {
+        let reaches = (0..self.edge_count() as u32).any(|e| {
+            self.edge_ok(e) && self.pieces.get(self.edge_pieces[e as usize]).iter().any(|p| { let q = p.bbox(); q[0] <= b[2] && q[2] >= b[0] && q[1] <= b[3] && q[3] >= b[1] })
+        });
+        if !reaches {
+            self.terrain.remove(key);
+        }
+        !reaches
+    }
+
+    /// The blocks with a terrain file that the terrain samples of live edges fall in (only the
+    /// blueprint's with `blueprint`), ascending.
+    pub fn terrain_blocks_under(&self, blueprint: bool) -> Vec<i32> {
+        let mut seen = std::collections::HashSet::new();
+        let frame = self.frame;
+        for e in 0..self.edge_count() as u32 {
+            let i = e as usize;
+            if self.edge_ok(e) && !(blueprint && self.edge_built[i]) {
+                let pieces = self.pieces.get(self.edge_pieces[i]);
+                cost::terrain_blocks(self.edge_len[i], |s| { let (x, y, _) = geom::pos_at(pieces, s); frame.to_lonlat(x, y) }, &mut seen);
+            }
+        }
+        let mut out: Vec<i32> = seen.into_iter().filter(|k| self.terrain.listed(*k)).collect();
+        out.sort_unstable();
+        out
     }
 
     /// T-1929: a road tile added to those in use (`roads::Roads::key`), its bounds `b` in the
@@ -1558,7 +1587,6 @@ impl Network {
 
     /// Work out again the water or the terrain, and the price, of the edges reaching into `b`.
     fn rework_ground(&mut self, b: [f64; 4], what: Ground) {
-        self.repriced = true;
         let frame = self.frame;
         for e in 0..self.edge_count() as u32 {
             let i = e as usize;
@@ -1582,7 +1610,10 @@ impl Network {
                     self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
                 }
             }
-            self.edge_cost[i] = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+            let price = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+            // a block over edges whose ground is flat changes no line's rows, and a view brings many
+            self.repriced |= (price - self.edge_cost[i]).abs() > 1e-9;
+            self.edge_cost[i] = price;
         }
     }
 

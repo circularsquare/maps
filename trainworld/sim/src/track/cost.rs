@@ -2,7 +2,8 @@
 
 use super::frame::Frame;
 use super::params::*;
-use std::sync::Arc;
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 
 /// Where the water is. T-030 ships a mask in the city pack; anything that can answer "is this
 /// point water?" in local metres works here.
@@ -292,10 +293,9 @@ pub fn water_spans(len: f64, at: impl Fn(f64) -> (f64, f64), mask: &dyn WaterMas
     }
 }
 
-/// Terrain classes on a grid of whole fractions of a degree (T-1270, `pipeline/zone_terrain.py`):
-/// 0 flat, 1 rolling, 2 hilly, 3 mountain, row after row from the south-west corner. Every zone's
-/// grid sits on one world lattice, so overlapping grids agree cell for cell. Two bits a cell (T-1854:
-/// the largest zone is about 60 M cells at 960 a degree).
+/// Terrain classes on a grid of whole fractions of a degree (T-1270, T-2901, `pipeline/world_terrain.py`):
+/// 0 flat, 1 rolling, 2 hilly, 3 mountain, row after row from the south-west corner. The world's land is
+/// one such grid per degree block, 960 x 960 cells. Two bits a cell (a block is 230 KB).
 pub struct ClassGrid {
     /// lattice cells a degree
     pub per_deg: f64,
@@ -381,11 +381,57 @@ impl ClassGrid {
     }
 }
 
-/// The terrain grids installed (one per zone near the view or the track). A point no grid covers is
-/// flat. Cheap to clone: the grids are shared.
+/// A degree block as one number: `(la + 90) * 360 + (lo + 180)`, `la` and `lo` the block's south-west
+/// corner in whole degrees. Must match the app's `blockKey` (`game/terrainBlocks.ts`).
+pub fn block_key(lon: f64, lat: f64) -> i32 {
+    let lo = (lon + 180.0).rem_euclid(360.0).floor() as i32;
+    let la = (lat + 90.0).floor().clamp(0.0, 179.0) as i32;
+    la * 360 + lo.min(359)
+}
+
+/// Which degree blocks have a terrain file: `index.bin` from `pipeline/world_terrain.py`. A block it does
+/// not list has no land to price (open sea, or Antarctica): known flat, nothing to fetch.
+pub struct BlockIndex {
+    south: i32,
+    rows: i32,
+    west: i32,
+    cols: i32,
+    bits: Vec<u8>,
+}
+
+impl BlockIndex {
+    /// `TWI1`, i16 south, u16 rows, i16 west, u16 columns, u32 blocks listed, then a bit a block
+    /// row-major from the south-west, the first in the low bit of each byte.
+    pub fn decode(b: &[u8]) -> Option<BlockIndex> {
+        if b.len() < 16 || &b[0..4] != b"TWI1" {
+            return None;
+        }
+        let i16_at = |i: usize| i16::from_le_bytes([b[i], b[i + 1]]) as i32;
+        let u16_at = |i: usize| u16::from_le_bytes([b[i], b[i + 1]]) as i32;
+        let (south, rows, west, cols) = (i16_at(4), u16_at(6), i16_at(8), u16_at(10));
+        let bits = b[16..].to_vec();
+        (rows > 0 && cols > 0 && ((rows * cols) as usize).div_ceil(8) == bits.len()).then_some(BlockIndex { south, rows, west, cols, bits })
+    }
+
+    pub fn has(&self, key: i32) -> bool {
+        let (la, lo) = (key.div_euclid(360) - 90 - self.south, key.rem_euclid(360) - 180 - self.west);
+        if la < 0 || lo < 0 || la >= self.rows || lo >= self.cols {
+            return false;
+        }
+        let i = (la * self.cols + lo) as usize;
+        self.bits[i >> 3] >> (i & 7) & 1 == 1
+    }
+}
+
+/// The terrain blocks installed, by `block_key` (T-2901). The track model loads the blocks under what it
+/// prices and the view reaches; a point in a block not installed reads flat, and the block goes on the
+/// `wanted` list for the worker to fetch. Cheap to clone: the grids are shared, and so is the list, so a
+/// preview's model reports what it wanted to the same place.
 #[derive(Clone, Default)]
 pub struct Terrain {
-    pub grids: Vec<Arc<ClassGrid>>,
+    blocks: HashMap<i32, Arc<ClassGrid>>,
+    index: Option<Arc<BlockIndex>>,
+    wanted: Arc<Mutex<HashSet<i32>>>,
 }
 
 /// Longitude and latitude of the centre of the terrain hex a point is in (T-2890): pointy-topped
@@ -411,28 +457,85 @@ pub fn hex_centre(lon: f64, lat: f64) -> (f64, f64) {
 }
 
 impl Terrain {
+    /// A block's grid: its key from its south-west cell.
+    pub fn add(&mut self, grid: Arc<ClassGrid>) {
+        let per = grid.per_deg as i64;
+        self.blocks.insert((grid.row0.div_euclid(per) * 360 + grid.col0.div_euclid(per)) as i32, grid);
+    }
+
+    pub fn remove(&mut self, key: i32) {
+        self.blocks.remove(&key);
+    }
+
+    pub fn set_index(&mut self, index: BlockIndex) {
+        self.index = Some(Arc::new(index));
+    }
+
+    /// Whether a block should have a file; every block while the index is not in.
+    pub fn listed(&self, key: i32) -> bool {
+        self.index.as_ref().map_or(true, |i| i.has(key))
+    }
+
+    /// The grid of a block, or `None` with the block marked wanted when it should have one.
+    fn grid(&self, key: i32) -> Option<&ClassGrid> {
+        if let Some(g) = self.blocks.get(&key) {
+            return Some(g);
+        }
+        if self.listed(key) {
+            self.wanted.lock().unwrap().insert(key);
+        }
+        None
+    }
+
     /// The class charged at a point: that of its hex's centre (T-2890).
     pub fn class_at(&self, lon: f64, lat: f64) -> u8 {
         let (lon, lat) = hex_centre(lon, lat);
-        self.grids.iter().find_map(|g| g.at(lon, lat)).unwrap_or(0)
+        self.grid(block_key(lon, lat)).and_then(|g| g.at(wrap_lon(lon), lat)).unwrap_or(0)
     }
-    pub fn is_empty(&self) -> bool {
-        self.grids.is_empty()
+
+    /// Blocks asked for and not installed since the last call (listed ones, not listed ones being
+    /// flat). Nothing while the index is not in, the list then kept for when it is.
+    pub fn take_wanted(&self) -> Vec<i32> {
+        if self.index.is_none() {
+            return vec![];
+        }
+        let mut w = self.wanted.lock().unwrap();
+        let out = w.iter().copied().filter(|k| !self.blocks.contains_key(k) && self.listed(*k)).collect();
+        w.clear();
+        out
     }
+}
+
+/// A longitude into -180..180, as hex centres can stray just past the antimeridian.
+fn wrap_lon(lon: f64) -> f64 {
+    (lon + 180.0).rem_euclid(360.0) - 180.0
+}
+
+/// How many terrain samples an alignment of length `len` has and their spacing; the n-th (from 0) is
+/// at chainage `(n + 0.5) * step`.
+fn terrain_samples(len: f64) -> (usize, f64) {
+    let n = (len / TERRAIN_STEP).ceil().max(1.0) as usize;
+    (n, len / n as f64)
 }
 
 /// Chainage spans `[s0, s1, class]` of terrain that is not flat along an alignment, sampled every
 /// `TERRAIN_STEP` m; `at` gives longitude and latitude at a chainage.
 pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out: &mut Vec<[f64; 3]>) {
-    if t.is_empty() || len <= 0.0 {
+    if len <= 0.0 {
         return;
     }
-    let n = (len / TERRAIN_STEP).ceil().max(1.0) as usize;
-    let step = len / n as f64;
+    let (n, step) = terrain_samples(len);
     let mut open: Option<(f64, u8)> = None;
+    let (mut key, mut grid) = (-1, None);
     for j in 0..n {
         let (lon, lat) = at((j as f64 + 0.5) * step);
-        let c = t.class_at(lon, lat);
+        let (lon, lat) = hex_centre(lon, lat);
+        let k = block_key(lon, lat);
+        if k != key {
+            key = k;
+            grid = t.grid(k);
+        }
+        let c = grid.and_then(|g| g.at(wrap_lon(lon), lat)).unwrap_or(0);
         let s = j as f64 * step;
         match open {
             Some((_, k)) if k == c => {}
@@ -446,6 +549,24 @@ pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out:
     }
     if let Some((s0, k)) = open {
         out.push([s0, len, k as f64]);
+    }
+}
+
+/// Every block the terrain samples of an alignment fall in, as `terrain_spans` reads them.
+pub fn terrain_blocks(len: f64, at: impl Fn(f64) -> (f64, f64), out: &mut HashSet<i32>) {
+    if len <= 0.0 {
+        return;
+    }
+    let (n, step) = terrain_samples(len);
+    let mut last = -1;
+    for j in 0..n {
+        let (lon, lat) = at((j as f64 + 0.5) * step);
+        let (lon, lat) = hex_centre(lon, lat);
+        let k = block_key(lon, lat);
+        if k != last {
+            last = k;
+            out.insert(k);
+        }
     }
 }
 
@@ -739,7 +860,8 @@ mod tests {
     #[test]
     fn terrain_spans_merge_runs_and_skip_flat() {
         let b = terrain_file(4, 1, 180 * 240, 135 * 240, &[(0, 1), (2, 2), (0, 1)]);
-        let t = Terrain { grids: vec![Arc::new(ClassGrid::decode(&b).unwrap())] };
+        let mut t = Terrain::default();
+        t.add(Arc::new(ClassGrid::decode(&b).unwrap()));
         let d = 1.0 / 240.0;
         let mut out = vec![];
         // 4 cells along a parallel, about 1.3 km at 45 N
@@ -748,6 +870,63 @@ mod tests {
         assert_eq!(out[0][2], 2.0);
         assert!((out[0][0] - 1000.0).abs() <= 100.0 && (out[0][1] - 3000.0).abs() <= 100.0, "{out:?}");
         assert_eq!(t.class_at(10.0, 10.0), 0, "outside every grid is flat");
+    }
+
+    #[test]
+    fn blocks_are_found_by_key_and_listed_by_the_index() {
+        // T-2901: a hilly block at 10-11 E, 45-46 N
+        assert_eq!(block_key(10.5, 45.5), 135 * 360 + 190);
+        assert_eq!(block_key(10.0, 45.0), 135 * 360 + 190);
+        assert_eq!(block_key(-180.0, 45.5), 135 * 360);
+        assert_eq!(block_key(180.0, 45.5), 135 * 360, "the antimeridian wraps");
+        assert_eq!(block_key(179.9999, 45.5), 135 * 360 + 359);
+        let b = terrain_file(240, 240, 190 * 240, 135 * 240, &[(2, 240 * 240)]);
+        let mut t = Terrain::default();
+        t.add(Arc::new(ClassGrid::decode(&b).unwrap()));
+        assert_eq!(t.class_at(10.5, 45.5), 2);
+        assert_eq!(t.class_at(11.5, 45.5), 0, "not installed reads flat");
+        // nothing is handed over until the index is in
+        assert!(t.take_wanted().is_empty());
+        // one row at 45 N, three columns from 10 E: the first and the third listed
+        let mut idx = b"TWI1".to_vec();
+        idx.extend(45i16.to_le_bytes());
+        idx.extend(1u16.to_le_bytes());
+        idx.extend(10i16.to_le_bytes());
+        idx.extend(3u16.to_le_bytes());
+        idx.extend(2u32.to_le_bytes());
+        idx.push(0b101);
+        t.set_index(BlockIndex::decode(&idx).unwrap());
+        assert!(t.listed(135 * 360 + 190) && !t.listed(135 * 360 + 191) && t.listed(135 * 360 + 192));
+        assert!(!t.listed(134 * 360 + 190), "outside the index is not listed");
+        t.class_at(11.5, 45.5); // not listed: not wanted
+        t.class_at(12.5, 45.5); // listed: wanted
+        assert_eq!(t.take_wanted(), vec![135 * 360 + 192]);
+        assert!(t.take_wanted().is_empty(), "taken once");
+        assert!(BlockIndex::decode(&idx[..idx.len() - 1]).is_none());
+        // a grid removed reads flat again and is wanted again
+        t.remove(135 * 360 + 190);
+        assert_eq!(t.class_at(10.5, 45.5), 0);
+        assert_eq!(t.take_wanted(), vec![135 * 360 + 190]);
+    }
+
+    #[test]
+    fn spans_read_across_a_block_edge_and_terrain_blocks_lists_them() {
+        // T-2901: 2 km along a parallel across 11 E at 45.5 N, a hilly block each side
+        let mut t = Terrain::default();
+        for lo in [190, 191] {
+            let b = terrain_file(240, 240, lo * 240, 135 * 240, &[(2, 240 * 240)]);
+            t.add(Arc::new(ClassGrid::decode(&b).unwrap()));
+        }
+        let m_per_deg = 111_320.0 * 45.5f64.to_radians().cos();
+        let at = |s: f64| (11.0 + (s - 1000.0) / m_per_deg, 45.5);
+        let mut out = vec![];
+        terrain_spans(2000.0, at, &t, &mut out);
+        assert_eq!(out.len(), 1, "{out:?}");
+        assert!(out[0][0].abs() < 1e-9 && (out[0][1] - 2000.0).abs() < 1e-9 && out[0][2] == 2.0, "{out:?}");
+        let mut blocks = HashSet::new();
+        terrain_blocks(2000.0, at, &mut blocks);
+        assert_eq!(blocks.len(), 2, "{blocks:?}");
+        assert!(blocks.contains(&(135 * 360 + 190)) && blocks.contains(&(135 * 360 + 191)));
     }
 
     /// A world water file at one cell a degree: `runs` per row index, (first water column, first land
