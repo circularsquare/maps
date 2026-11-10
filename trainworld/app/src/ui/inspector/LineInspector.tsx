@@ -34,6 +34,7 @@ import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, vehicleOf, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
+import { turnedLine, type TurnRow } from "../../game/turnedLine";
 import { MareyButton } from "./MareyChart";
 import { LineProfile } from "./LineProfile";
 import { LineTopSpeed } from "./LineTopSpeed";
@@ -229,12 +230,12 @@ function selfTransfer(l: LineInput, i: number): boolean {
 /** The lines stopping at stop `i`'s complex (T-549), busiest there first by their boardings in the
  * past 24 hours, the line itself where it comes back there (T-1391), leaving out `drawn` (line
  * numbers drawn beside the line there, T-1168). */
-function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>): LineInput[] {
+function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>, noSelf = false): LineInput[] {
   const w = world.value;
   const members = new Set(complexOf(l.stops[i]));
   const d = today.value;
   const riders = (o: LineInput) => o.stops.reduce((n, s, k) => n + (members.has(s) ? (d.get(o.id)?.stops[k] ?? 0) : 0), 0);
-  return (w?.save.lines ?? []).filter((o) => !drawn?.has(o.num) && (o.id === l.id ? selfTransfer(l, i) : o.stops.some((s) => members.has(s))))
+  return (w?.save.lines ?? []).filter((o) => !drawn?.has(o.num) && (o.id === l.id ? !noSelf && selfTransfer(l, i) : o.stops.some((s) => members.has(s))))
     .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
 }
 
@@ -252,8 +253,8 @@ export function TwoRows({ lines }: { lines: LineInput[] }) {
 
 /** The busiest two as bullets, then `extra` (lines drawn beside it whose bullet shows at this row,
  * T-1391), the rest behind a "+" whose hover names them. */
-export function StopTransfers({ l, i, drawn, extra = [], tall }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[]; tall?: boolean }) {
-  const others = [...transferLines(l, i, drawn), ...extra];
+export function StopTransfers({ l, i, drawn, extra = [], tall, noSelf }: { l: LineInput; i: number; drawn?: ReadonlySet<number>; extra?: LineInput[]; tall?: boolean; noSelf?: boolean }) {
+  const others = [...transferLines(l, i, drawn, noSelf), ...extra];
   if (!others.length) return null;
   // T-1786: a tall row of the related-lines view has its bullets in two rows, in the bars' order
   const shown = others.slice(0, tall ? TALL_MAX : STOP_CHIPS), rest = others.slice(shown.length);
@@ -327,20 +328,21 @@ export function StretchHalf({ s, down }: { s: StretchLook; down: boolean }) {
 const PANEL_MARK_FLOOR = 0.5;
 
 /** One stop's boardings in the past 24 hours (T-446), in the stops list. */
-export function StopToday({ line, i }: { line: string; i: number }) {
+export function StopToday({ line, i }: { line: string; i: number | number[] }) {
   const d = today.value.get(line);
-  return <span class="n num" data-tip={d ? tr("stationInspector.boardings24", { count: count(d.stops[i] ?? 0) }) : undefined}>{d ? count(d.stops[i] ?? 0) : ""}</span>;
+  const n = d ? (Array.isArray(i) ? i : [i]).reduce((a, k) => a + (d.stops[k] ?? 0), 0) : 0;
+  return <span class="n num" data-tip={d ? tr("stationInspector.boardings24", { count: count(n) }) : undefined}>{d ? count(n) : ""}</span>;
 }
 
 /** The plain stops strip; a loop's bar goes on past its ends and curves round (T-1391). */
-function PlainStops({ looks, colour, loop, order, onDblClick, children }: { looks: boolean; colour: string; loop: boolean; order: string; onDblClick: (e: MouseEvent) => void; children: ComponentChildren }) {
+function PlainStops({ looks, colour, loop, ends, order, onDblClick, children }: { looks: boolean; colour: string; loop: boolean; ends?: [boolean, boolean]; order: string; onDblClick: (e: MouseEvent) => void; children: ComponentChildren }) {
   const ul = useRef<HTMLUListElement>(null);
   useTightTimes(ul);
   return (
-    <ul ref={ul} class={"stops" + (looks ? " traffic" : "") + (loop ? " loop" : "") + order} style={{ "--c": colour }} onDblClick={onDblClick}>
-      {loop && <li class="loop-end top" aria-hidden="true" />}
+    <ul ref={ul} class={"stops" + (looks ? " traffic" : "") + (loop ? " loop" : "") + (ends ? " turned" : "") + order} style={{ "--c": colour }} onDblClick={onDblClick}>
+      {(loop || ends?.[0]) && <li class="loop-end top" aria-hidden="true" />}
       {children}
-      {loop && <li class="loop-end bottom" aria-hidden="true" />}
+      {(loop || ends?.[1]) && <li class="loop-end bottom" aria-hidden="true" />}
     </ul>
   );
 }
@@ -660,6 +662,14 @@ function RailLineInspector({ id }: { id: string }) {
   };
   const addGaps = (gs: number[]) => {
     const add = passed.filter((p) => gs.includes(p.gap));
+    // a turned line's stem is passed twice: a station added on the way out is added on the way back too
+    if (turned) {
+      for (const p of [...add].reverse()) {
+        const a = l.stops[p.gap], b = l.stops[p.gap + 1];
+        const back = l.stops.findIndex((x, k) => k !== p.gap && x === b && l.stops[k + 1] === a);
+        if (back >= 0) add.push({ gap: back, node: p.node });
+      }
+    }
     const stops = l.stops.flatMap((s, i) => [Number(s), ...add.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
     return setStops(stops);
@@ -700,13 +710,16 @@ function RailLineInspector({ id }: { id: string }) {
 
   const shown = title.shown;
   const nStops = l.stops.length;
+  // T-3025: a line turned round a loop is one row per station (the plain list, with no side lines drawn), except
+  // while a hand-ordered line's stops are edited, where each pass is its own row
+  const turned = !(editingStops && st.hand) ? turnedLine(l.stops, st) : null;
   // T-1894: north (or for an east-west line, west) end on top; a loop as built
   const byId = stationsById(w);
-  const flip = drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
+  const flip = !turned && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
   // T-2895: while stops are edited a row drags to a new place in the list (not by touch; in related lines the
   // line's own rows); a loop keeps its first and closing stop where they are. The line then keeps the order.
   const loopEnds = st.loop ? 1 : 0;
-  const canDrag = editingStops && nStops >= 3 + 2 * loopEnds;
+  const canDrag = editingStops && !turned && nStops >= 3 + 2 * loopEnds;
   const orderWhy = (issues: string[]) => {
     const f = issues.find((k) => k.startsWith("StopOrder:"))?.split(":").map(Number); // i18n-ignore
     if (!f) return describeIssues(issues);
@@ -768,7 +781,12 @@ function RailLineInspector({ id }: { id: string }) {
   const sortStops = () => void stopEdit({ op: "sortStops", line: l.num });
   // T-1894: while stops are edited a click on a stop's dot takes it out keeping the path, Shift-click
   // ends the line there, as in the group view; a stop the line needs has no click
-  const dotClick = (i: number): { tip: string; click: (e: MouseEvent) => void } | null => {
+  const takeOut = (row: TurnRow) => setStops(l.stops.filter((_, k) => !row.occ.includes(k)).map(Number));
+  const dotClick = (i: number, row?: TurnRow): { tip: string; click: (e: MouseEvent) => void } | null => {
+    if (row) {
+      if (!editingStops || turned!.rows.length <= 2 || st.reversals?.some((k) => row.occ.includes(k))) return null;
+      return { tip: tr("busInspector.removeStop", { name: name.get(l.stops[i]) ?? "" }), click: () => void takeOut(row) };
+    }
     const end = i === 0 || i === nStops - 1, loop = !!st.loop;
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
@@ -784,18 +802,26 @@ function RailLineInspector({ id }: { id: string }) {
   };
   // T-1168: stop `i`'s row; `drawn` (in the related-lines view) are the lines drawn beside the line
   // there, `bullets` those of them whose bullet shows here
-  const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[]) => {
+  const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[], row?: TurnRow) => {
     const s = l.stops[i];
-    const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || selfTransfer(l, i);
+    const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || (!row && selfTransfer(l, i));
     const tall = !!drawn && transferLines(l, i, drawn).length > ROUND_MAX;
     // the stretches above and below the row, and the time from the stop on top
-    const above = flip ? (i < nStops - 1 ? i : -1) : i - 1, below = flip ? i - 1 : (i < nStops - 1 ? i : -1);
+    let above = flip ? (i < nStops - 1 ? i : -1) : i - 1, below = flip ? i - 1 : (i < nStops - 1 ? i : -1);
     const total = times[nStops - 1] ?? 0;
-    const t = flip ? (i < nStops - 1 && times[i] !== undefined ? total - times[i] : undefined) : i > 0 ? times[i] : undefined;
-    const dot = dotClick(i);
+    let t = flip ? (i < nStops - 1 && times[i] !== undefined ? total - times[i] : undefined) : i > 0 ? times[i] : undefined;
+    // a turned line's rows follow its walk from the first pass: the stretch above a row is the one into its first pass
+    if (row) {
+      above = row.first ? -1 : i > 0 ? i - 1 : nStops - 2;
+      below = row.last ? -1 : i;
+      t = i > 0 ? times[i] : undefined;
+    }
+    const dot = dotClick(i, row);
     return (
-      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + dropClass(i)} data-r={drawn ? true : undefined}
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + dropClass(i)} data-r={drawn ? true : undefined}
         data-stop={i} onPointerDown={(e) => rowDown(e, i)}>
+        {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
+        {row?.arc === "end" && <i class="dir" aria-hidden="true" />}
         {looks && !drawn && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}
         {looks && !drawn && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}
         {dot && <span class="stop-hit" data-tip={dot.tip} onClick={dot.click} />}
@@ -810,11 +836,16 @@ function RailLineInspector({ id }: { id: string }) {
             </span>
           )}
         </span>
-        <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} />
-        <StopToday line={l.id} i={i} />
+        <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} noSelf={!!row} />
+        <StopToday line={l.id} i={row ? row.occ : i} />
         <RouteMarks marks={flip ? marks.filter((m) => m.gap === i - 1).reverse() : marks.filter((m) => m.gap === i)} />
+        {editingStops && row?.turn && (
+          <button class="btn icon mini" data-tip={tr("lineInspector.openLoop")} aria-label={tr("lineInspector.openLoop")} onClick={() => void stopEdit({ op: "openLoop", line: l.num })}>
+            <Icon.uturn />
+          </button>
+        )}
         {editingStops && (
-          <button class="btn icon mini danger" data-tip={tr(st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => removeStop(i)}>
+          <button class="btn icon mini danger" data-tip={tr(!row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : removeStop(i))}>
             <Icon.cross />
           </button>
         )}
@@ -826,7 +857,7 @@ function RailLineInspector({ id }: { id: string }) {
   // edited the last row stays, holding the button that opens the loop
   const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
   // T-646: after stop `i`, while stops are edited, the stations the line passes before the next
-  const afterStop = (i: number) => {
+  const afterStop = (i: number, inArc = false) => {
     // T-3007: a station a side line stops at counts too, though it also has its own row in related lines
     const here = editingStops ? passed.filter((p) => p.gap === i) : [];
     if (!here.length || i + 1 >= l.stops.length) return null;
@@ -836,15 +867,17 @@ function RailLineInspector({ id }: { id: string }) {
     return pending?.includes(i)
       ? <>
         <li class="passed confirm">
+          {inArc && <i class="arc mid" aria-hidden="true" />}
           <button class="btn text mini grow" onClick={() => void addPassed()}>{tr("lineInspector.add", { stations: stationsText(here.length) })}</button>
           <button class="btn text mini" onClick={() => setPending(null)}>{tr("lineInspector.cancel")}</button>
         </li>
         {here.map((p) => (
-          <li class="adding"><span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
+          <li class="adding">{inArc && <i class="arc mid" aria-hidden="true" />}<span class="grow"><span class="stop-name">+ {name.get(String(p.node)) ?? ""}</span></span></li>
         ))}
       </>
       : !pending && (
         <li class="passed">
+          {inArc && <i class="arc mid" aria-hidden="true" />}
           <button class="btn text mini" data-tip={tr("lineInspector.addTip", { names: tList(here.map((p) => name.get(String(p.node)) ?? "")) })} onClick={() => setPending([i])} onDblClick={() => void addGaps([i])}>
             <Icon.plus />{tr("lineInspector.passed", { stations: stationsText(here.length) })}
           </button>
@@ -857,7 +890,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <div class="h divided">
         {tr("lineInspector.stops")}
-        {l.stops.length >= 2 && (
+        {l.stops.length >= 2 && !turned && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
@@ -868,13 +901,15 @@ function RailLineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
-      {related ? (
+      {related && !turned ? (
         <div class={orderClass} onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce} flip={flip} lRow={stopRow} after={editingStops ? afterStop : undefined}
             adder={editingStops ? adder : undefined} onAdd={(node) => void stopEdit({ op: "stopPassed", line: l.num, station: node })} transfers={(i, drawn) => transferLines(l, i, drawn)} />
         </div>
-      ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce} order={orderClass} onDblClick={onListDblClick}>
-        {flip
+      ) : <PlainStops looks={!!looks} colour={shown} loop={loopOnce && !turned} ends={turned ? [turned.tipTop, turned.tipBottom] : undefined} order={orderClass} onDblClick={onListDblClick}>
+        {turned
+          ? turned.rows.map((row) => <>{stopRow(row.i, undefined, undefined, row)}{afterStop(row.i, row.arc === "start" || row.arc === "mid")}</>)
+          : flip
           ? l.stops.map((_, k) => { const i = nStops - 1 - k; return <>{stopRow(i)}{i > 0 && afterStop(i - 1)}</>; })
           : l.stops.map((_, i) => (loopOnce && i === nStops - 1 ? null : <>
             {stopRow(i)}
@@ -888,7 +923,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <LineTitle l={l} t={title} />
       <div class="sub muted flush">
-        {tr("lineInspector.sub", { fast: !!st.fast, count: l.stops.length - (st.loop ? 1 : 0), distance: distance(st.km * 1000) })}
+        {tr("lineInspector.sub", { fast: !!st.fast, count: turned ? turned.rows.length : l.stops.length - (st.loop ? 1 : 0), distance: distance(st.km * 1000) })}
       </div>
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">

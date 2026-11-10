@@ -397,7 +397,7 @@ The stops (above Schedule while being edited [T-670]),
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; a **loop**
   shows each station once, its bar going on past the first and last stops and curving round to
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
-  "Open the loop") [T-1391]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
+  "Open the loop") [T-1391]; a line **turned round a loop** (T-3021) shows one row per station, in the plain list even with related lines on (its toggle is hidden): the stem straight, the first pass's time on each row, the loop's stations after it, the loop as a bend at the side leaving the turning station and coming back in at its last one with a white chevron, a hook past an end whose loop has no station; no self-transfer bullet; boardings summed over the passes [T-3025]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
   a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; the plain list's bar and dots are painted half a pixel off the pixel grid (`--soft` in `style.css`) as the related view's SVG is, so both views have the same soft edges and ring weight [T-2623]; **while stops are
   edited** a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
   and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove

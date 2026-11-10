@@ -798,6 +798,14 @@ rect.now { fill-opacity: .45; }
 .stops li.loop-end.top::before { top: 2px; border-bottom: 0; border-top-left-radius: 11px; }
 .stops li.loop-end.bottom::before { bottom: 2px; border-top: 0; border-bottom-left-radius: 11px; }
 .stops.traffic li.loop-end::before { display: block; }
+/* T-3025: a turned line's loop, a bend at the side of the straight strip, leaving the station it turns at and
+   coming back in at the loop's last station; the strip is shifted right to make room for it */
+.stops.turned { margin-left: 12px; }
+.stops .arc { position: absolute; left: -7px; top: 0; bottom: 0; width: 0; border-left: 6px solid var(--c); pointer-events: none; }
+.stops .arc.start { top: calc(50% - 3px); width: 17px; border-top: 6px solid var(--c); border-top-left-radius: 12px; }
+.stops .arc.end { bottom: calc(50% - 3px); width: 17px; border-bottom: 6px solid var(--c); border-bottom-left-radius: 12px; }
+/* the loop is run one way, so its bend carries the map's white chevron, pointing back up to the station it leaves */
+.stops .dir { position: absolute; left: -6.5px; top: 2px; width: 5px; height: 5px; border-top: 2px solid #fff; border-left: 2px solid #fff; transform: rotate(45deg); pointer-events: none; z-index: 1; }
 /* T-1272: the Traffic view's diagram, each stretch as wide as its load (--w), in halves below a stop's
    dot and above the next; a crowded stretch has the map's darkening at strength --f and red edges
    at --e (the map's fullTrack colours, game/shadeTable.ts) */
