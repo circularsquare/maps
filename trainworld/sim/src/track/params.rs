@@ -311,7 +311,7 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         terrain_mult: TRAM_TERRAIN,
         water_mult: 0.5,
         price_scale: 1.0,
-        upkeep: 0.5,
+        upkeep: 0.6,
         road_crossings: false,
         ramps_over: false,
         section_s: 40.0,
@@ -482,7 +482,7 @@ mod kind_tests {
         let (s, t) = (TrackKind::StreetTram.spec(), TrackKind::Tram.spec());
         assert_eq!(s.level_mult, [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6]);
         assert_eq!(t.level_mult, [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6]);
-        assert_eq!((s.upkeep, t.upkeep), (0.5, 1.0));
+        assert_eq!((s.upkeep, t.upkeep), (0.6, 1.0));
         assert_eq!((s.v_cap_kmh, t.v_cap_kmh), (60.0, 80.0));
         assert!(!s.road_crossings && !t.road_crossings);
         assert!(s.family == 1 && t.family == 1);

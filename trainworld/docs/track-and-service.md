@@ -254,8 +254,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   tram track is a tram line: it starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car, with no boarding cost (docs/demand-worldwide.md).
-- **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, half
-  the upkeep, a quarter of what hills add (T-3004) and half what water adds (T-2928). With Tram picked, Snap to
+- **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
+  upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
   tram tool Ctrl means nothing else) lays it, the streets a tram may follow tinted green over the map while it is on
   (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to

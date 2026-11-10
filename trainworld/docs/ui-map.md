@@ -290,16 +290,14 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     is the run profiles' (speed against distance along each run, the medium demand level's; the
     levels differ only in standing time), the fastest of every such line in either direction, so
     shared track shows its fastest service and a station its trains' slowest (`lineTrainSpeeds` in
-    `map/network.ts`). Keyed 40/80/120/160/240/320 km/h
-    from warm red through ochre and green to blue, then indigo (#5b4fc9) and violet (#a03fc2)
+    `map/network.ts`). Keyed 1/20/40/60/80/110/160/200/260/320 km/h
+    from maroon through red, orange, yellow (#e0ad2c), yellow-green (#a3c23c) and green (#4aa850) to blue-green (#4e9d95), blue (#397bc1), indigo (#5b4fc9) and violet (#a03fc2), one ramp for trains, trams, buses and ferries [T-3013]
     (`SPEED_STOPS`; the stroke shader is built from the same stops); under 40 is the red. No key
     sits beside the display buttons for the speed or the elevation colours (T-1499): the track hover
     says the speed and the elevation, and which speed it shows ("Track" under "Hover tags on the
-    network"). A running bus or ferry line's route [T-2452] is coloured by its own vehicles' speed the
-    same way (the faster of its two runs' profiles at each route segment's middle, placed between its
-    stops by distance), on a scale of its own [T-2462]: rail's red (#d85b4b) at 10 km/h and under, rail's
-    yellow (#d9a437) at 30, and for buses on past it rail's green at 60 and blue at 90 (`BUS_SPEED_STOPS`,
-    T-2904; a ferry stops at the yellow, `FERRY_SPEED_STOPS`), the hover's chip likewise.
+    network"). A running bus or ferry line's route [T-2452] is coloured by its own vehicles' speed
+    on the same ramp (the faster of its two runs' profiles at each route segment's middle, placed between its
+    stops by distance), the hover's chip likewise.
   - **Profit** [T-2420, T-2440, design notes/T-2411.md; hover "Show track profit colors"]: built track coloured by
     how much of its costs its fares cover on the day shown (fares over costs, a ratio, not their difference),
     worked out only while the view is on (`game/stretchMoney.ts`). A stretch is the track between two stations,

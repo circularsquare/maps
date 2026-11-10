@@ -24,7 +24,7 @@
 // (`lineAt`, `stopAt`), on pointer moves only.
 
 import { t } from "../i18n";
-import { busSpeedColour, ferrySpeedColour, profitColour, rgb, rgbf } from "../game/palette";
+import { speedColour, profitColour, rgb, rgbf } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
 import { anchor, kAtY, pxPerUnitAt, toLocal, type Anchor } from "./geo";
@@ -900,7 +900,7 @@ export class BusLayer {
         if (s.paint === "speed") {
           const f = stops[k + 1] > stops[k] ? (mid - stops[k]) / (stops[k + 1] - stops[k]) : 0.5;
           v = runSpeed(l, k, f, s.phases, s.meta);
-          out[i] = v === null ? -2 : pack(l.ferry ? ferrySpeedColour(v) : busSpeedColour(v));
+          out[i] = v === null ? -2 : pack(speedColour(v));
         } else {
           v = ratio && k < ratio.length && ratio[k] < 1e29 ? ratio[k] : null;
           out[i] = v === null ? -2 : pack(profitColour(v));
