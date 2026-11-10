@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "Farben",
   "settingsTab.controls": "Steuerung",
   "settingsTab.crowded": "Volle Züge",
-  "settingsTab.crowdedTip": "Abschnitte, auf denen Züge in der vollsten Stunde mehr als ihre Nennlast tragen\nNur sichtbar, wenn der Verkehr der Linien angezeigt wird",
+  "settingsTab.crowdedTip": "Abschnitte, auf denen Züge in der vollsten Stunde mehr als ihre Nennlast tragen",
   "settingsTab.currency": "Währung",
   "settingsTab.currencyTip": "Fester Kurs: 1 USD = {rate} {code}",
   "settingsTab.dark": "Dunkel",

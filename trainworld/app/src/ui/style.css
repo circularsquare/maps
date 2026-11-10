@@ -1221,10 +1221,13 @@ button.save-add:hover { color: var(--text); }
 .tag-chip { background: linear-gradient(var(--chip-bg), var(--chip-bg)) no-repeat 0 0 / 100% calc(100% - 2px); }
 /* T-210: the same tag for the panels and controls (ui/tip.ts), over everything, never in the way */
 .ui-tag { position: fixed; left: 0; top: 0; right: auto; bottom: auto; margin: 0; height: auto; overflow: visible; z-index: 1000; pointer-events: none; width: max-content; }
-.pi-mark.drag { width: 11px; height: 11px; margin: -6px 0 0 -6px; pointer-events: auto; cursor: grab; }
+/* T-2977: a curve's corner is a hollow diamond, so it never reads as a node's square; the element is the hit area,
+   the pseudo-element the diamond (the element's own transform places it) */
+.pi-mark.drag { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: none; border: 0; pointer-events: auto; cursor: grab; }
+.pi-mark.drag::before { content: ""; position: absolute; inset: 3px; border: 2px solid var(--net-ink); transform: rotate(45deg); }
 /* T-474: while a point is dragged, wherever the pointer goes */
 .grabbing, .grabbing * { cursor: grabbing !important; }
-.pi-mark.drag:hover { background: var(--tint); }
+.pi-mark.drag:hover::before { background: var(--tint); }
 .snap-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-radius: 50%; }
 /* T-1721: the track tool's point: branching off track, joining it, or running beside it */
 .snap-ring.branch, .snap-ring.join { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-color: var(--bg); }

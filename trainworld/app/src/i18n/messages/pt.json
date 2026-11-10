@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "Cores",
   "settingsTab.controls": "Controles",
   "settingsTab.crowded": "Trens lotados",
-  "settingsTab.crowdedTip": "Trechos em que os trens levam mais que a lotação nominal no horário de pico\nSó aparece quando o tráfego das linhas é exibido",
+  "settingsTab.crowdedTip": "Trechos em que os trens levam mais que a lotação nominal no horário de pico",
   "settingsTab.currency": "Moeda",
   "settingsTab.currencyTip": "Câmbio fixo: 1 USD = {rate} {code}",
   "settingsTab.dark": "Escuro",

@@ -725,15 +725,15 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 [T-064, T-071, T-092, T-093; `map/edgeEdit.ts`, `map/nodeDrag.ts`; rules in
 [track-and-service.md](track-and-service.md) 6.1]
 
-- With the select tool, a selected blueprint stretch shows its corners as squares (not a
+- With the select tool, a selected blueprint stretch shows its corners as small hollow diamonds [T-2977] (not a
   crossover's, which keeps its shape [T-338]); any blueprint track end, junction or station can be
-  dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or square
+  dragged, except a node at a crossover's end. The cursor is a grab cursor over a node or diamond
   that can, and a grabbing one anywhere while dragging [T-474]. A draggable node takes the drag
   over a demand bubble. A click on a node's square (drawn over the bubbles) acts on the point, never
   the bubble [T-486]; a click on a blueprint station under a bubble selects the station, as for any
   station [T-1515].
   With the select tool every blueprint track end, corner and junction without a station shows the
-  same white square as a corner [T-416; `map/endMarkers.ts`], so draggable points can be seen; a
+  same white square as a node [T-416; `map/endMarkers.ts`], so draggable points can be seen; a
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.

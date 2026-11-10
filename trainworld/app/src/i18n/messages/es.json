@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "Colores",
   "settingsTab.controls": "Controles",
   "settingsTab.crowded": "Trenes llenos",
-  "settingsTab.crowdedTip": "Tramos donde los trenes llevan más pasajeros que su capacidad en la hora más concurrida\nSolo se ve cuando se muestra el tráfico de las líneas",
+  "settingsTab.crowdedTip": "Tramos donde los trenes llevan más pasajeros que su capacidad en la hora más concurrida",
   "settingsTab.currency": "Moneda",
   "settingsTab.currencyTip": "Cambio fijo: 1 USD = {rate} {code}",
   "settingsTab.dark": "Oscuro",

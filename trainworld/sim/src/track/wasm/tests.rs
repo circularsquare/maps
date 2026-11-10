@@ -3402,3 +3402,176 @@ fn platform_room_refusals_name_what_is_reached() {
     assert_ne!(a.add_station(2, e, 1650.0, 0.0, 200, "Second".into()), 0);
     assert_eq!(a.issue_kinds(), "PlatformStation");
 }
+
+/// T-2978: a point added halfway round a 320 km/h curve and nudged takes the heading that bisects
+/// the directions to its neighbours, so the curve keeps most of its speed: 260 of 288 km/h for a
+/// 110 m nudge (15 px at zoom 14). A curve is limited by geometry too: the ends stay put, so the
+/// bent arc through the nudged point cannot be as wide as the arc was.
+#[test]
+fn a_nudged_point_in_a_fast_curve_keeps_its_speed() {
+    let mut a = api();
+    a.set_route_hsr(true);
+    a.set_design_speed(320.0);
+    // a 3 km straight, then a tangent curve from its end 15 degrees off, as the drawing tool lays it
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let joint = a.route_end();
+    let off = 15.0f64.to_radians();
+    let to = [0.0, 0.0, 3000.0 + 5000.0 * off.cos(), 5000.0 * off.sin(), 0.0];
+    let ends: Vec<f64> = [1.0, joint as f64, 0.0, 0.0, 0.0].iter().chain(to.iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let curve = a.w.net.edge_count() as u32 - 1;
+    assert_eq!(a.add_point_middle(curve), 0, "{}", a.issues());
+    let at = a.nodes_info().chunks(10).find(|c| c[4] == 2.0 && c[1] > 3100.0).expect("the point").to_vec();
+    let (n, x0, y0) = (at[0] as u32, at[1], at[2]);
+    // the slowest curve in a preview, km/h
+    let slowest = |pv: &[f64]| {
+        let (mut i, mut v) = (3, f64::INFINITY);
+        for _ in 0..pv[2] as usize {
+            let k = pv[i] as usize;
+            for r in 0..k {
+                let row = &pv[i + 1 + 4 * r..i + 5 + 4 * r];
+                if row[2] > 0.0 {
+                    v = v.min(row[3]);
+                }
+            }
+            i += 1 + 4 * k;
+            i += 1 + 3 * pv[i] as usize;
+        }
+        v
+    };
+    let before = slowest(&a.preview_move_node(n, x0, y0 + 0.01));
+    assert!(before > 285.0, "{before}");
+    for (dx, dy) in [(0.0, 110.0), (0.0, -110.0), (110.0, 0.0), (-80.0, 80.0), (0.0, 40.0), (40.0, 40.0)] {
+        let pv = a.preview_move_node(n, x0 + dx, y0 + dy);
+        assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+        let v = slowest(&pv);
+        assert!(v > 0.88 * before, "nudge ({dx}, {dy}): {v:.0} of {before:.0} km/h");
+        assert_eq!(a.move_node(n, x0 + dx, y0 + dy), 0, "{}", a.issues());
+        assert_eq!(a.undo(), 0);
+    }
+}
+
+/// Sign changes of curvature along the stretch's edges, in order of x.
+fn curvature_flips(a: &TrackApi) -> usize {
+    let net = &a.w.net;
+    let mut es: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e)).collect();
+    es.sort_by(|&p, &q| net.node_x[net.edge_a[p as usize] as usize].total_cmp(&net.node_x[net.edge_a[q as usize] as usize]));
+    let mut last = 0.0f64;
+    let mut flips = 0;
+    for e in es {
+        for p in net.edge_pieces(e) {
+            if p.k.abs() > 1e-7 {
+                if last != 0.0 && p.k.signum() != last {
+                    flips += 1;
+                }
+                last = p.k.signum();
+            }
+        }
+    }
+    flips
+}
+
+/// Turn-sign changes of the polygon through the network's nodes in order of x: the S the points
+/// themselves ask for.
+fn polygon_flips(a: &TrackApi) -> usize {
+    let mut pts: Vec<(f64, f64)> = a.nodes_info().chunks(10).map(|c| (c[1], c[2])).collect();
+    pts.sort_by(|p, q| p.0.total_cmp(&q.0));
+    let mut last = 0.0f64;
+    let mut flips = 0;
+    for w in pts.windows(3) {
+        let cross = (w[1].0 - w[0].0) * (w[2].1 - w[1].1) - (w[1].1 - w[0].1) * (w[2].0 - w[1].0);
+        if cross.abs() > 1.0 {
+            if last != 0.0 && cross.signum() != last {
+                flips += 1;
+            }
+            last = cross.signum();
+        }
+    }
+    flips
+}
+
+/// T-2978: points on a straight stretch between two free ends, one dragged sideways by any
+/// distance: the track through them bends one way each side, with no S (curvature keeps one
+/// sign). The plain neighbours of the dragged point re-aim with it.
+#[test]
+fn a_dragged_point_among_plain_points_makes_no_s() {
+    let mut worst = vec![];
+    for (label, fracs, drag) in [("one point", vec![0.5], 0), ("two in a row", vec![0.4, 0.6], 1), ("three in a row", vec![0.3, 0.5, 0.7], 1)] {
+        let mut a = api();
+        let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        for f in &fracs {
+            let at = f * 6000.0;
+            let e = (0..a.w.net.edge_count() as u32)
+                .find(|&e| {
+                    let p = a.w.net.project(e, at, 0.0);
+                    a.w.net.edge_ok(e) && p.1.abs() < 1.0 && p.0 > 5.0 && a.w.net.edge_len[e as usize] - p.0 > 5.0
+                })
+                .unwrap();
+            assert_eq!(a.add_point(e, at, 0.0), 0, "{}", a.issues());
+        }
+        let mid = fracs[drag] * 6000.0;
+        let n = a.nodes_info().chunks(10).find(|c| (c[1] - mid).abs() < 1.0).unwrap()[0] as u32;
+        for dy in [30.0, 80.0, 150.0, 300.0, -150.0] {
+            assert_eq!(a.move_node(n, mid, dy), 0, "{}", a.issues());
+            let (flips, asked) = (curvature_flips(&a), polygon_flips(&a));
+                        if flips > asked {
+                worst.push(format!("{label} drag {dy}: {flips}"));
+            }
+            assert_eq!(a.undo(), 0);
+        }
+    }
+    assert!(worst.is_empty(), "{worst:?}");
+}
+
+/// T-2978: a nudge in the middle of a 320 km/h curve with a plain point either side. The curve
+/// is 288 km/h; a 110 m nudge leaves 186 to 223 km/h and a 40 m one 242 (the old rule: the same
+/// to within 3 km/h), since the arc through a moved point and fixed ends is tighter.
+#[test]
+fn a_nudged_point_with_neighbours_in_a_fast_curve_keeps_its_speed() {
+    let mut a = api();
+    a.set_route_hsr(true);
+    a.set_design_speed(320.0);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let joint = a.route_end();
+    let off = 15.0f64.to_radians();
+    let to = [0.0, 0.0, 3000.0 + 5000.0 * off.cos(), 5000.0 * off.sin(), 0.0];
+    let ends: Vec<f64> = [1.0, joint as f64, 0.0, 0.0, 0.0].iter().chain(to.iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let curve = a.w.net.edge_count() as u32 - 1;
+    // halfway, then halfway along each half: points at a quarter, half and three quarters
+    assert_eq!(a.add_point_middle(curve), 0, "{}", a.issues());
+    let second = a.w.net.edge_count() as u32 - 1;
+    assert_eq!(a.add_point_middle(curve), 0, "{}", a.issues());
+    assert_eq!(a.add_point_middle(second), 0, "{}", a.issues());
+    let mut pts: Vec<(u32, f64, f64)> = a.nodes_info().chunks(10).filter(|c| c[4] == 2.0 && c[1] > 3100.0).map(|c| (c[0] as u32, c[1], c[2])).collect();
+    pts.sort_by(|p, q| p.1.total_cmp(&q.1));
+    assert_eq!(pts.len(), 3);
+    let (n, x0, y0) = pts[1];
+    let slowest = |pv: &[f64]| {
+        let (mut i, mut v) = (3, f64::INFINITY);
+        for _ in 0..pv[2] as usize {
+            let k = pv[i] as usize;
+            for r in 0..k {
+                let row = &pv[i + 1 + 4 * r..i + 5 + 4 * r];
+                if row[2] > 0.0 {
+                    v = v.min(row[3]);
+                }
+            }
+            i += 1 + 4 * k;
+            i += 1 + 3 * pv[i] as usize;
+        }
+        v
+    };
+    let before = slowest(&a.preview_move_node(n, x0, y0 + 0.01));
+    let mut worst = f64::INFINITY;
+    for (dx, dy) in [(0.0, 110.0), (0.0, -110.0), (110.0, 0.0), (0.0, 40.0)] {
+        let pv = a.preview_move_node(n, x0 + dx, y0 + dy);
+        assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+        let v = slowest(&pv);
+        worst = worst.min(v / before);
+    }
+    assert!(worst > 0.6, "the slowest nudge kept {:.0}%", worst * 100.0);
+}

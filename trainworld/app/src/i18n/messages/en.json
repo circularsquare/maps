@@ -1640,7 +1640,7 @@
   "settingsTab.crowded": "Crowded trains",
   "settingsTab.currency": "Currency",
   "settingsTab.currencyTip": "Fixed rate: 1 USD = {rate} {code}",
-  "settingsTab.crowdedTip": "Stretches where trains carry more than their rated load at the busiest hour\nOnly visible when displaying line traffic",
+  "settingsTab.crowdedTip": "Stretches where trains carry more than their rated load at the busiest hour",
   "settingsTab.dark": "Dark",
   "settingsTab.day": "Day",
   "settingsTab.dayOf": "A day of {holiday}",

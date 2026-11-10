@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "Couleurs",
   "settingsTab.controls": "Commandes",
   "settingsTab.crowded": "Trains bondés",
-  "settingsTab.crowdedTip": "Tronçons où les trains transportent plus que leur charge nominale à l’heure la plus chargée\nVisible seulement quand le trafic des lignes est affiché",
+  "settingsTab.crowdedTip": "Tronçons où les trains transportent plus que leur charge nominale à l’heure la plus chargée",
   "settingsTab.currency": "Devise",
   "settingsTab.currencyTip": "Taux fixe : 1 USD = {rate} {code}",
   "settingsTab.dark": "Sombre",

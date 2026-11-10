@@ -5,7 +5,7 @@
 // shade are built when it is focused or near the view, never for every registered zone.
 import { effect } from "@preact/signals";
 import type { Feature, FeatureCollection, MultiPolygon } from "geojson";
-import type { ExpressionSpecification, GeoJSONSource, Map as MlMap } from "maplibre-gl";
+import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { cityBoundary } from "../game/boundaries";
 import { activeCity, zonesTouching } from "../game/cities";
 import { ZONE_LOAD_ZOOM } from "../game/zones";
@@ -33,27 +33,18 @@ const OUTLINE_MAX_ZOOM = 10.5;
 const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
 /** zones' outlines sent to the map in one task (T-1026) */
 const OUTLINES_A_TASK = 100;
-/** T-2900, T-2946: with no zone in view or just off it, the outside shade fades out between these zooms
- * (a player building where there is no data sees the plain basemap); with one near, it stays at every zoom,
- * so the edge of the data is always to be seen */
-const SHADE_FADE_ZOOM = [8, 10] as const;
-/** how far past a zone's box the shade stays, m: a pan across the edge does not toggle it */
-const SHADE_STAY_M = 25000;
-/** how long the shade takes to come back or go when a zone enters or leaves the view, ms */
-const SHADE_FADE_MS = 300;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
 const everywhere = outsideCity({ type: "MultiPolygon", coordinates: [] });
 /** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
  * loading; the theme's own (game/shades.ts, T-543). */
 export const shadePaint = () => ({ ...outsidePaint(shadeColours()) });
-/** Keeps layer `id`'s fill in the current theme's shade, from now on; `opacity`: how to get its
- * fill-opacity from the theme's, where not simply that. */
-export function followShade(map: MlMap, id: string, opacity?: (o: number) => number | ExpressionSpecification): () => void {
+/** Keeps layer `id`'s fill in the current theme's shade, from now on. */
+export function followShade(map: MlMap, id: string): () => void {
   const apply = () => {
     const paint = outsidePaint(SHADES[shade.peek()]);
     if (!styleUp(map) || !map.getLayer(id)) return;
     map.setPaintProperty(id, "fill-color", paint["fill-color"]);
-    map.setPaintProperty(id, "fill-opacity", opacity ? opacity(paint["fill-opacity"]) : paint["fill-opacity"]);
+    map.setPaintProperty(id, "fill-opacity", paint["fill-opacity"]);
   };
   const stop = effect(() => { void shade.value; apply(); });
   map.on("style.load", apply);
@@ -224,18 +215,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     const b = map.getBounds();
     return zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth()).map((c) => c.id).filter(zoneShown);
   };
-  let noZoneInView = false;
-  const shadeOpacity = (o: number): number | ExpressionSpecification => (noZoneInView ? ["interpolate", ["linear"], ["zoom"], SHADE_FADE_ZOOM[0], o, SHADE_FADE_ZOOM[1], 0] : o);
-  const paintFade = () => {
-    if (styleUp(map) && map.getLayer(SHADE)) map.setPaintProperty(SHADE, "fill-opacity", shadeOpacity(SHADES[shade.peek()].outsideOpacity));
-  };
   const follow = () => {
-    // every registered zone counts, a realm not shown too: its ground has data, and keeps its look
-    const b = map.getBounds(), none = !zonesTouching(b.getWest(), b.getSouth(), b.getEast(), b.getNorth(), SHADE_STAY_M).length;
-    if (none !== noZoneInView) {
-      noZoneInView = none;
-      paintFade();
-    }
     const next = aroundView();
     if (next.size !== around.size || [...next].some((id) => !around.has(id))) {
       around = next;
@@ -263,7 +243,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (!map.getSource(SHADE)) map.addSource(SHADE, { type: "geojson", data: everywhere });
     if (!map.getLayer(SHADE)) map.addLayer({
       id: SHADE, type: "fill", source: SHADE,
-      paint: { ...shadePaint(), "fill-opacity-transition": { duration: SHADE_FADE_MS, delay: 0 } },
+      paint: shadePaint(),
     }, before);
     if (!map.getSource(OUTLINES)) {
       map.addSource(OUTLINES, { type: "geojson", data: drawn(), promoteId: "id" });
@@ -295,7 +275,6 @@ export function startCityBoundaries(map: MlMap): () => void {
     }
     void focus(activeCity.peek());
     follow();
-    paintFade();
     showUnlessBlank();
   };
   // T-927, T-1051: a clean world map behind the start menu and while a game loads
@@ -312,7 +291,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     const id = activeCity.value;
     if (map.getSource(SHADE)) void focus(id);
   });
-  const disposeShade = followShade(map, SHADE, shadeOpacity);
+  const disposeShade = followShade(map, SHADE);
   // T-975: a realm shown or hidden redraws the outlines near the view
   const disposeRealms = effect(() => { void shownRealms.value; if (map.getSource(OUTLINES)) follow(); });
   return () => {

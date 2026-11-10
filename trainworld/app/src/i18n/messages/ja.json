@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "色",
   "settingsTab.controls": "操作方法",
   "settingsTab.crowded": "混雑した列車",
-  "settingsTab.crowdedTip": "いちばん混む1時間に列車が定員を超える区間\n路線の乗客数を表示しているときだけ表示されます",
+  "settingsTab.crowdedTip": "いちばん混む1時間に列車が定員を超える区間",
   "settingsTab.currency": "通貨",
   "settingsTab.currencyTip": "レートは固定: 1 USD = {rate} {code}",
   "settingsTab.dark": "ダーク",

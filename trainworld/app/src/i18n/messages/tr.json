@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "Renkler",
   "settingsTab.controls": "Kontroller",
   "settingsTab.crowded": "Kalabalık trenler",
-  "settingsTab.crowdedTip": "En yoğun saatte trenlerin kapasitesinden fazla yolcu taşıdığı kesimler\nYalnızca hat trafiği gösterilirken görünür",
+  "settingsTab.crowdedTip": "En yoğun saatte trenlerin kapasitesinden fazla yolcu taşıdığı kesimler",
   "settingsTab.currency": "Para birimi",
   "settingsTab.currencyTip": "Sabit kur: 1 USD = {rate} {code}",
   "settingsTab.dark": "Koyu",

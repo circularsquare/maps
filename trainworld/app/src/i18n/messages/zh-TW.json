@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "配色",
   "settingsTab.controls": "操作說明",
   "settingsTab.crowded": "列車擁擠",
-  "settingsTab.crowdedTip": "尖峰小時列車乘客超過載客量的區段\n僅在顯示路線運量時可見",
+  "settingsTab.crowdedTip": "尖峰小時列車乘客超過載客量的區段",
   "settingsTab.currency": "貨幣",
   "settingsTab.currencyTip": "匯率固定：1 USD = {rate} {code}",
   "settingsTab.dark": "深色",

@@ -1686,7 +1686,7 @@
   "settingsTab.colors": "색상",
   "settingsTab.controls": "조작법",
   "settingsTab.crowded": "혼잡 열차",
-  "settingsTab.crowdedTip": "가장 붐비는 시간에 열차가 정원을 넘겨 달리는 구간\n노선 운행량을 표시할 때만 보여요",
+  "settingsTab.crowdedTip": "가장 붐비는 시간에 열차가 정원을 넘겨 달리는 구간",
   "settingsTab.currency": "통화",
   "settingsTab.currencyTip": "고정 환율: 1 USD = {rate} {code}",
   "settingsTab.dark": "어둡게",
