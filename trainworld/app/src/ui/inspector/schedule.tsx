@@ -12,7 +12,8 @@ import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
 import { crowdLevel, dayNote, endNames, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today } from "../../game/today";
-import { accountVersion, BOAT_CARS, BUS_CARS, capacity } from "../../game/boarding";
+import { accountVersion, capacity } from "../../game/boarding";
+import { onRails, vehicleCars, vehicleOf, type Vehicle } from "../../game/vehicle";
 import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
@@ -36,20 +37,14 @@ export function levelTimes(d: Demand): string {
 
 // ---------------------------------------------------------------- the vehicle
 
-export type Vehicle = "train" | "bus" | "boat";
+export { vehicleCars, vehicleOf, type Vehicle };
 /** The vehicle's plural noun: "trains". */
 export const manyOf = (v: Vehicle): string => t("schedule.many", { vehicle: v });
 /** As `manyOf`, capitalised: "Trains". */
 const manyCap = (v: Vehicle): string => t("schedule.manyCap", { vehicle: v });
 
-export const vehicleOf = (st: LineStats): Vehicle => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
 /** "1 bus", "3 buses" */
 export const vehiclesText = (v: Vehicle, n: number) => t("schedule.vehicles", { vehicle: v, count: n });
-/** A vehicle's size in train cars, for its seats, rated load and crush (`capacity`). */
-export const vehicleCars = (st: LineStats): number => {
-  const v = vehicleOf(st);
-  return v === "boat" ? BOAT_CARS : v === "bus" ? BUS_CARS : st.cars;
-};
 
 export const carsText = (n: number) => t("inspector.cars", { count: n });
 
@@ -62,7 +57,7 @@ export const carsBought = (k: { carPrice: number; spare: number }, cars: number)
 
 /** What a schedule change draws on: a train's cars of its kind (T-631), or buses or boats. */
 function stockOf(m: MoneyState, st: LineStats, v: Vehicle): { unit: (n: number) => string; per: number; price: number; spare: number } | null {
-  if (v === "train") {
+  if (onRails(v)) {
     if (!st.cars) return null;
     const k = trainKind(m, st.fast, st.tram);
     return { unit: carsText, per: st.cars, price: k.carPrice, spare: k.spare };
@@ -124,7 +119,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   const broke = refused !== null && liveMoney.value.cash < refused.need;
   const shake = refused !== null && performance.now() - refused.at < SHAKE_MS;
   // the tutorial's marks are on a train line's cells
-  const guide = v !== "train" ? undefined : d === DEMANDS[0] ? "trains" : counts[lev] < 1 ? "levels" : undefined;
+  const guide = !onRails(v) ? undefined : d === DEMANDS[0] ? "trains" : counts[lev] < 1 ? "levels" : undefined;
   const wrap = (child: ComponentChildren) => <span key={refused?.at ?? 0} class={shake ? "shake" : undefined} data-guide={guide}>{child}</span>;
   const n = <span class={broke ? "bad" : undefined}>{counts[lev]}</span>;
   // T-798: a loop's trains are half each way, so its count steps by two
@@ -301,7 +296,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
         <Row label={t("schedule.riders")}>{count(shown ?? d.riders)}</Row>
         {!pending && extra}
         {profitKnown(l) ? (
-          <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "bus", dayNote(l, st))}>
+          <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "tram" ? "trams" : v === "bus", dayNote(l, st))}>
             <span class="grow">{t("schedule.profit")}</span>
             <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
           </li>

@@ -17,6 +17,7 @@ import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { exact, forecast } from "../game/format";
 import type { WorldView } from "../game/types";
+import { nameBeforeNoun, vehicleCars, vehicleOf } from "../game/vehicle";
 import { hasUpgrade, UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";
 import { tripAt } from "./network";
@@ -62,13 +63,14 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   const l = w.save.lines.find((x) => x.id === line);
   const net = ov.renderer.net;
   if (!l || !net) return null;
-  const name = t("networkTips.train", { name: l.name });
+  const st = w.lineStats[l.id];
+  const vehicle = st ? vehicleOf(st) : "train";
+  const name = t("networkTips.train", { name: nameBeforeNoun(l.name, vehicle), vehicle });
   const r = ov.renderer;
   const i = r.tripIndex(profile, dep - r.tripsEpoch);
   // a train standing at a terminal for its next departure is drawn past its trip (T-206), and one
   // the guard holds behind its timetable (T-1965)
   const at = tripAt(net, profile, dep + r.tripLag(i), clock.now(), i >= 0 && r.board && r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
-  const st = w.lineStats[l.id];
   if (!at || !st || !display.peek().trainLoad) return [name];
   const dv = demandView.peek();
   if (!dv) return [name, t("networkTips.calculating")];
@@ -78,7 +80,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   while (seg + 1 < n - 1 && stopS[seg + 1] <= at.s + 1) seg++;
   const atEnd = at.s >= (stopS[n - 1] ?? Infinity) - 1;
   const own = r.board && i >= 0 ? tripLoad(r.board, i, run === 0 ? seg : n - 2 - seg) : null;
-  const { crush } = capacity(st.cars);
+  const { crush } = capacity(vehicleCars(st));
   // full: drawn with a red edge (T-207)
   // T-324: a new or changed line's first figures, from an estimate the solve is still refining
   const est = !!dv.lines.get(l.id)?.estimate;

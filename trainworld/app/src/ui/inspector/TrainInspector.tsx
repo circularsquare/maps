@@ -11,7 +11,7 @@ import { linesById, stationNames, world } from "../../game/world";
 import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
 import { capacity, tripLoad } from "../../game/boarding";
-import { vehicleCars, vehicleOf } from "./schedule";
+import { nameBeforeNoun, vehicleCars, vehicleOf, type Vehicle } from "../../game/vehicle";
 import { Chip, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
@@ -36,7 +36,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
     <>
       <div class="title">
         <Chip line={l} size="lg" />
-        <span class="name">{t("trainInspector.title", { name: l.name, vehicle: vehicleOf(st) })}</span>
+        <span class="name">{t("trainInspector.title", { name: nameBeforeNoun(l.name, vehicleOf(st)), vehicle: vehicleOf(st) })}</span>
       </div>
       <div class="sub muted">{t("trainInspector.towards", { name: name.get(stops[stops.length - 1]) ?? "" })}</div>
       {at ? (
@@ -59,7 +59,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
  * from the boarding account (game/boarding.ts), against seats and crush load; and the typical
  * train of the period, demand's riders on the stretch shared among the trains then.
  */
-function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; what: "train" | "bus" | "boat"; profile: number; dep: number }) {
+function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: LineInput; run: number; s: number; stopS: number[]; cars: number; what: Vehicle; profile: number; dep: number }) {
   const dm = lineDemand(line.id);
   const n = line.stops.length;
   // T-309: the period in the line's own local time

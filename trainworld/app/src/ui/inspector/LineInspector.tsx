@@ -946,7 +946,7 @@ function RailLineInspector({ id }: { id: string }) {
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">
           <p>{tr("busInspector.planned")}</p>
-          <ConstructButton num={l.num} build={build} kind="line" />
+          <ConstructButton num={l.num} build={build} kind={st.tram ? "tram" : "line"} />
         </div>
       )}
       {st.status === "broken" && (

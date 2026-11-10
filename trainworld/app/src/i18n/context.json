@@ -1401,7 +1401,7 @@
   "networkTips.transfers": "Hover tag over a ridership circle in Total mode: riders changing trains here. n: \"3k\".",
   "networkTips.use": "Hover tag over a ridership circle when only entries or only transfers are drawn. mode: origins or transfers; n: \"9k\"; when: a day phrase.",
   "networkTips.allPurposes": "Hover tag row under a ridership circle's figures: the circles count every purpose even when a purpose filter is on.",
-  "networkTips.train": "Hover tag title over a train. name: the line's name, \"Line 4\".",
+  "networkTips.train": "Hover tag title over a train, tram, bus or boat on the map. name: the line's name without its own mode's word (\"53\" for \"Bus 53\"), \"Line 4\". vehicle: train, tram, bus or boat.",
   "networkTips.calculating": "Hover tag row while the demand figures for a train, station or circle are not ready.",
   "networkTips.onBoard": "Hover tag row over a train: riders on board against the most it carries. n: \"85\"; cap: \"120\"; full: true when at its limit; est: true while the line's figures are still an estimate.",
   "networkTips.nobody": "Hover tag over a station when no one is waiting.",
@@ -2399,5 +2399,6 @@
   "community.errBusy": "Error: rate limited",
   "community.errNoGame": "Error: the game is not stored yet, so it cannot be shared",
   "community.errDraw": "Error: the schematic layout failed",
-  "community.errLoad": "Over a card or the viewer when its drawing cannot be read"
+  "community.errLoad": "Over a card or the viewer when its drawing cannot be read",
+  "vehicle.noun": "A line's vehicle as a singular noun, lower case: train, tram, bus or boat. Used to spot a line name that starts with its own mode's word (\"Bus 53\") so a title can say \"53 bus\"; never shown. Give the word a player would put at the start of a line name."
 }

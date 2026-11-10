@@ -4,6 +4,7 @@
 import { t, tList, tNumber } from "../i18n";
 import { signal } from "@preact/signals";
 import { CAR_M } from "./boarding";
+import { onRails, vehicleOf, type Vehicle } from "./vehicle";
 
 import { loopHalves, type LineInput, type LineStats } from "./types";
 import { clickSound, edit, headwayShown, say, stationsById, trainsShown, world } from "./world";
@@ -21,12 +22,12 @@ export interface ScheduleCopy {
   /** T-2987: the line's speed limit, km/h, 0 for none; absent in a copy made before it, which leaves a line's limit alone */
   limit?: number;
   /** T-2919: what the line runs; absent in a copy made before it, a train line's */
-  vehicle?: "train" | "bus" | "boat";
+  vehicle?: Vehicle;
 }
 
-export const vehicleOf = (st: LineStats) => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
-/** Whether pasting `c` on a line carries its train length and kind: only from a train line to a train line. */
-export const wholeCopy = (c: ScheduleCopy, st: LineStats): boolean => !st.bus && (c.vehicle ?? "train") === "train";
+export { vehicleOf };
+/** Whether pasting `c` on a line carries its train length and kind: only from a train or tram line to one. */
+export const wholeCopy = (c: ScheduleCopy, st: LineStats): boolean => !st.bus && onRails(c.vehicle ?? "train");
 
 const STORE = "anitabuilder-schedule-copy";
 

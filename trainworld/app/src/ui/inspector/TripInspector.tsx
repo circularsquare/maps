@@ -138,7 +138,7 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       )}
       {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
-        return rideTip(l, w.lineStats[l.line]?.bus, l.fullWaitMin, l.waitPerceived - l.waitMin);
+        return rideTip(l, w.lineStats[l.line], l.fullWaitMin, l.waitPerceived - l.waitMin);
       })}
       {pair && last && (
         <li data-tip={walkTip(pair.egressM, pair.egressMin)}>

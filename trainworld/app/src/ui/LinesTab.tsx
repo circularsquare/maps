@@ -78,7 +78,7 @@ function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   if (!d || !profitKnown(l)) return <span class="val w-linemoney" />;
   const run = runningToday(l, st), net = d.dayFares - run - st.upkeep;
   return (
-    <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, st.bus?.ferry ? "boats" : !!st.bus, dayNote(l, st))}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, st.bus?.ferry ? "boats" : st.tram ? "trams" : !!st.bus, dayNote(l, st))}>
       <Money dollars={net} />
     </span>
   );

@@ -282,7 +282,7 @@ function Legs({ t, r }: { t: MarketPeriod; r: TripRoute }) {
           <span class="val muted">{minText(pair.accessPerceived)}</span>
         </li>
       )}
-      {legRows(r, name, ln, (l) => rideTip(l, w.lineStats[l.line]?.bus))}
+      {legRows(r, name, ln, (l) => rideTip(l, w.lineStats[l.line]))}
       {pair && last && (
         <li data-tip={tr("marketTrip.egressTip", { min: minNum1(pair.egressPerceived) })}>
           <span class="grow">{tRich("marketTrip.from", { station: <StationLink id={last.to} name={name(last.to)} /> })}</span>

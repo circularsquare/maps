@@ -7,6 +7,7 @@ import { t, tNumber, tRich } from "../../i18n";
 import { PERIODS } from "../../game/periods";
 import { tripPeriod, type TripLeg, type TripRoute } from "../../game/trip";
 import type { LineInput } from "../../game/types";
+import { nameBeforeNoun, vehicleOf } from "../../game/vehicle";
 import { world } from "../../game/world";
 import { live } from "../../map/live";
 import { shownPeriod } from "../../map/tripView";
@@ -56,12 +57,13 @@ export function legRows(r: TripRoute, name: (station: string) => string, ln: Rea
       );
     }
     const line = ln.get(l.line);
-    const busRow = world.peek()?.lineStats[l.line]?.bus;
-    const bus = !!busRow && !busRow.ferry;
+    const st = world.peek()?.lineStats[l.line];
+    const v = st ? vehicleOf(st) : "train";
+    const bus = v === "bus" ? "true" : v === "tram" ? "tram" : "false";
     return (
       <li data-tip={rideTip(l)}>
         {line && <Chip line={line} size="sm" />}
-        <span class="grow">{tRich("routeParts.rideTo", { change: i > 0 && r.legs[i - 1].kind === "ride", line: line?.name ?? t("routeParts.aLineCap"), bus, station: <StationLink id={l.to} name={name(l.to)} /> })}</span>
+        <span class="grow">{tRich("routeParts.rideTo", { change: i > 0 && r.legs[i - 1].kind === "ride", line: line ? (bus === "false" ? line.name : nameBeforeNoun(line.name, v)) : t("routeParts.aLineCap"), bus, station: <StationLink id={l.to} name={name(l.to)} /> })}</span>
         <span class="val">{minText(l.waitMin + l.min)}</span>
       </li>
     );

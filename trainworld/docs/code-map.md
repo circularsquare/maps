@@ -123,7 +123,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   (the automatic line colour pick as pure functions: palette pick, CIEDE2000, the lines beside a line, T-2291;
   `lineColour.ts` re-picks a new line's colour after its stop edits; `checks/t2291-line-colour.mjs` in Node and
   `t2291-line-colour-game.mjs` in the game), `scheduleCopy.ts`
-  (a line's schedule settings copied and pasted, kept in localStorage, T-1293; bus and ferry lines too, T-2919), `newLine.ts`
+  (a line's schedule settings copied and pasted, kept in localStorage, T-1293; bus and ferry lines too, T-2919), `vehicle.ts` (a line's vehicle: train, tram, bus or boat, its noun and size, and a name's mode word dropped before the noun, T-3054), `newLine.ts`
   (what a new train, bus or ferry line starts with: trains or headways, dwell, turnaround, T-2919), `remove.ts` (removing things, with the question asked before removing
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
