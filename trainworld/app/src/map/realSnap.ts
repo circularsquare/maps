@@ -65,6 +65,9 @@ export class RealSnap {
   private from: { lng: number; lat: number; r: number } | null = null;
   private spot: Spot | null = null;
   private timer = 0;
+  /** T-3018: what this snap has on the map for the segment: an earlier spot's ghost stays until the
+   * new spot's is ready, so the ghost never blanks while the pointer moves */
+  private shown: "route" | "line" | "red" | null = null;
   /** the ring: where a click at the pointer would snap to real track */
   ringAt: [number, number] | null = null;
   /** timings of the last route, for checks (`window.tw.tools.real.last`) */
@@ -204,10 +207,9 @@ export class RealSnap {
     if (!this.from || this.held) return;
     const s = this.spot;
     if (s && Math.hypot(s.px - px, s.py - py) < SAME_PX) return;
-    this.drop();
+    this.drop(!!this.ringAt);
     if (!this.ringAt) return;
     this.spot = { seq: ++this.seq, px, py, lng: this.ringAt[0], lat: this.ringAt[1], t0: 0, phase: "rest", waiters: [] };
-    this.show(null);
     this.timer = setTimeout(() => this.ask(), REST_MS) as unknown as number;
   }
 
@@ -223,13 +225,20 @@ export class RealSnap {
     return !!this.from && !!this.spot && this.spot.phase !== "off";
   }
 
-  /** The tag's rows while a real route is being found or was not found (null: the usual tag). */
+  /** The route at the pointer is still being found and has taken a while (the tag's spinner). */
+  get slow() {
+    const s = this.spot;
+    return this.active && !!s && s.phase !== "done" && s.phase !== "none" && s.t0 > 0 && performance.now() - s.t0 > SLOW_MS;
+  }
+
+  /** The tag's rows while a real route is being found or was not found (null: the usual tag, which
+   * while the last route's ghost stands is that route's). */
   tag(): { text: string; bad: boolean; spin: boolean } | null {
     const s = this.spot;
     if (!this.active || !s) return null;
     if (s.phase === "none") return { text: t("realSnap.noTrack"), bad: true, spin: false };
-    if (s.phase === "done") return null;
-    return { text: "", bad: false, spin: s.t0 > 0 && performance.now() - s.t0 > SLOW_MS };
+    if (s.phase === "done" || this.shown === "route") return null;
+    return { text: this.shown === "red" ? t("realSnap.noTrack") : "", bad: this.shown === "red", spin: this.slow };
   }
 
   /** The second click at (px, py): waits for the route if it is still being found. */
@@ -260,7 +269,7 @@ export class RealSnap {
   again() {
     const s = this.spot;
     if (!s || !this.from || this.held) return;
-    this.drop();
+    this.drop(true);
     this.spot = { ...s, seq: ++this.seq, t0: 0, phase: "rest", line: undefined, route: undefined, preview: undefined, waiters: [] };
     this.ask();
   }
@@ -283,7 +292,7 @@ export class RealSnap {
     this.client.preview(req, (a) => {
       if (this.spot !== s) return;
       s.preview = a;
-      this.show(a, req);
+      this.display(a, req);
     });
   }
 
@@ -294,7 +303,8 @@ export class RealSnap {
     this.askReach();
   }
 
-  private drop() {
+  /** The spot dropped; with `keep` its ghost stays on the map until the next spot's replaces it. */
+  private drop(keep = false) {
     clearTimeout(this.timer);
     this.roadsDirty = false;
     const s = this.spot;
@@ -306,8 +316,14 @@ export class RealSnap {
       // a click waiting on it gets nothing (an ordinary segment)
       s.phase = "off";
       for (const w of s.waiters.splice(0)) w();
-      this.show(null);
+      if (!keep) this.display(null);
     }
+    if (!keep) this.shown = null;
+  }
+
+  private display(a: PreviewAnswer | null, req?: object) {
+    this.shown = a ? "route" : null;
+    this.show(a, req);
   }
 
   private ask() {
@@ -343,10 +359,12 @@ export class RealSnap {
       if (!m.line) {
         if (m.why === "off") {
           this.finish(s, "off");
-          this.show(null);
+          this.display(null);
           return;
         }
-        // red, straight from the start to the pointer
+        // red, straight from the start to the pointer; the last route's figures go with its ghost
+        if (this.shown === "route") this.display(null);
+        this.shown = "red";
         const [ax, ay] = toLocal(this.from!.lng, this.from!.lat), [bx, by] = toLocal(s.lng, s.lat);
         this.overlay.renderer.setPreview(strokesFromPreview(new Float32Array([ax, ay, 0, bx, by, 0]), true, undefined, true));
         this.overlay.invalidate();
@@ -355,12 +373,23 @@ export class RealSnap {
       }
       s.phase = "fit";
       s.line = m.line;
-      this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(m.line), false, undefined, true));
-      this.overlay.invalidate();
+      // the real line stands in until the fit is ready, unless a fitted route already shows
+      if (this.shown !== "route") {
+        this.shown = "line";
+        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(m.line), false, undefined, true));
+        this.overlay.invalidate();
+      }
       this.redraw();
       return;
     }
     if (!m.pis || !s.line) {
+      if (this.shown === "route" && s.line) {
+        // the last route's ghost and figures give way to the real line this spot found
+        this.display(null);
+        this.shown = "line";
+        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(s.line), false, undefined, true));
+        this.overlay.invalidate();
+      }
       this.finish(s, "none");
       return;
     }
@@ -376,7 +405,7 @@ export class RealSnap {
       if (this.spot !== s) return;
       s.preview = a;
       if (this.last) this.last.previewMs = performance.now() - t;
-      this.show(a, req);
+      this.display(a, req);
       this.finish(s, "done");
       if (this.roadsDirty) {
         this.roadsDirty = false;

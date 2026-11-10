@@ -245,7 +245,7 @@ export class Tools {
       this.place();
     });
     effect(() => { buildPlatform.value; buildTramPlatform.value; if (tool.value === "station") this.place(); });
-    effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.peek(); });
+    effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.value; }); // T-3015: also when the type changes with the station tool in hand
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
@@ -1098,7 +1098,7 @@ export class Tools {
   /** T-1039: a click or the ghost has waited on the worker more than WAIT_MS; the tag shows a spinner. */
   private waiting(): boolean {
     const now = performance.now();
-    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS) || !!this.street?.slow;
+    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS) || !!this.street?.slow || !!this.real?.slow;
   }
 
   /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */

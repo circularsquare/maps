@@ -175,7 +175,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 14;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; beside: boolean; design: number; platform: number; tramPlatform: number }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -288,10 +288,14 @@ export const purposeFilter = signal<PurposeFilter>("all");
  * line, on at first (T-1529) and kept while the page is open. Not stored, so there is no old choice
  * to carry over. */
 export const relatedLines = signal(true);
-/** Platform length for new stations, m; tram track has its own (`buildTramPlatform`, T-2926). */
-export const buildPlatform = signal(200);
+/** Platform length for new stations on regular and high-speed track, m; tram track has its own
+ * (`buildTramPlatform`, T-2926). Each is remembered in the browser (T-3015). */
+export const buildPlatform = signal(savedLength(saved.build?.platform, 60, 400, 20, 200));
 export const TRAM_PLATFORM = { min: 20, max: 80, step: 20, start: 40 } as const;
-export const buildTramPlatform = signal<number>(TRAM_PLATFORM.start);
+export const buildTramPlatform = signal<number>(savedLength(saved.build?.tramPlatform, TRAM_PLATFORM.min, TRAM_PLATFORM.max, TRAM_PLATFORM.step, TRAM_PLATFORM.start));
+function savedLength(v: unknown, min: number, max: number, step: number, fallback: number): number {
+  return typeof v === "number" && v >= min && v <= max && v % step === 0 ? v : fallback;
+}
 /** The station tool's pointer is on tram track, so the station bar steps tram stops' length (T-2926). */
 export const stationOnTram = signal(false);
 /** T-468: the track bar's settings below are remembered per browser with the rest of the
@@ -425,7 +429,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

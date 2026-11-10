@@ -125,9 +125,11 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   track's seven steps, never elevation ("Level", "Level +1", "Levels go from −3 to +3."; "ground
   level" is one of them) [T-2226, reversing T-526].
 - **The station bar**, one row: **Platform length** and its stepper, for new stations. The station
-  tool reads no other option.
-- The level, the ramp switch, the track type, the target max speed, the keep placing switch and the
-  snap and beside switches are remembered per browser (localStorage with the other panel settings,
+  tool reads no other option. Tram stops and the other stations each keep their own length (tram 2
+  cars to start, regular and high speed 10 cars, shared by those two); the bar shows the length of
+  the kind under the pointer, else of the track type picked [T-3015].
+- The level, the ramp switch, the track type, the target max speed, the keep placing switch, the
+  snap and beside switches and both platform lengths are remembered per browser (localStorage with the other panel settings,
   not in the save) [T-468]; keep placing is on by default [T-942]. A browser with nothing remembered
   starts at +1, the first visit's level (ground track bridges water and ramps over other track, which
   brings refusals a new player has no reason to expect) [T-1822].
