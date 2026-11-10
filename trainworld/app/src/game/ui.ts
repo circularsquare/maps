@@ -267,6 +267,12 @@ export const cameraMoving = { now: false };
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). The
  * station building tool (T-2218) starts from a station's upgrade row, but it builds too. */
 export const isBuildTool = (t: Tool) => t === "track" || t === "station" || t === "delete" || t === "blueprint" || t === "bus" || t === "ferry" || t === "building";
+/** T-3083: starting to build closes the inspector of a thing on the network (line, station, track and
+ * the like). City, trip, commuter and achievement views stay, as the demand views stay under build tools. */
+const NETWORK_VIEWS = new Set(["line", "group", "busStop", "station", "track", "junction", "train"]);
+export function closeNetworkView() {
+  if (NETWORK_VIEWS.has(selection.peek()?.kind ?? "")) selection.value = null;
+}
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, nothing on the no button or Esc. `lines`: a row each
  * under the text, after the line's bullet (T-859: what a removal does to lines). */

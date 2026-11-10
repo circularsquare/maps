@@ -5,7 +5,8 @@ Updated: 2026-11-10 15:15
 
 ## Now
 
-**LIVE = 2026-11-10c** (33a8ccec, website 4b39208, verified 14:48). Due: purge R2 prefixes 2026-11-07c and 11-08 from
+**LIVE = v0.2.1 = 2026-11-10d** (f5a2b979 on tw/release-021, website eff496a, verified ~15:45, all PASS). Before: 10c
+(33a8ccec). Due: purge R2 prefixes 2026-11-07c and 11-08 from
 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b, 10c and the next.
 **v0.2.1 PUBLISHING** as R2 version 2026-11-10d from **f5a2b979** on branch `tw/release-021` (worktree `.tw-trees/hotfix`):
 = 2e2adc09 (master before T-3059 landed) + the hide commit (3172bd30 on master). Anita 15:10: "ok actually i think probably
@@ -20,16 +21,27 @@ Anita's player report "All my high speed lines turned in tram lines": app-side o
 as tram track, track panel "Tram track", 4-car stations, tram upkeep figure in the app); the sim and saves were never
 changed. Fixed by T-3078, in v0.2.1.
 
-**Running:**
-- manualstop (id a12d21a5d48b357d5, tree `.tw-trees/exact2` from a6c15a52, Vite 6171): T-3079 [P1] exact mode fixes.
-  Land it, flip `EXACT_EDITS` to true on 8800 for Anita to test; ship only once she's happy. T-3080 (map numbers + drag) after.
+v0.2.1 smoke8800 passed light+dark (f5a2b979), uploaded as 2026-11-10d, website eff496a pushed; pages_verify running.
+Master pushed at 16992b65. 8800 rebuilding at 16992b65.
+**Master = 16992b65**: T-3079 landed (ee29c42c); Exact edits shows only with `?exact` in the address
+(`EXACT_EDITS` in LineInspector.tsx): Anita tests on 8800 at localhost:8800/trainworld/?exact=1, then make it always on.
+After the v0.2.1 publish: snapbuild 16992b65 for 8800, one smoke on master (batch rule), push master.
+**8800 = 16992b65** (Exact edits with ?exact=1, track rebuild). **No silent updates any more** (Anita 15:50): every
+publish gets a version and an updates.ts entry.
+**Running (Sonnet, main tree):** curve25 (id a390bcca8c970904e, Vite 6172) T-3082 curves to 25 m; buildexit (id
+a950b264ff9052c93, Vite 6173) T-3083 build tools close line/station views; busedit (id af518479c4c4684d3, Vite 6174)
+T-3084 bus edit route: old route muted, node drags go through Edit route and undo. T-3086 reserved for busedit.
+T-3085 (auto flyovers + one-way track, design first) filed for 11/11 per her plan. T-3080 waits on her Exact edits test.
 
 **Queued:** T-3070 non-home-based trips design agent (Anita: "can wait then start a design agent"); T-3063 bus loops partway
 (can start); T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch); T-3060 rebuild preview;
 T-3069 trams on real rail + street-snap icon. P3s: T-3042, T-3036, T-3027, T-3002/T-3003, T-3019, T-3011.
-Open with Anita: standalone version (answered: wrapper alone gains little); lightload's question whether "Load without
-inter-city trips" should clear when the start menu opens (today it lasts the tab).
-Next free id **T-3081** (T-3081/3082 reserved for manualstop).
+Open with Anita: standalone version (answered: wrapper alone gains little). Master 0cc01142: a start-menu pick without the
+lite button clears the no-inter-city flag (Anita OK'd), not in v0.2.1.
+Next free id **T-3087**.
+Anita's priority plan (TODO.md, 2026-11-10): bug fixes; exact station mode; single track / flyover junctions (11/11);
+community tab, shared maps, country leaderboards (11/13); better schematic with generated timetables (next week); open source
+(next week).
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,

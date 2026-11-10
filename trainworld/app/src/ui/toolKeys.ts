@@ -2,7 +2,7 @@
 
 import type { JSX } from "preact";
 import { LEVELS, type Level } from "../game/types";
-import { tool, type Tab, type Tool } from "../game/ui";
+import { closeNetworkView, isBuildTool, tool, type Tab, type Tool } from "../game/ui";
 import { live } from "../map/live";
 import { Icon } from "./widgets";
 import { t, type MessageKey } from "../i18n";
@@ -59,9 +59,13 @@ export const levelOfKeyCode = (code: string): Level | null => /^Digit[1-7]$/.tes
 /** the key shown in an elevation button's hover */
 export const levelKeyName = (l: Level) => `Shift+${LEVELS.indexOf(l) + 1}`; // i18n-ignore (key name)
 
-/** Pick a build tool; the one in use again, or Select, goes back to selecting. */
+/** Pick a build tool; the one in use again, or Select, goes back to selecting. Starting a build tool
+ * closes the line, station and other network views; Select keeps them. */
 export function pickTool(v: Tool) {
   const cur = tool.peek();
   live.tools?.exit();
-  if (cur !== v && v !== "select") tool.value = v;
+  if (cur !== v && v !== "select") {
+    tool.value = v;
+    if (isBuildTool(v)) closeNetworkView();
+  }
 }

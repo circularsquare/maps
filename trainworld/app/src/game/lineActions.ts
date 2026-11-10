@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import { edit, lineById, say, stationsById, world } from "./world";
-import { lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
+import { closeNetworkView, lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
@@ -124,6 +124,7 @@ export function newBusLine() {
   const t = live.tools;
   if (!t || !world.peek()) return;
   t.exit();
+  closeNetworkView();
   t.bus.begin(null);
 }
 
@@ -145,6 +146,7 @@ export function newFerryLine() {
   const t = live.tools;
   if (!t || !world.peek()) return;
   t.exit();
+  closeNetworkView();
   t.ferry.begin(null);
 }
 

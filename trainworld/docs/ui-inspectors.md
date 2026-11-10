@@ -5,7 +5,7 @@
 
 The inspector, under the dock's tabs, shows whatever is selected: a line, a station complex (or
 one station), a stretch of track, a junction, a train, bubbles, a city or zone, or a trip. Nothing
-selected leaves it blank, with no text. An empty click on the map or Escape clears the selection.
+selected leaves it blank, with no text. An empty click on the map or Escape clears the selection. Picking a build tool (track, station, delete, blueprint, a new bus or ferry line) closes a line, station, track, junction or train view; editing the open thing (Edit stops, Edit route, a station's building tool) and the Select tool keep it [T-3083].
 The title row (the bullet or glyph, the name and its buttons) is pinned to the top of the panel's
 scroll area, on the panel's background, so it stays in view when the panel is scrolled [T-1812].
 One component per kind in `ui/inspector/` (`StationInspector.tsx`, `TrainInspector.tsx`, `TrackInspector.tsx` and `JunctionInspector.tsx` hold station, train, track and junction). The track and junction inspectors are in [ui-building.md](ui-building.md) and
