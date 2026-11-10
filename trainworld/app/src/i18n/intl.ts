@@ -122,8 +122,15 @@ export function formatDate(lang: Lang, d: Date | number, opts: Intl.DateTimeForm
   return cached(`d|${loc}|${JSON.stringify(opts)}`, () => new Intl.DateTimeFormat(loc, opts)).format(d);
 }
 
+/** Names Intl words longer than the game wants ("Palestinian Territories"), by code then language. */
+const COUNTRY_NAMES: Record<string, Partial<Record<Lang, string>>> = {
+  PS: { en: "Palestine", ja: "パレスチナ", "zh-Hans": "巴勒斯坦", "zh-TW": "巴勒斯坦", es: "Palestina", pt: "Palestina", tr: "Filistin", ru: "Палестина", de: "Palästina", fr: "Palestine", ko: "팔레스타인" },
+};
+
 /** A country's name from its ISO code ("JP" -> "Japan", "日本"); the code itself if Intl has none. */
 export function countryName(lang: Lang, code: string): string {
+  const own = COUNTRY_NAMES[code]?.[lang];
+  if (own) return own;
   const f = cached(`r|${lang}`, () => new Intl.DisplayNames([locale(lang, "date")], { type: "region" }));
   try {
     return f.of(code) ?? code;

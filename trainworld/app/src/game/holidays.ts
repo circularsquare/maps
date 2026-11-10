@@ -16,6 +16,7 @@ import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type Sup
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
 import { t, type MessageKey } from "../i18n";
+import { countryName as countryNameIn } from "../i18n/intl";
 
 export const data = signal<HolidayData | null>(null);
 let asked = false, watching = false;
@@ -61,7 +62,7 @@ const stationsById = new WeakMap<readonly object[], Map<string, { lng: number; l
 const stationCountry = new WeakMap<object, { outlines: unknown; country: string | null }>();
 
 const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
-export const countryName = (cc: string): string => regionNames?.of(cc) ?? cc;
+export const countryName = (cc: string): string => regionNames ? countryNameIn("en", cc) : cc;
 
 /** per station node: its zone's country and local time, kept while the node stays put */
 const placeOf = new Map<number, { lng: number; lat: number; outlines: number; country: string | null; shift: number }>();
