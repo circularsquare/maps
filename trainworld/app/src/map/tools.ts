@@ -50,7 +50,7 @@ import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
-import type { StopMarkers, StopTier } from "./stopMarkers";
+import type { StopMarkers, StopTier, VisitAction } from "./stopMarkers";
 import type { BusStopMarkers } from "./busStops";
 import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
@@ -1404,6 +1404,12 @@ export class Tools {
     if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y);
     const n = this.overlay.renderer.net;
     if (!n) return;
+    // T-3080: a visit number or an empty circle beside a station (Exact edits)
+    const visit = this.stops?.pickVisit(e.point.x, e.point.y);
+    if (visit) {
+      this.stops!.activateVisit(visit);
+      return;
+    }
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
     const marker = this.stops?.pick(e.point.x, e.point.y);
     if (marker) {
@@ -1430,6 +1436,42 @@ export class Tools {
     });
   }
 
+  /** T-3080: a click on a visit number (take that visit out, as its row's cross does) or an empty circle (put the
+   * station in after that stop). Queued with the other stop clicks. */
+  visitAction(a: VisitAction) {
+    const session = this.lineSession;
+    this.stopClicks = this.stopClicks.then(() => this.visit(a, session)).catch(() => {
+      if (session === this.lineSession) say(tr("tools.stopFailed"), true);
+    });
+  }
+
+  private async visit(a: VisitAction, session: number) {
+    if (session !== this.lineSession || tool.peek() !== "line") return;
+    const id = lineDraft.peek().line;
+    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    if (id === null || !line || !world.peek()?.lineStats[line.id]?.manual) return;
+    if (a.kind === "drop") await this.edited(id, { op: "dropStop", line: id, index: a.index });
+    else await this.spliceVisit(id, line.stops.map(Number), a.after, a.station);
+  }
+
+  /** T-3023: `station` goes into a manual line's stops after index `after`, the order as given (a drag's refusals) */
+  private async spliceVisit(id: number, before: number[], after: number, station: number) {
+    if (station === before[after] || station === before[after + 1]) return;
+    const stops = [...before];
+    stops.splice(after + 1, 0, station);
+    const a = await edit({ op: "orderStops", line: id, stops }, true);
+    if (!a.ok) return say(this.orderWhy(a.issues), true);
+    const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+  }
+
+  private async edited(id: number, change: Parameters<typeof edit>[0]) {
+    const a = await edit(change);
+    if (!a.ok) return;
+    const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+  }
+
   private async toggle(station: number, session: number, tier?: StopTier) {
     if (session !== this.lineSession || tool.peek() !== "line") return;
     const id = lineDraft.peek().line;
@@ -1444,15 +1486,11 @@ export class Tools {
     const after = addVisitAfter.peek();
     const adding = manual && after && after.line === id && after.n === n && tier !== "turn" && tier !== "unturn" ? after : null;
     if (after) addVisitAfter.value = null;
-    if (adding) {
-      if (station === before[adding.index] || station === before[adding.index + 1]) return;
-      const stops = [...before];
-      stops.splice(adding.index + 1, 0, station);
-      const a = await edit({ op: "orderStops", line: id, stops }, true);
-      if (!a.ok) return say(this.orderWhy(a.issues), true);
-      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
-      return;
+    if (adding) return this.spliceVisit(id, before, adding.index, station);
+    // T-3089: in Exact edits a click on a stop takes one visit out, the first, as that row's cross does
+    // (every visit of it went before, which left no way to take out one direction)
+    if (manual && tier !== "turn" && tier !== "unturn" && before.includes(station)) {
+      return this.edited(id, { op: "dropStop", line: id, index: before.indexOf(station) });
     }
     if (tier === "turn") {
       // T-3021: the end past this stop turned round its loop

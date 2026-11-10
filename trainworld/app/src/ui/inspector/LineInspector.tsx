@@ -24,6 +24,7 @@ import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "..
 import { toggleEditStops } from "../../game/lineActions";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum } from "../../game/world";
 import { live } from "../../map/live";
+import { setListHot } from "../../map/hovered";
 import { Alert, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
@@ -648,6 +649,8 @@ function RailLineInspector({ id }: { id: string }) {
   const manual = !!l && !!w?.lineStats[id]?.manual;
   useEffect(() => { addVisitAfter.value = null; }, [l?.num, editingStops, manual]);
   const adding = addVisitAfter.value;
+  // T-3089: a row's station is lit on the map while the pointer is on it; a row that goes takes the light with it
+  useEffect(() => () => setListHot(null), [l?.num, w?.version]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   // T-1272: the Traffic view draws the stops diagram by load, with the map's crowding marks
@@ -664,7 +667,8 @@ function RailLineInspector({ id }: { id: string }) {
     const a = await edit({ op: "constructLine", line: l.num });
     if (a.ok) say(tr("lineInspector.constructed", { name: l.name, price: money(a.charge * 1e6), vehicle: vehicleOf(st) }));
   };
-  const passed = editingStops ? st.passed : [];
+  // T-3089: on a manual line the route's passes of its own stops are the map's circles, not stations to add here
+  const passed = editingStops ? (st.manual ? st.passed.filter((p) => !l.stops.includes(String(p.node))) : st.passed) : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
   const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
   const setStops = async (stops: number[]) => {
@@ -805,6 +809,10 @@ function RailLineInspector({ id }: { id: string }) {
       if (!editingStops || turned!.rows.length <= 2 || st.reversals?.some((k) => row.occ.includes(k))) return null;
       return { tip: tr("busInspector.removeStop", { name: name.get(l.stops[i]) ?? "" }), click: () => void takeOut(row) };
     }
+    // T-3089: Exact edits: every visit has its cross, the ends and the turning ones too; the map's click and numbers do the same edit
+    if (st.manual) {
+      return editingStops && nStops >= 4 ? { tip: tr("lineInspector.skipStop"), click: () => void stopEdit({ op: "dropStop", line: l.num, index: i }) } : null;
+    }
     const end = i === 0 || i === nStops - 1, loop = !!st.loop;
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
@@ -843,7 +851,7 @@ function RailLineInspector({ id }: { id: string }) {
     const dot = dotClick(i, row);
     return (
       <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (row?.once ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
-        data-stop={i} onPointerDown={(e) => rowDown(e, i)}>
+        data-stop={i} onPointerDown={(e) => rowDown(e, i)} onMouseEnter={() => setListHot({ stations: complexOf(s) })} onMouseLeave={() => setListHot(null)}>
         {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
         {row?.arc === "end" && <i class="dir" aria-hidden="true" />}
         {looks && !drawn && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}
@@ -875,7 +883,7 @@ function RailLineInspector({ id }: { id: string }) {
             <Icon.plus />
           </button>
         )}
-        {editingStops && !(st.manual && (i === 0 || i === nStops - 1 || st.reversals?.includes(i))) && (
+        {editingStops && !(st.manual && nStops < 4) && (
           <button class="btn icon mini danger" data-tip={tr(st.manual ? "lineInspector.skipStop" : !row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : st.manual ? void stopEdit({ op: "dropStop", line: l.num, index: i }) : removeStop(i))}>
             <Icon.cross />
           </button>

@@ -899,8 +899,11 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `TrackApi::set_manual`, `line_manual`, `manual_folds`): the line's stops are the whole cycle, one row
   per visit, hand ordered and one way. An open line `[A, B, C, D]` becomes `[A, B, C, D, C, B, A]`, a balloon
   closing at A; a loop line keeps its stops. Stop edits on it route the stops as given (`manual_stops`),
-  where `edited_stops` would fold an out-and-back list into an open line. Skipping a visit is `drop_stop` with
-  its refusals (a reversal's stop stays, the ends stay). A reversal at a listed stop is a terminus: the
+  where `edited_stops` would fold an out-and-back list into an open line. Skipping a visit is `drop_stop`
+  (T-3089): any row's visit can go, the ends and a turning one included; the cycle closes up over it (a first or last
+  row is the cycle's first stop, so the next stop becomes the first), the route between its neighbours is found again, and the
+  two visits either side of a removed turn become one. Refused below two stations or with no route. `passed_stations` on a manual line also
+  lists a station the route runs over that is a stop of another visit, once per leg (the map's empty circles). A reversal at a listed stop is a terminus: the
   platform and turnback of a line end, with no reversal limiter (`build_nodes` skips `limiter`), and the
   app draws no U-turn icon on the line. `set_manual(false)` folds a plain out-and-back list (`folded`: it reads the same both ways)
   into the open line, both ways again; any other list stays as it is, a normal line with those stops (a turned line keeps its loop). The

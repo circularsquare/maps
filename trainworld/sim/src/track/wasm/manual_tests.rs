@@ -68,12 +68,28 @@ fn a_manual_line_writes_the_whole_cycle_and_folds_back() {
     assert_eq!(a.drop_stop(id, 4), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s3, s1, s0]);
     assert!(a.line_manual(id) && !a.manual_folds(id));
+    // T-3089: C, a stop on the way out, is passed on the way back (the leg from D to B), which the map draws as a circle
+    assert_eq!(a.passed_stations(id), vec![3.0, s2 as f64]);
     // switching off a list that does not fold keeps its stops as a normal line (T-3079)
     assert_eq!(a.set_manual(id, false), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s3, s1, s0]);
     assert!(!a.line_manual(id));
     assert_eq!(a.undo(), 0);
-    assert_ne!(a.drop_stop(id, 3), 0, "a reversal's stop stays");
+    // T-3089: the turning visit goes too: the visits either side of it become one
+    assert_eq!(a.drop_stop(id, 3), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s1, s0]);
+    assert_eq!(a.undo(), 0);
+    // the first stop (the cycle's turning point) goes: the line now turns at the next one
+    assert_eq!(a.drop_stop(id, 0), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[s1, s2, s3, s1]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.drop_stop(id, 5), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[s1, s2, s3, s1]);
+    assert_eq!(a.undo(), 0);
+    // a cycle of two stations does not shrink to one
+    assert_eq!(a.order_stops(id, &[s0, s1, s0]), 0, "{}", a.issues());
+    assert_ne!(a.drop_stop(id, 1), 0);
+    assert_eq!(a.undo(), 0);
     // a visit in after row 3 through order_stops keeps the manual list as given
     assert_eq!(a.order_stops(id, &[s0, s1, s2, s3, s2, s1, s0]), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[s0, s1, s2, s3, s2, s1, s0], "order_stops does not fold an out-and-back");

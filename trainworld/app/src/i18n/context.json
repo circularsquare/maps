@@ -1884,6 +1884,8 @@
   "statusTag.terrainFailed": "Small tag on the map's top row when the terrain data failed to download.",
   "stopMarkers.station": "Hover tag title over a stop marker when the station has no name.",
   "stopMarkers.remove": "Hover tag row over a marker of a station that is on the line being edited.",
+  "stopMarkers.removeVisit": "Hover tag row over the grey number beside a station on the map while a line is in Exact edits. A click takes that one visit out of the line.",
+  "stopMarkers.addVisit": "Hover tag row over the small empty circle beside a station on the map while a line is in Exact edits. A click makes the line stop at the station in that direction.",
   "stopMarkers.closeLoop": "Hover tag row over the first stop of the line being edited.",
   "stopMarkers.openLoop": "Hover tag row over the stop that closes a loop line.",
   "stopMarkers.loopBack": "Hover tag row over the stop just before the place a loop of track leaves the line near its end. A click makes the line run out past this stop, round the loop one way, and back over the stops it came by.",

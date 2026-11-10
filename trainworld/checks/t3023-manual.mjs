@@ -5,7 +5,10 @@
 // E in after C (the spur leaves facing east, so it cannot follow B); no U-turn icon shows on the line's reversals; a list that is a plain out-and-back folds
 // back through the toggle to the open line, and one undo takes the switch back. Times the add.
 // From the maps root, on a Vite of your own:
-//   node trainworld/checks/t3023-manual.mjs [dev url]
+//   node trainworld/checks/t3023-manual.mjs [dev url] [dark]
+// T-3089/T-3080: hovering a row lights its station; every visit has a cross (the first, the last and a turning one too);
+// a stop served one way gets the half-filled marker; the numbers beside the stations on the map (a click takes that visit
+// out), the empty circles (a click puts a stop in) and a click on a stop do what the cross does. Screenshots t3089-*.png.
 // About a minute. Screenshots artifacts/trainworld/t3023-*.png.
 import { ARTIFACTS, collectErrors, launchChrome } from './lib.mjs';
 import { writeFile } from 'node:fs/promises';
@@ -15,17 +18,18 @@ const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://lo
 let fail = 0;
 const check = (ok, what, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}${detail ? `  (${detail})` : ''}`); if (!ok) fail++; };
 const C = [-73.93, 40.668];
+const SHADE = process.argv.includes('dark') ? 'dark' : 'light';
 
 const chrome = await launchChrome({ prefix: 'tw-t3023-', size: [1400, 900], deviceScaleFactor: 1 });
 const errors = [];
 const page = await chrome.ctx.newPage();
-await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
+await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, SHADE);
 collectErrors(page, errors);
 const edit = (op) => page.evaluate((op) => window.tw.client.edit(op), op);
 const out = { when: new Date().toISOString() };
 
 try {
-  await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&exact&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw.tools, undefined, { timeout: 180000 });
   const built = await page.evaluate(async (c) => {
     const tw = window.tw, cl = tw.client, o = tw.lngLatToPack(c[0], c[1]);
@@ -97,7 +101,7 @@ try {
   check(p1.rows.length === 7 && p1.rows.map((r) => r.n).join() === '1,2,3,4,5,6,7', 'the list shows every visit, numbered', p1.rows.map((r) => `${r.n} ${r.name}`).join(' / '));
   check(!p1.direction, 'the Direction row is hidden');
   check(p1.toggle?.on && !p1.toggle.disabled, 'the toggle is on and can be switched back (a plain out-and-back)', JSON.stringify(p1.toggle));
-  check(!p1.rows[0].cross && !p1.rows[6].cross && !p1.rows[3].cross && p1.rows[4].cross, 'no cross on the ends or the turning stop, one on the way back', p1.rows.map((r) => (r.cross ? 'x' : '-')).join(''));
+  check(p1.rows.every((r) => r.cross), 'every visit has a cross, the ends and the turning stop too', p1.rows.map((r) => (r.cross ? 'x' : '-')).join(''));
   await page.screenshot({ path: join(ARTIFACTS, 't3023-manual.png') });
 
   // a visit out: C on the way back
@@ -168,6 +172,92 @@ try {
   await page.waitForTimeout(1200);
   const s6 = await info();
   check(s6.manual && s6.stops.length === 7, 'one undo takes the switch back', JSON.stringify(s6));
+  // ---- T-3089 / T-3080
+  const stationId = (n) => page.evaluate((n) => window.tw.world.value.save.stations.find((s) => s.num === n).id, n);
+  const markerBg = (n) => page.evaluate((n) => {
+    const tw = window.tw, node = tw.world.value.nodes.get(String(n)) ?? [...tw.world.value.nodes.values()].find((x) => Number(x.id) === n);
+    const [lng, lat] = tw.packToLngLat(node.x, node.y), p = tw.map.project([lng, lat]);
+    let best = null, bd = 1e9;
+    for (const el of document.querySelectorAll('.stop-marks > div.stop-mark')) {
+      const m = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(el.style.transform);
+      if (!m || el.style.display === 'none') continue;
+      const d = Math.hypot(+m[1] - p.x, +m[2] - p.y);
+      if (d < bd) { bd = d; best = el; }
+    }
+    return best ? { bg: best.style.background, cls: best.className } : null;
+  }, n);
+  const visitMarks = () => page.evaluate(() => {
+    const rect = window.tw.map.getContainer().getBoundingClientRect();
+    return [...document.querySelectorAll('.stop-marks > .visit-mark')].filter((e) => e.style.display !== 'none').map((e) => {
+      const m = /translate\((-?[\d.]+)px, (-?[\d.]+)px\)/.exec(e.style.transform) ?? [0, 0, 0];
+      return { add: e.classList.contains('add'), text: e.textContent, x: +m[1] + rect.left, y: +m[2] + rect.top };
+    });
+  });
+  const settle = async (len) => { await page.waitForFunction((a) => window.tw.world.value.save.lines.find((l) => l.num === a[0]).stops.length === a[1], [id, len], { timeout: 15000 }).catch(() => {}); await page.waitForTimeout(400); };
+  const bId = await stationId(N.B);
+  const hotNow = () => page.evaluate(async () => (await import('/src/map/hovered.ts')).hot().stations);
+  await page.locator('.stops > li[data-stop="1"]').hover();
+  await page.waitForTimeout(300);
+  check((await hotNow()).includes(bId), 'hovering a row lights its station on the map', JSON.stringify(await hotNow()));
+  check((await markerBg(N.B))?.cls.includes('hot'), 'the station marker takes the light');
+  await page.screenshot({ path: join(ARTIFACTS, `t3089-hover-${SHADE}.png`) });
+  await page.mouse.move(700, 20);
+  await page.waitForTimeout(300);
+  check((await hotNow()).length === 0, 'the light goes when the pointer leaves the row');
+  check((await page.evaluate(() => window.tw.selection.value.kind)) === 'line', 'the selection stays the line');
+
+  // the ends and the turning visit go like any other
+  await page.locator('.stops > li[data-stop="0"] button.danger').click();
+  await settle(5);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.B, N.C, N.D, N.C, N.B]), 'the first visit goes: the line now starts where its next stop is', (await info()).stops.join());
+  await edit({ op: 'undo' }); await settle(7);
+  await page.locator('.stops > li[data-stop="6"] button.danger').click();
+  await settle(5);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.B, N.C, N.D, N.C, N.B]), 'the last row does the same as the first', (await info()).stops.join());
+  await edit({ op: 'undo' }); await settle(7);
+  await page.locator('.stops > li[data-stop="3"] button.danger').click();
+  await settle(5);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.A, N.B, N.C, N.B, N.A]), 'the turning visit goes: the line is shorter', (await info()).stops.join());
+  await edit({ op: 'undo' }); await settle(7);
+
+  // B on the way back out: B is served one way, so its marker is half filled
+  const two = await markerBg(N.B);
+  check(!two.bg.includes('linear-gradient'), 'a stop served both ways has a whole dot', two.bg);
+  await page.locator('.stops > li[data-stop="5"] button.danger').click();
+  await settle(6);
+  await page.waitForTimeout(600);
+  const half = await markerBg(N.B);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.A, N.B, N.C, N.D, N.C, N.A]) && half.bg.includes('linear-gradient'), 'a stop left with one way has a half-filled dot', half.bg);
+
+  // the numbers on the map
+  await page.evaluate(([c]) => { window.tw.map.jumpTo({ center: [c[0] - 0.003, c[1] + 0.0004], zoom: 13.6 }); }, [C]);
+  await page.waitForTimeout(1200);
+  console.log('passed', JSON.stringify(await page.evaluate((num) => { const w = window.tw.world.value; return w.lineStats[w.save.lines.find((l) => l.num === num).id].passed; }, id)));
+  const vm = await visitMarks();
+  console.log('map marks', JSON.stringify(vm.map((v) => (v.add ? 'o' : v.text))));
+  check(vm.filter((v) => !v.add).map((v) => v.text).sort().join('|') === '1, 6|2|3|4|5', 'every visit has its number on the map', vm.map((v) => v.text).join('|'));
+  check(vm.filter((v) => v.add).length >= 1, 'an empty circle shows where a direction has no stop', String(vm.filter((v) => v.add).length));
+  await page.screenshot({ path: join(ARTIFACTS, `t3089-numbers-${SHADE}.png`) });
+  const five = vm.find((v) => v.text === '5');
+  await page.mouse.click(five.x, five.y);
+  await settle(5);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.A, N.B, N.C, N.D, N.A]), 'a click on a number takes that visit out', (await info()).stops.join());
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(500);
+  const circles = (await visitMarks()).filter((v) => v.add);
+  check(circles.length >= 2, 'the empty circles are there for the way back', String(circles.length));
+  const bm = await page.evaluate((n) => { const tw = window.tw, node = tw.world.value.nodes.get(String(n)) ?? [...tw.world.value.nodes.values()].find((x) => Number(x.id) === n); const [lng, lat] = tw.packToLngLat(node.x, node.y), p = tw.map.project([lng, lat]), r = tw.map.getContainer().getBoundingClientRect(); return { x: p.x + r.left, y: p.y + r.top }; }, N.B);
+  circles.sort((a, b) => Math.hypot(a.x - bm.x, a.y - bm.y) - Math.hypot(b.x - bm.x, b.y - bm.y));
+  await page.mouse.click(circles[0].x, circles[0].y);
+  await settle(6);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.A, N.B, N.C, N.D, N.B, N.A]), 'a click on an empty circle puts the stop in', (await info()).stops.join());
+  // a click on a stop is the cross
+  const mb = await markerAt(N.B);
+  await page.mouse.click(mb.x, mb.y);
+  await settle(5);
+  check(JSON.stringify((await info()).stops) === JSON.stringify([N.A, N.C, N.D, N.B, N.A]), 'a click on a stop takes out one visit, its first, as its cross does', (await info()).stops.join());
+  await edit({ op: 'orderStops', line: id, stops: want });
+  await settle(7);
   check(errors.length === 0, 'no console errors', errors.slice(0, 3).join(' | '));
 } catch (e) {
   await page.screenshot({ path: join(ARTIFACTS, 't3023-died.png') }).catch(() => {});

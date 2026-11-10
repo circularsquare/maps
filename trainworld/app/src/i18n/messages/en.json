@@ -1890,6 +1890,8 @@
   "stopMarkers.stopLooping": "Click to stop looping back here",
   "stopMarkers.add": "Click to add a stop",
   "stopMarkers.addReroute": "Click to add a stop and change the route",
+  "stopMarkers.removeVisit": "Click to remove this stop",
+  "stopMarkers.addVisit": "Click to add a stop here",
   "stopMarkers.reverseEnd": "{tram, select, true {Click to add a stop. Trams reverse at the end of the track} other {Click to add a stop. Trains reverse at the end of the track}}",
   "stopMarkers.reverseAt": "{tram, select, true {Click to add a stop. Trams reverse at {name}} other {Click to add a stop. Trains reverse at {name}}}",
   "stopMarkers.reverseSome": "{tram, select, true {Click to add a stop. Trams reverse at a stop} other {Click to add a stop. Trains reverse at a station}}",

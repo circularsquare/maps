@@ -102,8 +102,37 @@ impl TrackApi {
     /// is (`set_stops` would find the route again, and could move a local onto faster track); an
     /// end stop's removal cuts the path back to the new end. Refused if a train turns back there
     /// (a reversal falls on a stop), for a loop's ends, and below two stops.
+    ///
+    /// T-3089: on a manual line the list is a cycle (its last stop is its first), a visit of any row
+    /// can go, the ends and a reversal included: the cycle closes up over it, the route between the
+    /// visits either side is found again, and the two visits either side of a reversal that was
+    /// there become one. Refused when that leaves fewer than two stations or no route.
     pub fn drop_stop(&mut self, id: u32, i: u32) -> u32 {
+        if self.line_manual(id) {
+            return self.drop_visit(id, i as usize);
+        }
         self.drop_stops(id, i as usize, i as usize)
+    }
+    fn drop_visit(&mut self, id: u32, i: usize) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let n = d.stops.len();
+        if i >= n || !closed(&d.stops) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        let mut cyc: Vec<u32> = d.stops[..n - 1].to_vec();
+        cyc.remove(if i == n - 1 { 0 } else { i });
+        cyc.dedup();
+        while cyc.len() > 1 && cyc[0] == cyc[cyc.len() - 1] {
+            cyc.pop();
+        }
+        if cyc.len() < 2 {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        cyc.push(cyc[0]);
+        let Some((stops, path)) = manual_stops(&self.w.net, &cyc) else { return self.refuse(Issue::LinePath { line: id }) };
+        d.stops = stops;
+        d.path = path;
+        self.run(Op::Line { id, data: Some(d) })
     }
     /// T-1791: end the line at stop `i`: every stop past it toward the nearer end goes, and the path
     /// is cut there (the last stop's end when the two are level).
@@ -291,12 +320,14 @@ impl TrackApi {
         let Some(&first) = path.first() else { return vec![] };
         let mut nodes = vec![net.end_node(first >> 1, first & 1)];
         nodes.extend(path.iter().map(|&p| net.end_node(p >> 1, 1 - (p & 1))));
+        // T-3089: on a manual line a stop of another visit counts as passed where the route runs over it, once a leg
+        let manual = net.line_manual[line as usize];
         let (mut gap, mut out, mut seen) = (0usize, vec![], vec![]);
         for n in nodes {
             if gap + 1 < stops.len() && n == stops[gap + 1] {
                 gap += 1;
-            } else if net.is_station(n) && !stops.contains(&n) && !seen.contains(&n) && gap + 1 < stops.len() {
-                seen.push(n);
+            } else if net.is_station(n) && (if manual { n != stops[gap] } else { !stops.contains(&n) }) && !seen.contains(&(if manual { gap } else { 0 }, n)) && gap + 1 < stops.len() {
+                seen.push((if manual { gap } else { 0 }, n));
                 out.extend([gap as f64, n as f64]);
             }
         }
