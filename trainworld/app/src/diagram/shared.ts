@@ -7,7 +7,7 @@ import { levelAt, type LevelNames, type NamePlan } from "./names";
 
 export interface SharedDrawing {
   v: 1; pitch: number; stroke: number;
-  lines: { c: string; f?: 1; d: number[] }[];
+  lines: { c: string; f?: 1; t?: 1; o?: 1; d: number[] }[];
   names: string[]; small: number[]; pills: number[]; passages: number[];
   fontPx: number; width: number[]; width2: number[]; levels: number[]; faint: number;
   at: { node: number[]; x: number[]; y: number[]; dir: number[]; slide: number[]; lift: number[]; wrap: number[] }[];
@@ -63,7 +63,7 @@ export function encodeShared(d: Drawing, plan: NamePlan, tier: number): SharedDr
       for (let q = 1; q < n; q++) p.push(u(c[j + q]));
       j += n;
     }
-    return l.fast ? { c: cs[i], f: 1, d: p } : { c: cs[i], d: p };
+    return { c: cs[i], ...(l.fast ? { f: 1 as const } : {}), ...(l.tram ? { t: 1 as const } : {}), ...(l.oneWay ? { o: 1 as const } : {}), d: p };
   });
   const pills: number[] = [], passages: number[] = [];
   d.pills.forEach((p, i) => pills.push(u(p[0]), u(p[1]), u(p[2]), u(p[3]), u(p[4]), d.pillOf[i]));
@@ -102,13 +102,27 @@ export async function packShared(d: Drawing, plan: NamePlan): Promise<Blob | nul
 export interface DecodedShare { d: Drawing; names: NamePlan }
 
 /** what the painters draw, from a drawing as the server sent it */
+/** a path's commands as x, y points, a quadratic cut in 8: what a one-way loop's chevrons walk along */
+function flatten(c: number[]): Float64Array {
+  const out: number[] = [];
+  let x = 0, y = 0;
+  for (let i = 0; i < c.length; ) {
+    if (c[i] === 2) {
+      const cx = c[i + 1], cy = c[i + 2], ex = c[i + 3], ey = c[i + 4];
+      for (let k = 1; k <= 8; k++) { const a = k / 8, b = 1 - a; out.push(b * b * x + 2 * a * b * cx + a * a * ex, b * b * y + 2 * a * b * cy + a * a * ey); }
+      x = ex; y = ey; i += 5;
+    } else { x = c[i + 1]; y = c[i + 2]; out.push(x, y); i += 3; }
+  }
+  return Float64Array.from(out);
+}
+
 export function decodeShared(j: SharedDrawing): DecodedShare {
   const pills: Drawing["pills"] = [], pillOf: number[] = [], passages: Drawing["passages"] = [], passageOf: number[] = [];
   for (let i = 0; i + 5 < j.pills.length; i += 6) pills.push([j.pills[i], j.pills[i + 1], j.pills[i + 2], j.pills[i + 3], j.pills[i + 4]]), pillOf.push(j.pills[i + 5]);
   for (let i = 0; i + 4 < j.passages.length; i += 5) passages.push([j.passages[i], j.passages[i + 1], j.passages[i + 2], j.passages[i + 3]]), passageOf.push(j.passages[i + 4]);
   const d: Drawing = {
-    pitch: j.pitch, stroke: j.stroke, lineOf: [], ribbons: [], chainAt: [], hooks: [],
-    lines: j.lines.map((l) => ({ colour: l.c, fast: l.f === 1, cmds: Float64Array.from(l.d) })),
+    pitch: j.pitch, stroke: j.stroke, lineOf: [], ribbons: j.lines.map((l) => (l.o === 1 ? flatten(l.d) : new Float64Array(0))), chainAt: [], hooks: [],
+    lines: j.lines.map((l) => ({ colour: l.c, fast: l.f === 1, ...(l.t === 1 ? { tram: true } : {}), ...(l.o === 1 ? { oneWay: true } : {}), cmds: Float64Array.from(l.d) })),
     pills, pillOf, passages, passageOf,
     small: Uint8Array.from(j.small),
     box: j.box ?? [0, 0, 0, 0],

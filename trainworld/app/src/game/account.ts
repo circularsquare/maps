@@ -35,7 +35,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }

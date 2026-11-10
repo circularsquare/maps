@@ -25,8 +25,12 @@ export const myShares = signal<ShareRow[]>([]);
 /** what a share is doing while it runs */
 export const sharePhase = signal<"" | "drawing" | "sending">("");
 
-export const communityOn = () => accountState.value === "on" && accountConfig.value?.trainworldCommunity === true;
-const on = () => accountState.peek() === "on" && accountConfig.peek()?.trainworldCommunity === true;
+// A server in preview (SHONEI_COMMUNITY=preview) says `trainworldCommunityPreview` instead, and Community shows only
+// on a page opened with `?community` in its address; the server takes writes from its tester accounts alone.
+const FLAG = /[?&]community(?:[=&]|$)/.test(location.search);
+const available = (c: typeof accountConfig.value) => c?.trainworldCommunity === true || (FLAG && c?.trainworldCommunityPreview === true);
+export const communityOn = () => accountState.value === "on" && available(accountConfig.value);
+const on = () => accountState.peek() === "on" && available(accountConfig.peek());
 
 /** What went wrong, in plain words, for each of the server's codes. */
 function plain(e: unknown, act: "share" | "like" | "report"): Error {
@@ -37,6 +41,7 @@ function plain(e: unknown, act: "share" | "like" | "report"): Error {
     case "need-name": return new Error(t("community.errNeedName"));
     case "bad-name": return new Error(t("community.errBadName"));
     case "too-new": return new Error(act === "share" ? t("community.errNewShare") : t("community.errNewLike"));
+    case "preview": return new Error(t("community.errPreview"));
     case "banned": return new Error(t("community.errBanned"));
     case "too-many": return new Error(t("community.errTooMany"));
     case "too-big": return new Error(t("community.errTooBig"));
