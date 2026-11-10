@@ -9,6 +9,7 @@ import { queryClock } from "../workers/clockClient";
 import type { EditOp } from "../workers/protocol";
 import { t, tList } from "../i18n";
 import { bigDistance, distance } from "./format";
+import { deleteRun, noteDelete } from "./deleteHint";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 
@@ -146,12 +147,14 @@ export async function removeThing(r: Removable) {
   const go = async () => {
     ask.value = null;
     const wasSelected = selected(r);
+    const row = deleteRun();
     const a = await edit(opOf(r));
     if (!a.ok) {
       hider?.show();
       if (!a.issues.length) say(t("remove.failed"), true);
       return;
     }
+    noteDelete(row);
     if (wasSelected) selection.value = null;
     say(t("remove.done", { what: d.what }));
   };

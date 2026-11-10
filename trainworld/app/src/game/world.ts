@@ -7,6 +7,7 @@
 import { t } from "../i18n";
 import { signal, type Signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
+import { breakDeleteRun } from "./deleteHint";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues, type Buys } from "./issues";
 import { tidyNodes, type FareNode } from "./fareCurve";
@@ -69,6 +70,7 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
 export async function edit(op: EditOp, quiet = false, silent = false, early = false): Promise<EditAnswer> {
+  breakDeleteRun();
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
   noteEdit(op, world.peek());

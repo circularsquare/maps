@@ -10,7 +10,10 @@ import { useEffect, useState } from "preact/hooks";
 import { earned, FIRSTS, STEPS, TIERED, tierText, type TieredId } from "../game/achievements";
 import { accountOpen, accountState, boardsOpen } from "../game/account";
 import { choosing } from "../game/loading";
+import { setHintShower } from "../game/deleteHint";
 import { moneyState } from "../game/money";
+import { touchInput } from "../map/touch";
+import { TOOLS } from "./toolKeys";
 import { ask, selection, tab } from "../game/ui";
 import { t } from "../i18n";
 import { gamesLoaded } from "../workers/clockClient";
@@ -62,7 +65,7 @@ export function Medal({ metal, of }: { metal: Metal; of: RibbonOf }) {
   );
 }
 
-interface Toast { id: number; title: string; line?: string; medal?: { metal: Metal; of: RibbonOf } }
+interface Toast { id: number; title: string; line?: string; medal?: { metal: Metal; of: RibbonOf }; hint?: boolean }
 const HOLD_MS = 5000, FADE_MS = 1200, GAP_MS = 1000, MAX_SHOWN = 3;
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
@@ -80,6 +83,13 @@ function toastsFor(keys: string[], got: Record<string, Achieved>): Toast[] {
   for (const f of FIRSTS) if (keys.includes(f.id)) out.push({ id: nextId++, title: f.name, line: f.text(got[f.id]), medal: { metal: "gold", of: "first" } });
   return out;
 }
+
+// T-3026: a hint rides the same toasts (a help mark, and a click only dismisses it); sandbox games get it too
+setHintShower(() => {
+  const select = TOOLS.find(([id]) => id === "blueprint")![3];
+  const line = touchInput.peek() ? t("deleteHint.selectTouch") : t("deleteHint.select", { key: select });
+  waiting.value = [...waiting.peek(), { id: nextId++, title: t("deleteHint.title"), line, hint: true }];
+});
 
 // what the game had when its first money state came, so only steps earned since then toast
 let known: Set<string> | null = null, knownGame = -1;
@@ -138,8 +148,8 @@ export function AchievementToasts() {
     <div class="ach-toasts">
       {shown.map((s) => (
         <button key={s.id} class={"ach-toast" + (s.out ? " out" : "")} onPointerEnter={() => setOver(s.id)} onPointerLeave={() => setOver(null)}
-          onClick={() => { openAchievements(); setShown((l) => l.filter((x) => x.id !== s.id)); setOver(null); }}>
-          {s.medal ? <Medal metal={s.medal.metal} of={s.medal.of} /> : <span class="ach-mark"><Icon.medal /></span>}
+          onClick={() => { if (!s.hint) openAchievements(); setShown((l) => l.filter((x) => x.id !== s.id)); setOver(null); }}>
+          {s.medal ? <Medal metal={s.medal.metal} of={s.medal.of} /> : <span class="ach-mark">{s.hint ? <Icon.help /> : <Icon.medal />}</span>}
           <span class="ach-words">
             <b>{s.title}</b>
             {s.line && <span class="muted">{s.line}</span>}
