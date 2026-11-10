@@ -140,7 +140,9 @@ Briefs carry only the task; these hold for every agent.
   confirmation for region name text, i dont know much about specific places"): agents decide them and list
   none for her. Watch hardest for an object or colour as the
   subject ("grey fills", "red when"), telegraphic phrases with words dropped ("from street zooms"),
-  and hovers that describe what the player can already see.
+  and hovers that describe what the player can already see. "No interaction instructions" means ordinary
+  controls ("Click to type"); a gesture with no visible control gets its instruction in a tag (Anita,
+  2026-11-09, of "Click to close the loop": "i think we do need it here").
 - **Stop at a clean point** if the work outgrows one context: finish the stage you are on, write
   the rest as tasks, hand back. Compacting means the task was sized too big.
 - **Keep your context lean** (T-288's retrospective): each step re-reads your whole conversation,

@@ -13,7 +13,7 @@ if exist dist-old rmdir /s /q dist-old
 call npm run build -- --outDir dist-new || exit /b 1
 if not exist dist-new\index.html exit /b 1
 rem T-2962: the served build's files stay beside the new ones, so a tab open across this swap can still load its lazy files
-if exist dist python "%MAPS%	rainworld	ools\keep_assets.py" carry dist dist-new
+if exist dist python "%MAPS%\trainworld\tools\keep_assets.py" carry dist dist-new
 if exist dist move dist dist-old || exit /b 1
 move dist-new dist || (move dist-old dist & exit /b 1)
 if exist dist-old rmdir /s /q dist-old
