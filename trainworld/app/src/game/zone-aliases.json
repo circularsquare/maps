@@ -3386,5 +3386,17 @@
 "tmn": ["Tamanrasset", "تامنغست ⵜⴰⵎⴰⵏⵖⴰⵙⵜ", "Fort-Laperrine", "عين صالح"],
 "tta": ["طنطا"],
 "abk": ["مدينة أبو كبير", "Abou Kebir City", "أبو كبير"],
-"eli": ["الابراهيمية"]
+"eli": ["الابراهيمية"],
+"tel": ["תל אביב–יפו", "Rishon LeZion", "ראשון לציון", "Petah Tikva", "פתח תקווה", "Holon", "חולון", "Bnei Brak", "בני ברק", "Rehovot", "רחובות"],
+"hif": ["חיפה", "Hadera", "חדרה", "Kiryat Ata", "קרית אתא", "Umm al-Fahm", "أم الفحم", "Kiryat Motzkin", "קריית מוצקין", "Qiryat Bialik", "קריית ביאליק"],
+"akk": ["Nahariah", "נהריה", "נהרייה", "Karmiel", "כרמיאל", "Shefaram", "שפרעם", "Tamra", "طمرة", "Safed", "צפת", "Arraba", "عرابة"],
+"bse": ["באר-שבע", "Beersheba", "באר שבע", "Eilat", "אילת", "Netivot", "נתיבות", "Dimona", "דימונה", "Ofakim", "אופקים"],
+"yiz": ["Nazareth", "الناصرة", "Nof HaGalil", "נוף הגליל", "נצרת עילית", "Afula", "עפולה", "Tiberias", "טבריה", "Migdal HaEmeq", "מגדל העמק", "Yoqneam Illit", "יוקנעם עילית"],
+"has": ["Netanya", "נתניה", "Natanya"],
+"asq": ["Ashdod", "אשדוד", "Ashkelon", "אשקלון", "Kiryat Gat", "קריית גת", "קרית גת", "Sderot", "שדרות", "Kiryat Malachi", "קרית מלאכי"],
+"rml": ["Modiin-Maccabim-Reut", "מודיעין-מכבים-רעות", "Lod", "לוד", "רמלה", "Shoham", "שוהם"],
+"jer": ["ירושלים | القدس", "القدس", "ירושלים", "Beit Shemesh", "בית שמש"],
+"nbl": ["نابلس", "Shechem", "مدينة نابلس", "طولكرم", "Tulkarm", "جنين", "مدينة جنين", "Jenin", "قباطية‎", "Qabatiya", "طوباس", "Tubas", "اليامون", "Al-Yamun"],
+"heb": ["الخليل", "حبرون", "Yatta", "يطا", "ad-Dhahiriya", "الظاهرية", "Surif", "صوريف‎"],
+"ram": ["Beitar Ilit", "ביתר עילית", "Modi'in Illit", "מודיעין עילית", "رام الله", "ar-Ram", "الرام", "Jericho", "أريحا", "al-Eizariya", "العيزرية"]
 }

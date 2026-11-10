@@ -21665,13 +21665,13 @@
    "order": 253,
    "id": "tel",
    "name": "Tel Aviv",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "ISR"
    ],
    "iso2": "IL",
-   "people": 3285382,
+   "people": 3280710,
    "origin": [
     34.8123,
     32.0814
@@ -21681,8 +21681,8 @@
    "extracts": [
     "asia/israel-and-palestine"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "ISR": [
      "584046B25822139954764",
@@ -21702,7 +21702,33 @@
     ],
     "fua": [
      419
-    ]
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 1.58
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 204.7,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 23.8,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T08:21:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5919.2900390625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T08:34:48",
+    "shipped": "2026-11-10T09:19:57"
    }
   },
   {
@@ -29191,7 +29217,7 @@
    "order": 355,
    "id": "gaz",
    "name": "Gaza",
-   "status": "planned",
+   "status": "held",
    "region": "world",
    "countries": [
     "PSE"
@@ -29207,8 +29233,8 @@
    "extracts": [
     "asia/israel-and-palestine"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "PSE": [
      "87354302B11532502248212",
@@ -29230,8 +29256,14 @@
     ],
     "fua": [
      312
-    ]
-   }
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 0.57
+    }
+   },
+   "hold_reason": "Gaza left out for now (Anita, 2026-11-10: 'gaza: ok we can leave out'), T-2964"
   },
   {
    "order": 356,
@@ -31811,13 +31843,13 @@
    "order": 394,
    "id": "ram",
    "name": "Ramallah",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PSE"
    ],
    "iso2": "PS",
-   "people": 1720120,
+   "people": 1810642,
    "origin": [
     35.2268,
     31.7801
@@ -31827,20 +31859,21 @@
    "extracts": [
     "asia/israel-and-palestine"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "PSE": [
      "87354302B18092601143781",
      "87354302B37341560226836",
-     "87354302B24436251599031"
+     "87354302B24436251599031",
+     "87354302B18647900198549"
     ]
    },
    "bbox": [
     34.962,
     31.463,
-    35.492,
-    32.07
+    35.569,
+    32.196
    ],
    "source": {
     "ucdb": [
@@ -31851,7 +31884,48 @@
     ],
     "satellites": [
      1422
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "87354302B18647900198549"
+     ]
+    },
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 0.38
+    }
+   },
+   "run": {
+    "run_batch": "20261110-084530",
+    "built": "2026-11-10T08:48:14",
+    "steps": {
+     "build": 24.9,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 32.6,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.6712340680481863",
+      "pop_vs_fua 1.5080407994078233",
+      "pop_vs_ghsl_other 0.6689011787574233",
+      "jobs_per_resident 0.20847868182282833",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T08:49:42",
+    "gated": "2026-11-10T08:52:35",
+    "shipped": "2026-11-10T09:19:58"
+   },
+   "gate_relax": {
+    "pop_vs_plan": "T-2964: PCBS's mid-2025 governorates (admin_totals PS) hold about 1.21M where GHSL has 1.81M, settlements at 0 people (Anita, 2026-11-10)",
+    "jobs_per_resident": "T-2964: the World Bank's 2022 employment figure for Palestine, 0.208 a resident (low women's participation and high unemployment; PCBS's labour force survey agrees)",
+    "pop_vs_fua": "T-2964: the row is four governorates (East Jerusalem, Ramallah, Bethlehem, Jericho) round GHSL's Ramallah FUA, so it holds more than the FUA"
    }
   },
   {
@@ -33051,13 +33125,13 @@
    "order": 411,
    "id": "jer",
    "name": "Jerusalem",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "ISR"
    ],
    "iso2": "IL",
-   "people": 1638804,
+   "people": 1078546,
    "origin": [
     35.2068,
     31.7887
@@ -33067,8 +33141,8 @@
    "extracts": [
     "asia/israel-and-palestine"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "ISR": [
      "584046B86518607604876"
@@ -33076,9 +33150,9 @@
    },
    "bbox": [
     34.826,
-    31.602,
+    31.603,
     35.23,
-    31.856
+    31.852
    ],
    "source": {
     "ucdb": [
@@ -33086,7 +33160,41 @@
     ],
     "fua": [
      1507
-    ]
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 14.34
+    }
+   },
+   "run": {
+    "run_batch": "20261110-084030",
+    "built": "2026-11-10T08:42:55",
+    "gated": "2026-11-10T08:50:42",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 15.8,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.6038955572757906",
+      "pop_vs_fua 0.6897054887644577",
+      "pop_vs_ghsl_other 0.6031638643104769",
+      "top_zone_jobs_share 0.13582062386208008",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T08:44:01",
+    "shipped": "2026-11-10T09:19:58"
+   },
+   "gate_relax": {
+    "pop_vs_plan": "T-2964: CBS's 2022 census by statistical area (admin_totals IL) puts West Jerusalem and Beit Shemesh at about 0.64M against GHSL's 1.08M; Ramla and Modi'in 0.36M against 0.45M",
+    "pop_vs_fua": "T-2964: GHSL's Jerusalem FUA runs across the Green Line; the pack is West Jerusalem with Beit Shemesh only, East Jerusalem in ram (Anita, 2026-11-10)"
    }
   },
   {
@@ -353028,6 +353136,625 @@
     "gated": "2026-11-10T01:06:19",
     "shipped": "2026-11-10T02:23:29"
    }
+  },
+  {
+   "order": 5540,
+   "id": "hif",
+   "name": "Haifa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 988990,
+   "origin": [
+    35.0002,
+    32.8147
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B37321511847561",
+     "584046B72217003232480"
+    ]
+   },
+   "bbox": [
+    34.867,
+    32.373,
+    35.207,
+    32.888
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Haifa",
+     "Hadera"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 1.46
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 193.1,
+     "stations": 0.8,
+     "places": 1.8,
+     "routes": 23.4,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T08:21:13",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T08:34:49",
+    "shipped": "2026-11-10T09:19:59"
+   }
+  },
+  {
+   "order": 5541,
+   "id": "akk",
+   "name": "Akko",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 833824,
+   "origin": [
+    35.2746,
+    32.9357
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B83749751332199",
+     "584046B13386645158990"
+    ]
+   },
+   "bbox": [
+    35.067,
+    32.771,
+    35.685,
+    33.29
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Akko",
+     "Zefat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 21.8,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 15.0,
+     "merge": 0.7,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T08:21:56",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T08:34:50",
+    "shipped": "2026-11-10T09:19:59"
+   }
+  },
+  {
+   "order": 5542,
+   "id": "bse",
+   "name": "Be'er Sheva",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 711942,
+   "origin": [
+    34.7703,
+    31.2387
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B9730835639199"
+    ]
+   },
+   "bbox": [
+    34.27,
+    29.491,
+    35.476,
+    31.502
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Be'er Sheva"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 11.35
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 30.0,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 27.8,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T08:22:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13945675974578461"
+     ]
+    },
+    "gated": "2026-11-10T08:34:51",
+    "shipped": "2026-11-10T09:20:00"
+   }
+  },
+  {
+   "order": 5543,
+   "id": "yiz",
+   "name": "Yizre'el",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 680608,
+   "origin": [
+    35.2926,
+    32.6937
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B83064859640631",
+     "584046B15624900320210"
+    ]
+   },
+   "bbox": [
+    35.031,
+    32.388,
+    35.663,
+    32.946
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Yizre'el",
+     "Kinneret"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 0.87
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 25.8,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 22.6,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T08:22:21",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T08:34:51",
+    "shipped": "2026-11-10T09:20:01"
+   }
+  },
+  {
+   "order": 5544,
+   "id": "has",
+   "name": "HaSharon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 631047,
+   "origin": [
+    34.8587,
+    32.3227
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B61571705909900"
+    ]
+   },
+   "bbox": [
+    34.81,
+    32.186,
+    35.051,
+    32.413
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "HaSharon"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 1.06
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 18.0,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 11.2,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T08:22:05",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8280510789842571",
+      "top_zone_jobs_share 0.12377492501110807",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T08:34:52",
+    "shipped": "2026-11-10T09:20:01"
+   }
+  },
+  {
+   "order": 5545,
+   "id": "asq",
+   "name": "Ashqelon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 595710,
+   "origin": [
+    34.646,
+    31.7973
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B11408100439208"
+    ]
+   },
+   "bbox": [
+    34.471,
+    31.413,
+    34.961,
+    31.861
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ashqelon"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 2.61
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 24.2,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 18.0,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T08:22:47",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T08:34:52",
+    "shipped": "2026-11-10T09:20:02"
+   }
+  },
+  {
+   "order": 5546,
+   "id": "rml",
+   "name": "Ramla",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ISR"
+   ],
+   "iso2": "IL",
+   "people": 454777,
+   "origin": [
+    35.0105,
+    31.8919
+   ],
+   "tz": "Asia/Jerusalem",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "ISR": [
+     "584046B58948260517771"
+    ]
+   },
+   "bbox": [
+    34.815,
+    31.809,
+    35.027,
+    32.026
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ramla"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 23.43
+    }
+   },
+   "run": {
+    "run_batch": "20261110-084030",
+    "built": "2026-11-10T08:42:54",
+    "gated": "2026-11-10T08:44:59",
+    "steps": {
+     "build": 19.9,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 14.6,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10884033163132796",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-11-10T09:20:03"
+   },
+   "gate_relax": {
+    "pop_vs_plan": "T-2964: CBS's 2022 census by statistical area (admin_totals IL) puts West Jerusalem and Beit Shemesh at about 0.64M against GHSL's 1.08M; Ramla and Modi'in 0.36M against 0.45M"
+   }
+  },
+  {
+   "order": 5547,
+   "id": "nbl",
+   "name": "Nablus",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "PSE"
+   ],
+   "iso2": "PS",
+   "people": 1048386,
+   "origin": [
+    35.2456,
+    32.2278
+   ],
+   "tz": "Asia/Hebron",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "PSE": [
+     "87354302B42764778113026",
+     "87354302B37411468451868",
+     "87354302B17069565895340",
+     "87354302B40414204592822",
+     "87354302B3498749981476",
+     "87354302B78640432651808"
+    ]
+   },
+   "bbox": [
+    34.957,
+    32.033,
+    35.573,
+    32.552
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nablus",
+     "Jenin",
+     "Tulkarm",
+     "Qalqiliya",
+     "Salfit",
+     "Tubas"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 0.84
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.3,
+     "places": 2.2,
+     "routes": 42.2,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T08:23:33",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.25351631132364",
+      "jobs_per_resident 0.20847868108217937",
+      "top_zone_jobs_share 0.16310158076149908",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T08:33:43",
+    "gated": "2026-11-10T08:50:43",
+    "shipped": "2026-11-10T09:20:03"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "T-2964: the World Bank's 2022 employment figure for Palestine, 0.208 a resident (low women's participation and high unemployment; PCBS's labour force survey agrees)"
+   }
+  },
+  {
+   "order": 5548,
+   "id": "heb",
+   "name": "Hebron",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "PSE"
+   ],
+   "iso2": "PS",
+   "people": 830498,
+   "origin": [
+    35.102,
+    31.5307
+   ],
+   "tz": "Asia/Hebron",
+   "utc_offset": 2,
+   "extracts": [
+    "asia/israel-and-palestine"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "PSE": [
+     "87354302B80979559279056"
+    ]
+   },
+   "bbox": [
+    34.881,
+    31.342,
+    35.356,
+    31.671
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hebron"
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 3.52
+    }
+   },
+   "run": {
+    "run_batch": "20261110-081033",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 13.6,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T08:23:00",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.2084786825541178",
+      "top_zone_jobs_share 0.15044793615440183",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T08:33:44",
+    "gated": "2026-11-10T08:50:43",
+    "shipped": "2026-11-10T09:20:04"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "T-2964: the World Bank's 2022 employment figure for Palestine, 0.208 a resident (low women's participation and high unemployment; PCBS's labour force survey agrees)"
+   }
   }
  ],
  "dropped": [
@@ -406854,6 +407581,38 @@
      "37247803B47778858868079",
      "37247803B42052057109088",
      "37247803B38142631960117"
+    ]
+   }
+  },
+  "ISR": {
+   "built": "2026-11-10",
+   "task": "T-2964",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Kinneret (120,967) joins Yizre'el (nearest centre, partner 1.00)",
+    "Zefat (137,429) joins Akko (nearest centre, partner 1.00)",
+    "Hadera (411,010) joins Haifa (nearest centre, compact 0.70)",
+    "Ramla (471,715) stays as it is: no zone beside it"
+   ]
+  },
+  "PSE": {
+   "built": "2026-11-10",
+   "task": "T-2964",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Tubas (34,098) joins Nablus (biggest partner, shared border 28 km)",
+    "Salfit (113,509) joins Nablus (every join wraps; left to the ring cut)",
+    "Qalqiliya (120,798) joins Nablus (nearest centre, partner 1.00)",
+    "Tulkarm (181,101) joins Jenin (nearest centre, partner 0.61)",
+    "Jenin (447,571) joins Nablus (nearest centre, partner 1.00)"
+   ],
+   "remnants": {
+    "ram": [
+     "87354302B18647900198549"
     ]
    }
   }

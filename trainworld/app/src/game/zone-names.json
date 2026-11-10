@@ -1488,5 +1488,13 @@
 "adk": {"name": "Dakhla Oasis", "aliases": ["A-Dakhla Oasis", "Mut"]},
 "ghy": {"name": "Juhayna", "aliases": ["Guhayna Al-Gharbiyya", "Kharga"]},
 "ari": {"name": "El Badari", "aliases": ["Al- Badari"]},
-"kmh": {"name": "Kom Hamada", "aliases": ["Kum Hamada"]}
+"kmh": {"name": "Kom Hamada", "aliases": ["Kum Hamada"]},
+"ram": {"name": "East Jerusalem", "aliases": ["Ramallah", "Al-Quds", "Bethlehem", "Jericho"]},
+"heb": {"aliases": ["Al-Khalil"]},
+"bse": {"aliases": ["Beersheba", "Beer Sheva", "Negev"]},
+"akk": {"aliases": ["Acre", "Nahariya", "Karmiel", "Western Galilee"]},
+"yiz": {"name": "Nazareth", "aliases": ["Yizre'el", "Jezreel Valley", "Afula", "Nof HaGalil", "Tiberias"]},
+"has": {"name": "Netanya", "aliases": ["HaSharon", "Sharon"]},
+"asq": {"name": "Ashdod", "aliases": ["Ashqelon", "Ashkelon"]},
+"rml": {"name": "Modi'in", "aliases": ["Ramla", "Lod", "Modiin"]}
 }

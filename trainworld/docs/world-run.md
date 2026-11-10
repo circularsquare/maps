@@ -239,7 +239,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
     the desert beyond in no unit (`ABSORB`, T-2965). No
     geoBoundaries at all: the territory whole (Hong Kong, Macau). Zones take units on the de facto lines: a unit
     held by another side goes to it (`DE_FACTO_TAKE`, Crimea to Russia) or is left out (`LEFT_OUT`, occupied
-    Ukraine; docs/zones.md 2).
+    Ukraine; docs/zones.md 2). A line drawn from a file (`LINES`: Israel and Palestine on COD-AB's Green Line) bounds
+    the built outlines themselves (`osm_units.line_cut`), since a build's outline is OSM's relations, not the extent.
   - **Extent.** A unit is in when half its people live in the metro's area, the larger share
     winning. A unit with half its people in an existing pack is taken, and an extent is cut along
     every existing pack and every earlier row, so nothing overlaps. A metro left with no unit takes

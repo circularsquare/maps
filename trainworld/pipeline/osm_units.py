@@ -386,6 +386,7 @@ def build(cid, row, sources):
         filled = union_all(shells)
     enc = enclaves(row, sources, make_valid(filled.difference(whole)))
     whole = make_valid(filled.difference(enc)) if not enc.is_empty else filled
+    whole = line_cut(row, whole, units)
     whole = cut_packs(whole, {cid, row.get("test_of")})
     parts = sorted([p for p in shapely.get_parts(whole) if p.geom_type == "Polygon"], key=lambda p: -p.area)
     big = [km2(p, lat0) >= MIN_PART_KM2 for p in parts[1:]]
@@ -410,6 +411,31 @@ def build(cid, row, sources):
             json.dump(doc, f, ensure_ascii=False)
         os.replace(path + ".part", path)
     return stem + ".outline.geojson"
+
+
+_LINES = {}
+
+
+def line_cut(row, whole, units):
+    """The outline kept to world_plan.LINES' line for each of the row's countries that has one: "out" loses the
+    file's land, "in" keeps only it, with the row's own units of that country (lon/lat, landed) added first, since the
+    relations matched there may leave parts of them out (T-2964: East Jerusalem in no Palestinian relation)."""
+    import world_plan as wp
+    for iso in row["units"]:
+        if iso not in wp.LINES:
+            continue
+        path, side = wp.LINES[iso]
+        if path not in _LINES:
+            gj = json.loads(path.read_text(encoding="utf-8"))
+            _LINES[path] = make_valid(union_all([make_valid(shape(f["geometry"])) for f in gj["features"] if f["geometry"]]))
+        line = _LINES[path]
+        if side == "out":
+            whole = make_valid(whole.difference(line))
+        else:
+            own = [g for uid, _, g, _ in units if uid in set(row["units"][iso])]
+            whole = make_valid(union_all([whole] + own).intersection(line))
+        print(f"  {row['id']}: kept {side}side {path.name} ({iso}, world_plan.LINES)", flush=True)
+    return whole
 
 
 def foreign(row, sources, units, admin, picks):

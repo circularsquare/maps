@@ -235,6 +235,13 @@ out (`LEFT_OUT`): a council with over half its area inside ISW and AEI's assesse
 not zoned, one with less is zoned whole. The line only picks whole units (its terms are not an open licence); no
 edge of it is drawn or shipped. The Donetsk metro row stays held. notes/T-2344.md.
 
+**Israel and Palestine** (Anita, 2026-11-10, T-2964) split on the Green Line as COD-AB PSE draws it, East Jerusalem with
+Palestine and the Golan with Israel. OSM's relations there are Israel's (its Jerusalem District holds East Jerusalem), so
+the line bounds every built outline of the two (`world_plan.LINES`, `osm_units.line_cut`): Israel's lose the file's
+land, Palestine's keep only it. Israel's people are CBS's 2022 census by statistical area inside the line, Palestine's
+PCBS's governorates, the settlements cut out at 0 people. Gaza's row is held. The IL-PS border factor is 0.01.
+notes/T-2964.md.
+
 **Mercer County (Trenton) is part of New York's city zone**, not a non-city zone (Anita leaned
 this way). Reasons: it is in the New York combined statistical area; LODES holds 175,000 jobs
 between Mercer and New York's counties against 88,000 with Philadelphia's; and as a zone of

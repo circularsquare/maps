@@ -29306,6 +29306,82 @@
       {
         "name": "El-Ibrahimiya",
         "regionName": "El-Ibrahimiya region"
+      },
+      {
+        "name": "Tel Aviv",
+        "regionName": "Tel Aviv region"
+      },
+      {
+        "name": "Ramallah",
+        "regionName": "Ramallah region"
+      },
+      {
+        "name": "Jerusalem",
+        "regionName": "Jerusalem region"
+      },
+      {
+        "name": "Haifa",
+        "regionName": "Haifa region"
+      },
+      {
+        "name": "Akko",
+        "regionName": "Akko region"
+      },
+      {
+        "name": "Be'er Sheva",
+        "regionName": "Be'er Sheva region"
+      },
+      {
+        "name": "Yizre'el",
+        "regionName": "Yizre'el region"
+      },
+      {
+        "name": "HaSharon",
+        "regionName": "HaSharon region"
+      },
+      {
+        "name": "Ashqelon",
+        "regionName": "Ashqelon region"
+      },
+      {
+        "name": "Ramla",
+        "regionName": "Ramla region"
+      },
+      {
+        "name": "Nablus",
+        "regionName": "Nablus region"
+      },
+      {
+        "name": "Hebron",
+        "regionName": "Hebron region"
+      },
+      {
+        "name": "Jerusalem",
+        "regionName": "Jerusalem region"
+      },
+      {
+        "name": "Ramla",
+        "regionName": "Ramla region"
+      },
+      {
+        "name": "Ramallah",
+        "regionName": "Ramallah region"
+      },
+      {
+        "name": "Jerusalem",
+        "regionName": "Jerusalem region"
+      },
+      {
+        "name": "Nablus",
+        "regionName": "Nablus region"
+      },
+      {
+        "name": "Hebron",
+        "regionName": "Hebron region"
+      },
+      {
+        "name": "Ramallah",
+        "regionName": "Ramallah region"
       }
     ],
     "rule": {
@@ -132108,6 +132184,315 @@
       "country": "EG",
       "localTrips": 333908.0,
       "realm": "egypt"
+    },
+    {
+      "id": "tel",
+      "name": "Tel Aviv",
+      "origin": {
+        "lon": 34.8123,
+        "lat": 32.0814
+      },
+      "center": [
+        34.8123,
+        32.0814
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.643,
+        31.739,
+        35.046,
+        32.267
+      ],
+      "place": 7322,
+      "country": "IL",
+      "localTrips": 8308547.0,
+      "realm": "levant"
+    },
+    {
+      "id": "hif",
+      "name": "Haifa",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.0002,
+        "lat": 32.8147
+      },
+      "center": [
+        35.0002,
+        32.8147
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.847,
+        32.346,
+        35.231,
+        32.906
+      ],
+      "place": 7325,
+      "country": "IL",
+      "localTrips": 3223113.0,
+      "realm": "levant"
+    },
+    {
+      "id": "akk",
+      "name": "Akko",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.2746,
+        "lat": 32.9357
+      },
+      "center": [
+        35.2746,
+        32.9357
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        35.043,
+        32.747,
+        35.706,
+        33.309
+      ],
+      "place": 7326,
+      "country": "IL",
+      "localTrips": 2323909.0,
+      "realm": "levant"
+    },
+    {
+      "id": "bse",
+      "name": "Be'er Sheva",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.7703,
+        "lat": 31.2387
+      },
+      "center": [
+        34.7703,
+        31.2387
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.249,
+        29.472,
+        35.498,
+        31.515
+      ],
+      "place": 7327,
+      "country": "IL",
+      "localTrips": 2487372.0,
+      "realm": "levant"
+    },
+    {
+      "id": "yiz",
+      "name": "Yizre'el",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.2926,
+        "lat": 32.6937
+      },
+      "center": [
+        35.2926,
+        32.6937
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        35.005,
+        32.369,
+        35.697,
+        32.979
+      ],
+      "place": 7328,
+      "country": "IL",
+      "localTrips": 1942992.0,
+      "realm": "levant"
+    },
+    {
+      "id": "has",
+      "name": "HaSharon",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.8587,
+        "lat": 32.3227
+      },
+      "center": [
+        34.8587,
+        32.3227
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.787,
+        32.172,
+        35.074,
+        32.431
+      ],
+      "place": 7329,
+      "country": "IL",
+      "localTrips": 1379266.0,
+      "realm": "levant"
+    },
+    {
+      "id": "asq",
+      "name": "Ashqelon",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.646,
+        "lat": 31.7973
+      },
+      "center": [
+        34.646,
+        31.7973
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.441,
+        31.394,
+        34.983,
+        31.881
+      ],
+      "place": 7330,
+      "country": "IL",
+      "localTrips": 1744187.0,
+      "realm": "levant"
+    },
+    {
+      "id": "rml",
+      "name": "Ramla",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.0105,
+        "lat": 31.8919
+      },
+      "center": [
+        35.0105,
+        31.8919
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.792,
+        31.79,
+        35.049,
+        32.061
+      ],
+      "place": 7335,
+      "country": "IL",
+      "localTrips": 910403.0,
+      "realm": "levant"
+    },
+    {
+      "id": "jer",
+      "name": "Jerusalem",
+      "origin": {
+        "lon": 35.2068,
+        "lat": 31.7887
+      },
+      "center": [
+        35.2068,
+        31.7887
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.813,
+        31.585,
+        35.252,
+        31.872
+      ],
+      "place": 7337,
+      "country": "IL",
+      "localTrips": 1905113.0,
+      "realm": "levant"
+    },
+    {
+      "id": "nbl",
+      "name": "Nablus",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.2456,
+        "lat": 32.2278
+      },
+      "center": [
+        35.2456,
+        32.2278
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.935,
+        32.014,
+        35.595,
+        32.571
+      ],
+      "place": 7338,
+      "country": "PS",
+      "localTrips": 3462136.0,
+      "realm": "levant"
+    },
+    {
+      "id": "heb",
+      "name": "Hebron",
+      "kind": "zone",
+      "origin": {
+        "lon": 35.102,
+        "lat": 31.5307
+      },
+      "center": [
+        35.102,
+        31.5307
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.858,
+        31.324,
+        35.377,
+        31.689
+      ],
+      "place": 7339,
+      "country": "PS",
+      "localTrips": 2283210.0,
+      "realm": "levant"
+    },
+    {
+      "id": "ram",
+      "name": "Ramallah",
+      "origin": {
+        "lon": 35.2268,
+        "lat": 31.7801
+      },
+      "center": [
+        35.2268,
+        31.7801
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        34.94,
+        31.444,
+        35.591,
+        32.214
+      ],
+      "place": 7340,
+      "country": "PS",
+      "localTrips": 3157122.0,
+      "realm": "levant"
     }
   ]
 }

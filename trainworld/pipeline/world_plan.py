@@ -132,6 +132,11 @@ DE_FACTO_TAKE = {"RUS": ["UKR"]}
 # whole, one with less stays whole. ISW and AEI's assessed Russian-controlled Ukraine of 2026-09-29: its terms are not
 # an open licence, so it only picks whole units; none of its edges is drawn or shipped
 LEFT_OUT = {"UKR": (RAW / "isw_ukr_control_2026-09-29.geojson", 0.5)}
+# T-2964: a line drawn from a file, which a country's built outlines keep to (osm_units.line_cut): "out" loses the file's
+# land, "in" keeps only it, the row's own plan units added first. The Green Line as COD-AB PSE draws it, East Jerusalem in
+# the West Bank (Anita, 2026-11-10); OSM's relations there are Israel's (its Jerusalem District holds East Jerusalem,
+# Mateh Binyamin's council the land round Ramallah), and a plan extent does not bound a build
+LINES = {"ISR": (RAW / "cod_ab_pse_admin0.geojson", "out"), "PSE": (RAW / "cod_ab_pse_admin0.geojson", "in")}
 # The US, Puerto Rico and China (T-1004, T-1015; T-1185: China's census by township): `module` is the
 # country module zone rows take (elsewhere zones take none); `zoned_only` limits a first-level unit to
 # these units, the rest dead space (Alaska: the road and rail belt, Anchorage to Fairbanks)
