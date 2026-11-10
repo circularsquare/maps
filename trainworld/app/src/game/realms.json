@@ -78,6 +78,9 @@
     { "id": "in-south", "name": "South India", "units": { "IN": [
       "Andhra Pradesh", "Telangana", "Karnataka", "Tamil Nadu", "Kerala", "Puducherry", "Lakshadweep", "Andaman and Nicobar Islands"] } },
     { "id": "india", "name": "West India", "units": { "IN": "*" } },
-    { "id": "nigeria", "name": "Nigeria", "countries": ["NG"] }
+    { "id": "nigeria", "name": "Nigeria", "countries": ["NG"] },
+    { "id": "morocco", "name": "Morocco", "countries": ["MA", "EH"] },
+    { "id": "algeria-tunisia", "name": "Algeria and Tunisia", "countries": ["DZ", "TN"] },
+    { "id": "egypt", "name": "Egypt", "countries": ["EG"] }
   ]
 }

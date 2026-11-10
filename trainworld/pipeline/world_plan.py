@@ -727,6 +727,55 @@ GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each fi
 # (Indonesia's 25 far kabupaten parts are islands, and OSM's kabupaten relation holds them anyway; T-1738)
 GB_SPLIT_FAR = {"MYS"}
 FAR_PART_KM = 50.0
+# units a country's file draws round its others, split among them (T-2965): Egypt's 14 "Zemam Out" (outside the
+# farmland register, each governorate's desert) hold 4.7M of GHSL's valley-edge villages, just past the kism and
+# markaz polygons, and made desert zones of village strips and rings round the valley zones. Each piece within the
+# km of another unit goes to the nearest one; the desert beyond is in no unit
+ABSORB = {"EGY": ("Zemam Out", 40.0)}
+ABSORB_STEP_M = 500.0  # spacing of the boundary points the nearest unit is found from
+
+
+def absorb(iso, units):
+    """[(unit id, name, Mollweide geometry)] with ABSORB's units of `iso` split among the others."""
+    if iso not in ABSORB:
+        return units
+    from scipy.spatial import cKDTree
+    name, km = ABSORB[iso]
+    gone = {k for k, u in enumerate(units) if u[1] == name}
+    if not gone:
+        return units
+    keep = [k for k in range(len(units)) if k not in gone]
+    tree = STRtree([units[k][2] for k in keep])
+    add, left = collections.defaultdict(list), 0.0
+    for k in sorted(gone):
+        z = units[k][2]
+        near = [keep[int(i)] for i in tree.query(z, predicate="dwithin", distance=km * 1e3)]
+        if not near:
+            left += z.area
+            continue
+        pts = [shapely.get_coordinates(shapely.segmentize(units[j][2].boundary, ABSORB_STEP_M)) for j in near]
+        lab = np.concatenate([np.full(len(c), j) for j, c in zip(near, pts)])
+        pts, first = np.unique(np.round(np.concatenate(pts)), axis=0, return_index=True)  # shared borders repeat points
+        lab = lab[first]
+        cells = shapely.get_parts(shapely.voronoi_polygons(shapely.multipoints(pts), tolerance=1.0, extend_to=z.envelope))
+        # a cell's every point is nearest its own point, so its centroid (cells are convex) finds it
+        owner = lab[cKDTree(pts).query(shapely.get_coordinates(shapely.centroid(cells)))[1]]
+        got = 0.0
+        for j in near:
+            mine = cells[owner == j]
+            if not len(mine):
+                continue
+            piece = polygonal(shapely.coverage_union_all(mine).intersection(z).intersection(units[j][2].buffer(km * 1e3)))
+            if not piece.is_empty:
+                add[j].append(piece)
+                got += piece.area
+        left += max(z.area - got, 0.0)
+    out = []
+    for k in keep:
+        uid, nm, g = units[k]
+        out.append((uid, nm, polygonal(union_all([g] + [p.buffer(1) for p in add[k]])) if add[k] else g))
+    log(f"  {iso}: {len(gone)} '{name}' units split among {len(add)} others; {left / 1e6:,.0f} km2 beyond {km:.0f} km in no unit (T-2965)")
+    return out
 
 
 def far_parts(g, pop=None):
@@ -757,7 +806,7 @@ def gb_units(meta, iso, adm):
     path = fetch(f"{iso}_{adm}.geojson", r["simplifiedGeometryGeoJSON"], "geoboundaries")
     cache = path.with_suffix(f".{GB_CACHE}{'s2' if iso in GB_SPLIT_FAR else ''}.pkl")
     if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
-        return pickle.loads(cache.read_bytes())
+        return absorb(iso, pickle.loads(cache.read_bytes()))
     gj = json.loads(path.read_text(encoding="utf-8"))
     out = []
     pop = Pop() if iso in GB_SPLIT_FAR else None
@@ -779,7 +828,7 @@ def gb_units(meta, iso, adm):
     tmp = cache.with_suffix(".part")
     tmp.write_bytes(pickle.dumps(out))
     os.replace(tmp, cache)
-    return out
+    return absorb(iso, out)
 
 
 @__import__("functools").lru_cache(maxsize=4)
@@ -801,7 +850,7 @@ def state_units(iso):
             g = de_facto(iso, u.geom)
             if g is not None and not g.is_empty:
                 out.append((u.id, u.name, g))
-    return out + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
+    return absorb(iso, out) + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
 
 
 def fill_gaps(iso, units):
@@ -2001,6 +2050,10 @@ def zone_name(s, iso=None):
     if iso == "KOR":  # T-1191: "Cheongju-si", "Nam-gu [South District]"; a gu keeps its kind ("Jung-gu")
         s = re.sub(r"\s*\[[^\]]*\]$", "", s)
         s = re.sub(r"-(si|gun)$", "", s)
+    if iso == "MAR":  # T-2897: "Province de Nador إقليم الناظور", "Préfecture d'Oujda-Angad ...", "Tata Province"
+        s = re.sub(r"[؀-ۿⴰ-⵿].*$", "", s).strip()
+        s = re.sub(r"^(Province|Pr[ée]fecture)\s+(de\s+|d')", "", s)
+        s = re.sub(r"\s+(Province|Prefecture)$", "", s)
     return s.strip()
 
 
@@ -2567,6 +2620,11 @@ def plan_zones(isos3, out_path=None, replan=False):
             units = [u for u in units if u.geom is not None and not u.geom.is_empty]
             if gone:
                 log(f"{iso}: {len(gone)} units held by another country on the ground, left out: {', '.join(gone)}")
+            if iso in ABSORB:  # the state predates ABSORB (T-2965)
+                geo = {uid: g for uid, _, g in absorb(iso, [(u.id, u.name, u.geom) for u in units])}
+                units = [u for u in units if u.id in geo]
+                for u in units:
+                    u.geom = geo[u.id]
         took = took_all[iso]
         if took:
             units = units + took

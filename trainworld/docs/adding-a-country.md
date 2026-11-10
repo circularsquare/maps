@@ -103,6 +103,11 @@ Rule keys a new country may need (T-2294, T-2295):
   and again after the join. Any found with 10,000+: add them to the state (`plan_units` countries) and to the row
   holding their longest border within their first-level unit, under the plan lock, as notes/T-2702.md did.
 
+**Units drawn round the others** (Egypt's 14 "Zemam Out", each governorate's desert: GHSL's valley-edge villages fell
+into them, making desert zones of village strips and rings round the valley zones): name them in `world_plan.ABSORB`,
+which splits them among the units they wrap (T-2965). Metro rows naming them lose those units by hand under the plan
+lock before the dry run, or the zones step stops on a missing unit.
+
 **People where GHSL has them wrong.** Zones that are not cities but hold a city's people (Cambodia's
 Trapeang Prasat, 1.19M in forest villages, T-1738): compare the biggest rural rows' plan people with any census
 figure for their districts (citypopulation.de is enough for a look). GHS-POP can put 3-10x the census in a

@@ -234,7 +234,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
     of ADM2-4 where the median person's unit holds 20,000 people or more. A first-level unit that
     level misses a tenth of the people of takes the finest level covering it (Moscow). A unit of the chosen level that
     the units taken leave half of is taken too (a coastal unit whose point lies outside the simplified first-level
-    coast: Buenos Aires's comunas, T-2695). No
+    coast: Buenos Aires's comunas, T-2695). Units a file draws round its others (Egypt's "Zemam Out", each
+    governorate's desert outside its farmland) are split among them, each piece within 40 km of one to the nearest,
+    the desert beyond in no unit (`ABSORB`, T-2965). No
     geoBoundaries at all: the territory whole (Hong Kong, Macau). Zones take units on the de facto lines: a unit
     held by another side goes to it (`DE_FACTO_TAKE`, Crimea to Russia) or is left out (`LEFT_OUT`, occupied
     Ukraine; docs/zones.md 2).
