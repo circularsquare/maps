@@ -1,0 +1,41 @@
+diff --git a/trainworld/app/src/game/income.ts b/trainworld/app/src/game/income.ts
+index 75a256ee..56cd7779 100644
+--- a/trainworld/app/src/game/income.ts
++++ b/trainworld/app/src/game/income.ts
+@@ -143,6 +143,10 @@ export const carUsdPerKm = (country: string | undefined): number => (country &&
+ // the mean)^-`GROUP_E` times `LONG_TRIP_MONEY`, and it makes longer trips in proportion to (its
+ // income over the mean)^`eps`, the market rule's trip rate by income.
+ export const INCOME_GROUPS = 3;
++/** T-3029 trial, off by default (`VITE_INCOME_SPLIT=1`): the poorest third as two groups, the poorest
++ * sixth and the next sixth, from the same quintile table. */
++export const INCOME_SPLIT = (import.meta as { env?: Record<string, string> }).env?.VITE_INCOME_SPLIT === "1";
++const BREAKS = INCOME_SPLIT ? [0, 1 / 6, 1 / 3, 2 / 3, 1] : [0, 1 / 3, 2 / 3, 1];
+ /** Within a country prices are the same, so T-1277's exponent at PPP. */
+ export const GROUP_E = 0.5;
+ /** T-1521: a longer trip's money weighs 0.4 of a local trip's, every mode alike: about US DOT's
+@@ -167,9 +171,9 @@ export function incomeGroups(country: string | undefined, eps: number): IncomeGr
+     for (let k = 0; k < i; k++) below += q[k] / sum;
+     return below + (p * 5 - i) * (q[i] / sum);
+   };
+-  const n = INCOME_GROUPS;
+-  const rel = Array.from({ length: n }, (_, k) => (lorenz((k + 1) / n) - lorenz(k / n)) * n);
+-  const trips = rel.map((y) => y ** eps);
++  const wid = BREAKS.slice(1).map((b, k) => b - BREAKS[k]);
++  const rel = wid.map((w, k) => (lorenz(BREAKS[k + 1]) - lorenz(BREAKS[k])) / w);
++  const trips = rel.map((y, k) => wid[k] * y ** eps);
+   const total = trips.reduce((a, b) => a + b, 0);
+   return rel.map((y, k) => ({ share: trips[k] / total, factor: LONG_TRIP_MONEY * y ** -GROUP_E }));
+ }
+diff --git a/trainworld/sim/src/demand/intercity.rs b/trainworld/sim/src/demand/intercity.rs
+index 4f473a60..70e7a8f6 100644
+--- a/trainworld/sim/src/demand/intercity.rs
++++ b/trainworld/sim/src/demand/intercity.rs
+@@ -548,7 +548,7 @@ struct Place {
+     tour: f32,
+ }
+ /// T-1431: the most income groups a place's travellers come in.
+-pub const GROUPS: usize = 3;
++pub const GROUPS: usize = 4;
+ const ONE_GROUP: [(f32, f32); 1] = [(1., 1.)];
+ impl Place {
+     /// Perceived minutes a dollar costs a rider of average income leaving here.
