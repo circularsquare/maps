@@ -48,6 +48,9 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     assert_eq!(s[0][4], KIND_END as f64);
     assert_eq!(s.last().unwrap()[4], KIND_STATION as f64, "the end merges into the station: {s:?}");
     assert_eq!(s.last().unwrap()[5], st[1] as f64);
+    // T-2982: the stop is on the route, the point nearest the station, not on the station's centre
+    let (sx, sy) = (s.last().unwrap()[1], s.last().unwrap()[2]);
+    assert!((sx - 5000.0).abs() < 1e-6 && (sy - 100.0).abs() < 1e-6, "{sx} {sy}");
     // 7.2 km of road: ends, and stops at about every 2 km on the 400 m grid
     let road = 6000.0 * ROAD_FACTOR;
     assert!((a.lines_info()[22 + 9] - road).abs() < 1.0, "{:?}", a.lines_info());

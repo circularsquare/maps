@@ -4,8 +4,10 @@
 // the track): half a rail line's width in the line's colour on the casing, a planned route as rail
 // blueprint is, the 300 m corridor of the selected line as a thin outline under everything, small
 // rings for its street stops from zoom 13 and rounded squares for its ends. A stop at a train station
-// is drawn like any other, in a second pass after the stations (`drawStationStops`), so it reads over
-// the station's own mark (T-2948).
+// is drawn like any other, on the route where it passes nearest the station (T-2982), in a second pass
+// after the stations (`drawStationStops`), so it reads over the station's mark where they meet
+// (T-2948); a thin dashed line in the map's ink, faint, runs from it to the station from zoom 13, the
+// transfer.
 //
 // A ferry line (T-2194) has a bus line's row, so it is drawn here too: its route dashed on a continuous
 // casing, a solid stroke from each port's landing to its berth, no stops (its ports are stations) and
@@ -21,7 +23,7 @@
 // (`lineAt`, `stopAt`), on pointer moves only.
 
 import { t } from "../i18n";
-import { busSpeedColour, ferrySpeedColour, profitColour, rgb } from "../game/palette";
+import { busSpeedColour, ferrySpeedColour, profitColour, rgb, rgbf } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
 import { anchor, kAtY, pxPerUnitAt, toLocal, type Anchor } from "./geo";
@@ -53,6 +55,10 @@ const FLAG_BLUEPRINT = 1;
 const FLAG_FERRY = 2, FLAG_SPUR = 4;
 /** a ferry's dashes: one dash and gap this many line widths long, the dash this share of it */
 const DASH_WIDTHS = 3.2, DASH_ON = 0.6;
+/** T-2982: a stop's dashed line to the train station it changes at; its width, CSS px, its dash and
+ * gap in its widths, and how opaque the map's ink is in it */
+const FLAG_TRANSFER = 8;
+const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
 
 /** A bus line as the world gives it (lng, lat pairs flat). */
 interface BusSource {
@@ -65,6 +71,8 @@ interface BusSource {
   stops: number[];
   /** their ids, a train station's node or a stop's (`stationNames` has the names) */
   stopIds: number[];
+  /** T-2982: each stop at a train station and the station (lng, lat, lng, lat) */
+  transfers: number[];
   /** T-2194: a ferry line, and each port's landing and berth (lng, lat, lng, lat) */
   ferry: boolean;
   spurs: number[];
@@ -84,6 +92,8 @@ interface Built {
    * line's route at its start (a ferry's dashes run on across its points) */
   info: Float32Array;
   count: number;
+  /** the segments before the transfer lines, which come last and are never picked (T-2982) */
+  pickCount: number;
   /** per stop: x, y, 1 a ring + 2 a blueprint's, its colour packed as `info` */
   stops: Float32Array;
   stopCount: number;
@@ -128,6 +138,10 @@ in vec4 a_info;
 in float a_w;                // T-2274: the Traffic view's width by riders, a share of the line's own
 in float a_col;              // T-2452: the Speed or Profit view's colour packed as a_info.z; -1 the line's own, -2 plain track
 uniform vec3 u_track_rgb;
+uniform float u_xfer;        // T-2982: 1 draws the transfer lines (colour pass only)
+uniform float u_xfer_w;      // their width, device px
+uniform vec3 u_xfer_rgb;
+uniform float u_xfer_alpha;
 out vec3 v_color;
 out float v_alpha;
 out vec4 v_cap;
@@ -138,11 +152,13 @@ void main() {
   int flags = int(a_info.y + 0.5);
   bool bp = (flags & ${FLAG_BLUEPRINT}) != 0;
   bool sel = id == u_sel;
-  if ((u_only >= 0 && id != u_only) || (u_only == -2 && !sel) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR}) != 0)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  bool paint = u_pass == 1 && !bp;
+  bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
+  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER}) != 0)
+      || (xfer && (u_pass != 1 || u_xfer < 0.5))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  bool paint = u_pass == 1 && !bp && !xfer;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
   vec3 col = paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
-  float w = u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel ? u_extra : 0.0) : u_width;
+  float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
   if (u_pass < 2) {
@@ -167,10 +183,11 @@ void main() {
   gl_Position = c;
   float ext = (along * 2.0 - 1.0) * w * 0.5, ua = along * len + ext;
   v_cap = vec4(ua, len - ua, side * w * 0.5, w * 0.5);
-  v_period = max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
-  v_dash = u_pass == 1 && (flags & ${FLAG_FERRY}) != 0 ? a_info.w * u_px_per_unit + ua : -1.0;
-  v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : u_dim));
+  v_period = xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
+  v_dash = u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0 ? a_info.w * u_px_per_unit + ua : -1.0;
+  v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
   if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
+  else if (xfer) v_color = u_xfer_rgb;
   else {
     v_color = col;
     if (u_pass == 1) {
@@ -296,6 +313,8 @@ export class BusLayer {
   private lines: BusSource[] = [];
   /** counts `set`s that changed the lines (the renderer's stroke cache, T-1638) */
   version = 0;
+  /** T-2982: the dashed lines from stops to the train stations beside them (checks read it) */
+  transfers = 0;
   private byId = new Map<number, BusSource>();
   private built: Built | null = null;
   /** the build the GPU holds */
@@ -306,7 +325,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
@@ -322,23 +341,28 @@ export class BusLayer {
       for (const l of w.save.lines) {
         const b = w.lineStats[l.id]?.bus;
         if (!b || b.routeLL.length < 4) continue;
-        const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [];
+        const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [], transfers: number[] = [];
         // a ferry's stops are its ports, drawn as the stations they are
-        if (!b.ferry) for (const s of b.stops) (stops.push(s.lng, s.lat, s.kind), stopIds.push(s.id));
+        if (!b.ferry) for (const s of b.stops) {
+          stops.push(s.lng, s.lat, s.kind);
+          stopIds.push(s.id);
+          if (s.at && (s.at[0] !== s.lng || s.at[1] !== s.lat)) transfers.push(s.lng, s.lat, s.at[0], s.at[1]);
+        }
         for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
       }
     }
     const was = this.lines;
     const sameS = (a: number[][] | null, b: number[][] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((s, k) => sameNums(s, b[k])));
     if (was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
+    this.transfers = next.reduce((n, l) => n + l.transfers.length / 4, 0);
     this.byId = new Map(next.map((l) => [l.id, l]));
     this.built = null;
     this.version++;
@@ -358,7 +382,7 @@ export class BusLayer {
     if (this.built && this.built.a === a) return this.built;
     let nSeg = 0, nStop = 0;
     for (const l of this.lines) {
-      nSeg += l.route.length / 2 - 1 + l.spurs.length / 4;
+      nSeg += l.route.length / 2 - 1 + l.spurs.length / 4 + l.transfers.length / 4;
       nStop += l.street.length / 2 + l.stops.length / 3;
     }
     const seg = new Float32Array(nSeg * 4), info = new Float32Array(nSeg * 4);
@@ -406,9 +430,19 @@ export class BusLayer {
         else (kind === 1 ? sRings : rings).push(x, y, 1 + code, col), (kind === 1 ? sRingLine : ringLine).push(l.id);
       }
     }
+    // T-2982: the transfer lines last, out of the picking, each dashed from its stop
+    const pickCount = at;
+    for (const l of this.lines) {
+      for (let i = 0; i + 3 < l.transfers.length; i += 4) {
+        const [x0, y0] = toLocal(l.transfers[i], l.transfers[i + 1], a), [x1, y1] = toLocal(l.transfers[i + 2], l.transfers[i + 3], a);
+        seg.set([x0, y0, x1, y1], at * 4);
+        info.set([l.id, FLAG_TRANSFER, 0, 0], at * 4);
+        at++;
+      }
+    }
     const stopCount = (rings.length + ends.length + sRings.length + sEnds.length) / 4;
     this.built = {
-      a, seg, info, count: at, stops: Float32Array.from([...rings, ...ends, ...sRings, ...sEnds]), stopCount,
+      a, seg, info, count: at, pickCount, stops: Float32Array.from([...rings, ...ends, ...sRings, ...sEnds]), stopCount,
       plainCount: (rings.length + ends.length) / 4,
       stopLine: Int32Array.from([...ringLine, ...endLine, ...sRingLine, ...sEndLine]),
       stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1), ...sRingLine.map(() => 0), ...sEndLine.map(() => 1)]),
@@ -493,6 +527,11 @@ export class BusLayer {
     gl.uniform3fv(u.u_track_rgb, s.trackRgb);
     gl.uniform1f(u.u_rail, Math.max(1 * dpr, s.railShare * bus));
     gl.uniform1f(u.u_px_per_unit, pxPerUnitAt(zoom) * dpr);
+    // T-2982: the transfer lines from where the stop rings show
+    gl.uniform1f(u.u_xfer, zoom >= BUS_RING_ZOOM ? 1 : 0);
+    gl.uniform1f(u.u_xfer_w, TRANSFER_PX * dpr);
+    gl.uniform3fv(u.u_xfer_rgb, rgbf(s.shades.mapInk));
+    gl.uniform1f(u.u_xfer_alpha, TRANSFER_ALPHA);
     gl.bindVertexArray(this.segVao);
     // The selected line's corridor as an outline of its union (T-1490): the stencil gets 1 inside the
     // corridor widened by half the outline and 0 inside it narrowed by half, so what stays 1 is a ring
@@ -595,8 +634,8 @@ export class BusLayer {
   lineAt(ov: Overlay, px: number, py: number): number {
     if (!this.lines.length) return -1;
     const b = this.local(anchor());
-    if (!b.count) return -1;
-    const [i] = topSeg(ov, b.seg, b.count, px, py, PICK_SLOP_PX * PICK_SLOP_PX + 1);
+    if (!b.pickCount) return -1;
+    const [i] = topSeg(ov, b.seg, b.pickCount, px, py, PICK_SLOP_PX * PICK_SLOP_PX + 1);
     return i < 0 ? -1 : b.info[i * 4];
   }
 
@@ -605,8 +644,8 @@ export class BusLayer {
     if (!this.lines.length) return [];
     const b = this.local(anchor());
     const out: number[] = [];
-    while (out.length < max && b.count) {
-      const [i] = topSeg(ov, b.seg, b.count, px, py, PICK_SLOP_PX * PICK_SLOP_PX + 1, undefined, 0, (j) => !skip(b.info[j * 4]) && !out.includes(b.info[j * 4]));
+    while (out.length < max && b.pickCount) {
+      const [i] = topSeg(ov, b.seg, b.pickCount, px, py, PICK_SLOP_PX * PICK_SLOP_PX + 1, undefined, 0, (j) => !skip(b.info[j * 4]) && !out.includes(b.info[j * 4]));
       if (i < 0) break;
       out.push(b.info[i * 4]);
     }
@@ -697,7 +736,7 @@ export class BusLayer {
       const r = b.range.get(l.id), stops = r && this.stopsAlong(b, l.id);
       if (!l.built || !r || !stops) continue;
       // a ferry's landings have no figure of their own
-      for (let i = r[0] + r[1]; i < b.count && b.info[i * 4] === l.id; i++) out[i] = -2;
+      for (let i = r[0] + r[1]; i < b.pickCount && b.info[i * 4] === l.id; i++) out[i] = -2;
       const ratio = this.profit?.get(l.id)?.ratio;
       for (let i = r[0]; i < r[0] + r[1]; i++) {
         const mid = b.cum[i] + 0.5 * Math.hypot(b.seg[i * 4 + 2] - b.seg[i * 4], b.seg[i * 4 + 3] - b.seg[i * 4 + 1]);

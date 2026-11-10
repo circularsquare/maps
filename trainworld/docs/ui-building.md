@@ -400,9 +400,11 @@ the tag by the pointer gives the road length and the price.
   preview uses the line's stops.
 - **Manual** (T-2891, T-2939; `map/busStops.ts`): choosing it opens stop editing, the train mode's look and its
   keys (S or the panel's Edit stops button, shown while the line is manual; Enter or Stop editing ends it).
-  The first time it starts from the route's two ends. A stop is the train editor's disc, a station the route
-  can stop at (`STATION_REACH_M`) its hollow marker, and a hollow marker follows the pointer along the route. A
-  click on the route or a station adds a stop, a click on a stop takes it out, each one edit and one undo; the
+  The first time it starts from the route's two ends. A stop is the train editor's disc, and a hollow marker
+  follows the pointer along the route. Stops go only on the route (T-2982): stations have no marker and take no
+  click. Within 200 m of where the route passes nearest a station the route can stop at (`STATION_REACH_M`) the
+  marker snaps to that point and the tag names the station; a click there adds the station's stop, on the route.
+  A click on the route adds a stop, a click on a stop takes it out, each one edit and one undo; the
   two ends stay. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
   session (`BusRoute::hand_kept`, not saved): choosing Manual again gives them back, and a redraw in between
   keeps those within 200 m of the new route. A line's two end stops are drawn like its other stops in Auto

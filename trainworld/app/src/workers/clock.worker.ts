@@ -3251,11 +3251,16 @@ function buildSnapshot(): NetworkSnapshot {
  * flagged `bus`, so every stop of every line has a node row. */
 function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
   if (a.is_ferry(id)) return ferryRow(a, id);
-  const r = a.bus_route(id), st = a.bus_stops(id);
+  const r = a.bus_route(id), st = a.bus_stops(id), rs = a.bus_reach(id);
+  // T-2982: a stop at a station is on the route beside it; the station's own place, for the transfer's dashes
+  const reachAt = new Map<number, [number, number]>();
+  for (let k = 0; k + 2 < rs.length; k += 3) reachAt.set(rs[k], [rs[k + 1], rs[k + 2]]);
   const stops: ClockBus["stops"] = [];
   for (let k = 0; k + 7 < st.length; k += 8) {
     const [lng, lat] = packLngLat(st[k + 1], st[k + 2]);
-    const s = { id: st[k], x: st[k + 1], y: st[k + 2], lng, lat, kind: st[k + 4], station: st[k + 5] };
+    const s: ClockBus["stops"][number] = { id: st[k], x: st[k + 1], y: st[k + 2], lng, lat, kind: st[k + 4], station: st[k + 5] };
+    const sxy = s.station >= 0 ? reachAt.get(s.station) : undefined;
+    if (sxy) s.at = packLngLat(sxy[0], sxy[1]);
     stops.push(s);
     if (s.station < 0 && !nodes.some((n) => n.id === s.id)) {
       nodes.push({ id: s.id, x: s.x, y: s.y, lng, lat, level: 0, ports: 0, builtPorts: 0, flying: false, platform: 0, stationBuilt: r[0] === 1, stationOff: false, upgrades: 0, name: "", heading: 0, bus: true });
@@ -3274,7 +3279,6 @@ function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
   if (!same) busRouteLL.set(id, { route, ll: routeLL });
   const hand = a.bus_hand(id), reach: ClockBus["reach"] = [];
   if (hand) {
-    const rs = a.bus_reach(id);
     for (let k = 0; k + 2 < rs.length; k += 3) {
       const [lng, lat] = packLngLat(rs[k + 1], rs[k + 2]);
       reach.push({ node: rs[k], x: rs[k + 1], y: rs[k + 2], lng, lat });

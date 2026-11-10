@@ -1,7 +1,9 @@
 // T-2891: the stops of a bus line placed by hand, edited on the map with a train's stop markers
-// (map/stopMarkers.ts, the same marks and tag) while the line tool has the line. A stop is a disc; a
-// station the route can stop at is the hollow marker; along the route a hollow marker follows the
-// pointer. Like the train markers they take no pointer events: map/tools.ts calls `hover` and `click`.
+// (map/stopMarkers.ts, the same marks and tag) while the line tool has the line. A stop is a disc;
+// along the route a hollow marker follows the pointer. Stops go only on the route (T-2982): a station
+// has no mark and takes no click, and the route within reach of one offers the station's stop, the
+// marker snapping to where the route passes nearest it. Like the train markers they take no pointer
+// events: map/tools.ts calls `hover` and `click`.
 
 import { t } from "../i18n";
 import { effect } from "@preact/signals";
@@ -12,7 +14,7 @@ import type { ClockBus } from "../workers/protocol";
 import { toMerc01 } from "./geo";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
-import { NEAR_SCALE, sizeAt } from "./stopMarkers";
+import { sizeAt } from "./stopMarkers";
 
 /** The route takes a click this near, CSS px. */
 const ROUTE_SLOP_PX = 8;
@@ -21,12 +23,11 @@ const ROUTE_SLOP_PX = 8;
 const STATION_REACH_M = 200;
 const HAND_GAP_M = 50;
 
-/** What is under the pointer. */
+/** What is under the pointer: a point of the route (`name` the station whose stop it would be) */
 type Hit =
   | { kind: "end" }
   | { kind: "stop"; x: number; y: number; name: string | undefined }
-  | { kind: "station"; x: number; y: number; name: string }
-  | { kind: "route"; x: number; y: number; mx: number; my: number };
+  | { kind: "route"; x: number; y: number; mx: number; my: number; name?: string };
 
 /** A mark on the map: where it is and what a click on it does. */
 interface Item {
@@ -44,6 +45,30 @@ interface Item {
 const metres = (a: { lng: number; lat: number }, b: { lng: number; lat: number }) =>
   Math.hypot((a.lng - b.lng) * 111_320 * Math.cos((a.lat * Math.PI) / 180), (a.lat - b.lat) * 111_320);
 
+/** A point of a route, in the network's plane and in longitude and latitude. */
+interface RoutePoint { x: number; y: number; lng: number; lat: number }
+
+/** The point `k` of the way along route stretch `i`. */
+function routePoint(bus: ClockBus, i: number, k: number): RoutePoint {
+  const r = bus.route, ll = bus.routeLL;
+  return {
+    x: r[2 * i] + k * (r[2 * i + 2] - r[2 * i]), y: r[2 * i + 1] + k * (r[2 * i + 3] - r[2 * i + 1]),
+    lng: ll[2 * i] + k * (ll[2 * i + 2] - ll[2 * i]), lat: ll[2 * i + 1] + k * (ll[2 * i + 3] - ll[2 * i + 1]),
+  };
+}
+
+/** The stretch of a route (x, y flat, plane) nearest a plane point, and how far along it: as the sim's `Poly::project`. */
+function nearestOnRoute(r: number[], x: number, y: number): [number, number] {
+  let best = Infinity, at: [number, number] = [0, 0];
+  for (let i = 0; i + 3 < r.length; i += 2) {
+    const ax = r[i], ay = r[i + 1], dx = r[i + 2] - ax, dy = r[i + 3] - ay, l2 = dx * dx + dy * dy;
+    const k = l2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+    const d = Math.hypot(ax + k * dx - x, ay + k * dy - y);
+    if (d < best) (best = d), (at = [i >> 1, k]);
+  }
+  return at;
+}
+
 export class BusStopMarkers {
   private box: HTMLDivElement;
   private tag: HTMLDivElement;
@@ -56,6 +81,9 @@ export class BusStopMarkers {
   private merc = new Float64Array(0);
   private size = 0;
   private scratch: [number, number] = [0, 0];
+  private names = new Map<string, string>();
+  /** the stations the route can stop at, each at the route's point nearest it */
+  private reachOn: { p: RoutePoint; node: number }[] = [];
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = document.createElement("div");
@@ -104,14 +132,14 @@ export class BusStopMarkers {
       merc[i + 1] = my;
     }
     this.merc = merc;
-    const stopped = new Set(bus.stops.map((s) => s.station));
+    this.names = names;
+    this.reachOn = bus.reach.map((s) => ({ p: routePoint(bus, ...nearestOnRoute(bus.route, s.x, s.y)), node: s.node }));
     const add = (lng: number, lat: number, on: boolean, hit: Hit) => {
       const [mx, my] = toMerc01(lng, lat);
       const el = this.pool[this.items.length] ?? (this.pool[this.items.length] = this.box.appendChild(document.createElement("div")));
       el.className = "stop-mark " + (on ? "on" : "route");
       this.items.push({ mx, my, on, el, sx: 0, sy: 0, shown: false, hit });
     };
-    for (const r of bus.reach) if (!stopped.has(r.node)) add(r.lng, r.lat, false, { kind: "station", x: r.x, y: r.y, name: names.get(String(r.node)) ?? t("stopMarkers.station") });
     bus.stops.forEach((s, i) => {
       const end = i === 0 || i === bus.stops.length - 1;
       add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)) });
@@ -172,23 +200,23 @@ export class BusStopMarkers {
     for (const m of this.items) {
       if (!m.shown) continue;
       const d = Math.hypot(m.sx - px, m.sy - py);
-      const r = (m.on ? this.size : this.size * NEAR_SCALE) / 2 + 2;
-      if (d > r) continue;
-      // a stop over the station marker beside it
-      if ((m.on ? 0 : 1) * 1e4 + d < bestD) (best = m), (bestD = (m.on ? 0 : 1) * 1e4 + d);
+      if (d > this.size / 2 + 2) continue;
+      if (d < bestD) (best = m), (bestD = d);
     }
     if (best) return best.hit;
     const at = this.routeAt(px, py);
     if (!at) return null;
-    const [i, k] = at, r = bus.route, ll = bus.routeLL;
-    const x = r[2 * i] + k * (r[2 * i + 2] - r[2 * i]), y = r[2 * i + 1] + k * (r[2 * i + 3] - r[2 * i + 1]);
-    const here = { lng: ll[2 * i] + k * (ll[2 * i + 2] - ll[2 * i]), lat: ll[2 * i + 1] + k * (ll[2 * i + 3] - ll[2 * i + 1]) };
+    const here = routePoint(bus, ...at);
     // on top of a stop a click adds nothing, and near a station's stop it is that stop
     if (bus.stops.some((s) => metres(s, here) < (s.station >= 0 ? STATION_REACH_M : HAND_GAP_M))) return null;
-    const station = bus.reach.find((s) => metres(s, here) <= STATION_REACH_M);
-    if (station) return this.items.find((m) => m.hit.kind === "station" && m.hit.x === station.x && m.hit.y === station.y)?.hit ?? null;
-    const [mx, my] = toMerc01(here.lng, here.lat);
-    return { kind: "route", x, y, mx, my };
+    // T-2982: near a station, the station's stop, where the route passes nearest the station
+    let reach = STATION_REACH_M, near: { p: RoutePoint; node: number } | null = null;
+    for (const s of this.reachOn) {
+      const d = metres(s.p, here);
+      if (d <= reach) (reach = d), (near = s);
+    }
+    const p = near?.p ?? here, [mx, my] = toMerc01(p.lng, p.lat);
+    return { kind: "route", x: p.x, y: p.y, mx, my, ...(near ? { name: this.names.get(String(near.node)) ?? t("stopMarkers.station") } : {}) };
   }
 
   /** The pointer moved over the map: the follower along the route, the tag and the cursor. */
@@ -199,8 +227,7 @@ export class BusStopMarkers {
     this.map.getCanvas().style.cursor = hit && hit.kind !== "end" ? "pointer" : "crosshair";
     if (!hit || hit.kind === "end") return this.hideTag();
     const lines = hit.kind === "stop" ? [...(hit.name ? [hit.name] : []), t("stopMarkers.remove")]
-      : hit.kind === "station" ? [hit.name, t("stopMarkers.add")]
-      : [t("stopMarkers.add")];
+      : [...(hit.name ? [hit.name] : []), t("stopMarkers.add")];
     tagLines(this.tag, lines);
     this.tag.style.display = "";
     this.tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 12)}px)`;

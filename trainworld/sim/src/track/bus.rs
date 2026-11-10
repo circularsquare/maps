@@ -128,7 +128,8 @@ pub struct BusStop {
     pub id: u32,
     /// Road metres from the route's start.
     pub s: f64,
-    /// Where riders board: the station's node, or the point on the route.
+    /// Where the bus stops: always a point on the route, at a station the route's point nearest it
+    /// (T-2982). Riders at a station stop change from the station's node (`station`) as before.
     pub x: f64,
     pub y: f64,
     pub kind: u8,
@@ -520,14 +521,12 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     if closed && all.len() < 3 {
         all.insert(1, (0.5 * len, KIND_MIDDLE, None));
     }
+    // T-2982: every stop is on the route, a station's too (where the route passes nearest the station)
     let mut stops: Vec<BusStop> = all
         .iter()
         .enumerate()
         .map(|(k, &(s, kind, station))| {
-            let (x, y) = match station {
-                Some(n) => (net.node_x[n as usize], net.node_y[n as usize]),
-                None => poly.at_road(s),
-            };
+            let (x, y) = poly.at_road(s);
             BusStop { id: station.unwrap_or_else(|| stop_id(l, k)), s, x, y, kind, station, cover: None }
         })
         .collect();

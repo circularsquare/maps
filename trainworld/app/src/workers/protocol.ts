@@ -509,8 +509,9 @@ export interface ClockBus {
   /** road length, m: the drawn length, times 1.2 on the straight stretches */
   roadM: number;
   /** the stops demand sees, in run 0's order: kind 0 an end, 1 a train station (`station` its
-   * node), 2 a stop between, 3 where it crosses another bus route; `station` -1 for no station */
-  stops: { id: number; x: number; y: number; lng: number; lat: number; kind: number; station: number }[];
+   * node), 2 a stop between, 3 where it crosses another bus route; `station` -1 for no station. Every
+   * stop is on the route (T-2982); at a station `at` is the station's own longitude and latitude */
+  stops: { id: number; x: number; y: number; lng: number; lat: number; kind: number; station: number; at?: [number, number] }[];
   /** the street stops between, drawn only, x, y flat */
   street: number[];
   /** T-2885: how far apart the player set the stops, m; 0: they place themselves */

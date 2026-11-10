@@ -1569,7 +1569,10 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   every 2 km of road between (`k = ceil(gap / 2 km) - 1`, at least one between two stations 800 m
   or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
   route stops at constructed stations and crosses constructed routes; a planned one previews all.
-  Any edit to a station or a line places every bus line's stops again.
+  Any edit to a station or a line places every bus line's stops again. Every stop is on the route
+  (T-2982): a station's stop where the route passes nearest the station, never on the station's
+  centre (`BusStop::x`, `y`). Its id is still the station's node, so riders change between bus and
+  train there as at the station itself: the walk from the route to the station is not counted.
 - **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).
   Set from 400 m to 100 km in the bus panel, where 400 m, the least, is the placing above (`spacing_from`
   stores it as 0, T-2947: the placing has a stop about every 400 m, so the panel reads it as that distance).

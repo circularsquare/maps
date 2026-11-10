@@ -395,8 +395,11 @@ In the Traffic view a running bus or ferry line is drawn as wide as a rail line 
 stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
 (`demandLayers.ts` `busWidths`, T-2274).
 Street stops are small rings from zoom 13, ends small rounded squares from zoom 11 (T-2950). A stop at a train
-station is drawn like any other, ring or end square, over the station's own mark in a pass after the stations
-(`BusLayer.drawStationStops`, T-2948). Selecting the line draws its 300 m
+station is drawn like any other, ring or end square, on the route where it passes nearest the station, never on
+the station's centre (T-2982), in a pass after the stations so it reads over the station's mark where the two
+meet (`BusLayer.drawStationStops`, T-2948). From zoom 13 a thin dashed line runs from such a stop to its
+station (1.5 px, the map's ink at 50%, the transfer; `FLAG_TRANSFER`), drawn under the track and never
+picked. Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],
