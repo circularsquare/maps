@@ -124,6 +124,22 @@ CONFIGS = {
         "national": "CO",
         "mode": "factor",
     },
+    # T-2956: GHS-POP put 5.9M in Luxor governorate against CAPMAS's 1.4M, 1.7 times Luxor and Qena together
+    # (notes/T-2897.md); CAPMAS's 2023-07-01 estimates by governorate, as citypopulation.de lists them under CAPMAS codes
+    # (by kism and markaz, COD-AB's units lag CAPMAS's: tools/country/egypt_census.py)
+    "EG": {
+        "source": "CAPMAS population estimates 2023-07-01 by governorate (2017 census base), from citypopulation.de, "
+                  "on COD-AB EGY (HDX, CC BY-IGO)",
+        "polygons": {"file": "EG/egy_admin_boundaries.gdb.zip",
+                     "url": "https://data.humdata.org/dataset/b90d81ba-7c7a-4283-9899-827480d80a79/resource/"
+                            "7b57e5ac-3fc9-4139-a8c3-1315bd04cbe9/download/egy_admin_boundaries.gdb.zip",
+                     "layer": "egy_admin1", "code": "adm1_pcode", "name": "adm1_name"},
+        "totals": {"file": "EG/eg_governorates_2023.csv", "made_by": "tools/country/egypt_census.py", "code": "code",
+                   "pop": "pop"},
+        "parent": None,
+        "national_total": (105_177_948, 0.0001),  # the governorates' kism and markaz summed
+        "mode": "factor",
+    },
     # T-2111: 2011 is still the latest count (the 2027 census has no results yet), so shares within each state
     "IN": {
         "source": "Census of India 2011, Primary Census Abstract by district (NADA catalog 6191), on Datameet's 2011 "

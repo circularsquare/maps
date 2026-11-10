@@ -51,7 +51,7 @@ Take the first that holds; never take a source from memory.
    people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
    or province, spread by the census shares). A config may cover part of a country (`only`, a code regex: Cambodia's
    north-west) or a file with no parent rows (`parent` None, `national_total` the published figure and how near the
-   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO. Switch a country on with `"module": "admin_totals"`
+   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO, EG. Switch a country on with `"module": "admin_totals"`
    in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
    signal cache), and its `pop_vs_plan` is relaxed with the census figure.
 4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
@@ -79,6 +79,7 @@ Pick the zone rule from what the dry run shows (`world_plan.ZONE_RULES`, docs/zo
 | huge desert or mountain units, each round one town of 50,000-130,000, dead under the floor (Mexico's north: 6.9M people) | `min_density` 0, as `MEX` |
 | settled land at 10-20 a km2 round a roadless interior (Brazil: the default left 30.6M dead; no floor made 29 Amazon zones over 100,000 km2; `join_km` 150 left 72 interior zones under 0.5M) | `reach` without `join_km`, as `BRA` |
 | a thin country of coast and valley towns, units finer than districts (New Zealand's wards) | `min_density` 0, `group_level` 1, `join_km` long enough to keep the big towns' zones apart (250 km), as `NZL` |
+| settled coasts and valleys round a desert, a desert unit's one town far from its centroid and dead under `reach` (Dakhla, Marsa Matruh), towns 400 km apart joined (Laayoune and Guelmim) | `reach` with `reach_from_people` and `join_km` 150, as `MAR` |
 
 A rule change means a second dry run. Read the merge log (`zones.<ISO>.merges` in the dry plan).
 
@@ -169,7 +170,9 @@ Done when: all eight ticked.
 
     <tw>\pipeline\world_run.py step world_plan zones --countries XX > artifacts\trainworld\t###-zones.log 2>&1
 
-The live rows must match the dry run's (ids may differ if another country took some). Apply item 1-4
+The live rows must match the dry run's (ids may differ if another country took some). Several countries go in one call
+(`--countries MA,DZ,TN,EG`): dry runs made one country at a time each pick the same free ids (T-2897), so patches and
+names drafted on them are keyed by unit or name, not id. Apply item 1-4
 patches if they were made on the dry plan. `world_run.py plan --countries XX --limit 300` lists the
 runner's regions and extracts. Then `<tc>\backup.py T### pre XX,<neighbours>` (`--dry` counts first; it refuses a country with no packs, so with no
 built neighbour either there is nothing to back up before the join).

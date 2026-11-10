@@ -166,6 +166,9 @@ notes/T-1191.md. **Australia** takes Canada's rule on geoBoundaries LGAs, read a
 holds all of Greater Sydney, set by hand in the plan (T-1857). **New Zealand** (T-1738) zones its geoBoundaries wards by
 territorial authority (`group_level`) with no density floor and Canada's `join_km` at **250** km: four big zones round
 Hamilton, Wellington, Christchurch and Dunedin, and Northland; only the Chatham Islands are dead space.
+**Morocco, Algeria, Tunisia and Egypt** (T-2897) take Canada's rule with no density floor and cities of 0.5M kept whole,
+reach measured from each unit's people centre instead of its centroid (`reach_from_people`: a desert province's centroid
+can lie hundreds of km from its one town, which left Dakhla, Marsa Matruh and Tindouf dead space).
 **No ring zones** (Anita, 2026-10-23, T-1087: zones keep together areas that mostly commute within
 themselves, "kinda like voronoi"). Of the joins the merge rule allows, one that makes a zone
 **wrap** another zone, a metro row or a built pack is refused: A wraps B when at least **0.5** of B's

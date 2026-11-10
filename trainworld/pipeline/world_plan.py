@@ -217,6 +217,16 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
                        "fua_whole": 500_000, "plan_units": True, "task": t}
                  for iso, t in (("ARG", "T-2695"), ("CHL", "T-2695"), ("PER", "T-2695"), ("ECU", "T-2695"),
                                 ("ZAF", "T-2696"), ("SAU", "T-2697"))},
+              # the same for North Africa's coasts and valleys round the Sahara: at the default 20 a km2 Morocco left
+              # 1.59M dead (Guelmim, Dakhla, Zagora), Algeria 3.34M (Tamanrasset, Tindouf, Hassi Messaoud), Tunisia
+              # 0.36M (Ben Gardane), Egypt 1.77M (Marsa Matruh, Kharga); reach from each unit's people, since a desert
+              # unit's centroid lies far from its one town (`reach_centre`); `join_km` 150, as Canada: without it Laayoune
+              # joined Guelmim 430 km off, Sefrou Figuig, and Egypt's Kharga oasis a Sohag valley district; Egypt's people
+              # scaled to CAPMAS's 2023 estimates by governorate (GHS-POP had Luxor at 4.2 times, T-2956)
+              **{iso: {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                       "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True, "task": t,
+                       **({"module": "admin_totals"} if iso == "EGY" else {})}
+                 for iso, t in (("MAR", "T-2897"), ("DZA", "T-2954"), ("TUN", "T-2955"), ("EGY", "T-2956"))},
               # the same, on DANE's municipio totals: GHS-POP put 192,229 in one pixel of Tiquisio (T-2712)
               "COL": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
                       "fua_whole": 500_000, "plan_units": True, "module": "admin_totals", "task": "T-2712"},
@@ -313,7 +323,8 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
              "NZL": ("C", "admin_totals"),
-             "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals")}
+             "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
+             "EGY": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
@@ -2073,6 +2084,17 @@ def ground_km(a, b):
     return 2 * 6371.0 * math.asin(math.sqrt(h))
 
 
+def reach_centre(pop, g, rule):
+    """Where a unit's reach is measured from: its centroid, or with `reach_from_people` its people's centre
+    (T-2897: Oued Ed-Dahab's centroid lies 300 km inland of Dakhla, its one town, so the centroid had 4,091
+    people within reach and Dakhla's 194,000 were dead space; Marsa Matruh's 282,000 the same)."""
+    if rule.get("reach_from_people"):
+        x, y, p = pop.inside(g)
+        if p.sum() > 0:
+            return float((x * p).sum() / p.sum()), float((y * p).sum() / p.sum())
+    return g.centroid.coords[0]
+
+
 def reach_people(pop, pts, km):
     """People within `km` of each Mollweide point: GHS-POP of every country, summed on REACH_CELL_KM
     cells (T-1191), by great-circle distance as `ground_km`: Mollweide's own run up to 1.9x long away from
@@ -2571,7 +2593,8 @@ def plan_zones(isos3, out_path=None, replan=False):
         only = rule.get("zoned_only", {})
         level, reach = rule.get("group_level"), rule.get("reach")
         if reach:  # T-1191: the people within reach of each unit's own centre
-            near = dict(zip([u.id for u in units], reach_people(pop, [u.geom.centroid.coords[0] for u in units], reach[0])))
+            near = dict(zip([u.id for u in units], reach_people(pop, [reach_centre(pop, u.geom, rule) for u in units],
+                                                                reach[0])))
         for u in units:
             if u.parents and u.parents[0][0] in only and u.id not in only[u.parents[0][0]]:
                 if u.id not in held:
