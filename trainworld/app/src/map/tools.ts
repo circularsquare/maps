@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { addVisitAfter, ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -1439,10 +1439,25 @@ export class Tools {
     let change: Parameters<typeof edit>[0];
     const n = before.length;
     const closedLoop = n >= 3 && before[0] === before[n - 1];
+    const manual = !!world.peek()?.lineStats[line.id]?.manual;
+    // T-3023: the "+" on a manual line's row was pressed: the station goes in after that row
+    const after = addVisitAfter.peek();
+    const adding = manual && after && after.line === id && after.n === n && tier !== "turn" && tier !== "unturn" ? after : null;
+    if (after) addVisitAfter.value = null;
+    if (adding) {
+      if (station === before[adding.index] || station === before[adding.index + 1]) return;
+      const stops = [...before];
+      stops.splice(adding.index + 1, 0, station);
+      const a = await edit({ op: "orderStops", line: id, stops }, true);
+      if (!a.ok) return say(this.orderWhy(a.issues), true);
+      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+      return;
+    }
     if (tier === "turn") {
       // T-3021: the end past this stop turned round its loop
       change = { op: "turnEnd", line: id, station };
-    } else if (tier === "unturn" || (station === before[0] && closedLoop)) {
+    } else if (tier === "unturn" || (station === before[0] && closedLoop && !manual)) {
       // a loop opened: a circle less its closing stop, a turned line less its way back
       change = { op: "openLoop", line: id };
     } else if (!before.includes(station)) {
@@ -1463,6 +1478,14 @@ export class Tools {
       this.noteFast(id);
       void settleNewLineColour(id);
     }
+  }
+
+  /** Why an order the player gave has no route, in words (`StopOrder:<kind>:<from>:<to>`, T-2895). */
+  private orderWhy(issues: string[]): string {
+    const f = issues.find((k) => k.startsWith("StopOrder:"))?.split(":").map(Number); // i18n-ignore
+    if (!f) return describeIssues(issues);
+    const name = (id: number) => world.peek()?.save.stations.find((s) => Number(s.id) === id)?.name ?? "";
+    return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", { a: name(f[2]), b: name(f[3]) });
   }
 
   /** T-1899: whether a stop edit on `id` picks its train type by the track: while it is the new line

@@ -236,6 +236,9 @@ pub struct LineData {
     /// T-2895: the player set the stop order by hand, so no stop edit puts the stops in a
     /// straighter order (`straighten`).
     pub hand: bool,
+    /// T-3023: manual mode: the stop list is the whole cycle, one row a visit, run one way; a
+    /// reversal at one of its stops is a terminus, not the reversal limiter's.
+    pub manual: bool,
     /// T-2981: a loop runs one way, round in the direction its stops or route were drawn (run 0
     /// alone); otherwise both ways. Kept on an open line, which ignores it, so it carries over a
     /// close. A new bus or ferry line starts one way, a train line both ways.
@@ -457,6 +460,7 @@ pub struct Network {
     pub line_alive: Vec<bool>,
     pub line_day: Vec<u32>,
     pub line_hand: Vec<bool>,
+    pub line_manual: Vec<bool>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
     pub line_name: Vec<String>,
@@ -790,6 +794,7 @@ impl Network {
             line_alive: vec![],
             line_day: vec![],
             line_hand: vec![],
+            line_manual: vec![],
             line_one_way: vec![],
             line_limit: vec![],
             line_name: vec![],
@@ -1027,6 +1032,7 @@ impl Network {
         self.line_broken.push(false);
         self.line_day.push(0);
         self.line_hand.push(false);
+        self.line_manual.push(false);
         self.line_one_way.push(false);
         self.line_limit.push(0);
     }
@@ -1102,6 +1108,7 @@ impl Network {
                 group_look: self.line_group_look[i].clone(),
                 day: self.line_day[i],
                 hand: self.line_hand[i],
+                manual: self.line_manual[i],
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
             }
@@ -1504,6 +1511,7 @@ impl Network {
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
+                self.line_manual[i] = d.manual && d.bus.is_none() && d.ferry.is_none();
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
                 self.line_bus[i] = d.bus;
@@ -1520,6 +1528,7 @@ impl Network {
                 self.line_alive[i] = false;
                 self.line_day[i] = 0;
                 self.line_hand[i] = false;
+                self.line_manual[i] = false;
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
                 self.line_bus[i] = None;

@@ -893,6 +893,17 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
   to where the path turns, which becomes the line's end, a terminus rather than a reversal
   partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
+  **Manual mode** (T-3023, notes/T-2988.md, `LineData::manual`, saved as a trailing `LMN1` block, save level 14;
+  `TrackApi::set_manual`, `line_manual`, `manual_folds`): the line's stops are the whole cycle, one row
+  per visit, hand ordered and one way. An open line `[A, B, C, D]` becomes `[A, B, C, D, C, B, A]`, a balloon
+  closing at A; a loop line keeps its stops. Stop edits on it route the stops as given (`manual_stops`),
+  where `edited_stops` would fold an out-and-back list into an open line. Skipping a visit is `drop_stop` with
+  its refusals (a reversal's stop stays, the ends stay). A reversal at a listed stop is a terminus: the
+  platform and turnback of a line end, with no reversal limiter (`build_nodes` skips `limiter`), and the
+  app draws no U-turn icon on the line. `set_manual(false)` is refused unless the list is a plain out-and-back
+  (`folded`: it reads the same both ways), which it folds into the open line, both ways again. The marker
+  tiers 5, 6 and 8 are not offered on a manual line; tier 7 still writes a loop into it. Trains enter service at
+  the first stop only, so the far end waits one run at the start of the day.
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties); an open line whose edited route reverses is tried again

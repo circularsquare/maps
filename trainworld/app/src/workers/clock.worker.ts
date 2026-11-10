@@ -3660,6 +3660,8 @@ function apply(op: EditOp): Applied {
       return { r: a.turn_end(op.line, op.station) };
     case "openLoop":
       return { r: a.open_loop(op.line) };
+    case "setManual":
+      return { r: a.set_manual(op.line, op.on) };
     case "stopPassed": {
       const r = a.stop_passed(op.line, op.station);
       return { r: r === 0 ? 0 : INSERT_REFUSED };

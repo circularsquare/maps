@@ -15,7 +15,7 @@ import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretc
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
+import { addVisitAfter, display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
@@ -191,7 +191,7 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
   return (
     <>
       <ul class="rows">
-        {st.loop && (
+        {st.loop && !st.manual && (
           <li>
             <span class="grow">{tr("lineInspector.direction")}</span>
             <Segmented<boolean>
@@ -642,6 +642,9 @@ function RailLineInspector({ id }: { id: string }) {
   const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
   const draggedRow = useRef(false);
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
+  const manual = !!l && !!w?.lineStats[id]?.manual;
+  useEffect(() => { addVisitAfter.value = null; }, [l?.num, editingStops, manual]);
+  const adding = addVisitAfter.value;
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   // T-1272: the Traffic view draws the stops diagram by load, with the map's crowding marks
@@ -844,11 +847,12 @@ function RailLineInspector({ id }: { id: string }) {
         {looks && !drawn && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}
         {dot && <span class="stop-hit" data-tip={dot.tip} onClick={dot.click} />}
         <span class="grow">
+          {editingStops && st.manual && <span class="visit-n muted num">{i + 1}</span>}
           <span class="stop-name" onClick={() => { if (!draggedRow.current) selection.value = { kind: "station", station: s }; }}>
             {name.get(s)}
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
-          {st.reversals?.includes(i) && (
+          {st.reversals?.includes(i) && !st.manual && (
             <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st) })}>
               <Icon.uturn />
             </span>
@@ -862,8 +866,14 @@ function RailLineInspector({ id }: { id: string }) {
             <Icon.uturn />
           </button>
         )}
-        {editingStops && (
-          <button class="btn icon mini danger" data-tip={tr(!row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : removeStop(i))}>
+        {editingStops && st.manual && i < nStops - 1 && (
+          <button class={"btn icon mini" + (adding?.index === i ? " on" : "")} data-tip={tr(adding?.index === i ? "lineInspector.addVisitStop" : "lineInspector.addVisit", { name: name.get(s) ?? "" })} aria-label={tr("lineInspector.addVisit", { name: name.get(s) ?? "" })}
+            onClick={() => { addVisitAfter.value = adding?.index === i ? null : { line: l.num, index: i, n: nStops }; }}>
+            <Icon.plus />
+          </button>
+        )}
+        {editingStops && !(st.manual && (i === 0 || i === nStops - 1 || st.reversals?.includes(i))) && (
+          <button class="btn icon mini danger" data-tip={tr(st.manual ? "lineInspector.skipStop" : !row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : st.manual ? void stopEdit({ op: "dropStop", line: l.num, index: i }) : removeStop(i))}>
             <Icon.cross />
           </button>
         )}
@@ -878,11 +888,14 @@ function RailLineInspector({ id }: { id: string }) {
   const afterStop = (i: number, inArc = false) => {
     // T-3007: a station a side line stops at counts too, though it also has its own row in related lines
     const here = editingStops ? passed.filter((p) => p.gap === i) : [];
-    if (!here.length || i + 1 >= l.stops.length) return null;
+    const waiting = editingStops && st.manual && adding?.index === i && adding.n === nStops
+      ? <li class="adding"><span class="grow"><span class="stop-name">+ {tr("lineInspector.addVisitHint")}</span></span></li>
+      : null;
+    if (!here.length || i + 1 >= l.stops.length) return waiting;
     if (flip) here.reverse();
     // Add and Cancel take the clicked row's place, Add stretched over where the pointer is, so a double
     // click lands on Add; the stations are listed below (T-1489)
-    return pending?.includes(i)
+    return waiting ? <>{waiting}</> : pending?.includes(i)
       ? <>
         <li class="passed confirm">
           {inArc && <i class="arc mid" aria-hidden="true" />}
@@ -919,6 +932,13 @@ function RailLineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
+      {editingStops && l.stops.length >= 2 && (
+        <div class="manual-row">
+          <button class={"btn text mini" + (st.manual ? " on" : "")} aria-pressed={st.manual} disabled={st.manual && !st.manualFolds}
+            data-tip={st.manual ? (st.manualFolds ? undefined : tr("lineInspector.manualBackTip")) : tr("lineInspector.manualTip")}
+            onClick={() => void stopEdit({ op: "setManual", line: l.num, on: !st.manual })}>{tr("lineInspector.manualMode")}</button>
+        </div>
+      )}
       {related ? (
         <div class={orderClass + (turned ? " turned-rel" : "")} onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce && !turned} flip={flip} rows={turned?.rows}

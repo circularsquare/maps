@@ -204,6 +204,9 @@ export interface LineStats {
   endTurns: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
+  /** T-3023: manual mode: the stop list is every visit in order, run one way; `manualFolds`: the list is a plain out-and-back that folds into an open line */
+  manual: boolean;
+  manualFolds: boolean;
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
    * back. Run both ways, each way has its own trains, half the line's (`loopHalves`). */
   loop: "circle" | "balloon" | null;

@@ -597,7 +597,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 }
                 if net.turns_back(run.segs[k - 1], run.segs[k]) {
                     // T-797: reversing partway uses what a short turn there would, plus the
-                    // limiter; it is no junction move and no through train. At a bare track end
+                    // limiter (a manual line has none, T-3023); it is no junction move and no through train. At a bare track end
                     // (B3) the stub is a one-track terminus.
                     let stand = match run.stop_idx.iter().position(|&s| s as usize == k) {
                         Some(j) => run.stop_s[j],
@@ -611,7 +611,9 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     let reach = net.node_platform[n as usize] as f64;
                     let at = stand - reach.max(ls.train_len) - HOLD_MARGIN_M;
                     turn_at(net, n, l, r as u8, side_in, at, dwell, &mut plat, &mut term, &mut sidings, &mut turns);
-                    limiter.push((n, side_in, l as u32, r as u8, at));
+                    if !net.line_manual[l] {
+                        limiter.push((n, side_in, l as u32, r as u8, at));
+                    }
                     continue;
                 }
                 if net.node_platform[n as usize] > 0 {

@@ -13,7 +13,7 @@ fn api(w: TrackWorld) -> TrackApi {
 /// A stem A - B - M - J along x and a loop at J through K (`balloon_fixture`'s at half size, about
 /// 7 km round), leaving J on its east side both ways. With `west`, the same loop mirrored at Jw
 /// past A, with no station on it.
-fn teardrop(west: bool) -> (TrackWorld, [u32; 5]) {
+pub(super) fn teardrop(west: bool) -> (TrackWorld, [u32; 5]) {
     let mut w = world();
     let a = node(&mut w, -4000.0, 0.0, 0);
     let b = node(&mut w, -2000.0, 0.0, 0);
@@ -39,7 +39,7 @@ fn teardrop(west: bool) -> (TrackWorld, [u32; 5]) {
     (w, [a, b, m, j, k])
 }
 
-fn tier_of(a: &TrackApi, line: u32, n: u32) -> u8 {
+pub(super) fn tier_of(a: &TrackApi, line: u32, n: u32) -> u8 {
     a.stop_tiers(line).chunks_exact(3).find(|c| c[0] == n as f64).map_or(99, |c| c[1] as u8)
 }
 

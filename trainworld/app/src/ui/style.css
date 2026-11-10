@@ -1885,3 +1885,5 @@ html.ui-hidden .ui-hint.on { display: block; }
 /* T-2962: the new-version notice, as the demand-stopped one without the alarm colour */
 .new-version-note { border-color: var(--accent); }
 .new-version-note .dsn-row .btn { border-color: var(--accent); color: var(--text); }
+.manual-row { margin: 2px 0 6px; }
+.stops .visit-n { display: inline-block; min-width: 20px; margin-right: 4px; text-align: right; }

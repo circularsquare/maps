@@ -10,6 +10,8 @@ If the round trip leaves time over, the extra trains wait at the ends, half at e
 
 **A loop** runs an even number of trains, half each way.
 
+**A line with every stop listed in order** (Edit every stop in order) runs one way round its whole list, the way out and the way back as rows. Any number of trains fits. A train turning round at a listed stop stands the turnaround there, as it does at a line end. All trains start at the first stop, so the far end waits one run at the start of the day.
+
 **Departures.** The first train leaves about half a run before the level starts and then one every gap, until half a run before it ends. A train belongs to the level in force when it reaches the middle of the line. So stops near the ends change service a little early or late. A line uses the local time of its first stop.
 
 **Spacing between lines.** Lines that share track or a platform are set a little apart, so their trains don't arrive together. Two lines at one gap on one track leave half a gap apart.

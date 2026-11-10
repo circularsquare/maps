@@ -14,12 +14,12 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, manual: false, one_way: false, limit: 0 }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_for(&self.w.net, &d, stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
@@ -31,7 +31,7 @@ impl TrackApi {
         if d.bus.is_some() || d.ferry.is_some() {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, true) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_for(&self.w.net, &d, stops, true) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         d.hand = true;
@@ -296,7 +296,7 @@ impl TrackApi {
     /// first stop, where a click closes the line into a circle, 6 a loop's first stop, where a click
     /// opens it (T-798), 7 the stop before a loop at an end of the line, where a click turns the
     /// line round it (`turn_end`), 8 that stop on a line so turned, where a click opens it again
-    /// (`open_loop`, T-3021). Worked out with `insert_stop`'s own search, so the markers say what a
+    /// (`open_loop`, T-3021); a manual line (T-3023) has no 5, 6 or 8. Worked out with `insert_stop`'s own search, so the markers say what a
     /// click does. Empty if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
@@ -309,7 +309,8 @@ impl TrackApi {
         let reach = reachable_from(net, stops);
         let mut memo = HopMemo::new();
         let turn_at: Vec<u32> = turns(net, line, &mut memo).into_iter().map(|t| t.branch).collect();
-        let unturn_at = unturn_branch(net, line, &mut memo);
+        let manual = net.line_manual[line as usize];
+        let unturn_at = unturn_branch(net, line, &mut memo).filter(|_| !manual);
         let mut out = vec![];
         for n in 0..net.node_count() as u32 {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
@@ -317,9 +318,9 @@ impl TrackApi {
             }
             let (tier, at) = if turn_at.contains(&n) && (stops.first() != Some(&n) || closed(stops)) {
                 (7.0, -1.0)
-            } else if stops.first() == Some(&n) && closed(stops) {
+            } else if stops.first() == Some(&n) && closed(stops) && !manual {
                 (6.0, -1.0)
-            } else if stops.first() == Some(&n) && close_path(net, line, &mut memo).is_some() {
+            } else if stops.first() == Some(&n) && !manual && close_path(net, line, &mut memo).is_some() {
                 (5.0, -1.0)
             } else if turn_at.contains(&n) {
                 (7.0, -1.0)
@@ -368,7 +369,7 @@ impl TrackApi {
     /// coming back (a circle's closing stop off, a turned line's way back).
     pub fn open_loop(&mut self, id: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        if !closed(&d.stops) {
+        if !closed(&d.stops) || d.manual {
             return self.refuse(Issue::LinePath { line: id });
         }
         let open = d.stops[..=open_prefix(&d.stops)].to_vec();
@@ -376,6 +377,48 @@ impl TrackApi {
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3023: switch a line into manual mode (`on`) or back. An open line becomes its whole cycle,
+    /// out and back (`[A, B, C]` is `[A, B, C, B, A]`), hand ordered and one way, each row one visit;
+    /// a loop line keeps its stops. Back to an open line is refused unless the stops are a plain
+    /// out-and-back (`manual_folds`). One edit, one undo.
+    pub fn set_manual(&mut self, id: u32, on: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.bus.is_some() || d.ferry.is_some() || d.manual == on {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        if on {
+            if !closed(&d.stops) {
+                if d.stops.len() < 2 {
+                    return self.refuse(Issue::LinePath { line: id });
+                }
+                let back: Vec<u32> = d.stops[..d.stops.len() - 1].iter().rev().copied().collect();
+                d.stops.extend(back);
+            }
+            let Some((stops, path)) = manual_stops(&self.w.net, &d.stops) else { return self.refuse(Issue::LinePath { line: id }) };
+            d.stops = stops;
+            d.path = path;
+            d.hand = true;
+            d.one_way = true;
+        } else {
+            let Some(open) = folded(&d.stops) else { return self.refuse(Issue::LinePath { line: id }) };
+            let Some((stops, path)) = edited_stops(&self.w.net, &open, false) else { return self.refuse(Issue::LinePath { line: id }) };
+            d.stops = stops;
+            d.path = path;
+            d.hand = false;
+            d.one_way = false;
+        }
+        d.manual = on;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3023: whether a line is in manual mode.
+    pub fn line_manual(&self, line: u32) -> bool {
+        self.w.net.line_ok(line) && self.w.net.line_manual[line as usize]
+    }
+    /// T-3023: whether a manual line's stops are a plain out-and-back that `set_manual(false)` folds
+    /// into an open line.
+    pub fn manual_folds(&self, line: u32) -> bool {
+        self.line_manual(line) && folded(self.w.net.line_stops(line)).is_some()
     }
     /// T-2981: whether a line is a loop that runs one way, round in the direction it was drawn.
     pub fn line_one_way(&self, line: u32) -> bool {
@@ -519,6 +562,31 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
     let mut s = stops.to_vec();
     s.dedup();
     s
+}
+
+/// T-3023: `edited_stops` for a line in manual mode keeps the stops as given, out-and-back lists
+/// included (which `edited_stops` would fold into an open line).
+fn edited_for(net: &Network, d: &LineData, stops: &[u32], hand: bool) -> Option<(Vec<u32>, Vec<u32>)> {
+    if d.manual { manual_stops(net, stops) } else { edited_stops(net, stops, hand) }
+}
+
+/// A manual line's stops and the path through them, each leg the route search's.
+fn manual_stops(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    let stops = distinct_stops(stops);
+    if stops.len() < 2 {
+        return None;
+    }
+    let path = net.route(&stops)?;
+    Some((stops, path))
+}
+
+/// The open line a plain out-and-back list folds into: `[A, B, C, B, A]` is `[A, B, C]`.
+fn folded(stops: &[u32]) -> Option<Vec<u32>> {
+    let n = stops.len();
+    if n < 3 || n % 2 == 0 || (0..n).any(|i| stops[i] != stops[n - 1 - i]) {
+        return None;
+    }
+    Some(stops[..=n / 2].to_vec())
 }
 
 /// The stops a stop edit leaves and their path. Stops closed into a loop whose path only goes
