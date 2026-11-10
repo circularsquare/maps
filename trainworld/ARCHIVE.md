@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2951 (2026-11-09, tree trackvertex): the round handles at blueprint curves' middles are gone (a stale cache left them where the curve had been); a double click on blueprint track with the select tool adds a point there (a plain node, shape unchanged, `TrackApi.add_point`) that drags as any node, one undo each; the track inspector's Add point puts one halfway along, for a finger; a mouse's double click no longer zooms. Refused on built track. `checks/t2951-add-point.mjs`; decision in DECISIONS.md.
 - T-2947 to T-2950 (2026-11-09, tree busstops2): bus Auto spacing is 400 m and reads so (a saved 400 m or less loads as Auto, still stopping at every station and crossing); bus stops at train stations drawn over the station's mark; a click on a stop several bus lines share opens a Bus stop panel listing them; stop rings from zoom 13, end squares from 11.
 - T-2946 (2026-11-09, tree greyfade): the grey outside the zones stays while a zone's box is in view or within 25 km, fading only with none near (Morocco); the rule is in DECISIONS.md and ui-map.md.
 - T-2937 to T-2940 (2026-11-09, tree busmanual): a bus line's Stops heading has Auto and Manual buttons, Stop spacing shows under Auto; a line's two ends are always drawn as end stops; manual stops are kept for the session when switching away and back; pop, snap and station sounds for bus and ferry edits, where trains have them.
