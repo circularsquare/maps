@@ -16,10 +16,11 @@ const busRoad: RoadKeep = (cls, brunnel, service, access) =>
   cls === "trunk" ? TRUNK : BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
 
 /** `busRoad` as a MapLibre filter on the basemap's `transportation` lines (T-2883), for drawing the roads
- * a bus may use; built from the same classes, so the two cannot drift apart. */
-export const busRoadFilter = (): unknown[] => [
+ * a bus may use; built from the same classes, so the two cannot drift apart. Without `motorways`, the
+ * streets a tram follows (T-2998: `RoadGraph` keeps a street route off motorways). */
+export const busRoadFilter = (motorways = true): unknown[] => [
   "any",
-  ["in", ["get", "class"], ["literal", [...BUS_CLASSES, "motorway"]]],
+  ["in", ["get", "class"], ["literal", motorways ? [...BUS_CLASSES, "motorway"] : [...BUS_CLASSES]]],
   ["all", ["==", ["get", "class"], "service"], ["!", ["has", "service"]], ["!", ["has", "access"]], ["!", ["has", "brunnel"]]],
 ];
 
@@ -237,8 +238,9 @@ export class BusRoads {
   }
 
   /** T-2927: the streets a tram follows between two points (`RoadGraph.turnPath`), as lng, lat pairs
-   * from the street point by `a` to the one by `b`. `refused` as a bus leg's; not `ready` while tiles load. */
-  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number): Leg & { turns: number; states: number; ms: number } {
+   * from the street point by `a` to the one by `b`. `refused` as a bus leg's; not `ready` while tiles load.
+   * `from`: a point the track ran from to reach `a`, where the route carries on from it (T-2997). */
+  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number, from: Pt | null = null): Leg & { turns: number; states: number; ms: number } {
     const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
     const mpu = metresPerUnit((ay + by) / 2);
     const straight = Math.hypot(ax - bx, ay - by) * mpu;
@@ -266,7 +268,12 @@ export class BusRoads {
     const sa = near(ax, ay), sb = near(bx, by);
     if (!sa.length || !sb.length) return none(true, "far");
     const direct = Math.hypot(sa[0].x - sb[0].x, sa[0].y - sb[0].y) * mpu;
-    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM);
+    let dir: [number, number] | null = null;
+    if (from) {
+      const dx = ax - gxOf(from.lng), dy = ay - gyOf(from.lat), l = Math.hypot(dx, dy);
+      if (l > 0) dir = [dx / l, dy / l];
+    }
+    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM, dir);
     const ms = performance.now() - t0;
     if (!path) return { ...none(true, "path"), ms };
     const pts = thin(path.pts, 1 / mpu), ll: number[] = [];

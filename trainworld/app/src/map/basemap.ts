@@ -270,7 +270,7 @@ export function loadBasemap(map: maplibregl.Map) {
     missed = false;
     setBasemapShade(map, ...shadeAs);
     applyLite(map);
-    if (busHintOn) setBusRoadHint(map, true);
+    repaintRoadHints(map);
   });
 }
 
@@ -345,7 +345,7 @@ export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number)
   shadeAs = [s, contrast];
   if (!styleUp(map)) return void (missed = true);
   const land = SHADES[s].land;
-  if (busHintOn) setBusRoadHint(map, true);
+  repaintRoadHints(map);
   for (const t of themed) {
     if (!map.getLayer(t.id)) continue;
     const v = s === "dark" ? t.dark : t.light;
@@ -375,31 +375,46 @@ export function setHillshade(map: maplibregl.Map, on: boolean) {
 }
 let hillshadeOn = false;
 
-/** T-2883: in bus placing mode, the roads a bus may drive are tinted faintly over the basemap's own roads. */
-const BUS_HINT = "bus_roads_hint";
-const BUS_HINT_MINZOOM = 12;
-let busHintOn = false;
+/** T-2883: in bus placing mode, the roads a bus may drive are tinted faintly over the basemap's own
+ * roads; T-2998: with Tram in the track tool and the street snap on, the streets a tram may follow, in
+ * green. Colour light, dark, opacity light, dark. */
+const ROAD_HINTS = {
+  bus: { id: "bus_roads_hint", filter: () => busRoadFilter(), colour: ["#1a9e94", "#3fd0c4"], opacity: [0.45, 0.3] },
+  tram: { id: "tram_roads_hint", filter: () => busRoadFilter(false), colour: ["#3f9a1c", "#86d65a"], opacity: [0.45, 0.3] },
+} as const;
+type RoadHint = keyof typeof ROAD_HINTS;
+const ROAD_HINT_MINZOOM = 12;
+const hintOn: Record<RoadHint, boolean> = { bus: false, tram: false };
 export function setBusRoadHint(map: maplibregl.Map, on: boolean) {
-  busHintOn = on;
+  setRoadHint(map, "bus", on);
+}
+export function setTramRoadHint(map: maplibregl.Map, on: boolean) {
+  setRoadHint(map, "tram", on);
+}
+/** the hints that are on, painted again (a new style or shade) */
+function repaintRoadHints(map: maplibregl.Map) {
+  for (const k of Object.keys(hintOn) as RoadHint[]) if (hintOn[k]) setRoadHint(map, k, true);
+}
+function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
+  hintOn[kind] = on;
   if (!styleUp(map)) return;
-  const dark = shadeAs[0] === "dark";
+  const h = ROAD_HINTS[kind], dark = shadeAs[0] === "dark" ? 1 : 0;
   if (!on) {
-    if (map.getLayer(BUS_HINT)) map.removeLayer(BUS_HINT);
+    if (map.getLayer(h.id)) map.removeLayer(h.id);
     return;
   }
   const style = map.getStyle();
   if (!style || !map.getLayer("highway_minor") || !map.getSource(VECTOR_SOURCE)) return;
-  const colour = dark ? "#3fd0c4" : "#1a9e94";
-  const opacity = dark ? 0.3 : 0.45;
-  if (map.getLayer(BUS_HINT)) {
-    map.setPaintProperty(BUS_HINT, "line-color", colour);
-    map.setPaintProperty(BUS_HINT, "line-opacity", opacity);
+  const colour = h.colour[dark], opacity = h.opacity[dark];
+  if (map.getLayer(h.id)) {
+    map.setPaintProperty(h.id, "line-color", colour);
+    map.setPaintProperty(h.id, "line-opacity", opacity);
     return;
   }
   const before = style.layers.find((l) => l.type === "symbol")?.id;
   map.addLayer({
-    id: BUS_HINT, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: BUS_HINT_MINZOOM,
-    filter: busRoadFilter() as maplibregl.FilterSpecification,
+    id: h.id, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: ROAD_HINT_MINZOOM,
+    filter: h.filter() as maplibregl.FilterSpecification,
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": colour, "line-opacity": opacity, "line-width": zoomWidth(12, 0.5, 14, 1, 16, 2.5, 20, 10) as maplibregl.ExpressionSpecification },
   }, before);

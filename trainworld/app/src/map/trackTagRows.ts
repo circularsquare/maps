@@ -221,7 +221,7 @@ const HSR_KMH = 320;
  * placed and the route's lowest speed limit. The multiplier is on `costTint`'s colour. When the
  * segment could not be built ending here, why first.
  */
-export function placementTag(pv: PreviewAnswer, level: number, surcharge = 1): HTMLDivElement[] {
+export function placementTag(pv: PreviewAnswer, level: number, share: { terrain: number; water: number } = { terrain: 1, water: 1 }): HTMLDivElement[] {
   const div = (...kids: (string | Node)[]) => {
     const d = document.createElement("div");
     d.append(...kids);
@@ -246,7 +246,7 @@ export function placementTag(pv: PreviewAnswer, level: number, surcharge = 1): H
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = [terrainFact(pv.ground, surcharge), waterFact(pv.ground, surcharge), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
+  const ground = [terrainFact(pv.ground, share.terrain), waterFact(pv.ground, share.water), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
   if (ground.length) out.push(factRow(...ground));
   return out;
 }

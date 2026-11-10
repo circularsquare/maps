@@ -265,13 +265,19 @@ export class RoadGraph {
    * never turning back more than `maxTurn` at a node or within `backM` metres of road, and no motorway.
    * A search over directed segments (each state is a segment and the way it is run), A* on the
    * straight distance to the first end; null if none is under `capM`. `turns` counts the turns paid
-   * for; `from` and `to` are the ends taken. */
-  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number): (RoadPath & { from: Snap; turns: number; states: number }) | null {
+   * for; `from` and `to` are the ends taken. `startDir` (a unit grid vector), where the route carries on
+   * from track: leaving a start against it is a turn there, so never back the way the track came (T-2997). */
+  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number, startDir: [number, number] | null = null): (RoadPath & { from: Snap; turns: number; states: number }) | null {
     if (!starts.length || !ends.length) return null;
     let direct: { m: number; s: Snap; d: Snap } | null = null;
+    const cosBack = Math.cos(maxTurn);
     for (const s of starts)
       for (const d of ends) {
         if (s.edge !== d.edge) continue;
+        if (startDir) {
+          const e = s.edge, u = [this.gx[this.eb[e]] - this.gx[this.ea[e]], this.gy[this.eb[e]] - this.gy[this.ea[e]]], l = Math.hypot(u[0], u[1]) || 1, sg = d.t >= s.t ? 1 : -1;
+          if ((sg * (u[0] * startDir[0] + u[1] * startDir[1])) / l < cosBack) continue;
+        }
         const m = Math.abs(d.t - s.t) * this.elen[s.edge] + pen(s) + pen(d);
         if (m < capM && (!direct || m < direct.m)) direct = { m, s, d };
       }
@@ -326,8 +332,10 @@ export class RoadGraph {
     // a start's arcs come from -1 - its index
     starts.forEach((s, i) => {
       const l0 = this.elen[s.edge], p = pen(s);
-      open(2 * s.edge, p + (1 - s.t) * l0, -1 - i);
-      open(2 * s.edge + 1, p + s.t * l0, -1 - i);
+      for (const [a, m] of [[2 * s.edge, (1 - s.t) * l0], [2 * s.edge + 1, s.t * l0]]) {
+        const tc = startDir ? turnCost(startDir, dir(a)) : 0;
+        if (tc !== Infinity) open(a, p + m + tc, -1 - i);
+      }
     });
     // an end's segment entered at either of its nodes: from ea it runs as arc 2e, from eb as 2e + 1
     const endsAt = new Map<number, { c: Snap; v: [number, number]; rest: number }[]>();
@@ -642,7 +650,8 @@ const LINK_MAX_M = 60;
  * own, which drops the junction's vertex from a road that runs straight through it, so the roads meeting
  * there share none (T-2873). A vertex close to a road or two ground-level roads crossing is taken as a
  * junction; a motorway takes only another motorway's end, and its own ends (slip roads) join any road
- * at their level. `mpu` is ground metres per unit in this tile. */
+ * at their level. The end of a street's bridge or tunnel joins a ground road too (T-3000). `mpu` is
+ * ground metres per unit in this tile. */
 export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
   // clipped first: an added vertex on a segment crossing the tile's edge would move where it is cut,
   // and the two tiles' cut ends would no longer meet
@@ -720,7 +729,9 @@ export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
       if (!end && (level(li) !== 0 || motor(li))) continue;
       for (const s of cells.get(cellKey(Math.floor(x / JOIN_CELL), Math.floor(y / JOIN_CELL))) ?? []) {
         const lj = sLine[s];
-        if (lj === li || dropped.has(lj) || level(lj) !== level(li) || (motor(lj) && !motor(li))) continue;
+        if (lj === li || dropped.has(lj) || (motor(lj) && !motor(li))) continue;
+        // T-3000: a bridge's or tunnel's end is on the ground, so it joins a ground road there too
+        if (level(lj) !== level(li) && !(end && !motor(li) && level(li) !== 0 && level(lj) === 0)) continue;
         const m = lines[lj], j = sAt[s], ax = m[j], ay = m[j + 1], dx = m[j + 2] - ax, dy = m[j + 3] - ay;
         const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
         const ex = ax + t * dx - x, ey = ay + t * dy - y;

@@ -664,7 +664,7 @@ pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terra
         let wet = water.iter().any(|s| m >= s[0] && m < s[1]);
         // over water the water's surcharge stands for the crossing; the ground's class adds nothing
         let class = if wet { 0 } else { terrain.iter().find(|s| m >= s[0] && m < s[1]).map_or(0, |s| s[2] as u8) };
-        let dear = |l: i8| spec.level_mult[(l.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize] + terrain_surcharge(l, class) * spec.surcharge_mult;
+        let dear = |l: i8| spec.level_mult[(l.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize] + terrain_surcharge(l, class) * spec.terrain_mult;
         let i = vert.partition_point(|p| p[0] <= m).clamp(1, vert.len().max(2) - 1);
         let (level, ramp) = if vert.len() < 2 {
             (level_of(vert.first().map_or(0.0, |p| p[1])), false)
@@ -673,7 +673,7 @@ pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terra
             let b = level_of(vert[i][1]);
             (if dear(a) >= dear(b) { a } else { b }, (vert[i - 1][1] - vert[i][1]).abs() > 1e-9)
         };
-        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * (dear(level) + if wet { WATER_SURCHARGE * spec.surcharge_mult } else { 0.0 }) * track_f;
+        let c = (v - u) / 1000.0 * BASE_COST_PER_KM * (dear(level) + if wet { WATER_SURCHARGE * spec.water_mult } else { 0.0 }) * track_f;
         part(level, wet, ramp, class, v - u, c);
     }
 }

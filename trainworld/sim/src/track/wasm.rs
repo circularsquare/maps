@@ -1471,6 +1471,58 @@ fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool, cap: f64) -> Option<P
     lead_in_capped(r.x, r.y, r.level, nearer_dir(r, toward)?, toward, scaled, cap)
 }
 
+/// Street corners `tram_ends` may drop at each end of a route.
+const TRAM_DROP: usize = 3;
+
+/// T-2997: a street tram route's ends at track with a heading (`lead_in`): each lead-in at least long
+/// enough for a curve of `r_min` from the heading onto the street, and the street corners next to an
+/// end dropped where that curve has no room before them (the track then leaves the street there and
+/// is priced as off it, `street_pieces`). The fewest corners dropped whose alignment fits; if none
+/// does, the plain lead-ins, refused as before.
+fn tram_ends(ra: &Resolved, rb: &Resolved, pis: Vec<Pi>, scaled: bool, r_min: f64, cap: f64) -> (Vec<Pi>, Option<Pi>, Option<Pi>) {
+    let lead = |r: &Resolved, toward: (f64, f64)| {
+        let dir = nearer_dir(r, toward)?;
+        let p = lead_in_capped(r.x, r.y, r.level, dir, toward, scaled, cap)?;
+        // the shortest lead that leaves room for the smallest curve, a hair over: the curve at the
+        // lead's end turns by more than the way to `toward` does from the node, so a few rounds
+        let (r_k, d0) = (1.02 * r_min * kk(scaled, r.y), (p.x - r.x).hypot(p.y - r.y));
+        let mut need = 0.0;
+        for _ in 0..6 {
+            let (lx, ly) = (r.x + dir.cos() * need, r.y + dir.sin() * need);
+            let turn = geom::wrap((toward.1 - ly).atan2(toward.0 - lx) - dir).abs();
+            need = r_k * (turn / 2.0).tan();
+            if !need.is_finite() || need > (toward.0 - r.x).hypot(toward.1 - r.y) {
+                return Some(p);
+            }
+        }
+        Some(if need > d0 { Pi::new(r.x + dir.cos() * need, r.y + dir.sin() * need, 0.0, r.level).quantised() } else { p })
+    };
+    let n = pis.len();
+    let (ha, hb) = (!ra.dirs.is_empty(), !rb.dirs.is_empty());
+    for total in 0..=2 * TRAM_DROP {
+        for da in 0..=total.min(TRAM_DROP) {
+            let db = total - da;
+            if db > TRAM_DROP || da + db > n || (da > 0 && !ha) || (db > 0 && !hb) {
+                continue;
+            }
+            let rest = &pis[da..n - db];
+            let la = lead(ra, rest.first().map_or((rb.x, rb.y), |p| (p.x, p.y)));
+            let lb = lead(rb, rest.last().map_or((ra.x, ra.y), |p| (p.x, p.y)));
+            let mut v = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
+            v.extend(la);
+            v.extend_from_slice(rest);
+            v.extend(lb);
+            v.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
+            if geom::fit_min(&v, scaled, R_CAP, r_min).issues.is_empty() {
+                return (rest.to_vec(), la, lb);
+            }
+        }
+    }
+    let la = lead_in(ra, pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y)), scaled, cap);
+    let lb = lead_in(rb, pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y)), scaled, cap);
+    (pis, la, lb)
+}
+
 /// Of the directions an end allows a new edge to leave in, the one nearer to `toward`.
 fn nearer_dir(r: &Resolved, toward: (f64, f64)) -> Option<f64> {
     let want = (toward.1 - r.y).atan2(toward.0 - r.x);

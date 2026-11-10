@@ -148,10 +148,10 @@ fn route_pis(a: &mut TrackApi, from: (f64, f64), pis: &[f64], to: (f64, f64)) ->
     a.add_route(&ends, pis, 2, false)
 }
 
-/// T-2927: tram kinds take curves down to 25 m; rail keeps its 50.
+/// T-2927, T-2997: tram kinds take curves down to 18 m; rail keeps its 50.
 #[test]
-fn a_30_m_curve_is_tram_track_only() {
-    let corner = [500.0, 0.0, 30.0, 0.0];
+fn a_20_m_curve_is_tram_track_only() {
+    let corner = [500.0, 0.0, 20.0, 0.0];
     let mut a = api();
     assert_ne!(route_pis(&mut a, (0.0, 0.0), &corner, (500.0, 500.0)), 0);
     assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
@@ -161,7 +161,7 @@ fn a_30_m_curve_is_tram_track_only() {
         assert_eq!(route_pis(&mut a, (0.0, 0.0), &corner, (500.0, 500.0)), 0, "kind {kind}: {}", a.issues());
         let mut a = api();
         a.set_route_kind(kind);
-        assert_ne!(route_pis(&mut a, (0.0, 0.0), &[500.0, 0.0, 20.0, 0.0], (500.0, 500.0)), 0, "20 m is under the tram's 25");
+        assert_ne!(route_pis(&mut a, (0.0, 0.0), &[500.0, 0.0, 15.0, 0.0], (500.0, 500.0)), 0, "15 m is under the tram's 18");
     }
 }
 
@@ -226,7 +226,46 @@ fn a_straight_that_cuts_the_street_is_tram_track() {
     assert_eq!(kinds(&[(0.0, 0.0), (500.0, 40.0), (1000.0, 0.0)]), vec![TrackKind::Tram]);
 }
 
-/// T-2927: a street's staircase traced for street tram track: curves of 25 m or more, close to the
+/// T-3004: tram track pays a quarter of the terrain surcharge, street and off-street; water is half on
+/// streets (T-2928) and whole off them.
+#[test]
+fn tram_track_pays_a_quarter_of_the_hills() {
+    use crate::track::cost::{terrain_surcharge, track_cost_t};
+    let vert = [[0.0, 0.0], [1000.0, 0.0]];
+    let (hills, water) = ([[0.0, 1000.0, 3.0]], [[0.0, 1000.0]]);
+    for (k, t, w) in [(TrackKind::StreetTram, 0.25, 0.5), (TrackKind::Tram, 0.25, 1.0), (TrackKind::Regular, 1.0, 1.0)] {
+        let flat = track_cost_t(1000.0, &vert, &[], &[], 2, k);
+        let hill = track_cost_t(1000.0, &vert, &[], &hills, 2, k);
+        let wet = track_cost_t(1000.0, &vert, &water, &[], 2, k);
+        assert!((hill - flat - BASE_COST_PER_KM * terrain_surcharge(0, 3) * t).abs() < 1e-6, "{k:?} hills {}", hill - flat);
+        assert!((wet - flat - BASE_COST_PER_KM * WATER_SURCHARGE * w).abs() < 1e-6, "{k:?} water {}", wet - flat);
+    }
+}
+
+/// T-2997: chained on from the end of street track, a street route turning right at that end (the
+/// next corner 40 m on) turns at the smallest radius, dropping the corner, instead of being refused;
+/// a route back the way it came is still refused.
+#[test]
+fn a_street_route_turning_at_a_chained_end_rounds_the_turn() {
+    let mut a = api();
+    a.set_route_kind(2);
+    assert_eq!(route_pis(&mut a, (0.0, -500.0), &[], (0.0, 0.0)), 0, "{}", a.issues());
+    let end = a.route_end();
+    let from_node = |x: f64, y: f64| -> Vec<f64> { [1.0, end as f64, 0.0, 0.0, 0.0].iter().chain(free(x, y).iter()).copied().collect() };
+    // east along the street from the end, a jog north 40 m on, then east again
+    let pis = [40.0, 0.0, 0.0, 0.0, 60.0, 30.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&from_node(600.0, 30.0), &pis, 2, false), 0, "{}", a.issues());
+    let net = &a.w.net;
+    assert!(live(&a).iter().any(|&e| net.edge_kind[e as usize] == TrackKind::Tram), "the turn leaves the street");
+    let mut b = api();
+    b.set_route_kind(2);
+    assert_eq!(route_pis(&mut b, (0.0, -500.0), &[], (0.0, 0.0)), 0);
+    let end = b.route_end();
+    let back: Vec<f64> = [1.0, end as f64, 0.0, 0.0, 0.0].iter().chain(free(0.0, -300.0).iter()).copied().collect();
+    assert_ne!(b.add_route(&back, &[0.0, -150.0, 0.0, 0.0], 2, false), 0);
+}
+
+/// T-2927: a street's staircase traced for street tram track: curves of 18 m or more, close to the
 /// street, and placed as track.
 #[test]
 fn a_street_staircase_traces_for_street_tram_track() {
@@ -248,9 +287,9 @@ fn a_street_staircase_traces_for_street_tram_track() {
     v.extend(t.pis.iter().cloned());
     let (ex, ey) = (1200.0, 900.0);
     v.push(Pi::new(ex, ey, 0.0, 0));
-    let f = geom::fit_min(&v, false, R_CAP, 25.0);
+    let f = geom::fit_min(&v, false, R_CAP, TRAM_MIN_RADIUS);
     assert!(f.issues.is_empty(), "{:?}", f.issues);
-    assert!(f.radius.iter().all(|&r| r == 0.0 || r >= 25.0 - 1e-6));
+    assert!(f.radius.iter().all(|&r| r == 0.0 || r >= TRAM_MIN_RADIUS - 1e-6));
     a.set_route_kind(2);
     let flat: Vec<f64> = t.pis.iter().flat_map(|p| [p.x, p.y, p.radius, p.level as f64]).collect();
     assert_eq!(route_pis(&mut a, (0.0, 0.0), &flat, (ex, ey)), 0, "{}", a.issues());

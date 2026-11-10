@@ -3,7 +3,8 @@
 // streets between the segment's start and the pointer are searched with a cost for each turn
 // (`BusRoads.tramLeg`, `RoadGraph.turnPath`), drawn as the ghost, and fitted as tram corners in the
 // router worker (`TrackApi.trace_kind`) at the first tolerance of TOLS that fits; the fitted track's
-// preview then replaces the ghost with the usual tag. A pointer with no street within reach is an
+// preview then replaces the ghost with the usual tag. Until then the last fitted route's ghost and tag
+// stay (T-2996), the street's line drawn only where none shows. A pointer with no street within reach is an
 // ordinary segment (tools.ts draws it, off-street tram track); no street path, or no fit, is a red
 // ghost and a refusal.
 
@@ -29,7 +30,8 @@ const SLOW_MS = 300;
 const TOLS = [10, 20, 40];
 /** a fit whose worst point is further than this many times its tolerance, and than WORST_M, is not
  * taken. Where it leaves the street it is tram track, priced so (`set_route_street`); WORST_M is a
- * 25 m curve round the sharpest corner the search takes (BACK_DEG, 40 m from the corner) and a bit */
+ * 25 m curve round the sharpest corner the search takes (BACK_DEG, 40 m from the corner) and a bit,
+ * roomy for the smallest tram curve (18 m: 29 m from it) */
 const WORST_SHARE = 1.5;
 const WORST_M = 45;
 /** the search's cost for a turn sharper than TURN_DEG where streets meet, m; never turning back
@@ -38,6 +40,8 @@ export const TURN_M = 200;
 const TURN_DEG = 30;
 const BACK_DEG = 135;
 const BACK_M = 60;
+/** how far back along the last route's street its end's heading is taken from, ground m */
+const COME_M = 15;
 /** the track kind street snapped track is placed as (`TrackKind::StreetTram`) */
 const STREET_TRAM = 2;
 
@@ -75,6 +79,10 @@ export class StreetSnap {
   private timer = 0;
   private held = false;
   private on = false;
+  /** T-2996: what this snap has on the map for the segment: an earlier spot's ghost stays until the
+   * new spot's is ready, so the ghost never blanks while the pointer moves */
+  private shown: "route" | "line" | "red" | null = null;
+  private shownWhy = "";
   readonly roads: BusRoads;
   /** where a first click at the pointer would land on a street */
   ringAt: [number, number] | null = null;
@@ -135,6 +143,25 @@ export class StreetSnap {
   begin(at: [number, number] | null) {
     this.drop();
     this.from = at;
+    const e = this.ended;
+    // T-2997: carrying on from the street route placed last, never back the way it came
+    this.came = at && e && Math.abs(e.at[0] - at[0]) < 1e-7 && Math.abs(e.at[1] - at[1]) < 1e-7 ? e.back : null;
+  }
+
+  /** the end of the street route placed last, and a point on its street before that */
+  private ended: { at: [number, number]; back: [number, number] } | null = null;
+  /** the segment carries on from that route: the point it came from */
+  private came: [number, number] | null = null;
+
+  private endOf(r: StreetRoute) {
+    const l = r.line, n = l.length;
+    const [ex, ey] = [l[n - 2], l[n - 1]], k = Math.cos((ey * Math.PI) / 180);
+    let back: [number, number] = [l[0], l[1]];
+    for (let i = n - 4; i >= 0; i -= 2) {
+      back = [l[i], l[i + 1]];
+      if (Math.hypot((l[i] - ex) * k, l[i + 1] - ey) * 111320 >= COME_M) break;
+    }
+    this.ended = { at: r.last, back };
   }
 
   /** The route between this segment's clicks follows streets. */
@@ -154,19 +181,25 @@ export class StreetSnap {
     if (this.held) return;
     const s = this.spot;
     if (s && Math.hypot(s.px - px, s.py - py) < SAME_PX && s.onTrack === onTrack) return;
-    this.drop();
+    this.drop(true);
     this.spot = { seq: ++this.seq, px, py, lng, lat, onTrack, t0: 0, phase: "rest", tol: 0, waiters: [] };
-    this.show(null);
     this.timer = setTimeout(() => this.ask(), REST_MS) as unknown as number;
   }
 
-  /** The tag's rows while a street route is being found or was refused (null: the usual tag). */
+  /** The route at the pointer is still being found and has taken a while (the tag's spinner). */
+  get slow() {
+    const s = this.spot;
+    return this.active && !!s && s.phase !== "done" && s.phase !== "none" && s.t0 > 0 && performance.now() - s.t0 > SLOW_MS;
+  }
+
+  /** The tag's rows while a street route is being found or was refused (null: the usual tag, which
+   * while the last route's ghost stands is that route's). */
   tag(): { text: string; bad: boolean; spin: boolean } | null {
     const s = this.spot;
     if (!this.active || !s) return null;
     if (s.phase === "none") return { text: s.why ?? "", bad: true, spin: false };
-    if (s.phase === "done") return null;
-    return { text: "", bad: false, spin: s.t0 > 0 && performance.now() - s.t0 > SLOW_MS };
+    if (s.phase === "done" || this.shown === "route") return null;
+    return { text: this.shown === "red" ? this.shownWhy : "", bad: this.shown === "red", spin: this.slow };
   }
 
   /** The second click: waits for the route if it is still being found. */
@@ -186,6 +219,7 @@ export class StreetSnap {
     }
     if (this.spot !== s || (s.phase as Spot["phase"]) === "off") return null;
     if (s.phase === "none" || !s.route) return { kind: "refuse", text: s.why ?? t("tools.streetsTight") };
+    this.endOf(s.route);
     return { kind: "route", route: s.route };
   }
 
@@ -193,7 +227,7 @@ export class StreetSnap {
   again() {
     const s = this.spot;
     if (!s || !this.from || this.held) return;
-    this.drop();
+    this.drop(true);
     this.spot = { ...s, seq: ++this.seq, t0: 0, phase: "rest", line: undefined, route: undefined, why: undefined, tol: 0, waiters: [] };
     this.ask();
   }
@@ -210,7 +244,8 @@ export class StreetSnap {
     if (s && s.phase === "rest" && s.t0 > 0) this.ask(true);
   }
 
-  private drop() {
+  /** The spot dropped; with `keep` its ghost stays on the map until the next spot's replaces it. */
+  private drop(keep = false) {
     clearTimeout(this.timer);
     const s = this.spot;
     this.spot = null;
@@ -219,8 +254,14 @@ export class StreetSnap {
       else if (s.phase === "preview") this.client.dropPreview();
       s.phase = "off";
       for (const w of s.waiters.splice(0)) w();
-      this.show(null);
+      if (!keep) this.display(null);
     }
+    if (!keep) this.shown = null;
+  }
+
+  private display(a: PreviewAnswer | null, req?: object) {
+    this.shown = a ? "route" : null;
+    this.show(a, req);
   }
 
   private finish(s: Spot, phase: "done" | "none" | "off", why?: string) {
@@ -230,8 +271,12 @@ export class StreetSnap {
     this.redraw();
   }
 
-  /** The red straight from the start to the pointer. */
-  private redLine(s: Spot) {
+  /** The red straight from the start to the pointer, saying `why`. */
+  private redLine(s: Spot, why: string) {
+    // the last route's figures go with its ghost
+    if (this.shown === "route") this.display(null);
+    this.shown = "red";
+    this.shownWhy = why;
     const [ax, ay] = toLocal(this.from![0], this.from![1]), [bx, by] = toLocal(s.lng, s.lat);
     this.overlay.renderer.setPreview(strokesFromPreview(new Float32Array([ax, ay, 0, bx, by, 0]), true, undefined, true, undefined, 255, false, true));
     this.overlay.invalidate();
@@ -240,8 +285,13 @@ export class StreetSnap {
   private ask(retry = false) {
     const s = this.spot, f = this.from;
     if (!s || !f || (s.phase !== "rest")) return;
-    if (!retry) s.t0 = performance.now();
-    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, TURN_M, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M);
+    if (!retry) {
+      s.t0 = performance.now();
+      // the spinner, if it is still being found by then
+      setTimeout(() => this.spot === s && this.redraw(), SLOW_MS + 20);
+    }
+    const c = this.came;
+    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, TURN_M, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] });
     // tiles still landing: asked again when they have (`landed`)
     if (!leg.ready) {
       setTimeout(() => this.redraw(), SLOW_MS + 20);
@@ -251,19 +301,24 @@ export class StreetSnap {
     if (leg.refused === "far") {
       // no street by one end: an ordinary segment
       this.finish(s, "off");
-      this.show(null);
+      this.display(null);
       return;
     }
     if (leg.refused) {
-      this.redLine(s);
-      this.finish(s, "none", REFUSED[leg.refused]());
+      const why = REFUSED[leg.refused]();
+      this.redLine(s, why);
+      this.finish(s, "none", why);
       return;
     }
     const line = [f[0], f[1], ...leg.pts];
     if (s.onTrack) line.push(s.lng, s.lat);
     s.line = new Float64Array(line);
-    this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(s.line), false, undefined, true, undefined, 255, false, true));
-    this.overlay.invalidate();
+    // the street's line stands in until the fit is ready, unless a fitted route already shows
+    if (this.shown !== "route") {
+      this.shown = "line";
+      this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(s.line), false, undefined, true, undefined, 255, false, true));
+      this.overlay.invalidate();
+    }
     this.fit(s);
   }
 
@@ -287,7 +342,7 @@ export class StreetSnap {
         s.seq = ++this.seq;
         return this.fit(s);
       }
-      this.redLine(s);
+      this.redLine(s, t("tools.streetsTight"));
       return this.finish(s, "none", t("tools.streetsTight"));
     }
     const pis: PiInput[] = [];
@@ -301,7 +356,7 @@ export class StreetSnap {
     this.client.preview(req, (a) => {
       if (this.spot !== s) return;
       if (this.last) this.last.previewMs = performance.now() - t0;
-      this.show(a, req);
+      this.display(a, req);
       this.finish(s, "done");
     });
   }

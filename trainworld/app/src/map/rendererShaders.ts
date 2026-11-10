@@ -125,7 +125,7 @@ uniform vec3 u_ghost_rgb;    // the outline
 uniform vec2 u_ghost_min;    // the ghost's least width across its rails (px), and its outline's both sides together
 uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple (one stroke, built), and the
                              // stroke widths (px) between which its centre line comes in (a tram's wires too)
-uniform vec3 u_wire;         // T-2927: a tram's wires on built track and lines, the map's ink
+uniform vec3 u_wire;         // T-2927: a tram's wires on built track and lines (T-3006: white)
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side

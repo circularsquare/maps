@@ -63,6 +63,8 @@ export interface ShadeColours {
   fullTrack: string;
   /** the thin outline round the ghost of track being placed or dragged, and of a real-network route (T-1054) */
   ghost: string;
+  /** a tram's two wires on built track and lines (T-3006: white in both, Anita 2026-11-10) */
+  tramWire: string;
 }
 
 export const SHADES: Record<Shade, ShadeColours> = {
@@ -77,6 +79,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     lot: "#e7e3dc", lotLine: "#c4beb4",
     fullTrack: "#c0392b",
     ghost: "#000000",
+    tramWire: "#ffffff",
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
@@ -89,6 +92,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     lot: "#39352f", lotLine: "#625b52",
     fullTrack: "#f0584f",
     ghost: "#e6e4e0",
+    tramWire: "#e6e4e0",
   },
 };
 

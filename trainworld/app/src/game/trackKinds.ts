@@ -12,9 +12,10 @@ export interface TrackSpec {
   minRadius: number;
   /** price multiplier per level, index level + 3, in the units of the sim's `LEVEL_MULT` */
   levelMult: readonly number[];
-  /** what terrain and water add to the level's multiplier are scaled by this (high speed's is
-   * shown as a factor of its own instead) */
-  surcharge: number;
+  /** what terrain (hills, mountains) and what water add to the level's multiplier are scaled by (high
+   * speed's are shown as a factor of their own instead; tram terrain T-3004) */
+  terrain: number;
+  water: number;
   /** upkeep over ground rail's */
   upkeep: number;
   roadCrossings: boolean;
@@ -24,10 +25,10 @@ const LEVEL_MULT = [2.0, 1.6, 1.0, 0.5, 1.0, 1.5, 2.0] as const;
 const HSR_COST = 1.5;
 
 export const TRACK_SPECS: Record<TrackKind, TrackSpec> = {
-  regular: { id: 0, family: 0, vCapKmh: 160, minRadius: 50, levelMult: LEVEL_MULT, surcharge: 1, upkeep: 1, roadCrossings: true },
-  highSpeed: { id: 1, family: 0, vCapKmh: 320, minRadius: 50, levelMult: LEVEL_MULT.map(m => m * HSR_COST), surcharge: 1, upkeep: HSR_COST, roadCrossings: true },
-  streetTram: { id: 2, family: 1, vCapKmh: 60, minRadius: 25, levelMult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6], surcharge: 0.5, upkeep: 0.5, roadCrossings: false },
-  tram: { id: 3, family: 1, vCapKmh: 80, minRadius: 25, levelMult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6], surcharge: 1, upkeep: 1, roadCrossings: false },
+  regular: { id: 0, family: 0, vCapKmh: 160, minRadius: 50, levelMult: LEVEL_MULT, terrain: 1, water: 1, upkeep: 1, roadCrossings: true },
+  highSpeed: { id: 1, family: 0, vCapKmh: 320, minRadius: 50, levelMult: LEVEL_MULT.map(m => m * HSR_COST), terrain: 1, water: 1, upkeep: HSR_COST, roadCrossings: true },
+  streetTram: { id: 2, family: 1, vCapKmh: 60, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6], terrain: 0.25, water: 0.5, upkeep: 0.5, roadCrossings: false },
+  tram: { id: 3, family: 1, vCapKmh: 80, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6], terrain: 0.25, water: 1, upkeep: 1, roadCrossings: false },
 };
 
 /** a tram stop's upkeep a day, real US$ (sim `TrackSpec::station_upkeep`) */

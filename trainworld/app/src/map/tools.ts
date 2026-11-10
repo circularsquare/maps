@@ -278,9 +278,11 @@ export class Tools {
     // T-2927: the street snap for tram track, its own route and preview as the real snap's
     this.street = new StreetSnap(map, overlay, client, (r) => this.streetReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
-      this.lastPreview = null;
-      this.clearPreview();
-      if (!this.snapped) this.requestPreview();
+      // T-2996: an ordinary segment's ghost asked for replaces the street route's when it comes
+      if (this.snapped || !this.requestPreview()) {
+        this.lastPreview = null;
+        this.clearPreview();
+      }
       this.place();
     }, () => this.place(), () => this.freeLevel());
     effect(() => { tool.value; tramTrack.value; snapStreets.value; this.streetSwitch(); });
@@ -1018,25 +1020,26 @@ export class Tools {
     return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek() };
   }
 
-  private requestPreview() {
-    if (!this.start || this.snapped) return;
+  /** Ask for the ghost of a segment from the start to the pointer; true if asked. */
+  private requestPreview(): boolean {
+    if (!this.start || this.snapped) return false;
     const se = this.start.end;
     const nodes = world.peek()?.nodes;
     if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
     // undone meanwhile; a segment's end answered ahead of its state (T-1407) is not in yet
-    if (se.kind === "node" && se.node !== this.earlyNode && !nodes?.has(se.node)) return this.reset();
+    if (se.kind === "node" && se.node !== this.earlyNode && !nodes?.has(se.node)) return this.reset(), false;
     const h = this.hover;
-    if (!h) return;
+    if (!h) return false;
     // Nothing to show while the pointer is on the start.
     const [ax, ay] = this.screen(...toLocal(this.start.lng, this.start.lat)), [bx, by] = this.screen(h.lx, h.ly);
-    if (Math.hypot(ax - bx, ay - by) < 3) return;
+    if (Math.hypot(ax - bx, ay - by) < 3) return false;
     // too far for one piece: not asked for, the tag says why (T-1020)
     if (this.tooFar(h)) {
       this.wantKey = "";
       this.lastPreview = null;
       this.previewKey = "";
       this.clearPreview();
-      return;
+      return false;
     }
     const req = this.routeReq(this.endOf(h));
     const key = JSON.stringify(req);
@@ -1045,6 +1048,7 @@ export class Tools {
     this.client.preview(req, (a) => {
       if (this.start && !this.snapped && this.wantKey === key) this.showPreview(a, key);
     });
+    return true;
   }
 
   /** T-2404: the pointer near a held segment, away from the start the newest one ends at: their
@@ -1094,7 +1098,7 @@ export class Tools {
   /** T-1039: a click or the ghost has waited on the worker more than WAIT_MS; the tag shows a spinner. */
   private waiting(): boolean {
     const now = performance.now();
-    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS);
+    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS) || !!this.street?.slow;
   }
 
   /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */
@@ -1586,9 +1590,10 @@ export class Tools {
   private pointer: { px: number; py: number; lng: number; lat: number } | null = null;
 
   /** Faint rings 1 and 2 km, or miles in US units (ground distance), round the station being placed (T-312), under the
-   * ghost, labelled at their tops. */
+   * ghost, labelled at their tops; 0.5 and 1 for a tram stop, spaced closer (T-3001). */
   private rings: SVGSVGElement | null = null;
   private stationRings(h: Snap) {
+    const step = stationOnTram.peek() ? 0.5 : 1;
     if (!this.rings) {
       this.rings=this.svgMark(["circle","text","circle","text"],true);
       this.rings.setAttribute("class","station-rings");
@@ -1600,10 +1605,10 @@ export class Tools {
     placeAt(this.rings,cx,cy,0,0,false);
     const kids=this.rings.children;
     for (let i=0;i<2;i++) {
-      const r=km1*(i+1), c=kids[i*2], t=kids[i*2+1];
+      const r=km1*step*(i+1), c=kids[i*2], t=kids[i*2+1];
       c.setAttribute("r",String(r));
       t.setAttribute("y",String(-r-3));
-      t.textContent=`${i+1} ${unitShort()}`;
+      t.textContent=`${tNumber(step*(i+1))} ${unitShort()}`;
     }
   }
 
@@ -1940,7 +1945,7 @@ export class Tools {
     } else if (t === "track" && this.start && h && !this.snapped && this.tooFar(h)) {
       this.showTag(tooFarText(), true, ...at!);
     } else if (t === "track" && this.start && h && (pv || this.waiting())) {
-      const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), this.street.active ? TRACK_SPECS.streetTram.surcharge : 1) : [document.createElement("div")];
+      const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : this.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
       // T-1039: still working on the newest ghost or the click
       if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
       this.showTag(rows, false, ...at!);

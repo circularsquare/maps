@@ -1696,7 +1696,7 @@ export class NetworkRenderer {
     gl.uniform1i(u.u_ghost_layer, -1);
     gl.uniform2f(u.u_ghost_min, GHOST_MIN_PX * dpr, 2 * GHOST_OUTLINE_PX * dpr);
     gl.uniform3f(u.u_hsr, interp(zoom, HSR_WIDTH), HSR_STRIPE_PX[0] * dpr, HSR_STRIPE_PX[1] * dpr);
-    gl.uniform3fv(u.u_wire, rgbf(shades.mapInk));
+    gl.uniform3fv(u.u_wire, rgbf(shades.tramWire));
     // blueprint track (T-322): a line-wide light blue middle between two thin dark blue rails
     const bpRail = Math.max(1, BP_NARROW * Math.max(1, BP_RAIL_SHARE * wLine / dpr)) * dpr;
     const bpMid = Math.max(0, BP_NARROW * (wLine + 2 * Math.max(1, BP_RAIL_SHARE * wLine / dpr) * dpr) - 2 * bpRail);

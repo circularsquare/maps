@@ -88,11 +88,11 @@ function rowTip(r: BlueprintItem) {
     factors.push([t("blueprint.length"), shown, 1]);
     // T-1890: terrain and water add to the level's multiplier: "Ground level 0.5", "Mountains + 2.5",
     // "Cost factor × 3"
-    // (street tram track pays half of each, T-2928)
+    // (tram track pays a share of each, T-2928, T-3004)
     const adds: [string, number][] = [];
-    const sur = r.tracks === STREET_TRAM_ROW ? TRACK_SPECS.streetTram.surcharge : 1;
-    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), (TERRAIN_SURCHARGES[r.ground] ?? 0) * sur]);
-    if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE * sur]);
+    const spec = r.tracks === STREET_TRAM_ROW ? TRACK_SPECS.streetTram : r.tracks === TRAM_ROW ? TRACK_SPECS.tram : TRACK_SPECS.regular;
+    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), (TERRAIN_SURCHARGES[r.ground] ?? 0) * spec.terrain]);
+    if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE * spec.water]);
     if (adds.length) {
       factors.push([levelName(level), "=", mult(level)], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
       factors.push([t("blueprint.costFactor"), "", adds.reduce((s, [, m]) => s + m, mult(level))]);

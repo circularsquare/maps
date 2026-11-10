@@ -580,7 +580,7 @@ switch on, the track tool follows the real network the layer draws.
   changes, so the count is there when the pointer reaches track; while a newer solve's legs are
   on their way the last ones received stay in use, and a failed ask is repeated 2 s later [T-2430].
   A refused spot shows only the reason. Two thin rings at 1 km and
-  2 km of ground distance, each labelled at its top, follow the spot under the ghost
+  2 km of ground distance (0.5 and 1 km for a tram stop, T-3001), each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
 - **Only on track** [T-1820]: with the pointer further than the snap radii from track and nodes, the
   ghost is a refusal: no platform, no rings, the tag "Place stations on track" in red by the pointer.

@@ -206,6 +206,13 @@ pub enum TrackKind {
 
 pub const TRACK_KINDS: usize = 4;
 
+/// T-2997: tram track's smallest curve, centre line, m: one every common modern low-floor tram takes
+/// (Citadis and Skoda 18, Combino 15); old street networks go down to 11-13 (notes/T-2921.md).
+pub const TRAM_MIN_RADIUS: f64 = 18.0;
+
+/// T-3004: the share of the terrain surcharge tram track pays, street and off-street (Anita, 2026-11-10).
+pub const TRAM_TERRAIN: f64 = 0.25;
+
 /// One car of a kind: its price (US$M), running costs (real US$ a train-km and a car-km), the share
 /// of a rail car's riders it holds, and the fleet it is bought from.
 pub struct CarSpec {
@@ -224,8 +231,9 @@ pub struct TrackSpec {
     pub min_radius: f64,
     /// Price multiplier per level, index `level + 3`, in the units of `LEVEL_MULT`.
     pub level_mult: [f64; 7],
-    /// What terrain and water add to a level's multiplier are scaled by this.
-    pub surcharge_mult: f64,
+    /// What terrain (hills, mountains) and what water add to a level's multiplier are scaled by.
+    pub terrain_mult: f64,
+    pub water_mult: f64,
     /// What the preview's price multiplier is measured against (`cost::price_scale`).
     pub price_scale: f64,
     /// Upkeep over ground rail's.
@@ -257,7 +265,8 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         v_cap_kmh: 160.0,
         min_radius: MIN_RADIUS,
         level_mult: LEVEL_MULT,
-        surcharge_mult: 1.0,
+        terrain_mult: 1.0,
+        water_mult: 1.0,
         price_scale: 1.0,
         upkeep: 1.0,
         road_crossings: true,
@@ -277,7 +286,8 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         v_cap_kmh: 320.0,
         min_radius: MIN_RADIUS,
         level_mult: scaled(LEVEL_MULT, HSR_COST),
-        surcharge_mult: HSR_COST,
+        terrain_mult: HSR_COST,
+        water_mult: HSR_COST,
         price_scale: HSR_COST,
         upkeep: HSR_COST,
         road_crossings: true,
@@ -295,10 +305,11 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
     TrackSpec {
         family: 1,
         v_cap_kmh: 60.0,
-        min_radius: 25.0,
+        min_radius: TRAM_MIN_RADIUS,
         level_mult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6],
-        // T-2928: half the hills and water a street tram's track pays (Anita, 2026-11-09)
-        surcharge_mult: 0.5,
+        // T-2928: half the water street tram track pays (Anita, 2026-11-09)
+        terrain_mult: TRAM_TERRAIN,
+        water_mult: 0.5,
         price_scale: 1.0,
         upkeep: 0.5,
         road_crossings: false,
@@ -316,9 +327,10 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
     TrackSpec {
         family: 1,
         v_cap_kmh: 80.0,
-        min_radius: 25.0,
+        min_radius: TRAM_MIN_RADIUS,
         level_mult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6],
-        surcharge_mult: 1.0,
+        terrain_mult: TRAM_TERRAIN,
+        water_mult: 1.0,
         price_scale: 1.0,
         upkeep: 1.0,
         road_crossings: false,

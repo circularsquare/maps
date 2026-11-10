@@ -68,7 +68,7 @@ impl TrackApi {
     }
 
     fn route_op_as(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
-        let pis = pis_from(pis);
+        let mut pis = pis_from(pis);
         let scaled = self.w.net.frame().scaled();
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
         let lift = [matches!(a, End::Free { .. }), matches!(b, End::Free { .. })];
@@ -134,6 +134,15 @@ impl TrackApi {
             }
         }
         self.route_end = rb.node;
+        // T-2997: a street tram route from or to track turns onto the street at the kind's
+        // smallest radius, its street corners within reach of that curve dropped
+        let tram_leads = if self.route_kind.spec().family != 0 && !pis.is_empty() && !self.beside_on && !through {
+            let (p, la, lb) = tram_ends(&ra, &rb, pis.clone(), scaled, self.route_kind.spec().min_radius, self.route_cap);
+            pis = p;
+            Some((la, lb))
+        } else {
+            None
+        };
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
@@ -150,12 +159,12 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
                 }
             }
-        } else if let Some(p) = lead_in(&ra, next_a, scaled, self.route_cap).filter(|_| !self.beside_on) {
+        } else if let Some(p) = tram_leads.map_or_else(|| lead_in(&ra, next_a, scaled, self.route_cap).filter(|_| !self.beside_on), |l| l.0) {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        let lead_b = lead_in(&rb, prev_b, scaled, self.route_cap).filter(|_| !self.beside_on);
+        let lead_b = tram_leads.map_or_else(|| lead_in(&rb, prev_b, scaled, self.route_cap).filter(|_| !self.beside_on), |l| l.1);
         if let Some(p) = lead_b {
             verts.push(p);
         }

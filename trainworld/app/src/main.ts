@@ -18,7 +18,7 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, buildLevel, display, isBuildTool, selection, shade, stopEditing, tab, tool, VIDEO } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, selection, shade, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -36,7 +36,7 @@ import { lineRunFactor } from "./game/regionMoney";
 import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade, setBusRoadHint, setHillshade } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setBusRoadHint, setHillshade, setTramRoadHint } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startLite } from "./map/lite";
 import { startRealNetwork } from "./map/realNetwork";
@@ -457,6 +457,7 @@ map.on("load", () => {
   effect(() => setBasemapShade(map, shade.value, contrast.value));
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883
+  effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value)); // T-2998
   startTerrainTint(map); // T-1270 stage 3
   startLite(map); // T-1207
   startRealNetwork(map); // T-682
