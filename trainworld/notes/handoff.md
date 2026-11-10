@@ -1,37 +1,41 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6f38e27c-5131-4ca5-81d2-160b4694f258, name maps-c4 [3f93f3], since 2026-11-10 09:06
-Updated: 2026-11-10 12:30 (maps-c4 is past 500k tokens; a fresh orchestrator can take over any time)
+Updated: 2026-11-10 13:45 (maps-c4 is past 600k tokens; Anita will start a fresh orchestrator)
 
 ## Now
 
-**LIVE = 2026-11-10 (v0.2, trams)**: Pages built 30b52da at 12:31, `--verify --page` all PASS (7 checks). The rest of
-this paragraph is how it got there. **v0.2 (trams) is published as version 2026-11-10** (Anita's go 12:15: "ok, good to publish when they land"). Built from
-88c3ebf3; smoke8800 light and dark PASS (12 each); `deploy.py --version 2026-11-10 --smoked` done, data verified on R2;
-website commit 30b52da pushed ~12:25 (only trainsworld/ and trainworld/; her modified `pages/projects/abouttrainsworld.md`
-left uncommitted, hers). **Pending:** background script `scratchpad\pages_verify.sh` (task b09t2sto6, log
-`...\6f38e27c-...\scratchpad\pages_verify.log`) waits for the Pages build of 30b52da, then runs
-`deploy.py --verify --page --version 2026-11-10`. If the session died: `gh run list --repo circularsquare/circularsquare.github.io --limit 1`,
-then run the verify by hand. Once it passes, **LIVE = 2026-11-10** and tell Anita https://anita.garden/trainsworld/ is up.
-Previous LIVE was 2026-11-09c (a6f43c1b). Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09 and 11-09b a
-few days after; 11-09c once 11-10 has run a few days.
+**LIVE = 2026-11-10b** (silent update after v0.2; built from 97c11df7; Pages 5e68055 verified 13:40, 7 PASS). v0.2 (trams)
+went out as 2026-11-10 earlier the same day. Previous: 2026-11-09c. Due: purge R2 prefixes 2026-11-07c and 11-08 from
+2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10 and 11-10b.
+**Master = 1976e339** (last pushed 20a6f601; push again soon). **8800 = 97c11df7.** Master smoke PASSED 27 at 12241ef1;
+cargo 436/616 at 8c02a9a3 (sim unchanged since except as noted in agents' reports).
+Website: game thumbnail and featured strip pushed 70db5ff (Anita's OK); her `pages/projects/abouttrainsworld.md` edit is
+uncommitted and hers. `noritetsu/build_tiles.py` (T-3043's `mark_track_of_lines`) is uncommitted: noritetsu is Anita's to commit.
 
-**Master = 20a6f601, pushed** (12:32). Master smoke PASSED 27 at 12241ef1; both cargo suites 436/616 at 8c02a9a3. **8800 = 88c3ebf3.**
-shonei-server e9c9e1a (achievement counts) and 46876ae (signedIn) deployed and pushed with her approval.
+**Running (Sonnet, main tree), all for a second silent update 2026-11-10c:**
+- termstop (id ae10bb7caf0dbd50f, Vite 6167): T-3053 [P1] trains stop halfway into a terminal's platform; with a terminal
+  the line drew past the station. Anita's rule: "it should be able to go either on the left track and stay parked in the
+  station for a bit before heading back, or on the right track. i dont ever want them to visually go past the last station".
+- vehname (id a817414493b9f21f0, Vite 6168): T-3054 [P1] buses/trams called trains; "Bus 53 bus" -> "53 bus"; check a bus
+  hover's 1/240 capacity. Strings to show Anita.
+- greenmatch (id a95798ce10c36b6cb, Vite 6169): T-3055 green tram hint shows roads the snap can't use (Arakawa water pools).
+- Already committed for 10c: T-3050 two-loop line view (1976e339).
+**10c is pre-approved** (Anita: silent updates "good to publish once it passes checks"): commit the three, snapbuild,
+smoke8800 light+dark, `deploy.py --version 2026-11-10c --smoked` (add `--skip-data` only if no data changed), website
+`git add trainsworld/ trainworld/` only, commit "anitabuilder", push, `pages_verify.sh <website sha> 2026-11-10c`. Use
+`scratchpad\silent.cmd` as the pattern (cd back to the maps root after each called script).
 
-**Running (Sonnet, main tree):**
-- urlview done, committed d1229e50, T-3044 archived (sessionStorage `tw-view`; reload returns to the city; incoming hash
-  honoured then removed). **8800 = 98f5e802** (tramrow's four, T-3045-3048, committed and archived; "Ramps and portals" is English only: translate before v0.2.1). (was) tramrow (Sonnet, Vite 6164, id a9efce75358329243): T-3045 tram line row says "Tram", then T-3046 the two snap toggles exclude each other. Then T-3047 trams' zoomed-out size halfway between train and bus (edit made by maps-c4 in rendererShaders.ts, tramrow checks it). Then T-3048 a setting to hide ramp marks. Next free id T-3049. Anita approved both rail fixes ("our goal for trainworld is not to show real world lines, just real world track"; freight stays out): railgap resumed for Fix 4 then Fix 1 (noritetsu's cn_register.py; noritetsu map changes too). **Silent update 2026-11-10b approved** (Anita: "good to publish once it passes checks"): when tramrow reports (Ramps + translations, T-3049), commit, snapbuild, smoke8800 light+dark, `deploy.py --version 2026-11-10b --smoked` (data changed: realgraph), website commit/push, `--verify --page`. No new updates.ts entry. Named mostly-freight lines stay (Anita "can leave them"). dumbbell (Sonnet, Vite 6166, id a1b1c3ad1c53e6ea4): T-3050 loops at both ends (her Amsterdam line 1) shown as stem once + two bends; not part of the silent update unless it's done first. Next free id T-3051. Anita will start a new orchestrator after the silent update. **Next big item for it: T-3023/T-3024 manual stop sequence ("exact mode"), raised to P2 by Anita** ("i do want an explicit like "show me all the stops in order, both ways, so i can fine tune exactly as i want""); design and cost in notes/T-2988.md (2a sim ~120 lines Rust, 2b ~300 lines TS, most of a day); Sonnet in its own tree (it changes the WASM interface).
-**T-3043 done, committed 6d62d227 (trainworld side); `noritetsu/build_tiles.py` (`mark_track_of_lines`, the `x=1` flag) is uncommitted: noritetsu is Anita's to commit; told her.** 24 regions' noritetsu tiles rebuilt (backups data/work/pre-T3043/). Named freight lines without freight tags (e.g. 唐包线) now draw too: asked her. tramrow resumed for "Ramps" label + translations and T-3049 no snap beside for street trams. 8800 needs a rebuild for Long'an. Earlier: railgap done (notes/T-3043.md): Nankun line is in OSM; dropped because noritetsu's China register cuts lines at the last 12306 passenger station and the layer hides track no line runs over (n=1); ~8-12k km like it (estimate), plus 43k km hidden by the r/p clause in `SHOWN` (realNetwork.ts). Asked Anita: Fix 4 (show all track a line runs over, app + realgraph ~5 min) is my call to do; Fix 1 (China tail sections) edits noritetsu's cn_register.py, so it also changes the noritetsu map: asked; freight stays hidden unless she says. Ships in the next publish (v0.2.1) on Anita's word.
-- railgap (agent id a2344b053f2846378): T-3043 investigation only: the conventional line near Long'an missing from the
-  real-rail layer (second such report), why the realgraph build drops it, how much else the cause drops, fix and rebuild
-  cost; notes/T-3043.md. No rebuild without reporting.
-
-**Queued (after v0.2, lean Sonnet, prefer compute over tokens):** T-3033 rebuild the 37 split zones (notes/T-3012.md;
-~4 core-hours, 18 joins; plan unit-list edits only, never `zones --replan`). T-3042 one flat-junction mark per spot on a
-looped line (P3). T-3036 road gaps debug overlay (P3). T-3023/T-3024 manual stop sequence (P3). T-3027 slopes slow trains
-(P3, design first). T-3002 shorter tram ramps, T-3003 trams at grade over road bridges (notes/T-2996.md). T-3019 buses in
-the diagram (P3, "until someone asks"). T-3011 Cairo border off the Nile (P3). Next free id **T-3045**.
+**Next for the new orchestrator (lean Sonnet, prefer compute over tokens):**
+- **T-3023/T-3024 manual stop sequence ("exact mode"), P2**, Anita: "i do want an explicit like "show me all the stops in
+  order, both ways, so i can fine tune exactly as i want"". Design and cost in notes/T-2988.md (2a sim, 2b app, most of a
+  day); own tree (WASM interface).
+- T-3051 Select tool hint after 4 height changes (small). T-3052 rebuild built track with new height or type through a
+  blueprint (design first; her description in TASKS.md).
+- T-3033 rebuild the 37 split zones (notes/T-3012.md; ~4 core-hours, 18 joins; plan unit-list edits only, never `zones --replan`).
+- P3s: T-3042 one flat-junction mark per spot, T-3036 road gaps overlay, T-3027 slopes slow trains (design first),
+  T-3002/T-3003 tram ramps and road bridges, T-3019 buses in the diagram, T-3011 Cairo border.
+Next free id **T-3056**.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
