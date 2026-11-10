@@ -20,9 +20,8 @@ few days after; 11-09c once 11-10 has run a few days.
 shonei-server e9c9e1a (achievement counts) and 46876ae (signedIn) deployed and pushed with her approval.
 
 **Running (Sonnet, main tree):**
-- urlview (agent id a76f69e3eed392529, Vite 6162): T-3044 map position out of the URL (stop MapLibre `hash: true`,
-  remember the last view in browser storage for a reload, still honour an incoming hash). Commit and rebuild 8800 when it
-  reports; it can ship as v0.2.1 later.
+- urlview done, committed d1229e50, T-3044 archived (sessionStorage `tw-view`; reload returns to the city; incoming hash
+  honoured then removed). **8800 = d1229e50.** tramrow (Sonnet, Vite 6164, id a9efce75358329243): T-3045 tram line row says "Tram", then T-3046 the two snap toggles exclude each other. Then T-3047 trams' zoomed-out size halfway between train and bus (edit made by maps-c4 in rendererShaders.ts, tramrow checks it). Then T-3048 a setting to hide ramp marks. Next free id T-3049. Anita approved both rail fixes ("our goal for trainworld is not to show real world lines, just real world track"; freight stays out): railgap resumed for Fix 4 then Fix 1 (noritetsu's cn_register.py; noritetsu map changes too). railgap done (notes/T-3043.md): Nankun line is in OSM; dropped because noritetsu's China register cuts lines at the last 12306 passenger station and the layer hides track no line runs over (n=1); ~8-12k km like it (estimate), plus 43k km hidden by the r/p clause in `SHOWN` (realNetwork.ts). Asked Anita: Fix 4 (show all track a line runs over, app + realgraph ~5 min) is my call to do; Fix 1 (China tail sections) edits noritetsu's cn_register.py, so it also changes the noritetsu map: asked; freight stays hidden unless she says. Ships in the next publish (v0.2.1) on Anita's word.
 - railgap (agent id a2344b053f2846378): T-3043 investigation only: the conventional line near Long'an missing from the
   real-rail layer (second such report), why the realgraph build drops it, how much else the cause drops, fix and rebuild
   cost; notes/T-3043.md. No rebuild without reporting.

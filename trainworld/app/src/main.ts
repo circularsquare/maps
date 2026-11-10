@@ -241,6 +241,7 @@ const overlay = new Overlay(map, renderer, () => {
     ],
     crowds: d.platformCrowds !== "off", // T-164, T-219
     flatMarks: d.flatMarks,
+    rampMarks: d.rampMarks,
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)
     hotLine: hot().line,
     hotEdge: hot().edge,

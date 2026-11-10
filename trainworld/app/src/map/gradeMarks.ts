@@ -46,6 +46,7 @@ precision highp float;
 ${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
+uniform float u_ramps;       // 0: no marks on ramps and portals
 uniform float u_flat;        // 0: no marks on flat crossings and junctions
 in vec4 a_mark;              // x, y, shape, angle
 in vec2 a_style;             // tier (0 built, 1 blueprint), level
@@ -57,6 +58,7 @@ void main() {
   int shape = int(a_mark.z + 0.5);
   bool ramp = shape == ${M_RAMP} || shape == ${M_PORTAL};
   float r = ramp ? u_r.z : (a_style.x > 0.5 ? u_r.x : u_r.y);
+  if (u_ramps < 0.5 && ramp) r = 0.0;
   if (u_flat < 0.5 && (shape == ${M_CROSSING} || shape == ${M_JUNCTION})) r = 0.0;
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
@@ -162,7 +164,7 @@ export class GradeMarks {
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.built = this.drawing = null;
     this.prog = compile(gl, VS, FS);
-    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat"]);
+    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat", "u_ramps"]);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -212,7 +214,7 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true) {
+  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true) {
     if ((!this.built && !this.drawing) || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
@@ -229,6 +231,7 @@ export class GradeMarks {
     gl.uniform1f(u.u_quiet, QUIET_ALPHA);
     gl.uniform3fv(u.u_level_colours, levelColours);
     gl.uniform1f(u.u_flat, flat ? 1 : 0);
+    gl.uniform1f(u.u_ramps, ramps ? 1 : 0);
     for (const s of [this.built, this.drawing]) {
       if (!s) continue;
       gl.bindVertexArray(s.vao);
@@ -242,12 +245,13 @@ export class GradeMarks {
  * `marks`, or -1. The nearest of those the point is within. */
 export function markAt(ov: Overlay, marks: Float32Array, px: number, py: number, zoom: number): number {
   const [loud, quiet, ramp] = markRadii(zoom);
-  const flat = display.peek().flatMarks;
+  const flat = display.peek().flatMarks, ramps = display.peek().rampMarks;
   let best = -1, bestD = Infinity;
   const at = new Float64Array(2);
   for (let i = 0; i < marks.length; i += MARK_STRIDE) {
     const shape = marks[i + 2], isRamp = shape === M_RAMP || shape === M_PORTAL;
     if (!flat && (shape === M_CROSSING || shape === M_JUNCTION)) continue;
+    if (!ramps && isRamp) continue;
     const r = isRamp ? ramp : marks[i + 4] > 0.5 ? loud : quiet;
     if (r <= 0) continue;
     ov.toScreenInto(marks[i], marks[i + 1], at);

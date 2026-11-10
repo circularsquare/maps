@@ -113,6 +113,9 @@ export function SettingsTab() {
         <Check checked={d.flatMarks} onChange={(v) => setDisplay("flatMarks", v)}>
           {t("settingsTab.flatMarks")}
         </Check>
+        <Check checked={d.rampMarks} onChange={(v) => setDisplay("rampMarks", v)}>
+          {t("settingsTab.rampMarks")}
+        </Check>
         <Check checked={d.lineBands} onChange={(v) => setDisplay("lineBands", v)}>
           {t("settingsTab.lineBands")}
         </Check>

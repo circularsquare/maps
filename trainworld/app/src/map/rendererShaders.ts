@@ -980,7 +980,7 @@ void main() {
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
   // a bus (T-1798) is drawn 1.4 times its size from a distance and 1.2 times its real one close up
-  vec2 px = max(bus ? u_min_px * vec2(0.77 * BUS_LEN, 0.77) : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
+  vec2 px = max(bus ? u_min_px * vec2(0.77 * BUS_LEN, 0.77) : boat ? u_min_px * vec2(1.0, 1.3) : tram ? u_min_px * vec2(0.75, 0.885) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
   if (u_detail) px.x = max(bus ? 2.8 * BUS_LEN * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - (tram ? 0.0 : max(1.5 * u_dpr, kM * u_px_per_unit)));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)

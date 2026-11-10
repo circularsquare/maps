@@ -36,6 +36,8 @@ export interface DisplaySettings {
   fullMarks: boolean;
   /** T-673: the marks on flat crossings and junctions (ramps, portals and refused crossings stay) */
   flatMarks: boolean;
+  /** T-3048: the triangles and semicircles on ramps (a refused crossing's mark stays) */
+  rampMarks: boolean;
   /** T-1886: lines sharing track drawn side by side (T-1799, T-1848), not over each other; off by default */
   lineBands: boolean;
   basemapLabels: boolean;
@@ -122,6 +124,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   capacity: true,
   fullMarks: true,
   flatMarks: true,
+  rampMarks: true,
   lineBands: true,
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
@@ -319,7 +322,8 @@ export const snapReal = signal(saved.build?.snap === true);
  * turned off, and flipped while Ctrl is held (tools.ts) */
 export const snapStreets = signal(saved.build?.streets !== false);
 /** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
-export const snapBeside = signal(saved.build?.beside === true);
+// T-3046: the two snaps exclude each other in the bar; a save holding both keeps the real network
+export const snapBeside = signal(saved.build?.beside === true && saved.build?.snap !== true);
 /** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
 export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];

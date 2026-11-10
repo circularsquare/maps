@@ -171,6 +171,8 @@ export interface DrawOptions {
   crowds?: boolean;
   /** the marks on flat crossings and junctions (T-673); absent: shown */
   flatMarks?: boolean;
+  /** the marks on ramps and portals (T-3048); absent: shown */
+  rampMarks?: boolean;
   /** the stations the complex rule's distances group (T-313): zoomed out their dots are joined by
    * connectors; absent, only the player's links are */
   groups?: StationGroups | null;
@@ -1627,7 +1629,7 @@ export class NetworkRenderer {
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any && !opt.byLevel;
     if (!view) this.busesShown = buses;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1821,7 +1823,7 @@ export class NetworkRenderer {
       gl.uniform1i(u.u_lane_mode, 0);
     }
     gl.uniform1i(u.u_ghost, 0);
-    this.marks.draw(lc, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
+    this.marks.draw(lc, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false, opt.rampMarks !== false);
     // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
     if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !this.trafficWidths)
       this.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });

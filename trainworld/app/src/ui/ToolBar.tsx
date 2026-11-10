@@ -93,11 +93,11 @@ function TrackBar() {
             ) : (
               <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
                 data-tip={t("toolBar.snapReal")}
-                onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
+                onClick={() => { const on = !snapReal.peek(); snapReal.value = on; if (on) snapBeside.value = false; }}><Icon.snapReal /></button>
             )}
             <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label={t("toolBar.snapBeside")} aria-pressed={snapBeside.value}
               data-tip={t("toolBar.snapBesideTip")}
-              onClick={() => (snapBeside.value = !snapBeside.peek())}><Icon.snapBeside /></button>
+              onClick={() => { const on = !snapBeside.peek(); snapBeside.value = on; if (on) snapReal.value = false; }}><Icon.snapBeside /></button>
           </span>
           {!tram && <span class="tb-wide tb-speed">
             <span data-tip={speedTip()}>{t("toolBar.targetSpeed")}</span>
