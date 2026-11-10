@@ -6,7 +6,7 @@
 import { h, render, type ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { accountVersion } from "../game/boarding";
-import { CAPACITY_KINDS } from "../game/capacityKinds";
+import { capacityKind } from "../game/capacityKinds";
 import { clock } from "../game/clock";
 import { lngLatToPack } from "../game/coords";
 import { count, duration } from "../game/format";
@@ -15,7 +15,7 @@ import { readToday, type LineToday } from "../game/today";
 import { DEMAND_INDEX, type LineInput, type Selection, type WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
 import { world } from "../game/world";
-import { nearestJunction } from "../map/capacityMarkers";
+import { nearestJunction, tramSpot } from "../map/capacityMarkers";
 import { toLngLat } from "../map/geo";
 import { reversalsOf } from "../map/reversalMarks";
 import { queryClock } from "../workers/clockClient";
@@ -46,6 +46,8 @@ type Item = {
   go: () => void;
 };
 
+/** the vehicle of a line by id, a train when unknown */
+const lineVehicle = (w: WorldView, id?: string) => { const st = id ? w.lineStats[id] : undefined; return st ? vehicleOf(st) : "train"; };
 const selecting = () => tool.peek() === "select";
 const pick = (s: Selection) => { if (selecting()) selection.value = s; };
 const goLine = (l: LineInput) => () => { locateLine(l.stops); pick({ kind: "line", line: l.id }); };
@@ -85,7 +87,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const ls = r.lines.map((x) => lines.get(x.id)).filter((x): x is LineInput => !!x);
     out.push({ key: "r" + r.station, tier: 1, size: ls.length, lead: <i class="trouble-rev"><Icon.uturn /></i>, label: r.name,
       value: <span class="trouble-chips">{ls.slice(0, 3).map((l) => <Chip line={l} size="sm" plain />)}</span>,
-      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), CAPACITY_KINDS[9].fix].join("\n"),
+      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), capacityKind(9, lineVehicle(w, r.lines[0]?.id)).fix].join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
   // the orange and red tags only (90% and up) that are over capacity or make trains wait; a kind's tags by one station are one row, the worst
@@ -94,7 +96,8 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const d = Math.round(m.delayS), over = m.rho > 1 || m.held;
     // a line alone has no wait until it is over capacity: a row with no wait is no problem (T-2945)
     if (!over && (m.rho < NEAR_RHO || d < 2)) continue;
-    const k = CAPACITY_KINDS[m.kind] ?? CAPACITY_KINDS[0];
+    const vehicle = tramSpot(w, m.x, m.y) ? "tram" : "train";
+    const k = capacityKind(m.kind, vehicle);
     // the tags are in the draw anchor's local units, the stations in the pack's
     const [lng, lat] = toLngLat(m.x, m.y), p = lngLatToPack(lng, lat);
     const near = nearestStation(p.x, p.y);
@@ -103,8 +106,8 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     if (spots.has(key)) continue;
     const cls = over ? "over" : "near";
     const tip = [t("troubleList.capacity", { name: k.name, pct: tNumber(Math.round(m.rho * 100)) })];
-    if (m.held) tip.push(t("troubleList.held"));
-    if (d >= 2) tip.push(t("troubleList.waits", { time: duration(d), level: DEMAND_WORD[level] ?? "other" }));
+    if (m.held) tip.push(t("troubleList.held", { vehicle }));
+    if (d >= 2) tip.push(t("troubleList.waits", { time: duration(d), level: DEMAND_WORD[level] ?? "other", vehicle }));
     tip.push(k.fix); // T-2933: the last line of a hover is what to try
     spots.set(key, { key, tier: over ? 2 : 4, size: d + m.rho, lead: <i class={"trouble-mark " + cls}><Icon.alert /></i>,
       label: place ? t("troubleList.spot", { name: k.name, prep: k.prep, place }) : k.name,

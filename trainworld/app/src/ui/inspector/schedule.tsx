@@ -160,8 +160,8 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
  * on today's kind of day (`crowdLevel`, from the boarding account) while `v` has one: the fill graded
  * over the line's stretches, the ring (1 px out with a 1 px gap) at its fullest. One hover for both
  * (T-2334): the level's hours, then the dot's. */
-function LevelName({ v, d, stops, flip, pending, ends }: { v: Float64Array | null; d: Demand; stops: number; flip: boolean; pending: boolean; ends?: [string, string] }) {
-  const c = v ? crowdLevel(v, d, stops, flip, ends) : null;
+function LevelName({ v, d, stops, flip, pending, ends, vehicle }: { v: Float64Array | null; d: Demand; stops: number; flip: boolean; pending: boolean; ends?: [string, string]; vehicle: Vehicle }) {
+  const c = v ? crowdLevel(v, d, stops, flip, ends, vehicle) : null;
   return (
     <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
       {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
@@ -211,7 +211,7 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
           const p = dot && crowd && lineFiguresIn(demandView.value, l.id, stops) ? crowd : null;
           return (
             <tr class={d === now ? "now" : ""}>
-              <td><LevelName v={p} d={d} stops={stops} flip={flip} ends={endNames(l)} pending={dot && !p && demandPending.value} /></td>
+              <td><LevelName v={p} d={d} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} /></td>
               <LevelCells l={l} st={st} d={d} auto={auto} limits={limits} />
             </tr>
           );

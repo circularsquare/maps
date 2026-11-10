@@ -98,7 +98,7 @@ function waitSpotsFrom(d: Float64Array, v: Vehicle): Spot[] {
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
 interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
-function heldFrom(v: Float64Array): Held[] {
+function heldFrom(v: Float64Array, vehicle: Vehicle): Held[] {
   const st = stationsNow();
   const out: Held[] = [];
   DEMANDS.forEach((d, lev) => {
@@ -106,20 +106,20 @@ function heldFrom(v: Float64Array): Held[] {
     if (!(wait > 0)) return;
     const s = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y);
     const name = s?.name ?? "";
-    out.push({ d, wait, place: fullTitle(kind, name), ...fullParts(kind, name), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most) });
+    out.push({ d, wait, place: fullTitle(kind, name, vehicle), ...fullParts(kind, name, vehicle), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most, vehicle) });
   });
   return out;
 }
 
 /** What limits a line per level (T-679, `Limit`); null where nothing does. From the tail of
  * `TrackApi.line_held`. */
-function limitsFrom(v: Float64Array): (Limit | null)[] {
+function limitsFrom(v: Float64Array, vehicle: Vehicle): (Limit | null)[] {
   const st = stationsNow();
   return DEMANDS.map((_, lev) => {
     const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
     if (!(s > 0)) return null;
     const name = ((node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y))?.name ?? "";
-    return { s, what: fullParts(kind, name).head + name };
+    return { s, what: fullParts(kind, name, vehicle).head + name };
   });
 }
 
@@ -627,7 +627,7 @@ function RailLineInspector({ id }: { id: string }) {
   const own = w?.lineStats[id], rv: Vehicle = own ? vehicleOf(own) : "train";
   const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => spotsFrom(d, rv)) ?? NO_SPOTS;
   const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => waitSpotsFrom(d, rv)) ?? [];
-  const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
+  const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version, rv], (d) => ({ held: heldFrom(d, rv), limits: limitsFrom(d, rv) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];

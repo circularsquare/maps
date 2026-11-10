@@ -23,6 +23,7 @@ import { crowdColour } from "./palette";
 import { tipEnds, tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
+import type { Vehicle } from "./vehicle";
 import { cameraMoving, guideVerbose } from "./ui";
 
 export interface LineToday {
@@ -106,7 +107,7 @@ export function periodLoad(v: ArrayLike<number>, p: number, stops: number): numb
  * peak, a bar of the stretches between their stations, and each period's load where the level has
  * several. T-2661: `flip` (`lineReversed`) draws the bar last stretch first, so it reads west to east.
  * Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false, ends?: readonly [string, string]): { load: number; peak: number; tip: string } | null {
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false, ends?: readonly [string, string], vehicle: Vehicle = "train"): { load: number; peak: number; tip: string } | null {
   const at = peaksAt(v, stops), s = stops - 1;
   if (at < 0) return null;
   let trains = 0, peak = 0;
@@ -133,7 +134,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip 
     + (ends ? `
 ${flip ? tipEnds(ends[1], ends[0]) : tipEnds(ends[0], ends[1])}` : "")
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "")
-    + (short ? "\n" + t("today.shortStretch") : "");
+    + (short ? "\n" + t("today.shortStretch", { vehicle }) : "");
   return { load: stretchLoad(per), peak, tip };
 }
 

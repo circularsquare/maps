@@ -70,13 +70,13 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
           : t(s.built ? "stationUpgrades.actBuild" : "stationUpgrades.actAdd");
         const Ic = ICONS[u.bit];
         if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
-          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does}\n${housedText()}`}>
+          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does(s.tram)}\n${housedText()}`}>
             <Ic />
           </button>
         );
         return (
           <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-            data-tip={`${u.name}\n${u.does}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
+            data-tip={`${u.name}\n${u.does(s.tram)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
             onClick={() => void toggle(u.bit, u.name, !on)}>
             <Ic />
           </button>
@@ -121,11 +121,11 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const byId = w ? stationsById(w) : new Map<string, StationInput>();
   const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x);
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
-  const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "";
+  const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "", allTram = st.length > 0 && st.every((x) => x.tram);
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";
   const Ic = ICONS[u.bit];
   if (u.bit === UPGRADE.waitingRoom && !all && st.length && inBuilding(st.map((x) => x.id), true)) return (
-    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.doesAll}\n${housedText()}`}>
+    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${housedText()}`}>
       <Ic />
     </button>
   );
@@ -141,7 +141,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   };
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
-      data-tip={`${u.name}\n${u.doesAll}\n${t("stationUpgrades.costs", { price: money(cost * 1e6) })}\n${act}`} onClick={() => void click()}>
+      data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${t("stationUpgrades.costs", { price: money(cost * 1e6) })}\n${act}`} onClick={() => void click()}>
       <Ic />
     </button>
   );

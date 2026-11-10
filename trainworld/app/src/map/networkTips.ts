@@ -112,8 +112,9 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
   // zoomed out, the dot's pie (T-228, T-553): everyone waiting at it and its fullest platform
   const dot = r.dotCrowd(i);
   if (dot) {
-    if (dot.waiting < 1) return [t("networkTips.nobody")];
-    const fullest = dot.share >= 1 ? t("networkTips.fullestFull") : t("networkTips.fullestPct", { share: tNumber(Math.round(dot.share * 100)) });
+    const tram = !!w.save.stations.find((x) => x.id === id)?.tram;
+    if (dot.waiting < 1) return [t("networkTips.nobody", { tram })];
+    const fullest = dot.share >= 1 ? t("networkTips.fullestFull", { tram }) : t("networkTips.fullestPct", { share: tNumber(Math.round(dot.share * 100)), tram });
     return [waitRow(null, "", t("networkTips.waiting", { n: exact(dot.waiting) }), dot.share >= 1), fullest];
   }
   const node = Number(id), now = clock.now() - r.tripsEpoch;
@@ -129,7 +130,7 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
     const to = names.get(b.queues[base + 2] === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "";
     out.push(waitRow(lineBullet(l, true), to ? t("networkTips.toStation", { name: to }) : t("networkTips.toEnd"), t("networkTips.waiting", { n: exact(waiting) }),(r.queueShare(q) ?? 0) >= 1));
   }
-  return out.length ? out : [t("networkTips.nobody")];
+  return out.length ? out : [t("networkTips.nobody", { tram: !!w.save.stations.find((x) => x.id === id)?.tram })];
 }
 
 /** The tag for station `i` of the network buffers. */

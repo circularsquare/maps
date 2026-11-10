@@ -24,14 +24,15 @@ export interface CapacityKindText {
 
 type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge" | "terminusOne";
 // the texts read their messages when read, so the list follows the language
-const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | ""): CapacityKindText => ({
-  get name() { return t(`capacityKinds.${base}Name` as MessageKey); }, // i18n-ignore
-  get short() { return t(`capacityKinds.${base}Short` as MessageKey); }, // i18n-ignore
-  get title() { return t(`capacityKinds.${base}Title` as MessageKey); }, // i18n-ignore
+// and say tram for a tram's track (T-3067): every message takes the vehicle
+const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | "") => (vehicle: Vehicle): CapacityKindText => ({
+  get name() { return t(`capacityKinds.${base}Name` as MessageKey, { vehicle }); }, // i18n-ignore
+  get short() { return t(`capacityKinds.${base}Short` as MessageKey, { vehicle }); }, // i18n-ignore
+  get title() { return t(`capacityKinds.${base}Title` as MessageKey, { vehicle }); }, // i18n-ignore
   prep, ways, // i18n-ignore
-  get cause() { return t(`capacityKinds.${base}Cause` as MessageKey); }, // i18n-ignore
-  get help() { return t(`capacityKinds.${base}Help` as MessageKey); }, // i18n-ignore
-  get fix() { return t(`capacityKinds.${base}Fix` as MessageKey); }, // i18n-ignore
+  get cause() { return t(`capacityKinds.${base}Cause` as MessageKey, { vehicle }); }, // i18n-ignore
+  get help() { return t(`capacityKinds.${base}Help` as MessageKey, { vehicle }); }, // i18n-ignore
+  get fix() { return t(`capacityKinds.${base}Fix` as MessageKey, { vehicle }); }, // i18n-ignore
 });
 
 /** Indexed by kind: 0 track, 1 single track, 2 platform, 3 terminus, 4 junction, 5 flat crossing,
@@ -41,7 +42,7 @@ const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | ""): 
  * 14 a double-track dead end with no terminal, turning on one platform (T-2986).
  * 11, behind slower trains, and 13, waiting at passing tracks for faster ones (T-2231), are never a
  * dot or a limit. */
-export const CAPACITY_KINDS: CapacityKindText[] = [
+const KINDS = [
   kind("track", "near", "each"),
   kind("single", "near", "both"),
   kind("platform", "at", ""),
@@ -54,17 +55,18 @@ export const CAPACITY_KINDS: CapacityKindText[] = [
   kind("reversing", "at", ""),
   kind("sidings", "at", ""),
 ];
-CAPACITY_KINDS[12] = kind("merge", "near", "");
-CAPACITY_KINDS[14] = kind("terminusOne", "at", "");
+KINDS[12] = kind("merge", "near", "");
+KINDS[14] = kind("terminusOne", "at", "");
 
-const kindText = (kind: number): CapacityKindText => CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
+/** A kind's words for a train's or a tram's track. */
+export const capacityKind = (kind: number, vehicle: Vehicle = "train"): CapacityKindText => (KINDS[kind] ?? KINDS[0])(vehicle);
 
 /** "Turning on the platform at Nerul Village is full" */
-export const fullTitle = (kind: number, place: string) => { const p = fullParts(kind, place); return p.head + place + p.tail; };
+export const fullTitle = (kind: number, place: string, vehicle: Vehicle = "train") => { const p = fullParts(kind, place, vehicle); return p.head + place + p.tail; };
 
 /** `fullTitle` around the station's name, so a panel can make the name a link. */
-export function fullParts(kind: number, place: string): { head: string; tail: string } {
-  const k = kindText(kind);
+export function fullParts(kind: number, place: string, vehicle: Vehicle = "train"): { head: string; tail: string } {
+  const k = capacityKind(kind, vehicle);
   if (!place) return { head: t("capacityKinds.fullNoPlace", { title: k.title }), tail: "" };
   // the message is made with a stand-in for the place and cut there, so a language puts the name where it likes
   const [head, tail] = t(k.prep === "at" ? "capacityKinds.fullAt" : "capacityKinds.fullNear", { title: k.title, place: "\u0000" }).split("\u0000");
@@ -72,9 +74,9 @@ export function fullParts(kind: number, place: string): { head: string; tail: st
 }
 
 /** The hover of a full resource: what limits it, how many trains an hour it takes, what helps. */
-export function fullTip(kind: number, most: number): string {
-  const k = kindText(kind);
-  return t("capacityKinds.tip", { cause: k.cause, ways: k.ways || "none", most: Math.round(most), help: k.help });
+export function fullTip(kind: number, most: number, vehicle: Vehicle = "train"): string {
+  const k = capacityKind(kind, vehicle);
+  return t("capacityKinds.tip", { cause: k.cause, ways: k.ways || "none", most: Math.round(most), help: k.help, vehicle });
 }
 
 /** Whole trains out of service from `TrackApi.line_held`'s share of a fleet: a part train still runs some of the time (T-2935). */

@@ -20,16 +20,30 @@ silent.cmd as patterns). Set the updates.ts entry if 10c has one.
 For Anita to test after 10c: a line ending at a through station, with and without a terminal (T-3053).
 
 **Running:**
-- manualstop (Sonnet, id a12d21a5d48b357d5, tree `.tw-trees/manualstop` from 52fa18bf): T-3023 + T-3024 exact mode, 2a then
-  2b; may stop after 2a. Ids T-3056-3058. Land after 10c.
-- rebuild (Sonnet, id a2b5ad8262d71e795, tree `.tw-trees/rebuild` from 9003c8db): T-3059 rebuild built track in place; Anita
-  approved full new price, price+confirm, no undo, refused pieces drawn. Ids T-3065-3066. Lands after manualstop.
-- wording (Sonnet, id a16cca6d4db1e5159, main tree, Vite 6190): T-3064 tram/bus train-words sweep (en done, translations
-  next). Ids T-3067-3068. Told not to touch the git index. Its strings go to Anita.
+- manualstop DONE (tree `.tw-trees/manualstop`, T-3023 + T-3024 both stages; cargo 440/620, check 20/20, smoke 27 on its
+  Vite). WAITING TO LAND: `agent-tree.mjs land` fast-forwards the main tree, which fails while trainwords2/transit have the
+  i18n files and maybe LineInspector.tsx dirty. Land when both have reported and been committed; then wasm rebuild in the main
+  tree, commit its DECISIONS.md line (already in the main tree), archive T-3023/T-3024 (and T-2988 if nothing left), 8800.
+  Calls kept: toggle stays visible but disabled when it can't fold back; "+" per row, not a bar between rows.
+- rebuild DONE (id a2b5ad8262d71e795, tree `.tw-trees/rebuild` from 9003c8db): T-3059, cargo+check+smoke pass. Lands after
+  manualstop; its i18n inserts will conflict in the rebase: resume the same agent to rebase onto master (take both sides,
+  `l10n.mjs merge`), add the T-3051 height-hint counting in `rebuildPicked` (`heightRunLength`/`noteHeight`), then land.
+  Open: "Curves still limit speed" hover not added; junction/upgrade costs not charged in a rebuild.
+- lowmem DONE: T-3071 scoped (notes/T-3071.md; T-3072 pool by memory ~half a day, T-3073 "Load without intercity trips").
+  Waiting on Anita: what to assume when Chrome reports 8 GB (proposed 5 GB); T-3073 OK?
+- T-3064 landed ec7b878d (after 10c's commit, so in the next update), with "Trams yield here" (Anita's wording).
+- trainwords2 DONE (T-3067, archived, uncommitted: capacityKinds, capacityMarkers, TroubleList, LineInspector, upgrades,
+  StationUpgrades, issues, world, today, schedule, LinesTab, networkTips, stopMarkers, checks/t3067-tram-words.mjs, i18n).
+  Commit together with transit's T-3068 once it reports (both in the i18n files), then land manualstop. T-3068 "transit" for the whole system (demand view, mode shares, trip views): agent transit (Sonnet, Vite 6195),
+  Anita OK'd "transit" in general. T-3064 strings: Anita "text all looks great".
+- T-3074 landed 0119903a (row left out before a result). Precompute filed as T-3077 (with the next data batch / T-3033).
+- Uncommitted DECISIONS.md line is manualstop's (T-3023): commit it with that landing.
 
 - lowmem (Opus, id a372974d1a94dbeca, read-only, Vite 6192): T-3071 low-memory exploration into notes/T-3071.md. Ids T-3072-3073.
-- 10c: 8800 rebuilt at 33a8ccec (tsc and i18n clean there); `scratchpad\silent.cmd` (smoke8800 light+dark, then deploy)
-  running, log `scratchpad\silent.log`. Then website commit/push and pages_verify.
+- 10c: 8800 = 33a8ccec; smoke8800 light 12 PASS, dark 12 PASS; data uploaded to R2 (deploy.py --version 2026-11-10c, all
+  PASS). The website files are written but NOT committed/pushed: the auto-mode classifier refused the website commit+push
+  ("Create Public Surface"). Waiting on Anita's word, then: `git -C ../website add trainsworld/ trainworld/`, commit
+  "anitabuilder", push, then `pages_verify.sh <sha> 2026-11-10c`. Her own `pages/projects/abouttrainsworld.md` stays out.
 
 **Queued:** T-3070 design agent once this round is done (Anita 14:30: "can wait then start a design agent"). T-3063 bus loops partway along a route (after manualstop lands: bus.rs). T-3033 rebuild the 37 split zones after
 10c is published (writes data/packs; notes/T-3012.md; ~4 core-hours, 18 joins; unit-list edits only, never
@@ -37,7 +51,7 @@ For Anita to test after 10c: a line ending at a through station, with and withou
 non-home-based trips (P3, design, a demand change: Anita decides whether to scope now; I suggested after this round).
 P3s: T-3042 one flat-junction mark per spot, T-3036 road gaps overlay, T-3027 slopes slow trains (design first),
 T-3002/T-3003 tram ramps and road bridges, T-3019 buses in the diagram, T-3011 Cairo border.
-Next free id **T-3074**.
+Next free id **T-3078**.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,

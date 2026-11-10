@@ -8,7 +8,8 @@
 
 import { t, tNumber } from "../i18n";
 import { effect } from "@preact/signals";
-import { CAPACITY_KINDS } from "../game/capacityKinds";
+import { capacityKind } from "../game/capacityKinds";
+import type { Vehicle } from "../game/vehicle";
 import { duration } from "../game/format";
 import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
@@ -58,11 +59,11 @@ export function capacityDot(rho: number, over: boolean): string {
 
 /** The dot's hover: what it is at what utilisation, its trains an hour against the most it takes,
  * and each train's wait at the level in force. */
-export function capacityTip(kind: number, rho: number, tph: number, waitS: number, level: number): string[] {
-  const k = CAPACITY_KINDS[kind] ?? CAPACITY_KINDS[0];
+export function capacityTip(kind: number, rho: number, tph: number, waitS: number, level: number, vehicle: Vehicle = "train"): string[] {
+  const k = capacityKind(kind, vehicle);
   const tip = [t("capacityMarkers.use", { kind: k.short, load: rho > 1.005 ? ">100%" : `${tNumber(Math.round(rho * 100))}%` })];
-  if (rho > 0) tip.push(t("capacityMarkers.tph", { now: tNumber(Math.round(tph)), max: tNumber(Math.round(tph / rho)) }));
-  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: t("inspector.demand", { demand: DEMAND[level] }), wait: duration(waitS) }) : t("capacityMarkers.slowsThis", { wait: duration(waitS) }));
+  if (rho > 0) tip.push(t("capacityMarkers.tph", { now: tNumber(Math.round(tph)), max: tNumber(Math.round(tph / rho)), vehicle }));
+  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: t("inspector.demand", { demand: DEMAND[level] }), wait: duration(waitS), vehicle }) : t("capacityMarkers.slowsThis", { wait: duration(waitS), vehicle }));
   return tip;
 }
 
@@ -121,7 +122,7 @@ export class CapacityMarkers {
       const el = document.createElement("div");
       el.className = "cap-mark";
       el.innerHTML = capacityDot(m.rho, !!m.held);
-      const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level);
+      const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level, tramSpot(w, m.x, m.y) ? "tram" : "train");
       const junction = m.kind === 4 ? junctions[i] : null;
       if (junction !== null) el.classList.add("link");
       const point = (e: MouseEvent) => {
@@ -234,4 +235,19 @@ export function nearestJunction(w: WorldView, x: number, y: number): number | nu
     }
   }
   return id;
+}
+
+/** Whether a capacity spot is on tram track (T-3067): the nearest track node is a tram's. */
+export function tramSpot(w: WorldView, x: number, y: number): boolean {
+  let best = Infinity, tram = false;
+  for (const n of w.nodes.values()) {
+    if (n.bus || n.port) continue;
+    const [lx, ly] = toLocal(n.lng, n.lat);
+    const d = (lx - x) ** 2 + (ly - y) ** 2;
+    if (d < best) {
+      best = d;
+      tram = n.kind === 2 || n.kind === 3;
+    }
+  }
+  return tram;
 }

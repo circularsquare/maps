@@ -159,6 +159,7 @@ export class StopMarkers {
   private fromWorker: Map<string, StopTier> | null = null;
   /** for a "reverse" station, the station trains would reverse at, "" for a bare track end */
   private revAt = new Map<string, string>();
+  private tram = false;
   private seenWorld: WorldView | null = null;
   private seenLine: number | null = null;
   private gap: GapFlash;
@@ -201,6 +202,7 @@ export class StopMarkers {
       if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's are map/busStops.ts's (T-2891)
       if (!this.line) return;
       this.colour = this.line.colour;
+      this.tram = !!w.lineStats[this.line.id]?.tram;
       this.oneWay = new Map();
       const turned = turnedLine(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
       const ls = this.line.stops, lm = ls.length - 1;
@@ -366,7 +368,7 @@ export class StopMarkers {
       case "reroute": return [name, t("stopMarkers.addReroute")];
       case "reverse": {
         const at = this.revAt.get(id);
-        return [name, at === "" ? t("stopMarkers.reverseEnd") : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? "") }) : t("stopMarkers.reverseSome")];
+        return [name, at === "" ? t("stopMarkers.reverseEnd", { tram: this.tram }) : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? ""), tram: this.tram }) : t("stopMarkers.reverseSome", { tram: this.tram })];
       }
       default: return [name, t("stopMarkers.noTrack")];
     }

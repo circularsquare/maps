@@ -10,6 +10,7 @@ import type { EditOp } from "../workers/protocol";
 import { breakDeleteRun } from "./deleteHint";
 import type { EditAnswer } from "../workers/clockClient";
 import { describeIssues, type Buys } from "./issues";
+import { vehicleOf, type Vehicle } from "./vehicle";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
 import { noteEdit } from "./editCap";
@@ -77,7 +78,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early = fa
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`)
   const a = await sink(op, early);
-  if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op)), true);
+  if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op), lineVehicle((op as { line?: number }).line)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;
 }
@@ -90,6 +91,9 @@ function buysOf(op: EditOp): Buys | undefined {
 }
 
 const num = (id: LineId) => Number(id);
+
+/** What a line runs, by its id or number (a train where it is unknown), for words about buying its vehicles. */
+const lineVehicle = (line: LineId | number | undefined): Vehicle => { const st = line === undefined ? undefined : world.peek()?.lineStats[String(line)]; return st ? vehicleOf(st) : "train"; };
 
 /** Train counts asked for but not yet in `world` (T-229): the stepper shows them at once, and a
  * second click before the first edit lands counts from them, not from the old figure. */
@@ -200,7 +204,7 @@ const setTrainCounts = (id: LineId, trains: [number, number, number]) => {
   const short = trainBuyCheck?.(id, trains);
   if (short) {
     refusedForCash.value = { id, levs: trains.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
-    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
     return;
   }
   if (!was || trains.some((n, i) => n !== was[i])) clickSound({ op: "setTrainCount" });
@@ -226,7 +230,7 @@ export function stepLineCars(id: LineId, shown: number, cap: number, by: number,
   const st = world.peek()?.lineStats[id];
   const short = checkCash && st && to > st.cars ? carBuyCheck?.(id, (to - st.cars) * Math.max(...st.trainsNeeded)) : null;
   if (short) {
-    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
     return Promise.resolve(false);
   }
   clickSound({ op: "lineCars" });
@@ -326,7 +330,7 @@ const queueHeadway = (id: LineId, secs: [number, number, number] | null) => {
     const short = trainBuyCheck!(id, trains);
     if (short) {
       refusedForCash.value = { id, levs: secs!.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
-      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains"), true); // i18n-ignore
+      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
       return;
     }
   }
