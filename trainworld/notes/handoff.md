@@ -41,6 +41,15 @@ T-3019, T-3011.
 **maps-dc:** T-3104/T-3105 server done by mailname (shonei-server e1ac732, 7b68d01). Client `?site=trainsworld` in app/src/game/account.ts + ui/AccountPanel.tsx is maps-dc's,
 uncommitted, tsc clean: commit it with the next batch. Strings approved (mail wording, quota message untranslated).
 Server DEPLOYED 2026-11-10 16:20 and pushed by Anita.
+**Running (maps-dc's, launched ~16:55):**
+- flyover (Opus, af64c7f0ed83c00b5, tree `.tw-trees/flyover` from 74558ad4, Vite 6181): T-3103 flat badge only where
+  moves cross, then T-3092 real flyovers (Anita hopes tonight; no release until then). Land with `agent-tree.mjs land flyover`.
+- deadend (Sonnet, a79eb44b3fb6bfdbf, main tree): T-3107 round 2 (rule + hints, below), resumed after the landings.
+- tramwater (Sonnet, a68aa3b7f51cb1054) DONE, uncommitted: T-3106 (net.rs check_edge, draw.rs bridged/shaped/raise_end,
+  bridge_tests.rs, track-and-service.md, wiki/water.md + read/, DECISIONS). All StreetTram edges exempt (no bridge flags
+  in the sim's street data). Its new test passes; 12 capacity/turnback tests fail = deadend's WIP. Commit with T-3107
+  once deadend reports and both cargo suites + smoke pass; archive T-3106 then.
+`.tw-trees/hotfix` (tw/release-021, live v0.2.1's source) kept until the next release in case live needs a hotfix.
 - T-3107: Anita decided 16:50: dead ends and through stations identical, hints only "build a terminal" (terminal =
   30 tph) or, with one built, more track; never mention a dead end; drop "Add more platform tracks at the terminus".
   My rule: turning = 15/h without a terminal, 30/h with, per track pair, any station, ending or reversing partway; no
@@ -50,7 +59,6 @@ Server DEPLOYED 2026-11-10 16:20 and pushed by Anita.
   both land: resume deadend (SendMessage) to reapply the patch and do round 2 on top. Anita 16:55: no "more track /
   platform tracks" hint either (one line arrives on one pair, so a quad station can't help it): with a terminal built
   and still full, the hint is to turn some trains at another station. Tell deadend this on resume.
-- T-3106 street tram over water at grade: brief once rebuild2 (T-3087) lands, same water/level check.
 Next free id **T-3108**.
 Anita's TODO "do trams have shorter dwell times?": yes, 15 s against 30 s for trains (T-2926), answered 2026-11-10.
 

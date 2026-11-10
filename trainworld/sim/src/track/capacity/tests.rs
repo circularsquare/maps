@@ -82,58 +82,57 @@ fn turnback_fixture(single: bool, pass: bool) -> (TrackWorld, u32, u32, u32) {
     (w, b, through, short)
 }
 
-#[test]
-fn short_turns_occupy_platform_and_conflict_with_both_through_directions() {
-    let (mut w, b, through, short) = turnback_fixture(false, false);
+/// The turn pool at node `n` (T-3107): its one resource and its hold per train, always kind 3.
+fn turn_pool(w: &TrackWorld, n: u32) -> (usize, f64) {
     let cap = &w.svc.cap;
-    let crossing = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
-        && cap.users_of(*r).iter().any(|u| u.line == short && u.owner)).unwrap().0;
-    // 8 reversing moves cross 12 opposite-direction through moves, 90 seconds each.
-    assert!((cap.rho[crossing][0] - 20.0 * CONFLICT_S / 3600.0).abs() < 1e-12);
-    assert!(cap.delay[crossing][0] > 0.0);
-    assert_eq!(cap.rho[crossing][1], 0.0, "no crossover conflict when the reversing line is off");
-    assert_eq!(cap.delay[crossing][1], 0.0);
-    let users = cap.users_of(crossing);
-    assert_eq!(users.iter().filter(|u| u.line == through && u.owner).count(), 0);
-    assert_eq!(users.iter().filter(|u| u.line == through && !u.owner).count(), 1);
-    assert_eq!(users.iter().filter(|u| u.line == short && u.owner).count(), 1, "turnaround counted once per train");
-    let reciprocal = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
-        && cap.users_of(*r).iter().any(|u| u.line == through && u.owner)).unwrap().0;
-    assert_eq!(cap.users_of(reciprocal).iter().filter(|u| u.line == through && u.owner).count(), 1);
-    assert_eq!(cap.rho[reciprocal][0], cap.rho[crossing][0]);
+    let r = cap.res.iter().enumerate().find(|(r, x)| x.node == n && x.kind == ResKind::Terminus && cap.wire_kind(*r) == 3).unwrap().0;
+    let occ = cap.users_of(r).iter().map(|u| u.occ).fold(f64::NAN, |_, o| o);
+    assert!(cap.users_of(r).iter().all(|u| u.occ == occ));
+    assert_eq!(cap.res.iter().enumerate().filter(|(r, x)| x.node == n && x.kind == ResKind::Terminus && cap.wire_kind(*r) != 3).count(), 0, "no other turning kind");
+    (r, occ)
+}
+
+#[test]
+fn a_short_turn_at_a_through_station_holds_no_platform_and_crosses_nothing() {
+    let (mut w, b, through, short) = turnback_fixture(false, false);
+    let (r, occ) = turn_pool(&w, b);
+    let cap = &w.svc.cap;
+    assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S, "one platform to turn on without a terminal");
+    assert_eq!(cap.users_of(r).len(), 1);
+    assert_eq!(cap.users_of(r)[0].line, short, "turnaround counted once per train");
+    assert!((cap.rho[r][0] - 8.0 * occ / 3600.0).abs() < 1e-12);
     for run in 0..2 {
-        assert!(w.svc.lines[through as usize].runs[run].stop_holds[0][1] > 0.0, "through direction {run} waits at the short turn");
-        assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[1][1], 0.0);
+        assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[0][1], 0.0, "through direction {run} does not wait at the turn");
     }
     let platforms: Vec<_> = cap.res.iter().enumerate().filter(|(_, r)| r.node == b && r.kind == ResKind::Platform).map(|(i, _)| i).collect();
     assert_eq!(platforms.len(), 2);
-    let arrival = *platforms.iter().find(|&&r| cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
-    assert!((cap.rho[arrival][0] - (12.0 * (30.0 + PLATFORM_MARGIN_S) + 8.0 * (180.0 + TERMINUS_MARGIN_S)) / 3600.0).abs() < 1e-12);
-    assert_eq!(cap.wire_kind(arrival), 6, "a reversal on a through platform is its own kind");
-    assert!(platforms.iter().filter(|&&r| r != arrival).all(|&r| cap.wire_kind(r) == 2), "stopping trains alone are a plain platform");
-    assert_eq!(cap.wire_kind(crossing), 8);
+    for &p in &platforms {
+        assert_eq!(cap.wire_kind(p), 2, "stopping trains alone are a plain platform");
+        assert!((cap.rho[p][0] - 12.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    }
     assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 7), "the stretch both lines run over");
     assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 0), "the stretch only one runs over");
     same_as_global(&w, "short turn start");
     w.apply(Op::Schedule { id: short, tph: [0.0; 3] }).unwrap();
     same_as_global(&w, "short turn off");
-    for run in 0..2 { assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[0][1], 0.0); }
     w.undo().unwrap().unwrap(); same_as_global(&w, "short turn undo");
     w.redo().unwrap().unwrap(); same_as_global(&w, "short turn redo");
 }
 
 #[test]
-fn single_track_platform_shares_stops_and_short_turns_without_extra_tracks() {
+fn single_track_platform_shares_stops_and_a_short_turn_has_its_own_pool() {
     let (mut w, b, through, short) = turnback_fixture(true, false);
     assert_eq!(w.net.node_tracks(b), 1);
     let platforms: Vec<_> = w.svc.cap.res.iter().enumerate().filter(|(_, r)| r.node == b && r.kind == ResKind::Platform).map(|(i, _)| i).collect();
     assert_eq!(platforms.len(), 1);
     let platform = platforms[0];
     let cap = &w.svc.cap;
-    assert_eq!(cap.users_of(platform).len(), 3);
-    assert_eq!(cap.users_of(platform).iter().filter(|u| u.line == through).count(), 2);
-    assert!((cap.rho[platform][0] - (24.0 * (30.0 + PLATFORM_MARGIN_S) + 8.0 * (180.0 + TERMINUS_MARGIN_S)) / 3600.0).abs() < 1e-12);
-    assert!(cap.res.iter().all(|r| r.node != b || r.kind != ResKind::Terminus), "one shared platform; no fictional crossover or isolated turnaround pool");
+    assert_eq!(cap.users_of(platform).len(), 2);
+    assert!(cap.users_of(platform).iter().all(|u| u.line == through));
+    assert!((cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    let (r, occ) = turn_pool(&w, b);
+    assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S);
+    assert_eq!(w.svc.cap.users_of(r)[0].line, short);
     same_as_global(&w, "single short turn");
     w.apply(Op::Line { id: short, data: None }).unwrap();
     same_as_global(&w, "single remove short turn");
@@ -141,57 +140,29 @@ fn single_track_platform_shares_stops_and_short_turns_without_extra_tracks() {
     assert!((w.svc.cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
 }
 
+/// A line ending at a dead end and at a through station gets the same limit (T-3107, Anita
+/// 2026-11-10): 15 an hour at a 3-minute turnaround without a terminal, 30 with one.
 #[test]
-fn short_turn_conflicts_include_trains_passing_the_station() {
-    for single in [false, true] {
-        let (w, b, through, _) = turnback_fixture(single, true);
-        let cap = &w.svc.cap;
-        for run in 0..2 {
-            let resource = cap.res.iter().enumerate().find(|(r, x)| x.node == b && cap.delay[*r][0] > 0.0
-                && cap.users_of(*r).iter().any(|u| u.line == through && u.run == run && u.owner)).unwrap().0;
-            let u = cap.users_of(resource).iter().find(|u| u.line == through && u.run == run && u.owner).unwrap();
-            assert_eq!(u.stop, -1);
-            assert!(w.svc.lines[through as usize].runs[run as usize].holds[0].iter().any(|h| h.s == u.at && h.delay == cap.delay[resource][0]), "passing trains wait before the station");
-        }
-        same_as_global(&w, "passing short turn");
-    }
-}
-
-/// A dead end pools its turns over both platforms with a terminal, and over one without (T-2986,
-/// Anita 2026-11-10), where its terminus has wire kind 14; single track has one platform either way.
-#[test]
-fn true_dead_end_keeps_pooled_platform_turnaround_capacity() {
+fn a_dead_end_and_a_through_station_turn_alike() {
     let (mut w, b, _, _) = turnback_fixture(false, false);
-    let ends = |w: &TrackWorld| -> Vec<(u32, f64, u8)> {
-        let cap = &w.svc.cap;
-        cap.res.iter().enumerate().filter(|(_, x)| x.kind == ResKind::Terminus && x.node != b)
-            .filter(|(r, _)| matches!(cap.wire_kind(*r), 3 | 14))
-            .map(|(r, x)| {
-                assert_eq!(w.net.node_ports[x.node as usize].n, 1);
-                let occ = cap.users_of(r)[0].occ;
-                assert!(cap.users_of(r).iter().all(|u| u.occ == occ));
-                (x.node, occ, cap.wire_kind(r))
-            }).collect()
-    };
-    let with = ends(&w);
-    assert_eq!(with.len(), 2);
-    assert!(with.iter().all(|&(_, occ, k)| occ == (180.0 + TERMINUS_MARGIN_S) / 2.0 && k == 3), "{with:?}");
-    let a = with[0].0;
+    let a = (0..w.net.node_count() as u32).find(|&n| w.net.node_ports[n as usize].n == 1 && w.net.station_data(n).is_some()).unwrap();
+    let limit = |w: &TrackWorld, n: u32| 3600.0 / turn_pool(w, n).1;
+    // the fixture gives the dead ends a terminal
+    assert_eq!((limit(&w, a), limit(&w, b)), (30.0, 15.0));
     set_terminal(&mut w, a, false);
     same_as_global(&w, "dead end without a terminal");
-    let without = ends(&w);
-    let at_a = without.iter().find(|x| x.0 == a).unwrap();
-    assert_eq!((at_a.1, at_a.2), (180.0 + TERMINUS_MARGIN_S, 14), "one platform, and the alert says to build a terminal");
+    assert_eq!(limit(&w, a), 15.0);
+    set_terminal(&mut w, b, true);
+    same_as_global(&w, "through station with a terminal");
+    assert_eq!(limit(&w, b), 30.0);
     w.undo().unwrap().unwrap();
-    same_as_global(&w, "terminal back");
-    assert_eq!(ends(&w).iter().find(|x| x.0 == a).unwrap().1, (180.0 + TERMINUS_MARGIN_S) / 2.0);
-    // single track: one platform, with a terminal or without, and the plain terminus kind
-    let (w, b, _, _) = turnback_fixture(true, false);
-    let cap = &w.svc.cap;
-    for r in (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Terminus && cap.res[r].node != b && cap.wire_kind(r) == 3) {
-        assert!(cap.users_of(r).iter().all(|u| u.occ == 180.0 + TERMINUS_MARGIN_S));
-    }
-    assert!(!(0..cap.res.len()).any(|r| cap.wire_kind(r) == 14));
+    w.undo().unwrap().unwrap();
+    same_as_global(&w, "terminals back");
+    assert_eq!((limit(&w, a), limit(&w, b)), (30.0, 15.0));
+    // single track: one platform, with a terminal or without
+    let (mut w, b, _, _) = turnback_fixture(true, false);
+    set_terminal(&mut w, b, true);
+    assert_eq!(turn_pool(&w, b).1, 180.0 + TERMINUS_MARGIN_S);
 }
 
 #[test]
@@ -262,19 +233,16 @@ fn tiny_reversal_does_not_couple_independent_through_directions() {
 }
 
 #[test]
-fn opposite_short_turns_cross_without_through_trains() {
+fn opposite_short_turns_share_one_pool_at_a_station() {
     use super::super::tests::line;
     let (mut w, b, through, short) = turnback_fixture(false, false);
     let far = *w.net.line_stops(through).last().unwrap();
     w.apply(Op::Line { id: through, data: None }).unwrap();
     let opposite = line(&mut w, &[far, b], [8.0, 0.0, 0.0]);
+    let (r, _) = turn_pool(&w, b);
     let cap = &w.svc.cap;
-    for id in [short, opposite] {
-        let r = cap.res.iter().enumerate().find(|(r, x)| x.node == b && x.kind == ResKind::Terminus
-            && cap.users_of(*r).iter().any(|u| u.line == id && u.owner)).unwrap().0;
-        assert!(cap.delay[r][0] > 0.0, "opposite reversals must not be subtracted as one owners-only stream");
-        assert!(cap.users_of(r).iter().any(|u| u.line != id && !u.owner));
-    }
+    assert!(cap.delay[r][0] > 0.0, "16 an hour on one platform are over");
+    for id in [short, opposite] { assert!(cap.users_of(r).iter().any(|u| u.line == id && u.owner)); }
     same_as_global(&w, "opposite reversals");
 }
 
@@ -434,29 +402,19 @@ fn incremental_equals_global() {
     assert!(applied > 200, "too few edits applied: {applied}");
 }
 
-/// T-797: a line reversing at T has T's short-turn platform and crossover, and the limiter:
-/// 300 s a train for both directions arriving on the same side, so at most 6 an hour each way.
+/// T-797, T-3107: a line reversing at T turns as a line's end does, in the station's one turn pool.
 #[test]
-fn reversing_partway_is_capped_at_twelve_an_hour_a_side() {
+fn reversing_partway_turns_like_a_line_end() {
     use super::super::tests::{line, reversal_fixture};
     let (mut w, [_, t, _, m, br]) = reversal_fixture();
     let l = line(&mut w, &[br, t, m], [3.0, 6.0, 8.0]);
+    let (r, occ) = turn_pool(&w, t);
     let cap = &w.svc.cap;
-    let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 9).collect();
-    assert_eq!(lim.len(), 1, "both directions arrive at T on the same side");
-    let r = lim[0];
+    assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S);
     assert_eq!(cap.res[r].node, t);
     assert_eq!(cap.users_of(r).len(), 2);
-    assert!((cap.rho[r][HIGH] - 6.0 * REVERSAL_LIMIT_S / 3600.0).abs() < 1e-12);
-    assert!((cap.rho[r][MEDIUM] - 1.0).abs() < 1e-12, "12 an hour fill it");
-    assert_eq!(cap.delay[r][..2], [0.0; 2], "one line's two directions are one timetable: no queue until over");
-    assert!(cap.delay[r][LOW] > 0.0, "16 an hour are over");
-    let most = cap.line_limits(&w.net)[l as usize];
-    assert!((most[HIGH].0 - 6.0).abs() < 1e-9 && most[HIGH].1 as usize == r, "{most:?}");
-    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 6.0).abs() < 1e-9);
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 6), "the arrival platform held for the turnaround");
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 8), "the crossover");
-    let j = w.net.path_nodes(w.net.line_path(l)[0]).1;
+    let tph: f64 = cap.users_of(r).iter().map(|u| w.net.line_tph[u.line as usize][HIGH] as f64).sum();
+    assert!((cap.rho[r][HIGH] - tph * occ / 3600.0).abs() < 1e-12);
     assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == t && cap.res[r].kind == ResKind::Junction));
     // No section joins across the turn: each direction of T - J is its own.
     let te = w.net.line_path(l)[1] >> 1;
@@ -466,19 +424,16 @@ fn reversing_partway_is_capped_at_twelve_an_hour_a_side() {
             assert!(!(ks.contains(&(te * 2)) && ks.contains(&(te * 2 + 1))), "{ks:?}");
         }
     }
-    let _ = j;
     same_as_global(&w, "reversal");
     w.apply(Op::Schedule { id: l, tph: [0.0; 3] }).unwrap();
     same_as_global(&w, "reversal off");
     w.undo().unwrap().unwrap();
     same_as_global(&w, "reversal undo");
-    // A second line reversing on the same side shares the limiter.
-    let other = line(&mut w, &[br, t, m], [3.0, 0.0, 0.0]);
+    // A second line reversing there shares the pool.
+    line(&mut w, &[br, t, m], [3.0, 0.0, 0.0]);
     same_as_global(&w, "two reversing");
-    let cap = &w.svc.cap;
-    let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
-    assert_eq!(cap.users_of(r).len(), 4);
-    assert!((cap.line_limits(&w.net)[other as usize][HIGH].0 - 3.0).abs() < 1e-9);
+    let (r, _) = turn_pool(&w, t);
+    assert_eq!(w.svc.cap.users_of(r).len(), 4);
 }
 
 /// Give station `n` a terminal (T-1281), or take it away.
@@ -488,41 +443,36 @@ fn set_terminal(w: &mut TrackWorld, n: u32, on: bool) {
     w.apply(Op::Station { node: n, data: Some(d) }).unwrap();
 }
 
-/// T-1281: a line ending at a through station with a terminal holds its two platforms for the
-/// dwell and turns in the sidings, pooled over two: 30 an hour at a 3-minute turnaround.
+/// T-1281, T-3107: a terminal at a through station pools its turns over two platforms: 30 an
+/// hour at a 3-minute turnaround, and the turn holds no platform and crosses nothing.
 #[test]
-fn a_terminal_turns_in_sidings_and_frees_the_platform() {
+fn a_terminal_at_a_through_station_doubles_its_turns() {
     let (mut w, b, through, short) = turnback_fixture(false, false);
     set_terminal(&mut w, b, true);
     same_as_global(&w, "terminal");
+    let (r, occ) = turn_pool(&w, b);
     let cap = &w.svc.cap;
-    assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == b && cap.wire_kind(r) == 6), "no platform held for the turnaround");
-    let sidings: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == b && cap.wire_kind(r) == 10).collect();
-    assert_eq!(sidings.len(), 1);
-    let u = cap.users_of(sidings[0]);
+    let u = cap.users_of(r);
     assert_eq!(u.len(), 1);
-    assert_eq!((u[0].line, u[0].occ), (short, (180.0 + TERMINUS_MARGIN_S) / 2.0));
-    assert!((cap.rho[sidings[0]][HIGH] - 8.0 / 30.0).abs() < 1e-12, "30 an hour fill them");
+    assert_eq!((u[0].line, occ), (short, (180.0 + TERMINUS_MARGIN_S) / 2.0));
+    assert!((cap.rho[r][HIGH] - 8.0 / 30.0).abs() < 1e-12, "30 an hour fill it");
     let platforms: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == b && cap.res[r].kind == ResKind::Platform).collect();
     assert_eq!(platforms.len(), 2);
     for &p in &platforms {
         assert_eq!(cap.wire_kind(p), 2);
-        assert!(cap.users_of(p).iter().any(|u| u.line == short), "arrival and departure platforms");
-        assert!((cap.rho[p][HIGH] - (12.0 + 8.0) * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+        assert!(cap.users_of(p).iter().all(|u| u.line == through));
     }
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == b && cap.wire_kind(r) == 8), "the turn still crosses the other track");
-    let _ = through;
     set_terminal(&mut w, b, false);
     same_as_global(&w, "terminal removed");
-    assert!((0..w.svc.cap.res.len()).any(|r| w.svc.cap.res[r].node == b && w.svc.cap.wire_kind(r) == 6));
+    assert_eq!(turn_pool(&w, b).1, 180.0 + TERMINUS_MARGIN_S);
     w.undo().unwrap().unwrap();
     same_as_global(&w, "terminal undo");
 }
 
-/// T-1281: a short turnaround at a dead end turns no more than a real terminus does (36 an hour
-/// on two platform tracks), and reversing partway at a terminal is held to 30 an hour a side.
+/// T-1281: a short turnaround turns no more than a real terminus does (36 an hour on two
+/// platform tracks), at a dead end and at a through station with a terminal alike.
 #[test]
-fn pooled_turns_have_a_floor_and_a_terminal_lifts_the_reversing_limit() {
+fn pooled_turns_have_a_floor() {
     let (w, b, _, _) = turnback_fixture(false, false);
     let mut w = w;
     let short = (0..w.net.line_count() as u32).filter(|&l| w.net.line_ok(l)).last().unwrap();
@@ -532,16 +482,9 @@ fn pooled_turns_have_a_floor_and_a_terminal_lifts_the_reversing_limit() {
     let cap = &w.svc.cap;
     let dead = (0..cap.res.len()).find(|&r| cap.res[r].node != b && cap.res[r].kind == ResKind::Terminus && cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
     assert_eq!(cap.users_of(dead).iter().find(|u| u.line == short).unwrap().occ, upgrades::POOLED_TURN_MIN_S / 2.0);
-
-    use super::super::tests::{line, reversal_fixture};
-    let (mut w, [_, t, _, m, br]) = reversal_fixture();
-    line(&mut w, &[br, t, m], [3.0, 6.0, 8.0]);
-    set_terminal(&mut w, t, true);
-    same_as_global(&w, "reversing at a terminal");
-    let cap = &w.svc.cap;
-    let r = (0..cap.res.len()).find(|&r| cap.wire_kind(r) == 9).unwrap();
-    assert!((cap.rho[r][HIGH] - 6.0 * upgrades::TERMINAL_REVERSAL_S / 3600.0).abs() < 1e-12);
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == t && cap.wire_kind(r) == 10), "it turns in the sidings");
+    assert_eq!(turn_pool(&w, b).1, upgrades::POOLED_TURN_MIN_S);
+    set_terminal(&mut w, b, true);
+    assert_eq!(turn_pool(&w, b).1, upgrades::POOLED_TURN_MIN_S / 2.0);
 }
 
 /// T-798: a circle's sections join across its first stop, and the incremental pass agrees

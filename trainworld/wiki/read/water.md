@@ -2,6 +2,8 @@
 
 Track at ground level can't cross water. Draw across it at ground level and the game raises that stretch into a bridge for you, with ramps on land either side. If there's no room for the ramps the track is refused.
 
+Street tram track is the exception: it follows a street, and the street crosses on its own bridge, so it stays at ground level over water with no ramps. Tram track off the street, and rail, still get raised.
+
 Over or under water, track adds 2.5 to its [level's multiplier](levels-and-tunnels.md), at any level. Stations, junctions and crossings over water cost 2 times as much.
 
 Water replaces [terrain](terrain.md): what the ground would have been under it adds nothing.

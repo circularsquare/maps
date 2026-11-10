@@ -25,21 +25,22 @@ export interface CapacityKindText {
 type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge" | "terminusOne";
 // the texts read their messages when read, so the list follows the language
 // and say tram for a tram's track (T-3067): every message takes the vehicle
-const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | "") => (vehicle: Vehicle): CapacityKindText => ({
+// and, for turning, the advice for a station that already has a terminal (T-3107: one doubles the
+// turns, so the advice there is to turn some elsewhere)
+const kind = (base: KindBase, prep: "at" | "near", ways: "each" | "both" | "") => (vehicle: Vehicle, terminal = false): CapacityKindText => ({
   get name() { return t(`capacityKinds.${base}Name` as MessageKey, { vehicle }); }, // i18n-ignore
   get short() { return t(`capacityKinds.${base}Short` as MessageKey, { vehicle }); }, // i18n-ignore
   get title() { return t(`capacityKinds.${base}Title` as MessageKey, { vehicle }); }, // i18n-ignore
   prep, ways, // i18n-ignore
   get cause() { return t(`capacityKinds.${base}Cause` as MessageKey, { vehicle }); }, // i18n-ignore
-  get help() { return t(`capacityKinds.${base}Help` as MessageKey, { vehicle }); }, // i18n-ignore
-  get fix() { return t(`capacityKinds.${base}Fix` as MessageKey, { vehicle }); }, // i18n-ignore
+  get help() { return t(`capacityKinds.${base}Help${terminal && base === "terminus" ? "Terminal" : ""}` as MessageKey, { vehicle }); }, // i18n-ignore
+  get fix() { return t(`capacityKinds.${base}Fix${terminal && base === "terminus" ? "Terminal" : ""}` as MessageKey, { vehicle }); }, // i18n-ignore
 });
 
 /** Indexed by kind: 0 track, 1 single track, 2 platform, 3 terminus, 4 junction, 5 flat crossing,
- * 6 a line turning on a through station's platform, 7 track shared by several lines, 8 a line
- * turning across the other track at a through station, 9 lines reversing partway at a station (T-797),
- * 10 a terminal's sidings (T-1281), 12 shared track from where lines join it, a merge (T-2185),
- * 14 a double-track dead end with no terminal, turning on one platform (T-2986).
+ * 7 track shared by several lines, 12 shared track from where lines join it, a merge (T-2185).
+ * Every turn at a station is 3 (T-3107: a line's end or a reversal, dead end or through); 6, 8, 9,
+ * 10 and 14 were its variants and are no longer made, their words kept for old saves.
  * 11, behind slower trains, and 13, waiting at passing tracks for faster ones (T-2231), are never a
  * dot or a limit. */
 const KINDS = [
@@ -58,8 +59,8 @@ const KINDS = [
 KINDS[12] = kind("merge", "near", "");
 KINDS[14] = kind("terminusOne", "at", "");
 
-/** A kind's words for a train's or a tram's track. */
-export const capacityKind = (kind: number, vehicle: Vehicle = "train"): CapacityKindText => (KINDS[kind] ?? KINDS[0])(vehicle);
+/** A kind's words for a train's or a tram's track; `terminal`: the station it is at has a terminal. */
+export const capacityKind = (kind: number, vehicle: Vehicle = "train", terminal = false): CapacityKindText => (KINDS[kind] ?? KINDS[0])(vehicle, terminal);
 
 /** "Turning on the platform at Nerul Village is full" */
 export const fullTitle = (kind: number, place: string, vehicle: Vehicle = "train") => { const p = fullParts(kind, place, vehicle); return p.head + place + p.tail; };
@@ -74,8 +75,8 @@ export function fullParts(kind: number, place: string, vehicle: Vehicle = "train
 }
 
 /** The hover of a full resource: what limits it, how many trains an hour it takes, what helps. */
-export function fullTip(kind: number, most: number, vehicle: Vehicle = "train"): string {
-  const k = capacityKind(kind, vehicle);
+export function fullTip(kind: number, most: number, vehicle: Vehicle = "train", terminal = false): string {
+  const k = capacityKind(kind, vehicle, terminal);
   return t("capacityKinds.tip", { cause: k.cause, ways: k.ways || "none", most: Math.round(most), help: k.help, vehicle });
 }
 

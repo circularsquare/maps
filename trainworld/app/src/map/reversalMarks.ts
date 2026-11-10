@@ -16,9 +16,6 @@ import { tipBeside } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { quietBadgeRadius, STATIONS_ZOOM } from "./stationGeometry";
 
-/** the most trains an hour reversing at one side of a station (sim `REVERSAL_LIMIT_S`) */
-const REVERSALS_AN_HOUR = 12;
-
 const PLACING = new Set<string>(["track", "station", "line", "blueprint", "bus", "ferry", "building"]);
 /** how much larger the icon is with a placing tool on (T-1581) */
 const PLACING_SCALE = 1.6;
@@ -110,7 +107,6 @@ export class ReversalMarks {
       const words = [
         r.name,
         ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name })),
-        t("reversalMarks.limit", { n: REVERSALS_AN_HOUR, end: r.station.startsWith("end:") }),
       ];
       el.onmouseenter = el.onmousemove = () => tipBeside(this.tip, el, this.map.getContainer(), words, "right");
       el.onmouseleave = () => (this.tip.style.display = "none");

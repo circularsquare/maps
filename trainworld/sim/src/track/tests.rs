@@ -976,6 +976,12 @@ fn shared_track_splits_its_capacity() {
     let (mut w, ns) = corridor(5);
     let long = line(&mut w, &ns, [8.0, 3.0, 1.0]);
     let short = line(&mut w, &ns[1..4], [8.0, 3.0, 1.0]);
+    // the short line's ends turn on both platforms, so the shared track is what limits
+    for n in [ns[1], ns[3]] {
+        let mut d = w.net.station_data(n).unwrap();
+        d.upgrades |= super::upgrades::TERMINAL;
+        w.apply(Op::Station { node: n, data: Some(d) }).unwrap();
+    }
     set_counts(&mut w, long, [40, 4, 2]);
     set_counts(&mut w, short, [40, 4, 2]);
     assert!((fullest(&w, HIGH) - 1.0).abs() < 1e-4, "{}", fullest(&w, HIGH));
@@ -1076,13 +1082,13 @@ fn a_station_stopped_at_twice_around_a_dead_end_reversal() {
         assert!((f.dep[2] - f.arr[2] - 180.0).abs() < 1e-9);
         assert!((f.dep[1] - f.arr[1] - 30.0).abs() < 1e-9 && (f.dep[3] - f.arr[3] - 30.0).abs() < 1e-9);
     }
-    // T is a platform stop twice a run, at the dwell; X is a pooled terminus with the limiter.
+    // T is a platform stop twice a run, at the dwell; X is a pooled terminus.
     let cap = &w.svc.cap;
     let at_t: usize = (0..cap.res.len()).filter(|&r| cap.res[r].node == t && cap.res[r].kind == ResKind::Platform)
         .map(|r| cap.users_of(r).iter().filter(|u| u.line == l && u.stop >= 0).count()).sum();
     assert_eq!(at_t, 4);
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.wire_kind(r) == 9));
-    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == 14), "X turns on one platform: no terminal (T-2986)");
+    assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == 3), "X turns on one platform: no terminal");
+    assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == x && matches!(cap.wire_kind(r), 9 | 14)), "no limiter and no one-platform kind (T-3107)");
     // matching skips an earlier pass of a stop when a reversal needs it later
     let nodes = [1, 2, 1, 3, 1, 4];
     assert_eq!(super::net::match_stops(&nodes, &[1, 3, 1, 4], &[]), Some(vec![0, 3, 4, 5]));
@@ -1170,19 +1176,18 @@ fn a_line_reversing_at_a_bare_track_end_runs() {
     }
     let rt = ls.round_trip[HIGH];
     assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
-    // X is a one-track terminus with the limiter: 12 reversals an hour, both directions from one side
+    // X is a one-track terminus: 15 turns an hour at 240 s, both directions counted
     let cap = &w.svc.cap;
-    let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 9).collect();
+    let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus).collect();
     assert_eq!(lim.len(), 1);
     let r = lim[0];
-    assert_eq!((cap.res[r].node, cap.users_of(r).len()), (x, 2));
-    assert!((cap.rho[r][MEDIUM] - 1.0).abs() < 1e-12, "12 an hour fill it");
-    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 6.0).abs() < 1e-9);
+    assert_eq!((cap.wire_kind(r), cap.users_of(r).len()), (3, 2));
+    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 7.5).abs() < 1e-9);
     assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == ResKind::Terminus as u8));
     assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == t && cap.res[r].kind == ResKind::Platform && cap.users_of(r).iter().any(|u| u.stop >= 0)));
     // more trains than the end takes are held at the ends of the line
     set_counts(&mut w, l, [40, 3, 0]);
-    assert!(w.net.line_tph[l as usize][HIGH] <= 6.0 + 1e-6, "{:?}", w.net.line_tph[l as usize]);
+    assert!(w.net.line_tph[l as usize][HIGH] <= 7.5 + 1e-6, "{:?}", w.net.line_tph[l as usize]);
     // saves round trip
     let bytes = super::save::encode(&w.net);
     let back = TrackWorld::new(super::save::decode(&bytes).unwrap());

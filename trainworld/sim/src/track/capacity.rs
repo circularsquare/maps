@@ -79,18 +79,8 @@ enum Tag {
     Section { first: u32, count: u32 },
     /// A terminus or junction move at `Resource::node`.
     Node,
-    /// A platform at `Resource::node`; `reverses` when some line ends there on a through station
-    /// and holds the platform for its turnaround.
+    /// A platform at `Resource::node`; `reverses` is never set now (T-3107: a turn holds no platform).
     Platform { reverses: bool },
-    /// Station crossover: the first `turns` users reverse; through moves load it only while
-    /// a reversing stream runs at the demand level being solved.
-    Turnback { turns: u32 },
-    /// The limiter on lines reversing partway at `Resource::node`, one per arrival side (T-797).
-    Reversal,
-    /// A terminal's turnback sidings at `Resource::node` (T-1281), pooled.
-    Sidings,
-    /// A double-track dead-end station with no terminal, turning on one platform (T-2986).
-    OnePlatform,
     /// A flat crossing of `Resource::edge` with `other`. `yields`: a tram route crossing a train route
     /// (T-3032): its non-owners, the train passes, load it but are never limited by it.
     Crossing { other: u32, yields: bool },
@@ -151,26 +141,19 @@ impl Capacity {
     /// A following loss (T-1924) or a wait for faster trains (T-2231) neither fills nor caps
     /// anything either.
     pub fn limits(&self, r: usize) -> bool {
-        !matches!(self.tag[r], Tag::Turnback { .. } | Tag::Follow { .. } | Tag::Wait { .. })
+        !matches!(self.tag[r], Tag::Follow { .. } | Tag::Wait { .. })
     }
 
     /// The kind the app words alerts by (`ResKind as u8` for 0 to 5), finer where the cause differs:
-    /// 6 a line reversing on a through station's platform, 7 track several lines run over, 8 a
-    /// reversal crossing the other track at a through station, 9 lines reversing partway at a
-    /// station (T-797), 10 a terminal's sidings (T-1281), 11 a faster line held behind slower ones
-    /// (T-1924; never a map dot, its utilisation is 0), 12 track several lines join from different
-    /// edges at its start, a merge, where they wait for it (T-2185; `Resource::node` is that node),
-    /// 13 a slower line waiting at a passing station for faster trains to pass (T-2231; never a map
-    /// dot; `Resource::node` is the station), 14 a double-track dead end with no terminal, which
-    /// turns on one platform (T-2986).
+    /// 7 track several lines run over, 11 a faster line held behind slower ones (T-1924; never a
+    /// map dot, its utilisation is 0), 12 track several lines join from different edges at its
+    /// start, a merge, where they wait for it (T-2185; `Resource::node` is that node), 13 a slower
+    /// line waiting at a passing station for faster trains to pass (T-2231; never a map dot;
+    /// `Resource::node` is the station). Kinds 6, 8, 9, 10 and 14 (turning variants) are no longer
+    /// made (T-3107: every turn is a terminus, 3); their numbers stay for old saves.
     pub fn wire_kind(&self, r: usize) -> u8 {
         let kind = self.res[r].kind;
         match self.tag[r] {
-            Tag::Platform { reverses: true } => 6,
-            Tag::Turnback { .. } => 8,
-            Tag::Reversal => 9,
-            Tag::Sidings => 10,
-            Tag::OnePlatform => 14,
             Tag::Follow { .. } => 11,
             Tag::Wait { .. } => 13,
             Tag::Section { .. } if kind == ResKind::Section && self.res[r].node != u32::MAX => 12,
@@ -532,48 +515,22 @@ pub(super) fn active_node_tracks(net: &Network, node: u32) -> u8 {
     }).max().unwrap_or(1)
 }
 
-/// The platform tracks a dead end turns trains on (T-2986, Anita 2026-11-10): both of double track
-/// only at a station with a terminal, otherwise one, so one train stands there at a time.
-pub(super) fn dead_end_places(net: &Network, n: u32) -> u8 {
-    if net.node_platform[n as usize] > 0 && net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 { active_node_tracks(net, n) } else { 1 }
-}
-
-/// A station dead end on double track turning on one platform for want of a terminal (T-2986):
-/// its terminus has its own wire kind, so the alert says to build one.
-fn one_platform_end(net: &Network, n: u32) -> bool {
-    net.node_platform[n as usize] > 0 && active_node_tracks(net, n) > 1 && dead_end_places(net, n) == 1
+/// The places a turning train can stand at node `n` (T-3107, Anita 2026-11-10: a dead end and a
+/// through station turn alike): with a terminal every platform track, without one a single track
+/// of each pair. A track end with no station has one.
+pub(super) fn turn_places(net: &Network, n: u32) -> u8 {
+    if net.node_platform[n as usize] == 0 { return 1; }
+    let tracks = active_node_tracks(net, n);
+    if net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 { tracks } else { tracks.div_ceil(2).max(1) }
 }
 
 type PlatUse = (u32, u8, u32, u8, i32, f64, f64, bool);
 type TermUse = (u32, u32, u8, f64, f64);
-type TurnUse = (u32, u8, u32, u8, f64);
-
-/// What a train of line `l`'s run `r` turning at node `n` uses (SPEC 6.2), arriving on side
-/// `side_in`, approaching from `at`. A through station turns it on its arrival platform for the
-/// turnaround, or with a terminal (T-1281) holds both platforms for the dwell and its sidings for
-/// the turnaround; a dead end pools the turnaround over its platform tracks, both only with a
-/// terminal (T-2986, `dead_end_places`). Either way on double track the turn crosses the other track.
-#[allow(clippy::too_many_arguments)]
-fn turn_at(net: &Network, n: u32, l: usize, r: u8, side_in: u8, at: f64, dwell: f64, plat: &mut Vec<PlatUse>, term: &mut Vec<TermUse>, sidings: &mut Vec<TermUse>, turns: &mut Vec<TurnUse>) {
-    let tracks = active_node_tracks(net, n);
+/// What a train of line `l`'s run `r` turning at node `n` holds (SPEC 6.2), approaching from `at`:
+/// the pooled turnaround over `turn_places`, the same at a dead end and at a through station.
+fn turn_at(net: &Network, n: u32, l: usize, r: u8, at: f64, term: &mut Vec<TermUse>) {
     let turn = net.line_turn[l] as f64;
-    if net.built_ports(n) <= 1 {
-        term.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, dead_end_places(net, n) as f64)));
-        return;
-    }
-    let track = if tracks == 1 { 0 } else { side_in };
-    if net.node_platform[n as usize] > 0 && net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 {
-        let out = if tracks == 1 { 0 } else { 1 - side_in };
-        plat.push((n, track, l as u32, r, -1, at, dwell + net.node_margin_s(n as u32), false));
-        plat.push((n, out, l as u32, r, -1, at, dwell + net.node_margin_s(n as u32), false));
-        sidings.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, upgrades::TERMINAL_SIDINGS)));
-    } else {
-        // the arrival platform is held through the turnaround: through trains on it queue behind
-        plat.push((n, track, l as u32, r, -1, at, turn + TERMINUS_MARGIN_S, true));
-    }
-    if tracks > 1 {
-        turns.push((n, track, l as u32, r, at));
-    }
+    term.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, turn_places(net, n) as f64)));
 }
 
 /// Platforms, termini and junction moves at the nodes `in_n` accepts, from the runs of `cand`
@@ -581,11 +538,7 @@ fn turn_at(net: &Network, n: u32, l: usize, r: u8, side_in: u8, at: f64, dwell: 
 fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32) -> bool, cap: &mut Capacity) {
     let mut plat: Vec<PlatUse> = vec![]; // node, track, line, run, stop, at, occ, reverses here
     let mut term: Vec<TermUse> = vec![]; // node, line, run, at, occ
-    let mut sidings: Vec<TermUse> = vec![]; // as term, at a terminal (T-1281)
     let mut moves: Vec<(u32, f64, f64, u32, u8, f64)> = vec![]; // node, pA, pB, line, run, at
-    let mut turns: Vec<TurnUse> = vec![]; // node, arrival track, line, incoming run, approach
-    let mut through: Vec<(u32, u8, u32, u8, i32, f64)> = vec![]; // node, track, line, run, stop, approach
-    let mut limiter: Vec<(u32, u8, u32, u8, f64)> = vec![]; // node, arrival side, line, run, approach
     for &l in cand {
         let ls = &lines[l as usize];
         if !ls.running || ls.is_bus() {
@@ -601,9 +554,8 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     continue;
                 }
                 if net.turns_back(run.segs[k - 1], run.segs[k]) {
-                    // T-797: reversing partway uses what a short turn there would, plus the
-                    // limiter (a manual line has none, T-3023); it is no junction move and no through train. At a bare track end
-                    // (B3) the stub is a one-track terminus.
+                    // T-797: reversing partway turns as a line's end does; it is no junction move and no
+                    // through train. At a bare track end (B3) the stub is a one-track terminus.
                     let stand = match run.stop_idx.iter().position(|&s| s as usize == k) {
                         Some(j) => run.stop_s[j],
                         None => match run.ends.iter().find(|x| x.0 as usize == k) {
@@ -611,14 +563,9 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                             None => continue,
                         },
                     };
-                    let prev = run.segs[k - 1];
-                    let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
                     let reach = net.node_platform[n as usize] as f64;
                     let at = stand - reach.max(ls.train_len) - HOLD_MARGIN_M;
-                    turn_at(net, n, l, r as u8, side_in, at, dwell, &mut plat, &mut term, &mut sidings, &mut turns);
-                    if !net.line_manual[l] {
-                        limiter.push((n, side_in, l as u32, r as u8, at));
-                    }
+                    turn_at(net, n, l, r as u8, at, &mut term);
                     continue;
                 }
                 if net.node_platform[n as usize] > 0 {
@@ -635,7 +582,6 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     if !(passing && stop < 0) {
                         plat.push((n, track, l as u32, r as u8, stop, at, occ, false));
                     }
-                    if active_node_tracks(net, n) > 1 { through.push((n, track, l as u32, r as u8, stop, at)); }
                 }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
                     let (p, q) = (run.segs[k - 1], run.segs[k]);
@@ -660,7 +606,6 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 let track = if tracks == 1 { 0 } else { side_in };
                 let at = run.stop_s.last().unwrap() - hold_back(lines, l);
                 plat.push((n, track, l as u32, r as u8, -1, at, dwell + net.node_margin_s(n as u32), false));
-                if tracks > 1 { through.push((n, track, l as u32, r as u8, -1, at)); }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
                     let (ein, win) = (path_edge(p), 1 - path_dir(p));
                     let (eout, wout) = (path_edge(q), path_dir(q));
@@ -674,9 +619,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             } else if in_n(n) {
                 let reach = net.node_platform[n as usize] as f64;
                 let at = run.stop_s.last().unwrap() - reach.max(ls.train_len) - HOLD_MARGIN_M;
-                let prev = *run.segs.last().unwrap();
-                let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
-                turn_at(net, n, l, r as u8, side_in, at, dwell, &mut plat, &mut term, &mut sidings, &mut turns);
+                turn_at(net, n, l, r as u8, at, &mut term);
             }
         }
     }
@@ -691,57 +634,13 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         push_res(cap, ResKind::Platform, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Platform { reverses });
         i = end;
     }
-    for (term, tag) in [(&mut term, Tag::Node), (&mut sidings, Tag::Sidings)] {
-        term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
-        let mut i = 0;
-        while i < term.len() {
-            let end = term[i..].partition_point(|x| x.0 == term[i].0) + i;
-            users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
-            let n = term[i].0 as usize;
-            let tag = if matches!(tag, Tag::Node) && one_platform_end(net, n as u32) { Tag::OnePlatform } else { tag };
-            push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, tag);
-            i = end;
-        }
-    }
-    limiter.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
+    term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
     let mut i = 0;
-    while i < limiter.len() {
-        let end = limiter[i..].partition_point(|x| (x.0, x.1) == (limiter[i].0, limiter[i].1)) + i;
-        let n = limiter[i].0 as usize;
-        let occ = if net.node_platform[n] > 0 && net.node_upgrades[n] & upgrades::TERMINAL != 0 { upgrades::TERMINAL_REVERSAL_S } else { REVERSAL_LIMIT_S };
-        users = limiter[i..end].iter().map(|x| User { line: x.2, run: x.3, owner: true, occ, at: x.4, stop: -1 }).collect();
-        push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Reversal);
-        i = end;
-    }
-    turns.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
-    through.sort_by(|a, b| (a.0, a.1, a.2, a.3).cmp(&(b.0, b.1, b.2, b.3)));
-    let mut i = 0;
-    while i < turns.len() {
-        let n = turns[i].0;
-        let conflict = net.node_conflict_s(n);
-        let end = turns[i..].partition_point(|x| x.0 == n) + i;
-        let reversing = &turns[i..end];
-        let start_through = through.partition_point(|x| x.0 < n);
-        let end_through = through.partition_point(|x| x.0 <= n);
-        let passing = &through[start_through..end_through];
-        for track in 0..2 {
-            // A reversal sees the opposite through track and reversals from the other side.
-            // Same-side through traffic already shares its occupied arrival platform.
-            if reversing.iter().any(|x| x.1 == track) {
-                users = reversing.iter().map(|x| User { line: x.2, run: x.3, owner: x.1 == track, occ: conflict, at: x.4, stop: -1 }).collect();
-                let turn_count = users.len() as u32;
-                users.extend(passing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: conflict, at: x.5, stop: x.4 }));
-                push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
-            }
-            // Reciprocal resource for each through movement: independent opposite-direction
-            // through trains must never load each other's crossover capacity.
-            users = reversing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: conflict, at: x.4, stop: -1 }).collect();
-            if !users.is_empty() && passing.iter().any(|x| x.1 == track) {
-                let turn_count = users.len() as u32;
-                users.extend(passing.iter().filter(|x| x.1 == track).map(|x| User { line: x.2, run: x.3, owner: true, occ: conflict, at: x.5, stop: x.4 }));
-                push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
-            }
-        }
+    while i < term.len() {
+        let end = term[i..].partition_point(|x| x.0 == term[i].0) + i;
+        users = term[i..end].iter().map(|x| User { line: x.1, run: x.2, owner: true, occ: x.4, at: x.3, stop: -1 }).collect();
+        let n = term[i].0 as usize;
+        push_res(cap, ResKind::Terminus, net.node_x[n], net.node_y[n], n as u32, u32::MAX, &users, Tag::Node);
         i = end;
     }
     moves.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)).then(a.2.total_cmp(&b.2)).then((a.3, a.4).cmp(&(b.3, b.4))));
@@ -1218,9 +1117,6 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 
 /// Utilisation and delay of one resource's users for each demand level.
 fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, plans: &[Arc<Plan>]) -> ([f64; 3], [f64; 3]) {
-    let turns = match tag { Tag::Turnback { turns } => Some(turns as usize), _ => None };
-    // a line's two directions reversing at one station side run to one timetable (T-797): one stream
-    let by_line = matches!(tag, Tag::Reversal);
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     if matches!(tag, Tag::Follow { .. } | Tag::Wait { .. }) {
@@ -1235,10 +1131,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
         }
         return (rho_r, delay_r);
     }
-    let mut owner_streams: Vec<((u32, u8), f64)> = vec![];
     for lev in 0..LEVELS {
-        if turns.is_some_and(|n| !us[..n].iter().any(|u| net.line_tph[u.line as usize][lev] > 0.0)
-            || !us.iter().any(|u| u.owner && net.line_tph[u.line as usize][lev] > 0.0)) { continue; }
         let (mut load, mut trains) = (0.0, 0.0);
         streams.clear();
         for u in us {
@@ -1248,7 +1141,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
             }
             load += tph * u.occ;
             trains += tph;
-            let key = (u.line, if by_line { 0 } else { u.run });
+            let key = (u.line, u.run);
             match streams.iter_mut().find(|s| s.0 == key) {
                 Some(s) => s.1 = s.1.max(tph),
                 None => streams.push((key, tph)),
@@ -1260,26 +1153,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
         let rho = load / 3600.0;
         let tot: f64 = streams.iter().map(|s| s.1).sum();
         let mix = 1.0 - streams.iter().map(|s| (s.1 / tot).powi(2)).sum::<f64>();
-        let mut raw = kingman(rho, mix, load / trains);
-        if turns.is_some() {
-            // Track/platform resources already price queues between trains using the same
-            // move. Charge only the extra queue from crossing moves here; as conflicting
-            // reversal service tends to zero, the through movement's added delay also does.
-            owner_streams.clear();
-            let (mut own_load, mut own_trains) = (0.0, 0.0);
-            for u in us.iter().filter(|u| u.owner) {
-                let tph = net.line_tph[u.line as usize][lev] as f64;
-                if tph <= 0.0 { continue; }
-                own_load += tph * u.occ; own_trains += tph;
-                match owner_streams.iter_mut().find(|s| s.0 == (u.line, u.run)) {
-                    Some(s) => s.1 = s.1.max(tph),
-                    None => owner_streams.push(((u.line, u.run), tph)),
-                }
-            }
-            let own_total: f64 = owner_streams.iter().map(|s| s.1).sum();
-            let own_mix = 1.0 - owner_streams.iter().map(|s| (s.1 / own_total).powi(2)).sum::<f64>();
-            raw = (raw - kingman(own_load / 3600.0, own_mix, own_load / own_trains)).max(0.0);
-        }
+        let raw = kingman(rho, mix, load / trains);
         let w = if continuous { raw } else { raw.round() };
         rho_r[lev] = rho;
         delay_r[lev] = if !continuous && w < HOLD_MIN_S { 0.0 } else { w };
@@ -1376,7 +1250,7 @@ impl Capacity {
                         false
                     }
                 }
-                Tag::Node | Tag::Platform { .. } | Tag::Turnback { .. } | Tag::Reversal | Tag::Sidings | Tag::OnePlatform => flag(&dn, self.res[r].node),
+                Tag::Node | Tag::Platform { .. } => flag(&dn, self.res[r].node),
                 Tag::Crossing { other, .. } => flag(&de, self.res[r].edge) || flag(&de, other),
                 Tag::Follow { line } | Tag::Wait { line, .. } => flag(&follow, line) || !lines.get(line as usize).is_some_and(|l| l.running),
             };

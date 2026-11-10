@@ -7,7 +7,7 @@
 
 import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, signOut, startAccount, storeSession, type AccountView } from "../game/account";
+import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, SITE, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
 import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
 import { t, tRich, tNumber } from "../i18n";
@@ -73,7 +73,7 @@ function SignInForms() {
       <button class="btn text" type="submit">{t("accountPanel.signIn")}</button>
     </form>}
     {cfg.password && (form === "forgot"
-      ? <form class="acct-form" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email"); run(async () => setMsg((await api<{ message?: string }>("POST", "noritetsu/forgot", { email }, { auth: false })).message ?? t("accountPanel.linkSent"))); }}>
+      ? <form class="acct-form" onSubmit={(e) => { e.preventDefault(); const email = val(e.currentTarget, "email"); run(async () => setMsg((await api<{ message?: string }>("POST", "noritetsu/forgot" + SITE, { email }, { auth: false })).message ?? t("accountPanel.linkSent"))); }}>
         <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" />
         <div class="acct-btns"><button class="btn text acct-go" type="submit">{t("accountPanel.sendReset")}</button><button class="btn text" type="button" onClick={() => { setForm("login"); setMsg(""); }}>{t("accountPanel.back")}</button></div>
       </form>
@@ -106,7 +106,7 @@ function SignedIn({ a }: { a: AccountView }) {
   const who = a.username ? tRich("accountPanel.signedInAs", { name: <b>{a.username}</b> }) : a.logins.includes("google") ? t("accountPanel.signedInGoogle") : t("accountPanel.signedIn");
   const setAccount = (account: AccountView) => { const s = session.peek(); if (s) storeSession({ token: s.token, account }); };
   const google = a.logins.includes("google");
-  const saveEmail = (form: HTMLFormElement, email: string) => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email", { email, password: val(form, "emailPassword") })).account));
+  const saveEmail = (form: HTMLFormElement, email: string) => run(async () => setAccount((await api<{ account: AccountView }>("PUT", "noritetsu/email" + SITE, { email, password: val(form, "emailPassword") })).account));
   const remove = (proof: { password: string } | { credential: string }) => run(async () => { await deleteAccount(proof); accountOpen.value = false; });
   if (panel === "password") return <form class="acct-form" onSubmit={(e) => {
     e.preventDefault();

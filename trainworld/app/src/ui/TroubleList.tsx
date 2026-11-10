@@ -9,6 +9,7 @@ import { accountVersion } from "../game/boarding";
 import { capacityKind } from "../game/capacityKinds";
 import { clock } from "../game/clock";
 import { lngLatToPack } from "../game/coords";
+import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import { count, duration } from "../game/format";
 import { nearestStation, stationNameNear } from "../game/places";
 import { readToday, type LineToday } from "../game/today";
@@ -28,6 +29,9 @@ const STORE = "anitabuilder-trouble-open";
 const DEMAND_WORD = ["high", "medium", "low"];   // i18n-ignore (codes for troubleList.waits)
 /** capacity kinds tied to one station (`CAPACITY_KINDS`): platform, terminus, turning, reversing, sidings, a terminus on one platform */
 const AT_STATION = new Set([2, 3, 6, 8, 9, 10, 14]);
+
+/** Whether a station (by id) has a terminal, for advice that differs where it does. */
+const hasTerminal = (w: WorldView, id: string) => hasUpgrade(w.save.stations.find((s) => s.id === id)?.upgrades, UPGRADE.terminal);
 /** a line is listed for crowding past these: riders left at the platform as a share of those who
  * wanted its trains, or trains that left full as a share of those that ran, in the past 24 hours */
 const LEFT_SHARE = 0.03, LEFT_MIN = 10, FULL_SHARE = 0.25;
@@ -87,7 +91,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const ls = r.lines.map((x) => lines.get(x.id)).filter((x): x is LineInput => !!x);
     out.push({ key: "r" + r.station, tier: 1, size: ls.length, lead: <i class="trouble-rev"><Icon.uturn /></i>, label: r.name,
       value: <span class="trouble-chips">{ls.slice(0, 3).map((l) => <Chip line={l} size="sm" plain />)}</span>,
-      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), capacityKind(9, lineVehicle(w, r.lines[0]?.id)).fix].join("\n"),
+      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), capacityKind(3, lineVehicle(w, r.lines[0]?.id), hasTerminal(w, r.station)).fix].join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
   // the orange and red tags only (90% and up) that are over capacity or make trains wait; a kind's tags by one station are one row, the worst
@@ -97,10 +101,10 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     // a line alone has no wait until it is over capacity: a row with no wait is no problem (T-2945)
     if (!over && (m.rho < NEAR_RHO || d < 2)) continue;
     const vehicle = tramSpot(w, m.x, m.y) ? "tram" : "train";
-    const k = capacityKind(m.kind, vehicle);
     // the tags are in the draw anchor's local units, the stations in the pack's
     const [lng, lat] = toLngLat(m.x, m.y), p = lngLatToPack(lng, lat);
     const near = nearestStation(p.x, p.y);
+    const k = capacityKind(m.kind, vehicle, AT_STATION.has(m.kind) && !!near && hasTerminal(w, near.id));
     const place = AT_STATION.has(m.kind) ? near?.name ?? "" : stationNameNear(p.x, p.y);
     const key = `c${m.kind},${place || m.x + "," + m.y}`;
     if (spots.has(key)) continue;

@@ -688,3 +688,51 @@ fn long_route_through_close_corners_bridges_mid_route() {
         }
     }
 }
+
+/// T-3106: street tram track stays at ground level over water, with no ramps and no refusal; off-street
+/// tram track and rail over the same river are raised on a bridge; street track reshaped by hand becomes
+/// tram track and is refused at ground level; rebuilt as tram it is refused, rebuilt as itself it is not.
+#[test]
+fn street_tram_crosses_water_at_ground_level_and_others_are_raised() {
+    for kind in [0u8, 3] {
+        let mut a = api();
+        water(&mut a, &[(1000.0, 1500.0)]);
+        a.set_route_kind(kind);
+        let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "kind {kind}: {}", a.issue_kinds());
+        let edges = alive(&a);
+        assert!(edges.iter().any(|&e| a.w.net.edge_data(e).unwrap().pis.iter().any(|p| p.level == 1)), "kind {kind} is raised");
+        assert!(problems(&a).is_empty(), "kind {kind}: {:?}", problems(&a));
+    }
+    let mut a = api();
+    a.set_cash(1e6);
+    water(&mut a, &[(1000.0, 1500.0)]);
+    a.set_route_kind(2);
+    let e = ends(&a, (0.0, 0.0), (3000.0, 0.0));
+    let pv = a.preview_route(&e, &[], 2, false);
+    assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+    let edges = alive(&a);
+    assert_eq!(edges.len(), 1);
+    let (s, len) = (edges[0], a.w.net.edge_len[edges[0] as usize]);
+    assert_eq!(a.w.net.edge_kind[s as usize], TrackKind::StreetTram);
+    assert!(!a.w.net.edge_water(s).is_empty());
+    let mut x = 0.0;
+    while x <= len {
+        assert_eq!(height(&a, s, x), 0.0, "ramp at {x}");
+        x += 5.0;
+    }
+    assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+    // shaped by hand it is tram track and may not stay on the ground
+    assert_ne!(a.set_edge_pis(s, &[bx_of(&a) + 1250.0, base(&a).1 + 30.0, 0.0, 0.0]), 0);
+    // rebuilt as tram track it would have the same problem, as itself it has none
+    assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+    let q = a.rebuild_quote(&edges, &[], 99, 3);
+    assert_eq!((q[1], q[3]), (0.0, 1.0), "{q:?} {}", a.issue_kinds());
+    assert!(a.issue_kinds().contains("GroundOverWater"), "{}", a.issue_kinds());
+    assert_eq!(a.w.net.edge_kind[s as usize], TrackKind::StreetTram);
+}
+
+fn bx_of(a: &TrackApi) -> f64 {
+    base(a).0
+}

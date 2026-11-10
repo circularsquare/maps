@@ -8,7 +8,7 @@ A line can only run as many trains as its tightest spot allows. Every shared pie
 
 **Platforms.** Each stopping train holds its platform for its dwell time plus 60 seconds. With the default stop of 30 seconds that is 40 trains an hour on one platform track. A train that doesn't stop holds it for 40 seconds.
 
-**Where a line ends.** A train that turns round at a dead end holds the platform for its turnaround plus 60 seconds. Without a terminal its trains use one platform, so with the default turnaround of 3 minutes that is 15 trains an hour. With a [terminal](station-upgrades.md) on double track they use both platforms: 30 trains an hour. A short turnaround doesn't help past a point: a turn is never counted as quicker than 200 seconds. At a station with track past it, a terminal adds sidings for turning.
+**Turning.** A train that turns round at a station, where a line ends or where it reverses partway, holds one platform for its turnaround plus 60 seconds. With the default turnaround of 3 minutes that is 15 trains an hour. A [terminal](station-upgrades.md) turns them on both platforms: 30 trains an hour. A short turnaround doesn't help past a point: a turn is never counted as quicker than 200 seconds. A quad station counts each pair of tracks on its own.
 
 **When it fills up.** Delay starts as a spot gets busy and grows fast near full. One line alone, with trains evenly spaced, has no delay until it is over what the spot can take. Several lines meeting at one spot delay each other, and more so the more evenly mixed they are. Past 90% full the delay keeps climbing, and over full a queue builds.
 

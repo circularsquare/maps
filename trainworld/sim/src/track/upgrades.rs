@@ -54,17 +54,13 @@ pub fn building_price(m2: f64) -> f64 {
     BUILDING_PER_M2 * m2
 }
 
-/// Sidings a terminal turns trains in, pooled.
-pub const TERMINAL_SIDINGS: f64 = 2.0;
-/// The reversing-partway limiter's hold per train at a station with a terminal: 30 an hour a side.
-pub const TERMINAL_REVERSAL_S: f64 = 120.0;
 /// Least a turn holds, summed over the tracks it is pooled across (turnaround + margin, at least
 /// this): 18 an hour on one track, 36 on two (the Victoria line's two-platform termini), so a
 /// short turnaround never turns more than a real terminus does.
 pub const POOLED_TURN_MIN_S: f64 = 200.0;
 
-/// Occupancy per train of a turn pooled over `tracks` (a dead end's platform tracks, a terminal's
-/// sidings), from the line's turnaround plus `margin`.
+/// Occupancy per train of a turn pooled over `tracks` (the places a turning train can stand,
+/// `capacity::turn_places`), from the line's turnaround plus `margin`.
 pub fn pooled_turn_s(turnaround_s: f64, margin_s: f64, tracks: f64) -> f64 {
     (turnaround_s + margin_s).max(POOLED_TURN_MIN_S) / tracks.max(1.0)
 }

@@ -221,8 +221,11 @@ export function signOut() { tokenGone(); }
 
 /** Sign in, register or log in: the answer is a session. */
 export async function signIn(path: "signin" | "login" | "register", body: unknown) {
-  storeSession(await api<{ token: string; account: AccountView }>("POST", "noritetsu/" + path, body, { auth: false }));
+  storeSession(await api<{ token: string; account: AccountView }>("POST", "noritetsu/" + path + (path === "register" ? SITE : ""), body, { auth: false }));
 }
+
+/** Names this game in the account server's mails (T-3104); the accounts are shared with noritetsu. */
+export const SITE = "?site=trainsworld";
 
 /** Deleting asks again: the password, or a fresh Google credential for an account with none (shonei-server's checkReauth). */
 export async function deleteAccount(proof: { password: string } | { credential: string } = { password: "" }) {

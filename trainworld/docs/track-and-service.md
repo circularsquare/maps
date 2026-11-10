@@ -276,7 +276,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car, with no boarding cost (docs/demand-worldwide.md).
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
-  upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). With Tram picked, Snap to
+  upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
   tram tool Ctrl means nothing else) lays it, the streets a tram may follow tinted green over the map while it is on
   (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to
@@ -382,8 +382,13 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 #### Water, bridges and ramps
 
-- **No track at ground level over water** (level 0 is invalid where the water mask says water);
-  bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
+- **No track at ground level over water** (level 0 is invalid where the water mask says water), except street
+  tram track (T-3106): a street crosses water on a bridge, so `StreetTram` edges may run at level 0 over water,
+  and drawing it lays no ramps (the sim does not know which stretches of the street are bridge, so all street
+  tram edges are exempt). Tram track off the street, street track reshaped by hand (it becomes `Tram`) and
+  rail keep the rule, and so does a station over water, whatever the track. Rebuilding applies the same
+  check: street tram track rebuilt as tram track or rail at ground level over water is refused.
+  Bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
   crosses those at grade (notes/T-030.md). Outside every pack's mask the world's coarse mask
   decides (T-1285, zones.md 6): the sea and large lakes in cells of 1/60 degree, so open sea between
@@ -510,11 +515,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   final and refunds nothing. Saved as bits 4 to 7 of the station's node flags (old readers ignore
   them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
   changes keep them. No upkeep.
-  - **Terminal** (turnback sidings): trains ending there use both platforms (T-2986, Anita
-    2026-11-10: without one a line's end turns on one platform, 6.2). At a dead end that is the
-    whole effect; at a station with track past it a line turning there holds its platforms only
-    for the dwell and turns in two sidings past the platform (6.2): 30 an hour at the default
-    turnaround either way. The
+  - **Terminal** (turnback sidings): a train turning at the station (a line's end or a reversal
+    partway) is pooled over its platforms instead of holding one: 30 an hour a pair of tracks at the
+    default turnaround, where without one it is 15 (6.2; T-3107, Anita 2026-11-10: a dead end and a
+    through station turn alike, and "terminal = 30 trains an hour" is all a player needs). The
     map draws no sidings and no train past the platform (T-3053); it draws the box's two ends as thick dark bars
     reaching a little past its sides, like buffer stops (T-1416).
   - **Passing tracks** (T-2231, notes/T-2228.md; bit 8): a second platform track each way, the
@@ -617,39 +621,23 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train
   holds one of two platform tracks, (dwell + 60 s) / 2 pooled, and a train that does not stop
   holds none.
-- dead-end terminus: max(layover + 60 s, 200 s) / the platform tracks it turns on (a two-track
-  terminus with 3 min turnaround: 30/h; never more than 18 an hour on one track or 36 on two,
-  the Victoria line's best, however short the turnaround; `upgrades::pooled_turn_s`). Both
-  constructed platform tracks only at a station with a **terminal**, otherwise one, so one train
-  stands there at a time (T-2986, `capacity::dead_end_places`, Anita 2026-11-10: players took the
-  terminal to mean both platforms): 15/h at 3 minutes. A double-track station dead end without one
-  is its own kind (14, "Try: build a terminal"). A bare track end has no station, so one. Unused
-  blueprint extensions add no active platform capacity.
-- a station with a **terminal** (T-1281): a line turning there (ending, or reversing partway)
-  holds its arrival and departure platforms for dwell + 60 s each, and the terminal's sidings
-  for max(turnaround + 60 s, 200 s) / 2, pooled: 30 an hour at 3 minutes, 36 at 2. It still
-  crosses the other track (the 90 s move below). A dead end keeps its pooled rule, over both
-  platforms with the terminal.
-- double-track station reversal: 90 s per crossing move. Reversals share their arrival
-  platform with same-direction traffic and cross opposite-direction through trains or reversals.
-  Each move receives only the extra queue from crossing traffic, subtracting its own-move
-  baseline; independent opposing through trains do not compete. No crossover conflict applies
-  in a demand level with no reversing service.
-- a line reversing partway (T-797) uses what a short turn at that station would: at a through
-  station its arrival platform for turnaround + 60 s and the crossover above, at a dead end the
-  pooled terminus, and at a bare track end the same pooled terminus over the stub's tracks, with one
-  side for the limiter below. It is no junction move and no through train there, and no track section joins
-  across it. On top, a stopgap limiter per station and arrival side (`REVERSAL_LIMIT_S`): 300 s per
-  reversing train, so at most 12 reversals an hour a side; 120 s (30 a side) at a station with a
-  terminal (`TERMINAL_REVERSAL_S`). Both directions of a line reversing at a
-  station usually arrive on the same side, so one such line runs every 10 minutes each way at best;
-  in its queueing delay a line's two directions count as one stream (one timetable), so a line
-  alone there waits only once it is over the limit.
+- turning at a station (T-3107, Anita 2026-11-10: a dead end and a through station are the same to
+  the game; no player text mentions a dead end): a train ending its line there or reversing partway
+  holds one place for max(turnaround + 60 s, 200 s), pooled over the places the station has
+  (`capacity::turn_places`, `upgrades::pooled_turn_s`). Without a terminal that is one platform track
+  of each pair: 15 an hour at the default 3 minutes. With a **terminal** it is every platform track:
+  30 an hour a pair at 3 minutes, 36 at 2 (never counted quicker than 200 s, the Victoria line's
+  best). A quad station has two pairs, so it takes twice as many. The turn holds no platform and
+  crosses no other track: through trains' platform holds and junction moves are unchanged, and no
+  limiter caps reversing partway. A track end with no station has one place. A reversing line's
+  two directions are two streams; no track section joins across the turn. Unused blueprint
+  extensions add no active platform capacity. All of it is wire kind 3, so the hint is "build a
+  terminal" without one and "turn some trains at another station" with one.
 - a loop line (T-798): a circle's first stop is a stop on the way round (dwell + 60 s on its arrival
   platform, the move from its last path entry into its first a junction move, sections joined across
-  it); the hold there to the headway is not counted. A balloon's first stop is a terminus as any
-  line's end (short turn or pooled dead end), with no reversing limiter. The loop itself is plain
-  track, so a balloon has no turnback limit (about 34 an hour at 80 km/h).
+  it); the hold there to the headway is not counted. A balloon's first stop turns as any
+  line's end. The loop itself is plain track, so a balloon has no turnback limit (about 34 an hour
+  at 80 km/h).
 - junction move, with the moves it crosses; flat crossing, all moves: 90 s (30 s for a tram's own
   passes, and a tram's crossing of a train route loads only that tram's resource, above)
 
@@ -744,8 +732,7 @@ expresses.
 #### Capacity limits in the clock worker
 
 **No resource carries more trains than its capacity** (T-517). Whole-line fleets are cut to fit:
-on every resource but a station crossover (whose load counts through trains that never meet),
-`rho` stops at 100%. Where the lines a resource carries want more, each line's rate is scaled down
+on every resource `rho` stops at 100%. Where the lines a resource carries want more, each line's rate is scaled down
 in proportion to the rate its fleet would give, until the first resource it uses is full
 (progressive filling, `Capacity::fill`). The trains that do not fit wait at the ends of the line
 (the hand-over below sends them out of service), so a fleet past capacity buys no shorter headway
@@ -784,13 +771,9 @@ utilisation ("shared track at 81% of capacity", ">100%" when over), its trains a
 most it takes ("20/25 trains per hour"), and the wait per train at the level in force ("at high
 demand, slows trains by 1m21s"; no line without a wait). Each resource has a kind the app words by
 (`Capacity::wire_kind`, `game/capacityKinds.ts`, the hover's word in brackets): track, single track,
-platform, terminus, junction, flat crossing, a line turning on a through station's platform ("trains
-turning on the platform": the line ends there and holds the platform for its turnaround plus 60 s;
-helped by building a terminal there), track several lines run over ("shared track"), a turn across
-the other track at a through station ("trains turning across the track"), the limiter on reversing
-partway ("trains reversing"; "Reversing at Nerul Village is full" in the line panel), a
-terminal's sidings (T-1281), a dead end with no terminal turning on one platform (T-2986, kind 14,
-"terminus", whose fix is the terminal), and a **merge** (T-2185, wire kind 12, "merge"): shared double track
+platform, turning (kind 3, the pooled turn of 6.2, worded "Turning at Nerul Village is full"; T-3107
+folded the older kinds 6, 8, 9, 10 and 14 into it, and they are no longer made), junction, flat
+crossing, track several lines run over ("shared track"), and a **merge** (T-2185, wire kind 12, "merge"): shared double track
 whose lines come onto it from two or more edges at one node (a line turning back there, or starting
 there, joins nothing). Its trains wait for it at that node, so its point is the node, where they
 stand; other track sits midway along its first edge. On a Y two lines run, the way towards the
@@ -924,7 +907,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   row is the cycle's first stop, so the next stop becomes the first), the route between its neighbours is found again, and the
   two visits either side of a removed turn become one. Refused below two stations or with no route. `passed_stations` on a manual line also
   lists a station the route runs over that is a stop of another visit, once per leg (the map's empty circles). A reversal at a listed stop is a terminus: the
-  platform and turnback of a line end, with no reversal limiter (`build_nodes` skips `limiter`), and the
+  turn of a line end, and the
   app draws no U-turn icon on the line. `set_manual(false)` folds a plain out-and-back list (`folded`: it reads the same both ways)
   into the open line, both ways again; any other list stays as it is, a normal line with those stops (a turned line keeps its loop). The
   route between consecutive stops of a manual line turns back at a listed stop at no cost (`route_hops_turn`, 0 s; the search's

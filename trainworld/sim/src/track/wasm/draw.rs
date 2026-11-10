@@ -406,6 +406,10 @@ impl TrackApi {
     /// edit fails and says why (`bridge_refusal`). `lift`: which ends are new nodes, free to stay
     /// up on the bridge where they are over water (T-1269).
     pub(super) fn bridged(&mut self, shape: &[Pi], lift: [bool; 2]) -> Option<Vec<Pi>> {
+        // T-3106: street tram track follows a street, which crosses water on a bridge of its own
+        if self.route_kind == TrackKind::StreetTram {
+            return None;
+        }
         let scaled = self.w.net.frame().scaled();
         let mask = self.w.net.water_mask.as_ref();
         // a snapped real route (T-727d) bridges each river on its own
@@ -487,8 +491,9 @@ impl TrackApi {
         let last = now.len() - 1;
         let shape: Vec<Pi> = now.iter().enumerate().map(|(i, p)| if i == 0 || i == last { *p } else { Pi { level: 0, ..*p } }).collect();
         let water = bridge::water(net.water_mask.as_ref());
+        let street = d.kind == TrackKind::StreetTram;
         let near_end = |f: &geom::Fit, fine: bool| {
-            let mut s = water(f, fine);
+            let mut s = if street { vec![] } else { water(f, fine) };
             s.extend(held.iter().copied());
             s.push([f.len - 1e-3, f.len]);
             s.sort_by(|a, b| a[0].total_cmp(&b[0]));
@@ -543,7 +548,7 @@ impl TrackApi {
         }
         self.ramp_found = true;
         let up = (base >= 0) == (self.ramp_try == Ramp::First);
-        let wet = up && base == 0;
+        let wet = up && base == 0 && self.route_kind != TrackKind::StreetTram;
         let water = bridge::water(net.water_mask.as_ref());
         // seen from `ramp_over`, the route runs at level 0. T-1708: first with room for a station
         // beside each crossed track's station, then without.

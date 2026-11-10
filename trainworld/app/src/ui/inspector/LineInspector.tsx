@@ -107,7 +107,7 @@ function heldFrom(v: Float64Array, vehicle: Vehicle): Held[] {
     if (!(wait > 0)) return;
     const s = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y);
     const name = s?.name ?? "";
-    out.push({ d, wait, place: fullTitle(kind, name, vehicle), ...fullParts(kind, name, vehicle), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most, vehicle) });
+    out.push({ d, wait, place: fullTitle(kind, name, vehicle), ...fullParts(kind, name, vehicle), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most, vehicle, hasUpgrade(node >= 0 ? st.get(node)?.upgrades : undefined, UPGRADE.terminal)) });
   });
   return out;
 }

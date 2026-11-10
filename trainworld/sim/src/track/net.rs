@@ -2047,7 +2047,9 @@ impl Network {
             out.push(Issue::Geom { edge: e, issue });
         }
         let vert = self.edge_vert(e);
-        for w in self.edge_water(e) {
+        // T-3106: street tram track runs at ground level over the bridge its street has
+        let street = self.edge_kind[e as usize] == TrackKind::StreetTram;
+        for w in self.edge_water(e).iter().filter(|_| !street) {
             // Ground level over water: anything nearer the ground than half a level.
             let mut s = w[0];
             while s <= w[1] {

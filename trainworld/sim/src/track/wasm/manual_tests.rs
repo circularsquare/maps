@@ -110,17 +110,17 @@ fn a_manual_line_writes_the_whole_cycle_and_folds_back() {
 }
 
 #[test]
-fn a_reversal_on_a_manual_line_has_no_limiter() {
+fn a_reversal_on_a_manual_line_turns_as_a_line_end_does() {
     let (w, [sa, x1, _, sb]) = detour();
     let mut a = api(w);
     let id = a.new_line_id();
     assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.order_stops(id, &[x1, sa, sb]), 0, "{}", a.issues());
     assert_eq!(a.line_reversals(id), [1.0]);
-    assert!(limiter_at(&a, sa), "the stopgap limiter on a reversal at a stop");
+    assert!(!limiter_at(&a, sa), "no reversal limiter any more (T-3107): the turn is the station's pool");
     assert_eq!(a.set_manual(id, true), 0, "{}", a.issues());
     assert!(a.line_reversals(id).contains(&1.0), "the train still turns at A");
-    assert!(!limiter_at(&a, sa), "a manual line's reversals are termini");
+    assert!(!limiter_at(&a, sa));
     // the flag survives a save and load
     let bytes = a.save();
     let mut b = api(world());
