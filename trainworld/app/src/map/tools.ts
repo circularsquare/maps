@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { addVisitAfter, ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { addVisitAfter, ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -253,7 +253,7 @@ export class Tools {
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; singleTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
     // asked again when more of them land
     let roadsSent = false;
@@ -990,7 +990,7 @@ export class Tools {
 
   private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside };
+    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside };
   }
 
   /** T-2927: the pointer's spot for the street snap: the track it would end on, else where it is. */
@@ -1017,7 +1017,7 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek() };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek() };
   }
 
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */

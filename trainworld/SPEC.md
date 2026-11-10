@@ -238,7 +238,7 @@ piece of track [T-244]; the Select tool picks many at once, blueprint or else co
 disable, re-level or remove together, and rebuild constructed track in place at another level or track type for its full new price [T-333, T-815, T-829, T-3059]. A station clicked on quad track goes on the pair clicked only; the game
 adds no crossovers, so the player draws crossing track where lines should change pairs (saves keep
 their crossovers) [T-338, T-733, T-1687, T-1688]. Single
-track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has
+track is in the Build tab's Tracks row again [T-3093]. Each line has
 a train length in cars, by default the most its shortest platform fits (20 m cars) and never more
 [T-733], and ordinary trains (160 km/h) or high-speed trains (320 km/h on high-speed track, cars
 1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop or a bare track end, standing its turnaround there, at most 12 reversals an

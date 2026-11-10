@@ -11,7 +11,7 @@ import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/pal
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setTrackType, shade, snapBeside, snapReal, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -53,9 +53,10 @@ function TrackBar() {
   const tt = trackType.value;
   const tram = tt === "tram";
   const q = quadTrack.value;
+  const one = singleTrack.value;
   const m = moneyState.value;
-  const mult = trackMult(lv, tt, q);
-  const upkeep = upkeepAt(lv, tt, m, q);
+  const mult = trackMult(lv, tt, q, one);
+  const upkeep = upkeepAt(lv, tt, m, q, one);
   const [open, setOpen] = useState<"level" | "type" | "speed" | null>(null);
   const toggle = (k: "level" | "type" | "speed") => setOpen(open === k ? null : k);
   return (
@@ -63,22 +64,24 @@ function TrackBar() {
       <div class="tool-bar track-bar" role="group" aria-label={t("toolBar.track")} style={{ "--mode": CLICK_MODE_COLOURS.track }}>
         <div class="tb-row">
           <span class="muted tb-wide">{t("toolBar.level")}</span>
-          <div class="tb-wide"><LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q)} onPick={(l) => (buildLevel.value = l)} /></div>
+          <div class="tb-wide"><LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q, one)} onPick={(l) => (buildLevel.value = l)} /></div>
           <button class="btn lv on tb-narrow tb-level" style={{ "--lc": LEVEL_COLOURS[lv], "--lk": inkOn(LEVEL_COLOURS[lv]) }}
-            data-tip={levelTip(lv, tt, m, q)} aria-label={t("toolBar.level")} aria-expanded={open === "level"} onClick={() => toggle("level")}>{levelLabel(lv)}</button>
+            data-tip={levelTip(lv, tt, m, q, one)} aria-label={t("toolBar.level")} aria-expanded={open === "level"} onClick={() => toggle("level")}>{levelLabel(lv)}</button>
           {!tram && <button class={"btn icon tb-ramp" + (autoRamp.value ? " on" : "")} aria-label={t("toolBar.ramp")} aria-pressed={autoRamp.value}
             data-tip={t("toolBar.rampTip")}
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>}
           <p class="muted small price tb-wide" data-tip={t(tram ? "toolBar.priceTipTram" : "toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr", street: tram && snapStreets.value }) + (upkeep ? "\n" + upkeep : "")}>
-            {tRich("toolBar.price", { price: millions(unitPrice(lv, tt, q)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt, q) })}</span> })}
+            {tRich("toolBar.price", { price: millions(unitPrice(lv, tt, q, one)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt, q, one) })}</span> })}
           </p>
         </div>
         <div class="tb-row">
           <div class="tb-wide"><Segmented<TrackType> options={trackTypes()} value={tt} onChange={setTrackType} /></div>
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
           {!tram && <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
-            <button class={"btn icon" + (!q ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q} data-tip={t("toolBar.doubleTrack")}
-              onClick={() => setQuadTrack(false)}><Icon.tracks2 /></button>
+            <button class={"btn icon" + (one ? " on" : "")} aria-label={t("toolBar.singleTrack")} aria-pressed={one} data-tip={t("toolBar.singleTrack")}
+              onClick={() => setSingleTrack(true)}><Icon.tracks1 /></button>
+            <button class={"btn icon" + (!q && !one ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q && !one} data-tip={t("toolBar.doubleTrack")}
+              onClick={() => { setQuadTrack(false); setSingleTrack(false); }}><Icon.tracks2 /></button>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrack")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
           </div>}
@@ -109,7 +112,7 @@ function TrackBar() {
       </div>
       {open === "level" && (
         <div class="tool-bar-pop touch-levels">
-          <LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q)} onPick={(l) => { buildLevel.value = l; setOpen(null); }} />
+          <LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q, one)} onPick={(l) => { buildLevel.value = l; setOpen(null); }} />
         </div>
       )}
       {open === "type" && (

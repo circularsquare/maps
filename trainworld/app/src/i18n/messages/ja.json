@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}、高速線路} other {{level}}}",
   "toolBar.priceTipTram": "{level}、{street, select, true {道路上のトラムの線路} other {トラムの線路}}",
   "toolBar.quadTrack": "複々線",
+  "toolBar.singleTrack": "単線",
   "toolBar.ramp": "交差する線路を乗り越える",
   "toolBar.rampTip": "同じ高さで交差する線路を、自動で勾配をつけて乗り越えようとします。",
   "toolBar.regular": "通常",

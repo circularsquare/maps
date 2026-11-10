@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}，高速轨道} other {{level}}}",
   "toolBar.priceTipTram": "{level}，{street, select, true {街道有轨电车轨道} other {有轨电车轨道}}",
   "toolBar.quadTrack": "四线",
+  "toolBar.singleTrack": "单线",
   "toolBar.ramp": "自动抬升越过交叉的轨道",
   "toolBar.rampTip": "遇到同一层级的交叉轨道时，自动尝试抬升越过。",
   "toolBar.regular": "普通",

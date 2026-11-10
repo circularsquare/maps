@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, скоростной путь} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {трамвайный путь по улице} other {трамвайный путь}}",
   "toolBar.quadTrack": "Четыре пути",
+  "toolBar.singleTrack": "Однопутный участок",
   "toolBar.ramp": "Подъём над пересекаемым путём",
   "toolBar.rampTip": "Автоматически пытаться поднять путь над пересекаемыми путями на том же уровне.",
   "toolBar.regular": "Обычный",

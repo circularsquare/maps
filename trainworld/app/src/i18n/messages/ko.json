@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, 고속 선로} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {도로 위 트램 선로} other {트램 선로}}",
   "toolBar.quadTrack": "복복선",
+  "toolBar.singleTrack": "단선",
   "toolBar.ramp": "경사로로 교차 선로 넘기",
   "toolBar.rampTip": "같은 레벨의 선로와 교차하면 자동으로 경사로를 만들어 넘어가려고 해요.",
   "toolBar.regular": "일반",

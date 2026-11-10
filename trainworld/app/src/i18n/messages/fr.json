@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, voie à grande vitesse} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {voie de tramway sur rue} other {voie de tramway}}",
   "toolBar.quadTrack": "Voie quadruple",
+  "toolBar.singleTrack": "Voie unique",
   "toolBar.ramp": "Rampe au-dessus des voies croisées",
   "toolBar.rampTip": "Tente de passer automatiquement par-dessus les voies croisées au même niveau.",
   "toolBar.regular": "Normale",

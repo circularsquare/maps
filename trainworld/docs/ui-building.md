@@ -105,10 +105,11 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   at 0.5x [T-2744] (`costTint` in
   `map/trackTagRows.ts`); its hover names the level [T-1159] (with ", high-speed track" after it)
   and gives the same upkeep line as the level buttons [T-2006].
-  The second row: **Regular** or **High speed** track [T-255, T-817; no single track, T-733], the
-  selection bar's words, then two icon buttons, **Double track** (two lines) and **Quad track** (four
-  lines) [T-2931; the choice left in T-2282 and is back by request]. Quad is two double tracks' price (2x the
-  cost and upkeep shown) and is never high speed: picking one clears the other. A browser remembers the
+  The second row: **Regular** or **High speed** track [T-255, T-817], the
+  selection bar's words, then three icon buttons, **Single track** (one line), **Double track** (two lines)
+  and **Quad track** (four lines) [T-2931, T-3093]. Single is 0.6x the cost and the single-track upkeep shown;
+  quad is two double tracks' price (2x the cost and upkeep shown). Single and quad are never high speed
+  (picking either switches to Regular) and picking one clears the other. Tram has no count. A browser remembers the
   choice (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
   Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength

@@ -50,6 +50,7 @@ export const Icon = {
   // track ramping up over another line, seen side on (T-1615)
   autoRamp: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5h2.5l3-6h2l3 6h2.5" /><circle class="solid" cx="8" cy="12.5" r="1.6" /></svg>,
   // the track tool's two or four tracks, side on to their direction (T-2931)
+  tracks1: () => <svg class="tracks" viewBox="0 0 20 20"><path d="M10 3v14" /></svg>,
   tracks2: () => <svg class="tracks" viewBox="0 0 20 20"><path d="M6 3v14M14 3v14" /></svg>,
   tracks4: () => <svg class="tracks" viewBox="0 0 20 20"><path d="M4 3v14M8 3v14M12 3v14M16 3v14" /></svg>,
   undo: () => <svg viewBox="0 0 16 16"><path d="M5.5 4L2.5 7l3 3M3 7h6.5a3.5 3.5 0 010 7H7" /></svg>,

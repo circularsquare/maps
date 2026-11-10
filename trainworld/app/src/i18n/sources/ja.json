@@ -1965,6 +1965,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, high-speed track} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {tram track on streets} other {tram track}}",
   "toolBar.quadTrack": "Quad track",
+  "toolBar.singleTrack": "Single track",
   "toolBar.ramp": "Ramp over track you cross",
   "toolBar.rampTip": "Automatically try to ramp over crossed tracks at the same level.",
   "toolBar.regular": "Regular",

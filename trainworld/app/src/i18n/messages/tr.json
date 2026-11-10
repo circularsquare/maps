@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, yüksek hızlı ray} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {cadde üstü tramvay rayı} other {tramvay rayı}}",
   "toolBar.quadTrack": "Dörtlü hat",
+  "toolBar.singleTrack": "Tek hat",
   "toolBar.ramp": "Geçtiğin rayın üstünden rampayla geç",
   "toolBar.rampTip": "Aynı seviyede kesişen raylarda otomatik olarak rampayla geçmeyi dene.",
   "toolBar.regular": "Normal",

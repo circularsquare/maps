@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, Hochgeschwindigkeitsgleis} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {Straßenbahngleis auf Straßen} other {Straßenbahngleis}}",
   "toolBar.quadTrack": "Viergleisig",
+  "toolBar.singleTrack": "Eingleisig",
   "toolBar.ramp": "Rampe über gekreuzte Gleise",
   "toolBar.rampTip": "Versuche automatisch, gekreuzte Gleise auf gleicher Ebene mit einer Rampe zu überqueren.",
   "toolBar.regular": "Normal",

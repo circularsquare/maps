@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}，高速軌道} other {{level}}}",
   "toolBar.priceTipTram": "{level}，{street, select, true {街道路面電車軌道} other {路面電車軌道}}",
   "toolBar.quadTrack": "四線",
+  "toolBar.singleTrack": "單線",
   "toolBar.ramp": "以坡道跨越交叉的軌道",
   "toolBar.rampTip": "自動嘗試以坡道跨越同一高度上交叉的軌道。",
   "toolBar.regular": "一般",

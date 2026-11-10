@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, via de alta velocidade} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {via de bonde na rua} other {via de bonde}}",
   "toolBar.quadTrack": "Via quádrupla",
+  "toolBar.singleTrack": "Via única",
   "toolBar.ramp": "Rampa sobre a via que você cruza",
   "toolBar.rampTip": "Tenta fazer rampa automaticamente sobre vias cruzadas no mesmo nível.",
   "toolBar.regular": "Comum",

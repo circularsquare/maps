@@ -1968,6 +1968,7 @@
   "toolBar.priceTip": "{hsr, select, true {{level}, vía de alta velocidad} other {{level}}}",
   "toolBar.priceTipTram": "{level}, {street, select, true {vía de tranvía en la calle} other {vía de tranvía}}",
   "toolBar.quadTrack": "Vía cuádruple",
+  "toolBar.singleTrack": "Vía única",
   "toolBar.ramp": "Sube en rampa sobre la vía que cruzas",
   "toolBar.rampTip": "Intenta subir en rampa de forma automática sobre las vías cruzadas al mismo nivel.",
   "toolBar.regular": "Normal",

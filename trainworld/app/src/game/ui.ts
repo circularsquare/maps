@@ -353,6 +353,18 @@ export function setQuadTrack(on: boolean) {
   if (on && tramTrack.peek()) return;
   batch(() => {
     quadTrack.value = on;
+    if (on) singleTrack.value = false;
+    if (on && highSpeed.peek()) setTrackType(2);
+  });
+}
+/** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; never high-speed or tram. */
+export const singleTrack = signal(saved.build?.tracks === 1 && saved.build?.hsr !== true && saved.build?.tram !== true);
+export function setSingleTrack(on: boolean) {
+  if (on === singleTrack.peek()) return;
+  if (on && tramTrack.peek()) return;
+  batch(() => {
+    singleTrack.value = on;
+    if (on) quadTrack.value = false;
     if (on && highSpeed.peek()) setTrackType(2);
   });
 }
@@ -371,6 +383,7 @@ export function setTrackType(t: TrackType) {
   batch(() => {
     if (t === "tram") {
       quadTrack.value = false;
+      singleTrack.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
       highSpeed.value = false;
@@ -386,6 +399,7 @@ export function setTrackType(t: TrackType) {
     }
     if (t === "hsr") {
       quadTrack.value = false;
+      singleTrack.value = false;
       designBeforeHsr = designSpeed.peek();
       highSpeed.value = true;
       designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
@@ -448,7 +462,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {
