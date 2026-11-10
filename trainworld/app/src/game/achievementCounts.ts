@@ -8,6 +8,7 @@
 import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { browserId, quiet } from "./playtime";
+import { tNumber } from "../i18n";
 
 type Call = <T>(method: string, path: string, body?: unknown) => Promise<T>;
 
@@ -60,10 +61,10 @@ export function loadAchievementCounts() {
     .catch(() => { askedAt = -Infinity; });
 }
 
-/** "12%", or "<1%" under one; null while the counts are unknown or the players too few to say. */
+/** "12%", or one significant digit under one ("0.03%"); null while the counts are unknown or the players too few to say. */
 export function shareOfPlayers(key: string): string | null {
   const c = achievementCounts.value;
   if (!c || c.players < MIN_PLAYERS) return null;
-  const p = Math.min(100, (100 * (c.counts[key] ?? 0)) / c.players);
-  return p < 1 ? "<1%" : `${Math.round(p)}%`;
+  const f = Math.min(1, (c.counts[key] ?? 0) / c.players);
+  return tNumber(f, f < 0.01 ? { style: "percent", maximumSignificantDigits: 1 } : { style: "percent", maximumFractionDigits: 0 });
 }

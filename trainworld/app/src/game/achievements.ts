@@ -92,7 +92,7 @@ export const EUROPE_SHARE = 5, EUROPE_PEOPLE = 709_948_408;
 export const NATIONS: { cc: NationCode; share: number; people: number }[] = [
   { cc: "JP", share: 10, people: 126_117_819 }, { cc: "US", share: 2, people: 327_534_599 }, { cc: "ES", share: 3, people: 45_649_934 },
   { cc: "GB", share: 4, people: 66_408_930 }, { cc: "IT", share: 3, people: 59_366_251 }, { cc: "DE", share: 4, people: 83_346_335 },
-  { cc: "KR", share: 8, people: 51_205_458 }, { cc: "TW", share: 5, people: 23_752_850 }, { cc: "CN", share: 1, people: 1_412_121_555 },
+  { cc: "KR", share: 10, people: 51_205_458 }, { cc: "TW", share: 10, people: 23_752_850 }, { cc: "CN", share: 2, people: 1_412_121_555 },
   { cc: "ID", share: 2, people: 267_744_927 }, { cc: "MX", share: 2, people: 126_014_694 }, { cc: "BR", share: 2, people: 201_987_873 },
   { cc: "AU", share: 4, people: 24_664_377 }, { cc: "TR", share: 2, people: 87_720_246 },
 ];

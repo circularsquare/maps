@@ -120,7 +120,7 @@
   "achievements.when": "When an achievement was earned, on the game clock. weekday: \"Monday\"; day: 406; time: \"14:08\".",
   "achievementsView.day": "Right-hand figure of a first-achievement row in the achievements view, the game day it was reached. day: the day number, \"12\".",
   "achievementsView.firstReached": "Hover on a reached first-achievement row. text: what was done, a sentence such as \"Opened your first line\"; when: the date reached, \"Mar 4\" style as the game words it.",
-  "achievementsView.players": "Last line of the hover on an achievement, once the server has the counts. share: a percent such as \"12%\" or \"<1%\".",
+  "achievementsView.players": "Last line of the hover on an achievement, once the server has the counts. share: a percent such as \"12%\" or \"0.03%\".",
   "achievementsView.tierReached": "Hover on a medal of a tiered achievement that has been reached. text: the tier, such as \"Connect 5 cities\"; when: the date reached.",
   "achievementsView.title": "Title of the achievements view.",
   "airportMarks.hover": "Hover tag over an airport bubble on the map, above a mode bar. trips: a rounded count, \"1.2M\"; when: a day phrase, \"on a weekday\" or \"per day\".",
