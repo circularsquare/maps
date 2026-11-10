@@ -899,6 +899,8 @@ void main() {
   bool boat = rawCars < 0.0;
   bool bus = !boat && rawCars < 0.99;
   float cars = boat ? 1.0 : max(1.0, rawCars);
+  // T-2957: a bus is one straight body; its minimum on-screen size is 0.585 as long and 0.9 as wide, real scale is as it was
+  const float BUS_LEN = 0.585;
   float carM = boat ? -rawCars * 20.0 : bus ? rawCars * 20.0 : 20.0;
   v_boat = boat ? 1.0 : 0.0;
   int car = u_detail ? gl_VertexID / 6 : 0;
@@ -913,8 +915,8 @@ void main() {
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
   // a bus (T-1798) is drawn 1.4 times its size from a distance and 1.2 times its real one close up
-  vec2 px = max(bus ? u_min_px * 0.77 : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
-  if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - (tram ? 0.0 : max(1.5 * u_dpr, kM * u_px_per_unit)));
+  vec2 px = max(bus ? u_min_px * vec2(0.77 * BUS_LEN, 0.77 * 0.9) : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
+  if (u_detail) px.x = max(bus ? 2.8 * BUS_LEN * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - (tram ? 0.0 : max(1.5 * u_dpr, kM * u_px_per_unit)));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
   vec4 lb = laneAt(L, carD);
@@ -957,7 +959,7 @@ void main() {
   // its middle, as a station's platform does (SHAPE_GLSL); a car close up is short enough to stay
   // straight. k: curvature, 1/px, towards +nrm; ends: where the ends lie across the frame.
   float k = 0.0, ends = 0.0;
-  if (!u_detail && sl > 1e-3) {
+  if (!u_detail && !bus && sl > 1e-3) {
     float hc = 0.5 * sl, s = dot(c.xy / c.w * half_vp - 0.5 * (bs + fs), nrm);
     k = clamp(-2.0 * s / (hc * hc + s * s), -2.0 / px.x, 2.0 / px.x);
     ends = -s;

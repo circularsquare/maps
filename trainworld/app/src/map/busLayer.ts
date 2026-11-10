@@ -36,7 +36,7 @@ import type { TipLine } from "./networkTips";
 export const BUS_RING_ZOOM = 13;
 export const BUS_END_ZOOM = 11;
 /** A bus line is this share of a rail line's width, its casing this share of a rail line's. */
-const WIDTH_SHARE = 0.5;
+const WIDTH_SHARE = 0.45;
 const CASING_SHARE = 0.6;
 /** Ground metres each side of the route that its riders walk from (demand's corridor). */
 export const CORRIDOR_M = 300;

@@ -389,7 +389,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 
 ## Bus lines
 
-A bus line (T-1464) is drawn by its own pass under rail track: half a rail line's width in its
+A bus line (T-1464) is drawn by its own pass under rail track: 0.45 of a rail line's width in its
 colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
 In the Traffic view a running bus or ferry line is drawn as wide as a rail line with as many riders,
 stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
@@ -408,7 +408,7 @@ line" on a stop. A click selects the line; rail wins where both are under the po
 two or more bus lines have a stop (marks drawn on top of each other) selects the stop instead (T-2949): its
 panel names it (the nearest station's, else "Bus stop") and lists the lines that stop there, a click on one
 selecting that line; the map draws nothing selected. A bus is one
-short narrow car, drawn 1.4 times its old size from a distance (0.77 of a train's width) and 1.2 times
+short narrow car, one rigid straight body that points along the route (never bending or turning sideways in a corner), drawn at its minimum screen size from a distance (0.45 of a train's length and 0.69 of its width, T-2957) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the
 map's end squares too), a rail line's a circle. A new bus line is named "Bus n" (the next free
 number) and shows n as its symbol.
