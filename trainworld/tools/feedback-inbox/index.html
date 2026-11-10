@@ -49,6 +49,9 @@ textarea { display: block; width: 100%; padding: 8px; min-height: 80px; resize: 
 .msg .meta { font-size: 13px; color: var(--dim); }
 .msg.anita .meta b { color: var(--mine); font-weight: 600; }
 .msg .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg .tr { margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--line); }
+.msg .tr .note { margin: 0 0 2px; }
+.trbtn { font-size: 12px; padding: 0 8px; }
 dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 12px; font-size: 13px; margin: 10px 0; }
 dt { color: var(--dim); }
 dd { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow-y: auto; }
@@ -241,9 +244,13 @@ function renderThread() {
   const actions = el("div", { class: "actions" },
     el("button", { type: "button", text: t.status === "open" ? "Close" : "Reopen", onclick: () => setStatus(t.id, t.status === "open" ? "closed" : "open") }),
     el("button", { type: "button", text: "Delete", onclick: askDelete }));
-  const msgs = t.messages.map((m) => el("div", { class: "msg " + m.from },
-    el("div", { class: "meta" }, el("b", { text: m.from === "anita" ? "Anita" : who }), "  " + when(m.at)),
-    el("div", { class: "text", text: m.text })));
+  const msgs = t.messages.map((m) => {
+    const box = el("div", { class: "msg " + m.from },
+      el("div", { class: "meta" }, el("b", { text: m.from === "anita" ? "Anita" : who }), "  " + when(m.at)),
+      el("div", { class: "text", text: m.text }));
+    if (m.from !== "anita") addTranslate(box, m.text);
+    return box;
+  });
   const reply = el("textarea", { id: "replyText", "aria-label": "Reply" });
   const send = el("button", { type: "button", text: "Send reply", onclick: () => sendReply(t.id, reply) });
   box.replaceChildren(...[
@@ -254,6 +261,71 @@ function renderThread() {
     el("div", { id: "shot" }),
   ].filter(Boolean));
   if (t.shot) loadShot(t.id);
+}
+
+// ---- Translation (T-3031): Chrome's on-device LanguageDetector and Translator (Chrome 138+). Nothing leaves
+// this machine. The first click per language downloads a model (Chrome shows no prompt; the note below the
+// message counts the percent). Without the APIs, a link opens Google Translate with the text filled in.
+const langName = (() => { try { const n = new Intl.DisplayNames(["en"], { type: "language" }); return (c) => { try { return n.of(c) || c; } catch { return c; } }; } catch { return (c) => c; } })();
+const canTranslate = "Translator" in self && "LanguageDetector" in self;
+const translated = new Map(); // text -> { lang, english }
+let detectorP = null;
+const detector = () => (detectorP ||= LanguageDetector.create().catch((e) => { detectorP = null; throw e; }));
+const isEnglish = (l) => !l || l === "und" || l.split("-")[0] === "en";
+const googleLink = (text) => "https://translate.google.com/?sl=auto&tl=en&op=translate&text=" + encodeURIComponent(text.slice(0, 1500));
+
+async function detectLang(text) {
+  const r = await (await detector()).detect(text);
+  return r.length ? r[0].detectedLanguage : "und";
+}
+async function translateText(text, lang, note) {
+  const hit = translated.get(text);
+  if (hit) return hit.english;
+  const opts = { sourceLanguage: lang, targetLanguage: "en" };
+  const tr = await Translator.create({
+    ...opts,
+    monitor(m) { m.addEventListener("downloadprogress", (e) => { note.textContent = `Downloading the ${langName(lang)} model, ${Math.round(e.loaded * 100)}%`; }); },
+  });
+  const english = await tr.translate(text);
+  translated.set(text, { lang, english });
+  return english;
+}
+
+function addTranslate(box, text) {
+  if (!text || !text.trim()) return;
+  const slot = el("div", { class: "tr" });
+  box.append(slot);
+  const fallback = () => slot.replaceChildren(el("a", { href: googleLink(text), target: "_blank", rel: "noopener noreferrer", text: "Translate in Google Translate" }));
+  if (!canTranslate) { fallback(); return; }
+  const show = (lang, english) => slot.replaceChildren(
+    el("div", { class: "note", text: `English, from ${langName(lang)}` }), el("div", { class: "text", text: english }));
+  const run = async () => {
+    const note = el("div", { class: "note", text: "Translating" });
+    slot.replaceChildren(note);
+    try {
+      const lang = await detectLang(text);
+      if (isEnglish(lang)) { slot.replaceChildren(el("div", { class: "note", text: "Looks like English" })); return; }
+      const av = await Translator.availability({ sourceLanguage: lang, targetLanguage: "en" });
+      if (av === "unavailable") { slot.replaceChildren(el("div", { class: "note", text: `Chrome can't translate ${langName(lang)} here. ` }, el("a", { href: googleLink(text), target: "_blank", rel: "noopener noreferrer", text: "Google Translate" }))); return; }
+      show(lang, await translateText(text, lang, note));
+    } catch (e) {
+      slot.replaceChildren(el("div", { class: "note bad", text: "Translation failed: " + (e.message || e) + ". " }), el("a", { href: googleLink(text), target: "_blank", rel: "noopener noreferrer", text: "Google Translate" }));
+    }
+  };
+  const button = () => slot.replaceChildren(el("button", { type: "button", class: "trbtn", text: "Translate", onclick: run }));
+  // models already on this machine: detect and translate without a click; otherwise a button (a download needs a click)
+  (async () => {
+    try {
+      const dav = await LanguageDetector.availability();
+      if (dav === "unavailable") { fallback(); return; } // this Chrome cannot run the on-device model
+      if (dav !== "available") { button(); return; }
+      const hit = translated.get(text);
+      const lang = hit ? hit.lang : await detectLang(text);
+      if (isEnglish(lang)) return;
+      if (hit) { show(lang, hit.english); return; }
+      if ((await Translator.availability({ sourceLanguage: lang, targetLanguage: "en" })) === "available") await run(); else button();
+    } catch { button(); }
+  })();
 }
 
 async function loadShot(id) {

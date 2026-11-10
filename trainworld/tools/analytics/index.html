@@ -80,11 +80,11 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 
   <h2>By day (UTC)</h2>
   <div class="legend">
-    <span><i style="border-color:var(--plays)"></i>plays</span>
     <span><i style="border-color:var(--browsers)"></i>browsers</span>
     <span><i style="border-color:var(--new);border-top-style:dashed"></i>new browsers</span>
+    <span><i style="border-color:var(--plays)"></i>accounts</span>
   </div>
-  <div id="chartwrap"><svg id="chart" viewBox="0 0 820 300" role="img" aria-label="Plays, browsers and new browsers per UTC day"></svg><div id="tip"></div></div>
+  <div id="chartwrap"><svg id="chart" viewBox="0 0 820 300" role="img" aria-label="Browsers, new browsers and accounts per UTC day"></svg><div id="tip"></div></div>
   <div class="sub" id="chartnote"></div>
 
   <h2>Total time played per browser</h2>
@@ -165,10 +165,9 @@ function renderNow(data) {
 function renderToday(data) {
   const key = new Date().toISOString().slice(0, 10);
   const d = data.days.find((x) => x.day === key);
-  const items = d
-    ? [["plays", d.plays], ["plays over 5 min", d.plays5min], ["minutes played", d.minutes], ["browsers", d.browsers], ["new browsers", d.newBrowsers]]
-    : [["plays", 0], ["plays over 5 min", 0], ["minutes played", 0], ["browsers", 0], ["new browsers", 0]];
-  $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${fmt(v)}</b><span>${l}</span></div>`).join("");
+  const x = d || { plays: 0, plays5min: 0, minutes: 0, browsers: 0, newBrowsers: 0 };
+  const items = [["plays", fmt(x.plays)], ["plays over 5 min", fmt(x.plays5min)], ["hours played", (x.minutes / 60).toFixed(1)], ["browsers", fmt(x.browsers)], ["new browsers", fmt(x.newBrowsers)]];
+  $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
 }
 
 let CITY = {};
@@ -328,8 +327,8 @@ function renderMap(data) {
   if (!mapReady) return;
   const { feats, missing } = bubbles(data);
   const max = feats.length ? feats[0].properties.w : 1;
-  const maxR = view.group === "city" ? 26 : 40;
-  map.setPaintProperty("pts", "circle-radius", ["max", 3, ["*", maxR / Math.sqrt(max), ["sqrt", ["get", "w"]]]]);
+  const maxR = view.group === "city" ? 36 : 56;
+  map.setPaintProperty("pts", "circle-radius", ["max", 1,["*", maxR / Math.sqrt(max), ["sqrt", ["get", "w"]]]]);
   map.getSource("pts").setData({ type: "FeatureCollection", features: feats });
   const unit = view.weight === "plays" ? "plays" : "minutes";
   $("mapnote").textContent = `${fmt(feats.length)} ${view.group === "city" ? "cities" : "countries"}, bubble area is ${unit}, all days kept.` +
@@ -339,7 +338,7 @@ function renderMap(data) {
 
 // ---- chart: three lines over UTC days, hover guide with a tip
 const W = 820, H = 300, M = { l: 52, r: 12, t: 10, b: 28 };
-const SERIES = [["plays", "plays", "var(--plays)", ""], ["browsers", "browsers", "var(--browsers)", ""], ["newBrowsers", "new browsers", "var(--new)", "5 4"]];
+const SERIES = [["browsers", "browsers", "var(--browsers)", ""], ["newBrowsers", "new browsers", "var(--new)", "5 4"], ["signedIn", "accounts", "var(--plays)", ""]];
 
 function niceMax(v) {
   const p = Math.pow(10, Math.floor(Math.log10(Math.max(v, 1))));
@@ -351,7 +350,10 @@ function renderChart(list) {
   const svg = $("chart");
   if (!list.length) { svg.innerHTML = ""; return; }
   const n = list.length;
-  const max = niceMax(Math.max(...list.map((d) => Math.max(d.plays, d.browsers, d.newBrowsers))));
+  // an older server has no per-day accounts: draw the other two lines and say so
+  const hasAcc = list.some((d) => typeof d.signedIn === "number");
+  const series = hasAcc ? SERIES : SERIES.slice(0, 2);
+  const max = niceMax(Math.max(...list.map((d) => Math.max(...series.map(([k]) => d[k] || 0)))));
   const x = (i) => M.l + (n === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (n - 1));
   const y = (v) => M.t + (1 - v / max) * (H - M.t - M.b);
   let s = "";
@@ -366,10 +368,10 @@ function renderChart(list) {
       s +=`<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${d.day.slice(5)}</text>`;
     }
   });
-  for (const [k, , col, dash] of SERIES) {
-    const pts = list.map((d, i) => `${x(i).toFixed(1)},${y(d[k]).toFixed(1)}`).join(" ");
+  for (const [k, , col, dash] of series) {
+    const pts = list.map((d, i) => `${x(i).toFixed(1)},${y(d[k] || 0).toFixed(1)}`).join(" ");
     s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`;
-    if (n < 40) list.forEach((d, i) => { s += `<circle cx="${x(i)}" cy="${y(d[k])}" r="2.5" fill="${col}"/>`; });
+    if (n < 40) list.forEach((d, i) => { s += `<circle cx="${x(i)}" cy="${y(d[k] || 0)}" r="2.5" fill="${col}"/>`; });
   }
   s += `<line id="guide" y1="${M.t}" y2="${H - M.b}" stroke="#666" style="display:none"/>`;
   s += `<rect id="hit" x="${M.l}" y="${M.t}" width="${W - M.l - M.r}" height="${H - M.t - M.b}" fill="transparent"/>`;
@@ -384,7 +386,7 @@ function renderChart(list) {
     i = Math.max(0, Math.min(n - 1, i));
     const d = list[i];
     guide.setAttribute("x1", x(i)); guide.setAttribute("x2", x(i)); guide.style.display = "";
-    tip.innerHTML = `<span class="d">${d.day} UTC</span><br>` + SERIES.map(([k, l, col]) => `<span style="color:${col}">${l}</span> ${fmt(d[k])}`).join("<br>");
+    tip.innerHTML = `<span class="d">${d.day} UTC</span><br>` + series.map(([k, l, col]) => `<span style="color:${col}">${l}</span> ${fmt(d[k] || 0)}`).join("<br>");
     tip.style.display = "block";
     const wr = wrap.getBoundingClientRect();
     const left = (x(i) / W) * r.width;
@@ -393,7 +395,7 @@ function renderChart(list) {
   }
   hit.addEventListener("mousemove", move);
   hit.addEventListener("mouseleave", () => { tip.style.display = "none"; guide.style.display = "none"; });
-  $("chartnote").textContent = `${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Days before 2026-11-07 have no browser counts.`;
+  $("chartnote").textContent = `${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Days before 2026-11-07 have no browser counts. Accounts are the signed-in accounts that played that day.` + (hasAcc ? "" : " Accounts: not deployed yet.");
 }
 
 // ---- histograms: equal-width bars per bin (the bins themselves are uneven), height is total time played
