@@ -1,6 +1,7 @@
 // What is lit as hovered (T-730, T-741): the demand bubble, line, bare track edge and station
 // complex under the pointer, or, while the pointer is on an entry of the resting hover's list
-// (T-732), that entry's thing instead. The renderers read it as uniforms; a change only redraws.
+// (T-732), that entry's thing instead; and, while a bus route is drawn, the stations and bus lines it
+// will connect with (T-2993). The renderers read it as uniforms; a change only redraws.
 
 import type { StationId } from "../game/types";
 
@@ -17,6 +18,8 @@ export interface Hot {
   edge: number;
   stations: StationId[];
   disc: DiscHit | null;
+  /** T-2993: bus lines lit by the bus tool (numbers), the route drawn will change with them */
+  buses: number[];
 }
 
 /** T-936: CSS px added to every drawn bubble radius while a bubble is selected (the overlay's
@@ -24,11 +27,12 @@ export interface Hot {
 export const bubblePad = { px: 0 };
 export const SELECTED_PAD_PX = 0.5;
 
-const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null };
+const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null, buses: [] };
 
 let pointerNet: Hot = NONE;
 let pointerDisc: DiscHit | null = null;
 let list: Hot | null = null;
+let tool: { stations: StationId[]; buses: number[] } | null = null;
 let current: Hot = NONE;
 const listeners: (() => void)[] = [];
 
@@ -43,10 +47,12 @@ export function hot(): Hot {
 
 const same = (a: Hot, b: Hot) =>
   a.line === b.line && a.edge === b.edge && a.disc?.discs === b.disc?.discs && a.disc?.i === b.disc?.i
-  && a.stations.length === b.stations.length && a.stations.every((s, k) => s === b.stations[k]);
+  && a.stations.length === b.stations.length && a.stations.every((s, k) => s === b.stations[k])
+  && a.buses.length === b.buses.length && a.buses.every((s, k) => s === b.buses[k]);
 
 function update() {
-  const next = list ?? { ...pointerNet, disc: pointerDisc };
+  let next = list ?? { ...pointerNet, disc: pointerDisc };
+  if (tool) next = { ...next, stations: [...next.stations, ...tool.stations.filter((s) => !next.stations.includes(s))], buses: tool.buses };
   if (same(next, current)) return;
   current = next;
   for (const f of listeners) f();
@@ -61,6 +67,13 @@ export function setPointerNet(h: Partial<Hot> | null) {
 /** The bubble under the pointer's demand tag (demandHover.ts). */
 export function setPointerDisc(d: DiscHit | null) {
   pointerDisc = d;
+  update();
+}
+
+/** T-2993: what the bus tool's route will connect with (stations, bus line numbers), lit as well as
+ * whatever the pointer is on; null: none. */
+export function setToolHot(h: { stations: StationId[]; buses: number[] } | null) {
+  tool = h && (h.stations.length || h.buses.length) ? h : null;
   update();
 }
 

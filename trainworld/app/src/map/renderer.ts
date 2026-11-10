@@ -22,6 +22,7 @@ import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
+import { OneWayChevrons } from "./oneWayMarks";
 import { StrokeCache } from "./strokeCache";
 import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather } from "./strokeGather";
@@ -177,6 +178,8 @@ export interface DrawOptions {
   hotLine?: number;
   hotEdge?: number;
   hotStations?: number[];
+  /** T-2993: bus lines lit as hovered (numbers), the bus tool's route will change with them */
+  hotBuses?: number[];
   /** T-1248: lines, track and trains drawn this many times their width; absent: 1 */
   lineScale?: number;
   /** T-1567: every train one pill, white with a rim of its line's colour (the start menu's logo) */
@@ -284,6 +287,7 @@ export class NetworkRenderer {
   private probeU: Record<string, WebGLUniformLocation | null> = {};
   /** crossings, flat junctions, ramps and portals (T-629, T-655) */
   readonly marks = new GradeMarks();
+  readonly oneWay = new OneWayChevrons();
   /** the complexes' car parks (T-1528) */
   readonly lots = new ParkingLots();
   /** the station buildings' floors (T-2218) */
@@ -685,6 +689,7 @@ export class NetworkRenderer {
     for (const a of ["a_seg", "a_colour", "a_edge", "a_level", "a_flags", "a_speed", "a_lane", "a_wmul", "a_full", "a_band", "a_band_m"]) this.strokeLoc[a] = gl.getAttribLocation(this.strokeProg, a);
     this.stationProg = compile(gl, STATION_VS, STATION_FS);
     this.marks.init(gl);
+    this.oneWay.init(gl);
     this.lots.init(gl);
     this.floors.init(gl);
     this.bubbles.init(gl);
@@ -1209,6 +1214,7 @@ export class NetworkRenderer {
     this.hide = [n.edgePts.has(this.hide[0]) ? this.hide[0] : -2, n.edgePts.has(this.hide[1]) ? this.hide[1] : -2];
     this.guard.setNetwork(n);
     this.marks.setNetwork(n.marks);
+    this.oneWay.setNetwork(n.oneWay);
     this.lots.setNetwork(n.lots);
     this.floors.setNetwork(n.buildings);
     const oldTrack = this.track, oldLines = this.lines;
@@ -1621,7 +1627,7 @@ export class NetworkRenderer {
     const cache = this.strokeCache && !this.gl.isContextLost() ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any && !opt.byLevel;
     if (!view) this.busesShown = buses;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1630,7 +1636,7 @@ export class NetworkRenderer {
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
       const sh = shadeColours();
-      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
+      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
         paint: opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB });
     }
     gl.useProgram(this.strokeProg);
@@ -1816,6 +1822,9 @@ export class NetworkRenderer {
     }
     gl.uniform1i(u.u_ghost, 0);
     this.marks.draw(lc, vp, zoom, dpr, this.levelColours, opt.flatMarks !== false);
+    // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
+    if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !this.trafficWidths)
+      this.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });
     }
     if (cache) {
       if (redraw) {

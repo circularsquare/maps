@@ -245,6 +245,7 @@ const overlay = new Overlay(map, renderer, () => {
     hotLine: hot().line,
     hotEdge: hot().edge,
     hotStations: n ? hot().stations.map((id) => stationIndexOf(n, id)) : [],
+    hotBuses: hot().buses,
     lineScale: d.lineWidth, // T-1248
   };
 });

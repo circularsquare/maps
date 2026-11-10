@@ -352,7 +352,11 @@ route turns there instead of running to the next junction and back (T-1512; `acr
 the basemap's own tile server at zoom 14, whatever the map's zoom. While drawing,
 the route shows in the line's colour with the stops the sim would place (ends as small rounded
 squares, a ring round each train station it meets, small rings between and the street stops), and
-the tag by the pointer gives the road length and the price.
+the tag by the pointer gives the road length and the price. What those stops will connect with is lit
+as hovered things are (T-2993, `game/busLinks.ts` `routeMeets`): each train station it stops at, with a
+built line's dashed transfer line from the stop to it, and each other bus line it will change with, one
+it crosses (T-2952) or with a stop within 100 m of one of its stops (T-2992), drawn a little wider and
+lighter; at most 16 of each.
 
 - **Points**: each clicked point shows as a handle in the line's colour (only while the tool is
   on): a dot with a ring of the map's land colour, larger under the pointer; the **active end**, where
@@ -404,6 +408,9 @@ the tag by the pointer gives the road length and the price.
   follows the pointer along the route. Stops go only on the route (T-2982): stations have no marker and take no
   click. Within 200 m of where the route passes nearest a station the route can stop at (`STATION_REACH_M`) the
   marker snaps to that point and the tag names the station; a click there adds the station's stop, on the route.
+  Away from stations, within 100 m of where the route passes nearest another bus line's stop that is within
+  100 m of the route (`BUS_XFER_M`, demand's station merge; T-2992), the marker snaps there and the tag names
+  that line, so the stop is one place with the other line's.
   A click on the route adds a stop, a click on a stop takes it out, each one edit and one undo; the
   two ends stay. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
   session (`BusRoute::hand_kept`, not saved): choosing Manual again gives them back, and a redraw in between

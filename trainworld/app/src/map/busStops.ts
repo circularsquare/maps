@@ -2,7 +2,8 @@
 // (map/stopMarkers.ts, the same marks and tag) while the line tool has the line. A stop is a disc;
 // along the route a hollow marker follows the pointer. Stops go only on the route (T-2982): a station
 // has no mark and takes no click, and the route within reach of one offers the station's stop, the
-// marker snapping to where the route passes nearest it. Like the train markers they take no pointer
+// marker snapping to where the route passes nearest it; away from stations, so does another bus line's
+// stop within `BUS_XFER_M` of the route (T-2992), its line named in the tag. Like the train markers they take no pointer
 // events: map/tools.ts calls `hover` and `click`.
 
 import { t } from "../i18n";
@@ -12,6 +13,7 @@ import { lineDraft, stopEditing } from "../game/ui";
 import { edit, stationNames, world } from "../game/world";
 import type { ClockBus } from "../workers/protocol";
 import { toMerc01 } from "./geo";
+import { BUS_XFER_M } from "../game/busLinks";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { sizeAt } from "./stopMarkers";
@@ -84,6 +86,9 @@ export class BusStopMarkers {
   private names = new Map<string, string>();
   /** the stations the route can stop at, each at the route's point nearest it */
   private reachOn: { p: RoutePoint; node: number }[] = [];
+  /** T-2992: other bus lines' stops near enough the route to change at, each at the route's point
+   * nearest it, with the line's name */
+  private meetOn: { p: RoutePoint; name: string }[] = [];
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = document.createElement("div");
@@ -134,6 +139,17 @@ export class BusStopMarkers {
     this.merc = merc;
     this.names = names;
     this.reachOn = bus.reach.map((s) => ({ p: routePoint(bus, ...nearestOnRoute(bus.route, s.x, s.y)), node: s.node }));
+    this.meetOn = [];
+    const w = world.peek()!;
+    for (const o of w.save.lines) {
+      const ob = w.lineStats[o.id]?.bus;
+      if (o.num === line || !ob || ob.ferry) continue;
+      for (const s of ob.stops) {
+        if (s.station >= 0) continue;
+        const p = routePoint(bus, ...nearestOnRoute(bus.route, s.x, s.y));
+        if (metres(p, s) <= BUS_XFER_M) this.meetOn.push({ p, name: o.name });
+      }
+    }
     const add = (lng: number, lat: number, on: boolean, hit: Hit) => {
       const [mx, my] = toMerc01(lng, lat);
       const el = this.pool[this.items.length] ?? (this.pool[this.items.length] = this.box.appendChild(document.createElement("div")));
@@ -215,8 +231,18 @@ export class BusStopMarkers {
       const d = metres(s.p, here);
       if (d <= reach) (reach = d), (near = s);
     }
-    const p = near?.p ?? here, [mx, my] = toMerc01(p.lng, p.lat);
-    return { kind: "route", x: p.x, y: p.y, mx, my, ...(near ? { name: this.names.get(String(near.node)) ?? t("stopMarkers.station") } : {}) };
+    // T-2992: else near another bus line's stop, where the route passes nearest it
+    let meet: { p: RoutePoint; name: string } | null = null;
+    if (!near) {
+      let gap = BUS_XFER_M;
+      for (const s of this.meetOn) {
+        const d = metres(s.p, here);
+        if (d <= gap) (gap = d), (meet = s);
+      }
+    }
+    const p = near?.p ?? meet?.p ?? here, [mx, my] = toMerc01(p.lng, p.lat);
+    const name = near ? this.names.get(String(near.node)) ?? t("stopMarkers.station") : meet?.name || undefined;
+    return { kind: "route", x: p.x, y: p.y, mx, my, ...(name ? { name } : {}) };
   }
 
   /** The pointer moved over the map: the follower along the route, the tag and the cursor. */

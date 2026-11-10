@@ -399,7 +399,14 @@ station is drawn like any other, ring or end square, on the route where it passe
 the station's centre (T-2982), in a pass after the stations so it reads over the station's mark where the two
 meet (`BusLayer.drawStationStops`, T-2948). From zoom 13 a thin dashed line runs from such a stop to its
 station (1.5 px, the map's ink at 50%, the transfer; `FLAG_TRANSFER`), drawn under the track and never
-picked. Selecting the line draws its 300 m
+picked; the same line joins two bus lines' stops within 100 m of each other, one place for demand (T-2992,
+`game/busLinks.ts`; none between two on one spot). A bus or ferry loop run one way has small arrowheads in its colour from zoom 13, pointing the way
+its vehicles go and sticking out both sides of the route, twice as wide as they are long (their casing only
+off the route), none in the Speed and Profit displays (T-2991, `oneWayMarks.ts`). A train loop run one way
+has a tiny white chevron on the line instead, on the edges its path runs once (a balloon's tail runs both
+ways), from zoom 12 where the line or its band is at least 4.5 px wide, in the Line view only. Both are
+placed every 100 m along the route (bus and ferry arrows 125 m); at each zoom every 2^n-th is drawn so they are at least 150 px apart (arrows 190 px),
+and none closer to a stop than its mark (14 px from a station). Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
 badge and name, "Bus line", then "Not running yet" while planned or, in any track display [T-1907],

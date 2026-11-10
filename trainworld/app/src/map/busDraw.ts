@@ -6,7 +6,8 @@
 // colour; an older save's straight leg that finds no road stays red and keeps the route from being
 // saved. The clock worker
 // quotes the route as it is drawn (`busQuote`): road length, price and where the stops would go; the
-// stops and the tag by the pointer show that answer. With an existing line's route loaded
+// stops and the tag by the pointer show that answer, and the stations and other bus lines those stops
+// connect with are lit as hovered ones are (T-2993, `setToolHot`). With an existing line's route loaded
 // (`begin(line, ...)`) finishing redraws it (`busRoute`), else it makes the line (`addBusLine`).
 //
 // The clicked points are handles (docs/ui-building.md "Drawing a bus line"): new points go on at the
@@ -40,6 +41,8 @@ import { BusRoads, SNAP_M, type BusRefusal, type Leg } from "./busRoads";
 import { setGrabbing } from "./nodeDrag";
 import { playBuild } from "./buildSound";
 import { safeColour } from "./safeColour";
+import { setToolHot } from "./hovered";
+import { routeMeets } from "../game/busLinks";
 
 /** the sim's `bus::MIN_ROUTE_M` */
 const MIN_ROUTE_M = 100;
@@ -139,6 +142,8 @@ export class BusDraw {
   /** the old road length and whether it is paid for, for a redrawn line's price */
   private was = { road: 0, built: false };
   private quote: Quote | null = null;
+  /** T-2993: the quote's transfer lines (`routeMeets`), lng, lat, lng, lat flat */
+  private links: number[] = [];
   private wantKey = "";
   private wantRoute: number[] = [];
   private inflight = false;
@@ -213,7 +218,7 @@ export class BusDraw {
     this.dirty = false;
     this.at = this.touchAt = null;
     this.over = -1;
-    this.quote = null;
+    this.setQuote(null);
     this.wantKey = "";
     const c = this.map.getCenter();
     this.colour = colour ?? nextFreeColour([c.lng, c.lat]);
@@ -231,7 +236,7 @@ export class BusDraw {
     this.rev++;
     this.at = this.touchAt = null;
     this.over = -1;
-    this.quote = null;
+    this.setQuote(null);
     this.wantKey = "";
     this.svg.style.display = "none";
     busDraft.value = null;
@@ -356,7 +361,7 @@ export class BusDraw {
     const withHover = this.build(true);
     const b = withHover.dim[0] >= 0 && !withHover.hoverRoad ? this.build(false) : withHover;
     if (b.kinds.length < 2) {
-      this.quote = null;
+      this.setQuote(null);
       this.wantKey = "";
       return;
     }
@@ -366,6 +371,22 @@ export class BusDraw {
     if (!this.inflight) this.fire();
   }
 
+  /** A new quote, and with it what the route will connect with lit (T-2993): the stations it stops at
+   * and the other bus lines it will change with. */
+  private setQuote(q: Quote | null) {
+    this.quote = q;
+    this.links = [];
+    const w = world.peek();
+    if (!q || !w) return setToolHot(null);
+    const lines = w.save.lines.flatMap((l) => {
+      const b = w.lineStats[l.id]?.bus;
+      return b && !b.ferry && l.num !== this.line ? [{ line: l.num, stops: b.stops, routeLL: b.routeLL }] : [];
+    });
+    const m = routeMeets(q.stops, w.save.stations, lines);
+    this.links = m.links;
+    setToolHot(m);
+  }
+
   private fire() {
     const key = this.wantKey, route = this.wantRoute;
     this.inflight = true;
@@ -373,7 +394,7 @@ export class BusDraw {
       this.inflight = false;
       if (tool.peek() !== "bus") return;
       if (key === this.wantKey) {
-        this.quote = parseQuote(d);
+        this.setQuote(parseQuote(d));
         this.place();
       } else if (this.wantKey) this.fire();
     });
@@ -921,6 +942,11 @@ export class BusDraw {
     };
     if (q) {
       if (this.map.getZoom() >= STREET_ZOOM) for (const s of q.street) parts.push(ring(s, 2.4, 1.3));
+      // T-2993: the transfers the route will have, dashed as a built line's (busLayer.ts)
+      for (let i = 0; i + 3 < this.links.length; i += 4) {
+        const a = xy({ lng: this.links[i], lat: this.links[i + 1] }), z = xy({ lng: this.links[i + 2], lat: this.links[i + 3] });
+        parts.push(`<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${z.x.toFixed(1)}" y2="${z.y.toFixed(1)}" class="bus-link" style="stroke:var(--map-ink);stroke-opacity:.5;stroke-width:1.5px;stroke-dasharray:4 2.7"/>`);
+      }
       for (const s of q.stops) {
         if (s.kind === 0) parts.push(square(s));
         else if (s.kind === 1) {

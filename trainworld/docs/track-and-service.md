@@ -861,7 +861,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   any count, the running cost one way's train-km. Riders going the other way ride round the long way or
   take another mode. A train line starts both ways, a new bus or ferry line one way (`set_bus_line`,
   `set_ferry_line`); the flag stays on an open line, which ignores it, so it carries over opening and
-  closing. The direction is the one drawn: no reverse state (redrawing reverses it). Stops closed into a loop whose path only runs out and back the same way (a
+  closing. The direction is the one drawn: no reverse state (redrawing reverses it); arrows on the map
+  show it (T-2991, ui-map.md "Bus lines"). Stops closed into a loop whose path only runs out and back the same way (a
   lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
   to where the path turns, which becomes the line's end, a terminus rather than a reversal
   partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
@@ -1614,6 +1615,10 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (T-2982): a station's stop where the route passes nearest the station, never on the station's
   centre (`BusStop::x`, `y`). Its id is still the station's node, so riders change between bus and
   train there as at the station itself: the walk from the route to the station is not counted.
+  Two stops of different bus lines within demand's 100 m station merge of each other (a station's stop
+  from the station's place) are one demand station, so riders change there with no walk, whoever placed
+  them (T-2992; further apart, up to 300 m, they change on foot as between any stations, `xfer_walk_m`);
+  the map draws such a pair the transfer's dashed line, and Manual editing snaps to the other line's stop.
 - **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).
   Set from 400 m to 100 km in the bus panel, where 400 m, the least, is the placing above (`spacing_from`
   stores it as 0, T-2947: the placing has a stop about every 400 m, so the panel reads it as that distance).

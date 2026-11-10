@@ -19,6 +19,7 @@ import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/
 import { acrossAt, BAY_SIDING, bayCode, SIDING_LANE, SIDING_LEAD_M, SIDING_M, sidingMove, TURNBACK_M } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
+import { trainChevrons } from "./oneWayMarks";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -149,6 +150,8 @@ export interface NetworkBuffers {
   /** the crossovers where lines turn back, drawn close in only (T-658d, `turnbackStrokes`), and
    * passing stations' outer tracks (T-2233, `F_PASSING`) */
   turnbacks?: Strokes;
+  /** T-2991: one-way loops' chevrons, `CHEVRON_STRIDE` numbers each (map/oneWayMarks.ts) */
+  oneWay?: Float32Array;
   /** T-2233: per train sample, m past the nearest end of a platform with passing tracks where its line
    * stops on the outer track (below 0 along the platform), where its trains move out to it (`passBow`
    * over PASS_LEAD_M; past the end scaled by PASS_LEAD_M over that side's lead, T-2248); absent or
@@ -1466,6 +1469,16 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
     }
   }
+  // T-2991: a one-way loop's chevrons, on the edges it runs once
+  const oneWay: number[] = [];
+  for (const l of s.lines) {
+    const c = linesSeen.get(l.id);
+    if (!c || l.bus || !l.oneWay || !l.loopKind) continue;
+    const uses = new Map<number, number>();
+    for (const p of l.path) uses.set(p >> 1, (uses.get(p >> 1) ?? 0) + 1);
+    const at = l.stops.map((id) => nodeLocal.get(id)).filter((p) => p !== undefined);
+    trainChevrons(c.strokes, l.id, uses, at, l.tram ? 0.75 : 1, F_BLUEPRINT, oneWay);
+  }
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
@@ -1538,6 +1551,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathLen,
     conflicts: s.conflicts,
     turnbacks,
+    ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
     ...(passingAt.size ? { samplePass, passing: new Float32Array(passing) } : {}),
     edgePts,
     anchor: anchor(),

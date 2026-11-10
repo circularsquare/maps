@@ -7,7 +7,8 @@
 // is drawn like any other, on the route where it passes nearest the station (T-2982), in a second pass
 // after the stations (`drawStationStops`), so it reads over the station's mark where they meet
 // (T-2948); a thin dashed line in the map's ink, faint, runs from it to the station from zoom 13, the
-// transfer.
+// transfer, and the same between two lines' stops at one place for demand (T-2992, game/busLinks.ts). A loop that runs one way has small arrowheads in its colour along it from zoom 13, sticking
+// out on both sides of the route (T-2991, oneWayMarks.ts).
 //
 // A ferry line (T-2194) has a bus line's row, so it is drawn here too: its route dashed on a continuous
 // casing, a solid stroke from each port's landing to its berth, no stops (its ports are stations) and
@@ -33,6 +34,8 @@ import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
 import { factRow, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
+import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
+import { busStopLinks } from "../game/busLinks";
 
 /** Street stops are drawn from this zoom, ends from `END_ZOOM` (T-2950). */
 export const BUS_RING_ZOOM = 13;
@@ -46,6 +49,8 @@ export const CORRIDOR_M = 300;
 const OUTLINE_ALPHA = 0.75;
 const OUTLINE_PX = 1;
 const HOT_MIX = 0.3;
+/** T-2993: the most lines lit at once besides the hovered one */
+const LIT_MAX = 16;
 /** Bus stop sizes as shares of the bus line's width, and the least radius, device px */
 const RING_SHARE = 1.15, END_SHARE = 1.5, MIN_RING_PX = 2.6;
 const PICK_SLOP_PX = 6;
@@ -59,6 +64,11 @@ const DASH_WIDTHS = 3.2, DASH_ON = 0.6;
  * gap in its widths, and how opaque the map's ink is in it */
 const FLAG_TRANSFER = 8;
 const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
+/** T-2991: an arrow's direction is taken over this many ground metres either side, so one at a
+ * corner leans with the turn; how far its barbs reach past the route each side, device px at least
+ * and as a share of the route's width */
+const ARROW_TURN_M = 12;
+const ARROW_BARB_PX = 4, ARROW_BARB_SHARE = 1.1;
 
 /** A bus line as the world gives it (lng, lat pairs flat). */
 interface BusSource {
@@ -81,6 +91,8 @@ interface BusSource {
   /** T-2452: those stops' places along each run's profile, m (`LineStats.stopS`), while it runs
    * vehicles; else null */
   stopS: number[][] | null;
+  /** T-2991: a loop run one way */
+  oneWay: boolean;
 }
 
 /** The sources' geometry in local units of one anchor. */
@@ -110,7 +122,13 @@ interface Built {
   range: Map<number, [number, number]>;
   /** per line id, each of its stops' place along the route, in `cum`'s units (made when asked) */
   stopAlong: Map<number, number[]>;
+  /** T-2991: one-way loops' arrows, `ARROW_STRIDE` numbers each */
+  arrows: Float32Array;
 }
+
+/** Per arrow: x, y, its direction (a unit vector), its colour packed as `info`'s, its line, its
+ * place in its line's arrows, the ground metres to the line's nearest stop, 1 on a blueprint */
+const ARROW_STRIDE = 9;
 
 /** What the last draw drew, CSS px, for the hit tests; null when it drew nothing. */
 interface Drawn { rings: boolean; ends: boolean; ringR: number; endR: number }
@@ -126,6 +144,8 @@ uniform float u_extra;       // added to the selected line
 uniform int u_pass;          // 0 casing, 1 colour, 2 corridor outline (drawn three times, see draw())
 uniform int u_sel;
 uniform int u_hot;
+uniform int u_lit[${LIT_MAX}];   // T-2993: lines the bus tool's route will change with, u_lit_n of them
+uniform int u_lit_n;
 uniform int u_only;          // -1 every line, -2 the selected line, else that line only
 uniform float u_dim;
 uniform float u_alpha;       // the corridor's
@@ -152,13 +172,15 @@ void main() {
   int flags = int(a_info.y + 0.5);
   bool bp = (flags & ${FLAG_BLUEPRINT}) != 0;
   bool sel = id == u_sel;
+  bool lit = false;
+  for (int k = 0; k < ${LIT_MAX}; k++) if (k < u_lit_n && u_lit[k] == id) lit = true;
   bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
   if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER}) != 0)
       || (xfer && (u_pass != 1 || u_xfer < 0.5))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool paint = u_pass == 1 && !bp && !xfer;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
   vec3 col = paint && a_col < -1.5 ? u_track_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
-  float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel ? u_extra : 0.0) : u_width;
+  float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
   if (u_pass < 2) {
@@ -192,7 +214,7 @@ void main() {
     v_color = col;
     if (u_pass == 1) {
       if (bp) v_color = mix(v_color, vec3(1.0), 0.45);
-      if (id == u_hot) v_color = mix(v_color, vec3(1.0), ${HOT_MIX});
+      if (id == u_hot || lit) v_color = mix(v_color, vec3(1.0), ${HOT_MIX});
     }
   }
 }`;
@@ -268,6 +290,67 @@ void main() {
   o = vec4(c * cover, cover);
 }`;
 
+const ARROW_VS = `#version 300 es
+precision highp float;
+${PROJECT_GLSL}
+uniform vec2 u_viewport;
+uniform vec3 u_size;         // the route's half width, the arrow's half width, its casing, device px
+uniform float u_every;       // every this many-th arrow is drawn
+uniform float u_m_px;        // device px a ground metre spans
+uniform float u_clear;       // device px from a stop's middle an arrow's back keeps clear of
+uniform int u_sel;
+uniform int u_hot;
+uniform float u_dim;
+in vec4 a_arrow;             // x, y, direction
+in vec4 a_arrow2;            // colour packed, line, its place in its line's arrows, metres to its nearest stop
+in float a_bp;
+out vec2 v_p;
+flat out vec3 v_color;
+flat out float v_alpha;
+void main() {
+  float w = u_size.y, l = w;   // twice as wide as it is long
+  if (mod(a_arrow2.z, u_every) > 0.5 || a_arrow2.w * u_m_px < u_clear + 0.5 * l) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  vec4 c0 = project(a_arrow.xy);
+  vec4 c1 = project(a_arrow.xy + a_arrow.zw);
+  vec2 half_vp = u_viewport * 0.5;
+  vec2 dir = c1.xy / c1.w * half_vp - c0.xy / c0.w * half_vp;
+  dir = length(dir) > 1e-6 ? normalize(dir) : vec2(1.0, 0.0);
+  vec2 nrm = vec2(-dir.y, dir.x);
+  vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
+  vec2 p = corner * (vec2(0.5 * l, w) + u_size.z + 1.0);
+  c0.xy += (dir * p.x + nrm * p.y) / half_vp * c0.w;
+  gl_Position = c0;
+  v_p = p;
+  int id = int(a_arrow2.y + 0.5);
+  float q = a_arrow2.x;
+  vec3 col = vec3(floor(q / 65536.0), mod(floor(q / 256.0), 256.0), mod(q, 256.0)) / 255.0;
+  if (a_bp > 0.5) col = mix(col, vec3(1.0), 0.45);
+  if (id == u_hot) col = mix(col, vec3(1.0), ${HOT_MIX});
+  v_color = col;
+  v_alpha = id == u_sel ? 1.0 : u_dim;
+}`;
+
+const ARROW_FS = `#version 300 es
+precision highp float;
+uniform vec3 u_size;
+uniform vec3 u_casing_rgb;
+in vec2 v_p;
+flat in vec3 v_color;
+flat in float v_alpha;
+out vec4 o;
+void main() {
+  float w = u_size.y, l = w;
+  // a triangle, its point ahead: the two slanted sides and the back
+  vec2 q = vec2(v_p.x, abs(v_p.y));
+  float d = max(dot(q - vec2(0.5 * l, 0.0), normalize(vec2(w, l))), -(q.x + 0.5 * l));
+  float body = clamp(0.5 - d, 0.0, 1.0);
+  // its casing only off the route, whose own casing is under it
+  float rim = q.y > u_size.x ? clamp(0.5 - (d - u_size.z), 0.0, 1.0) : body;
+  float a = rim * v_alpha;
+  if (a <= 0.0) discard;
+  o = vec4(mix(u_casing_rgb, v_color, body / max(rim, 1e-3)) * a, a);
+}`;
+
 const pack = (colour: string) => {
   const [r, g, b] = rgb(colour);
   return r * 65536 + g * 256 + b;
@@ -286,6 +369,8 @@ export interface BusStyle {
   railShare: number;
   sel: number;
   hot: number;
+  /** T-2993: lines lit as the hovered one, numbers (at most LIT_MAX) */
+  lit: readonly number[];
   dim: number;
   shades: ShadeColours;
   fill: Float32Array;
@@ -309,6 +394,11 @@ export class BusLayer {
   private segVao: WebGLVertexArrayObject | null = null;
   private stopVao: WebGLVertexArrayObject | null = null;
   private stationStopVao: WebGLVertexArrayObject | null = null;
+  private arrowProg: WebGLProgram | null = null;
+  private au: Record<string, WebGLUniformLocation | null> = {};
+  private arrowVao: WebGLVertexArrayObject | null = null;
+  /** T-2991: the one-way arrows in the build drawn (checks read it) */
+  arrows = 0;
   private bufs: WebGLBuffer[] = [];
   private lines: BusSource[] = [];
   /** counts `set`s that changed the lines (the renderer's stroke cache, T-1638) */
@@ -320,13 +410,17 @@ export class BusLayer {
   /** the build the GPU holds */
   private onGpu: Built | null = null;
   private last: Drawn | null = null;
+  private litList = new Int32Array(LIT_MAX);
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
+    this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
+    this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb"]);
+    this.arrowVao = gl.createVertexArray();
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
     this.stationStopVao = gl.createVertexArray();
@@ -352,14 +446,18 @@ export class BusLayer {
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay });
       }
+      // T-2992: stops of two bus lines at one place for demand
+      const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
+      const byNum = new Map(next.map((x) => [x.id, x]));
+      for (let i = 0; i + 4 < links.length; i += 5) byNum.get(links[i])?.transfers.push(links[i + 1], links[i + 2], links[i + 3], links[i + 4]);
     }
     const was = this.lines;
     const sameS = (a: number[][] | null, b: number[][] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((s, k) => sameNums(s, b[k])));
     if (was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.oneWay === y.oneWay && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
     this.transfers = next.reduce((n, l) => n + l.transfers.length / 4, 0);
@@ -440,13 +538,33 @@ export class BusLayer {
         at++;
       }
     }
+    // T-2991: a one-way loop's arrows, one every ONE_WAY_STEP_M * ARROW_SPREAD along its route
+    const arrows: number[] = [];
+    for (const l of this.lines) {
+      const r = range.get(l.id);
+      if (!l.oneWay || !r || !r[1]) continue;
+      const kl = k.get(l.id) ?? 1, step = ONE_WAY_STEP_M * ARROW_SPREAD * kl, col = pack(l.colour), last = r[0] + r[1] - 1;
+      const len = cum[last] + Math.hypot(seg[last * 4 + 2] - seg[last * 4], seg[last * 4 + 3] - seg[last * 4 + 1]);
+      const near: [number, number][] = [];
+      for (let i = 0; i + 1 < l.marks.length; i += 2) near.push(toLocal(l.marks[i], l.marks[i + 1], a));
+      for (let i = 0; i + 1 < l.street.length; i += 2) near.push(toLocal(l.street[i], l.street[i + 1], a));
+      for (let m = 0; (m + 0.5) * step < len; m++) {
+        const s = (m + 0.5) * step;
+        const [x, y] = pointAlong(seg, cum, r, s), [x0, y0] = pointAlong(seg, cum, r, s - ARROW_TURN_M * kl), [x1, y1] = pointAlong(seg, cum, r, s + ARROW_TURN_M * kl);
+        const d = Math.hypot(x1 - x0, y1 - y0);
+        if (!(d > 0)) continue;
+        let clear = Infinity;
+        for (const p of near) clear = Math.min(clear, Math.hypot(p[0] - x, p[1] - y));
+        arrows.push(x, y, (x1 - x0) / d, (y1 - y0) / d, col, l.id, m, clear / kl, l.built ? 0 : 1);
+      }
+    }
     const stopCount = (rings.length + ends.length + sRings.length + sEnds.length) / 4;
     this.built = {
       a, seg, info, count: at, pickCount, stops: Float32Array.from([...rings, ...ends, ...sRings, ...sEnds]), stopCount,
       plainCount: (rings.length + ends.length) / 4,
       stopLine: Int32Array.from([...ringLine, ...endLine, ...sRingLine, ...sEndLine]),
       stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1), ...sRingLine.map(() => 0), ...sEndLine.map(() => 1)]),
-      k, cum, range, stopAlong: new Map(),
+      k, cum, range, stopAlong: new Map(), arrows: new Float32Array(arrows),
     };
     return this.built;
   }
@@ -486,6 +604,20 @@ export class BusLayer {
       gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, b.plainCount * 16);
       gl.vertexAttribDivisor(loc, 1);
     }
+    if (b.arrows.length) {
+      gl.bindVertexArray(this.arrowVao);
+      const buf = gl.createBuffer()!;
+      this.bufs.push(buf);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, b.arrows, gl.STATIC_DRAW);
+      for (const [name, size, at] of [["a_arrow", 4, 0], ["a_arrow2", 4, 4], ["a_bp", 1, 8]] as const) {
+        const l = gl.getAttribLocation(this.arrowProg!, name);
+        if (l < 0) continue;
+        gl.enableVertexAttribArray(l);
+        gl.vertexAttribPointer(l, size, gl.FLOAT, false, ARROW_STRIDE * 4, at * 4);
+        gl.vertexAttribDivisor(l, 1);
+      }
+    }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.onGpu = b;
@@ -520,6 +652,10 @@ export class BusLayer {
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform1i(u.u_sel, s.sel);
     gl.uniform1i(u.u_hot, s.hot);
+    this.litList.fill(-1);
+    s.lit.slice(0, LIT_MAX).forEach((v, k) => (this.litList[k] = v));
+    gl.uniform1iv(u.u_lit, this.litList);
+    gl.uniform1i(u.u_lit_n, Math.min(s.lit.length, LIT_MAX));
     gl.uniform1f(u.u_dim, s.dim);
     gl.uniform1f(u.u_extra, s.wSel * WIDTH_SHARE);
     gl.uniform3fv(u.u_casing_rgb, s.casingRgb);
@@ -574,6 +710,25 @@ export class BusLayer {
     // the selected line again over the rest, as the rail lines' (renderer.ts)
     if (this.byId.has(s.sel)) body(-2);
     gl.bindVertexArray(null);
+    // T-2991: one-way arrows, in the line view only
+    this.arrows = b.arrows.length / ARROW_STRIDE;
+    if (this.arrows && zoom >= ARROW_ZOOM && !s.paint) {
+      const a = this.au, mPx = pxPerUnitAt(zoom) * kAtY(0, b.a) * dpr;
+      gl.useProgram(this.arrowProg);
+      setCamera(gl, a, lc);
+      gl.uniform2f(a.u_viewport, vp[0], vp[1]);
+      gl.uniform3f(a.u_size, 0.5 * bus, 0.5 * bus + Math.max(ARROW_BARB_PX * dpr, ARROW_BARB_SHARE * bus), s.casing * CASING_SHARE);
+      gl.uniform1f(a.u_every, oneWayEvery(mPx, dpr, ARROW_SPREAD));
+      gl.uniform1f(a.u_m_px, mPx);
+      gl.uniform1f(a.u_clear, Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE) + 2 * dpr);
+      gl.uniform1i(a.u_sel, s.sel);
+      gl.uniform1i(a.u_hot, s.hot);
+      gl.uniform1f(a.u_dim, s.dim);
+      gl.uniform3fv(a.u_casing_rgb, s.casingRgb);
+      gl.bindVertexArray(this.arrowVao);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.arrows);
+      gl.bindVertexArray(null);
+    }
 
     this.style = s;
     const rings = zoom >= BUS_RING_ZOOM, ends = zoom >= BUS_END_ZOOM;
@@ -799,6 +954,19 @@ function nearestAlong(b: Built, from: number, to: number, x: number, y: number):
 }
 
 const alongRoute = (b: Built, r: [number, number], x: number, y: number) => nearestAlong(b, r[0], r[0] + r[1], x, y)[0];
+
+/** The point `s` along a line's segments `r` (start, count), in `cum`'s units, held to its ends. */
+function pointAlong(seg: Float32Array, cum: Float64Array, r: [number, number], s: number): [number, number] {
+  let lo = r[0], hi = r[0] + r[1] - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (cum[mid] <= s) lo = mid;
+    else hi = mid - 1;
+  }
+  const x0 = seg[lo * 4], y0 = seg[lo * 4 + 1], dx = seg[lo * 4 + 2] - x0, dy = seg[lo * 4 + 3] - y0, len = Math.hypot(dx, dy);
+  const t = len > 0 ? Math.max(0, Math.min(1, (s - cum[lo]) / len)) : 0;
+  return [x0 + t * dx, y0 + t * dy];
+}
 
 /** T-2452: the faster of a line's two runs at `f` of the way along run 0's stretch `k`, km/h, from
  * the run profiles as the rail track's Speed view reads them; null without a profile. */
