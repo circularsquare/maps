@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session d455ee97-22bd-4dd5-a487-a2a4e1449db1, name maps-15 [bf4395], since 2026-11-10 13:48
-Updated: 2026-11-10 16:05 (maps-15 is past 500k tokens; ready for a fresh orchestrator)
+Orchestrator: session 95c539d5-0cf1-43f1-8067-d0686e8d7331, name maps-dc [52e59f], since 2026-11-10 16:07
+Updated: 2026-11-10 16:51 (maps-15 done winding down)
 
 ## Now
 
@@ -13,38 +13,46 @@ tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees
 Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
 **No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
 **Website push needs her word each time** (the classifier refuses it otherwise).
-**Master = c4ae8f9e** (pushed 16992b65; push again soon). **8800 = 16992b65** (Exact edits via ?exact=1, track rebuild).
-Since 8800: T-3083 build tools close views (223a24dd), T-3082 curves 25 m (f6918f65), T-3084 bus/ferry edit route
-(16be9d0f, c4ae8f9e), T-3085 design (e95f1970). Rebuild 8800 (`checks/snapbuild.cmd <hash>`) after the running agents land;
-one smoke on master after the batch.
-
-**Running** (subagents of maps-15: they report to maps-15, which lands their work while it winds down; if maps-15 is gone,
-check each one's tree or files and adopt the work):
-- exactmap (Sonnet, a3896fc2d95771b05, tree `.tw-trees/exact3`, Vite 6176): T-3089 + T-3080 Exact edits round 2 (hover
-  highlights a station, ends removable, half dot for one-way stops, visit numbers and empty circles on the map, x and station
-  click do the same). Ids T-3097-98. Land with `agent-tree.mjs land exact3`.
-- rebuildfix (Opus, a321fbe3706c5ae16, tree `.tw-trees/rebuild2`, Vite 6175): T-3087 [P1] rebuild-to-level bug (0/+1 to -1
-  gave 0 over water, -1 on land, many refused) + T-3088 rebuild as tram and back. Ids T-3095-96.
-- line1a (Opus, ae2330e4f40883a14, main tree, diagnose first): T-3099 [P1] Line 1a drawn with end loops, turning round Line 1's
-  loop, strip crossing perpendicular (T-3081 folded in). Anita's save: artifacts/trainworld/t3099-anita-amsterdam.save.
-  Patches touching LineInspector/lines.rs come back to route (exact3 owns those). Id T-3100.
-- flyauto (Sonnet, af6facdb45895347b, main tree, Vite 6177): told to DROP T-3092 (faked flyover) and revert its edits, finish
-  T-3093 (Single track back in the Build tab). Main tree tsc currently fails on its WIP `toolBar.singleTrack` key.
-- oneway (Sonnet, a40677ad25982f9ba, tree `.tw-trees/oneway`, Vite 6178): T-3094 one-way single track (edge flag, routing,
-  inspector switch, arrows, re-route opposing lines). Ids T-3101-02.
-- flyover design (Opus, a8360dea8512f2827, read-only): extending notes/T-3085.md with "Real flyovers" (Anita: real ramped
-  track that blocks the other level, ramp marks, no badge; auto with ramps on; built on T-3094).
+**Master = 8846f377 + maps-dc's later commits** (maps-15 pushed through 8846f377). **8800 = 8846f377**: batch smoke on master
+PASSED 27 (16:50). Exact edits shows with `?exact` (or whenever a line is already manual).
+**maps-15 landed after the takeover (all its agents are done; nothing of maps-15's is in flight):**
+- T-3089 + T-3080 Exact edits round 2 (41202320): row hover lights the station, every visit removable (`drop_visit`), half
+  dot, visit numbers and add circles on the map. Strings "Click to remove this stop", "Click to add a stop here".
+- T-3094 one-way single track (97564abe): switch + reverse in the track panel, arrows, routing/capacity by direction, return
+  runs take their own way back. Strings shown to Anita ("wording seems fine"). Follow-ups T-3101, T-3102.
+- T-3087 rebuild-to-level fix + T-3088 rebuild as tram and back (90e97d88). String "tram track".
+- T-3099/T-3081 Line 1a (8846f377): turnedLine never reads a turn-back as a loop; set_manual keeps a closed line's path.
+  Her save fix: select 1a, Stop editing, click the pressed Exact edits once. Follow-up T-3100.
+- T-3093 Single track in Build (40af0202); real flyover design (42460efc, T-3092 after T-3103).
+**Open with Anita from maps-15's last exchange:** default new single track to one way? (She asked "single track should
+default be one-way right?"; maps-15 suggested keeping two-way since plain single-track lines run both ways; her call.)
+Anita on flyover strings: "like both text"; keeping the junction inspector's old "Add a flyover" for now.
 
 **Anita's answers today (for the record):** tram stop length on tram track = last tram length (as built); rebuild = full new
 price, price + confirm, final, refused pieces visible; "transit" for the whole system; Exact edits ship only once good;
 flyover cost fine; one-way on single track only; muted route = own colour at 40% + a little grey (done).
-**Open with Anita:** standalone version (answered: a wrapper alone gains little); Resend at 200% of 100/day today from
-account confirm/reset mails (feedback mail already off): wait and watch the 3,000/month cap, or paid plan, or confirm on
-request. T-3070 non-home-based trips design waits ("can wait then start a design agent").
+**Open with Anita:** standalone version (answered: a wrapper alone gains little); Resend over its 100/day: Anita
+16:40 "lets jut wait for resend" (T-3105 tells the player when the quota is out). No releases until real flyovers land,
+hopefully tonight (Anita 16:40). T-3070 non-home-based trips design waits ("can wait then start a design agent").
 **Queued:** T-3063 bus loops partway; T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch);
 T-3060 rebuild preview; T-3069 trams on real rail + street-snap icon; Anita's plan: community tab, shared maps, country
 leaderboards (11/13), better schematic with timetables, open source (next week). P3s: T-3042, T-3036, T-3027, T-3002/3003,
-T-3019, T-3011. Next free id **T-3103**.
+T-3019, T-3011.
+**maps-dc:** T-3104/T-3105 server done by mailname (shonei-server e1ac732, 7b68d01). Client `?site=trainsworld` in app/src/game/account.ts + ui/AccountPanel.tsx is maps-dc's,
+uncommitted, tsc clean: commit it with the next batch. Strings approved (mail wording, quota message untranslated).
+Server DEPLOYED 2026-11-10 16:20 and pushed by Anita.
+- T-3107: Anita decided 16:50: dead ends and through stations identical, hints only "build a terminal" (terminal =
+  30 tph) or, with one built, more track; never mention a dead end; drop "Add more platform tracks at the terminus".
+  My rule: turning = 15/h without a terminal, 30/h with, per track pair, any station, ending or reversing partway; no
+  90 s crossing for turns, no dead-end pooling, no REVERSAL_LIMIT_S. deadend (Sonnet, a79eb44b3fb6bfdbf) was briefed
+  for that (round 2), then STOPPED before editing so maps-15 can land oneway + rebuild2 (both edit en.json, and oneway
+  capacity.rs). Round-1 work parked at <maps-dc scratch>\deadend\t3107-round1.patch, files restored to HEAD. After
+  both land: resume deadend (SendMessage) to reapply the patch and do round 2 on top. Anita 16:55: no "more track /
+  platform tracks" hint either (one line arrives on one pair, so a quad station can't help it): with a terminal built
+  and still full, the hint is to turn some trains at another station. Tell deadend this on resume.
+- T-3106 street tram over water at grade: brief once rebuild2 (T-3087) lands, same water/level check.
+Next free id **T-3108**.
+Anita's TODO "do trams have shorter dwell times?": yes, 15 s against 30 s for trains (T-2926), answered 2026-11-10.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
