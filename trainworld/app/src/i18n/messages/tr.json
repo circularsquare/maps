@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "Başla: {city}",
   "newGame.tier": "{tier, select, easy {kolay} medium {orta} other {zor}}",
   "newGame.title": "Yeni oyun",
+  "newVersion.note": "Oyunun yeni bir sürümü var.",
+  "newVersion.reload": "Yeniden yükle",
   "noMarketNote.memory": "Bu cihazda 4 GB ya da daha az RAM var. Oyun büyük olasılıkla iyi çalışmaz.",
   "noMarketNote.text": "Şehirler arası yolculuklar mobilde kapalı. Ayarlardan açabilir ya da daha büyük oyunlar için bilgisayar deneyebilirsin.",
   "nodeDrag.builtFixed": "İnşa edilmiş ray ve istasyonlar taşınamaz.",

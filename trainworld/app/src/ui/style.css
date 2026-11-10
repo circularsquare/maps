@@ -1828,3 +1828,6 @@ html.ui-hidden .ui-hint.on { display: block; }
   .fb-tags .btn, .fb-thread .btn, .fb-confirm .btn { height: 34px; }
   .fb-row { min-height: 44px; }
 }
+/* T-2962: the new-version notice, as the demand-stopped one without the alarm colour */
+.new-version-note { border-color: var(--accent); }
+.new-version-note .dsn-row .btn { border-color: var(--accent); color: var(--text); }

@@ -1395,6 +1395,8 @@
   "newGame.startInCity": "Button that starts the new game. city: a city name, e.g. \"Tokyo\".",
   "newGame.tier": "Short light word after a city's name in the new game sheet's search results: how hard a game started there is. Lowercase in English. tier: easy, medium or hard. Use the words games use for difficulty levels; short.",
   "newGame.title": "Heading of the new game sheet.",
+  "newVersion.note": "Notice at the top centre of the map when part of the page could not be loaded because the game was updated while this tab was open. The Reload button sits beside it.",
+  "newVersion.reload": "Button in the new version notice. Reloads the web page; the game is saved first. Short, one word if the language has one.",
   "nodeDrag.builtFixed": "Notice when pressing on a built node to drag it.",
   "nodeDrag.cannotMoveThis": "Notice after dropping a dragged node on a spot that is refused with no reason given.",
   "nodeDrag.cannotMove": "Tag next to the cursor while dragging a node to a spot that is refused, when no more specific reason is known.",

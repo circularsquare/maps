@@ -5,6 +5,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { roadTileTemplate } from "../map/busRoads";
 import type { LegStats, LineRoute, LinePoint, LonLat, PortSnap } from "./route";
+import { noteStaleBuild } from "../game/staleBuild";
 import type { FerryIn, FerryOut } from "../workers/ferryWater.worker";
 
 export type { LineRoute, LinePoint, LonLat, PortSnap, Refusal } from "./route";
@@ -22,6 +23,7 @@ export class FerryWater {
   private start(): Worker {
     if (this.worker) return this.worker;
     const w = new Worker(new URL("../workers/ferryWater.worker.ts", import.meta.url), { type: "module" });
+    w.addEventListener("error", (e) => { if (!e.message) noteStaleBuild(); }); // no message: its script did not load
     w.onmessage = (e: MessageEvent<FerryOut>) => {
       const f = this.waiting.get(e.data.id);
       this.waiting.delete(e.data.id);

@@ -3,6 +3,7 @@
 // While it is up the clock worker posts the graph after each network state; the page names its
 // stations and measures the names, and the layout worker lays it out, draws it and places the names,
 // one at a time, the newest waiting next, the last drawing staying up meanwhile. The layout is on the rubber sheet
+import { noteStaleBuild } from "../game/staleBuild";
 // (diagram/sheet.ts, sheetLines.ts; T-2568, T-2567, T-2580), the sheet kept on `window.twSheet` for checks; `?sheet=0`
 // lays out as before it, where `?diagram=r2` takes round 2's options and `?distort=0.5` that setting of the distortion
 // dial (layout.ts `DISTORT`, T-2556).
@@ -398,7 +399,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!diagramShown.peek() && !forShare.length) return;
     if (!worker) {
       worker = new Worker(new URL("../workers/diagram.worker.ts", import.meta.url), { type: "module" });
-      worker.addEventListener("error", () => giveShare(null));
+      worker.addEventListener("error", (e) => { if (!e.message) noteStaleBuild(); giveShare(null); }); // no message: its script did not load
       worker.onmessage = (e: MessageEvent<FromDiagram>) => {
         if (e.data.kind === "progress") {
           if (!shown && diagramShown.peek()) diagramProgress.value = e.data.share;

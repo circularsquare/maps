@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "從{city}開始",
   "newGame.tier": "{tier, select, easy {簡單} medium {普通} other {困難}}",
   "newGame.title": "新遊戲",
+  "newVersion.note": "遊戲有新版本了。",
+  "newVersion.reload": "重新載入",
   "noMarketNote.memory": "此裝置的記憶體不超過4GB。遊戲很可能運行不順暢。",
   "noMarketNote.text": "手機上城際旅次已關閉。可在設定中開啟，規模較大的遊戲請使用電腦。",
   "nodeDrag.builtFixed": "已完工的軌道和車站無法移動。",

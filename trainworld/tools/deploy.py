@@ -58,6 +58,8 @@ TW = os.path.dirname(HERE)
 MAPS = os.path.dirname(TW)
 sys.path.insert(0, os.path.join(MAPS, "religiondots", "tools"))
 import web_wrap  # noqa: E402  front matter and the site's analytics include
+sys.path.insert(0, HERE)
+import keep_assets  # noqa: E402  T-2962: the previous build's hashed files stay beside the new ones
 
 DIST = os.path.join(MAPS, ".tw-snap", "trainworld", "app", "dist")
 WEBSITE = os.path.join(os.path.dirname(MAPS), "website")
@@ -284,11 +286,12 @@ def copy_site(dist, dest, base, dry):
     if dry:
         return
     os.makedirs(dest, exist_ok=True)
-    # old hashed chunks would pile up in the repo: clear the build's folders, keep index.html's front matter
-    for d in ("assets", "fonts"):
-        shutil.rmtree(os.path.join(dest, d), ignore_errors=True)
+    # T-2962: a tab open across this publish still asks for the previous build's hashed files, so they stay;
+    # the ones older than that go (tools/keep_assets.py). index.html keeps its front matter.
+    kept, gone = keep_assets.carry_into(dest, dist)
+    print(f"   assets/ and fonts/: the previous build's {kept} files kept, {gone} older ones removed")
     for r, p in files_under(dist):
-        if r.startswith("packs/") or r == "index.html":
+        if r.startswith("packs/") or r == "index.html" or r.split("/")[0] in keep_assets.DIRS or r == keep_assets.MANIFEST:
             continue
         t = os.path.join(dest, *r.split("/"))
         os.makedirs(os.path.dirname(t), exist_ok=True)

@@ -82,6 +82,7 @@ import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { DemandStopped } from "./ui/DemandStopped";
+import { NewVersion } from "./ui/NewVersion";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
@@ -171,6 +172,10 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const demandStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(demandStoppedRoot);
 render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
+// T-2962: a file of this tab gone from the server after a publish: a notice with Reload, which saves first
+const newVersionRoot = document.createElement("div");
+map.getContainer().appendChild(newVersionRoot);
+render(h(NewVersion, { save: () => client.saveBeforeReload() }), newVersionRoot);
 // T-2802, T-2839: a phone has no trips between cities, and a device reporting 4 GB or less may not run well; said once per game load
 if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");

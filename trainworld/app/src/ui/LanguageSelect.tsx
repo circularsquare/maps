@@ -3,6 +3,7 @@
 
 import { useState } from "preact/hooks";
 import { chooseLanguage, isLang, language, LANG_NAMES, pickable, t } from "../i18n";
+import { noteStaleBuild } from "../game/staleBuild";
 import { Icon } from "./widgets";
 
 export function LanguageSelect({ class: cls = "" }: { class?: string }) {
@@ -16,7 +17,7 @@ export function LanguageSelect({ class: cls = "" }: { class?: string }) {
       <label class={"purpose-filter" + (mouse ? " mouse" : "")}>
         <select aria-label={t("settingsTab.language")} value={language.value}
           onPointerDown={() => setMouse(true)} onKeyDown={() => setMouse(false)} onBlur={() => setMouse(false)}
-          onChange={(e) => { const v = (e.currentTarget as HTMLSelectElement).value; if (isLang(v)) void chooseLanguage(v); }}>
+          onChange={(e) => { const v = (e.currentTarget as HTMLSelectElement).value; if (isLang(v)) chooseLanguage(v).catch(noteStaleBuild); }}>
           {pickable.map((l) => <option key={l} value={l} lang={l}>{LANG_NAMES[l]}</option>)}
         </select>
       </label>

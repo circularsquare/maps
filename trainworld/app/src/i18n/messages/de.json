@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "Start in {city}",
   "newGame.tier": "{tier, select, easy {leicht} medium {mittel} other {schwer}}",
   "newGame.title": "Neues Spiel",
+  "newVersion.note": "Es gibt eine neue Version des Spiels.",
+  "newVersion.reload": "Neu laden",
   "noMarketNote.memory": "Dieses Gerät hat 4 GB RAM oder weniger. Das Spiel läuft vermutlich nicht gut.",
   "noMarketNote.text": "Fernreisen sind auf dem Handy aus. Du kannst sie in den Einstellungen einschalten oder für größere Spiele einen Computer nehmen.",
   "nodeDrag.builtFixed": "Gebaute Gleise und Stationen lassen sich nicht verschieben.",

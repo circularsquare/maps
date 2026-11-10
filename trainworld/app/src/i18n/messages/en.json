@@ -1395,6 +1395,8 @@
   "newGame.startInCity": "Start in {city}",
   "newGame.tier": "{tier, select, easy {easy} medium {medium} other {hard}}",
   "newGame.title": "New game",
+  "newVersion.note": "There's a new version of the game.",
+  "newVersion.reload": "Reload",
   "nodeDrag.builtFixed": "Built track and stations cannot be moved.",
   "nodeDrag.cannotMoveThis": "This cannot be moved there.",
   "nodeDrag.cannotMove": "Cannot be moved there.",

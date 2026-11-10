@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "Start in {city}",
   "newGame.tier": "{tier, select, easy {easy} medium {medium} other {hard}}",
   "newGame.title": "New game",
+  "newVersion.note": "There's a new version of the game.",
+  "newVersion.reload": "Reload",
   "noMarketNote.memory": "This device has 4GB of RAM or less. The game probably will not run well.",
   "noMarketNote.text": "Intercity trips are off on mobile. You can turn them on in Settings, or try a computer for bigger games.",
   "nodeDrag.builtFixed": "Built track and stations cannot be moved.",

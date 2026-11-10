@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "{city}で開始",
   "newGame.tier": "{tier, select, easy {簡単} medium {普通} other {難しい}}",
   "newGame.title": "新しいゲーム",
+  "newVersion.note": "ゲームの新しいバージョンがあります。",
+  "newVersion.reload": "再読み込み",
   "noMarketNote.memory": "この端末のRAMは4GB以下です。ゲームはおそらく快適には動きません。",
   "noMarketNote.text": "スマートフォンでは都市間の移動はオフです。設定でオンにできます。大きなゲームにはパソコンをお使いください。",
   "nodeDrag.builtFixed": "建設済みの線路と駅は動かせません。",

@@ -1441,6 +1441,8 @@
   "newGame.startInCity": "Empieza en {city}",
   "newGame.tier": "{tier, select, easy {fácil} medium {media} other {difícil}}",
   "newGame.title": "Nueva partida",
+  "newVersion.note": "Hay una versión nueva del juego.",
+  "newVersion.reload": "Recargar",
   "noMarketNote.memory": "Este dispositivo tiene 4 GB de RAM o menos. Es probable que el juego no funcione bien.",
   "noMarketNote.text": "Los desplazamientos interurbanos están desactivados en teléfonos. Puedes activarlos en Ajustes o probar en una computadora para partidas más grandes.",
   "nodeDrag.builtFixed": "Las vías y las estaciones construidas no se pueden mover.",
