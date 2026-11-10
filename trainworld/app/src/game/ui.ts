@@ -175,7 +175,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 14;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; keep: boolean; snap: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; beside: boolean; design: number }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -288,11 +288,15 @@ export const purposeFilter = signal<PurposeFilter>("all");
  * line, on at first (T-1529) and kept while the page is open. Not stored, so there is no old choice
  * to carry over. */
 export const relatedLines = signal(true);
-/** Platform length for new stations, m. */
+/** Platform length for new stations, m; tram track has its own (`buildTramPlatform`, T-2926). */
 export const buildPlatform = signal(200);
+export const TRAM_PLATFORM = { min: 20, max: 80, step: 20, start: 40 } as const;
+export const buildTramPlatform = signal<number>(TRAM_PLATFORM.start);
+/** The station tool's pointer is on tram track, so the station bar steps tram stops' length (T-2926). */
+export const stationOnTram = signal(false);
 /** T-468: the track bar's settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
-export const buildLevel = signal<Level>(LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
+export const buildLevel = signal<Level>(saved.build?.tram === true ? 0 : LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
 /** T-1822: this browser has finished the Getting started guide once, so new games start without it. */
 export const guideFinished = signal(saved.guide === true);
 /** T-2263: the tutorial card is up in this game, so a few hovers it leads to give a longer wording
@@ -307,6 +311,9 @@ export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== fa
 /** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);
+/** T-2927: tram track drawn with the track tool follows the streets (street tram track); on unless
+ * turned off, and flipped while Ctrl is held (tools.ts) */
+export const snapStreets = signal(saved.build?.streets !== false);
 /** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
 export const snapBeside = signal(saved.build?.beside === true);
 /** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
@@ -314,11 +321,15 @@ export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
 export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
 export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
 /** T-817: the track tool lays high-speed track, else regular. High-speed track is double only. */
-export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4);
+export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4 && saved.build?.tram !== true);
+/** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
+ * Regular and High speed. Drawn by hand it is the off-street kind (`TrackApi::set_route_kind(3)`). */
+export const tramTrack = signal(saved.build?.tram === true && saved.build?.tracks !== 4);
 /** T-2931: the track tool lays quad track (two pairs) instead of double; never high-speed. */
-export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.hsr !== true);
+export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.hsr !== true && saved.build?.tram !== true);
 export function setQuadTrack(on: boolean) {
   if (on === quadTrack.peek()) return;
+  if (on && tramTrack.peek()) return;
   batch(() => {
     quadTrack.value = on;
     if (on && highSpeed.peek()) setTrackType(2);
@@ -326,15 +337,32 @@ export function setQuadTrack(on: boolean) {
 }
 /** The design speed before High speed was picked, put back when Regular is picked again. */
 let designBeforeHsr: DesignSpeed | null = null;
-export type TrackType = 2 | "hsr";
-export const trackType = computed<TrackType>(() => (highSpeed.value ? "hsr" : 2));
+/** The level before Tram was picked, put back when another type is. */
+let levelBeforeTram: Level | null = null;
+export type TrackType = 2 | "hsr" | "tram";
+export const trackType = computed<TrackType>(() => (tramTrack.value ? "tram" : highSpeed.value ? "hsr" : 2));
 /** The track bar's Regular / High speed choice. High speed sets the design speed to its top (the
  * player can step it down); leaving it puts back the speed there was before. One batch, so the track
  * tool never sees the old type with the new speed (T-1001). */
 export function setTrackType(t: TrackType) {
-  const was = highSpeed.peek();
-  if (t === "hsr" && was) return;
+  const was = highSpeed.peek(), wasTram = tramTrack.peek();
+  if ((t === "hsr" && was) || (t === "tram" && wasTram) || (t === 2 && !was && !wasTram)) return;
   batch(() => {
+    if (t === "tram") {
+      quadTrack.value = false;
+      if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
+      designBeforeHsr = null;
+      highSpeed.value = false;
+      levelBeforeTram = buildLevel.peek();
+      tramTrack.value = true;
+      buildLevel.value = 0;
+      return;
+    }
+    if (wasTram) {
+      tramTrack.value = false;
+      buildLevel.value = levelBeforeTram ?? 1;
+      levelBeforeTram = null;
+    }
     if (t === "hsr") {
       quadTrack.value = false;
       designBeforeHsr = designSpeed.peek();
@@ -348,7 +376,7 @@ export function setTrackType(t: TrackType) {
   });
 }
 /** the real network is being snapped to: the switch on and the track tool in hand */
-export const snapping = computed(() => snapReal.value && tool.value === "track");
+export const snapping = computed(() => snapReal.value && tool.value === "track" && !tramTrack.value);
 
 /** The day every demand view shows (T-260, T-464): the setting, the average day by default. Away,
  * Out and Back read as the average while no superholiday is near (T-264, T-1373). */
@@ -397,7 +425,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

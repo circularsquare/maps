@@ -56,6 +56,8 @@ export interface StationInput {
   line?: ArrayLike<number>;
   /** T-2194: a port, for ferries (no track or platform), and its berth, longitude and latitude */
   port?: [number, number];
+  /** a tram stop: tram track's own 20-80 m platform (T-2926) */
+  tram?: true;
 }
 
 export interface LineInput {
@@ -89,6 +91,8 @@ export interface TrackEdge {
   off?: boolean;
   /** high-speed track (T-817): always double */
   hsr?: boolean;
+  /** `TrackApi.edge_kind`: 2 street tram, 3 tram (T-2926); absent for rail */
+  kind?: number;
   /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
   crossover?: boolean;
   /** a crossover diagonal's other diagonal, -1 if none */
@@ -122,6 +126,8 @@ export interface TrackNode {
   bus?: true;
   /** T-2194: a port: a station with no track, so no place to snap track to */
   port?: true;
+  /** `TrackApi.node_kind` where it is a tram's (2 or 3, T-2926); absent for rail */
+  kind?: number;
 }
 
 export interface Save {
@@ -174,6 +180,8 @@ export interface LineStats {
   carsSet: number;
   /** high-speed trains (T-817) */
   fast: boolean;
+  /** a line on tram track (T-2926) */
+  tram: boolean;
   /** its share of the upkeep of the track and stations it uses, US$ a game day (T-867) */
   upkeep: number;
   /** per stretch between stops, run 0: the top speed reached and the limit there, km/h, and what

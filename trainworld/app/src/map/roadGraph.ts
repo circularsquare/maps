@@ -219,8 +219,9 @@ export class RoadGraph {
     this.version++;
   }
 
-  /** Every road within `maxUnits` of a grid point: the nearest point of each edge, nearest first. */
-  snapsWithin(x: number, y: number, maxUnits: number): Snap[] {
+  /** Every road within `maxUnits` of a grid point: the nearest point of each edge, nearest first;
+   * with `street`, no motorway (a tram's, T-2927). */
+  snapsWithin(x: number, y: number, maxUnits: number, street = false): Snap[] {
     const out: Snap[] = [];
     const tx0 = Math.floor((x - maxUnits) / EXTENT), tx1 = Math.floor((x + maxUnits) / EXTENT);
     const ty0 = Math.floor((y - maxUnits) / EXTENT), ty1 = Math.floor((y + maxUnits) / EXTENT);
@@ -229,7 +230,7 @@ export class RoadGraph {
         const r = this.tiles.get(RoadGraph.tileKey(tx, ty));
         if (!r) continue;
         for (let e = r[0]; e < r[1]; e++) {
-          if (this.emotor[e] === 2) continue;
+          if (this.emotor[e] === 2 || (street && this.emotor[e] === 1)) continue;
           const a = this.ea[e], b = this.eb[e];
           const ax = this.gx[a], ay = this.gy[a], dx = this.gx[b] - ax, dy = this.gy[b] - ay;
           const l2 = dx * dx + dy * dy;
@@ -248,8 +249,143 @@ export class RoadGraph {
   }
 
   /** The road a click lands on within `maxUnits` of a grid point (the least `snapCost`), or null. */
-  snap(x: number, y: number, maxUnits: number): Snap | null {
-    return this.snapsWithin(x, y, maxUnits)[0] ?? null;
+  snap(x: number, y: number, maxUnits: number, street = false): Snap | null {
+    return this.snapsWithin(x, y, maxUnits, street)[0] ?? null;
+  }
+
+  private tg = new Float64Array(0);
+  private tfrom = new Int32Array(0);
+  private tseen = new Int32Array(0);
+  private tdone = new Int32Array(0);
+  private tstamp = 0;
+
+  /** T-2927: the road a tram follows from one of the snapped points `starts` to one of `ends` (each
+   * costing `pen` metres more: the nearest road can be a stub joined to nothing): shortest with
+   * `turnM` metres more for each turn sharper than `minTurn` (radians) where two road segments meet,
+   * never turning back more than `maxTurn` at a node or within `backM` metres of road, and no motorway.
+   * A search over directed segments (each state is a segment and the way it is run), A* on the
+   * straight distance to the first end; null if none is under `capM`. `turns` counts the turns paid
+   * for; `from` and `to` are the ends taken. */
+  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number): (RoadPath & { from: Snap; turns: number; states: number }) | null {
+    if (!starts.length || !ends.length) return null;
+    let direct: { m: number; s: Snap; d: Snap } | null = null;
+    for (const s of starts)
+      for (const d of ends) {
+        if (s.edge !== d.edge) continue;
+        const m = Math.abs(d.t - s.t) * this.elen[s.edge] + pen(s) + pen(d);
+        if (m < capM && (!direct || m < direct.m)) direct = { m, s, d };
+      }
+    const d = ends[0];
+    const arcs = 2 * this.edges;
+    if (this.tg.length < arcs) {
+      const n = Math.max(arcs, this.tg.length * 2);
+      this.tg = new Float64Array(n);
+      this.tfrom = new Int32Array(n);
+      this.tseen = new Int32Array(n);
+      this.tdone = new Int32Array(n);
+      this.tstamp = 0;
+    }
+    const stamp = ++this.tstamp;
+    this.hs = 0;
+    const mpu = metresPerUnit(d.y);
+    const cosMin = Math.cos(minTurn), cosMax = Math.cos(maxTurn);
+    // arc 2e runs ea to eb, 2e + 1 eb to ea; its head node and unit heading there
+    const head = (a: number) => ((a & 1) === 0 ? this.eb[a >> 1] : this.ea[a >> 1]);
+    const tail = (a: number) => ((a & 1) === 0 ? this.ea[a >> 1] : this.eb[a >> 1]);
+    const dir = (a: number): [number, number] => {
+      const p = tail(a), q = head(a), dx = this.gx[q] - this.gx[p], dy = this.gy[q] - this.gy[p], l = Math.hypot(dx, dy) || 1;
+      return [dx / l, dy / l];
+    };
+    // a lower bound: the other ends are at most `slack` units further on
+    let slack = 0;
+    for (const c of ends) slack = Math.max(slack, Math.hypot(c.x - d.x, c.y - d.y));
+    const h = (n: number) => Math.max(0, Math.hypot(this.gx[n] - d.x, this.gy[n] - d.y) - slack) * mpu;
+    /** what turning from heading `u` onto heading `v` costs: Infinity if it turns back too far */
+    const turnCost = (u: [number, number], v: [number, number]) => {
+      const c = u[0] * v[0] + u[1] * v[1];
+      return c < cosMax ? Infinity : c < cosMin ? turnM : 0;
+    };
+    /** whether heading `v` after done arc `a` turns back more than `maxTurn` from a heading run within
+     * `backM` before `a`'s head: a U-turn in steps (across a divided road's median, round a traffic island) */
+    const doubles = (a: number, v: [number, number]) => {
+      let m = this.elen[a >> 1];
+      for (let p = this.tfrom[a]; p >= 0 && m < backM; p = this.tfrom[p]) {
+        const u = dir(p);
+        if (u[0] * v[0] + u[1] * v[1] < cosMax) return true;
+        m += this.elen[p >> 1];
+      }
+      return false;
+    };
+    const open = (a: number, g: number, from: number) => {
+      if (this.tdone[a] === stamp || (this.tseen[a] === stamp && this.tg[a] <= g)) return;
+      this.tseen[a] = stamp;
+      this.tg[a] = g;
+      this.tfrom[a] = from;
+      this.push(g + h(head(a)), a);
+    };
+    // a start's arcs come from -1 - its index
+    starts.forEach((s, i) => {
+      const l0 = this.elen[s.edge], p = pen(s);
+      open(2 * s.edge, p + (1 - s.t) * l0, -1 - i);
+      open(2 * s.edge + 1, p + s.t * l0, -1 - i);
+    });
+    // an end's segment entered at either of its nodes: from ea it runs as arc 2e, from eb as 2e + 1
+    const endsAt = new Map<number, { c: Snap; v: [number, number]; rest: number }[]>();
+    for (const c of ends) {
+      const u = dir(2 * c.edge), l = this.elen[c.edge], p = pen(c);
+      for (const [n, v, rest] of [[this.ea[c.edge], u, c.t * l + p], [this.eb[c.edge], [-u[0], -u[1]], (1 - c.t) * l + p]] as const) {
+        const list = endsAt.get(n);
+        if (list) list.push({ c, v: v as [number, number], rest });
+        else endsAt.set(n, [{ c, v: v as [number, number], rest }]);
+      }
+    }
+    let best = direct ? direct.m : capM, end = -1, to = d, states = 0;
+    while (this.hs > 0) {
+      const a = this.pop();
+      if (this.popF >= best) break;
+      if (this.tdone[a] === stamp) continue;
+      this.tdone[a] = stamp;
+      states++;
+      const n = head(a), g = this.tg[a], u = dir(a);
+      for (const x of endsAt.get(n) ?? []) {
+        if (a >> 1 === x.c.edge || doubles(a, x.v)) continue;
+        const tot = g + x.rest + turnCost(u, x.v);
+        if (tot < best) (best = tot), (end = a), (to = x.c), (direct = null);
+      }
+      for (let arc = this.head[n]; arc >= 0; arc = this.arcNext[arc]) {
+        const e = arc >> 1;
+        if (e === a >> 1 || this.emotor[e] === 1) continue;
+        // a node's list holds 2e at ea and 2e + 1 at eb, so its arcs leave it
+        const b = arc;
+        const tc = turnCost(u, dir(b));
+        if (tc === Infinity || doubles(a, dir(b))) continue;
+        const ng = g + this.elen[e] + tc;
+        if (ng + h(head(b)) >= best) continue;
+        open(b, ng, a);
+      }
+    }
+    if (direct) return { pts: [direct.s.x, direct.s.y, direct.d.x, direct.d.y], m: Math.abs(direct.d.t - direct.s.t) * this.elen[direct.s.edge], from: direct.s, to: direct.d, turns: 0, states };
+    if (end < 0) return null;
+    const chain: number[] = [];
+    let a = end;
+    for (; a >= 0; a = this.tfrom[a]) chain.push(a);
+    const from = starts[-1 - a];
+    chain.reverse();
+    const pts = [from.x, from.y];
+    let turns = 0;
+    for (let i = 0; i < chain.length; i++) {
+      const n = head(chain[i]);
+      pts.push(this.gx[n], this.gy[n]);
+      if (i > 0) {
+        const u = dir(chain[i - 1]), v = dir(chain[i]);
+        if (u[0] * v[0] + u[1] * v[1] < cosMin) turns++;
+      }
+    }
+    pts.push(to.x, to.y);
+    // the turn onto the end's segment
+    const v = endsAt.get(head(end))!.find((x) => x.c === to)!.v, u = dir(end);
+    if (u[0] * v[0] + u[1] * v[1] < cosMin) turns++;
+    return { pts, m: best - turns * turnM - pen(from) - pen(to), from, to, turns, states };
   }
 
   // ---------------------------------------------------------------- search

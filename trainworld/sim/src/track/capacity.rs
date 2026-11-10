@@ -477,7 +477,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
             let occ_s = if single {
                 profile::time_at(ph, exit) - profile::time_at(ph, entry) + SINGLE_TRACK_MARGIN_S
             } else {
-                SECTION_BASE_S + profile::v_max(ph, entry, exit) / SIGNAL_BRAKE
+                net.edge_section_s(path_edge(run.segs[i0])) + profile::v_max(ph, entry, exit) / SIGNAL_BRAKE
             };
             users.push(User { line: l, run: r, owner: true, occ: occ_s, at: entry - hold_back(lines, l as usize), stop: -1 });
             u = ue;
@@ -535,8 +535,8 @@ fn turn_at(net: &Network, n: u32, l: usize, r: u8, side_in: u8, at: f64, dwell: 
     let track = if tracks == 1 { 0 } else { side_in };
     if net.node_platform[n as usize] > 0 && net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 {
         let out = if tracks == 1 { 0 } else { 1 - side_in };
-        plat.push((n, track, l as u32, r, -1, at, dwell + PLATFORM_MARGIN_S, false));
-        plat.push((n, out, l as u32, r, -1, at, dwell + PLATFORM_MARGIN_S, false));
+        plat.push((n, track, l as u32, r, -1, at, dwell + net.node_margin_s(n as u32), false));
+        plat.push((n, out, l as u32, r, -1, at, dwell + net.node_margin_s(n as u32), false));
         sidings.push((n, l as u32, r, at, upgrades::pooled_turn_s(turn, TERMINUS_MARGIN_S, upgrades::TERMINAL_SIDINGS)));
     } else {
         // the arrival platform is held through the turnaround: through trains on it queue behind
@@ -598,7 +598,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     // over them, and a train that does not stop runs past on its own track
                     let passing = overtake::passing_at(net, n);
                     let (stop, at, occ) = match run.stop_idx.iter().position(|&s| s as usize == k) {
-                        Some(j) => (j as i32, run.stop_s[j], if passing { (dwell + PLATFORM_MARGIN_S) / 2.0 } else { dwell + PLATFORM_MARGIN_S }),
+                        Some(j) => (j as i32, run.stop_s[j], if passing { (dwell + net.node_margin_s(n as u32)) / 2.0 } else { dwell + net.node_margin_s(n as u32) }),
                         None => (-1, run.node_s[k] - hold_back(lines, l), PASSING_S),
                     };
                     if !(passing && stop < 0) {
@@ -628,7 +628,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 let tracks = active_node_tracks(net, n);
                 let track = if tracks == 1 { 0 } else { side_in };
                 let at = run.stop_s.last().unwrap() - hold_back(lines, l);
-                plat.push((n, track, l as u32, r as u8, -1, at, dwell + PLATFORM_MARGIN_S, false));
+                plat.push((n, track, l as u32, r as u8, -1, at, dwell + net.node_margin_s(n as u32), false));
                 if tracks > 1 { through.push((n, track, l as u32, r as u8, -1, at)); }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
                     let (ein, win) = (path_edge(p), 1 - path_dir(p));
@@ -686,6 +686,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
     let mut i = 0;
     while i < turns.len() {
         let n = turns[i].0;
+        let conflict = net.node_conflict_s(n);
         let end = turns[i..].partition_point(|x| x.0 == n) + i;
         let reversing = &turns[i..end];
         let start_through = through.partition_point(|x| x.0 < n);
@@ -695,17 +696,17 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             // A reversal sees the opposite through track and reversals from the other side.
             // Same-side through traffic already shares its occupied arrival platform.
             if reversing.iter().any(|x| x.1 == track) {
-                users = reversing.iter().map(|x| User { line: x.2, run: x.3, owner: x.1 == track, occ: CONFLICT_S, at: x.4, stop: -1 }).collect();
+                users = reversing.iter().map(|x| User { line: x.2, run: x.3, owner: x.1 == track, occ: conflict, at: x.4, stop: -1 }).collect();
                 let turn_count = users.len() as u32;
-                users.extend(passing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: CONFLICT_S, at: x.5, stop: x.4 }));
+                users.extend(passing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: conflict, at: x.5, stop: x.4 }));
                 push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
             }
             // Reciprocal resource for each through movement: independent opposite-direction
             // through trains must never load each other's crossover capacity.
-            users = reversing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: CONFLICT_S, at: x.4, stop: -1 }).collect();
+            users = reversing.iter().filter(|x| x.1 != track).map(|x| User { line: x.2, run: x.3, owner: false, occ: conflict, at: x.4, stop: -1 }).collect();
             if !users.is_empty() && passing.iter().any(|x| x.1 == track) {
                 let turn_count = users.len() as u32;
-                users.extend(passing.iter().filter(|x| x.1 == track).map(|x| User { line: x.2, run: x.3, owner: true, occ: CONFLICT_S, at: x.5, stop: x.4 }));
+                users.extend(passing.iter().filter(|x| x.1 == track).map(|x| User { line: x.2, run: x.3, owner: true, occ: conflict, at: x.5, stop: x.4 }));
                 push_res(cap, ResKind::Terminus, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Turnback { turns: turn_count });
             }
         }
@@ -716,6 +717,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
     let mut i = 0;
     while i < moves.len() {
         let n = moves[i].0;
+        let conflict = net.node_conflict_s(n);
         let end = moves[i..].partition_point(|x| x.0 == n) + i;
         let at_node = &moves[i..end];
         let mut distinct: Vec<(f64, f64)> = at_node.iter().map(|m| (m.1, m.2)).collect();
@@ -728,9 +730,9 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
             users.clear();
             for m in at_node {
                 if (m.1, m.2) == (pa, pb) {
-                    users.push(User { line: m.3, run: m.4, owner: true, occ: CONFLICT_S, at: m.5, stop: -1 });
+                    users.push(User { line: m.3, run: m.4, owner: true, occ: conflict, at: m.5, stop: -1 });
                 } else if crosses(m) {
-                    users.push(User { line: m.3, run: m.4, owner: false, occ: CONFLICT_S, at: m.5, stop: -1 });
+                    users.push(User { line: m.3, run: m.4, owner: false, occ: conflict, at: m.5, stop: -1 });
                 }
             }
             push_res(cap, ResKind::Junction, net.node_x[n as usize], net.node_y[n as usize], n, u32::MAX, &users, Tag::Node);
@@ -765,6 +767,7 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
         if !matches!(c.kind, CrossKind::Flat(_)) || !sel(c) {
             continue;
         }
+        let conflict = net.edge_conflict_s(c.e1).max(net.edge_conflict_s(c.e2));
         for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
             // T-1805: a crossing no train runs over the other way holds nothing (blueprint, or
             // constructed track no line uses); the lines on its own track already share their section
@@ -777,13 +780,13 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
                 for o in on(own).iter().filter(|o| o.1 == dir) {
                     let run = &lines[o.2 as usize].runs[o.3 as usize];
                     let at = run.seg_off[o.4 as usize] + if dir == 0 { s_own } else { len - s_own } - hold_back(lines, o.2 as usize);
-                    users.push(User { line: o.2, run: o.3, owner: true, occ: CONFLICT_S, at, stop: -1 });
+                    users.push(User { line: o.2, run: o.3, owner: true, occ: conflict, at, stop: -1 });
                 }
                 if users.is_empty() {
                     continue;
                 }
                 for o in on(other) {
-                    users.push(User { line: o.2, run: o.3, owner: false, occ: CONFLICT_S, at: 0.0, stop: -1 });
+                    users.push(User { line: o.2, run: o.3, owner: false, occ: conflict, at: 0.0, stop: -1 });
                 }
                 push_res(cap, ResKind::Crossing, c.x, c.y, u32::MAX, own, &users, Tag::Crossing { other });
             }
@@ -947,10 +950,10 @@ pub(super) fn stretches(net: &Network, lines: &[LineSvc], f: u32, live: &dyn Fn(
                 if longer < FOLLOW_MIN_S {
                     continue;
                 }
-                let spacing = SECTION_BASE_S + profile::v_max(&s_run.free.phases, sa, sb) / SIGNAL_BRAKE;
+                let spacing = net.edge_section_s(path_edge(s_run.segs[j0])) + profile::v_max(&s_run.free.phases, sa, sb) / SIGNAL_BRAKE;
                 // T-2231: the slower one steps aside at passing stations inside, so the pair can part
                 let plan = if plans {
-                    let s = SECTION_BASE_S + profile::v_max(&run.free.phases, fa, fb) / SIGNAL_BRAKE;
+                    let s = net.edge_section_s(path_edge(run.segs[i0])) + profile::v_max(&run.free.phases, fa, fb) / SIGNAL_BRAKE;
                     overtake::plan(net, (f, fr as u8), run, (l, r), s_run, i0, last, j0, s)
                 } else {
                     None

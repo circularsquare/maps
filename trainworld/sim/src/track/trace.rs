@@ -21,6 +21,9 @@ use std::f64::consts::PI;
 const THIN_SHARE: f64 = 0.6;
 /// Real line sampled this often (ground m) to measure the fit.
 const SAMPLE_M: f64 = 10.0;
+/// T-2927: a tight line's corners pass at most this far from their vertex (or at the minimum
+/// radius), whatever the tolerance: a street corner kept close to the junction, as trams turn.
+const TIGHT_M: f64 = 10.0;
 /// Rounds of adding corners where the fit is out of tolerance.
 const MAX_ROUNDS: usize = 40;
 
@@ -56,6 +59,8 @@ pub struct Tracer {
     scaled: bool,
     tol: f64,
     r_min: f64,
+    /// the radius under which the geometry itself refuses a curve (`geom::fit_min`)
+    geom_r: f64,
     cap: f64,
     level: i8,
     keep: Vec<usize>,
@@ -67,6 +72,7 @@ pub struct Tracer {
     sweep: Option<Sweep>,
     pis: Vec<Pi>,
     done: Option<Option<Traced>>,
+    tight: bool,
 }
 
 enum Eased {
@@ -79,7 +85,7 @@ enum Eased {
 impl Tracer {
     pub fn new(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, cap: f64, level: i8) -> Tracer {
         let line = dedup(line);
-        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, cap: cap.max(R_CAP), level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None };
+        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, geom_r: r_min.min(MIN_RADIUS), cap, level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None, tight: false };
         if t.line.len() < 2 {
             t.done = Some(None);
             return t;
@@ -111,7 +117,11 @@ impl Tracer {
                 }
                 if !more || self.rounds >= MAX_ROUNDS {
                     let keep = std::mem::take(&mut self.keep);
-                    self.corners = Some(Corners { radius: vec![0.0; keep.len()], at: vec![None; keep.len()], keep });
+                    let mut c = Corners { radius: vec![0.0; keep.len()], at: vec![None; keep.len()], keep };
+                    if self.tight {
+                        self.tighten(&mut c);
+                    }
+                    self.corners = Some(c);
                 }
                 return false;
             }
@@ -153,9 +163,28 @@ impl Tracer {
         self.done.take().flatten()
     }
 
+    /// T-2927: for a line with few vertices (a street's, a corner at each junction), where no vertex
+    /// is left to add: each corner whose auto curve passes further than the tolerance from its own
+    /// vertex gets the radius that passes `TIGHT_M` from it (or the tolerance, if less), at least the minimum.
+    pub fn tight(mut self) -> Tracer {
+        self.tight = true;
+        self
+    }
+
+    fn tighten(&self, c: &mut Corners) {
+        let f = c.fit(&self.line, self.scaled, self.cap, self.level);
+        let v = c.verts(&self.line, self.level);
+        for j in 1..c.keep.len().saturating_sub(1) {
+            let off = 1.0 / (turn_at(&v, j) / 2.0).cos() - 1.0;
+            if f.radius[j] > 0.0 && off > 0.0 && f.radius[j] * off > TIGHT_M.min(self.tol) {
+                c.radius[j] = ((TIGHT_M.min(self.tol) / off).max(self.r_min + 1e-3) / QUANT).floor() * QUANT;
+            }
+        }
+    }
+
     /// The tightest curve under the minimum radius widened to it, or its corners dropped or merged.
     fn ease(&self, c: &Corners) -> Eased {
-        let (line, samples, scaled, level, r_min, tol, cap) = (&self.line[..], &self.samples[..], self.scaled, self.level, self.r_min, self.tol, self.cap);
+        let (line, samples, scaled, level, r_min, tol, cap, gr) = (&self.line[..], &self.samples[..], self.scaled, self.level, self.r_min, self.tol, self.cap, self.geom_r);
         let f = c.fit(line, scaled, cap, level);
         let tight_at = |f: &Fit, j: usize| f.radius[j] > 0.0 && f.radius[j] < r_min - 1e-6;
         let Some(i) = (1..c.keep.len() - 1).filter(|&j| tight_at(&f, j)).min_by(|&a, &b| f.radius[a].total_cmp(&f.radius[b])) else { return Eased::Done };
@@ -167,7 +196,7 @@ impl Tracer {
         if turn < PI - 1e-3 && need + f.tangent[i - 1] <= leg(i - 1, i) - FIT_TOL && need + f.tangent[i + 1] <= leg(i, i + 1) - FIT_TOL {
             let mut c2 = c.clone();
             c2.radius[i] = r_min + 1e-3;
-            if c2.near(line, scaled, cap, level, i).issues(|_| true) == 0 && c2.worst_near(line, samples, scaled, cap, level, i) <= 2.0 * tol {
+            if c2.near(line, scaled, cap, gr, level, i).issues(|_| true) == 0 && c2.worst_near(line, samples, scaled, cap, level, i) <= 2.0 * tol {
                 return Eased::Widened(c2);
             }
         }
@@ -183,7 +212,7 @@ impl Tracer {
             for merge in [false, true] {
                 let Some(c2) = (if merge { c.merged(&v, lo, hi, r_min + 1e-3) } else { Some(c.without(lo, hi)) }) else { continue };
                 let at = lo.min(c2.keep.len() - 2).max(1);
-                let w2 = c2.near(line, scaled, cap, level, at);
+                let w2 = c2.near(line, scaled, cap, gr, level, at);
                 if w2.tight(at.saturating_sub(6), at + 7, r_min) >= before || w2.issues(|g| !matches!(g, geom::GeomIssue::RadiusTooSmall(_))) > 0 {
                     continue;
                 }
@@ -205,7 +234,7 @@ impl Tracer {
         let mut v = c.verts(&self.line, self.level);
         let made: Vec<usize> = (1..v.len() - 1).collect();
         geom::design_radii(&mut v, &made, self.cap, self.scaled);
-        let f = geom::fit_in(&v, self.scaled);
+        let f = geom::fit_min(&v, self.scaled, R_CAP, self.geom_r);
         if !f.issues.is_empty() {
             self.done = Some(None);
             return true;
@@ -239,10 +268,10 @@ impl Corners {
     }
     /// The fit of the corners around corner `at` alone: a corner's arc depends only on its two
     /// legs, so away from the slice's ends it is the whole alignment's.
-    fn near(&self, line: &[(f64, f64)], scaled: bool, cap: f64, level: i8, at: usize) -> Near {
+    fn near(&self, line: &[(f64, f64)], scaled: bool, cap: f64, geom_r: f64, level: i8, at: usize) -> Near {
         let last = self.keep.len() - 1;
         let (a, b) = (at.saturating_sub(NEAR), (at + NEAR).min(last));
-        let fit = geom::fit_capped(&self.slice(a, b).verts(line, level), scaled, cap);
+        let fit = geom::fit_min(&self.slice(a, b).verts(line, level), scaled, cap, geom_r);
         // the slice's first and last corners are its ends, so the corners beside them lose the
         // half-leg rule, and an arc set beside those may then be blamed
         let lo = if a == 0 { 1 } else { a + 3 };

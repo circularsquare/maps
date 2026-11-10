@@ -132,13 +132,13 @@ fn set_edges_hsr_changes_double_blueprint_only() {
     assert_eq!(a.construct(&[ids[2]], &[]), 0, "{}", a.issues());
     assert_eq!(a.set_edges_hsr(&ids, true), 0, "{}", a.issues());
     assert_eq!(a.last_skipped(), 2);
-    assert!(a.w.net.edge_hsr[ids[0] as usize] && !a.w.net.edge_hsr[ids[1] as usize] && !a.w.net.edge_hsr[ids[2] as usize]);
+    assert!(a.w.net.edge_kind[ids[0] as usize].is_hsr() && !a.w.net.edge_kind[ids[1] as usize].is_hsr() && !a.w.net.edge_kind[ids[2] as usize].is_hsr());
     // already high speed: nothing to do, nothing skipped among the double blueprint
     assert_eq!(a.set_edges_hsr(&ids[..1], true), 1);
     assert_eq!(a.last_skipped(), 0);
     a.undo();
-    assert!(!a.w.net.edge_hsr[ids[0] as usize]);
+    assert!(!a.w.net.edge_kind[ids[0] as usize].is_hsr());
     assert_eq!(a.set_edges_hsr(&ids[..1], true), 0);
     assert_eq!(a.set_edges_hsr(&ids[..1], false), 0);
-    assert!(!a.w.net.edge_hsr[ids[0] as usize]);
+    assert!(!a.w.net.edge_kind[ids[0] as usize].is_hsr());
 }

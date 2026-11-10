@@ -398,18 +398,35 @@ pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
     f
 }
 
+/// `fit_capped` for track whose smallest radius is `r_min` (T-2927: a tram kind's 25 m): a curve of
+/// `r_min` up to `MIN_RADIUS` is no `RadiusTooSmall`. Never stricter than `fit_capped`.
+pub fn fit_min(v: &[Pi], scaled: bool, cap: f64, r_min: f64) -> Fit {
+    let mut f = fit_capped(v, scaled, cap);
+    if r_min < MIN_RADIUS {
+        let radius = &f.radius;
+        f.issues.retain(|g| !matches!(*g, GeomIssue::RadiusTooSmall(j) if radius[j] >= r_min - 1e-6));
+    }
+    f
+}
+
 /// T-817: at a design radius `cap` above `R_CAP`, each auto corner of `verts` named in `made`
 /// whose curve under that cap is wider than `R_CAP` gets that radius set, since every later fit
 /// caps an auto radius at `R_CAP`. Floored to the millimetre and eased like `stroke_pieces` where
-/// the scale at the arc's middle leaves it a hair too long for its legs.
+/// the scale at the arc's middle leaves it a hair too long for its legs. T-2927: under `R_CAP` (a
+/// street tram's), each one the cap narrows gets its capped radius set, for the same reason.
 pub fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
-    if cap <= R_CAP || made.is_empty() {
+    if cap == R_CAP || made.is_empty() {
         return;
     }
     let f = fit_capped(verts, scaled, cap);
+    let wide = if cap < R_CAP { Some(fit_in(verts, scaled)) } else { None };
     let mut set = vec![];
     for &i in made {
-        if verts[i].radius == 0.0 && f.radius[i] > R_CAP {
+        let over = match &wide {
+            Some(w) => f.radius[i] > 0.0 && w.radius[i] > f.radius[i] + 1e-6,
+            None => f.radius[i] > R_CAP,
+        };
+        if verts[i].radius == 0.0 && over {
             verts[i].radius = (f.radius[i] / QUANT).floor() * QUANT;
             set.push(i);
         }

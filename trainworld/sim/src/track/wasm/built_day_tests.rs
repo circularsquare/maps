@@ -15,7 +15,7 @@ fn joint(a: &mut TrackApi, x: f64) -> u32 {
 }
 
 fn piece(a: u32, b: u32, built: bool) -> EdgeData {
-    EdgeData { a, b, tracks: 2, pis: vec![], built, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }
+    EdgeData { a, b, tracks: 2, pis: vec![], built, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }
 }
 
 fn built_edge(a: &mut TrackApi, from: u32, to: u32) -> u32 {

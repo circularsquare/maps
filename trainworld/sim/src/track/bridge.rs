@@ -13,6 +13,25 @@ use super::frame::merc_k;
 use super::geom::{self, Fit, Piece, Pi};
 use super::params::*;
 
+thread_local! {
+    /// The smallest radius of the track being bridged (`with_min_radius`).
+    static MIN_R: std::cell::Cell<f64> = const { std::cell::Cell::new(MIN_RADIUS) };
+}
+
+/// T-2927: `f` with the bridges laid for track whose smallest radius is `r` (a tram kind's 25 m),
+/// so its tighter curves are not taken for a shape that does not fit.
+pub fn with_min_radius<T>(r: f64, f: impl FnOnce() -> T) -> T {
+    let was = MIN_R.with(|c| c.replace(r));
+    let out = f();
+    MIN_R.with(|c| c.set(was));
+    out
+}
+
+/// `geom::fit_in` for the track in hand.
+fn fit_here(v: &[Pi], scaled: bool) -> Fit {
+    geom::fit_min(v, scaled, R_CAP, MIN_R.with(|c| c.get()))
+}
+
 /// The level a bridge runs at.
 const BRIDGE_LEVEL: i8 = 1;
 /// A ramp up to the bridge, m.
@@ -125,7 +144,7 @@ fn bridge_in(verts: &[Pi], scaled: bool, spans: Spans, fine: bool, lift: [bool; 
         return Ok(None);
     }
     let Some(fixed) = ends_up(verts) else { return Ok(None) };
-    let f = geom::fit_in(verts, scaled);
+    let f = fit_here(verts, scaled);
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
     }
@@ -256,7 +275,7 @@ fn bridge_long_in(verts: &[Pi], scaled: bool, spans: Spans, lift: [bool; 2]) -> 
     if verts.len() < 2 || ends_up(verts).is_none() {
         return Ok(None);
     }
-    let f = geom::fit_in(verts, scaled);
+    let f = fit_here(verts, scaled);
     if !f.issues.is_empty() || f.pieces.is_empty() {
         return Ok(None);
     }
@@ -356,7 +375,7 @@ fn fine_spans(f: &Fit, mask: &dyn WaterMask) -> Vec<[f64; 2]> {
 
 /// Every fine sample over water on `v` is at least half a level up, as the edit's check wants.
 fn held(v: &[Pi], scaled: bool, spans: Spans) -> bool {
-    let g = geom::fit_in(v, scaled);
+    let g = fit_here(v, scaled);
     g.issues.is_empty() && spans(&g, true).iter().all(|w| {
         let mut s = w[0];
         while s <= w[1] {
@@ -384,7 +403,7 @@ fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64, stay_up: [bool; 2], scaled: bool)
         for p in &mut v[lo..=hi] {
             p.level = BRIDGE_LEVEL;
         }
-        let g = geom::fit_in(&v, scaled);
+        let g = fit_here(&v, scaled);
         // the window's own chainage at a place along the whole route, by its corners
         let at = |s: f64| {
             let i = sub.partition_point(|p| p.1 <= s).clamp(1, n - 1);
@@ -532,7 +551,7 @@ fn slice(piece: &Piece, scaled: bool, reqs: &[Req]) -> Option<Vec<V>> {
 /// The new alignment fits and is the old one. Radii that the millimetre grid left a hair too big
 /// are eased.
 fn settle(f: &Fit, nv: &mut [Pi], scaled: bool) -> Option<Fit> {
-    let mut g = geom::fit_in(nv, scaled);
+    let mut g = fit_here(nv, scaled);
     for _ in 0..10 {
         let bad = g.clamped.clone();
         if bad.is_empty() {
@@ -541,7 +560,7 @@ fn settle(f: &Fit, nv: &mut [Pi], scaled: bool) -> Option<Fit> {
         for j in bad {
             nv[j].radius = floor_mm(nv[j].radius * 0.9995);
         }
-        g = geom::fit_in(nv, scaled);
+        g = fit_here(nv, scaled);
     }
     if !g.issues.is_empty() || g.pieces.is_empty() || (g.len - f.len).abs() > 0.05 {
         return None;

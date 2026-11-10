@@ -15,7 +15,7 @@ import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretc
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool } from "../../game/ui";
+import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
@@ -40,6 +40,7 @@ import type { EditOp } from "../../workers/protocol";
 import { hasUpgrade, UPGRADE } from "../../game/upgrades";
 import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
+import { TRACK_SPECS } from "../../game/trackKinds";
 
 const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stationsByNum(world.value) : new Map());
 
@@ -341,25 +342,26 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   if (!plats.length || !st.cars) return null;
   const short = plats.reduce((a, b) => (b.length < a.length ? b : a));
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
+  const maxM = st.tram ? TRAM_PLATFORM.max : PLATFORM_MAX_M;
   const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
   const capText = tr("lineInspector.fits", { length: length(short.length), name: short.name, cars: carsText(cap) });
   // T-1893: the number between the buttons carries the hover; the buttons have none
   const m = moneyState.value;
   // T-2669: a line priced off the world list says by how much
   const rf = lineRunFactor(l.num), rfText = Math.abs(rf - 1) >= 0.005 ? "\n" + runCostLineFactor(rf) : "";
-  const tip = tr("lineInspector.carry", { cars: carsText(cars), rated: tNumber(cars * RATED_PER_CAR), crush: tNumber(cars * CRUSH_PER_CAR) }) + (m ? "\n" + trainCostLine(trainKind(m, st.fast)) + rfText : "");
+  const tip = tr("lineInspector.carry", { cars: carsText(cars), rated: tNumber(cars * RATED_PER_CAR), crush: tNumber(cars * CRUSH_PER_CAR) }) + (m ? "\n" + trainCostLine(trainKind(m, st.fast, st.tram)) + rfText : "");
   // T-751: a + at the cap offers to lengthen the platforms that stop it
   const step = (d: number) => {
     const r = stepLineCars(l.id, Math.min(st.cars, cap), cap, d);
     if (r === true) setWant(null);
-    else if (d > 0 && r === false && cap < PLATFORM_MAX_M / CAR_M) setWant({ line: l.id, cars: cap + 1 });
+    else if (d > 0 && r === false && cap < maxM / CAR_M) setWant({ line: l.id, cars: cap + 1 });
     return r;
   };
   // T-1894: a typed length past the platforms' cap goes to the cap and offers to expand them for it
   const typed = (v: number) => {
     const to = Math.max(1, Math.round(v));
     if (to !== cars) void stepLineCars(l.id, Math.min(st.cars, cap), cap, to - cars);
-    setWant(to > cap && cap < PLATFORM_MAX_M / CAR_M ? { line: l.id, cars: Math.min(to, Math.floor(PLATFORM_MAX_M / CAR_M)) } : null);
+    setWant(to > cap && cap < maxM / CAR_M ? { line: l.id, cars: Math.min(to, Math.floor(maxM / CAR_M)) } : null);
   };
   const offer = want && want.line === l.id && want.cars > cap ? want.cars : 0;
   return (
@@ -384,7 +386,7 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   const btn = useRef<HTMLButtonElement>(null);
   const busy = useRef(false);
   const m = moneyState.value;
-  const k = m && trainKind(m, st.fast);
+  const k = m && trainKind(m, st.fast, st.tram);
   const trains = Math.max(...st.trainsNeeded);
   const carsPrice = k && st.status === "running" ? Math.max(0, (to - cars) * trains - k.spare) * k.carPrice : 0;
   if (!short.length) return null;
@@ -564,11 +566,13 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
 }
 
 /** The hover on a stop's time: how fast the trains run from the stop before, and what holds them. */
-function stretchTip(s: { reached: number; limit: number; why: number } | undefined): string | undefined {
+function stretchTip(s: { reached: number; limit: number; why: number } | undefined, tram = false): string | undefined {
   if (!s) return undefined;
   const lim = speed(s.limit);
+  // T-2927: on a tram line the track's cap is street tram track's 60 km/h or tram track's 80
+  const track = !tram ? "track" : s.limit <= TRACK_SPECS.streetTram.vCapKmh + 0.5 ? "street" : "tram";
   // i18n-ignore: select option names
-  const why = tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? "track" : s.why === 2 ? "curve" : "crossover", speed: lim });
+  const why = tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? track : s.why === 2 ? "curve" : "crossover", speed: lim });
   return tr("lineInspector.reach", { speed: speed(s.reached) }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
@@ -788,7 +792,7 @@ function RailLineInspector({ id }: { id: string }) {
           <span class="stop-name" onClick={() => { if (!draggedRow.current) selection.value = { kind: "station", station: s }; }}>
             {name.get(s)}
           </span>
-          {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above])}>{duration(t)}</span>}
+          {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
           {st.reversals?.includes(i) && (
             <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS) })}>
               <Icon.uturn />

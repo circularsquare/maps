@@ -172,7 +172,7 @@ export function runningToday(l: LineInput, st: LineStats): number {
   const held = todayService.value.get(l.id);
   const tph = held ? held.tph : [l.tph.high, l.tph.medium, l.tph.low];
   const cars = held?.cars ?? st.cars;
-  const k = trainKind(m, st.fast);
+  const k = trainKind(m, st.fast, st.tram);
   let cost = 0;
   for (let h = Math.floor(t0); h < t; h++) {
     const lev = LEVEL_INDEX[PERIODS[periodAt(h * 3600)].demand];

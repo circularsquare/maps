@@ -1791,6 +1791,7 @@ async function run() {
           disturbed(p);
           p.set_complexes(m.complex);
           p.set_upgrades(m.ups ?? new Uint8Array(0));
+          if (p instanceof DemandApi) p.set_tram_lines(m.tram ?? new Uint8Array(0)); // T-2926, before set_network
           p.set_passages(m.passages ?? new Uint32Array(0));
           p.set_span(m.span ?? new Float32Array(0));
           // T-1277: riders weigh fares by their country's income and pay the curve times its scale;

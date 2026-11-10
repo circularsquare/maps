@@ -135,7 +135,7 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
     if (lm) lm.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
     if (st.status === "running") {
       // as `runningToday` (game/today.ts), over the whole day of this kind
-      const k = trainKind(m, st.fast);
+      const k = trainKind(m, st.fast, st.tram);
       const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
       const tph = [l.tph.high, l.tph.medium, l.tph.low];
       PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });

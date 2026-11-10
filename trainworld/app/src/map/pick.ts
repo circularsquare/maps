@@ -10,7 +10,7 @@
 import { clock } from "../game/clock";
 import { world } from "../game/world";
 import type { Selection } from "../game/types";
-import { F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
+import { carsOf, F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
 import { LOT_STRIDE } from "./facilityPlace";
@@ -305,7 +305,7 @@ function tripMayBeNear(n: NetworkBuffers, lb: LineBlocks, profile: number, dep: 
   const count = n.lineTable[line * 4 + 1], len = n.lineTable[line * 4 + 2], step = n.lineTable[line * 4 + 3];
   const f = lb.first[line], nb = lb.first[line + 1] - f;
   if (!(step > 0) || count < 2) return lb.mark[f] === 1;
-  const margin = Math.max(1, n.lineCars?.[line] ?? 8) * 20 + 30;
+  const margin = Math.max(1, carsOf(n.lineCars?.[line] ?? 8)) * 20 + 30;
   const blockAt = (dd: number) => Math.min(nb - 1, Math.floor(Math.min(Math.floor(Math.max(0, Math.min(len, dd)) / step), count - 2) / BLOCK));
   for (let b = blockAt(d - margin), hi = blockAt(d + margin); b <= hi; b++) if (lb.mark[f + b]) return true;
   return false;
@@ -399,7 +399,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM);
       if (!at) continue;
       if (r.detailedTrains) {
-        const cars = Math.max(1, n.lineCars?.[at.line] ?? 8);
+        const cars = Math.max(1, carsOf(n.lineCars?.[at.line] ?? 8));
         for (let car = 0; car < cars; car++) {
           const p = trainCarAt(n, at, car);
           const [x0, y0] = ov.toScreen(...p.back), [x1, y1] = ov.toScreen(...p.front);

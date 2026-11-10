@@ -2,6 +2,8 @@
 import type { Map as MlMap } from "maplibre-gl";
 
 export const MIN_LABEL_ZOOM = 12;
+/** T-2926: a tram stop's name shows from here, a zoom after a station's */
+export const TRAM_NAME_ZOOM = 13;
 export function labelPadding(zoom: number): [number, number] {
   return zoom < 14 ? [24, 14] : [10, 6];
 }

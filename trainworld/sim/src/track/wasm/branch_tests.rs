@@ -164,5 +164,5 @@ fn quad_and_high_speed_branch_past_the_platform() {
     let j = junctions(&a, st);
     assert_eq!(j.len(), 1);
     let n = &a.w.net;
-    assert!((0..n.edge_count()).filter(|&e| n.edge_ok(e as u32)).all(|e| n.edge_hsr[e]), "the split keeps high speed");
+    assert!((0..n.edge_count()).filter(|&e| n.edge_ok(e as u32)).all(|e| n.edge_kind[e].is_hsr()), "the split keeps high speed");
 }

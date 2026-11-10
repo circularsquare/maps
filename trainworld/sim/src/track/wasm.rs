@@ -69,6 +69,10 @@ pub struct TrackApi {
     route_cap: f64,
     /// T-817: double track the drawing tool lays is high-speed track (`set_route_hsr`).
     route_hsr: bool,
+    /// T-2926: the kind of track the drawing tool lays when it is a tram kind (`set_route_kind`); Regular otherwise.
+    route_kind: TrackKind,
+    /// T-2927: the street line (plane) street tram track is drawn along (`set_route_street`); empty for none.
+    route_street: Vec<(f64, f64)>,
     /// T-1615: routes ramp over or under track they would cross flat (`set_route_ramp`).
     route_ramp: bool,
     /// T-1685: the next route runs beside the run through this piece (`set_route_beside`).
@@ -198,7 +202,7 @@ fn pack_mask_in(frame: super::frame::Frame, mask: &Arc<RunMask>, lon: f64, lat: 
 }
 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
-/// Ordinary cars, then high-speed ones (T-817), then buses (T-1464), then boats (T-2193).
+/// Ordinary cars, then high-speed ones (T-817), then buses (T-1464), then boats (T-2193), then trams (T-2926).
 fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
     let mut out = [0; FLEETS];
     for (i, l) in w.svc.lines.iter().enumerate() {
@@ -209,22 +213,22 @@ fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
     out
 }
 
-/// The fleets: ordinary cars, high-speed cars, buses, boats.
-const FLEETS: usize = 4;
+/// The fleets: ordinary cars, high-speed cars, buses, boats, trams.
+const FLEETS: usize = 5;
 
-/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses, 3 boats.
+/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses, 3 boats, 4 trams.
 fn fleet_kind(n: &Network, l: usize) -> usize {
-    if n.line_bus[l].is_some() { 2 } else if n.line_ferry[l].is_some() { 3 } else { n.line_fast[l] as usize }
+    if n.line_bus[l].is_some() { 2 } else if n.line_ferry[l].is_some() { 3 } else if n.line_tram(l as u32) { 4 } else { n.line_fast[l] as usize }
 }
 
 /// Price of a car of each kind (a bus or a boat counting as one), US$M.
-const CAR_PRICES: [f64; FLEETS] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE, BOAT_PRICE];
+const CAR_PRICES: [f64; FLEETS] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE, BOAT_PRICE, TRAM_CAR_PRICE];
 
 /// A constructed edge's upkeep a game day, US$M; None for blueprint, and for crossovers, which cost
 /// nothing on top of their track (T-867).
 fn edge_upkeep(n: &Network, e: usize) -> Option<f64> {
     (n.edge_alive[e] && n.edge_built[e] && !n.edge_crossover[e])
-        .then(|| n.edge_len[e] / 1000.0 * edge_upkeep_km(n, e) * super::cost::track_factor(n.edge_tracks[e], n.edge_hsr[e]) * ECONOMY / 1e6)
+        .then(|| n.edge_len[e] / 1000.0 * edge_upkeep_km(n, e) * super::cost::track_factor(n.edge_tracks[e], n.edge_kind[e]) * ECONOMY / 1e6)
 }
 /// An edge's upkeep rate a route-km, real US$ (T-1931): the dearest structure between its lowest and
 /// highest level. The app reads the same two levels from `edges_info`, so its figures match
@@ -250,7 +254,7 @@ fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
     n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| n.bus_road_m(l) / 1000.0 * UPKEEP_BUS_KM * ECONOMY / 1e6)
 }
 fn station_upkeep(n: &Network, i: usize) -> f64 {
-    super::cost::station_upkeep(n.node_level[i]) * ECONOMY / 1e6
+    n.node_kind(i as u32).spec().station_upkeep.unwrap_or_else(|| super::cost::station_upkeep(n.node_level[i])) * ECONOMY / 1e6
 }
 
 fn pis_from(flat: &[f64]) -> Vec<Pi> {
@@ -297,7 +301,7 @@ struct Reshape {
     op: Op,
     verts: Vec<Pi>,
     tracks: u8,
-    hsr: bool,
+    kind: TrackKind,
     before: Vec<Pi>,
     after: Vec<Pi>,
 }
@@ -324,6 +328,8 @@ impl TrackApi {
             route_tangent: false,
             route_cap: R_CAP,
             route_hsr: false,
+            route_kind: TrackKind::Regular,
+            route_street: vec![],
             route_ramp: false,
             route_beside: None,
             beside_on: false,
@@ -1006,20 +1012,166 @@ fn reach_from(net: &Network, stops: &[u32]) -> (Vec<bool>, Vec<bool>) {
 /// node, must be at a whole level. Any radius that would still come out different (rounding to the
 /// millimetre grid) is set to the whole stroke's, so the track is where it was drawn. A leg a ramp
 /// spreads into from the next (T-1895) is not cut either.
-fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool) -> Vec<Vec<Pi>> {
-    let f = geom::fit_in(verts, scaled);
-    let mut cuts: Vec<(usize, Pi)> = vec![];
-    if f.issues.is_empty() {
-        for i in first..(first + clicks).saturating_sub(1) {
-            let (p, q) = (verts[i], verts[i + 1]);
-            let leg = (q.x - p.x).hypot(q.y - p.y);
-            let ramped = p.level != q.level || geom::on_ramp(&f.vert, f.vert_s[i], f.vert_s[i + 1]);
-            if ramped || leg < 2.0 * MIN_JOINT_LEG * kk(scaled, p.y) || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
-                continue;
-            }
-            cuts.push((i, Pi::new(quant((p.x + q.x) / 2.0), quant((p.y + q.y) / 2.0), 0.0, p.level)));
+/// `r_min` is the smallest radius of the track kind (`geom::fit_min`).
+fn stroke_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool, r_min: f64) -> Vec<Vec<Pi>> {
+    let f = geom::fit_min(verts, scaled, R_CAP, r_min);
+    let cuts = if f.issues.is_empty() { mid_cuts(verts, &f, first, clicks, scaled, &|_| true) } else { vec![] };
+    cut_at(verts, &f, &cuts, scaled)
+}
+
+/// Whether leg `i` of a fitted stroke changes level or carries a ramp, where no joint may go.
+fn ramped_leg(verts: &[Pi], f: &geom::Fit, i: usize) -> bool {
+    verts[i].level != verts[i + 1].level || geom::on_ramp(&f.vert, f.vert_s[i], f.vert_s[i + 1])
+}
+
+/// `stroke_pieces`' cuts: the middle of each leg between consecutive clicked corners where it is on
+/// the straight, and of the legs `ok` allows.
+fn mid_cuts(verts: &[Pi], f: &geom::Fit, first: usize, clicks: usize, scaled: bool, ok: &dyn Fn(usize) -> bool) -> Vec<(usize, Pi)> {
+    let mut cuts = vec![];
+    for i in first..(first + clicks).saturating_sub(1) {
+        let (p, q) = (verts[i], verts[i + 1]);
+        let leg = (q.x - p.x).hypot(q.y - p.y);
+        if !ok(i) || ramped_leg(verts, f, i) || leg < 2.0 * MIN_JOINT_LEG * kk(scaled, p.y) || f.tangent[i] > leg / 2.0 + 1e-6 || f.tangent[i + 1] > leg / 2.0 + 1e-6 {
+            continue;
+        }
+        cuts.push((i, Pi::new(quant((p.x + q.x) / 2.0), quant((p.y + q.y) / 2.0), 0.0, p.level)));
+    }
+    cuts
+}
+
+/// T-2927: a curve of street tram track whose middle lies more than this from its two legs (the
+/// street's line the route was fitted to) leaves the street, m.
+pub(super) const OFF_STREET_M: f64 = 5.0;
+/// The straight left on each side of a curve cut out as tram track of its own, m.
+const OFF_STREET_PAD: f64 = 1.0;
+/// T-2927: street tram track further than this from the street's line it was fitted to (where the
+/// fit cut a corner or rounded a sharp one wide) is off the street, ground m: about half a street.
+pub(super) const STREET_HALF_M: f64 = 10.0;
+/// The straight of a leg is measured against the street every this many ground m.
+const STREET_STEP_M: f64 = 5.0;
+
+/// Ground distance from plane point `p` to the polyline `line`.
+fn line_dist(line: &[(f64, f64)], p: (f64, f64), scaled: bool) -> f64 {
+    let mut best = f64::INFINITY;
+    for w in line.windows(2) {
+        let ((ax, ay), (bx, by)) = (w[0], w[1]);
+        let (dx, dy) = (bx - ax, by - ay);
+        let l2 = dx * dx + dy * dy;
+        let t = if l2 > 0.0 { (((p.0 - ax) * dx + (p.1 - ay) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+        best = best.min((ax + t * dx - p.0).hypot(ay + t * dy - p.1));
+    }
+    best / kk(scaled, p.1)
+}
+
+/// T-2927: a street tram stroke as `stroke_pieces` cuts it, each curve that leaves the street
+/// (`OFF_STREET_M`) cut out as a piece of tram track of its own from just before its arc to just
+/// after; the rest street tram track. With `street` (the line the stroke was fitted to, plane), a
+/// curve whose middle or a straight any part of which lies more than `STREET_HALF_M` from it is off
+/// the street too, a straight from corner to corner. Where there is no room for a joint between
+/// such a curve and the next (a street corner's arc, a ramp, under `MIN_JOINT_LEG` of straight to
+/// an end or to the next such curve), the off-street piece takes it in too.
+fn street_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool, street: &[(f64, f64)]) -> Vec<(Vec<Pi>, TrackKind)> {
+    let (on, own) = (TrackKind::StreetTram, TrackKind::Tram);
+    let f = geom::fit_min(verts, scaled, R_CAP, on.spec().min_radius);
+    let n = verts.len();
+    if !f.issues.is_empty() || n < 2 {
+        return cut_at(verts, &f, &[], scaled).into_iter().map(|p| (p, on)).collect();
+    }
+    let leg = |i: usize| (verts[i + 1].x - verts[i].x).hypot(verts[i + 1].y - verts[i].y);
+    let heading = |i: usize| (verts[i + 1].y - verts[i].y).atan2(verts[i + 1].x - verts[i].x);
+    let far = |p: (f64, f64)| street.len() > 1 && line_dist(street, p, scaled) > STREET_HALF_M;
+    // each leg's straight, from tangent point to tangent point
+    let leg_off: Vec<bool> = (0..n - 1)
+        .map(|i| {
+            let (p, l) = (verts[i], leg(i));
+            let (from, to) = (f.tangent[i], l - f.tangent[i + 1]);
+            let steps = ((to - from) / (STREET_STEP_M * kk(scaled, p.y))).ceil().max(1.0) as usize;
+            to > from && (0..=steps).any(|s| {
+                let t = (from + (to - from) * s as f64 / steps as f64) / l;
+                far((p.x + t * (verts[i + 1].x - p.x), p.y + t * (verts[i + 1].y - p.y)))
+            })
+        })
+        .collect();
+    if n == 2 {
+        return cut_at(verts, &f, &[], scaled).into_iter().map(|p| (p, if leg_off[0] { own } else { on })).collect();
+    }
+    let mut off = vec![false; n];
+    for i in 1..n - 1 {
+        let (h0, h1) = (heading(i - 1), heading(i));
+        let turn = geom::wrap(h1 - h0).abs();
+        let r = f.radius[i];
+        // the arc's middle: from the corner towards the inside, r (sec - 1) along the bisector
+        let bis = h0 + geom::wrap(h1 - h0) / 2.0 + if geom::wrap(h1 - h0) > 0.0 { PI / 2.0 } else { -PI / 2.0 };
+        let mid = r * (1.0 / (turn / 2.0).cos() - 1.0) * kk(scaled, verts[i].y);
+        off[i] = r > 0.0 && (r * (1.0 - (turn / 2.0).cos()) > OFF_STREET_M || far((verts[i].x + mid * bis.cos(), verts[i].y + mid * bis.sin())));
+    }
+    for i in 0..n - 1 {
+        if leg_off[i] {
+            (off[i], off[i + 1]) = (true, true);
         }
     }
+    // the joints either side of each off-street run: (leg, plane distance from its first vertex);
+    // `off` at an end means a run reaches it, with no joint there
+    let mut bounds: Vec<(usize, f64)>;
+    loop {
+        bounds = vec![];
+        let mut grew = false;
+        for i in 0..n - 1 {
+            let (a, b) = (off[i], off[i + 1]);
+            if a == b {
+                // two off-street curves: a street stretch between them only where it is worth a piece
+                let k = kk(scaled, verts[i].y);
+                let (pad, l) = (OFF_STREET_PAD * k, leg(i));
+                if a && !leg_off[i] && i > 0 && i + 1 < n - 1 && !ramped_leg(verts, &f, i) && l - f.tangent[i] - f.tangent[i + 1] - 2.0 * pad >= MIN_JOINT_LEG * k {
+                    bounds.push((i, f.tangent[i] + pad));
+                    bounds.push((i, l - f.tangent[i + 1] - pad));
+                }
+                continue;
+            }
+            let k = kk(scaled, verts[i].y);
+            let (pad, l) = (OFF_STREET_PAD * k, leg(i));
+            let (at, far) = if a { (f.tangent[i] + pad, i + 1) } else { (l - f.tangent[i + 1] - pad, i) };
+            // room beyond the joint for the far corner's curve, or for a piece to the end
+            let room = if a { l - at } else { at };
+            let need = if far == 0 || far == n - 1 { MIN_JOINT_LEG * k } else { f.tangent[far] };
+            if ramped_leg(verts, &f, i) || room < need - 1e-6 {
+                off[far] = true;
+                grew = true;
+                continue;
+            }
+            bounds.push((i, at));
+        }
+        if !grew {
+            break;
+        }
+    }
+    let in_run = |i: usize| off[i] && i > 0 && i < n - 1;
+    let mut cuts: Vec<(usize, f64, Pi)> = bounds
+        .iter()
+        .map(|&(i, s)| {
+            let (p, q) = (verts[i], verts[i + 1]);
+            let t = s / leg(i);
+            (i, s, Pi::new(quant(p.x + t * (q.x - p.x)), quant(p.y + t * (q.y - p.y)), 0.0, p.level))
+        })
+        .collect();
+    for (i, j) in mid_cuts(verts, &f, first, clicks, scaled, &|i| !off[i] && !off[i + 1]) {
+        cuts.push((i, leg(i) / 2.0, j));
+    }
+    cuts.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.total_cmp(&b.1)));
+    let flat: Vec<(usize, Pi)> = cuts.iter().map(|c| (c.0, c.2)).collect();
+    // each piece's kind: tram track if it holds an off-street curve
+    let mut kinds = vec![];
+    let mut start = 0;
+    for &(i, _) in flat.iter().chain(std::iter::once(&(n - 1, verts[n - 1]))) {
+        kinds.push(if (start + 1..=i.min(n - 2)).any(in_run) { own } else { on });
+        start = i;
+    }
+    cut_at(verts, &f, &flat, scaled).into_iter().zip(kinds).collect()
+}
+
+/// A stroke cut at `cuts` (leg index, joint; in order along it), each piece's corners keeping the
+/// whole stroke's radii (`stroke_pieces`).
+fn cut_at(verts: &[Pi], f: &geom::Fit, cuts: &[(usize, Pi)], scaled: bool) -> Vec<Vec<Pi>> {
     let mut out = vec![];
     let mut start = 0;
     let mut head = verts[0];
@@ -1559,7 +1711,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 }) })
@@ -1683,6 +1835,8 @@ mod station_sweep_tests;
 /// T-1898: drags keep the design speed; a selection's track type.
 #[cfg(test)]
 mod t1898_tests;
+#[cfg(test)]
+mod tram_tests;
 #[cfg(test)]
 mod gap_tests;
 /// T-2414: close crossings, ends near water and islands.

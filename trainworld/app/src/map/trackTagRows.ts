@@ -103,26 +103,29 @@ const TERRAIN_PATH = "M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z";
 /** Two waves: water. */
 const WATER_PATH = "M1.5 6.5q1.6-1.6 3.25 0t3.25 0 3.25 0 3.25 0M1.5 10.5q1.6-1.6 3.25 0t3.25 0 3.25 0 3.25 0";
 
+/** "0.5", "3.0", "0.25": what a surcharge adds, to a tenth unless halved to a twentieth */
+const addText = (v: number) => v.toFixed(Math.abs(v * 10 - Math.round(v * 10)) > 1e-9 ? 2 : 1);
+
 /** The icon and a chip for the roughest terrain class a route crosses where it is charged (T-1394),
- * with what it adds to the multiplier (T-1890), from the preview's metres per class
- * (`TrackApi.preview_ground`, flat to mountains); null on flat ground only. */
-export function terrainFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+ * with what it adds to the multiplier (T-1890; times `scale`, street tram track's half, T-2928), from
+ * the preview's metres per class (`TrackApi.preview_ground`, flat to mountains); null on flat ground only. */
+export function terrainFact(ground: ArrayLike<number> | undefined, scale = 1): HTMLSpanElement | null {
   if (!ground) return null;
   const k = [3, 2, 1].find((c) => (ground[c] ?? 0) >= 1);
   if (k === undefined) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(TERRAIN_PATH, t("trackTagRows.terrain")), chip(t("trackTagRows.terrainAdds", { terrain: TERRAIN_NAMES[k], mult: TERRAIN_SURCHARGES[k].toFixed(1) }), TERRAIN_COLOURS[k], 0.6));
+  s.append(icon(TERRAIN_PATH, t("trackTagRows.terrain")), chip(t("trackTagRows.terrainAdds", { terrain: TERRAIN_NAMES[k], mult: addText(TERRAIN_SURCHARGES[k] * scale) }), TERRAIN_COLOURS[k], 0.6));
   return s;
 }
 
 /** The icon and what water adds (any level) where a route crosses water (T-1887, the preview's
  * fifth figure); null on land only. */
-export function waterFact(ground: ArrayLike<number> | undefined): HTMLSpanElement | null {
+export function waterFact(ground: ArrayLike<number> | undefined, scale = 1): HTMLSpanElement | null {
   if (!ground || (ground[4] ?? 0) < 1) return null;
   const s = document.createElement("span");
   s.className = "tag-fact";
-  s.append(icon(WATER_PATH, t("trackTagRows.water")), chip(t("trackTagRows.waterAdds", { mult: WATER_SURCHARGE }), WATER_COLOUR, 0.6));
+  s.append(icon(WATER_PATH, t("trackTagRows.water")), chip(t("trackTagRows.waterAdds", { mult: addText(WATER_SURCHARGE * scale) }), WATER_COLOUR, 0.6));
   return s;
 }
 
@@ -218,7 +221,7 @@ const HSR_KMH = 320;
  * placed and the route's lowest speed limit. The multiplier is on `costTint`'s colour. When the
  * segment could not be built ending here, why first.
  */
-export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[] {
+export function placementTag(pv: PreviewAnswer, level: number, surcharge = 1): HTMLDivElement[] {
   const div = (...kids: (string | Node)[]) => {
     const d = document.createElement("div");
     d.append(...kids);
@@ -243,7 +246,7 @@ export function placementTag(pv: PreviewAnswer, level: number): HTMLDivElement[]
   }
   const [first, ...more] = placedLevels(pv.pts, level);
   out.push(factRow(elevationFact(first, ...more), speedFact(top)));
-  const ground = [terrainFact(pv.ground), waterFact(pv.ground), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
+  const ground = [terrainFact(pv.ground, surcharge), waterFact(pv.ground, surcharge), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
   if (ground.length) out.push(factRow(...ground));
   return out;
 }

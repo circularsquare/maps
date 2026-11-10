@@ -34,6 +34,8 @@ const DETOUR_M = 1000;
  * at most `MAX_ALTS` other roads are tried. */
 const SNAP_PEN = 3;
 const MAX_ALTS = 400;
+/** A tram end's streets tried (T-2927), nearest first. */
+const TRAM_ALTS = 12;
 /** The route is thinned to within this (ground metres) of the road. */
 const THIN_M = 2.5;
 /** Tiles beyond which a leg is not searched (refused as `long`). */
@@ -223,6 +225,53 @@ export class BusRoads {
     this.fresh();
     const x = gxOf(p.lng), y = gyOf(p.lat), s = this.snapAt(x, y, metresPerUnit(y));
     return s ? { lng: lngOf(s.x), lat: latOf(s.y) } : p;
+  }
+
+  /** T-2927: where a tram click lands: on the nearest street (no motorway) within `SNAP_M`, null where
+   * there is none; undefined while the tiles load. */
+  street(p: Pt): Pt | null | undefined {
+    if (!this.look(p)) return undefined;
+    this.fresh();
+    const x = gxOf(p.lng), y = gyOf(p.lat), s = this.graph.snap(x, y, SNAP_M / metresPerUnit(y), true);
+    return s ? { lng: lngOf(s.x), lat: latOf(s.y) } : null;
+  }
+
+  /** T-2927: the streets a tram follows between two points (`RoadGraph.turnPath`), as lng, lat pairs
+   * from the street point by `a` to the one by `b`. `refused` as a bus leg's; not `ready` while tiles load. */
+  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number): Leg & { turns: number; states: number; ms: number } {
+    const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
+    const mpu = metresPerUnit((ay + by) / 2);
+    const straight = Math.hypot(ax - bx, ay - by) * mpu;
+    const none = (ready: boolean, refused?: BusRefusal) => ({ pts: [a.lng, a.lat, b.lng, b.lat], road: false, ready, m: straight, refused, turns: 0, states: 0, ms: 0 });
+    const pad = Math.max(600, 0.25 * straight) / mpu;
+    const x0 = Math.min(ax, bx) - pad, x1 = Math.max(ax, bx) + pad, y0 = Math.min(ay, by) - pad, y1 = Math.max(ay, by) + pad;
+    const tiles = (Math.floor(x1 / EXTENT) - Math.floor(x0 / EXTENT) + 1) * (Math.floor(y1 / EXTENT) - Math.floor(y0 / EXTENT) + 1);
+    if (tiles > MAX_TILES) return none(true, "long");
+    if (!this.need(x0, y0, x1, y1)) return none(false);
+    this.fresh();
+    const t0 = performance.now();
+    // the nearest streets by each end (the nearest alone can be a stub joined to nothing)
+    // (one a road: a segment touching one taken, as a curved road's next one does, is skipped)
+    const near = (x: number, y: number) => {
+      const out: Snap[] = [], seen = new Set<number>(), g = this.graph;
+      for (const s of g.snapsWithin(x, y, SNAP_M / mpu, true)) {
+        const a = g.ea[s.edge], b = g.eb[s.edge], touches = seen.has(a) || seen.has(b);
+        seen.add(a).add(b);
+        if (touches) continue;
+        out.push(s);
+        if (out.length >= TRAM_ALTS) break;
+      }
+      return out;
+    };
+    const sa = near(ax, ay), sb = near(bx, by);
+    if (!sa.length || !sb.length) return none(true, "far");
+    const direct = Math.hypot(sa[0].x - sb[0].x, sa[0].y - sb[0].y) * mpu;
+    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM);
+    const ms = performance.now() - t0;
+    if (!path) return { ...none(true, "path"), ms };
+    const pts = thin(path.pts, 1 / mpu), ll: number[] = [];
+    for (let i = 0; i < pts.length; i += 2) ll.push(lngOf(pts[i]), latOf(pts[i + 1]));
+    return { pts: ll, road: true, ready: true, m: path.m, turns: path.turns, states: path.states, ms };
   }
 
   /** A road within `SNAP_M` of a point: true or false, null while the tiles load. */

@@ -17,7 +17,7 @@ import { complexOf, inComplexView, openAlone } from "../../game/complexView";
 import { complexNow, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
 import { linking, linksAmong, unlink } from "../../game/links";
-import { selection } from "../../game/ui";
+import { selection, TRAM_PLATFORM } from "../../game/ui";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
@@ -25,7 +25,7 @@ import { CAR_M, nextLeavingAt, platformsAt, stepPlatform } from "../../game/boar
 import { carsText } from "./schedule";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
-import { stationUpkeep } from "../../game/regionMoney";
+import { stationUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
@@ -370,7 +370,7 @@ function StationDetails({ s, lines, props }: {
         {!s.port && <li>
           <span class="grow">{tr("stationInspector.platforms")}</span>
           <Stepper value={carsText(Math.round(s.length / CAR_M))} wide label={tr("stationInspector.platformLength")} onStep={(d) => {
-            const to = stepPlatform(s.length, d);
+            const to = s.tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, s.length + d * TRAM_PLATFORM.step)) : stepPlatform(s.length, d);
             if (to === s.length) return false;
             return props(to);
           }} />
@@ -379,7 +379,7 @@ function StationDetails({ s, lines, props }: {
           <Row label={tr("trackInspector.upkeep")}>
             {s.port
               ? <span class="money-neg" data-tip={tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })}>{tr("inspector.perDay", { value: money(m.upkeepPort * m.economy) })}</span>
-              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) })}>{tr("inspector.perDay", { value: money(stationUpkeep(m, s.level)) })}</span>}
+              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) })}>{tr("inspector.perDay", { value: money(stationUpkeepOf(m, s)) })}</span>}
           </Row>
         )}
       </ul>

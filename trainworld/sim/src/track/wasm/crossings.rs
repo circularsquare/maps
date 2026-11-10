@@ -100,8 +100,11 @@ impl TrackApi {
         if net.edge_tracks[edge as usize] != 2 {
             return Err(Issue::Tracks { edge });
         }
-        if net.edge_hsr[edge as usize] {
+        if net.edge_hsr(edge) {
             return Err(Issue::HighSpeed { edge });
+        }
+        if net.edge_kind[edge as usize].spec().family != 0 {
+            return Err(Issue::Tracks { edge });
         }
         let doubled = |e: u32| self.twin_at(e, net.edge_len[e as usize] / 2.0).is_some();
         if doubled(edge) {
@@ -119,7 +122,7 @@ impl TrackApi {
                 }
                 let Some(&c) = p.ends().iter().find(|&&c| c >> 1 != from) else { break };
                 let e = c >> 1;
-                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || net.edge_hsr[e as usize] || doubled(e) {
+                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || net.edge_hsr(e) || doubled(e) {
                     break;
                 }
                 // c & 1 is the end of e at `node`: walking forward, e runs a to b when that is its a
@@ -192,7 +195,7 @@ impl TrackApi {
             let id = self.w.net.alloc_edge();
             ne.push(id);
             let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) });
         }
         Ok((Op::Batch(ops), nn, ne))
     }
@@ -246,7 +249,7 @@ impl TrackApi {
     /// Edges of high-speed track (T-817).
     pub fn hsr_edges(&self) -> Vec<u32> {
         let net = &self.w.net;
-        (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_hsr[e as usize]).collect()
+        (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_hsr(e)).collect()
     }
 
     /// Edges that are a crossover's diagonals.
@@ -368,7 +371,7 @@ impl TrackApi {
             ];
             let id = self.w.net.alloc_edge();
             new_edges.push(id);
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, hsr: false, sep: false, day: 0 }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, kind: TrackKind::Regular, sep: false, day: 0 }) });
             let mut v = vec![Pi::new(px, py, 0.0, pl)];
             v.extend(pis);
             v.push(Pi::new(qx, qy, 0.0, ql));

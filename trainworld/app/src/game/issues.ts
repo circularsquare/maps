@@ -3,11 +3,15 @@
 
 import { area, length, money, roughDistance } from "./format";
 import { t } from "../i18n";
+import { stationOnTram, tool, tramTrack, TRAM_PLATFORM } from "./ui";
+
+/** T-2926: the track kind the player is working on, for the text of a limit that differs by kind */
+const onTram = () => (tool.peek() === "station" ? stationOnTram.peek() : tramTrack.peek());
 
 const TEXT: Record<string, () => string> = {
   "Geom:ZeroLeg": () => t("issues.zeroLeg"),
   "Geom:Reversal": () => t("issues.reversal"),
-  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(50) }),
+  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(onTram() ? 25 : 50) }),
   "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(200) }),
   "Geom:LevelRange": () => t("issues.levelRange"),
   NodeLevel: () => t("issues.levelRange"),
@@ -26,7 +30,7 @@ const TEXT: Record<string, () => string> = {
   PlatformStation: () => t("issues.stationHere"),
   StationJunction: () => t("issues.stationOnJunction"),
   PlatformJunction: () => t("issues.stationOnJunction"),
-  PlatformLength: () => t("issues.platformLength", { min: length(60), max: length(400) }),
+  PlatformLength: () => t("issues.platformLength", onTram() ? { min: length(TRAM_PLATFORM.min), max: length(TRAM_PLATFORM.max) } : { min: length(60), max: length(400) }),
   PlatformTooLong: () => t("issues.platformTooLong"),
   PlatformJoint: () => t("issues.platformJoint"),
   PlatformNotLevel: () => t("issues.platformNotLevel"),
@@ -50,6 +54,7 @@ const TEXT: Record<string, () => string> = {
   Crossover: () => t("issues.crossover"),
   Alongside: () => t("issues.alongside"),
   HighSpeed: () => t("issues.highSpeed"),
+  TrackFamily: () => t("issues.trackFamily"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),
   RoadsMissing: () => t("issues.roadsMissing"),

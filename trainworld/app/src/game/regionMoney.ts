@@ -18,6 +18,7 @@ import { zoneCountry } from "./cities";
 import { runFactorOf } from "./income";
 import { groundDist, packToLngLat } from "./coords";
 import { lineFareMul } from "./fareCurve";
+import { TRACK_SPECS, TRAM_STOP_UPKEEP } from "./trackKinds";
 import { lineFares } from "./fareInEffect";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
@@ -105,11 +106,11 @@ export const lineShares = computed(() => {
 export const lineRunFactor = (num: number): number => runFactorOf(lineShares.value.get(num)?.run, zoneCountry);
 
 /** T-867: a constructed edge's upkeep a game day, US$ (0 for blueprint and crossovers). */
-export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; lengthM: number; levelMin: number; levelMax: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {
+export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: number; hsr?: boolean; kind?: number; lengthM: number; levelMin: number; levelMax: number }, m: Pick<MoneyState, "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepSingle" | "upkeepHsr" | "economy">): number {
   if (!e.built || e.crossover) return 0;
   // T-1931: the dearest structure the edge touches, as the track model counts it
   const rate = e.levelMin <= -2 ? m.upkeepBoredKm : e.levelMin === -1 ? m.upkeepCutKm : e.levelMax > 0 ? m.upkeepViaductKm : m.upkeepTrackKm;
-  return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : 1) * m.economy;
+  return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].upkeep : 1) * m.economy;
 }
 /** T-1464: a bus route's road km by region, each stretch between two stops half to each stop's
  * region (the drawn stops' ground distances, scaled to the road length). */
@@ -130,6 +131,9 @@ function busKmByRegion(w: WorldView, line: string): Map<string, number> {
 }
 /** T-867: a constructed station's upkeep a game day, US$; T-2619: dearer below ground, as the
  * track model counts it (`cost::station_upkeep`). */
+/** a station's upkeep a day: a tram stop's is its own figure (T-2926) */
+export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, s: { level: number; tram?: boolean }) =>
+  s.tram ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level);
 export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, level: number) =>
   (level < 0 ? m.upkeepStationUnder : m.upkeepStation) * m.economy;
 
@@ -159,7 +163,7 @@ export const upkeepShares = computed<Shares>(() => {
     const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
     if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
-  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeep(m, s.level));
+  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeepOf(m, s));
   for (const l of w.save.lines) {
     if (!w.lineStats[l.id]?.bus?.built || w.lineStats[l.id]?.bus?.ferry) continue; // T-2194: a ferry route has no upkeep
     for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * (m.upkeepBusKm ?? 0) * m.economy);

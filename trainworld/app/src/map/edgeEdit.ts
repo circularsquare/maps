@@ -163,7 +163,7 @@ export class EdgeEditor {
       if (!this.drag || this.edge !== edge) return;
       this.preview = a;
       const d = world.peek()?.edges.find((x) => x.id === edge);
-      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, undefined, false, a.marks, d?.tracks === 1 ? 0 : 255, !!d?.hsr) : null);
+      this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, undefined, false, a.marks, d?.tracks === 1 ? 0 : 255, !!d?.hsr, !!d?.kind) : null);
       this.overlay.invalidate();
       this.place();
     });

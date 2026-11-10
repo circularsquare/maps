@@ -14,13 +14,13 @@ import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
 import { PATCH_MODE } from "../game/patchMode";
-import type { WorldView } from "../game/types";
+import type { StationId, StationInput, WorldView } from "../game/types";
 import { NameIndex, labelGroups, linesAt, type NameGroup, type NameOp } from "./labelNames";
 import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { PlaceThrottle } from "./moving";
 import { perfOff } from "../perfFlags";
-import { BoxGrid, MIN_LABEL_ZOOM, labelPadding } from "./labelLayout";
+import { BoxGrid, MIN_LABEL_ZOOM, TRAM_NAME_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { afterPaint } from "../game/busy";
@@ -348,8 +348,13 @@ export class StationLabels {
     // T-2219: a station building's name first, in its cross-hall when it fits, else beside it; its
     // stations' own names go
     const inBuilding = this.placeBuildings(zoom, W, H, margin, placedBoxes, padX, padY);
+    const trams = zoom < TRAM_NAME_ZOOM ? this.tramStops() : null;
     for (let i = 0; i < this.labels.length; i++) {
       const l = this.labels[i];
+      if (trams?.size && this.names.list[i]?.members.every((m) => trams.has(m.id))) {
+        hide(l);
+        continue;
+      }
       if (inBuilding.size && this.names.list[i]?.members.every((m) => inBuilding.has(m.id))) {
         hide(l);
         continue;
@@ -375,6 +380,14 @@ export class StationLabels {
       l.ox = rx - sx;
       l.oy = ry - sy;
     }
+  }
+
+  private tramSeen: { stations: readonly StationInput[]; ids: Set<StationId> } | null = null;
+  /** the tram stops' ids (T-2926), whose names wait for TRAM_NAME_ZOOM */
+  private tramStops(): Set<StationId> {
+    const stations = world.peek()?.save.stations ?? [];
+    if (this.tramSeen?.stations !== stations) this.tramSeen = { stations, ids: new Set(stations.filter((s) => s.tram).map((s) => s.id)) };
+    return this.tramSeen.ids;
   }
 
   /** T-2219: the station buildings' names, placed before the stations' (`placed` takes their boxes);

@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// Pieces shorter than this (m) set no stretch's limit when longer ones are on it (`line_stretch_speeds`).
+const SHORT_PIECE_M: f64 = 10.0;
+
 #[wasm_bindgen]
 impl TrackApi {
     // ---- money
@@ -54,6 +57,36 @@ impl TrackApi {
     pub fn boats_needed(&self) -> u32 {
         cars_needed(&self.w)[3]
     }
+    /// The `TrackKind` number of an edge (0 rail, 1 high speed, 2 street tram, 3 tram); 0 for none.
+    pub fn edge_kind(&self, e: u32) -> u8 {
+        if self.w.net.edge_ok(e) { self.w.net.edge_kind[e as usize] as u8 } else { 0 }
+    }
+    /// The `TrackKind` number of the track at a node (its first edge's).
+    pub fn node_kind(&self, n: u32) -> u8 {
+        if self.w.net.node_ok(n) { self.w.net.node_kind(n) as u8 } else { 0 }
+    }
+    /// Whether a line runs on tram track (fleet, defaults and platform sizes differ).
+    pub fn line_tram(&self, line: u32) -> bool {
+        self.w.net.line_ok(line) && self.w.net.line_tram(line)
+    }
+    /// What a new line of a kind starts with: [dwell s, turnaround s, platform min m, platform max m,
+    /// car price US$M, whether stations on it are a flat price (1) or the rail formula (0)].
+    pub fn kind_defaults(kind: u8) -> Vec<f64> {
+        let k = TrackKind::from_u8(kind).unwrap_or_default();
+        let s = k.spec();
+        vec![s.dwell_s as f64, s.turnaround_s as f64, s.platform.0 as f64, s.platform.1 as f64, s.car.price, s.station_flat.is_some() as u8 as f64]
+    }
+    /// Tram sections owned (T-2926).
+    pub fn fleet_tram(&self) -> u32 {
+        self.fleet[4]
+    }
+    pub fn set_fleet_tram(&mut self, sections: u32) {
+        self.fleet[4] = sections;
+    }
+    /// Tram sections the running tram lines need now.
+    pub fn trams_needed(&self) -> u32 {
+        cars_needed(&self.w)[4]
+    }
     /// Ordinary cars the running lines need now.
     pub fn cars_needed(&self) -> u32 {
         cars_needed(&self.w)[0]
@@ -70,7 +103,7 @@ impl TrackApi {
     pub fn money_params(&self) -> Vec<f64> {
         vec![
             CAR_PRICE, RUN_COST_CAR_KM, ECONOMY, RUN_COST_TRAIN_KM, HS_CAR_PRICE, HS_RUN_COST_CAR_KM, HS_RUN_COST_TRAIN_KM,
-            UPKEEP_GROUND_KM, UPKEEP_STATION, crate::track::cost::track_factor(1, false), crate::track::cost::track_factor(2, true),
+            UPKEEP_GROUND_KM, UPKEEP_STATION, crate::track::cost::track_factor(1, TrackKind::Regular), crate::track::cost::track_factor(2, TrackKind::HighSpeed),
             // T-1464: a bus's price US$M, running cost per bus-km and a route's upkeep a day per
             // road-km US$, a route's price per road-km US$M
             BUS_PRICE, RUN_COST_BUS_KM, UPKEEP_BUS_KM, BUS_ROUTE_COST_PER_KM,
@@ -122,7 +155,9 @@ impl TrackApi {
         let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
         let bus = train_km[2] * RUN_COST_BUS_KM;
         let boats = train_km[3] * RUN_COST_BOAT_KM;
-        (ordinary + fast + bus + boats) * ECONOMY / 1e6
+        let tram = &TrackKind::Tram.spec().car;
+        let trams = train_km[4] * tram.run_train_km + car_km[4] * tram.run_car_km;
+        (ordinary + fast + bus + boats + trams) * ECONOMY / 1e6
     }
     /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
     /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464), ports
@@ -229,10 +264,16 @@ impl TrackApi {
         for i in 0..run.stop_idx.len().saturating_sub(1) {
             let (n0, n1) = (run.stop_idx[i] as usize, run.stop_idx[i + 1] as usize);
             let (mut best, mut why) = (0.0f64, 0.0);
+            // T-2927: a few metres of straight (the ends of a street route's off-street corner, at
+            // 80 km/h amid street track's 60) are no limit a train could reach
+            let long = run.segs[n0..n1].iter().any(|&p| net.edge_pieces(crate::track::net::path_edge(p)).iter().any(|pc| pc.len >= SHORT_PIECE_M));
             for &p in &run.segs[n0..n1] {
                 let e = crate::track::net::path_edge(p);
                 let cap = net.v_cap(e);
                 for pc in net.edge_pieces(e) {
+                    if long && pc.len < SHORT_PIECE_M {
+                        continue;
+                    }
                     let curve = pc.v_curve();
                     let v = curve.min(cap).min(top);
                     if v > best + 1e-9 {
@@ -302,6 +343,10 @@ impl TrackApi {
             // T-1464: buses, kind 11
             if buy[2] > 0 {
                 rows.extend([11.0, 0.0, 0.0, 0.0, 0.0, buy[2] as f64, buy[2] as f64 * CAR_PRICES[2]]);
+            }
+            // T-2926: tram sections, kind 15 (14 is the ferry routes' metres, net.rs)
+            if buy[4] > 0 {
+                rows.extend([15.0, 0.0, 0.0, 0.0, 0.0, buy[4] as f64, buy[4] as f64 * CAR_PRICES[4]]);
             }
             // T-2193: boats, kind 13 (ports are kind 12)
             if buy[3] > 0 {

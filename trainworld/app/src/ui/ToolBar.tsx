@@ -11,7 +11,7 @@ import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/pal
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildLevel, buildPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setTrackType, shade, snapBeside, snapReal, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setTrackType, shade, snapBeside, snapReal, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -34,7 +34,8 @@ export function clickColour(mode: ClickMode): string {
   return CLICK_MODE_COLOURS[mode];
 }
 
-const trackTypes =(): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")]];
+const trackTypes = (): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")], ["tram", t("toolBar.tram")]];
+const typeLabel = (tt: TrackType) => (tt === "tram" ? t("toolBar.tram") : tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular"));
 const speedTip = () => t("toolBar.speedTip");
 
 function stepSpeed(s: number) {
@@ -50,6 +51,7 @@ function stepSpeed(s: number) {
 function TrackBar() {
   const lv = buildLevel.value;
   const tt = trackType.value;
+  const tram = tt === "tram";
   const q = quadTrack.value;
   const m = moneyState.value;
   const mult = trackMult(lv, tt, q);
@@ -64,39 +66,45 @@ function TrackBar() {
           <div class="tb-wide"><LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q)} onPick={(l) => (buildLevel.value = l)} /></div>
           <button class="btn lv on tb-narrow tb-level" style={{ "--lc": LEVEL_COLOURS[lv], "--lk": inkOn(LEVEL_COLOURS[lv]) }}
             data-tip={levelTip(lv, tt, m, q)} aria-label={t("toolBar.level")} aria-expanded={open === "level"} onClick={() => toggle("level")}>{levelLabel(lv)}</button>
-          <button class={"btn icon tb-ramp" + (autoRamp.value ? " on" : "")} aria-label={t("toolBar.ramp")} aria-pressed={autoRamp.value}
+          {!tram && <button class={"btn icon tb-ramp" + (autoRamp.value ? " on" : "")} aria-label={t("toolBar.ramp")} aria-pressed={autoRamp.value}
             data-tip={t("toolBar.rampTip")}
-            onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>
-          <p class="muted small price tb-wide" data-tip={t("toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr" }) + (upkeep ? "\n" + upkeep : "")}>
+            onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>}
+          <p class="muted small price tb-wide" data-tip={t(tram ? "toolBar.priceTipTram" : "toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr", street: tram && snapStreets.value }) + (upkeep ? "\n" + upkeep : "")}>
             {tRich("toolBar.price", { price: millions(unitPrice(lv, tt, q)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt, q) })}</span> })}
           </p>
         </div>
         <div class="tb-row">
           <div class="tb-wide"><Segmented<TrackType> options={trackTypes()} value={tt} onChange={setTrackType} /></div>
-          <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular")}</button>
-          <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
+          <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
+          {!tram && <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
             <button class={"btn icon" + (!q ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q} data-tip={t("toolBar.doubleTrack")}
               onClick={() => setQuadTrack(false)}><Icon.tracks2 /></button>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrack")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
-          </div>
+          </div>}
           <span class="build-toggles">
             <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label={t("toolBar.keepPlacing")} aria-pressed={keepPlacing.value}
               data-tip={t(mobileDevice() ? "toolBar.keepPlacingTipTouch" : "toolBar.keepPlacingTip")}
               onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
-            <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
-              data-tip={t("toolBar.snapReal")}
-              onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
+            {tram ? (
+              <button class={"btn icon tb-streets" + (snapStreets.value ? " on" : "")} aria-label={t("toolBar.snapStreets")} aria-pressed={snapStreets.value}
+                data-tip={t("toolBar.snapStreets") + (mobileDevice() ? "" : "\n" + t("toolBar.snapStreetsCtrl", { on: snapStreets.value }))}
+                onClick={() => (snapStreets.value = !snapStreets.peek())}><Icon.snapReal /></button>
+            ) : (
+              <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
+                data-tip={t("toolBar.snapReal")}
+                onClick={() => (snapReal.value = !snapReal.peek())}><Icon.snapReal /></button>
+            )}
             <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label={t("toolBar.snapBeside")} aria-pressed={snapBeside.value}
               data-tip={t("toolBar.snapBesideTip")}
               onClick={() => (snapBeside.value = !snapBeside.peek())}><Icon.snapBeside /></button>
           </span>
-          <span class="tb-wide tb-speed">
+          {!tram && <span class="tb-wide tb-speed">
             <span data-tip={speedTip()}>{t("toolBar.targetSpeed")}</span>
             <Stepper value={speed(designSpeed.value, 5)} wide label={t("toolBar.targetSpeedLabel")} onStep={stepSpeed} />
-          </span>
-          <button class="btn tb-narrow tb-speed-btn" data-tip={`${t("toolBar.targetSpeed")}\n${speedTip()}`} aria-label={t("toolBar.targetSpeed")} aria-expanded={open === "speed"}
-            onClick={() => toggle("speed")}>{speed(designSpeed.value, 5).split(" ")[0]}</button>
+          </span>}
+          {!tram && <button class="btn tb-narrow tb-speed-btn" data-tip={`${t("toolBar.targetSpeed")}\n${speedTip()}`} aria-label={t("toolBar.targetSpeed")} aria-expanded={open === "speed"}
+            onClick={() => toggle("speed")}>{speed(designSpeed.value, 5).split(" ")[0]}</button>}
         </div>
       </div>
       {open === "level" && (
@@ -123,14 +131,16 @@ function TrackBar() {
 }
 
 function StationBar() {
+  const tram = stationOnTram.value;
+  const len = tram ? buildTramPlatform : buildPlatform;
   return (
     <div class="tool-bar station-bar" role="group" aria-label={t("toolBar.station")} style={{ "--mode": CLICK_MODE_COLOURS.station }}>
       <div class="tb-row">
         <span>{t("toolBar.platformLength")}</span>
-        <Stepper value={carsText(Math.round(buildPlatform.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
-          const to = stepPlatform(buildPlatform.value, s);
-          if (to === buildPlatform.value) return false;
-          buildPlatform.value = to;
+        <Stepper value={carsText(Math.round(len.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
+          const to = tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, len.value + s * TRAM_PLATFORM.step)) : stepPlatform(len.value, s);
+          if (to === len.value) return false;
+          len.value = to;
         }} />
       </div>
     </div>

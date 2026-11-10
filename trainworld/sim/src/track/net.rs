@@ -155,8 +155,8 @@ pub struct EdgeData {
     pub thru: Vec<Pi>,
     /// One diagonal of a crossover (T-338): fixed shape, `V_CROSSOVER`, priced as a junction.
     pub crossover: bool,
-    /// High-speed track (T-817): always double, priced at `HSR_COST`.
-    pub hsr: bool,
+    /// The kind of track (`TrackKind`): high speed (T-817) is always double.
+    pub kind: TrackKind,
     /// Grade-separated from every edge with this set, itself included (T-1751): where two meet there is no
     /// crossing at all, flat or bad. Set on an imported real network's edges, whose lines were
     /// each given one of six levels and cannot all avoid one another.
@@ -296,6 +296,8 @@ pub enum Issue {
     NodeHeading { node: u32, edge: u32 },
     /// A station's two ends leave on one side (its track does not run through).
     NodeOneSided { node: u32 },
+    /// Track of two families (rail and tram) meets at a node: they only cross, flat.
+    TrackFamily { node: u32 },
     NodeLevel { node: u32 },
     /// Removing a node that still has edges or a station.
     NodeInUse { node: u32 },
@@ -425,7 +427,7 @@ pub struct Network {
     /// Per edge: the points a T-079 edge was drawn through (`EdgeData::thru`), else empty.
     pub edge_thru: Vec<Vec<Pi>>,
     pub edge_crossover: Vec<bool>,
-    pub edge_hsr: Vec<bool>,
+    pub edge_kind: Vec<TrackKind>,
     pub edge_sep: Vec<bool>,
     pub edge_len: Vec<f64>,
     pub edge_pieces: Vec<Span>,
@@ -739,7 +741,7 @@ impl Network {
             edge_pis: vec![],
             edge_thru: vec![],
             edge_crossover: vec![],
-            edge_hsr: vec![],
+            edge_kind: vec![],
             edge_sep: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
@@ -958,7 +960,7 @@ impl Network {
         self.edge_pis.push(Span::default());
         self.edge_thru.push(vec![]);
         self.edge_crossover.push(false);
-        self.edge_hsr.push(false);
+        self.edge_kind.push(TrackKind::Regular);
         self.edge_sep.push(false);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
@@ -1035,7 +1037,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], hsr: self.edge_hsr[i], sep: self.edge_sep[i], day: self.edge_day[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -1128,7 +1130,7 @@ impl Network {
         if self.node_berth[n].is_some() {
             PORT_COST
         } else {
-            cost::station_cost(self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet())
+            cost::station_cost_k(self.node_kind(n as u32), self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet())
         }
     }
     /// A bus route's road length, m (its drawn length, times `bus::ROAD_FACTOR` where it is straight).
@@ -1213,7 +1215,31 @@ impl Network {
     }
     /// High-speed track meets the node (T-2231: passing tracks there are priced as it).
     pub fn node_hsr(&self, n: u32) -> bool {
-        self.node_ports[n as usize].ends().iter().any(|&c| self.edge_hsr[(c >> 1) as usize])
+        self.node_ports[n as usize].ends().iter().any(|&c| self.edge_kind[(c >> 1) as usize].is_hsr())
+    }
+    /// The kind of track at a node: its first edge end's (the family rule keeps them alike).
+    pub fn node_kind(&self, n: u32) -> TrackKind {
+        self.node_ports[n as usize].ends().first().map_or(TrackKind::Regular, |&c| self.edge_kind[(c >> 1) as usize])
+    }
+    pub fn edge_section_s(&self, e: u32) -> f64 {
+        self.edge_kind[e as usize].spec().section_s
+    }
+    pub fn edge_conflict_s(&self, e: u32) -> f64 {
+        self.edge_kind[e as usize].spec().conflict_s
+    }
+    pub fn node_conflict_s(&self, n: u32) -> f64 {
+        self.node_kind(n).spec().conflict_s
+    }
+    pub fn node_margin_s(&self, n: u32) -> f64 {
+        self.node_kind(n).spec().platform_margin_s
+    }
+    /// Whether a line runs on tram track: the kind of its first stop's track.
+    pub fn line_tram(&self, l: u32) -> bool {
+        self.line_stops(l).first().is_some_and(|&n| self.node_ok(n) && self.node_kind(n).spec().family == 1)
+    }
+    /// The edge is high-speed track.
+    pub fn edge_hsr(&self, e: u32) -> bool {
+        self.edge_kind[e as usize].is_hsr()
     }
     /// A station's upgrades, US$M (`upgrades::cost` at its level, water, platform and track).
     pub fn station_upgrades_price(&self, n: u32, bits: u8, wet: bool) -> f64 {
@@ -1223,7 +1249,7 @@ impl Network {
     /// The speed limit an edge puts on every piece of it, m/s: `V_CROSSOVER` on a crossover, 320
     /// km/h on high-speed track, 160 on any other (T-817).
     pub fn v_cap(&self, e: u32) -> f64 {
-        if self.edge_crossover[e as usize] { V_CROSSOVER } else if self.edge_hsr[e as usize] { V_HSR } else { V_TOP }
+        if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap() }
     }
     /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817).
     pub fn line_top(&self, l: u32) -> f64 {
@@ -1304,7 +1330,7 @@ impl Network {
             if d.a == d.b {
                 return Err(Issue::EdgeLoop { edge: id });
             }
-            if (d.tracks != 1 && d.tracks != 2) || (d.hsr && (d.tracks != 2 || d.crossover)) {
+            if (d.tracks != 1 && d.tracks != 2) || ((d.kind.is_hsr() || d.kind.spec().family != 0) && (d.tracks != 2 || d.crossover)) {
                 return Err(Issue::Tracks { edge: id });
             }
             for (node, which) in [(d.a, 0u32), (d.b, 1u32)] {
@@ -1335,7 +1361,7 @@ impl Network {
                 self.edge_pis[i] = self.pis.replace(self.edge_pis[i], &d.pis);
                 self.edge_thru[i] = d.thru;
                 self.edge_crossover[i] = d.crossover;
-                self.edge_hsr[i] = d.hsr;
+                self.edge_kind[i] = d.kind;
                 self.edge_sep[i] = d.sep;
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
@@ -1355,7 +1381,7 @@ impl Network {
                 self.edge_pis[i] = Span::default();
                 self.edge_thru[i] = vec![];
                 self.edge_crossover[i] = false;
-                self.edge_hsr[i] = false;
+                self.edge_kind[i] = TrackKind::Regular;
                 self.edge_sep[i] = false;
                 self.edge_free.push(id);
             }
@@ -1412,6 +1438,9 @@ impl Network {
         match data {
             Some(d) => {
                 if d.tph.iter().any(|t| !t.is_finite() || *t < 0.0) || d.dwell_s < 0.0 || d.turnaround_s < 0.0 {
+                    return Err(Issue::LineSchedule { line: id });
+                }
+                if d.fast && d.stops.first().is_some_and(|&n| self.node_ok(n) && self.node_kind(n).spec().family != 0) {
                     return Err(Issue::LineSchedule { line: id });
                 }
                 self.claim_line(id);
@@ -1560,7 +1589,7 @@ impl Network {
         for e in edges {
             let i = e as usize;
             // (as `derive`: a crossover's price has no crossings, and track off the ground keeps none)
-            if !self.edge_ok(e) || self.edge_crossover[i] || roads::off_ground(self.verts.get(self.edge_vert[i])) {
+            if !self.edge_ok(e) || self.edge_crossover[i] || !self.edge_kind[i].spec().road_crossings || roads::off_ground(self.verts.get(self.edge_vert[i])) {
                 continue;
             }
             let pieces = self.pieces.get(self.edge_pieces[i]);
@@ -1623,7 +1652,7 @@ impl Network {
         if self.edge_crossover[i] {
             cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
         } else {
-            cost::track_cost_t(self.edge_len[i], vert, wet, terrain, self.edge_tracks[i], self.edge_hsr[i]) + roads::charge(vert, cross).1
+            cost::track_cost_t(self.edge_len[i], vert, wet, terrain, self.edge_tracks[i], self.edge_kind[i]) + roads::charge(vert, cross).1
         }
     }
 
@@ -1692,7 +1721,7 @@ impl Network {
             let frame = self.frame;
             cost::terrain_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
             let mut cross = vec![];
-            if !self.edge_crossover[i] && !roads::off_ground(&f.vert) {
+            if !self.edge_crossover[i] && self.edge_kind[i].spec().road_crossings && !roads::off_ground(&f.vert) {
                 roads::crossings(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
             }
             self.edge_len[i] = f.len;
@@ -1943,7 +1972,7 @@ impl Network {
         if let Some(p) = verts.iter().find(|p| !self.inside_world(p.x, p.y)) {
             out.push(Issue::OutsideWorld { x: p.x, y: p.y });
         }
-        let f = self.fit(&verts);
+        let f = geom::fit_min(&verts, self.frame.scaled(), R_CAP, self.edge_kind[e as usize].spec().min_radius);
         for issue in f.issues {
             out.push(Issue::Geom { edge: e, issue });
         }
@@ -2059,6 +2088,12 @@ impl Network {
                 out.push(Issue::NodeHeading { node: n, edge: e });
             }
         }
+        let mut fam = p.ends().iter().map(|&c| self.edge_kind[(c >> 1) as usize].spec().family);
+        if let Some(f0) = fam.next() {
+            if fam.any(|f| f != f0) {
+                out.push(Issue::TrackFamily { node: n });
+            }
+        }
         // Two ends leaving the same way with nothing behind is a harmless fork (e.g. a junction
         // whose stem was removed); a station must have its platform track run through.
         if p.n >= 2 && self.node_platform[i] > 0 {
@@ -2096,7 +2131,8 @@ impl Network {
             return;
         }
         let plat = self.node_platform[i];
-        if !(PLATFORM_MIN..=PLATFORM_MAX).contains(&plat) || plat % PLATFORM_STEP != 0 {
+        let (pmin, pmax) = self.node_kind(n).spec().platform;
+        if !(pmin..=pmax).contains(&plat) || plat % PLATFORM_STEP != 0 {
             out.push(Issue::PlatformLength { node: n });
         }
         let p = self.node_ports[i];
@@ -2238,7 +2274,7 @@ impl Network {
 
     // ---------------------------------------------------------------- cost
 
-    /// Unbuilt costs grouped by kind, charged level, track count (`HSR_ROW` for high-speed track),
+    /// Unbuilt costs grouped by kind, charged level, track count (`HSR_ROW` for high-speed track, `TRAM_ROW` for tram, `STREET_TRAM_ROW` for street tram),
     /// water and ramp. Seven numbers per row: those five keys, metres/count, US$M. Kind 6 is what
     /// the terrain adds to track (T-1270), its level field holding the terrain class; kind 7 the
     /// roads crossed at ground level, weighted (T-1929).
@@ -2256,11 +2292,11 @@ impl Network {
                 let a = self.edge_a[e] as usize;
                 add(2, self.node_level[a], 0, !self.edge_water(e as u32).is_empty(), 0, 1.0, self.edge_cost[e]);
             } else if self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] {
-                let (tracks, hsr) = (self.edge_tracks[e], self.edge_hsr[e]);
-                cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, hsr, |level, wet, _ramp, class, m, c| {
+                let (tracks, kind) = (self.edge_tracks[e], self.edge_kind[e]);
+                cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, kind, |level, wet, _ramp, class, m, c| {
                     // T-1839: the whole price, keyed by terrain class (0 where it does not count)
                     let class = if cost::terrain_surcharge(level, class) == 0.0 { 0 } else { class };
-                    add(0, level, if hsr { HSR_ROW } else { tracks }, wet, class, m, c);
+                    add(0, level, if kind.is_hsr() { HSR_ROW } else if kind == TrackKind::Tram { TRAM_ROW } else if kind == TrackKind::StreetTram { STREET_TRAM_ROW } else { tracks }, wet, class, m, c);
                 });
                 // kind 7: roads crossed at ground level (T-1929), a count
                 let (n, c) = roads::charge(self.edge_vert(e as u32), self.edge_roads(e as u32));
@@ -2279,7 +2315,7 @@ impl Network {
                 add(12, 0, 0, false, 0, 1.0, PORT_COST);
             } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
-                add(1, level, tracks, wet, 0, 1.0, cost::station_cost(level, self.node_platform[n], tracks, wet));
+                add(1, level, tracks, wet, 0, 1.0, cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], tracks, wet));
                 let ups = self.node_upgrades[n];
                 if ups != 0 {
                     add(8, level, 0, wet, 0, ups.count_ones() as f64, self.station_upgrades_price(n as u32, ups, wet));
@@ -2353,7 +2389,7 @@ impl Network {
                 let price = if self.node_berth[n].is_some() { PORT_COST } else {
                     let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
                     let ups = self.node_upgrades[n];
-                    cost::station_cost(level, self.node_platform[n], tracks, wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }
+                    cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], tracks, wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }
                 };
                 row(1, n, n, price, !self.node_off[n]);
             }
@@ -2807,7 +2843,7 @@ impl Network {
             }
         }
         let i = e as usize;
-        let (tracks, built, off, hsr, sep) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_hsr[i], self.edge_sep[i]);
+        let (tracks, built, off, kind, sep) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_kind[i], self.edge_sep[i]);
         // A T-079 edge's clicked points go with the half they lie on; one at the split is the
         // node now.
         let (mut t1, mut t2) = (vec![], vec![]);
@@ -2819,8 +2855,8 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, hsr, sep, day: self.edge_day[i] };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, hsr, sep, day: self.edge_day[i] };
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i] };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i] };
         Ok((node, a, b))
     }
 }

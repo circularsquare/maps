@@ -93,6 +93,9 @@ pub const BUS_BOARD_MIN: f32 = 6.0;
 pub const BUS_WALK_EXTRA_M: f32 = 100.0;
 /// The bus stops a cell keeps beside its K train stations.
 pub const BUS_SLOTS: usize = 2;
+/// T-2926: the most tram-only stops among a cell's K nearest stations, so a street of close tram stops
+/// does not crowd out the metro a few minutes' walk away.
+pub const TRAM_SLOTS: usize = 3;
 
 /// Distance from (x, y) to a polyline, m.
 pub fn polyline_dist(pts: &[[f32; 2]], x: f32, y: f32) -> f32 {
@@ -264,6 +267,23 @@ pub fn build_access(city: &City, net: &Network, p: &Params) -> Access {
                         continue;
                     }
                     let st = &mut a.st[c * K..c * K + K];
+                    let mut cnt = cnt;
+                    if net.tram_only(s) {
+                        let trams = st[..cnt].iter().filter(|&&q| net.tram_only(q as usize)).count();
+                        if trams >= TRAM_SLOTS {
+                            // the farthest tram stop of the list goes if this one is nearer
+                            let far = (0..cnt).rev().find(|&j| net.tram_only(st[j] as usize)).unwrap();
+                            if d2 >= wk[far] {
+                                continue;
+                            }
+                            for q in far..cnt - 1 {
+                                wk[q] = wk[q + 1];
+                                st[q] = st[q + 1];
+                            }
+                            cnt -= 1;
+                            a.n[c] -= 1;
+                        }
+                    }
                     let mut i = if cnt < K { cnt } else { K - 1 };
                     while i > 0 && wk[i - 1] > d2 {
                         wk[i] = wk[i - 1];

@@ -383,6 +383,8 @@ export const ST_ROOM = 32, ST_FLIP = 64, ST_PARK = 128, ST_TERMINAL = 256, ST_BU
 export const ST_PASSING = 1024;
 /** In a station building (T-2219): its box's rim is not drawn on the building's floor. */
 export const ST_BUILDING = 2048;
+/** a tram stop (T-2926): its dot is smaller */
+export const ST_TRAM = 4096;
 /** Passing tracks' outer pair (T-2233): this far from the centre line on the ground, m (the
  * running tracks are 2 m out), and joining the running track over this much past the platform's end. */
 export const PASS_TRACK_M = 6, PASS_LEAD_M = 100;

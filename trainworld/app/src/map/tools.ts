@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, snapBeside, snapping, tool } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, snapBeside, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -56,6 +56,8 @@ import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
+import { StreetSnap, type StreetClick, type StreetRoute } from "./streetSnap";
+import { TRACK_SPECS } from "../game/trackKinds";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { FerryDraw } from "./ferryDraw";
@@ -176,6 +178,12 @@ export class Tools {
   private lastPreview: PreviewAnswer | null = null;
   /** snapping to the real network (T-727d) */
   readonly real: RealSnap;
+  /** snapping tram track to streets (T-2927) */
+  readonly street: StreetSnap;
+  /** the route between the clicks is a snapped one, real or street, not an ordinary segment */
+  private get snapped() {
+    return this.real.active || this.street.active;
+  }
   /** the bus line tool (T-1464) */
   readonly bus: BusDraw;
   /** the ferry line tool (T-2194) */
@@ -236,7 +244,8 @@ export class Tools {
       this.clearDelHover();
       this.place();
     });
-    effect(() => { buildPlatform.value; if (tool.value === "station") this.place(); });
+    effect(() => { buildPlatform.value; buildTramPlatform.value; if (tool.value === "station") this.place(); });
+    effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.peek(); });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
@@ -244,7 +253,7 @@ export class Tools {
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; quadTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
     // asked again when more of them land
     let roadsSent = false;
@@ -266,6 +275,15 @@ export class Tools {
       this.place();
     }, () => this.place(), () => this.freeLevel());
     effect(() => this.real.setOn(snapping.value));
+    // T-2927: the street snap for tram track, its own route and preview as the real snap's
+    this.street = new StreetSnap(map, overlay, client, (r) => this.streetReq(r), (a, req) => {
+      if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
+      this.lastPreview = null;
+      this.clearPreview();
+      if (!this.snapped) this.requestPreview();
+      this.place();
+    }, () => this.place(), () => this.freeLevel());
+    effect(() => { tool.value; tramTrack.value; snapStreets.value; this.streetSwitch(); });
     effect(() => { snapBeside.value; this.place(); });
     // T-1260: the touch control bar and the handle that drags the point being previewed
     this.touchHost = document.createElement("div");
@@ -333,8 +351,24 @@ export class Tools {
     const on = e.ctrlKey || e.metaKey;
     if (on === this.noSnap) return;
     this.noSnap = on;
+    this.streetSwitch();
     const p = this.pointer;
     if (tool.peek() === "track" && p) this.move({ point: { x: p.px, y: p.py }, lngLat: { lng: p.lng, lat: p.lat }, originalEvent: e } as unknown as MapMouseEvent);
+  }
+
+  /** T-2927: Ctrl is the free click only for rail; with Tram it flips the street snap */
+  private get freeClick() {
+    return this.noSnap && !tramTrack.peek();
+  }
+
+  /** T-2927: the street snap on while the track tool holds Tram, its switch flipped while Ctrl is held. */
+  private streetSwitch() {
+    if (!this.street) return;
+    const on = tool.peek() === "track" && tramTrack.peek() && snapStreets.peek() !== this.noSnap;
+    if (on === this.street.isOn) return;
+    this.street.setOn(on);
+    if (on && this.start) this.street.begin([this.start.lng, this.start.lat]);
+    if (!on && this.start) this.requestPreview();
   }
 
   private screen(lx: number, ly: number) {
@@ -348,7 +382,7 @@ export class Tools {
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
     const station = tool.peek() === "station";
     if (station) this.alts = [];
-    if (!w || !n || (this.noSnap && tool.peek() === "track")) return { kind: "free", lx: fx, ly: fy };
+    if (!w || !n || (this.freeClick && tool.peek() === "track")) return { kind: "free", lx: fx, ly: fy };
     const edgePx = station ? SNAP_EDGE_PX : TRACK_EDGE_PX;
     let best = TRACK_NODE_PX * TRACK_NODE_PX, hit: Snap | null = null;
     // only what is near the pointer (T-724); everything with the map pitched
@@ -356,10 +390,14 @@ export class Tools {
     // T-1870: a station goes on the track at the pointer, never pulled to a node within the radius
     // (zoomed out that was a long stretch of track); `roomSnap` moves it where the platform needs room
     nodes &&= !station;
+    // T-2926: tram track and train track never join, so while drawing, only the picked family's are snap targets
+    const fam = station ? null : tramTrack.peek();
+    const tramOf = fam === null ? null : this.tramEdgeSet(w);
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], edgePx * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
+      if (fam !== null && (node.kind ?? 0) >= 2 !== fam) continue;
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -372,6 +410,7 @@ export class Tools {
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
+      if (tramOf && tramOf.has(edge) !== fam) continue;
       let eb = edgePx * edgePx, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
@@ -393,9 +432,29 @@ export class Tools {
     // nearest in orderOverlapping's order, then the rest by distance
     const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
     const spots = close.map((c) => { const h = c.hit as Extract<Snap, { kind: "edge" }>; return { edge: h.edge, frac: fractionAlong(n.edgePts.get(h.edge)!, h.lx, h.ly) }; });
-    const order = close.length > 1 ? orderOverlapping(spots, buildPlatform.peek(), w.edges, w.nodes, this.lastStationTrack(), this.layout(w)) : close.map((_, i) => i);
+    const order = close.length > 1 ? orderOverlapping(spots, this.platFor(close[0].hit as Spot), w.edges, w.nodes, this.lastStationTrack(), this.layout(w)) : close.map((_, i) => i);
     this.alts = [...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
     return this.alts[0];
+  }
+
+  private tramEdges: { edges: unknown; set: Set<number> } | null = null;
+  /** the ids of the world's tram edges (T-2926), kept while its edges are the same */
+  private tramEdgeSet(w: NonNullable<ReturnType<typeof world.peek>>): Set<number> {
+    if (this.tramEdges?.edges !== w.edges) this.tramEdges = { edges: w.edges, set: new Set(w.edges.filter((e) => e.kind).map((e) => e.id)) };
+    return this.tramEdges.set;
+  }
+
+  /** whether a station spot is on tram track (T-2926) */
+  private tramSpot(s: Snap | null | undefined): boolean {
+    const w = world.peek();
+    if (!s || !w) return false;
+    if (s.kind === "free") return false;
+    return s.kind === "node" ? (w.nodes.get(s.node)?.kind ?? 0) >= 2 : this.tramEdgeSet(w).has(s.edge);
+  }
+
+  /** the platform length a new station gets at a spot: tram stops have their own (T-2926) */
+  private platFor(s: Snap | null | undefined): number {
+    return this.tramSpot(s) ? buildTramPlatform.peek() : buildPlatform.peek();
   }
 
   /** T-1685: with Snap beside on, open ground within BESIDE_PX of track: the nearest piece, and the
@@ -403,9 +462,11 @@ export class Tools {
   private besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
     const n = this.overlay.renderer.net;
     const at = pointerLocal(this.overlay, px, py);
-    if (!snapBeside.peek() || !n || !at || this.noSnap) return null;
+    if (!snapBeside.peek() || !n || !at || this.freeClick) return null;
     let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
+    const w = world.peek(), tramOf = w ? this.tramEdgeSet(w) : null, fam = tramTrack.peek();
     for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
+      if (tramOf && tramOf.has(edge) !== fam) continue;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
         const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
@@ -489,11 +550,13 @@ export class Tools {
     if (t === "building") return this.building.move(e);
     if (t === "line") (this.busStops?.active ? this.busStops : this.stops)?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+    this.streetSwitch();
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
+    if (t === "track") this.streetMove(e.point.x, e.point.y);
     // T-1721: from any start, and before the first click for the ring
-    this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.real.active ? this.besideAt(e.point.x, e.point.y) : null;
+    this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.snapped ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.held.length) this.releaseNear(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
@@ -505,6 +568,7 @@ export class Tools {
     const t = tool.peek();
     if (t === "track") {
       this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+      this.streetSwitch();
       this.trackClick(e);
     } else if (t === "station") void this.stationClick(e);
     else if (t === "line") this.lineClick(e);
@@ -662,7 +726,7 @@ export class Tools {
     if (t === "building") return this.building.touchState();
     if (t === "track" && this.start) {
       const pv = this.lastPreview;
-      const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.real.active;
+      const bad = !!pv && !pv.ok && this.previewKey === this.wantKey && !this.snapped;
       return { confirm: this.touchAt ? !bad && !this.placing : null, confirmTip: tr("tools.placeTrack"), back: !!this.touchAt || this.chain.length > 0, stopTip: tr("tools.stopDrawing") };
     }
     if (t === "station" && this.touchAt && this.hover && this.hover.kind !== "free") return { confirm: this.shown?.ok !== false, confirmTip: tr("tools.placeStation"), back: false, stopTip: tr("tools.cancelStation") };
@@ -767,6 +831,7 @@ export class Tools {
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.real.reset();
+    this.street.reset();
     this.touchAt = null;
     this.clearPreview();
     this.place();
@@ -802,12 +867,18 @@ export class Tools {
         const [lx, ly] = toLocal(ring[0], ring[1]);
         s = { kind: "free", lx, ly };
       }
+      // T-2927: with the street snap on, open ground near a street starts on it
+      if (this.street.isOn && s.kind === "free") {
+        const [lx, ly] = toLocal(...this.street.landing(e.lngLat.lng, e.lngLat.lat));
+        s = { kind: "free", lx, ly };
+      }
       // T-1685: open ground beside track starts on the line beside it
-      const by = !ring && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
+      const by = !ring && s.kind === "free" && !this.street.isOn ? this.besideAt(e.point.x, e.point.y) : null;
       if (by) s = { kind: "free", lx: by.lx, ly: by.ly };
       this.start = placedAt(this.endOf(s), s.lx, s.ly, ring);
       this.start.beside = by?.edge ?? null;
       this.real.begin(ring);
+      this.street.begin([this.start.lng, this.start.lat]);
       this.requestPreview();
       this.place();
       return;
@@ -833,7 +904,7 @@ export class Tools {
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
-    let rc: RealClick, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null;
+    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null;
     // T-1001: whatever happens to this click, later clicks are not ignored
     try {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
@@ -842,12 +913,20 @@ export class Tools {
         if (rc?.kind === "refuse") say(tr("tools.noRealTrack"), true);
         return;
       }
-      if (!rc && this.tooFar(s)) {
+      // T-2927: tram track with the street snap on follows the streets
+      if (!rc && this.street.isOn) {
+        sc = await this.street.click(...this.streetAt(e.point.x, e.point.y, s));
+        if (sc?.kind === "refuse" || this.start !== from) {
+          if (sc?.kind === "refuse") say(sc.text, true);
+          return;
+        }
+      }
+      if (!rc && !sc && this.tooFar(s)) {
         say(tooFarText(), true);
         return;
       }
-      by = !rc && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
-      const req = rc ? this.realReq(rc.route, s) : this.routeReq(this.endOf(s), by);
+      by = !rc && !sc && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
+      const req = rc ? this.realReq(rc.route, s) : sc ? this.streetReq(sc.route, s) : this.routeReq(this.endOf(s), by);
       // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
       // preview landing late) would give another segment's length and cost
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
@@ -863,7 +942,7 @@ export class Tools {
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
       if (p) this.overlay.renderer.keepPreviewAsPlaced();
-      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, 255, highSpeed.peek()));
+      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, 255, highSpeed.peek(), tramTrack.peek()));
       if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
     }
@@ -874,10 +953,11 @@ export class Tools {
       return;
     }
     this.chain.push(from);
-    const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : [s.lx, s.ly];
+    const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : sc && s.kind === "free" ? toLocal(...sc.route.last) : [s.lx, s.ly];
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
     this.real.begin(this.start.ring);
+    this.street.begin([this.start.lng, this.start.lat]);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.clearPreview();
@@ -899,6 +979,7 @@ export class Tools {
     if (!a.ok) return this.reset();
     this.start = prev;
     this.real.begin(prev.ring);
+    this.street.begin([prev.lng, prev.lat]);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.requestPreview();
@@ -907,7 +988,26 @@ export class Tools {
 
   private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek(), ...beside };
+    return { from: this.start!.end, to, pis: [], single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside };
+  }
+
+  /** T-2927: the pointer's spot for the street snap: the track it would end on, else where it is. */
+  private streetAt(px: number, py: number, h: Snap | null = this.hover): [number, number, number, number, boolean] {
+    if (h && h.kind !== "free") return [px, py, ...toLngLat(h.lx, h.ly), true];
+    const p = this.pointer;
+    return [px, py, p?.lng ?? 0, p?.lat ?? 0, false];
+  }
+  private streetMove(px: number, py: number) {
+    if (!this.street.isOn) return;
+    const [x, y, lng, lat, on] = this.streetAt(px, py);
+    this.street.move(x, y, lng, lat, on);
+  }
+
+  /** T-2927: a street route's request: from the start, to the tram track under the pointer, else the
+   * route's last point (on the street); street tram track. */
+  private streetReq(r: StreetRoute, at: Snap | null = this.hover) {
+    const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
+    return { from: this.start!.end, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first
@@ -915,11 +1015,11 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), ramp: autoRamp.peek() };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek() };
   }
 
   private requestPreview() {
-    if (!this.start || this.real.active) return;
+    if (!this.start || this.snapped) return;
     const se = this.start.end;
     const nodes = world.peek()?.nodes;
     if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
@@ -943,7 +1043,7 @@ export class Tools {
     if (!this.wantKey || this.wantKey === this.previewKey) this.waitFrom(false);
     this.wantKey = key;
     this.client.preview(req, (a) => {
-      if (this.start && !this.real.active && this.wantKey === key) this.showPreview(a, key);
+      if (this.start && !this.snapped && this.wantKey === key) this.showPreview(a, key);
     });
   }
 
@@ -1014,7 +1114,7 @@ export class Tools {
     // a real route's preview (T-727d) answers what the ghost waits for too
     this.previewKey = this.wantKey = key;
     // single track previews as one track close in, double and quad as two each (T-658)
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255, highSpeed.peek()) : null);
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255, highSpeed.peek(), tramTrack.peek()) : null);
     this.overlay.invalidate();
     this.place();
   }
@@ -1056,8 +1156,7 @@ export class Tools {
     const ahead = this.named?.key === key && this.map.areTilesLoaded() ? this.named.name : null;
     this.named = null;
     const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
-    const platform = buildPlatform.peek();
-    const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform, name });
+    const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform: this.platFor(p), name });
     const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
     this.dropPending(pend);
     if (r.spot) {
@@ -1460,7 +1559,7 @@ export class Tools {
 
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
    * on quad. */
-  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = buildPlatform.peek()) {
+  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = this.platFor(this.stationSpot())) {
     this.lastBox={lx,ly,ways,perM,plat};
     const sh=platformShape(ways,0,plat/2*perM);
     // always the full box at its true length, whatever the zoom (T-311): the map's own style
@@ -1525,7 +1624,7 @@ export class Tools {
     const key=this.altsKey(h);
     if (key===this.guess?.key) return;
     const spots=this.alts.length?this.alts:[h];
-    const platform=buildPlatform.peek(), lay=this.layout(w);
+    const platform=this.platFor(h), lay=this.layout(w);
     const id=(s:Spot)=>s.kind==="node"?`n${s.node}`:`e${s.edge}`;
     const scope=`${platform}:${w.version}`;
     if (this.tried.scope!==scope) this.tried={scope,at:new Map()};
@@ -1612,7 +1711,7 @@ export class Tools {
   /** the spots the pointer's candidates (`alts`) are tried at, and the world and platform they were tried in */
   private altsKey(h: Spot | null = this.hover as Spot | null) {
     const spots=this.alts.length?this.alts:h?[h]:[];
-    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${world.peek()?.version}`;
+    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${buildTramPlatform.peek()}:${world.peek()?.version}`;
   }
 
   /** the worker's answer for the pointer's candidates, else the layout's guess */
@@ -1635,7 +1734,7 @@ export class Tools {
   private roomSnap(h: Spot): Spot[] {
     const w=world.peek(), net=this.overlay.renderer.net, pts=h.kind==="edge"?net?.edgePts.get(h.edge):null;
     if (!w || !net || !pts || pts.length<6 || h.kind!=="edge") return [];
-    return roomNear({edge:h.edge,frac:fractionAlong(pts,h.lx,h.ly)},buildPlatform.peek(),this.layout(w)).flatMap((c):Spot[]=>{
+    return roomNear({edge:h.edge,frac:fractionAlong(pts,h.lx,h.ly)},this.platFor(h),this.layout(w)).flatMap((c):Spot[]=>{
       if (c.kind==="node") {
         const node=w.nodes.get(c.node);
         if (!node) return [];
@@ -1681,6 +1780,7 @@ export class Tools {
 
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
+    if (tool.peek() === "station" && this.hover && this.hover.kind !== "free") stationOnTram.value = this.tramSpot(this.stationSpot() as Spot | null);
     // on touch the pointer is a tap, a place on the map: its screen point follows the camera
     const p = this.pointer;
     if (p && touchInput.peek()) {
@@ -1824,8 +1924,11 @@ export class Tools {
     } else if (t === "track" && this.real.ringAt) {
       this.ring.style.display = "";
       put(this.ring, ...toLocal(...this.real.ringAt));
+    } else if (t === "track" && !this.start && h?.kind === "free" && this.street.ringAt) {
+      this.ring.style.display = "";
+      put(this.ring, ...toLocal(...this.street.ringAt));
     } else this.ring.style.display = "none";
-    const pv = this.lastPreview, rt = t === "track" && this.start && h ? this.real.tag() : null;
+    const pv = this.lastPreview, rt = t === "track" && this.start && h ? this.real.tag() ?? this.street.tag() : null;
     const at = h ? this.screen(h.lx, h.ly) : null;
     if (rt) {
       // T-727d: a real route still being found (the spinner once it takes a while), or none
@@ -1834,10 +1937,10 @@ export class Tools {
       if (rt.text) kids.push(rt.text);
       if (kids.length) this.showTag(kids, rt.bad, ...at!);
       else this.tag.style.display = "none";
-    } else if (t === "track" && this.start && h && !this.real.active && this.tooFar(h)) {
+    } else if (t === "track" && this.start && h && !this.snapped && this.tooFar(h)) {
       this.showTag(tooFarText(), true, ...at!);
     } else if (t === "track" && this.start && h && (pv || this.waiting())) {
-      const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek()) : [document.createElement("div")];
+      const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), this.street.active ? TRACK_SPECS.streetTram.surcharge : 1) : [document.createElement("div")];
       // T-1039: still working on the newest ghost or the click
       if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
       this.showTag(rows, false, ...at!);

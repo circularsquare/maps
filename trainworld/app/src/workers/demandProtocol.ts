@@ -63,6 +63,8 @@ export interface DemandNetwork {
   catchXY?: Float32Array;
   /** T-2196 (`EverydayApi.set_ferry`): 1 for each ferry line, 0 for the rest; absent with none */
   ferry?: Uint8Array;
+  /** T-2926 (`DemandApi.set_tram_lines`): 1 for each tram line, 0 for the rest; absent with none */
+  tram?: Uint8Array;
 }
 
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */

@@ -785,12 +785,12 @@ impl TrackWorld {
 
     /// Cost and validity of an alignment not yet built (the drawing tool's preview runs the same
     /// code): the fitted geometry, its track cost (water included) and its geometry problems.
-    pub fn preview(&self, vertices: &[super::geom::Pi], tracks: u8, hsr: bool) -> (super::geom::Fit, f64, bool) {
+    pub fn preview(&self, vertices: &[super::geom::Pi], tracks: u8, kind: super::params::TrackKind) -> (super::geom::Fit, f64, bool) {
         let f = self.net.fit(vertices);
         let mut wet = vec![];
         super::cost::water_spans(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); (x, y) }, self.net.water_mask.as_ref(), &mut wet);
         let ground = self.ground_of(&f);
-        let c = super::cost::track_cost_t(f.len, &f.vert, &wet, &ground, tracks, hsr);
+        let c = super::cost::track_cost_t(f.len, &f.vert, &wet, &ground, tracks, kind);
         let ground_wet = wet.iter().any(|w| {
             let mut s = w[0];
             while s <= w[1] {
@@ -814,7 +814,10 @@ impl TrackWorld {
     }
 
     /// The roads a fitted alignment crosses at ground level, weighted, and their price, US$M (T-1929).
-    pub fn road_charge_of(&self, f: &super::geom::Fit) -> (f64, f64) {
+    pub fn road_charge_of(&self, f: &super::geom::Fit, kind: TrackKind) -> (f64, f64) {
+        if !kind.spec().road_crossings {
+            return (0.0, 0.0);
+        }
         let mut cross = vec![];
         let frame = self.net.frame();
         super::roads::crossings(f.len, |s| { let (x, y, _) = super::geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.net.roads, &mut cross);
@@ -832,7 +835,7 @@ impl TrackWorld {
         if ground.is_empty() && wet.is_empty() {
             return out;
         }
-        super::cost::track_cost_parts_t(f.len, &f.vert, &wet, &ground, 2, false, |level, w, _, class, m, _| {
+        super::cost::track_cost_parts_t(f.len, &f.vert, &wet, &ground, 2, super::params::TrackKind::Regular, |level, w, _, class, m, _| {
             if w {
                 out[4] += m;
             } else if level >= TERRAIN_MIN_LEVEL {

@@ -64,7 +64,7 @@ export const carsBought = (k: { carPrice: number; spare: number }, cars: number)
 function stockOf(m: MoneyState, st: LineStats, v: Vehicle): { unit: (n: number) => string; per: number; price: number; spare: number } | null {
   if (v === "train") {
     if (!st.cars) return null;
-    const k = trainKind(m, st.fast);
+    const k = trainKind(m, st.fast, st.tram);
     return { unit: carsText, per: st.cars, price: k.carPrice, spare: k.spare };
   }
   const [owned, needed, price] = v === "boat" ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : [m.fleetBus, m.busesNeeded, m.busPrice];

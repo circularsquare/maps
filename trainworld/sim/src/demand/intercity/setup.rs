@@ -510,6 +510,7 @@ impl IntercityApi {
         let svc = Service {
             catches,
             st_bus,
+            st_tram: vec![],
             st_x,
             st_y,
             st_map: st_map.clone(),

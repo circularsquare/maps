@@ -4,18 +4,19 @@ import { distUnit, levelName, levelUpkeepLine, millions, perDistance } from "../
 import type { MoneyState } from "../workers/protocol";
 import { edgeUpkeep } from "../game/regionMoney";
 import type { Level } from "../game/types";
-import type { TrackType } from "../game/ui";
+import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
+import { snapStreets, type TrackType } from "../game/ui";
 import { levelKeyName } from "./toolKeys";
 import { t, tNumber } from "../i18n";
 
 // SPEC 6.4. A display copy: the track model (sim/src/track/params.rs) owns the real price list.
 export const BASE_M_PER_KM = 75;
-const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
-/** high-speed track's price over double track (params.rs `HSR_COST`, T-817) */
-const HSR_COST = 1.5;
 
 /** The cost multiplier at a level, high-speed track's included; quad track (T-2931) is two double tracks'. */
-export const trackMult = (l: Level, t: TrackType, quad = false) => MULT[l] * (t === "hsr" ? HSR_COST : 1) * (quad ? 2 : 1);
+export const trackMult = (l: Level, t: TrackType, quad = false) =>
+  kindLevelMult(t === "tram" ? tramKind() : t === "hsr" ? "highSpeed" : "regular", l) * (quad ? 2 : 1);
+/** T-2927: the tram track the tool lays: on streets while the street snap is on */
+export const tramKind = () => (snapStreets.value ? "streetTram" : "tram") as "streetTram" | "tram";
 /** "1.0x", "1.50x" for high-speed track */
 const multOf = (v: number, t: TrackType) => tNumber(v, { minimumFractionDigits: t === "hsr" ? 2 : 1, maximumFractionDigits: t === "hsr" ? 2 : 1 }) + "x";   // i18n-ignore
 export const multText = (l: Level, t: TrackType, quad = false) => multOf(trackMult(l, t, quad), t);
@@ -28,7 +29,7 @@ export const unitPrice = (l: Level, t: TrackType, quad = false) => Math.round(pe
 export function upkeepMult(l: Level, t: TrackType, m: Parameters<typeof edgeUpkeep>[1], quad = false): number {
   const at = (lev: Level, hsr: boolean) => edgeUpkeep({ built: true, tracks: 2, hsr, lengthM: 1000, levelMin: lev, levelMax: lev }, m);
   const base = at(1, false);
-  return base > 0 ? (at(l, t === "hsr") / base) * (quad ? 2 : 1) : 1;
+  return base > 0 ? (at(l, t === "hsr") / base) * (quad ? 2 : 1) * (t === "tram" ? TRACK_SPECS[tramKind()].upkeep : 1) : 1;
 }
 /** "0.7x upkeep" ("1.50x" for high-speed track, as the cost multiple), or "" before the money has come. */
 export function upkeepAt(l: Level, t: TrackType, m: MoneyState | null, quad = false): string {

@@ -21,7 +21,7 @@ use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
 use super::kernel::*;
 use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
-use super::network::{Network, PERIODS};
+use super::network::{Network, PERIODS, TRAM_CARS};
 use super::pack::{self, City};
 use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
 use std::sync::Arc;
@@ -325,6 +325,8 @@ pub(crate) struct Service {
     /// `Network::catches` and `Network::st_bus` (`demand_catches`, T-1464).
     pub(crate) catches: Vec<Catch>,
     pub(crate) st_bus: Vec<bool>,
+    /// `Network::st_tram` (`set_tram_lines`, T-2926).
+    pub(crate) st_tram: Vec<bool>,
 }
 
 /// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
@@ -353,6 +355,7 @@ impl Service {
             && self.passages == o.passages
             && self.catches == o.catches
             && self.st_bus == o.st_bus
+            && self.st_tram == o.st_tram
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period's level. A period reads no other level's.
@@ -550,6 +553,8 @@ pub struct DemandApi {
     span_in: Vec<f32>,
     /// set_bus (T-1464)
     bus_in: (Vec<u32>, Vec<f32>),
+    /// Per line of the network `set_network` is given, 1 if it runs on tram track (`set_tram_lines`).
+    tram_in: Vec<u8>,
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
     /// were, so their results were kept; and whether the layout was, so access was kept.
     pub(crate) same: u32,
@@ -642,6 +647,7 @@ impl DemandApi {
             st_passage: svc.passages.clone(),
             catches: svc.catches.clone(),
             st_bus: svc.st_bus.clone(),
+            st_tram: svc.st_tram.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -992,6 +998,7 @@ impl DemandApi {
             passages_in: vec![],
             span_in: vec![],
             bus_in: (vec![], vec![]),
+            tram_in: vec![],
             same: 0,
             layout_same: false,
             reusable: false,
@@ -1103,7 +1110,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1157,6 +1164,14 @@ impl DemandApi {
         self.bus_in = (catch_n.to_vec(), catch_xy.to_vec());
     }
 
+    /// The tram lines of the networks `set_network` is given from now on (T-2926): one flag per line,
+    /// 1 for a line on tram track. A tram line has `TRAM_CARS` of a car per tram section (so it
+    /// holds three quarters of the riders), boards with no penalty, and a station only tram lines
+    /// serve is a tram stop (`access::TRAM_SLOTS`). Empty or another length: none.
+    pub fn set_tram_lines(&mut self, flags: &[u8]) {
+        self.tram_in = flags.to_vec();
+    }
+
     /// T-874: commute zone pairs under the level's chunk (`Lod::chunk`) trips a period dealt in
     /// chunks (`Params::commute_chunk`), or every pair solved (`?perfOff=chunks`).
     pub fn set_chunked(&mut self, on: bool) {
@@ -1199,9 +1214,12 @@ impl DemandApi {
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
+        let tram_line: Vec<bool> = if self.tram_in.len() == nl { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
+        let st_tram = tram_stops(&st_map, st_x.len(), stops, &line_off, &tram_line);
         let svc = Service {
             catches,
             st_bus,
+            st_tram,
             st_x,
             st_y,
             st_map: st_map.clone(),
@@ -1210,7 +1228,7 @@ impl DemandApi {
             stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
             times: times.to_vec(),
             tph: tph.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
-            cars: cars.to_vec(),
+            cars: cars.iter().enumerate().map(|(l, &c)| if tram_line.get(l).copied().unwrap_or(false) { c * TRAM_CARS } else { c }).collect(),
             group,
             span: span_for(&self.span_in, nstops),
             ups,
@@ -2340,4 +2358,21 @@ mod tests;
 #[cfg(test)]
 mod bus_tests;
 #[cfg(test)]
+mod tram_tests;
+#[cfg(test)]
 mod islands_tests;
+
+/// Per merged station, whether only tram lines serve it (`Service::st_tram`); empty with no tram lines.
+pub(crate) fn tram_stops(st_map: &[u32], n: usize, stops: &[u32], line_off: &[u32], tram_line: &[bool]) -> Vec<bool> {
+    if !tram_line.iter().any(|&t| t) {
+        return vec![];
+    }
+    let (mut tram, mut other) = (vec![false; n], vec![false; n]);
+    for (l, &t) in tram_line.iter().enumerate() {
+        for &s in &stops[line_off[l] as usize..line_off[l + 1] as usize] {
+            let m = st_map[s as usize] as usize;
+            if t { tram[m] = true } else { other[m] = true }
+        }
+    }
+    (0..n).map(|s| tram[s] && !other[s]).collect()
+}

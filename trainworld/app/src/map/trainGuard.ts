@@ -21,7 +21,7 @@
 // does not on the running track beside it, so there neither holds the other: the one place order on a
 // track may change. A faster line stopping there stops on the running track beside it (T-2248).
 
-import { PASS_OUTER, PASS_STRIDE, profileS, type NetworkBuffers } from "./network";
+import { PASS_OUTER, PASS_STRIDE, carsOf, profileS, type NetworkBuffers } from "./network";
 import { perfOff } from "../perfFlags";
 
 /** Room left between a held train's front and the back of the train ahead, m. */
@@ -364,7 +364,7 @@ export class TrainGuard {
       }
       cand.push(i);
       cs.push(s);
-      half.push(Math.min(Math.max(1, n.lineCars?.[line] ?? 8) * 20, meta[p * 4 + 3]) / 2);
+      half.push(Math.min(Math.max(1, carsOf(n.lineCars?.[line] ?? 8)) * 20, meta[p * 4 + 3]) / 2);
       tauOf.push(tau);
       if (l0 !== li) { lag[i] = li; changed = true; }
     }

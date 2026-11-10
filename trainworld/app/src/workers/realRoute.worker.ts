@@ -19,7 +19,7 @@
 
 import init, { TrackApi } from "../wasm/track/sim";
 import { NEW_GAME_FRAME } from "../game/cities";
-import { EARTH_R, frameKindNumber } from "../game/frame";
+import { EARTH_R, frameKindNumber, type FrameSpec } from "../game/frame";
 import { inRing, noritetsuBases, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
 
@@ -29,6 +29,9 @@ export type ToRouter =
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
   | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number; design: number }
+  /** T-2927: a street's line (lon, lat pairs) fitted as track of kind `track` (2, street tram) at `tol`
+   * ground m; answered with a "fit" */
+  | { kind: "trace"; seq: number; line: Float64Array; tol: number; track: number; level: number; frame: FrameSpec }
   /** the route asked as `seq` is no longer wanted (the pointer left real track, the run ended): a
    * search or fit still running for it stops at its next look (T-1039) */
   | { kind: "drop"; seq: number }
@@ -545,8 +548,22 @@ const TRACE_SLICE_MS = 25;
 
 /** The fit in steps of a few ms, yielding every slice so a newer route request is seen; null
  *  once one has come. */
-async function traceLatest(seq: number, line: Float64Array, tol: number, tracks: number, level: number): Promise<Float64Array | null> {
-  const t = api!.trace_start(line, tol, tracks, level);
+/** T-2927: a TrackApi in a loaded game's own frame (an old save's may not be the new games'), for
+ * corners in that game's plane metres */
+const framed = new Map<string, TrackApi>();
+function apiIn(f: FrameSpec): TrackApi {
+  const key = `${f.kind}:${f.lon}:${f.lat}`;
+  let a = framed.get(key);
+  if (!a) {
+    a = new TrackApi(f.lon, f.lat, true);
+    a.set_empty_frame(frameKindNumber(f.kind));
+    framed.set(key, a);
+  }
+  return a;
+}
+
+async function traceLatest(seq: number, line: Float64Array, tol: number, tracks: number, level: number, kind = -1, frame: FrameSpec | null = null): Promise<Float64Array | null> {
+  const t = kind >= 0 ? apiIn(frame ?? NEW_GAME_FRAME).trace_kind(line, tol, kind, level) : api!.trace_start(line, tol, tracks, level);
   try {
     let slice = performance.now();
     while (!t.step()) {
@@ -570,12 +587,13 @@ self.onmessage = (ev: MessageEvent<ToRouter>) => {
     if (latest === m.seq) latest = -1;
     return;
   }
-  if (m.kind === "route") latest = m.seq;
+  if (m.kind === "route" || m.kind === "trace") latest = m.seq;
   if (m.kind === "reach") latestReach = m.seq;
   queue = queue.then(() => handle(m)).catch((err) => {
     console.error("real route", err);
     // T-1001: a route that failed is an ordinary segment, not a click waiting for ever
     if (m.kind === "route" && m.seq === latest) post({ kind: "line", seq: m.seq, line: null, lengthM: 0, why: "off", ms: 0, states: 0 });
+    if (m.kind === "trace" && m.seq === latest) post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms: 0 });
   });
 };
 
@@ -622,6 +640,16 @@ async function handle(m: ToRouter) {
     const t1 = performance.now();
     api!.set_design_speed(m.design);
     const out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
+    if (!out) return;
+    const ms = performance.now() - t1;
+    if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms });
+    const pis = out.slice(3);
+    post({ kind: "fit", seq: m.seq, pis, worst: out[0], ms }, [pis.buffer]);
+  } else if (m.kind === "trace") {
+    await apiReady;
+    if (m.seq !== latest) return;
+    const t1 = performance.now();
+    const out = await traceLatest(m.seq, m.line, m.tol, 2, m.level, m.track, m.frame);
     if (!out) return;
     const ms = performance.now() - t1;
     if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms });

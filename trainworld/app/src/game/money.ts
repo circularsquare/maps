@@ -61,7 +61,7 @@ export function carShortfall(id: LineId, more: number): { need: number; have: nu
   const m = moneyState.peek(), st = world.peek()?.lineStats[id];
   if (!m || !st || st.status !== "running" || m.mode === "sandbox" || !(more > 0)) return null;
   const [owned, needed, price] = st.bus?.ferry ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
-    : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
+    : st.tram ? [m.fleetTram, m.tramsNeeded, m.tramPrice] : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
   const need = Math.max(0, needed + more - owned) * price, have = liveMoney.peek().cash;
   return need > 1e-9 && need > have + 1e-6 ? { need, have } : null;
 }

@@ -282,9 +282,11 @@ export const runCostLineFactor = (f: number) => t("format.runCostLineFactor", { 
 export function upkeepText(m: UpkeepRates & { upkeepHsr: number; upkeepSingle: number }, lead: string): string {
   return t("format.upkeepText", { lead, rule: upkeepRule(m), hsr: m.upkeepHsr, single: m.upkeepSingle });
 }
-type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number };
+type Fleets = { carPrice: number; runCostTrainKm: number; runCostCarKm: number; hsCarPrice: number; hsRunCostTrainKm: number; hsRunCostCarKm: number; fleet: number; carsNeeded: number; fleetFast: number; carsNeededFast: number; fleetTram: number; tramsNeeded: number; tramPrice: number };
 /** One kind of train's car price, running costs and spare cars (T-817: high-speed or ordinary). */
-export function trainKind(m: Fleets, fast: boolean): { carPrice: number; runCostTrainKm: number; runCostCarKm: number; spare: number } {
+export function trainKind(m: Fleets, fast: boolean, tram = false): { carPrice: number; runCostTrainKm: number; runCostCarKm: number; spare: number } {
+  // T-2926: a tram car's own price and fleet, the running costs of an ordinary train
+  if (tram) return { carPrice: m.tramPrice, runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, spare: Math.max(0, m.fleetTram - m.tramsNeeded) };
   return fast
     ? { carPrice: m.hsCarPrice, runCostTrainKm: m.hsRunCostTrainKm, runCostCarKm: m.hsRunCostCarKm, spare: Math.max(0, m.fleetFast - m.carsNeededFast) }
     : { carPrice: m.carPrice, runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, spare: Math.max(0, m.fleet - m.carsNeeded) };

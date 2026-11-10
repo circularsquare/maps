@@ -157,7 +157,7 @@ export function doubleUpPieces(p: BpPicked): number[] {
   const w = world.peek();
   if (!w) return [];
   const picked = new Set(p.edges);
-  const ok = (e: TrackEdge) => e.tracks === 2 && !e.hsr && !e.crossover;
+  const ok = (e: TrackEdge) => e.tracks === 2 && !e.hsr && !e.kind && !e.crossover;
   const adj = adjacency(w.edges);
   const seen = new Set<number>(), out: number[] = [];
   for (const e0 of w.edges) {
@@ -214,7 +214,7 @@ export const pickedState = computed(() => {
 });
 
 /** T-1898: blueprint track that can be high-speed or regular (`TrackApi::set_edges_hsr`): double, no crossover. */
-const canBeHsr = (e: TrackEdge) => !e.built && e.tracks === 2 && !e.crossover;
+const canBeHsr = (e: TrackEdge) => !e.built && e.tracks === 2 && !e.crossover && !e.kind;
 
 /** Every blueprint piece switched off, for the Build tab. */
 export const offTotals = computed(() => {

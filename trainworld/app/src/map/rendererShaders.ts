@@ -6,7 +6,14 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
-import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+
+/** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
+const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
+/** T-2927 (Anita: "2 thin black lines in the middle ... to indicate the cables"): on tram strokes, each
+ * wire's middle this share of the stroke's width either side of its centre while drawn as one stroke
+ * (one wire along each track once they part), each this share of the width across, at least WIRE_MIN_PX */
+const WIRE_OFF = 0.17, WIRE_SHARE = 0.11, WIRE_MIN_PX = 0.7;
 
 export const TEX_W = 2048;
 export const LINES_W = 1024;
@@ -116,7 +123,8 @@ uniform int u_ghost_layer;   // T-1054: -1 the other strokes; 0 a ghost's outlin
 uniform vec3 u_ghost_rgb;    // the outline
 uniform vec2 u_ghost_min;    // the ghost's least width across its rails (px), and its outline's both sides together
 uniform vec3 u_hsr;          // T-1097: high-speed strokes' width as a multiple (one stroke, built), and the
-                             // stroke widths (px) between which its centre line comes in
+                             // stroke widths (px) between which its centre line comes in (a tram's wires too)
+uniform vec3 u_wire;         // T-2927: a tram's wires on built track and lines, the map's ink
 uniform float u_band;        // T-1799: how far lines sharing track are drawn side by side (0-1)
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
@@ -138,6 +146,8 @@ out float v_alpha;
 out vec4 v_cap;             // px: along from the segment's start, along to its end, across, half the width
 flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour and half width (px), 0 none
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
+flat out vec4 v_wire;       // T-2927: a tram's wires, their colour and how far each one's middle is from the centre (px)
+flat out float v_wire_hw;   // and each one's half width (px), 0 none
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
 out float v_along;          // T-2184: px along the stroke's run, so dashes keep one length round curves
 flat out vec4 v_inner;      // T-2184: a band's red edges over its neighbours: its colour's half width, the red's and the rim's px, strength; 0 none
@@ -148,8 +158,12 @@ void main() {
   v_aa = 0.0;
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
+  bool tram = (flags & 4096) != 0;
+  bool striped = hsr;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
+  v_wire = vec4(0.0);
+  v_wire_hw = 0.0;
   v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
   if (int(a_edge) == u_hide.x || int(a_edge) == u_hide.y) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
@@ -176,8 +190,9 @@ void main() {
   if (passing && (u_pass_off <= 0.0 || u_casing > 0.0 || u_lane_mode == 1 || u_lane_mode == 3)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float lfm = turnback || (passing && u_lane_mode == 2) ? 1.0 : passing ? 0.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
   bool bpShape = bpTrack || bpLine || ghost;
-  float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z;
-  float core = bpShape ? u_bp.x + 2.0 * u_bp.y : u_width.x;
+  float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0);
+  float tw = tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0;
+  float core = bpShape ? u_bp.x * tw + 2.0 * u_bp.y : u_width.x * tw;
   int id = gl_VertexID;
   float along = float(id & 1);
   // lines sharing track side by side (T-1799): each a band narrower than a line, shifted across;
@@ -207,9 +222,9 @@ void main() {
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (ghost ? core
-      : bpTrack ? u_bp.x + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
-      : bpLine ? u_bp.x * bandW + extra + cas
-      : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * bandW + extra + cas) + grow;
+      : bpTrack ? u_bp.x * tw + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+      : bpLine ? u_bp.x * tw * bandW + extra + cas
+      : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0) * bandW + extra + cas) + grow;
     // T-2126: a band of shared track a pixel narrower in colour than its slot, the casing showing between
     // (none for a line easing out of the ribbon to its full width)
     if (shared && u_casing <= 0.0 && !full) {
@@ -226,7 +241,7 @@ void main() {
     float band = max(core * (bpShape ? 1.0 : wmul), lfm * 2.0 * half_ + wl);
     bool casing = u_casing > 0.0;
     bool keep = u_lane_mode == 1
-      ? !ghost && (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (hsr && u_kind == 0))
+      ? !ghost && (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (striped && u_kind == 0))
       : (casing ? bpTrack : true) && (u_lane_mode == 2 || lfm > 0.0);
     if (!keep) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
     w = u_lane_mode == 1 ? band + extra + cas
@@ -321,9 +336,18 @@ void main() {
   vec3 rail = bpTrack ? (swOff ? u_bp_off_rail : u_bp_rail) : ghost ? u_bp_rail : placement ? u_sel : u_casing_rgb;
   // T-1097: on a narrow built stroke no centre line, which would leave little of the colour
   float hs = u_lane_mode == 0 ? (bpShape || placement ? max(0.3, 0.18 * w) : 0.18 * w * smoothstep(u_hsr.y, u_hsr.z, w)) : max(0.3, 0.08 * G);
-  if (hsr && u_casing <= 0.0 && u_lane_mode < 2 && !full && (!ghost || u_ghost_layer == 2) && hs >= 0.1) {
+  if (striped && u_casing <= 0.0 && u_lane_mode < 2 && !full && (!ghost || u_ghost_layer == 2) && hs >= 0.1) {
     v_stripe = vec4(u_lane_mode == 0 ? rail : (bpTrack || placement ? rail : v_color), hs);
     v_stripe_only = u_lane_mode == 1 && u_kind == 0 ? 1.0 : 0.0;
+  }
+  // T-2927: a tram's two wires, coming in as high-speed track's centre line does; one along each track
+  // once they part (blueprint's only then: between its rails there is no room for two more lines)
+  if (tram && u_casing <= 0.0 && u_lane_mode != 1 && !(bpShape && u_lane_mode == 0) && !full && !late && (!ghost || u_ghost_layer == 2)) {
+    float hw = max(${(WIRE_MIN_PX / 2).toFixed(2)}, ${(WIRE_SHARE / 2).toFixed(3)} * w) * (u_lane_mode > 1 ? 1.0 : smoothstep(u_hsr.y, u_hsr.z, w));
+    if (hw >= 0.1) {
+      v_wire = vec4(bpShape || placement ? rail : u_wire, u_lane_mode == 0 ? ${WIRE_OFF.toFixed(3)} * w : 0.0);
+      v_wire_hw = hw;
+    }
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
   if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
@@ -340,6 +364,8 @@ in float v_alpha;
 in vec4 v_cap;
 flat in vec4 v_stripe;
 flat in float v_stripe_only;
+flat in vec4 v_wire;
+flat in float v_wire_hw;
 flat in float v_dash;
 in float v_along;
 flat in vec4 v_inner;
@@ -376,6 +402,7 @@ void main() {
     c = mix(c, v_stripe.rgb, s);
     if (v_stripe_only > 0.5) { c = v_stripe.rgb; a *= s; }
   }
+  if (v_wire_hw > 0.0) c = mix(c, v_wire.rgb, clamp(v_wire_hw + 0.5 - abs(abs(v_cap.z) - v_wire.w), 0.0, 1.0));
   o = vec4(c * a, a);
 }`;
 
@@ -478,7 +505,7 @@ void main() {
   float cover = 0.3 * u_line + u_ring + u_pixel;
   float hl = max(len, hw);
   // zoomed out every station is its own dot at its platform's middle (T-313)
-  if (!boxes) v_dot = max((flags & 1) != 0 ? u_radius.y : u_radius.x, cover);
+  if (!boxes) v_dot = max(((flags & 1) != 0 ? u_radius.y : u_radius.x) * ((flags & ${ST_TRAM}) != 0 ? ${TRAM_DOT.toFixed(2)} : 1.0), cover);
   float lo, hi, xl, xh;
   // the quad's offset from the platform's middle and its axes on screen (a waiting room's own)
   vec2 shift = vec2(0.0), ra = along, rn = across;
@@ -864,6 +891,9 @@ void main() {
   bool chosen = u_sel_trip.x >= 0.0 && abs(a_trip.x - u_sel_trip.x) < 0.5 && abs(a_trip.y - u_sel_trip.y) < 0.01;
   if ((u_pass == 0) == chosen || !trainDist(L, d, line)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rawCars = texelFetch(u_cars, tc(line, ${LINES_W}), 0).x;
+  // a tram (T-2926): its sections as a whole number plus a half; 2.4 m across, sections end to end
+  bool tram = rawCars >= 1.0 && fract(rawCars) > 0.25;
+  if (tram) rawCars = floor(rawCars);
   // a bus (T-1464): one car under a full car's length, which is its value here; narrower than a train.
   // A boat (T-2194): below 0, its length in cars; one hull, 8 m across
   bool boat = rawCars < 0.0;
@@ -883,13 +913,13 @@ void main() {
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
   // Both representations share the same width: splitting into cars must not shrink the train.
   // a bus (T-1798) is drawn 1.4 times its size from a distance and 1.2 times its real one close up
-  vec2 px = max(bus ? u_min_px * 0.77 : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
-  if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - max(1.5 * u_dpr, kM * u_px_per_unit));
+  vec2 px = max(bus ? u_min_px * 0.77 : boat ? u_min_px * vec2(1.0, 1.3) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
+  if (u_detail) px.x = max(bus ? 2.8 * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - (tram ? 0.0 : max(1.5 * u_dpr, kM * u_px_per_unit)));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
   // passing never touch, and keeping right of its direction of travel (T-319)
   vec4 lb = laneAt(L, carD);
   float lane = u_lane.y * lb.x;
-  px.y = mix(px.y, 3.0 * kM * u_px_per_unit, lane);
+  px.y = mix(px.y, (tram ? 2.4 : 3.0) * kM * u_px_per_unit, lane);
   // Heading along the chord between the train's two ends (as its bogies sit on the track), not
   // the sample segment under its centre, which turns in steps on curves (T-047).
   float h = max(0.5 * px.x / u_px_per_unit / kM, 1.0);

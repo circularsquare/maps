@@ -299,6 +299,16 @@ export function MoneyTab() {
             </Row>
           </>
         )}
+        {(m.fleetTram > 0 || m.tramsNeeded > 0) && (
+          <>
+            <Row label={<span data-tip={t("moneyTab.tramCarTip", { price: money(m.tramPrice * 1e6), rule: runCostRule({ runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm }) })}>{t("moneyTab.tramCarsOwned")}</span>}>
+              <span data-tip={t("moneyTab.hsCarsRunning", { count: tNumber(m.tramsNeeded) })}>{m.fleetTram}</span>
+            </Row>
+            <Row label={t("moneyTab.tramCarsSpare")}>
+              {Math.max(0, m.fleetTram - m.tramsNeeded)}
+            </Row>
+          </>
+        )}
         {(m.fleetBus > 0 || m.busesNeeded > 0) && (
           <>
             <Row label={<span data-tip={t("moneyTab.busTip", { price: money(m.busPrice * 1e6), rule: busRunRule(m), route: busRouteRule(m) })}>{t("moneyTab.busesOwned")}</span>}>

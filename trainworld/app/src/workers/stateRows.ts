@@ -74,6 +74,7 @@ interface LineRead {
   heavy: Heavy;
   auto: Float64Array;
   fast: boolean;
+  tram: boolean;
   loopKind: number;
   shift: number;
   upkeep: number;
@@ -195,12 +196,12 @@ export class StateRows {
     const seen = new Set<number>();
     for (let i = 0; i < ei.length; i += 10) {
       const id = ei[i];
-      const off = offEdges.has(id), hsr = hsrEdges.has(id), crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
+      const off = offEdges.has(id), hsr = hsrEdges.has(id), kind = a.edge_kind(id), crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
       const tracks = ei[i + 3] as 1 | 2, built = ei[i + 4] === 1;
       let r = kept.get(id);
-      if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.crossover !== crossover || r.partner !== partner
+      if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.kind !== kind || r.crossover !== crossover || r.partner !== partner
         || !Object.is(r.lengthM, ei[i + 5]) || !Object.is(r.cost, ei[i + 6]) || !Object.is(r.vminKmh, ei[i + 7]) || r.levelMin !== ei[i + 8] || r.levelMax !== ei[i + 9]) {
-        r = { id, a: ei[i + 1], b: ei[i + 2], tracks, built, off, hsr, crossover, partner, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9] };
+        r = { id, a: ei[i + 1], b: ei[i + 2], tracks, built, off, hsr, kind, crossover, partner, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], levelMin: ei[i + 8], levelMax: ei[i + 9] };
         kept.set(id, r);
       }
       seen.add(id);
@@ -226,13 +227,14 @@ export class StateRows {
       const named = platform > 0 && namedStations.has(id);
       // T-2194: a port has no track, so no platform line
       const port = platform > 0 && a.is_port(id);
+      const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
       const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || r.platform !== platform
-        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port) {
+        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
         const berth = port ? a.port_berth(id) : null;
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}),
+        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
           ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
       }
@@ -269,16 +271,16 @@ export class StateRows {
       read.push({
         i, id, ok, running, bus, prev, fresh,
         heavy: fresh ? this.heavy(a, id, ok) : prev!.heavy,
-        auto: a.line_auto(id), fast: a.line_fast(id), loopKind: a.line_loop(id), shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
+        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
         busRow: bus ? env.busRow(a, id, nodes ?? []) : undefined,
       });
     }
     const out: ClockLine[] = [];
     for (const r of read) {
-      const { i, id, ok, running, prev, fresh, heavy, auto, fast, loopKind, shift, upkeep } = r;
+      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, shift, upkeep } = r;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
-      const extra = [upkeep, fast ? 1 : 0, loopKind, shift, ...auto];
+      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, shift, ...auto];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
         continue;
@@ -292,6 +294,7 @@ export class StateRows {
         fromStart: heavy.fromStart,
         stopS: heavy.stopS,
         fast,
+        tram,
         stretchSpeeds: heavy.stretchSpeeds,
         shift,
         passed: heavy.passed,

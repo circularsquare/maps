@@ -16,7 +16,7 @@ import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, type PlatformShape } from "./stationGeometry";
+import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
@@ -47,6 +47,13 @@ export const F_EASE = 512;
  * out it is, 0 on the running track to 255 on the outer track; F_PASS_LEFT on the left of its way. */
 export const F_PASSING = 1024;
 export const F_PASS_LEFT = 2048;
+/** Tram track (T-2926), both kinds alike, and lines over it: thinner than rail, with two wires along it (T-2927). */
+export const F_TRAM = 4096;
+/** A tram line's `lineCars` is its sections plus this, so the car shader tells it from a train of as many cars
+ * (readers of the count use `carsOf`). */
+export const TRAM_MARK = 0.5;
+/** The cars a `lineCars` entry stands for: a bus (below 1) and a boat (below 0) as given, a tram's without its mark. */
+export const carsOf = (raw: number) => (raw >= 1 ? Math.floor(raw) : raw);
 
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
@@ -426,9 +433,9 @@ function linesOnEdges(s: ClockState) {
 }
 
 /** `lane`: as `Strokes.lane`, 0 for single track (T-658); `hsr`: high-speed track's look (T-817) */
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255, hsr = false): Strokes {
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255, hsr = false, tram = false): Strokes {
   const b = new StrokeBuilder();
-  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0);
+  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0) | (tram ? F_TRAM : 0);
   // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
   let from = 0;
   if (speed) {
@@ -958,6 +965,7 @@ interface LineEntry {
   running: boolean;
   /** high-speed trains: only such a line is drawn in the high-speed look (T-1494) */
   fast: boolean;
+  tram: boolean;
   /** its bands (`LineBands.of`), null on no shared track */
   band: Float32Array | null;
   strokes: Strokes;
@@ -1135,6 +1143,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const builtEdge = new Map<number, boolean>();
   const offEdge = new Set<number>(s.edges.filter((e) => e.off).map((e) => e.id));
   const hsrEdge = new Set<number>(s.edges.filter((e) => e.hsr).map((e) => e.id));
+  const tramEdge = new Set<number>(s.edges.filter((e) => e.kind).map((e) => e.id));
   /** edges whose polyline, ends and flags are as in the last build */
   const kept = new Set<number>();
   const edgesSeen: NetCache["edges"] = new Map();
@@ -1158,7 +1167,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const given = r.edgeParts![i];
     const sg: ArrayLike<number> | undefined = r.edgeSpeedParts?.[i];
     builtEdge.set(e.id, e.built);
-    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0);
+    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
     if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && (c.given === given || sameFloats(c.pts, given))) {
@@ -1193,7 +1202,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
-  for (const l of s.lines) lineCars[l.id] = l.bus?.ferry ? BOAT_CAR : l.bus ? BUS_CAR : Math.max(1, l.cars);
+  for (const l of s.lines) lineCars[l.id] = l.bus?.ferry ? BOAT_CAR : l.bus ? BUS_CAR : l.tram ? Math.max(1, l.cars) + TRAM_MARK : Math.max(1, l.cars);
   const lineParts: LineEntry[] = [];
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();
@@ -1249,7 +1258,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
-    if (!c || c.running !== l.running || c.fast !== l.fast || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
+    if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || !sameArray(c.path, l.path) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
       const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -1261,7 +1270,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         const dr = drawn.get(e);
         const ends = edgeEnds.get(e);
         if (dr) {
-          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0);
+          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0);
           const stretchOf = Math.min(stretch, Math.max(0, l.stops.length - 2));
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
           if (band && dr.lpts.length >= 6) {
@@ -1276,7 +1285,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           next++;
         }
       });
-      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, band, strokes: lines.build(), firstStroke };
+      c = { path: l.path.slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);
@@ -1432,7 +1441,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of

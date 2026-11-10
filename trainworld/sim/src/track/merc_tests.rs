@@ -32,7 +32,7 @@ fn edge_ll(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64, f64)], level: i
         })
         .collect();
     let id = w.net.alloc_edge();
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }) })?;
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) })?;
     Ok(id)
 }
 

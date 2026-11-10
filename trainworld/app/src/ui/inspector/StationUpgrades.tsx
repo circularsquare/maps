@@ -61,7 +61,7 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   const housed = inBuilding([s.id]);
   return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
-      {UPGRADE_TEXT.filter((u) => u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit)).map((u) => {
+      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))).map((u) => {
         const on = hasUpgrade(s.upgrades, u.bit);
         const price = prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0;
         const state = !on ? "" : s.built ? " on" : " planned";
@@ -83,7 +83,7 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
         );
       })}
       <PassageButton s={s} />
-      <BuildingButton s={s} />
+      {!s.tram && <BuildingButton s={s} />}
     </div>
   );
 }

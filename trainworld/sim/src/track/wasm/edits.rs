@@ -168,7 +168,7 @@ impl TrackApi {
             }
         };
         let t = self.w.trial(r.op);
-        let mut out = self.preview_out(t, &r.verts, &[], r.tracks, r.hsr);
+        let mut out = self.preview_out(t, &r.verts, &[], r.tracks, r.kind);
         if r.before.is_empty() && r.after.is_empty() {
             return out;
         }
@@ -179,7 +179,7 @@ impl TrackApi {
         if !r.before.is_empty() {
             let f = self.w.net.fit(&r.before);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert, if r.hsr { V_HSR } else { V_TOP }));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap()));
             speeds.push(joint_speed);
         }
         out.extend(main);
@@ -188,7 +188,7 @@ impl TrackApi {
             let f = self.w.net.fit(&r.after);
             speeds.push(joint_speed);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert, if r.hsr { V_HSR } else { V_TOP }));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap()));
         }
         self.preview_speeds = speeds;
         out
@@ -213,6 +213,10 @@ impl TrackApi {
         }
         let old = std::mem::replace(&mut d.pis, pis_from(pis));
         d.thru.clear();
+        // T-2927: street tram track shaped by hand no longer follows the street
+        if d.kind == TrackKind::StreetTram {
+            d.kind = TrackKind::Tram;
+        }
         let same_count = old.len() == d.pis.len();
         let net = &self.w.net;
         let mut moved: Vec<(u32, f64, f64)> = vec![];
@@ -232,9 +236,9 @@ impl TrackApi {
         let made: Vec<usize> = (0..d.pis.len()).filter(|&k| !old.iter().any(|o| (o.x, o.y) == (d.pis[k].x, d.pis[k].y))).collect();
         design_corners(net, &mut d, &moved, &made, self.route_cap);
         let verts = vertices_of(net, &d, &moved);
-        let (tracks, hsr) = (d.tracks, d.hsr);
+        let (tracks, kind) = (d.tracks, d.kind);
         if moved.is_empty() {
-            return Ok(Reshape { op: Op::Edge { id, data: Some(d) }, verts, tracks, hsr, before: vec![], after: vec![] });
+            return Ok(Reshape { op: Op::Edge { id, data: Some(d) }, verts, tracks, kind, before: vec![], after: vec![] });
         }
         let mut ops = vec![];
         for &(n, x, y) in &moved {
@@ -260,7 +264,7 @@ impl TrackApi {
             }
             ops.push(Op::Edge { id: o, data: Some(od) });
         }
-        Ok(Reshape { op: Op::Batch(ops), verts, tracks, hsr, before, after })
+        Ok(Reshape { op: Op::Batch(ops), verts, tracks, kind, before, after })
     }
 
     /// The other piece at a joint of a stroke (T-244) that may follow a corner of `e` next to it
@@ -341,7 +345,7 @@ impl TrackApi {
             let mut cur = e;
             while gap < reach {
                 let Some((o, which, od)) = self.plain_joint(node, cur) else { break };
-                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.hsr != d.hsr || od.crossover || d.crossover {
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover {
                     break;
                 }
                 seen.push(o);
@@ -398,7 +402,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, hsr: d.hsr, sep: d.sep, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));
@@ -453,7 +457,7 @@ impl TrackApi {
         let f = net.fit(&vertices_of(net, &d, &[]));
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
         // T-1898: high-speed track's curves are labelled up to its own cap, not 160
-        let top = if d.hsr { V_HSR } else { V_TOP };
+        let top = d.kind.v_cap();
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
             let (mx, my) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i + 1]); (x, y) } else { (p.x, p.y) };
@@ -514,9 +518,9 @@ impl TrackApi {
         self.preview_moved(op, shapes)
     }
 
-    /// `shapes`: each changed edge's vertices and whether it is high-speed track (T-1898: its
+    /// `shapes`: each changed edge's vertices and its kind of track (T-1898: its
     /// curves' speeds go up to 320, not 160).
-    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<(Vec<Pi>, bool)>) -> Vec<f64> {
+    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<(Vec<Pi>, TrackKind)>) -> Vec<f64> {
         let r = self.w.trial(op);
         self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
@@ -529,10 +533,10 @@ impl TrackApi {
         }));
         self.last = None;
         let mut out = vec![ok, cost, shapes.len() as f64];
-        for (verts, hsr) in &shapes {
+        for (verts, kind) in &shapes {
             let f = self.w.net.fit(verts);
             out.push(verts.len() as f64);
-            vertex_rows(&f, verts, &mut out, if *hsr { V_HSR } else { V_TOP });
+            vertex_rows(&f, verts, &mut out, kind.v_cap());
             let mut pts = vec![];
             render_samples(&f.pieces, &f.vert, &mut pts);
             out.push((pts.len() / 3) as f64);
@@ -542,7 +546,7 @@ impl TrackApi {
     }
 
     /// The edit moving `node` to (x, y) (`move_node`), and each changed edge's vertices.
-    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<(Vec<Pi>, bool)>), Issue> {
+    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind)>), Issue> {
         let Some(nd) = self.w.net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
         self.moved_by(&[node], quant(x) - nd.x, quant(y) - nd.y)
     }
@@ -570,7 +574,7 @@ impl TrackApi {
     }
 
     /// The edit moving `nodes` by (dx, dy), and each changed edge's vertices.
-    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<(Vec<Pi>, bool)>), Issue> {
+    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind)>), Issue> {
         let net = &self.w.net;
         let mut ops = vec![];
         let mut moves: Vec<(u32, f64, f64)> = vec![];
@@ -614,7 +618,7 @@ impl TrackApi {
                         p.y = quant(p.y + dy);
                     }
                     d.thru.clear();
-                    shapes.push((vertices_of(net, &d, &moves), d.hsr));
+                    shapes.push((vertices_of(net, &d, &moves), d.kind));
                     ops.push(Op::Edge { id: e, data: Some(d) });
                     continue;
                 }
@@ -662,7 +666,7 @@ impl TrackApi {
                 d.thru.clear();
                 let made: Vec<usize> = (0..made.len()).filter(|&k| made[k]).collect();
                 design_corners(net, &mut d, &moves, &made, cap);
-                shapes.push((vertices_of(net, &d, &moves), d.hsr));
+                shapes.push((vertices_of(net, &d, &moves), d.kind));
                 ops.push(Op::Edge { id: e, data: Some(d) });
             }
         }
@@ -688,15 +692,15 @@ impl TrackApi {
     /// `shape` (T-656) is the alignment actually built where it differs from `verts`, the one the
     /// player drew (a bridge over water): it gives the polyline, length and price; `verts` gives
     /// the rows.
-    pub(super) fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8, hsr: bool) -> Vec<f64> {
-        let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks, hsr);
+    pub(super) fn preview_out(&mut self, r: Result<EditResult, Vec<Issue>>, verts: &[Pi], shape: &[Pi], tracks: u8, kind: TrackKind) -> Vec<f64> {
+        let (f, track, _) = self.w.preview(if shape.is_empty() { verts } else { shape }, tracks, kind);
         self.preview_marks = trial_crossings(&r);
-        let (roads, road_cost) = self.w.road_charge_of(&f);
+        let (roads, road_cost) = self.w.road_charge_of(&f, kind);
         let (ok, cost) = match &r {
             Ok(r) => (1.0, r.cost_after - r.cost_before),
             Err(_) => (0.0, track + road_cost),
         };
-        let base = BASE_COST_PER_KM * f.len / 1000.0 * crate::track::cost::track_factor(tracks, hsr);
+        let base = BASE_COST_PER_KM * f.len / 1000.0 * crate::track::cost::price_scale(tracks, kind);
         let mult = if base > 0.0 { track / base } else { 0.0 };
         let g = self.w.ground_metres(&f);
         self.preview_ground = [g[0], g[1], g[2], g[3], g[4], roads, road_cost];
@@ -707,12 +711,12 @@ impl TrackApi {
         self.last = None;
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
         if shape.is_empty() {
-            vertex_rows(&f, verts, &mut out, if hsr { V_HSR } else { V_TOP });
+            vertex_rows(&f, verts, &mut out, kind.v_cap());
         } else {
-            vertex_rows(&self.w.net.fit(verts), verts, &mut out, if hsr { V_HSR } else { V_TOP });
+            vertex_rows(&self.w.net.fit(verts), verts, &mut out, kind.v_cap());
         }
         render_samples(&f.pieces, &f.vert, &mut out);
-        self.preview_speeds = render_speeds(&f.pieces, &f.vert, if hsr { V_HSR } else { V_TOP });
+        self.preview_speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap());
         out
     }
 

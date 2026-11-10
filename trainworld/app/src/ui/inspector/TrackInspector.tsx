@@ -10,6 +10,7 @@ import { removeThing } from "../../game/remove";
 import { describeIssues } from "../../game/issues";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
+import { TRACK_SPECS } from "../../game/trackKinds";
 import { Built, Chip, ConstructRemove, Icon, Row } from "../widgets";
 import { useClockQuery } from "../useClockQuery";
 
@@ -46,13 +47,13 @@ export function TrackInspector({ edge }: { edge: number }) {
   return (
     <>
       <div class="title">
-        <span class="name">{t("trackInspector.name", { kind: e.crossover ? "crossover" : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" })}</span>
+        <span class="name">{e.kind && !e.crossover ? t(e.kind === 2 ? "trackInspector.nameStreetTram" : "trackInspector.nameTram") : t("trackInspector.name", { kind: e.crossover ? "crossover" : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" })}</span>
         {!e.built && !e.crossover && (
           <button class="btn icon" data-tip={t("trackInspector.addPointTip")} aria-label={t("trackInspector.addPoint")} onClick={() => void edit({ op: "addPoint", edge: e.id })}>
             <Icon.addPoint />
           </button>
         )}
-        {e.tracks === 2 && !e.crossover && !e.hsr && <DoubleUp edge={e.id} version={w.version} />}
+        {e.tracks === 2 && !e.crossover && !e.hsr && !e.kind && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
         {tSeries([distance(e.lengthM), lv])}
@@ -63,9 +64,9 @@ export function TrackInspector({ edge }: { edge: number }) {
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
       <ul class="rows">
         {!e.crossover && (
-          <li data-tip={t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal")}>
+          <li data-tip={e.kind ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal")}>
             <span class="grow">{t("trackInspector.speedLimit")}</span>
-            <span class="val">{speed(e.hsr ? 320 : 160)}</span>
+            <span class="val">{speed(e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].vCapKmh : e.hsr ? 320 : 160)}</span>
           </li>
         )}
         <Row label={t("trackInspector.slowest")}>{speed(e.vminKmh)}</Row>

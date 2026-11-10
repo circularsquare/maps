@@ -41,12 +41,12 @@ export type RouteEnd =
 export type StationAt =
   | { kind: "node"; node: NodeId }
   | { kind: "edge"; edge: EdgeId; x: number; y: number }
-  | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean; hsr?: boolean };
+  | { kind: "free"; x0: number; y0: number; x1: number; y1: number; level: Level; quad: boolean; hsr?: boolean; tram?: boolean };
 
 /** A route turning at the clicked points `pis`; a junction it makes is flat (T-080). `through`
  * (T-418): a route with no PIs from a heading to open ground is one tangent arc. `design` (T-817):
  * the design speed its curves are laid out for, km/h; 160 when absent. */
-export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; ramp?: boolean; beside?: [number, number] }
+export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number] }
 
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
@@ -346,6 +346,10 @@ export interface MoneyState {
    * port's upkeep a day (real US$) and its price US$M */
   fleetFerry: number;
   boatsNeeded: number;
+  /** T-2926: tram cars (20 m sections) owned and needed, and a car's price US$M */
+  fleetTram: number;
+  tramsNeeded: number;
+  tramPrice: number;
   boatPrice: number;
   runCostBoatKm: number;
   upkeepPort: number;
@@ -386,6 +390,8 @@ export interface ClockEdge {
   off: boolean;
   /** high-speed track (T-817) */
   hsr: boolean;
+  /** `TrackApi.edge_kind`: 0 rail, 1 high speed, 2 street tram, 3 tram (T-2926) */
+  kind: number;
   /** one diagonal of a crossover (T-338) */
   crossover: boolean;
   /** the crossover's other diagonal, -1 if none */
@@ -421,6 +427,8 @@ export interface ClockNode {
   heading: number;
   /** a station's platform line (T-1859, `StationInput.line`, workers/platformLines.ts) */
   line?: Float32Array;
+  /** `TrackApi.node_kind` where it is a tram's (2 or 3, T-2926); absent for rail */
+  kind?: number;
   /** T-1464: a bus stop that is no station (`ClockBus.stops`), listed so a line's stops all have a
    * row; no track, no platform, never picked or snapped to */
   bus?: true;
@@ -462,6 +470,8 @@ export interface ClockLine {
   stopS: [number[], number[]];
   /** high-speed trains (T-817) */
   fast: boolean;
+  /** a line on tram track (T-2926) */
+  tram: boolean;
   /** its share of the upkeep of the track and stations it uses, US$M a game day (T-867) */
   upkeep: number;
   /** per stretch between stops of run 0: top speed reached, the limit there (km/h), what sets
@@ -808,6 +818,8 @@ export interface SnapshotLine {
   fast?: boolean;
   /** T-2195: a ferry line, whose fares are times the ferry multiplier; its stops are ports */
   ferry?: boolean;
+  /** T-2926: a line on tram track (`DemandApi.set_tram_lines`) */
+  tram?: boolean;
   /** dwell at each stop, s, per run and level, in the run's own stop order (0 at both ends) */
   dwellS: number[][][];
   /** layover at each end, s */

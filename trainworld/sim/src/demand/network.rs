@@ -16,6 +16,8 @@ pub const BUS_CARS: f32 = 1.0 / 3.0;
 /// lines to the old bus, minded from 56 and full at 80. The penalty then rises over the same share
 /// of the rated load as a train's.
 pub const BUS_CROWD_START: f32 = 0.85;
+/// A tram section's share of a rail car's riders (T-2926; `track::params` `riders_scale` of the tram kinds).
+pub const TRAM_CARS: f32 = 0.75;
 
 #[derive(Clone)]
 pub struct Network {
@@ -68,6 +70,8 @@ pub struct Network {
     /// Per station, whether it is a bus stop only (reached through `catches`, never by a plain walk).
     /// Empty: none is.
     pub st_bus: Vec<bool>,
+    /// Per station, whether only tram lines serve it (T-2926): a cell keeps at most `TRAM_SLOTS` of them among its nearest. Empty: none is.
+    pub st_tram: Vec<bool>,
 }
 
 /// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
@@ -93,6 +97,11 @@ impl Network {
     #[inline]
     pub fn bus_only(&self, s: usize) -> bool {
         self.st_bus.get(s).copied().unwrap_or(false)
+    }
+    /// Whether station `s` is served by tram lines only (T-2926).
+    #[inline]
+    pub fn tram_only(&self, s: usize) -> bool {
+        self.st_tram.get(s).copied().unwrap_or(false)
     }
     /// Whether line `l` is a bus line (T-1577): the snapshot gives a bus the cars of `BUS_CARS`, so its
     /// crush load is a bus's, whatever its stops are (a short bus between two train stations has no
@@ -211,6 +220,7 @@ pub fn synth_network() -> Network {
         st_passage: vec![],
         catches: vec![],
         st_bus: vec![],
+        st_tram: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

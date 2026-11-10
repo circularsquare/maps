@@ -90,6 +90,8 @@ export interface SaveHeader {
   fleetBus?: number;
   /** T-2194: boats owned; absent for none */
   fleetFerry?: number;
+  /** T-2926: tram cars owned; absent for none */
+  fleetTram?: number;
   /** fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes (none in a save from before T-883) */
   fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; transfer?: number; ref?: string };
   /** recent days, oldest first (today last) */
@@ -147,7 +149,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
-  fleetBus: true, fleetFerry: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
+  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
   opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true,
 };
 

@@ -83,6 +83,10 @@ pub const SINGLE_TRACK_COST: f64 = 0.6;
 pub const HSR_COST: f64 = 1.5;
 /// The track count a blueprint quote row gives high-speed track (`blueprint_cost_items`).
 pub const HSR_ROW: u8 = 3;
+/// the same for tram track (T-2926): a quote row's price is the tram table's, not rail's
+pub const TRAM_ROW: u8 = 4;
+/// and for street tram track (T-2927)
+pub const STREET_TRAM_ROW: u8 = 5;
 pub const WATER_COST: f64 = 2.0;
 /// 200 m station with two platform tracks: the part every station has wherever it is (platforms,
 /// halls, systems), plus its structure's part by level, index `level + 3`: 50 + 25 a level down,
@@ -130,6 +134,8 @@ pub const CAR_PRICE: f64 = 2.5;
 /// 4-car one 12. Under real figures so fares can cover it at 100x (research/running-costs.md).
 pub const RUN_COST_TRAIN_KM: f64 = 4.0;
 pub const RUN_COST_CAR_KM: f64 = 2.0;
+/// A tram section's price, US$M (T-2926; section 8: about 2 for 20 m).
+pub const TRAM_CAR_PRICE: f64 = 2.0;
 /// A high-speed car's price and running costs (T-817, T-867): 1.5x a car, 5 + 3.
 pub const HS_CAR_PRICE: f64 = 3.75;
 pub const HS_RUN_COST_TRAIN_KM: f64 = 5.0;
@@ -183,6 +189,176 @@ pub const BOAT_CRUSH: f64 = 2.0 * super::boarding::CRUSH_PER_CAR;
 
 pub fn level_mult(level: i8) -> f64 {
     LEVEL_MULT[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize]
+}
+
+// ---- track kinds (T-2921 section 5, T-2925) ----
+
+/// What an edge of track is. The number is what a save stores (edge flags bits 8-10; 0 reads bit 6).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
+#[repr(u8)]
+pub enum TrackKind {
+    #[default]
+    Regular = 0,
+    HighSpeed = 1,
+    StreetTram = 2,
+    Tram = 3,
+}
+
+pub const TRACK_KINDS: usize = 4;
+
+/// One car of a kind: its price (US$M), running costs (real US$ a train-km and a car-km), the share
+/// of a rail car's riders it holds, and the fleet it is bought from.
+pub struct CarSpec {
+    pub price: f64,
+    pub run_train_km: f64,
+    pub run_car_km: f64,
+    pub riders_scale: f64,
+    pub fleet: usize,
+}
+
+/// Everything that differs between kinds of track.
+pub struct TrackSpec {
+    /// Nodes join only within a family: 0 rail, 1 tram (the check comes with T-2926).
+    pub family: u8,
+    pub v_cap_kmh: f64,
+    pub min_radius: f64,
+    /// Price multiplier per level, index `level + 3`, in the units of `LEVEL_MULT`.
+    pub level_mult: [f64; 7],
+    /// What terrain and water add to a level's multiplier are scaled by this.
+    pub surcharge_mult: f64,
+    /// What the preview's price multiplier is measured against (`cost::price_scale`).
+    pub price_scale: f64,
+    /// Upkeep over ground rail's.
+    pub upkeep: f64,
+    pub road_crossings: bool,
+    pub ramps_over: bool,
+    pub section_s: f64,
+    pub conflict_s: f64,
+    pub platform_margin_s: f64,
+    /// Shortest and longest platform, m.
+    pub platform: (u16, u16),
+    /// A stop's flat price at ground, US$M, where it is not the rail formula.
+    pub station_flat: Option<f64>,
+    /// A stop's upkeep a day, real US$, where it is not `UPKEEP_STATION`.
+    pub station_upkeep: Option<f64>,
+    /// What a new line of this kind starts with.
+    pub dwell_s: f32,
+    pub turnaround_s: f32,
+    pub car: CarSpec,
+}
+
+const fn scaled(m: [f64; 7], k: f64) -> [f64; 7] {
+    [m[0] * k, m[1] * k, m[2] * k, m[3] * k, m[4] * k, m[5] * k, m[6] * k]
+}
+
+pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
+    TrackSpec {
+        family: 0,
+        v_cap_kmh: 160.0,
+        min_radius: MIN_RADIUS,
+        level_mult: LEVEL_MULT,
+        surcharge_mult: 1.0,
+        price_scale: 1.0,
+        upkeep: 1.0,
+        road_crossings: true,
+        ramps_over: true,
+        section_s: SECTION_BASE_S,
+        conflict_s: CONFLICT_S,
+        platform_margin_s: PLATFORM_MARGIN_S,
+        platform: (PLATFORM_MIN, PLATFORM_MAX),
+        station_flat: None,
+        station_upkeep: None,
+        dwell_s: DEFAULT_DWELL_S,
+        turnaround_s: DEFAULT_TURNAROUND_S,
+        car: CarSpec { price: CAR_PRICE, run_train_km: RUN_COST_TRAIN_KM, run_car_km: RUN_COST_CAR_KM, riders_scale: 1.0, fleet: 0 },
+    },
+    TrackSpec {
+        family: 0,
+        v_cap_kmh: 320.0,
+        min_radius: MIN_RADIUS,
+        level_mult: scaled(LEVEL_MULT, HSR_COST),
+        surcharge_mult: HSR_COST,
+        price_scale: HSR_COST,
+        upkeep: HSR_COST,
+        road_crossings: true,
+        ramps_over: true,
+        section_s: SECTION_BASE_S,
+        conflict_s: CONFLICT_S,
+        platform_margin_s: PLATFORM_MARGIN_S,
+        platform: (PLATFORM_MIN, PLATFORM_MAX),
+        station_flat: None,
+        station_upkeep: None,
+        dwell_s: DEFAULT_DWELL_S,
+        turnaround_s: DEFAULT_TURNAROUND_S,
+        car: CarSpec { price: HS_CAR_PRICE, run_train_km: HS_RUN_COST_TRAIN_KM, run_car_km: HS_RUN_COST_CAR_KM, riders_scale: 1.0, fleet: 1 },
+    },
+    TrackSpec {
+        family: 1,
+        v_cap_kmh: 60.0,
+        min_radius: 25.0,
+        level_mult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6],
+        // T-2928: half the hills and water a street tram's track pays (Anita, 2026-11-09)
+        surcharge_mult: 0.5,
+        price_scale: 1.0,
+        upkeep: 0.5,
+        road_crossings: false,
+        ramps_over: false,
+        section_s: 40.0,
+        conflict_s: 30.0,
+        platform_margin_s: 30.0,
+        platform: (20, 80),
+        station_flat: Some(2.0),
+        station_upkeep: Some(50.0),
+        dwell_s: 15.0,
+        turnaround_s: 120.0,
+        car: CarSpec { price: TRAM_CAR_PRICE, run_train_km: RUN_COST_TRAIN_KM, run_car_km: RUN_COST_CAR_KM, riders_scale: 0.75, fleet: 4 },
+    },
+    TrackSpec {
+        family: 1,
+        v_cap_kmh: 80.0,
+        min_radius: 25.0,
+        level_mult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6],
+        surcharge_mult: 1.0,
+        price_scale: 1.0,
+        upkeep: 1.0,
+        road_crossings: false,
+        ramps_over: false,
+        section_s: 40.0,
+        conflict_s: 30.0,
+        platform_margin_s: 30.0,
+        platform: (20, 80),
+        station_flat: Some(2.0),
+        station_upkeep: Some(50.0),
+        dwell_s: 15.0,
+        turnaround_s: 120.0,
+        car: CarSpec { price: TRAM_CAR_PRICE, run_train_km: RUN_COST_TRAIN_KM, run_car_km: RUN_COST_CAR_KM, riders_scale: 0.75, fleet: 4 },
+    },
+];
+
+impl TrackKind {
+    pub const ALL: [TrackKind; TRACK_KINDS] = [TrackKind::Regular, TrackKind::HighSpeed, TrackKind::StreetTram, TrackKind::Tram];
+
+    pub fn spec(self) -> &'static TrackSpec {
+        &TRACK_SPECS[self as usize]
+    }
+
+    pub fn from_u8(n: u8) -> Option<TrackKind> {
+        Self::ALL.get(n as usize).copied()
+    }
+
+    /// Top speed of the track, m/s.
+    pub fn v_cap(self) -> f64 {
+        self.spec().v_cap_kmh / 3.6
+    }
+
+    pub fn is_hsr(self) -> bool {
+        self == TrackKind::HighSpeed
+    }
+
+    /// The kind a high-speed flag stands for.
+    pub fn from_hsr(hsr: bool) -> TrackKind {
+        if hsr { TrackKind::HighSpeed } else { TrackKind::Regular }
+    }
 }
 
 // ---- capacity (SPEC 6.2) ----
@@ -267,4 +443,82 @@ pub const EARTH_R: f64 = 6371008.8;
 /// Round to the placement grid (1 mm).
 pub fn quant(v: f64) -> f64 {
     (v / QUANT).round() * QUANT
+}
+
+#[cfg(test)]
+mod kind_tests {
+    use super::*;
+
+    #[test]
+    fn regular_and_high_speed_rows_are_the_old_constants() {
+        let (r, h) = (TrackKind::Regular.spec(), TrackKind::HighSpeed.spec());
+        assert_eq!(r.level_mult, LEVEL_MULT);
+        for i in 0..7 {
+            assert_eq!(h.level_mult[i], LEVEL_MULT[i] * HSR_COST);
+        }
+        assert_eq!((TrackKind::Regular.v_cap(), TrackKind::HighSpeed.v_cap()), (V_TOP, V_HSR));
+        for s in [r, h] {
+            assert_eq!((s.section_s, s.conflict_s, s.platform_margin_s), (SECTION_BASE_S, CONFLICT_S, PLATFORM_MARGIN_S));
+            assert_eq!(s.platform, (PLATFORM_MIN, PLATFORM_MAX));
+            assert!(s.road_crossings && s.ramps_over && s.family == 0);
+        }
+        assert_eq!((r.upkeep, h.upkeep), (1.0, HSR_COST));
+    }
+
+    #[test]
+    fn tram_rows_hold_annitas_prices() {
+        let (s, t) = (TrackKind::StreetTram.spec(), TrackKind::Tram.spec());
+        assert_eq!(s.level_mult, [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6]);
+        assert_eq!(t.level_mult, [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6]);
+        assert_eq!((s.upkeep, t.upkeep), (0.5, 1.0));
+        assert_eq!((s.v_cap_kmh, t.v_cap_kmh), (60.0, 80.0));
+        assert!(!s.road_crossings && !t.road_crossings);
+        assert!(s.family == 1 && t.family == 1);
+    }
+
+    #[test]
+    fn a_kind_reads_back_from_its_number() {
+        for k in TrackKind::ALL {
+            assert_eq!(TrackKind::from_u8(k as u8), Some(k));
+        }
+        assert_eq!(TrackKind::from_u8(TRACK_KINDS as u8), None);
+    }
+
+    #[test]
+    fn tram_track_prices_by_its_own_table() {
+        use super::super::cost::track_cost;
+        let flat = [[0.0, 0.0], [1000.0, 0.0]];
+        assert!((track_cost(1000.0, &flat, &[], 2, TrackKind::StreetTram) - 7.5).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat, &[], 2, TrackKind::Tram) - 37.5).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat, &[], 2, TrackKind::Regular) - 37.5).abs() < 1e-9);
+        // T-2928: over water street tram track pays half water's 2.5, off-street tram track all of it
+        let wet = [[0.0, 1000.0]];
+        assert!((track_cost(1000.0, &flat, &wet, 2, TrackKind::StreetTram) - 75.0 * (0.1 + 1.25)).abs() < 1e-9);
+        assert!((track_cost(1000.0, &flat, &wet, 2, TrackKind::Tram) - 75.0 * (0.5 + 2.5)).abs() < 1e-9);
+    }
+
+    fn line_net(kinds: [TrackKind; 2]) -> super::super::net::Network {
+        use super::super::net::{EdgeData, Network, NodeData};
+        use super::super::frame::FrameKind;
+        let mut net = Network::new_in(FrameKind::Merc, 0.0, 0.0, false);
+        for x in [0.0f64, 500.0, 1000.0] {
+            let n = net.alloc_node();
+            net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
+        }
+        for (k, kind) in kinds.into_iter().enumerate() {
+            let e = net.alloc_edge();
+            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0 })).unwrap();
+        }
+        net
+    }
+
+    #[test]
+    fn rail_and_tram_track_may_not_meet_at_a_node() {
+        use super::super::net::Issue;
+        let mixed = line_net([TrackKind::Regular, TrackKind::Tram]);
+        assert!(mixed.validate(&[], &[1], &[]).iter().any(|i| matches!(i, Issue::TrackFamily { node: 1 })));
+        for pair in [[TrackKind::Regular, TrackKind::HighSpeed], [TrackKind::StreetTram, TrackKind::Tram]] {
+            assert!(!line_net(pair).validate(&[], &[1], &[]).iter().any(|i| matches!(i, Issue::TrackFamily { .. })), "{pair:?}");
+        }
+    }
 }

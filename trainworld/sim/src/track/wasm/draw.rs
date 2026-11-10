@@ -13,6 +13,7 @@ impl TrackApi {
     /// T-1615: with `route_ramp`, a route crossing track at its own level ramps over or under it,
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+        let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
         if let Some(eb) = self.route_beside.take() {
             if let Some((b_ends, b_pis, on_line, run)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
                 // a start on the line leaves along it; one coming in keeps its lead-in
@@ -166,7 +167,7 @@ impl TrackApi {
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
         // High-speed track is double only (T-817).
-        let hsr = self.route_hsr && tracks == 2;
+        let kind = self.route_kind_of(tracks);
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
         // T-656: ground level over water is a bridge, raised over the water with ramps on land.
@@ -215,8 +216,14 @@ impl TrackApi {
             Some(b) if clicks > 0 => (clicks + b.len()).saturating_sub(n),
             _ => clicks,
         };
-        let pieces = stroke_pieces(bridged.as_deref().unwrap_or(&verts), first_click, cut(&bridged, verts.len(), pis.len()), scaled);
-        self.push_pieces(&pieces, ra.node, rb.node, tracks, hsr, &mut ops, &mut new_nodes, &mut new_edges);
+        let (shape, clicks) = (bridged.as_deref().unwrap_or(&verts), cut(&bridged, verts.len(), pis.len()));
+        // T-2927: street tram track's curves that leave the street are tram track
+        let pieces = if kind == TrackKind::StreetTram {
+            street_pieces(shape, first_click, clicks, scaled, &self.route_street)
+        } else {
+            stroke_pieces(shape, first_click, clicks, scaled, kind.spec().min_radius).into_iter().map(|p| (p, kind)).collect()
+        };
+        self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
         self.route_bridged = bridged.unwrap_or_default();
         let mut express = vec![];
         if quad {
@@ -262,11 +269,12 @@ impl TrackApi {
                 }
             }
             let pieces = match &ex_bridged {
-                Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled),
-                Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled),
-                None => stroke_pieces(&ex, first, clicks, scaled),
+                Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled, MIN_RADIUS),
+                Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled, MIN_RADIUS),
+                None => stroke_pieces(&ex, first, clicks, scaled, MIN_RADIUS),
             };
-            self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, false, &mut ops, &mut new_nodes, &mut new_edges);
+            let pieces: Vec<_> = pieces.into_iter().map(|p| (p, TrackKind::Regular)).collect();
+            self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex_bridged.unwrap_or(ex);
         }
         // A junction this route makes (it had two edge ends, or it splits track) is flying if
@@ -392,7 +400,7 @@ impl TrackApi {
         let scaled = self.w.net.frame().scaled();
         let mask = self.w.net.water_mask.as_ref();
         // a snapped real route (T-727d) bridges each river on its own
-        let b = if shape.len() > LONG_ROUTE_VERTS { bridge::bridge_long(shape, scaled, mask, lift) } else { bridge::bridge(shape, scaled, mask, lift) };
+        let b = bridge::with_min_radius(self.route_kind.spec().min_radius, || if shape.len() > LONG_ROUTE_VERTS { bridge::bridge_long(shape, scaled, mask, lift) } else { bridge::bridge(shape, scaled, mask, lift) });
         match b {
             Ok(b) => b,
             Err(bridge::NoRoom) => {
@@ -577,6 +585,7 @@ impl TrackApi {
     /// speed limit km/h, then the polyline as x, y, height (m) triples]. `issue_kinds()` holds
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
+        let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
         self.preview_speeds.clear();
         self.preview_marks.clear();
         let (op, verts, nn, ne) = match self.route_op(ends, pis, tracks, flying) {
@@ -590,14 +599,14 @@ impl TrackApi {
         self.release(&nn, &ne);
         let r = if self.bridge_refused { r.map_err(|i| bridge_refusal(i, &self.bridge_short)) } else { r };
         let shape = std::mem::take(&mut self.route_bridged);
-        let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_hsr && tracks == 2);
+        let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_kind_of(tracks));
         for j in &self.route_junctions {
             self.preview_marks.extend([j[0], j[1], 1.0]);
         }
         if !self.route_express.is_empty() && out.len() > 5 {
             // T-711: the multiplier over both pairs' track, as the price is
-            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, false);
-            let (fe, te, _) = self.w.preview(&self.route_express, 2, false);
+            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, TrackKind::Regular);
+            let (fe, te, _) = self.w.preview(&self.route_express, 2, TrackKind::Regular);
             let base = BASE_COST_PER_KM * (fl.len + fe.len) / 1000.0;
             out[4] = if base > 0.0 { (tl + te) / base } else { 0.0 };
             // a quad route's express pair, drawn on from the end back to the start (T-255)
@@ -634,6 +643,25 @@ impl TrackApi {
     /// high-speed track. Single and quad track are never.
     pub fn set_route_hsr(&mut self, on: bool) {
         self.route_hsr = on;
+    }
+
+    /// T-2926: the track kind the drawing tool lays, by `TrackKind` number: 3 is tram track (always
+    /// double; `set_route_hsr` and the track count are ignored while it is set), 2 street tram track
+    /// (used from T-2927), anything else the rail kinds `set_route_hsr` picks between.
+    pub fn set_route_kind(&mut self, kind: u8) {
+        self.route_kind = TrackKind::from_u8(kind).filter(|k| k.spec().family != 0).unwrap_or_default();
+    }
+
+    /// T-2927: the street (longitude, latitude pairs, flat) the next street tram routes follow, the line
+    /// `trace_kind` fitted them to; empty for none. Where the track lies more than `STREET_HALF_M` from
+    /// it, it is tram track.
+    pub fn set_route_street(&mut self, lonlat: &[f64]) {
+        let f = self.w.net.frame();
+        self.route_street = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
+    }
+
+    pub(super) fn route_kind_of(&self, tracks: u8) -> TrackKind {
+        if self.route_kind.spec().family != 0 { self.route_kind } else { TrackKind::from_hsr(self.route_hsr && tracks == 2) }
     }
 
     /// T-1615: whether routes after this ramp over or under track they would cross flat.
@@ -674,6 +702,15 @@ impl TrackApi {
         RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, r_min, self.route_cap, level) }
     }
 
+    /// T-2927: `trace_start` for track kind `kind` (`TrackKind` number; a street's line for street
+    /// tram track): curves from that kind's smallest radius up to the radius of its top speed.
+    pub fn trace_kind(&self, lonlat: &[f64], tol: f64, kind: u8, level: i8) -> RouteTrace {
+        let f = self.w.net.frame();
+        let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
+        let s = TrackKind::from_u8(kind).unwrap_or_default().spec();
+        RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, s.min_radius, design_radius(s.v_cap_kmh), level).tight() }
+    }
+
     /// The node the last `add_route` ended at, so the next segment can start from it (T-418).
     pub fn route_end(&self) -> u32 {
         self.route_end
@@ -682,9 +719,10 @@ impl TrackApi {
     /// Edges for the pieces of a stroke (`stroke_pieces`) from node `a` to node `b`, with new
     /// joints between them.
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn push_pieces(&mut self, pieces: &[Vec<Pi>], a: u32, b: u32, tracks: u8, hsr: bool, ops: &mut Vec<Op>, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) {
+    pub(super) fn push_pieces(&mut self, pieces: &[(Vec<Pi>, TrackKind)], a: u32, b: u32, tracks: u8, ops: &mut Vec<Op>, nodes: &mut Vec<u32>, edges: &mut Vec<u32>) {
         let mut from = a;
-        for (k, p) in pieces.iter().enumerate() {
+        for (k, (p, kind)) in pieces.iter().enumerate() {
+            let kind = *kind;
             let to = if k + 1 == pieces.len() {
                 b
             } else {
@@ -696,7 +734,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, hsr, sep: false, day: 0 }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0 }) });
             from = to;
         }
     }

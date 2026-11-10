@@ -240,6 +240,37 @@ Full design, numbers and sources: `notes/T-008.md`.
   tool's bar (T-1898, `TrackApi::set_edges_hsr`); single track, crossovers and constructed track
   stay as they are. It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
+- **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
+  `TRACK_SPECS` in params.rs holds every kind's figures; `game/trackKinds.ts` copies them for the app).
+  Always double, curves down to 25 m, 80 km/h cap, priced by level at 0.1x (on streets, T-2927), 0.5x (off
+  street) of the 75M a km, viaducts and tunnels 0.4 under rail's, and it pays no road crossings. The track bar's
+  Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
+  switch, track count and target speed do not apply. Tram track and train track never meet at a node
+  (`TrackFamily`: "Tram track and train track can't join. They can cross."), so while one is picked the other's
+  track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 90 s.
+  A stop is a station with a 20 to 80 m platform (default 40, remembered apart from rail's), at a flat US$2M
+  at ground and US$50 a day upkeep, and takes only the Waiting room and Passage upgrades. A line whose first stop is on
+  tram track is a tram line: it starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
+  the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
+  a train's. Demand counts a tram car as 0.75 of a car, with no boarding cost (docs/demand-worldwide.md).
+- **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, half
+  the upkeep, and half what hills and water add (T-2928). With Tram picked, Snap to streets (on by default,
+  remembered; Ctrl flips it while held, and in the
+  tram tool Ctrl means nothing else) lays it: a first click within 100 m of a street lands on it; the route to
+  the pointer follows the basemap's streets (no motorways), shortest with 200 m added for each turn over 30
+  degrees, never turning back over 135 degrees at a junction or within 60 m of street (no U-turn across a divided
+  road's median), from and to the 12 nearest streets by each end; the street line is
+  fitted as corners (`TrackApi::trace_kind`: curves 25 to 253 m, each passing at most 10 m from its junction) within
+  10 m of the street, else 20, else 40, taking the first whose worst point is within 1.5 times its tolerance or
+  45 m (a 25 m curve round a 135 degree corner passes 40 m from it), and placed as one `add_route` along with the
+  street line (`set_route_street`). Each curve whose middle lies more than 5 m from its two legs, or more than 10 m
+  from the street line, and each straight any part of which lies more than 10 m from the street line (the fit cut a
+  corner), is cut out as a piece of tram track (off-street, 0.5x), 1 m beyond each end of its arc, taking in a
+  neighbouring curve where no joint fits between. A pointer with no street
+  within 100 m draws ordinary tram track; no street path is refused as the bus tool's are; no fit says "The streets
+  are too tight here. Add a point on the way." Street track reshaped by hand becomes tram track. Both kinds look
+  alike on the map: 0.75 of rail's width, lines over them too, with two thin wires along the middle in the map's ink
+  once a stroke is wide enough, one along each track once they part (blueprint's only then).
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is

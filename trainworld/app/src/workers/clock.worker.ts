@@ -248,6 +248,8 @@ let achievements: Map<string, Achieved> | null = new Map();
 let lineNotes = new Map<string, [number, string]>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
 let newLineCars = NEW_LINE_CARS;
+/** T-2926: a new tram line's sections, and the most a tram has (an 80 m platform) */
+const TRAM_NEW_CARS = 2, TRAM_MAX_CARS = 4;
 /** T-1822: the Getting started card's progress in this game; undefined: none. `guideWanted`: the page
  * says a new normal game starts with it. */
 let guide: GuideSave | undefined;
@@ -749,10 +751,10 @@ const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
 
 /** the network, cash and fleet after the last load or edit */
-type Kept = { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number };
+type Kept = { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number; fleetTram: number };
 let kept: Kept | null = null;
 function modelNow(a: TrackApi): Kept {
-  return { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry() };
+  return { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry(), fleetTram: a.fleet_tram() };
 }
 function keep() {
   try {
@@ -836,6 +838,7 @@ async function rebuildModel(fromKept: boolean) {
   api!.set_fleet_fast(k.fleetFast);
   api!.set_fleet_bus(k.fleetBus);
   api!.set_fleet_ferry(k.fleetFerry);
+  api!.set_fleet_tram(k.fleetTram);
   api!.set_cash(k.cash);
   setMode(mode);
   restart(gameNow(), "autosave", "rebuilt");
@@ -1976,6 +1979,9 @@ function moneyState(): MoneyState {
     busesNeeded: a.buses_needed(),
     fleetFerry: a.fleet_ferry(),
     boatsNeeded: a.boats_needed(),
+    fleetTram: a.fleet_tram(),
+    tramsNeeded: a.trams_needed(),
+    tramPrice: TrackApi.kind_defaults(3)[4],
     ...prices,
     upkeep: upkeepNow(),
     loan: loan && { ...loan },
@@ -2255,7 +2261,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2618,6 +2624,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_fast(h.fleetFast ?? 0);
   api!.set_fleet_bus(h.fleetBus ?? 0);
   api!.set_fleet_ferry(h.fleetFerry ?? 0);
+  api!.set_fleet_tram(h.fleetTram ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
   setStartZone(h.start); // before the ledgers, whose days follow its local time
   ledger = mergeLedger(h.ledger, (d) => d.day);
@@ -2695,6 +2702,7 @@ async function newGame(spec?: NewGameSpec) {
   api!.set_fleet_fast(0);
   api!.set_fleet_bus(0);
   api!.set_fleet_ferry(0);
+  api!.set_fleet_tram(0);
   ledger = [];
   hourLedger = [];
   loadRegions(undefined);
@@ -3226,6 +3234,7 @@ function buildSnapshot(): NetworkSnapshot {
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
+      ...(!bus && !ferry && a.line_tram(id) ? { tram: true } : {}),
       turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : ferry ? BOAT_DEMAND_CARS : li[i + 21],
       ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
@@ -3513,7 +3522,7 @@ function apply(op: EditOp): Applied {
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
         : op.at.kind === "edge"
           ? { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) }
-          : (a.set_route_hsr(!!op.at.hsr), { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) });
+          : (a.set_route_kind(op.at.tram ? 3 : 0), a.set_route_hsr(!!op.at.hsr), { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) });
     case "crossover":
       return { r: a.add_crossover(op.edge, op.x, op.y) };
     case "doubleUp":
@@ -3557,7 +3566,10 @@ function apply(op: EditOp): Applied {
     case "addLine": {
       const id = a.new_line_id();
       const { trains: [h, m, l], dwellS, turnaroundS } = NEW_LINE.train;
-      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, dwellS, turnaroundS, newLineCars, colourInt(op.colour), op.name || a.next_line_name());
+      // T-2926: a line on tram track starts with the tram's dwell and turnaround and 2 cars
+      const tram = op.stops.length > 0 && a.node_kind(op.stops[0]) >= 2;
+      const [tramDwell, tramTurn] = tram ? TrackApi.kind_defaults(3) : [dwellS, turnaroundS];
+      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, tramDwell, tramTurn, tram ? TRAM_NEW_CARS : newLineCars, colourInt(op.colour), op.name || a.next_line_name());
       // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
       if (r !== 0 || !op.autoFast || hsrShare(a, id) <= 0.5) return { r, line: id };
       const charge = a.last_charge(), trainCharge = a.last_train_charge();
@@ -3635,9 +3647,10 @@ function apply(op: EditOp): Applied {
     case "removeLine":
       return { r: a.remove_line(op.line) };
     case "lineCars": {
-      const cars = Math.max(0, Math.min(255, Math.round(op.cars)));
+      const tram = a.line_tram(op.line);
+      const cars = Math.max(0, Math.min(tram ? TRAM_MAX_CARS : 255, Math.round(op.cars)));
       const r = a.set_line_cars(op.line, cars);
-      if (r === 0) newLineCars = cars;
+      if (r === 0 && !tram) newLineCars = cars;
       return { r };
     }
     case "lineFast":
@@ -3942,7 +3955,7 @@ async function processMessage(msg: ToClock) {
  * preview found every mask its geometry needs in, at that version: its edit needs no second look */
 let trackVersion = 0;
 let maskedRoute = "";
-const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), !!r.hsr, !!r.ramp, r.beside ?? null])}`;
+const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), !!r.hsr, !!r.tram, !!r.street, r.street ? r.streetLine ?? null : null, !!r.ramp, r.beside ?? null])}`;
 /** T-1685: the pieces a route beside track runs along, for `set_route_beside` (none: u32::MAX) */
 const besideOf = (r: { beside?: [number, number] }): [number, number] => r.beside ?? [0xffffffff, 0xffffffff];
 /** The design speed new track is laid for, km/h, where the request names none */
@@ -3952,6 +3965,8 @@ const designOf = (r: { design?: number }) => r.design ?? 160;
 function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, number] {
   a.set_route_tangent(!!r.through);
   a.set_design_speed(designOf(r));
+  a.set_route_kind(r.tram ? (r.street ? 2 : 3) : 0);
+  a.set_route_street(new Float64Array(r.tram && r.street ? r.streetLine ?? [] : []));
   a.set_route_hsr(!!r.hsr);
   a.set_route_ramp(!!r.ramp);
   a.set_route_beside(...besideOf(r));
@@ -4306,7 +4321,7 @@ async function handle(msg: ToClock) {
     const at = msg.at;
     const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform)
       : at.kind === "edge" ? api.preview_station(2, at.edge, at.x, at.y, msg.platform)
-      : (api.set_route_hsr(!!at.hsr), api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform));
+      : (api.set_route_kind(at.tram ? 3 : 0), api.set_route_hsr(!!at.hsr), api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform));
     send({ kind: "stationCheck", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), cost: r === 0 ? api.station_cost() : 0 });
   } else if (msg.kind === "previewCrossover") {
     const out = api.preview_crossover(msg.edge, msg.x, msg.y);

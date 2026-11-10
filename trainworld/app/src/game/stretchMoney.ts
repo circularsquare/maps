@@ -25,7 +25,7 @@ import { lineFares } from "./fareInEffect";
 import { trainKind } from "./format";
 import { baseTrips, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { PERIODS } from "./periods";
-import { edgeUpkeep, lineRunFactor, stationUpkeep } from "./regionMoney";
+import { edgeUpkeep, lineRunFactor, stationUpkeepOf } from "./regionMoney";
 import { stopsById, world } from "./world";
 import type { LineInput, WorldView } from "./types";
 
@@ -128,7 +128,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       placed.set(l.id, pieces);
       if (!lineFiguresIn(dv, l.id, n)) dark.add(l.id);
       // running trains by length along the path
-      const k = trainKind(m, st.fast);
+      const k = trainKind(m, st.fast, st.tram);
       // T-2669: at its countries' prices
       const runDay = (k.runCostTrainKm + st.cars * k.runCostCarKm) * E * (weight.get(l.id) ?? 0) * 2 * st.km * lineRunFactor(l.num);
       let pathM = 0;
@@ -194,7 +194,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     if (!s.built) continue;
     const on = stopping.get(s.id);
     if (!on) continue;
-    const u = s.port ? (t.upkeepPort ?? 0) * E : stationUpkeep(t, s.level);
+    const u = s.port ? (t.upkeepPort ?? 0) * E : stationUpkeepOf(t, s);
     let total = 0;
     for (const { l } of on) total += weight.get(l.id)!;
     for (const { l, k } of on) {

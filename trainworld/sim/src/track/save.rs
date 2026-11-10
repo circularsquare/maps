@@ -52,7 +52,13 @@ pub const BLOCKS: [&[u8; 4]; 18] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 9;
+pub const LEVEL: u32 = 10;
+
+/// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
+/// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
+fn edge_kind_bits(kind: TrackKind) -> u64 {
+    if (kind as u8) < 2 { 0 } else { (kind as u64) << 8 }
+}
 
 struct W(Vec<u8>);
 impl W {
@@ -166,7 +172,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.i(a - prev_a);
         w.i(node_id[d.b as usize] as i64 - a);
         prev_a = a;
-        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4 | (d.crossover as u64) << 5 | (d.hsr as u64) << 6 | (d.sep as u64) << 7);
+        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4 | (d.crossover as u64) << 5 | (d.kind.is_hsr() as u64) << 6 | (d.sep as u64) << 7 | edge_kind_bits(d.kind));
         w.u(d.pis.len() as u64);
         let (mut px, mut py) = (net.node_x[d.a as usize], net.node_y[d.a as usize]);
         for p in &d.pis {
@@ -581,8 +587,15 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         let b = a + r.i()?;
         prev_a = a;
         let tb = r.u()?;
-        unknown += (tb >> 8 != 0) as usize;
-        let (tracks, built, off, crossover, hsr, sep) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0, tb & 64 != 0, tb & 128 != 0);
+        unknown += (tb >> 11 != 0) as usize;
+        let (tracks, built, off, crossover, sep) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0, tb & 128 != 0);
+        let kind = match (tb >> 8 & 7) as u8 {
+            0 => TrackKind::from_hsr(tb & 64 != 0),
+            k => TrackKind::from_u8(k).unwrap_or_else(|| {
+                unknown += 1;
+                TrackKind::Regular
+            }),
+        };
         let n = r.u()? as usize;
         // T-2820: ends and sizes that cannot be are a damaged save, not a panic
         if a < 0 || b < 0 || a as usize >= n_nodes || b as usize >= n_nodes {
@@ -606,7 +619,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, hsr, sep, day: 0 })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, kind, sep, day: 0 })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     let (mut dead_node, mut dead_edge) = (None, None);
@@ -858,7 +871,7 @@ mod tests {
             net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
         }
         let e = net.alloc_edge();
-        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 })).unwrap();
+        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 })).unwrap();
         let l = net.alloc_line();
         net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false })).unwrap();
         encode(&net)
@@ -912,6 +925,34 @@ mod tests {
     }
 
     #[test]
+    fn edge_kind_bits_round_trip_and_old_flags_still_read() {
+        for k in TrackKind::ALL {
+            let mut net = decode(&sample()).unwrap();
+            let mut d = net.edge_data(0).unwrap();
+            d.kind = k;
+            d.tracks = 2;
+            net.set_edge(0, Some(d)).unwrap();
+            let (back, unread) = decode_read(&encode(&net)).unwrap();
+            assert_eq!(unread, 0);
+            assert_eq!(back.edge_kind[0], k);
+        }
+        assert_eq!(edge_kind_bits(TrackKind::Regular), 0);
+        assert_eq!(edge_kind_bits(TrackKind::HighSpeed), 0, "high speed keeps bit 6, as old builds wrote it");
+        assert_eq!(edge_kind_bits(TrackKind::StreetTram), 2 << 8);
+    }
+
+    /// An old save has high speed in bit 6 and nothing in bits 8-10.
+    #[test]
+    fn bit_six_alone_still_means_high_speed() {
+        let mut net = decode(&sample()).unwrap();
+        let mut d = net.edge_data(0).unwrap();
+        d.kind = TrackKind::HighSpeed;
+        net.set_edge(0, Some(d)).unwrap();
+        let bytes = encode(&net);
+        assert_eq!(decode(&bytes).unwrap().edge_kind[0], TrackKind::HighSpeed);
+    }
+
+    #[test]
     fn unknown_flag_bits_are_reported() {
         // two plain nodes and a single-track edge, written by hand with the flags given
         let raw = |node: u64, edge: u64| {
@@ -936,7 +977,9 @@ mod tests {
         };
         assert_eq!(decode_read(&raw(0, 1)).unwrap().1, 0);
         assert_eq!(decode_read(&raw(1 << 12, 1)).unwrap().1, 2, "both nodes");
-        assert_eq!(decode_read(&raw(0, 1 | 1 << 8)).unwrap().1, 1);
+        assert_eq!(decode_read(&raw(0, 1 | 1 << 11)).unwrap().1, 1);
+        assert_eq!(decode_read(&raw(0, 1 | 7 << 8)).unwrap().1, 1, "a kind this build lacks");
+        assert_eq!(decode_read(&raw(0, 2 | 3 << 8)).unwrap().1, 0, "a known kind");
     }
 
     /// Adding a block means listing it in BLOCKS and raising LEVEL; this pin fails until both are done.
@@ -951,7 +994,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (9, 18), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (10, 18), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

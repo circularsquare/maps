@@ -41,7 +41,7 @@ fn joint_kind(a: &TrackApi, node: u32, cur: u32) -> (&'static str, Option<(u32, 
     if d.tracks != od.tracks {
         return ("track count", next);
     }
-    if d.hsr != od.hsr {
+    if d.kind != od.kind {
         return ("high speed|not", next);
     }
     if !d.thru.is_empty() || !od.thru.is_empty() {
@@ -223,7 +223,7 @@ fn kinked(y: f64) -> (TrackApi, [u32; 2]) {
     }
     let e = [a.new_edge_id(), a.new_edge_id()];
     for k in 0..2 {
-        let op = Op::Edge { id: e[k], data: Some(EdgeData { a: n[k], b: n[k + 1], tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, hsr: false, sep: false, day: 0 }) };
+        let op = Op::Edge { id: e[k], data: Some(EdgeData { a: n[k], b: n[k + 1], tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0 }) };
         let r = a.w.apply(op);
         assert!(r.is_ok(), "y {y}: {:?}", r.err());
     }

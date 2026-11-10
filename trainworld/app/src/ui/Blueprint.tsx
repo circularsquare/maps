@@ -6,7 +6,7 @@ import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
-import { edgeUpkeep, stationUpkeep } from "../game/regionMoney";
+import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
@@ -20,14 +20,21 @@ import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons } from "./widgets";
 import { SWITCH_PICK_KEY } from "./toolKeys";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
+import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
 
 // 6 T-1270's terrain, 7 T-1929's roads crossed at ground level, 8 and 9 T-1281's, 10 and 11 T-1464's
 // bus routes and buses
 const KINDS: MessageKey[] = ["blueprint.kindTrack", "blueprint.kindStations", "blueprint.kindJunctions", "blueprint.kindFlyovers", "blueprint.kindFlatCrossings", "blueprint.kindTrains", "blueprint.kindTerrain", "blueprint.kindRoadCrossings", "blueprint.kindStationUpgrades", "blueprint.kindPassages", "blueprint.kindBusRoutes", "blueprint.kindBuses"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
+/** and for tram track (sim `TRAM_ROW`, T-2926), priced by the tram table */
+const TRAM_ROW = 4;
+/** and for street tram track (sim `STREET_TRAM_ROW`, T-2927) */
+const STREET_TRAM_ROW = 5;
+/** the quote row of tram cars (sim `blueprint_cost_items`; 14 is a ferry route) */
+const TRAM_CARS = 15;
 
-const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute"];
+const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute", "tram car"];
 /** "3 stations", "2 new cars": a counted noun by its id, the plural chosen in the message */
 const counted = (noun: string, count: number) => t("blueprint.count", { noun, count });
 const levelWords = (r: BlueprintItem) => `${lowerWord(levelName(r.level))} (${levelLabel(r.level)})`;
@@ -41,8 +48,11 @@ function rowName(r: BlueprintItem) {
   if (r.kind === 12) return counted("port", r.quantity);
   if (r.kind === 13) return counted("newBoat", r.quantity);
   if (r.kind === 14) return t("blueprint.ferryRoute", { distance: distance(r.quantity) });
+  if (r.kind === TRAM_CARS) return t("blueprint.newTramCars", { count: r.quantity });
   if (r.kind === 9) return counted("passage", r.quantity);
   if (r.kind === 7) return counted("roadCrossing", r.quantity);
+  if (r.kind === 0 && r.tracks === TRAM_ROW) return t("blueprint.lengthLevelTram", { distance: distance(r.quantity), level: levelWords(r) });
+  if (r.kind === 0 && r.tracks === STREET_TRAM_ROW) return t("blueprint.lengthLevelStreetTram", { distance: distance(r.quantity), level: levelWords(r) });
   if (r.kind === 0) return t("blueprint.lengthLevel", { distance: distance(r.quantity), level: levelWords(r) });
   return t("blueprint.withLevel", { what: counted(NOUN[r.kind] || "item", r.quantity), level: levelWords(r) });
 }
@@ -70,19 +80,22 @@ function rowTip(r: BlueprintItem) {
   let base: string;
   const water = r.wet ? WATER : 1;
   const wet = () => { if (r.wet) factors.push([t("blueprint.overWater"), "", WATER]); };
-  const lvl = (l: Level) => { if (MULT[l] !== 1) factors.push([levelName(l), "", MULT[l]]); };
+  const mult = (l: Level) => (r.kind === 0 && r.tracks === TRAM_ROW ? kindLevelMult("tram", l) : r.kind === 0 && r.tracks === STREET_TRAM_ROW ? kindLevelMult("streetTram", l) : MULT[l]);
+  const lvl = (l: Level) => { if (mult(l) !== 1) factors.push([levelName(l), "", mult(l)]); };
   if (r.kind === 0) {
     const [shown] = lenKm(n / 1000);
     base = t("blueprint.baseCostDist", { price: mil(perDistance(BASE_M_PER_KM)), unit: distUnit() });
     factors.push([t("blueprint.length"), shown, 1]);
     // T-1890: terrain and water add to the level's multiplier: "Ground level 0.5", "Mountains + 2.5",
     // "Cost factor × 3"
+    // (street tram track pays half of each, T-2928)
     const adds: [string, number][] = [];
-    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), TERRAIN_SURCHARGES[r.ground] ?? 0]);
-    if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE]);
+    const sur = r.tracks === STREET_TRAM_ROW ? TRACK_SPECS.streetTram.surcharge : 1;
+    if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), (TERRAIN_SURCHARGES[r.ground] ?? 0) * sur]);
+    if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE * sur]);
     if (adds.length) {
-      factors.push([levelName(level), "=", MULT[level]], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
-      factors.push([t("blueprint.costFactor"), "", adds.reduce((s, [, m]) => s + m, MULT[level])]);
+      factors.push([levelName(level), "=", mult(level)], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
+      factors.push([t("blueprint.costFactor"), "", adds.reduce((s, [, m]) => s + m, mult(level))]);
     } else lvl(level);
     if (r.tracks === 1) factors.push([t("blueprint.singleTrack"), "", SINGLE_TRACK]);
     if (r.tracks === HSR_ROW) factors.push([t("blueprint.hsrTrack"), "", HSR_TRACK]);
@@ -130,7 +143,7 @@ export function BlueprintControls() {
   if (w && m && total > 0) {
     for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
     // T-2194: a port's upkeep is its own, a fifth of a station's
-    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += s.port ? m.upkeepPort * m.economy : stationUpkeep(m, s.level);
+    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += s.port ? m.upkeepPort * m.economy : stationUpkeepOf(m, s);
     for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built && !st.bus.ferry) upkeep += (st.bus.roadM / 1000) * m.upkeepBusKm * m.economy;
   }
   return (
@@ -164,7 +177,7 @@ const pieces = (e: number, st: number) => tSeries([e ? t("blueprint.trackPieces"
 function OffCost({ items }: { items: BlueprintItem[] }) {
   const w = world.value, off = offTotals.value;
   if (!w || !(off.edges + off.stations)) return null;
-  const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 || r.kind === 13 ? 0 : r.cost), 0);
+  const on = items.reduce((sum, r) => sum + (r.kind === 5 || r.kind === 11 || r.kind === 13 || r.kind === TRAM_CARS ? 0 : r.cost), 0);
   const cost = w.money.blueprintCost - on;
   if (!(cost >= 0.5e6)) return null;
   return <span class="small muted num off-cost" onDblClick={() => void enableAll()} data-tip={t("blueprint.offTip", { pieces: pieces(off.edges, off.stations), cost: moneyCash(cost) })}>{t("blueprint.offCost", { money: money(cost) })}</span>;
@@ -265,7 +278,7 @@ export function BlueprintBar() {
 function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> }) {
   return (
     <>
-      {KINDS.map((kind, k) => {
+      {[...KINDS.map((kind, k): [MessageKey, number] => [kind, k]), ["blueprint.kindTramCars", TRAM_CARS] as [MessageKey, number]].map(([kind, k]) => {
         const rows = items.filter((r) => r.kind === k && (!only || only.has(k)));
         if (!rows.length) return null;
         return (
@@ -287,7 +300,7 @@ function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> 
 }
 
 /** the quote's kinds that are no piece of track or station: trains, bus routes and buses, ports, boats, ferry routes */
-const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14]);
+const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14, TRAM_CARS]);
 
 const levelsText = (r: { levelMin: Level; levelMax: Level }) =>
   r.levelMin === r.levelMax ? `${levelName(r.levelMin)} (${levelLabel(r.levelMin)})` : t("blueprint.levels", { from: levelLabel(r.levelMin), to: levelLabel(r.levelMax) });
