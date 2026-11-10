@@ -18,7 +18,30 @@ export interface Update {
 /** When v0.1 went out: set at publish. */
 const V0_1_AT = "2026-11-09T15:00:00Z";
 
+/** When v0.2 went out: the orchestrator sets this at publish (placeholder, 2026-11-10 in the evening). */
+const V0_2_AT = "2026-11-10T20:00:00Z";
+
 export const UPDATES: Update[] = [
+  {
+    version: "v0.2",
+    at: V0_2_AT,
+    line: "updates.v02Line",
+    changes: [
+      "updates.v02Trams",
+      "updates.v02TramCrossing",
+      "updates.v02Loops",
+      "updates.v02BusLoops",
+      "updates.v02Colors",
+      "updates.v02Limit",
+      "updates.v02BusStops",
+      "updates.v02BusFare",
+      "updates.v02Places",
+      "updates.v02Hidden",
+      "updates.v02ColorBlind",
+      "updates.v02Diagram",
+      "updates.v02Fixes",
+    ],
+  },
   {
     version: "v0.1.1",
     at: "2026-11-09T16:40:00Z",
