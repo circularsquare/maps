@@ -158,10 +158,16 @@ tabular figures, are the same in every language; then the language's own face. J
 111 woff2 slices self-hosted in `public/fonts/Huninn-400-*.woff2`, 2.5 MB in all, `i18n/huninn.css`; a page
 loads only the slices its text uses), then PingFang TC, Microsoft JhengHei, Noto Sans TC. Huninn has no bold, so
 zh-TW turns off the browser's made-up bold (`font-synthesis-weight: none`) and sets `.h` headings at 16px instead.
-Simplified Chinese:
-the system's face (PingFang SC, Microsoft YaHei, Noto Sans SC), since no rounded Simplified face is free to
-host. Chinese never falls into Zen Maru, which lacks a third of common Simplified hanzi and draws Japanese
-glyph shapes. In Japanese and Chinese the page sets `text-autospace` (the small gap between hanzi or kana
+Simplified Chinese: Hanzi Round (T-2936), which is Chill Round M (Warren2060/ChillRound, SIL OFL; Zen Maru
+Gothic completed to GB2312) cut into 12 woff2 slices, `public/fonts/HanziRound-400-*.woff2`, 1.5 MB in all,
+`i18n/hanziround.css`. It covers GB2312 and the whole level 1 list of the Table of General Standard Chinese
+Characters; the font's Reserved Font Name forbids keeping its name in a cut, so the family is renamed inside the
+files and in CSS, and the licence text is `public/fonts/OFL-HanziRound.txt`. Slice 0 is punctuation, slice 1 the
+hanzi the zh-Hans messages and place names use, then GB2312 in 500-650 character pieces. Fallback: PingFang SC,
+Microsoft YaHei, Noto Sans SC (for the rare hanzi outside GB2312). It has no bold, so zh-Hans takes the same
+`font-synthesis-weight: none` and 16px `.h` headings as zh-TW. To regenerate: slice the TTF by the same rule
+(notes/T-2936.md). Chinese never falls into Zen Maru, which lacks a third of common Simplified hanzi and draws
+Japanese glyph shapes. In Japanese and Chinese the page sets `text-autospace` (the small gap between hanzi or kana
 and Latin letters or digits, so messages carry no space for it); Japanese lines break between phrases
 (`word-break: auto-phrase`). The line height is the page's fixed 1.45 in every language. MapLibre's own CJK
 labels (`localIdeographFontFamily`) are not yet set per language (T-2586).

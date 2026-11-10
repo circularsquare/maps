@@ -11,6 +11,7 @@ import "./ui/style.css";
 import "./ui/zenmaru.css";
 // each language's font faces (T-2636); here, not in i18n/index.ts, which the workers import and where CSS injection throws
 import "./i18n/huninn.css";
+import "./i18n/hanziround.css";
 import { computed, effect } from "@preact/signals";
 import { h, render } from "preact";
 import { clock, startClock } from "./game/clock";
