@@ -20,7 +20,7 @@ import { moneyState } from "./money";
 import { readToday, runningToday } from "./today";
 import { weekdayOf } from "./days";
 import { stationsById, world } from "./world";
-import { sumModes } from "./worldTotals";
+import { RIDES_PER_PERSON, sumModes } from "./worldTotals";
 import { zonesLoaded } from "./zones";
 import type { LineInput, LineStats, StationInput, WorldView } from "./types";
 import { gamesLoaded, postAchievements, queryClock } from "../workers/clockClient";
@@ -56,10 +56,15 @@ export function tierText(id: TieredId, tier: number, a?: Achieved | Detail, toas
 }
 
 /** The firsts in the panel's order (Sea crossing comes with T-2150). */
-export type FirstId = "border" | "continents" | "long" | "pearls" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper";
-export interface First { id: FirstId; name: string; rule: () => string; text: (a: Achieved | Detail) => string;
+export type CorridorId = "allJapan" | "orient" | "transcon" | "siberian" | "andean" | "cape" | "ghan" | "silk";
+export type NationCode = "JP" | "US" | "ES" | "GB" | "IT" | "DE" | "KR" | "TW" | "CN" | "ID" | "MX" | "BR" | "AU" | "TR";
+export type FirstId = "border" | "continents" | "long" | "pearls" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper"
+  | CorridorId | "europe" | `nation:${NationCode}`;
+export interface First { id: FirstId; name: string; rule?: () => string; text: (a: Achieved | Detail) => string;
   /** the figure now, for the hover of a step not yet earned; "" while unknown */
-  now?: () => string }
+  now?: () => string;
+  /** T-3037: not listed until earned */
+  hidden?: boolean }
 
 export const LONG_M = 5_000_000;
 export const PEARLS_M = 3_000_000;
@@ -77,8 +82,50 @@ export const SLEEPER_S = 12 * 3600;
 /** riders a day who must be on one train that long */
 export const SLEEPER_RIDERS = 1;
 
+/** T-3037: the share of a region's rides a day that trains carry, as a percent, that earns its achievement.
+ * Japan's 10 and Europe's 5 are Anita's. The rest are about twice what one strong metro reaches: the real
+ * New York save carries 1.2% of the US's rides, the Tokyo save's Seoul and Busan 5.1% of Korea's (its Japan
+ * 3.1%), so a country needs several cities of that size, more where it is small (notes/T-3037.md). The countries
+ * are those with the most play (Anita's playtime map). `people`: the region's population, the zone populations
+ * summed (checks/nation-people.mjs), at `RIDES_PER_PERSON` rides each, as the world's share is (T-1301). */
+export const EUROPE_SHARE = 5, EUROPE_PEOPLE = 709_948_408;
+export const NATIONS: { cc: NationCode; share: number; people: number }[] = [
+  { cc: "JP", share: 10, people: 126_117_819 }, { cc: "US", share: 2, people: 327_534_599 }, { cc: "ES", share: 3, people: 45_649_934 },
+  { cc: "GB", share: 4, people: 66_408_930 }, { cc: "IT", share: 3, people: 59_366_251 }, { cc: "DE", share: 4, people: 83_346_335 },
+  { cc: "KR", share: 8, people: 51_205_458 }, { cc: "TW", share: 5, people: 23_752_850 }, { cc: "CN", share: 1, people: 1_412_121_555 },
+  { cc: "ID", share: 2, people: 267_744_927 }, { cc: "MX", share: 2, people: 126_014_694 }, { cc: "BR", share: 2, people: 201_987_873 },
+  { cc: "AU", share: 4, people: 24_664_377 }, { cc: "TR", share: 2, people: 87_720_246 },
+];
+
+/** A built station of a running line, as a corridor's ends read it. */
+interface Where { zone: CityId | null; cc: string | undefined; lng: number; lat: number }
+/** Hokkaido: Japan from the Tsugaru Strait north (Honshu's Shimokita reaches 41.55N east of 140.7E). */
+const inHokkaido = (p: Where) => p.cc === "JP" && p.lat >= 41.3 && !(p.lng >= 140.7 && p.lat < 41.65);
+/** Shikoku: its box, minus the Hiroshima and Okayama coast and the Shimanami islands (Honshu, north of 34.12N west of 133.2E). */
+const inShikoku = (p: Where) => p.cc === "JP" && p.lng >= 132 && p.lng <= 134.85 && p.lat >= 32.7 && p.lat <= 34.42 && !(p.lng < 133.2 && p.lat > 34.12);
+const WEST_EUROPE = new Set("GB IE FR BE NL LU DE CH AT LI MC ES PT IT AD".split(" "));
+/** Russia from Irkutsk (104.3E) east. */
+const EAST_RUSSIA_LNG = 104;
+const zoneIs = (id: CityId) => (p: Where) => p.zone === id;
+export const CORRIDORS: { id: CorridorId; from: (p: Where) => boolean; to: (p: Where) => boolean }[] = [
+  { id: "allJapan", from: inHokkaido, to: inShikoku },
+  { id: "orient", from: zoneIs("par"), to: zoneIs("ist") },
+  { id: "transcon", from: zoneIs("nyc"), to: zoneIs("snf") },
+  { id: "siberian", from: (p) => WEST_EUROPE.has(p.cc ?? ""), to: (p) => p.cc === "RU" && p.lng >= EAST_RUSSIA_LNG },
+  { id: "andean", from: zoneIs("san"), to: zoneIs("bue") },
+  { id: "cape", from: zoneIs("cap"), to: zoneIs("cai") },
+  { id: "ghan", from: zoneIs("ade"), to: zoneIs("daw") },
+  { id: "silk", from: zoneIs("ist"), to: zoneIs("xia") },
+];
+const corridorName: Record<CorridorId, () => string> = {
+  allJapan: () => t("achievements.nameAllJapan"), orient: () => t("achievements.nameOrient"), transcon: () => t("achievements.nameTranscon"),
+  siberian: () => t("achievements.nameSiberian"), andean: () => t("achievements.nameAndean"), cape: () => t("achievements.nameCape"),
+  ghan: () => t("achievements.nameGhan"), silk: () => t("achievements.nameSilk"),
+};
+
 /** A record keeps the city's Latin name; shown in the language now set. */
 const cityShown = (name: string | undefined) => { const c = name ? CITIES.find((x) => x.name === name) : undefined; return c ? tPlace(c.id, c.name) : name; };
+const shareText = (v: number | undefined) => decimals(v ?? 0, 1) + "%";
 const pct = (v: number) => `${Math.floor(v)}%`;
 const decimals = (v: number, dp: number) => tNumber(v, { minimumFractionDigits: dp, maximumFractionDigits: dp });
 /** The countries of a Over-the-border record: new ones store ISO codes, older saves the English names. */
@@ -96,6 +143,10 @@ export const FIRSTS: First[] = [
   { id: "city", get name() { return t("achievements.nameCity"); }, rule: () => t("achievements.ruleCity", { share: CITY_SHARE }), text: (a) => t("achievements.textCity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
   { id: "intercity", get name() { return t("achievements.nameIntercity"); }, rule: () => t("achievements.ruleIntercity", { share: INTERCITY_SHARE }), text: (a) => t("achievements.textIntercity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
   { id: "sleeper", get name() { return t("achievements.nameSleeper"); }, rule: () => t("achievements.ruleSleeper", { hours: SLEEPER_S / 3600 }), text: (a) => t("achievements.textSleeper", { hours: decimals(a.v ?? 0, 1), of: a.of }) },
+  // T-3037: hidden until earned, so no rule to show
+  ...CORRIDORS.map((c): First => ({ id: c.id, hidden: true, get name() { return corridorName[c.id](); }, text: (a) => t("achievements.textCorridor", { from: cityShown(a.of), to: cityShown(a.in?.[0]) }) })),
+  { id: "europe", hidden: true, get name() { return t("achievements.nameEurope"); }, text: (a) => t("achievements.textShare", { share: shareText(a.v), place: continentLabel("Europe") }) },
+  ...NATIONS.map((n): First => ({ id: `nation:${n.cc}`, hidden: true, get name() { return t("achievements.nameNation", { cc: n.cc, country: tCountry(n.cc) }); }, text: (a) => t("achievements.textShare", { share: shareText(a.v), place: tCountry(n.cc) }) })),
 ];
 
 /** "Monday, day 406, at 14:08" on the game clock. */
@@ -163,6 +214,45 @@ export const networkFigures = computed(() => {
   if (bullet) firsts.set("bullet", bullet);
   if (circle) firsts.set("circle", circle);
   return { cities: served.size, firsts, running: w.running.length };
+});
+
+/** T-3037: the corridors with service. Lines are joined where they share a station or a complex (the
+ * places a rider changes at); a corridor is met when one such network holds a built station at each end.
+ * Worked out when the running lines or the stations change, not with the clock. */
+export const corridorFigures = computed(() => {
+  const w = achWorld.value;
+  void zonesLoaded.value;
+  const cx = complexes.value;
+  if (!w) return null;
+  const up = new Map<string, string>();
+  const find = (k: string): string => { let r = k; while (up.get(r) !== r) r = up.get(r)!; up.set(k, r); return r; };
+  const key = (id: string) => { const c = cx.of.get(id); return c === undefined ? id : "c" + c; };
+  const stops: { name: string; k: string; at: Where }[] = [];
+  for (const { l } of w.running) {
+    let first: string | null = null;
+    for (const id of l.stops) {
+      const s = w.byId.get(id);
+      if (!s?.built) continue;
+      const k = key(id);
+      if (!up.has(k)) up.set(k, k);
+      if (first === null) first = k; else up.set(find(k), find(first));
+      const zone = stationZone(s);
+      stops.push({ name: s.name || (zone ? cityById(zone).name : ""), k, at: { zone, cc: zone ? cityById(zone)?.country : undefined, lng: s.lng, lat: s.lat } });
+    }
+  }
+  const ends = new Map<string, { from?: string; to?: string }>();
+  const out = new Map<FirstId, Detail>();
+  for (const c of CORRIDORS) {
+    ends.clear();
+    for (const { name, k, at } of stops) {
+      const root = find(k), e = ends.get(root) ?? {};
+      if (!e.from && c.from(at)) e.from = name;
+      if (!e.to && c.to(at)) e.to = name;
+      ends.set(root, e);
+      if (e.from && e.to) { out.set(c.id, { of: e.from, in: [e.to] }); break; }
+    }
+  }
+  return { firsts: out };
 });
 
 /** The longest a rider is sure to stay on one of the line's trains, s, among riders at least
@@ -274,6 +364,18 @@ export const demandFigures = computed(() => {
   }
   if (city) firsts.set("city", city);
   if (inter) firsts.set("intercity", inter);
+  // T-3037: the share of each region's rides that trains carry (built zones' final views)
+  const railIn = new Map<string, number>();
+  let railEurope = 0;
+  for (const id of built) {
+    const c = cityById(id), cv = d.cities.get(id);
+    if (!c?.country || !cv?.final) continue;
+    railIn.set(c.country, (railIn.get(c.country) ?? 0) + cv.railTripsPerDay);
+    if (continentOf(c.country, c.center[0], c.center[1]) === "Europe") railEurope += cv.railTripsPerDay;
+  }
+  const shareOf = (rail: number, people: number) => (100 * rail) / (RIDES_PER_PERSON * people);
+  if (shareOf(railEurope, EUROPE_PEOPLE) >= EUROPE_SHARE) firsts.set("europe", { v: shareOf(railEurope, EUROPE_PEOPLE) });
+  for (const n of NATIONS) { const v = shareOf(railIn.get(n.cc) ?? 0, n.people); if (v >= n.share) firsts.set(`nation:${n.cc}`, { of: n.cc, v }); }
   const transfersPerTrip = v.railTripsPerDay > 0 ? transfers / v.railTripsPerDay : undefined;
   return { trips, station, line, firsts, covered, transfersPerTrip };
 });
@@ -320,7 +422,7 @@ effect(() => { const w = world.value; if (w && w !== worldAtLoad) worldSinceLoad
 
 /** Every step met now, by key, with what met it, and whether every figure is in for a quiet working-out. */
 export const metNow = computed(() => {
-  const nf = networkFigures.value, df = demandFigures.value, bp = bestProfit.value;
+  const nf = networkFigures.value, df = demandFigures.value, bp = bestProfit.value, cf = corridorFigures.value;
   const out: Record<string, Detail> = {};
   if (!nf) return { met: out, ready: false };
   const tier = (id: TieredId, v: number | undefined, d: Detail) => {
@@ -328,6 +430,7 @@ export const metNow = computed(() => {
   };
   tier("cities", nf.cities, { v: nf.cities });
   for (const [k, d] of nf.firsts) out[k] = d;
+  if (cf) for (const [k, d] of cf.firsts) out[k] = d;
   if (df) {
     tier("trips", df.trips, { v: df.trips });
     if (df.station) tier("station", df.station.v, df.station);
@@ -344,7 +447,9 @@ export const metNow = computed(() => {
 
 /** How many steps there are, and how many this game has earned. */
 export const STEP_KEYS = new Set([...TIERED.flatMap((t) => t.tiers.map((x) => tierKey(t.id, x))), ...FIRSTS.map((f) => f.id)]);
-export const STEPS = STEP_KEYS.size;
+const HIDDEN_KEYS = new Set<string>(FIRSTS.filter((f) => f.hidden).map((f) => f.id));
+/** The steps listed: the hidden ones count only once earned. */
+export const STEPS = computed(() => STEP_KEYS.size - HIDDEN_KEYS.size + Object.keys(moneyState.value?.achievements ?? {}).filter((k) => HIDDEN_KEYS.has(k)).length);
 export const earned = computed(() => Object.keys(moneyState.value?.achievements ?? {}).filter((k) => STEP_KEYS.has(k)).length);
 
 // Post the steps met that the worker has not recorded; an older save's once its figures are all in.

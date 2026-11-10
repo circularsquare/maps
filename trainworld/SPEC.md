@@ -279,7 +279,10 @@ the train share that real network gets in this game [T-2145].
 riders a day, the last three on the average day) and ten firsts (a line in two countries, on two
 continents, 1,000 km long, with $200M profit in a day, a train at 300 km/h, a circle of 10 stops, one
 change per trip, a city at 20% of its own trips and of its trips to other places by train, a rider 12
-hours on one train). A small toast at the map's bottom left says each one earned; the medal at the
+hours on one train), then hidden ones shown only once earned: eight long corridors (Hokkaido to Shikoku, Paris to
+Istanbul, New York to San Francisco, western Europe to eastern Russia, Santiago to Buenos Aires, Cape Town to
+Cairo, Adelaide to Darwin, Istanbul to Xi'an) and a share of a region's rides by train in Europe and in fourteen
+countries [T-3037]. The achievements view's hovers give the share of players who have each [T-3038]. A small toast at the map's bottom left says each one earned; the medal at the
 top of the Cities tab opens them. A sandbox earns none [T-2124; docs/ui-panels.md "Achievements"].
 
 Bus lines (T-1464, T-1465) need no track: the player clicks a route that follows the roads between

@@ -21,6 +21,7 @@ import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { pointsPast24h } from "./points";
 import { startPlaytime } from "./playtime";
+import { startAchievementCounts } from "./achievementCounts";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
 import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
@@ -34,7 +35,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldCommunity?: boolean }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean }
 export interface BoardSetting { on: boolean; name: string }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -462,6 +463,8 @@ export function startAccount() {
     });
     // T-1771: plays and playtime, only against a server that says it takes them
     if (accountConfig.peek()?.trainworldPing) startPlaytime((p) => api("POST", "trainworld/ping", p));
+    // T-3038: how many players have each achievement; sent without the session
+    if (accountConfig.peek()?.trainworldAchievements) startAchievementCounts((method, path, body) => api(method, path, body, { auth: false }));
     if (accountState.peek() !== "on") { startFeedbackWatch(); return; }
     if (session.peek()) {
       try { storeSession(await api("POST", "noritetsu/refresh")); }

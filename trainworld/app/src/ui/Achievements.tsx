@@ -42,7 +42,7 @@ export function AchievementsButton() {
       <LeaderboardButton />
       {!sandbox && <button class={"btn text ach-open" + (on ? " on" : "")} data-tip={t("achievements.title")} aria-label={t("achievements.title")} aria-pressed={on}
         onClick={() => (on ? (selection.value = null) : openAchievements())}>
-        <Icon.medal /><span class="num">{earned.value}/{STEPS}</span>
+        <Icon.medal /><span class="num">{earned.value}/{STEPS.value}</span>
       </button>}
     </div>
   );

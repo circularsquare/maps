@@ -26,7 +26,7 @@ export interface Ping { id: string; b?: string; start: string; sandbox: boolean;
 const BROWSER_KEY = "trainworld.browser";
 
 /** Whether this page sends nothing. */
-function quiet(): boolean {
+export function quiet(): boolean {
   const q = new URLSearchParams(location.search);
   let stored = false;
   try {
@@ -46,7 +46,7 @@ function newId(): string {
 }
 
 /** This browser's id, made on first use; undefined when storage is blocked. */
-function browserId(): string | undefined {
+export function browserId(): string | undefined {
   try {
     let id = localStorage.getItem(BROWSER_KEY);
     if (!id || !/^[0-9a-f]{32}$/.test(id)) {

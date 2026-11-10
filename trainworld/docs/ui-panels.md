@@ -825,10 +825,27 @@ keeps what it had and earns no more.
   places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
   hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
   aboard there, and at least 1 a day must be sure to ride that long). Sea crossing comes with T-2150.
+- **Hidden firsts** [T-3037]: not listed in the view or counted in its "n/N" until earned, then listed
+  like the others (no rule hover, since none was shown). Gold medal, name, and a hover of what earned
+  it. Two kinds. **Corridors** (`CORRIDORS` in `game/achievements.ts`): one network of running lines, joined
+  where two lines share a station or a complex (the places a rider changes), has a built station at each
+  end, worked out when the running lines or stations change. All Japan (Hokkaido to Shikoku by position
+  inside Japan), Orient Express (the Paris zone to the Istanbul zone), Transcontinental (New York to San
+  Francisco zones), Trans-Siberian (a station in western Europe, a list of countries, to one in Russia at
+  or east of 104E), Trans-Andean (Santiago to Buenos Aires zones), Cape to Cairo (Cape Town to Cairo zones),
+  The Ghan (Adelaide to Darwin zones), Silk Road (Istanbul to Xi'an zones). **Shares** (`NATIONS`,
+  `EUROPE_SHARE`): the train rides a day in the built zones of a region (final results, the average day) over
+  its people times 3 rides each (the world share's rule, T-1301): Grand Tour is 5% of Europe (by zone,
+  `continentOf`: Russia west of 60E, Istanbul's zone counts), and one per country with the most play,
+  each at its own share: Japan Railways 10, US 2, Spain 3, Britain 4, Italy 3, Germany 4, Korea 8, Taiwan 5,
+  China 1, Indonesia 2, Mexico 2, Brazil 2, Australia 4, Turkey 2 (how they were set: notes/T-3037.md).
 - **Medals** [T-2179]: a disc in the tier's metal on a ribbon in the achievement's colour. Tiers take
   bronze, silver, gold, platinum and emerald in order (four-tier ones stop at platinum); every first is
   gold. Colours (`achievements.css`, a light and a dark value each): Cities served blue, Trips per day
   red, Busiest station orange, Busiest line green, the firsts purple.
+- **Players' share** [T-3038]: the hover of every listed step ends with "12% of players have this" once the
+  server (shonei-server `/trainworld/achievements`) has answered with at least 20 players; none before.
+  The game sends each key once per browser (`game/achievementCounts.ts`; design in notes/T-3038.md).
 - **The view** (selection `achievements`): the medal and "Achievements"; each tiered one a row with its
   name at the top left, under it a place per tier holding the tier's medal once earned or blank space
   where it would go, no outline [T-2431], so the earned medals keep their places (hover the tier, and once earned when, "10 cities served, reached on Monday, day 406,
@@ -846,7 +863,8 @@ keeps what it had and earns no more.
   while the start menu, the saved games, a confirmation, the leaderboards or the account panel is up, or
   the tab is hidden, and go with F2. A phone held upright shows one at a time, its line cut to one.
 - **Saves**: the header's `achievements`, by key (`cities:10`, `trips:1000000`, `border`), each with
-  `at` and what earned it (`of` a name, `v` the figure, `in` the countries or continents). An older
+  `at` and what earned it (`of` a name, `v` the figure, `in` the countries or continents; a corridor's
+  `of` and `in[0]` its two stations, a share's `of` the country code). An older
   save without the field works its out quietly once its first final result and the first profit answer
   are in: everything met then is recorded at that game second with no toast.
 

@@ -9,6 +9,8 @@ import { t as tr } from "../../i18n";
 import { moneyState } from "../../game/money";
 import type { Achieved } from "../../workers/saveFile";
 import { Medal, METALS } from "../Achievements";
+import { loadAchievementCounts, shareOfPlayers } from "../../game/achievementCounts";
+import { useEffect } from "preact/hooks";
 import { Icon } from "../widgets";
 import "../achievements.css";
 
@@ -20,6 +22,12 @@ function figureOf(id: Tiered["id"]): { v: number; of?: string } | null {
   if (id === "trips") return { v: d.trips };
   const x = id === "station" ? d.station : d.line;
   return x ? { v: x.v ?? 0, of: x.of } : { v: 0 };
+}
+
+/** A hover with how many players have the step, once the server has said (T-3038). */
+function withShare(tip: string, key: string): string {
+  const s = shareOfPlayers(key);
+  return s ? (tip ? tip + "\n" : "") + tr("achievementsView.players", { share: s }) : tip;
 }
 
 /** The ring: `p` of the way round from the top, clockwise. */
@@ -45,8 +53,8 @@ function TierRow({ t, got }: { t: Tiered; got: Record<string, Achieved> }) {
           {t.tiers.map((x, k) => {
             const a = got[tierKey(t.id, x)];
             return a
-              ? <span class="ach-slot" data-tip={tr("achievementsView.tierReached", { text: tierText(t.id, x, a), when: when(a.at) })}><Medal metal={METALS[k]} of={t.id} /></span>
-              : <span class="ach-slot empty" data-tip={tierText(t.id, x)} />;
+              ? <span class="ach-slot" data-tip={withShare(tr("achievementsView.tierReached", { text: tierText(t.id, x, a), when: when(a.at) }), tierKey(t.id, x))}><Medal metal={METALS[k]} of={t.id} /></span>
+              : <span class="ach-slot empty" data-tip={withShare(tierText(t.id, x), tierKey(t.id, x))} />;
           })}
         </span>
       </div>
@@ -62,6 +70,7 @@ function TierRow({ t, got }: { t: Tiered; got: Record<string, Achieved> }) {
 }
 
 export function AchievementsView() {
+  useEffect(loadAchievementCounts, []);
   const got = moneyState.value?.achievements ?? {};
   return (
     <>
@@ -73,10 +82,10 @@ export function AchievementsView() {
         {TIERED.map((t) => <TierRow t={t} got={got} />)}
       </ul>
       <ul class="rows ach-firsts">
-        {[...FIRSTS.filter((f) => got[f.id]), ...FIRSTS.filter((f) => !got[f.id])].map((f) => {
+        {[...FIRSTS.filter((f) => got[f.id]), ...FIRSTS.filter((f) => !got[f.id] && !f.hidden)].map((f) => {
           const a = got[f.id];
           return (
-            <li class={a ? "" : "muted"} data-tip={a ? tr("achievementsView.firstReached", { text: f.text(a), when: when(a.at) }) : [f.rule(), f.now?.()].filter(Boolean).join("\n")}>
+            <li class={a ? "" : "muted"} data-tip={withShare(a ? tr("achievementsView.firstReached", { text: f.text(a), when: when(a.at) }) : [f.rule?.(), f.now?.()].filter(Boolean).join("\n"), f.id)}>
               <span class={"ach-slot" + (a ? "" : " empty")}>{a && <Medal metal="gold" of="first" />}</span>
               <span class="grow">{f.name}</span>
               {a && <span class="val">{tr("achievementsView.day", { day: dayOf(Math.floor(a.at / 60)) })}</span>}
