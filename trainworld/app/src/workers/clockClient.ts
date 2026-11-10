@@ -806,7 +806,10 @@ export class ClockClient {
 
   get running() { return !!this.worker; }
 
+  private posts = 0;
+  private readsOut = new Map<string, { posts: number; p: Promise<Float64Array> }>();
   post(msg: ToClock, transfer: Transferable[] = []) {
+    this.posts++;
     if (this.worker && this.booted) this.worker.postMessage(msg, transfer);
     else this.waiting.push([msg, transfer]);
   }
@@ -1205,9 +1208,20 @@ export class ClockClient {
         if (!this.heldTimer) this.releaseHeld();
       });
     }
+    // T-2953: the panels each ask the same account read after an edit (the Lines tab, the trouble list, the
+    // goals); with nothing posted since the first, one answer serves them all
+    const key = PANEL_READS.has(q.what) ? JSON.stringify(q) : "";
+    const same = key ? this.readsOut.get(key) : undefined;
+    if (same && same.posts === this.posts) return same.p;
     const seq = ++this.seq;
     this.post({ kind: "query", seq, q });
-    return new Promise((res) => this.queries.set(seq, res));
+    const p = new Promise<Float64Array>((res) => this.queries.set(seq, res));
+    if (key) {
+      const read = { posts: this.posts, p };
+      this.readsOut.set(key, read);
+      void p.then(() => { if (this.readsOut.get(key) === read) this.readsOut.delete(key); });
+    }
+    return p;
   }
 
   /** Send an edit; the promise resolves with the worker's answer. */

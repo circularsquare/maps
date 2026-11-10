@@ -32,7 +32,7 @@ import { BusInspector } from "./BusInspector";
 import { locateStation } from "../locate";
 import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
-import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, wholeCopy } from "../../game/scheduleCopy";
+import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, vehicleOf, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
 import { MareyButton } from "./MareyChart";
 import { LineProfile } from "./LineProfile";
@@ -598,7 +598,7 @@ export function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) 
     <span class="sched-copy">
       <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st), !st.bus) })}
         onClick={() => copySchedule(l, st)}><Icon.copy /></button>
-      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c, whole) }) + cut : tr("lineInspector.pasteNone")}
+      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c, whole, vehicleOf(st)) }) + cut : tr("lineInspector.pasteNone")}
         onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
       {!st.bus && <MareyButton st={st} />}
     </span>

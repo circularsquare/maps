@@ -22,7 +22,7 @@ export interface ScheduleCopy {
   vehicle?: "train" | "bus" | "boat";
 }
 
-const vehicleOf = (st: LineStats) => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
+export const vehicleOf = (st: LineStats) => (st.bus?.ferry ? "boat" : st.bus ? "bus" : "train");
 /** Whether pasting `c` on a line carries its train length and kind: only from a train line to a train line. */
 export const wholeCopy = (c: ScheduleCopy, st: LineStats): boolean => !st.bus && (c.vehicle ?? "train") === "train";
 
@@ -71,9 +71,9 @@ const mins = (s: number) => (s > 0 ? t("scheduleCopy.minutes", { n: tNumber(+(s 
 
 /** "Headways 3 min, 5 min and 10 min, 6 cars, high speed", high, medium and low in order; without
  * `whole`, what a paste carries to or from a bus or ferry line: "Headways 8 min, 15 min and 30 min" or
- * "4, 3 and 2 buses". */
-export function scheduleText(c: ScheduleCopy, whole = true): string {
-  if (!whole) return c.headway ? t("scheduleCopy.headwaysOnly", { list: tList(c.headway.map(mins)) }) : t("scheduleCopy.countsOnly", { list: tList(c.trains.map(String)), vehicle: c.vehicle ?? "train" });
+ * "4, 3 and 2 buses", where `vehicle` is the line pasted on, not the copied one. */
+export function scheduleText(c: ScheduleCopy, whole = true, vehicle = c.vehicle ?? "train"): string {
+  if (!whole) return c.headway ? t("scheduleCopy.headwaysOnly", { list: tList(c.headway.map(mins)) }) : t("scheduleCopy.countsOnly", { list: tList(c.trains.map(String)), vehicle });
   return t(c.headway ? "scheduleCopy.withHeadways" : "scheduleCopy.withTrains", { list: tList((c.headway ? c.headway.map(mins) : c.trains.map(String))), cars: c.cars, fast: c.fast });
 }
 

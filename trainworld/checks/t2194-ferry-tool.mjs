@@ -120,6 +120,8 @@ try {
   const moved = await page.evaluate(() => {
     const tw = window.tw, r = tw.renderer, t = tw.clock.now(), a = r.net?.anchor ?? tw.anchor();
     const p0 = r.probe(t), p1 = r.probe(t + 120);
+    // the boat to click: under way and away from the ports, since a station wins over a vehicle at the same spot (T-1414)
+    const ports = tw.world.value.save.stations.filter((s) => s.port);
     let live = 0, moving = 0, first = null;
     for (let i = 0; i < r.tripCount; i++) {
       if (p0[i * 2] >= 1e8 || p1[i * 2] >= 1e8) continue;
@@ -127,7 +129,7 @@ try {
       const [x0, y0] = tw.toLngLat(p0[i * 2], p0[i * 2 + 1], a), [x1, y1] = tw.toLngLat(p1[i * 2], p1[i * 2 + 1], a);
       const m = Math.hypot((x1 - x0) * 84000, (y1 - y0) * 111000);
       if (m > 100) moving++;
-      first ??= { lng: x0, lat: y0, m };
+      if (ports.every((s) => Math.hypot((s.lng - x0) * 84000, (s.lat - y0) * 111000) > 250)) first ??= { lng: x0, lat: y0, m };
     }
     return { live, moving, first };
   });
