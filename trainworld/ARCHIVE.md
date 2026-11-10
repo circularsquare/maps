@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2930 to T-2934 (2026-11-09, tree uinotes): blueprint stations are blue like blueprint track (improvements on them already work, as planned); quad track back as a small two-icon control beside the track type; issues list button a red alert icon and number, clear of the attribution; "Try:" suggestion on issue hovers; riders-left-behind count in red.
 - T-2935 (2026-11-09, tree heldcount): the line panel's held count is whole trains bought and never run at each level, rounded down, with no "0 trains held" line and no held mark on a dot for part of a train; `checks/t2935-held-count.mjs`. Trains queueing for full track (about 5 at a time on a busy shared line) are in service, so still not counted.
 - T-2922 (2026-11-09, 2f2104b1): buses mind crowding from 85% of rated (45 aboard), so the capacity rating cost 8.9% of bus riders on a real save instead of 14% (85,883 to 78,231); seats stay at 15.
 - T-2889 (2026-11-09, e91253c2): Portuguese, Turkish, Russian, German, French and Korean added, each with translation, back-translation and review; Korean uses the system's Korean fonts, no hosted font. T-2851 is the wider list. notes/T-2889.md.
