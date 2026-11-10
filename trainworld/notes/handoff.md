@@ -13,42 +13,35 @@ tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees
 Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
 **No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
 **Website push needs her word each time** (the classifier refuses it otherwise).
-**Master = 1719028f** (T-3107 turning alike, T-3106 street tram over water, T-3104 client; dev smoke PASSED 28, 17:22;
-pushed through 74558ad4). **8800 = 1719028f** (snapbuild started 17:23). Exact edits shows with `?exact` (or whenever a line is already manual).
-**maps-15 landed after the takeover (all its agents are done; nothing of maps-15's is in flight):**
-- T-3089 + T-3080 Exact edits round 2 (41202320): row hover lights the station, every visit removable (`drop_visit`), half
-  dot, visit numbers and add circles on the map. Strings "Click to remove this stop", "Click to add a stop here".
-- T-3094 one-way single track (97564abe): switch + reverse in the track panel, arrows, routing/capacity by direction, return
-  runs take their own way back. Strings shown to Anita ("wording seems fine"). Follow-ups T-3101, T-3102.
-- T-3087 rebuild-to-level fix + T-3088 rebuild as tram and back (90e97d88). String "tram track".
-- T-3099/T-3081 Line 1a (8846f377): turnedLine never reads a turn-back as a loop; set_manual keeps a closed line's path.
-  Her save fix: select 1a, Stop editing, click the pressed Exact edits once. Follow-up T-3100.
-- T-3093 Single track in Build (40af0202); real flyover design (42460efc, T-3092 after T-3103).
-**Open with Anita from maps-15's last exchange:** default new single track to one way? (She asked "single track should
-default be one-way right?"; maps-15 suggested keeping two-way since plain single-track lines run both ways; her call.)
-Anita on flyover strings: "like both text"; keeping the junction inspector's old "Add a flyover" for now.
-
-**Anita's answers today (for the record):** tram stop length on tram track = last tram length (as built); rebuild = full new
-price, price + confirm, final, refused pieces visible; "transit" for the whole system; Exact edits ship only once good;
-flyover cost fine; one-way on single track only; muted route = own colour at 40% + a little grey (done).
-**Open with Anita:** standalone version (answered: a wrapper alone gains little); Resend over its 100/day: Anita
-16:40 "lets jut wait for resend" (T-3105 tells the player when the quota is out). No releases until real flyovers land,
-hopefully tonight (Anita 16:40). T-3070 non-home-based trips design waits ("can wait then start a design agent").
-**Queued:** T-3063 bus loops partway; T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch);
-T-3060 rebuild preview; T-3069 trams on real rail + street-snap icon; Anita's plan: community tab, shared maps, country
-leaderboards (11/13), better schematic with timetables, open source (next week). P3s: T-3042, T-3036, T-3027, T-3002/3003,
-T-3019, T-3011.
-**Done today by maps-dc (archived):** T-3104/T-3105 account mails name the game + mail quota message (shonei-server
-e1ac732, 7b68d01, deployed and pushed; client in 1719028f); T-3106 street tram at ground level over water; T-3107 turning
-alike at every station, 15/h or 30/h with a terminal, hints name only a terminal (1719028f). Kind 3 renamed "Turning"
-(Anita: "yeah "turning" is ok"). Anita gave maps-15 Exact edits feedback after the handover; maps-15 is filing it from
-T-3108 and will message maps-dc the ids; maps-dc briefs the agents.
+**Master = f7ed49e9** (pushed through 74558ad4: push again soon). **8800 = f7ed49e9** (built 18:10). Batch smoke
+on master after the flyover landing PASSED 28, both cargo suites OK (18:01).
+**Landed today since the takeover (archived):** maps-15's Exact edits round 2 (41202320; being dropped by T-3109), one-way
+single track T-3094 (97564abe), rebuild fix + rebuild as tram T-3087/3088 (90e97d88), Line 1a T-3099/3081 (8846f377),
+single track in Build T-3093 (40af0202). maps-dc's: T-3104/3105 account mails name the game + quota message (shonei-server
+e1ac732, 7b68d01, deployed, pushed by Anita; client in 1719028f); T-3106 street tram at ground level over water and T-3107
+turning alike at every station, 15/h or 30/h with a terminal, hints name only a terminal, kind 3 "Turning" (1719028f);
+T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `set_edges_kind`); T-3092 + T-3103 real
+flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
+**Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
+**Release:** Anita wanted no release until flyovers land; they have. Ask her whether to publish tonight (v0.2.2?):
+needs an updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, and her word for the website push.
 **Running:**
-- flyover (Opus, af64c7f0ed83c00b5, tree `.tw-trees/flyover` from 74558ad4, Vite 6181): T-3103 flat badge only where
-  moves cross, then T-3092 real flyovers (Anita hopes tonight; no release until then). Land with `agent-tree.mjs land
-  flyover`; it merges with 1719028f's capacity.rs and draw.rs changes.
+- loopclick (Opus, a2a9a1fb062be2b58, tree `.tw-trees/loopclick` from 3a0a8ee3, Vite 6183): T-3109 drop Exact edits,
+  right click loops back, left click add/remove, bus partial loops (T-3063 folded in), + T-3110 strip while editing.
+- singlemargin (Sonnet, a9b84b10633a94c97, main tree): T-3112 single-track margin 240 s.
+- catalan (Sonnet coordinator, adcc19e6d8b045139, main tree; starts Opus translators, Sonnet back-translators per unit):
+  T-3113 Catalan, then release (OFFERED).
+- communitycheck (Sonnet, a91f2b0e73e677d8e, main tree + shonei-server, Vite 6185): T-3114 re-test community stage 1
+  (T-2887, dormant behind SHONEI_COMMUNITY=1) on today's master, fix, launch steps + all strings into notes/T-2887.md.
+  Anita 2026-11-10: community is the next major push after the track work; "first version can be pretty minimal, but
+  would be nice to get map sharing up at least". Added: preview mode (SHONEI_COMMUNITY=preview + tester accounts, game
+  shows Community only with ?community) so Anita can share her own maps from 8800 on the real server; deploy that with
+  her word. Her answers: share link and open a copy (ON by default) in the first version = T-3115 (after T-3114, same
+  files); country leaderboards same push = T-3116.
+- countryboards (Sonnet, a46d383838482c455, main tree + shonei-server, Vite 6186): T-3116 country leaderboards.
+**Queued:** T-3111 one-way stop chevron (after loopclick lands; same hover and editing view). T-3100 likely moot after T-3109.
 `.tw-trees/hotfix` (tw/release-021, live v0.2.1's source) kept until the next release in case live needs a hotfix.
-Next free id **T-3112**.
+Next free id **T-3117**.
 Anita's TODO "do trams have shorter dwell times?": yes, 15 s against 30 s for trains (T-2926), answered 2026-11-10.
 
 **Open with Anita:**

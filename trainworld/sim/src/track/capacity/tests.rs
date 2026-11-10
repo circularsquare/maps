@@ -140,6 +140,34 @@ fn single_track_platform_shares_stops_and_a_short_turn_has_its_own_pool() {
     assert!((w.svc.cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
 }
 
+/// T-3112 (Anita, 2026-11-10): a two-way single-track stretch holds each train for its run time plus
+/// SINGLE_TRACK_MARGIN_S, both directions together, so 2 km takes about 5 trains an hour each way.
+#[test]
+fn two_km_of_two_way_single_track_takes_about_five_trains_an_hour_each_way() {
+    use super::super::tests::{edge, line, node, station, world};
+    assert_eq!(SINGLE_TRACK_MARGIN_S, 240.0);
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 2000.0, 0.0, 0);
+    let e = edge(&mut w, a, b, &[], 0).unwrap();
+    let mut d = w.net.edge_data(e).unwrap();
+    d.tracks = 1;
+    w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    station(&mut w, a, 200);
+    station(&mut w, b, 200);
+    line(&mut w, &[a, b], [5.0, 0.0, 0.0]);
+    let cap = &w.svc.cap;
+    let r = cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
+    let users = cap.users_of(r);
+    assert_eq!(users.len(), 2, "one user per direction");
+    let occ = users[0].occ;
+    assert!((users[1].occ - occ).abs() < 1e-9);
+    // 2 km at line speed with stops is roughly 2 minutes, so about 6 minutes held per train
+    let each_way = 3600.0 / (2.0 * occ);
+    assert!((4.0..=6.0).contains(&each_way), "occ {occ} s gives {each_way} an hour each way");
+    assert!((cap.rho[r][0] - 2.0 * 5.0 * occ / 3600.0).abs() < 1e-12);
+}
+
 /// A line ending at a dead end and at a through station gets the same limit (T-3107, Anita
 /// 2026-11-10): 15 an hour at a 3-minute turnaround without a terminal, 30 with one.
 #[test]

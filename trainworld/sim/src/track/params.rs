@@ -382,7 +382,7 @@ impl TrackKind {
 pub const SECTION_BASE_S: f64 = 70.0;
 /// Signalling braking rate behind the block length term `v / 0.6`.
 pub const SIGNAL_BRAKE: f64 = 0.6;
-pub const SINGLE_TRACK_MARGIN_S: f64 = 60.0;
+pub const SINGLE_TRACK_MARGIN_S: f64 = 240.0;
 pub const PLATFORM_MARGIN_S: f64 = 60.0;
 pub const PASSING_S: f64 = 40.0;
 pub const TERMINUS_MARGIN_S: f64 = 60.0;

@@ -641,7 +641,8 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 - track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
   160, 16 at 320 (T-517)
-- single-track section between passing points: run time + 60 s, counting both directions; one-way
+- single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions: a headway each way of
+  about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; one-way
   single track takes the track-section rule above, per direction (T-3094)
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
