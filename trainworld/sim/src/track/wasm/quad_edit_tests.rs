@@ -404,9 +404,9 @@ fn old_saves_with_crossovers_and_single_track_still_run() {
     }
 }
 
-/// T-1678: a curve of 50-58 m has the express pair's concentric curve under the minimum on its
-/// inside. A slight kink (an S of 20-degree turns at 54 m) widens it to 50 m and the whole run
-/// doubles up; an S of sharp turns at 54 m is too tight on either side, so doubling up the
+/// T-1678: a curve of 25-33 m has the express pair's concentric curve under the minimum on its
+/// inside. A slight kink (an S of 20-degree turns at 29 m) widens it to 25 m and the whole run
+/// doubles up; an S of sharp turns at 29 m is too tight on either side, so doubling up the
 /// straight before it stops short of it, and selecting the S itself is refused.
 #[test]
 fn double_up_eases_kinks_and_stops_short_of_tight_curves() {
@@ -419,13 +419,13 @@ fn double_up_eases_kinks_and_stops_short_of_tight_curves() {
         a
     };
     let rise = 1000.0 * 20f64.to_radians().tan();
-    let mut a = draw(&[1500.0, 0.0, 54.0, 0.0, 2500.0, rise, 54.0, 0.0], (3500.0, rise));
+    let mut a = draw(&[1500.0, 0.0, 29.0, 0.0, 2500.0, rise, 29.0, 0.0], (3500.0, rise));
     let local = live(&a);
     assert_eq!(local.len(), 3);
     assert_eq!(a.double_up(local[0]), 0, "{}", a.issues());
     assert_eq!(live(&a).len(), 6, "the whole run doubled up");
     let (s, e) = (30f64.to_radians().cos() * 800.0, 30f64.to_radians().sin() * 800.0);
-    let mut a = draw(&[1500.0, 0.0, 54.0, 0.0, 1500.0, 151.0, 54.0, 0.0], (1500.0 + s, 151.0 - e));
+    let mut a = draw(&[1500.0, 0.0, 29.0, 0.0, 1500.0, 83.0, 29.0, 0.0], (1500.0 + s, 83.0 - e));
     let local = live(&a);
     assert_eq!(local.len(), 2, "the S is one piece");
     assert_ne!(a.double_up(local[1]), 0);

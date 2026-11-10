@@ -209,7 +209,7 @@ fn bad_edits_are_refused_and_change_nothing() {
     let (mut w, [_, b, c], [_, e1], _) = simple();
     let before = w.net.edge_data(e1).unwrap();
     let mut d = before.clone();
-    d.pis[0].radius = 40.0;
+    d.pis[0].radius = 20.0;
     let err = w.apply(Op::Edge { id: e1, data: Some(d) }).unwrap_err();
     assert!(err.contains(&Issue::Geom { edge: e1, issue: GeomIssue::RadiusTooSmall(1) }), "{err:?}");
     assert_eq!(w.net.edge_data(e1).unwrap(), before);

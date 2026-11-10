@@ -25,7 +25,7 @@ const LEVEL_MULT = [2.0, 1.6, 1.0, 0.5, 1.0, 1.5, 2.0] as const;
 const HSR_COST = 1.5;
 
 export const TRACK_SPECS: Record<TrackKind, TrackSpec> = {
-  regular: { id: 0, family: 0, vCapKmh: 160, minRadius: 50, levelMult: LEVEL_MULT, terrain: 1, water: 1, upkeep: 1, roadCrossings: true },
+  regular: { id: 0, family: 0, vCapKmh: 160, minRadius: 25, levelMult: LEVEL_MULT, terrain: 1, water: 1, upkeep: 1, roadCrossings: true },
   highSpeed: { id: 1, family: 0, vCapKmh: 320, minRadius: 50, levelMult: LEVEL_MULT.map(m => m * HSR_COST), terrain: 1, water: 1, upkeep: HSR_COST, roadCrossings: true },
   streetTram: { id: 2, family: 1, vCapKmh: 60, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6], terrain: 0.25, water: 0.5, upkeep: 0.6, roadCrossings: false },
   tram: { id: 3, family: 1, vCapKmh: 80, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6], terrain: 0.25, water: 1, upkeep: 1, roadCrossings: false },

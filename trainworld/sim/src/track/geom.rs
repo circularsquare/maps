@@ -398,13 +398,20 @@ pub fn fit_capped(v: &[Pi], scaled: bool, cap: f64) -> Fit {
     f
 }
 
-/// `fit_capped` for track whose smallest radius is `r_min` (T-2927: a tram kind's 25 m): a curve of
-/// `r_min` up to `MIN_RADIUS` is no `RadiusTooSmall`. Never stricter than `fit_capped`.
+/// `fit_capped` for track whose smallest radius is `r_min` (T-2927: a tram kind's 18 m; T-3082:
+/// high-speed track's 50 m): a curve of `r_min` up to `MIN_RADIUS` is no `RadiusTooSmall`, and a
+/// curve under `r_min` above `MIN_RADIUS` is one.
 pub fn fit_min(v: &[Pi], scaled: bool, cap: f64, r_min: f64) -> Fit {
     let mut f = fit_capped(v, scaled, cap);
     if r_min < MIN_RADIUS {
         let radius = &f.radius;
         f.issues.retain(|g| !matches!(*g, GeomIssue::RadiusTooSmall(j) if radius[j] >= r_min - 1e-6));
+    } else if r_min > MIN_RADIUS {
+        for j in 1..f.radius.len().saturating_sub(1) {
+            if f.radius[j] > 0.0 && f.radius[j] < r_min - 1e-6 && !f.issues.contains(&GeomIssue::RadiusTooSmall(j)) {
+                f.issues.push(GeomIssue::RadiusTooSmall(j));
+            }
+        }
     }
     f
 }
@@ -591,10 +598,25 @@ mod tests {
         assert!(curve_speed(R_CAP - 1.0) < V_TOP);
     }
 
+    /// T-3082: rail's 25 m curve is slow but valid; high-speed track keeps 50 m.
+    #[test]
+    fn minimum_radius_by_kind() {
+        let mut v = [pi(0.0, 0.0), pi(1000.0, 0.0), pi(1000.0, 1000.0)];
+        v[1].radius = 40.0;
+        assert!(fit_min(&v, false, R_CAP, MIN_RADIUS).issues.is_empty());
+        assert_eq!(fit_min(&v, false, R_CAP, HSR_MIN_RADIUS).issues, vec![GeomIssue::RadiusTooSmall(1)]);
+        v[1].radius = 20.0;
+        assert_eq!(fit_min(&v, false, R_CAP, HSR_MIN_RADIUS).issues, vec![GeomIssue::RadiusTooSmall(1)]);
+        v[1].radius = HSR_MIN_RADIUS;
+        assert!(fit_min(&v, false, R_CAP, HSR_MIN_RADIUS).issues.is_empty());
+        let kmh = curve_speed(MIN_RADIUS) * 3.6;
+        assert!((18.0..20.0).contains(&kmh), "{kmh}");
+    }
+
     #[test]
     fn manual_radius_too_small_or_too_big() {
         let mut v = [pi(0.0, 0.0), pi(1000.0, 0.0), pi(1000.0, 1000.0)];
-        v[1].radius = 40.0;
+        v[1].radius = 20.0;
         assert!(fit(&v).issues.contains(&GeomIssue::RadiusTooSmall(1)));
         v[1].radius = MIN_RADIUS;
         assert!(fit(&v).issues.is_empty());
@@ -614,7 +636,7 @@ mod tests {
         let f = fit(&w);
         assert!(f.clamped == [1] && (f.tangent[1] + f.tangent[2] - 600.0).abs() < 1e-9);
         // narrowed under the minimum is still too tight
-        let mut t = [pi(0.0, 0.0), pi(40.0, 0.0), pi(40.0, 40.0)];
+        let mut t = [pi(0.0, 0.0), pi(20.0, 0.0), pi(20.0, 20.0)];
         t[1].radius = 300.0;
         assert!(fit(&t).issues.contains(&GeomIssue::RadiusTooSmall(1)));
         v[1].radius = 400.0;

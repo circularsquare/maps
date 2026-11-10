@@ -2,7 +2,7 @@
 
 A train goes as fast as the slowest thing in front of it. That is its own top speed, the cap of the track it is on, or the bend it is in.
 
-**Bends.** A curve of radius R can be taken at a speed that grows with the square root of R: top speed in m/s is the root of 1.1 times the radius in metres. A tight 50 m bend, the tightest the game lets you build, tops out at 27 km/h. A bend a kilometre in radius allows 119 km/h. Reaching the speed of an ordinary train takes a radius of about 1,796 m, and a high-speed train about 7,183 m.
+**Bends.** A curve of radius R can be taken at a speed that grows with the square root of R: top speed in m/s is the root of 1.1 times the radius in metres. A tight 25 m bend, the tightest the game lets you build on rail, tops out at 19 km/h. High-speed track needs at least 50 m. A bend a kilometre in radius allows 119 km/h. Reaching the speed of an ordinary train takes a radius of about 1,796 m, and a high-speed train about 7,183 m.
 
 **Two kinds of train.** An ordinary train tops out at 160 km/h. A high-speed train reaches 320 km/h, and only on track built for it. On other track it goes as fast as an ordinary one. You pick the kind per line.
 

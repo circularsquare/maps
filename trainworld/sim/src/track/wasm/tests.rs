@@ -1206,7 +1206,7 @@ fn reshape_blueprint_track() {
     // a set radius, then too small to be built
     assert_eq!(a.set_edge_pis(e, &[2000.0, 1000.0, 400.0, 0.0]), 0, "{}", a.issues());
     assert!((a.edge_pis(e)[5] - 400.0).abs() < 1e-6);
-    assert_ne!(a.set_edge_pis(e, &[2000.0, 1000.0, 40.0, 0.0]), 0);
+    assert_ne!(a.set_edge_pis(e, &[2000.0, 1000.0, 20.0, 0.0]), 0);
     assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
     // the whole stretch one level down, shape kept
     assert_eq!(a.set_edge_level(e, -1), 0, "{}", a.issues());
@@ -2227,13 +2227,13 @@ fn a_tangent_segment_turns_past_a_half_turn() {
 fn a_too_tight_or_backward_tangent_click_is_refused() {
     let (mut a, east) = tangent_start();
     let off: f64 = 60f64.to_radians();
-    let ends = from_node(east, 1000.0 + 80.0 * off.cos(), 80.0 * off.sin());
+    let ends = from_node(east, 1000.0 + 40.0 * off.cos(), 40.0 * off.sin());
     let pv = a.preview_route(&ends, &[], 2, false);
     assert_eq!(pv[0], 0.0);
     assert!(pv.len() > 5, "the red ghost is drawn");
     assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
     let r = a.route_arc()[2];
-    assert!((r - 80.0 / (2.0 * off.sin())).abs() < 0.5, "{r}");
+    assert!((r - 40.0 / (2.0 * off.sin())).abs() < 0.5, "{r}");
     let fr = a.w.net.fit(&a.route_vertices).radius[1];
     assert!((fr - r).abs() < 0.5, "the ghost's curve is the circle's: {fr} against {r}");
     assert_ne!(a.add_route(&ends, &[], 2, false), 0);

@@ -31,7 +31,15 @@ publish gets a version and an updates.ts entry.
 **Running (Sonnet, main tree):** curve25 (id a390bcca8c970904e, Vite 6172) T-3082 curves to 25 m; buildexit (id
 a950b264ff9052c93, Vite 6173) T-3083 build tools close line/station views; busedit (id af518479c4c4684d3, Vite 6174)
 T-3084 bus edit route: old route muted, node drags go through Edit route and undo. T-3086 reserved for busedit.
-T-3085 (auto flyovers + one-way track, design first) filed for 11/11 per her plan. T-3080 waits on her Exact edits test.
+Started 16:10: flyover (Opus, read-only, id a8360dea8512f2827) T-3085 design, aim to ship 11/11 ("start design tonight");
+rebuildfix (Opus, id a321fbe3706c5ae16, tree `.tw-trees/rebuild2`, Vite 6175) T-3087 [P1] rebuild-to-level bug + T-3088
+rebuild as tram and back; exactmap (Sonnet, id a3896fc2d95771b05, tree `.tw-trees/exact3`, Vite 6176) T-3089 + T-3080
+(hover highlight, ends removable, half dot, numbers and circles on the map; x and station click do the same). busedit also
+does ferries. Anita on Exact edits: "exact edits looks better".
+line1a (Opus, id ae2330e4f40883a14, main tree, diagnose first): T-3099 [P1] Line 1a (plain, interlined with Line 1) drawn
+with end loops, turning round Line 1's loop, strip crossing perpendicular (T-3081 folded in). Suspect: her Exact edits
+on/off left 1a a one-way closed list. Fix patches touching LineInspector/lines.rs come to me to route (exact3 owns them).
+Ids: flyover T-3092-94, rebuildfix T-3095-96, exactmap T-3097-98, line1a T-3100. Next free **T-3101**.
 
 **Queued:** T-3070 non-home-based trips design agent (Anita: "can wait then start a design agent"); T-3063 bus loops partway
 (can start); T-3033 split zones rebuild + T-3077 precomputed inter-city figure (one data batch); T-3060 rebuild preview;

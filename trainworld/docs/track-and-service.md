@@ -178,8 +178,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   and rolls it back (`TrackApi.preview_station`, T-311), so the ghost and the click cannot
   disagree, cash included.
 - **Curve speed** `v = sqrt(a_lat * R)`, **a_lat = 1.1 m/s²** (LGV design: 7,000 m for 320 km/h).
-  50 m: 27 km/h, 100 m: 38, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius 50 m**
-  (`MIN_RADIUS`, T-2799); a route snapped to a real line keeps its curves at 100 m or wider (`TRACE_MIN_RADIUS`).
+  25 m: 19 km/h, 50 m: 27, 100 m: 38, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius
+  25 m** on rail (`MIN_RADIUS`, T-3082; the Chicago Loop's corners are about 27 m) and **50 m** on high-speed
+  track (`HSR_MIN_RADIUS`; a real line takes nothing near 25 m); a route snapped to a real line keeps its curves
+  at 100 m or wider (`TRACE_MIN_RADIUS`).
   Each piece of track runs at the **lowest of its curve speed, its track's cap and the line's
   trains' top speed** (T-817): track caps at **160 km/h**, high-speed track at **320**, a crossover
   at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). Grades do not change speed.
@@ -207,7 +209,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   it leaves each end along the node's heading like a turnout and swings out over 150 m (less on a
   short leg), and between them runs parallel, each corner concentric with the drawn one (radius
   8 m smaller on the inside of the turn, 8 m larger outside; where that inside radius would be
-  under 50 m on a drawn curve of 50-58 m it is 50 m instead if that brings the curve's middle
+  under 25 m on a drawn curve of 25-33 m it is 25 m instead if that brings the curve's middle
   at most `QUAD_EASE_TOL` (0.5 m) nearer the drawn track, a slight turn, and is otherwise too
   tight for quad, T-1678; a corner whose concentric radius would overrun its legs, as the capped curve of a
   nearly straight segment can once the millimetre grid tilts its metre-long legs, takes the auto radius
@@ -283,7 +285,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
   on: through plain joints and stations into more double track, stopping each way at a junction,
   a track end, single track, a crossover or track that has a pair beside it already, and short of
-  a piece with a curve the pair cannot follow (under 50 m beside it, quad's rule above; T-1678),
+  a piece with a curve the pair cannot follow (under 25 m beside it, quad's rule above; T-1678),
   where the pair has its own loose end; the selected piece having one is refused
   (`RadiusTooSmall`). The pair runs 8 m to the left of the selected piece's direction, or to the
   right where the left is refused (crossing other track, water) or would stop short where the right would not, every
