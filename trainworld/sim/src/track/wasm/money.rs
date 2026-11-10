@@ -259,7 +259,7 @@ impl TrackApi {
         let net = &self.w.net;
         let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok) else { return vec![] };
         let run = &s.runs[0];
-        let top = net.line_top(line);
+        let top = net.line_run_top(line);
         let mut out = vec![];
         for i in 0..run.stop_idx.len().saturating_sub(1) {
             let (n0, n1) = (run.stop_idx[i] as usize, run.stop_idx[i + 1] as usize);

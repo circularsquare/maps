@@ -131,6 +131,8 @@ export type EditOp =
   | { op: "lineCars"; line: number; cars: number }
   | { op: "lineFast"; line: number; fast: boolean }
   | { op: "lineOneWay"; line: number; oneWay: boolean }
+  /** T-2987: a rail line's speed limit in km/h, 0 for none */
+  | { op: "lineLimit"; line: number; kmh: number }
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
   | { op: "lineGroup"; lines: number[]; group: number | "new" }
   | { op: "groupName"; group: number; name: string }
@@ -492,6 +494,8 @@ export interface ClockLine {
   loopKind: number;
   /** T-2981: a loop that runs one way (`TrackApi::line_one_way`) */
   oneWay: boolean;
+  /** T-2987: the line's speed limit, km/h; 0 for none (`TrackApi::line_limit`) */
+  limit: number;
   /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces
    * (a bus line's `path` is empty, its `stops` its `bus.stops`' ids) */
   bus?: ClockBus;

@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// T-2987: the lowest speed limit a rail line can be given, km/h.
+const LINE_LIMIT_MIN: u32 = 40;
+
 #[wasm_bindgen]
 impl TrackApi {
     // ---- lines
@@ -11,7 +14,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -347,6 +350,21 @@ impl TrackApi {
     pub fn set_line_one_way(&mut self, id: u32, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         d.one_way = on;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-2987: a rail line's speed limit, km/h; 0 for none.
+    pub fn line_limit(&self, line: u32) -> u32 {
+        self.w.net.line_limit.get(line as usize).copied().unwrap_or(0) as u32
+    }
+    /// T-2987: limit a rail line's trains to `kmh` everywhere on its route; 0 takes the limit off.
+    /// Never above the line's kind of train, whose top speed it would not change.
+    pub fn set_line_limit(&mut self, id: u32, kmh: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.bus.is_some() || d.ferry.is_some() {
+            return self.refuse(Issue::NoSuchLine { line: id });
+        }
+        let top = (self.w.net.line_top(id) * 3.6).round() as u32;
+        d.limit = if kmh == 0 { 0 } else { kmh.clamp(LINE_LIMIT_MIN, top) as u16 };
         self.run(Op::Line { id, data: Some(d) })
     }
 

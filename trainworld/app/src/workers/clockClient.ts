@@ -289,6 +289,7 @@ function toWorld(s: ClockState): WorldView {
       hand: l.hand,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,
+      limit: l.limit,
       ...(l.bus ? { bus: l.bus } : {}),
     });
   }

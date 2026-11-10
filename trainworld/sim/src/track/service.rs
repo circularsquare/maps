@@ -420,7 +420,7 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     run.nodes.push(net.path_nodes(run.segs[0]).0);
     run.node_s.push(0.0);
     let mut raw: Vec<[f64; 2]> = vec![];
-    let top = net.line_top(l);
+    let top = net.line_run_top(l);
     for &p in &run.segs {
         let e = path_edge(p);
         let len = net.edge_len[e as usize];

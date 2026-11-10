@@ -240,6 +240,8 @@ pub struct LineData {
     /// alone); otherwise both ways. Kept on an open line, which ignores it, so it carries over a
     /// close. A new bus or ferry line starts one way, a train line both ways.
     pub one_way: bool,
+    /// T-2987: the player's speed limit for the line's trains, km/h; 0 none. Applies to rail lines only.
+    pub limit: u16,
 }
 
 /// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
@@ -456,6 +458,7 @@ pub struct Network {
     pub line_day: Vec<u32>,
     pub line_hand: Vec<bool>,
     pub line_one_way: Vec<bool>,
+    pub line_limit: Vec<u16>,
     pub line_name: Vec<String>,
     pub line_symbol: Vec<String>,
     pub next_line_number: u32,
@@ -788,6 +791,7 @@ impl Network {
             line_day: vec![],
             line_hand: vec![],
             line_one_way: vec![],
+            line_limit: vec![],
             line_name: vec![],
             line_symbol: vec![],
             next_line_number: 1,
@@ -1024,6 +1028,7 @@ impl Network {
         self.line_day.push(0);
         self.line_hand.push(false);
         self.line_one_way.push(false);
+        self.line_limit.push(0);
     }
     fn claim_node(&mut self, id: u32) {
         while self.node_alive.len() <= id as usize {
@@ -1098,6 +1103,7 @@ impl Network {
                 day: self.line_day[i],
                 hand: self.line_hand[i],
                 one_way: self.line_one_way[i],
+                limit: self.line_limit[i],
             }
         })
     }
@@ -1285,6 +1291,12 @@ impl Network {
     /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817).
     pub fn line_top(&self, l: u32) -> f64 {
         if self.line_fast[l as usize] { V_HSR } else { V_TOP }
+    }
+    /// A line's trains' top speed under the player's limit for the line (T-2987), m/s.
+    pub fn line_run_top(&self, l: u32) -> f64 {
+        let lim = self.line_limit[l as usize];
+        let top = self.line_top(l);
+        if lim == 0 { top } else { top.min(lim as f64 / 3.6) }
     }
     /// Edge ends at a node that are not crossovers and pass `keep`. A crossover pays for its own
     /// turnouts (T-338), so the nodes at its ends are priced as junctions only with three others.
@@ -1493,6 +1505,7 @@ impl Network {
                 self.line_fast[i] = d.fast;
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
                 self.line_one_way[i] = d.one_way;
+                self.line_limit[i] = d.limit;
                 self.line_bus[i] = d.bus;
                 self.line_ferry[i] = d.ferry;
                 self.line_group[i] = d.group;
@@ -1508,6 +1521,7 @@ impl Network {
                 self.line_day[i] = 0;
                 self.line_hand[i] = false;
                 self.line_one_way[i] = false;
+                self.line_limit[i] = 0;
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;

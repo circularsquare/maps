@@ -524,6 +524,12 @@ The round trip split into running, dwell, turning and waiting,
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); run both ways, its trains steppers move by 2 and the count's hover says how many run each way; the
   stop count under the name counts the first stop once.
+  **Top speed** [T-2987]: a rail line's panel has, under the round trip block and above the line improvements, a
+  "Top speed" row with the fastest its trains reach on the route (the most of `line_stretch_speeds`' reached
+  figures) and a mini "Limit" toggle beside it. On, a "Speed limit" row appears with a stepper (steps of 10 km/h,
+  from 40 up to the train kind's top speed, 160 or 320), starting at the current top speed rounded down; off, the line
+  has no limit. The limit is saved with the line and copies with a train-to-train schedule paste (with the train
+  length and kind). Bus and ferry lines have none.
 - A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].
 

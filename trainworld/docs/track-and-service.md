@@ -780,6 +780,12 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   high-speed track meets ordinary track the train brakes to 160 before the joint as for a curve.
   The line panel's stop times carry a hover with the top speed reached from the stop before and
   what limits it (the trains, ordinary track, curves or a crossover; `TrackApi.line_stretch_speeds`).
+  **A line's speed limit** (T-2987; Anita 2026-11-10, for realism on metro lines): a rail line may carry a limit,
+  40 km/h up to its kind's top speed in whole km/h (`LineData::limit`, 0 none; `TrackApi.set_line_limit`), that
+  takes the place of the trains' top speed in `build_run` (`Network::line_run_top`, the lowest of curve, track cap and
+  this), so run times, round trip, fleet for headway lines, capacity and demand all follow; the stop-time hover
+  names it as "the trains". Saved in the `LSL1` block (count, then line index and km/h), save level 13; old saves load
+  with none. Bus and ferry lines ignore it.
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,

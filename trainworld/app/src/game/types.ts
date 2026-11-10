@@ -209,6 +209,8 @@ export interface LineStats {
   loop: "circle" | "balloon" | null;
   /** T-2981: a loop that runs one way, round in the direction it was drawn, with all its trains */
   oneWay: boolean;
+  /** T-2987: the player's speed limit for the line's trains, km/h; 0 for none */
+  limit: number;
   /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
    * never in the save's stations); absent for a rail line */
   bus?: import("../workers/protocol").ClockBus;

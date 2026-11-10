@@ -487,6 +487,7 @@ body.resizing, body.resizing * { user-select: none; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
 .line-stop-actions { justify-content: flex-start; margin-top: 12px; }
+.top-speed .val .btn { margin-left: 8px; }
 .improvements { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .improvements .improve { height: auto; min-height: 28px; padding: 3px 8px; grid-auto-flow: row; gap: 0; max-width: 100%; white-space: normal; text-align: center; }
 .improve-price { font-size: 0.85em; color: var(--muted); }

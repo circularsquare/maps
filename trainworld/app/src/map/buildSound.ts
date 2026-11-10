@@ -27,7 +27,7 @@ function soundOf(i: Intent): BuildSound | null {
       const s = world.peek()?.save.stations.find((x) => x.num === i.node);
       return s && s.length !== i.platform ? "pop" : null;
     }
-    case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast": case "lineOneWay":
+    case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast": case "lineOneWay": case "lineLimit":
     case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "orderStops": case "sortStops": case "removeLine": case "copyLine": case "lineGroup":
     case "busSpacing": case "busHand": case "busHandStop": // T-2940: a bus line's stops, as a train line's
     case "doubleUp": case "addPoint": case "edgeLevel": case "edgesLevel": case "edgesHsr": case "flying":

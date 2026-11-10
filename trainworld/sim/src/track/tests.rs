@@ -32,7 +32,7 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -1339,6 +1339,29 @@ fn high_speed_trains_reach_320_only_on_high_speed_track() {
     let (w, l) = hsr_world([false, false], true);
     assert!((top_kmh(&w, l, 0.0, 80000.0) - 160.0).abs() < 1e-6);
     assert_eq!(w.svc.lines[l as usize].runs[0].free.duration, slow);
+}
+
+#[test]
+fn a_line_speed_limit_caps_its_trains_and_saves() {
+    let (mut w, l) = hsr_world([true, true], true);
+    let free = w.svc.lines[l as usize].round_trip;
+    let set = |w: &mut TrackWorld, kmh: u16| {
+        let mut d = w.net.line_data(l).unwrap();
+        d.limit = kmh;
+        w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
+    };
+    set(&mut w, 120);
+    assert!((top_kmh(&w, l, 0.0, 80000.0) - 120.0).abs() < 1e-6);
+    let slow = w.svc.lines[l as usize].round_trip;
+    assert!(slow[HIGH] > free[HIGH] * 1.5, "{slow:?} against {free:?}");
+    let bytes = super::save::encode(&w.net);
+    assert!(bytes.windows(4).any(|x| x == b"LSL1"));
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert_eq!(back.net.line_limit[l as usize], 120);
+    assert_eq!(super::save::encode(&back.net), bytes);
+    set(&mut w, 0);
+    assert!(!super::save::encode(&w.net).windows(4).any(|x| x == b"LSL1"));
+    assert_eq!(w.svc.lines[l as usize].round_trip, free);
 }
 
 #[test]

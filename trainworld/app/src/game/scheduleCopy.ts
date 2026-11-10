@@ -18,6 +18,8 @@ export interface ScheduleCopy {
   trains: Levels;
   cars: number;
   fast: boolean;
+  /** T-2987: the line's speed limit, km/h, 0 for none; absent in a copy made before it, which leaves a line's limit alone */
+  limit?: number;
   /** T-2919: what the line runs; absent in a copy made before it, a train line's */
   vehicle?: "train" | "bus" | "boat";
 }
@@ -46,6 +48,7 @@ export const scheduleOf = (l: LineInput, st: LineStats): ScheduleCopy => ({
   trains: trainsShown(l.id) ?? (st.trainsNeeded as Levels),
   cars: Math.max(1, st.cars),
   fast: st.fast,
+  limit: st.limit,
   vehicle: vehicleOf(st),
 });
 
@@ -86,6 +89,7 @@ export async function pasteSchedule(l: LineInput, st: LineStats) {
   // T-2919: train length and kind only from a train line to a train line
   const whole = wholeCopy(c, st);
   if (whole && c.fast !== st.fast && !(await edit({ op: "lineFast", line: l.num, fast: c.fast }, false, true)).ok) return;
+  if (whole && c.limit !== undefined && c.limit !== st.limit && !(await edit({ op: "lineLimit", line: l.num, kmh: c.limit }, false, true)).ok) return;
   const fit = whole ? carsCap(l) : null;
   const cap = fit?.cap ?? c.cars;
   const cars = Math.min(c.cars, cap);

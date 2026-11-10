@@ -3676,6 +3676,8 @@ function apply(op: EditOp): Applied {
       return { r: a.set_line_fast(op.line, op.fast) };
     case "lineOneWay":
       return { r: a.set_line_one_way(op.line, op.oneWay) };
+    case "lineLimit":
+      return { r: a.set_line_limit(op.line, op.kmh) };
     case "lineGroup":
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
     case "groupName":

@@ -8,6 +8,8 @@ A train goes as fast as the slowest thing in front of it. That is its own top sp
 
 **Speeding up and stopping.** Trains speed up in three bands. They pull hardest at low speed and ease off as they go faster, like a real electric train. Only a high-speed train reaches the last band. Braking is gentler than pulling away: {{sim/src/track/params.rs:BRAKE}} m/s². A train waits at each stop for about {{sim/src/track/params.rs:DEFAULT_DWELL_S|0}} seconds.
 
+**Speed limit.** You can also cap a line at a speed of your own, anywhere below its train's top speed. Its trains then go no faster than that anywhere on the route, and the round trip grows to match.
+
 So stations close together mean slow lines, because the train spends its time speeding up and braking. A fast train gains most on long gaps between stops.
 
 **Joins.** The whole train has to be under a limit before it may speed up again, so a train brakes before the joint where fast track meets slower track, just as it does before a bend.
