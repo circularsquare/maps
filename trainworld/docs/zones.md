@@ -138,6 +138,14 @@ Three rules after the merge, in every country (T-1984):
   country's own figure): such zones parked on their own figures (Muong Nhe, Con Dao, Whyalla). A zone of
   **10,000** or more that touches no unit of its region by land but dead space, so can join nothing, stays a
   zone (`CUT_OFF_MIN`, T-1999: Vieques with Culebra, Nantucket, Aland, Ceuta, Gorazde, Trebinje).
+
+**One piece of land** (T-3012, every country, metros and zones): two units are one piece when they lie within **500 m**
+(`TOUCH_M`) or within 50 km with less than 30% of the line between them over other units' or packs' land (water or dead
+space between: islands, archipelagos); a unit's own exclaves stay with it. A metro's units (`assign`) in more than one piece
+are bridged by the free units touching two pieces with **25%** of their people in the metro's area (`BRIDGE_SHARE`, the
+biggest first; Mansoura takes Sinbillawin), else the piece with fewer people goes back to the free units. A zone in more than
+one piece (after the packs are cut out, `mend_zones`) sends each smaller piece whole to the zone it touches longest that stays
+within the cap, else makes it a zone of its own. `checks/split_zones.py` lists what is left, in the built rows.
 A replan of the metros keeps zone rows as
 they are. Countryside zones use the zone curve (section 4) and global sources only, unless their
 country's zone rule names its module (the US, below; China's zones take the `china` module, so their

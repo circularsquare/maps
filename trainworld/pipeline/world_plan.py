@@ -1118,7 +1118,84 @@ def densest(units, taken):
     return best[1]
 
 
-def assign(ms, units, taken):
+# T-3012: a zone or metro is one piece of land. Units (or a unit's whole land: its own exclaves stay with it) join
+# into a piece when they lie within TOUCH_M, or within ARCHIPELAGO_KM with no other unit's land across the line
+# between them (water, dead space); a line over other land by LAND_CROSS of its length is a break
+TOUCH_M = 500.0
+LAND_CROSS = 0.3
+BRIDGE_SHARE = 0.25  # a free unit with this share of its people in a metro's area may join it to close a break
+
+
+class Land:
+    """All the land a piece's line may run over: [(key, geometry)] with a tree."""
+    def __init__(self, pairs):
+        self.keys = [k for k, _ in pairs]
+        self.geoms = [g for _, g in pairs]
+        self.tree = STRtree(self.geoms) if pairs else None
+
+
+def land_pieces(nodes, others, reach_m=None):
+    """[[node ids]] of `nodes` ({id: geometry}, metres), biggest piece first (most nodes, ties by area), the nodes joined as
+    described above; `others`: a Land of all other land, a node's own key skipped."""
+    ids = list(nodes)
+    if len(ids) < 2:
+        return [ids]
+    reach_m = ARCHIPELAGO_KM * 1000 if reach_m is None else reach_m
+    geoms = [nodes[i] for i in ids]
+    root = list(range(len(ids)))
+
+    def find(a):
+        while root[a] != a:
+            root[a] = root[root[a]]
+            a = root[a]
+        return a
+    mine = set(ids)
+    for a, b in zip(*STRtree(geoms).query(geoms, predicate="dwithin", distance=reach_m)):
+        a, b = int(a), int(b)
+        if a >= b or find(a) == find(b):
+            continue
+        d = geoms[a].distance(geoms[b])
+        if d > TOUCH_M and others is not None and others.tree is not None:
+            from shapely.ops import nearest_points
+            line = shapely.LineString(nearest_points(geoms[a], geoms[b]))
+            over = sum(line.intersection(others.geoms[int(k)]).length for k in others.tree.query(line, predicate="intersects")
+                       if others.keys[int(k)] not in mine)
+            if over >= LAND_CROSS * d:
+                continue
+        root[find(a)] = find(b)
+    by = collections.defaultdict(list)
+    for k, i in enumerate(ids):
+        by[find(k)].append(i)
+    return sorted(by.values(), key=lambda m: (-len(m), -sum(nodes[i].area for i in m)))
+
+
+def bridge_metro(key, mine, free, others):
+    """T-3012: the units `mine` of a metro in more than one piece, closed by the free units touching two pieces that have
+    BRIDGE_SHARE of their people in its area (biggest share first); the pieces still apart then are not the metro's:
+    (units to add, units to give back)."""
+    add = []
+    while True:
+        nodes = {u.id: u.geom for u in mine + add}
+        pcs = land_pieces(nodes, others)
+        if len(pcs) < 2:
+            return add, []
+        sets = [shapely.union_all([nodes[i] for i in pc]) for pc in pcs]
+        cand = []
+        for u in free:
+            sh = u.share.get(key, 0.0)
+            if sh >= BRIDGE_SHARE and u.id not in nodes and sum(u.geom.distance(g) <= TOUCH_M for g in sets) >= 2:
+                cand.append((sh, u))
+        if not cand:
+            break
+        add.append(max(cand, key=lambda t: t[0])[1])
+    # no bridge: the piece with the most people stays
+    pop = {u.id: u.pop for u in mine + add}
+    pcs.sort(key=lambda pc: -sum(pop[i] for i in pc))
+    drop = {i for pc in pcs[1:] for i in pc}
+    return [u for u in add if u.id not in drop], [u for u in mine if u.id in drop]
+
+
+def assign(ms, units, taken, bridge=True):
     """Units to metros (free units with half their people in a metro's area, the larger share
     winning), metros with none taking the unit at their area's densest free pixel."""
     owner, out, dropped = {}, collections.defaultdict(list), []
@@ -1130,6 +1207,19 @@ def assign(ms, units, taken):
         if f >= UNIT_SHARE:
             owner[u.id] = key
             out[key].append(u)
+    if bridge:  # T-3012: a metro is one piece of land
+        others = Land([(u.id, u.geom) for u in units])
+        for key in [k for k, v in out.items() if len(v) > 1]:
+            add, back = bridge_metro(key, out[key], [u for u in units if u.id not in owner and u.px is not None
+                                                     and tk(u) < UNIT_SHARE], others)
+            for u in add:
+                owner[u.id] = key
+            for u in back:
+                owner.pop(u.id, None)
+            if add or back:
+                out[key] = [u for u in out[key] if u.id not in {b.id for b in back}] + add
+                log(f"  {key}: in pieces, {len(add)} units bridge it ({', '.join(u.name for u in add)}), "
+                    f"{len(back)} given back ({', '.join(u.name for u in back)})")
     for m in ms:
         if out.get(m["key"]):
             continue
@@ -2551,6 +2641,57 @@ CARRY_RELAX = ("drive_factor_median", "water_points_in_water", "university_rate"
 CARRY_IF_NO_SMALLER = ("mean_commute_km",)
 
 
+def mend_zones(groups, zby, pk, cap):
+    """T-3012: every zone one piece of land. `groups` {lead: [group ids]} in place: each zone's pieces (land_pieces over its
+    groups, cut by the packs) but the one with the most people move whole to the zone they touch with the longest border
+    that stays within `cap`, else become a zone of their own. Lines for the plan's merge log."""
+    cuts = [q["geom"] for q in pk.values()]
+    ctree = STRtree(cuts) if cuts else None
+    land = Land([(i, u.geom) for i, u in zby.items()] + [(("pack", k), g) for k, g in enumerate(cuts)])
+
+    def cut(i):
+        g = zby[i].geom
+        hit = [cuts[int(k)] for k in ctree.query(g, predicate="intersects")] if ctree is not None else []
+        return polygonal(g.difference(union_all(hit))) if hit else g
+    geo = {i: cut(i) for ids in groups.values() for i in ids}
+    out = []
+    for i, g in geo.items():  # a pack cutting through one unit leaves it in parts that no move of whole units mends
+        if g is not zby[i].geom and shapely.get_num_geometries(g) > 1:
+            parts = {k: p for k, p in enumerate(shapely.get_parts(g)) if p.area > 1e6}
+            if len(land_pieces(parts, land)) > 1:
+                out.append(f"  {zby[i].name}: cut in pieces by a pack, which only a regroup of its zone mends (T-3012)")
+    tot = {lead: sum(zby[i].free for i in ids) for lead, ids in groups.items()}
+    for lead in list(groups):
+        ids = [i for i in groups[lead] if not geo[i].is_empty]
+        pcs = land_pieces({i: geo[i] for i in ids}, land)
+        if len(pcs) < 2:
+            continue
+        pcs.sort(key=lambda pc: -sum(zby[i].free for i in pc))
+        for pc in pcs[1:]:
+            groups[lead] = [i for i in groups[lead] if i not in pc]
+            n = sum(zby[i].free for i in pc)
+            tot[lead] -= n
+            g = union_all([geo[i] for i in pc]).buffer(TOUCH_M)
+            best = None
+            for other, oids in groups.items():
+                if other == lead or tot[other] + n > cap:
+                    continue
+                b = g.intersection(union_all([geo[i] for i in oids if not geo[i].is_empty])).area if oids else 0.0
+                if b > 0 and (best is None or b > best[0]):
+                    best = (b, other)
+            names = ", ".join(zby[i].name for i in pc[:3])
+            if best:
+                groups[best[1]] += pc
+                tot[best[1]] += n
+                out.append(f"  {zby[lead].name}: {names} ({n:,.0f}) apart from its zone, moved to {zby[best[1]].name} (T-3012)")
+            else:
+                new = max(pc, key=lambda i: zby[i].free)
+                groups[new] = list(pc)
+                tot[new] = n
+                out.append(f"  {zby[lead].name}: {names} ({n:,.0f}) apart from its zone, touching no zone within {cap:,}: a zone of its own (T-3012)")
+    return out
+
+
 def cut_off(zunits, region, ids, dead=()):
     """T-1999: whether the zone of units `ids` touches no other unit of its region by land but `dead` space: an
     island, an exclave (Ceuta, Gorazde) or a town ringed by dead units (Trebinje); a unit any row or pack holds
@@ -2803,6 +2944,7 @@ def plan_zones(isos3, out_path=None, replan=False):
                     ids.remove(i)
                     dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "scattered": True})
                     lines.append(f"  {by[i].name}: towns over {SCATTER_KM:g} km from the rest of its zone, dead space")
+        lines += mend_zones(groups, zby, pk, cap)
         alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN)
         if alone_min:  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < alone_min]:
@@ -2829,12 +2971,6 @@ def plan_zones(isos3, out_path=None, replan=False):
             cut = [q["geom"] for q in pk.values() if q["geom"].intersects(g)]
             if cut:
                 g = polygonal(g.difference(union_all(cut)))
-            if rule.get("contiguous"):
-                parts = sorted(shapely.get_parts(g), key=lambda p: -p.area)
-                far = [p for p in parts[1:] if p.distance(parts[0]) > WATER_GAP_KM * 1000 and p.area > 1e6]
-                if far:
-                    log(f"  {us[0].name}: {len(far)} parts over {WATER_GAP_KM:g} km from its main part "
-                        f"({sum(p.area for p in far) / 1e6:,.0f} km2; a unit's own exclave or a pack's cut)")
             ll = to_ll(g)
             def densest(units):
                 best = None

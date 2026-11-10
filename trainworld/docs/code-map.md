@@ -779,6 +779,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `checks/t2257_links.py` (every pack with two parts or more, its extracts read again: the packs whose
   parts the current rule changes, and each part joined to another by a bridge, tunnel or causeway in
   OSM, by car, path or rail; 230 extracts, about 1 h 40 min on 4 readers).
+- `checks/split_zones.py` (T-3012; read-only, about 4 minutes on one core): every registered zone's land read from its
+  `boundary.geojson`, the zones in more than one piece on land listed with the zones that touch each piece and the zones
+  standing in the gap, into `artifacts/trainworld/split-zones.json`; slivers, water gaps and foreign exclaves ignored
+  (the docstring has the rules); exit 1 when a piece of 20 km2 or more lies 2 km or more from the rest.
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the
