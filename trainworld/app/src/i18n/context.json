@@ -240,8 +240,6 @@
   "buildTab.bus": "Label of the Bus tool button in the Build tab.",
   "buildTab.ferryTip": "Hover of the Ferry tool button in the Build tab. key: the keyboard shortcut, one capital letter, e.g. \"F\".",
   "buildTab.ferry": "Label of the Ferry tool button in the Build tab.",
-  "buildTab.tram": "Button in the Build tab that picks the track tool with tram track.",
-  "buildTab.tramTip": "Hover of the Tram button in the Build tab.",
   "busDraw.tagFar": "Tag next to the cursor in the bus line tool when the pointer is too far from any road.",
   "busDraw.tagPath": "Tag next to the cursor in the bus line tool when no road joins two points.",
   "busDraw.tagLong": "Tag next to the cursor in the bus line tool when two points are too far apart for one road leg.",

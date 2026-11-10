@@ -74,6 +74,7 @@ export const diagramWidth = signal((() => {
     return Number.isFinite(v) && v >= WIDTH_MIN && v <= WIDTH_MAX ? v : WIDTH_MIN;
   } catch { return WIDTH_MIN; }
 })());
+export const DIAGRAM_KEY = "m";
 /** a pitch this many CSS px when the diagram first opens */
 const START_PITCH_PX = 7;
 /** a pointer within this many CSS px of a pill or line is on it */
@@ -689,7 +690,13 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (keyIsTheirs(e) || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     const k = e.key.toLowerCase();
     // a build key goes back to the map, where main.ts's keys do the rest
-    if (diagramShown.peek() && BUILD_KEYS.has(k)) diagramShown.value = false;
+    if (diagramShown.peek() && BUILD_KEYS.has(k)) {
+      diagramShown.value = false;
+      return;
+    }
+    if (k !== DIAGRAM_KEY) return;
+    e.preventDefault();
+    diagramShown.value = !diagramShown.peek();
   });
 
   saver = () => {

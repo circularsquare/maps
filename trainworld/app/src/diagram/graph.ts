@@ -32,7 +32,7 @@ function below(c: Float64Array, v: number): number {
   return lo;
 }
 
-export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string; fast?: boolean }
+export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string; fast?: boolean; tram?: boolean; oneWay?: boolean; loopKind?: number }
 export interface GraphEdge { id: number; a: number; b: number }
 
 export interface DiagramGraph {
@@ -68,6 +68,10 @@ export interface DiagramLine {
   colour: string;
   /** high-speed trains (T-817), drawn with a centre stripe (T-2272) */
   fast?: boolean;
+  /** a tram line (T-3008): drawn thinner, with two wires */
+  tram?: boolean;
+  /** a loop run one way (T-2981), drawn with chevrons */
+  oneWay?: boolean;
   /** the nodes it runs through in order, first stop to last */
   chain: Int32Array;
   /** per chain entry, 1 where the line stops */
@@ -202,7 +206,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length >= 1 && l.stops.length >= 2);
   /** per line: its chain, and per chain entry the range of its path the hops either side run on: the hop
    * from entry i to i + 1 runs on path[lo[i]] to path[hi[i + 1]] */
-  type Out = { id: number; colour: string; fast: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[]; at: number[] };
+  type Out = { id: number; colour: string; fast: boolean; tram: boolean; oneWay: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[]; at: number[] };
   const out: Out[] = [];
   /** met: arc, node, lo, hi */
   const met: number[] = [];
@@ -246,7 +250,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     let i0 = stop.indexOf(1), i1 = stop.lastIndexOf(1);
     if (i0 < 0) continue;
     const cut = <T>(v: T[]) => v.slice(i0, i1 + 1);
-    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi), at: cut(at) });
+    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, tram: !!l.tram, oneWay: !!l.oneWay && l.loopKind === 1, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi), at: cut(at) });
   }
 
   // nodes on some kept chain only, numbered again in order of their keys
@@ -273,7 +277,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     // local y points south
     y[i] = -(py[i] - my) / k;
   });
-  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
+  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.oneWay ? { oneWay: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
   const em = new Map<number, number[]>();
   /** per edge, per line on it, the track edges its hops there run on */
   const runs = new Map<number, Map<number, Set<number>>>();
@@ -317,7 +321,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     const find = (q: number): number => (up[q] === q ? q : (up[q] = find(up[q])));
     for (let a = 0; a < here.length; a++) for (let b = a + 1; b < here.length; b++) {
       const la = dl[here[a]], lb = dl[here[b]];
-      if (la.colour !== lb.colour || !!la.fast !== !!lb.fast || !sameTrack(r.get(here[a])!, r.get(here[b])!)) continue;
+      if (la.colour !== lb.colour || !!la.fast !== !!lb.fast || !!la.tram !== !!lb.tram || !!la.oneWay !== !!lb.oneWay || !sameTrack(r.get(here[a])!, r.get(here[b])!)) continue;
       const ra = find(a), rb = find(b);
       if (ra !== rb) up[Math.max(ra, rb)] = Math.min(ra, rb);
     }

@@ -1,7 +1,7 @@
 // The Build tab: the tools and the blueprint quote. The track and station tools' options are on the
 // map while the tool is on (ToolBar.tsx, T-2282).
 
-import { setTrackType, tool, tramTrack } from "../game/ui";
+import { tool } from "../game/ui";
 import { t } from "../i18n";
 import { Icon } from "./widgets";
 import { BlueprintControls, BlueprintPick } from "./Blueprint";
@@ -12,24 +12,17 @@ import { live } from "../map/live";
 /** The building tools, then the blueprint's quote and construction. */
 export function BuildTab() {
   const cur = tool.value;
-  const tram = tramTrack.value;
   return (
     <>
       <div class="build-options">
         <div class="group tool-pick">
           {TOOLS.map(([id, label, I, key, title]) => (
-            <button class={"btn text" + (cur === id && !(tram && id === "track") ? " on" : "")} data-guide={id === "track" ? "track" : id === "station" ? "stations" : undefined} data-tip={title.replace(/\n|$/, ` (${key})$&`)} onClick={() => pickTool(id)}>
+            <button class={"btn text" + (cur === id ? " on" : "")} data-guide={id === "track" ? "track" : id === "station" ? "stations" : undefined} data-tip={title.replace(/\n|$/, ` (${key})$&`)} onClick={() => pickTool(id)}>
               <I />
               <span class="tool-label">{label}</span>
               <span class="key muted">{key}</span>
             </button>
           ))}
-          {/* T-2926: the track tool with Tram picked as its type */}
-          <button class={"btn text tool-tram" + (cur === "track" && tram ? " on" : "")} data-tip={t("buildTab.tramTip")}
-            onClick={() => (cur === "track" && tram ? live.tools?.exit() : (live.tools?.exit(), setTrackType("tram"), (tool.value = "track")))}>
-            <Icon.tram />
-            <span class="tool-label">{t("buildTab.tram")}</span>
-          </button>
           {/* T-1514: the bus tool, also on the Lines tab; it starts a new line, so it is no TOOLS entry */}
           <button class={"btn text tool-bus" + (cur === "bus" ? " on" : "")} data-tip={t("buildTab.busTip", { key: BUS_KEY.toUpperCase() })}
             onClick={() => (cur === "bus" ? live.tools?.exit() : newBusLine())}>

@@ -21,6 +21,16 @@ export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
 export const SMALL_R = 0.5, SMALL_OUTLINE = 0.24;
 /** a high-speed line's centre stripe, in the background colour, this share of its stroke (T-2272) */
 const FAST_CORE = 0.34;
+/** a tram line's width, in rail strokes (the map's tram track is thinner too; its chevrons are 0.75, map/network.ts) */
+const TRAM_W = 0.75;
+/** a tram's two wires, as on the map (rendererShaders.ts): each this share of the tram's width across, its middle
+ * this share either side of the centre; none drawn where the tram is under TRAM_WIRE_MIN_PX wide */
+const WIRE_OFF = 0.17, WIRE_SHARE = 0.11, TRAM_WIRE_MIN_PX = 5;
+/** the wires' colour: the map's ink, as the map draws them (T-2927) */
+const tramWire = (theme: DiagramTheme): string => theme.ink;
+/** a one-way loop's chevrons (T-2991, the map's white ones), one every CHEVRON_GAP strokes along its ribbon, its
+ * arms CHEVRON_ARM strokes long, drawn from CHEVRON_MIN_PX a stroke wide */
+const CHEVRON_GAP = 5, CHEVRON_ARM = 0.34, CHEVRON_LINE = 0.15, CHEVRON_MIN_PX = 4.5, CHEVRON_COLOUR = "#ffffff";
 /** stop points of one station this many pitches apart or nearer share a pill */
 const PILL_JOIN = 1.6;
 /** stops this many pitches apart or nearer share a pill when no line crosses between them */
@@ -45,7 +55,7 @@ export interface Drawing {
   casing?: number;
   /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
    * on the page when first painted */
-  lines: { colour: string; fast: boolean; cmds: Float64Array; path?: Path2D }[];
+  lines: { colour: string; fast: boolean; tram?: boolean; oneWay?: boolean; cmds: Float64Array; path?: Path2D }[];
   /** per line, its index in the graph's lines */
   lineOf: number[];
   /** per line, its drawn ribbon sampled: x, y pairs (the names keep off them) */
@@ -413,7 +423,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
     if (!cmds) return;
-    lines.push({ colour: Vs[li][0].colour, fast: !!Vs[li][0].fast, cmds });
+    lines.push({ colour: Vs[li][0].colour, fast: !!Vs[li][0].fast, ...(Vs[li][0].tram ? { tram: true } : {}), ...(Vs[li][0].oneWay ? { oneWay: true } : {}), cmds });
     ribbons.push(Float64Array.from(r.pts));
     lineOf.push(li);
     const V = Vs[li][1], at = new Int32Array(r.vi.length);
@@ -659,15 +669,55 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
       ctx.stroke((l.path ??= toPath(l.cmds)));
     }
     ctx.strokeStyle = l.colour;
-    const thin = width(d.stroke, 1);
+    const sw = d.stroke * (l.tram ? TRAM_W : 1), thin = width(sw, 1);
     ctx.stroke((l.path ??= toPath(l.cmds)));
     ctx.globalAlpha = 1;
+    // a tram: its two wires, a band of the wire colour either side of the middle, its line's colour between and over them
+    if (l.tram && sw * scale >= TRAM_WIRE_MIN_PX) {
+      const hw = Math.max(WIRE_SHARE * sw, 0.7 / scale) / 2, off = WIRE_OFF * sw;
+      if (off > hw) {
+        ctx.strokeStyle = tramWire(theme);
+        ctx.lineWidth = 2 * (off + hw);
+        ctx.stroke(l.path);
+        ctx.strokeStyle = l.colour;
+        ctx.lineWidth = 2 * (off - hw);
+        ctx.stroke(l.path);
+      }
+    }
+    if (l.oneWay && !thin && sw * scale >= CHEVRON_MIN_PX) chevrons(i, sw);
     // a high-speed line: two strokes of its colour either side of a stripe of the background
     if (l.fast && !thin) {
       ctx.strokeStyle = theme.bg;
       ctx.lineWidth = d.stroke * FAST_CORE;
       ctx.stroke(l.path);
     }
+  };
+  /** a one-way loop's chevrons along its ribbon, pointing the way it runs (its chain's order) */
+  const chevrons = (i: number, sw: number) => {
+    const r = d.ribbons[i];
+    if (!r) return;
+    const gap = CHEVRON_GAP * d.stroke, arm = CHEVRON_ARM * sw;
+    ctx.strokeStyle = CHEVRON_COLOUR;
+    ctx.lineWidth = CHEVRON_LINE * sw;
+    ctx.beginPath();
+    let next = gap / 2;
+    for (let j = 0, run = 0; j + 3 < r.length; j += 2) {
+      const dx = r[j + 2] - r[j], dy = r[j + 3] - r[j + 1], len = hyp(dx, dy);
+      if (!(len > 0)) continue;
+      const ux = dx / len, uy = dy / len;
+      for (; run + len >= next; next += gap) {
+        const t = next - run, x = r[j] + ux * t, y = r[j + 1] + uy * t;
+        // the arms trail behind the tip, a quarter turn either side of back
+        ctx.moveTo(x - ux * arm - uy * arm, y - uy * arm + ux * arm);
+        ctx.lineTo(x + ux * arm * 0.5, y + uy * arm * 0.5);
+        ctx.lineTo(x - ux * arm + uy * arm, y - uy * arm - ux * arm);
+      }
+      run += len;
+    }
+    ctx.lineCap = "butt";
+    ctx.stroke();
+    ctx.lineCap = "round";
+    ctx.globalAlpha = 1;
   };
   /** a stroke `w` wide at opacity `alpha`: under a device px, a px wide and fainter by as much, though never
    * below THIN_ALPHA of it, so no line vanishes far out (T-2408); whether it was */
@@ -685,7 +735,9 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     d.lines.forEach((l, i) => {
       if (full(i) || i === focus.hot) return;
       ctx.strokeStyle = l.colour;
+      if (l.tram) width(d.stroke * TRAM_W * MUTE_WIDTH, MUTE_ALPHA);
       ctx.stroke(l.path!);
+      if (l.tram) width(d.stroke * MUTE_WIDTH, MUTE_ALPHA);
     });
     ctx.globalAlpha = 1;
     for (const i of focus.lines) if (i !== focus.hot && d.lines[i]) ribbon(i, true);
