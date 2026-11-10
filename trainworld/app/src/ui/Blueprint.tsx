@@ -8,7 +8,7 @@ import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
-import { rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip } from "../game/rebuild";
+import { type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -240,9 +240,11 @@ export function BlueprintBar() {
   const chosenLevel = s.built ? rebuildLevel.value ?? s.level : s.level;
   const pickLevel = (l: Level) => { if (s.built) rebuildLevel.value = l; else void levelPicked(l); };
   const q = rebuildQuote.value;
-  const hsrOn = s.built && rebuildKind.value ? rebuildKind.value === "hsr" : s.regular === 0;
-  const regularOn = s.built && rebuildKind.value ? rebuildKind.value === "regular" : s.hsr === 0;
-  const pickType = (hsr: boolean) => { if (s.built) rebuildKind.value = hsr ? "hsr" : "regular"; else void hsrPicked(hsr); };
+  // T-3088: built tram track can become rail and rail tram; blueprint changes between rail kinds only
+  const trams = s.built ? s.tram : 0;
+  const typeOn = (k: RebuildKind) => s.built && rebuildKind.value ? rebuildKind.value === k
+    : k === "tram" ? trams > 0 && s.hsr + s.regular === 0 : trams === 0 && (k === "hsr" ? s.regular : s.hsr) === 0;
+  const pickType = (k: RebuildKind) => { if (s.built) rebuildKind.value = k; else void hsrPicked(k === "hsr"); };
   // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
   const keys = tool.value === "blueprint";
   const switchKey = SWITCH_PICK_KEY.toUpperCase();
@@ -257,14 +259,15 @@ export function BlueprintBar() {
             data-tip={s.level === null ? t("blueprint.levelMixed") : levelName(s.level)} aria-label={t("blueprint.level")} aria-expanded={levels}
             onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
         )}
-      {s.hsr + s.regular > 0 && (
+      {s.hsr + s.regular + trams > 0 && (
         <div class="group" role="group" aria-label={t("blueprint.trackType")}>
-          <button class={"btn" + (regularOn ? " on" : "")} onClick={() => pickType(false)}>{t("blueprint.regular")}</button>
-          <button class={"btn" + (hsrOn ? " on" : "")} data-tip={t("blueprint.hsrTip", { factor: HSR_TRACK })} onClick={() => pickType(true)}>{t("blueprint.highSpeed")}</button>
+          <button class={"btn" + (typeOn("regular") ? " on" : "")} onClick={() => pickType("regular")}>{t("blueprint.regular")}</button>
+          <button class={"btn" + (typeOn("hsr") ? " on" : "")} data-tip={t("blueprint.hsrTip", { factor: HSR_TRACK })} onClick={() => pickType("hsr")}>{t("blueprint.highSpeed")}</button>
+          {s.built && <button class={"btn" + (typeOn("tram") ? " on" : "")} onClick={() => pickType("tram")}>{t("toolBar.tram")}</button>}
         </div>
       )}
       {s.built && (
-        <button class="btn text" data-tip={rebuildTip(q)} disabled={!q || (!q.changed.length && !q.stations)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
+        <button class="btn text" data-tip={rebuildTip(q)} disabled={!q || (!q.changed.length && !q.stations && !q.refused.length)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
       )}
       {!s.built && (
         <div class="group">

@@ -229,6 +229,7 @@
   "blueprintPick.stationsPicked": "{built, select, true {{n, plural, other {建設済みの#駅}}} other {{n, plural, other {#駅}}}}",
   "blueprintPick.toHsr": "高速線路",
   "blueprintPick.toRegular": "通常の線路",
+  "blueprintPick.toTram": "トラムの線路",
   "blueprintPick.trackOf": "{built, select, true {建設済みの線路{length}} other {線路{length}}}",
   "blueprintStretches.endBuilt": "建設済みの線路",
   "blueprintStretches.endJunction": "分岐",

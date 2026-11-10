@@ -225,6 +225,7 @@
   "blueprintPick.levelTo": "Names the elevation in the blueprint notices (blueprintPick.cannotGo, setSome, setAll). level: \"+1\", \"0\" or \"−2\".",
   "blueprintPick.toHsr": "Names the track type in the blueprint notices (blueprintPick.setSome, setAll) after \"set to\".",
   "blueprintPick.toRegular": "Names the track type in the blueprint notices (blueprintPick.setSome, setAll) after \"set to\".",
+  "blueprintPick.toTram": "Names the track type after \"to\" in the rebuild hover, question and notices (rebuild.tip, rebuild.question, rebuild.done), beside blueprintPick.toRegular and toHsr.",
   "blueprintPick.cannotGo": "Error notice when changing the elevation of the picked blueprint track fails. n: how many pieces were picked; to: blueprintPick.levelTo, \"level +1\".",
   "blueprintPick.setSome": "Notice after changing the picked blueprint track when some pieces could not change. done: 3; n: 5; to: \"level +1\" or \"high-speed track\"; skipped: 2.",
   "blueprintPick.setAll": "Notice after changing the picked blueprint track. n: 5; to: \"level +1\" or \"high-speed track\".",

@@ -229,6 +229,7 @@
   "blueprintPick.stationsPicked": "{built, select, true {{n, plural, one {# построенная станция} few {# построенные станции} many {# построенных станций} other {# построенной станции}}} other {{n, plural, one {# станция} few {# станции} many {# станций} other {# станции}}}}",
   "blueprintPick.toHsr": "скоростной путь",
   "blueprintPick.toRegular": "обычный путь",
+  "blueprintPick.toTram": "трамвайный путь",
   "blueprintPick.trackOf": "{built, select, true {{length} построенного пути} other {{length} пути}}",
   "blueprintStretches.endBuilt": "построенный путь",
   "blueprintStretches.endJunction": "развилка",

@@ -196,10 +196,10 @@ export async function doubleUpPicked(pieces: number[]) {
  * elevation all of it is on (null when mixed or ramped). */
 export const pickedState = computed(() => {
   const w = world.value, p = bpPicked.value;
-  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0 };
+  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0, tram: 0 };
   const edges = new Map(w.edges.map((e) => [e.id, e]));
   const stations = stationsByNum(w);
-  let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0;
+  let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0, tram = 0;
   let level: Level | null | undefined;
   for (const id of p.edges) {
     const e = edges.get(id);
@@ -209,12 +209,14 @@ export const pickedState = computed(() => {
     const l = e.levelMin === e.levelMax ? e.levelMin : null;
     level = level === undefined || level === l ? l : null;
     if (canBeHsr(e)) e.hsr ? hsr++ : regular++;
+    else if (e.kind && !e.crossover) tram++;
   }
   for (const id of p.stations) (stations.get(id)?.off ? off++ : on++);
-  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular };
+  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular, tram };
 });
 
-/** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_hsr`, and T-3059's rebuild for built track): double, no crossover. */
+/** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_hsr`, and T-3059's rebuild for built track): double, no crossover.
+ * Built tram track (`tram` in `pickedState`) can be rebuilt as either, and rail as tram (T-3088). */
 const canBeHsr = (e: TrackEdge) => e.tracks === 2 && !e.crossover && !e.kind;
 
 /** Every blueprint piece switched off, for the Build tab. */

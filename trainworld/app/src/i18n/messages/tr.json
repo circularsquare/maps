@@ -229,6 +229,7 @@
   "blueprintPick.stationsPicked": "{built, select, true {{n, plural, one {# inşa edilmiş istasyon} other {# inşa edilmiş istasyon}}} other {{n, plural, one {# istasyon} other {# istasyon}}}}",
   "blueprintPick.toHsr": "yüksek hızlı ray",
   "blueprintPick.toRegular": "normal ray",
+  "blueprintPick.toTram": "tramvay rayı",
   "blueprintPick.trackOf": "{length} {built, select, true {inşa edilmiş ray} other {ray}}",
   "blueprintStretches.endBuilt": "yapılmış ray",
   "blueprintStretches.endJunction": "kavşak",

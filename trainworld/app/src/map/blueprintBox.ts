@@ -215,8 +215,8 @@ export class BlueprintBox {
       }
       this.overlay.renderer.setHighlight(strokesFromEdges(pts));
     }
-    // T-3059: the pieces a rebuild would refuse, in red over the pick
-    const refused = rebuildQuote.peek()?.refused ?? [];
+    // T-3059: the pieces a rebuild would refuse for their own sake, in red over the pick (T-3088)
+    const refused = rebuildQuote.peek()?.red ?? [];
     const rp: Float32Array[] = [];
     if (n && !bpHover.peek().length) for (const e of refused) {
       const a = n.edgePts.get(e);

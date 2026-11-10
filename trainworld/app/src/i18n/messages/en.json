@@ -225,6 +225,7 @@
   "blueprintPick.levelTo": "level {level}",
   "blueprintPick.toHsr": "high-speed track",
   "blueprintPick.toRegular": "regular track",
+  "blueprintPick.toTram": "tram track",
   "blueprintPick.cannotGo": "{n, plural, one {This track cannot go to {to}.} other {None of the # pieces can go to {to}.}}",
   "blueprintPick.setSome": "{done} of {n} pieces set to {to}. {skipped} could not change.",
   "blueprintPick.setAll": "{n, plural, one {# piece} other {# pieces}} set to {to}.",

@@ -14,9 +14,11 @@ import { ask } from "./ui";
 import { edit, say, world } from "./world";
 import { t, tList } from "../i18n";
 
+export type RebuildKind = "regular" | "hsr" | "tram";
+
 /** The level and track type chosen for the built pick; null keeps what the pieces have. */
 export const rebuildLevel = signal<Level | null>(null);
-export const rebuildKind = signal<"regular" | "hsr" | null>(null);
+export const rebuildKind = signal<RebuildKind | null>(null);
 
 export interface RebuildQuote {
   /** what it would cost, US$M: the full price of what changes, built new */
@@ -26,12 +28,14 @@ export interface RebuildQuote {
   stations: number;
   /** picked edges the track model would refuse */
   refused: number[];
+  /** of those, the ones refused for their own sake, drawn red; the rest would only change family alone (T-3088) */
+  red: number[];
 }
 
 /** The quote for the pick and choices now; null with nothing chosen, or while it is being worked out. */
 export const rebuildQuote = signal<RebuildQuote | null>(null);
 
-const KIND = { regular: 1, hsr: 2 } as const;
+const KIND = { regular: 1, hsr: 2, tram: 3 } as const;
 const version = computed(() => world.value?.version);
 
 let seq = 0;
@@ -46,21 +50,22 @@ effect(() => {
   }
   void queryClock({ what: "rebuildQuote", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0 }).then((d) => {
     if (mine !== seq || !d) return;
-    const refused = d[3];
+    const refused = d[3], red = d[4];
     rebuildQuote.value = {
       price: d[0],
-      changed: Array.from(d.subarray(4 + refused), Number),
+      changed: Array.from(d.subarray(5 + refused), Number),
       stations: d[2],
-      refused: Array.from(d.subarray(4, 4 + refused), Number),
+      refused: Array.from(d.subarray(5, 5 + refused), Number),
+      red: Array.from(d.subarray(5, 5 + red), Number),
     };
   });
 });
 
 /** What the pick would become, in words: "level +1 and high-speed track". */
-export function rebuildTo(level: Level | null, kind: "regular" | "hsr" | null): string {
+export function rebuildTo(level: Level | null, kind: RebuildKind | null): string {
   return tList([
     level === null ? "" : t("blueprintPick.levelTo", { level: levelLabel(level) }),
-    kind === null ? "" : t(kind === "hsr" ? "blueprintPick.toHsr" : "blueprintPick.toRegular"),
+    kind === null ? "" : t(kind === "hsr" ? "blueprintPick.toHsr" : kind === "tram" ? "blueprintPick.toTram" : "blueprintPick.toRegular"),
   ].filter(Boolean));
 }
 
@@ -84,10 +89,17 @@ export function rebuildTip(q: RebuildQuote | null): string {
   ].join("\n");
 }
 
-/** Ask, then rebuild the pick. A short purse, or terrain not loaded, is explained by the refusal. */
+/** Ask, then rebuild the pick. A short purse, or terrain not loaded, is explained by the refusal; so
+ * is a pick none of which can change, which is not asked about. */
 export function rebuildPicked() {
   const p = bpPicked.peek(), q = rebuildQuote.peek(), level = rebuildLevel.peek(), kind = rebuildKind.peek();
-  if (!p.built || !q || (!q.changed.length && !q.stations)) return;
+  if (!p.built || !q || (!q.changed.length && !q.stations && !q.refused.length)) return;
+  if (!q.changed.length && !q.stations) {
+    void edit({ op: "rebuild", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0 }).then((a) => {
+      if (!a.ok && !a.issues.length) say(t("rebuild.none"), true);
+    });
+    return;
+  }
   const n = p.edges.length + p.stations.length, to = rebuildTo(level, kind);
   const what = tList([
     q.changed.length ? t("blueprintPick.trackOf", { length: distance(lengthOf(q.changed)), built: true }) : "",

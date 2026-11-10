@@ -72,9 +72,9 @@ export type EditOp =
    * track, crossovers and constructed track are left out, counted in `skipped` */
   | { op: "edgesHsr"; edges: EdgeId[]; hsr: boolean }
   /** constructed track and stations changed in place to `level` (null: kept) and a track type (0 kept, 1 regular,
-   * 2 high speed), final and paid at the full new price (T-3059); pieces the track model refuses are left as
-   * they are, counted in `skipped` */
-  | { op: "rebuild"; edges: EdgeId[]; stations: NodeId[]; level: Level | null; kind: 0 | 1 | 2 }
+   * 2 high speed, 3 tram: T-3088), final and paid at the full new price (T-3059); pieces the track model refuses
+   * are left as they are, counted in `skipped` */
+  | { op: "rebuild"; edges: EdgeId[]; stations: NodeId[]; level: Level | null; kind: 0 | 1 | 2 | 3 }
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }

@@ -729,16 +729,20 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   or "Level of the selected track: mixed".
 - **Rebuild** [T-3059; `game/rebuild.ts`, `TrackApi::rebuild_quote` and `rebuild_pieces` in
   `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060]: a pick of built track and
-  stations has the same level buttons and Regular / High speed as a blueprint pick, but they only choose
-  (the chosen ones are solid; nothing is chosen at first), and a **Rebuild** button (wrench icon and word)
-  spends: it is greyed until a choice would change something. The track and the stations keep their ids,
-  so every line keeps its stops and path, stations keep their names and upgrades, and nothing is deleted.
-  The level is set as for blueprint (corners, and every node all of whose track is picked, a picked
-  station's node and platform edges with them; a node with unpicked track keeps its level and the piece ramps to
-  it), and Regular / High speed for double track only. A piece the track model refuses (no room to ramp
-  to unpicked track, a station left out of the pick, a crossing) is **refused**: the quote names it, the
-  map outlines it in red over the pick's band, and the hover and the question count it ("3 of 12 pieces
-  can't change"); it stays as it was. The price is the full price of the changed track, and of the
+  stations has the same level buttons and Regular / High speed as a blueprint pick, plus **Tram** (T-3088, the
+  track tool's word), but they only choose (the chosen ones are solid; nothing is chosen at first), and a
+  **Rebuild** button (wrench icon and word) spends: it is greyed until a choice is made. The track and the
+  stations keep their ids, so every line keeps its stops and path, stations keep their names and upgrades, and
+  nothing is deleted. The level is set as for blueprint (corners, and every node all of whose track is picked, a
+  picked station's node and platform edges with them; a node with unpicked track keeps its level and the piece
+  ramps to it), and the track type for double track only; rail made tram takes its stations (cut to 80 m tram
+  stops) and lines (now tram lines) with it, and tram made rail the other way. A piece the track model refuses
+  (no room to ramp to unpicked track, a station left out of the pick, a crossing, a curve too tight for trains,
+  tram track meeting rail) is **refused**: the quote names it, the map outlines it in red over the pick's band,
+  and the hover and the question count it ("3 of 12 pieces can't change"); it stays as it was, and the rest
+  ramps to it (T-3087). Pieces that stay only because they cannot change family alone are counted but not drawn
+  red. When nothing can change, Rebuild asks nothing and says why (the track model's refusal, such as "Tram track
+  and train track can't join. They can cross."). The price is the full price of the changed track, and of the
   stations whose level or type changed, built new at the new settings, with nothing back for what was there
   (Anita, 2026-11-10: "full new price, that feels more fair"); trains the longer round trips need are bought as
   for any edit. The hover shows the length and what it becomes, then the price; the question

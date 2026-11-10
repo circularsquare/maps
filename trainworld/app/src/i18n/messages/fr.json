@@ -229,6 +229,7 @@
   "blueprintPick.stationsPicked": "{built, select, true {{n, plural, one {# station construite} other {# stations construites}}} other {{n, plural, one {# station} other {# stations}}}}",
   "blueprintPick.toHsr": "en voie à grande vitesse",
   "blueprintPick.toRegular": "en voie classique",
+  "blueprintPick.toTram": "en voie de tramway",
   "blueprintPick.trackOf": "{built, select, true {{length} de voie construite} other {{length} de voie}}",
   "blueprintStretches.endBuilt": "voie construite",
   "blueprintStretches.endJunction": "une bifurcation",

@@ -324,8 +324,8 @@ impl TrackApi {
     /// Pieces that cannot change are left out and counted in `last_skipped`: constructed track, a
     /// crossover's diagonal, a piece with no corners whose ends cannot both move, and pieces the
     /// track model refuses on that level or that would make a flat crossing not there now. Those
-    /// are tried as groups (pieces joined through moving nodes), then a refused group's pieces with
-    /// corners one by one with their ends kept. Pieces already on the level are not counted. 1 when
+    /// leave the pick (the rest still move whole, ramping to them: T-3087), and those with corners are
+    /// tried last one by one with their ends kept. Pieces already on the level are not counted. 1 when
     /// nothing changed (the issues of the last refusal, if any).
     pub fn set_edges_level(&mut self, ids: &[u32], level: i8) -> u32 {
         let plan = self.plan_edges(ids, Some(level), None, false, &[]);

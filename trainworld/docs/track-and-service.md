@@ -1231,13 +1231,20 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   edge is constructed, a flat crossing when its second is.
   **Rebuilding constructed track** (T-3059, Anita 2026-11-10; `rebuild_pieces`, `rebuild_quote` in `wasm/rebuild.rs`):
   constructed edges and stations change level (as `set_edges_level` does for blueprint, a picked station
-  moving with its track) and double track changes between regular and high speed, in place, with the same edge,
-  node and station ids, so lines, names and upgrades stay and no train is removed. A piece the track model
-  refuses (a ramp with no room, a crossing, a station left out of the pick) is left as it was and reported by
-  the quote. It is one final edit (undo is cleared) that pays the full price of the changed edges and of the
-  picked stations whose level or type changed, as if built new at the new settings, with nothing back for the
-  old (`TrackWorld::apply_priced` sets the charge), plus the trains the lines then need. The Select tool's bar does
-  it ([ui-building.md](ui-building.md) "The Select tool").
+  moving with its track) and double track changes between regular, high speed and tram (T-3088), in place, with
+  the same edge, node and station ids, so lines, names and upgrades stay and no train is removed. The whole pick
+  is tried at once; a refusal blames the pieces its problems name (a ramp with no room, a crossing, a station
+  left out of the pick), which stay as they were while the rest changes whole, ramping only to them (T-3087).
+  Rail and tram never join, so a change of family takes whole stretches: a piece that would meet the other
+  family (track outside the pick, a crossover, single track, a refused piece) stays, and so does everything
+  joined to it that would then meet it; the quote names the pieces refused for their own sake apart, and only
+  those are drawn red. Stations on track that changes family get a platform their new kind allows (cut to a tram
+  stop's 80 m, or out to a rail station's 60 m), and lines on it become tram or train lines (`line_tram` reads
+  the first stop), losing high-speed trains and taking the new kind's dwell and turnaround where they had the old
+  kind's defaults. It is one final edit (undo is cleared) that pays the full price of the changed edges, of the
+  picked stations whose level or type changed and of every station whose track changed family, as if built new at
+  the new settings, with nothing back for the old (`TrackWorld::apply_priced` sets the charge), plus the trains
+  the lines then need. The Select tool's bar does it ([ui-building.md](ui-building.md) "The Select tool").
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
   **Disabled blueprint** (T-333): a blueprint edge or station can be switched off (`off` on
