@@ -1,6 +1,6 @@
 // T-973: the leaderboards, a centred modal opened by the trophy at the top of the Cities tab, beside
 // the achievements (`LeaderboardButton`, T-2179). Points only (Anita, 2026-10-23): the world board, then one per city, this
-// game's cities first and then the others that have rows. The top 50, the player's own row under
+// game's cities first and then the others that have rows. T-3116 country boards (`country_<cc>`, a game's city points summed over the country) sit in the same picker, found by the country's name. The top 50, the player's own row under
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
 // leaderboards. Each person once per board, with their best normal game (shonei-server's trainworld.go).
 
@@ -8,10 +8,11 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { normalise } from "../game/search";
 import { tPlace } from "../i18n/places";
 import { findStart } from "./NewGame";
-import { CITIES } from "../game/cities";
+import { CITIES, zoneCountry } from "../game/cities";
 import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, session, setBoard, type BoardRow } from "../game/account";
 import { exact } from "../game/format";
-import { t } from "../i18n";
+import { t, tCountry } from "../i18n";
+import { countryName } from "../i18n/intl";
 import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
@@ -19,6 +20,7 @@ import { CommunityButton } from "./Community";
 import { Icon } from "./widgets";
 
 export const WORLD = "points";
+const COUNTRY = "country_";
 const cityName = (id: string) => CITIES.find((c) => c.id === id)?.name ?? id;
 const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -26,7 +28,7 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name">{r.name}</span>
-    <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : cityName(board.slice(WORLD.length + 1)) }) + "\n" + t("leaderboard.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM })}>{t("leaderboard.value", { points: pointsShort(r.value) })}</span>
+    <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : board.startsWith(COUNTRY) ? countryLabel(board.slice(COUNTRY.length)) : cityName(board.slice(WORLD.length + 1)) }) + "\n" + t("leaderboard.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM })}>{t("leaderboard.value", { points: pointsShort(r.value) })}</span>
   </li>;
 }
 
@@ -52,22 +54,28 @@ function Join() {
 
 const MAX_SHOWN = 8;
 const shownName = (id: string) => tPlace(id, cityName(id));
+const countryLabel = (cc: string) => tCountry(cc.toUpperCase());
+/** T-3116: a country board is named for the country, in the player's language or in English. */
+const countryHit = (cc: string, q: string) => [countryLabel(cc), countryName("en", cc.toUpperCase())].some((n) => { const w = ` ${normalise(n)}`; return w.includes(` ${normalise(q)}`); });
+const boardLabel = (key: string) => key === WORLD ? t("leaderboard.world") : key.startsWith(COUNTRY) ? countryLabel(key.slice(COUNTRY.length)) : shownName(key.slice(WORLD.length + 1));
 
 /** T-2813: the board picker works as the new game's city search does: type, and every matching
  * board is listed (arrows and Enter to choose); with nothing typed it lists the world and this game's cities. `onPick`: Community's, in place of loading that board. */
-export function CityPick({ boardKey, mine, all, onPick }: { boardKey: string; mine: string[]; all: ReadonlySet<string>; onPick?: (key: string) => void }) {
+export function CityPick({ boardKey, mine, all, countries, onPick }: { boardKey: string; mine: string[]; all: ReadonlySet<string>; countries?: string[]; onPick?: (key: string) => void }) {
   const [text, setText] = useState<string | null>(null);
   const [cursor, setCursor] = useState(0);
-  const current = boardKey === WORLD ? t("leaderboard.world") : shownName(boardKey.slice(WORLD.length + 1));
+  const current = boardLabel(boardKey);
   const q = text?.trim() ?? "";
   const items = useMemo(() => {
     if (text === null) return [];
     const world = { key: WORLD, label: t("leaderboard.world"), sub: "" };
     const city = (id: string) => ({ key: `${WORLD}_${id}`, label: shownName(id), sub: "" });
-    if (!q) return [world, ...mine.slice(0, MAX_SHOWN - 1).map(city)];
+    const country = (cc: string) => ({ key: COUNTRY + cc, label: countryLabel(cc), sub: "" });
+    if (!q) return [world, ...(countries ?? []).slice(0, 2).map(country), ...mine.slice(0, MAX_SHOWN - 3).map(city)];
     const hits = findStart(q, all).map(({ city: c, matched }) => ({ key: `${WORLD}_${c.id}`, label: shownName(c.id), sub: matched ? t("newGame.matched", { alias: matched }) : "" }));
-    return (normalise(t("leaderboard.world")).startsWith(normalise(q)) ? [world] : []).concat(hits).slice(0, MAX_SHOWN);
-  }, [text, mine, all]);
+    const lands = (countries ?? []).filter((cc) => countryHit(cc, q)).sort((a, b) => collate(countryLabel(a), countryLabel(b))).map(country);
+    return (normalise(t("leaderboard.world")).startsWith(normalise(q)) ? [world] : []).concat(lands, hits).slice(0, MAX_SHOWN);
+  }, [text, mine, all, countries]);
   const pick = (key: string) => { setText(null); if (onPick) onPick(key); else void fetchBoards(key); (document.activeElement as HTMLElement | null)?.blur(); };
   return <div class="lb-find">
     <input type="text" class="new-game-find lb-pick" aria-label={t("leaderboard.pick")} placeholder={t("newGame.findCity")} maxLength={60}
@@ -99,9 +107,10 @@ function Boards() {
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const others = Object.keys(st.list).filter((k) => k.startsWith(WORLD + "_")).map((k) => k.slice(WORLD.length + 1))
     .filter((id) => !mine.includes(id)).sort((a, b) => collate(cityName(a), cityName(b)));
+  const lands = [...new Set([...mine.map((id) => zoneCountry(id)?.toLowerCase() ?? ""), ...Object.keys(st.list).filter((k) => k.startsWith(COUNTRY)).map((k) => k.slice(COUNTRY.length))].filter(Boolean))];
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
-    <CityPick boardKey={key} mine={mine} all={new Set([...mine, ...others])} />
+    <CityPick boardKey={key} mine={mine} all={new Set([...mine, ...others])} countries={lands} />
     {!d ? <p class="small muted">{st.error || t("leaderboard.loading")}</p>
       : <ol class="lb-rows">
         {d.rows.length === 0 && <li class="muted">{t("leaderboard.nobody")}</li>}

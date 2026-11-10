@@ -1088,13 +1088,16 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   one (T-988), so one id names a game's save and its figures. A game that turns sandbox sends that once and is
   never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
   takes its figures off (on the next signed-in load if signed out then).
-- **Leaderboards**: the trophy opens a centred modal: a picker (World, then the cities in this
-  game by points, then other cities with rows, by name), the top 50 (rank, name, points short, the
+- **Leaderboards**: the trophy opens a centred modal: a picker (World, then up to two countries in
+  this game, then its cities by points; typing searches cities and countries, a country by its name in
+  the player's language or in English), the top 50 (rank, name, points short, the
   exact figure in the hover), the player's own row under them when lower, "Nobody here yet." on an
   empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24
   characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
   name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
-  board, with their best game.
+  board, with their best game. A country board ranks a game by its points summed over that country's
+  cities (the same per-city figures the city boards use; the server maps city to country with a table
+  made by `tools/country_table.mjs`) [T-3116].
 
 ## Start menu
 
