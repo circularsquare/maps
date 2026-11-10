@@ -926,7 +926,12 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   (`Network::line_phase`, `Lattice::phase`), picked so the line's trains and those of each line it
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
   as they can (`spacing::place`: per train of an hour, how far it falls short of half the smaller
-  headway from the other line's nearest there, squared, summed; 24 phases tried a headway). A pair
+  headway from the other line's nearest there, squared, summed; 24 phases tried a headway). At a flat
+  junction move the trains need only the crossing's own time apart (90 s), not half a headway. A
+  merge comes first (T-2960): it counts 25 times any other meeting (`MERGE_FIRST`), so lines joining
+  one track take even turns there and the other meetings choose only among phases nearly as good at
+  the merge. One phase serves both runs, so where the branches' run times differ the same lines
+  leaving the shared track the other way can run unevenly (no train waits there). A pair
 timetabled together (6.2, "Behind slower trains", T-2419) is placed the other way: each of the
 faster line's trains as near as it can be to its place after one of the slower line's (the share of
 half the smaller headway it is off, squared): `s` before the next slower train, or for a pair that

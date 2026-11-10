@@ -3,7 +3,8 @@
 //! lines it shares track, a platform or a flat junction with do not reach the place they meet
 //! together (and are drawn on top of each other). Real timetabling, done greedily: only the lines
 //! an edit changed are placed, against every other line as it runs, so the rest keep their times.
-//! Waits are by headway, so demand does not move.
+//! Waits are by headway, so demand does not move. A merge, where trains queue in sight, comes
+//! first; one phase serves both runs, so it cannot always even out the other direction too (T-2960).
 
 use super::capacity::ResKind;
 use super::net::Network;
@@ -17,6 +18,9 @@ const STEPS: usize = 24;
 const KEEP: f64 = 0.9;
 /// Trains of the line looked at per meeting: an hour's, at most this many.
 const MAX_TRAINS: usize = 60;
+/// A merge's weight against other meetings (T-2960): so large that they only choose among phases
+/// nearly as good at the merge (its trains off by at most 1/26 of what the others pull).
+const MERGE_FIRST: f64 = 25.0;
 
 /// Where one direction of the line meets one direction of another line: when its trains get
 /// there after its pattern's own times (`a`, without its phase), when the other line's do (`b`,
@@ -29,12 +33,17 @@ struct Meet {
     /// (`Capacity::follow_targets`): the faster one's trains belong this far (s) after the slower
     /// one's; positive when this line follows, negative when it leads, 0 for any other pair
     behind: f64,
+    /// `MERGE_FIRST` at a merge, else 1
+    weight: f64,
+    /// how far apart its trains are clear of each other, s: a flat junction's crossing time, or
+    /// infinite (half the smaller headway)
+    clear: f64,
 }
 
 /// How crowded a phase leaves the line's meetings: per train, how far it is short of half the
-/// smaller headway from the nearest train of the other line there, squared, as a share. For a
-/// following pair timetabled together, how far each following train is from its place after a
-/// leading one, as a share of the same half headway, squared.
+/// smaller headway (or of `clear`) from the nearest train of the other line there, squared, as a
+/// share, times the meeting's weight. For a following pair timetabled together, how far each
+/// following train is from its place after a leading one, as a share of the same half headway, squared.
 fn crowding(meets: &[Meet], h: f64, phase: f64) -> f64 {
     let n = ((3600.0 / h).ceil() as usize).clamp(1, MAX_TRAINS);
     let mut sum = 0.0;
@@ -56,11 +65,12 @@ fn crowding(meets: &[Meet], h: f64, phase: f64) -> f64 {
             }
             continue;
         }
+        let g = g.min(m.clear);
         for k in 0..n {
             let x = (m.a + phase + k as f64 * h - m.b).rem_euclid(m.hb);
             let d = x.min(m.hb - x);
             if d < g {
-                sum += ((g - d) / g).powi(2);
+                sum += m.weight * ((g - d) / g).powi(2);
             }
         }
     }
@@ -124,7 +134,8 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
         }
     }
     let mut moved = vec![];
-    let mut first: Vec<((u32, u8, u8), f64, f64, f64)> = vec![]; // (other line, its run, own run), own time, a, b
+    // (other line, its run, own run), own time, a, b, weight, clear
+    let mut first: Vec<((u32, u8, u8), f64, f64, f64, f64, f64)> = vec![];
     for &l in &todo {
         let Some(Some(lat)) = lats[l as usize] else { continue };
         let mut p = phase[l as usize];
@@ -140,6 +151,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             for &r in &by_line[l as usize] {
                 let us = cap.users_of(r);
                 let junction = cap.res[r].kind == ResKind::Junction;
+                let weight = if cap.wire_kind(r) == 12 { MERGE_FIRST } else { 1.0 };
                 for u in us.iter().filter(|u| u.line == l) {
                     let tu = time(l, u.run, lev, u.at);
                     for v in us.iter().filter(|v| v.line != l && (!junction || v.owner != u.owner)) {
@@ -150,10 +162,11 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
                         let Some(Some(other)) = &lats[v.line as usize] else { continue };
                         let b = base(other, v.run) + phase[v.line as usize][lev] as f64 + time(v.line, v.run, lev, v.at);
                         let a = base(&lat, u.run) + tu;
+                        let clear = if junction { u.occ.max(v.occ) } else { f64::INFINITY };
                         match first.iter_mut().find(|x| x.0 == key) {
                             Some(x) if x.1 <= tu => {}
-                            Some(x) => *x = (key, tu, a, b),
-                            None => first.push((key, tu, a, b)),
+                            Some(x) => *x = (key, tu, a, b, weight, clear),
+                            None => first.push((key, tu, a, b, weight, clear)),
                         }
                     }
                 }
@@ -161,7 +174,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             if first.is_empty() {
                 continue;
             }
-            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1) }).collect();
+            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1), weight: x.4, clear: x.5 }).collect();
             let cur = (p[lev] as f64).rem_euclid(h);
             let now = crowding(&meets, h, cur);
             let (mut best, mut at) = (now, cur);
@@ -238,5 +251,51 @@ mod tests {
         let before: Vec<_> = [a, b, c].iter().map(|&l| w.net.line_phase_of(l)).collect();
         w.apply(Op::Schedule { id: alone, tph: [4.0, 4.0, 2.0] }).unwrap();
         assert_eq!(before, [a, b, c].iter().map(|&l| w.net.line_phase_of(l)).collect::<Vec<_>>());
+    }
+
+    /// T-2960: two headway lines on branches of different lengths joining one track at J take turns
+    /// through the merge at even gaps, though the other direction or a flat junction's crossing
+    /// would want other phases (1.65:1 and 2.41:1 at J in these two before the merge came first).
+    #[test]
+    fn trains_take_even_turns_at_a_merge() {
+        use super::super::net::NodeData;
+        use super::super::params::HIGH;
+        use super::super::profile;
+        for (headway, flying, m_x, br_x) in [(360, false, 6000.0, 4400.0), (420, true, 7000.0, 3700.0)] {
+            let mut w = world();
+            let t = node(&mut w, 0.0, 0.0, 0);
+            let j = node(&mut w, 3000.0, 0.0, 0);
+            let m = node(&mut w, m_x, 0.0, 0);
+            let br = node(&mut w, br_x, 1500.0, 0);
+            edge(&mut w, t, j, &[], 0).unwrap();
+            edge(&mut w, j, m, &[], 0).unwrap();
+            edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
+            for x in [t, m, br] { station(&mut w, x, 200); }
+            if flying {
+                w.apply(Op::Node { id: j, data: Some(NodeData { x: 3000.0, y: 0.0, level: 0, flying: true }) }).unwrap();
+            }
+            let mut ls = vec![];
+            for end in [br, m] {
+                let l = line(&mut w, &[t, end], [0.0; 3]);
+                w.apply(Op::AutoTrains { id: l, auto: Some([headway, 2 * headway, 0]), trains: Some([4, 2, 0]) }).unwrap();
+                ls.push(l);
+            }
+            let hw: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph[l as usize][HIGH] as f64).collect();
+            assert!(hw.iter().all(|&h| (h - headway as f64).abs() < 0.01), "both keep {headway} s: {hw:?}");
+            // each train's time leaving its hold short of J towards T, 09:00 to 10:00 of a weekday
+            let t0 = 86400.0 + 9.0 * 3600.0;
+            let mut at_j: Vec<(f64, u32)> = vec![];
+            for tr in w.svc.trips(&w.net, t0 - 7200.0, t0 + 3600.0).into_iter().filter(|tr| tr.run == 1) {
+                let run = &w.svc.lines[tr.line as usize].runs[1];
+                let i = run.nodes.iter().position(|&x| x == j).unwrap();
+                let s = tr.draw + profile::time_at(&run.prof[tr.level as usize].phases, run.node_s[i]);
+                if s >= t0 && s < t0 + 3600.0 { at_j.push((s, tr.line)); }
+            }
+            at_j.sort_by(|x, y| x.0.total_cmp(&y.0));
+            let gaps: Vec<f64> = at_j.windows(2).map(|p| p[1].0 - p[0].0).collect();
+            assert!(at_j.windows(2).all(|p| p[0].1 != p[1].1), "the lines take turns: {at_j:?}");
+            let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
+            assert!(hi / lo < 1.25, "headway {headway}, flying {flying}: gaps at J {gaps:.0?}");
+        }
     }
 }
