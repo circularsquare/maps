@@ -326,7 +326,7 @@ new line; the Build tab's button again, while it is on, leaves it. Each click ad
 point. Between two points the route takes the shortest path over the basemap's zoom 14 roads
 (`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
 long bridges and tunnels most cities carry on them (T-2469); any direction, length as it is, no turn
-rules; service ways, tracks and paths are left out, except that a plain service road (no driveway, alley or parking aisle tag, open to all, at ground level) at most 60 m long with each end on a street can be driven, and is never landed on (T-2882)), at most 3 times the straight line or 1 km more
+rules; service ways, tracks and paths are left out, except that a plain service road (no driveway, alley or parking aisle tag, open to all, at ground level) at most 60 m long with each end within 3 m of a street can be driven, and is never landed on (T-2882)), at most 3 times the straight line or 1 km more
 than it, whichever is longer. Roads join where a road's vertex comes within about 1 m of another road
 at its level, or where two ground-level roads cross, since the tiles drop the junction's vertex from a road
 running straight through it (T-2873; a motorway joins another motorway, and its own ends join any road).
@@ -879,8 +879,10 @@ running line's trains stop at then wins over one they do; then the nearest.
   before a loop of track at an end of the line (the last stop at or before where the loop rejoins
   the line; the end stop itself when the loop has no stop of its line) says "Click to loop back here"
   (tier 7) and the click turns the line round it, one way (`turnEnd`). On a line so turned the same
-  stop says "Click to stop looping back here" (tier 8) and the click opens it (`openLoop`). Every
-  pass is its own row in the stop list. The markers take no pointer events (the map's pick handles clicks), so the wheel
+  stop says "Click to stop looping back here" (tier 8) and the click opens it (`openLoop`). The stop
+  list shows a turned line one row per station (`game/turnedLine.ts`, T-3025; ui-inspectors.md): a
+  cross takes a station out on every pass, the turn's row has a button that opens the loop, and rows
+  do not drag. A hand-ordered line's rows stay one per pass while its stops are edited. The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

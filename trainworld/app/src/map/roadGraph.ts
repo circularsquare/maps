@@ -641,9 +641,12 @@ function clipSegment(x0: number, y0: number, x1: number, y1: number, out: number
   return out[0] !== out[2] || out[1] !== out[3];
 }
 
-/** A road's vertex this near another road (tile units, about 1 m at zoom 14) with no vertex of that road
- * under it is a junction: the tiles' end-to-road gaps stop dead at 2 units (notes/T-2873.md). */
-const JUNCTION_GAP = 2;
+/** A road's end this near another road (ground metres, so 5 to 7 tile units) with no vertex of that road
+ * under it is a junction, and an interior vertex only `NEAR_UNITS` near; a short service line is a link when each end is this near a street (T-3034). */
+const JUNCTION_GAP_M = 3;
+/** Any vertex, and an end running along a road, joins only this near (tile units, about 1 m). */
+const NEAR_UNITS = 2;
+const ALONG_COS = 0.8;
 const JOIN_CELL = 128;
 /** A line of this weight (`RoadLines.weights`) is kept only as a link: at most `LINK_MAX_M` long, each end
  * on a street (T-2882). Service roads as a class stay out, so a bus does not cut through car parks. */
@@ -657,6 +660,7 @@ const LINK_MAX_M = 60;
  * at their level. The end of a street's bridge or tunnel joins a ground road too (T-3000). `mpu` is
  * ground metres per unit in this tile. */
 export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
+  const JUNCTION_GAP = JUNCTION_GAP_M / mpu;
   // clipped first: an added vertex on a segment crossing the tile's edge would move where it is cut,
   // and the two tiles' cut ends would no longer meet
   const lines: Int32Array[] = [], src: number[] = [];
@@ -739,7 +743,13 @@ export function joinRoads(rl: RoadLines, mpu: number): RoadLines {
         const m = lines[lj], j = sAt[s], ax = m[j], ay = m[j + 1], dx = m[j + 2] - ax, dy = m[j + 3] - ay;
         const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
         const ex = ax + t * dx - x, ey = ay + t * dy - y;
-        if (ex * ex + ey * ey <= gap2) add(s, x, y);
+        const d2 = ex * ex + ey * ey;
+        if (d2 <= NEAR_UNITS * NEAR_UNITS) add(s, x, y);
+        else if (end && d2 <= gap2) {
+          // the wider gap is for a road end that meets the road, not one running along it (T-3034)
+          const bi = i === 0 ? 2 : l.length - 4, hx = x - l[bi], hy = y - l[bi + 1];
+          if (Math.abs(hx * dx + hy * dy) <= ALONG_COS * Math.hypot(hx, hy) * Math.hypot(dx, dy)) add(s, x, y);
+        }
       }
     }
   });
