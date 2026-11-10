@@ -292,29 +292,32 @@ impl TrackApi {
         self.run(Op::Batch(ops))
     }
 
-    /// Make blueprint edges high-speed or regular track (T-1898), shape and level unchanged. One
-    /// undoable edit. Constructed track, single track and crossovers cannot change and are counted
-    /// in `last_skipped`; pieces already that kind are not. Returns 1 when nothing changed.
-    pub fn set_edges_hsr(&mut self, ids: &[u32], hsr: bool) -> u32 {
-        let net = &self.w.net;
-        let mut ops = vec![];
-        let mut skipped = 0;
-        for &e in ids {
-            let Some(mut d) = net.edge_data(e) else { continue };
-            if d.built || d.crossover || d.tracks != 2 || d.kind.spec().family != 0 {
-                skipped += 1;
-            } else if d.kind.is_hsr() != hsr {
-                d.kind = TrackKind::from_hsr(hsr);
-                ops.push(Op::Edge { id: e, data: Some(d) });
+    /// Make blueprint edges track type `kind` (1 regular, 2 high speed, 3 tram; T-1898, T-3108), shape
+    /// and level unchanged, by the rules of rebuilding built track (`rebuild_pieces`): a change of
+    /// family (rail to tram and back) takes whole joined stretches and fits stations and lines. One
+    /// undoable edit, free. Constructed track, single track, crossovers and pieces the track model
+    /// refuses stay and are counted in `last_skipped`; pieces already that kind are not. Returns 1 when
+    /// nothing changed (the issues of the last refusal, if any).
+    pub fn set_edges_kind(&mut self, ids: &[u32], kind: i32) -> u32 {
+        let kind = match kind {
+            1 => TrackKind::Regular,
+            2 => TrackKind::HighSpeed,
+            3 => TrackKind::Tram,
+            _ => {
+                self.issues = vec![];
+                return 1;
             }
-        }
-        self.skipped = skipped;
-        if ops.is_empty() {
+        };
+        let plan = self.plan_edges(ids, None, Some(kind), false, &[]);
+        self.skipped = plan.refused.len() as u32;
+        if plan.take.is_empty() {
             self.money_short = None;
-            self.issues = vec![];
+            self.issues = plan.issues;
             return 1;
         }
-        self.run(Op::Batch(ops))
+        let r = self.run(Op::Batch(plan.take));
+        self.skipped = plan.refused.len() as u32;
+        r
     }
 
     /// Put several blueprint edges on one level (T-815), one undoable edit. Each piece's corners go

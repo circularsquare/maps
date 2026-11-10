@@ -215,8 +215,8 @@ export const pickedState = computed(() => {
   return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular, tram };
 });
 
-/** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_hsr`, and T-3059's rebuild for built track): double, no crossover.
- * Built tram track (`tram` in `pickedState`) can be rebuilt as either, and rail as tram (T-3088). */
+/** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_kind`, and T-3059's rebuild for built track): double, no crossover.
+ * Tram track (`tram` in `pickedState`) can become either, and rail tram (T-3088, T-3108). */
 const canBeHsr = (e: TrackEdge) => e.tracks === 2 && !e.crossover && !e.kind;
 
 /** Every blueprint piece switched off, for the Build tab. */
@@ -263,18 +263,26 @@ export async function levelPicked(level: Level) {
   else say(t("blueprintPick.setAll", { n, to }));
 }
 
-/** T-1898: the picked blueprint double track made high-speed or regular, one undoable edit; single
- * track and crossovers stay as they are, counted in the notice as `levelPicked` does. */
-export async function hsrPicked(hsr: boolean) {
+/** T-1898, T-3108: the picked blueprint double track made regular, high-speed or tram track, one undoable
+ * edit and free. By the rebuild's rules (`TrackApi::set_edges_kind`): rail and tram change as whole joined
+ * stretches with their stations and lines; the pieces that cannot are left as they are, counted in the notice
+ * as `levelPicked` does. */
+export async function kindPicked(kind: "regular" | "hsr" | "tram") {
   const p = bpPicked.peek();
   if (p.built || !p.edges.length) return;
-  const a = await edit({ op: "edgesHsr", edges: p.edges, hsr }, true);
-  if (!a.ok) return;
-  setTrackType(hsr ? "hsr" : 2); // T-2474, as for the level
-  const n = p.edges.length, skipped = a.skipped ?? 0, to = t(hsr ? "blueprintPick.toHsr" : "blueprintPick.toRegular");
+  const a = await edit({ op: "edgesKind", edges: p.edges, kind: kind === "regular" ? 1 : kind === "hsr" ? 2 : 3 }, true);
+  const n = p.edges.length, skipped = a.skipped ?? 0;
+  if (!a.ok) {
+    say(t("blueprintPick.cannotGo", { n, to: t(TO[kind]) }), true);
+    return;
+  }
+  setTrackType(kind === "regular" ? 2 : kind); // T-2474, as for the level
+  const to = t(TO[kind]);
   if (skipped) say(t("blueprintPick.setSome", { done: n - skipped, n, to, skipped }));
   else say(t("blueprintPick.setAll", { n, to }));
 }
+
+const TO = { regular: "blueprintPick.toRegular", hsr: "blueprintPick.toHsr", tram: "blueprintPick.toTram" } as const;
 
 /** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
  * changing a line after a yes, as for one piece (game/remove.ts). */

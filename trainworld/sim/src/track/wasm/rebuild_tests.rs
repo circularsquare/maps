@@ -386,3 +386,59 @@ fn a_tram_curve_too_tight_for_trains_stays_tram() {
     assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1), 1);
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
 }
+
+/// T-3108: blueprint track changes between regular, high speed and tram by the rebuild rules, free and
+/// undoable: whole stretches, stations cut to a tram stop and back, the line following.
+#[test]
+fn blueprint_switches_between_regular_high_speed_and_tram() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let mut st = [0; 2];
+    for (i, x) in [1000.0, 7000.0].into_iter().enumerate() {
+        let edge = (0..a.w.net.edge_count() as u32)
+            .find(|&e| {
+                let n = &a.w.net;
+                n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+            })
+            .unwrap();
+        assert_eq!(a.add_station(2, edge, x, 0.0, 200, format!("S{i}")), 0, "{}", a.issues());
+        st[i] = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap();
+    }
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &st, 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issues());
+    let edges = live(&a);
+    let kinds = |a: &TrackApi, k: TrackKind| edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == k);
+    let cash = a.cash();
+
+    // part of the run alone would meet the rail beside it: nothing changes
+    let part: Vec<u32> = edges.iter().copied().filter(|&e| a.w.net.edge_a[e as usize] == st[0] || a.w.net.edge_b[e as usize] == st[0]).collect();
+    assert_eq!(a.set_edges_kind(&part, 3), 1);
+    assert_eq!(a.last_skipped(), 2);
+    assert!(kinds(&a, TrackKind::Regular));
+
+    // rail to tram: stations cut to 80 m, the line a tram line with the tram dwell, nothing paid
+    assert_eq!(a.set_edges_kind(&edges, 3), 0, "{}", a.issue_kinds());
+    assert_eq!(a.last_skipped(), 0);
+    assert!(kinds(&a, TrackKind::Tram));
+    assert!(st.iter().all(|&n| a.w.net.node_platform[n as usize] == 80 && !a.w.net.node_built[n as usize]));
+    assert!(a.line_tram(line));
+    assert_eq!((a.w.net.line_dwell[line as usize], a.w.net.line_turn[line as usize]), (15.0, 120.0));
+    assert_eq!(a.cash(), cash);
+    // already tram: nothing to do
+    assert_eq!(a.set_edges_kind(&edges, 3), 1);
+
+    // tram to high speed and back to tram
+    assert_eq!(a.set_edges_kind(&edges, 2), 0, "{}", a.issue_kinds());
+    assert!(kinds(&a, TrackKind::HighSpeed) && !a.line_tram(line));
+    assert_eq!(a.set_edges_kind(&edges, 3), 0, "{}", a.issue_kinds());
+    assert!(kinds(&a, TrackKind::Tram) && a.line_tram(line));
+
+    // a mixed pick (one piece high speed, the rest tram) goes to regular in one go, and one undo reverts it
+    assert_eq!(a.set_edges_kind(&edges[..1], 2), 1, "a lone piece cannot leave its family");
+    assert_eq!(a.set_edges_kind(&edges, 1), 0, "{}", a.issue_kinds());
+    assert!(kinds(&a, TrackKind::Regular) && !a.line_tram(line));
+    a.undo();
+    assert!(kinds(&a, TrackKind::Tram) && a.line_tram(line));
+}

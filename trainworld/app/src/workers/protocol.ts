@@ -70,7 +70,7 @@ export type EditOp =
   | { op: "edgesLevel"; edges: EdgeId[]; level: Level }
   /** several blueprint pieces made high-speed or regular track, one undoable edit (T-1898); single
    * track, crossovers and constructed track are left out, counted in `skipped` */
-  | { op: "edgesHsr"; edges: EdgeId[]; hsr: boolean }
+  | { op: "edgesKind"; edges: EdgeId[]; kind: 1 | 2 | 3 }
   /** constructed track and stations changed in place to `level` (null: kept) and a track type (0 kept, 1 regular,
    * 2 high speed, 3 tram: T-3088), final and paid at the full new price (T-3059); pieces the track model refuses
    * are left as they are, counted in `skipped` */

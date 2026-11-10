@@ -41,7 +41,8 @@ T-3019, T-3011.
 **Done today by maps-dc (archived):** T-3104/T-3105 account mails name the game + mail quota message (shonei-server
 e1ac732, 7b68d01, deployed and pushed; client in 1719028f); T-3106 street tram at ground level over water; T-3107 turning
 alike at every station, 15/h or 30/h with a terminal, hints name only a terminal (1719028f). Kind 3 renamed "Turning"
-(asked Anita to check the word).
+(Anita: "yeah "turning" is ok"). Anita gave maps-15 Exact edits feedback after the handover; maps-15 is filing it from
+T-3108 and will message maps-dc the ids; maps-dc briefs the agents.
 **Running:**
 - flyover (Opus, af64c7f0ed83c00b5, tree `.tw-trees/flyover` from 74558ad4, Vite 6181): T-3103 flat badge only where
   moves cross, then T-3092 real flyovers (Anita hopes tonight; no release until then). Land with `agent-tree.mjs land

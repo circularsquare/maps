@@ -120,7 +120,7 @@ fn a_dragged_joint_lays_its_new_curve_for_the_design_speed() {
 /// The selection's track type: double blueprint track changes, single track and constructed
 /// track are counted as skipped; one undo puts it back.
 #[test]
-fn set_edges_hsr_changes_double_blueprint_only() {
+fn set_edges_kind_changes_double_blueprint_only() {
     let mut a = api();
     a.set_cash(1e6);
     let mut ids = vec![];
@@ -130,15 +130,15 @@ fn set_edges_hsr_changes_double_blueprint_only() {
         ids.push((0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).max().unwrap());
     }
     assert_eq!(a.construct(&[ids[2]], &[]), 0, "{}", a.issues());
-    assert_eq!(a.set_edges_hsr(&ids, true), 0, "{}", a.issues());
+    assert_eq!(a.set_edges_kind(&ids, 2), 0, "{}", a.issues());
     assert_eq!(a.last_skipped(), 2);
     assert!(a.w.net.edge_kind[ids[0] as usize].is_hsr() && !a.w.net.edge_kind[ids[1] as usize].is_hsr() && !a.w.net.edge_kind[ids[2] as usize].is_hsr());
     // already high speed: nothing to do, nothing skipped among the double blueprint
-    assert_eq!(a.set_edges_hsr(&ids[..1], true), 1);
+    assert_eq!(a.set_edges_kind(&ids[..1], 2), 1);
     assert_eq!(a.last_skipped(), 0);
     a.undo();
     assert!(!a.w.net.edge_kind[ids[0] as usize].is_hsr());
-    assert_eq!(a.set_edges_hsr(&ids[..1], true), 0);
-    assert_eq!(a.set_edges_hsr(&ids[..1], false), 0);
+    assert_eq!(a.set_edges_kind(&ids[..1], 2), 0);
+    assert_eq!(a.set_edges_kind(&ids[..1], 1), 0);
     assert!(!a.w.net.edge_kind[ids[0] as usize].is_hsr());
 }

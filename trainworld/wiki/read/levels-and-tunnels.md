@@ -22,7 +22,7 @@ High-speed track is 1.5 times that. Quad track is two lots of double.
 
 **Ramps.** Going up or down a level takes 200 m of track, and the ramp costs as much as the dearer of its two levels. Grades don't slow the trains down.
 
-**Changing track you've built.** Select it, pick a new level or Regular, High speed or Tram, then press Rebuild. It is the same track and the same stations, so lines and station names carry on. You pay the full price of the new track and get nothing back for the old. A piece with no room to ramp to the track beside it stays as it was, and shows in red before you confirm; the rest ramps to it. Rail rebuilt as tram turns its stations into tram stops, cutting long platforms down to a tram stop's longest, and its lines into tram lines. Tram and rail can't join, so all the track joined together has to change at once.
+**Changing track you've built.** Select it, pick a new level or Regular, High speed or Tram, then press Rebuild. It is the same track and the same stations, so lines and station names carry on. You pay the full price of the new track and get nothing back for the old. A piece with no room to ramp to the track beside it stays as it was, and shows in red before you confirm; the rest ramps to it. Rail rebuilt as tram turns its stations into tram stops, cutting long platforms down to a tram stop's longest, and its lines into tram lines. Tram and rail can't join, so all the track joined together has to change at once. Blueprint track switches between Regular, High speed and Tram the same way, at once and free.
 
 What the ground is like adds more: see [terrain](terrain.md). Water does too: see [water](water.md). Then the track costs money every day: see [upkeep](upkeep.md).
 

@@ -257,9 +257,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
   ordinary track at plain nodes like any two pieces; a split keeps the flag on both halves, and
   two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
-  Blueprint double track switches to high speed or back, shape and level kept, with the Select
-  tool's bar (T-1898, `TrackApi::set_edges_hsr`); single track, crossovers and constructed track
-  stay as they are. It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
+  Blueprint double track switches between regular, high speed and tram, shape and level kept, with the Select
+  tool's bar (T-1898, T-3108, `TrackApi::set_edges_kind`, the planner rebuilding built track uses): rail and tram
+  change as whole joined stretches with their stations and lines; single track, crossovers, constructed track
+  and pieces the track model refuses stay as they are. It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
   `TRACK_SPECS` in params.rs holds every kind's figures; `game/trackKinds.ts` copies them for the app).

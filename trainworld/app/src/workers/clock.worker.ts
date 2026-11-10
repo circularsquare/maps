@@ -3534,8 +3534,8 @@ function apply(op: EditOp): Applied {
       const r = a.set_edges_level(new Uint32Array(op.edges), op.level);
       return { r, skipped: a.last_skipped() };
     }
-    case "edgesHsr": {
-      const r = a.set_edges_hsr(new Uint32Array(op.edges), op.hsr);
+    case "edgesKind": {
+      const r = a.set_edges_kind(new Uint32Array(op.edges), op.kind);
       return { r, skipped: a.last_skipped() };
     }
     case "rebuild": {

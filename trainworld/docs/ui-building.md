@@ -687,10 +687,13 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   appears and goes in one step) is the pick's inspector: "N selected" (its hover says blueprint or
   constructed and lists track and stations), the picked track's total length, and the actions.
   For blueprint: the seven level buttons tinted as in the track bar (the one all the picked
-  track is on solid), **Regular** and **High speed** while the pick holds blueprint double track
-  [T-1898; `hsrPicked`, `TrackApi::set_edges_hsr`] (the kind all of it is solid, neither when
+  track is on solid), **Regular**, **High speed** and **Tram** while the pick holds blueprint double track
+  [T-1898, T-3108; `kindPicked`, `TrackApi::set_edges_kind`] (the kind all of it is solid, none when
   mixed; High speed's hover gives its 1.5x price): every picked double piece to that kind in one
-  undoable edit, single track and crossovers left as they are and counted in the message as for
+  undoable edit, free, by the rules of Rebuild below: rail and tram change as whole joined stretches (they never
+  join), stations are cut to a tram stop or back and lines become tram or train lines with the new kind's dwell and
+  turnaround. Single track, crossovers and pieces the track model refuses (a stretch joined to track outside the
+  pick, a curve too tight for trains) stay as they are and are counted in the message as for
   elevation ("3 of 5 pieces set to high-speed track. 2 could not change."). A level or kind picked here
   (its key too) becomes the track tool's as well, as if picked in the track bar (High speed with its top design
   speed, Regular with the speed before it), so the next track placed is laid the same way [T-2474]; a level
