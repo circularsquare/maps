@@ -23,8 +23,9 @@ export const SMALL_R = 0.5, SMALL_OUTLINE = 0.24;
 const FAST_CORE = 0.34;
 /** a tram line's width, in layout strokes (the map's tram track is thinner too) */
 const TRAM_W = 0.675;
-/** every other line's width, in layout strokes, applied when painting so the layout and pills stay as they are */
-const RAIL_W = 1.1;
+/** every other line's width, in layout strokes; above 1 neighbours in a bundle touch, since the layout keeps their
+ * spacing (Anita 2026-11-10 kept it at 1) */
+const RAIL_W = 1.0;
 /** a tram's two wires, as on the map (rendererShaders.ts): each this share of the tram's width across, its middle
  * this share either side of the centre; none drawn where the tram is under TRAM_WIRE_MIN_PX wide */
 const WIRE_OFF = 0.17, WIRE_SHARE = 0.11, TRAM_WIRE_MIN_PX = 5;
