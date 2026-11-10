@@ -658,10 +658,8 @@ function RailLineInspector({ id }: { id: string }) {
     const a = await edit({ op: "setStops", line: l.num, stops });
     if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
   };
-  // the passed stations related lines draw as rows of their own (set as it draws them)
-  let sideShown: ReadonlySet<number> = new Set();
   const addGaps = (gs: number[]) => {
-    const add = passed.filter((p) => gs.includes(p.gap) && !sideShown.has(p.node));
+    const add = passed.filter((p) => gs.includes(p.gap));
     const stops = l.stops.flatMap((s, i) => [Number(s), ...add.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
     return setStops(stops);
@@ -827,10 +825,9 @@ function RailLineInspector({ id }: { id: string }) {
   // edited the last row stays, holding the button that opens the loop
   const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
   // T-646: after stop `i`, while stops are edited, the stations the line passes before the next
-  const afterStop = (i: number, shown?: ReadonlySet<number>) => {
-    // T-1894: a station with its own row in related lines is added there, not here
-    if (shown) sideShown = shown;
-    const here = editingStops ? passed.filter((p) => p.gap === i && !sideShown.has(p.node)) : [];
+  const afterStop = (i: number) => {
+    // T-3007: a station a side line stops at counts too, though it also has its own row in related lines
+    const here = editingStops ? passed.filter((p) => p.gap === i) : [];
     if (!here.length || i + 1 >= l.stops.length) return null;
     if (flip) here.reverse();
     // Add and Cancel take the clicked row's place, Add stretched over where the pointer is, so a double

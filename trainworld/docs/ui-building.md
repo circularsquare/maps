@@ -889,6 +889,7 @@ running line's trains stop at then wins over one they do; then the nearest.
   has not redrawn yet, the old row's dblclick adds; the hover says "Double-click to add them at
   once") [T-1297, T-1489]. **A** adds every station the open line panel's
   line passes, whether or not its stops are being edited; there is no "Add all" row (T-1297's was
-  clutter, T-1417). Only stations on the line's path count: a quad twin on the pair beside, or a
+  clutter, T-1417). The row and Add count every passed station, those another line stops at
+  included (T-3007). Only stations on the line's path count: a quad twin on the pair beside, or a
   station on a branch, is not offered. The passed stations come in the clock state with each line
   (`ClockLine.passed`), so the list never shows new stops with the old gaps (T-648).

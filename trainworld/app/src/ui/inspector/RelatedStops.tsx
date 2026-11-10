@@ -57,8 +57,8 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
    * lines, with those of `marks` after the crossing lines' */
   lRow: (i: number, drawn: ReadonlySet<number>, marks: LineInput[]) => ComponentChildren;
   /** rows after the selected line's stop `i` that are not stops (the stations it passes while
-   * its stops are edited, less `shown`, those with a side row) */
-  after?: (i: number, shown: ReadonlySet<number>) => ComponentChildren;
+   * its stops are edited) */
+  after?: (i: number) => ComponentChildren;
   transfers: RowTransfers;
 }) {
   const w = world.value!;
@@ -101,10 +101,9 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   const W = lay.width;
   const rows: ComponentChildren[] = [];
   const n = l.stops.length;
-  const shown = new Set(lay.rows.filter((r) => r.lStop < 0).map((r) => addAt(r.ref.line, r.ref.stop)).filter((x) => x !== null));
   lay.rows.forEach((r) => {
     // the stations passed between two stops go between their rows, whichever way up
-    if (after && (flip ? r.lStop >= 0 && r.lStop < n - 1 : r.lStop > 0)) rows.push(after(flip ? r.lStop : r.lStop - 1, shown));
+    if (after && (flip ? r.lStop >= 0 && r.lStop < n - 1 : r.lStop > 0)) rows.push(after(flip ? r.lStop : r.lStop - 1));
     if (r.lStop >= 0) { rows.push(lRow(r.lStop, new Set(r.drawn), r.marks.map((n) => byNum.get(n)).filter((o) => o !== undefined))); return; }
     const add = addAt(r.ref.line, r.ref.stop), here = stopName(r.ref.line, r.ref.stop);
     rows.push(

@@ -439,7 +439,7 @@ The stops (above Schedule while being edited [T-670]),
   north up the same way), and only while stops are edited, the side lines' stops at a station the
   line passes (interlined: a station of the complex is on its path), at the nearest point of the
   line, names fainter than muted text (36% of the text colour, T-2602), a click on the row's mark adding the stop (hover "Click to add a stop at 96
-  St"; such a station leaves the "+ N stations passed" row) [T-1894]; a
+  St"; such a station stays in the "+ N stations passed" row's count and Add, T-3007) [T-1894]; a
   side line's bullet shows after the crossing lines' at the first and last rows both stop at, and
   at each row both stop at next to one only one of them does (where an express's stops part from a
   local's); a white pill with the dark rim over each run of neighbouring columns stopping at a row
