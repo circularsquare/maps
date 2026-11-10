@@ -28,7 +28,7 @@ export const LEVEL_COLOURS: Record<Level, string> = {
 /** The Speed display's colours by km/h, one ramp for trains, trams, buses and ferries (T-3013);
  * the stroke shader is built from the same stops. Maroon to red, orange, yellow (a tram's top speed), yellow-green,
  * green, blue-green, blue, indigo and purple at high-speed track's 320. */
-export const SPEED_STOPS: [number, string][] = [[1, "#8a2232"], [20, "#d85b4b"], [40, "#e07f3a"], [60, "#e0ad2c"], [80, "#a3c23c"], [110, "#4aa850"], [160, "#4e9d95"], [200, "#397bc1"], [260, "#5b4fc9"], [320, "#a03fc2"]];
+export const SPEED_STOPS: [number, string][] = [[1, "#8a2232"], [20, "#d85b4b"], [40, "#e2922e"], [60, "#d9b92e"], [80, "#a3c23c"], [110, "#4aa850"], [160, "#4e9d95"], [200, "#397bc1"], [260, "#5b4fc9"], [320, "#a03fc2"]];
 
 /** The colour of `v` along `stops`, blended between the two either side. */
 function rampColour(stops: [number, string][], v: number): string {
