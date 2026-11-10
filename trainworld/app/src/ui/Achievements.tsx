@@ -67,7 +67,7 @@ export function Medal({ metal, of }: { metal: Metal; of: RibbonOf }) {
 }
 
 interface Toast { id: number; title: string; line?: ComponentChildren; medal?: { metal: Metal; of: RibbonOf }; hint?: boolean }
-const HOLD_MS = 5000, FADE_MS = 1200, GAP_MS = 1000, MAX_SHOWN = 3;
+const HOLD_MS = 10000, FADE_MS = 1200, GAP_MS = 1000, MAX_SHOWN = 3;
 const PHONE = matchMedia("(max-width: 600px) and (min-height: 560px)");
 
 const waiting = signal<Toast[]>([]);
