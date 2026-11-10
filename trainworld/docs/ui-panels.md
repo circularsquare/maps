@@ -342,12 +342,13 @@ the button is gone.
 - **Rows, worst first** (12 px type, one row each, the whole row's hover giving the figures):
   lines whose track is gone (its chip, a red alert mark); places where lines reverse partway (an
   amber U-turn disc, the station or "Track end", up to three of the lines' chips); orange and red
-  capacity tags, the map's tags at 90% and up (`NEAR_RHO`) at the demand level in force, one row per
+  capacity tags, the map's tags at 90% and up (`NEAR_RHO`) at the demand level in force that are over capacity or
+  make trains wait 2 s or more (a line alone queues only once over capacity, so a 99% tag with no wait is no problem) [T-2945], one row per
   kind by one station with the worst delay, red ones first ("Flat crossing near 14 St/6 Av", then
-  the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count, both red) [T-2934] where
+  the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count, both red; the row reads "{line} crowding") [T-2934, T-2944] where
   at least 3% of those who wanted their trains and 10 riders were left in the past 24 hours; lines
   whose trains left full at least a quarter of the time with fewer left behind (a train and
-  "26/81"); last, lines with no stations (its chip, an alert mark, the hover "No stations"; a click
+  "26/81", same label); a bus line's hovers say buses and a ferry's boats [T-2941]; last, lines with no stations (its chip, an alert mark, the hover "No stations"; a click
   selects the line). Within a kind the bigger figure goes first. A row's hover ends with a line starting
   "Try: " that names what to do about it (a few words per kind of capacity limit, `fix` in
   `game/capacityKinds.ts`; more trains for crowding; stations for a line with none; rebuilding the track

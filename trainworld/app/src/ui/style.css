@@ -415,6 +415,8 @@ body.resizing, body.resizing * { user-select: none; }
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .slider:has(> .group) { flex-wrap: wrap; }
+/* T-2942: the superholiday days belong to the day row above them */
+.slider.day-super { margin-top: 2px; }
 .slider span { min-width: 3.6em; }
 .slider .slider-pct { flex: none; width: 4ch; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .slider input { flex: 1; min-width: 0; appearance: none; height: calc(15 * var(--px)); background: transparent; margin: 0; }

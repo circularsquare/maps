@@ -20,6 +20,7 @@ import { toLngLat } from "../map/geo";
 import { reversalsOf } from "../map/reversalMarks";
 import { queryClock } from "../workers/clockClient";
 import { locateLine, locateStation } from "./locate";
+import { vehicleOf } from "./inspector/schedule";
 import { Chip, Icon } from "./widgets";
 import { t, tNumber } from "../i18n";
 
@@ -54,7 +55,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
   for (const l of w.save.lines) {
     if (!l.stops.length) {
       out.push({ key: "n" + l.id, tier: 6, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="trouble-fig"><Icon.alert /></span>, tip: t("troubleList.noStations") + "\n" + t("troubleList.fixNoStations"), go: goLine(l) });
+        value: <span class="trouble-fig"><Icon.alert /></span>, tip: t("troubleList.noStations"), go: goLine(l) });
       continue;
     }
     const st = w.lineStats[l.id];
@@ -65,17 +66,18 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
       continue;
     }
     const d = st.status === "running" ? day.get(l.id) : undefined;
+    const vehicle = vehicleOf(st);
     if (!d) continue;
     const wanted = d.riders + d.leftBehind;
     if (d.leftBehind >= LEFT_MIN && d.leftBehind >= LEFT_SHARE * wanted) {
-      out.push({ key: "l" + l.id, tier: 3, size: d.leftBehind, lead: <Chip line={l} size="sm" plain />, label: l.name,
+      out.push({ key: "l" + l.id, tier: 3, size: d.leftBehind, lead: <Chip line={l} size="sm" plain />, label: t("troubleList.crowding", { name: l.name }),
         value: <span class="trouble-fig bad"><Icon.person />{count(d.leftBehind)}</span>,
-        tip: t("troubleList.leftBehind", { left: count(d.leftBehind), wanted: count(wanted), full: count(d.fullTrains), trains: count(d.trains) }) + "\n" + t("troubleList.fixCrowded"),
+        tip: t("troubleList.leftBehind", { left: count(d.leftBehind), wanted: count(wanted), full: count(d.fullTrains), trains: count(d.trains), vehicle }) + "\n" + t("troubleList.fixCrowded", { vehicle }),
         go: goLine(l) });
     } else if (d.trains > 0 && d.fullTrains >= FULL_SHARE * d.trains) {
-      out.push({ key: "f" + l.id, tier: 5, size: d.fullTrains / d.trains, lead: <Chip line={l} size="sm" plain />, label: l.name,
+      out.push({ key: "f" + l.id, tier: 5, size: d.fullTrains / d.trains, lead: <Chip line={l} size="sm" plain />, label: t("troubleList.crowding", { name: l.name }),
         value: <span class="trouble-fig"><Icon.train />{count(d.fullTrains)}/{count(d.trains)}</span>,
-        tip: t("troubleList.full", { full: count(d.fullTrains), trains: count(d.trains) }) + "\n" + t("troubleList.fixCrowded"), go: goLine(l) });
+        tip: t("troubleList.full", { full: count(d.fullTrains), trains: count(d.trains), vehicle }) + "\n" + t("troubleList.fixCrowded", { vehicle }), go: goLine(l) });
     }
   }
   const lines = new Map(w.save.lines.map((l) => [l.id, l]));
@@ -86,11 +88,12 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
       tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), CAPACITY_KINDS[9].fix].join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
-  // the orange and red tags only (90% and up); a kind's tags by one station are one row, the worst
+  // the orange and red tags only (90% and up) that are over capacity or make trains wait; a kind's tags by one station are one row, the worst
   const spots = new Map<string, Item>();
   for (const m of [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho)) {
     const d = Math.round(m.delayS), over = m.rho > 1 || m.held;
-    if (m.rho < NEAR_RHO && !over) continue;
+    // a line alone has no wait until it is over capacity: a row with no wait is no problem (T-2945)
+    if (!over && (m.rho < NEAR_RHO || d < 2)) continue;
     const k = CAPACITY_KINDS[m.kind] ?? CAPACITY_KINDS[0];
     // the tags are in the draw anchor's local units, the stations in the pack's
     const [lng, lat] = toLngLat(m.x, m.y), p = lngLatToPack(lng, lat);
