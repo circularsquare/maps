@@ -1,7 +1,10 @@
 # trainworld — notes for agents
 
-Read this, then `SPEC.md`. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand;
-where code lives is `docs/code-map.md`.
+Read this, then `SPEC.md`. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand:
+for how a mechanic works, the wiki first (`wiki/index.md` lists the pages; read `wiki/read/<page>.md`, which has the
+figures filled in; each page ends with the doc section and code that own the exact rule), then the docs for what the
+wiki leaves out (Anita, 2026-11-10). A change to a rule a wiki page states updates that page too (`wiki/RULES.md`).
+Where code lives is `docs/code-map.md`.
 
 ## What each file is for
 
