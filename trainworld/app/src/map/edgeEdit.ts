@@ -5,6 +5,9 @@
 // it as one undoable edit, Escape puts the square back. Constructed track cannot be reshaped (SPEC
 // 6.4). Track drawn while the track ran through the clicked points (T-079) shows its clicks as
 // the squares; its first reshape makes them corners like on any other track.
+//
+// T-2951: a double click on blueprint track (the select tool, a mouse) adds a point there, a plain
+// node that then drags as any node does (map/nodeDrag.ts); a finger has the track inspector's button.
 
 import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
@@ -21,7 +24,9 @@ import { live } from "./live";
 import { strokesFromPreview } from "./network";
 import { endDrag, setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
+import { trackAt } from "./pick";
 import { marksLayer, placeAt } from "./screenPlace";
+import { touchInput } from "./touch";
 import { curveLabelled, curveLabels, CurveLabelPool, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
@@ -78,6 +83,21 @@ export class EdgeEditor {
     overlay.afterMapFrame.push(() => this.place());
     addEventListener("pointermove", (e) => this.onMove(e));
     addEventListener("pointerup", () => void this.onUp());
+    map.getCanvasContainer().addEventListener("dblclick", (e) => this.addPoint(e));
+  }
+
+  /** A double click on track: a point there (T-2951). Not on a node, a platform's end or a station,
+   * which already have their own. */
+  private addPoint(e: MouseEvent) {
+    if (tool.peek() !== "select" || touchInput.peek() || e.target !== this.map.getCanvas()) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const ov = this.overlay;
+    if (live.nodeDrag?.hit(px, py) || ov.renderer.stationAt(px, py, (x, y) => ov.toScreen(x, y)) >= 0) return;
+    const edge = trackAt(ov, px, py);
+    if (edge < 0) return;
+    const ll = this.map.unproject([px, py]), at = lngLatToPack(ll.lng, ll.lat);
+    void edit({ op: "addPoint", edge, x: at.x, y: at.y });
   }
 
   /** The blueprint edge being edited, or -1: a selected blueprint stretch with the select tool. */

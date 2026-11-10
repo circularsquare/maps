@@ -323,6 +323,16 @@ function blueprintOf(s: { flags: Float32Array; count: number }): Int32Array {
   return had;
 }
 
+/** The piece of track under a screen point, blueprint first as it is drawn on top, or -1 (T-2951). */
+export function trackAt(ov: Overlay, px: number, py: number): number {
+  const n = ov.renderer.net;
+  if (!n || !ov.camMatrix) return -1;
+  const reach = Math.max(SLOP_PX, ov.renderer.laneReachPx), slop = reach * reach + 1;
+  let [ti] = ov.renderer.hasBlueprint ? topSeg(ov, n.track.seg, n.track.count, px, py, slop, undefined, 0, undefined, null, 0, blueprintOf(n.track)) : [-1];
+  if (ti < 0) [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop);
+  return ti >= 0 ? n.track.edge[ti] : -1;
+}
+
 /** T-1907: the different lines with a stroke within the slop, each with the segment found and its
  * squared px distance. */
 function linesNear(ov: Overlay, n: NetworkBuffers, px: number, py: number, slop: number): { num: number; i: number; d: number }[] {

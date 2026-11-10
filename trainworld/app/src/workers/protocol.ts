@@ -58,6 +58,9 @@ export type EditOp =
   | { op: "edgePis"; edge: EdgeId; pis: PiInput[]; design?: number }
   /** move a blueprint node (T-093) to pack metres x, y; the blueprint track there follows */
   | { op: "moveNode"; node: NodeId; x: number; y: number; design?: number }
+  /** a plain node on blueprint track where pack metres x, y project onto it, or halfway along
+   * without them (T-2951); the shape is unchanged */
+  | { op: "addPoint"; edge: EdgeId; x?: number; y?: number }
   /** move several blueprint nodes together by dx, dy pack metres (T-475) */
   | { op: "moveNodes"; nodes: NodeId[]; dx: number; dy: number; design?: number }
   /** a whole blueprint stretch on one level, shape kept */

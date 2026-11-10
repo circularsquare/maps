@@ -1,12 +1,10 @@
-// T-1869: dragging a blueprint curve's middle, a blueprint station's platform end, and the Select
-// tool's pick, with real mouse events in headless Chrome.
+// T-1869: dragging a blueprint station's platform end, and the Select tool's pick, with real mouse
+// events in headless Chrome (a point added to track: t2951-add-point.mjs).
 //   node trainworld/checks/t1869-drag.mjs [url]      (from the maps root; about a minute)
 // A new game in New York gets a curved blueprint piece and a straight one with a station on it.
-// 1. With the select tool the curve has a round handle at its middle; dragging it 40 px bends the
-//    curve until its middle is under the pointer, and letting go makes that shape (one undo back).
-// 2. From zoom 16 the station's platform ends have squares; dragging one moves the station by the
+// 1. From zoom 16 the station's platform ends have squares; dragging one moves the station by the
 //    pointer's move, the end held under the pointer.
-// 3. The Select tool's pick of everything shows a square on each movable node; dragging the pick
+// 2. The Select tool's pick of everything shows a square on each movable node; dragging the pick
 //    moves the squares with it and shows the curves' speed labels.
 // Screenshots (before and during each) to artifacts/trainworld/t1869/. One PASS or FAIL line each.
 import { mkdir } from 'node:fs/promises';
@@ -44,7 +42,6 @@ try {
     return { curve, straight, station: st?.ok ? station : null, pi };
   });
   if (made.curve === null || made.station === null) throw new Error('setup failed ' + JSON.stringify(made));
-  const ui = () => page.evaluate(async () => (await import('/src/game/ui.ts')).tool.value);
   const setTool = (t) => page.evaluate(async (t) => { (await import('/src/game/ui.ts')).tool.value = t; }, t);
   const jump = (lngLat, zoom) => page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [lngLat, zoom]);
   const lngLatOf = (p) => page.evaluate((p) => window.tw.packToLngLat ? window.tw.packToLngLat(p.x, p.y) : null, p);
@@ -61,40 +58,11 @@ try {
   };
   const visible = (sel) => page.evaluate((sel) => [...document.querySelectorAll(sel)].filter((m) => m.style.display !== 'none' && m.style.visibility !== 'hidden').map((m) => { const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }), sel);
   const undo = async () => { await page.evaluate(() => window.tw.client.edit({ op: 'undo' }, true)); await page.waitForTimeout(700); };
-  const edgePis = (edge) => page.evaluate(async (edge) => Array.from(await (await import('/src/workers/clockClient.ts')).queryClock({ what: 'edgePis', edge })), edge);
 
-  // 1: the curve's middle
   await setTool('select');
   const ll = await lngLatOf(made.pi);
-  await jump(ll ?? [-73.963, 40.778], 15);
-  await page.waitForTimeout(1500);
-  await page.mouse.move(5, 5);
-  let curves = await visible('.tool-marks > .pi-mark.curve');
-  await page.screenshot({ path: `${OUT}curve-before.png` });
-  report(curves.length >= 1, 'the select tool marks the blueprint curve\'s middle', `${curves.length} round marks, tool ${await ui()}`);
-  if (curves.length) {
-    const before = await edgePis(made.curve);
-    const h = curves[0];
-    // towards the PI: the curve gets tighter
-    const r = await rect(), piLL = ll, piPx = await page.evaluate((c) => window.tw.map.project(c), piLL);
-    const vx = piPx.x + r.left - h.x, vy = piPx.y + r.top - h.y, vl = Math.hypot(vx, vy) || 1;
-    const dx = (40 * vx) / vl, dy = (40 * vy) / vl;
-    await drag(h.x, h.y, dx, dy, 'curve-during.png');
-    const state = await page.evaluate(async () => { const b = (await import('/src/map/live.ts')).live.nodeDrag.drag?.bend; return b ? { q: b.q, m: b.last?.m ?? null, gain: b.gain } : null; });
-    const miss = state?.m ? Math.hypot(state.q.x - state.m.x, state.q.y - state.m.y) : NaN;
-    report(miss < 1, 'while dragged, the curve\'s middle follows the pointer', `missed by ${miss.toFixed(2)} m, gain ${state?.gain?.toFixed(2)}`);
-    const want = await packAt(Math.round(h.x + dx), Math.round(h.y + dy));
-    await page.mouse.up();
-    await page.waitForTimeout(900);
-    const after = await edgePis(made.curve);    const got = after.length >= 9 ? Math.hypot(after[7] - want.x, after[8] - want.y) : NaN;
-    report(got < 1.5 && Math.hypot(after[1] - before[1], after[2] - before[2]) > 5, 'letting go makes the curve run through the point let go at', `middle ${got.toFixed(2)} m off, PI moved ${Math.hypot(after[1] - before[1], after[2] - before[2]).toFixed(1)} m, radius ${before[5]?.toFixed(0)} -> ${after[5]?.toFixed(0)} m`);
-    await page.screenshot({ path: `${OUT}curve-after.png` });
-    await undo();
-    const back = await edgePis(made.curve);
-    report(Math.hypot(back[1] - before[1], back[2] - before[2]) < 0.01, 'one undo puts the curve back');
-  }
 
-  // 2: a platform's end
+  // 1: a platform's end
   const stLL = await page.evaluate((n) => { const p = window.tw.world.value.nodes.get(n); return [p.lng, p.lat]; }, made.station);
   await jump(stLL, 16);
   await page.waitForTimeout(1500);
@@ -119,7 +87,7 @@ try {
     await undo();
   }
 
-  // 3: the Select tool's pick
+  // 2: the Select tool's pick
   await jump(ll ?? [-73.963, 40.778], 14.2);
   await setTool('blueprint');
   const pick = await page.evaluate(async (station) => {

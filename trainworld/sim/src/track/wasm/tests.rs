@@ -1405,6 +1405,52 @@ fn drag_blueprint_nodes() {
     assert_eq!(a.preview_move_node(s, 4500.0, 250.0)[0], 0.0);
 }
 
+/// T-2951: a point added to blueprint track, then dragged.
+#[test]
+fn add_point_to_blueprint() {
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(6000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0);
+    let e = a.edges_info()[0] as u32;
+    let count = |a: &TrackApi| (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).count();
+    let nodes = |a: &TrackApi| a.nodes_info().len() / 10;
+    let (e0, n0) = (count(&a), nodes(&a));
+
+    // a click 4 m beside the track: the point goes on it
+    assert_eq!(a.add_point(e, 2500.0, 4.0), 0, "{}", a.issues());
+    assert_eq!((count(&a), nodes(&a)), (e0 + 1, n0 + 1));
+    let p = a.nodes_info().chunks(10).find(|c| (c[1] - 2500.0).abs() < 0.01 && c[2].abs() < 0.01).expect("a node at the point")[0] as u32;
+    // it drags like any node, one undo each
+    assert_eq!(a.move_node(p, 2500.0, 300.0), 0, "{}", a.issues());
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.undo(), 0);
+    assert_eq!((count(&a), nodes(&a)), (e0, n0), "one undo takes the point away");
+
+    // the inspector's button: halfway
+    assert_eq!(a.add_point_middle(e), 0, "{}", a.issues());
+    assert!(a.nodes_info().chunks(10).any(|c| (c[1] - 3000.0).abs() < 0.01 && c[2].abs() < 0.01));
+    assert_eq!(a.undo(), 0);
+
+    // too near an end: refused, nothing changes
+    assert_ne!(a.add_point(e, 2.0, 0.0), 0);
+    assert!(a.issue_kinds().contains("SplitPoint"));
+    assert_eq!((count(&a), nodes(&a)), (e0, n0));
+
+    // inside a station's platform: refused
+    assert_eq!(a.add_station(2, e, 4500.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
+    let (e1, n1) = (count(&a), nodes(&a));
+    let on = (0..a.w.net.edge_count() as u32).find(|&x| a.w.net.edge_ok(x) && a.w.net.edge_data(x).unwrap().b != a.w.net.edge_data(x).unwrap().a && a.w.net.project(x, 4550.0, 0.0).1.abs() < 1.0 && a.w.net.project(x, 4550.0, 0.0).0 > 1.0).unwrap();
+    assert_ne!(a.add_point(on, 4550.0, 0.0), 0, "a point inside a platform is refused");
+    assert!(a.issue_kinds().contains("PlatformJoint"));
+    assert_eq!((count(&a), nodes(&a)), (e1, n1));
+
+    // constructed: refused
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert_ne!(a.add_point(e, 1000.0, 0.0), 0);
+    assert!(a.issue_kinds().contains("NodeInUse"));
+    assert_eq!((count(&a), nodes(&a)), (e1, n1));
+}
+
 /// Track drawn while the track ran through the clicked points (T-079, saves TWT3 with flag 8)
 /// loads and looks as it did; its first reshape cuts the corners at its clicks.
 #[test]

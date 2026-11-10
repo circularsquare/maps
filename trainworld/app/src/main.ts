@@ -463,11 +463,14 @@ effect(() => {
   map.triggerRepaint();
 });
 
-// While a tool is on, double clicks finish a route instead of zooming.
+// A double click never zooms with a mouse: with the select tool it adds a point to track (T-2951,
+// map/edgeEdit.ts), with the track tool it ends a run. A finger's double tap zooms with the select tool.
 effect(() => {
+  if (tool.value === "select" && touchInput.value) map.doubleClickZoom.enable();
+  else map.doubleClickZoom.disable();
   // a shift-click places a refused track point (T-410), which MapLibre's shift-drag zoom would eat
-  if (tool.value === "select") map.doubleClickZoom.enable(), map.boxZoom.enable();
-  else map.doubleClickZoom.disable(), map.boxZoom.disable();
+  if (tool.value === "select") map.boxZoom.enable();
+  else map.boxZoom.disable();
   map.getCanvas().style.cursor = tool.value === "select" ? "" : "crosshair";
   if (tool.value !== "track") tools.reset();
 });

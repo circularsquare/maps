@@ -48,6 +48,7 @@ function sections(): [string, [string, string][]][] {
     [t("help.shiftClick"), t("help.placeTrack")],
     [t("help.doubleClickEnter"), t("help.stopDrawing")],
     [t("help.backspaceRight"), t("help.undoPiece")],
+    [t("help.dblTrack"), t("help.addPoint")],
     [t("help.rightClickBus"), t("help.doDelete")],
     [t("help.dragBusPoint"), t("help.doMove")],
     [t("help.clickBusEnd"), t("help.drawFromEnd")],

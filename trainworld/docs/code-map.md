@@ -223,7 +223,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
 - Tools: `realSnap.ts` (the track tool's snap to the real network: ring, route ghost and tag, the
   second click's route, T-727d; only where a graph covers the click, `covers`, T-913), `pick.ts`, `cellIndex.ts` and `snapIndex.ts` (grids built in idle time, at once for 20,000 items or more (T-2404), that narrow a pick
   and the build tools' snap to what is near the pointer, T-724, and carried over an edit, T-1030), `tools.ts` (drawing track, placing stations, the line tool; on touch the tap, preview and confirm and the control bar's place, T-1260), `touch.ts` (whether the last press was a finger, and what the touch control bar offers), `stationSnap.ts` (which overlapping track a station goes on, the nearest spot with room for the platform, T-671, T-1870), `edgeEdit.ts`
-  (dragging blueprint track's PIs, T-064, T-092), `nodeDrag.ts` (dragging blueprint nodes, T-093; a platform's end or a curve's middle, T-1869; `endDrag`, a drag's cleanup), `dragHandles.ts` (where the curve-middle and platform-end handles are, for the markers and the drag, T-1869; `NODE_HIT_PX`, a node's reach for a press), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777; `marksLayer`, a tool's layer of marks), `curveCircle.ts` (the circle of the segment being drawn, T-418),
+  (dragging blueprint track's PIs, T-064, T-092; a double click adding a point, T-2951), `nodeDrag.ts` (dragging blueprint nodes, T-093; a platform's end, T-1869; `endDrag`, a drag's cleanup), `dragHandles.ts` (where the platform-end handles are, for the markers and the drag, T-1869; `NODE_HIT_PX`, a node's reach for a press), `endMarkers.ts` (loose-end and draggable-point markers, T-416), `screenPlace.ts` (`placeAt`: every DOM mark placed through the overlay's projection, hidden where its point has no place on the screen, T-1777; `marksLayer`, a tool's layer of marks), `curveCircle.ts` (the circle of the segment being drawn, T-418),
   `blueprintBox.ts` (the Select tool's drag box, T-333, and dragging its pick, T-475; its state is `game/blueprintPick.ts`),
   `busStops.ts` (a by-hand bus line's stop editing, T-2891), `stopMarkers.ts` (the toggle markers of stop editing, T-233; the gap to a station they cannot
   reach, drawn by `gapFlash.ts`, T-1896), `reversalMarks.ts` (the icon over
@@ -599,12 +599,15 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   `t1899-stop-logic.mjs [url]` (browser, that city: clicks along a way round run straight, a new line
   on high-speed track gets high-speed trains and back, an established line keeps its type, overlapping
   markers on a new line take the station no trains stop at; about a minute, default port 6120, T-1899),
-  `t1869-drag.mjs [url]` (a new game by Central Park, real mouse drags: a blueprint curve's middle
-  bends the curve through the pointer and undoes, a platform end moves its station, the Select tool's
-  pick shows its squares moving and the speed labels; screenshots to artifacts/trainworld/t1869/;
-  about a minute, port 6169 by default, T-1869),
+  `t1869-drag.mjs [url]` (a new game by Central Park, real mouse drags: a platform end moves its
+  station, the Select tool's pick shows its squares moving and the speed labels; screenshots to
+  artifacts/trainworld/t1869/; about a minute, port 6169 by default, T-1869),
+  `t2951-add-point.mjs [url]` (a new game by Central Park, real mouse: two drawn segments' middle
+  dragged leaves every square on the track, a double click adds a point that drags and undoes in
+  two steps without zooming, the track inspector's Add point, refused on built track; screenshots to
+  artifacts/trainworld/trackvertex/; about a minute, port 6310 by default, T-2951),
   `t1898-select.mjs [url]` (the real save, real mouse drags: a Select tool box moves only the nodes
-  inside it, the bar's High speed and Regular with their messages, and a 320 km/h curve bent and its
+  inside it, the bar's High speed and Regular with their messages, and a 320 km/h curve's corner and
   joint dragged keeping its speed; screenshots to artifacts/trainworld/t1898/; about two minutes,
   port 6190 by default, T-1898),
   `t714-pan.mjs` (frame time while dragging and wheel-zooming the

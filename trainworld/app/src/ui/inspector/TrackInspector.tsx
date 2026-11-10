@@ -47,6 +47,11 @@ export function TrackInspector({ edge }: { edge: number }) {
     <>
       <div class="title">
         <span class="name">{t("trackInspector.name", { kind: e.crossover ? "crossover" : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" })}</span>
+        {!e.built && !e.crossover && (
+          <button class="btn icon" data-tip={t("trackInspector.addPointTip")} aria-label={t("trackInspector.addPoint")} onClick={() => void edit({ op: "addPoint", edge: e.id })}>
+            <Icon.addPoint />
+          </button>
+        )}
         {e.tracks === 2 && !e.crossover && !e.hsr && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">

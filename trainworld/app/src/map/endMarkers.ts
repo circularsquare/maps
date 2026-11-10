@@ -3,8 +3,8 @@
 // line is continued or a station goes at the end of one. With the select tool, a square marker at
 // every blueprint point that can be dragged (map/nodeDrag.ts): track ends, corners and junctions.
 // The track tool has both (T-1811): the squares, a blueprint loose end's in the accent, and the
-// rings near the pointer at built loose ends. With either, a round mark at the middle of every
-// blueprint curve and a square at both ends of a blueprint platform (T-1869, map/dragHandles.ts).
+// rings near the pointer at built loose ends. With either, a square at both ends of a blueprint
+// platform (T-1869, map/dragHandles.ts).
 // They take no presses; the tools and the node drag work on the nodes underneath.
 
 import type { Map as MlMap } from "maplibre-gl";
@@ -15,12 +15,12 @@ import { effect } from "@preact/signals";
 import { anchor, toLocal } from "./geo";
 import { live } from "./live";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
-import { MARKS_ZOOM, NODE_HIT_PX, onCurveHandles, stationEnds, visibleCurves } from "./dragHandles";
+import { MARKS_ZOOM, NODE_HIT_PX, stationEnds } from "./dragHandles";
 import type { Overlay } from "./overlay";
 import { marksLayer, onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag" | "track";
-type Cls = "end-mark" | "pi-mark" | "pi-mark loose" | "pi-mark curve";
+type Cls = "end-mark" | "pi-mark" | "pi-mark loose";
 
 /** below this zoom the markers would only crowd the map */
 const MIN_ZOOM = MARKS_ZOOM;
@@ -76,15 +76,11 @@ export class EndMarkers {
       world.value;
       this.place();
     });
-    onCurveHandles(() => this.place());
   }
 
-  /** The curves' middles and the platforms' ends, px (T-1869). */
+  /** The platforms' ends, px (T-1869). */
   private handles(): { x: number; y: number; cls: Cls }[] {
-    return [
-      ...visibleCurves(this.overlay).map((c) => ({ x: c.x, y: c.y, cls: "pi-mark curve" as Cls })),
-      ...stationEnds(this.overlay).map((e) => ({ x: e.x, y: e.y, cls: "pi-mark" as Cls })),
-    ];
+    return stationEnds(this.overlay).map((e) => ({ x: e.x, y: e.y, cls: "pi-mark" as Cls }));
   }
 
   private wanted(): Kind | null {

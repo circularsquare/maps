@@ -68,6 +68,8 @@ export const Icon = {
   related: () => <svg viewBox="0 0 16 16"><path d="M6 1.5v13M10 1.5v8c0 1.8 1 3 3 5" /><rect x="3.5" y="4.5" width="9" height="3.5" rx="1.75" /></svg>,
   // two parallel tracks with an express pair added beside them
   doubleUp: () => <svg viewBox="0 0 16 16"><path d="M1.5 3h13M1.5 6h13M8 9v6M5 12h6" /></svg>,
+  // T-2951: track with a square point on it, and a plus
+  addPoint: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5l4.5-3M10 10.5l4.5 3M12 1.5v5M9.5 4h5" /><rect x="6" y="8.5" width="4" height="4" /></svg>,
   bus: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>,
   // T-2194: a boat on waves
   ferry: () => <svg viewBox="0 0 16 16"><path d="M2.5 8.5h11l-1.8 3H4.3zM5 8.5V6h5.5l1 2.5M7 6V4" /><path d="M1.5 13.8c1.1-.7 2.1-.7 3.2 0s2.1.7 3.3 0 2.1-.7 3.2 0 2.1.7 3.3 0" /></svg>,

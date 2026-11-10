@@ -10,9 +10,9 @@
 // 2. High speed in the bar makes the picked double piece high-speed track and counts the single one
 //    as not changed; Regular puts it back.
 // 3. At 320 km/h (Build tab: High speed) a 3 km straight and a tangent curve from its end at the
-//    design radius (zoom 14): bending the curve's middle 15 px sharper keeps 300 km/h or more, 15 px
-//    gentler keeps 320, 40 px sharper slows it only to what its legs allow (over 160), and a 15 px
-//    drag of the joint keeps both pieces at 300 or more.
+//    design radius (zoom 14): its corner dragged 15 px sharper keeps 300 km/h or more, 15 px gentler
+//    keeps 320, 40 px sharper slows it only to what its legs allow (over 160), and a 15 px drag of
+//    the joint keeps both pieces at 300 or more.
 // Screenshots to artifacts/trainworld/t1898/. One PASS or FAIL line each.
 import { mkdir, readFile } from 'node:fs/promises';
 import { launchChrome, GL, ARTIFACTS, REAL_SAVE, importSave } from './lib.mjs';
@@ -208,24 +208,26 @@ try {
   const s0 = await slowest(hs.curve);
   report(s0.kmh >= 319 && s0.set > 7000, 'the curve is drawn for 320 km/h', `${s0.kmh.toFixed(0)} km/h, radius ${s0.r.toFixed(0)} m (set ${s0.set.toFixed(0)})`);
   const midOf = async () => { const d = await edgePis(hs.curve); return screenOf({ x: d[7], y: d[8] }); };
-  const handle = async () => { const m = await midOf(), marks = await visible('.tool-marks > .pi-mark.curve'); return marks.sort((a, b) => Math.hypot(a.x - m.x, a.y - m.y) - Math.hypot(b.x - m.x, b.y - m.y))[0]; };
   await jump(await page.evaluate(async (e) => { const d = Array.from(await (await import('/src/workers/clockClient.ts')).queryClock({ what: 'edgePis', edge: e })); return window.tw.packToLngLat(d[7], d[8]); }, hs.curve), 14);
   await page.waitForTimeout(1500);
   await page.mouse.move(5, 5);
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${OUT}hsr-before.png` });
   const undo = async () => { await page.evaluate(() => window.tw.client.edit({ op: 'undo' }, true)); await page.waitForTimeout(1000); };
-  // towards the curve's PI bends it sharper, away from it gentler
-  const towardPi = async (h) => { const d = await edgePis(hs.curve), p = await screenOf({ x: d[1], y: d[2] }), l = Math.hypot(p.x - h.x, p.y - h.y) || 1; return [(p.x - h.x) / l, (p.y - h.y) / l]; };
+  // the selected curve's corner square (its PI, map/edgeEdit.ts) dragged away from the curve bends it
+  // sharper, towards it gentler
+  await page.evaluate(async (e) => { (await import('/src/game/ui.ts')).selection.value = { kind: 'track', edge: e }; }, hs.curve);
+  await page.waitForTimeout(1200);
   for (const [name, sign, px, ok] of [['sharper', 1, 15, (k) => k >= 300], ['gentler', -1, 15, (k) => k >= 319], ['much sharper', 1, 40, (k) => k > 165 && k < 319]]) {
-    const h = await handle();
-    if (!h) { report(false, `a bend ${name}`, 'no curve handle'); continue; }
-    const [vx, vy] = await towardPi(h);
-    await drag(h.x, h.y, sign * px * vx, sign * px * vy, `hsr-bend-${name.replace(' ', '-')}.png`);
+    const d = await edgePis(hs.curve), m = await midOf(), p = await screenOf({ x: d[1], y: d[2] }), l = Math.hypot(p.x - m.x, p.y - m.y) || 1;
+    const sq = (await visible('.tool-marks > .pi-mark.drag')).sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    if (!sq || Math.hypot(sq.x - p.x, sq.y - p.y) > 3) { report(false, `the corner dragged ${name}`, 'no corner square at the PI'); continue; }
+    await drag(sq.x, sq.y, (sign * px * (p.x - m.x)) / l, (sign * px * (p.y - m.y)) / l, `hsr-bend-${name.replace(' ', '-')}.png`);
     const s = await slowest(hs.curve);
-    report(ok(s.kmh), `a ${px} px bend ${name}: ${px === 40 ? 'slows only as far as its legs need' : 'keeps the curve fast'}`, `${s.kmh.toFixed(0)} km/h, radius ${s.r.toFixed(0)} m (set ${s.set.toFixed(0)})`);
+    report(ok(s.kmh), `the curve's corner dragged ${px} px ${name}: ${px === 40 ? 'slows only as far as its legs need' : 'keeps the curve fast'}`, `${s.kmh.toFixed(0)} km/h, radius ${s.r.toFixed(0)} m (set ${s.set.toFixed(0)})`);
     await undo();
   }
+  await page.evaluate(async () => { (await import('/src/game/ui.ts')).selection.value = null; });
   {
     const j = await screenOf(await nodeAt(hs.joint));
     await drag(j.x, j.y, 0, 15, 'hsr-joint.png');

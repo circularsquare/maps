@@ -558,8 +558,8 @@ has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on S
 [T-908, `ui/HelpPanel.tsx`] The "?" at the top of Settings [T-1099] (hover "Controls") opens a panel over the
 map beside the dock, under the tab row, listing only the controls no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
-modifiers (Shift+click, double click or Enter, Backspace, Caps Lock, right drag, E and Delete in
-the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, D, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
+modifiers (Shift+click, double click or Enter, Backspace, a double click on track adding a point
+(T-2951, not on a phone), Caps Lock, right drag, E and Delete in the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, D, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
 the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY`, `DEMAND_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
 Esc, so the selection stays), a press outside or the button again closes it. A control added or

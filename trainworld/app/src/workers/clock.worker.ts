@@ -3378,6 +3378,8 @@ function apply(op: EditOp): Applied {
     case "moveNode":
       a.set_design_speed(designOf(op));
       return { r: a.move_node(op.node, op.x, op.y) };
+    case "addPoint":
+      return { r: op.x === undefined || op.y === undefined ? a.add_point_middle(op.edge) : a.add_point(op.edge, op.x, op.y) };
     case "moveNodes":
       a.set_design_speed(designOf(op));
       return { r: a.move_nodes(new Uint32Array(op.nodes), op.dx, op.dy) };

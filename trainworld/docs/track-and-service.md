@@ -129,14 +129,15 @@ Full design, numbers and sources: `notes/T-008.md`.
   **Drags keep the design speed** (T-1898): in any reshape or node drag a set radius stays set,
   the most its corner may take (above), so a 320 km/h curve bent a little keeps nearly 320 and
   slows only as far as its legs make it, and is wide again once they have room. A corner the edit
-  moves or adds (a dragged PI, a bent curve's PI, the PI moving with a node, a new lead-in) with an
+  moves or adds (a dragged PI, the PI moving with a node, a new lead-in) with an
   auto radius is laid out for the Build tab's target max speed, as a drawn corner is (`design_radii`;
   each of these edits carries `design`). At 160 nothing is set and corners stay auto.
-  **Bending a curve by its middle** (T-1869): dragging a blueprint curve's middle moves that
-  curve's PI so the curve's middle lands under the pointer, its radius rule unchanged (auto stays
-  auto, a set radius stays set and narrows to fit): a reshape of the edge as dragging the
-  PI is, the PI found by stepping it by the preview's miss until the middle is within 0.3 m. Either
-  end of a blueprint platform drags the station node by the pointer's move.
+  **Adding a point** (T-2951, `add_point`): a blueprint edge is split where the player asks, as a
+  station or a branch splits it (`split_plan`: the shape unchanged, a split inside a curve gives
+  each half a PI at the curve's radius), leaving a plain node that drags by the rules above. It is
+  refused on constructed track (as a reshape is), on a crossover, within 5 m of either end, on a
+  ramp, and where a platform would then reach the new joint. Either end of a blueprint platform
+  drags the station node by the pointer's move (T-1869).
 
 #### Placing stations, curve speed and levels
 

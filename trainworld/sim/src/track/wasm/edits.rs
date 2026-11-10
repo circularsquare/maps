@@ -119,6 +119,42 @@ impl TrackApi {
         }
     }
 
+    /// Add a point to a blueprint edge (T-2951): a plain node where (x, y) projects onto it, the
+    /// shape unchanged, as a station's split leaves it; the node then drags like any other. One
+    /// undoable edit. Refused on constructed track and a crossover, as a reshape is.
+    pub fn add_point(&mut self, id: u32, x: f64, y: f64) -> u32 {
+        if !self.w.net.edge_ok(id) {
+            return self.refuse(Issue::NoSuchEdge { edge: id });
+        }
+        let s = self.w.net.project(id, x, y).0;
+        self.add_point_at(id, s)
+    }
+
+    /// `add_point` halfway along the edge: the track inspector's button, for a finger.
+    pub fn add_point_middle(&mut self, id: u32) -> u32 {
+        if !self.w.net.edge_ok(id) {
+            return self.refuse(Issue::NoSuchEdge { edge: id });
+        }
+        self.add_point_at(id, self.w.net.edge_len[id as usize] / 2.0)
+    }
+
+    fn add_point_at(&mut self, id: u32, s: f64) -> u32 {
+        let net = &self.w.net;
+        if net.edge_built[id as usize] {
+            return self.refuse(Issue::NodeInUse { node: net.edge_a[id as usize] });
+        }
+        if let Err(i) = net.split_plan(id, s) {
+            return self.refuse(i);
+        }
+        let node = self.w.net.alloc_node();
+        let new_edge = self.w.net.alloc_edge();
+        let r = self.run(Op::Split { edge: id, s, node, new_edge });
+        if r != 0 {
+            self.release(&[node], &[new_edge]);
+        }
+        r
+    }
+
     /// What `set_edge_pis` would do, without doing it: the layout of `preview_route`. Its
     /// polyline includes the next pieces of the stroke where a joint moves with it (T-244).
     pub fn preview_edge(&mut self, id: u32, pis: &[f64]) -> Vec<f64> {

@@ -1178,8 +1178,6 @@ button.save-add:hover { color: var(--text); }
 .end-mark { width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid var(--accent); border-radius: 50%; z-index: 1; }
 /* T-1811: the track tool's square at a blueprint loose end, in the ring's colour */
 .pi-mark.loose { border-color: var(--accent); }
-/* T-1869: the middle of a blueprint curve, round so it never reads as a corner or a node */
-.pi-mark.curve { border-radius: 50%; }
 .pi-label, .tool-tag { font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);
                        padding: 0 4px; border: 1px solid var(--rule); }
 .tool-tag { max-width: 340px; white-space: normal !important; padding: 3px 6px; }

@@ -247,7 +247,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   line on would only continue it [T-2008]. A click beyond the 1,796 m circle gets that
   circle's curve then a straight to the click [T-471].
 - **Tangent on a node drag** [T-2765; `drawTangent` in `map/curveCircle.ts`]: dragging a track end with no other track
-  at it draws the same dotted line on from the end as the track tool does; none for a junction, a curve middle or a platform end.
+  at it draws the same dotted line on from the end as the track tool does; none for a junction or a platform end.
 - **What a click joins** [T-1895]: within 12 px of a node (a track end, a junction, a station) a
   click joins at it; within 8 px of a piece of track it branches off it (the station tool reaches
   15 px for track); further out it is open ground.
@@ -716,25 +716,35 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   junction with a fork badge (flat junction marks on) has no square, the badge is its handle [T-663].
   A drag previews the new shape with each curve's speed (or why not); letting go is one
   undoable edit, Escape puts it back.
-- **Curve middles and platform ends** [T-1869; `map/dragHandles.ts`, `map/nodeDrag.ts`]: with the
-  select or track tool, from zoom 9, the middle of every blueprint curve has a round white mark
-  (left out within 14 px of its piece's ends, where their squares are), and from zoom 14, where
-  platforms are drawn, both ends of a blueprint station's platform have a square. Dragging a
-  curve's middle bends the curve so that it runs through the pointer, its ends and other corners
-  staying put ([track-and-service.md](track-and-service.md) 6.1; a set radius stays set and an
-  auto one is laid out for the target max speed, so a 320 km/h curve keeps 320 where it has room,
-  T-1898; curve speed labels show on curves under 5,000 m, and on high-speed track on any curve
-  holding trains under 320, its speeds counted up to 320 there); dragging a platform's end moves
-  the station as dragging its node does, by the pointer's move, so the end stays near the pointer
-  (the platform then follows its track). Both preview, commit and cancel as a node drag does, and
-  take a press over a demand bubble [T-486]. A node within reach comes before either.
+- **Adding a point** [T-2951; `addPoint` in `map/edgeEdit.ts`, `TrackApi.add_point`]: with the
+  select tool, a double click on blueprint track (a line drawn on it included) puts a new point on
+  the track there, a plain node like a drawn segment's end, which then drags as any node does: the
+  track bends through it, keeping its heading (a drag of the point between two drawn segments
+  works the same way). The shape does not change until it is dragged; the piece is now two. One
+  undo step, and the drag is another. On a node, a platform's end or a station it does nothing;
+  on constructed track it is refused ("Built track cannot be moved. Remove it and draw it again."),
+  as are a point within 5 m of a piece's end or on a ramp, and one inside a platform. A mouse's
+  double click never zooms the map; a finger's double tap still zooms with the select tool, and a
+  finger adds a point with the track inspector's Add point (below). The track tool's double click
+  ends a run as before, and the Select tool's picks a run.
+- **Platform ends** [T-1869; `map/dragHandles.ts`, `map/nodeDrag.ts`]: with the select or track
+  tool, from zoom 14, where platforms are drawn, both ends of a blueprint station's platform have a
+  square. Dragging one moves the station as dragging its node does, by the pointer's move, so the
+  end stays near the pointer (the platform then follows its track). It previews, commits and
+  cancels as a node drag does, and takes a press over a demand bubble [T-486]. A node within reach
+  comes first. Any node drag keeps the design speed (a set radius stays set and an auto one is
+  laid out for the target max speed, T-1898; [track-and-service.md](track-and-service.md) 6.1);
+  curve speed labels show on curves under 5,000 m, and on high-speed track on any curve holding
+  trains under 320, its speeds counted up to 320 there.
 - **With the track tool** [T-734, T-1811] the same node drag works, its squares shown: a press on a
   blueprint node that moves 3 px or more drags it under the select tool's rules, and a press that
   moves less is the click that places or branches track as always (no hold time). Constructed nodes
   are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
 - **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
-  says "Remove track") and the lines here [T-1669]. It has no corner list and
+  says "Remove track") and the lines here [T-1669]. Its title carries **Add point** [T-2951], an
+  icon of track with a square on it and a plus, on blueprint track that is not a crossover: a point
+  halfway along the piece, as a double click adds one (hover "Add a point halfway along"). It has no corner list and
   no curve radius: corners are dragged on the map. Its level is set in the selection bar, which the
   click on the piece opens too (`edgesLevel`; a notice says when it cannot change) [T-841, T-244,
   T-2283]. On double track (blueprint or
