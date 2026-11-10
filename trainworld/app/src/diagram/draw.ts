@@ -21,8 +21,10 @@ export const PILL_R = 0.95, PILL_OUTLINE = 0.32;
 export const SMALL_R = 0.5, SMALL_OUTLINE = 0.24;
 /** a high-speed line's centre stripe, in the background colour, this share of its stroke (T-2272) */
 const FAST_CORE = 0.34;
-/** a tram line's width, in rail strokes (the map's tram track is thinner too; its chevrons are 0.75, map/network.ts) */
-const TRAM_W = 0.75;
+/** a tram line's width, in layout strokes (the map's tram track is thinner too) */
+const TRAM_W = 0.675;
+/** every other line's width, in layout strokes, applied when painting so the layout and pills stay as they are */
+const RAIL_W = 1.1;
 /** a tram's two wires, as on the map (rendererShaders.ts): each this share of the tram's width across, its middle
  * this share either side of the centre; none drawn where the tram is under TRAM_WIRE_MIN_PX wide */
 const WIRE_OFF = 0.17, WIRE_SHARE = 0.11, TRAM_WIRE_MIN_PX = 5;
@@ -670,7 +672,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
       ctx.stroke((l.path ??= toPath(l.cmds)));
     }
     ctx.strokeStyle = l.colour;
-    const sw = d.stroke * (l.tram ? TRAM_W : 1), thin = width(sw, 1);
+    const sw = d.stroke * (l.tram ? TRAM_W : RAIL_W), thin = width(sw, 1);
     ctx.stroke((l.path ??= toPath(l.cmds)));
     ctx.globalAlpha = 1;
     // a tram: its two wires, a band of the wire colour either side of the middle, its line's colour between and over them
@@ -689,7 +691,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     // a high-speed line: two strokes of its colour either side of a stripe of the background
     if (l.fast && !thin) {
       ctx.strokeStyle = theme.bg;
-      ctx.lineWidth = d.stroke * FAST_CORE;
+      ctx.lineWidth = sw * FAST_CORE;
       ctx.stroke(l.path);
     }
   };
@@ -732,13 +734,11 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   ctx.lineWidth = d.casing ?? d.pitch;
   for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
   if (focus?.lines) {
-    width(d.stroke * MUTE_WIDTH, MUTE_ALPHA);
     d.lines.forEach((l, i) => {
       if (full(i) || i === focus.hot) return;
       ctx.strokeStyle = l.colour;
-      if (l.tram) width(d.stroke * TRAM_W * MUTE_WIDTH, MUTE_ALPHA);
+      width(d.stroke * (l.tram ? TRAM_W : RAIL_W) * MUTE_WIDTH, MUTE_ALPHA);
       ctx.stroke(l.path!);
-      if (l.tram) width(d.stroke * MUTE_WIDTH, MUTE_ALPHA);
     });
     ctx.globalAlpha = 1;
     for (const i of focus.lines) if (i !== focus.hot && d.lines[i]) ribbon(i, true);
