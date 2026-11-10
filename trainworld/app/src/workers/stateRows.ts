@@ -52,9 +52,6 @@ interface Heavy {
   endTurns: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
-  /** T-3023: the line is in manual mode, every stop a visit in order (`TrackApi::line_manual`), and whether its stops fold back into an open line (`manual_folds`) */
-  manual: boolean;
-  manualFolds: boolean;
 }
 
 /** a kept line: its row, and the numbers the row was made from */
@@ -308,8 +305,6 @@ export class StateRows {
         reversals: heavy.reversals,
         endTurns: heavy.endTurns,
         hand: heavy.hand,
-        manual: heavy.manual,
-        manualFolds: heavy.manualFolds,
         loopKind,
         oneWay,
         limit,
@@ -419,8 +414,6 @@ export class StateRows {
       reversals: [...a.line_reversals(id)],
       endTurns: [...a.line_end_turns(id)],
       hand: a.line_hand(id),
-      manual: a.line_manual(id),
-      manualFolds: a.manual_folds(id),
     };
   }
 }

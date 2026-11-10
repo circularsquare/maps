@@ -214,8 +214,21 @@ impl<'a> Poly<'a> {
     }
     /// The route's nearest point to (x, y): road metres from the start and ground distance.
     pub fn project(&self, net: &Network, x: f64, y: f64) -> (f64, f64) {
+        self.project_in(net, x, y, 1, self.pts.len())
+    }
+    /// T-3109: `project` on each pass of a route that loops back (`loop_back_at`): the way out, the loop and the way
+    /// back, so a place on the way out and back is on both; on any other route the one nearest point.
+    pub fn project_passes(&self, net: &Network, x: f64, y: f64) -> Vec<(f64, f64)> {
+        let n = self.pts.len();
+        match loop_back_at(self.pts) {
+            Some(k) => [(1, k + 1), (k + 1, n - k), (n - k, n)].iter().map(|&(a, b)| self.project_in(net, x, y, a, b)).collect(),
+            None => vec![self.project(net, x, y)],
+        }
+    }
+    /// `project` over the stretches ending at points `lo..hi`.
+    fn project_in(&self, net: &Network, x: f64, y: f64, lo: usize, hi: usize) -> (f64, f64) {
         let mut best = (0.0, f64::INFINITY);
-        for i in 1..self.pts.len() {
+        for i in lo.max(1)..hi.min(self.pts.len()) {
             let (a, b) = (self.pts[i - 1], self.pts[i]);
             let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
             let l2 = dx * dx + dy * dy;
@@ -300,9 +313,10 @@ fn reach(net: &Network, poly: &Poly, built_only: bool) -> Vec<(f64, u32, f64)> {
         if x < bb[0] - pad || x > bb[2] + pad || y < bb[1] - pad || y > bb[3] + pad {
             continue;
         }
-        let (g, d) = poly.project(net, x, y);
-        if d <= STATION_REACH_M {
-            st.push((g, n, d));
+        for (g, d) in poly.project_passes(net, x, y) {
+            if d <= STATION_REACH_M {
+                st.push((g, n, d));
+            }
         }
     }
     st.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
@@ -357,6 +371,29 @@ pub fn is_closed(pts: &[[f64; 2]]) -> bool {
     pts.len() >= 4 && pts[0] == pts[pts.len() - 1]
 }
 
+/// T-3109: a loop that loops back: a route that runs out, round a loop at its far end and back the way it came,
+/// stored as a loop whose last points are its first ones in reverse. The index of the point where the loop leaves
+/// the way out and comes back to it; None for any other route.
+pub fn loop_back_at(pts: &[[f64; 2]]) -> Option<usize> {
+    if !is_closed(pts) {
+        return None;
+    }
+    let n = pts.len();
+    let mut k = 0;
+    while 2 * (k + 1) < n - 1 && pts[k + 1] == pts[n - 2 - k] {
+        k += 1;
+    }
+    // the loop past the way out has three stretches or more
+    (k >= 1 && n - 1 - 2 * k >= 3).then_some(k)
+}
+
+/// T-3109: where a point lies along a route, once per pass over it (`Poly::project_passes`): road metres.
+pub fn on_route_at(poly: &Poly, net: &Network, x: f64, y: f64) -> Vec<f64> {
+    let passes = poly.project_passes(net, x, y);
+    let best = passes.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+    passes.into_iter().filter(|p| p.1 <= best + 1.0).map(|p| p.0).collect()
+}
+
 /// Whether a route's points make a route at all: two or more, finite, inside the world, not too
 /// many, and at least `MIN_ROUTE_M` long.
 pub fn route_ok(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> bool {
@@ -396,10 +433,11 @@ fn spaced_stops(fixed: &[(f64, u8, Option<u32>)], sp: f64) -> Vec<(f64, u8, Opti
 /// a point within `STATION_REACH_M` along the road of a station the route reaches (`kept`) is that
 /// station's stop, and a stop on top of an end or the stop before it is dropped.
 fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]]) -> Vec<(f64, u8, Option<u32>)> {
+    // a point on the way out and back of a route that loops back is a stop on both passes (T-3109)
     let mut inner: Vec<(f64, u8, Option<u32>)> = points
         .iter()
-        .map(|p| {
-            let s = poly.project(net, p[0], p[1]).0;
+        .flat_map(|p| on_route_at(poly, net, p[0], p[1]))
+        .map(|s| {
             let station = kept.iter().filter(|k| (k.0 - s).abs() <= STATION_REACH_M).min_by(|a, b| (a.0 - s).abs().total_cmp(&(b.0 - s).abs()));
             station.map_or((s, KIND_MIDDLE, None), |k| (k.0, KIND_STATION, Some(k.1)))
         })

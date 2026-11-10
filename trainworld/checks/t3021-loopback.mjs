@@ -1,7 +1,7 @@
 // T-3021/T-3022: turning a line's end round a loop of track. On a new game in New York, a layout like
 // Anita's Pittsburgh line 5 built with the edit API: a stem A - B - M, a junction J, and a loop through
 // L and K back into J; past A a second, smaller loop with no station. A line A, B, M, L, K: in stop
-// editing M's marker says "Click to loop back here"; a click on it turns the line (stops out and back
+// editing M's marker says "Right click to loop back here"; a right click on it turns the line (stops out and back
 // over the stem, one way); undo takes it back; the marker then opens it again; and the far end turns
 // too. T-3050: a line with a station-bearing loop at each end (entered stop by stop) is one row per station
 // with a bend above and below, in the plain and the related-lines view. Times the worker's stop tiers. Screenshots artifacts/trainworld/t3021-*.png.
@@ -121,10 +121,10 @@ try {
   await page.mouse.move(mk.x, mk.y);
   await page.waitForTimeout(500);
   const tag = await page.evaluate(() => document.querySelector('.stop-tag')?.innerText ?? '');
-  check(/Click to loop back here/.test(tag), 'its hover says what the click does', tag.replace(/\n/g, ' / '));
+  check(/Right click to loop back here/.test(tag), 'its hover says what the right click does', tag.replace(/\n/g, ' / '));
   await page.screenshot({ path: join(ARTIFACTS, 't3021-marker.png') });
 
-  await page.mouse.click(mk.x, mk.y);
+  await page.mouse.click(mk.x, mk.y, { button: 'right' });
   await page.waitForTimeout(1500);
   const s1 = await info();
   const want = [N.A, N.B, N.M, N.L, N.K, N.M, N.B, N.A];
@@ -179,11 +179,11 @@ try {
     await page.mouse.move(mk.x, mk.y);
     await page.waitForTimeout(500);
     const tag2 = await page.evaluate(() => document.querySelector('.stop-tag')?.innerText ?? '');
-    check(/Click to stop looping back here/.test(tag2), 'its hover says so', tag2.replace(/\n/g, ' / '));
-    await page.mouse.click(mk.x, mk.y);
+    check(/Right click to stop looping back here/.test(tag2), 'its hover says so', tag2.replace(/\n/g, ' / '));
+    await page.mouse.click(mk.x, mk.y, { button: 'right' });
     await page.waitForTimeout(1500);
     const s6 = await info();
-    check(JSON.stringify(s6.stops) === JSON.stringify(s0.stops), 'the click opens it again', JSON.stringify(s6));
+    check(JSON.stringify(s6.stops) === JSON.stringify(s0.stops), 'the right click opens it again', JSON.stringify(s6));
   }
 
   // T-3050: a stem with a loop past each end, each loop with stations of its own, stops entered in order

@@ -287,8 +287,6 @@ function toWorld(s: ClockState): WorldView {
       reversals: l.reversals,
       endTurns: l.endTurns,
       hand: l.hand,
-      manual: l.manual,
-      manualFolds: l.manualFolds,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,
       limit: l.limit,

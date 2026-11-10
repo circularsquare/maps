@@ -926,22 +926,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
   to where the path turns, which becomes the line's end, a terminus rather than a reversal
   partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
-  **Manual mode** (T-3023, notes/T-2988.md, `LineData::manual`, saved as a trailing `LMN1` block, save level 14;
-  `TrackApi::set_manual`, `line_manual`, `manual_folds`): the line's stops are the whole cycle, one row
-  per visit, hand ordered and one way. An open line `[A, B, C, D]` becomes `[A, B, C, D, C, B, A]`, a balloon
-  closing at A; a loop line keeps its stops. Stop edits on it route the stops as given (`manual_stops`),
-  where `edited_stops` would fold an out-and-back list into an open line. Skipping a visit is `drop_stop`
-  (T-3089): any row's visit can go, the ends and a turning one included; the cycle closes up over it (a first or last
-  row is the cycle's first stop, so the next stop becomes the first), the route between its neighbours is found again, and the
-  two visits either side of a removed turn become one. Refused below two stations or with no route. `passed_stations` on a manual line also
-  lists a station the route runs over that is a stop of another visit, once per leg (the map's empty circles). A reversal at a listed stop is a terminus: the
-  turn of a line end, and the
-  app draws no U-turn icon on the line. `set_manual(false)` folds a plain out-and-back list (`folded`: it reads the same both ways)
-  into the open line, both ways again; any other list stays as it is, a normal line with those stops (a turned line keeps its loop). The
-  route between consecutive stops of a manual line turns back at a listed stop at no cost (`route_hops_turn`, 0 s; the search's
-  600 s penalty is for a line whose reversals are accidents), so a leg never runs on round a loop to turn. The marker
-  tiers 5, 6 and 8 are not offered on a manual line; tier 7 still writes a loop into it. Trains enter service at
-  the first stop only, so the far end waits one run at the start of the day.
+  There is no manual mode (T-3109 dropped T-3023's): a stop list never holds every visit by hand. A save that has a
+  trailing `LMN1` block (lines once in manual mode) loads each listed line whose stops and path read the same both ways
+  (`[A, B, C, B, A]`) as its open line (`[A, B, C]`, both ways, not hand ordered; `save::fold_manual`); any other
+  listed line loads as the normal line with those stops. Nothing writes the block now.
   Empty and one-stop lines are valid inactive drafts with an empty path. Stop edits use the same
   turn-valid route search for every insertion position, choosing minimum total path length plus
   the reversal penalty (append wins ties); an open line whose edited route reverses is tried again
@@ -1776,6 +1764,12 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   end), no other stop merges into the ends, and a ring with no stop between gets one at half its length. The
   stop's `cover` is two stretches, the first and last of the ring. A drawn route out and back along one road
   and closed is a loop all the same.
+- **Looping back** (T-3109, T-3063; `bus::loop_back_at`): a loop whose last points are its first ones in reverse,
+  with three stretches or more between where they meet, runs out, round the loop at its far end and back the way it
+  came: it is a loop as above (a circle, one way by default), its way out run twice. A place on the way out is on
+  both passes (`Poly::project_passes`): a station within reach of the way out is a stop on the way out and on the
+  way back, and a stop placed by hand there (`on_route_at`) is a stop on both passes and goes from both when taken
+  out. The app sends the route so (ui-building.md "Loop back").
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops

@@ -10,7 +10,8 @@
 //
 // The markers are plain DOM over the map and take no pointer events: the map's own click and
 // mousemove (main.ts -> map/tools.ts) call `pick`, `hover` and `activate` here, so the wheel and
-// dragging still reach the map under a marker. Everything else the mode changes (the demand views
+// dragging still reach the map under a marker. A click adds or removes a stop and nothing else; a right
+// click, or a finger held on a marker, closes or opens a loop or turns the line round one (T-3109). Everything else the mode changes (the demand views
 // hidden, other lines dimmed) is a class on the page and one renderer option (main.ts, style.css).
 
 import { t } from "../i18n";
@@ -25,6 +26,7 @@ import { GapFlash } from "./gapFlash";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { hot, onHot } from "./hovered";
+import { touchInput } from "./touch";
 
 /** How a station stands to the line being edited. */
 export type StopTier =
@@ -38,38 +40,14 @@ export type StopTier =
   | "cut"
   /** adding it makes the line's trains reverse at a station where they did not (T-797) */
   | "reverse"
-  /** the first stop, where a click closes the line into a loop (T-798) */
+  /** the first stop, where a right click closes the line into a loop (T-798) */
   | "close"
-  /** a loop's first stop, where a click opens it */
+  /** a loop's first stop, where a right click opens it */
   | "open"
-  /** the stop before a loop of track at an end of the line, where a click turns the line round it (T-3021) */
+  /** the stop before a loop of track at an end of the line, where a right click turns the line round it (T-3021) */
   | "turn"
-  /** that stop on a line so turned, where a click opens it again */
+  /** that stop on a line so turned, where a right click opens it again */
   | "unturn";
-
-/** T-3080: what a click on a visit number or an empty circle asks of the line (Exact edits) */
-export type VisitAction = { kind: "drop"; index: number } | { kind: "add"; after: number; station: number };
-
-/** T-3080: a visit's number, or the empty circle for a direction with none, drawn beside its station */
-interface VisitMark {
-  kind: "visit" | "add";
-  station: string;
-  /** the stop index of a visit; for a circle, the stop it goes in after */
-  index: number;
-  label: string;
-  /** the stations the line comes from and goes on to there, along its route */
-  from: string;
-  to: string;
-  el: HTMLDivElement;
-  x: number;
-  y: number;
-  shown: boolean;
-}
-
-/** T-3080: the numbers and circles show from this zoom up; closer stations would run them together */
-const VISIT_ZOOM = 12.5;
-/** T-3080: how far a number or circle stands from the track, CSS px past the marker's edge */
-const VISIT_OFFSET = 9;
 
 /** Marker diameter by zoom, CSS px. */
 const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
@@ -78,6 +56,11 @@ const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
 export const NEAR_SCALE = 0.8;
 const FAR_SCALE = 0.65;
 const REASON_MS = 4000;
+/** T-3109: a finger held this long on a marker is a right click; it may move this far, CSS px */
+const LONG_PRESS_MS = 500;
+const PRESS_SLOP_PX = 8;
+/** the tiers whose right click does something */
+const LOOP_TIERS: ReadonlySet<StopTier> = new Set(["close", "open", "turn", "unturn"]);
 
 export function sizeAt(zoom: number): number {
   if (zoom <= SIZE[0][0]) return SIZE[0][1];
@@ -173,7 +156,6 @@ export class StopMarkers {
   private colour = "#888";
   /** T-3041: the stops of a turned line served one way, with the stops either side of them on the walk */
   private oneWay = new Map<string, [string, string]>();
-  private visits: VisitMark[] = [];
   private index = new Map<string, number>();
   private netSeen: unknown = null;
   private size = 0;
@@ -192,7 +174,12 @@ export class StopMarkers {
   /** the last gap asked for; an older answer is dropped */
   private gapAsked = 0;
 
-  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number, tier: StopTier) => void, private visit: (a: VisitAction) => void) {
+  /** T-3109: a finger down on a marker, until it is held long enough, moves or lifts */
+  private press: { id: string; x: number; y: number; timer: number } | null = null;
+  /** the tap a long press leaves behind is not a click on the marker */
+  private swallow = false;
+
+  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number) => void, private loop: (station: number, tier: StopTier) => void) {
     this.gap = new GapFlash(map, overlay);
     this.box = document.createElement("div");
     this.box.className = "stop-marks";
@@ -203,6 +190,27 @@ export class StopMarkers {
     map.getContainer().append(this.box, this.tag);
     overlay.afterMapFrame.push(() => this.place());
     onHot(() => this.place());
+    map.on("contextmenu", (e) => {
+      if (!this.line) return;
+      e.originalEvent.preventDefault();
+      // a held finger makes one too: its own long press has dealt with it
+      if (touchInput.peek()) return;
+      const id = this.pick(e.point.x, e.point.y);
+      if (id !== null) this.loopAt(id, e.point.x, e.point.y);
+    });
+    const box = map.getContainer();
+    box.addEventListener("pointerdown", (e) => this.pressDown(e), true);
+    addEventListener("pointermove", (e) => {
+      const p = this.press;
+      if (!p || e.pointerType !== "touch") return;
+      const r = box.getBoundingClientRect();
+      if (Math.hypot(e.clientX - r.left - p.x, e.clientY - r.top - p.y) > PRESS_SLOP_PX) this.pressEnd();
+    });
+    addEventListener("pointerup", () => {
+      this.pressEnd();
+      if (this.swallow) window.setTimeout(() => (this.swallow = false), 400);
+    });
+    addEventListener("pointercancel", () => this.pressEnd());
     effect(() => {
       const on = stopEditing.value;
       const id = lineDraft.value.line;
@@ -214,7 +222,6 @@ export class StopMarkers {
         this.seenLine = null;
         this.fromWorker = null;
         this.tiers = new Map();
-        this.setVisits([]);
         this.hideTag();
         this.gapAsked++;
         this.gap.clear();
@@ -234,12 +241,7 @@ export class StopMarkers {
       this.oneWay = new Map();
       const turned = turnedLine(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
       const ls = this.line.stops, lm = ls.length - 1;
-      const stats = w.lineStats[this.line.id];
-      if (stats?.manual) this.manualMarks(ls, stats.passed);
-      else {
-        this.setVisits([]);
-        for (const r of turned?.rows ?? []) if (r.once && r.occ[0] >= 0) this.oneWay.set(ls[r.i], [ls[(r.i + lm - 1) % lm], ls[(r.i + 1) % lm]]);
-      }
+      for (const r of turned?.rows ?? []) if (r.once && r.occ[0] >= 0) this.oneWay.set(ls[r.i], [ls[(r.i + lm - 1) % lm], ls[(r.i + 1) % lm]]);
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
@@ -330,111 +332,12 @@ export class StopMarkers {
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       m.el.style.background = stop ? this.halfFill(id, n, x, y) : "";
     }
-    this.placeVisits(n, size);
     // stations that left the list (an undo): their markers go
     for (const [id, m] of this.marks)
       if (!this.tiers.has(id)) {
         m.el.remove();
         this.marks.delete(id);
       }
-  }
-
-  private setVisits(next: VisitMark[]) {
-    for (const v of this.visits) v.el.remove();
-    this.visits = next;
-    for (const v of next) this.box.appendChild(v.el);
-  }
-
-  /**
-   * T-3080, Exact edits: a manual line's visits, each with its number beside the station on the right of
-   * the way the train goes (right-hand running; left-hand running takes the left in `placeVisits`), and an
-   * empty circle on the right of every other pass of the line's route over a station it does not stop at: a
-   * station dropped on the way back has its circle where its number was. A circle puts the stop in after the
-   * stop before it on the route. A station served one way only is filled on one half (T-3089).
-   */
-  private manualMarks(stops: readonly string[], passed: readonly { gap: number; node: number }[]) {
-    const n = stops.length;
-    // the stations along the route in running order: each stop, then the stations passed before the next
-    const seq: { id: string; index: number; pass: boolean }[] = [];
-    for (let i = 0; i < n; i++) {
-      seq.push({ id: stops[i], index: i, pass: false });
-      for (const p of passed) if (p.gap === i && i < n - 1) seq.push({ id: String(p.node), index: i, pass: true });
-    }
-    const m = seq.length;
-    const closed = n >= 3 && stops[0] === stops[n - 1];
-    const marks: VisitMark[] = [];
-    const cyc = closed ? stops.slice(0, n - 1) : stops;
-    const visitsAt = new Map<string, number>();
-    for (const s of cyc) visitsAt.set(s, (visitsAt.get(s) ?? 0) + 1);
-    for (let k = 0; k < m; k++) {
-      const e = seq[k];
-      if (!e.pass && closed && e.index === n - 1) continue; // the closing row is the first stop's other row
-      const prev = seq[k === 0 && closed ? m - 2 : k - 1]?.id ?? e.id;
-      const next = seq[k === m - 1 && closed ? 1 : k + 1]?.id ?? e.id;
-      const el = document.createElement("div");
-      el.setAttribute("aria-hidden", "true");
-      el.style.display = "none";
-      if (e.pass) {
-        el.className = "visit-mark add";
-        marks.push({ kind: "add", station: e.id, index: e.index, label: "", from: prev, to: next, el, x: 0, y: 0, shown: false });
-        continue;
-      }
-      el.className = "visit-mark";
-      const label = closed && e.index === 0 ? `1, ${n}` : String(e.index + 1);
-      el.textContent = label;
-      marks.push({ kind: "visit", station: e.id, index: e.index, label, from: prev, to: next, el, x: 0, y: 0, shown: false });
-      if (closed && visitsAt.get(e.id) === 1 && prev !== next) this.oneWay.set(e.id, [prev, next]);
-    }
-    this.setVisits(marks);
-  }
-
-  /** T-3080: put the numbers and circles beside their stations, after each frame */
-  private placeVisits(n: NonNullable<Overlay["renderer"]["net"]>, size: number) {
-    if (!this.visits.length) return;
-    const show = this.map.getZoom() >= VISIT_ZOOM;
-    const at = (s: string): [number, number] | null => {
-      const i = this.index.get(s);
-      return i === undefined ? null : this.overlay.toScreen(n.stations[i * 3], n.stations[i * 3 + 1]);
-    };
-    for (const v of this.visits) {
-      const c = at(v.station), a = at(v.from), b = at(v.to);
-      let on = false;
-      if (show && c && a && b) {
-        // the way the train goes there: along from the station before to the one after, or in from the one before at a turn
-        let dx = b[0] - a[0], dy = b[1] - a[1];
-        if (v.from === v.to) { dx = c[0] - a[0]; dy = c[1] - a[1]; }
-        const len = Math.hypot(dx, dy);
-        if (len > 0.5) {
-          // right-hand running: the right of the way the train goes, (-dy, dx) on screen (y down); left-hand running takes the left
-          const side = 1, off = size / 2 + VISIT_OFFSET;
-          v.x = c[0] - (dy / len) * off * side;
-          v.y = c[1] + (dx / len) * off * side;
-          on = v.x > -20 && v.y > -20 && v.x < this.overlay.cssW + 20 && v.y < this.overlay.cssH + 20;
-        }
-      }
-      if (on) {
-        v.el.style.transform = `translate(${Math.round(v.x)}px, ${Math.round(v.y)}px)`;
-        if (!v.shown) v.el.style.display = "";
-      } else if (v.shown) v.el.style.display = "none";
-      v.shown = on;
-    }
-  }
-
-  /** T-3080: the number or circle under a map point (CSS px), nearest first */
-  pickVisit(px: number, py: number): VisitMark | null {
-    let best: VisitMark | null = null, bestD = 11;
-    for (const v of this.visits) {
-      if (!v.shown) continue;
-      const d = Math.hypot(v.x - px, v.y - py);
-      if (d < bestD) [best, bestD] = [v, d];
-    }
-    return best;
-  }
-
-  /** T-3080: a click on a number takes that visit out, one on a circle puts a visit in */
-  activateVisit(v: VisitMark) {
-    this.hideTag();
-    this.visit(v.kind === "visit" ? { kind: "drop", index: v.index } : { kind: "add", after: v.index, station: Number(v.station) });
   }
 
   /** T-3041: a stop served one way is filled on one half only, split along the track, the half on the right
@@ -488,15 +391,15 @@ export class StopMarkers {
     return this.servedFor.ids;
   }
 
-  /** What hovering a marker says. */
+  /** What hovering a marker says: a stop's click, then its right click where that does something (T-3109). */
   private words(id: string): string[] {
     const name = this.names.get(id) ?? t("stopMarkers.station");
     switch (this.tierOf(id)) {
       case "on": return [name, t("stopMarkers.remove")];
-      case "close": return [name, t("stopMarkers.closeLoop")];
-      case "open": return [name, t("stopMarkers.openLoop")];
-      case "turn": return [name, t("stopMarkers.loopBack")];
-      case "unturn": return [name, t("stopMarkers.stopLooping")];
+      case "close": return [name, t("stopMarkers.remove"), t("stopMarkers.rightClose")];
+      case "open": return [name, t("stopMarkers.remove"), t("stopMarkers.rightOpen")];
+      case "turn": return [name, t("stopMarkers.remove"), t("stopMarkers.rightLoopBack")];
+      case "unturn": return [name, t("stopMarkers.remove"), t("stopMarkers.rightStopLooping")];
       case "route": return [name, t("stopMarkers.add")];
       case "reroute": return [name, t("stopMarkers.addReroute")];
       case "reverse": {
@@ -522,13 +425,6 @@ export class StopMarkers {
 
   /** The pointer moved over the map: the hover tag, and the pointer cursor over a marker. */
   hover(px: number, py: number) {
-    const v = this.pickVisit(px, py);
-    if (v) {
-      this.map.getCanvas().style.cursor = "pointer";
-      if (this.reasonFor !== null) this.hideTag();
-      this.showTag([this.names.get(v.station) ?? t("stopMarkers.station"), t(v.kind === "visit" ? "stopMarkers.removeVisit" : "stopMarkers.addVisit")], px, py);
-      return;
-    }
     const id = this.pick(px, py);
     this.map.getCanvas().style.cursor = id ? "pointer" : "crosshair";
     if (id === null) {
@@ -539,8 +435,9 @@ export class StopMarkers {
     if (this.reasonFor === null) this.showTag(this.words(id), px, py);
   }
 
-  /** A click on the marker of station `id`. */
+  /** A click on the marker of station `id`: the stop added or taken out. */
   activate(id: string, px: number, py: number) {
+    if (this.swallow) return void (this.swallow = false);
     if (this.tierOf(id) === "cut") {
       const name = this.names.get(id) ?? t("stopMarkers.thatStation");
       this.hideTag();
@@ -551,7 +448,39 @@ export class StopMarkers {
       return;
     }
     this.hideTag();
-    this.toggle(Number(id), this.tierOf(id));
+    this.toggle(Number(id));
+  }
+
+  /** T-3109: a right click (or a long press) on the marker of station `id`: the loop there closed, opened or
+   * turned round, or a word that there is none. */
+  private loopAt(id: string, px: number, py: number) {
+    const tier = this.tierOf(id);
+    this.hideTag();
+    if (LOOP_TIERS.has(tier)) return this.loop(Number(id), tier);
+    this.reasonFor = id;
+    this.showTag([this.names.get(id) ?? t("stopMarkers.station"), t("stopMarkers.noLoop")], px, py, true);
+    this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
+  }
+
+  private pressDown(e: PointerEvent) {
+    if (e.pointerType !== "touch" || !this.line || !e.isPrimary) return this.pressEnd();
+    const r = this.map.getContainer().getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const id = this.pick(x, y);
+    this.pressEnd();
+    if (id === null) return;
+    const timer = window.setTimeout(() => {
+      this.press = null;
+      this.swallow = true;
+      navigator.vibrate?.(15);
+      this.loopAt(id, x, y);
+    }, LONG_PRESS_MS);
+    this.press = { id, x, y, timer };
+  }
+
+  private pressEnd() {
+    if (this.press) window.clearTimeout(this.press.timer);
+    this.press = null;
   }
 
   /** T-1896: where the line's track and station `id`'s are nearest, drawn for a few seconds. */

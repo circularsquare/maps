@@ -1,6 +1,6 @@
 // T-2899: bus and ferry loop lines, with the mouse, on a new game in New York. A bus loop drawn in the bus
-// tool (four points, then a click on the first closes it and makes the line), its tag "Click to close the
-// loop", the panel's lap, constructed and run with buses going round one way (T-2981), riders from a demand solve,
+// tool (four points, then a right click on the first closes it and makes the line, T-3109), its tag "Right click to
+// close the loop", the panel's lap, constructed and run with buses going round one way (T-2981), riders from a demand solve,
 // an out-and-back bus line beside it unchanged, undo and redo, and a save that reloads with the loop. Then
 // a ferry loop over three ports of the harbour the same way. Pictures in artifacts/trainworld/busloop/.
 // From the maps root, on a Vite of your own:
@@ -96,10 +96,10 @@ try {
   await page.mouse.move(first.x, first.y, { steps: 3 });
   await page.waitForTimeout(900);
   const tag = await tags();
-  check(/Click to close the loop/.test(tag), 'the tag over the first point says Click to close the loop', tag);
+  check(/Right click to close the loop/.test(tag), 'the tag over the first point says Right click to close the loop (T-3109)', tag);
   await page.screenshot({ path: join(OUT, `bus-draw-${SHADE}.png`) });
   const cash0 = await page.evaluate(() => window.tw.world.value.save.cash);
-  await page.mouse.click(first.x, first.y);
+  await page.mouse.click(first.x, first.y, { button: 'right' });
   await page.waitForFunction(() => window.tw.world.value.save.lines.length === 1 && !window.tw.tools.bus.active, undefined, { timeout: 60000 }).catch(() => {});
   const nums = await lines();
   check(nums.length === 1, 'the click makes the line', JSON.stringify(nums));

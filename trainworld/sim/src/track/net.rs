@@ -238,9 +238,6 @@ pub struct LineData {
     /// T-2895: the player set the stop order by hand, so no stop edit puts the stops in a
     /// straighter order (`straighten`).
     pub hand: bool,
-    /// T-3023: manual mode: the stop list is the whole cycle, one row a visit, run one way; a
-    /// reversal at one of its stops is a terminus, not the reversal limiter's.
-    pub manual: bool,
     /// T-2981: a loop runs one way, round in the direction its stops or route were drawn (run 0
     /// alone); otherwise both ways. Kept on an open line, which ignores it, so it carries over a
     /// close. A new bus or ferry line starts one way, a train line both ways.
@@ -465,7 +462,6 @@ pub struct Network {
     pub line_alive: Vec<bool>,
     pub line_day: Vec<u32>,
     pub line_hand: Vec<bool>,
-    pub line_manual: Vec<bool>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
     pub line_name: Vec<String>,
@@ -800,7 +796,6 @@ impl Network {
             line_alive: vec![],
             line_day: vec![],
             line_hand: vec![],
-            line_manual: vec![],
             line_one_way: vec![],
             line_limit: vec![],
             line_name: vec![],
@@ -1039,7 +1034,6 @@ impl Network {
         self.line_broken.push(false);
         self.line_day.push(0);
         self.line_hand.push(false);
-        self.line_manual.push(false);
         self.line_one_way.push(false);
         self.line_limit.push(0);
     }
@@ -1115,7 +1109,6 @@ impl Network {
                 group_look: self.line_group_look[i].clone(),
                 day: self.line_day[i],
                 hand: self.line_hand[i],
-                manual: self.line_manual[i],
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
             }
@@ -1524,7 +1517,6 @@ impl Network {
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
-                self.line_manual[i] = d.manual && d.bus.is_none() && d.ferry.is_none();
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
                 self.line_bus[i] = d.bus;
@@ -1541,7 +1533,6 @@ impl Network {
                 self.line_alive[i] = false;
                 self.line_day[i] = 0;
                 self.line_hand[i] = false;
-                self.line_manual[i] = false;
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
                 self.line_bus[i] = None;
@@ -2681,17 +2672,17 @@ impl Network {
     /// The path of a line's return run (T-3094): its path run backward, or where that runs against a
     /// one-way track, the route back through its stops in reverse order. None when there is no way
     /// back.
-    pub fn back_path_of(&self, stops: &[u32], path: &[u32], manual: bool) -> Option<Vec<u32>> {
+    pub fn back_path_of(&self, stops: &[u32], path: &[u32]) -> Option<Vec<u32>> {
         let back: Vec<u32> = path.iter().rev().map(|p| p ^ 1).collect();
         if back.iter().all(|&p| self.dir_ok(p)) {
             return Some(back);
         }
         let stops: Vec<u32> = stops.iter().rev().copied().collect();
-        self.route_hops_turn(&stops, if manual { 0.0 } else { REVERSAL_SEARCH_S }).ok()
+        self.route_hops(&stops).ok()
     }
 
     pub fn back_path(&self, l: u32) -> Option<Vec<u32>> {
-        self.back_path_of(self.line_stops(l), self.line_path(l), self.line_manual[l as usize])
+        self.back_path_of(self.line_stops(l), self.line_path(l))
     }
 
     /// Rail lines whose return run takes a way of its own, round one-way track: their tracks are not
@@ -2723,19 +2714,13 @@ impl Network {
     /// `find_path` arriving at `to` on the side `want` when given (T-798: a loop's closing hop
     /// arrives so the train carries on round).
     pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>) -> Option<(Vec<u32>, u8)> {
-        self.find_path_turn(from, to, arrived, want, REVERSAL_SEARCH_S)
-    }
-
-    /// `find_path_side` with the cost of turning back at `from` given: 0 on a manual line (T-3079), where
-    /// the player listed the stop and a reversal there is a terminus.
-    pub fn find_path_turn(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, turn_s: f64) -> Option<(Vec<u32>, u8)> {
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
         let mut heap = BinaryHeap::new();
         let p = &self.node_ports[from as usize];
         for (k, &c) in p.ends().iter().enumerate() {
-            let turn = if arrived == Some(p.side[k]) { turn_s } else { 0.0 };
+            let turn = if arrived == Some(p.side[k]) { REVERSAL_SEARCH_S } else { 0.0 };
             let (e, which) = (c >> 1, c & 1);
             let st = e << 1 | which; // leaving from end a = direction 0
             if !self.dir_ok(st) {
@@ -2791,19 +2776,13 @@ impl Network {
     /// `route` over stops that are all stations, or the first hop with no path (T-2895: hop k runs
     /// from stop k to stop k + 1).
     pub fn route_hops(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
-        self.route_hops_turn(stops, REVERSAL_SEARCH_S)
-    }
-
-    /// `route_hops` with a reversal at a stop costing `turn_s`; a manual line's (T-3079) costs nothing and
-    /// its closing hop takes the quickest way, no carrying on round.
-    pub fn route_hops_turn(&self, stops: &[u32], turn_s: f64) -> Result<Vec<u32>, usize> {
         let mut path: Vec<u32> = vec![];
         let mut side = None;
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
         for (k, w) in stops.windows(2).enumerate() {
-            let want = if closes && k + 2 == stops.len() && turn_s > 0.0 { self.carry_on_side(&path) } else { None };
-            let carry = want.and_then(|_| self.find_path_turn(w[0], w[1], side, want, turn_s));
-            let plain = self.find_path_turn(w[0], w[1], side, None, turn_s);
+            let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
+            let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want));
+            let plain = self.find_path_side(w[0], w[1], side, None);
             let (p, s) = match (carry, plain) {
                 (Some(c), Some(p)) => if self.carry_worth(&c.0, &p.0) { c } else { p },
                 (c, p) => c.or(p).ok_or(k)?,

@@ -26,7 +26,7 @@ impl TrackApi {
         }
         let data = LineData {
             name, symbol: String::new(), colour, stops: vec![], path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
-            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, manual: false, one_way: true, limit: 0,
+            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: true, limit: 0,
         };
         self.run(Op::Line { id, data: Some(data) })
     }
@@ -113,7 +113,7 @@ impl TrackApi {
             }
             // every point that made this stop goes, or a stop two points landed on would stay
             let nearest = |s: f64| (0..n).min_by(|&a, &b| (plan.stops[a].s - s).abs().total_cmp(&(plan.stops[b].s - s).abs()));
-            hand.retain(|p| nearest(poly.project(net, p[0], p[1]).0) != Some(k));
+            hand.retain(|p| bus::on_route_at(&poly, net, p[0], p[1]).into_iter().all(|s| nearest(s) != Some(k)));
         }
         r.hand = Some(hand);
         if bus::plan_route(net, id, r, r.built).stops.len() == plan.stops.len() {

@@ -32,7 +32,8 @@ use super::params::*;
 /// then index and metres); without it every bus line's stops place themselves.
 /// A trailing `LHO1` block (T-2895) lists the lines whose stop order the player set by hand (count,
 /// then indices); without it none is.
-/// A trailing `LMN1` block (T-3023) lists the lines in manual mode (count, then indices); without it none is.
+/// A trailing `LMN1` block (T-3023, written until T-3109 dropped manual mode) lists lines that were in manual
+/// mode (count, then indices); a plain out-and-back among them folds into its open line (`fold_manual`).
 /// A trailing `LBH1` block (T-2891) gives the bus lines whose stops the player places those stops
 /// (count, then per line its index, its stop count and the stops like PIs, no radius); without it
 /// no line's are.
@@ -457,12 +458,6 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(hand.len() as u64);
         for i in hand { w.u(i as u64); }
     }
-    let manual: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_manual[l as usize]).map(|(i, _)| i).collect();
-    if !manual.is_empty() {
-        w.0.extend_from_slice(b"LMN1");
-        w.u(manual.len() as u64);
-        for i in manual { w.u(i as u64); }
-    }
     let by_hand: Vec<(usize, &[[f64; 2]])> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().and_then(|r| r.hand.as_deref()).map(|h| (i, h))).collect();
     if !by_hand.is_empty() {
         w.0.extend_from_slice(b"LBH1");
@@ -692,7 +687,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, manual: false, one_way: false, limit: 0 })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -893,11 +888,12 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines && net.line_bus[i].is_none() && net.line_ferry[i].is_none() { net.line_hand[i] = true; }
         }
     }
+    let mut manual = vec![];
     if r.0.get(r.1..r.1 + 4) == Some(b"LMN1") {
         r.1 += 4;
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
-            if i < n_lines && net.line_bus[i].is_none() && net.line_ferry[i].is_none() { net.line_manual[i] = true; }
+            if i < n_lines && net.line_bus[i].is_none() && net.line_ferry[i].is_none() { manual.push(i as u32); }
         }
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LBH1") {
@@ -933,8 +929,26 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines { net.line_limit[i] = v.min(u16::MAX as u64) as u16; }
         }
     }
+    for l in manual {
+        fold_manual(&mut net, l);
+    }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
+}
+
+/// A line saved in manual mode (T-3023) whose stops and path read the same both ways, `[A, B, C, B, A]`,
+/// becomes the open line `[A, B, C]` run both ways; any other list stays as it is (T-3109).
+fn fold_manual(net: &mut Network, l: u32) {
+    let Some(mut d) = net.line_data(l) else { return };
+    let (n, m) = (d.stops.len(), d.path.len());
+    if n < 3 || n % 2 == 0 || (0..n).any(|i| d.stops[i] != d.stops[n - 1 - i]) || (0..m).any(|i| d.path[i] != d.path[m - 1 - i] ^ 1) {
+        return;
+    }
+    d.stops.truncate(n / 2 + 1);
+    d.path.truncate(m / 2);
+    d.hand = false;
+    d.one_way = false;
+    let _ = net.set_line(l, Some(d));
 }
 
 #[cfg(test)]
@@ -952,7 +966,7 @@ mod tests {
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, manual: false, one_way: false, limit: 0 })).unwrap();
+        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 })).unwrap();
         encode(&net)
     }
 
@@ -971,6 +985,21 @@ mod tests {
         let w2 = crate::track::world::TrackWorld::new(decode(&second).unwrap());
         assert!(w2.net.line_ok(0) && w2.net.check_line(0).is_err(), "still there and still broken on the next load");
         encode(&w2.net);
+    }
+
+    /// T-3109: a line saved in manual mode as a plain out-and-back loads as its open line.
+    #[test]
+    fn a_manual_out_and_back_folds_on_load() {
+        let mut net = decode(&sample()).unwrap();
+        let mut d = net.line_data(0).unwrap();
+        d.stops = vec![0, 1, 0];
+        d.path = vec![0, 1];
+        d.hand = true;
+        d.one_way = true;
+        net.set_line(0, Some(d)).unwrap();
+        fold_manual(&mut net, 0);
+        let d = net.line_data(0).unwrap();
+        assert_eq!((d.stops, d.path, d.hand, d.one_way), (vec![0, 1], vec![0], false, false));
     }
 
     #[test]

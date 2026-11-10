@@ -354,7 +354,7 @@ render(h(TouchBar, null), tools.touchHost);
 const blueprintBox = new BlueprintBox(map, overlay, client);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
-tools.stops = new StopMarkers(map, overlay, (station, tier) => tools.toggleStop(station, tier), (a) => tools.visitAction(a));
+tools.stops = new StopMarkers(map, overlay, (station) => tools.toggleStop(station), (station, tier) => tools.loopStop(station, tier));
 tools.busStops = new BusStopMarkers(map, overlay);
 // T-797: a large icon over every station where a line reverses partway
 if (!SYNTH) new ReversalMarks(map, overlay);

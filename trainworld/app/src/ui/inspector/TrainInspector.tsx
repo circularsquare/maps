@@ -32,8 +32,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
   const stopS = st.stopS[run] ?? [];
   const next = at ? stopS.findIndex((s) => s > at.s + 1) : -1;
   const len = net.meta[profile * 4 + 3];
-  // T-3023: a manual line runs the whole list one way, so a train heads for the next stop where it turns, not the list's last
-  const head = st.manual && next >= 0 ? (st.reversals.find((k) => k >= next) ?? stops.length - 1) : stops.length - 1;
+  const head = stops.length - 1;
   return (
     <>
       <div class="title">

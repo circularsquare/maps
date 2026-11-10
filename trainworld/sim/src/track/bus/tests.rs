@@ -13,6 +13,28 @@ fn profile_runs_flat_and_stands_between() {
     assert_eq!(state_at(&p.phases, p.duration + 100.0), (3000.0, 0.0));
 }
 
+/// T-3109: a route out 2 km, round a 1 km square and back: a station and a stop placed by hand on the way out are
+/// stops on the way back too; one on the loop is a stop once.
+#[test]
+fn a_route_that_loops_back_stops_both_ways_on_its_way_out() {
+    use crate::track::net::{NodeData, StationData};
+    let mut net = Network::new(-73.985, 40.758, true);
+    let n = net.alloc_node();
+    net.set_node(n, Some(NodeData { x: 500.0, y: 40.0, level: 0, flying: false })).unwrap();
+    net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
+    let pts = [[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [2000.0, 1000.0], [2000.0, 0.0], [0.0, 0.0]];
+    assert_eq!(loop_back_at(&pts), Some(1));
+    assert_eq!(loop_back_at(&[[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [0.0, 0.0]]), None, "a plain loop");
+    let p = plan(&net, 0, &pts, &[], false);
+    let at: Vec<f64> = p.stops.iter().filter(|s| s.station == Some(n)).map(|s| s.s).collect();
+    assert_eq!(at.len(), 2, "the station both ways: {at:?}");
+    assert!((at[0] - 500.0 * ROAD_FACTOR).abs() < 1.0 && (p.len - at[1] - 500.0 * ROAD_FACTOR).abs() < 1.0);
+    let hand = [[1500.0, 0.0], [3000.0, 500.0]];
+    let p = plan_by(&net, 0, &pts, &[], false, StopRule::Hand(&hand));
+    let middles = p.stops.iter().filter(|s| s.kind == KIND_MIDDLE).count();
+    assert_eq!(middles, 3, "{:?}", p.stops.iter().map(|s| s.s).collect::<Vec<_>>());
+}
+
 #[test]
 fn plan_on_an_empty_network() {
     let net = Network::new(-73.985, 40.758, true);

@@ -12,13 +12,15 @@
 //
 // The clicked points are handles (docs/ui-building.md "Drawing a bus line"): new points go on at the
 // active end (either end; a click on the other one switches), a drag moves a point and re-searches
-// the legs either side, a right click on one deletes it (a finger: drag, and hold to delete,
-// T-1517). A click on the active end, a double click,
-// Enter, Escape or the Save/Make button finishes a new route; Escape drops an edit as a whole. A click on the
-// other end, with three points or more, closes the route into a loop and finishes it (T-2899): the last point
-// is then a copy of the first, which is all the sim keeps of a loop (`bus::is_closed`). A closed route has no
-// active end; a right click on its first point opens it again, and taking out a point of a ring of three
-// leaves an open route of two.
+// the legs either side, a click on one deletes it (T-3109; a finger: drag, tap to delete). A click on the active
+// end, a double click, Enter, Escape or the Save/Make button finishes a new route; Escape drops an edit as a whole.
+// A right click (a finger: hold, T-1517) loops (T-3109): on the other end, with three points or more, it closes the
+// route into a loop and finishes it (T-2899): the last point is then a copy of the first, which is all the sim keeps
+// of a loop (`bus::is_closed`). On a point partway along it joins the active end back to that point and finishes:
+// the bus runs out, round the loop and back the way it came, kept as a loop whose last legs are its first ones
+// backward (`bus::loop_back_at`), folded back to the way out and the loop here (`begin`). A looped route has no
+// active end; a right click where it closes opens it again, as does deleting that point, and taking out a point
+// of a loop of three leaves it open. A right click on the active end deletes it.
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
@@ -174,7 +176,7 @@ export class BusDraw {
       // a held finger makes one too: its own long press has dealt with it (T-1517)
       if (touchInput.peek()) return;
       const i = this.handleAt(e.point.x, e.point.y);
-      if (i >= 0) void this.remove(i);
+      if (i >= 0) this.rightClick(i);
       else this.back();
     });
     // capture: before MapLibre's own handlers, so a press on a handle does not pan the map
@@ -224,6 +226,16 @@ export class BusDraw {
       this.pts.push(p);
       from = i;
     }
+    // T-3109: a route that loops back is drawn with its way out once, its last point the one the loop comes back to
+    const last = this.pts.length - 1, same = (a: Pt, b: Pt) => a.lng === b.lng && a.lat === b.lat;
+    if (last >= 4 && same(this.pts[0], this.pts[last])) {
+      let k = 0;
+      while (2 * (k + 1) < last && same(this.pts[k + 1], this.pts[last - k - 1])) k++;
+      if (k >= 1 && last - 2 * k >= 3) {
+        this.pts = this.pts.slice(0, last - k + 1);
+        this.legs = this.legs.slice(0, last - k);
+      }
+    }
     this.rev++;
     this.head = false;
     this.line = line;
@@ -266,7 +278,7 @@ export class BusDraw {
     }
     if (this.pts.length < 2) this.head = false;
     const d = busDraft.peek();
-    const points = this.pts.length - (this.closed() ? 1 : 0);
+    const points = this.pts.length - (this.looped() ? 1 : 0);
     if (!d || d.line !== this.line || d.points !== points) busDraft.value = { line: this.line, points };
     this.ask();
     this.place();
@@ -276,7 +288,7 @@ export class BusDraw {
 
   /** where a leg to the pointer goes: none while the pointer is on a handle or a point is dragged */
   private hoverPt(): Pt | null {
-    if (this.closed()) return null;
+    if (this.looped()) return null;
     if (touchInput.peek()) return this.touchAt;
     return this.over >= 0 || this.drag ? null : this.at;
   }
@@ -296,6 +308,27 @@ export class BusDraw {
     return n >= 4 && this.pts[0].lng === this.pts[n - 1].lng && this.pts[0].lat === this.pts[n - 1].lat;
   }
 
+  /** T-3109: the route loops back: its last point is its point `k` partway along, with three legs or more past
+   * it; -1 for none. */
+  private joinAt(): number {
+    const n = this.pts.length, z = this.pts[n - 1];
+    for (let k = 1; k <= n - 4; k++) if (this.pts[k].lng === z.lng && this.pts[k].lat === z.lat) return k;
+    return -1;
+  }
+
+  /** a loop, or a route that loops back: no end to add points at */
+  private looped(): boolean {
+    return this.closed() || this.joinAt() >= 0;
+  }
+
+  /** where a looped route closes: its last point's handle and, for one that loops back, that point partway along */
+  private isSeam(i: number): boolean {
+    const n = this.pts.length;
+    if (this.closed()) return i === 0 || i === n - 1;
+    const k = this.joinAt();
+    return k >= 0 && (i === k || i === n - 1);
+  }
+
   /** The route so far as points, built from the legs and, with the pointer out, the leg to it. */
   private build(withHover: boolean): Built {
     const hover = withHover ? this.hoverPt() : null;
@@ -309,6 +342,13 @@ export class BusDraw {
       hoverLeg = this.head ? this.roads.leg(hover, end, "a") : this.roads.leg(end, hover, "b");
       if (this.head) legs.unshift(hoverLeg);
       else legs.push(hoverLeg);
+    }
+    // T-3109: a route that loops back runs its way out again backward after the loop; those legs have no handles
+    const k = this.joinAt(), back = new Set<Leg>();
+    if (k >= 0) for (let j = k - 1; j >= 0; j--) {
+      const leg = reversedLeg(this.legs[j]);
+      back.add(leg);
+      legs.push(leg);
     }
     const ll: number[] = [], kinds: number[] = [], corners: Pt[] = [];
     let ready = true;
@@ -348,7 +388,7 @@ export class BusDraw {
       }
       // never a straight leg in the line's colour (T-2467): the pointer's draws nothing until its roads are in
       runs.push({ from, to: kinds.length, draw: leg.road ? "road" : isHover && !leg.ready ? "none" : "bad" });
-      if (!(isHover && !this.head)) corners.push({ lng: leg.pts[n - 2], lat: leg.pts[n - 1] });
+      if (!(isHover && !this.head) && !back.has(leg)) corners.push({ lng: leg.pts[n - 2], lat: leg.pts[n - 1] });
     });
     const hoverRoad = !!hoverLeg?.road;
     const b: Built = { ll, kinds, corners, ready, dim, runs, hoverRefused, hoverRoad, sig: `${key}|${ll.length}|${ready}|${hoverLeg ? hoverLeg.road : ""}` };
@@ -567,8 +607,8 @@ export class BusDraw {
     this.press = { i, x: px, y: py };
   }
 
-  /** A finger on a handle: it drags the point and does not pan the map; held still it deletes the
-   * point; a tap that moves nothing reaches the tap logic as before. A second finger is a pinch. */
+  /** A finger on a handle: it drags the point and does not pan the map; held still it does a right click's
+   * work there (T-3109); a tap that moves nothing reaches the tap logic as before. A second finger is a pinch. */
   private onTouchDown(e: PointerEvent) {
     if (e.pointerType !== "touch") return;
     this.fingers.add(e.pointerId);
@@ -594,7 +634,7 @@ export class BusDraw {
     this.map.dragPan.enable();
     this.noTap = true;
     navigator.vibrate?.(15);
-    void this.remove(p.i);
+    this.rightClick(p.i);
   }
 
   private onTouchEnd(e: PointerEvent) {
@@ -634,6 +674,8 @@ export class BusDraw {
    * first of them found a road for it (T-2467). */
   private movePoint(i: number, q: Pt) {
     if (this.closed() && (i === 0 || i === this.pts.length - 1)) return this.moveSeam(q);
+    const k = this.joinAt();
+    if (k >= 0 && (i === k || i === this.pts.length - 1)) return this.moveJoin(k, q);
     let at = q;
     if (i > 0) {
       const leg = this.roads.leg(this.pts[i - 1], q, "b");
@@ -659,6 +701,20 @@ export class BusDraw {
     const at = into.road ? { lng: into.pts[into.pts.length - 2], lat: into.pts[into.pts.length - 1] } : q;
     this.legs[0] = this.roads.leg(at, this.pts[1]);
     this.pts[0] = this.pts[last] = at;
+    this.roads.look(q);
+    this.rev++;
+    this.changed(true);
+  }
+
+  /** T-3109: the point a route loops back to, point `k` and the last, is now at `q`: the three legs at it are searched again. */
+  private moveJoin(k: number, q: Pt) {
+    const last = this.pts.length - 1;
+    const into = this.roads.leg(this.pts[k - 1], q, "b");
+    this.legs[k - 1] = into;
+    const at = into.road ? { lng: into.pts[into.pts.length - 2], lat: into.pts[into.pts.length - 1] } : q;
+    this.legs[k] = this.roads.leg(at, this.pts[k + 1]);
+    this.legs[last - 1] = this.roads.leg(this.pts[last - 1], at);
+    this.pts[k] = this.pts[last] = at;
     this.roads.look(q);
     this.rev++;
     this.changed(true);
@@ -696,8 +752,10 @@ export class BusDraw {
 
   /** Dropped where the roads do not reach: back where it was, unless its legs had no road before either. */
   private async checkDrop(was: { i: number; pts: Pt[]; legs: Leg[] }) {
-    const i = was.i, last = this.pts.length - 1;
-    const sides = this.closed() && (i === 0 || i === last) ? [last - 1, 0] : [i - 1, i].filter((k) => k >= 0 && k < this.legs.length);
+    const i = was.i, last = this.pts.length - 1, join = this.joinAt();
+    const sides = this.closed() && (i === 0 || i === last) ? [last - 1, 0]
+      : join >= 0 && (i === join || i === last) ? [join - 1, join, last - 1]
+      : [i - 1, i].filter((k) => k >= 0 && k < this.legs.length);
     if (sides.some((k) => !this.legs[k].ready)) {
       this.busy = true;
       try {
@@ -742,9 +800,9 @@ export class BusDraw {
   /** Delete point `i`; the points either side are joined by a new leg. */
   private async remove(i: number) {
     if (this.busy || i < 0 || i >= this.pts.length) return;
-    // a loop's first point is also its last: taking it out opens the loop
-    const wasClosed = this.closed();
-    if (wasClosed && (i === 0 || i === this.pts.length - 1)) {
+    // a loop's first point is also its last, and a route that loops back has its last at its join: taking it out opens the loop
+    const wasClosed = this.closed(), wasLooped = this.looped();
+    if (this.isSeam(i)) {
       this.legs.pop();
       this.pts.pop();
       playBuild("pop");
@@ -772,8 +830,9 @@ export class BusDraw {
     else this.legs.pop();
     playBuild("pop"); // T-2940
     this.pts.splice(i, 1);
-    // a ring of three points is no loop without one: the closing point goes too
-    if (wasClosed && this.pts.length <= 3) {
+    // a ring of three points is no loop without one, nor a loop of three past where a route loops back: the closing
+    // point goes too
+    if ((wasClosed && this.pts.length <= 3) || (wasLooped && !this.looped())) {
       this.pts.pop();
       this.legs.pop();
     }
@@ -806,20 +865,65 @@ export class BusDraw {
     void this.add({ lng: e.lngLat.lng, lat: e.lngLat.lat });
   }
 
-  /** A click on a point: the active end finishes; the other end closes the loop, or with two points
-   * becomes the active one. */
+  /** A click on a point (T-3109): the active end, or where a loop closes, finishes; any other point is deleted. */
   private handleClick(i: number) {
     const n = this.pts.length;
     if (n < 2) return;
-    if (this.closed() && (i === 0 || i === n - 1)) return void this.finish();
-    if (i === this.endIndex()) return void this.finish();
-    if (i === 0 || i === n - 1) {
-      if (n >= 3) return void this.closeLoop();
-      this.head = i === 0;
-      this.over = -1;
+    if (this.isSeam(i) || (!this.looped() && i === this.endIndex())) return void this.finish();
+    void this.remove(i);
+  }
+
+  /** What a right click on point `i` does (T-3109), null for nothing: open a loop where it closes, delete the active
+   * end, close the loop at the other end, or loop back to a point partway along. */
+  private rightAction(i: number): "open" | "delete" | "close" | "loopBack" | null {
+    const n = this.pts.length;
+    if (n < 2) return null;
+    if (this.looped()) return this.isSeam(i) ? "open" : null;
+    const end = this.endIndex();
+    if (i === end) return "delete";
+    if (i === 0 || i === n - 1) return n >= 3 ? "close" : null;
+    // the active end joins back to it: the loop past it needs three legs
+    return Math.abs(end - i) >= 2 ? "loopBack" : null;
+  }
+
+  private rightClick(i: number) {
+    const a = this.rightAction(i);
+    if (a === "open" || a === "delete") void this.remove(i);
+    else if (a === "close") void this.closeLoop();
+    else if (a === "loopBack") void this.loopBack(i);
+  }
+
+  /** T-3109: join the active end back to point `i` by road and make the line: the bus runs out, round the loop and
+   * back. Refused with the reason when the roads do not reach. */
+  private async loopBack(i: number) {
+    if (this.busy) return;
+    if (this.head) {
+      // the route turned round, so the active end is its last point
+      this.pts.reverse();
+      this.legs = this.legs.reverse().map(reversedLeg);
+      i = this.pts.length - 1 - i;
+      this.head = false;
       this.rev++;
-      this.changed();
     }
+    const a = this.pts[this.pts.length - 1], b = this.pts[i];
+    let leg = this.roads.leg(a, b);
+    if (!leg.ready) {
+      this.busy = true;
+      try {
+        leg = await this.whenReady(() => this.roads.leg(a, b), (l) => !l.ready);
+      } finally {
+        this.busy = false;
+      }
+      if (tool.peek() !== "bus" || this.pts[this.pts.length - 1] !== a || this.pts[i] !== b) return;
+    }
+    if (!leg.ready) return void say(notLoaded(), true);
+    if (leg.refused) return void say(refusalSay(leg.refused), true);
+    this.pts.push(b);
+    this.legs.push(leg);
+    playBuild("snap");
+    this.rev++;
+    this.changed(true);
+    await this.finish();
   }
 
   /** Join the last point to the first by road, and make the line (T-2899). Refused with the reason when the
@@ -851,7 +955,7 @@ export class BusDraw {
    * for the roads there if they are still loading, then adds it or says why not. */
   private async add(p: Pt) {
     if (this.busy) return;
-    if (this.closed()) return void say(t("busDraw.loopClosed"), true);
+    if (this.looped()) return void say(t("busDraw.loopClosed"), true);
     const end = this.endPt(), head = this.head;
     if (end) {
       const a = this.map.project([end.lng, end.lat]), b = this.map.project([p.lng, p.lat]);
@@ -941,10 +1045,9 @@ export class BusDraw {
     };
     if (near(this.touchAt)) return this.confirm();
     if (!this.touchAt && this.pts.length >= 2) {
-      // the active end tapped again, with nothing waiting, finishes; the other end becomes the active one
-      if (near(this.endPt())) return void this.finish();
-      const other = this.head ? this.pts.length - 1 : 0;
-      if (near(this.pts[other])) return this.handleClick(other);
+      // a point tapped, with nothing waiting: as a click on it (the active end finishes, another is deleted)
+      const i = this.handleAt(e.point.x, e.point.y, SAME_TAP_PX);
+      if (i >= 0) return this.handleClick(i);
     }
     this.touchAt = p;
     this.changed();
@@ -1131,11 +1234,11 @@ export class BusDraw {
     // over a handle: what a click, a drag and a right click do there
     const h = this.drag ? -1 : this.over;
     if (h >= 0 && at && !touchInput.peek()) {
-      const ends = this.pts.length >= 2 && (h === 0 || h === this.pts.length - 1);
-      const loop = ends && this.closed();
-      const finish = row(this.line === null ? t("busDraw.clickMake") : t("busDraw.clickSave"));
-      const first = !ends ? [] : loop || h === this.endIndex() ? [finish] : [row(this.pts.length >= 3 ? t("busDraw.clickClose") : t("busDraw.clickFrom"))];
-      return show([...first, row(t("busDraw.dragMove")), row(loop ? t("busDraw.rightOpen") : t("busDraw.rightDelete"))]);
+      const finishes = this.pts.length >= 2 && (this.isSeam(h) || (!this.looped() && h === this.endIndex()));
+      const first = row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"));
+      const right = { open: this.closed() ? "busDraw.rightOpen" : "busDraw.rightStopLooping", delete: "busDraw.rightDelete", close: "busDraw.rightClose", loopBack: "busDraw.rightLoopBack" } as const;
+      const a = this.rightAction(h);
+      return show([first, row(t("busDraw.dragMove")), ...(a ? [row(t(right[a]))] : [])]);
     }
     // where a click (or a drop) would be refused, the tag says why before it
     const d = this.drag;
@@ -1148,7 +1251,7 @@ export class BusDraw {
     if (!q.ok) return show([row(t("busDraw.minLength", { length: length(MIN_ROUTE_M) }))], true);
     // a built route redrawn pays only for the road it adds
     const pay = this.was.built ? Math.max(0, q.cost - this.was.road / 1000) : q.cost;
-    const rows = [row(t("busDraw.roadCost", { distance: distance(q.road), cost: moneyShort(pay * 1e6), more: this.was.built })), row(t("busDraw.stops", { count: q.stops.length + q.street.length - (this.closed() ? 1 : 0) }))];
+    const rows = [row(t("busDraw.roadCost", { distance: distance(q.road), cost: moneyShort(pay * 1e6), more: this.was.built })), row(t("busDraw.stops", { count: q.stops.length + q.street.length - (this.looped() ? 1 : 0) }))];
     const red = this.legs.find((l) => l.refused)?.refused;
     if (red) rows.unshift(row(refusalTag(red), true));
     show(rows);
@@ -1160,4 +1263,11 @@ function segM(x0: number, y0: number, x1: number, y1: number, q: Pt): number {
   const k = Math.cos((q.lat * Math.PI) / 180), ax = (x1 - x0) * k, ay = y1 - y0, bx = (q.lng - x0) * k, by = q.lat - y0;
   const l2 = ax * ax + ay * ay, f = l2 > 0 ? Math.max(0, Math.min(1, (ax * bx + ay * by) / l2)) : 0;
   return Math.hypot(bx - f * ax, by - f * ay) * 111000;
+}
+
+/** A leg run the other way: its points backward, each stretch's trunk flag with it (T-3109). */
+function reversedLeg(leg: Leg): Leg {
+  const pts: number[] = [];
+  for (let i = leg.pts.length - 2; i >= 0; i -= 2) pts.push(leg.pts[i], leg.pts[i + 1]);
+  return { ...leg, pts, ...(leg.fast ? { fast: [...leg.fast].reverse() } : {}) };
 }

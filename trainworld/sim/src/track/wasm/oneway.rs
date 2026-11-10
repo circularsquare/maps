@@ -63,17 +63,17 @@ impl TrackApi {
         }
         hit.sort_unstable();
         hit.dedup();
-        let lines: Vec<(u32, Vec<u32>, Vec<u32>, bool, bool)> = hit.iter().map(|&l| (l, net.line_stops(l).to_vec(), net.line_path(l).to_vec(), net.line_manual[l as usize], net.line_runs_once(l))).collect();
-        let was: Vec<Option<Vec<u32>>> = lines.iter().map(|x| net.back_path_of(&x.1, &x.2, x.3)).collect();
+        let lines: Vec<(u32, Vec<u32>, Vec<u32>, bool)> = hit.iter().map(|&l| (l, net.line_stops(l).to_vec(), net.line_path(l).to_vec(), net.line_runs_once(l))).collect();
+        let was: Vec<Option<Vec<u32>>> = lines.iter().map(|x| net.back_path_of(&x.1, &x.2)).collect();
         let inv = self.w.sketch(op.clone(), false).map_err(|mut v| v.swap_remove(0))?;
         let net = &self.w.net;
         let mut rows = vec![];
-        for (k, (l, stops, path, manual, once)) in lines.into_iter().enumerate() {
+        for (k, (l, stops, path, once)) in lines.into_iter().enumerate() {
             let fwd_ok = path.iter().all(|&p| net.dir_ok(p));
-            let new = if fwd_ok { Some(path.clone()) } else { net.route_hops_turn(&stops, if manual { 0.0 } else { REVERSAL_SEARCH_S }).ok() };
-            let new = new.filter(|np| once || net.back_path_of(&stops, np, manual).is_some());
+            let new = if fwd_ok { Some(path.clone()) } else { net.route_hops(&stops).ok() };
+            let new = new.filter(|np| once || net.back_path_of(&stops, np).is_some());
             let moved = match &new {
-                Some(np) => *np != path || (!once && net.back_path_of(&stops, np, manual) != was[k]),
+                Some(np) => *np != path || (!once && net.back_path_of(&stops, np) != was[k]),
                 None => true,
             };
             if moved {

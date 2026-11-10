@@ -366,26 +366,34 @@ lighter; at most 16 of each.
 
 - **Points**: each clicked point shows as a handle in the line's colour (only while the tool is
   on): a dot with a ring of the map's land colour, larger under the pointer; the **active end**, where
-  new points join, is a ring instead. With two points a click on the other end makes it the active end,
-  so a route grows from either end; with three or more it closes a **loop** (below). A press on any point dragged more than 3 px moves it (the map does not
+  new points join, is a ring instead. As with a train line's stops (T-3109), a click on a point deletes it, its
+  neighbours joined by a new leg (a click on the active end finishes instead, below), and a right click loops (the
+  **loop** items below); a right click on the active end, a right click elsewhere, or Backspace takes back the active
+  end. A press on any point dragged more than 3 px moves it (the map does not
   pan), and the legs either side are searched again on every move; Escape during the drag puts it
-  back. A right click on a point deletes it, its neighbours joined by a new leg; a right click
-  elsewhere or Backspace takes back the active end. Over a point the tag says "Drag to move" and
-  "Right click to delete", led by what a click there does, and the network's hover is left out.
+  back. Over a point the tag says what a click there does ("Click to delete", or finishing), "Drag to move", and what
+  a right click does where it does something, and the network's hover is left out.
   With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
   not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
-  deletes it (the phone buzzes) and the lift adds nothing. A press that does not move and is lifted
-  sooner is a tap, as in Building by touch.
-- **Loop** (T-2899): with three points or more, a click on the first point (the tail active) or on the last
-  (the head active) joins the other end to it by road, adds a copy of the first point at the end, and makes
-  the line or saves the route as a click on the active end does; the tag over that point says "Click to
-  close the loop". A road that does not reach is refused as a click's is. A closed route has no active end
-  and no leg follows the pointer: a click on empty ground says "The loop is closed. Right click its first
-  point to open it."; a click on the first point (also the last) finishes; dragging it moves both and
-  searches the legs into and out of it; a right click on it or Backspace takes the closing point off and
-  opens the route, and its tag says "Right click to open the loop". Taking out a point of a ring of three
-  leaves an open route of two. The tag's stop count leaves the closing stop out. A closed route is a loop line (track-and-service.md
-  6.7); Edit route on one reopens it closed.
+  does a right click's work there (the phone buzzes) and the lift adds nothing; a tap on a point is a click on it.
+  A press that does not move and is lifted sooner is a tap, as in Building by touch.
+- **Loop** (T-2899): with three points or more, a right click on the other end joins the active end to it by road,
+  adds a copy of the first point at the end, and makes the line or saves the route as a click on the active end does;
+  the tag over that point says "Right click to close the loop". A road that does not reach is refused as a click's
+  is. A closed route has no active end and no leg follows the pointer: a click on empty ground says "The loop is
+  closed. Right click the point where it closes to open it."; a click on the first point (also the last) finishes;
+  dragging it moves both and searches the legs into and out of it; a right click on it, deleting it, or Backspace
+  takes the closing point off and opens the route, and its tag says "Right click to open the loop". Taking out a
+  point of a ring of three leaves an open route of two. The tag's stop count leaves the closing stop out. A closed
+  route is a loop line (track-and-service.md 6.7); Edit route on one reopens it closed.
+- **Loop back** (T-3109, T-3063): a right click on a point partway along, two points or more from the active end,
+  joins the active end back to it by road and makes the line or saves the route ("Right click to loop back here"):
+  the bus runs out, round the loop one way and back the way it came. The route is sent as a loop whose last legs are
+  its first ones run backward (`bus::loop_back_at`, track-and-service.md 6.7); Edit route folds it back to the way
+  out and the loop, its last point a copy of the one it joins. The joining point acts as a closed route's first
+  point: a click finishes, a drag moves both copies, and a right click ("Right click to stop looping back here"),
+  deleting it, or Backspace takes the closing leg off. Taking out a point that leaves the loop under three legs
+  opens it too.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
@@ -886,9 +894,14 @@ running line's trains stop at then wins over one they do; then the nearest.
   into the land, the unreachable ones dimmest (CSS tokens `--mk-*`, T-543). The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click
   does; until the answer lands an estimate from the track graph shows on entering, and after an edit
-  the last answer stands with only the stops changed (T-648). A click on a marker is one edit
-  (`insertStop`): the worker fits the station in where `TrackApi::insert_stop` puts it, among the
-  stops it holds then.
+  the last answer stands with only the stops changed (T-648). A click on a marker adds or removes a stop and
+  nothing else (T-3109, trains and trams alike): on a station that is no stop it is one edit (`insertStop`): the
+  worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then; on a stop it
+  takes out every visit of it (`setStops`), and a loop that loses its first stop closes again on its new first stop.
+  A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
+  or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
+  says "Can't loop back here" for four seconds. The strip at the bottom says "Click a circle to add or remove a
+  stop. Right click one to loop back there." ("Tap ... Hold one to loop back there." by touch).
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to add a
   stop. Trains reverse at <station>" (`stop_tiers` gives tier 4 with the station; "at the end of
   the track" for a bare track end), "Click to remove
@@ -904,21 +917,23 @@ running line's trains stop at then wins over one they do; then the nearest.
   line; a side with no loose ends tries its nodes. Nothing is drawn when the two sides share track
   (unreachable only by turning back). If either end is outside the view (less 45 px), the camera
   fits the gap with 90 px of room, never zooming in.
-- **Loops** (T-798): the first stop's marker says "Click to close the loop" (tier 5) while the line
-  has two or more stops and track leads round from the last stop back to it without the train going
-  back the way it came or back over the line's own track (a ring, a circle; T-3021); the click appends
-  the first stop (`setStops`). On a loop it says "Click to open the loop" (tier 6) and the click opens
-  it (`openLoop`: a circle's closing stop off, a turned line's way back). The closing stop's cross in
-  the stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
+- **Loops** (T-798): the first stop's marker says "Right click to close the loop" (tier 5, under "Click
+  to remove the stop") while the line has two or more stops and track leads round from the last stop back to it
+  without the train going back the way it came or back over the line's own track (a ring, a circle; T-3021); the
+  right click appends the first stop (`setStops`). On a loop it says "Right click to open the loop" (tier 6) and the
+  right click opens it (`openLoop`: a circle's closing stop off, a turned line's way back). The closing stop's cross
+  in the stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
   closing one (`best_insert`); on a turned line's stem, on both passes.
 - **Loops at an end** (T-3021; track-and-service.md 6.3 "Turning round a loop at an end"): the stop
   before a loop of track at an end of the line (the last stop at or before where the loop rejoins
-  the line; the end stop itself when the loop has no stop of its line) says "Click to loop back here"
-  (tier 7) and the click turns the line round it, one way (`turnEnd`). On a line so turned the same
-  stop says "Click to stop looping back here" (tier 8) and the click opens it (`openLoop`). The stop
-  list shows a turned line one row per station (`game/turnedLine.ts`, T-3025; ui-inspectors.md): a
-  cross takes a station out on every pass, the turn's row has a button that opens the loop, and rows
-  do not drag. Adding passed stations on a turned line goes through `insertStop`, as a map click does (T-3039). A one-way stop's marker is filled on the half to the right of the way the train goes (T-3041). A hand-ordered line's rows stay one per pass while its stops are edited. The markers take no pointer events (the map's pick handles clicks), so the wheel
+  the line; the end stop itself when the loop has no stop of its line) says "Right click to loop back here"
+  (tier 7) and the right click turns the line round it, one way (`turnEnd`). On a line so turned the same
+  stop says "Right click to stop looping back here" (tier 8) and the right click opens it (`openLoop`). The stop
+  list shows a turned line one row per station (`game/turnedLine.ts`, T-3025; ui-inspectors.md), its stops being
+  edited or not (T-3109): a cross takes a station out on every pass, the turn's row has a button that opens the
+  loop, and rows do not drag. No list shows every visit in order. Adding passed stations on a turned line goes
+  through `insertStop`, as a map click does (T-3039). A one-way stop's marker is filled on the half to the right of
+  the way the train goes (T-3041). The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

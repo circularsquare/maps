@@ -279,8 +279,6 @@ export function closeNetworkView() {
 export const ask = signal<{ text: string; yes: string; no: string; run: () => void; lines?: { line: number; text: string }[] } | null>(null);
 /** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
-/** T-3023: a manual line whose stop list waits for a station click on the map: the stop goes in after row `index` (of `n` rows then) */
-export const addVisitAfter = signal<{ line: number; index: number; n: number } | null>(null);
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand
  * views, dims the other lines and puts a toggle marker on every station (map/stopMarkers.ts). */
 export const stopEditing = computed(() => tool.value === "line" && lineDraft.value.line !== null);

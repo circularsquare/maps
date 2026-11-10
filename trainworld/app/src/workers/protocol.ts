@@ -129,8 +129,6 @@ export type EditOp =
   /** T-3021: the line's end turned round the loop past `station`, the stop before the branch, run one way (`TrackApi::turn_end`); `openLoop` makes a loop line open again: a circle less its closing stop, a turned line less its way back (`open_loop`). Refused with "LinePath" */
   | { op: "turnEnd"; line: number; station: NodeId }
   | { op: "openLoop"; line: number }
-  /** T-3023: switch a line into manual mode (its stops the whole cycle, out and back, one way) or back to the open line it folds into (`TrackApi::set_manual`). Refused with "LinePath" */
-  | { op: "setManual"; line: number; on: boolean }
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
@@ -506,9 +504,6 @@ export interface ClockLine {
   endTurns: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
-  /** T-3023: the line is in manual mode, every stop a visit in order (`TrackApi::line_manual`), and whether its stops fold back into an open line (`manual_folds`) */
-  manual: boolean;
-  manualFolds: boolean;
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
   loopKind: number;
   /** T-2981: a loop that runs one way (`TrackApi::line_one_way`) */

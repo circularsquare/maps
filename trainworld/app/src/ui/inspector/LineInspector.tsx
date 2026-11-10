@@ -15,7 +15,7 @@ import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretc
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { addVisitAfter, display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
+import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
@@ -192,7 +192,7 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
   return (
     <>
       <ul class="rows">
-        {st.loop && !st.manual && (
+        {st.loop && (
           <li>
             <span class="grow">{tr("lineInspector.direction")}</span>
             <Segmented<boolean>
@@ -219,9 +219,6 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
 
 /** Bullets shown at a transfer stop; the rest sit behind a "+". */
 const STOP_CHIPS = 2;
-/** T-3079: the Exact edits toggle stays hidden until Anita has tested it, except with `?exact` in the address; a line
- * already in it keeps the toggle to leave */
-const EXACT_EDITS = typeof location !== "undefined" && new URLSearchParams(location.search).has("exact");
 
 /** T-1391: the line stops at stop `i`'s complex again further along or before (not the next or
  * previous stop, nor a loop's first stop at its end), so it is a transfer to itself there. */
@@ -646,9 +643,6 @@ function RailLineInspector({ id }: { id: string }) {
   const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
   const draggedRow = useRef(false);
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
-  const manual = !!l && !!w?.lineStats[id]?.manual;
-  useEffect(() => { addVisitAfter.value = null; }, [l?.num, editingStops, manual]);
-  const adding = addVisitAfter.value;
   // T-3089: a row's station is lit on the map while the pointer is on it; a row that goes takes the light with it
   useEffect(() => () => setListHot(null), [l?.num, w?.version]);
   // its day so far (T-293), kept fresh while the panel is open
@@ -667,8 +661,7 @@ function RailLineInspector({ id }: { id: string }) {
     const a = await edit({ op: "constructLine", line: l.num });
     if (a.ok) say(tr("lineInspector.constructed", { name: l.name, price: money(a.charge * 1e6), vehicle: vehicleOf(st) }));
   };
-  // T-3089: on a manual line the route's passes of its own stops are the map's circles, not stations to add here
-  const passed = editingStops ? (st.manual ? st.passed.filter((p) => !l.stops.includes(String(p.node))) : st.passed) : [];
+  const passed = editingStops ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
   const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
   const setStops = async (stops: number[]) => {
@@ -727,12 +720,11 @@ function RailLineInspector({ id }: { id: string }) {
 
   const shown = title.shown;
   const nStops = l.stops.length;
-  // T-3025: a line turned round a loop is one row per station (the plain list, with no side lines drawn), except
-  // while a hand-ordered line's stops are edited, where each pass is its own row
+  // T-3025: a line turned round a loop is one row per station, its stops being edited or not (T-3109)
   const byId = stationsById(w);
-  const turned = !(editingStops && st.hand) ? turnedLine(l.stops, st, (a, b) => !drawnReversed(byId.get(a), byId.get(b))) : null;
-  // T-1894: north (or for an east-west line, west) end on top; a loop as built. T-3079: Exact edits lists the visits in running order, never flipped
-  const flip = !turned && !(editingStops && st.manual) && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
+  const turned = turnedLine(l.stops, st, (a, b) => !drawnReversed(byId.get(a), byId.get(b)));
+  // T-1894: north (or for an east-west line, west) end on top; a loop as built
+  const flip = !turned && drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[nStops - 1]), !!st.loop);
   // T-2895: while stops are edited a row drags to a new place in the list (not by touch; in related lines the
   // line's own rows); a loop keeps its first and closing stop where they are. The line then keeps the order.
   const loopEnds = st.loop ? 1 : 0;
@@ -809,10 +801,6 @@ function RailLineInspector({ id }: { id: string }) {
       if (!editingStops || turned!.rows.length <= 2 || st.reversals?.some((k) => row.occ.includes(k))) return null;
       return { tip: tr("busInspector.removeStop", { name: name.get(l.stops[i]) ?? "" }), click: () => void takeOut(row) };
     }
-    // T-3089: Exact edits: every visit has its cross, the ends and the turning ones too; the map's click and numbers do the same edit
-    if (st.manual) {
-      return editingStops && nStops >= 4 ? { tip: tr("lineInspector.skipStop"), click: () => void stopEdit({ op: "dropStop", line: l.num, index: i }) } : null;
-    }
     const end = i === 0 || i === nStops - 1, loop = !!st.loop;
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
@@ -858,12 +846,11 @@ function RailLineInspector({ id }: { id: string }) {
         {looks && !drawn && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}
         {dot && <span class="stop-hit" data-tip={dot.tip} onClick={dot.click} />}
         <span class="grow">
-          {editingStops && st.manual && <span class="visit-n muted num">{i + 1}</span>}
           <span class="stop-name" onClick={() => { if (!draggedRow.current) selection.value = { kind: "station", station: s }; }}>
             {name.get(s)}
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
-          {st.reversals?.includes(i) && !st.manual && (
+          {st.reversals?.includes(i) && (
             <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st) })}>
               <Icon.uturn />
             </span>
@@ -877,23 +864,15 @@ function RailLineInspector({ id }: { id: string }) {
             <Icon.uturn />
           </button>
         )}
-        {editingStops && st.manual && i < nStops - 1 && (
-          <button class={"btn icon mini" + (adding?.index === i ? " on" : "")} data-tip={tr(adding?.index === i ? "lineInspector.addVisitStop" : "lineInspector.addVisit", { name: name.get(s) ?? "" })} aria-label={tr("lineInspector.addVisit", { name: name.get(s) ?? "" })}
-            onClick={() => { addVisitAfter.value = adding?.index === i ? null : { line: l.num, index: i, n: nStops }; }}>
-            <Icon.plus />
-          </button>
-        )}
-        {editingStops && !(st.manual && nStops < 4) && (
-          <button class="btn icon mini danger" data-tip={tr(st.manual ? "lineInspector.skipStop" : !row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : st.manual ? void stopEdit({ op: "dropStop", line: l.num, index: i }) : removeStop(i))}>
+        {editingStops && (
+          <button class="btn icon mini danger" data-tip={tr(!row && st.loop && i > 0 && i === l.stops.length - 1 ? "lineInspector.openLoop" : "lineInspector.takeOut")} aria-label={tr("lineInspector.removeStop", { name: name.get(s) ?? "" })} onClick={() => (row ? void takeOut(row) : removeStop(i))}>
             <Icon.cross />
           </button>
         )}
       </li>
     );
   };
-  // T-3079: Exact edits is a plain numbered list: no side lines, so no loop or crossing drawn beside it
-  const exact = editingStops && st.manual;
-  const related = relatedLines.value && l.stops.length >= 2 && !exact;
+  const related = relatedLines.value && l.stops.length >= 2;
   // T-1391: a loop shows each station once, its bar going on past both ends; while its stops are
   // edited the last row stays, holding the button that opens the loop
   const loopOnce = !!st.loop && !editingStops && l.stops.length > 2;
@@ -901,14 +880,11 @@ function RailLineInspector({ id }: { id: string }) {
   const afterStop = (i: number, inArc = false) => {
     // T-3007: a station a side line stops at counts too, though it also has its own row in related lines
     const here = editingStops ? passed.filter((p) => p.gap === i) : [];
-    const waiting = editingStops && st.manual && adding?.index === i && adding.n === nStops
-      ? <li class="adding"><span class="grow"><span class="stop-name">+ {tr("lineInspector.addVisitHint")}</span></span></li>
-      : null;
-    if (!here.length || i + 1 >= l.stops.length) return waiting;
+    if (!here.length || i + 1 >= l.stops.length) return null;
     if (flip) here.reverse();
     // Add and Cancel take the clicked row's place, Add stretched over where the pointer is, so a double
     // click lands on Add; the stations are listed below (T-1489)
-    return waiting ? <>{waiting}</> : pending?.includes(i)
+    return pending?.includes(i)
       ? <>
         <li class="passed confirm">
           {inArc && <i class="arc mid" aria-hidden="true" />}
@@ -934,7 +910,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <div class="h divided">
         {tr("lineInspector.stops")}
-        {l.stops.length >= 2 && !exact && (
+        {l.stops.length >= 2 && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
@@ -945,12 +921,6 @@ function RailLineInspector({ id }: { id: string }) {
         )}
         <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
       </div>
-      {editingStops && l.stops.length >= 2 && (EXACT_EDITS || st.manual) && (
-        <div class="manual-row">
-          <button class={"btn text mini" + (st.manual ? " on" : "")} aria-pressed={st.manual} data-tip={st.manual ? undefined : tr("lineInspector.manualTip")}
-            onClick={() => void stopEdit({ op: "setManual", line: l.num, on: !st.manual })}>{tr("lineInspector.manualMode")}</button>
-        </div>
-      )}
       {related ? (
         <div class={orderClass + (turned ? " turned-rel" : "")} onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce && !turned} flip={flip} rows={turned?.rows}

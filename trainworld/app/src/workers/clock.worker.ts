@@ -3656,7 +3656,7 @@ function apply(op: EditOp): Applied {
       return { r: r === 0 ? 0 : DROP_REFUSED };
     }
     case "orderStops": {
-      const fault = [...a.order_fault_line(op.line, new Uint32Array(op.stops))];
+      const fault = [...a.order_fault(new Uint32Array(op.stops))];
       if (fault.length === 3) return { r: ORDER_REFUSED, fault };
       return { r: a.order_stops(op.line, new Uint32Array(op.stops)) };
     }
@@ -3666,8 +3666,6 @@ function apply(op: EditOp): Applied {
       return { r: a.turn_end(op.line, op.station) };
     case "openLoop":
       return { r: a.open_loop(op.line) };
-    case "setManual":
-      return { r: a.set_manual(op.line, op.on) };
     case "stopPassed": {
       const r = a.stop_passed(op.line, op.station);
       return { r: r === 0 ? 0 : INSERT_REFUSED };

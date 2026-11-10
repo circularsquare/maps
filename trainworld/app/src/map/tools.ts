@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { addVisitAfter, ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -50,7 +50,7 @@ import { strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
-import type { StopMarkers, StopTier, VisitAction } from "./stopMarkers";
+import type { StopMarkers, StopTier } from "./stopMarkers";
 import type { BusStopMarkers } from "./busStops";
 import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
@@ -1404,12 +1404,6 @@ export class Tools {
     if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y);
     const n = this.overlay.renderer.net;
     if (!n) return;
-    // T-3080: a visit number or an empty circle beside a station (Exact edits)
-    const visit = this.stops?.pickVisit(e.point.x, e.point.y);
-    if (visit) {
-      this.stops!.activateVisit(visit);
-      return;
-    }
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
     const marker = this.stops?.pick(e.point.x, e.point.y);
     if (marker) {
@@ -1425,51 +1419,23 @@ export class Tools {
     this.toggleStop(hit);
   }
 
-  /** Add the station as a stop, or take it out if the line stops there (T-233); on the first stop,
-   * close the line into a loop or open it when its marker says so (`tier`, T-798); on the stop before
-   * a loop at an end, turn the line round it or open it again (T-3021). Clicks queue and each reads
-   * the latest stops. */
-  toggleStop(station: number, tier?: StopTier) {
+  /** Add the station as a stop, or take it out if the line stops there (T-233), every visit of it (T-3109: a click
+   * does nothing else). Clicks queue and each reads the latest stops. */
+  toggleStop(station: number) {
+    this.queueStop(station);
+  }
+
+  /** T-3109, a right click or a long press on a stop: close the line into a loop or open it (`tier` "close", "open",
+   * T-798), turn its end round a loop of track or open it again ("turn", "unturn", T-3021). */
+  loopStop(station: number, tier: StopTier) {
+    this.queueStop(station, tier);
+  }
+
+  private queueStop(station: number, tier?: StopTier) {
     const session = this.lineSession;
     this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
       if (session === this.lineSession) say(tr("tools.stopFailed"), true);
     });
-  }
-
-  /** T-3080: a click on a visit number (take that visit out, as its row's cross does) or an empty circle (put the
-   * station in after that stop). Queued with the other stop clicks. */
-  visitAction(a: VisitAction) {
-    const session = this.lineSession;
-    this.stopClicks = this.stopClicks.then(() => this.visit(a, session)).catch(() => {
-      if (session === this.lineSession) say(tr("tools.stopFailed"), true);
-    });
-  }
-
-  private async visit(a: VisitAction, session: number) {
-    if (session !== this.lineSession || tool.peek() !== "line") return;
-    const id = lineDraft.peek().line;
-    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-    if (id === null || !line || !world.peek()?.lineStats[line.id]?.manual) return;
-    if (a.kind === "drop") await this.edited(id, { op: "dropStop", line: id, index: a.index });
-    else await this.spliceVisit(id, line.stops.map(Number), a.after, a.station);
-  }
-
-  /** T-3023: `station` goes into a manual line's stops after index `after`, the order as given (a drag's refusals) */
-  private async spliceVisit(id: number, before: number[], after: number, station: number) {
-    if (station === before[after] || station === before[after + 1]) return;
-    const stops = [...before];
-    stops.splice(after + 1, 0, station);
-    const a = await edit({ op: "orderStops", line: id, stops }, true);
-    if (!a.ok) return say(this.orderWhy(a.issues), true);
-    const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-    if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
-  }
-
-  private async edited(id: number, change: Parameters<typeof edit>[0]) {
-    const a = await edit(change);
-    if (!a.ok) return;
-    const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-    if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
   }
 
   private async toggle(station: number, session: number, tier?: StopTier) {
@@ -1481,32 +1447,26 @@ export class Tools {
     let change: Parameters<typeof edit>[0];
     const n = before.length;
     const closedLoop = n >= 3 && before[0] === before[n - 1];
-    const manual = !!world.peek()?.lineStats[line.id]?.manual;
-    // T-3023: the "+" on a manual line's row was pressed: the station goes in after that row
-    const after = addVisitAfter.peek();
-    const adding = manual && after && after.line === id && after.n === n && tier !== "turn" && tier !== "unturn" ? after : null;
-    if (after) addVisitAfter.value = null;
-    if (adding) return this.spliceVisit(id, before, adding.index, station);
-    // T-3089: in Exact edits a click on a stop takes one visit out, the first, as that row's cross does
-    // (every visit of it went before, which left no way to take out one direction)
-    if (manual && tier !== "turn" && tier !== "unturn" && before.includes(station)) {
-      return this.edited(id, { op: "dropStop", line: id, index: before.indexOf(station) });
-    }
     if (tier === "turn") {
       // T-3021: the end past this stop turned round its loop
       change = { op: "turnEnd", line: id, station };
-    } else if (tier === "unturn" || (station === before[0] && closedLoop && !manual)) {
+    } else if (tier === "unturn" || tier === "open") {
       // a loop opened: a circle less its closing stop, a turned line less its way back
       change = { op: "openLoop", line: id };
+    } else if (tier === "close") {
+      if (station !== before[0] || closedLoop) return;
+      change = { op: "setStops", line: id, stops: [...before, station], autoFast: this.autoFast(id) };
+    } else if (tier) {
+      return;
     } else if (!before.includes(station)) {
       // the worker fits it in among the stops it holds then (T-648), so a queued click never works
       // from stops an earlier one changed
       change = { op: "insertStop", line: id, station, autoFast: this.autoFast(id) };
     } else {
-      // a first stop the marker offers to close closes it (T-798)
-      const stops = station === before[0] && tier === "close" ? [...before, station]
-        // taking a stop out: the route between its neighbours is the worker's, as the inspector's crosses
-        : before.filter((s) => s !== station);
+      // taking a stop out, every visit of it: the route between its neighbours is the worker's, as the inspector's
+      // crosses; a loop that loses its first stop closes again on its new first stop (T-3050)
+      const stops = before.filter((s) => s !== station);
+      if (closedLoop && stops.length >= 2 && stops[0] !== stops[stops.length - 1]) stops.push(stops[0]);
       change = { op: "setStops", line: id, stops, autoFast: this.autoFast(id) };
     }
     const a = await edit(change);
@@ -1516,14 +1476,6 @@ export class Tools {
       this.noteFast(id);
       void settleNewLineColour(id);
     }
-  }
-
-  /** Why an order the player gave has no route, in words (`StopOrder:<kind>:<from>:<to>`, T-2895). */
-  private orderWhy(issues: string[]): string {
-    const f = issues.find((k) => k.startsWith("StopOrder:"))?.split(":").map(Number); // i18n-ignore
-    if (!f) return describeIssues(issues);
-    const name = (id: number) => world.peek()?.save.stations.find((s) => Number(s.id) === id)?.name ?? "";
-    return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", { a: name(f[2]), b: name(f[3]) });
   }
 
   /** T-1899: whether a stop edit on `id` picks its train type by the track: while it is the new line
