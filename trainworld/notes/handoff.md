@@ -5,7 +5,8 @@ Updated: 2026-11-10 12:30 (maps-c4 is past 500k tokens; a fresh orchestrator can
 
 ## Now
 
-**v0.2 (trams) is published as version 2026-11-10** (Anita's go 12:15: "ok, good to publish when they land"). Built from
+**LIVE = 2026-11-10 (v0.2, trams)**: Pages built 30b52da at 12:31, `--verify --page` all PASS (7 checks). The rest of
+this paragraph is how it got there. **v0.2 (trams) is published as version 2026-11-10** (Anita's go 12:15: "ok, good to publish when they land"). Built from
 88c3ebf3; smoke8800 light and dark PASS (12 each); `deploy.py --version 2026-11-10 --smoked` done, data verified on R2;
 website commit 30b52da pushed ~12:25 (only trainsworld/ and trainworld/; her modified `pages/projects/abouttrainsworld.md`
 left uncommitted, hers). **Pending:** background script `scratchpad\pages_verify.sh` (task b09t2sto6, log
@@ -15,8 +16,7 @@ then run the verify by hand. Once it passes, **LIVE = 2026-11-10** and tell Anit
 Previous LIVE was 2026-11-09c (a6f43c1b). Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09 and 11-09b a
 few days after; 11-09c once 11-10 has run a few days.
 
-**Master = 88c3ebf3** (plus uncommitted TASKS.md/handoff edits), pushed up to 53b7c2f7; push again (allowed a couple of
-times a session). Master smoke PASSED 27 at 12241ef1; both cargo suites 436/616 at 8c02a9a3. **8800 = 88c3ebf3.**
+**Master = 20a6f601, pushed** (12:32). Master smoke PASSED 27 at 12241ef1; both cargo suites 436/616 at 8c02a9a3. **8800 = 88c3ebf3.**
 shonei-server e9c9e1a (achievement counts) and 46876ae (signedIn) deployed and pushed with her approval.
 
 **Running (Sonnet, main tree):**
