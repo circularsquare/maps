@@ -18,6 +18,7 @@ import { count, length, scaleBars } from "../../game/format";
 import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
 import { world } from "../../game/world";
+import { vehicleOf } from "../../game/vehicle";
 import type { ComplexNow } from "../../game/complexLive";
 import { live } from "../../map/live";
 import { t as tr, tSeries } from "../../i18n";
@@ -184,7 +185,7 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     const rows = at.get(s.id) ?? [];
     if (!rows.length) return `${text}\n${tr("complexMap.noLines")}`;
     for (const r of rows) {
-      text += `\n${r.line.name}` + (r.known ? `\n${tr("complexMap.boardings", { count: count(r.boardings) })}\n${tr("complexMap.riders", { count: count(r.riders) })}` : "");
+      text += `\n${r.line.name}` + (r.known ? `\n${tr("complexMap.boardings", { count: count(r.boardings) })}\n${tr("complexMap.riders", { count: count(r.riders), vehicle: world.peek()?.lineStats[r.line.id] ? vehicleOf(world.peek()!.lineStats[r.line.id]) : "train" })}` : "");
       const m = partners.get(strokeKey(s.id, r.line.id));
       if (m) {
         const top = [...m].sort((x, y) => y[1] - x[1]);

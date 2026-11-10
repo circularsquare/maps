@@ -121,7 +121,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
         <Row label={t("trainInspector.fullAt")}>{exact(crush)}</Row>
       </ul>
       {!atEnd && dm && <TrainStops line={line} dm={dm} board={b} trip={i} run={run} seg={seg} stopS={stopS} profile={profile} dep={dep} />}
-      {!atEnd && dm && aboard > 0.5 && <OneRider key={`${profile}:${dep}`} line={line} dm={dm} run={run} seg={seg} p={p} />}
+      {!atEnd && dm && aboard > 0.5 && <OneRider key={`${profile}:${dep}`} line={line} dm={dm} run={run} seg={seg} p={p} vehicle={what} />}
     </>
   );
 }

@@ -90,7 +90,7 @@ export interface Limit { s: number; what: string }
 export const NO_LIMITS: (Limit | null)[] = [null, null, null];
 
 /** "Terminus at West takes one train every 4m00s at most", or with no room left "... is full" */
-export const limitText = (lim: Limit) => t("schedule.limit", { full: !Number.isFinite(lim.s), what: lim.what, time: Number.isFinite(lim.s) ? duration(lim.s) : "" });
+export const limitText = (lim: Limit, vehicle: Vehicle) => t("schedule.limit", { full: !Number.isFinite(lim.s), what: lim.what, time: Number.isFinite(lim.s) ? duration(lim.s) : "", vehicle });
 
 const headwayText = (s: number) => (s > 0 ? t("inspector.min", { n: tNumber(s / 60, { maximumFractionDigits: 2 }) }) : t("schedule.noHeadway"));
 
@@ -133,7 +133,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
           {wrap(<Stepper value={n} label={t("schedule.stepperLabel", { vehicle: v })} jump onStep={(s) => stepTrainCount(l.id, d, s)}
             tipDown={changeTip(counts, lev, Math.max(0, counts[lev] - k), st)} tipUp={changeTip(counts, lev, counts[lev] + k, st)} />)}
         </td>
-        <td>{over ? <span class="bad" data-tip={t("schedule.limitWait", { text: limitText(limit) })}>{headway(tph)}</span> : headway(tph)}</td>
+        <td>{over ? <span class="bad" data-tip={t("schedule.limitWait", { text: limitText(limit, v), vehicle: v })}>{headway(tph)}</span> : headway(tph)}</td>
       </>
     );
   }
@@ -150,7 +150,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
         {wrap(<Stepper wide jump jumpUnit={t("schedule.minUnit")} label={t("schedule.headwayLabel")} value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
           tipDown={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], -1), lim, loop), st)}
           tipUp={changeTip(counts, lev, autoTrainsFor(trip, nextHeadway(auto[lev], 1), lim, loop), st)}
-          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? t("schedule.limitWait", { text: limitText(limit) }) : undefined }} />)}
+          type={{ text: auto[lev] ? String(+(auto[lev] / 60).toFixed(2)) : "0", set: (v) => setHeadway(l.id, d, headwayFromMinutes(v)), tip: short ? t("schedule.limitWait", { text: limitText(limit, v), vehicle: v }) : undefined }} />)}
       </td>
     </>
   );
@@ -310,7 +310,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
         {d.fullTrains > 0 && <Row label={t("schedule.leavingFull", { vehicle: v })}><span data-tip={t("schedule.departedFull", { full: count(d.fullTrains), all: count(d.trains), vehicle: v })}>{count(d.fullTrains)}/{count(d.trains)}</span></Row>}
         {v !== "bus" && (
           <li data-tip={t("schedule.leftBehindTip", { left: count(d.leftBehind), all: count(d.riders + d.leftBehind) })}>
-            <span class="grow">{t("schedule.leftBehind")}</span>
+            <span class="grow">{t("schedule.leftBehind", { vehicle: v })}</span>
             <span class="val">{count(d.leftBehind)}/{count(d.riders + d.leftBehind)}</span>
           </li>
         )}

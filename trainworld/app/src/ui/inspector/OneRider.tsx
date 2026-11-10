@@ -3,6 +3,7 @@
 // workers as the trip explorer asks: the perceived minutes by train and by car. A way into the
 // explorer for the same two stations.
 
+import type { Vehicle } from "../../game/vehicle";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { demandView, type LineDemand } from "../../game/demand";
 import { exact } from "../../game/format";
@@ -30,7 +31,7 @@ const TRIES = 6;
 
 const pct = (v: number | null) => (v === null ? "" : pctWhole(v));
 
-export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineDemand; run: number; seg: number; p: number }) {
+export function OneRider({ line, dm, run, seg, p, vehicle }: { line: LineInput; dm: LineDemand; run: number; seg: number; p: number; vehicle: Vehicle }) {
   const w = world.value;
   const dv = demandView.value;
   const n = line.stops.length;
@@ -107,7 +108,7 @@ export function OneRider({ line, dm, run, seg, p }: { line: LineInput; dm: LineD
   return (
     <>
       <div class="h">
-        <span data-tip={t("oneRider.tip")}>{t("oneRider.title")}</span>
+        <span data-tip={t("oneRider.tip", { vehicle })}>{t("oneRider.title")}</span>
         <span class="one-rider-acts">
           <button class="btn icon mini" aria-label={t("oneRider.another")} data-tip={t("oneRider.another")} onClick={another}><Icon.cycle /></button>
           <button class="btn icon mini" aria-label={t("oneRider.open")} data-tip={t("oneRider.open")} onClick={open}><Icon.route /></button>

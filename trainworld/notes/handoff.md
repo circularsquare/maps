@@ -27,13 +27,17 @@ For Anita to test after 10c: a line ending at a through station, with and withou
 - wording (Sonnet, id a16cca6d4db1e5159, main tree, Vite 6190): T-3064 tram/bus train-words sweep (en done, translations
   next). Ids T-3067-3068. Told not to touch the git index. Its strings go to Anita.
 
-**Queued:** T-3063 bus loops partway along a route (after manualstop lands: bus.rs). T-3033 rebuild the 37 split zones after
+- lowmem (Opus, id a372974d1a94dbeca, read-only, Vite 6192): T-3071 low-memory exploration into notes/T-3071.md. Ids T-3072-3073.
+- 10c: 8800 rebuilt at 33a8ccec (tsc and i18n clean there); `scratchpad\silent.cmd` (smoke8800 light+dark, then deploy)
+  running, log `scratchpad\silent.log`. Then website commit/push and pages_verify.
+
+**Queued:** T-3070 design agent once this round is done (Anita 14:30: "can wait then start a design agent"). T-3063 bus loops partway along a route (after manualstop lands: bus.rs). T-3033 rebuild the 37 split zones after
 10c is published (writes data/packs; notes/T-3012.md; ~4 core-hours, 18 joins; unit-list edits only, never
 `zones --replan`). T-3060 rebuild preview after T-3059. T-3069 trams on real rail + new street-snap icon. T-3070
 non-home-based trips (P3, design, a demand change: Anita decides whether to scope now; I suggested after this round).
 P3s: T-3042 one flat-junction mark per spot, T-3036 road gaps overlay, T-3027 slopes slow trains (design first),
 T-3002/T-3003 tram ramps and road bridges, T-3019 buses in the diagram, T-3011 Cairo border.
-Next free id **T-3071**.
+Next free id **T-3074**.
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,

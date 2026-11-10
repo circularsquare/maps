@@ -18,6 +18,7 @@ import { complexNow, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
 import { linking, linksAmong, unlink } from "../../game/links";
 import { selection, TRAM_PLATFORM } from "../../game/ui";
+import { vehicleOf } from "../../game/vehicle";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
@@ -68,6 +69,7 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
   const rows: ComplexRow[] = [];
   for (const [name, ls] of groups) {
     const ids = new Set(ls.map((l) => l.id));
+    const own = world.peek()?.lineStats[ls[0].id], vehicle = own ? vehicleOf(own) : "train";
     const per = new Map<string, number>();
     let todayB: number | null = null;
     for (const l of ls) {
@@ -93,8 +95,8 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     rows.push({
       name, line: ls[0], stations, open, built: stations.some((m) => byId.get(m)?.built), waiting, full, boardings, today: todayB,
       tip: tr("stationInspector.rowTip", { name, stations: tList(names) }) + (ends.length ? "\n" + tr("stationInspector.rowTo", { ends: tSeries(ends) }) : ""),
-      waitTip: waiting === null ? tr("stationInspector.noTrain")
-        : tr("stationInspector.waitingFor", { count: count(waiting), name }) + (full ? "\n" + tr("stationInspector.leftBehind") : ""),
+      waitTip: waiting === null ? tr("stationInspector.noTrain", { vehicle })
+        : tr("stationInspector.waitingFor", { count: count(waiting), name }) + (full ? "\n" + tr("stationInspector.leftBehind", { vehicle }) : ""),
     });
   }
   rows.sort((a, b) => b.boardings - a.boardings || a.name.localeCompare(b.name));

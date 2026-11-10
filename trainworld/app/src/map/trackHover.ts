@@ -230,7 +230,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   // T-473: always the elevation, speed and lines on it, whatever the track display; no lines row
   // where none runs (T-526). Track under a bundle of lines loses to the lines, except at its edges.
   const on = linesOn(w, hit.edge);
-  const money = d.trackColour === "profit" ? profitRows(hit.edge) : [];
+  const money = d.trackColour === "profit" ? profitRows(hit.edge, edgeVehicles(w, hit.edge)) : [];
   if (on.length) {
     return [...money, ...edgeRiders(n, hit.edge, on), ...facts, lineBullets(on)];
   }
@@ -239,13 +239,13 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
 
 /** T-2420: the Profit view's rows for the track stretch an edge is on: the share of its costs the fares cover on
  * its colour, its profit, per km, then fares, running trains and upkeep; bare track its upkeep. None for blueprint track. */
-function profitRows(edge: number): TipLine[] {
+function profitRows(edge: number, vehicles: string): TipLine[] {
   const sm = stretchMoney.peek();
   if (!sm) return demandView.peek() ? [] : [t("trackHover.calculating")];
   const s = sm.stretchOf.get(edge);
   if (!s) return [];
-  if (s.bare) return [t("trackHover.noTrains"), moneyRow("trackHover.upkeepDay", -s.upkeep)];
-  return stretchMoneyRows(s, "trains");
+  if (s.bare) return [t("trackHover.noVehicles", { vehicles }), moneyRow("trackHover.upkeepDay", -s.upkeep)];
+  return stretchMoneyRows(s, vehicles);
 }
 
 /** A money row, negative money red. */
@@ -269,6 +269,12 @@ function stretchMoneyRows(s: StretchFigures, vehicles: string): TipLine[] {
   const ratio = s.fares / costs, top = document.createElement("div");
   top.append(...kids(tRich("trackHover.faresCover", { share: chip(`${tNumber(Math.round(100 * ratio))}%`, profitColour(ratio)) as unknown as ComponentChild })));
   return [top, ...rows];
+}
+
+/** What runs on an edge, in the plural: trams where every line on it is a tram line (tram and train track never join). */
+function edgeVehicles(w: WorldView | null, edge: number): "trams" | "trains" {
+  const on = linesOn(w, edge);
+  return on.length > 0 && on.every((l) => w!.lineStats[l.id]?.tram) ? "trams" : "trains";
 }
 
 /** The lines whose path uses an edge, in the save's order. */
@@ -295,7 +301,8 @@ function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: num
   // T-1271: the Speed view draws the trains' speed where they run, the limit elsewhere; say which
   if (display.peek().trackColour === "speed") {
     const v = T.trainSpeed?.[i] ?? -1;
-    rows.unshift(v >= 0 ? factRow(trainSpeedFact(v)) : t("trackHover.noTrains"));
+    const tram = edgeVehicles(world.peek(), edge) === "trams";
+    rows.unshift(v >= 0 ? factRow(trainSpeedFact(v, tram ? "tram" : "train")) : t("trackHover.noVehicles", { vehicles: tram ? "trams" : "trains" }));
   }
   return rows;
 }

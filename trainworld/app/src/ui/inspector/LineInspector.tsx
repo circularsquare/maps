@@ -32,6 +32,7 @@ import { BusInspector } from "./BusInspector";
 import { locateStation } from "../locate";
 import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
+import type { Vehicle } from "../../game/vehicle";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, vehicleOf, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
 import { turnedLine, type TurnRow } from "../../game/turnedLine";
@@ -52,7 +53,7 @@ const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stat
  * is waiting at busy track. */
 interface Spot { text: string; s: number }
 interface Spots { spots: Spot[]; behindSpots: Spot[]; behind: number; waits: number }
-function spotsFrom(d: Float64Array): Spots {
+function spotsFrom(d: Float64Array, v: Vehicle): Spots {
   const busy: Spot[] = [], following: Spot[] = [];
   const st = stationsNow();
   const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
@@ -66,7 +67,7 @@ function spotsFrom(d: Float64Array): Spots {
     const ahead = kind === 11 && node >= 0 ? lines.get(node)?.name : undefined;
     const text =
       kind === 11
-        ? ahead ? tr("lineInspector.behindLine", { line: ahead }) : tr("lineInspector.behindSlower")
+        ? ahead ? tr("lineInspector.behindLine", { line: ahead, vehicle: v }) : tr("lineInspector.behindSlower", { vehicle: v })
         : (kind === 2 || kind === 3 || kind === 6 || kind === 8 || kind === 9 || kind === 10 || kind === 14) && at
           ? tr("lineInspector.spotAt", { name: at })
           : tr("lineInspector.spotPlace", { kind: kind === 4 ? "junction" : kind === 5 ? "crossing" : kind === 12 ? "merge" : "track", hasNear: !!near, near: near ?? "" });
@@ -81,7 +82,7 @@ const NO_SPOTS: Spots = { spots: [], behindSpots: [], behind: 0, waits: 0 };
 
 /** T-2232: the stations a line stands at for faster trains, from `TrackApi.line_waits`' triples,
  * both directions summed: "At E, for Express trains". */
-function waitSpotsFrom(d: Float64Array): Spot[] {
+function waitSpotsFrom(d: Float64Array, v: Vehicle): Spot[] {
   const st = stationsNow();
   const lines = world.value ? linesByNum(world.value) : new Map<number, LineInput>();
   const by = new Map<number, { s: number; faster: string[] }>();
@@ -92,7 +93,7 @@ function waitSpotsFrom(d: Float64Array): Spot[] {
     x.s += d[i + 2];
     by.set(d[i], x);
   }
-  return [...by].map(([node, x]) => ({ text: tr("lineInspector.waitSpot", { name: st.get(node)?.name ?? "", faster: x.faster.length > 0, list: tList(x.faster) }), s: x.s }));
+  return [...by].map(([node, x]) => ({ text: tr("lineInspector.waitSpot", { name: st.get(node)?.name ?? "", faster: x.faster.length > 0, list: tList(x.faster), vehicle: v }), s: x.s }));
 }
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
@@ -209,8 +210,8 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
         {reversing > 0 && <Row label={tr("lineInspector.reversing")}>{duration(reversing)}</Row>}
       </ul>
       {delayRow(tr("lineInspector.busyTrack"), waiting, busy)}
-      {delayRow(tr("lineInspector.behindSlower"), behind, behindSpots)}
-      {delayRow(tr("lineInspector.fasterTrains"), forFaster, waitSpots)}
+      {delayRow(tr("lineInspector.behindSlower", { vehicle: vehicleOf(st) }), behind, behindSpots)}
+      {delayRow(tr("lineInspector.fasterTrains", { vehicle: vehicleOf(st) }), forFaster, waitSpots)}
     </>
   );
 }
@@ -358,7 +359,7 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   const cap = Math.max(1, Math.floor(short.length / CAR_M));
   const maxM = st.tram ? TRAM_PLATFORM.max : PLATFORM_MAX_M;
   const cars = pendingCars.value.get(l.id)?.to ?? Math.min(st.cars, cap);
-  const capText = tr("lineInspector.fits", { length: length(short.length), name: short.name, cars: carsText(cap) });
+  const capText = tr("lineInspector.fits", { length: length(short.length), name: short.name, cars: carsText(cap), vehicle: vehicleOf(st) });
   // T-1893: the number between the buttons carries the hover; the buttons have none
   const m = moneyState.value;
   // T-2669: a line priced off the world list says by how much
@@ -381,8 +382,8 @@ function TrainLength({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <ul class="rows">
       <li>
-        <span class="grow" data-tip={capText}>{tr("lineInspector.trainLength")}</span>
-        <Stepper value={carsText(cars)} wide label={tr("lineInspector.trainLengthLabel")} onStep={step} tipValue={tip} type={{ text: String(cars), set: typed, tip }} />
+        <span class="grow" data-tip={capText}>{tr("lineInspector.trainLength", { vehicle: vehicleOf(st) })}</span>
+        <Stepper value={carsText(cars)} wide label={tr("lineInspector.trainLengthLabel", { vehicle: vehicleOf(st) })} onStep={step} tipValue={tip} type={{ text: String(cars), set: typed, tip }} />
       </li>
       {offer > 0 && <LongerPlatforms l={l} st={st} stations={plats} cars={cars} to={offer} onDone={() => setWant(null)} />}
     </ul>
@@ -432,12 +433,12 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   };
   // i18n-ignore: a yes/no for the message
   const label = tr("lineInspector.expand", { one: n === 1, priced: price !== null && price > 1e-9, price: price === null ? "" : money(price * 1e6) });
-  const tip = tr("lineInspector.expandTip", { count: n, names, length: length(metres), cars: carsText(to) })
+  const tip = tr("lineInspector.expandTip", { count: n, names, length: length(metres), cars: carsText(to), vehicle: vehicleOf(st) })
     + (price !== null && price <= 1e-9 ? "\n" + tr("lineInspector.free") : "")
     + (carsPrice > 0 ? "\n" + tr("lineInspector.extraCars", { price: money(carsPrice * 1e6) }) : "");
   return (
     <li class="offer">
-      <span class="grow">{tr("lineInspector.tooShort", { count: n, to })}</span>
+      <span class="grow">{tr("lineInspector.tooShort", { count: n, to, vehicle: vehicleOf(st) })}</span>
       <button ref={btn} class="btn text" data-tip={tip} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>{label}</button>
     </li>
   );
@@ -446,7 +447,7 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
 /** T-2232: under the round trip, one button that adds passing tracks at every station where the
  * line's trains get passed or pass a slower line's (`TrackApi.passing_spots`), in one edit; built
  * stations pay at once, blueprint ones join the blueprint. Gone once none is missing. */
-function PassingTracks({ l, version }: { l: LineInput; version: number }) {
+function PassingTracks({ l, version, vehicle }: { l: LineInput; version: number; vehicle: Vehicle }) {
   const spots = useClockQuery({ what: "passingSpots", line: l.num }, [l.num, version], (d) => {
     const out: { num: number; price: number }[] = [];
     for (let i = 0; i + 1 < d.length; i += 2) out.push({ num: d[i], price: d[i + 1] });
@@ -470,7 +471,7 @@ function PassingTracks({ l, version }: { l: LineInput; version: number }) {
       // the edit also buys the trains a slower line now needs for its headway
       const trains = a.charge - price;
       say(price > 1e-9
-        ? tr("lineInspector.passingBuilt", { stations: tr("inspector.stations", { count: built.length }), price: money(price * 1e6), extra: trains > 0.05, trains: money(trains * 1e6) })
+        ? tr("lineInspector.passingBuilt", { stations: tr("inspector.stations", { count: built.length }), price: money(price * 1e6), extra: trains > 0.05, trains: money(trains * 1e6), vehicle })
         : tr("lineInspector.passingAdded", { stations: n }));
     } finally {
       busy.current = false;
@@ -537,12 +538,12 @@ function ParkingButtons({ l, version }: { l: LineInput; version: number }) {
 }
 
 /** T-2692: the foot of the line view, under one heading. */
-function LineImprovements({ l, version }: { l: LineInput; version: number }) {
+function LineImprovements({ l, version, vehicle }: { l: LineInput; version: number; vehicle: Vehicle }) {
   return (
     <>
       <div class="h">{tr("lineInspector.improvements")}</div>
       <div class="improvements">
-        <PassingTracks l={l} version={version} />
+        <PassingTracks l={l} version={version} vehicle={vehicle} />
         <ParkingButtons l={l} version={version} />
       </div>
     </>
@@ -564,7 +565,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
   return (
     <ul class="rows">
       <li>
-        <span class="grow">{tr("lineInspector.trains")}</span>
+        <span class="grow">{tr("lineInspector.trains", { vehicle: vehicleOf(st) })}</span>
         {st.tram ? <span>{tr("toolBar.tram")}</span> : (
           <Segmented<boolean>
             options={[
@@ -583,13 +584,14 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
 
 /** The hover on a stop's time: how fast the trains run from the stop before, and what holds them. */
 function stretchTip(s: { reached: number; limit: number; why: number } | undefined, tram = false): string | undefined {
+  const vehicle: Vehicle = tram ? "tram" : "train";
   if (!s) return undefined;
   const lim = speed(s.limit);
   // T-2927: on a tram line the track's cap is street tram track's 60 km/h or tram track's 80
   const track = !tram ? "track" : s.limit <= TRACK_SPECS.streetTram.vCapKmh + 0.5 ? "street" : "tram";
   // i18n-ignore: select option names
-  const why = tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? track : s.why === 2 ? "curve" : "crossover", speed: lim });
-  return tr("lineInspector.reach", { speed: speed(s.reached) }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
+  const why = tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? track : s.why === 2 ? "curve" : "crossover", speed: lim, vehicle });
+  return tr("lineInspector.reach", { speed: speed(s.reached), vehicle }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
 /** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts).
@@ -598,7 +600,7 @@ export function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) 
   const c = scheduleCopy.value;
   const whole = !!c && wholeCopy(c, st);
   const fit = whole ? carsCap(l) : null;
-  const cut = c && fit && c.cars > fit.cap ? "\n" + tr("lineInspector.pasteCut", { name: fit.name, cars: carsText(c.cars), cap: carsText(fit.cap) }) : "";
+  const cut = c && fit && c.cars > fit.cap ? "\n" + tr("lineInspector.pasteCut", { name: fit.name, cars: carsText(c.cars), cap: carsText(fit.cap), vehicle: vehicleOf(st) }) : "";
   return (
     <span class="sched-copy">
       <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st), !st.bus) })}
@@ -622,8 +624,9 @@ function RailLineInspector({ id }: { id: string }) {
   const now = demandAt(lineSeconds(w?.lineStats[id]));
   const lev = DEMAND_INDEX[now];
   // where it loses time to busy track, asked again after every edit and when the level turns
-  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev], spotsFrom) ?? NO_SPOTS;
-  const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: lev } : null, [l?.num, w?.version, lev], waitSpotsFrom) ?? [];
+  const own = w?.lineStats[id], rv: Vehicle = own ? vehicleOf(own) : "train";
+  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => spotsFrom(d, rv)) ?? NO_SPOTS;
+  const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => waitSpotsFrom(d, rv)) ?? [];
   const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version], (d) => ({ held: heldFrom(d), limits: limitsFrom(d) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
@@ -653,7 +656,7 @@ function RailLineInspector({ id }: { id: string }) {
 
   const build = async () => {
     const a = await edit({ op: "constructLine", line: l.num });
-    if (a.ok) say(tr("lineInspector.constructed", { name: l.name, price: money(a.charge * 1e6) }));
+    if (a.ok) say(tr("lineInspector.constructed", { name: l.name, price: money(a.charge * 1e6), vehicle: vehicleOf(st) }));
   };
   const passed = editingStops ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
@@ -728,7 +731,7 @@ function RailLineInspector({ id }: { id: string }) {
     const f = issues.find((k) => k.startsWith("StopOrder:"))?.split(":").map(Number); // i18n-ignore
     if (!f) return describeIssues(issues);
     const names = { a: name.get(String(f[2])) ?? "", b: name.get(String(f[3])) ?? "" };
-    return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", names);
+    return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", { ...names, vehicle: vehicleOf(st) });
   };
   const moveStop = async (from: number, gap: number) => {
     if (stopEditing) return;
@@ -846,7 +849,7 @@ function RailLineInspector({ id }: { id: string }) {
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
           {st.reversals?.includes(i) && (
-            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS) })}>
+            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st) })}>
               <Icon.uturn />
             </span>
           )}
@@ -970,7 +973,7 @@ function RailLineInspector({ id }: { id: string }) {
             return (
               <Alert tip={h0.tip}>
                 {h0.head}{h0.at ? <span class="place-link" onClick={() => { locateStation(h0.at!.lng, h0.at!.lat); selection.value = { kind: "station", station: h0.at!.id }; }}>{h0.name}</span> : h0.name}{h0.tail}
-                {hs.filter((h) => heldTrains(h.wait) > 0).map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait) })}</div>)}
+                {hs.filter((h) => heldTrains(h.wait) > 0).map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip(vehicleOf(st))}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait, vehicleOf(st)) })}</div>)}
               </Alert>
             );
           })}
@@ -982,7 +985,7 @@ function RailLineInspector({ id }: { id: string }) {
       {!editingStops && stopsBlock}
       {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip num={l.num} st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}
       {st.status !== "broken" && l.stops.length >= 2 && <LineTopSpeed l={l} st={st} />}
-      {st.status !== "broken" && l.stops.length >= 2 && <LineImprovements l={l} version={w.version} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <LineImprovements l={l} version={w.version} vehicle={vehicleOf(st)} />}
       {st.status !== "broken" && l.stops.length >= 2 && <LineProfile l={l} version={w.version} />}
     </>
   );

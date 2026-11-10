@@ -78,7 +78,7 @@ const mins = (s: number) => (s > 0 ? t("scheduleCopy.minutes", { n: tNumber(+(s 
  * "4, 3 and 2 buses", where `vehicle` is the line pasted on, not the copied one. */
 export function scheduleText(c: ScheduleCopy, whole = true, vehicle = c.vehicle ?? "train"): string {
   if (!whole) return c.headway ? t("scheduleCopy.headwaysOnly", { list: tList(c.headway.map(mins)) }) : t("scheduleCopy.countsOnly", { list: tList(c.trains.map(String)), vehicle });
-  return t(c.headway ? "scheduleCopy.withHeadways" : "scheduleCopy.withTrains", { list: tList((c.headway ? c.headway.map(mins) : c.trains.map(String))), cars: c.cars, fast: c.fast });
+  return t(c.headway ? "scheduleCopy.withHeadways" : "scheduleCopy.withTrains", { list: tList((c.headway ? c.headway.map(mins) : c.trains.map(String))), cars: c.cars, fast: c.fast, vehicle });
 }
 
 /** Put the copy on a line: kind of train, length (cut to what its platforms fit), then the
@@ -104,5 +104,5 @@ export async function pasteSchedule(l: LineInput, st: LineStats) {
     const trains = c.trains.map((n) => Math.ceil(n / k) * k) as Levels;
     if (!(await edit({ op: "setTrainCount", line: l.num, trains }, false, true)).ok) return;
   }
-  if (fit && cars < c.cars) say(t("scheduleCopy.tooShort", { station: fit.name, wanted: c.cars, line: l.name, kept: cars }));
+  if (fit && cars < c.cars) say(t("scheduleCopy.tooShort", { station: fit.name, wanted: c.cars, line: l.name, kept: cars, vehicle: vehicleOf(st) }));
 }

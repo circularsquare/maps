@@ -1,8 +1,8 @@
 // What limits each kind of capacity resource, in words, for the map's dots, the Trouble list and
 // the line panel's alert (T-627). The kind numbers are `Capacity::wire_kind` in sim/src/track/capacity.rs.
 
-import { effect } from "@preact/signals";
 import { t, type MessageKey } from "../i18n";
+import type { Vehicle } from "./vehicle";
 
 export interface CapacityKindText {
   /** its name in the Trouble list ("Junction at 94% of capacity") */
@@ -80,9 +80,8 @@ export function fullTip(kind: number, most: number): string {
 /** Whole trains out of service from `TrackApi.line_held`'s share of a fleet: a part train still runs some of the time (T-2935). */
 export const heldTrains = (wait: number) => Math.floor(wait + 0.01);
 
-/** Trains the line owns but cannot run, in words: "2 trains held out of service". */
-export const heldText = (wait: number) => t("capacityKinds.held", { n: heldTrains(wait) });
+/** Vehicles the line owns but cannot run, in words: "2 trains held out of service". */
+export const heldText = (wait: number, vehicle: Vehicle) => t("capacityKinds.held", { n: heldTrains(wait), vehicle });
 
 /** What holding them means, for the hover. */
-export let heldTip = "";
-effect(() => { heldTip = t("capacityKinds.heldTip"); });
+export const heldTip = (vehicle: Vehicle) => t("capacityKinds.heldTip", { vehicle });
