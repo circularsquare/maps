@@ -574,7 +574,7 @@ def checks_of(city, f, rates, browser, changed, joint=None):
         un = browser.get("unreached") or {}
         note = "; not required of the test line: " + ", ".join(f"{k} ({v})" for k, v in un.items()) if un else ""
         c.append({"name": "browser", "status": "PASS" if ok else "FAIL", "value": None,
-                  "detail": ("8 checks" if ok else f"failed: {bad or browser.get('error', 'no result')}") + note})
+                  "detail": (f"{len(browser.get('checks', []))} checks" if ok else f"failed: {bad or browser.get('error', 'no result')}") + note})
     if changed is None:
         c.append(skip("other_packs_unchanged", "no snapshot (--since)"))
     else:
@@ -809,12 +809,11 @@ def purposes_in_reach(header, a, line):
 
 def browser_row(city, header, a, f, reg, out_dir):
     """The browser check's row for one pack ({id, row, out, json} for city-browser.mjs's ROWS, and
-    what the result adds), or (None, a failed result) when it has no water pair."""
+    what the result adds)."""
     line, how = test_line(header, a, f, reg)
     required, unreached = purposes_in_reach(header, a, line)
+    # no water run within 30 km (Tamanrasset, Tanta): the page skips the crossing check (T-2897)
     pair = water_pair(header, f, reg) if f.get("mask") is not None else None
-    if pair is None:
-        return None, {"pass": False, "error": "no water run near the centre for the water pair"}
     names = os.path.join(ROOT, "app", "src", "game", "zone-names.json")  # the name the game shows (T-825)
     # with no hand-set name, zoneNames.ts's cleanName: "Minneapolis [Saint Paul]" shows "Minneapolis" (T-1078)
     shown = re.sub(r"\s+", " ", re.sub(r" CC\b", "", re.sub(r"\s*\([^)]*\)\s*$", "",
@@ -948,7 +947,9 @@ def browser_run(rows, out_dir, stall_s=None, script=None):
             with open(r["json"], encoding="utf-8") as fh:
                 got = json.load(fh)
         checks = got.get("checks", [])
-        res = {"pass": len(checks) == 8 and all(c["ok"] for c in checks), "checks": checks}
+        with open(r["row"], encoding="utf-8") as fh:
+            want = 8 if json.load(fh).get("water") else 7  # no water pair: no crossing check (T-2897)
+        res = {"pass": len(checks) == want and all(c["ok"] for c in checks), "checks": checks}
         if got.get("tries", 1) > 1:
             res["tries"] = got["tries"]
         if not res["pass"] and all(c["ok"] for c in checks):  # died after passing checks (T-788)

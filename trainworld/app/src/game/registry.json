@@ -28374,6 +28374,938 @@
       {
         "name": "Gadong",
         "regionName": "Gadong region"
+      },
+      {
+        "name": "Casablanca",
+        "regionName": "Casablanca region"
+      },
+      {
+        "name": "Rabat",
+        "regionName": "Rabat region"
+      },
+      {
+        "name": "Marrakesh",
+        "regionName": "Marrakesh region"
+      },
+      {
+        "name": "Tangier",
+        "regionName": "Tangier region"
+      },
+      {
+        "name": "Fez",
+        "regionName": "Fez region"
+      },
+      {
+        "name": "Agadir",
+        "regionName": "Agadir region"
+      },
+      {
+        "name": "Nador",
+        "regionName": "Nador region"
+      },
+      {
+        "name": "Kenitra",
+        "regionName": "Kenitra region"
+      },
+      {
+        "name": "Chefchaouen",
+        "regionName": "Chefchaouen region"
+      },
+      {
+        "name": "Oujda-Angad",
+        "regionName": "Oujda-Angad region"
+      },
+      {
+        "name": "Algiers",
+        "regionName": "Algiers region"
+      },
+      {
+        "name": "Oran",
+        "regionName": "Oran region"
+      },
+      {
+        "name": "Tizi Ouzou",
+        "regionName": "Tizi Ouzou region"
+      },
+      {
+        "name": "Batna",
+        "regionName": "Batna region"
+      },
+      {
+        "name": "Djelfa",
+        "regionName": "Djelfa region"
+      },
+      {
+        "name": "El Oued",
+        "regionName": "El Oued region"
+      },
+      {
+        "name": "Ash Shalif",
+        "regionName": "Ash Shalif region"
+      },
+      {
+        "name": "Skikda",
+        "regionName": "Skikda region"
+      },
+      {
+        "name": "Tiaret",
+        "regionName": "Tiaret region"
+      },
+      {
+        "name": "Setif",
+        "regionName": "Setif region"
+      },
+      {
+        "name": "El Mansura",
+        "regionName": "El Mansura region"
+      },
+      {
+        "name": "Alexandria",
+        "regionName": "Alexandria region"
+      },
+      {
+        "name": "Luxor",
+        "regionName": "Luxor region"
+      },
+      {
+        "name": "Asyut",
+        "regionName": "Asyut region"
+      },
+      {
+        "name": "Suhaj",
+        "regionName": "Suhaj region"
+      },
+      {
+        "name": "Al Zaqaziq",
+        "regionName": "Al Zaqaziq region"
+      },
+      {
+        "name": "Banha",
+        "regionName": "Banha region"
+      },
+      {
+        "name": "Dusuq",
+        "regionName": "Dusuq region"
+      },
+      {
+        "name": "El Mahalla El Kubra",
+        "regionName": "El Mahalla El Kubra region"
+      },
+      {
+        "name": "Tanta",
+        "regionName": "Tanta region"
+      },
+      {
+        "name": "Tunis",
+        "regionName": "Tunis region"
+      },
+      {
+        "name": "El Hencha",
+        "regionName": "El Hencha region"
+      },
+      {
+        "name": "الحمامات",
+        "regionName": "الحمامات region"
+      },
+      {
+        "name": "سوسة جوهرة",
+        "regionName": "سوسة جوهرة region"
+      },
+      {
+        "name": "بنزرت الشمالية",
+        "regionName": "بنزرت الشمالية region"
+      },
+      {
+        "name": "Jendouba Sud",
+        "regionName": "Jendouba Sud region"
+      },
+      {
+        "name": "بن قردان",
+        "regionName": "بن قردان region"
+      },
+      {
+        "name": "المنستير",
+        "regionName": "المنستير region"
+      },
+      {
+        "name": "قفصة الجنوبية",
+        "regionName": "قفصة الجنوبية region"
+      },
+      {
+        "name": "القيروان الشمالية",
+        "regionName": "القيروان الشمالية region"
+      },
+      {
+        "name": "Taroudant",
+        "regionName": "Taroudant region"
+      },
+      {
+        "name": "Safi",
+        "regionName": "Safi region"
+      },
+      {
+        "name": "Beni Mellal",
+        "regionName": "Beni Mellal region"
+      },
+      {
+        "name": "El Kelâat Es-Sraghna",
+        "regionName": "El Kelâat Es-Sraghna region"
+      },
+      {
+        "name": "Meknès",
+        "regionName": "Meknès region"
+      },
+      {
+        "name": "Sidi Kacem",
+        "regionName": "Sidi Kacem region"
+      },
+      {
+        "name": "Essaouira",
+        "regionName": "Essaouira region"
+      },
+      {
+        "name": "El Jadida",
+        "regionName": "El Jadida region"
+      },
+      {
+        "name": "Tetouan",
+        "regionName": "Tetouan region"
+      },
+      {
+        "name": "Errachidia",
+        "regionName": "Errachidia region"
+      },
+      {
+        "name": "Settat",
+        "regionName": "Settat region"
+      },
+      {
+        "name": "Taounate",
+        "regionName": "Taounate region"
+      },
+      {
+        "name": "Chtouka-Ait Baha",
+        "regionName": "Chtouka-Ait Baha region"
+      },
+      {
+        "name": "Al Haouz",
+        "regionName": "Al Haouz region"
+      },
+      {
+        "name": "Cairo",
+        "regionName": "Cairo region"
+      },
+      {
+        "name": "Markz Mallawi",
+        "regionName": "Markz Mallawi region"
+      },
+      {
+        "name": "Kum Umbu",
+        "regionName": "Kum Umbu region"
+      },
+      {
+        "name": "Al-Husayniya",
+        "regionName": "Al-Husayniya region"
+      },
+      {
+        "name": "Markz Al Minya",
+        "regionName": "Markz Al Minya region"
+      },
+      {
+        "name": "Markz Bani Mazar",
+        "regionName": "Markz Bani Mazar region"
+      },
+      {
+        "name": "Kafr Al-Shaykh",
+        "regionName": "Kafr Al-Shaykh region"
+      },
+      {
+        "name": "Nag Hammadi",
+        "regionName": "Nag Hammadi region"
+      },
+      {
+        "name": "Al-Balyana",
+        "regionName": "Al-Balyana region"
+      },
+      {
+        "name": "Minya al-Qamh",
+        "regionName": "Minya al-Qamh region"
+      },
+      {
+        "name": "Markz Maghagha",
+        "regionName": "Markz Maghagha region"
+      },
+      {
+        "name": "Al Hamul",
+        "regionName": "Al Hamul region"
+      },
+      {
+        "name": "Itay Al-Barud",
+        "regionName": "Itay Al-Barud region"
+      },
+      {
+        "name": "Abshaway",
+        "regionName": "Abshaway region"
+      },
+      {
+        "name": "Al-Zohour",
+        "regionName": "Al-Zohour region"
+      },
+      {
+        "name": "Tlemcen",
+        "regionName": "Tlemcen region"
+      },
+      {
+        "name": "Bejaia",
+        "regionName": "Bejaia region"
+      },
+      {
+        "name": "Mascara",
+        "regionName": "Mascara region"
+      },
+      {
+        "name": "Chelghoum Laïd",
+        "regionName": "Chelghoum Laïd region"
+      },
+      {
+        "name": "Mostaganem",
+        "regionName": "Mostaganem region"
+      },
+      {
+        "name": "Relizane",
+        "regionName": "Relizane region"
+      },
+      {
+        "name": "Tebessa",
+        "regionName": "Tebessa region"
+      },
+      {
+        "name": "Aïn Beïda",
+        "regionName": "Aïn Beïda region"
+      },
+      {
+        "name": "M'sila",
+        "regionName": "M'sila region"
+      },
+      {
+        "name": "Laghouat",
+        "regionName": "Laghouat region"
+      },
+      {
+        "name": "El Eulma",
+        "regionName": "El Eulma region"
+      },
+      {
+        "name": "Bordj Bou Arreridj",
+        "regionName": "Bordj Bou Arreridj region"
+      },
+      {
+        "name": "سيدي بوزيد الغربية",
+        "regionName": "سيدي بوزيد الغربية region"
+      },
+      {
+        "name": "سبيطلة",
+        "regionName": "سبيطلة region"
+      },
+      {
+        "name": "الكاف الشرقية",
+        "regionName": "الكاف الشرقية region"
+      },
+      {
+        "name": "المهدية",
+        "regionName": "المهدية region"
+      },
+      {
+        "name": "قابس الجنوبية",
+        "regionName": "قابس الجنوبية region"
+      },
+      {
+        "name": "Kerkennah",
+        "regionName": "Kerkennah region"
+      },
+      {
+        "name": "Tinghir",
+        "regionName": "Tinghir region"
+      },
+      {
+        "name": "Sefrou",
+        "regionName": "Sefrou region"
+      },
+      {
+        "name": "Azilal",
+        "regionName": "Azilal region"
+      },
+      {
+        "name": "Khouribga",
+        "regionName": "Khouribga region"
+      },
+      {
+        "name": "Khémisset",
+        "regionName": "Khémisset region"
+      },
+      {
+        "name": "Larache",
+        "regionName": "Larache region"
+      },
+      {
+        "name": "Taza",
+        "regionName": "Taza region"
+      },
+      {
+        "name": "Fquih Ben Saleh",
+        "regionName": "Fquih Ben Saleh region"
+      },
+      {
+        "name": "Sidi Bennour",
+        "regionName": "Sidi Bennour region"
+      },
+      {
+        "name": "Guelmim",
+        "regionName": "Guelmim region"
+      },
+      {
+        "name": "Khemis Milana",
+        "regionName": "Khemis Milana region"
+      },
+      {
+        "name": "Constantine",
+        "regionName": "Constantine region"
+      },
+      {
+        "name": "Sidi Bel Abbès",
+        "regionName": "Sidi Bel Abbès region"
+      },
+      {
+        "name": "Jijel",
+        "regionName": "Jijel region"
+      },
+      {
+        "name": "Bouira",
+        "regionName": "Bouira region"
+      },
+      {
+        "name": "Annaba",
+        "regionName": "Annaba region"
+      },
+      {
+        "name": "Blida",
+        "regionName": "Blida region"
+      },
+      {
+        "name": "Souk Ahras",
+        "regionName": "Souk Ahras region"
+      },
+      {
+        "name": "Guelma",
+        "regionName": "Guelma region"
+      },
+      {
+        "name": "Aïn Oussara",
+        "regionName": "Aïn Oussara region"
+      },
+      {
+        "name": "Bani Swayf",
+        "regionName": "Bani Swayf region"
+      },
+      {
+        "name": "Fayyum",
+        "regionName": "Fayyum region"
+      },
+      {
+        "name": "Sinbillawin",
+        "regionName": "Sinbillawin region"
+      },
+      {
+        "name": "Markz Samalut",
+        "regionName": "Markz Samalut region"
+      },
+      {
+        "name": "Biba",
+        "regionName": "Biba region"
+      },
+      {
+        "name": "Atsa",
+        "regionName": "Atsa region"
+      },
+      {
+        "name": "Tamya",
+        "regionName": "Tamya region"
+      },
+      {
+        "name": "Abu Tig",
+        "regionName": "Abu Tig region"
+      },
+      {
+        "name": "Abu Hammad",
+        "regionName": "Abu Hammad region"
+      },
+      {
+        "name": "Qutur",
+        "regionName": "Qutur region"
+      },
+      {
+        "name": "Al-Arbiin",
+        "regionName": "Al-Arbiin region"
+      },
+      {
+        "name": "Abu-l-Matamir",
+        "regionName": "Abu-l-Matamir region"
+      },
+      {
+        "name": "Markz Abu Qurqas",
+        "regionName": "Markz Abu Qurqas region"
+      },
+      {
+        "name": "Ismailiyya 2",
+        "regionName": "Ismailiyya 2 region"
+      },
+      {
+        "name": "Al-Dilingat",
+        "regionName": "Al-Dilingat region"
+      },
+      {
+        "name": "Berrechid",
+        "regionName": "Berrechid region"
+      },
+      {
+        "name": "Laayoune",
+        "regionName": "Laayoune region"
+      },
+      {
+        "name": "Benslimane",
+        "regionName": "Benslimane region"
+      },
+      {
+        "name": "Oued Ed-Dahab",
+        "regionName": "Oued Ed-Dahab region"
+      },
+      {
+        "name": "Figuig",
+        "regionName": "Figuig region"
+      },
+      {
+        "name": "El Abiodh Sidi Cheikh",
+        "regionName": "El Abiodh Sidi Cheikh region"
+      },
+      {
+        "name": "Bou Saada",
+        "regionName": "Bou Saada region"
+      },
+      {
+        "name": "Biskra",
+        "regionName": "Biskra region"
+      },
+      {
+        "name": "Médéa",
+        "regionName": "Médéa region"
+      },
+      {
+        "name": "Besbes",
+        "regionName": "Besbes region"
+      },
+      {
+        "name": "Khenchela",
+        "regionName": "Khenchela region"
+      },
+      {
+        "name": "Ouled Djellal",
+        "regionName": "Ouled Djellal region"
+      },
+      {
+        "name": "Ouargla",
+        "regionName": "Ouargla region"
+      },
+      {
+        "name": "Maghnia",
+        "regionName": "Maghnia region"
+      },
+      {
+        "name": "Lakhdaria",
+        "regionName": "Lakhdaria region"
+      },
+      {
+        "name": "Faqus",
+        "regionName": "Faqus region"
+      },
+      {
+        "name": "Minuf",
+        "regionName": "Minuf region"
+      },
+      {
+        "name": "Sinuras",
+        "regionName": "Sinuras region"
+      },
+      {
+        "name": "Dumyat",
+        "regionName": "Dumyat region"
+      },
+      {
+        "name": "Al-Minshat",
+        "regionName": "Al-Minshat region"
+      },
+      {
+        "name": "Manzala",
+        "regionName": "Manzala region"
+      },
+      {
+        "name": "Bilqas",
+        "regionName": "Bilqas region"
+      },
+      {
+        "name": "Abu Hummus",
+        "regionName": "Abu Hummus region"
+      },
+      {
+        "name": "Mitubas",
+        "regionName": "Mitubas region"
+      },
+      {
+        "name": "Aga",
+        "regionName": "Aga region"
+      },
+      {
+        "name": "Sidi Salim",
+        "regionName": "Sidi Salim region"
+      },
+      {
+        "name": "Kum Hamada",
+        "regionName": "Kum Hamada region"
+      },
+      {
+        "name": "Abu Kabir",
+        "regionName": "Abu Kabir region"
+      },
+      {
+        "name": "Rafah",
+        "regionName": "Rafah region"
+      },
+      {
+        "name": "Al- Badari",
+        "regionName": "Al- Badari region"
+      },
+      {
+        "name": "Al Fashn",
+        "regionName": "Al Fashn region"
+      },
+      {
+        "name": "Kafr Al-Zayyat",
+        "regionName": "Kafr Al-Zayyat region"
+      },
+      {
+        "name": "Qina",
+        "regionName": "Qina region"
+      },
+      {
+        "name": "Ahnasya",
+        "regionName": "Ahnasya region"
+      },
+      {
+        "name": "Tala",
+        "regionName": "Tala region"
+      },
+      {
+        "name": "Saïda",
+        "regionName": "Saïda region"
+      },
+      {
+        "name": "Adrar",
+        "regionName": "Adrar region"
+      },
+      {
+        "name": "Hadjout",
+        "regionName": "Hadjout region"
+      },
+      {
+        "name": "Ghardaia",
+        "regionName": "Ghardaia region"
+      },
+      {
+        "name": "Tissemsilt",
+        "regionName": "Tissemsilt region"
+      },
+      {
+        "name": "Bashar",
+        "regionName": "Bashar region"
+      },
+      {
+        "name": "Mouzaia",
+        "regionName": "Mouzaia region"
+      },
+      {
+        "name": "Tamanghasset",
+        "regionName": "Tamanghasset region"
+      },
+      {
+        "name": "Arzew",
+        "regionName": "Arzew region"
+      },
+      {
+        "name": "Zighoud Youcef",
+        "regionName": "Zighoud Youcef region"
+      },
+      {
+        "name": "Girga",
+        "regionName": "Girga region"
+      },
+      {
+        "name": "Guhayna Al-Gharbiyya",
+        "regionName": "Guhayna Al-Gharbiyya region"
+      },
+      {
+        "name": "Samannud",
+        "regionName": "Samannud region"
+      },
+      {
+        "name": "Minya Al-Nasr",
+        "regionName": "Minya Al-Nasr region"
+      },
+      {
+        "name": "Marsa Matruh",
+        "regionName": "Marsa Matruh region"
+      },
+      {
+        "name": "Al-Shuhada",
+        "regionName": "Al-Shuhada region"
+      },
+      {
+        "name": "Kafr Saqr",
+        "regionName": "Kafr Saqr region"
+      },
+      {
+        "name": "Birkat Al-Sab",
+        "regionName": "Birkat Al-Sab region"
+      },
+      {
+        "name": "10 Ramadan 2",
+        "regionName": "10 Ramadan 2 region"
+      },
+      {
+        "name": "El-Ibrahimiya",
+        "regionName": "El-Ibrahimiya region"
+      },
+      {
+        "name": "Timimoun",
+        "regionName": "Timimoun region"
+      },
+      {
+        "name": "Boutlelis",
+        "regionName": "Boutlelis region"
+      },
+      {
+        "name": "Tinduf",
+        "regionName": "Tinduf region"
+      },
+      {
+        "name": "Aswan",
+        "regionName": "Aswan region"
+      },
+      {
+        "name": "Hurghada 1",
+        "regionName": "Hurghada 1 region"
+      },
+      {
+        "name": "Idku",
+        "regionName": "Idku region"
+      },
+      {
+        "name": "Sharm el-Sheikh",
+        "regionName": "Sharm el-Sheikh region"
+      },
+      {
+        "name": "A-Dakhla Oasis",
+        "regionName": "A-Dakhla Oasis region"
+      },
+      {
+        "name": "Luxor",
+        "regionName": "Luxor region"
+      },
+      {
+        "name": "Suhaj",
+        "regionName": "Suhaj region"
+      },
+      {
+        "name": "Tanta",
+        "regionName": "Tanta region"
+      },
+      {
+        "name": "Kafr Al-Shaykh",
+        "regionName": "Kafr Al-Shaykh region"
+      },
+      {
+        "name": "Al Hamul",
+        "regionName": "Al Hamul region"
+      },
+      {
+        "name": "Itay Al-Barud",
+        "regionName": "Itay Al-Barud region"
+      },
+      {
+        "name": "Abshaway",
+        "regionName": "Abshaway region"
+      },
+      {
+        "name": "Al-Zohour",
+        "regionName": "Al-Zohour region"
+      },
+      {
+        "name": "Sinbillawin",
+        "regionName": "Sinbillawin region"
+      },
+      {
+        "name": "Abu Hummus",
+        "regionName": "Abu Hummus region"
+      },
+      {
+        "name": "Abu Kabir",
+        "regionName": "Abu Kabir region"
+      },
+      {
+        "name": "Rafah",
+        "regionName": "Rafah region"
+      },
+      {
+        "name": "Girga",
+        "regionName": "Girga region"
+      },
+      {
+        "name": "Al- Badari",
+        "regionName": "Al- Badari region"
+      },
+      {
+        "name": "Kafr Al-Zayyat",
+        "regionName": "Kafr Al-Zayyat region"
+      },
+      {
+        "name": "Qina",
+        "regionName": "Qina region"
+      },
+      {
+        "name": "Samannud",
+        "regionName": "Samannud region"
+      },
+      {
+        "name": "Birkat Al-Sab",
+        "regionName": "Birkat Al-Sab region"
+      },
+      {
+        "name": "Hurghada 1",
+        "regionName": "Hurghada 1 region"
+      },
+      {
+        "name": "El-Ibrahimiya",
+        "regionName": "El-Ibrahimiya region"
+      },
+      {
+        "name": "Idku",
+        "regionName": "Idku region"
+      },
+      {
+        "name": "Taroudant",
+        "regionName": "Taroudant region"
+      },
+      {
+        "name": "Tinghir",
+        "regionName": "Tinghir region"
+      },
+      {
+        "name": "Essaouira",
+        "regionName": "Essaouira region"
+      },
+      {
+        "name": "Laayoune",
+        "regionName": "Laayoune region"
+      },
+      {
+        "name": "Oued Ed-Dahab",
+        "regionName": "Oued Ed-Dahab region"
+      },
+      {
+        "name": "Figuig",
+        "regionName": "Figuig region"
+      },
+      {
+        "name": "El Oued",
+        "regionName": "El Oued region"
+      },
+      {
+        "name": "Bordj Bou Arreridj",
+        "regionName": "Bordj Bou Arreridj region"
+      },
+      {
+        "name": "Aïn Oussara",
+        "regionName": "Aïn Oussara region"
+      },
+      {
+        "name": "Khenchela",
+        "regionName": "Khenchela region"
+      },
+      {
+        "name": "Ghardaia",
+        "regionName": "Ghardaia region"
+      },
+      {
+        "name": "Tissemsilt",
+        "regionName": "Tissemsilt region"
+      },
+      {
+        "name": "Bashar",
+        "regionName": "Bashar region"
+      },
+      {
+        "name": "Mouzaia",
+        "regionName": "Mouzaia region"
+      },
+      {
+        "name": "Tamanghasset",
+        "regionName": "Tamanghasset region"
+      },
+      {
+        "name": "Arzew",
+        "regionName": "Arzew region"
+      },
+      {
+        "name": "Zighoud Youcef",
+        "regionName": "Zighoud Youcef region"
+      },
+      {
+        "name": "Tinduf",
+        "regionName": "Tinduf region"
+      },
+      {
+        "name": "سيدي بوزيد الغربية",
+        "regionName": "سيدي بوزيد الغربية region"
+      },
+      {
+        "name": "سبيطلة",
+        "regionName": "سبيطلة region"
+      },
+      {
+        "name": "قابس الجنوبية",
+        "regionName": "قابس الجنوبية region"
+      },
+      {
+        "name": "Kerkennah",
+        "regionName": "Kerkennah region"
+      },
+      {
+        "name": "Tamanghasset",
+        "regionName": "Tamanghasset region"
+      },
+      {
+        "name": "Kerkennah",
+        "regionName": "Kerkennah region"
+      },
+      {
+        "name": "Tanta",
+        "regionName": "Tanta region"
+      },
+      {
+        "name": "Abu Kabir",
+        "regionName": "Abu Kabir region"
+      },
+      {
+        "name": "El-Ibrahimiya",
+        "regionName": "El-Ibrahimiya region"
       }
     ],
     "rule": {
@@ -126382,6 +127314,4800 @@
       "country": "BN",
       "realm": "borneo",
       "localTrips": 1245180.0
+    },
+    {
+      "id": "cas",
+      "name": "Casablanca",
+      "origin": {
+        "lon": -7.5247,
+        "lat": 33.5676
+      },
+      "center": [
+        -7.5247,
+        33.5676
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.903,
+        33.25,
+        -7.254,
+        33.752
+      ],
+      "place": 7089,
+      "country": "MA",
+      "localTrips": 12460701.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "rab",
+      "name": "Rabat",
+      "origin": {
+        "lon": -6.8191,
+        "lat": 33.984
+      },
+      "center": [
+        -6.8191,
+        33.984
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.145,
+        33.527,
+        -6.451,
+        34.18
+      ],
+      "place": 7090,
+      "country": "MA",
+      "localTrips": 6218695.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "mae",
+      "name": "Marrakesh",
+      "origin": {
+        "lon": -7.9865,
+        "lat": 31.6339
+      },
+      "center": [
+        -7.9865,
+        31.6339
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.448,
+        31.345,
+        -7.714,
+        32.098
+      ],
+      "place": 7091,
+      "country": "MA",
+      "localTrips": 3924278.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "tae",
+      "name": "Tangier",
+      "origin": {
+        "lon": -5.8205,
+        "lat": 35.7453
+      },
+      "center": [
+        -5.8205,
+        35.7453
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.127,
+        35.287,
+        -5.355,
+        35.933
+      ],
+      "place": 7092,
+      "country": "MA",
+      "localTrips": 3662004.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "fez",
+      "name": "Fez",
+      "origin": {
+        "lon": -4.9614,
+        "lat": 34.0535
+      },
+      "center": [
+        -4.9614,
+        34.0535
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.455,
+        33.827,
+        -4.726,
+        34.337
+      ],
+      "place": 7093,
+      "country": "MA",
+      "localTrips": 3923290.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "agd",
+      "name": "Agadir",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.5386,
+        "lat": 30.3646
+      },
+      "center": [
+        -9.5386,
+        30.3646
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -9.912,
+        30.243,
+        -9.2,
+        30.957
+      ],
+      "place": 7094,
+      "country": "MA",
+      "localTrips": 3438671.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ndo",
+      "name": "Nador",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.934,
+        "lat": 35.1682
+      },
+      "center": [
+        -2.934,
+        35.1682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -4.131,
+        33.354,
+        -2.245,
+        35.459
+      ],
+      "place": 7095,
+      "country": "MA",
+      "localTrips": 3270966.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ket",
+      "name": "Kenitra",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.5861,
+        "lat": 34.2621
+      },
+      "center": [
+        -6.5861,
+        34.2621
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.753,
+        34.079,
+        -5.738,
+        35.036
+      ],
+      "place": 7096,
+      "country": "MA",
+      "localTrips": 3065602.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "chu",
+      "name": "Chefchaouen",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.2632,
+        "lat": 35.1682
+      },
+      "center": [
+        -5.2632,
+        35.1682
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.82,
+        34.486,
+        -3.781,
+        35.454
+      ],
+      "place": 7097,
+      "country": "MA",
+      "localTrips": 2837194.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ouj",
+      "name": "Oujda-Angad",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.9095,
+        "lat": 34.6886
+      },
+      "center": [
+        -1.9095,
+        34.6886
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -2.827,
+        33.621,
+        -1.625,
+        35.143
+      ],
+      "place": 7098,
+      "country": "MA",
+      "localTrips": 2737772.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "alg",
+      "name": "Algiers",
+      "origin": {
+        "lon": 3.052,
+        "lat": 36.7897
+      },
+      "center": [
+        3.052,
+        36.7897
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.484,
+        36.203,
+        3.805,
+        36.842
+      ],
+      "place": 7099,
+      "country": "DZ",
+      "localTrips": 13822956.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "ora",
+      "name": "Oran",
+      "origin": {
+        "lon": -0.6415,
+        "lat": 35.7015
+      },
+      "center": [
+        -0.6415,
+        35.7015
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.151,
+        35.263,
+        -0.264,
+        35.891
+      ],
+      "place": 7100,
+      "country": "DZ",
+      "localTrips": 4252588.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tiz",
+      "name": "Tizi Ouzou",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.0455,
+        "lat": 36.7017
+      },
+      "center": [
+        4.0455,
+        36.7017
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.613,
+        36.434,
+        4.676,
+        36.942
+      ],
+      "place": 7101,
+      "country": "DZ",
+      "localTrips": 3869491.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bbq",
+      "name": "Batna",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1625,
+        "lat": 35.5353
+      },
+      "center": [
+        6.1625,
+        35.5353
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.718,
+        34.735,
+        6.816,
+        35.941
+      ],
+      "place": 7102,
+      "country": "DZ",
+      "localTrips": 3526833.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "dje",
+      "name": "Djelfa",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.2496,
+        "lat": 34.6711
+      },
+      "center": [
+        3.2496,
+        34.6711
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.336,
+        32.834,
+        5.101,
+        35.197
+      ],
+      "place": 7103,
+      "country": "DZ",
+      "localTrips": 3132177.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "ass",
+      "name": "Ash Shalif",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.3044,
+        "lat": 36.1396
+      },
+      "center": [
+        1.3044,
+        36.1396
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.668,
+        35.833,
+        1.744,
+        36.574
+      ],
+      "place": 7105,
+      "country": "DZ",
+      "localTrips": 3173534.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sik",
+      "name": "Skikda",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.905,
+        "lat": 36.8777
+      },
+      "center": [
+        6.905,
+        36.8777
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.216,
+        36.401,
+        7.429,
+        37.108
+      ],
+      "place": 7106,
+      "country": "DZ",
+      "localTrips": 2807767.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tre",
+      "name": "Tiaret",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.3192,
+        "lat": 35.3692
+      },
+      "center": [
+        1.3192,
+        35.3692
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.464,
+        34.055,
+        2.694,
+        35.73
+      ],
+      "place": 7107,
+      "country": "DZ",
+      "localTrips": 2729714.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sbz",
+      "name": "Setif",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.4426,
+        "lat": 36.201
+      },
+      "center": [
+        5.4426,
+        36.201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.705,
+        35.958,
+        5.788,
+        36.615
+      ],
+      "place": 7108,
+      "country": "DZ",
+      "localTrips": 2560136.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "elm",
+      "name": "El Mansura",
+      "origin": {
+        "lon": 31.3745,
+        "lat": 31.0327
+      },
+      "center": [
+        31.3745,
+        31.0327
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.884,
+        30.318,
+        31.882,
+        31.494
+      ],
+      "place": 7109,
+      "country": "EG",
+      "localTrips": 19328342.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ale",
+      "name": "Alexandria",
+      "origin": {
+        "lon": 29.9656,
+        "lat": 31.2387
+      },
+      "center": [
+        29.9656,
+        31.2387
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.357,
+        30.634,
+        30.262,
+        31.35
+      ],
+      "place": 7110,
+      "country": "EG",
+      "localTrips": 17937339.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "asy",
+      "name": "Asyut",
+      "origin": {
+        "lon": 31.1682,
+        "lat": 27.1839
+      },
+      "center": [
+        31.1682,
+        27.1839
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.585,
+        26.943,
+        31.758,
+        27.661
+      ],
+      "place": 7112,
+      "country": "EG",
+      "localTrips": 9781689.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "alz",
+      "name": "Al Zaqaziq",
+      "origin": {
+        "lon": 31.4939,
+        "lat": 30.5957
+      },
+      "center": [
+        31.4939,
+        30.5957
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.319,
+        30.459,
+        31.705,
+        30.726
+      ],
+      "place": 7114,
+      "country": "EG",
+      "localTrips": 4245195.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "bah",
+      "name": "Banha",
+      "origin": {
+        "lon": 31.1836,
+        "lat": 30.4673
+      },
+      "center": [
+        31.1836,
+        30.4673
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.075,
+        30.351,
+        31.369,
+        30.634
+      ],
+      "place": 7115,
+      "country": "EG",
+      "localTrips": 1947978.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "duu",
+      "name": "Dusuq",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.6485,
+        "lat": 31.1357
+      },
+      "center": [
+        30.6485,
+        31.1357
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.21,
+        30.77,
+        30.829,
+        31.307
+      ],
+      "place": 7116,
+      "country": "EG",
+      "localTrips": 6270827.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "elr",
+      "name": "El Mahalla El Kubra",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.1774,
+        "lat": 30.9813
+      },
+      "center": [
+        31.1774,
+        30.9813
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.002,
+        30.854,
+        31.263,
+        31.182
+      ],
+      "place": 7117,
+      "country": "EG",
+      "localTrips": 3360729.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "tun",
+      "name": "Tunis",
+      "origin": {
+        "lon": 10.0989,
+        "lat": 36.8337
+      },
+      "center": [
+        10.0989,
+        36.8337
+      ],
+      "zoom": 11.2,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.71,
+        36.375,
+        10.637,
+        37.134
+      ],
+      "place": 7119,
+      "country": "TN",
+      "localTrips": 7843088.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "elh",
+      "name": "El Hencha",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.76,
+        "lat": 34.7398
+      },
+      "center": [
+        10.76,
+        34.7398
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.689,
+        34.149,
+        11.05,
+        35.297
+      ],
+      "place": 7120,
+      "country": "TN",
+      "localTrips": 2637075.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xaj",
+      "name": "الحمامات",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6231,
+        "lat": 36.4029
+      },
+      "center": [
+        10.6231,
+        36.4029
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.571,
+        35.982,
+        11.16,
+        37.108
+      ],
+      "place": 7121,
+      "country": "TN",
+      "localTrips": 2458667.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xak",
+      "name": "سوسة جوهرة",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6184,
+        "lat": 35.8066
+      },
+      "center": [
+        10.6184,
+        35.8066
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.135,
+        35.538,
+        10.71,
+        36.41
+      ],
+      "place": 7122,
+      "country": "TN",
+      "localTrips": 1971370.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xam",
+      "name": "بنزرت الشمالية",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.8711,
+        "lat": 37.2742
+      },
+      "center": [
+        9.8711,
+        37.2742
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.875,
+        36.693,
+        10.304,
+        37.561
+      ],
+      "place": 7123,
+      "country": "TN",
+      "localTrips": 1685314.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "jeb",
+      "name": "Jendouba Sud",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.1744,
+        "lat": 36.7281
+      },
+      "center": [
+        9.1744,
+        36.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.131,
+        36.317,
+        9.887,
+        37.176
+      ],
+      "place": 7124,
+      "country": "TN",
+      "localTrips": 1790677.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xan",
+      "name": "بن قردان",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.2216,
+        "lat": 33.1346
+      },
+      "center": [
+        11.2216,
+        33.1346
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.335,
+        30.21,
+        11.622,
+        33.935
+      ],
+      "place": 7125,
+      "country": "TN",
+      "localTrips": 1719283.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xao",
+      "name": "المنستير",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.8199,
+        "lat": 35.7715
+      },
+      "center": [
+        10.8199,
+        35.7715
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.47,
+        35.404,
+        11.073,
+        35.807
+      ],
+      "place": 7126,
+      "country": "TN",
+      "localTrips": 1529729.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xap",
+      "name": "قفصة الجنوبية",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.7866,
+        "lat": 34.4274
+      },
+      "center": [
+        8.7866,
+        34.4274
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.5,
+        32.484,
+        10.034,
+        34.829
+      ],
+      "place": 7127,
+      "country": "TN",
+      "localTrips": 1610530.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xaq",
+      "name": "القيروان الشمالية",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1518,
+        "lat": 35.7978
+      },
+      "center": [
+        10.1518,
+        35.7978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.247,
+        35.002,
+        10.33,
+        36.157
+      ],
+      "place": 7128,
+      "country": "TN",
+      "localTrips": 1465371.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sfx",
+      "name": "Safi",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.2399,
+        "lat": 32.2882
+      },
+      "center": [
+        -9.2399,
+        32.2882
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -9.483,
+        31.698,
+        -8.205,
+        32.741
+      ],
+      "place": 7130,
+      "country": "MA",
+      "localTrips": 2522951.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "bie",
+      "name": "Beni Mellal",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.3634,
+        "lat": 32.3399
+      },
+      "center": [
+        -6.3634,
+        32.3399
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.678,
+        32.111,
+        -5.219,
+        33.502
+      ],
+      "place": 7131,
+      "country": "MA",
+      "localTrips": 2492282.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "elk",
+      "name": "El Kelâat Es-Sraghna",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.4127,
+        "lat": 32.0641
+      },
+      "center": [
+        -7.4127,
+        32.0641
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.501,
+        31.6,
+        -6.98,
+        32.833
+      ],
+      "place": 7132,
+      "country": "MA",
+      "localTrips": 2169706.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "mek",
+      "name": "Meknès",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.4824,
+        "lat": 33.9059
+      },
+      "center": [
+        -5.4824,
+        33.9059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.905,
+        33.724,
+        -5.173,
+        34.276
+      ],
+      "place": 7133,
+      "country": "MA",
+      "localTrips": 2283597.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "sii",
+      "name": "Sidi Kacem",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.9599,
+        "lat": 34.5753
+      },
+      "center": [
+        -5.9599,
+        34.5753
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.345,
+        34.066,
+        -5.292,
+        34.871
+      ],
+      "place": 7134,
+      "country": "MA",
+      "localTrips": 2086766.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "elj",
+      "name": "El Jadida",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.5112,
+        "lat": 33.2557
+      },
+      "center": [
+        -8.5112,
+        33.2557
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.972,
+        32.674,
+        -7.932,
+        33.474
+      ],
+      "place": 7136,
+      "country": "MA",
+      "localTrips": 2162621.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "tto",
+      "name": "Tetouan",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.3479,
+        "lat": 35.579
+      },
+      "center": [
+        -5.3479,
+        35.579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.874,
+        35.188,
+        -5.057,
+        35.941
+      ],
+      "place": 7137,
+      "country": "MA",
+      "localTrips": 2155460.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "err",
+      "name": "Errachidia",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.2329,
+        "lat": 31.4362
+      },
+      "center": [
+        -4.2329,
+        31.4362
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.91,
+        29.981,
+        -3.089,
+        33.117
+      ],
+      "place": 7138,
+      "country": "MA",
+      "localTrips": 1884598.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "sbw",
+      "name": "Settat",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.6281,
+        "lat": 33.0048
+      },
+      "center": [
+        -7.6281,
+        33.0048
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.102,
+        32.301,
+        -6.831,
+        33.25
+      ],
+      "place": 7139,
+      "country": "MA",
+      "localTrips": 1666263.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ton",
+      "name": "Taounate",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.2089,
+        "lat": 34.3665
+      },
+      "center": [
+        -5.2089,
+        34.3665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.555,
+        34.021,
+        -4.075,
+        34.858
+      ],
+      "place": 7140,
+      "country": "MA",
+      "localTrips": 1561771.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "cht",
+      "name": "Chtouka-Ait Baha",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.4836,
+        "lat": 30.1764
+      },
+      "center": [
+        -9.4836,
+        30.1764
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -10.032,
+        29.239,
+        -8.578,
+        30.347
+      ],
+      "place": 7141,
+      "country": "MA",
+      "localTrips": 1414563.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "aha",
+      "name": "Al Haouz",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.5242,
+        "lat": 31.4276
+      },
+      "center": [
+        -7.5242,
+        31.4276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.683,
+        30.844,
+        -7.109,
+        31.712
+      ],
+      "place": 7142,
+      "country": "MA",
+      "localTrips": 1334636.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "cai",
+      "name": "Cairo",
+      "origin": {
+        "lon": 31.1816,
+        "lat": 30.0141
+      },
+      "center": [
+        31.1816,
+        30.0141
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.569,
+        29.144,
+        31.821,
+        30.53
+      ],
+      "place": 7143,
+      "country": "EG",
+      "localTrips": 73164142.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mrz",
+      "name": "Markz Mallawi",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.8468,
+        "lat": 27.7426
+      },
+      "center": [
+        30.8468,
+        27.7426
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.448,
+        27.552,
+        31.37,
+        27.989
+      ],
+      "place": 7144,
+      "country": "EG",
+      "localTrips": 3785800.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "kbu",
+      "name": "Kum Umbu",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.9493,
+        "lat": 24.4729
+      },
+      "center": [
+        32.9493,
+        24.4729
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.425,
+        24.185,
+        33.323,
+        25.568
+      ],
+      "place": 7145,
+      "country": "EG",
+      "localTrips": 3809879.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "als",
+      "name": "Al-Husayniya",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.9208,
+        "lat": 30.8612
+      },
+      "center": [
+        31.9208,
+        30.8612
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.568,
+        30.714,
+        32.23,
+        31.135
+      ],
+      "place": 7146,
+      "country": "EG",
+      "localTrips": 2338424.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mrm",
+      "name": "Markz Al Minya",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7419,
+        "lat": 28.1241
+      },
+      "center": [
+        30.7419,
+        28.1241
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.089,
+        27.844,
+        31.159,
+        28.307
+      ],
+      "place": 7147,
+      "country": "EG",
+      "localTrips": 2856397.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mrb",
+      "name": "Markz Bani Mazar",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7983,
+        "lat": 28.4977
+      },
+      "center": [
+        30.7983,
+        28.4977
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.129,
+        28.262,
+        31.337,
+        28.623
+      ],
+      "place": 7148,
+      "country": "EG",
+      "localTrips": 2504435.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ngh",
+      "name": "Nag Hammadi",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.2831,
+        "lat": 26.0191
+      },
+      "center": [
+        32.2831,
+        26.0191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.948,
+        25.969,
+        32.631,
+        26.51
+      ],
+      "place": 7150,
+      "country": "EG",
+      "localTrips": 3634935.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "all",
+      "name": "Al-Balyana",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.999,
+        "lat": 26.2298
+      },
+      "center": [
+        31.999,
+        26.2298
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.805,
+        26.093,
+        32.424,
+        26.851
+      ],
+      "place": 7151,
+      "country": "EG",
+      "localTrips": 2354858.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "miq",
+      "name": "Minya al-Qamh",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.347,
+        "lat": 30.5186
+      },
+      "center": [
+        31.347,
+        30.5186
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.245,
+        30.381,
+        31.511,
+        30.633
+      ],
+      "place": 7152,
+      "country": "EG",
+      "localTrips": 1739014.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mkz",
+      "name": "Markz Maghagha",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.8477,
+        "lat": 28.6506
+      },
+      "center": [
+        30.8477,
+        28.6506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.172,
+        28.502,
+        31.347,
+        28.892
+      ],
+      "place": 7153,
+      "country": "EG",
+      "localTrips": 2328848.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "tlm",
+      "name": "Tlemcen",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.3143,
+        "lat": 34.8803
+      },
+      "center": [
+        -1.3143,
+        34.8803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.749,
+        34.182,
+        -0.56,
+        35.556
+      ],
+      "place": 7158,
+      "country": "DZ",
+      "localTrips": 2556515.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bjx",
+      "name": "Bejaia",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.0422,
+        "lat": 36.7281
+      },
+      "center": [
+        5.0422,
+        36.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.327,
+        36.199,
+        5.506,
+        36.915
+      ],
+      "place": 7159,
+      "country": "DZ",
+      "localTrips": 2612951.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "msc",
+      "name": "Mascara",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.1529,
+        "lat": 35.4041
+      },
+      "center": [
+        0.1529,
+        35.4041
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.545,
+        34.993,
+        0.925,
+        35.803
+      ],
+      "place": 7160,
+      "country": "DZ",
+      "localTrips": 2448680.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "chm",
+      "name": "Chelghoum Laïd",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.1704,
+        "lat": 36.1659
+      },
+      "center": [
+        6.1704,
+        36.1659
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.713,
+        35.858,
+        6.569,
+        36.643
+      ],
+      "place": 7161,
+      "country": "DZ",
+      "localTrips": 2339443.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "msa",
+      "name": "Mostaganem",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.0853,
+        "lat": 35.9292
+      },
+      "center": [
+        0.0853,
+        35.9292
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.138,
+        35.653,
+        0.764,
+        36.353
+      ],
+      "place": 7162,
+      "country": "DZ",
+      "localTrips": 2348443.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "rel",
+      "name": "Relizane",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.5508,
+        "lat": 35.7365
+      },
+      "center": [
+        0.5508,
+        35.7365
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.205,
+        35.426,
+        1.451,
+        36.247
+      ],
+      "place": 7163,
+      "country": "DZ",
+      "localTrips": 2174285.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tes",
+      "name": "Tebessa",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.1045,
+        "lat": 35.4041
+      },
+      "center": [
+        8.1045,
+        35.4041
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.205,
+        34.225,
+        8.499,
+        36.022
+      ],
+      "place": 7164,
+      "country": "DZ",
+      "localTrips": 2128366.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "aib",
+      "name": "Aïn Beïda",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.3909,
+        "lat": 35.7978
+      },
+      "center": [
+        7.3909,
+        35.7978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.131,
+        35.404,
+        7.891,
+        36.217
+      ],
+      "place": 7165,
+      "country": "DZ",
+      "localTrips": 2029886.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "msl",
+      "name": "M'sila",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.5366,
+        "lat": 35.7278
+      },
+      "center": [
+        4.5366,
+        35.7278
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.347,
+        35.161,
+        5.361,
+        36.061
+      ],
+      "place": 7166,
+      "country": "DZ",
+      "localTrips": 1995569.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "lgt",
+      "name": "Laghouat",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.8598,
+        "lat": 33.8191
+      },
+      "center": [
+        2.8598,
+        33.8191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.313,
+        32.786,
+        4.502,
+        34.714
+      ],
+      "place": 7167,
+      "country": "DZ",
+      "localTrips": 1878711.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "ell",
+      "name": "El Eulma",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7028,
+        "lat": 36.1571
+      },
+      "center": [
+        5.7028,
+        36.1571
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.001,
+        35.597,
+        6.049,
+        36.463
+      ],
+      "place": 7168,
+      "country": "DZ",
+      "localTrips": 1946406.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xav",
+      "name": "الكاف الشرقية",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.7006,
+        "lat": 36.1747
+      },
+      "center": [
+        8.7006,
+        36.1747
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.231,
+        35.459,
+        9.793,
+        36.484
+      ],
+      "place": 7172,
+      "country": "TN",
+      "localTrips": 1092029.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xaw",
+      "name": "المهدية",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.0358,
+        "lat": 35.509
+      },
+      "center": [
+        11.0358,
+        35.509
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.138,
+        35.068,
+        11.189,
+        35.614
+      ],
+      "place": 7173,
+      "country": "TN",
+      "localTrips": 1024813.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sef",
+      "name": "Sefrou",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.8298,
+        "lat": 33.8191
+      },
+      "center": [
+        -4.8298,
+        33.8191
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.846,
+        32.581,
+        -2.87,
+        34.102
+      ],
+      "place": 7177,
+      "country": "MA",
+      "localTrips": 2255650.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "azi",
+      "name": "Azilal",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.0471,
+        "lat": 31.5823
+      },
+      "center": [
+        -7.0471,
+        31.5823
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.343,
+        31.32,
+        -5.754,
+        32.419
+      ],
+      "place": 7178,
+      "country": "MA",
+      "localTrips": 1247907.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "kor",
+      "name": "Khouribga",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.9327,
+        "lat": 32.8924
+      },
+      "center": [
+        -6.9327,
+        32.8924
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.078,
+        32.6,
+        -6.024,
+        33.257
+      ],
+      "place": 7179,
+      "country": "MA",
+      "localTrips": 1485386.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "kmi",
+      "name": "Khémisset",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.3216,
+        "lat": 33.8885
+      },
+      "center": [
+        -6.3216,
+        33.8885
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.886,
+        33.143,
+        -5.692,
+        34.199
+      ],
+      "place": 7180,
+      "country": "MA",
+      "localTrips": 1374034.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "lrc",
+      "name": "Larache",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.9001,
+        "lat": 35.0024
+      },
+      "center": [
+        -5.9001,
+        35.0024
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -6.266,
+        34.899,
+        -5.433,
+        35.485
+      ],
+      "place": 7181,
+      "country": "MA",
+      "localTrips": 1278904.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "tza",
+      "name": "Taza",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.0018,
+        "lat": 34.2099
+      },
+      "center": [
+        -4.0018,
+        34.2099
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -4.615,
+        33.664,
+        -3.558,
+        34.914
+      ],
+      "place": 7182,
+      "country": "MA",
+      "localTrips": 1271104.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "fqu",
+      "name": "Fquih Ben Saleh",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.7048,
+        "lat": 32.2968
+      },
+      "center": [
+        -6.7048,
+        32.2968
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.155,
+        32.144,
+        -6.402,
+        32.695
+      ],
+      "place": 7183,
+      "country": "MA",
+      "localTrips": 1267565.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "sir",
+      "name": "Sidi Bennour",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.4195,
+        "lat": 32.6506
+      },
+      "center": [
+        -8.4195,
+        32.6506
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -9.081,
+        32.28,
+        -8.021,
+        32.905
+      ],
+      "place": 7184,
+      "country": "MA",
+      "localTrips": 1149184.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "gem",
+      "name": "Guelmim",
+      "kind": "zone",
+      "origin": {
+        "lon": -10.0542,
+        "lat": 28.9908
+      },
+      "center": [
+        -10.0542,
+        28.9908
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -11.803,
+        27.117,
+        -8.646,
+        29.649
+      ],
+      "place": 7185,
+      "country": "MA",
+      "localTrips": 1046045.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "kmx",
+      "name": "Khemis Milana",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.218,
+        "lat": 36.2624
+      },
+      "center": [
+        2.218,
+        36.2624
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.503,
+        35.842,
+        2.649,
+        36.475
+      ],
+      "place": 7186,
+      "country": "DZ",
+      "localTrips": 2396600.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "cnt",
+      "name": "Constantine",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.6478,
+        "lat": 36.359
+      },
+      "center": [
+        6.6478,
+        36.359
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.287,
+        36.127,
+        6.805,
+        36.607
+      ],
+      "place": 7187,
+      "country": "DZ",
+      "localTrips": 2453043.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sdb",
+      "name": "Sidi Bel Abbès",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.6389,
+        "lat": 35.1944
+      },
+      "center": [
+        -0.6389,
+        35.1944
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.148,
+        33.89,
+        0.063,
+        35.475
+      ],
+      "place": 7188,
+      "country": "DZ",
+      "localTrips": 1839991.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "jie",
+      "name": "Jijel",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7671,
+        "lat": 36.8073
+      },
+      "center": [
+        5.7671,
+        36.8073
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.397,
+        36.5,
+        6.534,
+        36.958
+      ],
+      "place": 7189,
+      "country": "DZ",
+      "localTrips": 1922724.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bia",
+      "name": "Bouira",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.8979,
+        "lat": 36.3765
+      },
+      "center": [
+        3.8979,
+        36.3765
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.374,
+        35.832,
+        4.418,
+        36.574
+      ],
+      "place": 7190,
+      "country": "DZ",
+      "localTrips": 1612499.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "aac",
+      "name": "Annaba",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.7559,
+        "lat": 36.9217
+      },
+      "center": [
+        7.7559,
+        36.9217
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.262,
+        36.584,
+        7.853,
+        37.104
+      ],
+      "place": 7191,
+      "country": "DZ",
+      "localTrips": 1717210.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bbs",
+      "name": "Blida",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.8272,
+        "lat": 36.4732
+      },
+      "center": [
+        2.8272,
+        36.4732
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.702,
+        36.344,
+        3.002,
+        36.619
+      ],
+      "place": 7192,
+      "country": "DZ",
+      "localTrips": 1445790.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "sks",
+      "name": "Souk Ahras",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.9672,
+        "lat": 36.2887
+      },
+      "center": [
+        7.9672,
+        36.2887
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.259,
+        35.787,
+        8.433,
+        36.489
+      ],
+      "place": 7193,
+      "country": "DZ",
+      "localTrips": 1438209.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "glm",
+      "name": "Guelma",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.4187,
+        "lat": 36.4644
+      },
+      "center": [
+        7.4187,
+        36.4644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.916,
+        36.006,
+        7.982,
+        36.692
+      ],
+      "place": 7194,
+      "country": "DZ",
+      "localTrips": 1433832.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bnw",
+      "name": "Bani Swayf",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.1135,
+        "lat": 29.0334
+      },
+      "center": [
+        31.1135,
+        29.0334
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.949,
+        28.974,
+        31.528,
+        29.285
+      ],
+      "place": 7196,
+      "country": "EG",
+      "localTrips": 2912028.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "fay",
+      "name": "Fayyum",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.8375,
+        "lat": 29.2974
+      },
+      "center": [
+        30.8375,
+        29.2974
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.699,
+        29.178,
+        31.132,
+        29.422
+      ],
+      "place": 7197,
+      "country": "EG",
+      "localTrips": 2744027.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mks",
+      "name": "Markz Samalut",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7106,
+        "lat": 28.3108
+      },
+      "center": [
+        30.7106,
+        28.3108
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.061,
+        28.038,
+        31.023,
+        28.448
+      ],
+      "place": 7199,
+      "country": "EG",
+      "localTrips": 2088483.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "bbw",
+      "name": "Biba",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9845,
+        "lat": 28.9228
+      },
+      "center": [
+        30.9845,
+        28.9228
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.481,
+        28.611,
+        31.571,
+        29.184
+      ],
+      "place": 7200,
+      "country": "EG",
+      "localTrips": 1884413.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ats",
+      "name": "Atsa",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7471,
+        "lat": 29.2207
+      },
+      "center": [
+        30.7471,
+        29.2207
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.09,
+        28.825,
+        30.912,
+        29.335
+      ],
+      "place": 7201,
+      "country": "EG",
+      "localTrips": 1663775.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "tmy",
+      "name": "Tamya",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9582,
+        "lat": 29.4764
+      },
+      "center": [
+        30.9582,
+        29.4764
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.838,
+        29.356,
+        31.165,
+        29.758
+      ],
+      "place": 7202,
+      "country": "EG",
+      "localTrips": 1076564.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "abg",
+      "name": "Abu Tig",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.3164,
+        "lat": 27.0486
+      },
+      "center": [
+        31.3164,
+        27.0486
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.039,
+        26.825,
+        31.86,
+        27.33
+      ],
+      "place": 7203,
+      "country": "EG",
+      "localTrips": 1601333.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "abm",
+      "name": "Abu Hammad",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.6788,
+        "lat": 30.5357
+      },
+      "center": [
+        31.6788,
+        30.5357
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.555,
+        30.381,
+        32.196,
+        30.752
+      ],
+      "place": 7204,
+      "country": "EG",
+      "localTrips": 1283403.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "qut",
+      "name": "Qutur",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9561,
+        "lat": 30.9727
+      },
+      "center": [
+        30.9561,
+        30.9727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.72,
+        30.857,
+        31.097,
+        31.07
+      ],
+      "place": 7205,
+      "country": "EG",
+      "localTrips": 1342359.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "aai",
+      "name": "Al-Arbiin",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.5565,
+        "lat": 29.9628
+      },
+      "center": [
+        32.5565,
+        29.9628
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.509,
+        28.958,
+        32.876,
+        30.304
+      ],
+      "place": 7206,
+      "country": "EG",
+      "localTrips": 2084749.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "abl",
+      "name": "Abu-l-Matamir",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.1761,
+        "lat": 30.9127
+      },
+      "center": [
+        30.1761,
+        30.9127
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.611,
+        30.064,
+        30.548,
+        31.076
+      ],
+      "place": 7207,
+      "country": "EG",
+      "localTrips": 1560828.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mrq",
+      "name": "Markz Abu Qurqas",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.8259,
+        "lat": 27.929
+      },
+      "center": [
+        30.8259,
+        27.929
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.334,
+        27.769,
+        31.333,
+        28.302
+      ],
+      "place": 7208,
+      "country": "EG",
+      "localTrips": 1553800.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "isy",
+      "name": "Ismailiyya 2",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.2621,
+        "lat": 30.6042
+      },
+      "center": [
+        32.2621,
+        30.6042
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.705,
+        30.176,
+        32.954,
+        31.021
+      ],
+      "place": 7209,
+      "country": "EG",
+      "localTrips": 3710646.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "adi",
+      "name": "Al-Dilingat",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.5321,
+        "lat": 30.827
+      },
+      "center": [
+        30.5321,
+        30.827
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.3,
+        30.364,
+        30.841,
+        30.978
+      ],
+      "place": 7210,
+      "country": "EG",
+      "localTrips": 1351245.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "bci",
+      "name": "Berrechid",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.5753,
+        "lat": 33.2644
+      },
+      "center": [
+        -7.5753,
+        33.2644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.168,
+        32.99,
+        -7.192,
+        33.525
+      ],
+      "place": 7211,
+      "country": "MA",
+      "localTrips": 1238073.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "bsl",
+      "name": "Benslimane",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.1252,
+        "lat": 33.6196
+      },
+      "center": [
+        -7.1252,
+        33.6196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.402,
+        33.176,
+        -6.739,
+        33.851
+      ],
+      "place": 7213,
+      "country": "MA",
+      "localTrips": 496737.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ela",
+      "name": "El Abiodh Sidi Cheikh",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.5504,
+        "lat": 32.9011
+      },
+      "center": [
+        0.5504,
+        32.9011
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.755,
+        30.683,
+        2.383,
+        34.467
+      ],
+      "place": 7216,
+      "country": "DZ",
+      "localTrips": 1707779.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bbt",
+      "name": "Bou Saada",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.1791,
+        "lat": 35.2119
+      },
+      "center": [
+        4.1791,
+        35.2119
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        3.438,
+        34.198,
+        5.051,
+        35.66
+      ],
+      "place": 7217,
+      "country": "DZ",
+      "localTrips": 1345531.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bkr",
+      "name": "Biskra",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.7243,
+        "lat": 34.8542
+      },
+      "center": [
+        5.7243,
+        34.8542
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.436,
+        34.264,
+        6.795,
+        35.304
+      ],
+      "place": 7218,
+      "country": "DZ",
+      "localTrips": 1339727.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "mbj",
+      "name": "Médéa",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.7656,
+        "lat": 36.2712
+      },
+      "center": [
+        2.7656,
+        36.2712
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.116,
+        35.427,
+        3.325,
+        36.396
+      ],
+      "place": 7219,
+      "country": "DZ",
+      "localTrips": 1362526.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bsb",
+      "name": "Besbes",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.845,
+        "lat": 36.7017
+      },
+      "center": [
+        7.845,
+        36.7017
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.635,
+        36.372,
+        8.704,
+        36.971
+      ],
+      "place": 7220,
+      "country": "DZ",
+      "localTrips": 1216432.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "oul",
+      "name": "Ouled Djellal",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.0539,
+        "lat": 34.4274
+      },
+      "center": [
+        5.0539,
+        34.4274
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.109,
+        33.337,
+        5.713,
+        35.116
+      ],
+      "place": 7222,
+      "country": "DZ",
+      "localTrips": 1231969.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "oug",
+      "name": "Ouargla",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.3413,
+        "lat": 31.9522
+      },
+      "center": [
+        5.3413,
+        31.9522
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.975,
+        28.48,
+        7.086,
+        33.518
+      ],
+      "place": 7223,
+      "country": "DZ",
+      "localTrips": 1107737.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "mhx",
+      "name": "Maghnia",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.7201,
+        "lat": 34.8542
+      },
+      "center": [
+        -1.7201,
+        34.8542
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -2.241,
+        34.078,
+        -1.288,
+        35.172
+      ],
+      "place": 7224,
+      "country": "DZ",
+      "localTrips": 1108111.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "lak",
+      "name": "Lakhdaria",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.5951,
+        "lat": 36.561
+      },
+      "center": [
+        3.5951,
+        36.561
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.813,
+        35.633,
+        3.765,
+        36.624
+      ],
+      "place": 7225,
+      "country": "DZ",
+      "localTrips": 1049209.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "faq",
+      "name": "Faqus",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.7847,
+        "lat": 30.7327
+      },
+      "center": [
+        31.7847,
+        30.7327
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.689,
+        30.587,
+        32.073,
+        30.911
+      ],
+      "place": 7226,
+      "country": "EG",
+      "localTrips": 1718123.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mif",
+      "name": "Minuf",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9219,
+        "lat": 30.5272
+      },
+      "center": [
+        30.9219,
+        30.5272
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        28.428,
+        28.631,
+        31.029,
+        30.911
+      ],
+      "place": 7227,
+      "country": "EG",
+      "localTrips": 1573282.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "scc",
+      "name": "Sinuras",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7774,
+        "lat": 29.3826
+      },
+      "center": [
+        30.7774,
+        29.3826
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.577,
+        29.325,
+        30.956,
+        29.737
+      ],
+      "place": 7228,
+      "country": "EG",
+      "localTrips": 1379832.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "dut",
+      "name": "Dumyat",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.7974,
+        "lat": 31.4276
+      },
+      "center": [
+        31.7974,
+        31.4276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.72,
+        31.335,
+        32.085,
+        31.542
+      ],
+      "place": 7229,
+      "country": "EG",
+      "localTrips": 1570398.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "amn",
+      "name": "Al-Minshat",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.7967,
+        "lat": 26.4828
+      },
+      "center": [
+        31.7967,
+        26.4828
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.649,
+        26.316,
+        31.892,
+        26.586
+      ],
+      "place": 7230,
+      "country": "EG",
+      "localTrips": 1385424.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mzl",
+      "name": "Manzala",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.9394,
+        "lat": 31.1614
+      },
+      "center": [
+        31.9394,
+        31.1614
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.796,
+        31.053,
+        32.105,
+        31.299
+      ],
+      "place": 7231,
+      "country": "EG",
+      "localTrips": 1590085.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "bil",
+      "name": "Bilqas",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.3566,
+        "lat": 31.2129
+      },
+      "center": [
+        31.3566,
+        31.2129
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.23,
+        31.16,
+        31.586,
+        31.529
+      ],
+      "place": 7232,
+      "country": "EG",
+      "localTrips": 1239102.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "mib",
+      "name": "Mitubas",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.5275,
+        "lat": 31.2988
+      },
+      "center": [
+        30.5275,
+        31.2988
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.305,
+        31.238,
+        30.672,
+        31.498
+      ],
+      "place": 7234,
+      "country": "EG",
+      "localTrips": 1362308.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "aad",
+      "name": "Aga",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.3465,
+        "lat": 30.8955
+      },
+      "center": [
+        31.3465,
+        30.8955
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.198,
+        30.771,
+        31.421,
+        31.02
+      ],
+      "place": 7235,
+      "country": "EG",
+      "localTrips": 936846.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "sds",
+      "name": "Sidi Salim",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.7862,
+        "lat": 31.273
+      },
+      "center": [
+        30.7862,
+        31.273
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.542,
+        31.166,
+        31.028,
+        31.55
+      ],
+      "place": 7236,
+      "country": "EG",
+      "localTrips": 1388385.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "kmh",
+      "name": "Kum Hamada",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.6939,
+        "lat": 30.7584
+      },
+      "center": [
+        30.6939,
+        30.7584
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.565,
+        30.462,
+        30.874,
+        30.847
+      ],
+      "place": 7237,
+      "country": "EG",
+      "localTrips": 1064618.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "afa",
+      "name": "Al Fashn",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9006,
+        "lat": 28.8207
+      },
+      "center": [
+        30.9006,
+        28.8207
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.424,
+        28.64,
+        31.274,
+        28.919
+      ],
+      "place": 7241,
+      "country": "EG",
+      "localTrips": 1165339.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ahn",
+      "name": "Ahnasya",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9342,
+        "lat": 29.1185
+      },
+      "center": [
+        30.9342,
+        29.1185
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.777,
+        28.981,
+        31.041,
+        29.26
+      ],
+      "place": 7244,
+      "country": "EG",
+      "localTrips": 913689.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "tlx",
+      "name": "Tala",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9416,
+        "lat": 30.6813
+      },
+      "center": [
+        30.9416,
+        30.6813
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.771,
+        30.572,
+        31.048,
+        30.768
+      ],
+      "place": 7245,
+      "country": "EG",
+      "localTrips": 758031.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "scb",
+      "name": "Saïda",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.1523,
+        "lat": 34.8367
+      },
+      "center": [
+        0.1523,
+        34.8367
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.371,
+        34.301,
+        0.956,
+        35.186
+      ],
+      "place": 7246,
+      "country": "DZ",
+      "localTrips": 1061114.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "adx",
+      "name": "Adrar",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.2962,
+        "lat": 27.8782
+      },
+      "center": [
+        -0.2962,
+        27.8782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.689,
+        23.976,
+        2.112,
+        29.454
+      ],
+      "place": 7247,
+      "country": "DZ",
+      "localTrips": 1019305.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "hdj",
+      "name": "Hadjout",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.4167,
+        "lat": 36.5083
+      },
+      "center": [
+        2.4167,
+        36.5083
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.619,
+        36.337,
+        2.646,
+        36.664
+      ],
+      "place": 7248,
+      "country": "DZ",
+      "localTrips": 1000273.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "ghy",
+      "name": "Guhayna Al-Gharbiyya",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.4986,
+        "lat": 26.6769
+      },
+      "center": [
+        31.4986,
+        26.6769
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.379,
+        23.357,
+        32.763,
+        26.991
+      ],
+      "place": 7257,
+      "country": "EG",
+      "localTrips": 959367.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "myr",
+      "name": "Minya Al-Nasr",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.7161,
+        "lat": 31.1443
+      },
+      "center": [
+        31.7161,
+        31.1443
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.58,
+        31.066,
+        31.908,
+        31.375
+      ],
+      "place": 7259,
+      "country": "EG",
+      "localTrips": 807051.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "msr",
+      "name": "Marsa Matruh",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.2371,
+        "lat": 31.3503
+      },
+      "center": [
+        27.2371,
+        31.3503
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.673,
+        28.281,
+        28.988,
+        31.689
+      ],
+      "place": 7260,
+      "country": "EG",
+      "localTrips": 1049455.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "asd",
+      "name": "Al-Shuhada",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9026,
+        "lat": 30.5957
+      },
+      "center": [
+        30.9026,
+        30.5957
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.767,
+        30.504,
+        30.976,
+        30.698
+      ],
+      "place": 7261,
+      "country": "EG",
+      "localTrips": 672481.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "kfs",
+      "name": "Kafr Saqr",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.6325,
+        "lat": 30.7927
+      },
+      "center": [
+        31.6325,
+        30.7927
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.523,
+        30.731,
+        31.783,
+        30.941
+      ],
+      "place": 7262,
+      "country": "EG",
+      "localTrips": 563281.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "rmd",
+      "name": "10 Ramadan 2",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.7012,
+        "lat": 30.3218
+      },
+      "center": [
+        31.7012,
+        30.3218
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.565,
+        30.018,
+        31.845,
+        30.361
+      ],
+      "place": 7264,
+      "country": "EG",
+      "localTrips": 387717.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "tmm",
+      "name": "Timimoun",
+      "kind": "zone",
+      "origin": {
+        "lon": 0.2334,
+        "lat": 29.2633
+      },
+      "center": [
+        0.2334,
+        29.2633
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.942,
+        28.542,
+        2.08,
+        31.678
+      ],
+      "place": 7266,
+      "country": "DZ",
+      "localTrips": 312162.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bol",
+      "name": "Boutlelis",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.9017,
+        "lat": 35.579
+      },
+      "center": [
+        -0.9017,
+        35.579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -1.277,
+        35.326,
+        -0.775,
+        35.747
+      ],
+      "place": 7267,
+      "country": "DZ",
+      "localTrips": 269636.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "asw",
+      "name": "Aswan",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.9085,
+        "lat": 24.0875
+      },
+      "center": [
+        32.9085,
+        24.0875
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.879,
+        22.052,
+        33.288,
+        24.363
+      ],
+      "place": 7269,
+      "country": "EG",
+      "localTrips": 1582503.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "shl",
+      "name": "Sharm el-Sheikh",
+      "kind": "zone",
+      "origin": {
+        "lon": 34.3236,
+        "lat": 27.9121
+      },
+      "center": [
+        34.3236,
+        27.9121
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.611,
+        27.708,
+        34.93,
+        29.964
+      ],
+      "place": 7272,
+      "country": "EG",
+      "localTrips": 302267.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "adk",
+      "name": "A-Dakhla Oasis",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.9834,
+        "lat": 25.4889
+      },
+      "center": [
+        28.9834,
+        25.4889
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.976,
+        21.982,
+        32.74,
+        27.768
+      ],
+      "place": 7273,
+      "country": "EG",
+      "localTrips": 364730.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "lux",
+      "name": "Luxor",
+      "origin": {
+        "lon": 32.6439,
+        "lat": 25.6992
+      },
+      "center": [
+        32.6439,
+        25.6992
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.408,
+        25.467,
+        33.233,
+        26.248
+      ],
+      "place": 7274,
+      "country": "EG",
+      "localTrips": 6206359.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "suh",
+      "name": "Suhaj",
+      "origin": {
+        "lon": 31.6922,
+        "lat": 26.5588
+      },
+      "center": [
+        31.6922,
+        26.5588
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.297,
+        26.411,
+        32.182,
+        27.033
+      ],
+      "place": 7275,
+      "country": "EG",
+      "localTrips": 7783022.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "kay",
+      "name": "Kafr Al-Shaykh",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.9457,
+        "lat": 31.0842
+      },
+      "center": [
+        30.9457,
+        31.0842
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.742,
+        30.992,
+        31.107,
+        31.39
+      ],
+      "place": 7277,
+      "country": "EG",
+      "localTrips": 2293167.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ahu",
+      "name": "Al Hamul",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.0148,
+        "lat": 31.5823
+      },
+      "center": [
+        31.0148,
+        31.5823
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.774,
+        31.121,
+        31.423,
+        31.62
+      ],
+      "place": 7278,
+      "country": "EG",
+      "localTrips": 2015869.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ity",
+      "name": "Itay Al-Barud",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.6646,
+        "lat": 30.887
+      },
+      "center": [
+        30.6646,
+        30.887
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.503,
+        30.776,
+        30.814,
+        31.103
+      ],
+      "place": 7279,
+      "country": "EG",
+      "localTrips": 1771201.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "abs",
+      "name": "Abshaway",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.6857,
+        "lat": 29.357
+      },
+      "center": [
+        30.6857,
+        29.357
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        29.96,
+        29.1,
+        30.816,
+        29.739
+      ],
+      "place": 7280,
+      "country": "EG",
+      "localTrips": 2018897.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "azh",
+      "name": "Al-Zohour",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.269,
+        "lat": 31.2644
+      },
+      "center": [
+        32.269,
+        31.2644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.038,
+        30.879,
+        32.572,
+        31.384
+      ],
+      "place": 7281,
+      "country": "EG",
+      "localTrips": 2111946.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "slw",
+      "name": "Sinbillawin",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.4637,
+        "lat": 30.8784
+      },
+      "center": [
+        31.4637,
+        30.8784
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.32,
+        30.784,
+        31.711,
+        31.016
+      ],
+      "place": 7282,
+      "country": "EG",
+      "localTrips": 1709191.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "auh",
+      "name": "Abu Hummus",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.3121,
+        "lat": 31.1014
+      },
+      "center": [
+        30.3121,
+        31.1014
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.119,
+        30.943,
+        30.529,
+        31.269
+      ],
+      "place": 7283,
+      "country": "EG",
+      "localTrips": 1251333.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "rfa",
+      "name": "Rafah",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.7984,
+        "lat": 31.1313
+      },
+      "center": [
+        33.7984,
+        31.1313
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.504,
+        29.495,
+        34.902,
+        31.343
+      ],
+      "place": 7285,
+      "country": "EG",
+      "localTrips": 1314651.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ggx",
+      "name": "Girga",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.8882,
+        "lat": 26.331
+      },
+      "center": [
+        31.8882,
+        26.331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.73,
+        26.208,
+        31.964,
+        26.398
+      ],
+      "place": 7286,
+      "country": "EG",
+      "localTrips": 1263181.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "ari",
+      "name": "Al- Badari",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.444,
+        "lat": 26.981
+      },
+      "center": [
+        31.444,
+        26.981
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.287,
+        26.825,
+        31.955,
+        27.206
+      ],
+      "place": 7287,
+      "country": "EG",
+      "localTrips": 1067960.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "kfr",
+      "name": "Kafr Al-Zayyat",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.8357,
+        "lat": 30.8098
+      },
+      "center": [
+        30.8357,
+        30.8098
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.736,
+        30.679,
+        30.918,
+        30.936
+      ],
+      "place": 7288,
+      "country": "EG",
+      "localTrips": 955823.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "qia",
+      "name": "Qina",
+      "kind": "zone",
+      "origin": {
+        "lon": 32.7899,
+        "lat": 26.0528
+      },
+      "center": [
+        32.7899,
+        26.0528
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        32.512,
+        25.965,
+        33.151,
+        26.471
+      ],
+      "place": 7289,
+      "country": "EG",
+      "localTrips": 1630192.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "smd",
+      "name": "Samannud",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.2398,
+        "lat": 30.9641
+      },
+      "center": [
+        31.2398,
+        30.9641
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.136,
+        30.822,
+        31.338,
+        31.079
+      ],
+      "place": 7290,
+      "country": "EG",
+      "localTrips": 582100.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "brt",
+      "name": "Birkat Al-Sab",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.0864,
+        "lat": 30.6385
+      },
+      "center": [
+        31.0864,
+        30.6385
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.991,
+        30.567,
+        31.22,
+        30.735
+      ],
+      "place": 7291,
+      "country": "EG",
+      "localTrips": 601554.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "hud",
+      "name": "Hurghada 1",
+      "kind": "zone",
+      "origin": {
+        "lon": 33.8199,
+        "lat": 27.2516
+      },
+      "center": [
+        33.8199,
+        27.2516
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.298,
+        25.197,
+        34.663,
+        29.156
+      ],
+      "place": 7292,
+      "country": "EG",
+      "localTrips": 994858.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "idk",
+      "name": "Idku",
+      "kind": "zone",
+      "origin": {
+        "lon": 30.2872,
+        "lat": 31.3074
+      },
+      "center": [
+        30.2872,
+        31.3074
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.119,
+        31.205,
+        30.446,
+        31.393
+      ],
+      "place": 7294,
+      "country": "EG",
+      "localTrips": 451800.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "trt",
+      "name": "Taroudant",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.2122,
+        "lat": 30.3902
+      },
+      "center": [
+        -9.2122,
+        30.3902
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -9.352,
+        28.292,
+        -6.332,
+        31.185
+      ],
+      "place": 7295,
+      "country": "MA",
+      "localTrips": 2432951.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "tih",
+      "name": "Tinghir",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.5348,
+        "lat": 31.5135
+      },
+      "center": [
+        -5.5348,
+        31.5135
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.774,
+        29.458,
+        -4.509,
+        32.189
+      ],
+      "place": 7296,
+      "country": "MA",
+      "localTrips": 2415940.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "eso",
+      "name": "Essaouira",
+      "kind": "zone",
+      "origin": {
+        "lon": -9.7644,
+        "lat": 31.5135
+      },
+      "center": [
+        -9.7644,
+        31.5135
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -9.865,
+        30.767,
+        -8.24,
+        31.959
+      ],
+      "place": 7297,
+      "country": "MA",
+      "localTrips": 2026389.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "lau",
+      "name": "Laayoune",
+      "kind": "zone",
+      "origin": {
+        "lon": -13.104,
+        "lat": 27.1923
+      },
+      "center": [
+        -13.104,
+        27.1923
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -13.647,
+        25.975,
+        -8.645,
+        28.23
+      ],
+      "place": 7298,
+      "country": "MA",
+      "localTrips": 706338.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "oue",
+      "name": "Oued Ed-Dahab",
+      "kind": "zone",
+      "origin": {
+        "lon": -15.9471,
+        "lat": 23.7025
+      },
+      "center": [
+        -15.9471,
+        23.7025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -17.125,
+        20.751,
+        -11.98,
+        24.702
+      ],
+      "place": 7299,
+      "country": "MA",
+      "localTrips": 453770.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "fig",
+      "name": "Figuig",
+      "kind": "zone",
+      "origin": {
+        "lon": -1.9577,
+        "lat": 32.5383
+      },
+      "center": [
+        -1.9577,
+        32.5383
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -4.041,
+        31.691,
+        -0.977,
+        33.771
+      ],
+      "place": 7300,
+      "country": "MA",
+      "localTrips": 344430.0,
+      "realm": "morocco"
+    },
+    {
+      "id": "ele",
+      "name": "El Oued",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.8553,
+        "lat": 33.3596
+      },
+      "center": [
+        6.8553,
+        33.3596
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.161,
+        31.983,
+        9.093,
+        34.53
+      ],
+      "place": 7301,
+      "country": "DZ",
+      "localTrips": 3264509.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bou",
+      "name": "Bordj Bou Arreridj",
+      "kind": "zone",
+      "origin": {
+        "lon": 4.7768,
+        "lat": 36.0782
+      },
+      "center": [
+        4.7768,
+        36.0782
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        4.047,
+        35.742,
+        5.22,
+        36.45
+      ],
+      "place": 7302,
+      "country": "DZ",
+      "localTrips": 1916202.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "aio",
+      "name": "Aïn Oussara",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.895,
+        "lat": 35.4478
+      },
+      "center": [
+        2.895,
+        35.4478
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.99,
+        34.834,
+        3.717,
+        35.851
+      ],
+      "place": 7303,
+      "country": "DZ",
+      "localTrips": 1303117.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "kne",
+      "name": "Khenchela",
+      "kind": "zone",
+      "origin": {
+        "lon": 7.154,
+        "lat": 35.4216
+      },
+      "center": [
+        7.154,
+        35.4216
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.475,
+        34.136,
+        7.572,
+        35.691
+      ],
+      "place": 7304,
+      "country": "DZ",
+      "localTrips": 1244882.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "ghd",
+      "name": "Ghardaia",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.6425,
+        "lat": 32.4952
+      },
+      "center": [
+        3.6425,
+        32.4952
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.218,
+        31.198,
+        5.047,
+        33.09
+      ],
+      "place": 7305,
+      "country": "DZ",
+      "localTrips": 1043158.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tss",
+      "name": "Tissemsilt",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.8094,
+        "lat": 35.5965
+      },
+      "center": [
+        1.8094,
+        35.5965
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.234,
+        35.518,
+        2.337,
+        36.054
+      ],
+      "place": 7306,
+      "country": "DZ",
+      "localTrips": 957626.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "bbv",
+      "name": "Bashar",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.2316,
+        "lat": 31.5909
+      },
+      "center": [
+        -2.2316,
+        31.5909
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -3.813,
+        28.776,
+        0.406,
+        32.435
+      ],
+      "place": 7307,
+      "country": "DZ",
+      "localTrips": 844562.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "moz",
+      "name": "Mouzaia",
+      "kind": "zone",
+      "origin": {
+        "lon": 2.6899,
+        "lat": 36.4644
+      },
+      "center": [
+        2.6899,
+        36.4644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.453,
+        36.311,
+        2.799,
+        36.603
+      ],
+      "place": 7308,
+      "country": "DZ",
+      "localTrips": 522219.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "arz",
+      "name": "Arzew",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.3126,
+        "lat": 35.8591
+      },
+      "center": [
+        -0.3126,
+        35.8591
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.513,
+        35.575,
+        -0.091,
+        35.928
+      ],
+      "place": 7310,
+      "country": "DZ",
+      "localTrips": 483183.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "zig",
+      "name": "Zighoud Youcef",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.7029,
+        "lat": 36.5347
+      },
+      "center": [
+        6.7029,
+        36.5347
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.49,
+        36.074,
+        7.072,
+        36.643
+      ],
+      "place": 7311,
+      "country": "DZ",
+      "localTrips": 293375.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tif",
+      "name": "Tinduf",
+      "kind": "zone",
+      "origin": {
+        "lon": -8.1269,
+        "lat": 27.6748
+      },
+      "center": [
+        -8.1269,
+        27.6748
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -8.69,
+        25.495,
+        -3.965,
+        28.939
+      ],
+      "place": 7312,
+      "country": "DZ",
+      "localTrips": 245938.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xar",
+      "name": "سيدي بوزيد الغربية",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.4936,
+        "lat": 35.0373
+      },
+      "center": [
+        9.4936,
+        35.0373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.898,
+        34.246,
+        10.086,
+        35.514
+      ],
+      "place": 7313,
+      "country": "TN",
+      "localTrips": 1118349.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xas",
+      "name": "سبيطلة",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.1229,
+        "lat": 35.2294
+      },
+      "center": [
+        9.1229,
+        35.2294
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        8.223,
+        34.609,
+        9.362,
+        35.81
+      ],
+      "place": 7314,
+      "country": "TN",
+      "localTrips": 1133784.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "xax",
+      "name": "قابس الجنوبية",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.1161,
+        "lat": 33.8625
+      },
+      "center": [
+        10.1161,
+        33.8625
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        9.225,
+        33.251,
+        10.502,
+        34.301
+      ],
+      "place": 7315,
+      "country": "TN",
+      "localTrips": 1040790.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tmn",
+      "name": "Tamanghasset",
+      "kind": "zone",
+      "origin": {
+        "lon": 5.5134,
+        "lat": 22.7836
+      },
+      "center": [
+        5.5134,
+        22.7836
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        0.913,
+        20.426,
+        10.291,
+        29.1
+      ],
+      "place": 7317,
+      "country": "DZ",
+      "localTrips": 550835.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "kke",
+      "name": "Kerkennah",
+      "kind": "zone",
+      "origin": {
+        "lon": 11.0315,
+        "lat": 34.6537
+      },
+      "center": [
+        11.0315,
+        34.6537
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        10.944,
+        34.595,
+        11.341,
+        34.85
+      ],
+      "place": 7318,
+      "country": "TN",
+      "localTrips": 35354.0,
+      "realm": "algeria-tunisia"
+    },
+    {
+      "id": "tta",
+      "name": "Tanta",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.0025,
+        "lat": 30.767
+      },
+      "center": [
+        31.0025,
+        30.767
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.85,
+        30.685,
+        31.133,
+        30.934
+      ],
+      "place": 7319,
+      "country": "EG",
+      "localTrips": 3181716.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "abk",
+      "name": "Abu Kabir",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.6733,
+        "lat": 30.7241
+      },
+      "center": [
+        31.6733,
+        30.7241
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.578,
+        30.618,
+        31.81,
+        30.847
+      ],
+      "place": 7320,
+      "country": "EG",
+      "localTrips": 926311.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "eli",
+      "name": "El-Ibrahimiya",
+      "kind": "zone",
+      "origin": {
+        "lon": 31.5892,
+        "lat": 30.7413
+      },
+      "center": [
+        31.5892,
+        30.7413
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        31.478,
+        30.667,
+        31.644,
+        30.797
+      ],
+      "place": 7321,
+      "country": "EG",
+      "localTrips": 333908.0,
+      "realm": "egypt"
     }
   ]
 }

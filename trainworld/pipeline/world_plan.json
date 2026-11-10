@@ -7618,7 +7618,7 @@
    "order": 89,
    "id": "cai",
    "name": "Cairo",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -7741,6 +7741,26 @@
       "task": "T-2897"
      }
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 108.9,
+     "stations": 1.8,
+     "places": 4.6,
+     "routes": 902.4,
+     "merge": 1.8,
+     "nocar": 2.3,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:22:55",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 8479.19921875"
+     ]
+    },
+    "gated": "2026-11-10T01:05:53",
+    "shipped": "2026-11-10T02:21:58"
    }
   },
   {
@@ -12081,7 +12101,7 @@
    "order": 128,
    "id": "elm",
    "name": "El Mansura",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -12145,6 +12165,27 @@
       "37247803B6997097478011"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 97.5,
+     "stations": 1.2,
+     "places": 3.3,
+     "routes": 442.0,
+     "merge": 4.2,
+     "nocar": 7.9,
+     "everyday": 2.8
+    },
+    "built": "2026-11-10T00:15:09",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.365062819729445",
+      "top_school_cell_pupils 7517.83837890625"
+     ]
+    },
+    "gated": "2026-11-10T01:05:49",
+    "shipped": "2026-11-10T02:21:59"
    }
   },
   {
@@ -12688,7 +12729,7 @@
    "order": 136,
    "id": "ale",
    "name": "Alexandria",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -12751,6 +12792,26 @@
       "37247803B38142631960117"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 109.5,
+     "stations": 1.8,
+     "places": 4.1,
+     "routes": 89.4,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:09:18",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 8886.263671875"
+     ]
+    },
+    "gated": "2026-11-10T01:05:50",
+    "shipped": "2026-11-10T02:21:59"
    }
   },
   {
@@ -13788,7 +13849,7 @@
    "order": 152,
    "id": "lux",
    "name": "Luxor",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -13838,7 +13899,34 @@
     }
    },
    "gate_relax": {
-    "pop_vs_plan": "T-2956: people scaled to CAPMAS 2023 governorate totals (GHS-POP has Luxor governorate at 4.2 times the census): about 2.41M against the plan's GHSL 6.60M"
+    "pop_vs_plan": "T-2956: people scaled to CAPMAS 2023 governorate totals (GHS-POP has Luxor governorate at 4.2 times the census): about 2.41M against the plan's GHSL 6.60M",
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 96.9,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 41.8,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:08:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.3571611834771411",
+      "pop_vs_ghsl_other 0.3569212761262967",
+      "top_zone_jobs_share 0.20810636417171086",
+      "top_school_cell_pupils 8455.81640625",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:26:22",
+    "gated": "2026-11-10T01:18:05",
+    "shipped": "2026-11-10T02:21:59"
    }
   },
   {
@@ -15334,7 +15422,7 @@
    "order": 172,
    "id": "alg",
    "name": "Algiers",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -15490,6 +15578,26 @@
       "69997007B98351839521636"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 58.7,
+     "stations": 1.4,
+     "places": 3.8,
+     "routes": 71.0,
+     "merge": 1.7,
+     "nocar": 2.3,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:10:01",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5487.03955078125"
+     ]
+    },
+    "gated": "2026-11-10T01:00:31",
+    "shipped": "2026-11-10T02:22:00"
    }
   },
   {
@@ -15883,7 +15991,7 @@
    "order": 179,
    "id": "cas",
    "name": "Casablanca",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -15922,6 +16030,26 @@
     "fua": [
      1785
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 132.5,
+     "stations": 1.1,
+     "places": 2.8,
+     "routes": 39.1,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:08:17",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:07",
+    "shipped": "2026-11-10T02:22:01"
    }
   },
   {
@@ -21386,7 +21514,7 @@
    "order": 251,
    "id": "asy",
    "name": "Asyut",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -21439,6 +21567,27 @@
       "37247803B89417957828076"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 31.0,
+     "stations": 1.5,
+     "places": 2.7,
+     "routes": 64.5,
+     "merge": 1.6,
+     "nocar": 2.8,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:10:09",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.4030953921858966",
+      "top_school_cell_pupils 7507.19873046875"
+     ]
+    },
+    "gated": "2026-11-10T01:05:50",
+    "shipped": "2026-11-10T02:22:01"
    }
   },
   {
@@ -22813,7 +22962,7 @@
    "order": 271,
    "id": "tun",
    "name": "Tunis",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -22905,6 +23054,26 @@
       "11933810B41984965215358"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 250.1,
+     "stations": 1.5,
+     "places": 3.8,
+     "routes": 75.5,
+     "merge": 1.5,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:08:58",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:36:47",
+    "shipped": "2026-11-10T02:22:02"
    }
   },
   {
@@ -24052,7 +24221,7 @@
    "order": 288,
    "id": "suh",
    "name": "Suhaj",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -24104,6 +24273,32 @@
       "37247803B45887361748458"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 32.5,
+     "stations": 1.6,
+     "places": 2.6,
+     "routes": 35.6,
+     "merge": 1.7,
+     "nocar": 3.2,
+     "everyday": 2.2
+    },
+    "built": "2026-11-10T00:10:44",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.22726011623275366",
+      "top_school_cell_pupils 6081.58740234375",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:26:24",
+    "gated": "2026-11-10T01:18:06",
+    "shipped": "2026-11-10T02:22:02"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -25940,7 +26135,7 @@
    "order": 309,
    "id": "rab",
    "name": "Rabat",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -25978,6 +26173,26 @@
     "fua": [
      2317
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 137.1,
+     "stations": 1.3,
+     "places": 2.6,
+     "routes": 31.1,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:09:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:08",
+    "shipped": "2026-11-10T02:22:03"
    }
   },
   {
@@ -32080,7 +32295,7 @@
    "order": 399,
    "id": "alz",
    "name": "Al Zaqaziq",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -32127,6 +32342,30 @@
      6551,
      6671
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 30.0,
+     "stations": 2.5,
+     "places": 3.0,
+     "routes": 67.9,
+     "merge": 1.8,
+     "nocar": 3.6,
+     "everyday": 2.1
+    },
+    "built": "2026-11-10T00:12:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_fua 1.4956362743286717",
+      "top_zone_jobs_share 0.1742323166767549",
+      "top_school_cell_pupils 5478.7744140625",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:05:51",
+    "shipped": "2026-11-10T02:22:03"
    }
   },
   {
@@ -33558,7 +33797,7 @@
    "order": 419,
    "id": "mae",
    "name": "Marrakesh",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -33594,6 +33833,28 @@
     "fua": [
      1515
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 129.0,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 39.8,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:08:16",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.3283460324794871",
+      "top_zone_jobs_share 0.10548596081658619",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:09",
+    "shipped": "2026-11-10T02:22:04"
    }
   },
   {
@@ -35337,7 +35598,7 @@
    "order": 445,
    "id": "tae",
    "name": "Tangier",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -35380,6 +35641,27 @@
       "96644757B56432502406176"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.4,
+     "places": 2.7,
+     "routes": 24.2,
+     "merge": 1.2,
+     "nocar": 2.0,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:09:19",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.3486071220042946",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:09",
+    "shipped": "2026-11-10T02:22:04"
    }
   },
   {
@@ -35519,7 +35801,7 @@
    "order": 448,
    "id": "ora",
    "name": "Oran",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -35587,13 +35869,31 @@
       "69997007B92941794952382"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 35.2,
+     "stations": 1.4,
+     "places": 2.4,
+     "routes": 21.1,
+     "merge": 1.2,
+     "nocar": 1.9,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:08:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:31",
+    "shipped": "2026-11-10T02:22:05"
    }
   },
   {
    "order": 449,
    "id": "fez",
    "name": "Fez",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -35638,6 +35938,27 @@
       "task": "T-2897"
      }
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.5,
+     "places": 2.8,
+     "routes": 21.1,
+     "merge": 1.2,
+     "nocar": 2.2,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:09:14",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11813927587607403",
+      "top_school_cell_pupils 6000.00048828125"
+     ]
+    },
+    "gated": "2026-11-10T00:44:10",
+    "shipped": "2026-11-10T02:22:05"
    }
   },
   {
@@ -39040,7 +39361,7 @@
    "order": 504,
    "id": "bah",
    "name": "Banha",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -39078,6 +39399,28 @@
     "fua": [
      4121
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 39.8,
+     "stations": 3.1,
+     "places": 3.0,
+     "routes": 54.1,
+     "merge": 1.4,
+     "nocar": 2.7,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:12:33",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8459215917963665",
+      "top_zone_jobs_share 0.11165661746270095",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:05:51",
+    "shipped": "2026-11-10T02:22:06"
    }
   },
   {
@@ -338560,7 +338903,7 @@
    "id": "agd",
    "name": "Agadir",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338596,6 +338939,26 @@
      "Inezgane-Ait Melloul Prefecture",
      "Agadir Ida-Outanane Prefecture"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 23.7,
+     "stations": 1.3,
+     "places": 2.9,
+     "routes": 20.4,
+     "merge": 1.7,
+     "nocar": 2.3,
+     "everyday": 3.8
+    },
+    "built": "2026-11-10T00:11:15",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:11",
+    "shipped": "2026-11-10T02:22:06"
    }
   },
   {
@@ -338603,7 +338966,7 @@
    "id": "ndo",
    "name": "Nador",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338643,6 +339006,28 @@
      "Province de Guercif إقليم جرسيف",
      "Province de Driouch إقليم الدريوش"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 42.2,
+     "stations": 1.6,
+     "places": 3.4,
+     "routes": 47.5,
+     "merge": 4.0,
+     "nocar": 5.4,
+     "everyday": 4.1
+    },
+    "built": "2026-11-10T00:11:08",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5796.36865234375",
+      "road_snap_median_m 319.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:11",
+    "shipped": "2026-11-10T02:22:07"
    }
   },
   {
@@ -338650,7 +339035,7 @@
    "id": "ket",
    "name": "Kenitra",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338684,6 +339069,27 @@
     "unit_names": [
      "Province de Kenitra إقليم القنيطرة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 22.7,
+     "stations": 1.4,
+     "places": 2.8,
+     "routes": 26.8,
+     "merge": 1.3,
+     "nocar": 2.6,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:10:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12009192682769722",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:12",
+    "shipped": "2026-11-10T02:22:07"
    }
   },
   {
@@ -338691,7 +339097,7 @@
    "id": "chu",
    "name": "Chefchaouen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338729,6 +339135,27 @@
      "Al Hoceima Province",
      "Province d'Ouezzane إقليم وزان"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 38.5,
+     "stations": 3.0,
+     "places": 4.7,
+     "routes": 29.2,
+     "merge": 1.6,
+     "nocar": 2.2,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:11:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17553114218235022",
+      "top_school_cell_pupils 5999.9990234375"
+     ]
+    },
+    "gated": "2026-11-10T00:44:13",
+    "shipped": "2026-11-10T02:22:07"
    }
   },
   {
@@ -338736,7 +339163,7 @@
    "id": "ouj",
    "name": "Oujda-Angad",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338774,6 +339201,27 @@
      "Province de Berkane إقليم بركان",
      "Province de Jerada إقليم جرادة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 30.2,
+     "stations": 1.4,
+     "places": 2.8,
+     "routes": 34.7,
+     "merge": 1.5,
+     "nocar": 2.3,
+     "everyday": 2.6
+    },
+    "built": "2026-11-10T00:12:27",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1243888926395619",
+      "top_school_cell_pupils 5999.99951171875"
+     ]
+    },
+    "gated": "2026-11-10T00:44:13",
+    "shipped": "2026-11-10T02:22:08"
    }
   },
   {
@@ -338781,7 +339229,7 @@
    "id": "trt",
    "name": "Taroudant",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338817,6 +339265,31 @@
      "Taroudant Province",
      "Tata Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 38.2,
+     "stations": 2.2,
+     "places": 3.4,
+     "routes": 48.7,
+     "merge": 1.7,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:12:56",
+    "gate": {
+     "warn": [
+      "area_km2 42607.169588448625",
+      "top_school_cell_pupils 6013.30859375"
+     ]
+    },
+    "parked": "2026-11-10T00:32:03",
+    "gated": "2026-11-10T01:18:16",
+    "shipped": "2026-11-10T02:22:08"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-2897: the dry points lie in the Oued Souss bed by Taroudant, a wadi dry most of the year"
    }
   },
   {
@@ -338824,7 +339297,7 @@
    "id": "sfx",
    "name": "Safi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338860,6 +339333,26 @@
      "Province de Safi إقليم أسفي",
      "Province de Youssoufia إقليم اليوسفية"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 26.5,
+     "stations": 2.4,
+     "places": 3.6,
+     "routes": 33.5,
+     "merge": 1.4,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:12:59",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6186.1240234375"
+     ]
+    },
+    "gated": "2026-11-10T00:44:14",
+    "shipped": "2026-11-10T02:22:09"
    }
   },
   {
@@ -338867,7 +339360,7 @@
    "id": "bie",
    "name": "Beni Mellal",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338903,6 +339396,27 @@
      "Province de Beni Mellal إقليم بني ملال",
      "Province de Khénifra إقليم خنيفرة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 28.3,
+     "stations": 1.3,
+     "places": 2.2,
+     "routes": 25.5,
+     "merge": 1.4,
+     "nocar": 2.0,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:13:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1382348990795698",
+      "top_school_cell_pupils 6289.14794921875"
+     ]
+    },
+    "gated": "2026-11-10T00:44:15",
+    "shipped": "2026-11-10T02:22:09"
    }
   },
   {
@@ -338910,7 +339424,7 @@
    "id": "tih",
    "name": "Tinghir",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338948,6 +339462,33 @@
      "Zagora Province",
      "Ouarzazate Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 32.0,
+     "stations": 1.5,
+     "places": 2.8,
+     "routes": 31.5,
+     "merge": 1.2,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:27:28",
+    "gate": {
+     "warn": [
+      "area_km2 46785.39341397538",
+      "top_zone_jobs_share 0.10951108484729227",
+      "top_school_cell_pupils 6000.00048828125",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:38:59",
+    "gated": "2026-11-10T01:18:16",
+    "shipped": "2026-11-10T02:22:10"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-2897: the dry points lie on the shore of the El Mansour Eddahbi reservoir by Ouarzazate, whose level varies"
    }
   },
   {
@@ -338955,7 +339496,7 @@
    "id": "sef",
    "name": "Sefrou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -338995,6 +339536,26 @@
      "Province de Boulemane إقليم بولمان",
      "Province d'Ifrane ⵜⴰⵙⴳⴰ ⵏ ⵉⴼⵔⴰⵏ إقليم إفران"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 34.4,
+     "stations": 1.4,
+     "places": 3.1,
+     "routes": 38.6,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:27:37",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6241.12158203125"
+     ]
+    },
+    "gated": "2026-11-10T00:44:23",
+    "shipped": "2026-11-10T02:22:10"
    }
   },
   {
@@ -339002,7 +339563,7 @@
    "id": "elk",
    "name": "El Kelâat Es-Sraghna",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339038,6 +339599,28 @@
      "Province d'El Kelâat Es-Sraghna إقليم قلعة السراغنة",
      "Rhamna Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 37.5,
+     "stations": 1.7,
+     "places": 3.4,
+     "routes": 48.3,
+     "merge": 3.3,
+     "nocar": 5.2,
+     "everyday": 2.5
+    },
+    "built": "2026-11-10T00:15:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12292258066384551",
+      "top_school_cell_pupils 6225.93115234375",
+      "road_snap_median_m 302.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:15",
+    "shipped": "2026-11-10T02:22:11"
    }
   },
   {
@@ -339045,7 +339628,7 @@
    "id": "mek",
    "name": "Meknès",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339079,6 +339662,26 @@
     "unit_names": [
      "Prefecture de Meknès عمالة مكناس"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 31.4,
+     "stations": 1.6,
+     "places": 4.1,
+     "routes": 20.8,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:16:22",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13681575524079181"
+     ]
+    },
+    "gated": "2026-11-10T00:44:16",
+    "shipped": "2026-11-10T02:22:11"
    }
   },
   {
@@ -339086,7 +339689,7 @@
    "id": "sii",
    "name": "Sidi Kacem",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339122,6 +339725,26 @@
      "Province de Sidi Kacem إقليم سيدي قاسم",
      "Province de Sidi Slimane إقليم سيدي سليمان"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.5,
+     "places": 2.9,
+     "routes": 19.8,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:17:14",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1854467579953483"
+     ]
+    },
+    "gated": "2026-11-10T00:44:17",
+    "shipped": "2026-11-10T02:22:12"
    }
   },
   {
@@ -339129,7 +339752,7 @@
    "id": "eso",
    "name": "Essaouira",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339165,6 +339788,32 @@
      "Essaouira Province",
      "Chichaoua Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 24.2,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 26.8,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:18:15",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.2509350639545433",
+      "top_school_cell_pupils 6247.11181640625",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:32:10",
+    "gated": "2026-11-10T01:18:17",
+    "shipped": "2026-11-10T02:22:12"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -339172,7 +339821,7 @@
    "id": "elj",
    "name": "El Jadida",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339206,6 +339855,26 @@
     "unit_names": [
      "El Jadida Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 22.9,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 21.6,
+     "merge": 1.1,
+     "nocar": 2.4,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:19:10",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T00:44:18",
+    "shipped": "2026-11-10T02:22:13"
    }
   },
   {
@@ -339213,7 +339882,7 @@
    "id": "tto",
    "name": "Tetouan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339249,6 +339918,27 @@
      "Tetouan Province",
      "Préfecture de M'diq-Fnideq عمالة المضيق الفنيدق"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 24.5,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 16.8,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:20:01",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1451486317804787",
+      "top_school_cell_pupils 6000.0009765625"
+     ]
+    },
+    "gated": "2026-11-10T00:44:19",
+    "shipped": "2026-11-10T02:22:13"
    }
   },
   {
@@ -339256,7 +339946,7 @@
    "id": "err",
    "name": "Errachidia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339292,6 +339982,29 @@
      "Province d'Errachidia إقليم الرشيدية",
      "Province de Midelt إقليم ميدلت"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 32.1,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 21.6,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:21:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11069328213919119",
+      "top_school_cell_pupils 6007.11865234375",
+      "road_snap_median_m 373.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:19",
+    "shipped": "2026-11-10T02:22:14"
    }
   },
   {
@@ -339299,7 +340012,7 @@
    "id": "sbw",
    "name": "Settat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339333,6 +340046,27 @@
     "unit_names": [
      "Settat Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 21.0,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 25.6,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:21:59",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.184882737333787",
+      "top_school_cell_pupils 6199.16357421875"
+     ]
+    },
+    "gated": "2026-11-10T00:44:20",
+    "shipped": "2026-11-10T02:22:14"
    }
   },
   {
@@ -339340,7 +340074,7 @@
    "id": "ton",
    "name": "Taounate",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339374,6 +340108,27 @@
     "unit_names": [
      "Province de Taounate إقليم تاونات"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 23.2,
+     "stations": 1.9,
+     "places": 10.2,
+     "routes": 24.3,
+     "merge": 1.5,
+     "nocar": 2.4,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:23:06",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1891076181383114",
+      "top_school_cell_pupils 6219.2724609375"
+     ]
+    },
+    "gated": "2026-11-10T00:44:21",
+    "shipped": "2026-11-10T02:22:15"
    }
   },
   {
@@ -339381,7 +340136,7 @@
    "id": "cht",
    "name": "Chtouka-Ait Baha",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339417,6 +340172,28 @@
      "Chtouka-Ait Baha Province",
      "Tiznit Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 28.7,
+     "stations": 2.4,
+     "places": 4.6,
+     "routes": 38.6,
+     "merge": 3.0,
+     "nocar": 3.5,
+     "everyday": 2.6
+    },
+    "built": "2026-11-10T00:24:33",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6084.98291015625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:21",
+    "shipped": "2026-11-10T02:22:15"
    }
   },
   {
@@ -339424,7 +340201,7 @@
    "id": "aha",
    "name": "Al Haouz",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339458,6 +340235,26 @@
     "unit_names": [
      "Al Haouz Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 38.8,
+     "stations": 1.7,
+     "places": 3.4,
+     "routes": 33.3,
+     "merge": 2.0,
+     "nocar": 2.3,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:26:00",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6017.46240234375"
+     ]
+    },
+    "gated": "2026-11-10T00:44:22",
+    "shipped": "2026-11-10T02:22:16"
    }
   },
   {
@@ -339465,7 +340262,7 @@
    "id": "azi",
    "name": "Azilal",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339499,6 +340296,29 @@
     "unit_names": [
      "Province d'Azilal إقليم أزيلال"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 21.8,
+     "stations": 1.4,
+     "places": 2.6,
+     "routes": 19.8,
+     "merge": 1.4,
+     "nocar": 2.4,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:27:04",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 521.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T00:44:24",
+    "shipped": "2026-11-10T02:22:16"
    }
   },
   {
@@ -339506,7 +340326,7 @@
    "id": "bci",
    "name": "Berrechid",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339540,6 +340360,26 @@
     "unit_names": [
      "Berrechid Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 28.4,
+     "stations": 1.9,
+     "places": 3.3,
+     "routes": 55.8,
+     "merge": 1.5,
+     "nocar": 2.5,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:35:42",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6101.79931640625"
+     ]
+    },
+    "gated": "2026-11-10T00:44:30",
+    "shipped": "2026-11-10T02:22:17"
    }
   },
   {
@@ -339547,7 +340387,7 @@
    "id": "kor",
    "name": "Khouribga",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339581,6 +340421,28 @@
     "unit_names": [
      "Province de Khouribga إقليم خريبكة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 25.7,
+     "stations": 2.0,
+     "places": 4.6,
+     "routes": 28.4,
+     "merge": 1.4,
+     "nocar": 2.4,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:35:15",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12310687165749137",
+      "top_school_cell_pupils 6167.37255859375",
+      "road_snap_median_m 307.1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:25",
+    "shipped": "2026-11-10T02:22:17"
    }
   },
   {
@@ -339588,7 +340450,7 @@
    "id": "kmi",
    "name": "Khémisset",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339622,6 +340484,28 @@
     "unit_names": [
      "Province de Khémisset إقليم الخميسات"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.4,
+     "places": 2.8,
+     "routes": 24.7,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:28:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14867654443931272",
+      "top_school_cell_pupils 6039.86962890625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:25",
+    "shipped": "2026-11-10T02:22:18"
    }
   },
   {
@@ -339629,7 +340513,7 @@
    "id": "lrc",
    "name": "Larache",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339663,6 +340547,29 @@
     "unit_names": [
      "Larache Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 26.8,
+     "stations": 3.0,
+     "places": 4.6,
+     "routes": 16.7,
+     "merge": 1.6,
+     "nocar": 2.2,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:29:37",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.14189324135494005",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:26",
+    "shipped": "2026-11-10T02:22:18"
    }
   },
   {
@@ -339670,7 +340577,7 @@
    "id": "tza",
    "name": "Taza",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339704,6 +340611,29 @@
     "unit_names": [
      "Province de Taza اقليم تازة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 20.2,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 17.2,
+     "merge": 3.6,
+     "nocar": 5.0,
+     "everyday": 3.4
+    },
+    "built": "2026-11-10T00:30:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.19652126898522257",
+      "top_school_cell_pupils 6440.99267578125",
+      "road_snap_median_m 402.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:27",
+    "shipped": "2026-11-10T02:22:19"
    }
   },
   {
@@ -339711,7 +340641,7 @@
    "id": "fqu",
    "name": "Fquih Ben Saleh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339745,6 +340675,28 @@
     "unit_names": [
      "Province de Fquih Ben Saleh إقليم الفقيه بن صالح"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 25.3,
+     "stations": 7.4,
+     "places": 5.4,
+     "routes": 32.9,
+     "merge": 3.0,
+     "nocar": 3.1,
+     "everyday": 2.3
+    },
+    "built": "2026-11-10T00:31:56",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6244.43017578125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:28",
+    "shipped": "2026-11-10T02:22:19"
    }
   },
   {
@@ -339752,7 +340704,7 @@
    "id": "sir",
    "name": "Sidi Bennour",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339786,6 +340738,28 @@
     "unit_names": [
      "Province de Sidi Bennour إقليم سيدي بنور"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 20.6,
+     "stations": 1.8,
+     "places": 2.5,
+     "routes": 20.1,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:33:04",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13854671912310892",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:28",
+    "shipped": "2026-11-10T02:22:20"
    }
   },
   {
@@ -339793,7 +340767,7 @@
    "id": "gem",
    "name": "Guelmim",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339833,6 +340807,29 @@
      "Province de Tan-Tan إقليم طانطان",
      "Assa-Zag Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 35.2,
+     "stations": 1.4,
+     "places": 2.9,
+     "routes": 31.4,
+     "merge": 2.4,
+     "nocar": 3.3,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:34:30",
+    "gate": {
+     "warn": [
+      "area_km2 44821.287833430346",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 3326.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T00:44:29",
+    "shipped": "2026-11-10T02:22:20"
    }
   },
   {
@@ -339840,7 +340837,7 @@
    "id": "lau",
    "name": "Laayoune",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339878,6 +340875,34 @@
      "Province d'Es-Semara إقليم السمارة",
      "Tarfaya Province"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 38.7,
+     "stations": 1.6,
+     "places": 5.2,
+     "routes": 26.0,
+     "merge": 1.5,
+     "nocar": 2.1,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:35:50",
+    "gate": {
+     "warn": [
+      "area_km2 88254.57017229332",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 6432.1",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:42:43",
+    "gated": "2026-11-10T01:18:18",
+    "shipped": "2026-11-10T02:22:21"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-2897: the dry points lie in the Saguia el-Hamra wadi and its sebkha by Laayoune, seasonal"
    }
   },
   {
@@ -339885,7 +340910,7 @@
    "id": "bsl",
    "name": "Benslimane",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339919,6 +340944,28 @@
     "unit_names": [
      "Province de Benslimane إقليم بن سليمان"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.5,
+     "places": 2.4,
+     "routes": 30.3,
+     "merge": 1.3,
+     "nocar": 3.1,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:36:21",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1767376324299366",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:44:31",
+    "shipped": "2026-11-10T02:22:21"
    }
   },
   {
@@ -339926,7 +340973,7 @@
    "id": "oue",
    "name": "Oued Ed-Dahab",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -339962,6 +341009,37 @@
      "Oued Ed-Dahab Province",
      "Province d'Aousserd إقليم أوسرد"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 68.7,
+     "stations": 1.7,
+     "places": 2.4,
+     "routes": 17.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:38:56",
+    "gate": {
+     "warn": [
+      "university_rate 0.00074",
+      "area_km2 129122.69338051985",
+      "top_zone_jobs_share 0.24731644074372824",
+      "top_school_cell_pupils 5999.99951171875",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 1487.2",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:42:45",
+    "gated": "2026-11-10T01:18:18",
+    "shipped": "2026-11-10T02:22:22"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)",
+    "university_rate": "T-2897: Dakhla and Aousserd have no university campus (0.20M)"
    }
   },
   {
@@ -339969,7 +341047,7 @@
    "id": "fig",
    "name": "Figuig",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MAR"
@@ -340003,6 +341081,31 @@
     "unit_names": [
      "Province de Figuig إقليم الناظور"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235629",
+    "steps": {
+     "build": 31.8,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 15.7,
+     "merge": 1.3,
+     "nocar": 2.4,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:37:20",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.24734675362358932",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:42:46",
+    "gated": "2026-11-10T01:18:19",
+    "shipped": "2026-11-10T02:22:22"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -340010,7 +341113,7 @@
    "id": "tiz",
    "name": "Tizi Ouzou",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340200,6 +341303,24 @@
      "",
      "Zekri"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 35.3,
+     "stations": 1.3,
+     "places": 2.5,
+     "routes": 26.9,
+     "merge": 1.3,
+     "nocar": 2.4,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:08:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:32",
+    "shipped": "2026-11-10T02:22:23"
    }
   },
   {
@@ -340207,7 +341328,7 @@
    "id": "bbq",
    "name": "Batna",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340357,6 +341478,27 @@
      "Boumia",
      "Larbaa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 37.3,
+     "stations": 1.3,
+     "places": 3.1,
+     "routes": 48.1,
+     "merge": 2.0,
+     "nocar": 2.7,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:10:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14700198889836105",
+      "road_snap_median_m 315.6"
+     ]
+    },
+    "gated": "2026-11-10T01:00:32",
+    "shipped": "2026-11-10T02:22:23"
    }
   },
   {
@@ -340364,7 +341506,7 @@
    "id": "dje",
    "name": "Djelfa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340444,6 +341586,32 @@
      "Ain Chouhada",
      "Zaccar"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 50.8,
+     "stations": 1.7,
+     "places": 2.8,
+     "routes": 48.9,
+     "merge": 4.9,
+     "nocar": 3.4,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:10:48",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.847470239902397",
+      "pop_vs_ghsl 0.84747855219857",
+      "top_zone_jobs_share 0.1354464225062611",
+      "top_school_cell_pupils 6000.00048828125",
+      "drive_factor_median 2.184200810815618",
+      "road_snap_median_m 1402.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:33",
+    "shipped": "2026-11-10T02:22:24"
    }
   },
   {
@@ -340451,7 +341619,7 @@
    "id": "ele",
    "name": "El Oued",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340565,6 +341733,33 @@
      "Ourmes",
      "Beni Guecha"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 44.6,
+     "stations": 2.4,
+     "places": 5.1,
+     "routes": 66.5,
+     "merge": 2.6,
+     "nocar": 4.6,
+     "everyday": 2.6
+    },
+    "built": "2026-11-10T00:12:13",
+    "gate": {
+     "warn": [
+      "area_km2 53672.52912694149",
+      "top_school_cell_pupils 5474.8212890625",
+      "road_snap_median_m 369.3",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:26:05",
+    "gated": "2026-11-10T01:18:19",
+    "shipped": "2026-11-10T02:22:24"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-2897: the dry point lies in the Chott Merouane salt flats, seasonal"
    }
   },
   {
@@ -340572,7 +341767,7 @@
    "id": "ass",
    "name": "Ash Shalif",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340674,6 +341869,27 @@
      "Sidi Abderrahmane",
      "Beni Bouattab"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 49.400000000000006,
+     "stations": 2.5,
+     "places": 3.6,
+     "routes": 35.2,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:13:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10837234426202805",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T01:00:34",
+    "shipped": "2026-11-10T02:22:25"
    }
   },
   {
@@ -340681,7 +341897,7 @@
    "id": "sik",
    "name": "Skikda",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340789,6 +342005,24 @@
      "Ouldja Boulballout",
      "Ain Zouit"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 48.6,
+     "stations": 1.6,
+     "places": 3.0,
+     "routes": 34.4,
+     "merge": 2.2,
+     "nocar": 3.4,
+     "everyday": 2.4
+    },
+    "built": "2026-11-10T00:12:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:34",
+    "shipped": "2026-11-10T02:22:25"
    }
   },
   {
@@ -340796,7 +342030,7 @@
    "id": "tre",
    "name": "Tiaret",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -340912,6 +342146,28 @@
      "Madna",
      "Sebt"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 42.5,
+     "stations": 1.2,
+     "places": 2.5,
+     "routes": 69.2,
+     "merge": 3.9,
+     "nocar": 3.0,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:14:21",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 996.4",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:35",
+    "shipped": "2026-11-10T02:22:26"
    }
   },
   {
@@ -340919,7 +342175,7 @@
    "id": "sbz",
    "name": "Setif",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341023,6 +342279,26 @@
      "Guenzet",
      "Oued El Bared"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 33.5,
+     "stations": 1.3,
+     "places": 2.7,
+     "routes": 35.9,
+     "merge": 1.2,
+     "nocar": 2.3,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:13:54",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13766175650229864"
+     ]
+    },
+    "gated": "2026-11-10T01:00:36",
+    "shipped": "2026-11-10T02:22:26"
    }
   },
   {
@@ -341030,7 +342306,7 @@
    "id": "tlm",
    "name": "Tlemcen",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341160,6 +342436,24 @@
      "Ouled Kihal",
      "Chentouf"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 35.6,
+     "stations": 1.7,
+     "places": 3.6,
+     "routes": 42.3,
+     "merge": 2.4,
+     "nocar": 3.0,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:14:35",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:36",
+    "shipped": "2026-11-10T02:22:27"
    }
   },
   {
@@ -341167,7 +342461,7 @@
    "id": "bjx",
    "name": "Bejaia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341303,6 +342597,26 @@
      "Tamokra",
      "Beni Ksila"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 38.1,
+     "stations": 1.6,
+     "places": 4.0,
+     "routes": 33.1,
+     "merge": 2.6,
+     "nocar": 4.6,
+     "everyday": 3.3
+    },
+    "built": "2026-11-10T00:15:26",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.1503379159523"
+     ]
+    },
+    "gated": "2026-11-10T01:00:37",
+    "shipped": "2026-11-10T02:22:27"
    }
   },
   {
@@ -341310,7 +342624,7 @@
    "id": "msc",
    "name": "Mascara",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341436,6 +342750,27 @@
      "Guerdjoum",
      "Aïn Fras"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 39.1,
+     "stations": 3.1,
+     "places": 4.9,
+     "routes": 54.9,
+     "merge": 1.8,
+     "nocar": 2.8,
+     "everyday": 2.3
+    },
+    "built": "2026-11-10T00:16:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1352259524264384",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T01:00:38",
+    "shipped": "2026-11-10T02:22:28"
    }
   },
   {
@@ -341443,7 +342778,7 @@
    "id": "kmx",
    "name": "Khemis Milana",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341547,6 +342882,27 @@
      "Birbouche",
      "El Hassania"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 31.5,
+     "stations": 2.1,
+     "places": 4.2,
+     "routes": 36.0,
+     "merge": 1.6,
+     "nocar": 2.4,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:29:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1222411936970207",
+      "top_school_cell_pupils 5226.3466796875"
+     ]
+    },
+    "gated": "2026-11-10T01:00:43",
+    "shipped": "2026-11-10T02:22:28"
    }
   },
   {
@@ -341554,7 +342910,7 @@
    "id": "cnt",
    "name": "Constantine",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341602,6 +342958,24 @@
      "Beni Hamidene",
      "Messaoud Boudjriou"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 25.5,
+     "stations": 1.7,
+     "places": 5.3,
+     "routes": 23.2,
+     "merge": 2.1,
+     "nocar": 3.0,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:29:25",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:44",
+    "shipped": "2026-11-10T02:22:29"
    }
   },
   {
@@ -341609,7 +342983,7 @@
    "id": "chm",
    "name": "Chelghoum Laïd",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341705,6 +343079,24 @@
      "El Ayadi Barbes",
      "Sidi Khelifa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 27.8,
+     "stations": 1.6,
+     "places": 3.1,
+     "routes": 29.8,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:17:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:38",
+    "shipped": "2026-11-10T02:22:29"
    }
   },
   {
@@ -341712,7 +343104,7 @@
    "id": "msa",
    "name": "Mostaganem",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341808,6 +343200,27 @@
      "Sidi Belattar",
      "Ain Boudinar"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 28.9,
+     "stations": 1.4,
+     "places": 2.2,
+     "routes": 17.6,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:18:19",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13983856160084238",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-10T01:00:39",
+    "shipped": "2026-11-10T02:22:30"
    }
   },
   {
@@ -341815,7 +343228,7 @@
    "id": "rel",
    "name": "Relizane",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -341923,6 +343336,27 @@
      "El Hassi",
      "El Ouldja"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 29.7,
+     "stations": 1.3,
+     "places": 2.1,
+     "routes": 30.3,
+     "merge": 2.4,
+     "nocar": 2.3,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:19:30",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11410317640795045",
+      "top_school_cell_pupils 5281.84765625"
+     ]
+    },
+    "gated": "2026-11-10T01:00:40",
+    "shipped": "2026-11-10T02:22:30"
    }
   },
   {
@@ -341930,7 +343364,7 @@
    "id": "tes",
    "name": "Tebessa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342018,6 +343452,27 @@
      "Stah Guentis",
      "Oum Ali"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 33.1,
+     "stations": 1.4,
+     "places": 2.4,
+     "routes": 31.2,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:20:45",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 574.4",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:40",
+    "shipped": "2026-11-10T02:22:31"
    }
   },
   {
@@ -342025,7 +343480,7 @@
    "id": "aib",
    "name": "Aïn Beïda",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342115,6 +343570,28 @@
      "El Belala",
      "Behir Chergui"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 25.2,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 31.1,
+     "merge": 1.3,
+     "nocar": 1.9,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:21:51",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1367967473212059",
+      "road_snap_median_m 333.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:41",
+    "shipped": "2026-11-10T02:22:31"
    }
   },
   {
@@ -342122,7 +343599,7 @@
    "id": "msl",
    "name": "M'sila",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342200,6 +343677,29 @@
      "Dehahna",
      "Ouled Mansour"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 24.9,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 31.8,
+     "merge": 2.4,
+     "nocar": 2.8,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:22:59",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12943683384531218",
+      "top_school_cell_pupils 5660.2998046875",
+      "road_snap_median_m 334.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:41",
+    "shipped": "2026-11-10T02:22:32"
    }
   },
   {
@@ -342207,7 +343707,7 @@
    "id": "lgt",
    "name": "Laghouat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342287,6 +343787,28 @@
      "El Houaita",
      "Taouila"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 45.2,
+     "stations": 2.5,
+     "places": 4.1,
+     "routes": 50.1,
+     "merge": 5.9,
+     "nocar": 4.8,
+     "everyday": 5.8
+    },
+    "built": "2026-11-10T00:25:02",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 1342.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:42",
+    "shipped": "2026-11-10T02:22:32"
    }
   },
   {
@@ -342294,7 +343816,7 @@
    "id": "ell",
    "name": "El Eulma",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342374,6 +343896,26 @@
      "Tella",
      "Maaouia"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 35.6,
+     "stations": 1.4,
+     "places": 2.9,
+     "routes": 33.3,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:26:24",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12159429401091645"
+     ]
+    },
+    "gated": "2026-11-10T01:00:43",
+    "shipped": "2026-11-10T02:22:33"
    }
   },
   {
@@ -342381,7 +343923,7 @@
    "id": "bou",
    "name": "Bordj Bou Arreridj",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342481,6 +344023,30 @@
      "Ouled Sidi Brahim",
      "Tafreg"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 30.7,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 25.5,
+     "merge": 1.4,
+     "nocar": 2.2,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:27:54",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.22031601491454536"
+     ]
+    },
+    "parked": "2026-11-10T00:33:29",
+    "gated": "2026-11-10T01:18:20",
+    "shipped": "2026-11-10T02:22:33"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -342488,7 +344054,7 @@
    "id": "sdb",
    "name": "Sidi Bel Abbès",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342624,6 +344190,28 @@
      "Aïn Kada",
      "Oued Taourira"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 29.7,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 41.5,
+     "merge": 2.5,
+     "nocar": 3.0,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:29:24",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.19307750902162457",
+      "road_snap_median_m 461.9",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:45",
+    "shipped": "2026-11-10T02:22:34"
    }
   },
   {
@@ -342631,7 +344219,7 @@
    "id": "ela",
    "name": "El Abiodh Sidi Cheikh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342731,6 +344319,31 @@
      "Krakda",
      "Ain El Orak"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 70.2,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 55.0,
+     "merge": 7.4,
+     "nocar": 2.5,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:38:06",
+    "gate": {
+     "warn": [
+      "area_km2 101709.27184843345",
+      "top_zone_jobs_share 0.1333036936339802",
+      "top_school_cell_pupils 5110.869140625",
+      "drive_factor_median 2.2535347872132085",
+      "road_snap_median_m 1983.3",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:00:50",
+    "shipped": "2026-11-10T02:22:34"
    }
   },
   {
@@ -342738,7 +344351,7 @@
    "id": "jie",
    "name": "Jijel",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342826,6 +344439,26 @@
      "Eraguene",
      "Selma Ben Ziada"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 34.2,
+     "stations": 1.6,
+     "places": 2.8,
+     "routes": 23.3,
+     "merge": 1.6,
+     "nocar": 1.9,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:36:52",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-11-10T01:00:46",
+    "shipped": "2026-11-10T02:22:35"
    }
   },
   {
@@ -342833,7 +344466,7 @@
    "id": "bia",
    "name": "Bouira",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -342939,6 +344572,24 @@
      "Mamora",
      "El Hakimia"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 28.1,
+     "stations": 2.1,
+     "places": 3.8,
+     "routes": 35.0,
+     "merge": 3.3,
+     "nocar": 3.8,
+     "everyday": 2.6
+    },
+    "built": "2026-11-10T00:31:05",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T01:00:46",
+    "shipped": "2026-11-10T02:22:35"
    }
   },
   {
@@ -342946,7 +344597,7 @@
    "id": "aac",
    "name": "Annaba",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343002,6 +344653,26 @@
      "Treat",
      "Seraidi"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 46.9,
+     "stations": 6.5,
+     "places": 3.8,
+     "routes": 14.4,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:32:28",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12946904431727274"
+     ]
+    },
+    "gated": "2026-11-10T01:00:47",
+    "shipped": "2026-11-10T02:22:36"
    }
   },
   {
@@ -343009,7 +344680,7 @@
    "id": "bbs",
    "name": "Blida",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343059,6 +344730,27 @@
      "Oued El Alleug",
      "Chrea"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 27.4,
+     "stations": 1.3,
+     "places": 2.5,
+     "routes": 15.7,
+     "merge": 1.2,
+     "nocar": 2.0,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:33:25",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13348242259462204",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:47",
+    "shipped": "2026-11-10T02:22:36"
    }
   },
   {
@@ -343066,7 +344758,7 @@
    "id": "sks",
    "name": "Souk Ahras",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343150,6 +344842,27 @@
      "Safel El Ouiden",
      "Zouabi"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 31.9,
+     "stations": 1.8,
+     "places": 3.4,
+     "routes": 31.0,
+     "merge": 1.6,
+     "nocar": 3.1,
+     "everyday": 2.5
+    },
+    "built": "2026-11-10T00:34:50",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18228857003744384",
+      "top_school_cell_pupils 5999.99951171875"
+     ]
+    },
+    "gated": "2026-11-10T01:00:48",
+    "shipped": "2026-11-10T02:22:37"
    }
   },
   {
@@ -343157,7 +344870,7 @@
    "id": "glm",
    "name": "Guelma",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343257,6 +344970,26 @@
      "Selloua Anouna",
      "Ras El Agba"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 30.8,
+     "stations": 1.8,
+     "places": 3.0,
+     "routes": 25.6,
+     "merge": 1.6,
+     "nocar": 2.1,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:36:08",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15884336757868486"
+     ]
+    },
+    "gated": "2026-11-10T01:00:49",
+    "shipped": "2026-11-10T02:22:37"
    }
   },
   {
@@ -343264,7 +344997,7 @@
    "id": "aio",
    "name": "Aïn Oussara",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343320,6 +345053,33 @@
      "El Khemis",
      "Guernini"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 32.0,
+     "stations": 1.6,
+     "places": 3.4,
+     "routes": 21.6,
+     "merge": 1.8,
+     "nocar": 2.9,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:37:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.21732043865882822",
+      "drive_factor_median 2.184200810815618",
+      "road_snap_median_m 1231.3",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:40:50",
+    "gated": "2026-11-10T01:18:20",
+    "shipped": "2026-11-10T02:22:38"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -343327,7 +345087,7 @@
    "id": "bbt",
    "name": "Bou Saada",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343407,6 +345167,27 @@
      "Aïn Fares",
      "Oultem"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 33.7,
+     "stations": 1.9,
+     "places": 2.7,
+     "routes": 25.6,
+     "merge": 1.5,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:38:13",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 669.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:00:50",
+    "shipped": "2026-11-10T02:22:38"
    }
   },
   {
@@ -343414,7 +345195,7 @@
    "id": "bkr",
    "name": "Biskra",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343482,6 +345263,29 @@
      "Tigherghar",
      "Khenguet Sidi Nadji"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 31.9,
+     "stations": 1.4,
+     "places": 2.6,
+     "routes": 20.1,
+     "merge": 1.5,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:38:20",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12058854599289091",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 849.6",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:51",
+    "shipped": "2026-11-10T02:22:39"
    }
   },
   {
@@ -343489,7 +345293,7 @@
    "id": "mbj",
    "name": "Médéa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343585,6 +345389,26 @@
      "Ouled Antar",
      "Ouled Bouachra"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 26.6,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 20.2,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:43:27",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14519529876586004"
+     ]
+    },
+    "gated": "2026-11-10T01:00:51",
+    "shipped": "2026-11-10T02:22:39"
    }
   },
   {
@@ -343592,7 +345416,7 @@
    "id": "bsb",
    "name": "Besbes",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343672,6 +345496,27 @@
      "Hammam Beni Salah",
      "Raml Souk"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 26.5,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 14.3,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:43:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16935955435411879",
+      "top_school_cell_pupils 5999.99951171875"
+     ]
+    },
+    "gated": "2026-11-10T01:00:52",
+    "shipped": "2026-11-10T02:22:40"
    }
   },
   {
@@ -343679,7 +345524,7 @@
    "id": "kne",
    "name": "Khenchela",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343753,6 +345598,32 @@
      "El Oueldja",
      "Djellal"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 27.2,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 20.8,
+     "merge": 1.5,
+     "nocar": 1.9,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:39:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.22611279320330224",
+      "road_snap_median_m 502.2",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:47:37",
+    "gated": "2026-11-10T01:18:21",
+    "shipped": "2026-11-10T02:22:40"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -343760,7 +345631,7 @@
    "id": "oul",
    "name": "Ouled Djellal",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343824,6 +345695,29 @@
      "Ourlal",
      "Mekhadma"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 26.6,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 18.1,
+     "merge": 1.5,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:40:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1375199758768049",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 1008.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:53",
+    "shipped": "2026-11-10T02:22:41"
    }
   },
   {
@@ -343831,7 +345725,7 @@
    "id": "oug",
    "name": "Ouargla",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343881,6 +345775,28 @@
      "El Allia",
      "Hassi Ben Abdellah"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 37.8,
+     "stations": 2.0,
+     "places": 2.6,
+     "routes": 48.9,
+     "merge": 2.9,
+     "nocar": 2.5,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:42:03",
+    "gate": {
+     "warn": [
+      "area_km2 97407.57401259866",
+      "road_snap_median_m 526.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:00:53",
+    "shipped": "2026-11-10T02:22:41"
    }
   },
   {
@@ -343888,7 +345804,7 @@
    "id": "mhx",
    "name": "Maghnia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -343966,6 +345882,26 @@
      "Beni Bahdel",
      "Souk Tlata"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 23.7,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 18.5,
+     "merge": 1.1,
+     "nocar": 1.8,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:43:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1190617128366813"
+     ]
+    },
+    "gated": "2026-11-10T01:00:54",
+    "shipped": "2026-11-10T02:22:42"
    }
   },
   {
@@ -343973,7 +345909,7 @@
    "id": "lak",
    "name": "Lakhdaria",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344075,6 +346011,27 @@
      "Tlatet Eddouair",
      "Sidi Ziane"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 24.7,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 24.9,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:43:58",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10559184168455737",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:55",
+    "shipped": "2026-11-10T02:22:42"
    }
   },
   {
@@ -344082,7 +346039,7 @@
    "id": "scb",
    "name": "Saïda",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344146,6 +346103,29 @@
      "Doui Thabet",
      "Hounet"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 20.2,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 13.2,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:44:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13531521435193525",
+      "top_school_cell_pupils 5642.59375",
+      "road_snap_median_m 636.9",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:00:55",
+    "shipped": "2026-11-10T02:22:43"
    }
   },
   {
@@ -344153,7 +346133,7 @@
    "id": "adx",
    "name": "Adrar",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344223,6 +346203,29 @@
      "Tit",
      "Sebaa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 59.0,
+     "stations": 1.3,
+     "places": 1.8,
+     "routes": 28.8,
+     "merge": 1.6,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:45:05",
+    "gate": {
+     "warn": [
+      "area_km2 249902.38844879356",
+      "top_zone_jobs_share 0.12341659243099651",
+      "road_snap_median_m 698.3",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:00:56",
+    "shipped": "2026-11-10T02:22:43"
    }
   },
   {
@@ -344230,7 +346233,7 @@
    "id": "hdj",
    "name": "Hadjout",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344300,6 +346303,26 @@
      "Sidi Semiane",
      "Hadjret Ennous"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 11.8,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:44:43",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1261913913333081"
+     ]
+    },
+    "gated": "2026-11-10T01:00:56",
+    "shipped": "2026-11-10T02:22:44"
    }
   },
   {
@@ -344307,7 +346330,7 @@
    "id": "ghd",
    "name": "Ghardaia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344361,6 +346384,29 @@
      "Mansoura",
      "Sebseb"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 26.5,
+     "stations": 1.5,
+     "places": 2.0,
+     "routes": 17.4,
+     "merge": 1.2,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:50:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11070078683815247",
+      "road_snap_median_m 505.0",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:56:46",
+    "gated": "2026-11-10T01:18:22",
+    "shipped": "2026-11-10T02:22:44"
    }
   },
   {
@@ -344368,7 +346414,7 @@
    "id": "tss",
    "name": "Tissemsilt",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344444,6 +346490,30 @@
      "Youssoufia",
      "Larbaa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 21.5,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 14.8,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:49:53",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.19402665997276317",
+      "top_school_cell_pupils 5125.8525390625",
+      "road_snap_median_m 336.5",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:56:47",
+    "gated": "2026-11-10T01:18:22",
+    "shipped": "2026-11-10T02:22:45"
    }
   },
   {
@@ -344451,7 +346521,7 @@
    "id": "bbv",
    "name": "Bashar",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344519,6 +346589,31 @@
      "Mougheul",
      "Meridja"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 37.2,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 23.7,
+     "merge": 1.5,
+     "nocar": 1.9,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:46:16",
+    "gate": {
+     "warn": [
+      "area_km2 91015.80545793437",
+      "top_zone_jobs_share 0.14819417776316138",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 1277.4",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:56:48",
+    "gated": "2026-11-10T01:18:23",
+    "shipped": "2026-11-10T02:22:45"
    }
   },
   {
@@ -344526,7 +346621,7 @@
    "id": "moz",
    "name": "Mouzaia",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344568,6 +346663,28 @@
      "Chiffa",
      "Aïn Romana"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 20.3,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 10.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:46:55",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15559726039453334",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:56:48",
+    "gated": "2026-11-10T01:18:23",
+    "shipped": "2026-11-10T02:22:46"
    }
   },
   {
@@ -344575,7 +346692,7 @@
    "id": "tmn",
    "name": "Tamanghasset",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344619,6 +346736,31 @@
      "In Amguel",
      "Tazrouk"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 85.9,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 50.4,
+     "merge": 1.5,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:49:21",
+    "gate": {
+     "warn": [
+      "area_km2 382753.494160867",
+      "top_zone_jobs_share 0.16781279111777578",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 1800.4",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T01:14:39",
+    "gated": "2026-11-10T01:23:29",
+    "shipped": "2026-11-10T02:22:46"
    }
   },
   {
@@ -344626,7 +346768,7 @@
    "id": "arz",
    "name": "Arzew",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344672,6 +346814,28 @@
      "Boufatis",
      "Sidi Ben Yebka"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 22.0,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 9.6,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:50:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13377825777389754",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:56:50",
+    "gated": "2026-11-10T01:18:24",
+    "shipped": "2026-11-10T02:22:47"
    }
   },
   {
@@ -344679,7 +346843,7 @@
    "id": "zig",
    "name": "Zighoud Youcef",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344719,6 +346883,27 @@
      "Ouled Rahmoun",
      "Ibn Badis"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 19.8,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 14.5,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:50:40",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:56:50",
+    "gated": "2026-11-10T01:18:24",
+    "shipped": "2026-11-10T02:22:47"
    }
   },
   {
@@ -344726,7 +346911,7 @@
    "id": "tmm",
    "name": "Timimoun",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344772,6 +346957,30 @@
      "Ouled Aissa",
      "Ksar Kaddour"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 26.3,
+     "stations": 1.3,
+     "places": 2.2,
+     "routes": 11.5,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:50:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "area_km2 48800.8728948552",
+      "top_zone_jobs_share 0.1807317488512973",
+      "road_snap_median_m 372.8",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:00:57",
+    "shipped": "2026-11-10T02:22:48"
    }
   },
   {
@@ -344779,7 +346988,7 @@
    "id": "bol",
    "name": "Boutlelis",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344829,6 +347038,27 @@
      "Ain El Kerma",
      "Bouzedjar"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 22.9,
+     "stations": 1.5,
+     "places": 2.1,
+     "routes": 11.0,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:50:47",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:00:58",
+    "shipped": "2026-11-10T02:22:48"
    }
   },
   {
@@ -344836,7 +347066,7 @@
    "id": "tif",
    "name": "Tinduf",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "DZA"
@@ -344870,6 +347100,35 @@
     "unit_names": [
      "Tinduf"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235734",
+    "steps": {
+     "build": 28.8,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 14.2,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:51:33",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.772335695602939",
+      "pop_vs_ghsl 0.7723358893285306",
+      "area_km2 74301.20144033183",
+      "top_zone_jobs_share 0.23487126243402975",
+      "road_snap_median_m 942.4",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:59:19",
+    "gated": "2026-11-10T01:18:25",
+    "shipped": "2026-11-10T02:22:49"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -344877,7 +347136,7 @@
    "id": "elh",
    "name": "El Hencha",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -344943,6 +347202,24 @@
      10.7425,
      35.1159
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 253.6,
+     "stations": 1.8,
+     "places": 3.2,
+     "routes": 56.9,
+     "merge": 1.7,
+     "nocar": 2.5,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:08:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T00:36:48",
+    "shipped": "2026-11-10T02:22:49"
    }
   },
   {
@@ -344950,7 +347227,7 @@
    "id": "xaj",
    "name": "الحمامات",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345024,6 +347301,24 @@
      "حمام الغزاز",
      "صواف"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 42.1,
+     "stations": 1.5,
+     "places": 3.4,
+     "routes": 90.9,
+     "merge": 2.9,
+     "nocar": 3.6,
+     "everyday": 2.4
+    },
+    "built": "2026-11-10T00:11:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T00:36:50",
+    "shipped": "2026-11-10T02:22:50"
    }
   },
   {
@@ -345031,7 +347326,7 @@
    "id": "xak",
    "name": "سوسة جوهرة",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345095,6 +347390,24 @@
      "كندار",
      "هرقلة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 27.4,
+     "stations": 1.5,
+     "places": 2.7,
+     "routes": 38.4,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:10:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T00:36:51",
+    "shipped": "2026-11-10T02:22:50"
    }
   },
   {
@@ -345102,7 +347415,7 @@
    "id": "xam",
    "name": "بنزرت الشمالية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345166,6 +347479,24 @@
      "البطان",
      "غار الملح"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 51.6,
+     "stations": 1.9,
+     "places": 4.9,
+     "routes": 62.8,
+     "merge": 1.9,
+     "nocar": 3.0,
+     "everyday": 2.4
+    },
+    "built": "2026-11-10T00:12:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T00:36:51",
+    "shipped": "2026-11-10T02:22:51"
    }
   },
   {
@@ -345173,7 +347504,7 @@
    "id": "jeb",
    "name": "Jendouba Sud",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345245,6 +347576,26 @@
      8.7804,
      36.4995
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 39.1,
+     "stations": 1.6,
+     "places": 3.4,
+     "routes": 55.1,
+     "merge": 1.4,
+     "nocar": 2.1,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:13:04",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1335242624535527"
+     ]
+    },
+    "gated": "2026-11-10T00:36:52",
+    "shipped": "2026-11-10T02:22:51"
    }
   },
   {
@@ -345252,7 +347603,7 @@
    "id": "xan",
    "name": "بن قردان",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345316,6 +347667,28 @@
      "بئر الأحمر",
      "ذهيبة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 62.0,
+     "stations": 1.4,
+     "places": 2.6,
+     "routes": 62.2,
+     "merge": 4.2,
+     "nocar": 5.4,
+     "everyday": 3.1
+    },
+    "built": "2026-11-10T00:14:54",
+    "gate": {
+     "warn": [
+      "area_km2 47895.107180827385",
+      "road_snap_median_m 329.5",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T00:36:54",
+    "shipped": "2026-11-10T02:22:52"
    }
   },
   {
@@ -345323,7 +347696,7 @@
    "id": "xao",
    "name": "المنستير",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345381,6 +347754,24 @@
      "البقالطة",
      "بني حسان"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 25.0,
+     "stations": 1.5,
+     "places": 2.6,
+     "routes": 30.9,
+     "merge": 1.9,
+     "nocar": 2.4,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:14:14",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-10T00:36:55",
+    "shipped": "2026-11-10T02:22:52"
    }
   },
   {
@@ -345388,7 +347779,7 @@
    "id": "xap",
    "name": "قفصة الجنوبية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345464,6 +347855,27 @@
      "حزوة",
      "تمغزة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 45.9,
+     "stations": 2.4,
+     "places": 5.4,
+     "routes": 60.7,
+     "merge": 2.5,
+     "nocar": 2.4,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:16:21",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 323.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T00:36:56",
+    "shipped": "2026-11-10T02:22:53"
    }
   },
   {
@@ -345471,7 +347883,7 @@
    "id": "xaq",
    "name": "القيروان الشمالية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345525,6 +347937,26 @@
      "العلاء",
      "الشراردة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 43.2,
+     "stations": 2.5,
+     "places": 3.1,
+     "routes": 51.3,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:16:42",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1736105021360086"
+     ]
+    },
+    "gated": "2026-11-10T00:36:56",
+    "shipped": "2026-11-10T02:22:53"
    }
   },
   {
@@ -345532,7 +347964,7 @@
    "id": "xar",
    "name": "سيدي بوزيد الغربية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345588,6 +348020,27 @@
      "أولاد حفوز",
      "سبالة أوالد عسكر"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 25.6,
+     "stations": 1.3,
+     "places": 2.9,
+     "routes": 39.5,
+     "merge": 1.5,
+     "nocar": 2.5,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:17:39",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11063451367436586"
+     ]
+    },
+    "parked": "2026-11-10T00:34:51",
+    "gated": "2026-11-10T01:18:26",
+    "shipped": "2026-11-10T02:22:54"
    }
   },
   {
@@ -345595,7 +348048,7 @@
    "id": "xas",
    "name": "سبيطلة",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345653,6 +348106,27 @@
      "جدليان",
      "حيدرة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 24.2,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 33.7,
+     "merge": 1.6,
+     "nocar": 2.5,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:17:52",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18238284123134652"
+     ]
+    },
+    "parked": "2026-11-10T00:34:53",
+    "gated": "2026-11-10T01:18:26",
+    "shipped": "2026-11-10T02:22:54"
    }
   },
   {
@@ -345660,7 +348134,7 @@
    "id": "xav",
    "name": "الكاف الشرقية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345736,6 +348210,26 @@
      "الجريصة",
      "القلعة الخصباء"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 27.4,
+     "stations": 1.5,
+     "places": 2.3,
+     "routes": 52.8,
+     "merge": 1.6,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:28:34",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1425814601958223"
+     ]
+    },
+    "gated": "2026-11-10T00:36:57",
+    "shipped": "2026-11-10T02:22:55"
    }
   },
   {
@@ -345743,7 +348237,7 @@
    "id": "xaw",
    "name": "المهدية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345797,6 +348291,26 @@
      "ملولش",
      "هبيرة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 22.2,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 34.9,
+     "merge": 1.4,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:28:09",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10115329140246013"
+     ]
+    },
+    "gated": "2026-11-10T00:36:59",
+    "shipped": "2026-11-10T02:22:55"
    }
   },
   {
@@ -345804,7 +348318,7 @@
    "id": "xax",
    "name": "قابس الجنوبية",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345856,6 +348370,28 @@
      "منزل الحبيب",
      "مطماطة"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 24.0,
+     "stations": 1.5,
+     "places": 2.4,
+     "routes": 33.7,
+     "merge": 1.7,
+     "nocar": 3.5,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:29:21",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 374.1",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:34:56",
+    "gated": "2026-11-10T01:18:27",
+    "shipped": "2026-11-10T02:22:56"
    }
   },
   {
@@ -345863,7 +348399,7 @@
    "id": "kke",
    "name": "Kerkennah",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "TUN"
@@ -345897,6 +348433,32 @@
     "unit_names": [
      "Kerkennah"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235758",
+    "steps": {
+     "build": 30.6,
+     "stations": 2.0,
+     "places": 3.5,
+     "routes": 11.0,
+     "merge": 1.3,
+     "nocar": 1.9,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:29:28",
+    "gate": {
+     "warn": [
+      "browser None",
+      "top_zone_jobs_share 0.18829669460842893",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-10T01:17:02",
+    "gated": "2026-11-10T01:23:30",
+    "shipped": "2026-11-10T02:22:56"
+   },
+   "gate_relax": {
+    "browser": "T-2897: Kerkennah, 16,005 people on an island: the Gate test line carries work, shopping, social and medical trips but no school trip; the page's other checks pass"
    }
   },
   {
@@ -345904,7 +348466,7 @@
    "id": "duu",
    "name": "Dusuq",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -345952,6 +348514,27 @@
      "Al-Rahmaniyya",
      "Fuwwa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 38.2,
+     "stations": 1.7,
+     "places": 2.7,
+     "routes": 80.3,
+     "merge": 1.9,
+     "nocar": 2.8,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:14:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1286576308404071",
+      "top_school_cell_pupils 8347.1513671875"
+     ]
+    },
+    "gated": "2026-11-10T01:05:52",
+    "shipped": "2026-11-10T02:22:57"
    }
   },
   {
@@ -345959,7 +348542,7 @@
    "id": "elr",
    "name": "El Mahalla El Kubra",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -345997,6 +348580,28 @@
      "El Mahalla El Kobra",
      "El Mahalla El Kobra 2"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 29.2,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 55.0,
+     "merge": 1.7,
+     "nocar": 2.6,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:14:13",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1814513454093897",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:05:52",
+    "shipped": "2026-11-10T02:22:57"
    }
   },
   {
@@ -346004,7 +348609,7 @@
    "id": "mrz",
    "name": "Markz Mallawi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346042,6 +348647,27 @@
      "Markz Dir Mawas",
      "Kesm Mallawi"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 36.4,
+     "stations": 1.6,
+     "places": 5.8,
+     "routes": 48.1,
+     "merge": 2.7,
+     "nocar": 3.2,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:15:56",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:05:53",
+    "shipped": "2026-11-10T02:22:58"
    }
   },
   {
@@ -346049,7 +348675,7 @@
    "id": "tta",
    "name": "Tanta",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346087,6 +348713,29 @@
      "Tanta 2",
      "Tanta 1"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 34.7,
+     "stations": 2.3,
+     "places": 5.3,
+     "routes": 39.3,
+     "merge": 1.5,
+     "nocar": 2.6,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:15:49",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14748383181527566",
+      "top_school_cell_pupils 7095.3203125",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T01:10:20",
+    "gated": "2026-11-10T01:23:30",
+    "shipped": "2026-11-10T02:22:58"
    }
   },
   {
@@ -346094,7 +348743,7 @@
    "id": "kbu",
    "name": "Kum Umbu",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346136,6 +348785,28 @@
      "Nasr",
      "Daraw"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 99.0,
+     "stations": 1.6,
+     "places": 2.5,
+     "routes": 26.3,
+     "merge": 1.1,
+     "nocar": 1.9,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:17:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15418817525806477",
+      "top_school_cell_pupils 6433.537109375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:54",
+    "shipped": "2026-11-10T02:22:59"
    }
   },
   {
@@ -346143,7 +348814,7 @@
    "id": "als",
    "name": "Al-Husayniya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346181,6 +348852,27 @@
      "Awlad Saqr",
      "Bany Abeed"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 32.3,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 73.3,
+     "merge": 1.4,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:17:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:05:55",
+    "shipped": "2026-11-10T02:22:59"
    }
   },
   {
@@ -346188,7 +348880,7 @@
    "id": "bnw",
    "name": "Bani Swayf",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346226,6 +348918,27 @@
      "Nasir",
      "Bani Swayf"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 28.5,
+     "stations": 1.7,
+     "places": 5.2,
+     "routes": 34.9,
+     "merge": 1.0,
+     "nocar": 2.3,
+     "everyday": 2.0
+    },
+    "built": "2026-11-10T00:29:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11474431598766759",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:58",
+    "shipped": "2026-11-10T02:23:00"
    }
   },
   {
@@ -346233,7 +348946,7 @@
    "id": "fay",
    "name": "Fayyum",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346269,6 +348982,28 @@
      "Fayyum",
      "Fayyum"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.7,
+     "stations": 1.6,
+     "places": 4.5,
+     "routes": 33.1,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:29:28",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.19970533089071285",
+      "top_school_cell_pupils 8334.06640625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:59",
+    "shipped": "2026-11-10T02:23:00"
    }
   },
   {
@@ -346276,7 +349011,7 @@
    "id": "mrm",
    "name": "Markz Al Minya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346312,6 +349047,28 @@
      "Markz Al Minya",
      "Kesm Al-minya"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 27.1,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 19.5,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:18:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.178760944025004",
+      "top_school_cell_pupils 7786.96240234375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:55",
+    "shipped": "2026-11-10T02:23:01"
    }
   },
   {
@@ -346319,7 +349076,7 @@
    "id": "mrb",
    "name": "Markz Bani Mazar",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346355,6 +349112,28 @@
      "Markz Bani Mazar",
      "Markz Matay"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 27.3,
+     "stations": 1.5,
+     "places": 3.0,
+     "routes": 25.1,
+     "merge": 1.0,
+     "nocar": 1.9,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:19:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.11168244951877816",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:05:56",
+    "shipped": "2026-11-10T02:23:01"
    }
   },
   {
@@ -346362,7 +349141,7 @@
    "id": "kay",
    "name": "Kafr Al-Shaykh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346400,6 +349179,32 @@
      "Qillin",
      "Kafr Al-Shaykh"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 25.9,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 35.2,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:20:55",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.20209489979372722",
+      "top_school_cell_pupils 6876.7451171875",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:37:52",
+    "gated": "2026-11-10T01:18:07",
+    "shipped": "2026-11-10T02:23:02"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -346407,7 +349212,7 @@
    "id": "ngh",
    "name": "Nag Hammadi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346447,6 +349252,30 @@
      "Dishna",
      "Farshut"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.9,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 20.8,
+     "merge": 0.9,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:21:47",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 1.4611756072644415",
+      "pop_vs_ghsl_other 1.4611764052199492",
+      "top_zone_jobs_share 0.12103848178321243",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:56",
+    "shipped": "2026-11-10T02:23:02"
    }
   },
   {
@@ -346454,7 +349283,7 @@
    "id": "all",
    "name": "Al-Balyana",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346492,6 +349321,27 @@
      "Dar al-Salam",
      "Akhmim City"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 0.4,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:22:19",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6151.46484375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:05:57",
+    "shipped": "2026-11-10T02:23:03"
    }
   },
   {
@@ -346499,7 +349349,7 @@
    "id": "miq",
    "name": "Minya al-Qamh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346533,6 +349383,27 @@
     "unit_names": [
      "Minya al-Qamh"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 33.3,
+     "stations": 2.0,
+     "places": 2.9,
+     "routes": 50.8,
+     "merge": 1.8,
+     "nocar": 2.3,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:23:56",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12529257177088343",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:05:57",
+    "shipped": "2026-11-10T02:23:03"
    }
   },
   {
@@ -346540,7 +349411,7 @@
    "id": "mkz",
    "name": "Markz Maghagha",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346576,6 +349447,27 @@
      "Markz Maghagha",
      "Markz Al Idwa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 33.2,
+     "stations": 1.9,
+     "places": 4.6,
+     "routes": 31.2,
+     "merge": 2.2,
+     "nocar": 2.7,
+     "everyday": 2.4
+    },
+    "built": "2026-11-10T00:24:17",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:05:58",
+    "shipped": "2026-11-10T02:23:04"
    }
   },
   {
@@ -346583,7 +349475,7 @@
    "id": "ahu",
    "name": "Al Hamul",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346621,6 +349513,28 @@
      "Biyalu",
      "Burullus"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 45.6,
+     "stations": 3.2,
+     "places": 5.5,
+     "routes": 69.3,
+     "merge": 0.8,
+     "nocar": 2.7,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:26:08",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-10T00:37:57",
+    "gated": "2026-11-10T01:18:07",
+    "shipped": "2026-11-10T02:23:04"
    }
   },
   {
@@ -346628,7 +349542,7 @@
    "id": "ity",
    "name": "Itay Al-Barud",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346664,6 +349578,28 @@
      "Itay Al-Barud",
      "Shubra Khît"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 47.8,
+     "stations": 2.7,
+     "places": 2.9,
+     "routes": 35.4,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:25:54",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:37:59",
+    "gated": "2026-11-10T01:18:08",
+    "shipped": "2026-11-10T02:23:05"
    }
   },
   {
@@ -346671,7 +349607,7 @@
    "id": "abs",
    "name": "Abshaway",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346707,6 +349643,29 @@
      "Abshaway",
      "Yousef El sadeq"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.4,
+     "stations": 1.8,
+     "places": 2.4,
+     "routes": 24.4,
+     "merge": 1.3,
+     "nocar": 2.8,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:27:09",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10735056578619857",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T00:38:00",
+    "gated": "2026-11-10T01:18:08",
+    "shipped": "2026-11-10T02:23:05"
    }
   },
   {
@@ -346714,7 +349673,7 @@
    "id": "azh",
    "name": "Al-Zohour",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346776,6 +349735,28 @@
       "task": "T-2897"
      }
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 30.6,
+     "stations": 1.5,
+     "places": 2.7,
+     "routes": 19.9,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:27:25",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14063377581429934",
+      "top_school_cell_pupils 6845.27783203125"
+     ]
+    },
+    "parked": "2026-11-10T00:38:01",
+    "gated": "2026-11-10T01:18:09",
+    "shipped": "2026-11-10T02:23:06"
    }
   },
   {
@@ -346783,7 +349764,7 @@
    "id": "slw",
    "name": "Sinbillawin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346819,6 +349800,33 @@
      "Sinbillawin",
      "Tamy Al-Amdid"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.0,
+     "stations": 1.3,
+     "places": 2.0,
+     "routes": 43.7,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:28:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.3525032564771777",
+      "top_school_cell_pupils 6896.80224609375",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:43:07",
+    "gated": "2026-11-10T01:18:10",
+    "shipped": "2026-11-10T02:23:06"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -346826,7 +349834,7 @@
    "id": "mks",
    "name": "Markz Samalut",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346860,6 +349868,27 @@
     "unit_names": [
      "Markz Samalut"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.8,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 23.3,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:28:31",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:05:59",
+    "shipped": "2026-11-10T02:23:07"
    }
   },
   {
@@ -346867,7 +349896,7 @@
    "id": "faq",
    "name": "Faqus",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346903,6 +349932,28 @@
      "Faqus",
      "Faqus"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 23.6,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 25.3,
+     "merge": 0.7,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:40:36",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.19774816278030877",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:06",
+    "shipped": "2026-11-10T02:23:07"
    }
   },
   {
@@ -346910,7 +349961,7 @@
    "id": "mif",
    "name": "Minuf",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346948,6 +349999,26 @@
      "Sadat City",
      "Al-Hammam"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 40.0,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 159.3,
+     "merge": 1.1,
+     "nocar": 2.1,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:43:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6224.31640625"
+     ]
+    },
+    "gated": "2026-11-10T01:06:07",
+    "shipped": "2026-11-10T02:23:08"
    }
   },
   {
@@ -346955,7 +350026,7 @@
    "id": "bbw",
    "name": "Biba",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -346993,6 +350064,29 @@
      "Sumusta",
      "Bani Swayf City"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 29.0,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 40.9,
+     "merge": 1.5,
+     "nocar": 4.9,
+     "everyday": 3.3
+    },
+    "built": "2026-11-10T00:30:54",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.15689517120153665",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:00",
+    "shipped": "2026-11-10T02:23:08"
    }
   },
   {
@@ -347000,7 +350094,7 @@
    "id": "ats",
    "name": "Atsa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347034,6 +350128,27 @@
     "unit_names": [
      "Atsa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.7,
+     "stations": 1.3,
+     "places": 1.9,
+     "routes": 32.6,
+     "merge": 1.1,
+     "nocar": 2.8,
+     "everyday": 2.2
+    },
+    "built": "2026-11-10T00:30:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:00",
+    "shipped": "2026-11-10T02:23:09"
    }
   },
   {
@@ -347041,7 +350156,7 @@
    "id": "tmy",
    "name": "Tamya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347077,6 +350192,28 @@
      "6 October-2",
      "6 October-1"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 48.5,
+     "stations": 6.4,
+     "places": 4.3,
+     "routes": 36.8,
+     "merge": 1.2,
+     "nocar": 2.2,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:32:28",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10937175765484582",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:01",
+    "shipped": "2026-11-10T02:23:09"
    }
   },
   {
@@ -347084,7 +350221,7 @@
    "id": "abg",
    "name": "Abu Tig",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347122,6 +350259,28 @@
      "Sahil Silim",
      "Al-Ghanayem"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 52.6,
+     "stations": 3.0,
+     "places": 8.2,
+     "routes": 20.8,
+     "merge": 1.3,
+     "nocar": 2.5,
+     "everyday": 1.8
+    },
+    "built": "2026-11-10T00:32:30",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.553589458062927",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:06:02",
+    "shipped": "2026-11-10T02:23:10"
    }
   },
   {
@@ -347129,7 +350288,7 @@
    "id": "abm",
    "name": "Abu Hammad",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347167,6 +350326,29 @@
      "Qurin",
      "Al-Salhiyya"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 31.3,
+     "stations": 1.4,
+     "places": 2.5,
+     "routes": 46.7,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:33:59",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.16576213923489483",
+      "top_school_cell_pupils 6122.9287109375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:02",
+    "shipped": "2026-11-10T02:23:10"
    }
   },
   {
@@ -347174,7 +350356,7 @@
    "id": "qut",
    "name": "Qutur",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347210,6 +350392,27 @@
      "Qutur",
      "Basyun"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 29.3,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 31.1,
+     "merge": 1.3,
+     "nocar": 2.3,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:33:45",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:03",
+    "shipped": "2026-11-10T02:23:11"
    }
   },
   {
@@ -347217,7 +350420,7 @@
    "id": "aai",
    "name": "Al-Arbiin",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347259,6 +350462,29 @@
      "Suez",
      "Ataqa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 50.9,
+     "stations": 1.9,
+     "places": 3.4,
+     "routes": 67.8,
+     "merge": 1.4,
+     "nocar": 2.6,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:35:57",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 562.4",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:03",
+    "shipped": "2026-11-10T02:23:11"
    }
   },
   {
@@ -347266,7 +350492,7 @@
    "id": "abl",
    "name": "Abu-l-Matamir",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347304,6 +350530,28 @@
      "Wadi Al-NatrUn",
      "Nubariyya West"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 42.1,
+     "stations": 2.5,
+     "places": 3.5,
+     "routes": 99.9,
+     "merge": 2.5,
+     "nocar": 3.0,
+     "everyday": 1.7
+    },
+    "built": "2026-11-10T00:36:37",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6117.8525390625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:06:04",
+    "shipped": "2026-11-10T02:23:12"
    }
   },
   {
@@ -347311,7 +350559,7 @@
    "id": "mrq",
    "name": "Markz Abu Qurqas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347347,6 +350595,29 @@
      "Markz Abu Qurqas",
      "New Minya"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 32.4,
+     "stations": 2.0,
+     "places": 3.5,
+     "routes": 23.8,
+     "merge": 1.0,
+     "nocar": 2.0,
+     "everyday": 1.9
+    },
+    "built": "2026-11-10T00:37:06",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13701581709742536",
+      "top_school_cell_pupils 6517.99072265625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:06:05",
+    "shipped": "2026-11-10T02:23:12"
    }
   },
   {
@@ -347354,7 +350625,7 @@
    "id": "isy",
    "name": "Ismailiyya 2",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347419,6 +350690,27 @@
       "task": "T-2897"
      }
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 35.6,
+     "stations": 2.7,
+     "places": 3.5,
+     "routes": 82.2,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:39:01",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11771935300820857",
+      "top_school_cell_pupils 6551.08837890625"
+     ]
+    },
+    "gated": "2026-11-10T01:06:05",
+    "shipped": "2026-11-10T02:23:13"
    }
   },
   {
@@ -347426,7 +350718,7 @@
    "id": "adi",
    "name": "Al-Dilingat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347462,6 +350754,27 @@
      "Al-Dilingat",
      "Badr"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 32.0,
+     "stations": 1.9,
+     "places": 2.7,
+     "routes": 50.2,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:38:48",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:06",
+    "shipped": "2026-11-10T02:23:13"
    }
   },
   {
@@ -347469,7 +350782,7 @@
    "id": "scc",
    "name": "Sinuras",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347503,6 +350816,28 @@
     "unit_names": [
      "Sinuras"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 25.5,
+     "stations": 1.7,
+     "places": 2.3,
+     "routes": 15.3,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:39:47",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10546318306530603",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:07",
+    "shipped": "2026-11-10T02:23:14"
    }
   },
   {
@@ -347510,7 +350845,7 @@
    "id": "dut",
    "name": "Dumyat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347552,6 +350887,29 @@
      "Ras al-Bar",
      "Police Department Port of Damietta"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 26.2,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 11.7,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:40:01",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13481492594894007",
+      "top_school_cell_pupils 6193.9921875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:08",
+    "shipped": "2026-11-10T02:23:14"
    }
   },
   {
@@ -347559,7 +350917,7 @@
    "id": "sds",
    "name": "Sidi Salim",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347595,6 +350953,27 @@
      "Sidi Salim",
      "Riyad"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.5,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 28.5,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:45:35",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:11",
+    "shipped": "2026-11-10T02:23:15"
    }
   },
   {
@@ -347602,7 +350981,7 @@
    "id": "amn",
    "name": "Al-Minshat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347638,6 +351017,27 @@
      "Al-Minshat",
      "Al Usayrat"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 21.4,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 11.1,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:45:17",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:08",
+    "shipped": "2026-11-10T02:23:15"
    }
   },
   {
@@ -347645,7 +351045,7 @@
    "id": "mzl",
    "name": "Manzala",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347683,6 +351083,29 @@
      "Matariyya",
      "Gamaliyya"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 27.0,
+     "stations": 1.8,
+     "places": 3.9,
+     "routes": 18.2,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:41:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1472409016553286",
+      "top_school_cell_pupils 7015.01318359375",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:09",
+    "shipped": "2026-11-10T02:23:16"
    }
   },
   {
@@ -347690,7 +351113,7 @@
    "id": "bil",
    "name": "Bilqas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347726,6 +351149,27 @@
      "Bilqas",
      "Gamsa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 27.7,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 31.5,
+     "merge": 0.9,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:42:43",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6523.71875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:09",
+    "shipped": "2026-11-10T02:23:16"
    }
   },
   {
@@ -347733,7 +351177,7 @@
    "id": "auh",
    "name": "Abu Hummus",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347767,6 +351211,32 @@
     "unit_names": [
      "Abu Hummus"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 23.7,
+     "stations": 1.3,
+     "places": 2.1,
+     "routes": 25.6,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:43:52",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.22247777215740072",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-10T00:48:19",
+    "gated": "2026-11-10T01:18:10",
+    "shipped": "2026-11-10T02:23:17"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -347774,7 +351244,7 @@
    "id": "mib",
    "name": "Mitubas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347810,6 +351280,27 @@
      "Mitubas",
      "Rashid"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 20.7,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 13.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:44:10",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:10",
+    "shipped": "2026-11-10T02:23:17"
    }
   },
   {
@@ -347817,7 +351308,7 @@
    "id": "aad",
    "name": "Aga",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347851,6 +351342,29 @@
     "unit_names": [
      "Aga"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 19.6,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 24.8,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:44:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.14578379821192883",
+      "top_school_cell_pupils 6051.92529296875",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:11",
+    "shipped": "2026-11-10T02:23:18"
    }
   },
   {
@@ -347858,7 +351372,7 @@
    "id": "kmh",
    "name": "Kum Hamada",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347892,6 +351406,28 @@
     "unit_names": [
      "Kum Hamada"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.0,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 21.8,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:45:26",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.16572792512338444",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:12",
+    "shipped": "2026-11-10T02:23:18"
    }
   },
   {
@@ -347899,7 +351435,7 @@
    "id": "abk",
    "name": "Abu Kabir",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347933,6 +351469,32 @@
     "unit_names": [
      "Abu Kabir"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.2,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 19.6,
+     "merge": 0.9,
+     "nocar": 2.0,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:45:41",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.23571632480062654",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T01:10:25",
+    "gated": "2026-11-10T01:23:31",
+    "shipped": "2026-11-10T02:23:19"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -347940,7 +351502,7 @@
    "id": "rfa",
    "name": "Rafah",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -347998,6 +351560,30 @@
      34.1158,
      31.2129
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 35.2,
+     "stations": 1.5,
+     "places": 2.7,
+     "routes": 25.0,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:46:28",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.21389877102619972"
+     ]
+    },
+    "parked": "2026-11-10T00:52:52",
+    "gated": "2026-11-10T01:18:11",
+    "shipped": "2026-11-10T02:23:19"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348005,7 +351591,7 @@
    "id": "asw",
    "name": "Aswan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348045,6 +351631,30 @@
      "Aswan City",
      "Abu Simbel"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 383.3,
+     "stations": 1.3,
+     "places": 1.8,
+     "routes": 15.5,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:56:38",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.171092649462022",
+      "top_school_cell_pupils 6904.75048828125",
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 336.8",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:06:18",
+    "shipped": "2026-11-10T02:23:20"
    }
   },
   {
@@ -348052,7 +351662,7 @@
    "id": "ggx",
    "name": "Girga",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348088,6 +351698,33 @@
      "Girga",
      "Girga"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 21.4,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 12.0,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:50:35",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.30985652496972016",
+      "top_school_cell_pupils 6565.60791015625",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:58:34",
+    "gated": "2026-11-10T01:18:11",
+    "shipped": "2026-11-10T02:23:20"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348095,7 +351732,7 @@
    "id": "ari",
    "name": "Al- Badari",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348131,6 +351768,33 @@
      "Al- Badari",
      "Sidfa"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 25.9,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 11.4,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:46:26",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.20359358560923907",
+      "top_school_cell_pupils 7185.6494140625",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-10T00:52:53",
+    "gated": "2026-11-10T01:18:12",
+    "shipped": "2026-11-10T02:23:21"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348138,7 +351802,7 @@
    "id": "afa",
    "name": "Al Fashn",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348172,6 +351836,28 @@
     "unit_names": [
      "Al Fashn"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 15.4,
+     "merge": 1.1,
+     "nocar": 1.9,
+     "everyday": 1.5
+    },
+    "built": "2026-11-10T00:47:14",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.19037516505221647",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:13",
+    "shipped": "2026-11-10T02:23:21"
    }
   },
   {
@@ -348179,7 +351865,7 @@
    "id": "kfr",
    "name": "Kafr Al-Zayyat",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348213,6 +351899,32 @@
     "unit_names": [
      "Kafr Al-Zayyat"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 20.3,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:47:20",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.25675645156242505",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:52:56",
+    "gated": "2026-11-10T01:18:13",
+    "shipped": "2026-11-10T02:23:22"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348220,7 +351932,7 @@
    "id": "ghy",
    "name": "Guhayna Al-Gharbiyya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348258,6 +351970,31 @@
      "Al-Kharga Oasis",
      "Al Waqf"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 178.4,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 111.7,
+     "merge": 2.4,
+     "nocar": 2.7,
+     "everyday": 1.6
+    },
+    "built": "2026-11-10T00:52:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "area_km2 90352.35592303943",
+      "top_zone_jobs_share 0.16352977533703894",
+      "drive_factor_median 2.184200810815618",
+      "road_snap_median_m 692.7",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:14",
+    "shipped": "2026-11-10T02:23:22"
    }
   },
   {
@@ -348265,7 +352002,7 @@
    "id": "qia",
    "name": "Qina",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348303,6 +352040,34 @@
      "Qina",
      "Qina City"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 21.6,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 13.9,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:48:04",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.471294081741056",
+      "pop_vs_ghsl_other 1.4712957234677067",
+      "top_zone_jobs_share 0.3160939926754114",
+      "top_school_cell_pupils 6020.15283203125",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-10T00:52:56",
+    "gated": "2026-11-10T01:18:13",
+    "shipped": "2026-11-10T02:23:23"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348310,7 +352075,7 @@
    "id": "ahn",
    "name": "Ahnasya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348346,6 +352111,28 @@
      "Ahnasya",
      "Fayyum City"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.3,
+     "stations": 1.3,
+     "places": 2.2,
+     "routes": 19.1,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:49:00",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10471725852426626",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:13",
+    "shipped": "2026-11-10T02:23:23"
    }
   },
   {
@@ -348353,7 +352140,7 @@
    "id": "tlx",
    "name": "Tala",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348387,6 +352174,27 @@
     "unit_names": [
      "Tala"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.2,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 19.0,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:49:54",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-10T01:06:14",
+    "shipped": "2026-11-10T02:23:24"
    }
   },
   {
@@ -348394,7 +352202,7 @@
    "id": "smd",
    "name": "Samannud",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348428,6 +352236,32 @@
     "unit_names": [
      "Samannud"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 21.8,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 23.9,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:50:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.2360086336278719",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T00:58:35",
+    "gated": "2026-11-10T01:18:14",
+    "shipped": "2026-11-10T02:23:24"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348435,7 +352269,7 @@
    "id": "myr",
    "name": "Minya Al-Nasr",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348471,6 +352305,28 @@
      "Minya Al-Nasr",
      "MIt Salsil"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 20.7,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 17.6,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-10T00:55:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.14740052453016164",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:15",
+    "shipped": "2026-11-10T02:23:25"
    }
   },
   {
@@ -348478,7 +352334,7 @@
    "id": "msr",
    "name": "Marsa Matruh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348520,6 +352376,30 @@
      "Salloum",
      "Alamn"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 38.1,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 31.0,
+     "merge": 12.7,
+     "nocar": 2.1,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:55:46",
+    "gate": {
+     "warn": [
+      "area_km2 102482.49096720015",
+      "top_zone_jobs_share 0.1492341179833691",
+      "top_school_cell_pupils 5869.46923828125",
+      "road_snap_median_m 448.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:16",
+    "shipped": "2026-11-10T02:23:25"
    }
   },
   {
@@ -348527,7 +352407,7 @@
    "id": "asd",
    "name": "Al-Shuhada",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348561,6 +352441,28 @@
     "unit_names": [
      "Al-Shuhada"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 20.6,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 13.4,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.4
+    },
+    "built": "2026-11-10T00:53:08",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1022845802736306",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:16",
+    "shipped": "2026-11-10T02:23:26"
    }
   },
   {
@@ -348568,7 +352470,7 @@
    "id": "kfs",
    "name": "Kafr Saqr",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348602,6 +352504,28 @@
     "unit_names": [
      "Kafr Saqr"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 17.3,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:54:10",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.16882298529941006",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:17",
+    "shipped": "2026-11-10T02:23:26"
    }
   },
   {
@@ -348609,7 +352533,7 @@
    "id": "brt",
    "name": "Birkat Al-Sab",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348643,6 +352567,32 @@
     "unit_names": [
      "Birkat Al-Sab"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 19.9,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 14.5,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:54:56",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.27221531301938234",
+      "top_school_cell_pupils 6777.21337890625",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-10T00:58:39",
+    "gated": "2026-11-10T01:18:14",
+    "shipped": "2026-11-10T02:23:27"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348650,7 +352600,7 @@
    "id": "hud",
    "name": "Hurghada 1",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348699,6 +352649,34 @@
       "task": "T-2897"
      }
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 57.7,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 54.2,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-10T00:56:56",
+    "gate": {
+     "warn": [
+      "area_km2 59941.08499698814",
+      "top_zone_jobs_share 0.1699310179145598",
+      "top_school_cell_pupils 6000.0",
+      "road_snap_median_m 458.8",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-10T01:04:45",
+    "gated": "2026-11-10T01:18:15",
+    "shipped": "2026-11-10T02:23:27"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-2897: the dry points lie at El Gouna's lagoons and Hurghada's marinas and reclaimed shore"
    }
   },
   {
@@ -348706,7 +352684,7 @@
    "id": "rmd",
    "name": "10 Ramadan 2",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348744,6 +352722,26 @@
      "10 Ramadan 1",
      "Badr"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.2,
+     "places": 12.7,
+     "routes": 19.3,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 1.3
+    },
+    "built": "2026-11-10T00:56:05",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-10T01:06:17",
+    "shipped": "2026-11-10T02:23:27"
    }
   },
   {
@@ -348751,7 +352749,7 @@
    "id": "eli",
    "name": "El-Ibrahimiya",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348785,6 +352783,33 @@
     "unit_names": [
      "El-Ibrahimiya"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 20.8,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 12.0,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-10T00:56:27",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.18329923932227446",
+      "mean_commute_km 2.9140643038094125",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T01:10:31",
+    "gated": "2026-11-10T01:23:31",
+    "shipped": "2026-11-10T02:23:28"
+   },
+   "gate_relax": {
+    "mean_commute_km": "T-2897: El-Ibrahimiya, a 0.21M zone of one compact markaz in the Sharqia delta, so short trips"
    }
   },
   {
@@ -348792,7 +352817,7 @@
    "id": "idk",
    "name": "Idku",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348826,6 +352851,32 @@
     "unit_names": [
      "Idku"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 21.4,
+     "stations": 1.2,
+     "places": 1.6,
+     "routes": 10.9,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-10T00:56:46",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.27780528280080014",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-10T01:04:46",
+    "gated": "2026-11-10T01:18:15",
+    "shipped": "2026-11-10T02:23:29"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
    }
   },
   {
@@ -348833,7 +352884,7 @@
    "id": "shl",
    "name": "Sharm el-Sheikh",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348884,6 +352935,32 @@
    },
    "gate_relax": {
     "pop_vs_plan": "T-2956: people scaled to CAPMAS 2023 governorate totals (South Sinai 0.69 of GHS-POP): about 116,000 against the plan's GHSL 168,000"
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 32.6,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 18.9,
+     "merge": 1.1,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-10T00:57:27",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.6788577837887481",
+      "pop_vs_ghsl_other 0.6953610482170323",
+      "top_zone_jobs_share 0.17183724216823482",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 764.5",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-10T01:06:18",
+    "shipped": "2026-11-10T02:23:29"
    }
   },
   {
@@ -348891,7 +352968,7 @@
    "id": "adk",
    "name": "A-Dakhla Oasis",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "EGY"
@@ -348925,6 +353002,31 @@
     "unit_names": [
      "A-Dakhla Oasis"
     ]
+   },
+   "run": {
+    "run_batch": "20261109-235702",
+    "steps": {
+     "build": 114.9,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 119.5,
+     "merge": 1.5,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-10T01:00:58",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 1.269020199282719",
+      "area_km2 351319.8628519582",
+      "drive_factor_median 2.475023769963025",
+      "road_snap_median_m 1355.3",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-10T01:06:19",
+    "shipped": "2026-11-10T02:23:29"
    }
   }
  ],

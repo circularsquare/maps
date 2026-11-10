@@ -309,7 +309,9 @@ async function checkZone(page, errors, id, C, out, result) {
   check(`the top bar names ${C.name} and gives its split`, (result.noRail.topBar.city ?? '').includes(C.name) && /Walking/.test(result.noRail.topBar.split ?? ''), result.noRail);
   await page.screenshot({ path: out + 'homes.png' });
 
-  // 2. the water mask: ground track across the crossing bridged or refused for room, a tunnel accepted
+  // 2. the water mask: ground track across the crossing bridged or refused for room, a tunnel accepted; skipped
+  // for a zone with no water run within 30 km of its centre (Tamanrasset, the Nile delta's inland towns, T-2897)
+  if (C.water) {
   const water = await page.evaluate(async ([p, q]) => {
     const t = window.tw, a = t.lngLatToPack(p[0], p[1]), b = t.lngLatToPack(q[0], q[1]);
     const g = await t.client.edit({ op: 'route', from: { kind: 'free', x: a.x, y: a.y, level: 0 }, to: { kind: 'free', x: b.x, y: b.y, level: 0 }, pis: [], single: false });
@@ -319,6 +321,7 @@ async function checkZone(page, errors, id, C, out, result) {
     return { ground: g.ok ? 'accepted' : JSON.stringify(g).slice(0, 200), tunnel: u.ok };
   }, C.water);
   check('ground track across the water bridged (or refused for want of room), a tunnel accepted', (water.ground === 'accepted' || /BridgeNoRoom/.test(water.ground)) && water.tunnel, water);
+  }
 
   // 3. a test line through the centre, constructed
   // several zones in one game: each line its own name, so no lookup finds an earlier zone's
@@ -420,7 +423,7 @@ for (const z of zones) {
   }
   result.seconds = Math.round((Date.now() - t) / 100) / 10;
   await writeFile(z.json, JSON.stringify(result, null, 2));
-  const ok = result.checks.length === 8 && result.checks.every(c => c.ok);
+  const ok = result.checks.length === (z.C.water ? 8 : 7) && result.checks.every(c => c.ok);
   pass &&= ok;
   console.log(ok ? `PASS city-browser ${z.id}` : `FAIL city-browser ${z.id}`, `${result.seconds} s`);
   // not after a page's last zone (T-925: that removal's solve hung a gate for 90 minutes)

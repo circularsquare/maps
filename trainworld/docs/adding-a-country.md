@@ -226,7 +226,7 @@ Read the batch report and `world_run.py status`. For each parked row:
 |---|---|
 | `drive_factor_median` over 3.0 on a zone (it WARNs from 2.0 and fails only above 3.0; a metro fails above 2.0, T-1985) | open the row's routes: hills, gorges or islands (Yuanyang, Yunnan, 3.13), relax naming the ground; else a routing fault, leave parked and file a task |
 | `water_points_in_water` at 0.9 or more, the dry points in seasonal wetland | relax, naming the wetland |
-| `top_zone_jobs_share` up to 0.3 on a zone under 0.2M | relax |
+| `top_zone_jobs_share` up to 0.3 on a zone under 0.2M, or up to about 0.35 on a one-town zone or metro of any size (its top cell in the town's centre, not on a GHSL blob: Indonesia, North Africa) | relax |
 | `mean_commute_km` on a zone over 20,000 km² | relax |
 | `pop_vs_plan` on a row with a census hook | relax with the census figure |
 | `browser` failing only "no page errors", every row checked in the same few minutes | the app changed under the gate's Vite (a landing, a WASM rebuild): rerun, no relax |
