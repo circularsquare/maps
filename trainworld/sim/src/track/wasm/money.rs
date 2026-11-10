@@ -145,7 +145,7 @@ impl TrackApi {
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 // T-2669: priced in its countries' money, so a km costs the factor's share
-                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * 2.0 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
+                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
                 let k = fleet_kind(n, l);
                 train_km[k] += tk;
                 car_km[k] += tk * s.cars as f64;

@@ -115,7 +115,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       const wt = weight.get(l.id) ?? 0;
       figs = Array.from({ length: n - 1 }, (_, j) => ({ fares: 0, running: 0, upkeep: 0, km: Math.abs(s0[j + 1] - s0[j]) / 1000, bare: !(wt > 0), noFigures: !lineFiguresIn(dv, l.id, n) }));
       busFigs.set(l.id, figs);
-      const runDay = (st.bus.ferry ? m.runCostBoatKm : m.runCostBusKm) * E * wt * 2 * st.km * lineRunFactor(l.num);
+      const runDay = (st.bus.ferry ? m.runCostBoatKm : m.runCostBusKm) * E * wt * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
       // the route's upkeep is its own line's (`line_upkeep`), there while vehicles run
       const route = st.bus.built && !st.bus.ferry && wt > 0 ? (st.bus.roadM / 1000) * (t.upkeepBusKm ?? 0) * E : 0;
       let km = 0;
@@ -130,7 +130,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       // running trains by length along the path
       const k = trainKind(m, st.fast, st.tram);
       // T-2669: at its countries' prices
-      const runDay = (k.runCostTrainKm + st.cars * k.runCostCarKm) * E * (weight.get(l.id) ?? 0) * 2 * st.km * lineRunFactor(l.num);
+      const runDay = (k.runCostTrainKm + st.cars * k.runCostCarKm) * E * (weight.get(l.id) ?? 0) * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
       let pathM = 0;
       for (const p of st.path) pathM += edgeById.get(p >> 1)?.lengthM ?? 0;
       if (pathM > 0) for (const p of st.path) part(p >> 1, l.id).running += runDay * (edgeById.get(p >> 1)?.lengthM ?? 0) / pathM;

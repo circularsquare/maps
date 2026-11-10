@@ -518,10 +518,11 @@ The round trip split into running, dwell, turning and waiting,
   edit, priced by the worker's `upgradeCosts` ("Parking built at 38 stations for $760M."); the
   second is left out when every station is an end station, and a button is disabled once none is
   missing, its hover saying so ("The end stations already have parking") [T-2692]. A refusal
-  shakes the button and the notice says why. A **loop** [T-798] shows its lap (one way round, the longer way's)
+  shakes the button and the notice says why. A **loop** [T-798] has a Direction row first, a segmented
+  One way (hover "Round the way it was drawn") or Both ways [T-2981], then its lap (one way round, both ways the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
-  turning); its trains steppers move by 2 and the count's hover says how many run each way; the
+  turning); run both ways, its trains steppers move by 2 and the count's hover says how many run each way; the
   stop count under the name counts the first stop once.
 - A line's riders count every line actually boarded, transfers included; inter-city trips show
   only in its purpose split [T-182].

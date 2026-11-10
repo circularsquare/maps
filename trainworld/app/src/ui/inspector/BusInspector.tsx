@@ -417,7 +417,7 @@ export function BusInspector({ id }: { id: string }) {
         ))}
       </ul>}
 
-      {l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} standing={standing} />}
+      {l.stops.length >= 2 && <RoundTrip num={l.num} st={st} lev={lev} stops={l.stops.length} standing={standing} />}
     </>
   );
 }

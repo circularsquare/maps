@@ -130,6 +130,7 @@ export type EditOp =
   /** a line's train length in cars, 0 for the most its shortest platform fits (T-733) */
   | { op: "lineCars"; line: number; cars: number }
   | { op: "lineFast"; line: number; fast: boolean }
+  | { op: "lineOneWay"; line: number; oneWay: boolean }
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
   | { op: "lineGroup"; lines: number[]; group: number | "new" }
   | { op: "groupName"; group: number; name: string }
@@ -489,6 +490,8 @@ export interface ClockLine {
   hand: boolean;
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */
   loopKind: number;
+  /** T-2981: a loop that runs one way (`TrackApi::line_one_way`) */
+  oneWay: boolean;
   /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces
    * (a bus line's `path` is empty, its `stops` its `bus.stops`' ids) */
   bus?: ClockBus;

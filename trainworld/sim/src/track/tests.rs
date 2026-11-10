@@ -32,7 +32,7 @@ pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     let path = w.net.route(stops).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -1591,6 +1591,76 @@ fn loops_save_round_trip_and_open_again() {
     let ls = &w.svc.lines[c as usize];
     assert!(ls.ok && ls.kind == LoopKind::None);
     assert!((ls.round_trip[HIGH] - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 2.0 * w.net.line_turn[c as usize] as f64)).abs() < 1e-9);
+}
+
+fn set_one_way(w: &mut TrackWorld, id: u32, on: bool) {
+    let mut d = w.net.line_data(id).unwrap();
+    d.one_way = on;
+    w.apply(Op::Line { id, data: Some(d) }).unwrap();
+}
+
+#[test]
+fn a_one_way_circle_goes_round_once_with_every_train() {
+    let (mut w, ns) = ring_fixture();
+    let id = line(&mut w, &closed(&ns), [12.0, 6.0, 3.0]);
+    set_counts(&mut w, id, [8, 4, 2]);
+    let both = w.svc.lines[id as usize].round_trip;
+    let plats = |w: &TrackWorld| (0..w.svc.cap.res.len()).filter(|&r| w.svc.cap.res[r].kind == ResKind::Platform).map(|r| w.svc.cap.users_of(r).len()).sum::<usize>();
+    let users_both = plats(&w);
+    set_one_way(&mut w, id, true);
+    assert!(w.net.line_one_way[id as usize]);
+    let ls = &w.svc.lines[id as usize];
+    assert!(ls.one_way && !ls.paired() && ls.live_runs() == 1);
+    // the round trip is one lap: run 0 and the dwell at the first stop
+    let dwell = w.net.line_dwell[id as usize] as f64;
+    for lev in 0..LEVELS {
+        assert!((ls.round_trip[lev] - (ls.runs[0].prof[lev].duration + dwell)).abs() < 1e-9, "level {lev}");
+        assert!((ls.round_trip[lev] - both[lev] / 2.0).abs() < 1.0, "half the both-ways round trip on a symmetric ring");
+    }
+    // the same trains all go one way: twice as often
+    assert_eq!(ls.trains, [8, 4, 2]);
+    assert!((3600.0 / w.net.line_tph[id as usize][MEDIUM] as f64 - ls.round_trip[MEDIUM] / 4.0).abs() < 1.0, "{:?} {:?}", w.net.line_tph[id as usize], ls.round_trip);
+    // run 1 has no departures, no trips and no capacity users
+    let lat = w.svc.lattice(&w.net, id as usize).unwrap();
+    assert!(lat.off.iter().all(|o| o.is_infinite()));
+    let day = 2.0 * 86400.0;
+    let trips = w.svc.trips(&w.net, day + 7.0 * 3600.0, day + 9.0 * 3600.0);
+    let own: Vec<_> = trips.iter().filter(|t| t.line == id).collect();
+    assert!(own.len() >= 8 && own.iter().all(|t| t.run == 0), "{} trips", own.len());
+    for t in own.iter().filter(|t| t.dep > day + 7.0 * 3600.0 && t.dep < day + 8.0 * 3600.0) {
+        let n = t.next.expect("every train carries on round");
+        assert!(trips.iter().any(|u| u.line == id && u.draw == n && u.run == 0), "{t:?}");
+    }
+    assert!(w.svc.cap.users.iter().all(|u| u.line != id || u.run == 0));
+    assert_eq!(plats(&w) * 2, users_both, "half the platform uses");
+    let span = super::span::line_span(&w.svc.lines[id as usize], &lat);
+    let n = ns.len() + 1;
+    assert!((0..super::params::PERIOD_HOURS.len()).all(|q| span[(q * 2 + 1) * n..(q * 2 + 2) * n].iter().all(|&p| p == 0.0)), "no train due on run 1");
+    // an odd count stays odd
+    set_counts(&mut w, id, [7, 3, 1]);
+    assert_eq!(w.net.line_trains[id as usize], Some([7, 3, 1]));
+    // the save lists it; it loads one way, and back to both ways it is as before
+    let bytes = super::save::encode(&w.net);
+    assert!(bytes.windows(4).any(|x| x == b"LOW1"));
+    let back = TrackWorld::new(super::save::decode(&bytes).unwrap());
+    assert!(back.svc.lines[id as usize].one_way);
+    assert_eq!(super::save::encode(&back.net), bytes);
+    set_counts(&mut w, id, [8, 4, 2]);
+    set_one_way(&mut w, id, false);
+    assert!(!super::save::encode(&w.net).windows(4).any(|x| x == b"LOW1"));
+    assert!((w.svc.lines[id as usize].round_trip[HIGH] - both[HIGH]).abs() < 1e-6);
+    assert_eq!(plats(&w), users_both);
+}
+
+#[test]
+fn a_one_way_balloon_turns_once_a_round_trip() {
+    let (mut w, [a, m, _, k]) = balloon_fixture();
+    let id = line(&mut w, &[a, m, k, m, a], [12.0, 6.0, 3.0]);
+    set_one_way(&mut w, id, true);
+    let ls = &w.svc.lines[id as usize];
+    let turn = w.net.line_turn[id as usize] as f64;
+    assert!((ls.round_trip[HIGH] - (ls.runs[0].prof[HIGH].duration + turn)).abs() < 1e-9);
+    assert!(w.svc.cap.users.iter().all(|u| u.line != id || u.run == 0));
 }
 
 /// The real save has no line whose last stop is its first (T-798 checks before loading them as

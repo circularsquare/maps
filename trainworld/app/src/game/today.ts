@@ -178,7 +178,7 @@ export function runningToday(l: LineInput, st: LineStats): number {
     const lev = LEVEL_INDEX[PERIODS[periodAt(h * 3600)].demand];
     // T-1464: a bus line's buses cost a bus-km each
     const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
-    cost += tph[lev] * 2 * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
+    cost += tph[lev] * (st.oneWay ? 1 : 2) * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   // T-2669: at its countries' prices, as the clock worker drains it
   return cost * lineRunFactor(l.num);

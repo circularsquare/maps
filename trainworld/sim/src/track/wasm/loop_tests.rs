@@ -38,10 +38,15 @@ fn a_bus_loop_starts_and_ends_at_one_stop_and_runs_as_a_circle() {
     assert!((s.last().unwrap()[3] - road).abs() < 1e-6, "{s:?}");
     assert_eq!(a.line_loop(b), 1);
     assert_eq!(a.w.svc.lines[b as usize].kind, LoopKind::Circle);
-    // the lap is one run and the dwell; the round trip twice that, both ways with a bus each
+    // the lap is one run and the dwell; a new bus loop runs one way (T-2981), its round trip the lap
     let t = a.stop_times(b, 0, 0);
-    let ls = &a.w.svc.lines[b as usize];
     let lap = t[t.len() - 1] + 30.0;
+    assert!(a.line_one_way(b));
+    let ls = &a.w.svc.lines[b as usize];
+    assert!((ls.round_trip[0] - lap).abs() < 1e-6, "{} {lap}", ls.round_trip[0]);
+    // both ways: twice that, a bus each way
+    assert_eq!(a.set_line_one_way(b, false), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[b as usize];
     assert!((ls.round_trip[0] - 2.0 * lap).abs() < 1e-6, "{} {lap}", ls.round_trip[0]);
     assert_eq!(a.stop_times(b, 1, 0).last(), t.last());
     assert!(ls.trains[0] % 2 == 0 && ls.trains[0] > 0, "{}", ls.trains[0]);
@@ -59,6 +64,7 @@ fn a_bus_loop_starts_and_ends_at_one_stop_and_runs_as_a_circle() {
     let before: Vec<u64> = a.bus_stops(b).into_iter().map(f64::to_bits).collect();
     assert!(a.load(&saved));
     assert_eq!(a.line_loop(b), 1);
+    assert!(!a.line_one_way(b), "both ways is saved");
     assert_eq!(a.bus_stops(b).into_iter().map(f64::to_bits).collect::<Vec<_>>(), before);
 }
 
@@ -104,6 +110,10 @@ fn a_ferry_loop_names_its_first_port_twice_and_pays_for_it_once() {
     assert_eq!(ls.kind, LoopKind::Circle);
     let t = a.stop_times(l, 0, 0);
     assert_eq!(t.len(), 4);
+    assert!(ls.one_way, "a new ferry loop runs one way (T-2981)");
+    assert!((ls.round_trip[0] - (t[3] + 60.0)).abs() < 1e-6, "{} {t:?}", ls.round_trip[0]);
+    assert_eq!(a.set_line_one_way(l, false), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[l as usize];
     assert!((ls.round_trip[0] - 2.0 * (t[3] + 60.0)).abs() < 1e-6, "{} {t:?}", ls.round_trip[0]);
     // three ports to pay for, not four
     assert!((a.line_build_cost(l) - 3.0 * PORT_COST).abs() < 1e-9, "{}", a.line_build_cost(l));

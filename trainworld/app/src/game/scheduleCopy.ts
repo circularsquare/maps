@@ -5,7 +5,7 @@ import { t, tList, tNumber } from "../i18n";
 import { signal } from "@preact/signals";
 import { CAR_M } from "./boarding";
 
-import type { LineInput, LineStats } from "./types";
+import { loopHalves, type LineInput, type LineStats } from "./types";
 import { clickSound, edit, headwayShown, say, stationsById, trainsShown, world } from "./world";
 
 type Levels = [number, number, number];
@@ -94,8 +94,8 @@ export async function pasteSchedule(l: LineInput, st: LineStats) {
     if (!(await edit({ op: "setHeadway", line: l.num, seconds: c.headway }, false, true)).ok) return;
   } else {
     if (headwayShown(l.id) && !(await edit({ op: "setHeadway", line: l.num, seconds: null }, false, true)).ok) return;
-    // T-798: a loop's trains are half each way, so its counts are even
-    const k = st.loop ? 2 : 1;
+    // T-798: a loop's trains run both ways are half each way, so its counts are even
+    const k = loopHalves(st) ? 2 : 1;
     const trains = c.trains.map((n) => Math.ceil(n / k) * k) as Levels;
     if (!(await edit({ op: "setTrainCount", line: l.num, trains }, false, true)).ok) return;
   }

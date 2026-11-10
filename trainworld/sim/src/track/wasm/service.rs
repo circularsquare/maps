@@ -146,7 +146,7 @@ impl TrackApi {
             if !ls.running {
                 continue;
             }
-            for (r, run) in ls.runs.iter().enumerate() {
+            for (r, run) in ls.runs.iter().enumerate().take(ls.live_runs()) {
                 for k in 1..run.nodes.len().saturating_sub(1) {
                     if run.nodes[k] != node {
                         continue;

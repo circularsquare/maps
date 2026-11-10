@@ -17,7 +17,7 @@ import { lineSeconds } from "../../game/clock";
 import { DAY_KIND_NAME } from "../../game/days";
 import { kindIn, lineCountry } from "../../game/holidays";
 import { useClockQuery } from "../useClockQuery";
-import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats } from "../../game/types";
+import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { pendingLabel } from "../../game/lineFigures";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
@@ -111,7 +111,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   const trip = st.roundTripByLevel[lev];
   const limit = limits[lev];
   const lim = limit?.s ?? 0;
-  const loop = !!st.loop;
+  const loop = loopHalves(st);
   // T-1276: a headway or count still on its way to the worker (an edit takes seconds on a big
   // network) shows the other cell as it will be, not the world's from an edit or two before
   const autoPending = auto ? auto.map((s, i) => s !== st.autoS?.[i]) : null;
@@ -148,6 +148,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
       <td>
         <span class={"num" + (broke ? " bad" : "")} data-tip={loop
           ? t("schedule.lapTip", { vehicles: vehiclesText(v, counts[lev]), half: counts[lev] / 2, lap: duration(trip / 2) })
+          : st.loop ? t("schedule.lapOneWayTip", { vehicles: vehiclesText(v, counts[lev]), lap: duration(trip) })
           : t("schedule.roundTip", { vehicles: vehiclesText(v, counts[lev]), trip: duration(trip) })}>{counts[lev]}</span>
       </td>
       <td>
@@ -230,7 +231,7 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
 export function AverageSpeed({ st, lev }: { st: LineStats; lev: number }) {
   const rt = st.roundTripByLevel[lev] ?? st.roundTripS;
   // T-798: a loop once round in its lap, minus a balloon's turning
-  const s = st.loop ? rt / 2 - (st.loop === "balloon" ? st.turnaroundS : 0) : rt - 2 * st.turnaroundS;
+  const s = st.loop ? rt / (loopHalves(st) ? 2 : 1) - (st.loop === "balloon" ? st.turnaroundS : 0) : rt - 2 * st.turnaroundS;
   if (!(s > 0) || !(st.km > 0)) return null;
   const km = st.loop ? st.km : 2 * st.km;
   const kmh = km / (s / 3600);

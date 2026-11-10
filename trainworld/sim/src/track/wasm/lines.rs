@@ -11,7 +11,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -338,6 +338,16 @@ impl TrackApi {
             Some(LoopKind::Balloon) => 2,
             _ => 0,
         }
+    }
+    /// T-2981: whether a line is a loop that runs one way, round in the direction it was drawn.
+    pub fn line_one_way(&self, line: u32) -> bool {
+        self.w.svc.lines.get(line as usize).is_some_and(|l| l.ok && l.one_way)
+    }
+    /// T-2981: run a line's loop one way or both ways. Kept on an open line for when it closes.
+    pub fn set_line_one_way(&mut self, id: u32, on: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        d.one_way = on;
+        self.run(Op::Line { id, data: Some(d) })
     }
 
     /// The stops where a line's trains reverse partway, as indices into its stops (T-797).

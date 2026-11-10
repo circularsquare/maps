@@ -244,9 +244,11 @@ a train length in cars, by default the most its shortest platform fits (20 m car
 1.5x the price, dearer to run, a fleet of their own), the player's choice [T-817]. A line may reverse partway at a stop or a bare track end, standing its turnaround there, at most 12 reversals an
 hour per station side or track end, and a large icon marks the place [T-797]. A line ending at a through station turns on its platform; a dead end pools its turns over its platform tracks (6.2) [T-1281]. Stations take **upgrades** from a row of icons in their panel, into the blueprint or paid at once on a built station, none refunded [T-1281]: a terminal (turnback sidings past the platform, the platforms free for other trains), a park and ride (a ride to the station costs 10 perceived minutes less; US$20M), a waiting room (waits there count at 0.8 of their minutes; US$5M), and a passage to another station up to 1 km away (one complex, changes along the straight line at 2 m/s; US$10M plus US$90M a km), the one way to link stations. A complex shares park and ride and a waiting room across its stations [T-1528]. A line whose last stop is its first
 is a loop, closed and opened by clicking its first stop while editing stops: a circle carries on round
-through it, a balloon turns back there; both run both ways with half their (even) trains each way,
-holding at the first stop to the headway, and riders ride through a circle's first stop the short
-way round [T-798]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
+through it, a balloon turns back there; a loop runs both ways with half its (even) trains each way,
+or one way, round in the direction it was drawn, with all of them (a toggle in the line panel; new bus
+and ferry loops start one way, train loops both ways) [T-2981]; trains hold at the first stop to the
+headway, and riders ride through a circle's first stop the short way round, on a one-way loop the
+only way round [T-798]. Lines set a whole number of trains for high, medium and low demand, or a headway for each, run with the fewest trains that keep it, or at the track's limit the most that fit [T-625, T-679]; capacity and
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517].
@@ -285,7 +287,7 @@ clicks (a point the roads do not reach is refused, T-2451), stops place themselv
 stations it passes and about every 2 km (or the player sets a line's stops about a distance apart, T-2885), a hop takes the car's time over its road at 90% of the car's speed (never under 30 km/h, a bus lane) plus 28 s for the stop (T-2904),
 and homes within 300 m of the route ride from it, each boarding of a bus costing 6 perceived minutes; US$1M a road-km, US$0.6M a
 bus and US$6 a bus-km to run. A bus is a third of a train car (53 riders at the rated load, 80 at crush, T-2919), so its crowding reads as a train's. Trips by bus count as rail.
-A route that ends where it starts is a loop (T-2899), and so is a ferry line whose last port is its first: it runs round and round, both ways, as a train circle does.
+A route that ends where it starts is a loop (T-2899), and so is a ferry line whose last port is its first: it runs round and round as a train circle does, one way unless the player sets both ways (T-2981).
 
 
 Ferry lines (T-2193, design notes/T-2177.md) run on water between ports, stations of their own kind

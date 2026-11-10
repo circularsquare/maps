@@ -56,6 +56,8 @@ pub struct LineSvc {
     /// A loop (T-798): each run goes from the first stop round to it again, and its trains take
     /// that run's next departure there.
     pub kind: LoopKind,
+    /// T-2981: a loop run one way: run 1 carries no trains (`Lattice::off` infinite).
+    pub one_way: bool,
     pub runs: [Run; 2],
     pub cars: u32,
     pub train_len: f64,
@@ -124,11 +126,24 @@ impl LineSvc {
     pub fn is_loop(&self) -> bool {
         self.kind != LoopKind::None
     }
-    /// Trains a round trip needs at `tph` each way; a loop's count is even, the same each way.
+    /// A loop run both ways: its trains are half each way, so its count is even (T-798).
+    pub fn paired(&self) -> bool {
+        self.is_loop() && !self.one_way
+    }
+    /// The runs that carry trains, from run 0: both, or run 0 alone on a one-way loop (T-2981).
+    pub fn live_runs(&self) -> usize {
+        if self.one_way { 1 } else { 2 }
+    }
+    /// The round trip from each run's duration: a one-way loop's lap, twice a two-way loop's
+    /// longer lap, or both runs and their turnarounds.
+    fn round_trip_of(&self, a: f64, b: f64, stand: f64) -> f64 {
+        if self.one_way { a + stand } else if self.is_loop() { 2.0 * (a.max(b) + stand) } else { a + b + 2.0 * stand }
+    }
+    /// Trains a round trip needs at `tph` each way; a two-way loop's count is even, the same each way.
     pub fn fleet(&self, round_trip: f64, tph: f64) -> u32 {
         if tph <= 0.0 {
             0
-        } else if self.is_loop() {
+        } else if self.paired() {
             2 * (0.5 * round_trip * tph / 3600.0 - 1e-9).ceil() as u32
         } else {
             (round_trip * tph / 3600.0 - 1e-9).ceil() as u32
@@ -193,7 +208,7 @@ fn time_reaching(ph: &[profile::Phase], dur: f64, s: f64) -> f64 {
 
 /// A line's departure pattern (T-206): trains an hour per demand level, and where run 1's
 /// departures sit after each period's start (a whole-line fleet's reverse trips follow the forward
-/// ones round the circuit; 0 otherwise), and `shift`, the line's local time ahead of the game
+/// ones round the circuit; 0 otherwise; infinite on a one-way loop, which has none, T-2981), and `shift`, the line's local time ahead of the game
 /// clock (T-309): its periods start on its own region's hours. `lead`: seconds every period's
 /// departures leave the ends before its start, so a train belongs to the period in force when it
 /// reaches the line's middle (T-835); one figure for both runs keeps a whole-line fleet aligned.
@@ -269,7 +284,7 @@ pub(crate) fn level_stretches(levels: &[usize; 5]) -> Vec<(usize, usize)> {
 fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usize), levels: &[usize; 5]) -> Option<(f64, f64, i64)> {
     let lev = levels[first];
     let tph = lat.tph[lev] as f64;
-    if tph <= 0.0 {
+    if tph <= 0.0 || (r == 1 && lat.off[lev].is_infinite()) {
         return None;
     }
     let hw = 3600.0 / tph;
@@ -557,6 +572,7 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     ls.stops = net.line_stops(l).to_vec();
     if ls.stops.len() < 2 { return ls; }
     ls.kind = net.line_loop(l);
+    ls.one_way = ls.is_loop() && net.line_one_way[l as usize];
     let min_plat = net.line_stops(l).iter().map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;
@@ -613,6 +629,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     // T-2899: a route that ends where it starts is a circle
     if super::bus::is_closed(&r.points) {
         ls.kind = LoopKind::Circle;
+        ls.one_way = net.line_one_way[l as usize];
     }
     ls.runs = [make(fwd_s, &fwd_dw, &plan.street, &pace), make(rev_s, &rev_dw, &rev_street, &pace.reversed())];
     ls.cars = 1;
@@ -660,6 +677,7 @@ fn build_ferry(net: &Network, l: u32, r: &super::ferry::FerryRoute) -> LineSvc {
     ls.stops = ports.to_vec();
     if ferry::is_closed(ports) {
         ls.kind = LoopKind::Circle;
+        ls.one_way = net.line_one_way[l as usize];
     }
     ls.runs = [make(fwd_s, &fwd), make(rev_s, &rev)];
     ls.cars = 1;
@@ -794,8 +812,8 @@ impl Service {
                 let stand = ls.close_stand(net, l as u32);
                 for lev in 0..LEVELS {
                     let (a, b) = (&ls.runs[0].prof[lev], &ls.runs[1].prof[lev]);
-                    ls.round_trip[lev] = if ls.is_loop() { 2.0 * (a.duration.max(b.duration) + stand) } else { a.duration + b.duration + 2.0 * stand };
-                    ls.delay[lev] = a.hold + b.hold;
+                    ls.round_trip[lev] = ls.round_trip_of(a.duration, b.duration, stand);
+                    ls.delay[lev] = a.hold + if ls.one_way { 0.0 } else { b.hold };
                     ls.trains[lev] = ls.fleet(ls.round_trip[lev], net.line_tph[l][lev] as f64);
                 }
             }
@@ -888,7 +906,7 @@ impl Service {
                     let (h, sh) = &holds[l as usize][r][lev];
                     run.prof[lev].duration + total(h, sh) - total(&run.holds[lev], &run.stop_holds[lev])
                 });
-                if ls.is_loop() { 2.0 * (a.max(b) + stand) } else { a + b + 2.0 * stand }
+                ls.round_trip_of(a, b, stand)
             })
         }).collect()
     }
@@ -910,6 +928,9 @@ impl Service {
         // stays evenly spaced around the complete circuit.
         let off = std::array::from_fn(|lev| {
             let t = tph[lev] as f64;
+            if ls.one_way {
+                return f64::INFINITY;
+            }
             if net.line_trains[l].is_none() || t <= 0.0 || ls.is_loop() {
                 return 0.0;
             }

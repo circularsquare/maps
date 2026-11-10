@@ -1841,7 +1841,8 @@ function regionLines() {
     const id = li[i], km = li[i + 9] / 1000, cars = li[i + 21] || li[i + 8];
     const [perTrainKm, perCarKm] = a.line_fast(id) ? [prices.hsRunCostTrainKm, prices.hsRunCostCarKm] : [prices.runCostTrainKm, prices.runCostCarKm];
     const f = a.line_run_factor(id); // T-2669: its countries' prices
-    const run = [0, 1, 2].map((l) => li[i + 5 + l] * 2 * km * (perTrainKm + perCarKm * cars) * unit * f);
+    const ways = a.line_one_way(id) ? 1 : 2; // T-2981
+    const run = [0, 1, 2].map((l) => li[i + 5 + l] * ways * km * (perTrainKm + perCarKm * cars) * unit * f);
     costs.push({ id, shift: a.line_shift(id), run, tail: runTail(li, i, run), shares: lineShares.get(id)?.run ?? [] });
   }
   const fares = [...lineIncome].map(([id, per]) => ({ shift: a.line_shift(id), kindOf: kindOfLine(id), per, shares: lineShares.get(id)?.fare ?? [] }));
@@ -3656,6 +3657,8 @@ function apply(op: EditOp): Applied {
     }
     case "lineFast":
       return { r: a.set_line_fast(op.line, op.fast) };
+    case "lineOneWay":
+      return { r: a.set_line_one_way(op.line, op.oneWay) };
     case "lineGroup":
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
     case "groupName":

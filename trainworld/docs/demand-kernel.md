@@ -116,7 +116,8 @@ levels:
    nodes plus one node per stop per direction per line (T-069). On a circle line (T-798,
    `Network::line_wrap`) each direction's last node rides on to its first, costing the stand at
    the first stop, and nobody boards at the last: a rider rides through the first stop the short
-   way round without changing. At each station, useful lines
+   way round without changing; on a one-way loop (T-2981) run 1 has no train due anywhere (its span is
+   0), so the long way round is the only ride. At each station, useful lines
    share their departure frequency: boarding costs the wait (half the combined headway, in plain
    minutes: T-585) plus their frequency-weighted downstream cost.
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").

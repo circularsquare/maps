@@ -205,8 +205,10 @@ export interface LineStats {
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
-   * back. Each way has its own trains, half the line's. */
+   * back. Run both ways, each way has its own trains, half the line's (`loopHalves`). */
   loop: "circle" | "balloon" | null;
+  /** T-2981: a loop that runs one way, round in the direction it was drawn, with all its trains */
+  oneWay: boolean;
   /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
    * never in the save's stations); absent for a rail line */
   bus?: import("../workers/protocol").ClockBus;
@@ -218,6 +220,11 @@ export interface ModeSplit {
   drive: number;
   /** T-2215: trips no way serves (between two land parts, not by rail), "No route"; absent as 0 */
   none?: number;
+}
+
+/** A loop run both ways (T-798, T-2981): its round trip is two laps, its trains half each way. */
+export function loopHalves(st: Pick<LineStats, "loop" | "oneWay">): boolean {
+  return !!st.loop && !st.oneWay;
 }
 
 /** The split of `trips` with `rail`, `walk` and `none` (T-2215) of them, % of trips; driving is

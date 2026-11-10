@@ -1758,7 +1758,9 @@ impl TrackApi {
         let stops = ls.runs[0].stop_s.len().saturating_sub(2) as f64 - turns + if circle { 1.0 } else { 0.0 };
         let ends = if circle { 0.0 } else { 2.0 };
         let turns = turns + ls.runs[0].ends.len() as f64;
-        vec![2.0 * stops * n.line_dwell[line as usize] as f64, (ends + 2.0 * turns) * n.line_turn[line as usize] as f64]
+        // T-2981: a one-way loop goes round once
+        let ways = ls.live_runs() as f64;
+        vec![ways * stops * n.line_dwell[line as usize] as f64, ways * (ends / 2.0 + turns) * n.line_turn[line as usize] as f64]
     }
 }
 
@@ -1771,7 +1773,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })

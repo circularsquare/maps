@@ -499,7 +499,7 @@ impl Boarding {
         }
         h.f(ls.shift);
         if ls.is_loop() {
-            h.add(ls.kind as u64 + 100);
+            h.add(ls.kind as u64 + 100 + 10 * ls.one_way as u64);
         }
         for t in net.line_tph[l] {
             h.f(t as f64);
@@ -980,7 +980,7 @@ impl Boarding {
                 let lv = ra.levels[j] as usize;
                 // a loop's train is out until the next one of its run could leave (T-798)
                 let span = if ls.is_loop() {
-                    ls.round_trip[lv] / 2.0
+                    ls.round_trip[lv] / ls.live_runs() as f64
                 } else {
                     ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
                 };

@@ -376,7 +376,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
         if !ls.running || ls.is_bus() {
             continue;
         }
-        for r in 0..2 {
+        for r in 0..ls.live_runs() {
             for (i, &p) in ls.runs[r].segs.iter().enumerate() {
                 let k = key_of(net, p);
                 if in_k(k) {
@@ -417,7 +417,7 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
         }
         // a circle's runs carry on through their first stop (T-798)
         let wrap = ls.kind == LoopKind::Circle;
-        for run in &ls.runs {
+        for run in ls.runs.iter().take(ls.live_runs()) {
             let ns = run.segs.len();
             for i in 0..if wrap { ns } else { ns.saturating_sub(1) } {
                 let node = run.nodes[i + 1] as usize;
@@ -564,7 +564,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         }
         let l = l as usize;
         let dwell = net.line_dwell[l] as f64;
-        for (r, run) in ls.runs.iter().enumerate() {
+        for (r, run) in ls.runs.iter().enumerate().take(ls.live_runs()) {
             let k_last = run.nodes.len() - 1;
             for k in 1..k_last {
                 let n = run.nodes[k];
@@ -750,7 +750,7 @@ fn build_crossings(net: &Network, lines: &[LineSvc], cand: &[u32], sel: &dyn Fn(
         if !ls.running || ls.is_bus() {
             continue;
         }
-        for (r, run) in ls.runs.iter().enumerate() {
+        for (r, run) in ls.runs.iter().enumerate().take(ls.live_runs()) {
             for (i, &p) in run.segs.iter().enumerate() {
                 on_edge.push((path_edge(p), path_dir(p), l, r as u8, i as u32));
             }
@@ -804,7 +804,7 @@ pub fn move_conflicts(net: &Network, lines: &[LineSvc]) -> Vec<[u32; 5]> {
         if !ls.ok || ls.is_bus() {
             continue;
         }
-        for run in &ls.runs {
+        for run in ls.runs.iter().take(ls.live_runs()) {
             for k in 1..run.nodes.len().saturating_sub(1) {
                 let n = run.nodes[k];
                 let (p, q) = (run.segs[k - 1], run.segs[k]);
@@ -910,13 +910,13 @@ pub(super) fn stretches(net: &Network, lines: &[LineSvc], f: u32, live: &dyn Fn(
     seen.sort_unstable();
     let mut occ: Vec<(u32, u32, u8, u32)> = vec![]; // path entry, line, run, entry index
     for &l in &seen {
-        for (r, run) in lines[l as usize].runs.iter().enumerate() {
+        for (r, run) in lines[l as usize].runs.iter().enumerate().take(lines[l as usize].live_runs()) {
             occ.extend(run.segs.iter().enumerate().map(|(j, &p)| (p, l, r as u8, j as u32)));
         }
     }
     occ.sort_unstable();
     let mut chains: Vec<(u32, u8, usize, usize, usize)> = vec![]; // line, run, i0, j0, last i
-    for (fr, run) in fs.runs.iter().enumerate() {
+    for (fr, run) in fs.runs.iter().enumerate().take(fs.live_runs()) {
         let stretches = &mut out[fr];
         chains.clear();
         let ns = run.segs.len();

@@ -13,7 +13,7 @@ import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
 import { noteEdit } from "./editCap";
 import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from "./types";
-import { DEMAND_INDEX } from "./types";
+import { DEMAND_INDEX, loopHalves } from "./types";
 
 export const world = signal<WorldView | null>(null);
 /** A short message for the player: why an edit was refused, what a construct cost. */
@@ -122,9 +122,10 @@ function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number
   return true;
 }
 
-/** The step of a line's train count: 2 on a loop, whose trains are half each way (T-798). */
+/** The step of a line's train count: 2 on a loop run both ways, whose trains are half each way (T-798). */
 export function trainStep(id: LineId): number {
-  return world.value?.lineStats[id]?.loop ? 2 : 1;
+  const st = world.value?.lineStats[id];
+  return st && loopHalves(st) ? 2 : 1;
 }
 
 /** T-625: a train count or headway edit refused for want of cash: the line, the levels it changed,
@@ -309,7 +310,7 @@ function headwayTrains(id: LineId, secs: readonly number[], was: readonly number
   for (let i = 0; i < secs.length; i++) {
     if (secs[i] === was?.[i]) out.push(st.trainsNeeded[i]);
     else if (secs[i] * AUTO_SLACK < lim[i]) return null;
-    else out.push(autoTrainsFor(st.roundTripByLevel[i], secs[i], lim[i], !!st.loop));
+    else out.push(autoTrainsFor(st.roundTripByLevel[i], secs[i], lim[i], loopHalves(st)));
   }
   return out;
 }
@@ -359,7 +360,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
     const exact = Math.ceil(trip / k);
     for (const step of [60, 30, 10, 5]) {
       const h = Math.ceil(exact / step) * step;
-      if (autoTrainsFor(trip, h, 0, !!st.loop) === k) return h;
+      if (autoTrainsFor(trip, h, 0, loopHalves(st)) === k) return h;
     }
     return exact;
   }) as [number, number, number];

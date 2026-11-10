@@ -211,7 +211,7 @@ impl TrackWorld {
             let switching = self.switching == Some(l as u32);
             let trip = self.svc.lines[l].round_trip;
             // a loop's two directions each keep the headway with half its trains (T-798)
-            let each = if self.svc.lines[l].is_loop() { 2 } else { 1 };
+            let each = if self.svc.lines[l].paired() { 2 } else { 1 };
             let mut counts = old;
             for lev in (0..LEVELS).filter(|&lev| !switching || old[lev] == 0) {
                 let t = trip[lev] / each as f64;
@@ -239,7 +239,7 @@ impl TrackWorld {
             for lev in (0..LEVELS).filter(|&lev| worst[l][lev].0 <= 2.0 - FULL_RHO) {
                 let short = self.net.running_trains(l, lev, trip[lev]) - self.net.line_tph[l][lev] as f64 * trip[lev] / 3600.0;
                 let mut held = if short > 0.01 { short.floor() as u32 } else { 0 };
-                if self.svc.lines[l].is_loop() { held &= !1; }
+                if self.svc.lines[l].paired() { held &= !1; }
                 if held > 0 { counts[lev] -= held.min(counts[lev]); trimmed = true; }
             }
             self.net.line_trains[l] = Some(counts);
@@ -254,7 +254,7 @@ impl TrackWorld {
         if ids.is_empty() { return vec![]; }
         // a loop's trains split evenly between its two directions: an odd count rounds up (T-798)
         for &id in &ids {
-            if self.svc.lines[id as usize].is_loop() {
+            if self.svc.lines[id as usize].paired() {
                 if let Some(c) = self.net.line_trains[id as usize].as_mut() {
                     c.iter_mut().for_each(|x| *x += *x % 2);
                 }

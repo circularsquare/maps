@@ -198,6 +198,18 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
     let plain = skims(&build_graph(&ring(false), &p), &p);
     let want = (8.0 + 8.5) / 2.0 + 1.25;
     assert!((plain.r[5 * s + 1] - want).abs() < 1e-4, "{} against {want}", plain.r[5 * s + 1]);
+    // T-2981: run one way, run 1 has no train due anywhere (`track::span`), so 1 to 5 rides round the
+    // long way on run 0, four stops; 5 to 1 is the short way as before
+    let mut one = ring(true);
+    one.span = (0..network::PERIODS).flat_map(|_| (0..14).map(|r| if r < 7 { 1.0 } else { 0.0 })).collect();
+    let g1 = build_graph(&one, &p);
+    let sk1 = skims(&g1, &p);
+    assert!((sk1.r[5 * s + 1] - short).abs() < 1e-4, "{}", sk1.r[5 * s + 1]);
+    let long = 2.5 + 4.0 * 2.0;
+    assert!((sk1.r[1 * s + 5] - long).abs() < 1e-4, "{} against {long}", sk1.r[1 * s + 5]);
+    let loads = assign(&g1, &sk1, &od);
+    assert_eq!(loads.rn_board[7..].iter().sum::<f32>(), 0.0, "nobody boards run 1");
+    assert_eq!((loads.rn_board[1], loads.rn_alight[5]), (40.0, 40.0));
 }
 
 #[test]

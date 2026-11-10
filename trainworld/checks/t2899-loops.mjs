@@ -1,6 +1,6 @@
 // T-2899: bus and ferry loop lines, with the mouse, on a new game in New York. A bus loop drawn in the bus
 // tool (four points, then a click on the first closes it and makes the line), its tag "Click to close the
-// loop", the panel's lap, constructed and run with buses going round both ways, riders from a demand solve,
+// loop", the panel's lap, constructed and run with buses going round one way (T-2981), riders from a demand solve,
 // an out-and-back bus line beside it unchanged, undo and redo, and a save that reloads with the loop. Then
 // a ferry loop over three ports of the harbour the same way. Pictures in artifacts/trainworld/busloop/.
 // From the maps root, on a Vite of your own:
@@ -107,7 +107,7 @@ try {
   let s = await stats(num);
   check(s?.loop === 'circle', 'it is a circle', s?.loop);
   check(s && s.stops.length >= 3 && s.stops[0][0] === s.stops.at(-1)[0], 'its first and last stop are one stop', JSON.stringify(s?.stops));
-  check(s && s.round[0] > 0 && Math.abs(s.round[0] - 2 * (s.fromStart.at(-1) + s.dwell)) < 1, 'its round trip is twice the lap and the stand', `${s?.round[0]} lap ${s?.fromStart.at(-1)} + ${s?.dwell}`);
+  check(s && s.round[0] > 0 && Math.abs(s.round[0] - (s.fromStart.at(-1) + s.dwell)) < 1, 'one way (T-2981), its round trip is the lap and the stand', `${s?.round[0]} lap ${s?.fromStart.at(-1)} + ${s?.dwell}`);
   console.log('bus loop', JSON.stringify({ km: s?.km, roadM: s?.roadM, stops: s?.stops.length, trains: s?.trains }));
 
   // undo takes the loop line away, redo brings it back whole
@@ -130,9 +130,9 @@ try {
   await page.waitForFunction((n) => { const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === n); return l && w.lineStats[l.id].bus?.built; }, num, { timeout: 30000 });
   s = await stats(num);
   check(s.built && s.status === 'running', 'constructed and running', s.status);
-  check(s.trains[0] % 2 === 0 && s.trains[0] >= 2, 'a bus each way: an even fleet', `${s.trains}`);
+  check(s.trains[0] >= 1, 'it has buses', `${s.trains}`);
 
-  // buses go round, both ways, on a clock set to 8:30
+  // buses go round, one way, on a clock set to 8:30
   await page.evaluate(() => { const tw = window.tw; tw.clock.setRunning(false); tw.clock.set(Math.floor(tw.clock.now() / 86400) * 86400 + 8.5 * 3600); tw.overlay.invalidate(); });
   await page.waitForFunction(() => window.tw.renderer.tripCount > 0, undefined, { timeout: 60000 });
   await page.waitForTimeout(500);
@@ -141,7 +141,7 @@ try {
   let tn = [];
   for (let k = 0; k < 10 && tn.filter((x) => Math.abs(x) > 0.05).length < 2; k++) { await page.waitForTimeout(1500); tn = await turns(centre, 6, 180); }
   const cw = tn.filter((x) => x < -0.05).length, ccw = tn.filter((x) => x > 0.05).length;
-  check(tn.length >= 2 && cw >= 1 && ccw >= 1, 'buses go round the ring, some each way', `${tn.map((x) => x.toFixed(2)).join(' ')}`);
+  check(tn.length >= 2 && (cw === 0) !== (ccw === 0), 'buses go round the ring, all one way', `${tn.map((x) => x.toFixed(2)).join(' ')}`);
   const tn2 = await turns(centre, 8, 60);
   check(tn2.every((x) => Math.abs(x) < 1.2), 'and none turns back', tn2.map((x) => x.toFixed(2)).join(' '));
   await page.evaluate(() => { window.tw.selection.value = null; });
@@ -245,7 +245,7 @@ try {
   fs = await stats(fnum);
   const boats = Math.max(...fs.trains);
   check(Math.abs(spent - (30 + 8 * boats)) < 0.1, 'Construct pays three ports once and the boats', `spent ${spent.toFixed(1)} for ${boats} boats; "${quote}"`);
-  check(fs.trains[0] % 2 === 0, 'a boat each way: an even fleet', `${fs.trains}`);
+  check(fs.trains[0] >= 1, 'it has boats', `${fs.trains}`);
   await page.evaluate(() => { const tw = window.tw; tw.clock.setRunning(false); tw.clock.set(tw.clock.now() + 2 * 3600); tw.overlay.invalidate(); });
   await page.waitForFunction(() => window.tw.renderer.tripCount > 0, undefined, { timeout: 60000 });
   const fc = [(WHITEHALL[0] + ST_GEORGE[0] + RED_HOOK[0]) / 3, (WHITEHALL[1] + ST_GEORGE[1] + RED_HOOK[1]) / 3];
@@ -254,7 +254,7 @@ try {
   for (let k = 0; k < 10 && ft2.filter((x) => Math.abs(x) > 0.02).length < 2; k++) { await page.waitForTimeout(1500); ft2 = await turns(fc, 6, 300); }
   console.log('boat turns', ft2.map((x) => x.toFixed(2)).join(' '), 'trips', await page.evaluate(() => window.tw.renderer.tripCount));
   const live = ft2.filter((x) => Math.abs(x) > 0.02);
-  check(live.length >= 2 && live.some((x) => x > 0) && live.some((x) => x < 0), 'boats go round the harbour, some each way', ft2.map((x) => x.toFixed(2)).join(' '));
+  check(live.length >= 1 && (live.some((x) => x > 0) !== live.some((x) => x < 0)), 'boats go round the harbour, all one way', ft2.map((x) => x.toFixed(2)).join(' '));
   await fit([WHITEHALL, ST_GEORGE, RED_HOOK], 200);
   await page.evaluate((id) => { window.tw.selection.value = { kind: 'line', line: id }; }, fs.id);
   await page.waitForTimeout(1500);

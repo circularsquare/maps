@@ -14,7 +14,7 @@ import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
-import { DEMAND_INDEX, DEMANDS, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
+import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
 import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
@@ -152,11 +152,12 @@ function markTip(m: RouteMark): string {
 
 /** The round trip at the level in force, split into running, dwell, turnaround and delay (T-031),
  * and where the delay is. */
-export function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, behind: behindAll, waits: waitsAll } = NO_SPOTS, waitSpots = [], standing }: { st: LineStats; lev: number; stops: number; spots?: Spots; waitSpots?: Spot[]; standing?: number }) {
-  // T-798: a loop shows its lap, one way round (the longer way's, half its round trip); a circle
-  // stands the dwell at its first stop and turns nowhere, a balloon turns there
+export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpots, behind: behindAll, waits: waitsAll } = NO_SPOTS, waitSpots = [], standing }: { num: number; st: LineStats; lev: number; stops: number; spots?: Spots; waitSpots?: Spot[]; standing?: number }) {
+  // T-798: a loop shows its lap, one way round (run both ways, the longer way's, half its round
+  // trip); a circle stands the dwell at its first stop and turns nowhere, a balloon turns there
   const runs = st.loop ? 1 : 2;
-  const total = (st.roundTripByLevel[lev] ?? st.roundTripS) / (st.loop ? 2 : 1);
+  const halves = loopHalves(st) ? 2 : 1;
+  const total = (st.roundTripByLevel[lev] ?? st.roundTripS) / halves;
   // T-797: a stop where trains reverse stands the turnaround both ways, not the dwell
   const reversals = st.reversals?.length ?? 0;
   // T-2919: a bus line gives its own standing time (its dwell is stood at train stations only)
@@ -164,11 +165,11 @@ export function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, b
   const turn = st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS;
   // and so does a bare track end it reverses at (B3), which is no stop
   const reversing = runs * (reversals + (st.endTurns?.length ?? 0)) * st.turnaroundS;
-  const delay = (st.delayS[lev] ?? 0) / (st.loop ? 2 : 1);
+  const delay = (st.delayS[lev] ?? 0) / halves;
   // T-1924: following slower trains, apart from waiting at busy track
-  const behind = Math.min(delay, behindAll / (st.loop ? 2 : 1));
+  const behind = Math.min(delay, behindAll / halves);
   // T-2232: and standing at passing tracks for faster ones
-  const forFaster = Math.min(delay - behind, waitsAll / (st.loop ? 2 : 1));
+  const forFaster = Math.min(delay - behind, waitsAll / halves);
   const waiting = delay - behind - forFaster;
   const running = Math.max(0, total - dwell - turn - reversing - delay);
   // T-2232: each delay row with its own places right under it, the largest three
@@ -187,6 +188,16 @@ export function RoundTrip({ st, lev, stops, spots: { spots: busy, behindSpots, b
   return (
     <>
       <ul class="rows">
+        {st.loop && (
+          <li>
+            <span class="grow">{tr("lineInspector.direction")}</span>
+            <Segmented<boolean>
+              options={[[true, <span data-tip={tr("lineInspector.oneWayTip")}>{tr("lineInspector.oneWay")}</span>], [false, tr("lineInspector.bothWays")]]}
+              value={st.oneWay}
+              onChange={(oneWay) => { if (oneWay !== st.oneWay) void edit({ op: "lineOneWay", line: num, oneWay }); }}
+            />
+          </li>
+        )}
         <Row label={tr(st.loop ? "lineInspector.lap" : "lineInspector.roundTrip")} bold>
           {duration(total)}
         </Row>
@@ -917,7 +928,7 @@ function RailLineInspector({ id }: { id: string }) {
       {st.status === "running" && <div class="line-day"><PastDay l={l} st={st} periods={periods} kind={kind} extra={<PurposeSplit scope={[{ line: l.id }]} unit={tr("lineInspector.ridersUnit")} />} /></div>}
 
       {!editingStops && stopsBlock}
-      {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}
+      {st.status !== "broken" && l.stops.length >= 2 && <RoundTrip num={l.num} st={st} lev={lev} stops={l.stops.length} spots={spots} waitSpots={waitSpots} />}
       {st.status !== "broken" && l.stops.length >= 2 && <LineImprovements l={l} version={w.version} />}
       {st.status !== "broken" && l.stops.length >= 2 && <LineProfile l={l} version={w.version} />}
     </>
