@@ -17,12 +17,11 @@ const busRoad: RoadKeep = (cls, brunnel, service, access) =>
 
 /** `busRoad` as a MapLibre filter on the basemap's `transportation` lines (T-2883), for drawing the roads
  * a bus may use; built from the same classes, so the two cannot drift apart. Without `motorways`, the
- * streets a tram follows (T-2998: `RoadGraph` keeps a street route off motorways). */
-export const busRoadFilter = (motorways = true): unknown[] => [
-  "any",
-  ["in", ["get", "class"], ["literal", motorways ? [...BUS_CLASSES, "motorway"] : [...BUS_CLASSES]]],
-  ["all", ["==", ["get", "class"], "service"], ["!", ["has", "service"]], ["!", ["has", "access"]], ["!", ["has", "brunnel"]]],
-];
+ * streets a tram follows (T-2998: `RoadGraph` keeps a street route off motorways). T-3055: service ways
+ * are left out. `joinRoads` keeps one only as a link of at most `LINK_MAX_M` with both ends on a street, which a
+ * layer filter cannot test, and drawing every one painted long service roads (round water works, car parks)
+ * that nothing snaps to; the few links that do work go undrawn. */
+export const busRoadFilter = (motorways = true): unknown[] => ["in", ["get", "class"], ["literal", motorways ? [...BUS_CLASSES, "motorway"] : [...BUS_CLASSES]]];
 
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
