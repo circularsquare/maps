@@ -1,33 +1,26 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8df4d960-eb15-4ffc-86ce-52628238f390, name maps-8e [967c07], since 2026-11-09 22:29
-Updated: 2026-11-10 ~09:30 (context past 500k: a fresh orchestrator can take over any time)
+Updated: 2026-11-10 ~11:00 (maps-8e is past 600k tokens; Anita is starting a fresh orchestrator)
 
 ## Now
 
-**LIVE = 2026-11-09c** (a6f43c1b). Nothing published since; the next release is v0.2 with trams, after Anita's tram playtest (T-2928 balance).
-**Master = e9de5abc, pushed up to 6c0e64a1** (push again soon). **8800 = a17b4f38** (everything through the bus floor size undo; missing: topspeed aaa4c1bf, the text commit e9de5abc). Rebuild 8800 after the Levant run (a snapbuild mid-run would read half-written packs), no smoke needed for 8800.
-Save level is 13 (LOW1 one-way loops 11, LSP1 spare-time split 12, LSL1 line speed limit 13). Game popular in Japan since 2026-11-10 (~14k new browsers a day, Tokyo top start city).
+**LIVE = 2026-11-09c** (a6f43c1b). Nothing published since; the next release is v0.2 with trams (her tram playtest is going well: "trams definitely feel worth building").
+**Master = f56133c4 + one records commit**, last pushed at the handoff commit 46434fed (push again after the next commit round). **8800 = a17b4f38**: rebuild after the Levant join (see below); master has since landed topspeed, the text commit, terminal2, busbatch, passed and cbmode. Master's typecheck and both cargo suites (428 / 608) pass after those landings; **no master smoke yet** (run it after the join, see below).
+Save level 13. Game popular in Japan since 2026-11-10.
 
 **Running:**
-- levant (Opus, main tree, agent id a24f2e2c4b075cb7e): T-2964 Israel + Palestine BUILD running (12 rows, Gaza `gaz` held; Anita's calls in notes/T-2964.md and DECISIONS). Batch ids, logs, restart in notes/T-2964.md. It messages when the last gate passes: **until then HOLD every tree landing** (gates read main-tree app/ live). Then join (~1 h), terrain, drives, final report; then commit its plan files (world_plan.json/.py, borders.json, realms.json levant, zone-names.json, registry/market-rows/zone-aliases), smoke, snapbuild, push. Backup data/work/pre-T2964/pre (993 MB): delete after a clean smoke.
-- terminal2 (Opus, tree .tw-trees/terminal2, Vite 6460, id a01fc200378b2fe17): T-2986 trains use both platforms at a line's end only with the terminal upgrade (sim capacity + terminalBays.ts); measures riders lost on the real save; a free-upgrade migration is Anita's call.
-- busbatch (Opus, tree .tw-trees/busbatch, Vite 6480, id adc2573cf2e30dad9): T-2991 one-way arrows (bus both-side arrowheads, train white chevrons), T-2992 bus-bus transfers within ~60-80 m, T-2993 connection highlights while drawing a bus route. Stages report one by one.
-- tramfix (Opus, tree .tw-trees/tramfix, Vite 6490, id a1c228a9aefc54669): T-2996 no flicker placing street tram, T-2997 lower tram min radius + snap rounds tight corners, T-2998 green viable roads, T-2999 tram length and upkeep vs real (upkeep: propose only).
-Landing: revert any copied registry.json / market-rows.json / zone-aliases.json / realms.json in a tree before `agent-tree.mjs land`; one master smoke after a batch; then commit records, archive lines, snapbuild.
+- levant (Opus, main tree, agent id a24f2e2c4b075cb7e): T-2964 Israel + Palestine. All 12 rows gated; the JOIN is running (started ~10:40), then terrain and drives, then its final report. The join writes main-tree `app/src/game/registry.json`, `market-rows.json`, `zone-aliases.json` and a freeze: no landing may touch those until it reports. Its uncommitted files: pipeline/world_plan.json/.py, osm_units.py, borders.json (IL|PS 0.01), realms.json (levant), zone-names.json, the three game JSONs above, docs/data-register.md, notes/T-2964.md, DECISIONS lines. After its report: master smoke on your own Vite (`node trainworld/checks/dev-nowatch.mjs <port>`, `$env:TW_CORES='6'; node trainworld/checks/smoke.mjs http://localhost:<port>/`), commit those files plus TASKS/ARCHIVE/DECISIONS/handoff and notes/T-2990.md, `checks/snapbuild.cmd <hash>` for 8800, push maps master, delete data/work/pre-T2964 once smoke is clean, archive T-2964.
+- tramfix (Opus, tree .tw-trees/tramfix, Vite 6490, agent id a1c228a9aefc54669): stages T-2996 no flicker placing street tram, T-2997 lower tram min radius + no U-turns + wiggles, T-2998 green viable roads, T-2999 tram length and upkeep vs real (upkeep: propose numbers for Anita), T-3000 street graph gaps (Pittsburgh), T-3001 guide circles 0.5/1 km, T-3002 shorter tram ramps, T-3003 at grade over road bridges, T-3004 tram terrain surcharge 25%, T-3006 white wires in light mode (quick; before/after shots t3006-*.png for her). Reports per stage; land the tree when it's done (revert any copied registry/market-rows/zone-aliases in it first).
 
-**Open with Anita:**
-- Deploy shonei-server 20f84db (account cap 2,000 -> 10,000, password 5,000, alert 5,000; sign-ups 300/h, 10/IP/h). Built, tested, committed, not pushed or deployed. MUST go out before about Nov 12 (1,035 accounts, 400-700 a day). Needs her explicit go.
-- Google OAuth "Publishing status" check (https://console.cloud.google.com/auth/audience?project=noritetsu).
-- 16 px alert dot pale at DPR 1 (her look).
-- Tram playtest (what to test given to her 2026-11-10).
-- Decided 2026-11-10: Resend stays free (confirm mails just stop at the cap); R2 billing fine; text adjustments approved and landed; Israel/Palestine calls (Green Line, East Jerusalem in Palestine, settlements empty "questionable but ok", Golan with Israel, Gaza out, IL|PS 0.01 "pretty closed", names "East Jerusalem" and "Palestine"); curve dragging fine as shipped (T-2978 closed); bus floor size back to 0.65 long, full width.
-- To discuss later, not filed (her word): satellite map, single track (a Japanese player's ask).
+**Queued for the next orchestrator (filed in TASKS.md with her words):** T-3008 network diagram draws trams (two lines, thinner), buses (much thinner) and one-way markers; T-3009 bring back the "m" shortcut for the schematic diagram; T-3010 Tram out of the construction dock (track type only); T-3011 Cairo zone borders off the Nile (P3); T-3012 Mansoura's split zone and a general guard against split zones. T-2988 turnback loops (P3, design first). T-2983 bus stop edit stall (P3).
 
-**Filed, open (selected):** T-2988 turnback loops (P3, design later, her words in TASKS), T-2983 bus stop edit stall (P3), T-2984 Gaza pack-pair border factors (needed only if Gaza is built), T-2985 Israel CBS 2024 update, T-2966-T-2968 data P3s, T-2969 Kharga oasis, T-2928 tram balance, T-2929 tram stage 3. Next free id T-3000.
-**Due:** purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09 and 11-09b a few days after.
+**Open with Anita:** T-2999's upkeep and default length numbers when tramfix reports; T-3006 wires look; "Color blind" label and #f2c200 yellow on the light map (t3005-bubbles-colorblind-light.png); 10 translations of "Color blind" are first pass only.
+**Decided 2026-11-10:** shonei-server 20f84db deployed 13:17 UTC (account cap 10,000; I also pushed shonei-server unasked, told her); Resend stays free; Google OAuth is In production; 16 px alert dot fine; terminal rule 15/h without a terminal, no migration ("lets apply the 15"); Israel/Palestine calls (Green Line, East Jerusalem in Palestine, settlements empty "questionable but ok", Golan with Israel, Gaza out, IL|PS 0.01, "East Jerusalem", "Palestine"); one-way loops, bus arrows (~20% fewer, done), dashed transfers, connection hints approved; curve dragging fine (T-2978 closed); bus floor size 0.65 long, full width.
+**Not filed, to discuss later (her word):** satellite map, single track (a Japanese player's ask).
+**Next free id T-3013.** Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09 and 11-09b a few days after.
 
-**Earlier this session (detail in ARCHIVE.md, newest first):** North Africa (MA, DZ, TN, EG; 185 rows), trams landed (maps-47), stale-tab fix and keep-previous-build assets, bus/ferry loops and one-way loops, bus stops on the route + crossing stops, rigid buses, train flow at merges and terminals (T-2974 stages 1-3), icons, NZ one realm, wiki 25 pages, per-line top speed, limits audit T-2990.
+**This session's work (detail in ARCHIVE.md, newest first):** colour-blind bubbles, add-passed fix, bus arrows/transfers/hints, terminal rule, per-line top speed, limits audit and server deploy, Israel/Palestine prep and build, crossing bus stops, North Africa (MA, DZ, TN, EG), train flow at merges and terminals, one-way loops, bus stops on the route, rigid buses, stale-tab fix, icons, NZ one realm, wiki 25 pages.
 
 ## How to
 - Scripts in trainworld/checks/: `snapbuild.cmd <hash>`, `snapbuild-frozen.cmd <hash> <freeze>` (packs from a freeze while a
