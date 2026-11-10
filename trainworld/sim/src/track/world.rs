@@ -528,8 +528,17 @@ impl TrackWorld {
     /// a network in debt can still be edited. `final_` edits clear the undo history (SPEC 6.4);
     /// the others go on the undo stack. Returns the result and what `extra` came to.
     pub fn apply_paid(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<(EditResult, f64), ChargeError> {
+        self.apply_priced(op, cash, final_, extra, None)
+    }
+
+    /// `apply_paid` with the track's charge set by `price` on the edited network, not the rise in
+    /// built value (T-3059: a rebuild pays the full new price).
+    pub fn apply_priced(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64, price: Option<&dyn Fn(&TrackWorld) -> f64>) -> Result<(EditResult, f64), ChargeError> {
         let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
-        let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
+        let (mut r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
+        if let Some(price) = price {
+            r.charge = price(self);
+        }
         let x = extra(self);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
@@ -590,6 +599,15 @@ impl TrackWorld {
         // whole network twice for a result nobody reads
         let _ = self.apply_and_derive(inv);
         Ok(r)
+    }
+
+    /// `trial_with` without the services (as `trial`): for a planner that tries many edits, on
+    /// track that lines run on (T-3059).
+    pub fn trial_light<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
+        let (r, inv) = self.commit_with(op, true, false)?;
+        let value = inspect(self);
+        let _ = self.apply_and_derive(inv);
+        Ok((r, value))
     }
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.

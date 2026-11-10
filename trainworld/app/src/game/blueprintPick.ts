@@ -214,8 +214,8 @@ export const pickedState = computed(() => {
   return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular };
 });
 
-/** T-1898: blueprint track that can be high-speed or regular (`TrackApi::set_edges_hsr`): double, no crossover. */
-const canBeHsr = (e: TrackEdge) => !e.built && e.tracks === 2 && !e.crossover && !e.kind;
+/** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_hsr`, and T-3059's rebuild for built track): double, no crossover. */
+const canBeHsr = (e: TrackEdge) => e.tracks === 2 && !e.crossover && !e.kind;
 
 /** Every blueprint piece switched off, for the Build tab. */
 export const offTotals = computed(() => {

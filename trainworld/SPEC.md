@@ -235,7 +235,7 @@ price, its target max speed 320 by default; track caps trains at 160 km/h, high-
 places stations (on track only [T-1820]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. The track and station tools' options sit in a bar on the map while the tool is on, and each click mode but plain selecting has its colour as an aura round the map [T-2282, T-2284]. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to
-disable, re-level or remove together [T-333, T-815, T-829]. A station clicked on quad track goes on the pair clicked only; the game
+disable, re-level or remove together, and rebuild constructed track in place at another level or track type for its full new price [T-333, T-815, T-829, T-3059]. A station clicked on quad track goes on the pair clicked only; the game
 adds no crossovers, so the player draws crossing track where lines should change pairs (saves keep
 their crossovers) [T-338, T-733, T-1687, T-1688]. Single
 track is not offered (saves and imports keep theirs, which run as before) [T-733]. Each line has

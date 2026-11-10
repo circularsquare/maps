@@ -749,6 +749,7 @@ use draw::Ramp;
 mod beside;
 mod crossings;
 mod links;
+mod rebuild;
 mod lines;
 mod gap;
 mod snapshot;
@@ -2050,6 +2051,8 @@ mod station_sweep_tests;
 /// T-1898: drags keep the design speed; a selection's track type.
 #[cfg(test)]
 mod t1898_tests;
+#[cfg(test)]
+mod rebuild_tests;
 #[cfg(test)]
 mod tram_tests;
 #[cfg(test)]

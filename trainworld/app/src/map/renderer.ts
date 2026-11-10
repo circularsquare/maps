@@ -302,6 +302,8 @@ export class NetworkRenderer {
   private turnback: StrokeVao | null = null;
   private preview: StrokeVao | null = null;
   private highlightRes: { del: () => void }[] = [];
+  private refusedRes: { del: () => void }[] = [];
+  private refused: StrokeVao | null = null;
   /** the drag-selected blueprint (T-333): an ink band drawn under the track */
   private highlight: StrokeVao | null = null;
   private stationVao: WebGLVertexArrayObject | null = null;
@@ -1415,8 +1417,17 @@ export class NetworkRenderer {
     this.highlight = s && s.count ? this.strokes(s, this.highlightRes) : null;
   }
 
+  /** T-3059: the picked pieces a rebuild would refuse, outlined in red over the pick's band, or null. */
+  setRefused(s: Strokes | null) {
+    this.refusedSrc = s;
+    for (const r of this.refusedRes) r.del();
+    this.refusedRes = [];
+    this.refused = s && s.count ? this.strokes(s, this.refusedRes) : null;
+  }
+
   /** What the setters were last given, for `restore`. */
   private layersSrc: NetworkLayers | null = null;
+  private refusedSrc: Strokes | null = null;
   private previewSrc: Strokes | null = null;
   private highlightSrc: Strokes | null = null;
 
@@ -1432,6 +1443,7 @@ export class NetworkRenderer {
     this.placedRes = []; // the stand-ins go with the old context; their state is on its way
     this.placed = [];
     this.highlightRes = [];
+    this.refusedRes = [];
     this.connRes = [];
     this.connVao = this.connFlagBuf = null;
     this.probeProg = this.probeVao = null;
@@ -1445,6 +1457,7 @@ export class NetworkRenderer {
     }
     this.setPreview(this.previewSrc);
     this.setHighlight(this.highlightSrc);
+    this.setRefused(this.refusedSrc);
   }
 
   /** T-1071: states from the worker not drawn yet, oldest first. Each waits for its own trips (the
@@ -1794,6 +1807,14 @@ export class NetworkRenderer {
         gl.uniform3fv(u.u_sel, rgbf(rgb));
         gl.uniform3f(u.u_width, Math.max(bpMid + 2 * bpRail, wLine) + px * dpr, 0, lanes.share * G + px * dpr);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.highlight.count);
+      }
+      if (this.refused) {
+        gl.bindVertexArray(this.refused.vao);
+        for (const [px, rgb] of [[10, shades.fullTrack], [6, shades.casing]] as const) {
+          gl.uniform3fv(u.u_sel, rgbf(rgb));
+          gl.uniform3f(u.u_width, Math.max(bpMid + 2 * bpRail, wLine) + px * dpr, 0, lanes.share * G + px * dpr);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.refused.count);
+        }
       }
       gl.uniform3fv(u.u_sel, rgbf(shades.mapInk));
       gl.uniform1i(u.u_lane_mode, 0);

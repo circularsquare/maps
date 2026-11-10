@@ -22,7 +22,9 @@ High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track 
 
 **Ramps.** Going up or down a level takes {{sim/src/track/params.rs:RAMP_PER_LEVEL|0}} m of track, and the ramp costs as much as the dearer of its two levels. Grades don't slow the trains down.
 
+**Changing track you've built.** Select it, pick a new level or Regular or High speed, then press Rebuild. It is the same track and the same stations, so lines and station names carry on. You pay the full price of the new track and get nothing back for the old. A piece with no room to ramp to the track beside it stays as it was, and shows in red before you confirm.
+
 What the ground is like adds more: see [[terrain]]. Water does too: see [[water]]. Then the track costs money every day: see [[upkeep]].
 
-Exact rule: `docs/track-and-service.md` "Construction prices", and "Placing stations, curve speed and levels" for how levels and ramps fit.
-In the code: **main** `sim/src/track/cost.rs` `track_cost_parts_t`, also `track_factor` `sim/src/track/params.rs` `LEVEL_MULT`, `level_mult`, `ROAD_CROSSING_COST` `sim/src/track/roads.rs` `charge`
+Exact rule: `docs/track-and-service.md` "Construction prices", and "Placing stations, curve speed and levels" for how levels and ramps fit, and "Rebuilding constructed track" for changing built track.
+In the code: **main** `sim/src/track/cost.rs` `track_cost_parts_t`, also `track_factor` `sim/src/track/params.rs` `LEVEL_MULT`, `level_mult`, `ROAD_CROSSING_COST` `sim/src/track/roads.rs` `charge`, `sim/src/track/wasm/rebuild.rs` `rebuild_pieces`

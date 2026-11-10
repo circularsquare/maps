@@ -328,148 +328,15 @@ impl TrackApi {
     /// corners one by one with their ends kept. Pieces already on the level are not counted. 1 when
     /// nothing changed (the issues of the last refusal, if any).
     pub fn set_edges_level(&mut self, ids: &[u32], level: i8) -> u32 {
-        let net = &self.w.net;
-        let mut cand: Vec<u32> = ids.iter().copied().filter(|&e| net.edge_ok(e)).collect();
-        cand.sort_unstable();
-        cand.dedup();
-        let total = cand.len();
-        cand.retain(|&e| !net.edge_built[e as usize] && !net.edge_crossover[e as usize]);
-        let movable = |cand: &[u32], n: u32| {
-            net.node_ports[n as usize].ends().iter().all(|&c| cand.binary_search(&(c >> 1)).is_ok()) && !(net.node_platform[n as usize] > 0 && net.node_built[n as usize])
-        };
-        let cornerless = |e: u32| net.edge_data(e).is_some_and(|d| d.pis.is_empty() && d.thru.is_empty());
-        loop {
-            let was = cand.clone();
-            cand.retain(|&e| !cornerless(e) || (movable(&was, net.edge_a[e as usize]) && movable(&was, net.edge_b[e as usize])));
-            if cand.len() == was.len() {
-                break;
-            }
-        }
-        let mut skipped = (total - cand.len()) as u32;
-        // groups joined through moving nodes (union-find over positions in `cand`)
-        let mut up: Vec<usize> = (0..cand.len()).collect();
-        fn root(up: &mut [usize], mut i: usize) -> usize {
-            while up[i] != i {
-                up[i] = up[up[i]];
-                i = up[i];
-            }
-            i
-        }
-        let mut nodes: Vec<u32> = cand.iter().flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]]).filter(|&n| movable(&cand, n)).collect();
-        nodes.sort_unstable();
-        nodes.dedup();
-        for &n in &nodes {
-            let at: Vec<usize> = net.node_ports[n as usize].ends().iter().filter_map(|&c| cand.binary_search(&(c >> 1)).ok()).collect();
-            for w in at.windows(2) {
-                let (a, b) = (root(&mut up, w[0]), root(&mut up, w[1]));
-                up[a] = b;
-            }
-        }
-        let edge_op = |e: u32| {
-            let mut d = net.edge_data(e)?;
-            if d.pis.iter().chain(d.thru.iter()).all(|p| p.level == level) {
-                return None;
-            }
-            for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
-                p.level = level;
-            }
-            Some(Op::Edge { id: e, data: Some(d) })
-        };
-        let node_op = |n: u32| net.node_data(n).filter(|d| d.level != level).map(|d| Op::Node { id: n, data: Some(NodeData { level, ..d }) });
-        let mut groups: Vec<(Vec<u32>, Vec<Op>)> = vec![];
-        let mut of_root = std::collections::HashMap::new();
-        for i in 0..cand.len() {
-            let r = root(&mut up, i);
-            let g = *of_root.entry(r).or_insert_with(|| {
-                groups.push((vec![], vec![]));
-                groups.len() - 1
-            });
-            groups[g].0.push(cand[i]);
-            groups[g].1.extend(edge_op(cand[i]));
-        }
-        for &n in &nodes {
-            let first = net.node_ports[n as usize].ends()[0] >> 1;
-            let g = of_root[&root(&mut up, cand.binary_search(&first).unwrap())];
-            groups[g].1.extend(node_op(n));
-        }
-        groups.retain(|g| !g.1.is_empty());
-        if groups.is_empty() {
-            self.skipped = skipped;
+        let plan = self.plan_edges(ids, Some(level), None, false, &[]);
+        self.skipped = plan.refused.len() as u32;
+        if plan.take.is_empty() {
             self.money_short = None;
-            self.issues.clear();
+            self.issues = plan.issues;
             return 1;
         }
-        let flat_key = |c: &crate::track::net::Crossing| (c.e1.min(c.e2), c.e1.max(c.e2), c.x.round() as i64, c.y.round() as i64);
-        let flat = |net: &Network| -> Vec<(u32, u32, i64, i64)> {
-            let mut v: Vec<_> = net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))).map(flat_key).collect();
-            v.sort_unstable();
-            v
-        };
-        let before = flat(net);
-        let mut last_issues = vec![];
-        // the track model accepts `ops` with no new flat crossing
-        let fits = |w: &mut TrackWorld, ops: Vec<Op>, last_issues: &mut Vec<Issue>| match w.trial_with(Op::Batch(ops), |w| flat(&w.net)) {
-            Ok((_, after)) => after.iter().all(|k| before.binary_search(k).is_ok()),
-            Err(e) => {
-                *last_issues = e;
-                false
-            }
-        };
-        let all: Vec<Op> = groups.iter().flat_map(|g| g.1.iter().cloned()).collect();
-        let mut take = vec![];
-        if fits(&mut self.w, all.clone(), &mut last_issues) {
-            take = all;
-        } else {
-            let mut refused = vec![];
-            for (edges, ops) in groups {
-                let mut more = take.clone();
-                more.extend(ops.iter().cloned());
-                if fits(&mut self.w, more.clone(), &mut last_issues) {
-                    take = more;
-                } else {
-                    refused.extend(edges);
-                }
-            }
-            // a refused group's pieces with corners one by one, their ends kept, twice since a
-            // ramp may fit only once its neighbour has changed
-            let mut todo: Vec<(u32, Op)> = vec![];
-            for e in refused {
-                match self.w.net.edge_data(e).filter(|d| !(d.pis.is_empty() && d.thru.is_empty())) {
-                    Some(mut d) if d.pis.iter().chain(d.thru.iter()).any(|p| p.level != level) => {
-                        for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
-                            p.level = level;
-                        }
-                        todo.push((e, Op::Edge { id: e, data: Some(d) }));
-                    }
-                    _ => skipped += 1,
-                }
-            }
-            for _ in 0..2 {
-                let mut rest = vec![];
-                for (e, op) in todo {
-                    let mut more = take.clone();
-                    more.push(op.clone());
-                    if fits(&mut self.w, more.clone(), &mut last_issues) {
-                        take = more;
-                    } else {
-                        rest.push((e, op));
-                    }
-                }
-                todo = rest;
-                if todo.is_empty() {
-                    break;
-                }
-            }
-            skipped += todo.len() as u32;
-        }
-        if take.is_empty() {
-            self.skipped = skipped;
-            self.money_short = None;
-            self.issues = last_issues;
-            return 1;
-        }
-        let r = self.run(Op::Batch(take));
-        self.skipped = skipped;
+        let r = self.run(Op::Batch(plan.take));
+        self.skipped = plan.refused.len() as u32;
         r
     }
 

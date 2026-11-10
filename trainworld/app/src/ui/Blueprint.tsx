@@ -8,6 +8,7 @@ import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, hsrPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
+import { rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -234,7 +235,14 @@ export function BlueprintBar() {
   if ((tool.value !== "blueprint" && tool.value !== "select") || n === 0) return null;
   const piece = t("blueprint.piece", { built: s.built, pieces: pieces(s.edges, s.stations) });
   const levelTip = (l: Level) => t("blueprint.levelTip", { level: lowerWord(levelName(l)), label: levelLabel(l) });
-  const canLevel = !s.built && s.edges > 0;
+  const canLevel = s.edges > 0;
+  // T-3059: a built pick only chooses; the Rebuild button spends (game/rebuild.ts)
+  const chosenLevel = s.built ? rebuildLevel.value ?? s.level : s.level;
+  const pickLevel = (l: Level) => { if (s.built) rebuildLevel.value = l; else void levelPicked(l); };
+  const q = rebuildQuote.value;
+  const hsrOn = s.built && rebuildKind.value ? rebuildKind.value === "hsr" : s.regular === 0;
+  const regularOn = s.built && rebuildKind.value ? rebuildKind.value === "regular" : s.hsr === 0;
+  const pickType = (hsr: boolean) => { if (s.built) rebuildKind.value = hsr ? "hsr" : "regular"; else void hsrPicked(hsr); };
   // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
   const keys = tool.value === "blueprint";
   const switchKey = SWITCH_PICK_KEY.toUpperCase();
@@ -243,17 +251,20 @@ export function BlueprintBar() {
       <div class="blueprint-bar" role="group" aria-label={t("blueprint.selection")}>
         <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span><span class="bp-short">{tNumber(n)}</span><span class="bp-label">{t("blueprint.selected", { count: tNumber(n) })}</span></span>
         {s.edges > 0 && <span class="num" data-tip={t("blueprint.lengthTip")}>{distance(s.lengthM)}</span>}
-        {canLevel && <div class="bp-levels"><LevelButtons value={s.level} tip={levelTip} onPick={(l) => void levelPicked(l)} /></div>}
+        {canLevel && <div class="bp-levels"><LevelButtons value={chosenLevel} tip={levelTip} onPick={pickLevel} /></div>}
         {canLevel && (
           <button class={"btn bp-level" + (s.level === null ? "" : " lv on")} style={s.level === null ? undefined : { "--lc": LEVEL_COLOURS[s.level], "--lk": inkOn(LEVEL_COLOURS[s.level]) }}
             data-tip={s.level === null ? t("blueprint.levelMixed") : levelName(s.level)} aria-label={t("blueprint.level")} aria-expanded={levels}
             onClick={() => setLevels(!levels)}>{s.level === null ? <Icon.autoLevel /> : levelLabel(s.level)}</button>
         )}
-      {!s.built && s.hsr + s.regular > 0 && (
+      {s.hsr + s.regular > 0 && (
         <div class="group" role="group" aria-label={t("blueprint.trackType")}>
-          <button class={"btn" + (s.hsr === 0 ? " on" : "")} onClick={() => void hsrPicked(false)}>{t("blueprint.regular")}</button>
-          <button class={"btn" + (s.regular === 0 ? " on" : "")} data-tip={t("blueprint.hsrTip", { factor: HSR_TRACK })} onClick={() => void hsrPicked(true)}>{t("blueprint.highSpeed")}</button>
+          <button class={"btn" + (regularOn ? " on" : "")} onClick={() => pickType(false)}>{t("blueprint.regular")}</button>
+          <button class={"btn" + (hsrOn ? " on" : "")} data-tip={t("blueprint.hsrTip", { factor: HSR_TRACK })} onClick={() => pickType(true)}>{t("blueprint.highSpeed")}</button>
         </div>
+      )}
+      {s.built && (
+        <button class="btn text" data-tip={rebuildTip(q)} disabled={!q || (!q.changed.length && !q.stations)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
       )}
       {!s.built && (
         <div class="group">
@@ -267,7 +278,7 @@ export function BlueprintBar() {
       </div>
       {canLevel && levels && (
         <div class="blueprint-levels touch-levels">
-          <LevelButtons value={s.level} tip={levelTip} onPick={(l) => { void levelPicked(l); setLevels(false); }} />
+          <LevelButtons value={chosenLevel} tip={levelTip} onPick={(l) => { pickLevel(l); setLevels(false); }} />
         </div>
       )}
     </>

@@ -32,6 +32,7 @@ function soundOf(i: Intent): BuildSound | null {
     case "busSpacing": case "busHand": case "busHandStop": // T-2940: a bus line's stops, as a train line's
     case "doubleUp": case "addPoint": case "edgeLevel": case "edgesLevel": case "edgesHsr": case "flying":
       return "pop";
+    case "rebuild": return null; // sounds once the worker has accepted it (afterEditSound)
     default:
       return null;
   }
@@ -41,7 +42,7 @@ function soundOf(i: Intent): BuildSound | null {
  * them; one added only to the blueprint (no charge) gets the quiet pop. */
 function afterEditSound(op: EditOp, a: EditAnswer) {
   switch (op.op) {
-    case "construct": case "constructAll": case "constructLine":
+    case "construct": case "constructAll": case "constructLine": case "rebuild":
       playBuild("construct");
       break;
     case "stationUpgrade": case "link":

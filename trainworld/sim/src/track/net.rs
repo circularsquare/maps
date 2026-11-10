@@ -1168,6 +1168,10 @@ impl Network {
             _ => 0.0,
         }
     }
+    /// What a station costs built new as it stands, US$M (T-3059: a rebuild is charged it).
+    pub fn station_build_price(&self, n: u32) -> f64 {
+        self.station_price(n as usize, || self.node_is_wet(n as usize))
+    }
     /// A station's price, US$M: a port's flat price, any other by its level, platform, tracks and the
     /// water under it (`wet`, asked only for those).
     fn station_price(&self, n: usize, wet: impl FnOnce() -> bool) -> f64 {

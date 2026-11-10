@@ -720,6 +720,25 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   ends kept. The message says how many changed ("9 of 12 pieces set to level +1. 3 could not
   change."), or that none could. The phone bar's one button's hover is the level's name ("Viaduct"),
   or "Level of the selected track: mixed".
+- **Rebuild** [T-3059; `game/rebuild.ts`, `TrackApi::rebuild_quote` and `rebuild_pieces` in
+  `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060]: a pick of built track and
+  stations has the same level buttons and Regular / High speed as a blueprint pick, but they only choose
+  (the chosen ones are solid; nothing is chosen at first), and a **Rebuild** button (wrench icon and word)
+  spends: it is greyed until a choice would change something. The track and the stations keep their ids,
+  so every line keeps its stops and path, stations keep their names and upgrades, and nothing is deleted.
+  The level is set as for blueprint (corners, and every node all of whose track is picked, a picked
+  station's node and platform edges with them; a node with unpicked track keeps its level and the piece ramps to
+  it), and Regular / High speed for double track only. A piece the track model refuses (no room to ramp
+  to unpicked track, a station left out of the pick, a crossing) is **refused**: the quote names it, the
+  map outlines it in red over the pick's band, and the hover and the question count it ("3 of 12 pieces
+  can't change"); it stays as it was. The price is the full price of the changed track, and of the
+  stations whose level or type changed, built new at the new settings, with nothing back for what was there
+  (Anita, 2026-11-10: "full new price, that feels more fair"); trains the longer round trips need are bought as
+  for any edit. The hover shows the length and what it becomes, then the price; the question
+  ("Rebuild 3.1 km of built track and 2 built stations to level +1 for $412M? Nothing is refunded for what
+  is there now.", Keep or Rebuild) comes before anything is spent. The edit is final and clears undo, like
+  Construct, and waits for terrain, water and road tiles as Construct does. The notice says how many
+  pieces were rebuilt ("9 of 12 pieces rebuilt to level +1. 3 could not change.").
 - **Remove** [T-829; `TrackApi.delete_pieces`]: everything picked goes in one edit, with the nodes
   left bare and a crossover whole. Blueprint goes at once (one undo) unless it is big (above);
   constructed asks first, as for one piece ("Remove 3.1 km of built track and 2 built stations?

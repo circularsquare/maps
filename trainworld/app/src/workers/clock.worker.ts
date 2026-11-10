@@ -3538,6 +3538,10 @@ function apply(op: EditOp): Applied {
       const r = a.set_edges_hsr(new Uint32Array(op.edges), op.hsr);
       return { r, skipped: a.last_skipped() };
     }
+    case "rebuild": {
+      const r = a.rebuild_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations), op.level ?? 99, op.kind);
+      return { r, skipped: a.last_skipped() };
+    }
     case "removeEdge":
       return { r: a.delete_edge(op.edge) };
     case "removePieces":
@@ -4166,7 +4170,7 @@ async function handle(msg: ToClock) {
     }
     await worldWaterIntoModel();
     await masksFor(msg.op);
-    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine") {
+    if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine" || msg.op.op === "rebuild") {
       const missing = await groundForBlueprint();
       if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
     }
@@ -4351,6 +4355,7 @@ async function handle(msg: ToClock) {
       : q.what === "lineTrips" ? api.line_trips(q.line, q.t0, q.t1)
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
+      : q.what === "rebuildQuote" ? Float64Array.from(api.rebuild_quote(new Uint32Array(q.edges), new Uint32Array(q.stations), q.level ?? 99, q.kind))
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
       : q.what === "blueprintPieces" ? Float64Array.from(api.blueprint_piece_costs())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])

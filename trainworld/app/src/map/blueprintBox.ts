@@ -14,6 +14,7 @@
 import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { bpHover } from "../game/blueprintStretches";
+import { rebuildQuote } from "../game/rebuild";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
 import { SWITCH_PICK_KEY } from "../ui/toolKeys";
 import { designSpeed, selection, tool } from "../game/ui";
@@ -92,6 +93,7 @@ export class BlueprintBox {
     effect(() => {
       bpPicked.value;
       bpHover.value;
+      rebuildQuote.value;
       selection.value;
       world.value;
       tool.value;
@@ -213,6 +215,14 @@ export class BlueprintBox {
       }
       this.overlay.renderer.setHighlight(strokesFromEdges(pts));
     }
+    // T-3059: the pieces a rebuild would refuse, in red over the pick
+    const refused = rebuildQuote.peek()?.refused ?? [];
+    const rp: Float32Array[] = [];
+    if (n && !bpHover.peek().length) for (const e of refused) {
+      const a = n.edgePts.get(e);
+      if (a) rp.push(a);
+    }
+    this.overlay.renderer.setRefused(rp.length ? strokesFromEdges(rp) : null);
     this.overlay.invalidate();
   }
 

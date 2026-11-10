@@ -113,7 +113,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   pieces of a route (T-244: a plain node on the straight between the corners either side of it)
   moves with a corner dragged next to it, to the same fraction of the way between the corners, and
   the preview shows the neighbouring piece too, so a corner drags as on a route of one edge.
-  Constructed track cannot be reshaped (remove it and draw it again). notes/T-064.md.
+  Constructed track cannot be reshaped (remove it and draw it again), but its level and track type can change in place (**Rebuilding**, 6.4). notes/T-064.md.
 - **Moving blueprint nodes** (T-093): with the select tool, a track end, junction or station can be
   dragged while every edge meeting there is blueprint and its station is not constructed; the
   blueprint track there follows, previewed like a reshape (each curve's radius and speed, or why
@@ -1202,6 +1202,15 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   track runs as soon as it has trains; Construct with nothing left to build is refused with the
   issue `NothingToConstruct` (T-849). A junction is paid when its third
   edge is constructed, a flat crossing when its second is.
+  **Rebuilding constructed track** (T-3059, Anita 2026-11-10; `rebuild_pieces`, `rebuild_quote` in `wasm/rebuild.rs`):
+  constructed edges and stations change level (as `set_edges_level` does for blueprint, a picked station
+  moving with its track) and double track changes between regular and high speed, in place, with the same edge,
+  node and station ids, so lines, names and upgrades stay and no train is removed. A piece the track model
+  refuses (a ramp with no room, a crossing, a station left out of the pick) is left as it was and reported by
+  the quote. It is one final edit (undo is cleared) that pays the full price of the changed edges and of the
+  picked stations whose level or type changed, as if built new at the new settings, with nothing back for the
+  old (`TrackWorld::apply_priced` sets the charge), plus the trains the lines then need. The Select tool's bar does
+  it ([ui-building.md](ui-building.md) "The Select tool").
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
   **Disabled blueprint** (T-333): a blueprint edge or station can be switched off (`off` on
