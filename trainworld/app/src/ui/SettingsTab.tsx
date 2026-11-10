@@ -25,7 +25,7 @@ import { LanguageSelect } from "./LanguageSelect";
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
 type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away" | "out" | "back";
-const SCHEME_OPTIONS: [BubbleScheme, MessageKey][] = [["mode", "settingsTab.scheme3"], ["ramp", "settingsTab.scheme2"], ["purpose", "settingsTab.schemePurpose"]];
+const SCHEME_OPTIONS: [BubbleScheme, MessageKey][] = [["mode", "settingsTab.scheme3"], ["ramp", "settingsTab.scheme2"], ["purpose", "settingsTab.schemePurpose"], ["colorblind", "settingsTab.schemeColorblind"]];
 const DAY_OPTIONS: [DayShown, MessageKey][] = [["average", "settingsTab.average"], ["weekday", "settingsTab.weekday"], ["saturday", "settingsTab.sat"], ["sunday", "settingsTab.sun"]];
 type Projection = "flat" | "globe";
 const PROJECTION_OPTIONS: [Projection, MessageKey][] = [["flat", "settingsTab.flat"], ["globe", "settingsTab.globe"]];

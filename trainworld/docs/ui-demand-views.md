@@ -173,7 +173,7 @@ hover and clicks. They do not enlarge the station's click target.
   #e61e1e or #1e3ce6 is dropped once, settings version 9, and any other stays), blended in OKLab and
   skewed towards the end colour (position = share^0.576, so 30% train is halfway and 70% is 81% of
   the way; Anita, T-812), with two colour pickers shown while it is chosen (`game/palette.ts` `bubbleColour`). **3-color** (the old Mode mix)
-  blends the mode colours by share. **Purpose** (T-2886) colours by what the trips are for, the same three colours blended by
+  blends the mode colours by share. **Color blind** (T-3005) is 2-color with fixed ends, a deeper Okabe-Ito yellow #f2c200 at 0% train and blue #0072b2 at 100%, no pickers; the player's own 2-color ends are kept for when they switch back, and the mode bars and swatches follow (train blue, car yellow). **Purpose** (T-2886) colours by what the trips are for, the same three colours blended by
   share with no grey pull: work and school blue, errands and leisure red, everything else green (medical, airports, attractions, longer trips);
   the purposes' legs are asked for only while it is on (`commuterView.ts` `attachPurp`), and until they are in,
   the mix or ramp chosen before is used. A selection's own and far-end bubbles are coloured the same way (T-2892). The hover on a bubble so coloured has its bar and a row per group by purpose, not by mode; a share that rounds to 0% has no row (T-2908, T-2911). Any of the three colours the local

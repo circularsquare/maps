@@ -1695,6 +1695,7 @@
   "settingsTab.sat": "Settings, Day choice: Saturday, short as on a calendar. Narrow segmented button.",
   "settingsTab.scheme2": "Settings, Colors choice: bubbles shaded between two colours the player picks, by the share of trips by train. Short segmented button.",
   "settingsTab.scheme3": "Settings, Colors choice: bubbles in three colours by how people travel (train, car, walk). Short segmented button.",
+  "settingsTab.schemeColorblind": "Settings, Colors choice: bubbles in two colours, blue and yellow, picked to be told apart with colour blindness. Short segmented button.",
   "settingsTab.schemePurpose": "Settings, Colors choice: bubbles in three colours by what the trips are for (work, errands and leisure, everything else). Short segmented button; the same word as the Purpose filter.",
   "settingsTab.show": "Settings: section heading over checkboxes of things drawn on the map (trains, station names, marks).",
   "settingsTab.sound": "Settings, Stations up close: checkbox for the game's sounds.",

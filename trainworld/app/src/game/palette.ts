@@ -100,7 +100,8 @@ export const modeScheme = signal<BubbleScheme>("mode");
 /** The mode colours for bars, swatches and hover tags under the bubble scheme in force; `none` is
  * "No route" (T-2215), the bubbles' `NONE_GREY` in both schemes (style.css `--none-grey`). */
 export const modeColours = (): { readonly train: string; readonly walk: string; readonly drive: string; readonly other: string; readonly none: string } =>
-  modeScheme.value === "ramp" ? SHARE_MODE_COLOURS : MIX_MODE_COLOURS;
+  modeScheme.value === "colorblind" ? CB_MODE_COLOURS : modeScheme.value === "ramp" ? SHARE_MODE_COLOURS : MIX_MODE_COLOURS;
+const CB_MODE_COLOURS = { ...SHARE_MODE_COLOURS, train: "#0072b2", drive: "#f2c200" } as const;
 
 /**
  * A bubble's colour for commuters by train, walking and driving, 0-255 rgb: the three mode colours
@@ -133,7 +134,11 @@ const MIX_TOP = Math.max(...rgb(MODE_COLOURS.train), ...rgb(MODE_COLOURS.walk), 
  * one colour at 0% to another at 100%, or (T-2886) by trip purpose: work and school blue, errands and leisure red,
  * everything else green, the same three colours blended by share as the mode mix. Until a bubble's
  * purposes are in, it is painted as the mix or ramp chosen before. */
-export type BubbleScheme = "mode" | "ramp" | "purpose";
+export type BubbleScheme = "mode" | "ramp" | "purpose" | "colorblind";
+/** T-3005: Color blind is the ramp with fixed ends, Okabe-Ito blue (100% train) and a deeper yellow (0%; the Okabe-Ito one, #f0e442, is too pale on the light map): they differ in
+ * lightness as well as hue, so they hold for red-green and, by lightness, blue-yellow colour blindness. */
+export const COLORBLIND_RAMP = { from: "#f2c200", to: "#0072b2" } as const;
+let cbOn = false;
 export const DEFAULT_RAMP = { from: SHARE_MODE_COLOURS.drive, to: SHARE_MODE_COLOURS.train } as const;
 /** The ramp's position is the train share to this power, so a 30% share sits halfway (Anita, T-812:
  * 30% purple, 70% clearly blue; 0.3^K = 0.5, and 70% lands at 81%). */
@@ -149,12 +154,17 @@ let rampLut: Uint8ClampedArray | null = null;
  * swatches); the same arguments again change nothing. */
 export function setBubbleColours(s: BubbleScheme, from: string, to: string) {
   lastScheme = [s, from, to];
-  if (s !== "purpose") baseScheme = s;
+  if (s === "colorblind") {
+    from = COLORBLIND_RAMP.from;
+    to = COLORBLIND_RAMP.to;
+  }
+  if (s !== "purpose") baseScheme = s === "colorblind" ? "ramp" : s;
   purposeOn = s === "purpose";
   const ramp = baseScheme === "ramp";
+  cbOn = s === "colorblind";
   // the shade is in the key under either scheme: the No route grey (T-2215) follows it
   const key = (purposeOn ? "purpose-" : "") + (ramp ? `ramp${from}${to}` : "mode") + (lightMap ? "-light" : "");
-  modeScheme.value = ramp ? "ramp" : "mode";
+  modeScheme.value = cbOn ? "colorblind" : ramp ? "ramp" : "mode";
   if (key === schemeKey) return;
   schemeKey = key;
   rampLut = ramp ? buildRamp(HEX.test(from) ? from : DEFAULT_RAMP.from, HEX.test(to) ? to : DEFAULT_RAMP.to) : null;
