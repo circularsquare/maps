@@ -17,6 +17,7 @@ use, always taken in this order when nested:
     made            data/work/world_run/made.json
     batch-<batch>   held by a run for its life: its claimed rows are live while it is held
     sea             osm_water's coastline FlatGeobuf, while one process makes it from the zip
+    wikidata-students  data/raw/tier0/wikidata_students.json, read, merged and written (T-3217)
 """
 import contextlib
 import datetime

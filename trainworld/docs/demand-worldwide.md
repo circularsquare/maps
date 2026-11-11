@@ -123,7 +123,11 @@ of its proxies where it has them. Measured by building Toronto from tier 0 again
   areas only spread it (counts alone sized London at several times its students). Why it may not
   carry over: students gather in university cities, so a national rate undercounts a city with
   many campuses (Toronto -20% against Ontario's files) and overcounts one with few. Check: London
-  against HESA (T-382).
+  against HESA (T-382). A campus OSM maps as an outline has its students spread over the cells
+  under it, half by GHSL non-residential volume and half by area (`CAMPUS_BUILT_SHARE`; T-3214:
+  one cell under the outline's inner point put all of UBC's 45,000 2.2 km from its bus exchange);
+  a point, or an outline too small to hold a res-11 cell centre, stays in its one cell. Packs pick
+  this up when their OSM education cache is made again (a row's rebuild deletes it).
 - **Airports**: patronage from Wikidata (it matched StatCan's for Toronto's three airports).
 
 ## France (Paris, `pipeline/france.py`, T-289, 2026-10-15)

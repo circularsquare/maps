@@ -1,6 +1,7 @@
 """T-287: tier 0, a city pack from global sources only (research/world-sampler.md section 2).
 
     python pipeline/build_city.py <city>      (build_city.main hands a city with "tier0" to main())
+    python pipeline/merge_cells.py <ids> --through "tier0 {id} --education"   schools and universities again
 
 Every input comes from a source that covers the world, so any city can be built; a country's own
 census or registers then upgrade single inputs by replacing one function. What each input is:
@@ -34,7 +35,8 @@ census or registers then upgrade single inputs by replacing one function. What e
   count (P2196) split over its sites by area; sites with no Wikidata count by area at the
   median students per hectare of those with one; points with no count left out. The total is
   then scaled to population x the national tertiary students a resident (UNESCO via the World
-  Bank, SE.TER.ENRL / SP.POP.TOTL; T-288), so the counts and areas only spread it.
+  Bank, SE.TER.ENRL / SP.POP.TOTL; T-288), so the counts and areas only spread it. A site with
+  an outline spreads its students over the cells under it (campus_spread, T-3214).
 - Airports: OurAirports scheduled-service airports in the boundary, boardings = Wikidata
   patronage (P3872) / 2, O&D share 1 except the config's judgement values for hubs, pack share
   from the GHSL population around the airport (exp(-d/20 km), as enrich_airports).
@@ -124,6 +126,11 @@ ERRAND_SHARE, LEISURE_SHARE = 0.15, 0.08
 SCHOOL_ENROL = 0.9                    # pupils per child aged 0-14 (judgement; UNESCO rates would refine)
 SCHOOL_SITE_MAX = 3000.0              # pupils one OSM school site holds at most (T-574)
 SCHOOL_CELL_MAX = 6000.0              # ... and one pack cell's sites together (T-574: Vile Parle's campus of 8 schools)
+# T-3214: a campus's students spread over the cells under its outline, this share by GHSL
+# non-residential volume and the rest by area (judgement: lecture halls over playing fields and
+# farms, but no cell of the campus left empty).
+CAMPUS_BUILT_SHARE = 0.5
+CAMPUS_RES = 11                       # the outline sampled at H3 res 11 centres (~2,150 m² each)
 DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
 ZONE_M = 2000.0
 INTRAZONAL_KM = 1.04                  # the game's same-zone distance
@@ -1163,10 +1170,15 @@ def finish(city, kids=None):
 # ---------------------------------------------------------------- schools and universities
 
 def osm_education(city, boundary, extract):
-    """OSM schools, universities and colleges: (kind, name, lat, lon, site m2 or 0, wikidata)."""
+    """OSM schools, universities and colleges: (kind, name, lat, lon, site m2 or 0, wikidata, wkt),
+    wkt a university's or college's outline (T-3214), "" for points, schools and caches made
+    before it (those campuses stay at their point until the cache is made again)."""
     cache = raw(f"osm_education_{city}.csv.gz")
     if os.path.exists(cache):
-        return pd.read_csv(cache, keep_default_na=False)
+        out = pd.read_csv(cache, keep_default_na=False)
+        if "wkt" not in out.columns:
+            out["wkt"] = ""
+        return out
     import osm_features
     import overpass
     t0 = time.time()
@@ -1186,7 +1198,10 @@ def osm_education(city, boundary, extract):
             a = overpass.area_m2(g)
         except shapely.errors.GEOSException:  # a ring of under 4 points (Guayaquil, T-2695)
             continue
-        rows.append((r.amenity, r.name or "", c.y, c.x, a, rt.tag(r.other_tags, "wikidata")))
+        wkt = ""
+        if r.amenity != "school":
+            wkt = shapely.to_wkt(g.simplify(0.00003), rounding_precision=6)  # ~3 m
+        rows.append((r.amenity, r.name or "", c.y, c.x, a, rt.tag(r.other_tags, "wikidata"), wkt))
         polys[r.amenity].append(g)
     trees = {k: shapely.STRtree(v) for k, v in polys.items() if v}
     n_dup = 0
@@ -1195,8 +1210,8 @@ def osm_education(city, boundary, extract):
         if k in trees and len(trees[k].query(r.geometry, predicate="within")):
             n_dup += 1  # a point inside a mapped site of the same kind: the site counts
             continue
-        rows.append((k, r.name or "", r.geometry.y, r.geometry.x, 0.0, rt.tag(r.other_tags, "wikidata")))
-    out = pd.DataFrame(rows, columns=["kind", "name", "lat", "lon", "m2", "wikidata"])
+        rows.append((k, r.name or "", r.geometry.y, r.geometry.x, 0.0, rt.tag(r.other_tags, "wikidata"), ""))
+    out = pd.DataFrame(rows, columns=["kind", "name", "lat", "lon", "m2", "wikidata", "wkt"])
     out.to_csv(cache, index=False)
     print(f"  OSM education: {len(mp):,} sites, {len(pts):,} points ({n_dup} inside a site); {time.time() - t0:.0f} s", flush=True)
     return out
@@ -1229,11 +1244,13 @@ def wikidata_students(qids):
                 best[qid] = (v, t)
         for qid in part:
             have[qid] = best.get(qid, (None, ""))
-    if need:  # several builds may run at once (T-420 stage 3): write whole files only
-        tmp = f"{path}.{os.getpid()}.part"
-        with open(tmp, "w") as f:
-            json.dump(have, f)
-        os.replace(tmp, path)
+    if need:  # several builds run at once: merge into the file as it is now, under its lock (T-3217)
+        import shared_lock
+        with shared_lock.held("wikidata-students", "tier0.wikidata_students"):
+            disk = shared_lock.read_json(path) if os.path.exists(path) else {}
+            disk.update({q: have[q] for q in need})
+            shared_lock.write_atomic(path, json.dumps(disk))
+        have = {**disk, **have}
     return {q: tuple(have[q]) for q in qids if q in have}
 
 
@@ -1265,6 +1282,44 @@ def school_site_pupils(pupils, sizes, cell=None, cap=SCHOOL_SITE_MAX, cell_cap=S
             break
         p[~fixed] *= max(pupils - p[fixed].sum(), 0.0) / free
     return p, max(pupils - float(p.sum()), 0.0)
+
+
+def campus_spread(wkt, m2, index, nres_of):
+    """(pack cell indices, shares summing to 1) of a campus's students over the cells under its
+    outline (T-3214): CAMPUS_BUILT_SHARE by the GHSL non-residential volume of each res-9 cell's
+    part of the outline, the rest by area. None when there is no outline or none of its sample
+    points falls in a pack cell (a site too small for a res-11 centre: its point instead). A
+    sample in a merged cell (res 8, merge_cells) counts there."""
+    if not wkt:
+        return None
+    parts = [p for p in shapely.get_parts(shapely.from_wkt(wkt)) if p.geom_type in ("Polygon", "MultiPolygon")]
+    if not parts:
+        return None
+    res = CAMPUS_RES if m2 < 1e7 else CAMPUS_RES - 1 if m2 < 7e7 else CAMPUS_RES - 2  # at most ~30,000 samples
+    per9 = {}
+    for part in parts:
+        for c in h3.geo_to_cells(part, res):
+            p = h3.cell_to_parent(c, 9)
+            per9[p] = per9.get(p, 0) + 1
+    area, built, cell = [], [], []
+    for p, k in per9.items():
+        i = index.get(h3.str_to_int(p))
+        if i is None:
+            i = index.get(h3.str_to_int(h3.cell_to_parent(p, 8)))
+        if i is None:
+            continue  # outside the pack
+        frac = k / 7 ** (res - 9)
+        cell.append(i)
+        area.append(float(k))
+        built.append(nres_of.get(h3.str_to_int(p), 0.0) * frac)
+    if not cell:
+        return None
+    cell, area, built = np.asarray(cell), np.asarray(area), np.asarray(built)
+    w = area / area.sum()
+    if built.sum() > 0:
+        w = (1 - CAMPUS_BUILT_SHARE) * w + CAMPUS_BUILT_SHARE * built / built.sum()
+    u, inv = np.unique(cell, return_inverse=True)
+    return u, np.bincount(inv, weights=w)
 
 
 def education_osm(city, boundary, kids):
@@ -1338,7 +1393,29 @@ def education_osm(city, boundary, kids):
     raw_total = float(site_students.sum())
     if ter and raw_total > 0:
         site_students = site_students * (pop.sum() * ter / raw_total)
-    uenr, n_u = place(rows, site_students)
+    sig_path = os.path.join(b.WORK, f"{city}.tier0_signals.npz")
+    nres_of = {}
+    if os.path.exists(sig_path):
+        with np.load(sig_path) as z:
+            nres_of = dict(zip(z["h3"].astype(np.int64).tolist(), z["nres_v"].tolist()))
+    at = cell_of(rows)
+    acc = np.zeros(len(cells), np.float64)
+    n_u = n_spread = 0
+    site_cells = []
+    for k, r in enumerate(rows.itertuples()):
+        sp = campus_spread(r.wkt, r.m2, index, nres_of)
+        if sp is not None:
+            np.add.at(acc, sp[0], site_students[k] * sp[1])
+            n_spread += 1
+            site_cells.append(len(sp[0]))
+        elif at[k] >= 0:
+            acc[at[k]] += site_students[k]
+            site_cells.append(1)
+        else:
+            site_cells.append(0)
+            continue
+        n_u += 1
+    uenr = acc.astype("<f4")
     adults = pop * (1 - kids)
     buf = packio.replace_cell_arrays(header, buf, {"school_children": children.astype("<f4"), "school_enrollment": enr,
                                                       "university_adults": adults.astype("<f4"), "university_enrollment": uenr})
@@ -1349,7 +1426,8 @@ def education_osm(city, boundary, kids):
         "attendance_factor": 0.9, "sources": school_src}
     header["university"] = dict(
         coverage="tier 0: OSM amenity=university|college; Wikidata P2196 students by institution split over its sites by area, other sites "
-                 f"at the median {per_m2 * 1e4:.0f} students a hectare"
+                 f"at the median {per_m2 * 1e4:.0f} students a hectare; a mapped campus's students over the cells under its outline, "
+                 f"{CAMPUS_BUILT_SHARE:.0%} by GHSL non-residential volume and the rest by area ({n_spread} sites; the others at their point)"
                  + (f"; scaled to population x {ter:.4f} tertiary students a resident (UNESCO via World Bank SE.TER.ENRL, {ter_year})" if ter else ""),
         enrolled=float(uenr.sum(dtype=np.float64)), institutions=int(known.wikidata.nunique()), sites=int(n_u),
         location_match_share=1.0, adult_weight=float(adults.sum()), adult_origin=f"population x {1 - kids:.3f} (ages 15+, World Bank)",
@@ -1357,11 +1435,12 @@ def education_osm(city, boundary, kids):
         sources=["https://www.openstreetmap.org/copyright", WIKIDATA, WB_TERTIARY.format(iso2=cfg["iso2"], ind="SE.TER.ENRL")])
     canada.rewrite(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
-        json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s) for r, s in
-                   zip(rows.itertuples(), site_students)], f, indent=1)
+        json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s, cells=n) for r, s, n in
+                   zip(rows.itertuples(), site_students, site_cells)], f, indent=1)
     print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f} ({near_home:,.0f} near home); universities: {known.wikidata.nunique()} with Wikidata "
           f"counts ({len(known)} sites), {len(unknown)} sites by area at {per_m2 * 1e4:.0f} a hectare, {raw_total:,.0f} students before "
-          f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year})" if ter else " (no national figure, unscaled)"), flush=True)
+          f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year})" if ter else " (no national figure, unscaled)")
+          + f"; {n_spread} campuses spread over their outlines", flush=True)
 
 
 # ---------------------------------------------------------------- airports, medical, parks
@@ -1435,4 +1514,8 @@ def medical_parks(city, els, names):
 if __name__ == "__main__":
     import sys
     args = [x for x in sys.argv[1:] if not x.startswith("--")]
-    (finish if "--finish" in sys.argv else main)(args[0])
+    if "--education" in sys.argv:  # schools and universities alone, on a res-9 pack (merge_cells --through, T-3214)
+        _cfg = b.CITIES[args[0]]
+        education_osm(args[0], build_boundary(args[0], _cfg), worldbank(_cfg["iso2"])[1])
+    else:
+        (finish if "--finish" in sys.argv else main)(args[0])
