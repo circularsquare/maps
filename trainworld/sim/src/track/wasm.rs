@@ -95,6 +95,10 @@ pub struct TrackApi {
     route_end: u32,
     /// Per rendered segment of the last route/edge preview, authoritative geometry speed km/h.
     preview_speeds: Vec<f32>,
+    /// Per rendered segment of the last route/edge preview, its track as `Strokes.lane`: 0 single, 255 double (T-3134).
+    preview_lanes: Vec<u8>,
+    /// Per edge of the last node-move preview, as `preview_lanes`.
+    preview_part_lanes: Vec<u8>,
     /// Where the last preview's track makes a crossing or a flat junction (T-629): x, y, kind (0
     /// crossing, 1 junction) per mark.
     preview_marks: Vec<f64>,
@@ -345,6 +349,8 @@ impl TrackApi {
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
+            preview_lanes: vec![],
+            preview_part_lanes: vec![],
             preview_marks: vec![],
             route_junctions: vec![],
             station_cost: 0.0,
@@ -2174,3 +2180,5 @@ mod gap_tests;
 mod water_gap_tests;
 #[cfg(test)]
 mod built_day_tests;
+#[cfg(test)]
+mod lane_preview_tests;

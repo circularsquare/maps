@@ -13,7 +13,7 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
-import { designSpeed } from "../game/ui";
+import { designSpeed, singleTrack, tramTrack } from "../game/ui";
 import { dataUrl, PUBLISHED } from "../game/dataBase";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
@@ -341,6 +341,11 @@ export class RealSnap {
     this.redraw();
   }
 
+  /** the lane the stand-in ghosts draw: single track close in (T-3134), tram track is double */
+  private lane() {
+    return singleTrack.peek() && !tramTrack.peek() ? 0 : 255;
+  }
+
   private answer(m: FromRouter) {
     if (m.kind === "cover") {
       this.cover = m.all ? "all" : m.rings.map((r) => ({ r, box: ringBox(r) }));
@@ -366,7 +371,7 @@ export class RealSnap {
         if (this.shown === "route") this.display(null);
         this.shown = "red";
         const [ax, ay] = toLocal(this.from!.lng, this.from!.lat), [bx, by] = toLocal(s.lng, s.lat);
-        this.overlay.renderer.setPreview(strokesFromPreview(new Float32Array([ax, ay, 0, bx, by, 0]), true, undefined, true));
+        this.overlay.renderer.setPreview(strokesFromPreview(new Float32Array([ax, ay, 0, bx, by, 0]), true, undefined, true, undefined, this.lane()));
         this.overlay.invalidate();
         this.finish(s, "none");
         return;
@@ -376,7 +381,7 @@ export class RealSnap {
       // the real line stands in until the fit is ready, unless a fitted route already shows
       if (this.shown !== "route") {
         this.shown = "line";
-        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(m.line), false, undefined, true));
+        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(m.line), false, undefined, true, undefined, this.lane()));
         this.overlay.invalidate();
       }
       this.redraw();
@@ -387,7 +392,7 @@ export class RealSnap {
         // the last route's ghost and figures give way to the real line this spot found
         this.display(null);
         this.shown = "line";
-        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(s.line), false, undefined, true));
+        this.overlay.renderer.setPreview(strokesFromPreview(this.ghostPts(s.line), false, undefined, true, undefined, this.lane()));
         this.overlay.invalidate();
       }
       this.finish(s, "none");

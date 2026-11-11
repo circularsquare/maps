@@ -11,6 +11,13 @@ import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, 
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
 const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
+/** T-3136 (Anita: "we should draw double track a bit thicker, and single a bit thinner"): rail track's
+ * width as a share of a line's, single and double, so the two read apart zoomed out. Double eases back to 1
+ * as its two tracks grow apart (`u_lanes.z`), and single with it, so close in nothing changes. */
+const SINGLE_WIDTH = 0.75, DOUBLE_WIDTH = 1.3;
+/** Zoomed far out every stroke is at least a pixel wide; double track's least is this many (device px), so
+ * the two still differ where both would be at the floor. */
+const DOUBLE_FLOOR_PX = 2.0;
 /** T-2927 (Anita: "2 thin black lines in the middle ... to indicate the cables"): on tram strokes, each
  * wire's middle this share of the stroke's width either side of its centre while drawn as one stroke
  * (one wire along each track once they part), each this share of the width across, at least WIRE_MIN_PX */
@@ -193,7 +200,8 @@ void main() {
   bool bpShape = bpTrack || bpLine || ghost;
   float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0);
   float tw = tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0;
-  float core = bpShape ? u_bp.x * tw + 2.0 * u_bp.y : u_width.x * tw;
+  float tk = tram || turnback || passing ? 1.0 : mix(mix(${SINGLE_WIDTH.toFixed(2)}, ${DOUBLE_WIDTH.toFixed(2)}, lfm), 1.0, u_lanes.z);
+  float core = bpShape ? u_bp.x * tw * tk + 2.0 * u_bp.y : u_width.x * tw * tk;
   int id = gl_VertexID;
   float along = float(id & 1);
   // lines sharing track side by side (T-1799): each a band narrower than a line, shifted across;
@@ -223,9 +231,9 @@ void main() {
   float w, lane_off = 0.0;
   if (u_lane_mode == 0) {
     w = (ghost ? core
-      : bpTrack ? u_bp.x * tw + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
-      : bpLine ? u_bp.x * tw * bandW + extra + cas
-      : u_width.x * wmul * (hsr ? u_hsr.x : 1.0) * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0) * bandW + extra + cas) + grow;
+      : bpTrack ? u_bp.x * tw * tk + extra + (u_casing > 0.0 ? 2.0 * u_bp.y : 0.0)
+      : bpLine ? u_bp.x * tw * tk * bandW + extra + cas
+      : u_width.x * wmul * tk * (hsr ? u_hsr.x : 1.0) * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0) * bandW + extra + cas) + grow;
     // T-2126: a band of shared track a pixel narrower in colour than its slot, the casing showing between
     // (none for a line easing out of the ribbon to its full width)
     if (shared && u_casing <= 0.0 && !full) {
@@ -258,7 +266,13 @@ void main() {
   }
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
-  w = max(w, 1.0);
+  float floorPx = 1.0;
+  if (u_kind == 0 && !(tram || turnback || passing)) {
+    floorPx = mix(1.0, ${DOUBLE_FLOOR_PX.toFixed(1)}, lfm * (1.0 - u_lanes.z));
+    // a blueprint's middle and a ghost's inner layer sit between rails of their own
+    if ((bpShape && u_casing <= 0.0 && !ghost) || (ghost && u_ghost_layer == 2)) floorPx = max(1.0, floorPx - 2.0 * u_bp.y);
+  }
+  w = max(w, floorPx);
   if (late) {
     float hr = 0.5 * (u_full_px + ${FULL_WIDTH_SHARE} * w), ho = 0.5 * u_full_out;
     v_inner = vec4(0.5 * w, hr, ho, fs);

@@ -2362,7 +2362,7 @@
   "updates.v022Line": "update v0.2.2! flyovers, single track and right click loops...",
   "updates.v022Flyovers": "new junctions are built as flyovers when auto-ramp is enabled",
   "updates.v022Single": "added single track",
-  "updates.v022RightClick": "right click a stop to loop back there, left click only adds or removes a stop",
+  "updates.v022RightClick": "more explicit loop controls",
   "updates.v022BusLoops": "buses and ferries can loop back partway",
   "updates.v022LoopButton": "way to make loops on mobile",
   "updates.v022LoopStops": "a line on a loop stops at a station each time it passes",

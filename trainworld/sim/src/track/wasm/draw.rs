@@ -608,6 +608,7 @@ impl TrackApi {
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
         let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
+        self.preview_lanes.clear();
         self.preview_speeds.clear();
         self.preview_marks.clear();
         let (op, verts, nn, ne) = match self.route_op(ends, pis, tracks, flying) {
@@ -630,6 +631,21 @@ impl TrackApi {
         for (j, _) in self.route_junctions.iter().zip(&crosses).filter(|c| *c.1) {
             self.preview_marks.extend([j.1[0], j.1[1], 1.0]);
         }
+        // T-3134: each flyover's plain leg, from its junction to J3, is single track
+        if out.len() > 5 {
+            let p0 = 5 + 4 * verts.len();
+            let pt = |i: usize| (out[p0 + 3 * i], out[p0 + 3 * i + 1]);
+            let near = |i: usize, q: &Pi| (pt(i).0 - q.x).hypot(pt(i).1 - q.y);
+            let last = (out.len() - p0) / 3 - 1;
+            for leg in &self.route_legs {
+                let (j, j3) = (&leg[0], &leg[leg.len() - 1]);
+                let at3 = (0..=last).min_by(|&a, &b| near(a, j3).total_cmp(&near(b, j3))).unwrap_or(0);
+                let range = if near(0, j) <= near(last, j) { 0..at3 } else { at3..last };
+                for k in range {
+                    self.preview_lanes[k] = 0;
+                }
+            }
+        }
         if !self.route_express.is_empty() && out.len() > 5 {
             // T-711: the multiplier over both pairs' track, as the price is
             let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, TrackKind::Regular);
@@ -644,16 +660,20 @@ impl TrackApi {
             // -1: no track between the pairs' own ends (T-423), so the ghost draws no step there
             let joint = if (back[0].x - end.x).hypot(back[0].y - end.y) > 0.5 { -1.0 } else { self.preview_speeds.last().copied().unwrap_or((V_TOP * 3.6) as f32) };
             self.preview_speeds.push(joint);
+            self.preview_lanes.push(255);
             render_samples(&f.pieces, &f.vert, &mut out);
             self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
+            self.preview_lanes.resize(self.preview_speeds.len(), 255);
         }
         // T-3092: each flyover's crossing leg, after a step with no track
         if out.len() > 5 {
             for leg in &self.route_legs {
                 let f = self.w.net.fit(leg);
                 self.preview_speeds.push(-1.0);
+                self.preview_lanes.push(0);
                 render_samples(&f.pieces, &f.vert, &mut out);
                 self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
+                self.preview_lanes.resize(self.preview_speeds.len(), 0);
             }
         }
         self.route_vertices = verts;

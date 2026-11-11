@@ -159,6 +159,7 @@ impl TrackApi {
     /// polyline includes the next pieces of the stroke where a joint moves with it (T-244).
     pub fn preview_edge(&mut self, id: u32, pis: &[f64]) -> Vec<f64> {
         self.preview_speeds.clear();
+        self.preview_lanes.clear();
         self.preview_marks.clear();
         let r = match self.reshaped(id, pis) {
             Ok(r) => r,
@@ -190,6 +191,7 @@ impl TrackApi {
             render_samples(&f.pieces, &f.vert, &mut out);
             speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap()));
         }
+        self.preview_lanes = vec![lane_of(r.tracks); speeds.len()];
         self.preview_speeds = speeds;
         out
     }
@@ -523,7 +525,8 @@ impl TrackApi {
 
     /// `shapes`: each changed edge's vertices and its kind of track (T-1898: its
     /// curves' speeds go up to 320, not 160).
-    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<(Vec<Pi>, TrackKind)>) -> Vec<f64> {
+    pub(super) fn preview_moved(&mut self, op: Op, shapes: Vec<(Vec<Pi>, TrackKind, u8)>) -> Vec<f64> {
+        self.preview_part_lanes = shapes.iter().map(|s| lane_of(s.2)).collect();
         let r = self.w.trial(op);
         self.preview_marks = trial_crossings(&r);
         let (ok, cost) = match &r {
@@ -536,7 +539,7 @@ impl TrackApi {
         }));
         self.last = None;
         let mut out = vec![ok, cost, shapes.len() as f64];
-        for (verts, kind) in &shapes {
+        for (verts, kind, _) in &shapes {
             let f = self.w.net.fit(verts);
             out.push(verts.len() as f64);
             vertex_rows(&f, verts, &mut out, kind.v_cap());
@@ -549,7 +552,7 @@ impl TrackApi {
     }
 
     /// The edit moving `node` to (x, y) (`move_node`), and each changed edge's vertices.
-    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind)>), Issue> {
+    pub(super) fn moved(&self, node: u32, x: f64, y: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind, u8)>), Issue> {
         let Some(nd) = self.w.net.node_data(node) else { return Err(Issue::NoSuchNode { node }) };
         self.moved_by(&[node], quant(x) - nd.x, quant(y) - nd.y)
     }
@@ -577,7 +580,7 @@ impl TrackApi {
     }
 
     /// The edit moving `nodes` by (dx, dy), and each changed edge's vertices.
-    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind)>), Issue> {
+    pub(super) fn moved_by(&self, nodes: &[u32], dx: f64, dy: f64) -> Result<(Op, Vec<(Vec<Pi>, TrackKind, u8)>), Issue> {
         let net = &self.w.net;
         let mut ops = vec![];
         let mut moves: Vec<(u32, f64, f64)> = vec![];
@@ -621,7 +624,7 @@ impl TrackApi {
                         p.y = quant(p.y + dy);
                     }
                     d.thru.clear();
-                    shapes.push((vertices_of(net, &d, &moves), d.kind));
+                    shapes.push((vertices_of(net, &d, &moves), d.kind, d.tracks));
                     ops.push(Op::Edge { id: e, data: Some(d) });
                     continue;
                 }
@@ -669,7 +672,7 @@ impl TrackApi {
                 d.thru.clear();
                 let made: Vec<usize> = (0..made.len()).filter(|&k| made[k]).collect();
                 design_corners(net, &mut d, &moves, &made, cap);
-                shapes.push((vertices_of(net, &d, &moves), d.kind));
+                shapes.push((vertices_of(net, &d, &moves), d.kind, d.tracks));
                 ops.push(Op::Edge { id: e, data: Some(d) });
             }
         }
@@ -720,6 +723,7 @@ impl TrackApi {
         }
         render_samples(&f.pieces, &f.vert, &mut out);
         self.preview_speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap());
+        self.preview_lanes = vec![lane_of(tracks); self.preview_speeds.len()];
         out
     }
 
@@ -729,6 +733,11 @@ impl TrackApi {
         self.preview_speeds.clone()
     }
 
+}
+
+/// A preview segment's `Strokes.lane` for a track count: 0 single, 255 double (T-3134).
+pub(super) fn lane_of(tracks: u8) -> u8 {
+    if tracks == 1 { 0 } else { 255 }
 }
 
 /// How far off the straight between its neighbours a joint may be and still be dropped when two

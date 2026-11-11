@@ -31,6 +31,15 @@ word each time.
   switch/docs (notes/T-3137.md, notes/T-3135.md). Land with agent-tree.mjs.
 - singleghost (Sonnet, a2bdab2e9d1eef273, main tree, Vite 6191): T-3134 ghost per-segment track count (sim preview answer
   + tools.ts, realSnap.ts, previewStrokes, flyover preview) and T-3136 single thinner / double thicker when zoomed out.
+  23:00: sent back for a thicker zoomed-out floor for double (z11.5 still identical). Then commit + snapbuild.
+- loops3 (Opus, a8acc7928a61a451b, main, Vite 6193): T-3140 no automatic loops (undo T-3122 rule 2), T-3141 lone branch
+  = line end, T-3139 chevrons on the track tangent, 25% smaller and closer. May file T-3145/3146.
+- onewayui (Sonnet, ac84a57324f0462ac, main, Vite 6194): T-3142 half dots on bus/ferry loops, T-3143 hover says one way and
+  which way (new strings). May file T-3147.
+- community3 (Sonnet, a74ecb7dd2921c010, main + shonei-server commits, Vite 6195): T-3144 Biggest/World empty bug, card
+  space, share title (default save name, profanity screen, title bold + name grey), sandbox button alignment. Server
+  deploy needs her word. May file T-3148. Next free id after these: **T-3149**.
+- Anita 23:15: "auto-ramp" fine; changelog RightClick -> "more explicit loop controls" (done in en.json, uncommitted).
 - singletrack (Opus, addd2bb7c40268aea) is done (design stages 1 and 1b; ~320k tokens); resume only for questions about
   its notes.
 
@@ -38,7 +47,7 @@ word each time.
 in one piece, never deletable by halves; flyover ramps 4% like normal ramps; question every "double = one object" shortcut
 from now on. Stop chevrons follow the track and one-way loops get half dots (stoporder; checks pass, not eyeballed on 8800).
 **Filed, not started:** T-3126 HSR quad, T-3129 snap to road for normal track (design first), T-3131 bus out-and-back by
-hand near-overlap stops, T-3138 [P3] left-hand running (fold into lanes if cheap). Next free id **T-3139**.
+hand near-overlap stops, T-3138 [P3] left-hand running (fold into lanes if cheap). Next free id **T-3149**.
 **Anita's decisions today (for the record):** dead ends and through stations turn alike, hints only "build a terminal"
 (terminal = 30 tph), never "dead end"; single track two-way default, margin 240 s; margins: trams ~40/h, terminals 30/h,
 junction moves 120 s, platforms unchanged; community first version = share + share link + open a copy (ON by default) +

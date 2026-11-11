@@ -946,7 +946,7 @@ export class Tools {
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
       if (p) this.overlay.renderer.keepPreviewAsPlaced();
-      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, 255, highSpeed.peek(), tramTrack.peek()));
+      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() && !tramTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
       if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
     }
@@ -1119,8 +1119,8 @@ export class Tools {
     this.lastPreview = a;
     // a real route's preview (T-727d) answers what the ghost waits for too
     this.previewKey = this.wantKey = key;
-    // single track previews as one track close in, double and quad as two each (T-658)
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, 255, highSpeed.peek(), tramTrack.peek()) : null);
+    // single track previews as one track close in, double and quad as two each (T-658), as the sim says per segment (T-3134)
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, a.lanes ?? 255, highSpeed.peek(), tramTrack.peek()) : null);
     this.overlay.invalidate();
     this.place();
   }

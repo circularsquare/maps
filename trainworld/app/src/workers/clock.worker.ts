@@ -4423,10 +4423,12 @@ async function handle(msg: ToClock) {
     }
     const speeds = a.preview_render_speeds();
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
+    const lanes = a.preview_render_lanes();
+    if (lanes.length !== speeds.length) throw new Error("Preview lane/speed length mismatch");
     const marks = markPoints(a.preview_marks(), 3);
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
     const flatJunctions = msg.kind === "preview" ? a.route_flyovers_flat() : 0;
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, arc, anchor: anchor().version, marks, ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, marks.buffer]);
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;
@@ -4476,7 +4478,8 @@ function sendNodePreview(seq: number, out: Float64Array) {
   }
   const v = new Float64Array(verts), p = new Float32Array(pts), pa = new Uint32Array(parts);
   const marks = markPoints(api!.preview_marks(), 3);
-  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, marks.buffer]);
+  const partLanes = api!.preview_part_lanes();
+  send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, partLanes, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, partLanes.buffer, marks.buffer]);
 }
 
 // T-2710: the script has loaded (every import with it); the page posts its held messages on this

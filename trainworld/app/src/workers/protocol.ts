@@ -691,6 +691,10 @@ export type FromClock =
       pts: Float32Array;
       /** Geometry km/h per consecutive point pair, for a route/edge preview. */
       speeds?: Float32Array;
+      /** T-3134: its track per segment, as `speeds`: 0 single, 255 double */
+      lanes?: Uint8Array;
+      /** T-3134: a node drag's track per part: 0 single, 255 double */
+      partLanes?: Uint8Array;
       /** several alignments (a node drag moves every edge there, T-093): where each starts in
        * `pts`, in triples, and the end; absent = one */
       parts?: Uint32Array;

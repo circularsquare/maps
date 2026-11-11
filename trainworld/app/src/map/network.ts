@@ -438,21 +438,29 @@ function linesOnEdges(s: ClockState) {
   return onEdge;
 }
 
-/** `lane`: as `Strokes.lane`, 0 for single track (T-658); `hsr`: high-speed track's look (T-817) */
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane = 255, hsr = false, tram = false): Strokes {
+/** `lane`: as `Strokes.lane`, 0 for single track (T-658), or per segment like `speed` (T-3134: the sim's
+ * answer, `PreviewAnswer.lanes`); `hsr`: high-speed track's look (T-817) */
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane: number | ArrayLike<number> = 255, hsr = false, tram = false): Strokes {
   const b = new StrokeBuilder();
   const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0) | (tram ? F_TRAM : 0);
+  // the points `from` to `to` with their lanes: each point takes its own segment's, the last its segment before
+  const part = (from: number, to: number) => {
+    const p = pts.subarray(from * 3, (to + 1) * 3);
+    if (typeof lane === "number" || !lane.length) return b.add(p, TRACK, 0xffffffff, flags, false, 0, undefined, typeof lane === "number" ? lane : 255);
+    const l = Uint8Array.from({ length: to - from + 1 }, (_, i) => lane[Math.min(from + i, to - 1, lane.length - 1)]);
+    return b.add(p, TRACK, 0xffffffff, flags, false, 0, undefined, l);
+  };
   // a negative speed is a step with no track (between quad's two pairs' own ends, T-423): not drawn
   let from = 0;
   if (speed) {
     for (let k = 0; k < speed.length; k++) {
       if (speed[k] >= 0) continue;
-      b.add(pts.subarray(from * 3, (k + 1) * 3), TRACK, 0xffffffff, flags, false, 0, undefined, lane);
+      part(from, k);
       from = k + 1;
     }
     if (from > 0) speed = speed.filter((v) => v >= 0);
   }
-  b.add(pts.subarray(from * 3), TRACK, 0xffffffff, flags, false, 0, undefined, lane);
+  part(from, pts.length / 3 - 1);
   const strokes = b.build();
   strokes.marks = previewMarks(pts, simMarks);
   if (speed) {
@@ -469,7 +477,7 @@ export function previewStrokes(a: PreviewAnswer): Strokes | null {
   for (let k = 0; k + 1 < parts.length; k++) {
     const pts = a.pts.subarray(parts[k] * 3, parts[k + 1] * 3);
     // the track model's crossings and junctions belong to the whole preview: given to the first part
-    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks));
+    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks, a.partLanes?.[k] ?? 255));
   }
   if (!all.length) return null;
   if (all.length === 1) return all[0];
@@ -478,6 +486,7 @@ export function previewStrokes(a: PreviewAnswer): Strokes | null {
   const out: Strokes = {
     seg: new Float32Array(n * 4), colour: new Uint32Array(n), edge: new Uint32Array(n), level: new Float32Array(n),
     flags: new Float32Array(n), dist: new Float32Array(n), count: n, marks: marks.length ? new Float32Array(marks) : undefined,
+    lane: new Uint8Array(n * 2),
   };
   let o = 0;
   for (const s of all) {
@@ -487,6 +496,7 @@ export function previewStrokes(a: PreviewAnswer): Strokes | null {
     out.level.set(s.level.subarray(0, s.count), o);
     out.flags.set(s.flags.subarray(0, s.count), o);
     out.dist.set(s.dist.subarray(0, s.count), o);
+    out.lane!.set(s.lane!.subarray(0, s.count * 2), o * 2);
     o += s.count;
   }
   return out;

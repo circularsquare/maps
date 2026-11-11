@@ -123,6 +123,15 @@ impl TrackApi {
     pub fn preview_marks(&self) -> Vec<f64> {
         self.preview_marks.clone()
     }
+    /// Per segment of the last route or edge preview polyline (the segments `preview_render_speeds` has), its
+    /// track: 0 single, 255 double (T-3134).
+    pub fn preview_render_lanes(&self) -> Vec<u8> {
+        self.preview_lanes.clone()
+    }
+    /// Per edge of the last node-move preview, its track: 0 single, 255 double (T-3134).
+    pub fn preview_part_lanes(&self) -> Vec<u8> {
+        self.preview_part_lanes.clone()
+    }
     pub fn node_name(&self, id: u32) -> String {
         self.w.net.node_name.get(id as usize).cloned().unwrap_or_default()
     }
